@@ -27,7 +27,7 @@
     "apollo-server-express": "^2.9.15",
     "graphql": "^14.5.8",
     "graphql-tools": "^4.0.6",
-    "neo4j-driver": "^4.0.1",
+    "neo4j-driver": "1.7.6",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.0",
     "rxjs": "^6.5.3",

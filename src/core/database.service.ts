@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import Neo4j, { Driver } from 'neo4j-driver';
+import Neo4j from 'neo4j-driver';
+import { Driver } from 'neo4j-driver/types/v1';
 
 @Injectable()
 export class DatabaseService {

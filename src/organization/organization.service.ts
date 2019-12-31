@@ -21,7 +21,7 @@ export class OrganizationService {
         organization.name = result.records[0].get('name');
       })
       .catch(error => {
-        // console.log(error);
+        console.log(error);
       })
       .then(() => session.close());
 
