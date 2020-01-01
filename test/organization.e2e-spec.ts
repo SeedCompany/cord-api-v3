@@ -5,15 +5,23 @@ import { INestApplication } from '@nestjs/common';
 import { AppModule } from '../src/app.module';
 import { isValid } from 'shortid';
 import { DatabaseService } from '../src/core/database.service';
+import { DatabaseUtility } from '../src/common/database-utility';
 
 describe('OrganizationController (e2e)', () => {
   let app: INestApplication;
   let db: DatabaseService;
+  let dbUtility: DatabaseUtility;
+
   let orgId: string;
   const orgName = 'myOrg4';
+  const newOrgName = 'newMyOrg4';
 
   beforeAll(async () => {
     db = new DatabaseService();
+    dbUtility = new DatabaseUtility(db);
+    await dbUtility.deleteAllData();
+    await dbUtility.prepareDatabase();
+    await dbUtility.loadTestData();
   });
 
   beforeEach(async () => {
@@ -64,6 +72,28 @@ describe('OrganizationController (e2e)', () => {
       .expect(({ body }) => {
         expect(body.data.readOrganization.id).toBe(orgId);
         expect(body.data.readOrganization.name).toBe(orgName);
+      })
+      .expect(200);
+  });
+
+  it('update one organization', () => {
+    console.log(orgId);
+    return request(app.getHttpServer())
+      .post('/graphql')
+      .send({
+        operationName: null,
+        query: `
+        mutation {
+          updateOrganization (id: "${orgId}", name: "${newOrgName}"){
+            id
+            name
+          }
+        }
+        `,
+      })
+      .expect(({ body }) => {
+        expect(body.data.updateOrganization.id).toBe(orgId);
+        expect(body.data.updateOrganization.name).toBe(newOrgName);
       })
       .expect(200);
   });

@@ -19,4 +19,11 @@ export class OrganizationResolver {
   async readOrganization(@Args('id') id: string) {
     return await this.orgService.readOne(id);
   }
+
+  @Mutation(returns => Organization, {
+    description: 'Update an organization',
+  })
+  async updateOrganization(@Args('id') id: string, @Args('name') name: string) {
+    return await this.orgService.update(id, name);
+  }
 }

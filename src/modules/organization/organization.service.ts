@@ -52,4 +52,27 @@ export class OrganizationService {
 
     return organization;
   }
+
+  async update(id: string, name: string) {
+    const organization = new Organization();
+    const session = this.db.driver.session();
+    await session
+      .run(
+        'MATCH (org:Organization {id: $id}) SET org.name = $name RETURN org.id as id, org.name as name',
+        {
+          id,
+          name,
+        },
+      )
+      .then(result => {
+        organization.id = result.records[0].get('id');
+        organization.name = result.records[0].get('name');
+      })
+      .catch(error => {
+        console.log(error);
+      })
+      .then(() => session.close());
+
+    return organization;
+  }
 }

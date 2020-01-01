@@ -3,13 +3,44 @@ import { DatabaseService } from 'src/core/database.service';
 export class DatabaseUtility {
   constructor(private readonly db: DatabaseService) {}
 
-  public loadFakeData() {
+  // add constraints and indexes today
+  public async deleteAllData() {
+    let cypher = 'MATCH (n)-[r]-() DELETE r,n WITH * MATCH (m) DELETE m';
+
+    // console.log(cypher);
+
+    const session = this.db.driver.session();
+
+    await session.run(cypher, {}).then(result => {
+      session.close();
+      // console.log(result);
+    });
+  }
+
+  // add constraints and indexes today
+  public async prepareDatabase() {
+    let cypher = '';
+
+    cypher +=
+      'CREATE CONSTRAINT ON (org:Organization) ASSERT org.name IS UNIQUE';
+
+    // console.log(cypher);
+
+    const session = this.db.driver.session();
+
+    await session.run(cypher, {}).then(result => {
+      session.close();
+      // console.log(result);
+    });
+  }
+
+  public async loadTestData() {
     // let's create one cypher query to load this thing
     let cypher = '';
-    const users = 50;
-    const groups = 30;
-    const groupOfGroups = 10;
-    const userInXGroups = 6;
+    const users = 4;
+    const groups = 3;
+    const groupOfGroups = 1;
+    const userInXGroups = 2;
 
     // create users, inclusive of max number. so users = 5 will create 6 users.
     for (let i = 0; i <= users; i++) {
@@ -62,9 +93,7 @@ export class DatabaseUtility {
 
     const session = this.db.driver.session();
 
-    const resultPromise = session.run(cypher, {});
-
-    resultPromise.then(result => {
+    await session.run(cypher, {}).then(result => {
       session.close();
       // console.log(result);
     });
