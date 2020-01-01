@@ -5,7 +5,7 @@ export class DatabaseUtility {
 
   // add constraints and indexes today
   public async deleteAllData() {
-    let cypher = 'MATCH (n)-[r]-() DELETE r,n WITH * MATCH (m) DELETE m';
+    const cypher = 'MATCH (n)-[r]-() DELETE r,n WITH * MATCH (m) DELETE m';
 
     // console.log(cypher);
 

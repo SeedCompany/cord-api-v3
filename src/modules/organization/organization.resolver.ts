@@ -26,4 +26,11 @@ export class OrganizationResolver {
   async updateOrganization(@Args('id') id: string, @Args('name') name: string) {
     return await this.orgService.update(id, name);
   }
+
+  @Mutation(returns => Organization, {
+    description: 'Delete an organization',
+  })
+  async deleteOrganization(@Args('id') id: string) {
+    return await this.orgService.delete(id);
+  }
 }

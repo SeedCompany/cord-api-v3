@@ -13,7 +13,7 @@ export class OrganizationService {
     const id = generate();
     await session
       .run(
-        'MERGE (org:Organization {name: $name}) ON CREATE SET org.id = $id RETURN org.id as id, org.name as name',
+        'MERGE (org:Organization {name: $name, active: true}) ON CREATE SET org.id = $id RETURN org.id as id, org.name as name',
         {
           id,
           name,
@@ -36,7 +36,7 @@ export class OrganizationService {
     const session = this.db.driver.session();
     await session
       .run(
-        'MATCH (org:Organization) WHERE org.id = $id RETURN org.id as id, org.name as name',
+        'MATCH (org:Organization {active: true}) WHERE org.id = $id RETURN org.id as id, org.name as name',
         {
           id,
         },
@@ -58,7 +58,7 @@ export class OrganizationService {
     const session = this.db.driver.session();
     await session
       .run(
-        'MATCH (org:Organization {id: $id}) SET org.name = $name RETURN org.id as id, org.name as name',
+        'MATCH (org:Organization {active: true, id: $id}) SET org.name = $name RETURN org.id as id, org.name as name',
         {
           id,
           name,
@@ -67,6 +67,28 @@ export class OrganizationService {
       .then(result => {
         organization.id = result.records[0].get('id');
         organization.name = result.records[0].get('name');
+      })
+      .catch(error => {
+        console.log(error);
+      })
+      .then(() => session.close());
+
+    return organization;
+  }
+
+
+  async delete(id: string) {
+    const organization = new Organization();
+    const session = this.db.driver.session();
+    await session
+      .run(
+        'MATCH (org:Organization {active: true, id: $id}) SET org.active = false RETURN org.id as id',
+        {
+          id,
+        },
+      )
+      .then(result => {
+        organization.id = result.records[0].get('id');
       })
       .catch(error => {
         console.log(error);

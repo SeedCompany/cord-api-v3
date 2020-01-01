@@ -76,8 +76,7 @@ describe('OrganizationController (e2e)', () => {
       .expect(200);
   });
 
-  it('update one organization', () => {
-    console.log(orgId);
+  it('update organization', () => {
     return request(app.getHttpServer())
       .post('/graphql')
       .send({
@@ -94,6 +93,25 @@ describe('OrganizationController (e2e)', () => {
       .expect(({ body }) => {
         expect(body.data.updateOrganization.id).toBe(orgId);
         expect(body.data.updateOrganization.name).toBe(newOrgName);
+      })
+      .expect(200);
+  });
+
+  it('delete organization', () => {
+    return request(app.getHttpServer())
+      .post('/graphql')
+      .send({
+        operationName: null,
+        query: `
+        mutation {
+          deleteOrganization (id: "${orgId}"){
+            id
+          }
+        }
+        `,
+      })
+      .expect(({ body }) => {
+        expect(body.data.deleteOrganization.id).toBe(orgId);
       })
       .expect(200);
   });
