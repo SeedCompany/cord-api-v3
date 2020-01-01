@@ -3,9 +3,12 @@ import * as request from 'supertest';
 import { GraphQLModule } from '@nestjs/graphql';
 import { INestApplication } from '@nestjs/common';
 import { AppModule } from '../src/app.module';
+import { isValid } from 'shortid';
 
 describe('OrganizationController (e2e)', () => {
   let app: INestApplication;
+  let orgId = "";
+  const orgName = "myOrg4";
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -16,14 +19,14 @@ describe('OrganizationController (e2e)', () => {
     await app.init();
   });
 
-  it('read one organization by id', () => {
+  it('create organization', () => {
     return request(app.getHttpServer())
       .post('/graphql')
       .send({
         operationName: null,
         query: `
-        query {
-          read (id: "id"){
+        mutation {
+          createOrganization (name: "${orgName}"){
             id
             name
           }
@@ -31,7 +34,30 @@ describe('OrganizationController (e2e)', () => {
         `,
       })
       .expect(({ body }) => {
-        expect(body.data.read.id).toBe('id');
+        orgId = body.data.createOrganization.id;
+        expect(isValid( orgId) ).toBe(true);
+        expect(body.data.createOrganization.name).toBe(orgName);
+      })
+      .expect(200);
+  });
+
+  it('read one organization by id', () => {
+    return request(app.getHttpServer())
+      .post('/graphql')
+      .send({
+        operationName: null,
+        query: `
+        query {
+          readOrganization (id: "${orgId}"){
+            id
+            name
+          }
+        }
+        `,
+      })
+      .expect(({ body }) => {
+        expect(body.data.readOrganization.id).toBe(orgId);
+        expect(body.data.readOrganization.name).toBe(orgName);
       })
       .expect(200);
   });

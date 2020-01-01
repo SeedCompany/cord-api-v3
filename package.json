@@ -24,6 +24,7 @@
     "@nestjs/core": "^6.7.2",
     "@nestjs/graphql": "^6.5.3",
     "@nestjs/platform-express": "^6.7.2",
+    "@types/shortid": "^0.0.29",
     "apollo-server-express": "^2.9.15",
     "graphql": "^14.5.8",
     "graphql-tools": "^4.0.6",
@@ -31,6 +32,7 @@
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.0",
     "rxjs": "^6.5.3",
+    "shortid": "^2.2.15",
     "type-graphql": "^0.17.6"
   },
   "devDependencies": {
