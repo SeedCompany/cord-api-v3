@@ -4,11 +4,17 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { INestApplication } from '@nestjs/common';
 import { AppModule } from '../src/app.module';
 import { isValid } from 'shortid';
+import { DatabaseService } from '../src/core/database.service';
 
 describe('OrganizationController (e2e)', () => {
   let app: INestApplication;
-  let orgId = "";
-  const orgName = "myOrg4";
+  let db: DatabaseService;
+  let orgId: string;
+  const orgName = 'myOrg4';
+
+  beforeAll(async () => {
+    db = new DatabaseService();
+  });
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -35,7 +41,7 @@ describe('OrganizationController (e2e)', () => {
       })
       .expect(({ body }) => {
         orgId = body.data.createOrganization.id;
-        expect(isValid( orgId) ).toBe(true);
+        expect(isValid(orgId)).toBe(true);
         expect(body.data.createOrganization.name).toBe(orgName);
       })
       .expect(200);

@@ -7,7 +7,6 @@ import { generate } from 'shortid';
 export class OrganizationService {
   constructor(private readonly db: DatabaseService) {}
 
-
   async create(name: string) {
     const organization = new Organization();
     const session = this.db.driver.session();
@@ -53,6 +52,4 @@ export class OrganizationService {
 
     return organization;
   }
-
-
 }

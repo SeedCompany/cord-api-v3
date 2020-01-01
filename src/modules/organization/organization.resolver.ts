@@ -14,7 +14,7 @@ export class OrganizationResolver {
   }
 
   @Query(returns => Organization, {
-    description: 'Read an organization by id'
+    description: 'Read an organization by id',
   })
   async readOrganization(@Args('id') id: string) {
     return await this.orgService.readOne(id);
