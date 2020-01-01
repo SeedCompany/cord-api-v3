@@ -20,6 +20,9 @@ export NEO4J_PASSWORD=asdf
 Install: `yarn`  
 Develop: `yarn run start:dev`  
 Test: `yarn run test:e2e`  
+Create new model class: `nest g class model/className --no-spec`
+Create new resolver: `nest g resolver modules/className --no-spec`
+Create new service: `nest g service modules/className --no-spec`
 
 
 ## License

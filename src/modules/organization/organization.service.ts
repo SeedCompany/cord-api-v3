@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { Organization } from '../model/organization';
-import { DatabaseService } from '../core/database.service';
+import { Organization } from '../../model/organization';
+import { DatabaseService } from '../../core/database.service';
 
 @Injectable()
 export class OrganizationService {
