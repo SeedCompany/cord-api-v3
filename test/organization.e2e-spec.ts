@@ -20,6 +20,7 @@ describe('OrganizationController (e2e)', () => {
     db = new DatabaseService();
     dbUtility = new DatabaseUtility(db);
     await dbUtility.deleteAllData();
+    await dbUtility.deleteAllConstraintsAndIndexes();
     await dbUtility.prepareDatabase();
     await dbUtility.loadTestData();
   });

@@ -13,7 +13,7 @@ export class OrganizationService {
     const id = generate();
     await session
       .run(
-        'MERGE (org:Organization {name: $name, active: true}) ON CREATE SET org.id = $id RETURN org.id as id, org.name as name',
+        'MERGE (org:Organization {name: $name, active: true}) ON CREATE SET org.id = $id, org.timestamp = datetime() RETURN org.id as id, org.name as name',
         {
           id,
           name,

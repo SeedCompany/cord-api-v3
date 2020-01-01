@@ -17,12 +17,8 @@ export class DatabaseUtility {
     });
   }
 
-  // add constraints and indexes today
-  public async prepareDatabase() {
-    let cypher = '';
-
-    cypher +=
-      'CREATE CONSTRAINT ON (org:Organization) ASSERT org.name IS UNIQUE';
+  public async deleteAllConstraintsAndIndexes() {
+    const cypher = 'CALL apoc.schema.assert({}, {})';
 
     // console.log(cypher);
 
@@ -32,6 +28,28 @@ export class DatabaseUtility {
       session.close();
       // console.log(result);
     });
+  }
+
+  // add constraints and indexes on database
+  public async prepareDatabase() {
+    const session = this.db.driver.session();
+    await session.run(
+      'CREATE CONSTRAINT ON (org:Organization) ASSERT org.name IS UNIQUE',
+    );
+    await session.run(
+      'CREATE CONSTRAINT ON (org:Organization) ASSERT org.id IS UNIQUE',
+    );
+    await session.run(
+      'CREATE CONSTRAINT ON (org:Organization) ASSERT exists(org.id)',
+    );
+    await session.run(
+      'CREATE CONSTRAINT ON (org:Organization) ASSERT exists(org.name)',
+    );
+    await session.run(
+      'CREATE CONSTRAINT ON (org:Organization) ASSERT exists(org.active)',
+    );
+    //await session.run('CREATE INDEX ON :Organization(id)');
+    session.close();
   }
 
   public async loadTestData() {
