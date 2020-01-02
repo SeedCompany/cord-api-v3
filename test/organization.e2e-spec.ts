@@ -41,17 +41,19 @@ describe('Organization e2e', () => {
         operationName: null,
         query: `
         mutation {
-          createOrganization (name: "${orgName}"){
+          createOrganization (input: { organization: { name: "${orgName}" } }){
+            organization{
             id
             name
+            }
           }
         }
         `,
       })
       .expect(({ body }) => {
-        orgId = body.data.createOrganization.id;
+        orgId = body.data.createOrganization.organization.id;
         expect(isValid(orgId)).toBe(true);
-        expect(body.data.createOrganization.name).toBe(orgName);
+        expect(body.data.createOrganization.organization.name).toBe(orgName);
       })
       .expect(200);
   });
@@ -63,16 +65,18 @@ describe('Organization e2e', () => {
         operationName: null,
         query: `
         query {
-          readOrganization (id: "${orgId}"){
+          readOrganization ( input: { organization: { id: "${orgId}" } }){
+            organization{
             id
             name
+            }
           }
         }
         `,
       })
       .expect(({ body }) => {
-        expect(body.data.readOrganization.id).toBe(orgId);
-        expect(body.data.readOrganization.name).toBe(orgName);
+        expect(body.data.readOrganization.organization.id).toBe(orgId);
+        expect(body.data.readOrganization.organization.name).toBe(orgName);
       })
       .expect(200);
   });
@@ -84,16 +88,18 @@ describe('Organization e2e', () => {
         operationName: null,
         query: `
         mutation {
-          updateOrganization (id: "${orgId}", name: "${newOrgName}"){
+          updateOrganization (input: { organization: {id: "${orgId}", name: "${newOrgName}" } }){
+            organization {
             id
             name
+            }
           }
         }
         `,
       })
       .expect(({ body }) => {
-        expect(body.data.updateOrganization.id).toBe(orgId);
-        expect(body.data.updateOrganization.name).toBe(newOrgName);
+        expect(body.data.updateOrganization.organization.id).toBe(orgId);
+        expect(body.data.updateOrganization.organization.name).toBe(newOrgName);
       })
       .expect(200);
   });
@@ -105,14 +111,16 @@ describe('Organization e2e', () => {
         operationName: null,
         query: `
         mutation {
-          deleteOrganization (id: "${orgId}"){
+          deleteOrganization (input: { organization: { id: "${orgId}" } }){
+            organization {
             id
+            }
           }
         }
         `,
       })
       .expect(({ body }) => {
-        expect(body.data.deleteOrganization.id).toBe(orgId);
+        expect(body.data.deleteOrganization.organization.id).toBe(orgId);
       })
       .expect(200);
   });
