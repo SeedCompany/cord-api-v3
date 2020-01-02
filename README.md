@@ -8,9 +8,9 @@ Bible translation project management API.
 
 1. Install [Neo4j Desktop](https://neo4j.com/download/) 
 1. Create a new database using the Neo4j Desktop GUI with the username and password shown in the environment variables below  
-1. Click the `plugins` tab on the new database management view and add the APOC plugin
-1. Start the database 
-1. Set enironment variables:
+1. Click the `plugins` tab on the new database management view and add the APOC plugin  
+1. Start the database   
+1. Set enironment variables:   
 ```
 export NEO4J_URL=bolt://localhost
 export NEO4J_USERNAME=neo4j

@@ -1,7 +1,20 @@
 import { DatabaseService } from 'src/core/database.service';
+import { OrganizationService } from 'src/components/organization/organization.service';
+import { CreateOrganizationInput } from '../../src/components/organization/organization.dto';
+import { isValid } from 'shortid';
 
 export class DatabaseUtility {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(
+    private readonly db: DatabaseService,
+    private readonly orgService: OrganizationService,
+  ) {}
+
+  public async resetDatabaseForTesting() {
+    await this.deleteAllData();
+    await this.deleteAllConstraintsAndIndexes();
+    await this.prepareDatabase();
+    await this.loadTestData();
+  }
 
   // add constraints and indexes today
   public async deleteAllData() {
@@ -53,6 +66,17 @@ export class DatabaseUtility {
   }
 
   public async loadTestData() {
+    // create organizations
+    const orgsToCreate = 3;
+    for (let i = 0; i < orgsToCreate; i++) {
+      const org = new CreateOrganizationInput();
+      org.name = 'org' + i;
+      const orgResponse = await this.orgService.create(org);
+      if (!isValid(orgResponse.organization.id)) {
+        throw new Error('Org failed to create');
+      }
+    }
+
     // let's create one cypher query to load this thing
     let cypher = '';
     const users = 4;
