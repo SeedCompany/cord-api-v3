@@ -7,7 +7,7 @@ import { isValid } from 'shortid';
 import { DatabaseService } from '../src/core/database.service';
 import { DatabaseUtility } from '../src/common/database-utility';
 
-describe('OrganizationController (e2e)', () => {
+describe('Organization e2e', () => {
   let app: INestApplication;
   let db: DatabaseService;
   let dbUtility: DatabaseUtility;
