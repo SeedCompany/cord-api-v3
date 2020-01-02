@@ -7,6 +7,9 @@ export class Organization {
   active: boolean;
 
   @Field(type => String, {nullable: true})
+  owningOrg: string;
+
+  @Field(type => String, {nullable: true})
   id: string;
 
   @Field(type => String, {nullable: true})

@@ -13,7 +13,8 @@
     "interface-name": [false],
     "arrow-parens": false,
     "object-literal-sort-keys": false,
-    "no-console": false
+    "no-console": false,
+    "max-classes-per-file": false
   },
   "rulesDirectory": []
 }
