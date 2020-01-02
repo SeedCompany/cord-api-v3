@@ -14,9 +14,23 @@ export class OrganizationResolver {
   }
 
   @Query(returns => Organization, {
-    description: 'Read an organization by id'
+    description: 'Read an organization by id',
   })
   async readOrganization(@Args('id') id: string) {
     return await this.orgService.readOne(id);
+  }
+
+  @Mutation(returns => Organization, {
+    description: 'Update an organization',
+  })
+  async updateOrganization(@Args('id') id: string, @Args('name') name: string) {
+    return await this.orgService.update(id, name);
+  }
+
+  @Mutation(returns => Organization, {
+    description: 'Delete an organization',
+  })
+  async deleteOrganization(@Args('id') id: string) {
+    return await this.orgService.delete(id);
   }
 }
