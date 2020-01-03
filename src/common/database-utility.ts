@@ -2,7 +2,7 @@ import { DatabaseService } from '../core/database.service';
 import { OrganizationService } from '../components/organization/organization.service';
 import { CreateOrganizationInput } from '../components/organization/organization.dto';
 import { isValid } from 'shortid';
-import { LanguageService } from '../components/language/language.service';
+import { LanguageService } from 'src/components/language/language.service';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
@@ -17,6 +17,8 @@ export class DatabaseUtility {
     await this.deleteAllData();
     // await this.deleteAllConstraintsAndIndexes();
     await this.prepareDatabase();
+    await this.prepareLocations();
+    await this.prepareAreas();
     await this.loadTestData();
   }
 
@@ -70,6 +72,48 @@ export class DatabaseUtility {
     await Promise.all(wait);
     session.close();
   }
+
+  public async prepareLocations() {
+    const session = this.db.driver.session();
+    await session.run(
+      'CREATE CONSTRAINT ON (loc:Location) ASSERT loc.name IS UNIQUE',
+    );
+    await session.run(
+      'CREATE CONSTRAINT ON (loc:Location) ASSERT loc.id IS UNIQUE',
+    );
+    await session.run(
+      'CREATE CONSTRAINT ON (loc:Location) ASSERT exists(loc.id)',
+    );
+    await session.run(
+      'CREATE CONSTRAINT ON (loc:Location) ASSERT exists(loc.name)',
+    );
+    await session.run(
+      'CREATE CONSTRAINT ON (loc:Location) ASSERT exists(loc.active)',
+    );
+    session.close();
+  }
+
+  public async prepareAreas() {
+    const session = this.db.driver.session();
+    await session.run(
+      'CREATE CONSTRAINT ON (area:Area) ASSERT area.name IS UNIQUE',
+    );
+    await session.run(
+      'CREATE CONSTRAINT ON (area:Area) ASSERT area.id IS UNIQUE',
+    );
+    await session.run(
+      'CREATE CONSTRAINT ON (area:Area) ASSERT exists(area.id)',
+    );
+    await session.run(
+      'CREATE CONSTRAINT ON (area:Area) ASSERT exists(area.name)',
+    );
+    await session.run(
+      'CREATE CONSTRAINT ON (area:Area) ASSERT exists(area.active)',
+    );
+    session.close();
+  }
+
+
 
   public async loadTestData() {
     // create organizations

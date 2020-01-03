@@ -1,5 +1,9 @@
 import { Module } from '@nestjs/common';
 import { GraphQLModule } from '@nestjs/graphql';
+import { AreaResolver } from './components/area/area.resolver';
+import { AreaService } from './components/area/area.service';
+import { RegionResolver } from './components/region/region.resolver';
+import { RegionService } from './components/region/region.service';
 import { DatabaseService } from './core/database.service';
 import { OrganizationService } from './components/organization/organization.service';
 import { OrganizationResolver } from './components/organization/organization.resolver';
@@ -15,6 +19,8 @@ import { UserService } from './components/user/user.service';
   imports: [GraphQLModule.forRoot({ autoSchemaFile: 'schema.gql' })],
   controllers: [],
   providers: [
+    AreaResolver,
+    AreaService,
     DatabaseService,
     DatabaseUtility,
     OrganizationResolver,
@@ -23,6 +29,8 @@ import { UserService } from './components/user/user.service';
     LanguageService,
     LocationResolver,
     LocationService,
+    RegionService,
+    RegionResolver,
     UserService,
     UserResolver,
   ],

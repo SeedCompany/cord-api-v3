@@ -5,10 +5,8 @@ import { AppModule } from '../src/app.module';
 import { isValid } from 'shortid';
 import { CreateOrganizationInput } from '../src/components/organization/organization.dto';
 
-describe('Organization e2e', () => {
+xdescribe('Organization e2e', () => {
   let app: INestApplication;
-
-  beforeAll(async () => {});
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({

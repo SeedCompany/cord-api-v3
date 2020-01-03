@@ -5,7 +5,7 @@ import { AppModule } from '../src/app.module';
 import { isValid } from 'shortid';
 import { CreateLanguageInput } from '../src/components/language/language.dto';
 
-describe('Language e2e', () => {
+describe('Language e2 e', () => {
   let app: INestApplication;
 
   beforeEach(async () => {
