@@ -7,17 +7,20 @@ import { DatabaseService } from '../src/core/database.service';
 import { DatabaseUtility } from '../src/common/database-utility';
 import { LanguageService } from '../src/components/language/language.service';
 import { CreateLanguageInput } from '../src/components/language/language.dto';
+import { OrganizationService } from '../src/components/organization/organization.service';
 
 describe('Language e2e', () => {
   let app: INestApplication;
   let db: DatabaseService;
   let dbUtility: DatabaseUtility;
+  let orgService: OrganizationService;
   let langService: LanguageService;
 
   beforeAll(async () => {
     db = new DatabaseService();
     langService = new LanguageService(db);
-    dbUtility = new DatabaseUtility(db, langService);
+    orgService = new OrganizationService(db);
+    dbUtility = new DatabaseUtility(db, orgService, langService);
     //await dbUtility.resetDatabaseForTesting();
   });
 

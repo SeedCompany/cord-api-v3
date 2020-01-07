@@ -24,7 +24,7 @@ export class LanguageService {
     const id = generate();
     await session
       .run(
-        'MERGE (lang:Language {active: true, owningOrg: "seedcompany", name: $name}) ON CREATE SET lang.id = $id, lang.timestamp = datetime() RETURN lang.id as id, lang.name as name',
+        'MERGE (lang:Language {active: true, name: $name}) ON CREATE SET lang.id = $id, lang.timestamp = datetime() RETURN lang.id as id, lang.name as name',
         {
           id,
           name: input.name,
@@ -49,7 +49,7 @@ export class LanguageService {
     const session = this.db.driver.session();
     await session
       .run(
-        'MATCH (lang:Language {active: true, owningOrg: "seedcompany"}) WHERE lang.id = $id RETURN lang.id as id, lang.name as name',
+        'MATCH (lang:Language {active: true}) WHERE lang.id = $id RETURN lang.id as id, lang.name as name',
         {
           id: input.id,
         },
@@ -71,7 +71,7 @@ export class LanguageService {
     const session = this.db.driver.session();
     await session
       .run(
-        'MATCH (lang:Language {active: true, owningOrg: "seedcompany", id: $id}) SET lang.name = $name RETURN lang.id as id, lang.name as name',
+        'MATCH (lang:Language {active: true, id: $id}) SET lang.name = $name RETURN lang.id as id, lang.name as name',
         {
           id: input.id,
           name: input.name,
@@ -99,7 +99,7 @@ export class LanguageService {
     const session = this.db.driver.session();
     await session
       .run(
-        'MATCH (lang:Language {active: true, owningOrg: "seedcompany", id: $id}) SET lang.active = false RETURN lang.id as id',
+        'MATCH (lang:Language {active: true, id: $id}) SET lang.active = false RETURN lang.id as id',
         {
           id: input.id,
         },
