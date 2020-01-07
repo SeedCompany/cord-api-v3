@@ -1,0 +1,13 @@
+import { DateTime } from 'luxon';
+import { Organization } from '../organization';
+import { PartnershipAgreementStatus } from './agreement-status';
+import { PartnershipType } from './type';
+
+export interface Partnership {
+  agreementStatus: PartnershipAgreementStatus;
+  mouStatus: PartnershipAgreementStatus;
+  mouStart: DateTime | null;
+  mouEnd: DateTime | null;
+  organization: Organization;
+  types: PartnershipType[];
+}
