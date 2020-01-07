@@ -13,9 +13,9 @@ import {
 } from './language.dto';
 
 
-@Resolver('Language')
+@Resolver(of => Language)
 export class LanguageResolver {
-    constructor(private readonly orgService: LanguageService) {}
+    constructor(private readonly langService: LanguageService) {}
 
     @Mutation(returns => CreateLanguageOutputDto, {
         description: 'Create an language',
@@ -23,7 +23,7 @@ export class LanguageResolver {
       async createLanguage(
         @Args('input') { language: input }: CreateLanguageInputDto,
       ): Promise<CreateLanguageOutputDto> {
-        return await this.orgService.create(input);
+        return await this.langService.create(input);
       }
     
       @Query(returns => ReadLanguageOutputDto, {
@@ -32,7 +32,7 @@ export class LanguageResolver {
       async readLanguage(
         @Args('input') { language: input }: ReadLanguageInputDto,
       ): Promise<ReadLanguageOutputDto> {
-        return await this.orgService.readOne(input);
+        return await this.langService.readOne(input);
       }
     
       @Mutation(returns => UpdateLanguageOutputDto, {
@@ -42,7 +42,7 @@ export class LanguageResolver {
         @Args('input')
         { language: input }: UpdateLanguageInputDto,
       ): Promise<UpdateLanguageOutputDto> {
-        return await this.orgService.update(input);
+        return await this.langService.update(input);
       }
     
       @Mutation(returns => DeleteLanguageOutputDto, {
@@ -52,6 +52,6 @@ export class LanguageResolver {
         @Args('input')
         { language: input }: DeleteLanguageInputDto,
       ): Promise<DeleteLanguageOutputDto> {
-        return await this.orgService.delete(input);
+        return await this.langService.delete(input);
       }
     }
