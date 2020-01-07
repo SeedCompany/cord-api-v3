@@ -79,10 +79,10 @@ export class DatabaseUtility {
 
     // let's create one cypher query to load this thing
     let cypher = '';
-    const users = 4;
-    const groups = 3;
-    const groupOfGroups = 1;
-    const userInXGroups = 2;
+    const users = 20;
+    const groups = 10;
+    const groupOfGroups = 7;
+    const userInXGroups = 5;
 
     // create users, inclusive of max number. so users = 5 will create 6 users.
     for (let i = 0; i <= users; i++) {
