@@ -7,12 +7,14 @@ import { LanguageResolver } from './components/language/language.resolver';
 import { LanguageService } from './components/language/language.service';
 import { LocationService } from './components/location/location.service';
 import { LocationResolver } from './components/location/location.resolver';
+import { DatabaseUtility } from './common/database-utility';
 
 @Module({
   imports: [GraphQLModule.forRoot({ autoSchemaFile: 'schema.gql' })],
   controllers: [],
   providers: [
     DatabaseService,
+    DatabaseUtility,
     OrganizationResolver,
     OrganizationService,
     LanguageResolver,

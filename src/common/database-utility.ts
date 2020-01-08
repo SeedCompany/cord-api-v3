@@ -1,14 +1,16 @@
-import { DatabaseService } from 'src/core/database.service';
-import { OrganizationService } from 'src/components/organization/organization.service';
-import { CreateOrganizationInput } from '../../src/components/organization/organization.dto';
+import { DatabaseService } from '../core/database.service';
+import { OrganizationService } from '../components/organization/organization.service';
+import { CreateOrganizationInput } from '../components/organization/organization.dto';
 import { isValid } from 'shortid';
 import { LanguageService } from 'src/components/language/language.service';
+import { Injectable } from '@nestjs/common';
 
+@Injectable()
 export class DatabaseUtility {
   constructor(
     private readonly db: DatabaseService,
     private readonly orgService: OrganizationService,
-    private readonly langService: LanguageService
+    private readonly langService: LanguageService,
   ) {}
 
   public async resetDatabaseForTesting() {
