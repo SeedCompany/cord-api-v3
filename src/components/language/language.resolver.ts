@@ -1,5 +1,5 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { Language } from '../../model/language';
+import { Language } from './language';
 import { LanguageService } from './language.service';
 import { 
     CreateLanguageInputDto, 
@@ -18,7 +18,7 @@ export class LanguageResolver {
     constructor(private readonly langService: LanguageService) {}
 
     @Mutation(returns => CreateLanguageOutputDto, {
-        description: 'Create an language',
+        description: 'Create a language',
       })
       async createLanguage(
         @Args('input') { language: input }: CreateLanguageInputDto,
@@ -36,7 +36,7 @@ export class LanguageResolver {
       }
     
       @Mutation(returns => UpdateLanguageOutputDto, {
-        description: 'Update an language',
+        description: 'Update a language',
       })
       async updateLanguage(
         @Args('input')
@@ -46,7 +46,7 @@ export class LanguageResolver {
       }
     
       @Mutation(returns => DeleteLanguageOutputDto, {
-        description: 'Delete an language',
+        description: 'Delete a language',
       })
       async deleteLanguage(
         @Args('input')
