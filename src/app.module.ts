@@ -5,9 +5,11 @@ import { OrganizationService } from './components/organization/organization.serv
 import { OrganizationResolver } from './components/organization/organization.resolver';
 import { LanguageResolver } from './components/language/language.resolver';
 import { LanguageService } from './components/language/language.service';
-import { LocationService } from './components/location/location.service';
 import { LocationResolver } from './components/location/location.resolver';
 import { DatabaseUtility } from './common/database-utility';
+import { LocationService } from './components/location/location.service';
+import { UserResolver } from './components/user/user.resolver';
+import { UserService } from './components/user/user.service';
 
 @Module({
   imports: [GraphQLModule.forRoot({ autoSchemaFile: 'schema.gql' })],
@@ -21,6 +23,8 @@ import { DatabaseUtility } from './common/database-utility';
     LanguageService,
     LocationResolver,
     LocationService,
+    UserResolver,
+    UserService,
   ],
 })
 export class AppModule {}
