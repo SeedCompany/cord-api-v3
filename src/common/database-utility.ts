@@ -2,7 +2,7 @@ import { DatabaseService } from '../core/database.service';
 import { OrganizationService } from '../components/organization/organization.service';
 import { CreateOrganizationInput } from '../components/organization/organization.dto';
 import { isValid } from 'shortid';
-import { LanguageService } from 'src/components/language/language.service';
+import { LanguageService } from '../components/language/language.service';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
