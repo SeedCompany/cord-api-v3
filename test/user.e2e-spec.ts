@@ -34,14 +34,14 @@ describe('User e2e', () => {
   });
 
   it('create user', () => {
-    const userName = 'bestLangEver12345';
+    const UserEmail = 'bestUserEver12345@test.com';
     return request(app.getHttpServer())
       .post('/graphql')
       .send({
         operationName: null,
         query: `
         mutation {
-          createUser (input: { user: { email: "${userName}" } }){
+          createUser (input: { user: { email: "${UserEmail}" } }){
             user{
             id
             email
@@ -53,22 +53,22 @@ describe('User e2e', () => {
       .expect(({ body }) => {
         const userId = body.data.createUser.user.id;
         expect(isValid(userId)).toBe(true);
-        expect(body.data.createUser.user.email).toBe(userName);
+        expect(body.data.createUser.user.email).toBe(UserEmail);
       })
       .expect(200);
   });
 
   it('read one user by id', async () => {
     const newUser = new CreateUserInput();
-    newUser.email = 'userNameForReadLangTest1';
-    const createdLang = await userService.create(newUser);
+    newUser.email = 'UserEmailForReadUserTest1@test.com';
+    const createdUser = await userService.create(newUser);
     return request(app.getHttpServer())
       .post('/graphql')
       .send({
         operationName: null,
         query: `
         query {
-          readUser ( input: { user: { id: "${createdLang.user.id}" } }){
+          readUser ( input: { user: { id: "${createdUser.user.id}" } }){
             user{
             id
             email
@@ -78,23 +78,23 @@ describe('User e2e', () => {
         `,
       })
       .expect(({ body }) => {
-        expect(body.data.readUser.user.id).toBe(createdLang.user.id);
-        expect(body.data.readUser.user.email).toBe(createdLang.user.email);
+        expect(body.data.readUser.user.id).toBe(createdUser.user.id);
+        expect(body.data.readUser.user.email).toBe(createdUser.user.email);
       })
       .expect(200);
   });
 
   it('update user', async () => {
     const newUser = new CreateUserInput();
-    newUser.email = 'userNameForUpdateLangTest1';
-    const createdLang = await userService.create(newUser);
+    newUser.email = 'UserEmailForUpdateUserTest1@test.com';
+    const createdUser = await userService.create(newUser);
     return request(app.getHttpServer())
       .post('/graphql')
       .send({
         operationName: null,
         query: `
         mutation {
-          updateUser (input: { user: {id: "${createdLang.user.id}", email: "${createdLang.user.email}" } }){
+          updateUser (input: { user: {id: "${createdUser.user.id}", email: "${createdUser.user.email}" } }){
             user {
             id
             email
@@ -104,23 +104,23 @@ describe('User e2e', () => {
         `,
       })
       .expect(({ body }) => {
-        expect(body.data.updateUser.user.id).toBe(createdLang.user.id);
-        expect(body.data.updateUser.user.email).toBe(createdLang.user.email);
+        expect(body.data.updateUser.user.id).toBe(createdUser.user.id);
+        expect(body.data.updateUser.user.email).toBe(createdUser.user.email);
       })
       .expect(200);
   });
 
   it('delete user', async () => {
     const newUser = new CreateUserInput();
-    newUser.email = 'userNameForDeleteLangTest1';
-    const createdLang = await userService.create(newUser);
+    newUser.email = 'UserEmailForDeleteUserTest1@test.com';
+    const createdUser = await userService.create(newUser);
     return request(app.getHttpServer())
       .post('/graphql')
       .send({
         operationName: null,
         query: `
         mutation {
-          deleteUser (input: { user: { id: "${createdLang.user.id}" } }){
+          deleteUser (input: { user: { id: "${createdUser.user.id}" } }){
             user {
             id
             }
@@ -129,7 +129,7 @@ describe('User e2e', () => {
         `,
       })
       .expect(({ body }) => {
-        expect(body.data.deleteUser.user.id).toBe(createdLang.user.id);
+        expect(body.data.deleteUser.user.id).toBe(createdUser.user.id);
       })
       .expect(200);
   });
