@@ -17,11 +17,11 @@ describe('User e2e', () => {
   let userService: UserService;
 
   beforeAll(async () => {
-    db = new DatabaseService();
-    userService = new UserService(db);
-    orgService = new OrganizationService(db);
-    dbUtility = new DatabaseUtility(db, orgService, userService);
-    //await dbUtility.resetDatabaseForTesting();
+    // db = new DatabaseService();
+    // userService = new UserService(db);
+    // orgService = new OrganizationService(db);
+    // dbUtility = new DatabaseUtility(db, orgService, userService);
+    // await dbUtility.resetDatabaseForTesting();
   });
 
   beforeEach(async () => {
@@ -31,9 +31,11 @@ describe('User e2e', () => {
 
     app = moduleFixture.createNestApplication();
     await app.init();
+    const db: DatabaseUtility = app.get(DatabaseUtility);
+    await db.resetDatabaseForTesting();
   });
 
-  it('create user', () => {
+  it('create user', async() => {
     const UserEmail = 'bestUserEver12345@test.com';
     return request(app.getHttpServer())
       .post('/graphql')
