@@ -9,13 +9,6 @@ import { DatabaseUtility } from '../src/common/database-utility';
 describe('Location e2e', () => {
   let app: INestApplication;
 
-  beforeAll(async () => {
-    // db = new DatabaseService();
-    // orgService = new OrganizationService(db);
-    // dbUtility = new DatabaseUtility(db, orgService);
-    // await dbUtility.resetDatabaseForTesting();
-  });
-
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
@@ -24,7 +17,7 @@ describe('Location e2e', () => {
     app = moduleFixture.createNestApplication();
     await app.init();
     const db: DatabaseUtility = app.get(DatabaseUtility);
-    await db.resetDatabaseForTesting();
+    // await db.resetDatabaseForTesting();
   });
 
   it('create location', async () => {

@@ -17,7 +17,7 @@ describe('Region e2e', () => {
     app = moduleFixture.createNestApplication();
     await app.init();
     const db: DatabaseUtility = app.get(DatabaseUtility);
-    await db.resetDatabaseForTesting();
+    // await db.resetDatabaseForTesting();
   });
 
   it('create Region', async () => {
@@ -39,7 +39,7 @@ describe('Region e2e', () => {
         `,
       })
       .expect(({ body }) => {
-        const regionId = body.data.createRegion.Region.id;
+        const regionId = body.data.createRegion.region.id;
         expect(isValid(regionId)).toBe(true);
         expect(body.data.createRegion.region.name).toBe(regionName);
       })
@@ -51,7 +51,7 @@ describe('Region e2e', () => {
     newRegion.name = 'Region1';
 
     // create loc first
-    let RegionId;
+    let regionId;
     await request(app.getHttpServer())
       .post('/graphql')
       .send({
@@ -68,7 +68,7 @@ describe('Region e2e', () => {
         `,
       })
       .expect(({ body }) => {
-        RegionId = body.data.createRegion.region.id;
+        regionId = body.data.createRegion.region.id;
       })
       .expect(200);
 
@@ -78,7 +78,7 @@ describe('Region e2e', () => {
         operationName: null,
         query: `
         query {
-          readRegion ( input: { region: { id: "${RegionId}" } }){
+          readRegion ( input: { region: { id: "${regionId}" } }){
             region{
             id
             name
@@ -88,7 +88,7 @@ describe('Region e2e', () => {
         `,
       })
       .expect(({ body }) => {
-        expect(body.data.readRegion.region.id).toBe(RegionId);
+        expect(body.data.readRegion.region.id).toBe(regionId);
         expect(body.data.readRegion.region.name).toBe(newRegion.name);
       })
       .expect(200);
@@ -98,7 +98,7 @@ describe('Region e2e', () => {
     const newRegion = new CreateRegionInput();
     newRegion.name = 'RegionNameForUpdate';
 
-    let RegionId;
+    let regionId;
     await request(app.getHttpServer())
       .post('/graphql')
       .send({
@@ -115,7 +115,7 @@ describe('Region e2e', () => {
         `,
       })
       .expect(({ body }) => {
-        RegionId = body.data.createRegion.region.id;
+        regionId = body.data.createRegion.region.id;
       })
       .expect(200);
 
@@ -125,7 +125,7 @@ describe('Region e2e', () => {
         operationName: null,
         query: `
         mutation {
-          updateRegion (input: { region: {id: "${RegionId}", name: "${newRegion.name}" } }){
+          updateRegion (input: { region: {id: "${regionId}", name: "${newRegion.name}" } }){
             Region {
             id
             name
@@ -135,7 +135,7 @@ describe('Region e2e', () => {
         `,
       })
       .expect(({ body }) => {
-        expect(body.data.updateRegion.region.id).toBe(RegionId);
+        expect(body.data.updateRegion.region.id).toBe(regionId);
         expect(body.data.updateRegion.region.name).toBe(newRegion.name);
       })
       .expect(200);
@@ -145,7 +145,7 @@ describe('Region e2e', () => {
     const newRegion = new CreateRegionInput();
     newRegion.name = 'RegionForDelete';
 
-    let RegionId;
+    let regionId;
     await request(app.getHttpServer())
       .post('/graphql')
       .send({
@@ -162,7 +162,7 @@ describe('Region e2e', () => {
         `,
       })
       .expect(({ body }) => {
-        RegionId = body.data.createRegion.Region.id;
+        regionId = body.data.createRegion.region.id;
       })
       .expect(200);
 
@@ -172,7 +172,7 @@ describe('Region e2e', () => {
         operationName: null,
         query: `
         mutation {
-          deleteRegion (input: { Region: { id: "${RegionId}" } }){
+          deleteRegion (input: { Region: { id: "${regionId}" } }){
             Region {
             id
             }
@@ -181,7 +181,7 @@ describe('Region e2e', () => {
         `,
       })
       .expect(({ body }) => {
-        expect(body.data.deleteRegion.Region.id).toBe(RegionId);
+        expect(body.data.deleteRegion.region.id).toBe(regionId);
       })
       .expect(200);
   });

@@ -26,13 +26,13 @@ export class DatabaseUtility {
   public async deleteAllData() {
     const cypher = 'MATCH (n) DETACH DELETE n';
 
-    // console.log(cypher);
+    console.log(cypher);
 
     const session = this.db.driver.session();
 
     await session.run(cypher, {}).then(result => {
       session.close();
-      // console.log(result);
+      console.log(result);
     });
   }
 

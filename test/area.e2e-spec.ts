@@ -3,7 +3,7 @@ import * as request from 'supertest';
 import { INestApplication } from '@nestjs/common';
 import { AppModule } from '../src/app.module';
 import { isValid } from 'shortid';
-import { CreateAreaInput } from '../src/components/Area/area.dto';
+import { CreateAreaInput } from '../src/components/area/area.dto';
 import { DatabaseUtility } from '../src/common/database-utility';
 
 describe('Area e2e', () => {
@@ -17,7 +17,7 @@ describe('Area e2e', () => {
     app = moduleFixture.createNestApplication();
     await app.init();
     const db: DatabaseUtility = app.get(DatabaseUtility);
-    await db.resetDatabaseForTesting();
+    // await db.resetDatabaseForTesting();
   });
 
   it('create Area', async () => {
@@ -135,8 +135,8 @@ describe('Area e2e', () => {
         `,
       })
       .expect(({ body }) => {
-        expect(body.data.updateArea.Area.id).toBe(areaId);
-        expect(body.data.updateArea.Area.name).toBe(newArea.name);
+        expect(body.data.updateArea.area.id).toBe(areaId);
+        expect(body.data.updateArea.area.name).toBe(newArea.name);
       })
       .expect(200);
   });
@@ -162,7 +162,7 @@ describe('Area e2e', () => {
         `,
       })
       .expect(({ body }) => {
-        areaId = body.data.createArea.Area.id;
+        areaId = body.data.createArea.area.id;
       })
       .expect(200);
 
