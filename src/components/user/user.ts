@@ -4,10 +4,10 @@ import { Field, ID, Int, ObjectType } from 'type-graphql';
 //import { User as IUser } from '@cord/data';
 @ObjectType()
 export class User {
-  @Field(() => String)
+  @Field(type => String)
   id: string;
 
-  @Field()
+  @Field(type => String)
   email: string;
 
   @Field()
