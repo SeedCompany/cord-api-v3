@@ -50,22 +50,24 @@ export class DatabaseUtility {
   // add constraints and indexes on database
   public async prepareDatabase() {
     const session = this.db.driver.session();
-    await session.run(
-      'CREATE CONSTRAINT ON (org:Organization) ASSERT org.name IS UNIQUE',
-    );
-    await session.run(
+    const wait = [];
+    // await session.run(
+    //   'CREATE CONSTRAINT ON (org:Organization) ASSERT org.name IS UNIQUE',
+    // );
+    wait.push( session.run(
       'CREATE CONSTRAINT ON (org:Organization) ASSERT org.id IS UNIQUE',
-    );
-    await session.run(
+    ));
+    wait.push(session.run(
       'CREATE CONSTRAINT ON (org:Organization) ASSERT exists(org.id)',
-    );
-    await session.run(
-      'CREATE CONSTRAINT ON (org:Organization) ASSERT exists(org.name)',
-    );
-    await session.run(
+    ));
+    // wait.push( session.run(
+    //   'CREATE CONSTRAINT ON (org:Organization) ASSERT exists(org.name)',
+    // ));
+    wait.push(session.run(
       'CREATE CONSTRAINT ON (org:Organization) ASSERT exists(org.active)',
-    );
-    //await session.run('CREATE INDEX ON :Organization(id)');
+    ));
+    // wait.push(session.run('CREATE INDEX ON :Organization(id)'));
+    await Promise.all(wait);
     session.close();
   }
 

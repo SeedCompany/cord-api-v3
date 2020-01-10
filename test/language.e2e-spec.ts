@@ -21,7 +21,7 @@ describe('Language e2e', () => {
     langService = new LanguageService(db);
     orgService = new OrganizationService(db);
     dbUtility = new DatabaseUtility(db, orgService, langService);
-    //await dbUtility.resetDatabaseForTesting();
+    await dbUtility.resetDatabaseForTesting();
   });
 
   beforeEach(async () => {
