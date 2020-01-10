@@ -25,7 +25,7 @@ export class LocationService {
     const id = generate();
     await session
       .run(
-        'MERGE (location:Location {active: true, owninglocation: "seedcompany", name: $name}) ON CREATE SET location.id = $id, location.timestamp = datetime() RETURN location.id as id, location.name as name',
+        'MERGE (location:Location {active: true, owningOrg: "seedcompany", name: $name}) ON CREATE SET location.id = $id, location.timestamp = datetime() RETURN location.id as id, location.name as name',
         {
           id,
           name: input.name,
@@ -50,7 +50,7 @@ export class LocationService {
     const session = this.db.driver.session();
     await session
       .run(
-        'MATCH (location:Location {active: true, owninglocation: "seedcompany"}) WHERE location.id = $id RETURN location.id as id, location.name as name',
+        'MATCH (location:Location {active: true, owningOrg: "seedcompany"}) WHERE location.id = $id RETURN location.id as id, location.name as name',
         {
           id: input.id,
         },
@@ -72,7 +72,7 @@ export class LocationService {
     const session = this.db.driver.session();
     await session
       .run(
-        'MATCH (location:Location {active: true, owninglocation: "seedcompany", id: $id}) SET location.name = $name RETURN location.id as id, location.name as name',
+        'MATCH (location:Location {active: true, owningOrg: "seedcompany", id: $id}) SET location.name = $name RETURN location.id as id, location.name as name',
         {
           id: input.id,
           name: input.name,
@@ -100,7 +100,7 @@ export class LocationService {
     const session = this.db.driver.session();
     await session
       .run(
-        'MATCH (location:Location {active: true, owninglocation: "seedcompany", id: $id}) SET location.active = false RETURN location.id as id',
+        'MATCH (location:Location {active: true, owningOrg: "seedcompany", id: $id}) SET location.active = false RETURN location.id as id',
         {
           id: input.id,
         },

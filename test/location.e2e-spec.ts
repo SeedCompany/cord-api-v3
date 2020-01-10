@@ -6,7 +6,7 @@ import { isValid } from 'shortid';
 import { CreateLocationInput } from '../src/components/location/location.dto';
 import { DatabaseUtility } from '../src/common/database-utility';
 
-xdescribe('Location e2e', () => {
+describe('Location e2e', () => {
   let app: INestApplication;
 
   beforeAll(async () => {

@@ -25,7 +25,7 @@ export class RegionService {
     const id = generate();
     await session
       .run(
-        'MERGE (region:Region {active: true, owningRegion: "seedcompany", name: $name}) ON CREATE SET region.id = $id, region.timestamp = datetime() RETURN region.id as id, region.name as name',
+        'MERGE (region:Region {active: true, owningOrg: "seedcompany", name: $name}) ON CREATE SET region.id = $id, region.timestamp = datetime() RETURN region.id as id, region.name as name',
         {
           id,
           name: input.name,
@@ -50,7 +50,7 @@ export class RegionService {
     const session = this.db.driver.session();
     await session
       .run(
-        'MATCH (region:Region {active: true, owningRegion: "seedcompany"}) WHERE region.id = $id RETURN region.id as id, region.name as name',
+        'MATCH (region:Region {active: true, owningOrg: "seedcompany"}) WHERE region.id = $id RETURN region.id as id, region.name as name',
         {
           id: input.id,
         },
@@ -72,7 +72,7 @@ export class RegionService {
     const session = this.db.driver.session();
     await session
       .run(
-        'MATCH (region:Region {active: true, owningRegion: "seedcompany", id: $id}) SET region.name = $name RETURN region.id as id, region.name as name',
+        'MATCH (region:Region {active: true, owningOrg: "seedcompany", id: $id}) SET region.name = $name RETURN region.id as id, region.name as name',
         {
           id: input.id,
           name: input.name,
@@ -99,7 +99,7 @@ export class RegionService {
     const session = this.db.driver.session();
     await session
       .run(
-        'MATCH (region:Region {active: true, owningRegion: "seedcompany", id: $id}) SET region.active = false RETURN region.id as id',
+        'MATCH (region:Region {active: true, owningOrg: "seedcompany", id: $id}) SET region.active = false RETURN region.id as id',
         {
           id: input.id,
         },

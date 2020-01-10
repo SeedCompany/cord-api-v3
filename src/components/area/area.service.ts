@@ -25,7 +25,7 @@ export class AreaService {
     const id = generate();
     await session
       .run(
-        'MERGE (area:Area {active: true, owningArea: "seedcompany", name: $name}) ON CREATE SET area.id = $id, area.timestamp = datetime() RETURN area.id as id, area.name as name',
+        'MERGE (area:Area {active: true, owningOrg: "seedcompany", name: $name}) ON CREATE SET area.id = $id, area.timestamp = datetime() RETURN area.id as id, area.name as name',
         {
           id,
           name: input.name,
@@ -50,7 +50,7 @@ export class AreaService {
     const session = this.db.driver.session();
     await session
       .run(
-        'MATCH (area:Area {active: true, owningArea: "seedcompany"}) WHERE area.id = $id RETURN area.id as id, area.name as name',
+        'MATCH (area:Area {active: true, owningOrg: "seedcompany"}) WHERE area.id = $id RETURN area.id as id, area.name as name',
         {
           id: input.id,
         },
@@ -72,7 +72,7 @@ export class AreaService {
     const session = this.db.driver.session();
     await session
       .run(
-        'MATCH (area:Area {active: true, owningArea: "seedcompany", id: $id}) SET area.name = $name RETURN area.id as id, area.name as name',
+        'MATCH (area:Area {active: true, owningOrg: "seedcompany", id: $id}) SET area.name = $name RETURN area.id as id, area.name as name',
         {
           id: input.id,
           name: input.name,
@@ -99,7 +99,7 @@ export class AreaService {
     const session = this.db.driver.session();
     await session
       .run(
-        'MATCH (area:Area {active: true, owningArea: "seedcompany", id: $id}) SET area.active = false RETURN area.id as id',
+        'MATCH (area:Area {active: true, owningOrg: "seedcompany", id: $id}) SET area.active = false RETURN area.id as id',
         {
           id: input.id,
         },

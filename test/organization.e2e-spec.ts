@@ -5,7 +5,7 @@ import { AppModule } from '../src/app.module';
 import { isValid } from 'shortid';
 import { CreateOrganizationInput } from '../src/components/organization/organization.dto';
 
-xdescribe('Organization e2e', () => {
+describe('Organization e2e', () => {
   let app: INestApplication;
 
   beforeEach(async () => {
