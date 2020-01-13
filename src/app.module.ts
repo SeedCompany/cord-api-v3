@@ -23,8 +23,8 @@ import { UserService } from './components/user/user.service';
     LanguageService,
     LocationResolver,
     LocationService,
-    UserResolver,
     UserService,
+    UserResolver,
   ],
 })
 export class AppModule {}

@@ -1,7 +1,6 @@
-import { Field, InputType, ObjectType } from 'type-graphql';
+import { ObjectType, Field, InputType } from 'type-graphql';
 
 // CREATE
-
 @InputType()
 export class CreateUserInput {
   @Field(type => String)
@@ -16,18 +15,19 @@ export class CreateUserInputDto {
 
 @ObjectType()
 export class CreateUserOutput {
-    @Field(type => String)
-    id: string;
-    @Field(type => String)
-    email: string;
+  @Field(type => String)
+  id: string;
+  @Field(type => String)
+  email: string;
 }
 
 @ObjectType()
 export class CreateUserOutputDto {
-  @Field({nullable: true}) // nullable in case of error
+  @Field({ nullable: true }) // nullable in case of error
   user: CreateUserOutput;
-  constructor(){
-      this.user = new CreateUserOutput();
+
+  constructor() {
+    this.user = new CreateUserOutput();
   }
 }
 

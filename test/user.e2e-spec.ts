@@ -3,22 +3,11 @@ import * as request from 'supertest';
 import { INestApplication } from '@nestjs/common';
 import { AppModule } from '../src/app.module';
 import { isValid } from 'shortid';
-//import { DatabaseService } from '../src/core/database.service';
-import { DatabaseUtility } from '../src/common/database-utility';
-//import { UserService } from '../src/components/user/user.service';
 import { CreateUserInput } from '../src/components/user/user.dto';
-import { async } from 'rxjs/internal/scheduler/async';
-//import { LanguageService } from '../src/components/language/language.service';
+import { DatabaseUtility } from '../src/common/database-utility';
 
 describe('User e2e', () => {
   let app: INestApplication;
-
-  beforeAll(async () => {
-    // db = new DatabaseService();
-    // userService = new UserService(db);
-    // dbUtility = new DatabaseUtility(db, userService);
-    // await dbUtility.resetDatabaseForTesting();
-  });
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -28,11 +17,12 @@ describe('User e2e', () => {
     app = moduleFixture.createNestApplication();
     await app.init();
     const db: DatabaseUtility = app.get(DatabaseUtility);
-    await db.resetDatabaseForTesting();
+    // await db.resetDatabaseForTesting();
   });
 
-  it('create user', async() => {
-    const userEmail = 'bestUserlEver12345@test.com';
+  it('create user', async () => {
+    const userEmail = 'firstUser';
+
     return request(app.getHttpServer())
       .post('/graphql')
       .send({
@@ -49,6 +39,7 @@ describe('User e2e', () => {
         `,
       })
       .expect(({ body }) => {
+        //console.log(body.data);
         const userId = body.data.createUser.user.id;
         expect(isValid(userId)).toBe(true);
         expect(body.data.createUser.user.email).toBe(userEmail);
@@ -58,7 +49,7 @@ describe('User e2e', () => {
 
   it('read one user by id', async () => {
     const newUser = new CreateUserInput();
-    newUser.email = 'userEmailForReadUserlTest1@test.com';
+    newUser.email = 'userEmailUserTest1';
 
     // create user first
     let userId;
@@ -82,7 +73,6 @@ describe('User e2e', () => {
       })
       .expect(200);
 
-    // test reading new user
     return request(app.getHttpServer())
       .post('/graphql')
       .send({
@@ -107,25 +97,23 @@ describe('User e2e', () => {
 
   it('update user', async () => {
     const newUser = new CreateUserInput();
-    newUser.email = 'userEmailForUpdateUserlTest1@test.com';
-    // const createdUserl = await userService.create(newUser);
+    newUser.email = 'userEmailForUpdateUserTest1';
 
-    // create user first
     let userId;
     await request(app.getHttpServer())
       .post('/graphql')
       .send({
         operationName: null,
         query: `
-          mutation {
-            createUser (input: { user: { email: "${newUser.email}" } }){
-              user{
-              id
-              email
-              }
+        mutation {
+          createUser (input: { user: { email: "${newUser.email}" } }){
+            user{
+            id
+            email
             }
           }
-          `,
+        }
+        `,
       })
       .expect(({ body }) => {
         userId = body.data.createUser.user.id;
@@ -149,34 +137,30 @@ describe('User e2e', () => {
       })
       .expect(({ body }) => {
         expect(body.data.updateUser.user.id).toBe(userId);
-        expect(body.data.updateUser.user.email).toBe(
-          newUser.email,
-        );
+        expect(body.data.updateUser.user.email).toBe(newUser.email);
       })
       .expect(200);
   });
 
   it('delete user', async () => {
     const newUser = new CreateUserInput();
-    newUser.email = 'userEmailForDeleteUserlTest1@test.com';
-    // const createdUserl = await userService.create(newUser);
+    newUser.email = 'userEmailForDeleteUserTest1';
 
-    // create user first
     let userId;
     await request(app.getHttpServer())
       .post('/graphql')
       .send({
         operationName: null,
         query: `
-              mutation {
-                createUser (input: { user: { email: "${newUser.email}" } }){
-                  user{
-                  id
-                  email
-                  }
-                }
-              }
-              `,
+        mutation {
+          createUser (input: { user: { email: "${newUser.email}" } }){
+            user{
+            id
+            email
+            }
+          }
+        }
+        `,
       })
       .expect(({ body }) => {
         userId = body.data.createUser.user.id;
@@ -198,9 +182,7 @@ describe('User e2e', () => {
         `,
       })
       .expect(({ body }) => {
-        expect(body.data.deleteUser.user.id).toBe(
-          userId,
-        );
+        expect(body.data.deleteUser.user.id).toBe(userId);
       })
       .expect(200);
   });
