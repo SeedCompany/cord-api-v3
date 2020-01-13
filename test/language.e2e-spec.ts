@@ -3,26 +3,21 @@ import * as request from 'supertest';
 import { INestApplication } from '@nestjs/common';
 import { AppModule } from '../src/app.module';
 import { isValid } from 'shortid';
-import { DatabaseService } from '../src/core/database.service';
+//import { DatabaseService } from '../src/core/database.service';
 import { DatabaseUtility } from '../src/common/database-utility';
-import { LanguageService } from '../src/components/language/language.service';
+//import { LanguageService } from '../src/components/language/language.service';
 import { CreateLanguageInput } from '../src/components/language/language.dto';
-import { OrganizationService } from '../src/components/organization/organization.service';
+//import { LanguageService } from '../src/components/language/language.service';
 
 describe('Language e2e', () => {
   let app: INestApplication;
-  let db: DatabaseService;
-  let dbUtility: DatabaseUtility;
-  let orgService: OrganizationService;
-  let langService: LanguageService;
 
-  beforeAll(async () => {
-    db = new DatabaseService();
-    langService = new LanguageService(db);
-    orgService = new OrganizationService(db);
-    dbUtility = new DatabaseUtility(db, orgService, langService);
-    await dbUtility.resetDatabaseForTesting();
-  });
+  // beforeAll(async () => {
+  //   db = new DatabaseService();
+  //   langService = new LanguageService(db);
+  //   dbUtility = new DatabaseUtility(db, langService);
+  //   await dbUtility.resetDatabaseForTesting();
+  // });
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -31,6 +26,8 @@ describe('Language e2e', () => {
 
     app = moduleFixture.createNestApplication();
     await app.init();
+    const db: DatabaseUtility = app.get(DatabaseUtility);
+    await db.resetDatabaseForTesting();
   });
 
   it('create language', () => {
@@ -61,14 +58,16 @@ describe('Language e2e', () => {
   it('read one language by id', async () => {
     const newLang = new CreateLanguageInput();
     newLang.name = 'langNameForReadLangTest1';
-    const createdLang = await langService.create(newLang);
-    return request(app.getHttpServer())
+
+    // create lang first
+    let langId;
+    await request(app.getHttpServer())
       .post('/graphql')
       .send({
         operationName: null,
         query: `
-        query {
-          readLanguage ( input: { language: { id: "${createdLang.language.id}" } }){
+        mutation {
+          createLanguage (input: { language: { name: "${newLang.name}" } }){
             language{
             id
             name
@@ -78,8 +77,29 @@ describe('Language e2e', () => {
         `,
       })
       .expect(({ body }) => {
-        expect(body.data.readLanguage.language.id).toBe(createdLang.language.id);
-        expect(body.data.readLanguage.language.name).toBe(createdLang.language.name);
+        langId = body.data.createLanguage.language.id;
+      })
+      .expect(200);
+
+    // test reading new lang
+    return request(app.getHttpServer())
+      .post('/graphql')
+      .send({
+        operationName: null,
+        query: `
+        query {
+          readLanguage ( input: { language: { id: "${langId}" } }){
+            language{
+            id
+            name
+            }
+          }
+        }
+        `,
+      })
+      .expect(({ body }) => {
+        expect(body.data.readLanguage.language.id).toBe(langId);
+        expect(body.data.readLanguage.language.name).toBe(newLang.name);
       })
       .expect(200);
   });
@@ -87,14 +107,37 @@ describe('Language e2e', () => {
   it('update language', async () => {
     const newLang = new CreateLanguageInput();
     newLang.name = 'langNameForUpdateLangTest1';
-    const createdLang = await langService.create(newLang);
+    // const createdLang = await langService.create(newLang);
+
+    // create lang first
+    let langId;
+    await request(app.getHttpServer())
+      .post('/graphql')
+      .send({
+        operationName: null,
+        query: `
+          mutation {
+            createLanguage (input: { language: { name: "${newLang.name}" } }){
+              language{
+              id
+              name
+              }
+            }
+          }
+          `,
+      })
+      .expect(({ body }) => {
+        langId = body.data.createLanguage.language.id;
+      })
+      .expect(200);
+
     return request(app.getHttpServer())
       .post('/graphql')
       .send({
         operationName: null,
         query: `
         mutation {
-          updateLanguage (input: { language: {id: "${createdLang.language.id}", name: "${createdLang.language.name}" } }){
+          updateLanguage (input: { language: {id: "${langId}", name: "${newLang.name}" } }){
             language {
             id
             name
@@ -104,8 +147,8 @@ describe('Language e2e', () => {
         `,
       })
       .expect(({ body }) => {
-        expect(body.data.updateLanguage.language.id).toBe(createdLang.language.id);
-        expect(body.data.updateLanguage.language.name).toBe(createdLang.language.name);
+        expect(body.data.updateLanguage.language.id).toBe(langId);
+        expect(body.data.updateLanguage.language.name).toBe(newLang.name);
       })
       .expect(200);
   });
@@ -113,14 +156,37 @@ describe('Language e2e', () => {
   it('delete language', async () => {
     const newLang = new CreateLanguageInput();
     newLang.name = 'langNameForDeleteLangTest1';
-    const createdLang = await langService.create(newLang);
+    // const createdLang = await langService.create(newLang);
+
+    // create lang first
+    let langId;
+    await request(app.getHttpServer())
+      .post('/graphql')
+      .send({
+        operationName: null,
+        query: `
+              mutation {
+                createLanguage (input: { language: { name: "${newLang.name}" } }){
+                  language{
+                  id
+                  name
+                  }
+                }
+              }
+              `,
+      })
+      .expect(({ body }) => {
+        langId = body.data.createLanguage.language.id;
+      })
+      .expect(200);
+
     return request(app.getHttpServer())
       .post('/graphql')
       .send({
         operationName: null,
         query: `
         mutation {
-          deleteLanguage (input: { language: { id: "${createdLang.language.id}" } }){
+          deleteLanguage (input: { language: { id: "${langId}" } }){
             language {
             id
             }
@@ -129,7 +195,7 @@ describe('Language e2e', () => {
         `,
       })
       .expect(({ body }) => {
-        expect(body.data.deleteLanguage.language.id).toBe(createdLang.language.id);
+        expect(body.data.deleteLanguage.language.id).toBe(langId);
       })
       .expect(200);
   });

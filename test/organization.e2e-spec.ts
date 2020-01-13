@@ -148,9 +148,7 @@ describe('Organization e2e', () => {
       })
       .expect(({ body }) => {
         expect(body.data.updateOrganization.organization.id).toBe(orgId);
-        expect(body.data.updateOrganization.organization.name).toBe(
-          newOrg.name,
-        );
+        expect(body.data.updateOrganization.organization.name).toBe(newOrg.name);
       })
       .expect(200);
   });
@@ -197,9 +195,7 @@ describe('Organization e2e', () => {
         `,
       })
       .expect(({ body }) => {
-        expect(body.data.deleteOrganization.organization.id).toBe(
-          orgId,
-        );
+        expect(body.data.deleteOrganization.organization.id).toBe(orgId);
       })
       .expect(200);
   });

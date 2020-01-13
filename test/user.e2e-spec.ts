@@ -21,7 +21,7 @@ describe('User e2e', () => {
   });
 
   it('create user', async () => {
-    const userEmail = 'firstUser';
+    const userEmail = 'newuser@test.com';
 
     return request(app.getHttpServer())
       .post('/graphql')
@@ -49,7 +49,7 @@ describe('User e2e', () => {
 
   it('read one user by id', async () => {
     const newUser = new CreateUserInput();
-    newUser.email = 'userEmailUserTest1';
+    newUser.email = 'newuser@test.com';
 
     // create user first
     let userId;
@@ -97,7 +97,7 @@ describe('User e2e', () => {
 
   it('update user', async () => {
     const newUser = new CreateUserInput();
-    newUser.email = 'userEmailForUpdateUserTest1';
+    newUser.email = 'updateuser@test.com';
 
     let userId;
     await request(app.getHttpServer())
@@ -144,7 +144,7 @@ describe('User e2e', () => {
 
   it('delete user', async () => {
     const newUser = new CreateUserInput();
-    newUser.email = 'userEmailForDeleteUserTest1';
+    newUser.email = 'deleteuser@test.com';
 
     let userId;
     await request(app.getHttpServer())
