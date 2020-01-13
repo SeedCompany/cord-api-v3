@@ -3,21 +3,11 @@ import * as request from 'supertest';
 import { INestApplication } from '@nestjs/common';
 import { AppModule } from '../src/app.module';
 import { isValid } from 'shortid';
-//import { DatabaseService } from '../src/core/database.service';
 import { DatabaseUtility } from '../src/common/database-utility';
-//import { LanguageService } from '../src/components/language/language.service';
 import { CreateLanguageInput } from '../src/components/language/language.dto';
-//import { LanguageService } from '../src/components/language/language.service';
 
 describe('Language e2e', () => {
   let app: INestApplication;
-
-  // beforeAll(async () => {
-  //   db = new DatabaseService();
-  //   langService = new LanguageService(db);
-  //   dbUtility = new DatabaseUtility(db, langService);
-  //   await dbUtility.resetDatabaseForTesting();
-  // });
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -195,6 +185,7 @@ describe('Language e2e', () => {
         `,
       })
       .expect(({ body }) => {
+        console.log(body);
         expect(body.data.deleteLanguage.language.id).toBe(langId);
       })
       .expect(200);

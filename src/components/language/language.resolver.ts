@@ -1,5 +1,5 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { Language } from './language';
+import { Language } from '../../model/language';
 import { LanguageService } from './language.service';
 import { 
     CreateLanguageInputDto, 
