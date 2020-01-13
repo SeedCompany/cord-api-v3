@@ -4,7 +4,6 @@ import { Organization } from '../components/organization/organization';
 
 @ObjectType()
 export class BaseNode {
-
   @Field(type => ID)
   id: string;
 
@@ -16,5 +15,4 @@ export class BaseNode {
 
   @Field(type => User)
   createdBy: User;
-
 }

@@ -6,7 +6,11 @@ import {
   Context,
 } from '@nestjs/graphql';
 import { AuthService } from './auth.service';
-import { CreateTokenOutputDto, LoginUserOutputDto, LogoutUserOutputDto } from './auth.dto';
+import {
+  CreateTokenOutputDto,
+  LoginUserOutputDto,
+  LogoutUserOutputDto,
+} from './auth.dto';
 import { Req } from '@nestjs/common';
 
 @Resolver('Auth')
