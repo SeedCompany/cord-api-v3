@@ -25,15 +25,23 @@ export class UserService {
     const id = generate();
     await session
       .run(
-        'MERGE (user:User {active: true, owningOrg: "seedcompany", email: $email}) ON CREATE SET user.id = $id, user.timestamp = datetime() RETURN user.id as id, user.email as email',
+        'MERGE (user:User {active: true, owningOrg: "seedcompany", email: $email, realFirstName: $realFirstName, realLastName: $realLastName, displayFirstName: $displayFirstName, displayLastName: $displayLastName}) ON CREATE SET user.id = $id, user.timestamp = datetime() RETURN user.id as id, user.email as email, user.realFirstName as realFirstName, user.realLastName as realLastName, user.displayFirstName as displayFirstName, user.displayLastName as displayLastName',
         {
           id,
           email: input.email,
+          realFirstName: input.realFirstName,
+          realLastName: input.realLastName,
+          displayFirstName: input.displayFirstName,
+          displayLastName: input.displayLastName,
         },
       )
       .then(result => {
         response.user.id = result.records[0].get('id');
         response.user.email = result.records[0].get('email');
+        response.user.realFirstName = result.records[0].get('realFirstName');
+        response.user.realLastName = result.records[0].get('realLastName');
+        response.user.displayFirstName = result.records[0].get('displayFirstName');
+        response.user.displayLastName = result.records[0].get('displayLastName');
       })
       .catch(error => {
         console.log(error);
@@ -50,7 +58,7 @@ export class UserService {
     const session = this.db.driver.session();
     await session
       .run(
-        'MATCH (user:User {active: true, owningOrg: "seedcompany"}) WHERE user.id = $id RETURN user.id as id, user.email as email',
+        'MATCH (user:User {active: true, owningOrg: "seedcompany"}) WHERE user.id = $id RETURN user.id as id, user.email as email, user.realFirstName as realFirstName, user.realLastName as realLastName, user.displayFirstName as displayFirstName, user.displayLastName as displayLastName',
         {
           id: input.id,
         },
@@ -58,6 +66,10 @@ export class UserService {
       .then(result => {
         response.user.id = result.records[0].get('id');
         response.user.email = result.records[0].get('email');
+        response.user.realFirstName = result.records[0].get('realFirstName');
+        response.user.realLastName = result.records[0].get('realLastName');
+        response.user.displayFirstName = result.records[0].get('displayFirstName');
+        response.user.displayLastName = result.records[0].get('displayLastName');
       })
       .catch(error => {
         console.log(error);
@@ -72,10 +84,14 @@ export class UserService {
     const session = this.db.driver.session();
     await session
       .run(
-        'MATCH (user:User {active: true, owningOrg: "seedcompany", id: $id}) SET user.email = $email RETURN user.id as id, user.email as email',
+        'MATCH (user:User {active: true, owningOrg: "seedcompany", id: $id}) SET user.email = $email, user.realFirstName = $realFirstName, user.realLastName = $realLastName, user.displayFirstName = $displayFirstName, user.displayLastName = $displayLastName RETURN user.id as id, user.email as email, user.realFirstName as realFirstName, user.realLastName as realLastName, user.displayFirstName as displayFirstName, user.displayLastName as displayLastName',
         {
           id: input.id,
           email: input.email,
+          realFirstName: input.realFirstName,
+          realLastName: input.realLastName,
+          displayFirstName: input.displayFirstName,
+          displayLastName: input.displayLastName,
         },
       )
       .then(result => {
@@ -83,6 +99,10 @@ export class UserService {
 
           response.user.id = result.records[0].get('id');
           response.user.email = result.records[0].get('email');
+          response.user.realFirstName = result.records[0].get('realFirstName');
+          response.user.realLastName = result.records[0].get('realLastName');
+          response.user.displayFirstName = result.records[0].get('displayFirstName');
+          response.user.displayLastName = result.records[0].get('displayLastName');
         } else {
           response.user = null;
         }
