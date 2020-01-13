@@ -15,8 +15,6 @@ describe('User e2e', () => {
 
     app = moduleFixture.createNestApplication();
     await app.init();
-    const db: DatabaseUtility = app.get(DatabaseUtility);
-    await db.resetDatabaseForTesting();
   });
 
   it('create user', async () => {
