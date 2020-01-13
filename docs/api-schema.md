@@ -24,3 +24,8 @@ updateOrganization(org: Partial<Organization>): Organization
 deleteOrganization(id: string): boolean
 organizations(filter?: string, page?: number = 0, count?: number = 10, order?: string = "asc", sort?: string): List<Organization>
 organization(id?: string, name?: string): Organization?
+
+
+qualified
+red flags
+distinquishing
