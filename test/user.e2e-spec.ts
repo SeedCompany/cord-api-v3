@@ -18,7 +18,7 @@ describe('User e2e', () => {
   });
 
   it('create user', async () => {
-    const email = 'newuser@test.com';
+    const email = 'newuser@test.com' + Date.now();
     const fn = 'George';
     const ln = 'Washington';
 
@@ -51,7 +51,7 @@ describe('User e2e', () => {
 
   it('read one user by id', async () => {
     const newUser = new CreateUserInput();
-    newUser.email = 'newuser@test.com';
+    newUser.email = 'newuser@test.com' + Date.now();
     const fn = 'George';
     const ln = 'Washington';
 
@@ -109,8 +109,8 @@ describe('User e2e', () => {
   });
 
   it('update user', async () => {
-    const oldEmail = 'newUser@test.com';
-    const email = 'updateuser@test.com';
+    const oldEmail = 'newUser@test.com' + Date.now();
+    const email = 'updateuser@test.com' + Date.now();
     const fn = 'George';
     const ln = 'Washington';
 
@@ -177,7 +177,7 @@ describe('User e2e', () => {
   });
 
   it('delete user', async () => {
-    const email = 'deleteuser@test.com';
+    const email = 'deleteuser@test.com' + Date.now();
     const fn = 'George';
     const ln = 'Washington';
 
