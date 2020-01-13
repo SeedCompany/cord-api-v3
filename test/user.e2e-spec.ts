@@ -16,12 +16,10 @@ describe('User e2e', () => {
 
     app = moduleFixture.createNestApplication();
     await app.init();
-    const db: DatabaseUtility = app.get(DatabaseUtility);
-    //await db.resetDatabaseForTesting();
   });
 
   it('create user', async () => {
-    const userEmail = 'newuser@test.com';
+    const userEmail = 'newuser@test.com' + Date.now();
 
     return request(app.getHttpServer())
       .post('/graphql')
@@ -48,7 +46,7 @@ describe('User e2e', () => {
 
   it('read one user by id', async () => {
     const newUser = new CreateUserInput();
-    newUser.email = 'newuser@test.com';
+    newUser.email = 'newuser@test.com' + Date.now();
 
     // create user first
     let userId;
@@ -96,7 +94,7 @@ describe('User e2e', () => {
 
   it('update user', async () => {
     const newUser = new CreateUserInput();
-    newUser.email = 'updateuser@test.com';
+    newUser.email = 'updateuser@test.com' + Date.now();
 
     let userId;
     await request(app.getHttpServer())

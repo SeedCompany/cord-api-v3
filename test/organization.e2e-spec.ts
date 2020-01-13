@@ -21,12 +21,10 @@ describe('Organization e2e', () => {
 
     app = moduleFixture.createNestApplication();
     await app.init();
-    const db: DatabaseUtility = app.get(DatabaseUtility);
-    await db.resetDatabaseForTesting();
   });
 
   it('create organization', () => {
-    const orgName = 'bestOrgEver12345';
+    const orgName = 'bestOrgEver12345' + Date.now();
     return request(app.getHttpServer())
       .post('/graphql')
       .send({
@@ -52,7 +50,7 @@ describe('Organization e2e', () => {
 
   it('read one organization by id', async () => {
     const newOrg = new CreateOrganizationInput();
-    newOrg.name = 'orgNameForReadOrgTest1';
+    newOrg.name = 'orgNameForReadOrgTest1' + Date.now();
 
     // create org first
     let orgId;
@@ -101,8 +99,7 @@ describe('Organization e2e', () => {
 
   it('update organization', async () => {
     const newOrg = new CreateOrganizationInput();
-    newOrg.name = 'orgNameForUpdateOrgTest1';
-    // const createdOrg = await orgService.create(newOrg);
+    newOrg.name = 'orgNameForUpdateOrgTest1' + Date.now();
 
     // create org first
     let orgId;
@@ -152,8 +149,8 @@ describe('Organization e2e', () => {
 
   it('delete organization', async () => {
     const newOrg = new CreateOrganizationInput();
-    newOrg.name = 'orgNameForDeleteOrgTest1';
-    // const createdOrg = await orgService.create(newOrg);
+    newOrg.name = 'orgNameForDeleteOrgTest1' + Date.now();
+    
 
     // create org first
     let orgId;

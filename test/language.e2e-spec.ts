@@ -16,12 +16,10 @@ describe('Language e2e', () => {
 
     app = moduleFixture.createNestApplication();
     await app.init();
-    const db: DatabaseUtility = app.get(DatabaseUtility);
-    //await db.resetDatabaseForTesting();
   });
 
   it('create language', () => {
-    const langName = 'bestLangEver12345';
+    const langName = 'bestLangEver12345' + Date.now();
     return request(app.getHttpServer())
       .post('/graphql')
       .send({
@@ -47,7 +45,7 @@ describe('Language e2e', () => {
 
   it('read one language by id', async () => {
     const newLang = new CreateLanguageInput();
-    newLang.name = 'langNameForReadLangTest1';
+    newLang.name = 'langNameForReadLangTest1' + Date.now();
 
     // create lang first
     let langId;
@@ -96,8 +94,7 @@ describe('Language e2e', () => {
 
   it('update language', async () => {
     const newLang = new CreateLanguageInput();
-    newLang.name = 'langNameForUpdateLangTest1';
-    // const createdLang = await langService.create(newLang);
+    newLang.name = 'langNameForUpdateLangTest1' + Date.now();
 
     // create lang first
     let langId;
@@ -145,8 +142,7 @@ describe('Language e2e', () => {
 
   it('delete language', async () => {
     const newLang = new CreateLanguageInput();
-    newLang.name = 'langNameForDeleteLangTest1';
-    // const createdLang = await langService.create(newLang);
+    newLang.name = 'langNameForDeleteLangTest1' + Date.now();
 
     // create lang first
     let langId;
