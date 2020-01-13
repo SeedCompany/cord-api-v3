@@ -1,5 +1,4 @@
 import { Resolver, Args, Query, Mutation } from '@nestjs/graphql';
-import { Area } from '../../model/area';
 import { AreaService } from './area.service';
 import {
   CreateAreaInputDto,
@@ -11,6 +10,7 @@ import {
   DeleteAreaInputDto,
   DeleteAreaOutputDto,
 } from './area.dto';
+import { Area } from '../location';
 
 @Resolver(of => Area)
 export class AreaResolver {

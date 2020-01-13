@@ -1,5 +1,5 @@
 import { Resolver, Args, Query, Mutation } from '@nestjs/graphql';
-import { Region } from '../../model/region';
+import { Region } from '../location';
 import { RegionService } from './region.service';
 import {
   CreateRegionInputDto,

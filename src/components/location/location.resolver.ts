@@ -1,5 +1,5 @@
 import { Resolver, Args, Query, Mutation } from '@nestjs/graphql';
-import { Location } from '../../model/location';
+import { Location } from '.';
 import { LocationService } from './location.service';
 import {
   CreateLocationInputDto,

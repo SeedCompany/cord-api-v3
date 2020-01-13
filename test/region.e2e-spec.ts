@@ -16,12 +16,10 @@ describe('Region e2e', () => {
 
     app = moduleFixture.createNestApplication();
     await app.init();
-    const db: DatabaseUtility = app.get(DatabaseUtility);
-    // await db.resetDatabaseForTesting();
   });
 
   it('create Region', async () => {
-    const regionName = 'firstRegion';
+    const regionName = 'firstRegion' + Date.now();
 
     return request(app.getHttpServer())
       .post('/graphql')
@@ -48,7 +46,7 @@ describe('Region e2e', () => {
 
   it('read one Region by id', async () => {
     const newRegion = new CreateRegionInput();
-    newRegion.name = 'Region1';
+    newRegion.name = 'Region1' + Date.now();
 
     // create loc first
     let regionId;
@@ -95,8 +93,9 @@ describe('Region e2e', () => {
   });
 
   it('update Region', async () => {
-    const newRegion = new CreateRegionInput();
-    newRegion.name = 'RegionNameForUpdate';
+    
+    const oldRegion = 'RegionName' + Date.now();
+    const newRegion = 'RegionNameForUpdate' + Date.now();
 
     let regionId;
     await request(app.getHttpServer())
@@ -105,7 +104,7 @@ describe('Region e2e', () => {
         operationName: null,
         query: `
         mutation {
-          createRegion (input: { region: { name: "${newRegion.name}" } }){
+          createRegion (input: { region: { name: "${oldRegion}" } }){
             region{
             id
             name
@@ -125,8 +124,8 @@ describe('Region e2e', () => {
         operationName: null,
         query: `
         mutation {
-          updateRegion (input: { region: {id: "${regionId}", name: "${newRegion.name}" } }){
-            Region {
+          updateRegion (input: { region: {id: "${regionId}", name: "${newRegion}" } }){
+            region {
             id
             name
             }
@@ -136,14 +135,13 @@ describe('Region e2e', () => {
       })
       .expect(({ body }) => {
         expect(body.data.updateRegion.region.id).toBe(regionId);
-        expect(body.data.updateRegion.region.name).toBe(newRegion.name);
+        expect(body.data.updateRegion.region.name).toBe(newRegion);
       })
       .expect(200);
   });
 
   it('delete Region', async () => {
-    const newRegion = new CreateRegionInput();
-    newRegion.name = 'RegionForDelete';
+    const regionName = 'RegionName' + Date.now();
 
     let regionId;
     await request(app.getHttpServer())
@@ -152,7 +150,7 @@ describe('Region e2e', () => {
         operationName: null,
         query: `
         mutation {
-          createRegion (input: { region: { name: "${newRegion.name}" } }){
+          createRegion (input: { region: { name: "${regionName}" } }){
             region{
             id
             name
@@ -172,8 +170,8 @@ describe('Region e2e', () => {
         operationName: null,
         query: `
         mutation {
-          deleteRegion (input: { Region: { id: "${regionId}" } }){
-            Region {
+          deleteRegion (input: { region: { id: "${regionId}" } }){
+            region {
             id
             }
           }
