@@ -9,7 +9,7 @@ export class CreateLocationInput {
 
 @InputType()
 export class CreateLocationInputDto {
-  @Field()
+  @Field(type => CreateLocationInput)
   location: CreateLocationInput;
 }
 
@@ -23,7 +23,7 @@ export class CreateLocationOutput {
 
 @ObjectType()
 export class CreateLocationOutputDto {
-  @Field({ nullable: true }) // nullable in case of error
+  @Field(type => CreateLocationOutput, { nullable: true }) // nullable in case of error
   location: CreateLocationOutput;
 
   constructor() {
@@ -41,7 +41,7 @@ export class ReadLocationInput {
 
 @InputType()
 export class ReadLocationInputDto {
-  @Field()
+  @Field(type => ReadLocationInput)
   location: ReadLocationInput;
 }
 
@@ -55,7 +55,7 @@ export class ReadLocationOutput {
 
 @ObjectType()
 export class ReadLocationOutputDto {
-  @Field({ nullable: true }) // nullable in case of error
+  @Field(type => ReadLocationOutput, { nullable: true }) // nullable in case of error
   location: ReadLocationOutput;
 
   constructor() {
@@ -75,7 +75,7 @@ export class UpdateLocationInput {
 
 @InputType()
 export class UpdateLocationInputDto {
-  @Field()
+  @Field(type => UpdateLocationInput)
   location: UpdateLocationInput;
 }
 
@@ -89,7 +89,7 @@ export class UpdateLocationOutput {
 
 @ObjectType()
 export class UpdateLocationOutputDto {
-  @Field({ nullable: true }) // nullable in case of error
+  @Field(type => UpdateLocationOutput, { nullable: true }) // nullable in case of error
   location: UpdateLocationOutput;
 
   constructor() {
@@ -107,7 +107,7 @@ export class DeleteLocationInput {
 
 @InputType()
 export class DeleteLocationInputDto {
-  @Field()
+  @Field(type => DeleteLocationInput)
   location: DeleteLocationInput;
 }
 
@@ -119,7 +119,7 @@ export class DeleteLocationOutput {
 
 @ObjectType()
 export class DeleteLocationOutputDto {
-  @Field({ nullable: true }) // nullable in case of error
+  @Field(type => DeleteLocationOutput, { nullable: true }) // nullable in case of error
   location: DeleteLocationOutput;
 
   constructor() {

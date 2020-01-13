@@ -56,7 +56,7 @@ describe('Location e2e', () => {
         operationName: null,
         query: `
         mutation {
-          createLocation (input: { location: { name: "${newLoc.name}" } }){
+          createLocation (input: { location: { name: "${newLoc}" } }){
             location{
             id
             name
@@ -87,7 +87,7 @@ describe('Location e2e', () => {
       })
       .expect(({ body }) => {
         expect(body.data.readLocation.location.id).toBe(locId);
-        expect(body.data.readLocation.location.name).toBe(newLoc.name);
+        expect(body.data.readLocation.location.name).toBe(newLoc);
       })
       .expect(200);
   });
@@ -103,7 +103,7 @@ describe('Location e2e', () => {
         operationName: null,
         query: `
         mutation {
-          createLocation (input: { location: { name: "${newLoc.name}" } }){
+          createLocation (input: { location: { name: "oldLoc" } }){
             location{
             id
             name
@@ -123,7 +123,7 @@ describe('Location e2e', () => {
         operationName: null,
         query: `
         mutation {
-          updateLocation (input: { location: {id: "${locId}", name: "${newLoc.name}" } }){
+          updateLocation (input: { location: {id: "${locId}", name: "${newLoc}" } }){
             location {
             id
             name
@@ -134,7 +134,7 @@ describe('Location e2e', () => {
       })
       .expect(({ body }) => {
         expect(body.data.updateLocation.location.id).toBe(locId);
-        expect(body.data.updateLocation.location.name).toBe(newLoc.name);
+        expect(body.data.updateLocation.location.name).toBe(newLoc);
       })
       .expect(200);
   });
@@ -150,7 +150,7 @@ describe('Location e2e', () => {
         operationName: null,
         query: `
         mutation {
-          createLocation (input: { location: { name: "${newLoc.name}" } }){
+          createLocation (input: { location: { name: "${newLoc}" } }){
             location{
             id
             name

@@ -14,8 +14,7 @@ import {
 
 @Injectable()
 export class UserService {
-  constructor(private readonly db: DatabaseService) {
-  }
+  constructor(private readonly db: DatabaseService) {}
 
   async create(
     input: CreateUserInput,
@@ -89,8 +88,12 @@ export class UserService {
         response.user.email = result.records[0].get('email');
         response.user.realFirstName = result.records[0].get('realFirstName');
         response.user.realLastName = result.records[0].get('realLastName');
-        response.user.displayFirstName = result.records[0].get('displayFirstName');
-        response.user.displayLastName = result.records[0].get('displayLastName');
+        response.user.displayFirstName = result.records[0].get(
+          'displayFirstName',
+        );
+        response.user.displayLastName = result.records[0].get(
+          'displayLastName',
+        );
       })
       .catch(error => {
         console.log(error);
@@ -100,9 +103,7 @@ export class UserService {
     return response;
   }
 
-  async readOne(
-    input: ReadUserInput,
-  ): Promise<ReadUserOutputDto> {
+  async readOne(input: ReadUserInput): Promise<ReadUserOutputDto> {
     const response = new ReadUserOutputDto();
     const session = this.db.driver.session();
     await session
@@ -132,8 +133,12 @@ export class UserService {
         response.user.email = result.records[0].get('email');
         response.user.realFirstName = result.records[0].get('realFirstName');
         response.user.realLastName = result.records[0].get('realLastName');
-        response.user.displayFirstName = result.records[0].get('displayFirstName');
-        response.user.displayLastName = result.records[0].get('displayLastName');
+        response.user.displayFirstName = result.records[0].get(
+          'displayFirstName',
+        );
+        response.user.displayLastName = result.records[0].get(
+          'displayLastName',
+        );
       })
       .catch(error => {
         console.log(error);
@@ -181,13 +186,16 @@ export class UserService {
       )
       .then(result => {
         if (result.records.length > 0) {
-
           response.user.id = result.records[0].get('id');
           response.user.email = result.records[0].get('email');
           response.user.realFirstName = result.records[0].get('realFirstName');
           response.user.realLastName = result.records[0].get('realLastName');
-          response.user.displayFirstName = result.records[0].get('displayFirstName');
-          response.user.displayLastName = result.records[0].get('displayLastName');
+          response.user.displayFirstName = result.records[0].get(
+            'displayFirstName',
+          );
+          response.user.displayLastName = result.records[0].get(
+            'displayLastName',
+          );
         } else {
           response.user = null;
         }

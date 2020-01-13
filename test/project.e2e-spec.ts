@@ -1,29 +1,37 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import * as request from 'supertest';
-import { GraphQLModule } from '@nestjs/graphql';
 import { INestApplication } from '@nestjs/common';
 import { AppModule } from '../src/app.module';
-import { isValid } from 'shortid';
-import { DatabaseService } from '../src/core/database.service';
-import { DatabaseUtility } from '../src/common/database-utility';
+import { isValid, generate } from 'shortid';
 
-describe('Organization e2e', () => {
+async function createProject(
+  app: INestApplication,
+  projectName: string,
+): Promise<string> {
+  let projectId = '';
+  await request(app.getHttpServer())
+    .post('/graphql')
+    .send({
+      operationName: null,
+      query: `
+    mutation {
+      createProject (input: { project: { name: "${projectName}" } }){
+        project {
+        id,
+        name
+        }
+      }
+    }
+    `,
+    })
+    .then(({ body }) => {
+      projectId = body.data.createProject.project.id;
+    });
+  return projectId;
+}
+
+describe('Project e2e', () => {
   let app: INestApplication;
-  let db: DatabaseService;
-  let dbUtility: DatabaseUtility;
-
-  let orgId: string;
-  const orgName = 'myOrg4';
-  const newOrgName = 'newMyOrg4';
-
-  beforeAll(async () => {
-    db = new DatabaseService();
-    dbUtility = new DatabaseUtility(db);
-    await dbUtility.deleteAllData();
-    await dbUtility.deleteAllConstraintsAndIndexes();
-    await dbUtility.prepareDatabase();
-    await dbUtility.loadTestData();
-  });
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -34,85 +42,111 @@ describe('Organization e2e', () => {
     await app.init();
   });
 
-  it('create organization', () => {
-    return request(app.getHttpServer())
+  it('create project', async () => {
+    const projectName = 'projectName' + generate();
+    await request(app.getHttpServer())
       .post('/graphql')
       .send({
         operationName: null,
         query: `
         mutation {
-          createOrganization (name: "${orgName}"){
+          createProject (input: { project: { name: "${projectName}" } }){
+            project {
             id
             name
+            }
           }
         }
         `,
       })
       .expect(({ body }) => {
-        orgId = body.data.createOrganization.id;
-        expect(isValid(orgId)).toBe(true);
-        expect(body.data.createOrganization.name).toBe(orgName);
+        const projId = body.data.createProject.project.id;
+        expect(isValid(projId)).toBe(true);
+        expect(body.data.createProject.project.name).toBe(projectName);
       })
       .expect(200);
   });
 
-  it('read one organization by id', () => {
-    return request(app.getHttpServer())
+  it('read one project by id', async () => {
+    const projectName = 'projectName' + Date.now();
+
+    // create project first
+    const projId = await createProject(app, projectName);
+
+    // test reading new org
+    await request(app.getHttpServer())
       .post('/graphql')
       .send({
         operationName: null,
         query: `
         query {
-          readOrganization (id: "${orgId}"){
+          readProject ( input: { project: { id: "${projId}" } }){
+            project{
             id
             name
+            }
           }
         }
         `,
       })
       .expect(({ body }) => {
-        expect(body.data.readOrganization.id).toBe(orgId);
-        expect(body.data.readOrganization.name).toBe(orgName);
+        expect(body.data.readProject.project.id).toBe(projId);
+        expect(body.data.readProject.project.name).toBe(projectName);
       })
       .expect(200);
   });
 
-  it('update organization', () => {
+  it('update project', async () => {
+    const projectName = 'projectOld' + Date.now();
+    const projectNameNew = 'projectNew' + Date.now();
+
+    // create project first
+    const projId = await createProject(app, projectName);
+
     return request(app.getHttpServer())
       .post('/graphql')
       .send({
         operationName: null,
         query: `
         mutation {
-          updateOrganization (id: "${orgId}", name: "${newOrgName}"){
+          updateProject (input: { project: {id: "${projId}", name: "${projectNameNew}" } }){
+            project {
             id
             name
+            }
           }
         }
         `,
       })
       .expect(({ body }) => {
-        expect(body.data.updateOrganization.id).toBe(orgId);
-        expect(body.data.updateOrganization.name).toBe(newOrgName);
+        expect(body.data.updateProject.project.id).toBe(projId);
+        expect(body.data.updateProject.project.name).toBe(projectNameNew);
       })
       .expect(200);
   });
 
-  it('delete organization', () => {
+  it('delete project', async () => {
+    const projectName = 'projectName' + Date.now();
+
+    // create project first
+    const projId = await createProject(app, projectName);
+
     return request(app.getHttpServer())
       .post('/graphql')
       .send({
         operationName: null,
         query: `
         mutation {
-          deleteOrganization (id: "${orgId}"){
+          deleteProject (input: { project: { id: "${projId}" } }){
+            project {
             id
+            }
           }
         }
         `,
       })
       .expect(({ body }) => {
-        expect(body.data.deleteOrganization.id).toBe(orgId);
+        expect(body.data.deleteProject.project.id).toBe(projId);
       })
       .expect(200);
   });
