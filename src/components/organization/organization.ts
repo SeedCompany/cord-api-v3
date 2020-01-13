@@ -1,16 +1,8 @@
 import { Field, Int, ObjectType, ID } from 'type-graphql';
+import { BaseNode } from 'src/common/base-node';
 
 @ObjectType()
-export class Organization {
-
-  @Field(type => Boolean, {nullable: true})
-  active: boolean;
-
-  @Field(type => String, {nullable: true})
-  owningOrg: string;
-
-  @Field(type => String, {nullable: true})
-  id: string;
+export class Organization extends BaseNode{
 
   @Field(type => String, {nullable: true})
   name: string;

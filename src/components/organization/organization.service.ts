@@ -12,6 +12,8 @@ import {
   ReadOrganizationInput,
   UpdateOrganizationInput,
   DeleteOrganizationInput,
+  ListOrganizationsInput,
+  ListOrganizationsOutputDto,
 } from './organization.dto';
 
 @Injectable()
@@ -68,7 +70,9 @@ export class OrganizationService {
     return response;
   }
 
-  async update(input: UpdateOrganizationInput): Promise<UpdateOrganizationOutputDto> {
+  async update(
+    input: UpdateOrganizationInput,
+  ): Promise<UpdateOrganizationOutputDto> {
     const response = new UpdateOrganizationOutputDto();
     const session = this.db.driver.session();
     await session
@@ -81,7 +85,6 @@ export class OrganizationService {
       )
       .then(result => {
         if (result.records.length > 0) {
-
           response.organization.id = result.records[0].get('id');
           response.organization.name = result.records[0].get('name');
         } else {
@@ -96,7 +99,9 @@ export class OrganizationService {
     return response;
   }
 
-  async delete(input: DeleteOrganizationInput): Promise<DeleteOrganizationOutputDto> {
+  async delete(
+    input: DeleteOrganizationInput,
+  ): Promise<DeleteOrganizationOutputDto> {
     const response = new DeleteOrganizationOutputDto();
     const session = this.db.driver.session();
     await session
@@ -108,6 +113,34 @@ export class OrganizationService {
       )
       .then(result => {
         response.organization.id = result.records[0].get('id');
+      })
+      .catch(error => {
+        console.log(error);
+      })
+      .then(() => session.close());
+
+    return response;
+  }
+
+  async queryOrganizations(
+    input: ListOrganizationsInput,
+  ): Promise<ListOrganizationsOutputDto> {
+    const response = new ListOrganizationsOutputDto();
+    const session = this.db.driver.session();
+    await session
+      .run(
+        'MATCH (org:Organization {active: true}) RETURN org.id as id, org.name as name',
+        {
+          // todo
+        },
+      )
+      .then(result => {
+        result.records.forEach(record => {
+          const org = new Organization();
+          org.id = record.get('id');
+          org.name = record.get('name');
+          response.organizations.push(org);
+        });
       })
       .catch(error => {
         console.log(error);

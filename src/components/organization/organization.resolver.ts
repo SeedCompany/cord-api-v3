@@ -10,6 +10,8 @@ import {
   UpdateOrganizationOutputDto,
   DeleteOrganizationInputDto,
   DeleteOrganizationOutputDto,
+  ListOrganizationsOutputDto,
+  ListOrganizationsInputDto,
 } from './organization.dto';
 
 @Resolver(of => Organization)
@@ -32,6 +34,15 @@ export class OrganizationResolver {
     @Args('input') { organization: input }: ReadOrganizationInputDto,
   ): Promise<ReadOrganizationOutputDto> {
     return await this.orgService.readOne(input);
+  }
+
+  @Query(returns => ListOrganizationsOutputDto, {
+    description: 'Query orgainzations',
+  })
+  async organizations(
+    @Args('input') { query: input }: ListOrganizationsInputDto,
+  ): Promise<ListOrganizationsOutputDto> {
+    return await this.orgService.queryOrganizations(input);
   }
 
   @Mutation(returns => UpdateOrganizationOutputDto, {

@@ -1,5 +1,4 @@
 import { ObjectType, Field } from 'type-graphql';
-import { DateTime } from 'neo4j-driver/types/v1';
 
 @ObjectType()
 export class BaseNode {
@@ -15,11 +14,11 @@ export class BaseNode {
   @Field(type => String)
   owningOrgId: string;
 
-  @Field(type => DateTime)
-  createdOn: DateTime;
+  @Field(type => String)
+  createdOn: string;
 
-  @Field(type => DateTime, { nullable: true })
-  deletedOn: DateTime;
+  @Field(type => String, { nullable: true })
+  deletedOn: string;
 
   @Field(type => String)
   writeHash: string;
