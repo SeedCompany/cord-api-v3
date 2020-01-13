@@ -1,11 +1,13 @@
 import { DateTime } from 'luxon';
-import { Budget } from '../budget';
-import { Location } from '../location';
-import { Partnership } from '../partnerships';
-import { Sensitivity } from '../sensitivity';
-import { TeamMember } from '../team-member';
-import { InternshipEngagement } from './engagement';
+import { Budget } from '../budget/budget';
+import { Location } from '../location/location';
+
+import { Sensitivity } from '../project/sensitivity';
+import { TeamMember } from '../user/team-member';
+
 import { InternshipStatus } from './status';
+import { Partnership } from '../partnership/partnership';
+import { InternshipEngagement } from '../internship-engagement/engagement';
 
 export interface Internship extends EditableInternship {
   id: string;

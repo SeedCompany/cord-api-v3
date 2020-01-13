@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Organization } from '../../model/organization';
+import { Organization } from './organization';
 import { DatabaseService } from '../../core/database.service';
 import { generate } from 'shortid';
 import {

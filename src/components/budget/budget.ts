@@ -1,4 +1,4 @@
-import { Organization } from './organization';
+import { Organization } from '../organization/organization';
 
 export interface Budget {
   id: string;

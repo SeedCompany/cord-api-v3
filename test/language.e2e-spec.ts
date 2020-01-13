@@ -3,7 +3,6 @@ import * as request from 'supertest';
 import { INestApplication } from '@nestjs/common';
 import { AppModule } from '../src/app.module';
 import { isValid } from 'shortid';
-import { DatabaseUtility } from '../src/common/database-utility';
 import { CreateLanguageInput } from '../src/components/language/language.dto';
 
 describe('Language e2e', () => {

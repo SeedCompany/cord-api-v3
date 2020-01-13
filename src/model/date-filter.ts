@@ -12,7 +12,7 @@ export interface DateFilterAPI {
 }
 
 export const buildDateFilter = <Filters extends DateFilter>(
-  filters: Filters
+  filters: Filters,
 ): Omit<Filters, keyof DateFilter> & DateFilterAPI => {
   const { dateRange, startDate, endDate, ...rest } = filters;
 

@@ -1,4 +1,4 @@
-import { Bible, BibleBook } from '../bible-book';
+import { Bible, BibleBook } from './bible-book';
 
 export enum ProductType {
   // Special Types

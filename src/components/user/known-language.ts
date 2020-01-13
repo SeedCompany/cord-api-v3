@@ -1,4 +1,4 @@
-import { Language } from '../language';
+import { Language } from '../language/language';
 import { LanguageProficiency } from './language-proficiency';
 
 export interface KnownLanguage {

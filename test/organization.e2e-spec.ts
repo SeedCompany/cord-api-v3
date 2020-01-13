@@ -3,11 +3,7 @@ import * as request from 'supertest';
 import { INestApplication } from '@nestjs/common';
 import { AppModule } from '../src/app.module';
 import { isValid } from 'shortid';
-import { DatabaseService } from '../src/core/database.service';
-import { DatabaseUtility } from '../src/common/database-utility';
-import { OrganizationService } from '../src/components/organization/organization.service';
 import { CreateOrganizationInput } from '../src/components/organization/organization.dto';
-import { LanguageService } from '../src/components/language/language.service';
 
 describe('Organization e2e', () => {
   let app: INestApplication;

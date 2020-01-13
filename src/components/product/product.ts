@@ -1,4 +1,4 @@
-import { BibleBook } from '../bible-book';
+import { BibleBook } from './bible-book';
 import { ProductApproach } from './approach';
 import { ProductMedium } from './medium';
 import { ProductMethodology } from './methodology';

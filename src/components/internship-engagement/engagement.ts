@@ -1,10 +1,11 @@
 import { DateTime } from 'luxon';
-import { Location } from '../../location';
-import { ProductMethodology } from '../../product';
-import { User } from '../../user';
+import { Location } from '../location/location';
+
 import { InternshipEngagementPosition } from './position';
 import { InternshipEngagementStatus } from './status';
 import { InternshipEngagementTag } from './tag';
+import { User } from '../user/user';
+import { ProductMethodology } from '../product/methodology';
 
 export interface InternshipEngagement extends EditableInternshipEngagement {
   id: string;

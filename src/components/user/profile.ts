@@ -1,4 +1,4 @@
-import { Organization } from '../organization';
+import { Organization } from '../organization/organization';
 import { Education } from './education';
 import { KnownLanguage } from './known-language';
 import { Unavailability } from './unavailability';

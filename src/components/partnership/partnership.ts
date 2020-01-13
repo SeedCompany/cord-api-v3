@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon';
-import { Organization } from '../organization';
+import { Organization } from '../organization/organization';
 import { PartnershipAgreementStatus } from './agreement-status';
 import { PartnershipType } from './type';
 

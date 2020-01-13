@@ -4,7 +4,6 @@ import { INestApplication } from '@nestjs/common';
 import { AppModule } from '../src/app.module';
 import { isValid } from 'shortid';
 import { CreateUserInput } from '../src/components/user/user.dto';
-import { DatabaseUtility } from '../src/common/database-utility';
 
 describe('User e2e', () => {
   let app: INestApplication;
