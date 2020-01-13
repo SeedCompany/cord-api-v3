@@ -15,7 +15,7 @@ export class DatabaseUtility {
 
   public async resetDatabaseForTesting() {
     await this.deleteAllData();
-    await this.deleteAllConstraintsAndIndexes();
+    // await this.deleteAllConstraintsAndIndexes();
     await this.prepareDatabase();
     await this.loadTestData();
   }

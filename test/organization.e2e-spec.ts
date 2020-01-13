@@ -12,12 +12,7 @@ import { LanguageService } from '../src/components/language/language.service';
 describe('Organization e2e', () => {
   let app: INestApplication;
 
-  beforeAll(async () => {
-    // db = new DatabaseService();
-    // orgService = new OrganizationService(db);
-    // dbUtility = new DatabaseUtility(db, orgService);
-    // await dbUtility.resetDatabaseForTesting();
-  });
+  beforeAll(async () => {});
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -27,7 +22,7 @@ describe('Organization e2e', () => {
     app = moduleFixture.createNestApplication();
     await app.init();
     const db: DatabaseUtility = app.get(DatabaseUtility);
-    //await db.resetDatabaseForTesting();
+    await db.resetDatabaseForTesting();
   });
 
   it('create organization', () => {
@@ -148,7 +143,9 @@ describe('Organization e2e', () => {
       })
       .expect(({ body }) => {
         expect(body.data.updateOrganization.organization.id).toBe(orgId);
-        expect(body.data.updateOrganization.organization.name).toBe(newOrg.name);
+        expect(body.data.updateOrganization.organization.name).toBe(
+          newOrg.name,
+        );
       })
       .expect(200);
   });
