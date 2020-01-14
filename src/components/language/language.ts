@@ -31,7 +31,7 @@ export class Language {
   }
 }
 
-export interface Language {
+export interface ILanguage {
   id: string;
   name: string | null;
   displayName: string | null;
