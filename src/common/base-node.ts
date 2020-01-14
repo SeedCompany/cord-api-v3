@@ -2,23 +2,24 @@ import { ObjectType, Field } from 'type-graphql';
 
 @ObjectType()
 export class BaseNode {
-  @Field(type => Boolean)
-  active: boolean;
 
   @Field(type => String)
   id: string;
 
   @Field(type => String)
-  modifiedByUserId: string;
-
-  @Field(type => String)
   owningOrgId: string;
 
   @Field(type => String)
-  createdOn: string;
+  createdAt: string;
 
   @Field(type => String, { nullable: true })
-  deletedOn: string;
+  deletedAt: string;
+
+  @Field(type => String)
+  createdByUserId: string;
+
+  @Field(type => String, { nullable: true })
+  deletedByUserId: string;
 
   @Field(type => String)
   writeHash: string;
