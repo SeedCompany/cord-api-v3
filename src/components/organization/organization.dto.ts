@@ -1,4 +1,5 @@
 import { ObjectType, Field, InputType } from 'type-graphql';
+import { Organization } from './organization';
 
 // CREATE
 @InputType()
@@ -121,5 +122,42 @@ export class DeleteOrganizationOutputDto {
   organization: DeleteOrganizationOutput;
   constructor() {
     this.organization = new DeleteOrganizationOutput();
+  }
+}
+
+// LIST
+
+@InputType()
+export class ListOrganizationsInput {
+  @Field(type => String, { nullable: true, defaultValue: '' })
+  filter: string;
+  @Field(type => Number, { nullable: true, defaultValue: 0 })
+  page: number;
+  @Field(type => Number, { nullable: true, defaultValue: 25 })
+  count: number;
+  @Field(type => String, { nullable: true, defaultValue: 'DESC' })
+  order: string;
+  @Field(type => String, { nullable: true, defaultValue: 'name' })
+  sort: string;
+}
+
+@InputType()
+export class ListOrganizationsInputDto {
+  @Field()
+  query: ListOrganizationsInput;
+}
+
+@ObjectType()
+export class ListOrganizationsOutput {
+  @Field(type => Organization, { nullable: true })
+  organization: Organization;
+}
+
+@ObjectType()
+export class ListOrganizationsOutputDto {
+  @Field(type => [Organization], { nullable: true }) // nullable in case of error
+  organizations: Organization[];
+  constructor() {
+    this.organizations = [];
   }
 }

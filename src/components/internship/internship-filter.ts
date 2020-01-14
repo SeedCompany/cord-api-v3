@@ -1,4 +1,4 @@
-import { DateFilter } from '../../model/date-filter';
+import { DateFilter } from '../../common/date-filter';
 import { Location } from '../location/location';
 import { Sensitivity } from '../project/sensitivity';
 

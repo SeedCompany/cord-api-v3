@@ -2,11 +2,13 @@ import { DateTime } from 'luxon';
 import { Budget } from '../budget/budget';
 import { Language } from '../language/language';
 import { Location } from '../location/location';
-import { Partnership } from '../partnership/partnership';
+
 import { Sensitivity } from './sensitivity';
 import { TeamMember } from '../user/team-member';
-import { ProjectEngagement } from '../project-engagement/engagement';
+
 import { ProjectStatus } from './status';
+import { Partnership } from '../partnership/partnership';
+import { ProjectEngagement } from '../project-engagement/engagement';
 
 export interface Project {
   id: string;

@@ -12,6 +12,8 @@ import {
   ReadOrganizationInput,
   UpdateOrganizationInput,
   DeleteOrganizationInput,
+  ListOrganizationsInput,
+  ListOrganizationsOutputDto,
 } from './organization.dto';
 
 @Injectable()
@@ -68,7 +70,9 @@ export class OrganizationService {
     return response;
   }
 
-  async update(input: UpdateOrganizationInput): Promise<UpdateOrganizationOutputDto> {
+  async update(
+    input: UpdateOrganizationInput,
+  ): Promise<UpdateOrganizationOutputDto> {
     const response = new UpdateOrganizationOutputDto();
     const session = this.db.driver.session();
     await session
@@ -81,7 +85,6 @@ export class OrganizationService {
       )
       .then(result => {
         if (result.records.length > 0) {
-
           response.organization.id = result.records[0].get('id');
           response.organization.name = result.records[0].get('name');
         } else {
@@ -96,7 +99,9 @@ export class OrganizationService {
     return response;
   }
 
-  async delete(input: DeleteOrganizationInput): Promise<DeleteOrganizationOutputDto> {
+  async delete(
+    input: DeleteOrganizationInput,
+  ): Promise<DeleteOrganizationOutputDto> {
     const response = new DeleteOrganizationOutputDto();
     const session = this.db.driver.session();
     await session
@@ -113,6 +118,36 @@ export class OrganizationService {
         console.log(error);
       })
       .then(() => session.close());
+
+    return response;
+  }
+
+  async queryOrganizations(
+    query: ListOrganizationsInput,
+  ): Promise<ListOrganizationsOutputDto> {
+    const response = new ListOrganizationsOutputDto();
+    const session = this.db.driver.session();
+    const skipIt = query.page * query.count;
+
+    const result = await session.run(
+      `MATCH (org:Organization {active: true}) WHERE org.name CONTAINS $filter RETURN org.id as id, org.name as name ORDER BY ${query.sort} ${query.order} SKIP $skip LIMIT $count`,
+      {
+        filter: query.filter,
+        skip: skipIt,
+        count: query.count,
+        sort: query.sort,
+        order: query.order,
+      },
+    );
+
+    session.close();
+
+    response.organizations = result.records.map(record => {
+      const org = new Organization();
+      org.id = record.get('id');
+      org.name = record.get('name');
+      return org;
+    });
 
     return response;
   }
