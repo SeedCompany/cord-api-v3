@@ -1,5 +1,5 @@
 import { Field, ID, ObjectType } from 'type-graphql';
-import { Area } from './area';
+import { Area } from '../area/area';
 
 @ObjectType()
 export class Location implements ILocation {

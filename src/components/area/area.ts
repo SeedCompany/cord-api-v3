@@ -1,5 +1,5 @@
 import { Field, ID, ObjectType } from 'type-graphql';
-import { Region } from './region';
+import { Region } from '../region/region';
 
 @ObjectType()
 export class Area implements IArea {

@@ -1,3 +1,3 @@
-export * from './area';
+export * from '../area/area';
 export * from './location';
-export * from './region';
+export * from '../region/region';
