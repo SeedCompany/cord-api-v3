@@ -8,8 +8,6 @@ import { CreateOrganizationInput } from '../src/components/organization/organiza
 describe('Organization e2e', () => {
   let app: INestApplication;
 
-  beforeAll(async () => {});
-
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
