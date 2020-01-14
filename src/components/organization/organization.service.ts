@@ -123,15 +123,23 @@ export class OrganizationService {
   }
 
   async queryOrganizations(
-    input: ListOrganizationsInput,
+    query: ListOrganizationsInput,
   ): Promise<ListOrganizationsOutputDto> {
     const response = new ListOrganizationsOutputDto();
     const session = this.db.driver.session();
+    const skipIt = query.page * query.count;
+
+    console.log(query);
+
     await session
       .run(
-        'MATCH (org:Organization {active: true}) RETURN org.id as id, org.name as name',
+        'MATCH (org:Organization {active: true}) WHERE org.name CONTAINS $filter RETURN   org.id as id, org.name as name ORDER BY $order SKIP $skip LIMIT $count',
         {
-          // todo
+          filter: query.filter,
+          skip: skipIt,
+          count: query.count,
+          order: query.order,
+          sort: query.sort,
         },
       )
       .then(result => {

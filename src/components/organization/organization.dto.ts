@@ -129,15 +129,15 @@ export class DeleteOrganizationOutputDto {
 
 @InputType()
 export class ListOrganizationsInput {
-  @Field(type => String, { nullable: true })
+  @Field(type => String, { nullable: true, defaultValue: '' })
   filter: string;
-  @Field(type => Number, { nullable: true })
+  @Field(type => Number, { nullable: true, defaultValue: 0 })
   page: number;
-  @Field(type => Number, { nullable: true })
+  @Field(type => Number, { nullable: true, defaultValue: 25 })
   count: number;
-  @Field(type => String, { nullable: true })
+  @Field(type => String, { nullable: true, defaultValue: 'name' })
   order: string;
-  @Field(type => String, { nullable: true })
+  @Field(type => String, { nullable: true, defaultValue: 'DESC' })
   sort: string;
 }
 
