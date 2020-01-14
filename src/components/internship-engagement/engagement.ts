@@ -6,7 +6,14 @@ import { InternshipEngagementStatus } from './status';
 import { InternshipEngagementTag } from './tag';
 import { User } from '../user/user';
 import { ProductMethodology } from '../product/product-methodology';
+import { ObjectType, InputType } from 'type-graphql';
 
+
+@ObjectType()
+@InputType('InternshipEngagementInput')
+export class InternshipEngagement {
+  
+}
 export interface InternshipEngagement extends EditableInternshipEngagement {
   id: string;
   intern: User;
