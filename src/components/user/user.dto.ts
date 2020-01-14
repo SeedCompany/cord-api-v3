@@ -5,6 +5,19 @@ import { ObjectType, Field, InputType } from 'type-graphql';
 export class CreateUserInput {
   @Field(type => String)
   email: string;
+
+  @Field({nullable: true})
+  realFirstName: string;
+
+  @Field({nullable: true})
+  realLastName: string;
+
+  @Field({nullable: true})
+  displayFirstName: string;
+
+  @Field({nullable: true})
+  displayLastName: string;
+
 }
 
 @InputType()
@@ -17,8 +30,22 @@ export class CreateUserInputDto {
 export class CreateUserOutput {
   @Field(type => String)
   id: string;
+
   @Field(type => String)
   email: string;
+
+  @Field({nullable: true})
+  realFirstName: string;
+
+  @Field({nullable: true})
+  realLastName: string;
+
+  @Field({nullable: true})
+  displayFirstName: string;
+
+  @Field({nullable: true})
+  displayLastName: string;
+
 }
 
 @ObjectType()
@@ -49,8 +76,22 @@ export class ReadUserInputDto {
 export class ReadUserOutput {
   @Field(type => String)
   id: string;
+
   @Field(type => String)
   email: string;
+
+  @Field()
+  realFirstName: string;
+
+  @Field()
+  realLastName: string;
+
+  @Field()
+  displayFirstName: string;
+
+  @Field()
+  displayLastName: string;
+
 }
 
 @ObjectType()
@@ -68,8 +109,22 @@ export class ReadUserOutputDto {
 export class UpdateUserInput {
   @Field(type => String)
   id: string;
+
   @Field(type => String)
   email: string;
+
+  @Field()
+  realFirstName: string;
+
+  @Field()
+  realLastName: string;
+
+  @Field()
+  displayFirstName: string;
+
+  @Field()
+  displayLastName: string;
+
 }
 
 @InputType()
@@ -82,8 +137,22 @@ export class UpdateUserInputDto {
 export class UpdateUserOutput {
   @Field(type => String)
   id: string;
+
   @Field(type => String)
   email: string;
+
+  @Field()
+  realFirstName: string;
+
+  @Field()
+  realLastName: string;
+
+  @Field()
+  displayFirstName: string;
+
+  @Field()
+  displayLastName: string;
+
 }
 
 @ObjectType()

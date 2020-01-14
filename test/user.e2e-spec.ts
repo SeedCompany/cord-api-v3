@@ -18,7 +18,9 @@ describe('User e2e', () => {
   });
 
   it('create user', async () => {
-    const userEmail = 'newuser@test.com' + Date.now();
+    const email = 'newuser@test.com' + Date.now();
+    const fn = 'George';
+    const ln = 'Washington';
 
     return request(app.getHttpServer())
       .post('/graphql')
@@ -26,10 +28,14 @@ describe('User e2e', () => {
         operationName: null,
         query: `
         mutation {
-          createUser (input: { user: { email: "${userEmail}" } }){
+          createUser (input: { user: { email: "${email}", realFirstName: "${fn}", realLastName: "${ln}", displayFirstName: "${fn}", displayLastName: "${ln}"} }){
             user{
             id
             email
+            realFirstName
+            realLastName
+            displayFirstName
+            displayLastName
             }
           }
         }
@@ -38,7 +44,7 @@ describe('User e2e', () => {
       .expect(({ body }) => {
         const userId = body.data.createUser.user.id;
         expect(isValid(userId)).toBe(true);
-        expect(body.data.createUser.user.email).toBe(userEmail);
+        expect(body.data.createUser.user.email).toBe(email);
       })
       .expect(200);
   });
@@ -46,6 +52,9 @@ describe('User e2e', () => {
   it('read one user by id', async () => {
     const newUser = new CreateUserInput();
     newUser.email = 'newuser@test.com' + Date.now();
+    const fn = 'George';
+    const ln = 'Washington';
+
 
     // create user first
     let userId;
@@ -55,10 +64,14 @@ describe('User e2e', () => {
         operationName: null,
         query: `
         mutation {
-          createUser (input: { user: { email: "${newUser.email}" } }){
+          createUser (input: { user: { email: "${newUser.email}", realFirstName: "${fn}", realLastName: "${ln}", displayFirstName: "${fn}", displayLastName: "${ln}"} }){
             user{
             id
-            email
+            email,
+            realFirstName
+            realLastName
+            displayFirstName
+            displayLastName
             }
           }
         }
@@ -79,6 +92,10 @@ describe('User e2e', () => {
             user{
             id
             email
+            realFirstName
+            realLastName
+            displayFirstName
+            displayLastName
             }
           }
         }
@@ -92,8 +109,10 @@ describe('User e2e', () => {
   });
 
   it('update user', async () => {
-    const newUser = new CreateUserInput();
-    newUser.email = 'updateuser@test.com' + Date.now();
+    const oldEmail = 'newUser@test.com' + Date.now();
+    const email = 'updateuser@test.com' + Date.now();
+    const fn = 'George';
+    const ln = 'Washington';
 
     let userId;
     await request(app.getHttpServer())
@@ -102,10 +121,14 @@ describe('User e2e', () => {
         operationName: null,
         query: `
         mutation {
-          createUser (input: { user: { email: "${newUser.email}" } }){
+          createUser (input: { user: { email: "${oldEmail}", realFirstName: "${fn}", realLastName: "${ln}", displayFirstName: "${fn}", displayLastName: "${ln}"} }){
             user{
             id
-            email
+            email,
+            realFirstName
+            realLastName
+            displayFirstName
+            displayLastName
             }
           }
         }
@@ -116,16 +139,31 @@ describe('User e2e', () => {
       })
       .expect(200);
 
-    return request(app.getHttpServer())
+    return await request(app.getHttpServer())
       .post('/graphql')
       .send({
         operationName: null,
         query: `
         mutation {
-          updateUser (input: { user: {id: "${userId}", email: "${newUser.email}" } }){
+          updateUser (
+            input: {
+              user: {
+                id: "${userId}"
+                email: "${email}"
+                realFirstName: "${fn}"
+                realLastName: "${ln}"
+                displayFirstName: "${fn}"
+                displayLastName: "${ln}"
+              }
+            }
+            ) {
             user {
-            id
-            email
+              id
+              email
+              realFirstName
+              realLastName
+              displayFirstName
+              displayLastName
             }
           }
         }
@@ -133,14 +171,15 @@ describe('User e2e', () => {
       })
       .expect(({ body }) => {
         expect(body.data.updateUser.user.id).toBe(userId);
-        expect(body.data.updateUser.user.email).toBe(newUser.email);
+        expect(body.data.updateUser.user.email).toBe(email);
       })
       .expect(200);
   });
 
   it('delete user', async () => {
-    const newUser = new CreateUserInput();
-    newUser.email = 'deleteuser@test.com';
+    const email = 'deleteuser@test.com' + Date.now();
+    const fn = 'George';
+    const ln = 'Washington';
 
     let userId;
     await request(app.getHttpServer())
@@ -149,10 +188,14 @@ describe('User e2e', () => {
         operationName: null,
         query: `
         mutation {
-          createUser (input: { user: { email: "${newUser.email}" } }){
+          createUser (input: { user: { email: "${email}", realFirstName: "${fn}", realLastName: "${ln}", displayFirstName: "${fn}", displayLastName: "${ln}"} }){
             user{
             id
-            email
+            email,
+            realFirstName
+            realLastName
+            displayFirstName
+            displayLastName
             }
           }
         }

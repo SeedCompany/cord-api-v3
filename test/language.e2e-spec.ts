@@ -180,7 +180,6 @@ describe('Language e2 e', () => {
         `,
       })
       .expect(({ body }) => {
-        console.log(body);
         expect(body.data.deleteLanguage.language.id).toBe(langId);
       })
       .expect(200);
