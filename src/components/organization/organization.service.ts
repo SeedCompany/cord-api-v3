@@ -129,31 +129,25 @@ export class OrganizationService {
     const session = this.db.driver.session();
     const skipIt = query.page * query.count;
 
-    console.log(query);
+    const result = await session.run(
+      `MATCH (org:Organization {active: true}) WHERE org.name CONTAINS $filter RETURN org.id as id, org.name as name ORDER BY ${query.sort} ${query.order} SKIP $skip LIMIT $count`,
+      {
+        filter: query.filter,
+        skip: skipIt,
+        count: query.count,
+        sort: query.sort,
+        order: query.order,
+      },
+    );
 
-    await session
-      .run(
-        'MATCH (org:Organization {active: true}) WHERE org.name CONTAINS $filter RETURN   org.id as id, org.name as name ORDER BY $order SKIP $skip LIMIT $count',
-        {
-          filter: query.filter,
-          skip: skipIt,
-          count: query.count,
-          order: query.order,
-          sort: query.sort,
-        },
-      )
-      .then(result => {
-        result.records.forEach(record => {
-          const org = new Organization();
-          org.id = record.get('id');
-          org.name = record.get('name');
-          response.organizations.push(org);
-        });
-      })
-      .catch(error => {
-        console.log(error);
-      })
-      .then(() => session.close());
+    session.close();
+
+    response.organizations = result.records.map(record => {
+      const org = new Organization();
+      org.id = record.get('id');
+      org.name = record.get('name');
+      return org;
+    });
 
     return response;
   }

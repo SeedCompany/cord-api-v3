@@ -1,26 +1,20 @@
-import { ObjectType, Field } from 'type-graphql';
+import { ObjectType, Field, ID } from 'type-graphql';
+import { User } from '../components/user/user';
+import { Organization } from '../components/organization/organization';
 
 @ObjectType()
 export class BaseNode {
 
-  @Field(type => String)
+  @Field(type => ID)
   id: string;
 
-  @Field(type => String)
-  owningOrgId: string;
+  @Field(type => Organization)
+  owningOrg: Organization;
 
-  @Field(type => String)
+  @Field()
   createdAt: string;
 
-  @Field(type => String, { nullable: true })
-  deletedAt: string;
+  @Field(type => User)
+  createdBy: User;
 
-  @Field(type => String)
-  createdByUserId: string;
-
-  @Field(type => String, { nullable: true })
-  deletedByUserId: string;
-
-  @Field(type => String)
-  writeHash: string;
 }

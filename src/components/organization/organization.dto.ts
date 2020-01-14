@@ -135,9 +135,9 @@ export class ListOrganizationsInput {
   page: number;
   @Field(type => Number, { nullable: true, defaultValue: 25 })
   count: number;
-  @Field(type => String, { nullable: true, defaultValue: 'name' })
-  order: string;
   @Field(type => String, { nullable: true, defaultValue: 'DESC' })
+  order: string;
+  @Field(type => String, { nullable: true, defaultValue: 'name' })
   sort: string;
 }
 
