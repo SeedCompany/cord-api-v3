@@ -1,6 +1,7 @@
 import { Organization } from '../organization/organization';
 import { registerEnumType } from 'type-graphql';
 
+export class Budget {}
 export interface Budget {
   id: string;
   status: BudgetStatus;

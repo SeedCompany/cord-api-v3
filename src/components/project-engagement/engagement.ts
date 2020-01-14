@@ -5,6 +5,8 @@ import { ProjectEngagementStatus } from './status';
 import { ProjectEngagementTag } from './tag';
 import { Product } from '../product/product';
 
+export class ProjectEngagement {
+}
 export interface ProjectEngagement extends EditableProjectEngagement {
   id: string;
   possibleStatuses: ProjectEngagementStatus[];

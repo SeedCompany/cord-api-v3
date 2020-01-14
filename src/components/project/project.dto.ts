@@ -14,70 +14,107 @@ import { ProjectStatus } from './status';
 export class CreateProjectInput {
   @Field(type => String)
   name: string;
+
+  @Field({ nullable: true })
+  deptId: string | null;
+
+  @Field()
+  status: ProjectStatus;
+
+  @Field({ nullable: true })
+  location: Location | null;
+
+  /** A version of the location that a "non-authorized" user would see. */
+  @Field({ nullable: true })
+  publicLocation: Location | null;
+
+  @Field({ nullable: true })
+  mouStart: DateTime | null;
+
+  @Field()
+  mouEnd: DateTime | null;
+
+  @Field()
+  languages: Language[];
+
+  @Field()
+  partnerships: Partnership[];
+
+  @Field()
+  sensitivity: Sensitivity;
+
+  @Field()
+  team: TeamMember[];
+
+  @Field()
+  budgets: Budget[];
+
+  @Field({ nullable: true })
+  estimatedSubmission: DateTime | null;
+
+  @Field()
+  engagements: ProjectEngagement[];
+
+  @Field()
+  updatedAt: DateTime;
 }
 
 @InputType()
 export class CreateProjectInputDto {
   @Field()
   project: CreateProjectInput;
-  
-  @Field()
-  deptId: string | null;
-  
-  @Field()
-  status: ProjectStatus;
-  
-  /**
-   * The possible statuses the current user can set the status to.
-   * Replace with better workflow
-   */
-  @Field()
-  possibleStatuses: ProjectStatus[];
-  
-  @Field()
-  location: Location | null;
-  
-  /** A version of the location that a "non-authorized" user would see. */
-  @Field()
-  publicLocation: Location | null;
-  
-  @Field()
-  mouStart: DateTime | null;
-  
-  @Field()
-  mouEnd: DateTime | null;
-  
-  @Field()
-  languages: Language[];
-  
-  @Field()
-  partnerships: Partnership[];
-  
-  @Field()
-  sensitivity: Sensitivity;
-  
-  @Field()
-  team: TeamMember[];
-  
-  @Field()
-  budgets: Budget[];
-  
-  @Field()
-  estimatedSubmission: DateTime | null;
-  
-  @Field()
-  engagements: ProjectEngagement[];
-  
-  @Field()
-  updatedAt: DateTime;
 }
 
 @ObjectType()
 export class CreateProjectOutput {
   @Field(type => String)
   id: string;
+
   @Field(type => String)
   name: string;
+
+  @Field({ nullable: true })
+  deptId: string | null;
+
+  @Field()
+  status: ProjectStatus;
+
+  @Field({ nullable: true })
+  location: Location | null;
+
+  /** A version of the location that a "non-authorized" user would see. */
+  @Field({ nullable: true })
+  publicLocation: Location | null;
+
+  @Field({ nullable: true })
+  mouStart: DateTime | null;
+
+  @Field()
+  mouEnd: DateTime | null;
+
+  @Field()
+  languages: Language[];
+
+  @Field()
+  partnerships: Partnership[];
+
+  @Field()
+  sensitivity: Sensitivity;
+
+  @Field()
+  team: TeamMember[];
+
+  @Field()
+  budgets: Budget[];
+
+  @Field({ nullable: true })
+  estimatedSubmission: DateTime | null;
+
+  @Field()
+  engagements: ProjectEngagement[];
+
+  @Field()
+  updatedAt: DateTime;
 }
 
 @ObjectType()
@@ -108,8 +145,52 @@ export class ReadProjectInputDto {
 export class ReadProjectOutput {
   @Field(type => String)
   id: string;
+
   @Field(type => String)
   name: string;
+
+  @Field({ nullable: true })
+  deptId: string | null;
+
+  @Field()
+  status: ProjectStatus;
+
+  @Field({ nullable: true })
+  location: Location | null;
+
+  /** A version of the location that a "non-authorized" user would see. */
+  @Field({ nullable: true })
+  publicLocation: Location | null;
+
+  @Field({ nullable: true })
+  mouStart: DateTime | null;
+
+  @Field({ nullable: true })
+  mouEnd: DateTime | null;
+
+  @Field(type => [Language], { nullable: true })
+  languages: Language[];
+
+  @Field()
+  partnerships: Partnership[];
+
+  @Field()
+  sensitivity: Sensitivity;
+
+  @Field()
+  team: TeamMember[];
+
+  @Field()
+  budgets: Budget[];
+
+  @Field({ nullable: true })
+  estimatedSubmission: DateTime | null;
+
+  @Field()
+  engagements: ProjectEngagement[];
+
+  @Field()
+  updatedAt: DateTime;
 }
 
 @ObjectType()
@@ -128,8 +209,50 @@ export class ReadProjectOutputDto {
 export class UpdateProjectInput {
   @Field(type => String)
   id: string;
+
   @Field(type => String)
   name: string;
+
+  @Field({ nullable: true })
+  deptId: string | null;
+
+  @Field()
+  status: ProjectStatus;
+
+  @Field({ nullable: true })
+  location: Location | null;
+
+  /** A version of the location that a "non-authorized" user would see. */
+  @Field({ nullable: true })
+  publicLocation: Location | null;
+
+  @Field({ nullable: true })
+  mouStart: DateTime | null;
+
+  @Field({ nullable: true })
+  mouEnd: DateTime | null;
+
+  @Field({ nullable: true })
+  languages: Language[];
+
+  @Field({ nullable: true })
+  partnerships: Partnership[];
+
+  @Field({ nullable: true })
+  sensitivity: Sensitivity;
+
+  @Field({ nullable: true })
+  team: TeamMember[];
+
+  @Field({ nullable: true })
+  budgets: Budget[];
+
+  @Field({ nullable: true })
+  estimatedSubmission: DateTime | null;
+
+  @Field({ nullable: true })
+  engagements: ProjectEngagement[];
+
 }
 
 @InputType()
@@ -142,8 +265,52 @@ export class UpdateProjectInputDto {
 export class UpdateProjectOutput {
   @Field(type => String)
   id: string;
+
   @Field(type => String)
   name: string;
+
+  @Field({ nullable: true })
+  deptId: string | null;
+
+  @Field()
+  status: ProjectStatus;
+
+  @Field({ nullable: true })
+  location: Location | null;
+
+  /** A version of the location that a "non-authorized" user would see. */
+  @Field({ nullable: true })
+  publicLocation: Location | null;
+
+  @Field({ nullable: true })
+  mouStart: DateTime | null;
+
+  @Field()
+  mouEnd: DateTime | null;
+
+  @Field()
+  languages: Language[];
+
+  @Field()
+  partnerships: Partnership[];
+
+  @Field()
+  sensitivity: Sensitivity;
+
+  @Field()
+  team: TeamMember[];
+
+  @Field()
+  budgets: Budget[];
+
+  @Field({ nullable: true })
+  estimatedSubmission: DateTime | null;
+
+  @Field()
+  engagements: ProjectEngagement[];
+
+  @Field()
+  updatedAt: DateTime;
 }
 
 @ObjectType()

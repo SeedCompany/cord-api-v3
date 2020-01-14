@@ -25,10 +25,24 @@ describe('Project e2e', () => {
         operationName: null,
         query: `
         mutation {
-          createProject (input: { project: { name: "${projectName}" } }){
-            project{
+          createProject (input: { project: { name: ${projectName} } }){
+            project {
             id
             name
+            deptId
+            status
+            possibleStatuses
+            location
+            publicLocation
+            mouStart
+            mouEnd
+            languages
+            partnerships
+            sensitivity
+            team
+            budgets
+            estimatedSubmission
+            engagements
             }
           }
         }
@@ -133,16 +147,13 @@ describe('Project e2e', () => {
       })
       .expect(({ body }) => {
         expect(body.data.updateProject.project.id).toBe(projId);
-        expect(body.data.updateProject.project.name).toBe(
-          projectNameNew,
-        );
+        expect(body.data.updateProject.project.name).toBe(projectNameNew);
       })
       .expect(200);
   });
 
   it('delete project', async () => {
     const projectName = 'projectName' + Date.now();
-    
 
     // create org first
     let projId;

@@ -23,7 +23,7 @@ export enum ProjectStatus {
 registerEnumType(ProjectStatus, { name: 'ProjectStatus' });
 
 // Want to give extra props to enum, this is the only way.
-// eslint-disable-next-line @typescript-eslint/no-namespace
+// tslint:disable-next-line: no-namespace
 export namespace ProjectStatus {
   const Enum = ProjectStatus;
   // eslint-disable-next-line @typescript-eslint/no-namespace
