@@ -188,7 +188,6 @@ describe('Organization e2e', () => {
           `,
       })
       .expect(({ body }) => {
-        console.log(body);
         expect(body.data.organizations.organizations.length).toBe(totalOrgs);
       })
       .expect(200);

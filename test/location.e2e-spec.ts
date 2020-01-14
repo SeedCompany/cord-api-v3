@@ -37,7 +37,6 @@ describe('Location e2e', () => {
         `,
       })
       .expect(({ body }) => {
-        console.log(body.data);
         const locId = body.data.createLocation.location.id;
         expect(isValid(locId)).toBe(true);
         expect(body.data.createLocation.location.name).toBe(locName);
