@@ -1,5 +1,5 @@
 import { Field, Int, ObjectType, ID, InputType } from 'type-graphql';
-import { BaseNode } from 'src/common/base-node';
+import { BaseNode } from '../../common/base-node';
 
 @ObjectType()
 @InputType('OrganizationInput')
