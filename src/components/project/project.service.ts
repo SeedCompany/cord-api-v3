@@ -188,7 +188,6 @@ export class ProjectService {
         },
       )
       .then(result => {
-        console.log(JSON.stringify(result.records))
         if (result.records.length > 0) {
           response.project.id = result.records[0].get('id');
           response.project.name = result.records[0].get('name');
