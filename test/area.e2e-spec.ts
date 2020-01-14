@@ -4,7 +4,6 @@ import { INestApplication } from '@nestjs/common';
 import { AppModule } from '../src/app.module';
 import { isValid } from 'shortid';
 import { CreateAreaInput } from '../src/components/area/area.dto';
-import { DatabaseUtility } from '../src/common/database-utility';
 
 describe('Area e2e', () => {
   let app: INestApplication;
@@ -142,7 +141,6 @@ describe('Area e2e', () => {
   it('delete Area', async () => {
     const newArea = new CreateAreaInput();
     newArea.name = 'areaForDelete';
-
     let areaId;
     await request(app.getHttpServer())
       .post('/graphql')
