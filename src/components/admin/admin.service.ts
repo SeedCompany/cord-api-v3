@@ -96,7 +96,7 @@ export class AdminService {
     await Promise.all(wait);
     session.close();
 
-    response.output = 'completed';
+    response.success = true;
 
     return response;
   }
@@ -126,16 +126,22 @@ export class AdminService {
       this.userService.create(user);
     }
 
-    response.output = 'completed';
+    response.success = true;
 
     return response;
   }
 
   async consistencyCheck(): Promise<AdminOutputDto> {
     const response = new AdminOutputDto();
-
-    response.output = 'completed';
-
+    let totalNodes = 0;
+    const session = this.db.driver.session();
+    const result = await session.run('MATCH (n) RETURN count(n) as count', {});
+    totalNodes = result.records[0].get('count');
+    for (let i = 0; i < totalNodes; i++) {
+      // todo
+    }
+    session.close();
+    response.success = true;
     return response;
   }
   async deleteAllData(): Promise<AdminOutputDto> {
@@ -143,7 +149,7 @@ export class AdminService {
     const session = this.db.driver.session();
     await session.run('MATCH (n) DETACH DELETE n');
     session.close();
-    response.output = 'completed';
+    response.success = true;
     return response;
   }
 
@@ -152,7 +158,7 @@ export class AdminService {
     const session = this.db.driver.session();
     await session.run('CALL apoc.schema.assert({}, {})');
     session.close();
-    response.output = 'completed';
+    response.success = true;
     return response;
   }
 }

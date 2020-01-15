@@ -9,5 +9,5 @@ export class AdminInputDto {
 @ObjectType()
 export class AdminOutputDto {
   @Field({ nullable: true })
-  output: string;
+  success: true;
 }
