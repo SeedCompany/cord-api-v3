@@ -1,13 +1,13 @@
 import { InputType, Field, ObjectType } from 'type-graphql';
 
 @InputType()
-export class PrepareDatabaseInputDto {
+export class AdminInputDto {
   @Field()
   input: string;
 }
 
 @ObjectType()
-export class PrepareDatabaseOutputDto {
-  @Field()
+export class AdminOutputDto {
+  @Field({ nullable: true })
   output: string;
 }
