@@ -1,4 +1,4 @@
-import { ObjectType, Field, InputType } from 'type-graphql';
+import { ObjectType, Field, InputType, GraphQLISODateTime } from 'type-graphql';
 import { DateTime } from 'luxon';
 import { Budget } from '../budget/budget';
 import { Language } from '../language/language';
@@ -18,7 +18,7 @@ export class CreateProjectInput {
   @Field({ nullable: true })
   deptId: string | null;
 
-  @Field()
+  @Field({ nullable: true })
   status: ProjectStatus;
 
   @Field({ nullable: true })
@@ -28,35 +28,32 @@ export class CreateProjectInput {
   @Field({ nullable: true })
   publicLocation: Location | null;
 
-  @Field({ nullable: true })
+  @Field(type => GraphQLISODateTime, { nullable: true })
   mouStart: DateTime | null;
 
-  @Field()
+  @Field(type => GraphQLISODateTime, { nullable: true })
   mouEnd: DateTime | null;
 
-  @Field()
+  @Field(type => [Language], { nullable: true })
   languages: Language[];
 
-  @Field()
+  @Field(type => [Partnership], { nullable: true })
   partnerships: Partnership[];
 
-  @Field()
+  @Field(type => Sensitivity, { nullable: true })
   sensitivity: Sensitivity;
 
-  @Field()
+  @Field(type => [TeamMember], { nullable: true })
   team: TeamMember[];
 
-  @Field()
+  @Field(type => [Budget], { nullable: true })
   budgets: Budget[];
 
-  @Field({ nullable: true })
+  @Field(type => GraphQLISODateTime, { nullable: true })
   estimatedSubmission: DateTime | null;
 
-  @Field()
+  @Field(type => [ProjectEngagement], { nullable: true })
   engagements: ProjectEngagement[];
-
-  @Field()
-  updatedAt: DateTime;
 }
 
 @InputType()
@@ -76,7 +73,7 @@ export class CreateProjectOutput {
   @Field({ nullable: true })
   deptId: string | null;
 
-  @Field()
+  @Field({ nullable: true })
   status: ProjectStatus;
 
   @Field({ nullable: true })
@@ -86,35 +83,33 @@ export class CreateProjectOutput {
   @Field({ nullable: true })
   publicLocation: Location | null;
 
-  @Field({ nullable: true })
+  @Field(type => GraphQLISODateTime, { nullable: true })
   mouStart: DateTime | null;
 
-  @Field()
+  @Field(type => GraphQLISODateTime, { nullable: true })
   mouEnd: DateTime | null;
 
-  @Field()
+  @Field(type => [Language], { nullable: true })
   languages: Language[];
 
-  @Field()
+  @Field(type => [Partnership], { nullable: true })
   partnerships: Partnership[];
 
-  @Field()
+  @Field({ nullable: true })
   sensitivity: Sensitivity;
 
-  @Field()
+  @Field(type => [TeamMember], { nullable: true })
   team: TeamMember[];
 
-  @Field()
+  @Field(type => [Budget], { nullable: true })
   budgets: Budget[];
 
   @Field({ nullable: true })
   estimatedSubmission: DateTime | null;
 
-  @Field()
+  @Field(type => [ProjectEngagement], { nullable: true })
   engagements: ProjectEngagement[];
 
-  @Field()
-  updatedAt: DateTime;
 }
 
 @ObjectType()
@@ -152,7 +147,7 @@ export class ReadProjectOutput {
   @Field({ nullable: true })
   deptId: string | null;
 
-  @Field()
+  @Field({ nullable: true })
   status: ProjectStatus;
 
   @Field({ nullable: true })
@@ -162,35 +157,32 @@ export class ReadProjectOutput {
   @Field({ nullable: true })
   publicLocation: Location | null;
 
-  @Field({ nullable: true })
+  @Field(type => GraphQLISODateTime, { nullable: true })
   mouStart: DateTime | null;
 
-  @Field({ nullable: true })
+  @Field(type => GraphQLISODateTime, { nullable: true })
   mouEnd: DateTime | null;
 
   @Field(type => [Language], { nullable: true })
   languages: Language[];
 
-  @Field()
+  @Field(type => [Partnership], { nullable: true })
   partnerships: Partnership[];
 
-  @Field()
+  @Field({ nullable: true })
   sensitivity: Sensitivity;
 
-  @Field()
+  @Field(type => [TeamMember], { nullable: true })
   team: TeamMember[];
 
-  @Field()
+  @Field(type => [Budget], { nullable: true })
   budgets: Budget[];
 
   @Field({ nullable: true })
   estimatedSubmission: DateTime | null;
 
-  @Field()
+  @Field(type => [ProjectEngagement], { nullable: true })
   engagements: ProjectEngagement[];
-
-  @Field()
-  updatedAt: DateTime;
 }
 
 @ObjectType()
@@ -216,7 +208,7 @@ export class UpdateProjectInput {
   @Field({ nullable: true })
   deptId: string | null;
 
-  @Field()
+  @Field({ nullable: true })
   status: ProjectStatus;
 
   @Field({ nullable: true })
@@ -226,33 +218,32 @@ export class UpdateProjectInput {
   @Field({ nullable: true })
   publicLocation: Location | null;
 
-  @Field({ nullable: true })
+  @Field(type => GraphQLISODateTime, { nullable: true })
   mouStart: DateTime | null;
 
-  @Field({ nullable: true })
+  @Field(type => GraphQLISODateTime, { nullable: true })
   mouEnd: DateTime | null;
 
-  @Field({ nullable: true })
+  @Field(type => [Language], { nullable: true })
   languages: Language[];
 
-  @Field({ nullable: true })
+  @Field(type => [Partnership], { nullable: true })
   partnerships: Partnership[];
 
   @Field({ nullable: true })
   sensitivity: Sensitivity;
 
-  @Field({ nullable: true })
+  @Field(type => [TeamMember], { nullable: true })
   team: TeamMember[];
 
-  @Field({ nullable: true })
+  @Field(type => [Budget], { nullable: true })
   budgets: Budget[];
 
   @Field({ nullable: true })
   estimatedSubmission: DateTime | null;
 
-  @Field({ nullable: true })
+  @Field(type => [ProjectEngagement], { nullable: true })
   engagements: ProjectEngagement[];
-
 }
 
 @InputType()
@@ -272,7 +263,7 @@ export class UpdateProjectOutput {
   @Field({ nullable: true })
   deptId: string | null;
 
-  @Field()
+  @Field({ nullable: true })
   status: ProjectStatus;
 
   @Field({ nullable: true })
@@ -282,35 +273,32 @@ export class UpdateProjectOutput {
   @Field({ nullable: true })
   publicLocation: Location | null;
 
-  @Field({ nullable: true })
+  @Field(type => GraphQLISODateTime, { nullable: true })
   mouStart: DateTime | null;
 
-  @Field()
+  @Field(type => GraphQLISODateTime, { nullable: true })
   mouEnd: DateTime | null;
 
-  @Field()
+  @Field(type => [Language], { nullable: true })
   languages: Language[];
 
-  @Field()
+  @Field(type => [Partnership], { nullable: true })
   partnerships: Partnership[];
 
-  @Field()
+  @Field({ nullable: true })
   sensitivity: Sensitivity;
 
-  @Field()
+  @Field(type => [TeamMember], { nullable: true })
   team: TeamMember[];
 
-  @Field()
+  @Field(type => [Budget], { nullable: true })
   budgets: Budget[];
 
   @Field({ nullable: true })
   estimatedSubmission: DateTime | null;
 
-  @Field()
+  @Field(type => [ProjectEngagement], { nullable: true })
   engagements: ProjectEngagement[];
-
-  @Field()
-  updatedAt: DateTime;
 }
 
 @ObjectType()
