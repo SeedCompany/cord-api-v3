@@ -37,7 +37,7 @@ export class OrganizationResolver {
   }
 
   @Query(returns => ListOrganizationsOutputDto, {
-    description: 'Query orgainzations',
+    description: 'Query organizations',
   })
   async organizations(
     @Args('input') { query: input }: ListOrganizationsInputDto,
