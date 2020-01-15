@@ -3,8 +3,7 @@ import { BaseNode } from '../../common/base-node';
 
 @ObjectType()
 @InputType('OrganizationInput')
-export class Organization extends BaseNode{
-
-  @Field(type => String, {nullable: true})
+export class Organization extends BaseNode {
+  @Field(type => String, { nullable: true })
   name: string;
 }
