@@ -1,3 +1,5 @@
+import { registerEnumType } from 'type-graphql';
+
 export enum ProductMethodology {
   // Written
   Paratext = 'written_paratext',
@@ -18,3 +20,7 @@ export enum ProductMethodology {
   SignLanguage = 'visual_sign_language',
   OtherVisual = 'visual_other',
 }
+
+registerEnumType(ProductMethodology, {
+  name: 'ProductMethodology',
+});

@@ -1,3 +1,5 @@
+import { registerEnumType } from 'type-graphql';
+
 export enum ProductMedium {
   Print = 'print',
   Web = 'web',
@@ -8,3 +10,7 @@ export enum ProductMedium {
   Video = 'video',
   Other = 'other',
 }
+
+registerEnumType(ProductMedium, {
+  name: 'ProductMedium',
+});

@@ -1,13 +1,13 @@
 import { BibleBook } from './bible-book';
-import { ProductApproach } from './approach';
-import { ProductMedium } from './medium';
-import { ProductMethodology } from './methodology';
-import { ProductPurpose } from './purpose';
-import { ProductType } from './type';
+import { ProductApproach } from './product-approach';
+import { ProductMedium } from './product-medium';
+import { ProductMethodology } from './product-methodology';
+import { ProductPurpose } from './product-purpose';
+import { BaseNode } from 'src/common/base-node';
+import { ProductType } from './product-type';
 
-export interface Product {
-  id: string;
-  name: ProductType;
+export interface Product extends BaseNode {
+  type: ProductType;
   books: BibleBook[];
   mediums: ProductMedium[];
   purposes: ProductPurpose[];

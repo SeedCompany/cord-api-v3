@@ -1,3 +1,5 @@
+import { registerEnumType } from 'type-graphql';
+
 export enum ProductPurpose {
   EvangelismChurchPlanting = 'evangelism_church_planting',
   ChurchLife = 'church_life',
@@ -5,3 +7,7 @@ export enum ProductPurpose {
   Discipleship = 'discipleship',
   SocialIssues = 'social_issues',
 }
+
+registerEnumType(ProductPurpose, {
+  name: 'ProductPurpose',
+});
