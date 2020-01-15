@@ -5,7 +5,7 @@ import { InternshipEngagementPosition } from './position';
 import { InternshipEngagementStatus } from './status';
 import { InternshipEngagementTag } from './tag';
 import { User } from '../user/user';
-import { ProductMethodology } from '../product/methodology';
+import { ProductMethodology } from '../product/product-methodology';
 
 export interface InternshipEngagement extends EditableInternshipEngagement {
   id: string;
