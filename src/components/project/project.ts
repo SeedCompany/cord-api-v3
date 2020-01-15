@@ -7,20 +7,20 @@ import { TeamMember } from '../user/team-member';
 import { ProjectStatus } from './status';
 import { Partnership } from '../partnership/partnership';
 import { ProjectEngagement } from '../project-engagement/engagement';
-import { Field, ID, ObjectType } from 'type-graphql';
+import { Field, ID, ObjectType, GraphQLISODateTime } from 'type-graphql';
 
 @ObjectType()
 export class Project implements IProject {
   @Field(() => ID)
   id: string;
 
-  @Field()
+  @Field(type => String)
   name: string;
 
   @Field({ nullable: true })
   deptId: string | null;
 
-  @Field()
+  @Field({ nullable: true })
   status: ProjectStatus;
 
   @Field({ nullable: true })
@@ -30,35 +30,32 @@ export class Project implements IProject {
   @Field({ nullable: true })
   publicLocation: Location | null;
 
-  @Field({ nullable: true })
+  @Field(type => GraphQLISODateTime, { nullable: true })
   mouStart: DateTime | null;
 
-  @Field()
+  @Field(type => GraphQLISODateTime, { nullable: true })
   mouEnd: DateTime | null;
 
-  @Field(type => [Language])
+  @Field(type => [Language], { nullable: true })
   languages: Language[];
 
-  @Field(type => [Partnership])
+  @Field(type => [Partnership], { nullable: true })
   partnerships: Partnership[];
 
-  @Field()
+  @Field(type => Sensitivity, { nullable: true })
   sensitivity: Sensitivity;
 
-  @Field(type => [TeamMember])
+  @Field(type => [TeamMember], { nullable: true })
   team: TeamMember[];
 
-  @Field(type => [Budget])
+  @Field(type => [Budget], { nullable: true })
   budgets: Budget[];
 
-  @Field({ nullable: true })
+  @Field(type => GraphQLISODateTime, { nullable: true })
   estimatedSubmission: DateTime | null;
 
-  @Field(type => [ProjectEngagement])
+  @Field(type => [ProjectEngagement], { nullable: true })
   engagements: ProjectEngagement[];
-
-  @Field()
-  updatedAt: DateTime;
 
   static from(project: Project) {
     return Object.assign(new Project(), project);
@@ -81,5 +78,5 @@ export interface IProject {
   budgets: Budget[];
   estimatedSubmission: DateTime | null;
   engagements: ProjectEngagement[];
-  updatedAt: DateTime;
+
 }

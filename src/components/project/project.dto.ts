@@ -95,7 +95,7 @@ export class CreateProjectOutput {
   @Field(type => [Partnership], { nullable: true })
   partnerships: Partnership[];
 
-  @Field({ nullable: true })
+  @Field(type => Sensitivity, { nullable: true })
   sensitivity: Sensitivity;
 
   @Field(type => [TeamMember], { nullable: true })
@@ -104,7 +104,7 @@ export class CreateProjectOutput {
   @Field(type => [Budget], { nullable: true })
   budgets: Budget[];
 
-  @Field({ nullable: true })
+  @Field(type => GraphQLISODateTime, { nullable: true })
   estimatedSubmission: DateTime | null;
 
   @Field(type => [ProjectEngagement], { nullable: true })
@@ -169,7 +169,7 @@ export class ReadProjectOutput {
   @Field(type => [Partnership], { nullable: true })
   partnerships: Partnership[];
 
-  @Field({ nullable: true })
+  @Field(type => Sensitivity, { nullable: true })
   sensitivity: Sensitivity;
 
   @Field(type => [TeamMember], { nullable: true })
@@ -178,7 +178,7 @@ export class ReadProjectOutput {
   @Field(type => [Budget], { nullable: true })
   budgets: Budget[];
 
-  @Field({ nullable: true })
+  @Field(type => GraphQLISODateTime, { nullable: true })
   estimatedSubmission: DateTime | null;
 
   @Field(type => [ProjectEngagement], { nullable: true })
@@ -230,7 +230,7 @@ export class UpdateProjectInput {
   @Field(type => [Partnership], { nullable: true })
   partnerships: Partnership[];
 
-  @Field({ nullable: true })
+  @Field(type => Sensitivity, { nullable: true })
   sensitivity: Sensitivity;
 
   @Field(type => [TeamMember], { nullable: true })
@@ -239,7 +239,7 @@ export class UpdateProjectInput {
   @Field(type => [Budget], { nullable: true })
   budgets: Budget[];
 
-  @Field({ nullable: true })
+  @Field(type => GraphQLISODateTime, { nullable: true })
   estimatedSubmission: DateTime | null;
 
   @Field(type => [ProjectEngagement], { nullable: true })
@@ -285,7 +285,7 @@ export class UpdateProjectOutput {
   @Field(type => [Partnership], { nullable: true })
   partnerships: Partnership[];
 
-  @Field({ nullable: true })
+  @Field(type => Sensitivity, { nullable: true })
   sensitivity: Sensitivity;
 
   @Field(type => [TeamMember], { nullable: true })
@@ -294,7 +294,7 @@ export class UpdateProjectOutput {
   @Field(type => [Budget], { nullable: true })
   budgets: Budget[];
 
-  @Field({ nullable: true })
+  @Field(type => GraphQLISODateTime, { nullable: true })
   estimatedSubmission: DateTime | null;
 
   @Field(type => [ProjectEngagement], { nullable: true })
