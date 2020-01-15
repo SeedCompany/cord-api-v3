@@ -16,6 +16,8 @@ import { UserResolver } from './components/user/user.resolver';
 import { UserService } from './components/user/user.service';
 import { ProductResolver } from './components/product/product.resolver';
 import { ProductService } from './components/product/product.service';
+import { AdminService } from './components/admin/admin.service';
+import { AdminResolver } from './components/admin/admin.resolver';
 
 @Module({
   imports: [GraphQLModule.forRoot({ autoSchemaFile: 'schema.gql' })],
@@ -37,6 +39,8 @@ import { ProductService } from './components/product/product.service';
     UserResolver,
     ProductResolver,
     ProductService,
+    AdminService,
+    AdminResolver,
   ],
 })
 export class AppModule {}
