@@ -3,7 +3,45 @@ import * as request from 'supertest';
 import { INestApplication } from '@nestjs/common';
 import { AppModule } from '../src/app.module';
 import { isValid } from 'shortid';
-import { CreateProjectInput } from '../src/components/project/project.dto';
+
+async function createProject(
+  app: INestApplication,
+  projectName: string,
+): Promise<string> {
+  let projectId = '';
+  await request(app.getHttpServer())
+    .post('/graphql')
+    .send({
+      operationName: null,
+      query: `
+    mutation {
+      createProject (input: { project: { name: ${projectName} } }){
+        project {
+        id
+        name
+        deptId
+        status
+        location
+        publicLocation
+        mouStart
+        mouEnd
+        languages
+        partnerships
+        sensitivity
+        team
+        budgets
+        estimatedSubmission
+        engagements
+        }
+      }
+    }
+    `,
+    })
+    .then(({ body }) => {
+      projectId = body.data.createProject.project.id;
+    });
+  return projectId;
+}
 
 describe('Project e2e', () => {
   let app: INestApplication;
@@ -17,9 +55,9 @@ describe('Project e2e', () => {
     await app.init();
   });
 
-  it('create project', () => {
+  it('create project', async () => {
     const projectName = 'projectName' + Date.now();
-    return request(app.getHttpServer())
+    await request(app.getHttpServer())
       .post('/graphql')
       .send({
         operationName: null,
@@ -31,7 +69,6 @@ describe('Project e2e', () => {
             name
             deptId
             status
-            possibleStatuses
             location
             publicLocation
             mouStart
@@ -59,30 +96,11 @@ describe('Project e2e', () => {
   it('read one project by id', async () => {
     const projectName = 'projectName' + Date.now();
 
-    // create org first
-    let projId;
-    await request(app.getHttpServer())
-      .post('/graphql')
-      .send({
-        operationName: null,
-        query: `
-        mutation {
-          createProject (input: { project: { name: "${projectName}" } }){
-            project{
-            id
-            name
-            }
-          }
-        }
-        `,
-      })
-      .expect(({ body }) => {
-        projId = body.data.createProject.project.id;
-      })
-      .expect(200);
+    // create project first
+    const projId = await createProject(app, projectName);
 
     // test reading new org
-    return request(app.getHttpServer())
+    await request(app.getHttpServer())
       .post('/graphql')
       .send({
         operationName: null,
@@ -108,27 +126,8 @@ describe('Project e2e', () => {
     const projectName = 'projectOld' + Date.now();
     const projectNameNew = 'projectNew' + Date.now();
 
-    // create org first
-    let projId;
-    await request(app.getHttpServer())
-      .post('/graphql')
-      .send({
-        operationName: null,
-        query: `
-          mutation {
-            createProject (input: { project: { name: "${projectName}" } }){
-              project{
-              id
-              name
-              }
-            }
-          }
-          `,
-      })
-      .expect(({ body }) => {
-        projId = body.data.createProject.project.id;
-      })
-      .expect(200);
+    // create project first
+    const projId = await createProject(app, projectName);
 
     return request(app.getHttpServer())
       .post('/graphql')
@@ -155,27 +154,8 @@ describe('Project e2e', () => {
   it('delete project', async () => {
     const projectName = 'projectName' + Date.now();
 
-    // create org first
-    let projId;
-    await request(app.getHttpServer())
-      .post('/graphql')
-      .send({
-        operationName: null,
-        query: `
-              mutation {
-                createProject (input: { project: { name: "${projectName}" } }){
-                  project{
-                  id
-                  name
-                  }
-                }
-              }
-              `,
-      })
-      .expect(({ body }) => {
-        projId = body.data.createProject.project.id;
-      })
-      .expect(200);
+    // create project first
+    const projId = await createProject(app, projectName);
 
     return request(app.getHttpServer())
       .post('/graphql')

@@ -1,8 +1,9 @@
-import { Field, ID, ObjectType } from 'type-graphql';
+import { Field, ID, ObjectType, InputType } from 'type-graphql';
 import { Area } from '../area/area';
 
 @ObjectType()
-export class Location implements ILocation {
+@InputType('LocationInput')
+export class Location {
   @Field(() => ID)
   id: string;
 

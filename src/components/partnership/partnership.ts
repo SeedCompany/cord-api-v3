@@ -2,9 +2,10 @@ import { DateTime } from 'luxon';
 import { Organization } from '../organization/organization';
 import { PartnershipAgreementStatus } from './agreement-status';
 import { PartnershipType } from './partnership-type';
-import { Field, GraphQLISODateTime, ObjectType } from 'type-graphql';
+import { Field, GraphQLISODateTime, ObjectType, InputType } from 'type-graphql';
 
 @ObjectType()
+@InputType('PartnershipInput')
 export class Partnership {
   @Field(type => PartnershipAgreementStatus, {nullable: true})
   agreementStatus: PartnershipAgreementStatus;

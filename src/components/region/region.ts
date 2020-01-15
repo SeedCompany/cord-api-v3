@@ -1,6 +1,7 @@
-import { Field, ID, ObjectType } from 'type-graphql';
+import { Field, ID, ObjectType, InputType } from 'type-graphql';
 
 @ObjectType()
+@InputType('RegionInput')
 export class Region implements IRegion {
   @Field(() => ID)
   id: string;

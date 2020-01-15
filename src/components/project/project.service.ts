@@ -22,21 +22,31 @@ export class ProjectService {
     const id = generate();
     await session
       .run(
-        `MERGE (project:Project {active: true, owningOrg: "seedcompany",
-                    name: $name,
-                    deptId: $deptId,
-                    status: $status,
-                    location: $location,
-                    publicLocation: $publicLocation,
-                    mouStart: $mouStart,
-                    mouEnd: $mouEnd,
-                    languages: $languages,
-                    partnerships: $partnerships,
-                    sensitivity: $sensitivity,
-                    team: $team,
-                    budgets: $budgets,
-                    estimatedSubmission: $estimatedSubmission,
-                    engagements: $engagements})
+        `
+        CREATE (project:Project 
+                  {active: true, 
+                    owningOrg: "seedcompany",
+                    id: $id ,
+                    name: $name
+                  })  
+                  location: $location,
+                  publicLocation: $publicLocation,
+                  WITH *
+                  FOREACH (n IN $partnerships | 
+                    CREATE (project)-
+                    []->
+                    
+                  WITH *
+                  FOREACH (n IN $team | 
+                    CREATE (project)-
+                    []->
+                  WITH *
+                  FOREACH (n IN $budgets | 
+                    CREATE (project)-
+                    []->
+                    
+                  WITH *
+                  FOREACH (n IN $engagements})
                 ON CREATE SET project.id = $id, project.updatedAt = datetime()
                 RETURN
                 project.id as id,
