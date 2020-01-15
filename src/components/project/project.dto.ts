@@ -15,17 +15,17 @@ export class CreateProjectInput {
   @Field(type => String)
   name: string;
 
-  @Field({ nullable: true })
+  @Field(type => String, { nullable: true })
   deptId: string | null;
 
-  @Field({ nullable: true })
+  @Field(type => ProjectStatus, { nullable: true })
   status: ProjectStatus;
 
-  @Field({ nullable: true })
+  @Field(type => Location, { nullable: true })
   location: Location | null;
 
   /** A version of the location that a "non-authorized" user would see. */
-  @Field({ nullable: true })
+  @Field(type => Location, { nullable: true })
   publicLocation: Location | null;
 
   @Field(type => GraphQLISODateTime, { nullable: true })
@@ -70,17 +70,17 @@ export class CreateProjectOutput {
   @Field(type => String)
   name: string;
 
-  @Field({ nullable: true })
+  @Field(type => String, { nullable: true })
   deptId: string | null;
 
-  @Field({ nullable: true })
+  @Field(type => ProjectStatus, { nullable: true })
   status: ProjectStatus;
 
-  @Field({ nullable: true })
+  @Field(type => Location, { nullable: true })
   location: Location | null;
 
   /** A version of the location that a "non-authorized" user would see. */
-  @Field({ nullable: true })
+  @Field(type => Location, { nullable: true })
   publicLocation: Location | null;
 
   @Field(type => GraphQLISODateTime, { nullable: true })
@@ -144,17 +144,17 @@ export class ReadProjectOutput {
   @Field(type => String)
   name: string;
 
-  @Field({ nullable: true })
+  @Field(type => String, { nullable: true })
   deptId: string | null;
 
-  @Field({ nullable: true })
+  @Field(type => ProjectStatus, { nullable: true })
   status: ProjectStatus;
 
-  @Field({ nullable: true })
+  @Field(type => Location, { nullable: true })
   location: Location | null;
 
   /** A version of the location that a "non-authorized" user would see. */
-  @Field({ nullable: true })
+  @Field(type => Location, { nullable: true })
   publicLocation: Location | null;
 
   @Field(type => GraphQLISODateTime, { nullable: true })
@@ -205,17 +205,17 @@ export class UpdateProjectInput {
   @Field(type => String)
   name: string;
 
-  @Field({ nullable: true })
+  @Field(type => String, { nullable: true })
   deptId: string | null;
 
-  @Field({ nullable: true })
+  @Field(type => ProjectStatus, { nullable: true })
   status: ProjectStatus;
 
-  @Field({ nullable: true })
+  @Field(type => Location, { nullable: true })
   location: Location | null;
 
   /** A version of the location that a "non-authorized" user would see. */
-  @Field({ nullable: true })
+  @Field(type => Location, { nullable: true })
   publicLocation: Location | null;
 
   @Field(type => GraphQLISODateTime, { nullable: true })
@@ -260,17 +260,17 @@ export class UpdateProjectOutput {
   @Field(type => String)
   name: string;
 
-  @Field({ nullable: true })
+  @Field(type => String, { nullable: true })
   deptId: string | null;
 
-  @Field({ nullable: true })
+  @Field(type => ProjectStatus, { nullable: true })
   status: ProjectStatus;
 
-  @Field({ nullable: true })
+  @Field(type => Location, { nullable: true })
   location: Location | null;
 
   /** A version of the location that a "non-authorized" user would see. */
-  @Field({ nullable: true })
+  @Field(type => Location, { nullable: true })
   publicLocation: Location | null;
 
   @Field(type => GraphQLISODateTime, { nullable: true })

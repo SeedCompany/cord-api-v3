@@ -1,10 +1,10 @@
 import { DateTime } from 'luxon';
 import { Role } from './role';
 import { User } from './user';
+import { ObjectType } from 'type-graphql';
 
-export class TeamMember {
-  
-}
+@ObjectType()
+export class TeamMember {}
 export interface TeamMember {
   user: User;
   roles: Role[];

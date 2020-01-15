@@ -1,6 +1,7 @@
 import { Organization } from '../organization/organization';
-import { registerEnumType } from 'type-graphql';
+import { registerEnumType, ObjectType } from 'type-graphql';
 
+@ObjectType()
 export class Budget {}
 export interface Budget {
   id: string;

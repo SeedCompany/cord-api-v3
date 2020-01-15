@@ -4,7 +4,9 @@ import { Language } from '../language/language';
 import { ProjectEngagementStatus } from './status';
 import { ProjectEngagementTag } from './tag';
 import { Product } from '../product/product';
+import { ObjectType } from 'type-graphql';
 
+@ObjectType()
 export class ProjectEngagement {
 }
 export interface ProjectEngagement extends EditableProjectEngagement {
