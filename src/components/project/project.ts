@@ -20,14 +20,14 @@ export class Project implements IProject {
   @Field({ nullable: true })
   deptId: string | null;
 
-  @Field({ nullable: true })
+  @Field(type => ProjectStatus, { nullable: true })
   status: ProjectStatus;
 
-  @Field({ nullable: true })
+  @Field(type => Location, { nullable: true })
   location: Location | null;
 
   /** A version of the location that a "non-authorized" user would see. */
-  @Field({ nullable: true })
+  @Field(type => Location, { nullable: true })
   publicLocation: Location | null;
 
   @Field(type => GraphQLISODateTime, { nullable: true })
