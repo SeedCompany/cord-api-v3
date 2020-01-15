@@ -1,3 +1,5 @@
+import { registerEnumType } from 'type-graphql';
+
 export enum InternshipEngagementPosition {
   ExegeticalFacilitator = 'exegetical_facilitator',
   TranslationConsultantInTraining = 'translation_consultant_in_training',
@@ -19,3 +21,7 @@ export enum InternshipEngagementPosition {
   TranslationFacilitator = 'translation_facilitator',
   Translator = 'translator',
 }
+
+registerEnumType(InternshipEngagementPosition, {
+  name: 'InternshipEngagementPosition',
+});

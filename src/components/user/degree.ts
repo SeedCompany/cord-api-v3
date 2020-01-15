@@ -1,3 +1,5 @@
+import { registerEnumType } from 'type-graphql';
+
 export enum Degree {
   Primary = 'primary',
   Secondary = 'secondary',
@@ -6,3 +8,5 @@ export enum Degree {
   Masters = 'masters',
   Doctorate = 'doctorate',
 }
+
+registerEnumType(Degree, { name: 'Degree' });

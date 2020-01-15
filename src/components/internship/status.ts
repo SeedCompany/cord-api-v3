@@ -1,3 +1,5 @@
+import { registerEnumType } from 'type-graphql';
+
 export enum InternshipStatus {
   EarlyConversations = 'early_conversations',
   PendingConceptApproval = 'pending_concept_approval',
@@ -17,6 +19,8 @@ export enum InternshipStatus {
   Terminated = 'terminated',
   Completed = 'completed',
 }
+
+registerEnumType(InternshipStatus, { name: 'InternshipStatus' });
 
 // Want to give extra props to enum, this is the only way.
 // eslint-disable-next-line @typescript-eslint/no-namespace

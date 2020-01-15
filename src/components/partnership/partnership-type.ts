@@ -1,3 +1,5 @@
+import { registerEnumType } from 'type-graphql';
+
 export enum PartnershipType {
   Managing = 'm',
   Funding = 'f',
@@ -5,3 +7,5 @@ export enum PartnershipType {
   Technical = 't',
   Resource = 'r',
 }
+
+registerEnumType(PartnershipType, { name: 'PartnershipType' });

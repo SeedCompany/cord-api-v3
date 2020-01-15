@@ -1,3 +1,5 @@
+import { registerEnumType } from 'type-graphql';
+
 export enum ProjectEngagementStatus {
   Active = 'active',
   Completed = 'completed',
@@ -11,3 +13,5 @@ export enum ProjectEngagementStatus {
   AwaitingDedication = 'awaiting_dedication',
   Transferred = 'transferred',
 }
+
+registerEnumType(ProjectEngagementStatus, { name: 'ProjectEngagementStatus' });
