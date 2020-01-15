@@ -1,4 +1,5 @@
 import { Organization } from '../organization/organization';
+import { registerEnumType } from 'type-graphql';
 
 export interface Budget {
   id: string;
@@ -18,3 +19,5 @@ export interface BudgetDetails {
   fiscalYear: number;
   amount: number;
 }
+
+registerEnumType(BudgetStatus, {name: 'BudgetStatus'});

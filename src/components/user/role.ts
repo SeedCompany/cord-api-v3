@@ -1,3 +1,5 @@
+import { registerEnumType } from 'type-graphql';
+
 export enum Role {
   Admin = 'adm',
   BibleTranslationLiaison = 'btl',
@@ -22,3 +24,5 @@ export enum Role {
   Translator = 't',
   Writer = 'w',
 }
+
+registerEnumType(Role, { name: 'Role' });
