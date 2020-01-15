@@ -10,15 +10,16 @@ import {
   ReadLanguageInput,
   UpdateLanguageInput,
   DeleteLanguageInput,
+  ListLanguagesInput,
+  ListLanguagesOutputDto,
 } from './language.dto';
+import { Language } from './language';
 
 @Injectable()
 export class LanguageService {
   constructor(private readonly db: DatabaseService) {}
 
-  async create(
-    input: CreateLanguageInput,
-  ): Promise<CreateLanguageOutputDto> {
+  async create(input: CreateLanguageInput): Promise<CreateLanguageOutputDto> {
     const response = new CreateLanguageOutputDto();
     const session = this.db.driver.session();
     const id = generate();
@@ -42,9 +43,7 @@ export class LanguageService {
     return response;
   }
 
-  async readOne(
-    input: ReadLanguageInput,
-  ): Promise<ReadLanguageOutputDto> {
+  async readOne(input: ReadLanguageInput): Promise<ReadLanguageOutputDto> {
     const response = new ReadLanguageOutputDto();
     const session = this.db.driver.session();
     await session
@@ -79,7 +78,6 @@ export class LanguageService {
       )
       .then(result => {
         if (result.records.length > 0) {
-
           response.language.id = result.records[0].get('id');
           response.language.name = result.records[0].get('name');
         } else {
@@ -111,6 +109,36 @@ export class LanguageService {
         console.log(error);
       })
       .then(() => session.close());
+
+    return response;
+  }
+
+  async queryLanguages(
+    query: ListLanguagesInput,
+  ): Promise<ListLanguagesOutputDto> {
+    const response = new ListLanguagesOutputDto();
+    const session = this.db.driver.session();
+    const skipIt = query.page * query.count;
+
+    const result = await session.run(
+      `MATCH (language:Language {active: true}) WHERE language.name CONTAINS $filter RETURN language.id as id, language.name as name ORDER BY ${query.sort} ${query.order} SKIP $skip LIMIT $count`,
+      {
+        filter: query.filter,
+        skip: skipIt,
+        count: query.count,
+        sort: query.sort,
+        order: query.order,
+      },
+    );
+
+    session.close();
+
+    response.languages = result.records.map(record => {
+      const org = new Language();
+      org.id = record.get('id');
+      org.name = record.get('name');
+      return org;
+    });
 
     return response;
   }

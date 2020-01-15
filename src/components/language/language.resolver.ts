@@ -10,6 +10,8 @@ import {
   UpdateLanguageOutputDto,
   DeleteLanguageInputDto,
   DeleteLanguageOutputDto,
+  ListLanguagesInputDto,
+  ListLanguagesOutputDto,
 } from './language.dto';
 import { Language } from './language';
 
@@ -53,5 +55,14 @@ export class LanguageResolver {
     { language: input }: DeleteLanguageInputDto,
   ): Promise<DeleteLanguageOutputDto> {
     return await this.langService.delete(input);
+  }
+
+  @Query(returns => ListLanguagesOutputDto, {
+    description: 'Query organizations',
+  })
+  async languages(
+    @Args('input') { query: input }: ListLanguagesInputDto,
+  ): Promise<ListLanguagesOutputDto> {
+    return await this.langService.queryLanguages(input);
   }
 }

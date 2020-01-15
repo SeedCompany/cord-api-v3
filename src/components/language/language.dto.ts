@@ -1,4 +1,5 @@
 import { Field, InputType, ObjectType } from 'type-graphql';
+import { Language } from './language';
 
 // CREATE
 
@@ -16,18 +17,18 @@ export class CreateLanguageInputDto {
 
 @ObjectType()
 export class CreateLanguageOutput {
-    @Field(type => String)
-    id: string;
-    @Field(type => String)
-    name: string;
+  @Field(type => String)
+  id: string;
+  @Field(type => String)
+  name: string;
 }
 
 @ObjectType()
 export class CreateLanguageOutputDto {
-  @Field({nullable: true}) // nullable in case of error
+  @Field({ nullable: true }) // nullable in case of error
   language: CreateLanguageOutput;
-  constructor(){
-      this.language = new CreateLanguageOutput();
+  constructor() {
+    this.language = new CreateLanguageOutput();
   }
 }
 
@@ -121,5 +122,41 @@ export class DeleteLanguageOutputDto {
   language: DeleteLanguageOutput;
   constructor() {
     this.language = new DeleteLanguageOutput();
+  }
+}
+// List all languages (query)
+
+@InputType()
+export class ListLanguagesInput {
+  @Field(type => String, { nullable: true, defaultValue: '' })
+  filter: string;
+  @Field(type => Number, { nullable: true, defaultValue: 0 })
+  page: number;
+  @Field(type => Number, { nullable: true, defaultValue: 25 })
+  count: number;
+  @Field(type => String, { nullable: true, defaultValue: 'DESC' })
+  order: string;
+  @Field(type => String, { nullable: true, defaultValue: 'name' })
+  sort: string;
+}
+
+@InputType()
+export class ListLanguagesInputDto {
+  @Field()
+  query: ListLanguagesInput;
+}
+
+@ObjectType()
+export class ListLanguagesOutput {
+  @Field(type => Language, { nullable: true })
+  language: Language;
+}
+
+@ObjectType()
+export class ListLanguagesOutputDto {
+  @Field(type => [Language], { nullable: true }) // nullable in case of error
+  languages: Language[];
+  constructor() {
+    this.languages = [];
   }
 }
