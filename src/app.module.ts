@@ -10,12 +10,13 @@ import { OrganizationResolver } from './components/organization/organization.res
 import { LanguageResolver } from './components/language/language.resolver';
 import { LanguageService } from './components/language/language.service';
 import { LocationResolver } from './components/location/location.resolver';
-import { DatabaseUtility } from './common/database-utility';
 import { LocationService } from './components/location/location.service';
 import { UserResolver } from './components/user/user.resolver';
 import { UserService } from './components/user/user.service';
 import { ProductResolver } from './components/product/product.resolver';
 import { ProductService } from './components/product/product.service';
+import { AdminService } from './components/admin/admin.service';
+import { AdminResolver } from './components/admin/admin.resolver';
 
 @Module({
   imports: [GraphQLModule.forRoot({ autoSchemaFile: 'schema.gql' })],
@@ -24,7 +25,6 @@ import { ProductService } from './components/product/product.service';
     AreaResolver,
     AreaService,
     DatabaseService,
-    DatabaseUtility,
     OrganizationResolver,
     OrganizationService,
     LanguageResolver,
@@ -37,6 +37,8 @@ import { ProductService } from './components/product/product.service';
     UserResolver,
     ProductResolver,
     ProductService,
+    AdminService,
+    AdminResolver,
   ],
 })
 export class AppModule {}
