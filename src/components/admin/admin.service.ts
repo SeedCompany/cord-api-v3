@@ -123,7 +123,7 @@ export class AdminService {
       user.email = s;
       user.realFirstName = s;
       user.realLastName = s;
-      this.userService.create(user);
+      this.userService.create(user, "token - replace me later");
     }
 
     response.success = true;

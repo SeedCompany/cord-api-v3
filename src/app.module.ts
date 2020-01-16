@@ -17,9 +17,11 @@ import { ProductResolver } from './components/product/product.resolver';
 import { ProductService } from './components/product/product.service';
 import { AdminService } from './components/admin/admin.service';
 import { AdminResolver } from './components/admin/admin.resolver';
+import { AuthService } from './components/auth/auth.service';
+import { AuthResolver } from './components/auth/auth.resolver';
 
 @Module({
-  imports: [GraphQLModule.forRoot({ autoSchemaFile: 'schema.gql' })],
+  imports: [GraphQLModule.forRoot({ autoSchemaFile: 'schema.gql', context: ({ req, res }) => ({ req, res }) })],
   controllers: [],
   providers: [
     AreaResolver,
@@ -39,6 +41,8 @@ import { AdminResolver } from './components/admin/admin.resolver';
     ProductService,
     AdminService,
     AdminResolver,
+    AuthService,
+    AuthResolver,
   ],
 })
 export class AppModule {}

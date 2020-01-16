@@ -19,20 +19,69 @@ export class UserService {
 
   async create(
     input: CreateUserInput,
+    token: string,
   ): Promise<CreateUserOutputDto> {
     const response = new CreateUserOutputDto();
     const session = this.db.driver.session();
     const id = generate();
     await session
       .run(
-        'MERGE (user:User {active: true, owningOrg: "seedcompany", email: $email, realFirstName: $realFirstName, realLastName: $realLastName, displayFirstName: $displayFirstName, displayLastName: $displayLastName}) ON CREATE SET user.id = $id, user.timestamp = datetime() RETURN user.id as id, user.email as email, user.realFirstName as realFirstName, user.realLastName as realLastName, user.displayFirstName as displayFirstName, user.displayLastName as displayLastName',
+        `
+        MATCH (token:Token {active: true, value: $token})
+        CREATE
+          (user:User {
+            id: $id,
+            active: true,
+            createdAt: datetime()
+          })
+          -[:email {active: true}]->
+          (email:EmailAddress:Property {
+            active: true,
+            value: $email
+          }),
+          (user)-[:token {active: true, createdAt: datetime()}]->(token),
+          (user)-[:password {active: true, createdAt: datetime()}]->
+          (password:Property {
+            active: true,
+            value: $password
+          }),
+          (user)-[:realFirstName {active: true, createdAt: datetime()}]->
+          (realFirstName:Property {
+            active: true,
+            value: $realFirstName
+          }),
+          (user)-[:realLastName {active: true, createdAt: datetime()}]->
+          (realLastName:Property {
+            active: true,
+            value: $realLastName
+          }),
+          (user)-[:displayFirstName {active: true, createdAt: datetime()}]->
+          (displayFirstName:Property {
+            active: true,
+            value: $displayFirstName
+          }),
+          (user)-[:displayLastName {active: true, createdAt: datetime()}]->
+          (displayLastName:Property {
+            active: true,
+            value: $displayLastName
+          })
+        RETURN
+          user.id as id,
+          email.value as email,
+          realFirstName.value as realFirstName,
+          realLastName.value as realLastName,
+          displayFirstName.value as displayFirstName,
+          displayLastName.value as displayLastName
+        `,
         {
           id,
+          token,
           email: input.email,
           realFirstName: input.realFirstName,
           realLastName: input.realLastName,
           displayFirstName: input.displayFirstName,
           displayLastName: input.displayLastName,
+          password: input.password,
         },
       )
       .then(result => {
@@ -58,7 +107,22 @@ export class UserService {
     const session = this.db.driver.session();
     await session
       .run(
-        'MATCH (user:User {active: true, owningOrg: "seedcompany"}) WHERE user.id = $id RETURN user.id as id, user.email as email, user.realFirstName as realFirstName, user.realLastName as realLastName, user.displayFirstName as displayFirstName, user.displayLastName as displayLastName',
+        `
+        MATCH
+          (user:User {active: true, id: $id}),
+          (user)-[:email {active: true}]->(email:EmailAddress {active: true}),
+          (user)-[:realFirstName {active: true}]->(realFirstName:Property {active: true}),
+          (user)-[:realLastName {active: true}]->(realLastName:Property {active: true}),
+          (user)-[:displayFirstName {active: true}]->(displayFirstName:Property {active: true}),
+          (user)-[:displayLastName {active: true}]->(displayLastName:Property {active: true})
+        RETURN
+          user.id as id,
+          email.value as email,
+          realFirstName.value as realFirstName,
+          realLastName.value as realLastName,
+          displayFirstName.value as displayFirstName,
+          displayLastName.value as displayLastName
+        `,
         {
           id: input.id,
         },
@@ -84,7 +148,28 @@ export class UserService {
     const session = this.db.driver.session();
     await session
       .run(
-        'MATCH (user:User {active: true, owningOrg: "seedcompany", id: $id}) SET user.email = $email, user.realFirstName = $realFirstName, user.realLastName = $realLastName, user.displayFirstName = $displayFirstName, user.displayLastName = $displayLastName RETURN user.id as id, user.email as email, user.realFirstName as realFirstName, user.realLastName as realLastName, user.displayFirstName as displayFirstName, user.displayLastName as displayLastName',
+        `
+        MATCH
+          (user:User {active: true, id: $id}),
+          (user)-[:email {active: true}]->(email:EmailAddress {active: true}),
+          (user)-[:realFirstName {active: true}]->(realFirstName:Property {active: true}),
+          (user)-[:realLastName {active: true}]->(realLastName:Property {active: true}),
+          (user)-[:displayFirstName {active: true}]->(displayFirstName:Property {active: true}),
+          (user)-[:displayLastName {active: true}]->(displayLastName:Property {active: true})
+        SET
+          email.value = $email,
+          realFirstName.value = $realFirstName,
+          realLastName.value = $realLastName,
+          displayFirstName.value = $displayFirstName,
+          displayLastName.value = $displayLastName
+        RETURN
+          user.id as id,
+          email.value as email,
+          realFirstName.value as realFirstName,
+          realLastName.value as realLastName,
+          displayFirstName.value as displayFirstName,
+          displayLastName.value as displayLastName
+        `,
         {
           id: input.id,
           email: input.email,
@@ -120,7 +205,14 @@ export class UserService {
     const session = this.db.driver.session();
     await session
       .run(
-        'MATCH (user:User {active: true, owningOrg: "seedcompany", id: $id}) SET user.active = false RETURN user.id as id',
+        `
+        MATCH
+          (user:User {active: true, id: $id})
+        SET
+          user.active = false
+        RETURN
+          user.id as id
+        `,
         {
           id: input.id,
         },
