@@ -23,7 +23,7 @@ export class AuthResolver {
   @Mutation(returns => LoginUserOutputDto, {
     description: 'Login a user',
   })
-  async login(
+  async loginUser(
     @Context() context: GraphQLExecutionContext,
     @Args('username') username: string,
     @Args('password') password: string,
