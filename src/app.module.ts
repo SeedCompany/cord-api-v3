@@ -3,7 +3,6 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { AreaResolver } from './components/area/area.resolver';
 import { AreaService } from './components/area/area.service';
 import { DatabaseService } from './core/database.service';
-import { DatabaseUtility } from './common/database-utility';
 import { LanguageResolver } from './components/language/language.resolver';
 import { LanguageService } from './components/language/language.service';
 import { LocationResolver } from './components/location/location.resolver';

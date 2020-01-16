@@ -109,7 +109,22 @@ describe('Project e2e', () => {
         operationName: null,
         query: `
         mutation {
-          updateProject (input: { project: {id: "${projId}", name: "${projectNameNew}" } }){
+          updateProject (input: { project: {
+            id: "${projId}",
+            name: "${projectNameNew}",
+            deptId: null,
+            status: null,
+            location: null,
+            publicLocation: null,
+            mouStart: null,
+            mouEnd: null,
+            partnerships: null,
+            sensitivity: null,
+            team: null,
+            budgets: null,
+            estimatedSubmission: null,
+            engagements: null,
+          } }){
             project {
             id
             name

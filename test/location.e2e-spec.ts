@@ -45,8 +45,7 @@ describe('Location e2e', () => {
   });
 
   it('read one location by id', async () => {
-    const newLoc = new CreateLocationInput();
-    newLoc.name = 'locNameLocTest1' + generate();
+    const newLoc = 'locNameLocTest1' + generate();
 
     // create loc first
     let locId;
@@ -93,8 +92,7 @@ describe('Location e2e', () => {
   });
 
   it('update location', async () => {
-    const newLoc = new CreateLocationInput();
-    newLoc.name = 'locNameForUpdateLocTest1' + generate();
+    const newLoc = 'locNameForUpdateLocTest1' + generate();
 
     let locId;
     await request(app.getHttpServer())
@@ -140,8 +138,7 @@ describe('Location e2e', () => {
   });
 
   it('delete location', async () => {
-    const newLoc = new CreateLocationInput();
-    newLoc.name = 'locNameForDeleteLocTest1' + generate();
+    const newLoc = 'locNameForDeleteLocTest1' + generate();
 
     let locId;
     await request(app.getHttpServer())

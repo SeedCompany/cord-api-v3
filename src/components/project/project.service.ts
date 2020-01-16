@@ -22,7 +22,7 @@ export class ProjectService {
     const id = generate();
     await session
       .run(
-        `MERGE (project:Project {active: true, name: $name}) ON CREATE SET project.id = $id, project.timestamp = datetime() RETURN
+        `MERGE (project:Project {active: true, name: $name, owningOrg: "seedcompany"}) ON CREATE SET project.id = $id, project.timestamp = datetime() RETURN
         project.id as id,
         project.name as name,
         project.deptId as deptId,
@@ -89,7 +89,7 @@ export class ProjectService {
     await session
       .run(
         `MATCH (project:Project {active: true, owningOrg: "seedcompany"})
-        WHERE project.id = $id
+        WHERE project.id = "${input.id}"
         RETURN project.id as id,
         project.name as name,
         project.deptId as deptId,
@@ -110,7 +110,6 @@ export class ProjectService {
         },
       )
       .then(result => {
-        console.log(result)
         response.project.id = result.records[0].get('id');
         response.project.name = result.records[0].get('name');
         response.project.deptId = result.records[0].get('deptId');
@@ -144,11 +143,19 @@ export class ProjectService {
     await session
       .run(
         `MATCH (project:Project {active: true, owningOrg: "seedcompany", id: $id})
-        SET project.email = $email,
-        project.realFirstName = $realFirstName,
-        project.realLastName = $realLastName,
-        project.displayFirstName = $displayFirstName,
-        project.displayLastName = $displayLastName
+        SET project.name = $name,
+        project.deptId = $deptId,
+        project.status = $status,
+        project.location = $location,
+        project.publicLocation = $publicLocation,
+        project.mouStart = $mouStart,
+        project.mouEnd = $mouEnd,
+        project.partnerships = $partnerships,
+        project.sensitivity = $sensitivity,
+        project.team = $team,
+        project.budgets = $budgets,
+        project.estimatedSubmission = $estimatedSubmission,
+        project.engagements = $engagements
           RETURN project.id as id,
           project.name as name,
           project.deptId as deptId,
@@ -181,7 +188,7 @@ export class ProjectService {
         },
       )
       .then(result => {
-        console.log(JSON.stringify(result))
+        console.log(JSON.stringify(result.records))
         if (result.records.length > 0) {
           response.project.id = result.records[0].get('id');
           response.project.name = result.records[0].get('name');
