@@ -69,20 +69,20 @@ export async function createUser(app: INestApplication): Promise<User> {
 
 // CREATE ORG
 export async function createOrg(app: INestApplication): Promise<Organization> {
-  const user = await createUser(app);
   const org = new Organization();
+  org.createdBy = await createUser(app);
   org.name = 'orgName_' + generate();
   await request(app.getHttpServer())
     .post('/graphql')
-    .set('token', user.token)
+    .set('token', org.createdBy.token)
     .send({
       operationName: null,
       query: `
           mutation {
             createOrganization (input: { organization: { name: "${org.name}" } }){
               organization{
-              id
-              name
+                id
+                name
               }
             }
           }

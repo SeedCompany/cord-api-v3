@@ -80,23 +80,29 @@ export class OrganizationService {
   ): Promise<ReadOrganizationOutputDto> {
     const response = new ReadOrganizationOutputDto();
     const session = this.db.driver.session();
+    
     await session
       .run(
         `
         MATCH
+          (token:Token {active: true, value: $token})
+          <-[:token {active: true}]-
+          (user:User {
+            canReadOrgs: true
+          }),
           (org:Organization {
-            active: true
+            active: true,
+            id: $id
           })
           -[:name {active: true}]->
           (name:OrgName {active: true})
-        WHERE
-          org.id = $id
         RETURN
           org.id as id,
           name.value as name
         `,
         {
           id: input.id,
+          token,
         },
       )
       .then(result => {
@@ -119,7 +125,13 @@ export class OrganizationService {
     const session = this.db.driver.session();
     await session
       .run(
-        `MATCH
+        `
+        MATCH
+          (token:Token {active: true, value: $token})
+          <-[:token {active: true}]-
+          (user:User {
+            canCreateOrg: true
+          }),
           (org:Organization {
             active: true,
             id: $id
@@ -135,6 +147,7 @@ export class OrganizationService {
         {
           id: input.id,
           name: input.name,
+          token,
         },
       )
       .then(result => {
@@ -163,6 +176,11 @@ export class OrganizationService {
       .run(
         `
         MATCH
+          (token:Token {active: true, value: $token})
+          <-[:token {active: true}]-
+          (user:User {
+            canCreateOrg: true
+          }),
           (org:Organization {
             active: true,
             id: $id
@@ -174,6 +192,7 @@ export class OrganizationService {
         `,
         {
           id: input.id,
+          token,
         },
       )
       .then(result => {
@@ -216,6 +235,7 @@ export class OrganizationService {
         count: query.count,
         sort: query.sort,
         order: query.order,
+        token,
       },
     );
 

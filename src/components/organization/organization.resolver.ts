@@ -44,6 +44,7 @@ export class OrganizationResolver {
     @Args('input') { organization: input }: ReadOrganizationInputDto,
   ): Promise<ReadOrganizationOutputDto> {
     const token = context['req']['headers']['token'];
+    console.log(token);
     return await this.orgService.readOne(input, token);
   }
 

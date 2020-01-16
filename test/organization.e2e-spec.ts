@@ -24,6 +24,7 @@ describe('Organization e2e', () => {
     // test reading new org
     return request(app.getHttpServer())
       .post('/graphql')
+      .set('token', org.createdBy.token)
       .send({
         operationName: null,
         query: `
@@ -50,6 +51,7 @@ describe('Organization e2e', () => {
 
     return request(app.getHttpServer())
       .post('/graphql')
+      .set('token', org.createdBy.token)
       .send({
         operationName: null,
         query: `
@@ -78,6 +80,7 @@ describe('Organization e2e', () => {
 
     return request(app.getHttpServer())
       .post('/graphql')
+      .set('token', org.createdBy.token)
       .send({
         operationName: null,
         query: `
@@ -109,6 +112,7 @@ describe('Organization e2e', () => {
     // test reading new org
     return request(app.getHttpServer())
       .post('/graphql')
+      .set('token', orgs[0].createdBy.token)
       .send({
         operationName: null,
         query: `
