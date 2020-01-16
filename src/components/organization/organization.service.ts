@@ -7,7 +7,6 @@ import {
   ReadOrganizationOutputDto,
   UpdateOrganizationOutputDto,
   DeleteOrganizationOutputDto,
-  CreateOrganizationInputDto,
   CreateOrganizationInput,
   ReadOrganizationInput,
   UpdateOrganizationInput,

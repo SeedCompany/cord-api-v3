@@ -1,6 +1,7 @@
-import { Field, ID, ObjectType } from 'type-graphql';
+import { Field, ID, ObjectType, InputType } from 'type-graphql';
 
 @ObjectType()
+@InputType('UserInput')
 export class User implements IUser{
   @Field(() => ID)
   id: string;
@@ -19,6 +20,12 @@ export class User implements IUser{
 
   @Field()
   displayLastName: string;
+
+  @Field()
+  password: string;
+
+  @Field()
+  token: string;
 
   static from(user: User) {
     return Object.assign(new User(), user);

@@ -1,4 +1,11 @@
-import { Resolver, Args, Query, Mutation } from '@nestjs/graphql';
+import {
+  Resolver,
+  Args,
+  Query,
+  Mutation,
+  GraphQLExecutionContext,
+  Context,
+} from '@nestjs/graphql';
 
 import { UserService } from './user.service';
 import {
@@ -21,9 +28,11 @@ export class UserResolver {
     description: 'Create a user',
   })
   async createUser(
+    @Context() context: GraphQLExecutionContext,
     @Args('input') { user: input }: CreateUserInputDto,
   ): Promise<CreateUserOutputDto> {
-    return await this.userService.create(input);
+    const token = context['req']['headers']['token'];
+    return await this.userService.create(input, token);
   }
 
   @Query(returns => ReadUserOutputDto, {

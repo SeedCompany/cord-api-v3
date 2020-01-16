@@ -4,7 +4,6 @@ import { INestApplication } from '@nestjs/common';
 import { AppModule } from '../src/app.module';
 import { isValid } from 'shortid';
 import { CreateRegionInput } from '../src/components/region/region.dto';
-import { DatabaseUtility } from '../src/common/database-utility';
 
 describe('Region e2e', () => {
   let app: INestApplication;

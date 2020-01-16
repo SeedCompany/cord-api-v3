@@ -1,3 +1,5 @@
+import { registerEnumType } from 'type-graphql';
+
 export enum FileNodeCategory {
   Audio = 'audio',
   Directory = 'directory',
@@ -7,3 +9,5 @@ export enum FileNodeCategory {
   Spreadsheet = 'spreadsheet',
   Video = 'video',
 }
+
+registerEnumType(FileNodeCategory, { name: 'FileNodeCategory' });
