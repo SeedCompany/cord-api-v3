@@ -4,6 +4,7 @@ import { INestApplication } from '@nestjs/common';
 import { AppModule } from '../src/app.module';
 import { isValid } from 'shortid';
 import { CreateAreaInput } from '../src/components/area/area.dto';
+import { generate } from 'shortid';
 
 describe('Area e2e', () => {
   let app: INestApplication;
@@ -18,7 +19,7 @@ describe('Area e2e', () => {
   });
 
   it('create Area', async () => {
-    const areaName = 'firstArea';
+    const areaName = 'firstArea' + generate();
 
     return request(app.getHttpServer())
       .post('/graphql')
@@ -45,7 +46,7 @@ describe('Area e2e', () => {
 
   it('read one area by id', async () => {
     const newArea = new CreateAreaInput();
-    newArea.name = 'area1';
+    newArea.name = 'area1' + generate();
 
     // create loc first
     let areaId;
@@ -93,7 +94,7 @@ describe('Area e2e', () => {
 
   it('update Area', async () => {
     const newArea = new CreateAreaInput();
-    newArea.name = 'areaNameForUpdate';
+    newArea.name = 'areaNameForUpdate' + generate();
 
     let areaId;
     await request(app.getHttpServer())
@@ -140,7 +141,8 @@ describe('Area e2e', () => {
 
   it('delete Area', async () => {
     const newArea = new CreateAreaInput();
-    newArea.name = 'areaForDelete';
+    newArea.name = 'areaForDelete' + generate();
+
     let areaId;
     await request(app.getHttpServer())
       .post('/graphql')
