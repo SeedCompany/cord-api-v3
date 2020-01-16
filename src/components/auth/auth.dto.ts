@@ -27,3 +27,16 @@ export class LoginUserOutputDto {
   @Field()
   success: boolean;
 }
+
+// LOGOUT USER
+@InputType()
+export class LogoutUserInputDto {
+  @Field()
+  token: string;
+}
+
+@ObjectType()
+export class LogoutUserOutputDto {
+  @Field()
+  success: boolean;
+}

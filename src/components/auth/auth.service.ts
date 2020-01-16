@@ -6,6 +6,8 @@ import { generate } from 'shortid';
 @Injectable()
 export class AuthService {
   constructor(private readonly db: DatabaseService) {}
+
+  // CREATE TOKEN
   async createToken(): Promise<CreateTokenOutputDto> {
     const response = new CreateTokenOutputDto();
     const token = 'token_' + generate();
@@ -27,16 +29,22 @@ export class AuthService {
     session.close();
     return response;
   }
-  async loginUser(username: string, password: string, token: string): Promise<LoginUserOutputDto>{
+
+  // LOG IN
+  async login(
+    username: string,
+    password: string,
+    token: string,
+  ): Promise<LoginUserOutputDto> {
     const response = new LoginUserOutputDto();
     const session = this.db.driver.session();
     const result = await session.run(
       `
-      MATCH 
-        (token:Token {active: true, token: $token}),
+      MATCH
+        (token:Token {active: true, value: $token}),
         (user:User {username: $username, password: $password})
       CREATE (user)-[:token {createdAt: datetime()}]->(token)
-      RETURN token.token as token
+      RETURN token.value as token
       `,
       {
         token,
@@ -44,8 +52,31 @@ export class AuthService {
         password,
       },
     );
-    response.success = (result.records[0].get('token') === token);
+    response.success = result.records[0].get('token') === token;
     session.close();
     return response;
   }
+
+  // LOG OUT
+  async logout(
+    token: string,
+  ): Promise<LoginUserOutputDto> {
+    const response = new LoginUserOutputDto();
+    const session = this.db.driver.session();
+    const result = await session.run(
+      `
+      MATCH
+        (token:Token)-[r]-()
+      DELETE r
+      RETURN token.value as token
+      `,
+      {
+        token,
+      },
+    );
+    response.success = result.records[0].get('token') === token;
+    session.close();
+    return response;
+  }
+
 }
