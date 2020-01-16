@@ -18,6 +18,9 @@ export class CreateUserInput {
   @Field({nullable: true})
   displayLastName: string;
 
+  @Field({nullable: true})
+  password: string;
+
 }
 
 @InputType()

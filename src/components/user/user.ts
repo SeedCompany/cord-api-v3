@@ -20,6 +20,12 @@ export class User implements IUser{
   @Field()
   displayLastName: string;
 
+  @Field()
+  password: string;
+
+  @Field()
+  token: string;
+
   static from(user: User) {
     return Object.assign(new User(), user);
   }

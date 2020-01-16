@@ -4,7 +4,7 @@ import { INestApplication } from '@nestjs/common';
 import { AppModule } from '../src/app.module';
 import { isValid } from 'shortid';
 import { CreateLocationInput } from '../src/components/location/location.dto';
-import { DatabaseUtility } from '../src/common/database-utility';
+import { generate } from 'shortid';
 
 describe('Location e2e', () => {
   let app: INestApplication;
@@ -19,7 +19,7 @@ describe('Location e2e', () => {
   });
 
   it('create location', async () => {
-    const locName = 'firstLocation';
+    const locName = 'firstLocation' + generate();
 
     return request(app.getHttpServer())
       .post('/graphql')
@@ -46,7 +46,7 @@ describe('Location e2e', () => {
 
   it('read one location by id', async () => {
     const newLoc = new CreateLocationInput();
-    newLoc.name = 'locNameLocTest1';
+    newLoc.name = 'locNameLocTest1' + generate();
 
     // create loc first
     let locId;
@@ -94,7 +94,7 @@ describe('Location e2e', () => {
 
   it('update location', async () => {
     const newLoc = new CreateLocationInput();
-    newLoc.name = 'locNameForUpdateLocTest1';
+    newLoc.name = 'locNameForUpdateLocTest1' + generate();
 
     let locId;
     await request(app.getHttpServer())
@@ -141,7 +141,7 @@ describe('Location e2e', () => {
 
   it('delete location', async () => {
     const newLoc = new CreateLocationInput();
-    newLoc.name = 'locNameForDeleteLocTest1';
+    newLoc.name = 'locNameForDeleteLocTest1' + generate();
 
     let locId;
     await request(app.getHttpServer())
