@@ -31,7 +31,8 @@ export class UserService {
           (user:User {
             id: $id,
             active: true,
-            createdAt: datetime()
+            createdAt: datetime(),
+            canCreateOrg: true
           })
           -[:email {active: true}]->
           (email:EmailAddress:Property {
