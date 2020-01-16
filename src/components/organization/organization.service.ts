@@ -217,6 +217,11 @@ export class OrganizationService {
     const result = await session.run(
       `
       MATCH
+        (token:Token {active: true, value: $token})
+        <-[:token {active: true}]-
+        (user:User {
+          canReadOrgs: true
+        }),
         (org:Organization {
           active: true
         })
