@@ -2,8 +2,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import * as request from 'supertest';
 import { INestApplication } from '@nestjs/common';
 import { AppModule } from '../src/app.module';
-import { generate, isValid } from 'shortid';
-import { CreateOrganizationInput } from '../src/components/organization/organization.dto';
 import { Organization } from '../src/components/organization/organization';
 import { createOrg } from './test-utility';
 
