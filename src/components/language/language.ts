@@ -1,6 +1,7 @@
-import { Field, Int, ObjectType } from 'type-graphql';
+import { Field, Int, ObjectType, InputType } from 'type-graphql';
 
 @ObjectType()
+@InputType('LanguageInput')
 export class Language {
   @Field(type => String)
   id: string;
@@ -31,7 +32,7 @@ export class Language {
   }
 }
 
-export interface Language {
+export interface ILanguage {
   id: string;
   name: string | null;
   displayName: string | null;

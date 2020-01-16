@@ -8,7 +8,7 @@ import { Language } from 'src/components/language/language';
 
 async function createLanguage(
   app: INestApplication,
-  name: string,
+  langName: string,
 ): Promise<string> {
   let langId = '0';
   await request(app.getHttpServer())
@@ -17,7 +17,7 @@ async function createLanguage(
       operationName: null,
       query: `
     mutation {
-      createLanguage (input: { language: { name: "${name}" } }){
+      createLanguage (input: { language: { name: "${langName}" } }){
         language{
         id
         name
@@ -26,12 +26,9 @@ async function createLanguage(
     }
     `,
     })
-    .expect(({ body }) => {
+    .then(({ body }) => {
       langId = body.data.createLanguage.language.id;
-      expect(isValid(langId)).toBe(true);
-      expect(body.data.createLanguage.language.name).toBe(name);
-    })
-    .expect(200);
+    });
   return langId;
 }
 

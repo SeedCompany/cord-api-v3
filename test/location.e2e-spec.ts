@@ -45,8 +45,7 @@ describe('Location e2e', () => {
   });
 
   it('read one location by id', async () => {
-    const newLoc = new CreateLocationInput();
-    newLoc.name = 'locNameLocTest1' + generate();
+    const newLoc = 'locNameLocTest1' + generate();
 
     // create loc first
     let locId;
@@ -56,7 +55,7 @@ describe('Location e2e', () => {
         operationName: null,
         query: `
         mutation {
-          createLocation (input: { location: { name: "${newLoc.name}" } }){
+          createLocation (input: { location: { name: "${newLoc}" } }){
             location{
             id
             name
@@ -87,14 +86,13 @@ describe('Location e2e', () => {
       })
       .expect(({ body }) => {
         expect(body.data.readLocation.location.id).toBe(locId);
-        expect(body.data.readLocation.location.name).toBe(newLoc.name);
+        expect(body.data.readLocation.location.name).toBe(newLoc);
       })
       .expect(200);
   });
 
   it('update location', async () => {
-    const newLoc = new CreateLocationInput();
-    newLoc.name = 'locNameForUpdateLocTest1' + generate();
+    const newLoc = 'locNameForUpdateLocTest1' + generate();
 
     let locId;
     await request(app.getHttpServer())
@@ -103,7 +101,7 @@ describe('Location e2e', () => {
         operationName: null,
         query: `
         mutation {
-          createLocation (input: { location: { name: "${newLoc.name}" } }){
+          createLocation (input: { location: { name: "oldLoc" } }){
             location{
             id
             name
@@ -123,7 +121,7 @@ describe('Location e2e', () => {
         operationName: null,
         query: `
         mutation {
-          updateLocation (input: { location: {id: "${locId}", name: "${newLoc.name}" } }){
+          updateLocation (input: { location: {id: "${locId}", name: "${newLoc}" } }){
             location {
             id
             name
@@ -134,14 +132,13 @@ describe('Location e2e', () => {
       })
       .expect(({ body }) => {
         expect(body.data.updateLocation.location.id).toBe(locId);
-        expect(body.data.updateLocation.location.name).toBe(newLoc.name);
+        expect(body.data.updateLocation.location.name).toBe(newLoc);
       })
       .expect(200);
   });
 
   it('delete location', async () => {
-    const newLoc = new CreateLocationInput();
-    newLoc.name = 'locNameForDeleteLocTest1' + generate();
+    const newLoc = 'locNameForDeleteLocTest1' + generate();
 
     let locId;
     await request(app.getHttpServer())
@@ -150,7 +147,7 @@ describe('Location e2e', () => {
         operationName: null,
         query: `
         mutation {
-          createLocation (input: { location: { name: "${newLoc.name}" } }){
+          createLocation (input: { location: { name: "${newLoc}" } }){
             location{
             id
             name

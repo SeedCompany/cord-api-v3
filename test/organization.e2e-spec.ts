@@ -7,7 +7,7 @@ import { CreateOrganizationInput } from '../src/components/organization/organiza
 import { Organization } from '../src/components/organization/organization';
 
 async function createOrg(app: INestApplication, name: string): Promise<string> {
-  let orgId;
+  let orgId = '';
   await request(app.getHttpServer())
     .post('/graphql')
     .send({
@@ -23,12 +23,9 @@ async function createOrg(app: INestApplication, name: string): Promise<string> {
           }
           `,
     })
-    .expect(({ body }) => {
+    .then(({ body }) => {
       orgId = body.data.createOrganization.organization.id;
-      expect(isValid(orgId)).toBe(true);
-      expect(body.data.createOrganization.organization.name).toBe(name);
-    })
-    .expect(200);
+    });
   return orgId;
 }
 
