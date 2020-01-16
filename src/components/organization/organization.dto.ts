@@ -16,9 +16,9 @@ export class CreateOrganizationInputDto {
 
 @ObjectType()
 export class CreateOrganizationOutput {
-  @Field(type => String)
+  @Field(type => String, {nullable: true})
   id: string;
-  @Field(type => String)
+  @Field(type => String, {nullable: true})
   name: string;
 }
 

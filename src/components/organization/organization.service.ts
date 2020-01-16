@@ -21,26 +21,55 @@ export class OrganizationService {
 
   async create(
     input: CreateOrganizationInput,
+    token: string,
   ): Promise<CreateOrganizationOutputDto> {
     const response = new CreateOrganizationOutputDto();
-    const session = this.db.driver.session();
     const id = generate();
-    await session
-      .run(
-        'MERGE (org:Organization {active: true, owningOrg: "seedcompany", name: $name}) ON CREATE SET org.id = $id, org.timestamp = datetime() RETURN org.id as id, org.name as name',
-        {
-          id,
-          name: input.name,
-        },
-      )
-      .then(result => {
-        response.organization.id = result.records[0].get('id');
-        response.organization.name = result.records[0].get('name');
-      })
-      .catch(error => {
-        console.log(error);
-      })
-      .then(() => session.close());
+    const session = this.db.driver.session();
+    const result = await session.run(
+      `
+        MATCH
+          (token:Token {
+            active: true,
+            value: $token
+          })
+          <-[:token {active: true}]-
+          (user:User {
+            active: true,
+            canCreateOrg: true
+          })
+        MERGE
+          (org:Organization {
+            active: true
+          })-[nameRel:name {active: true}]->
+          (name:OrgName:Property {
+            active: true,
+            value: $name
+          })
+        ON CREATE SET
+          org.id = $id,
+          org.createdAt = datetime(),
+          org.createdById = user.id,
+          nameRel.createdAt = datetime()
+        RETURN
+          org.id as id,
+          name.value as name
+        `,
+      {
+        id,
+        token,
+        name: input.name,
+      },
+    );
+
+    session.close();
+
+    if (result.records.length === 0) {
+      return response;
+    }
+
+    response.organization.id = result.records[0].get('id');
+    response.organization.name = result.records[0].get('name');
 
     return response;
   }
@@ -52,7 +81,19 @@ export class OrganizationService {
     const session = this.db.driver.session();
     await session
       .run(
-        'MATCH (org:Organization {active: true, owningOrg: "seedcompany"}) WHERE org.id = $id RETURN org.id as id, org.name as name',
+        `
+        MATCH
+          (org:Organization {
+            active: true
+          })
+          -[:name {active: true}]->
+          (name:OrgName {active: true})
+        WHERE
+          org.id = $id
+        RETURN
+          org.id as id,
+          name.value as name
+        `,
         {
           id: input.id,
         },
@@ -76,7 +117,19 @@ export class OrganizationService {
     const session = this.db.driver.session();
     await session
       .run(
-        'MATCH (org:Organization {active: true, owningOrg: "seedcompany", id: $id}) SET org.name = $name RETURN org.id as id, org.name as name',
+        `MATCH
+          (org:Organization {
+            active: true,
+            id: $id
+          })
+          -[:name {active: true}]->
+          (name:OrgName {active: true})
+        SET
+          name.value = $name
+        RETURN
+          org.id as id,
+          name.value as name
+        `,
         {
           id: input.id,
           name: input.name,
@@ -105,7 +158,17 @@ export class OrganizationService {
     const session = this.db.driver.session();
     await session
       .run(
-        'MATCH (org:Organization {active: true, owningOrg: "seedcompany", id: $id}) SET org.active = false RETURN org.id as id',
+        `
+        MATCH
+          (org:Organization {
+            active: true,
+            id: $id
+          })
+        SET
+          org.active = false
+        RETURN
+          org.id as id
+        `,
         {
           id: input.id,
         },
@@ -129,7 +192,20 @@ export class OrganizationService {
     const skipIt = query.page * query.count;
 
     const result = await session.run(
-      `MATCH (org:Organization {active: true}) WHERE org.name CONTAINS $filter RETURN org.id as id, org.name as name ORDER BY ${query.sort} ${query.order} SKIP $skip LIMIT $count`,
+      `
+      MATCH
+        (org:Organization {
+          active: true
+        })
+      WHERE
+        org.name CONTAINS $filter
+      RETURN
+        org.id as id,
+        org.name as name
+      ORDER BY ${query.sort} ${query.order}
+      SKIP $skip
+      LIMIT $count
+      `,
       {
         filter: query.filter,
         skip: skipIt,

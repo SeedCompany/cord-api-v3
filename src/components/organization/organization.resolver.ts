@@ -1,4 +1,11 @@
-import { Resolver, Args, Query, Mutation } from '@nestjs/graphql';
+import {
+  Resolver,
+  Args,
+  Query,
+  Mutation,
+  GraphQLExecutionContext,
+  Context,
+} from '@nestjs/graphql';
 import { Organization } from './organization';
 import { OrganizationService } from './organization.service';
 import {
@@ -22,9 +29,11 @@ export class OrganizationResolver {
     description: 'Create an organization',
   })
   async createOrganization(
+    @Context() context: GraphQLExecutionContext,
     @Args('input') { organization: input }: CreateOrganizationInputDto,
   ): Promise<CreateOrganizationOutputDto> {
-    return await this.orgService.create(input);
+    const token = context['req']['headers']['token'];
+    return await this.orgService.create(input, token);
   }
 
   @Query(returns => ReadOrganizationOutputDto, {

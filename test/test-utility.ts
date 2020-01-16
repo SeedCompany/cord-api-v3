@@ -4,34 +4,6 @@ import { generate, isValid } from 'shortid';
 import { Organization } from 'src/components/organization/organization';
 import { User } from 'src/components/user/user';
 
-// CREATE ORG
-export async function createOrg(app: INestApplication): Promise<Organization> {
-  const org = new Organization();
-  org.name = 'orgName_' + generate();
-  await request(app.getHttpServer())
-    .post('/graphql')
-    .send({
-      operationName: null,
-      query: `
-          mutation {
-            createOrganization (input: { organization: { name: "${org.name}" } }){
-              organization{
-              id
-              name
-              }
-            }
-          }
-          `,
-    })
-    .expect(({ body }) => {
-      org.id = body.data.createOrganization.organization.id;
-      expect(isValid(org.id)).toBe(true);
-      expect(body.data.createOrganization.organization.name).toBe(org.name);
-    })
-    .expect(200);
-  return org;
-}
-
 // CREATE TOKEN
 export async function createToken(app: INestApplication): Promise<string> {
   let token;
@@ -93,4 +65,34 @@ export async function createUser(app: INestApplication): Promise<User> {
     })
     .expect(200);
   return user;
+}
+
+// CREATE ORG
+export async function createOrg(app: INestApplication): Promise<Organization> {
+  const user = await createUser(app);
+  const org = new Organization();
+  org.name = 'orgName_' + generate();
+  await request(app.getHttpServer())
+    .post('/graphql')
+    .set('token', user.token)
+    .send({
+      operationName: null,
+      query: `
+          mutation {
+            createOrganization (input: { organization: { name: "${org.name}" } }){
+              organization{
+              id
+              name
+              }
+            }
+          }
+          `,
+    })
+    .expect(({ body }) => {
+      org.id = body.data.createOrganization.organization.id;
+      expect(isValid(org.id)).toBe(true);
+      expect(body.data.createOrganization.organization.name).toBe(org.name);
+    })
+    .expect(200);
+  return org;
 }
