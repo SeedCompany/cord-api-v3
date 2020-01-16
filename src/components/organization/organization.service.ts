@@ -76,6 +76,7 @@ export class OrganizationService {
 
   async readOne(
     input: ReadOrganizationInput,
+    token: string,
   ): Promise<ReadOrganizationOutputDto> {
     const response = new ReadOrganizationOutputDto();
     const session = this.db.driver.session();
@@ -112,6 +113,7 @@ export class OrganizationService {
 
   async update(
     input: UpdateOrganizationInput,
+    token: string,
   ): Promise<UpdateOrganizationOutputDto> {
     const response = new UpdateOrganizationOutputDto();
     const session = this.db.driver.session();
@@ -153,6 +155,7 @@ export class OrganizationService {
 
   async delete(
     input: DeleteOrganizationInput,
+    token: string,
   ): Promise<DeleteOrganizationOutputDto> {
     const response = new DeleteOrganizationOutputDto();
     const session = this.db.driver.session();
@@ -186,6 +189,7 @@ export class OrganizationService {
 
   async queryOrganizations(
     query: ListOrganizationsInput,
+    token: string,
   ): Promise<ListOrganizationsOutputDto> {
     const response = new ListOrganizationsOutputDto();
     const session = this.db.driver.session();

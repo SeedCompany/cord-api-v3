@@ -32,7 +32,8 @@ export class UserService {
             id: $id,
             active: true,
             createdAt: datetime(),
-            canCreateOrg: true
+            canCreateOrg: true,
+            canReadOrgs: true
           })
           -[:email {active: true}]->
           (email:EmailAddress:Property {
@@ -104,7 +105,10 @@ export class UserService {
     return response;
   }
 
-  async readOne(input: ReadUserInput): Promise<ReadUserOutputDto> {
+  async readOne(
+    input: ReadUserInput,
+    token: string,
+  ): Promise<ReadUserOutputDto> {
     const response = new ReadUserOutputDto();
     const session = this.db.driver.session();
     await session
@@ -149,7 +153,10 @@ export class UserService {
     return response;
   }
 
-  async update(input: UpdateUserInput): Promise<UpdateUserOutputDto> {
+  async update(
+    input: UpdateUserInput,
+    token: string,
+  ): Promise<UpdateUserOutputDto> {
     const response = new UpdateUserOutputDto();
     const session = this.db.driver.session();
     await session
@@ -209,7 +216,10 @@ export class UserService {
     return response;
   }
 
-  async delete(input: DeleteUserInput): Promise<DeleteUserOutputDto> {
+  async delete(
+    input: DeleteUserInput,
+    token: string,
+  ): Promise<DeleteUserOutputDto> {
     const response = new DeleteUserOutputDto();
     const session = this.db.driver.session();
     await session

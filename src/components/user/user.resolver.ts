@@ -39,28 +39,34 @@ export class UserResolver {
     description: 'Read one user by id',
   })
   async readUser(
+    @Context() context: GraphQLExecutionContext,
     @Args('input') { user: input }: ReadUserInputDto,
   ): Promise<ReadUserOutputDto> {
-    return await this.userService.readOne(input);
+    const token = context['req']['headers']['token'];
+    return await this.userService.readOne(input, token);
   }
 
   @Mutation(returns => UpdateUserOutputDto, {
     description: 'Update a user',
   })
   async updateUser(
+    @Context() context: GraphQLExecutionContext,
     @Args('input')
     { user: input }: UpdateUserInputDto,
   ): Promise<UpdateUserOutputDto> {
-    return await this.userService.update(input);
+    const token = context['req']['headers']['token'];
+    return await this.userService.update(input, token);
   }
 
   @Mutation(returns => DeleteUserOutputDto, {
     description: 'Delete a user',
   })
   async deleteUser(
+    @Context() context: GraphQLExecutionContext,
     @Args('input')
     { user: input }: DeleteUserInputDto,
   ): Promise<DeleteUserOutputDto> {
-    return await this.userService.delete(input);
+    const token = context['req']['headers']['token'];
+    return await this.userService.delete(input, token);
   }
 }

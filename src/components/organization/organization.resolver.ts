@@ -40,37 +40,45 @@ export class OrganizationResolver {
     description: 'Read one organization by id',
   })
   async readOrganization(
+    @Context() context: GraphQLExecutionContext,
     @Args('input') { organization: input }: ReadOrganizationInputDto,
   ): Promise<ReadOrganizationOutputDto> {
-    return await this.orgService.readOne(input);
+    const token = context['req']['headers']['token'];
+    return await this.orgService.readOne(input, token);
   }
 
   @Query(returns => ListOrganizationsOutputDto, {
     description: 'Query orgainzations',
   })
   async organizations(
+    @Context() context: GraphQLExecutionContext,
     @Args('input') { query: input }: ListOrganizationsInputDto,
   ): Promise<ListOrganizationsOutputDto> {
-    return await this.orgService.queryOrganizations(input);
+    const token = context['req']['headers']['token'];
+    return await this.orgService.queryOrganizations(input, token);
   }
 
   @Mutation(returns => UpdateOrganizationOutputDto, {
     description: 'Update an organization',
   })
   async updateOrganization(
+    @Context() context: GraphQLExecutionContext,
     @Args('input')
     { organization: input }: UpdateOrganizationInputDto,
   ): Promise<UpdateOrganizationOutputDto> {
-    return await this.orgService.update(input);
+    const token = context['req']['headers']['token'];
+    return await this.orgService.update(input, token);
   }
 
   @Mutation(returns => DeleteOrganizationOutputDto, {
     description: 'Delete an organization',
   })
   async deleteOrganization(
+    @Context() context: GraphQLExecutionContext,
     @Args('input')
     { organization: input }: DeleteOrganizationInputDto,
   ): Promise<DeleteOrganizationOutputDto> {
-    return await this.orgService.delete(input);
+    const token = context['req']['headers']['token'];
+    return await this.orgService.delete(input, token);
   }
 }
