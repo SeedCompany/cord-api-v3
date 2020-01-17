@@ -1,10 +1,12 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import * as request from 'supertest';
-import { INestApplication } from '@nestjs/common';
+
+import { Test, TestingModule } from '@nestjs/testing';
+
 import { AppModule } from '../src/app.module';
-import { isValid } from 'shortid';
 import { CreateAreaInput } from '../src/components/area/area.dto';
+import { INestApplication } from '@nestjs/common';
 import { generate } from 'shortid';
+import { isValid } from 'shortid';
 
 describe('Area e2e', () => {
   let app: INestApplication;
