@@ -25,6 +25,8 @@ import { RegionResolver } from './components/region/region.resolver';
 import { RegionService } from './components/region/region.service';
 import { UserResolver } from './components/user/user.resolver';
 import { UserService } from './components/user/user.service';
+import { PartnershipResolver } from './components/partnership/partnership.resolver';
+import { PartnershipService } from './components/partnership/partnership.service';
 
 @Module({
   imports: [
@@ -62,6 +64,8 @@ import { UserService } from './components/user/user.service';
     RegionService,
     UserResolver,
     UserService,
+    PartnershipResolver,
+    PartnershipService,
   ],
 })
 export class AppModule {}
