@@ -3,9 +3,9 @@ import {
   Args,
   Query,
   Mutation,
-  GraphQLExecutionContext,
   Context,
 } from '@nestjs/graphql';
+import { GqlContextType } from '../../common';
 
 import { UserService } from './user.service';
 import {
@@ -28,10 +28,9 @@ export class UserResolver {
     description: 'Create a user',
   })
   async createUser(
-    @Context() context: GraphQLExecutionContext,
+    @Context() { token }: GqlContextType,
     @Args('input') { user: input }: CreateUserInputDto,
   ): Promise<CreateUserOutputDto> {
-    const token = context['req']['headers']['token'];
     return await this.userService.create(input, token);
   }
 
@@ -39,10 +38,9 @@ export class UserResolver {
     description: 'Read one user by id',
   })
   async readUser(
-    @Context() context: GraphQLExecutionContext,
+    @Context() { token }: GqlContextType,
     @Args('input') { user: input }: ReadUserInputDto,
   ): Promise<ReadUserOutputDto> {
-    const token = context['req']['headers']['token'];
     return await this.userService.readOne(input, token);
   }
 
@@ -50,11 +48,10 @@ export class UserResolver {
     description: 'Update a user',
   })
   async updateUser(
-    @Context() context: GraphQLExecutionContext,
+    @Context() { token }: GqlContextType,
     @Args('input')
     { user: input }: UpdateUserInputDto,
   ): Promise<UpdateUserOutputDto> {
-    const token = context['req']['headers']['token'];
     return await this.userService.update(input, token);
   }
 
@@ -62,11 +59,10 @@ export class UserResolver {
     description: 'Delete a user',
   })
   async deleteUser(
-    @Context() context: GraphQLExecutionContext,
+    @Context() { token }: GqlContextType,
     @Args('input')
     { user: input }: DeleteUserInputDto,
   ): Promise<DeleteUserOutputDto> {
-    const token = context['req']['headers']['token'];
     return await this.userService.delete(input, token);
   }
 }

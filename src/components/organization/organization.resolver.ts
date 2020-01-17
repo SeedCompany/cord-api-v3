@@ -3,9 +3,9 @@ import {
   Args,
   Query,
   Mutation,
-  GraphQLExecutionContext,
   Context,
 } from '@nestjs/graphql';
+import { GqlContextType } from '../../common';
 import { Organization } from './organization';
 import { OrganizationService } from './organization.service';
 import {
@@ -29,10 +29,9 @@ export class OrganizationResolver {
     description: 'Create an organization',
   })
   async createOrganization(
-    @Context() context: GraphQLExecutionContext,
+    @Context() { token }: GqlContextType,
     @Args('input') { organization: input }: CreateOrganizationInputDto,
   ): Promise<CreateOrganizationOutputDto> {
-    const token = context['req']['headers']['token'];
     return await this.orgService.create(input, token);
   }
 
@@ -40,11 +39,9 @@ export class OrganizationResolver {
     description: 'Read one organization by id',
   })
   async readOrganization(
-    @Context() context: GraphQLExecutionContext,
+    @Context() { token }: GqlContextType,
     @Args('input') { organization: input }: ReadOrganizationInputDto,
   ): Promise<ReadOrganizationOutputDto> {
-    const token = context['req']['headers']['token'];
-    console.log(token);
     return await this.orgService.readOne(input, token);
   }
 
@@ -52,10 +49,9 @@ export class OrganizationResolver {
     description: 'Query orgainzations',
   })
   async organizations(
-    @Context() context: GraphQLExecutionContext,
+    @Context() { token }: GqlContextType,
     @Args('input') { query: input }: ListOrganizationsInputDto,
   ): Promise<ListOrganizationsOutputDto> {
-    const token = context['req']['headers']['token'];
     return await this.orgService.queryOrganizations(input, token);
   }
 
@@ -63,11 +59,10 @@ export class OrganizationResolver {
     description: 'Update an organization',
   })
   async updateOrganization(
-    @Context() context: GraphQLExecutionContext,
+    @Context() { token }: GqlContextType,
     @Args('input')
     { organization: input }: UpdateOrganizationInputDto,
   ): Promise<UpdateOrganizationOutputDto> {
-    const token = context['req']['headers']['token'];
     return await this.orgService.update(input, token);
   }
 
@@ -75,11 +70,10 @@ export class OrganizationResolver {
     description: 'Delete an organization',
   })
   async deleteOrganization(
-    @Context() context: GraphQLExecutionContext,
+    @Context() { token }: GqlContextType,
     @Args('input')
     { organization: input }: DeleteOrganizationInputDto,
   ): Promise<DeleteOrganizationOutputDto> {
-    const token = context['req']['headers']['token'];
     return await this.orgService.delete(input, token);
   }
 }

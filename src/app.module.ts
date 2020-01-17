@@ -1,3 +1,8 @@
+import { Module } from '@nestjs/common';
+import { GraphQLModule } from '@nestjs/graphql';
+import { ContextFunction } from 'apollo-server-core';
+import { Request, Response } from 'express';
+import { GqlContextType } from './common';
 import { AdminResolver } from './components/admin/admin.resolver';
 import { AdminService } from './components/admin/admin.service';
 import { AreaResolver } from './components/area/area.resolver';
@@ -9,14 +14,12 @@ import { BudgetService } from './components/budget/budget.service';
 import { ConfigModule } from '@nestjs/config';
 import configuration from './config/configuration';
 import { DatabaseService } from './core/database.service';
-import { GraphQLModule } from '@nestjs/graphql';
 import { InternshipResolver } from './components/internship/internship.resolver';
 import { InternshipService } from './components/internship/internship.service';
 import { LanguageResolver } from './components/language/language.resolver';
 import { LanguageService } from './components/language/language.service';
 import { LocationResolver } from './components/location/location.resolver';
 import { LocationService } from './components/location/location.service';
-import { Module } from '@nestjs/common';
 import { OrganizationResolver } from './components/organization/organization.resolver';
 import { OrganizationService } from './components/organization/organization.service';
 import { ProductResolver } from './components/product/product.resolver';
@@ -30,6 +33,13 @@ import { UserService } from './components/user/user.service';
 import { PartnershipResolver } from './components/partnership/partnership.resolver';
 import { PartnershipService } from './components/partnership/partnership.service';
 
+const context: ContextFunction<{ req: Request; res: Response }, GqlContextType> = ({
+  req,
+  res,
+}) => ({
+  token: req.header('token'),
+});
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -38,10 +48,9 @@ import { PartnershipService } from './components/partnership/partnership.service
     }),
     GraphQLModule.forRoot({
       autoSchemaFile: 'schema.gql',
-      context: ({ req, res }) => ({ req, res }),
+      context,
     }),
   ],
-
   controllers: [],
   providers: [
     AdminResolver,
