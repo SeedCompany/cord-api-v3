@@ -1,15 +1,20 @@
 import { Organization } from '../organization/organization';
-import { registerEnumType, ObjectType, InputType, Field } from 'type-graphql';
+import {
+  registerEnumType,
+  ID,
+  ObjectType,
+  InputType,
+  Field,
+} from 'type-graphql';
 
 @ObjectType()
 @InputType('BudgetInput')
 export class Budget {
-  @Field()
+  @Field(() => ID)
   id: string;
 
   @Field(type => BudgetStatus, { nullable: true })
   status: BudgetStatus;
-
   @Field(type => [BudgetDetails], { nullable: true })
   budgetDetails: BudgetDetails[];
 }
