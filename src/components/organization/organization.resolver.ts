@@ -3,9 +3,8 @@ import {
   Args,
   Query,
   Mutation,
-  Context,
 } from '@nestjs/graphql';
-import { GqlContextType } from '../../common';
+import { Token } from '../../common';
 import { Organization } from './organization';
 import { OrganizationService } from './organization.service';
 import {
@@ -29,7 +28,7 @@ export class OrganizationResolver {
     description: 'Create an organization',
   })
   async createOrganization(
-    @Context() { token }: GqlContextType,
+    @Token() token: string,
     @Args('input') { organization: input }: CreateOrganizationInputDto,
   ): Promise<CreateOrganizationOutputDto> {
     return await this.orgService.create(input, token);
@@ -39,7 +38,7 @@ export class OrganizationResolver {
     description: 'Read one organization by id',
   })
   async readOrganization(
-    @Context() { token }: GqlContextType,
+    @Token() token: string,
     @Args('input') { organization: input }: ReadOrganizationInputDto,
   ): Promise<ReadOrganizationOutputDto> {
     return await this.orgService.readOne(input, token);
@@ -49,7 +48,7 @@ export class OrganizationResolver {
     description: 'Query orgainzations',
   })
   async organizations(
-    @Context() { token }: GqlContextType,
+    @Token() token: string,
     @Args('input') { query: input }: ListOrganizationsInputDto,
   ): Promise<ListOrganizationsOutputDto> {
     return await this.orgService.queryOrganizations(input, token);
@@ -59,7 +58,7 @@ export class OrganizationResolver {
     description: 'Update an organization',
   })
   async updateOrganization(
-    @Context() { token }: GqlContextType,
+    @Token() token: string,
     @Args('input')
     { organization: input }: UpdateOrganizationInputDto,
   ): Promise<UpdateOrganizationOutputDto> {
@@ -70,7 +69,7 @@ export class OrganizationResolver {
     description: 'Delete an organization',
   })
   async deleteOrganization(
-    @Context() { token }: GqlContextType,
+    @Token() token: string,
     @Args('input')
     { organization: input }: DeleteOrganizationInputDto,
   ): Promise<DeleteOrganizationOutputDto> {

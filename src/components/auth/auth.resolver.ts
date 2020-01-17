@@ -1,10 +1,5 @@
-import {
-  Resolver,
-  Mutation,
-  Args,
-  Context,
-} from '@nestjs/graphql';
-import { GqlContextType } from '../../common';
+import { Resolver, Mutation, Args } from '@nestjs/graphql';
+import { Token } from '../../common';
 import { AuthService } from './auth.service';
 import {
   CreateTokenOutputDto,
@@ -27,7 +22,7 @@ export class AuthResolver {
     description: 'Login a user',
   })
   async loginUser(
-    @Context() { token }: GqlContextType,
+    @Token() token: string,
     @Args('username') username: string,
     @Args('password') password: string,
   ): Promise<LoginUserOutputDto> {
@@ -37,9 +32,7 @@ export class AuthResolver {
   @Mutation(returns => LogoutUserOutputDto, {
     description: 'Logout a user',
   })
-  async logout(
-    @Context() { token }: GqlContextType,
-  ): Promise<LogoutUserOutputDto> {
+  async logout(@Token() token: string): Promise<LogoutUserOutputDto> {
     return await this.authService.logout(token);
   }
 }
