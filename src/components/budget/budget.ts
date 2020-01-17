@@ -1,11 +1,12 @@
-import { Organization } from '../organization/organization';
 import {
-  registerEnumType,
-  ID,
-  ObjectType,
-  InputType,
   Field,
+  ID,
+  InputType,
+  ObjectType,
+  registerEnumType,
 } from 'type-graphql';
+
+import { Organization } from '../organization/organization';
 
 @ObjectType()
 @InputType('BudgetInput')
@@ -25,13 +26,6 @@ export interface Budget {
   budgetDetails: BudgetDetails[];
 }
 
-export enum BudgetStatus {
-  Pending = 'pending',
-  Current = 'current',
-  Superceded = 'superceded',
-  Rejected = 'rejected',
-}
-
 @ObjectType()
 @InputType('BudgetDetailsInput')
 export class BudgetDetails {
@@ -48,6 +42,13 @@ export interface BudgetDetails {
   organization: Organization;
   fiscalYear: number;
   amount: number;
+}
+
+export enum BudgetStatus {
+  Pending = 'pending',
+  Current = 'current',
+  Superceded = 'superceded',
+  Rejected = 'rejected',
 }
 
 registerEnumType(BudgetStatus, { name: 'BudgetStatus' });

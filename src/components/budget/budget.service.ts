@@ -1,20 +1,21 @@
-import { Injectable } from '@nestjs/common';
-import { DatabaseService } from '../../core/database.service';
-import { generate } from 'shortid';
 import {
   CreateBudgetInput,
   CreateBudgetInputDto,
   CreateBudgetOutputDto,
-  ReadBudgetInputDto,
+  DeleteBudgetInput,
+  DeleteBudgetInputDto,
+  DeleteBudgetOutputDto,
   ReadBudgetInput,
+  ReadBudgetInputDto,
   ReadBudgetOutputDto,
   UpdateBudgetInput,
   UpdateBudgetInputDto,
   UpdateBudgetOutputDto,
-  DeleteBudgetInput,
-  DeleteBudgetInputDto,
-  DeleteBudgetOutputDto,
 } from './budget.dto';
+
+import { DatabaseService } from '../../core/database.service';
+import { Injectable } from '@nestjs/common';
+import { generate } from 'shortid';
 @Injectable()
 export class BudgetService {
   constructor(private readonly db: DatabaseService) {}
@@ -25,7 +26,7 @@ export class BudgetService {
     const id = generate();
     await session
       .run(
-        'MERGE (budget:Budget {active: true, owningOrg: "seedcompany", status: $status}) ON CREATE SET budget.id = $id, budget.timestamp = datetime() RETURN budget.id as id, budget.status as status, budget.budgetDetails as budgetDetails',
+        'MERGE (budget:Budget {active: true, owningOrg: "seedcompany", id: $id}) ON CREATE SET budget.id = $id, budget.status  = $status, budget.timestamp = datetime() RETURN budget.id as id, budget.status as status, budget.budgetDetails as budgetDetails',
         {
           id,
           status: input.status,

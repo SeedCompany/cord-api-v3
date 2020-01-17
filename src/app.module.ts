@@ -1,18 +1,20 @@
-import { Module } from '@nestjs/common';
-import { GraphQLModule } from '@nestjs/graphql';
 import { AdminResolver } from './components/admin/admin.resolver';
 import { AdminService } from './components/admin/admin.service';
 import { AreaResolver } from './components/area/area.resolver';
 import { AreaService } from './components/area/area.service';
 import { AuthResolver } from './components/auth/auth.resolver';
 import { AuthService } from './components/auth/auth.service';
+import { BudgetResolver } from './components/budget/budget.resolver';
+import { BudgetService } from './components/budget/budget.service';
 import { DatabaseService } from './core/database.service';
+import { GraphQLModule } from '@nestjs/graphql';
 import { InternshipResolver } from './components/internship/internship.resolver';
 import { InternshipService } from './components/internship/internship.service';
 import { LanguageResolver } from './components/language/language.resolver';
 import { LanguageService } from './components/language/language.service';
 import { LocationResolver } from './components/location/location.resolver';
 import { LocationService } from './components/location/location.service';
+import { Module } from '@nestjs/common';
 import { OrganizationResolver } from './components/organization/organization.resolver';
 import { OrganizationService } from './components/organization/organization.service';
 import { ProductResolver } from './components/product/product.resolver';
@@ -23,8 +25,6 @@ import { RegionResolver } from './components/region/region.resolver';
 import { RegionService } from './components/region/region.service';
 import { UserResolver } from './components/user/user.resolver';
 import { UserService } from './components/user/user.service';
-import { BudgetService } from './components/budget/budget.service';
-import { BudgetResolver } from './components/budget/budget.resolver';
 
 @Module({
   imports: [
@@ -42,6 +42,8 @@ import { BudgetResolver } from './components/budget/budget.resolver';
     AreaService,
     AuthResolver,
     AuthService,
+    BudgetResolver,
+    BudgetService,
     DatabaseService,
     InternshipResolver,
     InternshipService,
@@ -60,8 +62,6 @@ import { BudgetResolver } from './components/budget/budget.resolver';
     RegionService,
     UserResolver,
     UserService,
-    BudgetService,
-    BudgetResolver,
   ],
 })
 export class AppModule {}
