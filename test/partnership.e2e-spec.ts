@@ -1,19 +1,20 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import * as request from 'supertest';
-import { INestApplication } from '@nestjs/common';
-import { AppModule } from '../src/app.module';
-import { generate, isValid } from 'shortid';
-import { CreatePartnershipInput } from '../src/components/partnership/partnership.dto';
-import { Partnership } from '../src/components/partnership/partnership';
-import { Organization } from '../src/components/organization/organization';
 
-async function createPartnership(app: INestApplication, organization: Organization): Promise<string> {
-  let partshipId = '';
+import { Test, TestingModule } from '@nestjs/testing';
+import { generate, isValid } from 'shortid';
+
+import { AppModule } from '../src/app.module';
+import { CreatePartnershipInput } from '../src/components/partnership/partnership.dto';
+import { INestApplication } from '@nestjs/common';
+import { PartnershipAgreementStatus } from 'src/components/partnership/agreement-status';
+
+async function createPartnership(app: INestApplication): Promise<string> {
+  let partnershipId = '';
   await request(app.getHttpServer())
     .post('/graphql')
     .send({
       operationName: null,
-      //ToDO : Use Later
+      // TODO : Use Later
       // query: `
       //   mutation {
       //     createPartnership(
@@ -36,19 +37,18 @@ async function createPartnership(app: INestApplication, organization: Organizati
       //   `,
       query: `
           mutation {
-            createPartnership (input: { partnership: { organization: "${organization}" } }){
-              partnership{
-              id
-              organization
+            createPartnership (input: { partnership: {} }){
+              partnership {
+                id
               }
             }
           }
           `,
     })
     .then(({ body }) => {
-      partshipId = body.data.createPartnership.partnership.id;
+      partnershipId = body.data.createPartnership.partnership.id;
     });
-  return partshipId;
+  return partnershipId;
 }
 
 describe('Partnership e2e', () => {
@@ -57,7 +57,8 @@ describe('Partnership e2e', () => {
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+.compile();
 
     app = moduleFixture.createNestApplication();
     await app.init();
@@ -65,27 +66,31 @@ describe('Partnership e2e', () => {
 
   // CREATE PARTNERSHIP
   it('create partnership', () => {
-    const orgName = 'partshipName_' + generate();
-    const organization = {id: generate(), name : orgName, owningOrg: null, createdAt: null, createdBy: null};
+    const orgName = 'partnershipName_' + generate();
+    const organization = {
+      id: generate(),
+      name: orgName,
+      owningOrg: null,
+      createdAt: null,
+      createdBy: null,
+    };
     return request(app.getHttpServer())
       .post('/graphql')
       .send({
         operationName: null,
         query: `
         mutation {
-          createPartnership (input: { partnership: { organization: "${organization}" } }){
+          createPartnership (input: { partnership: {  } }){
             partnership {
-            id
-            organization
+              id
             }
           }
         }
         `,
       })
       .expect(({ body }) => {
-        const partshipId = body.data.createPartnership.partnership.id;
-        expect(isValid(partshipId)).toBe(true);
-        expect(body.data.createPartnership.partnership.organization).toBe(orgName);
+        const partnershipId = body.data.createPartnership.partnership.id;
+        expect(isValid(partnershipId)).toBe(true);
       })
       .expect(200);
   });
@@ -93,9 +98,15 @@ describe('Partnership e2e', () => {
   // READ PARTNERSHIP
   it('read one partnership by id', async () => {
     const newPartShip = new CreatePartnershipInput();
-    const orgName = 'partshipName_' + generate();
-    newPartShip.organization = {id: generate(), name : orgName, owningOrg: null, createdAt: null, createdBy: null};
-    const partshipId = await createPartnership(app, newPartShip.organization);
+    const orgName = 'partnershipName_' + generate();
+    newPartShip.organization = {
+      id: generate(),
+      name: orgName,
+      owningOrg: null,
+      createdAt: null,
+      createdBy: null,
+    };
+    const partnershipId = await createPartnership(app);
 
     // test reading new partnership
     return request(app.getHttpServer())
@@ -104,28 +115,24 @@ describe('Partnership e2e', () => {
         operationName: null,
         query: `
         query {
-          readPartnership ( input: { partnership: { id: "${partshipId}" } }){
+          readPartnership ( input: { partnership: { id: "${partnershipId}" } }){
             partnership {
-            id
-            organization
+              id
             }
           }
         }
         `,
       })
       .expect(({ body }) => {
-        expect(body.data.readPartnership.partnership.id).toBe(partshipId);
-        expect(body.data.readPartnership.partnership.organization).toBe(newPartShip.organization);
+        expect(body.data.readPartnership.partnership.id).toBe(partnershipId);
       })
       .expect(200);
   });
 
   // UPDATE PARTNERSHIP
   it('update partnership', async () => {
-    const newPartShip = new CreatePartnershipInput();
-    const orgName = 'partshipName_' + generate();
-    newPartShip.organization = {id: generate(), name : orgName, owningOrg: null, createdAt: null, createdBy: null};
-    const partshipId = await createPartnership(app, newPartShip.organization);
+    const partnershipId = await createPartnership(app);
+    const agreementStatus: PartnershipAgreementStatus = PartnershipAgreementStatus.NotAttached;
 
     return request(app.getHttpServer())
       .post('/graphql')
@@ -133,20 +140,20 @@ describe('Partnership e2e', () => {
         operationName: null,
         query: `
         mutation {
-          updatePartnership (input: { partnership: {id: "${partshipId}", organization: "${newPartShip.organization}" } }){
+          updatePartnership (input: { partnership: {id: "${partnershipId}",
+          agreementStatus: ${agreementStatus} } } }){
             partnership {
-            id
-            organization
+              id
+              agreementStatus
             }
           }
         }
         `,
       })
       .expect(({ body }) => {
-        expect(body.data.updatePartnership.partnership.id).toBe(partshipId);
-        expect(body.data.updatePartnership.partnership.organization).toBe(
-          newPartShip.organization,
-        );
+        console.log(JSON.stringify(body));
+        expect(body.data.updatePartnership.partnership.id).toBe(partnershipId);
+        expect(body.data.updatePartnership.partnership.agreementStatus).toBe(agreementStatus);
       })
       .expect(200);
   });
@@ -154,9 +161,15 @@ describe('Partnership e2e', () => {
   // DELETE PARTNERSHIP
   it('delete partnership', async () => {
     const newPartShip = new CreatePartnershipInput();
-    const orgName = 'partshipName_' + generate();
-    newPartShip.organization = {id: generate(), name : orgName, owningOrg: null, createdAt: null, createdBy: null};
-    const partshipId = await createPartnership(app, newPartShip.organization);
+    const orgName = 'partnershipName_' + generate();
+    newPartShip.organization = {
+      id: generate(),
+      name: orgName,
+      owningOrg: null,
+      createdAt: null,
+      createdBy: null,
+    };
+    const partnershipId = await createPartnership(app);
 
     return request(app.getHttpServer())
       .post('/graphql')
@@ -164,7 +177,7 @@ describe('Partnership e2e', () => {
         operationName: null,
         query: `
         mutation {
-          deletePartnership (input: { partnership: { id: "${partshipId}" } }){
+          deletePartnership (input: { partnership: { id: "${partnershipId}" } }){
             partnership {
             id
             }
@@ -173,7 +186,7 @@ describe('Partnership e2e', () => {
         `,
       })
       .expect(({ body }) => {
-        expect(body.data.deletePartnership.partnership.id).toBe(partshipId);
+        expect(body.data.deletePartnership.partnership.id).toBe(partnershipId);
       })
       .expect(200);
   });
@@ -185,7 +198,7 @@ describe('Partnership e2e', () => {
   //   const orgs: Partnership[] = [];
   //   for (let i = 0; i < totalOrgs; i++) {
   //     const newPartShip = new Partnership();
-  //     const orgName = 'partshipName_' + generate();
+  //     const orgName = 'partnershipName_' + generate();
   //     newPartShip.organization = {id: generate(), name : orgName, owningOrg: null, createdAt: null, createdBy: null};
   //     //newPartShip.id = await createPartnership(app, newPartShip.organization);
   //     orgs.push(newPartShip);

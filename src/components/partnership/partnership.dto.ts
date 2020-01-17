@@ -1,23 +1,30 @@
-import { InputType, Field, ID, GraphQLISODateTime, ObjectType } from 'type-graphql';
+import {
+  Field,
+  GraphQLISODateTime,
+  ID,
+  InputType,
+  ObjectType,
+} from 'type-graphql';
+
 import { DateTime } from 'luxon';
-import { PartnershipAgreementStatus } from './agreement-status';
 import { Organization } from '../organization/organization';
+import { PartnershipAgreementStatus } from './agreement-status';
 import { PartnershipType } from './partnership-type';
 
 // CREATE
 @InputType()
 export class CreatePartnershipInput {
-  @Field(type => PartnershipAgreementStatus, { nullable: true })
+  @Field(type => String, { nullable: true })
   agreementStatus: PartnershipAgreementStatus;
 
-  @Field(type => PartnershipAgreementStatus, { nullable: true })
+  @Field(type => String, { nullable: true })
   mouStatus: PartnershipAgreementStatus;
-    
-  @Field(type => GraphQLISODateTime, { nullable: true })
-  mouStart: DateTime | null;;
 
   @Field(type => GraphQLISODateTime, { nullable: true })
-  mouEnd: DateTime | null;;
+  mouStart: DateTime | null;
+
+  @Field(type => GraphQLISODateTime, { nullable: true })
+  mouEnd: DateTime | null;
 
   @Field(type => Organization, { nullable: true })
   organization: Organization;
@@ -37,17 +44,17 @@ export class CreatePartnershipOutput {
   @Field(type => String)
   id: string;
 
-  @Field(type => PartnershipAgreementStatus, { nullable: true })
+  @Field(type => String, { nullable: true })
   agreementStatus: PartnershipAgreementStatus;
 
-  @Field(type => PartnershipAgreementStatus, { nullable: true })
+  @Field(type => String, { nullable: true })
   mouStatus: PartnershipAgreementStatus;
-    
-  @Field(type => GraphQLISODateTime, { nullable: true })
-  mouStart: DateTime | null;;
 
   @Field(type => GraphQLISODateTime, { nullable: true })
-  mouEnd: DateTime | null;;
+  mouStart: DateTime | null;
+
+  @Field(type => GraphQLISODateTime, { nullable: true })
+  mouEnd: DateTime | null;
 
   @Field(type => Organization, { nullable: true })
   organization: Organization;
@@ -58,14 +65,13 @@ export class CreatePartnershipOutput {
 
 @ObjectType()
 export class CreatePartnershipOutputDto {
-    @Field({ nullable: true }) // nullable in case of error
-    partnership: CreatePartnershipOutput;
-  
-    constructor() {
-      this.partnership = new CreatePartnershipOutput();
-    }
-}
+  @Field({ nullable: true }) // nullable in case of error
+  partnership: CreatePartnershipOutput;
 
+  constructor() {
+    this.partnership = new CreatePartnershipOutput();
+  }
+}
 
 // READ
 
@@ -83,26 +89,26 @@ export class ReadPartnershipInputDto {
 
 @ObjectType()
 export class ReadPartnershipOutput {
-    @Field(type => String)
-    id: string;
-  
-    @Field(type => PartnershipAgreementStatus, { nullable: true })
-    agreementStatus: PartnershipAgreementStatus;
-  
-    @Field(type => PartnershipAgreementStatus, { nullable: true })
-    mouStatus: PartnershipAgreementStatus;
-      
-    @Field(type => GraphQLISODateTime, { nullable: true })
-    mouStart: DateTime | null;;
-  
-    @Field(type => GraphQLISODateTime, { nullable: true })
-    mouEnd: DateTime | null;;
-  
-    @Field(type => Organization, { nullable: true })
-    organization: Organization;
-  
-    @Field(type => [PartnershipType], { nullable: true })
-    types: PartnershipType;
+  @Field(type => String)
+  id: string;
+
+  @Field(type => String, { nullable: true })
+  agreementStatus: PartnershipAgreementStatus;
+
+  @Field(type => String, { nullable: true })
+  mouStatus: PartnershipAgreementStatus;
+
+  @Field(type => GraphQLISODateTime, { nullable: true })
+  mouStart: DateTime | null;
+
+  @Field(type => GraphQLISODateTime, { nullable: true })
+  mouEnd: DateTime | null;
+
+  @Field(type => Organization, { nullable: true })
+  organization: Organization;
+
+  @Field(type => [PartnershipType], { nullable: true })
+  types: PartnershipType;
 }
 
 @ObjectType()
@@ -119,26 +125,26 @@ export class ReadPartnershipOutputDto {
 
 @InputType()
 export class UpdatePartnershipInput {
-    @Field(type => String)
-    id: string;
-  
-    @Field(type => PartnershipAgreementStatus, { nullable: true })
-    agreementStatus: PartnershipAgreementStatus;
-  
-    @Field(type => PartnershipAgreementStatus, { nullable: true })
-    mouStatus: PartnershipAgreementStatus;
-      
-    @Field(type => GraphQLISODateTime, { nullable: true })
-    mouStart: DateTime | null;;
-  
-    @Field(type => GraphQLISODateTime, { nullable: true })
-    mouEnd: DateTime | null;;
-  
-    @Field(type => Organization, { nullable: true })
-    organization: Organization;
-  
-    @Field(type => [PartnershipType], { nullable: true })
-    types: PartnershipType;
+  @Field(type => String)
+  id: string;
+
+  @Field(type => String, { nullable: true })
+  agreementStatus: PartnershipAgreementStatus;
+
+  @Field(type => String, { nullable: true })
+  mouStatus: PartnershipAgreementStatus;
+
+  @Field(type => GraphQLISODateTime, { nullable: true })
+  mouStart: DateTime | null;
+
+  @Field(type => GraphQLISODateTime, { nullable: true })
+  mouEnd: DateTime | null;
+
+  @Field(type => Organization, { nullable: true })
+  organization: Organization;
+
+  @Field(type => [PartnershipType], { nullable: true })
+  types: PartnershipType;
 }
 
 @InputType()
@@ -149,26 +155,26 @@ export class UpdatePartnershipInputDto {
 
 @ObjectType()
 export class UpdatePartnershipOutput {
-    @Field(type => String)
-    id: string;
-  
-    @Field(type => PartnershipAgreementStatus, { nullable: true })
-    agreementStatus: PartnershipAgreementStatus;
-  
-    @Field(type => PartnershipAgreementStatus, { nullable: true })
-    mouStatus: PartnershipAgreementStatus;
-      
-    @Field(type => GraphQLISODateTime, { nullable: true })
-    mouStart: DateTime | null;;
-  
-    @Field(type => GraphQLISODateTime, { nullable: true })
-    mouEnd: DateTime | null;;
-  
-    @Field(type => Organization, { nullable: true })
-    organization: Organization;
-  
-    @Field(type => [PartnershipType], { nullable: true })
-    types: PartnershipType;
+  @Field(type => String)
+  id: string;
+
+  @Field(type => String, { nullable: true })
+  agreementStatus: PartnershipAgreementStatus;
+
+  @Field(type => String, { nullable: true })
+  mouStatus: PartnershipAgreementStatus;
+
+  @Field(type => GraphQLISODateTime, { nullable: true })
+  mouStart: DateTime | null;
+
+  @Field(type => GraphQLISODateTime, { nullable: true })
+  mouEnd: DateTime | null;
+
+  @Field(type => Organization, { nullable: true })
+  organization: Organization;
+
+  @Field(type => [PartnershipType], { nullable: true })
+  types: PartnershipType;
 }
 
 @ObjectType()
