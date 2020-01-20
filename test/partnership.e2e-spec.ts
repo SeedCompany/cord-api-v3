@@ -141,7 +141,7 @@ describe('Partnership e2e', () => {
         query: `
         mutation {
           updatePartnership (input: { partnership: {id: "${partnershipId}",
-          agreementStatus: ${agreementStatus} } } }){
+          agreementStatus: "${agreementStatus}" } }){
             partnership {
               id
               agreementStatus
@@ -151,7 +151,6 @@ describe('Partnership e2e', () => {
         `,
       })
       .expect(({ body }) => {
-        console.log(JSON.stringify(body));
         expect(body.data.updatePartnership.partnership.id).toBe(partnershipId);
         expect(body.data.updatePartnership.partnership.agreementStatus).toBe(agreementStatus);
       })

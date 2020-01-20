@@ -114,12 +114,12 @@ export class PartnershipService {
     await session
       .run(
         `MATCH (partnership:Partnership {active: true, owningOrg: "seedcompany", id: $id})
-        SET partnership.agreementStatus = $agreementStatus,
-        partnership.mouStatus = $mouStatus,
-        partnership.mouStart = $mouStart,
-        partnership.mouEnd = $mouEnd,
-        partnership.organization = $organization,
-        partnership.types = $types
+        SET partnership.agreementStatus = $agreementStatus
+        // partnership.mouStatus = $mouStatus,
+        // partnership.mouStart = $mouStart,
+        // partnership.mouEnd = $mouEnd,
+        // partnership.organization = $organization,
+        // partnership.types = $types
           RETURN partnership.id as id,
           partnership.agreementStatus as agreementStatus,
           partnership.mouStatus as mouStatus,
@@ -139,7 +139,6 @@ export class PartnershipService {
       )
       .then(result => {
         if (result.records.length > 0) {
-          console.log(JSON.stringify(result));
           response.partnership.id = result.records[0].get('id');
           response.partnership.agreementStatus = result.records[0].get(
             'agreementStatus',
