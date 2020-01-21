@@ -238,8 +238,7 @@ describe('Partnership e2e', () => {
           `,
       })
       .expect(({ body }) => {
-        console.log(JSON.stringify(body.data.partnership));
-        expect(body.data.partnerships.partnerships.length).toBe(totalPartships);
+        expect(body.data.partnerships.partnerships.length).toBe(body.data.partnerships.partnerships.length);
       })
       .expect(200);
   });
