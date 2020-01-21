@@ -10,6 +10,7 @@ import { DateField } from '../../common';
 import { Organization } from '../organization/organization';
 import { PartnershipAgreementStatus } from './agreement-status';
 import { PartnershipType } from './partnership-type';
+import { Partnership } from './partnership';
 
 // CREATE
 @InputType()
@@ -214,5 +215,42 @@ export class DeletePartnershipOutputDto {
 
   constructor() {
     this.partnership = new DeletePartnershipOutput();
+  }
+}
+
+// LIST
+
+@InputType()
+export class ListPartnershipsInput {
+  @Field(type => String, { nullable: true, defaultValue: '' })
+  filter: string;
+  @Field(type => Number, { nullable: true, defaultValue: 0 })
+  page: number;
+  @Field(type => Number, { nullable: true, defaultValue: 25 })
+  count: number;
+  @Field(type => String, { nullable: true, defaultValue: 'DESC' })
+  order: string;
+  @Field(type => String, { nullable: true, defaultValue: 'agreementStatus' })
+  sort: string;
+}
+
+@InputType()
+export class ListPartnershipsInputDto {
+  @Field()
+  query: ListPartnershipsInput;
+}
+
+@ObjectType()
+export class ListPartnershipsOutput {
+  @Field(type => Partnership, { nullable: true })
+  partnership: Partnership;
+}
+
+@ObjectType()
+export class ListPartnershipsOutputDto {
+  @Field(type => [Partnership], { nullable: true }) // nullable in case of error
+  partnerships: Partnership[];
+  constructor() {
+    this.partnerships = [];
   }
 }

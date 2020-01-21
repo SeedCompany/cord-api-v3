@@ -3,6 +3,8 @@ import {
   CreatePartnershipOutputDto,
   DeletePartnershipInput,
   DeletePartnershipOutputDto,
+  ListPartnershipsInput,
+  ListPartnershipsOutputDto,
   ReadPartnershipInput,
   ReadPartnershipOutputDto,
   UpdatePartnershipInput,
@@ -12,6 +14,7 @@ import {
 import { DatabaseService } from '../../core/database.service';
 import { Injectable } from '@nestjs/common';
 import { generate } from 'shortid';
+import { Partnership } from './partnership';
 
 @Injectable()
 export class PartnershipService {
@@ -36,12 +39,12 @@ export class PartnershipService {
        `,
         {
           id,
-          // agreementStatus: input.agreementStatus,
-          // mouStatus: input.mouStatus,
-          // mouStart: input.mouStart,
-          // mouEnd: input.mouEnd,
-          // organization: input.organization,
-          // types: input.types,
+          agreementStatus: input.agreementStatus,
+          mouStatus: input.mouStatus,
+          mouStart: input.mouStart,
+          mouEnd: input.mouEnd,
+          organization: input.organization,
+          types: input.types,
         },
       )
       .then(result => {
@@ -185,4 +188,37 @@ export class PartnershipService {
 
     return response;
   }
+
+  async queryPartnerships(
+    query: ListPartnershipsInput,
+  ): Promise<ListPartnershipsOutputDto> {
+    const response = new ListPartnershipsOutputDto();
+    const session = this.db.driver.session();
+    const skipIt = query.page * query.count;
+
+    const result = await session.run(
+      `MATCH (partnership:Partnership {active: true}) WHERE partnership.agreementStatus CONTAINS $filter RETURN partnership.agreementStatus as agreementStatus, partnership.organization as organization ORDER BY ${query.sort} ${query.order} SKIP $skip LIMIT $count`,
+      {
+        filter: query.filter,
+        skip: skipIt,
+        count: query.count,
+        sort: query.sort,
+        order: query.order,
+      },
+    );
+
+    session.close();
+
+    response.partnerships = result.records.map(record => {
+      const partnership = new Partnership();
+      //partnership.id = record.get('id');
+      partnership.agreementStatus = record.get('agreementStatus');
+      partnership.organization = record.get('organization');
+      return partnership;
+    });
+
+    return response;
+  }
 }
+
+

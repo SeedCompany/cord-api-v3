@@ -7,6 +7,8 @@ import {
   CreatePartnershipOutputDto,
   ReadPartnershipInputDto,
   ReadPartnershipOutputDto,
+  ListPartnershipsInputDto,
+  ListPartnershipsOutputDto,
   UpdatePartnershipInputDto,
   UpdatePartnershipOutputDto,
   DeletePartnershipInputDto,
@@ -27,7 +29,6 @@ export class PartnershipResolver {
     return await this.partnershipService.create(input);
   }
 
-  
   @Query(returns => ReadPartnershipOutputDto, {
     description: 'Read one Partnership by id',
   })
@@ -35,6 +36,15 @@ export class PartnershipResolver {
     @Args('input') { partnership: input }: ReadPartnershipInputDto,
   ): Promise<ReadPartnershipOutputDto> {
     return await this.partnershipService.readOne(input);
+  }
+
+  @Query(returns => ListPartnershipsOutputDto, {
+    description: 'Query partnership',
+  })
+  async partnerships(
+    @Args('input') { query: input }: ListPartnershipsInputDto,
+  ): Promise<ListPartnershipsOutputDto> {
+    return await this.partnershipService.queryPartnerships(input);
   }
 
   @Mutation(returns => UpdatePartnershipOutputDto, {
