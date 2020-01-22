@@ -103,7 +103,9 @@ describe('Partnership e2e', () => {
       id: generate(),
       name: orgName,
       owningOrg: null,
-      createdAt: null,
+      modifiedByUser: null,
+      createdOn: null,
+      deletedOn: null,
       createdBy: null,
     };
     const partnershipId = await createPartnership(app);
@@ -165,7 +167,9 @@ describe('Partnership e2e', () => {
       id: generate(),
       name: orgName,
       owningOrg: null,
-      createdAt: null,
+      modifiedByUser: null,
+      createdOn: null,
+      deletedOn: null,
       createdBy: null,
     };
     const partnershipId = await createPartnership(app);
