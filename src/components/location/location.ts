@@ -11,7 +11,7 @@ export class Location {
   country: string;
 
   @Field()
-  area: Area;
+  area: string;
 
   @Field()
   editable: boolean;
@@ -24,6 +24,6 @@ export class Location {
 export interface ILocation {
   id: string;
   country: string | null;
-  area: Area;
+  area: string;
   editable: boolean;
 }

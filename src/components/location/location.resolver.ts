@@ -10,12 +10,13 @@ import {
   UpdateLocationOutputDto,
   DeleteLocationInputDto,
   DeleteLocationOutputDto,
+  ListLocationsOutputDto,
+  ListLocationsInputDto,
 } from './location.dto';
 
 @Resolver(of => Location)
 export class LocationResolver {
-  constructor(private readonly locationService: LocationService) {
-  }
+  constructor(private readonly locationService: LocationService) {}
 
   @Mutation(returns => CreateLocationOutputDto, {
     description: 'Create a Location',
@@ -34,13 +35,20 @@ export class LocationResolver {
   ): Promise<ReadLocationOutputDto> {
     return await this.locationService.readOne(input);
   }
-
+  @Query(returns => ListLocationsOutputDto, {
+    description: 'Query orgainzations',
+  })
+  async locations(
+    @Args('input') { query: input }: ListLocationsInputDto,
+  ): Promise<ListLocationsOutputDto> {
+    return await this.locationService.queryLocations(input);
+  }
   @Mutation(returns => UpdateLocationOutputDto, {
     description: 'Update an Location',
   })
   async updateLocation(
     @Args('input')
-      { location: input }: UpdateLocationInputDto,
+    { location: input }: UpdateLocationInputDto,
   ): Promise<UpdateLocationOutputDto> {
     return await this.locationService.update(input);
   }
@@ -50,7 +58,7 @@ export class LocationResolver {
   })
   async deleteLocation(
     @Args('input')
-      { location: input }: DeleteLocationInputDto,
+    { location: input }: DeleteLocationInputDto,
   ): Promise<DeleteLocationOutputDto> {
     return await this.locationService.delete(input);
   }

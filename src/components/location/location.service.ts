@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../../core/database.service';
 import { generate } from 'shortid';
+import { Location } from './location';
 import {
   CreateLocationOutputDto,
   ReadLocationOutputDto,
@@ -10,30 +11,34 @@ import {
   ReadLocationInput,
   UpdateLocationInput,
   DeleteLocationInput,
+  ListLocationsOutputDto,
+  ListLocationsInputDto,
+  ListLocationsInput,
 } from './location.dto';
 
 @Injectable()
 export class LocationService {
-  constructor(private readonly db: DatabaseService) {
-  }
+  constructor(private readonly db: DatabaseService) {}
 
-  async create(
-    input: CreateLocationInput,
-  ): Promise<CreateLocationOutputDto> {
+  async create(input: CreateLocationInput): Promise<CreateLocationOutputDto> {
     const response = new CreateLocationOutputDto();
     const session = this.db.driver.session();
     const id = generate();
     await session
       .run(
-        'MERGE (location:Location {active: true, owningOrg: "seedcompany", name: $name}) ON CREATE SET location.id = $id, location.timestamp = datetime() RETURN location.id as id, location.name as name',
+        'MERGE (location:Location {active: true, owningOrg: "seedcompany", country: $country, area: $area, editable: $editable}) ON CREATE SET location.id = $id, location.timestamp = datetime() RETURN location.id as id, location.country as country, location.area as area , location.editable as editable ',
         {
           id,
-          name: input.name,
+          country: input.country,
+          area: input.area,
+          editable: input.editable,
         },
       )
       .then(result => {
         response.location.id = result.records[0].get('id');
-        response.location.name = result.records[0].get('name');
+        response.location.country = result.records[0].get('country');
+        response.location.area = result.records[0].get('area');
+        response.location.editable = result.records[0].get('editable');
       })
       .catch(error => {
         console.log(error);
@@ -43,21 +48,21 @@ export class LocationService {
     return response;
   }
 
-  async readOne(
-    input: ReadLocationInput,
-  ): Promise<ReadLocationOutputDto> {
+  async readOne(input: ReadLocationInput): Promise<ReadLocationOutputDto> {
     const response = new ReadLocationOutputDto();
     const session = this.db.driver.session();
     await session
       .run(
-        'MATCH (location:Location {active: true, owningOrg: "seedcompany"}) WHERE location.id = $id RETURN location.id as id, location.name as name',
+        'MATCH (location:Location {active: true, owningOrg: "seedcompany"}) WHERE location.id = $id RETURN location.id as id, location.country as country, location.area as area , location.editable as editable ',
         {
           id: input.id,
         },
       )
       .then(result => {
         response.location.id = result.records[0].get('id');
-        response.location.name = result.records[0].get('name');
+        response.location.country = result.records[0].get('country');
+        response.location.area = result.records[0].get('area');
+        response.location.editable = result.records[0].get('editable');
       })
       .catch(error => {
         console.log(error);
@@ -72,17 +77,20 @@ export class LocationService {
     const session = this.db.driver.session();
     await session
       .run(
-        'MATCH (location:Location {active: true, owningOrg: "seedcompany", id: $id}) SET location.name = $name RETURN location.id as id, location.name as name',
+        'MATCH (location:Location {active: true, owningOrg: "seedcompany", id: $id}) SET location.country = $country RETURN location.id as id,location.country as country,location.area as area , location.editable as editable',
         {
           id: input.id,
-          name: input.name,
+          country: input.country,
+          area: input.area,
+          editable: input.editable,
         },
       )
       .then(result => {
         if (result.records.length > 0) {
-
           response.location.id = result.records[0].get('id');
-          response.location.name = result.records[0].get('name');
+          response.location.country = result.records[0].get('country');
+          response.location.area = result.records[0].get('area');
+          response.location.editable = result.records[0].get('editable');
         } else {
           response.location = null;
         }
@@ -112,6 +120,36 @@ export class LocationService {
         console.log(error);
       })
       .then(() => session.close());
+
+    return response;
+  }
+
+  async queryLocations(
+    query: ListLocationsInput,
+  ): Promise<ListLocationsOutputDto> {
+    const response = new ListLocationsOutputDto();
+    const session = this.db.driver.session();
+    const skipIt = query.page * query.count;
+
+    const result = await session.run(
+      `MATCH (location:Location {active: true}) WHERE location.country CONTAINS $filter RETURN location.id as id, location.country as country ORDER BY ${query.sort} ${query.order} SKIP $skip LIMIT $count`,
+      {
+        filter: query.filter,
+        skip: skipIt,
+        count: query.count,
+        sort: query.sort,
+        order: query.order,
+      },
+    );
+
+    session.close();
+
+    response.countries = result.records.map(record => {
+      const location = new Location();
+      location.id = record.get('id');
+      location.country = record.get('country');
+      return location;
+    });
 
     return response;
   }
