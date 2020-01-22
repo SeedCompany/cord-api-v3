@@ -18,6 +18,37 @@ describe('Product e2e', () => {
     await app.init();
   });
 
+  async function createProduct(): Promise<string> {
+    return request(app.getHttpServer())
+      .post('/graphql')
+      .send({
+        operationName: null,
+        query: `
+      mutation {
+        createProduct(
+          input: {
+            product: {
+              type: BibleStories
+              books: [ Genesis, Exodus, Leviticus]
+              mediums: [Web, Print]
+              purposes: [ChurchLife, SocialIssues]
+              approach: Written
+              methodology: Paratext
+            }
+          }
+        ) {
+          product {
+            id
+          }
+        }
+      }
+      `,
+      })
+      .then(({ body }) => {
+        return body.data.createProduct.product.id;
+      });
+  }
+
   // CREATE Product
   it('create product', () => {
     const product = 'product_' + generate();
@@ -57,3 +88,9 @@ describe('Product e2e', () => {
     await app.close();
   });
 });
+
+// Read one product
+
+it('read one product', () = {
+  
+})
