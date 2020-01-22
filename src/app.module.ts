@@ -3,6 +3,7 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { ContextFunction } from 'apollo-server-core';
 import { Request, Response } from 'express';
 import { GqlContextType } from './common';
+import { DateScalar, DateTimeScalar } from './common/luxon.graphql';
 import { AdminResolver } from './components/admin/admin.resolver';
 import { AdminService } from './components/admin/admin.service';
 import { AreaResolver } from './components/area/area.resolver';
@@ -60,6 +61,8 @@ const context: ContextFunction<{ req: Request; res: Response }, GqlContextType> 
     BudgetService,
     CypherFactory,
     DatabaseService,
+    DateTimeScalar,
+    DateScalar,
     InternshipResolver,
     InternshipService,
     LanguageResolver,

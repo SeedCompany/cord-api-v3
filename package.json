@@ -30,6 +30,7 @@
     "apollo-server-express": "^2.9.15",
     "class-transformer": "^0.2.3",
     "class-validator": "^0.11.0",
+    "common-tags": "^1.8.0",
     "cypher-query-builder": "^5.0.4",
     "dotenv": "^8.2.0",
     "dotenv-expand": "^5.1.0",
