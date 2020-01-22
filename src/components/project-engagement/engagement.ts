@@ -1,10 +1,11 @@
-import { DateTime } from 'luxon';
 import { DateField, DateTimeField } from '../../common';
+import { Field, InputType, ObjectType } from 'type-graphql';
+
+import { DateTime } from 'luxon';
 import { Language } from '../language/language';
+import { Product } from '../product/product';
 import { ProjectEngagementStatus } from './status';
 import { ProjectEngagementTag } from './tag';
-import { Product } from '../product/product';
-import { ObjectType, InputType, Field } from 'type-graphql';
 
 @ObjectType()
 @InputType('ProjectEngagementInput')
@@ -12,7 +13,7 @@ export class ProjectEngagement {
   @Field({ nullable: true })
   id: string;
 
-  @Field(type => Language, {nullable: true })
+  @Field(type => Language, { nullable: true })
   language: Language;
 
   @DateField({ nullable: true })
