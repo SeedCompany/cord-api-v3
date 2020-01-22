@@ -2,72 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import * as request from 'supertest';
 import { INestApplication } from '@nestjs/common';
 import { AppModule } from '../src/app.module';
-import { isValid } from 'shortid';
-import { CreateUserInput } from '../src/components/user/user.dto';
-import { generate } from 'shortid';
-import { User } from 'src/components/user/user';
-import { serialize } from 'v8';
-
-async function createToken(app: INestApplication): Promise<string> {
-  let token;
-  await request(app.getHttpServer())
-    .post('/graphql')
-    .send({
-      operationName: null,
-      query: `
-      mutation{
-        createToken{
-          token
-        }
-      }
-    `,
-    })
-    .expect(({ body }) => {
-      token = body.data.createToken.token;
-    })
-    .expect(200);
-
-  return token;
-}
-
-async function createUser(app: INestApplication): Promise<User> {
-  const user = new User();
-  user.token = await createToken(app);
-  user.email = 'email_' + generate(); // needs to be unique in db, other props don't
-  user.realFirstName = 'realFirstName';
-  user.realLastName = 'realLastName';
-  user.displayFirstName = 'displayFirstName';
-  user.displayLastName = 'displayLastName';
-  user.password = 'password';
-
-  await request(app.getHttpServer())
-    .post('/graphql')
-    .set('token', user.token)
-    .send({
-      operationName: null,
-      query: `
-    mutation {
-      createUser (input: { user: { email: "${user.email}", realFirstName: "${user.realFirstName}", realLastName: "${user.realLastName}", displayFirstName: "${user.displayFirstName}", displayLastName: "${user.displayLastName}", password: "${user.password}" } }){
-        user{
-        id
-        email
-        realFirstName
-        realLastName
-        displayFirstName
-        displayLastName
-        }
-      }
-    }
-    `,
-    })
-    .expect(({ body }) => {
-      user.id = body.data.createUser.user.id;
-      expect(isValid(user.id)).toBe(true);
-      expect(body.data.createUser.user.email).toBe(user.email);
-    })
-    .expect(200);
-  return user;
-}
+import { createUser } from './test-utility';
 
 describe('User e2e', () => {
   let app: INestApplication;

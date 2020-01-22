@@ -1,13 +1,11 @@
-import {
-  Resolver,
-  Mutation,
-  GraphQLExecutionContext,
-  Args,
-  Context,
-} from '@nestjs/graphql';
+import { Resolver, Mutation, Args } from '@nestjs/graphql';
+import { Token } from '../../common';
 import { AuthService } from './auth.service';
-import { CreateTokenOutputDto, LoginUserOutputDto, LogoutUserOutputDto } from './auth.dto';
-import { Req } from '@nestjs/common';
+import {
+  CreateTokenOutputDto,
+  LoginUserOutputDto,
+  LogoutUserOutputDto,
+} from './auth.dto';
 
 @Resolver('Auth')
 export class AuthResolver {
@@ -23,22 +21,18 @@ export class AuthResolver {
   @Mutation(returns => LoginUserOutputDto, {
     description: 'Login a user',
   })
-  async login(
-    @Context() context: GraphQLExecutionContext,
+  async loginUser(
+    @Token() token: string,
     @Args('username') username: string,
     @Args('password') password: string,
   ): Promise<LoginUserOutputDto> {
-    const token = context['req']['headers']['token'];
     return await this.authService.login(username, password, token);
   }
 
   @Mutation(returns => LogoutUserOutputDto, {
     description: 'Logout a user',
   })
-  async logout(
-    @Context() context: GraphQLExecutionContext,
-  ): Promise<LogoutUserOutputDto> {
-    const token = context['req']['headers']['token'];
+  async logout(@Token() token: string): Promise<LogoutUserOutputDto> {
     return await this.authService.logout(token);
   }
 }

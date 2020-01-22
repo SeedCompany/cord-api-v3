@@ -111,7 +111,7 @@ export class AdminService {
     for (let i = 0; i < totalOrgs; i++) {
       const org = new CreateOrganizationInput();
       org.name = 'org_' + generate();
-      this.orgService.create(org);
+      // this.orgService.create(org );
     }
 
     // USERS
@@ -123,7 +123,7 @@ export class AdminService {
       user.email = s;
       user.realFirstName = s;
       user.realLastName = s;
-      this.userService.create(user, "token - replace me later");
+      this.userService.create(user, 'token - replace me later');
     }
 
     response.success = true;
