@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@nestjs/common": "^6.7.2",
+    "@nestjs/config": "^0.1.0",
     "@nestjs/core": "^6.7.2",
     "@nestjs/graphql": "^6.5.3",
     "@nestjs/passport": "^6.1.1",

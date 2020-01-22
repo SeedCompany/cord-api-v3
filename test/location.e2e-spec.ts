@@ -80,7 +80,7 @@ describe('Location e2e', () => {
   it('list locations', async () => {
     const listLocations = [
       {
-        country: 'india',
+        country: 'India',
       },
     ];
     const location = await createLocation(app);
