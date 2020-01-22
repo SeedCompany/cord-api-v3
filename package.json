@@ -28,6 +28,7 @@
     "@types/luxon": "^1.21.0",
     "@types/shortid": "^0.0.29",
     "apollo-server-express": "^2.9.15",
+    "cypher-query-builder": "^5.0.4",
     "dotenv": "^8.2.0",
     "dotenv-expand": "^5.1.0",
     "graphql": "^14.5.8",
