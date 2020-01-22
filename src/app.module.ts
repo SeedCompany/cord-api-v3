@@ -12,6 +12,7 @@ import { AuthService } from './components/auth/auth.service';
 import { BudgetResolver } from './components/budget/budget.resolver';
 import { BudgetService } from './components/budget/budget.service';
 import { ConfigModule } from './core/config/config.module';
+import { CypherFactory } from './core/cypher.factory';
 import { DatabaseService } from './core/database.service';
 import { InternshipResolver } from './components/internship/internship.resolver';
 import { InternshipService } from './components/internship/internship.service';
@@ -57,6 +58,7 @@ const context: ContextFunction<{ req: Request; res: Response }, GqlContextType> 
     AuthService,
     BudgetResolver,
     BudgetService,
+    CypherFactory,
     DatabaseService,
     InternshipResolver,
     InternshipService,
