@@ -6,6 +6,8 @@ import { AuthResolver } from './components/auth/auth.resolver';
 import { AuthService } from './components/auth/auth.service';
 import { BudgetResolver } from './components/budget/budget.resolver';
 import { BudgetService } from './components/budget/budget.service';
+import { ConfigModule } from '@nestjs/config';
+import configuration from './config/configuration';
 import { DatabaseService } from './core/database.service';
 import { GraphQLModule } from '@nestjs/graphql';
 import { InternshipResolver } from './components/internship/internship.resolver';
@@ -30,6 +32,10 @@ import { PartnershipService } from './components/partnership/partnership.service
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [configuration],
+    }),
     GraphQLModule.forRoot({
       autoSchemaFile: 'schema.gql',
       context: ({ req, res }) => ({ req, res }),
