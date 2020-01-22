@@ -1,3 +1,4 @@
+import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import 'source-map-support/register';
@@ -9,6 +10,12 @@ async function bootstrap() {
   });
   const config = app.get(ConfigService);
   app.setGlobalPrefix(config.globalPrefix);
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      skipMissingProperties: true,
+    }),
+  );
   await app.listen(config.port, () => {
     console.log(
       `Listening at http://localhost:${config.port}/${config.globalPrefix}`,
