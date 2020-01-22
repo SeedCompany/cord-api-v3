@@ -11,8 +11,7 @@ import { AuthResolver } from './components/auth/auth.resolver';
 import { AuthService } from './components/auth/auth.service';
 import { BudgetResolver } from './components/budget/budget.resolver';
 import { BudgetService } from './components/budget/budget.service';
-import { ConfigModule } from '@nestjs/config';
-import configuration from './config/configuration';
+import { ConfigModule } from './core/config/config.module';
 import { DatabaseService } from './core/database.service';
 import { InternshipResolver } from './components/internship/internship.resolver';
 import { InternshipService } from './components/internship/internship.service';
@@ -42,10 +41,7 @@ const context: ContextFunction<{ req: Request; res: Response }, GqlContextType> 
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      load: [configuration],
-    }),
+    ConfigModule,
     GraphQLModule.forRoot({
       autoSchemaFile: 'schema.gql',
       context,

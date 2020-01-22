@@ -3,6 +3,10 @@
 /node_modules
 schema.gql
 
+# local configuration
+.env.local
+.env.*.local
+
 # Logs
 logs
 *.log
