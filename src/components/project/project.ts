@@ -1,4 +1,5 @@
 import { DateTime } from 'luxon';
+import { DateField } from '../../common';
 import { Budget } from '../budget/budget';
 import { Language } from '../language/language';
 import { Location } from '../location/location';
@@ -7,7 +8,7 @@ import { TeamMember } from '../user/team-member';
 import { ProjectStatus } from './status';
 import { Partnership } from '../partnership/partnership';
 import { ProjectEngagement } from '../project-engagement/engagement';
-import { Field, ID, ObjectType, GraphQLISODateTime, InputType } from 'type-graphql';
+import { Field, ID, ObjectType, InputType } from 'type-graphql';
 
 @ObjectType()
 @InputType('ProjectInput')
@@ -31,10 +32,10 @@ export class Project implements IProject {
   @Field(type => Location, { nullable: true })
   publicLocation: Location | null;
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   mouStart: DateTime | null;
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   mouEnd: DateTime | null;
 
   @Field(type => [Language], { nullable: true })
@@ -52,7 +53,7 @@ export class Project implements IProject {
   @Field(type => [Budget], { nullable: true })
   budgets: Budget[];
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   estimatedSubmission: DateTime | null;
 
   @Field(type => [ProjectEngagement], { nullable: true })

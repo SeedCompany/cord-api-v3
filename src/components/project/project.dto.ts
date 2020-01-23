@@ -1,5 +1,6 @@
-import { ObjectType, Field, InputType, GraphQLISODateTime } from 'type-graphql';
+import { ObjectType, Field, InputType } from 'type-graphql';
 import { DateTime } from 'luxon';
+import { DateField } from '../../common';
 import { Budget } from '../budget/budget';
 import { Location } from '../location/location';
 import { Partnership } from '../partnership/partnership';
@@ -27,10 +28,10 @@ export class CreateProjectInput {
   @Field(type => Location, { nullable: true })
   publicLocation: Location | null;
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   mouStart: DateTime | null;
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   mouEnd: DateTime | null;
 
   @Field(type => [Partnership], { nullable: true })
@@ -45,7 +46,7 @@ export class CreateProjectInput {
   @Field(type => [Budget], { nullable: true })
   budgets: Budget[];
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   estimatedSubmission: DateTime | null;
 
   @Field(type => [ProjectEngagement], { nullable: true })
@@ -79,10 +80,10 @@ export class CreateProjectOutput {
   @Field(type => Location, { nullable: true })
   publicLocation: Location | null;
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   mouStart: DateTime | null;
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   mouEnd: DateTime | null;
 
   @Field(type => [Partnership], { nullable: true })
@@ -97,7 +98,7 @@ export class CreateProjectOutput {
   @Field(type => [Budget], { nullable: true })
   budgets: Budget[];
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   estimatedSubmission: DateTime | null;
 
   @Field(type => [ProjectEngagement], { nullable: true })
@@ -150,10 +151,10 @@ export class ReadProjectOutput {
   @Field(type => Location, { nullable: true })
   publicLocation: Location | null;
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   mouStart: DateTime | null;
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   mouEnd: DateTime | null;
 
   @Field(type => [Partnership], { nullable: true })
@@ -168,7 +169,7 @@ export class ReadProjectOutput {
   @Field(type => [Budget], { nullable: true })
   budgets: Budget[];
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   estimatedSubmission: DateTime | null;
 
   @Field(type => [ProjectEngagement], { nullable: true })
@@ -208,10 +209,10 @@ export class UpdateProjectInput {
   @Field(type => Location, { nullable: true })
   publicLocation: Location | null;
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   mouStart: DateTime | null;
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   mouEnd: DateTime | null;
 
   @Field(type => [Partnership], { nullable: true })
@@ -226,7 +227,7 @@ export class UpdateProjectInput {
   @Field(type => [Budget], { nullable: true })
   budgets: Budget[];
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   estimatedSubmission: DateTime | null;
 
   @Field(type => [ProjectEngagement], { nullable: true })
@@ -260,10 +261,10 @@ export class UpdateProjectOutput {
   @Field(type => Location, { nullable: true })
   publicLocation: Location | null;
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   mouStart: DateTime | null;
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   mouEnd: DateTime | null;
 
   @Field(type => [Partnership], { nullable: true })
@@ -278,7 +279,7 @@ export class UpdateProjectOutput {
   @Field(type => [Budget], { nullable: true })
   budgets: Budget[];
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   estimatedSubmission: DateTime | null;
 
   @Field(type => [ProjectEngagement], { nullable: true })

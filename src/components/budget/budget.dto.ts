@@ -1,4 +1,4 @@
-import { ObjectType, Field, InputType, GraphQLISODateTime } from 'type-graphql';
+import { ObjectType, Field, InputType } from 'type-graphql';
 import { BudgetDetails, BudgetStatus } from './budget';
 
 // CREATE

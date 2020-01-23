@@ -1,5 +1,6 @@
-import { ObjectType, Field, InputType, GraphQLISODateTime } from 'type-graphql';
+import { ObjectType, Field, InputType } from 'type-graphql';
 import { DateTime } from 'luxon';
+import { DateField } from '../../common';
 import { Budget } from '../budget/budget';
 import { Location } from '../location/location';
 import { Partnership } from '../partnership/partnership';
@@ -26,10 +27,10 @@ export class CreateInternshipInput {
   @Field(type => Location, { nullable: true })
   location: Location | null;
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   mouStart: DateTime | null;
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   mouEnd: DateTime | null;
 
   @Field(type => [Partnership], { nullable: true })
@@ -44,7 +45,7 @@ export class CreateInternshipInput {
   @Field(type => [Budget], { nullable: true })
   budgets: Budget[];
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   estimatedSubmission: DateTime | null;
 
   @Field(type => [InternshipEngagement], { nullable: true })
@@ -77,10 +78,10 @@ export class CreateInternshipOutput {
   @Field(type => Location, { nullable: true })
   location: Location | null;
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   mouStart: DateTime | null;
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   mouEnd: DateTime | null;
 
   @Field(type => [Partnership], { nullable: true })
@@ -95,7 +96,7 @@ export class CreateInternshipOutput {
   @Field(type => [Budget], { nullable: true })
   budgets: Budget[];
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   estimatedSubmission: DateTime | null;
 
   @Field(type => [InternshipEngagement], { nullable: true })
@@ -147,10 +148,10 @@ export class ReadInternshipOutput {
   @Field(type => Location, { nullable: true })
   location: Location | null;
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   mouStart: DateTime | null;
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   mouEnd: DateTime | null;
 
   @Field(type => [Partnership], { nullable: true })
@@ -165,7 +166,7 @@ export class ReadInternshipOutput {
   @Field(type => [Budget], { nullable: true })
   budgets: Budget[];
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   estimatedSubmission: DateTime | null;
 
   @Field(type => [InternshipEngagement], { nullable: true })
@@ -204,10 +205,10 @@ export class UpdateInternshipInput {
   @Field(type => Location, { nullable: true })
   location: Location | null;
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   mouStart: DateTime | null;
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   mouEnd: DateTime | null;
 
   @Field(type => [Partnership], { nullable: true })
@@ -222,7 +223,7 @@ export class UpdateInternshipInput {
   @Field(type => [Budget], { nullable: true })
   budgets: Budget[];
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   estimatedSubmission: DateTime | null;
 
   @Field(type => [InternshipEngagement], { nullable: true })
@@ -255,10 +256,10 @@ export class UpdateInternshipOutput {
   @Field(type => Location, { nullable: true })
   location: Location | null;
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   mouStart: DateTime | null;
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   mouEnd: DateTime | null;
 
   @Field(type => [Partnership], { nullable: true })
@@ -273,7 +274,7 @@ export class UpdateInternshipOutput {
   @Field(type => [Budget], { nullable: true })
   budgets: Budget[];
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   estimatedSubmission: DateTime | null;
 
   @Field(type => [InternshipEngagement], { nullable: true })

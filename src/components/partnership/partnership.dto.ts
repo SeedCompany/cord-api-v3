@@ -1,12 +1,12 @@
 import {
   Field,
-  GraphQLISODateTime,
   ID,
   InputType,
   ObjectType,
 } from 'type-graphql';
 
 import { DateTime } from 'luxon';
+import { DateField } from '../../common';
 import { Organization } from '../organization/organization';
 import { PartnershipAgreementStatus } from './agreement-status';
 import { PartnershipType } from './partnership-type';
@@ -20,10 +20,10 @@ export class CreatePartnershipInput {
   @Field(type => String, { nullable: true })
   mouStatus: PartnershipAgreementStatus;
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   mouStart: DateTime | null;
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   mouEnd: DateTime | null;
 
   @Field(type => Organization, { nullable: true })
@@ -50,10 +50,10 @@ export class CreatePartnershipOutput {
   @Field(type => String, { nullable: true })
   mouStatus: PartnershipAgreementStatus;
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   mouStart: DateTime | null;
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   mouEnd: DateTime | null;
 
   @Field(type => Organization, { nullable: true })
@@ -98,10 +98,10 @@ export class ReadPartnershipOutput {
   @Field(type => String, { nullable: true })
   mouStatus: PartnershipAgreementStatus;
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   mouStart: DateTime | null;
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   mouEnd: DateTime | null;
 
   @Field(type => Organization, { nullable: true })
@@ -134,10 +134,10 @@ export class UpdatePartnershipInput {
   @Field(type => String, { nullable: true })
   mouStatus: PartnershipAgreementStatus;
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   mouStart: DateTime | null;
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   mouEnd: DateTime | null;
 
   @Field(type => Organization, { nullable: true })
@@ -164,10 +164,10 @@ export class UpdatePartnershipOutput {
   @Field(type => String, { nullable: true })
   mouStatus: PartnershipAgreementStatus;
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   mouStart: DateTime | null;
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   mouEnd: DateTime | null;
 
   @Field(type => Organization, { nullable: true })

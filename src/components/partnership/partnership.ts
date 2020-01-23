@@ -1,6 +1,6 @@
-import { Field, GraphQLISODateTime, InputType, ObjectType } from 'type-graphql';
-
+import { Field, InputType, ObjectType } from 'type-graphql';
 import { DateTime } from 'luxon';
+import { DateField } from '../../common';
 import { Organization } from '../organization/organization';
 import { PartnershipAgreementStatus } from './agreement-status';
 import { PartnershipType } from './partnership-type';
@@ -14,10 +14,10 @@ export class Partnership {
   @Field(type => String, { nullable: true })
   mouStatus: PartnershipAgreementStatus;
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   mouStart: DateTime | null;
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   mouEnd: DateTime | null;
 
   @Field(type => Organization, { nullable: true })

@@ -1,7 +1,8 @@
 import { DateTime } from 'luxon';
+import { DateTimeField } from '../../common';
 import { Role } from './role';
 import { User } from './user';
-import { ObjectType, InputType, Field, GraphQLISODateTime } from 'type-graphql';
+import { ObjectType, InputType, Field } from 'type-graphql';
 
 @ObjectType()
 @InputType('TeamMemberInput')
@@ -18,7 +19,7 @@ export class TeamMember {
   @Field({ nullable: true })
   editable: boolean;
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateTimeField({ nullable: true })
   dateAdded: DateTime | null;
 
   static from(teamMember: TeamMember) {

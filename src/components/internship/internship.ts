@@ -1,4 +1,5 @@
 import { DateTime } from 'luxon';
+import { DateField } from '../../common';
 import { Budget } from '../budget/budget';
 import { Location } from '../location/location';
 import { Sensitivity } from '../project/sensitivity';
@@ -6,7 +7,7 @@ import { TeamMember } from '../user/team-member';
 import { InternshipStatus } from './status';
 import { Partnership } from '../partnership/partnership';
 import { InternshipEngagement } from '../internship-engagement/engagement';
-import { ObjectType, InputType, Field, GraphQLISODateTime } from 'type-graphql';
+import { ObjectType, InputType, Field } from 'type-graphql';
 
 @ObjectType()
 @InputType('InternshipInput')
@@ -29,10 +30,10 @@ export class Internship {
   @Field(type => Location, { nullable: true })
   location: Location | null;
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   mouStart: DateTime | null;
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   mouEnd: DateTime | null;
 
   @Field(type => [Partnership], { nullable: true })
@@ -47,7 +48,7 @@ export class Internship {
   @Field(type => [Budget], { nullable: true })
   budgets: Budget[];
 
-  @Field(type => GraphQLISODateTime, { nullable: true })
+  @DateField({ nullable: true })
   estimatedSubmission: DateTime | null;
 
   @Field(type => [InternshipEngagement], { nullable: true })
