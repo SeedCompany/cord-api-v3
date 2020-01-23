@@ -12,6 +12,8 @@ import { AuthResolver } from './components/auth/auth.resolver';
 import { AuthService } from './components/auth/auth.service';
 import { BudgetResolver } from './components/budget/budget.resolver';
 import { BudgetService } from './components/budget/budget.service';
+import { AwsS3Factory } from './core/aws-s3.factory';
+import { AwsS3Service } from './core/aws-s3.service';
 import { ConfigModule } from './core/config/config.module';
 import { CypherFactory } from './core/cypher.factory';
 import { DatabaseService } from './core/database.service';
@@ -57,6 +59,8 @@ const context: ContextFunction<{ req: Request; res: Response }, GqlContextType> 
     AreaService,
     AuthResolver,
     AuthService,
+    AwsS3Service,
+    AwsS3Factory,
     BudgetResolver,
     BudgetService,
     CypherFactory,
