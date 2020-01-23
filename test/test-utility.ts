@@ -1,7 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { generate, isValid } from 'shortid';
-import { Organization } from 'src/components/organization/organization';
+import { Organization } from '../src/components/organization';
 import { User } from 'src/components/user/user';
 
 // CREATE TOKEN

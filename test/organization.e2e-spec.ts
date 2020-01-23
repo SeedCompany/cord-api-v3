@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import * as request from 'supertest';
 import { INestApplication } from '@nestjs/common';
 import { AppModule } from '../src/app.module';
-import { Organization } from '../src/components/organization/organization';
+import { Organization } from '../src/components/organization';
 import { createOrg } from './test-utility';
 
 describe('Organization e2e', () => {

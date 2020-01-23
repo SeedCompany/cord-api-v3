@@ -7,7 +7,7 @@ import {
 
 import { DateTime } from 'luxon';
 import { DateField } from '../../common';
-import { Organization } from '../organization/organization';
+import { Organization } from '../organization';
 import { PartnershipAgreementStatus } from './agreement-status';
 import { PartnershipType } from './partnership-type';
 import { Partnership } from './partnership';

@@ -5,8 +5,7 @@ import {
   ObjectType,
   registerEnumType,
 } from 'type-graphql';
-
-import { Organization } from '../organization/organization';
+import { Organization } from '../organization';
 
 @ObjectType()
 @InputType('BudgetInput')
