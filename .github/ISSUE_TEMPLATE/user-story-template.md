@@ -3,7 +3,7 @@ name: User Story Template
 about: Use to create user stories for all issues
 title: ''
 labels: ''
-assignees: reneepe
+assignees: ''
 
 ---
 
