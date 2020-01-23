@@ -28,7 +28,6 @@ export interface Budget {
 @ObjectType()
 @InputType('BudgetDetailsInput')
 export class BudgetDetails {
-  @Field(type => Organization, { nullable: true })
   organization: Organization;
 
   @Field({ nullable: true })

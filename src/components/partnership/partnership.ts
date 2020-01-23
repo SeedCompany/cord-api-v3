@@ -20,7 +20,6 @@ export class Partnership {
   @DateField({ nullable: true })
   mouEnd: DateTime | null;
 
-  @Field(type => Organization, { nullable: true })
   organization: Organization;
 
   @Field(type => [PartnershipType], { nullable: true })

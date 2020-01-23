@@ -27,7 +27,6 @@ export class CreatePartnershipInput {
   @DateField({ nullable: true })
   mouEnd: DateTime | null;
 
-  @Field(type => Organization, { nullable: true })
   organization: Organization;
 
   @Field(type => [PartnershipType], { nullable: true })
@@ -141,7 +140,6 @@ export class UpdatePartnershipInput {
   @DateField({ nullable: true })
   mouEnd: DateTime | null;
 
-  @Field(type => Organization, { nullable: true })
   organization: Organization;
 
   @Field(type => [PartnershipType], { nullable: true })
