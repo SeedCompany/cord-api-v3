@@ -47,7 +47,9 @@ export class OrganizationService {
         RETURN
           org.id as id,
           org.createdAt as createdAt,
-          name.value as name
+          name.value as name,
+          user.canCreateOrg as canCreateOrg,
+          user.canReadOrgs as canReadOrgs
       `,
         {
           token,
@@ -65,8 +67,8 @@ export class OrganizationService {
       id: result.id,
       name: {
         value: result.name,
-        canRead: true, // TODO
-        canEdit: true, // TODO
+        canRead: result.canReadOrgs,
+        canEdit: result.canCreateOrg,
       },
       createdAt: result.createdAt,
     };
@@ -92,7 +94,9 @@ export class OrganizationService {
         RETURN
           org.id as id,
           org.createdAt as createdAt,
-          name.value as name
+          name.value as name,
+          user.canCreateOrg as canCreateOrg,
+          user.canReadOrgs as canReadOrgs
         `,
         {
           id,
@@ -105,12 +109,18 @@ export class OrganizationService {
       throw new NotFoundException('Could not find organization');
     }
 
+    if (!result.canCreateOrg) {
+      throw new Error(
+        'User does not have permission to create an organization',
+      );
+    }
+
     return {
       id: result.id,
       name: {
         value: result.name,
-        canRead: true, // TODO
-        canEdit: true, // TODO
+        canRead: result.canReadOrgs,
+        canEdit: result.canCreateOrg,
       },
       createdAt: result.createdAt,
     };
@@ -140,7 +150,9 @@ export class OrganizationService {
           name.value = $name
         RETURN
           org.id as id,
-          name.value as name
+          name.value as name,
+          user.canCreateOrg as canCreateOrg,
+          user.canReadOrgs as canReadOrgs
         `,
         {
           id: input.id,
@@ -158,8 +170,8 @@ export class OrganizationService {
       id: result.id,
       name: {
         value: result.name,
-        canRead: true, // TODO
-        canEdit: true, // TODO
+        canRead: result.canReadOrgs,
+        canEdit: result.canCreateOrg,
       },
       createdAt: result.createdAt,
     };
@@ -216,10 +228,22 @@ export class OrganizationService {
         })
       WHERE
         org.name CONTAINS $filter
+      WITH count(org) as orgs, user
+      MATCH 
+        (org:Organization {
+          active: true
+        })
+        -[:name {active: true}]->
+        (name:OrgName {
+          active: true
+        })
       RETURN
         org.id as id,
         org.createdAt as createdAt,
-        org.name as name
+        name.value as name,
+        user.canCreateOrg as canCreateOrg,
+        user.canReadOrgs as canReadOrgs,
+        orgs as total
       ORDER BY org.${sort} ${order}
       SKIP $skip
       LIMIT $count
@@ -238,15 +262,17 @@ export class OrganizationService {
       createdAt: row.createdAt,
       name: {
         value: row.name,
-        canRead: true, // TODO
-        canEdit: true, // TODO
+        canRead: row.canReadOrgs,
+        canEdit: row.canCreateOrg,
       },
     }));
 
+    const hasMore = (((page - 1) * count) + count < result[0].total); // if skip + count is less than total there is more
+
     return {
       items,
-      hasMore: false, // TODO
-      total: 0, // TODO
+      hasMore,
+      total: result[0].total,
     };
   }
 }
