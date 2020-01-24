@@ -196,6 +196,26 @@ export class PartnershipService {
     const session = this.db.driver.session();
     const skipIt = query.page * query.count;
 
+    //TO DO : List all partnerships by projectId
+    // const result = await session.run(
+    //   `
+    //     MATCH
+    //       (project:Project {id: "$projectId"})-[partnerships:Partnership {active:true}]->
+    //       (partner:Partnership {active:true}),
+    //       (partner)-[:agreementStatus {active: true}]->(agreementStatus: Property)
+    //       (partner)-[:mouStatus {active: true}]->(mouStatus: Property),
+    //       (partner)-[:mouStart {active: true}]->(mouStart: Property),
+    //       (partner)-[:mouEnd {active: true}]->(mouEnd: Property),
+    //     RETURN
+    //       partner.id as id,
+    //       agreementStatus.value as agreementStatus,
+    //       mouStatus.value as mouStatus,
+    //       mouStart.value as mouStart,
+    //       mouEnd.value as mouEnd,
+    //     `,
+    //     },
+    // );
+
     const result = await session.run(
       `MATCH (partnership:Partnership {active: true}) WHERE partnership.agreementStatus CONTAINS $filter RETURN partnership.agreementStatus as agreementStatus, partnership.organization as organization ORDER BY ${query.sort} ${query.order} SKIP $skip LIMIT $count`,
       {
