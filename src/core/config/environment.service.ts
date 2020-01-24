@@ -69,7 +69,7 @@ export class EnvironmentService {
         ? `${'*'.repeat(val.slice(0, -3).length) + val.slice(-3)}`
         : val,
     );
-    this.logger.verbose(`Loaded environment ${inspect(safeEnv)}`);
+    // this.logger.verbose(`Loaded environment ${inspect(safeEnv)}`);
   }
 
   string(key: string) {

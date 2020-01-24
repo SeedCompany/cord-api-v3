@@ -6,8 +6,8 @@ import { generate, isValid } from 'shortid';
 import { AppModule } from '../src/app.module';
 import { CreatePartnershipInput } from '../src/components/partnership/partnership.dto';
 import { INestApplication } from '@nestjs/common';
-import { PartnershipAgreementStatus } from 'src/components/partnership/agreement-status';
 import { Partnership } from 'src/components/partnership/partnership';
+import { PartnershipAgreementStatus } from 'src/components/partnership/agreement-status';
 
 async function createPartnership(app: INestApplication): Promise<string> {
   let partnershipId = '';
@@ -58,8 +58,7 @@ describe('Partnership e2e', () => {
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    })
-.compile();
+    }).compile();
 
     app = moduleFixture.createNestApplication();
     await app.init();
@@ -98,9 +97,9 @@ describe('Partnership e2e', () => {
 
   // READ PARTNERSHIP
   it('read one partnership by id', async () => {
-    const newPartShip = new CreatePartnershipInput();
+    const newPartnership = new CreatePartnershipInput();
     const orgName = 'partnershipName_' + generate();
-    newPartShip.organization = {
+    newPartnership.organization = {
       id: generate(),
       name: orgName,
       owningOrg: null,
@@ -135,7 +134,8 @@ describe('Partnership e2e', () => {
   // UPDATE PARTNERSHIP
   it('update partnership', async () => {
     const partnershipId = await createPartnership(app);
-    const agreementStatus: PartnershipAgreementStatus = PartnershipAgreementStatus.NotAttached;
+    const agreementStatus: PartnershipAgreementStatus =
+      PartnershipAgreementStatus.NotAttached;
 
     return request(app.getHttpServer())
       .post('/graphql')
@@ -155,16 +155,18 @@ describe('Partnership e2e', () => {
       })
       .expect(({ body }) => {
         expect(body.data.updatePartnership.partnership.id).toBe(partnershipId);
-        expect(body.data.updatePartnership.partnership.agreementStatus).toBe(agreementStatus);
+        expect(body.data.updatePartnership.partnership.agreementStatus).toBe(
+          agreementStatus,
+        );
       })
       .expect(200);
   });
 
   // DELETE PARTNERSHIP
   it('delete partnership', async () => {
-    const newPartShip = new CreatePartnershipInput();
+    const newPartnership = new CreatePartnershipInput();
     const orgName = 'partnershipName_' + generate();
-    newPartShip.organization = {
+    newPartnership.organization = {
       id: generate(),
       name: orgName,
       owningOrg: null,
@@ -198,13 +200,13 @@ describe('Partnership e2e', () => {
   // LIST PARTNERSHIPS
   it('list view of partnerships', async () => {
     // create a bunch of partnership
-    const totalPartships = 10;
-    const partships: Partnership[] = [];
-    
-    for (let i = 0; i < totalPartships; i++) {
-      const newPartShip = new Partnership();
+    const totalPartnership = 10;
+    const partnerships: Partnership[] = [];
+
+    for (let i = 0; i < totalPartnership; i++) {
+      const newPartnership = new Partnership();
       const orgName = 'partnershipName_' + generate();
-      newPartShip.organization = {
+      newPartnership.organization = {
         id: generate(),
         name: orgName,
         owningOrg: null,
@@ -213,9 +215,7 @@ describe('Partnership e2e', () => {
         deletedOn: null,
         createdBy: null,
       };
-      //newPartShip.id = await createPartnership(app);
-      //newPartShip.agreementStatus = await createPartnership(app)
-      partships.push(newPartShip);
+      partnerships.push(newPartnership);
     }
 
     // test reading new partnership
@@ -227,7 +227,7 @@ describe('Partnership e2e', () => {
         query {
           partnerships(
             input: {
-              query: { filter: "", page: 0, count: ${totalPartships}, sort: "organization", order: "asc" }
+              query: { filter: "", page: 0, count: ${totalPartnership}, sort: "organization", order: "asc" }
             }
           ) {
             partnerships {
@@ -240,7 +240,9 @@ describe('Partnership e2e', () => {
           `,
       })
       .expect(({ body }) => {
-        expect(body.data.partnerships.partnerships.length).toBe(body.data.partnerships.partnerships.length);
+        expect(body.data.partnerships.partnerships.length).toBe(
+          body.data.partnerships.partnerships.length,
+        );
       })
       .expect(200);
   });
