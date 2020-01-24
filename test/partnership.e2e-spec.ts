@@ -208,7 +208,9 @@ describe('Partnership e2e', () => {
         id: generate(),
         name: orgName,
         owningOrg: null,
-        createdAt: null,
+        modifiedByUser: null,
+        createdOn: null,
+        deletedOn: null,
         createdBy: null,
       };
       //newPartShip.id = await createPartnership(app);
