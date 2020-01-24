@@ -1,8 +1,4 @@
-import {
-  Field,
-  InputType,
-  ObjectType,
-} from 'type-graphql';
+import { Field, InputType, ObjectType } from 'type-graphql';
 
 import { DateField } from 'src/common/luxon.graphql';
 import { DateTime } from 'luxon';
@@ -67,8 +63,9 @@ export class ReadProjectEngagementInputDto {
 export class ReadProjectEngagementOutput {
   @Field(type => String)
   id: string;
+
   @Field(type => String)
-  name: string;
+  languageName: string;
 }
 
 @ObjectType()
@@ -86,8 +83,12 @@ export class ReadProjectEngagementOutputDto {
 export class UpdateProjectEngagementInput {
   @Field(type => String)
   id: string;
-  @Field(type => String)
-  name: string;
+
+  @DateField({ nullable: true })
+  initialEndDate: DateTime | null;
+
+  @DateField({ nullable: true })
+  currentEndDate: DateTime | null;
 }
 
 @InputType()
@@ -100,8 +101,13 @@ export class UpdateProjectEngagementInputDto {
 export class UpdateProjectEngagementOutput {
   @Field(type => String)
   id: string;
-  @Field(type => String)
-  name: string;
+
+  @DateField({ nullable: true })
+  initialEndDate: DateTime | null;
+
+  @DateField({ nullable: true })
+  currentEndDate: DateTime | null;
+
 }
 
 @ObjectType()

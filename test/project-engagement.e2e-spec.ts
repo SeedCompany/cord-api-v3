@@ -5,6 +5,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { generate, isValid } from 'shortid';
 
 import { AppModule } from '../src/app.module';
+import { DateTime } from 'luxon';
 import { createLanguage } from './language.e2e-spec';
 
 async function createProjectEngagement(
@@ -12,7 +13,7 @@ async function createProjectEngagement(
   projectEngagementName: string,
 ): Promise<string> {
   let projectEngagementId = '';
-  const languageId = await createLanguage(app, projectEngagementName);
+  await createLanguage(app, projectEngagementName);
 
   await request(app.getHttpServer())
     .post('/graphql')
@@ -36,7 +37,7 @@ async function createProjectEngagement(
   return projectEngagementId;
 }
 
-describe.only('ProjectEngagement e2e', () => {
+describe('ProjectEngagement e2e', () => {
   let app: INestApplication;
 
   beforeEach(async () => {
@@ -49,9 +50,9 @@ describe.only('ProjectEngagement e2e', () => {
     Logger.overrideLogger(['error']);
   });
 
-  it.only('create projectEngagement', async () => {
+  it('create projectEngagement', async () => {
     const languageName = 'projectEngagementName' + generate();
-    await createLanguage(app, languageName)
+    await createLanguage(app, languageName);
 
     await request(app.getHttpServer())
       .post('/graphql')
@@ -81,7 +82,7 @@ describe.only('ProjectEngagement e2e', () => {
 
   it('read one projectEngagement by id', async () => {
     const languageName = 'projectEngagementName' + Date.now();
-    const languageId = await createLanguage(app, languageName);
+    await createLanguage(app, languageName);
 
     // create projectEngagement first
     const projId = await createProjectEngagement(app, languageName);
@@ -96,7 +97,7 @@ describe.only('ProjectEngagement e2e', () => {
           readProjectEngagement ( input: { projectEngagement: { id: "${projId}" } }){
             projectEngagement{
             id
-            name
+            languageName
             }
           }
         }
@@ -106,19 +107,21 @@ describe.only('ProjectEngagement e2e', () => {
         expect(body.data.readProjectEngagement.projectEngagement.id).toBe(
           projId,
         );
-        expect(body.data.readProjectEngagement.projectEngagement.languageName).toBe(
-          languageName,
-        );
+        expect(
+          body.data.readProjectEngagement.projectEngagement.languageName,
+        ).toBe(languageName);
       })
       .expect(200);
   });
 
   it('update projectEngagement', async () => {
-    const projectEngagementName = 'projectEngagementOld' + Date.now();
-    const projectEngagementNameNew = 'projectEngagementNew' + Date.now();
+    const languageName = 'projectEngagementName' + Date.now();
+    await createLanguage(app, languageName);
 
     // create projectEngagement first
-    const projId = await createProjectEngagement(app, projectEngagementName);
+    const projId = await createProjectEngagement(app, languageName);
+    const initialEndDate = DateTime.local().toString();
+    const currentEndDate = DateTime.local().toString();
 
     return request(app.getHttpServer())
       .post('/graphql')
@@ -128,23 +131,13 @@ describe.only('ProjectEngagement e2e', () => {
         mutation {
           updateProjectEngagement (input: { projectEngagement: {
             id: "${projId}",
-            name: "${projectEngagementNameNew}",
-            deptId: null,
-            status: null,
-            location: null,
-            publicLocation: null,
-            mouStart: null,
-            mouEnd: null,
-            partnerships: null,
-            sensitivity: null,
-            team: null,
-            budgets: null,
-            estimatedSubmission: null,
-            engagements: null,
+            initialEndDate: "${initialEndDate}",
+            currentEndDate: "${currentEndDate}"
           } }){
-            projectengagement {
-            id
-            name
+            projectEngagement {
+              id,
+              initialEndDate,
+              currentEndDate
             }
           }
         }
@@ -154,9 +147,12 @@ describe.only('ProjectEngagement e2e', () => {
         expect(body.data.updateProjectEngagement.projectEngagement.id).toBe(
           projId,
         );
-        expect(body.data.updateProjectEngagement.projectEngagement.name).toBe(
-          projectEngagementNameNew,
-        );
+        expect(
+          body.data.updateProjectEngagement.projectEngagement.initialEndDate,
+        ).toBe(initialEndDate);
+        expect(
+          body.data.updateProjectEngagement.projectEngagement.currentEndDate,
+        ).toBe(currentEndDate);
       })
       .expect(200);
   });
