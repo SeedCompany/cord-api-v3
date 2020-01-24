@@ -16,6 +16,13 @@ export NEO4J_URL=bolt://localhost
 export NEO4J_USERNAME=neo4j
 export NEO4J_PASSWORD=asdf
 ```
+You will also need the following environment variables set:  get values from the team
+```
+export AWS_SECRET_ACCESS_KEY=
+export AWS_ACCESS_KEY_ID=
+export FILES_S3_BUCKET=
+```
+
 
 ## Usage
 
