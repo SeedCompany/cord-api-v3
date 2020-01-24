@@ -34,7 +34,7 @@ export async function createLanguage(
   return langId;
 }
 
-describe.skip('Language e2 e', () => {
+describe('Language e2 e', () => {
   let app: INestApplication;
 
   beforeEach(async () => {
