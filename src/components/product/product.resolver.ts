@@ -1,6 +1,17 @@
-import { Resolver, Mutation, Args } from '@nestjs/graphql';
+import { Resolver, Args, Query, Mutation } from '@nestjs/graphql';
 import { ProductService } from './product.service';
-import { CreateProductOutputDto, CreateProductInputDto } from './product.dto';
+import {
+  CreateProductInput,
+  CreateProductInputDto,
+  CreateProductOutputDto,
+  ReadProductInputDto,
+  ReadProductOutputDto,
+  UpdateProductInput,
+  UpdateProductInputDto,
+  UpdateProductOutputDto,
+  DeleteProductOutputDto,
+  DeleteProductInputDto,
+} from './product.dto';
 
 @Resolver('Product')
 export class ProductResolver {
@@ -13,5 +24,33 @@ export class ProductResolver {
     @Args('input') { product: input }: CreateProductInputDto,
   ): Promise<CreateProductOutputDto> {
     return await this.productService.create(input);
+  }
+  @Query(returns => ReadProductOutputDto, {
+    description: 'Read one Product by id',
+  })
+  async readProduct(
+    @Args('input') { product: input }: ReadProductInputDto,
+  ): Promise<ReadProductOutputDto> {
+    return await this.productService.readOne(input);
+  }
+
+  @Mutation(returns => UpdateProductOutputDto, {
+    description: 'Update an Product',
+  })
+  async updateProduct(
+    @Args('input')
+    { product: input }: UpdateProductInputDto,
+  ): Promise<UpdateProductOutputDto> {
+    return await this.productService.update(input);
+  }
+
+  @Mutation(returns => DeleteProductOutputDto, {
+    description: 'Delete an Product',
+  })
+  async deleteProduct(
+    @Args('input')
+    { product: input }: DeleteProductInputDto,
+  ): Promise<DeleteProductOutputDto> {
+    return await this.productService.delete(input);
   }
 }
