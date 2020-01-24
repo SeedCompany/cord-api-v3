@@ -1,38 +1,42 @@
 import * as request from 'supertest';
 
+import { INestApplication, Logger } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { generate, isValid } from 'shortid';
 
 import { AppModule } from '../src/app.module';
-import { INestApplication } from '@nestjs/common';
+import { createLanguage } from './language.e2e-spec';
 
 async function createProjectEngagement(
   app: INestApplication,
   projectEngagementName: string,
 ): Promise<string> {
-  let projectengagementId = '';
+  let projectEngagementId = '';
+  const languageId = await createLanguage(app, projectEngagementName);
+
   await request(app.getHttpServer())
     .post('/graphql')
     .send({
       operationName: null,
       query: `
     mutation {
-      createProjectEngagement (input: { projectEngagement: { name: "${projectEngagementName}" } }){
+      createProjectEngagement (input: { projectEngagement: { languageName: "${projectEngagementName}" } }){
         projectEngagement {
         id,
-        name
+        languageName
         }
       }
     }
     `,
     })
     .then(({ body }) => {
-      projectengagementId = body.data.createProjectEngagement.projectengagement.id;
+      projectEngagementId =
+        body.data.createProjectEngagement.projectEngagement.id;
     });
-  return projectengagementId;
+  return projectEngagementId;
 }
 
-fdescribe('ProjectEngagement e2e', () => {
+describe.only('ProjectEngagement e2e', () => {
   let app: INestApplication;
 
   beforeEach(async () => {
@@ -42,38 +46,45 @@ fdescribe('ProjectEngagement e2e', () => {
 
     app = moduleFixture.createNestApplication();
     await app.init();
+    Logger.overrideLogger(['error']);
   });
 
-  it('create projectengagement', async () => {
-    const projectEngagementName = 'projectEngagementName' + generate();
+  it.only('create projectEngagement', async () => {
+    const languageName = 'projectEngagementName' + generate();
+    await createLanguage(app, languageName)
+
     await request(app.getHttpServer())
       .post('/graphql')
       .send({
         operationName: null,
         query: `
         mutation {
-          createProjectEngagement (input: { projectengagement: { name: "${projectEngagementName}" } }){
+          createProjectEngagement (input: { projectEngagement: { languageName: "${languageName}" } }){
             projectEngagement {
             id
-            name
+            languageName
             }
           }
         }
         `,
       })
       .expect(({ body }) => {
-        const projId = body.data.createProjectEngagement.projectengagement.id;
+        console.log(JSON.stringify(body));
+        const projId = body.data.createProjectEngagement.projectEngagement.id;
         expect(isValid(projId)).toBe(true);
-        expect(body.data.createProjectEngagement.projectEngagement.name).toBe(projectEngagementName);
+        expect(
+          body.data.createProjectEngagement.projectEngagement.languageName,
+        ).toBe(languageName);
       })
       .expect(200);
   });
 
   it('read one projectEngagement by id', async () => {
-    const projectEngagementName = 'projectEngagementName' + Date.now();
+    const languageName = 'projectEngagementName' + Date.now();
+    const languageId = await createLanguage(app, languageName);
 
     // create projectEngagement first
-    const projId = await createProjectEngagement(app, projectEngagementName);
+    const projId = await createProjectEngagement(app, languageName);
 
     // test reading new org
     await request(app.getHttpServer())
@@ -92,8 +103,12 @@ fdescribe('ProjectEngagement e2e', () => {
         `,
       })
       .expect(({ body }) => {
-        expect(body.data.readProjectEngagement.projectEngagement.id).toBe(projId);
-        expect(body.data.readProjectEngagement.projectEngagement.name).toBe(projectEngagementName);
+        expect(body.data.readProjectEngagement.projectEngagement.id).toBe(
+          projId,
+        );
+        expect(body.data.readProjectEngagement.projectEngagement.languageName).toBe(
+          languageName,
+        );
       })
       .expect(200);
   });
@@ -102,7 +117,7 @@ fdescribe('ProjectEngagement e2e', () => {
     const projectEngagementName = 'projectEngagementOld' + Date.now();
     const projectEngagementNameNew = 'projectEngagementNew' + Date.now();
 
-    // create projectengagement first
+    // create projectEngagement first
     const projId = await createProjectEngagement(app, projectEngagementName);
 
     return request(app.getHttpServer())
@@ -136,8 +151,12 @@ fdescribe('ProjectEngagement e2e', () => {
         `,
       })
       .expect(({ body }) => {
-        expect(body.data.updateProjectEngagement.projectEngagement.id).toBe(projId);
-        expect(body.data.updateProjectEngagement.projectEngagement.name).toBe(projectEngagementNameNew);
+        expect(body.data.updateProjectEngagement.projectEngagement.id).toBe(
+          projId,
+        );
+        expect(body.data.updateProjectEngagement.projectEngagement.name).toBe(
+          projectEngagementNameNew,
+        );
       })
       .expect(200);
   });
@@ -163,7 +182,9 @@ fdescribe('ProjectEngagement e2e', () => {
         `,
       })
       .expect(({ body }) => {
-        expect(body.data.deleteProjectEngagement.projectEngagement.id).toBe(projId);
+        expect(body.data.deleteProjectEngagement.projectEngagement.id).toBe(
+          projId,
+        );
       })
       .expect(200);
   });

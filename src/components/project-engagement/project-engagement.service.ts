@@ -27,8 +27,8 @@ export class ProjectEngagementService {
     await session
       .run(
         `MATCH (language:Language {name: "${input.languageName}"}) 
-        CREATE (projectEngagement {active: true, id: ${id}, timestamp: datetime()})-[:language {active: true, timestamp: datetime()}]->(l)
-        RETURN projectEngagement
+        CREATE (projectEngagement { id: "${id}", active: true, timestamp: datetime()})-[:language {active: true, timestamp: datetime()}]->(l)
+        RETURN projectEngagement.id as id, language.name as languageName
         `,
         {
           id,
@@ -38,7 +38,7 @@ export class ProjectEngagementService {
       .then(result => {
         console.log(JSON.stringify(result.records))
         response.projectEngagement.id = result.records[0].get('id');
-        //response.projectEngagement.languageName = result.records[0].get('languageName');
+        response.projectEngagement.languageName = result.records[0].get('languageName');
       })
       .catch(error => {
         console.log(error);
