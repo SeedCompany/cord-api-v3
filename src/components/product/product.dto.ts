@@ -34,6 +34,18 @@ export class CreateProductInputDto {
 export class CreateProductOutput extends BaseNode {
   @Field(type => ID)
   id: string;
+  @Field(type => ProductType)
+  type: ProductType;
+  @Field(type => [BibleBook])
+  books: BibleBook[];
+  @Field(type => [ProductMedium])
+  mediums: ProductMedium[];
+  @Field(type => [ProductPurpose])
+  purposes: ProductPurpose[];
+  @Field(type => ProductApproach)
+  approach: ProductApproach;
+  @Field(type => ProductMethodology)
+  methodology: ProductMethodology;
 }
 
 @ObjectType()
@@ -43,5 +55,128 @@ export class CreateProductOutputDto {
 
   constructor() {
     this.product = new CreateProductOutput();
+  }
+}
+// READ
+
+@InputType()
+export class ReadProductInput {
+  @Field(type => String)
+  id: string;
+}
+
+@InputType()
+export class ReadProductInputDto {
+  @Field()
+  product: ReadProductInput;
+}
+@ObjectType()
+export class ReadProductOutput {
+  @Field(type => ID)
+  id: string;
+  @Field(type => ProductType)
+  type: ProductType;
+  @Field(type => [BibleBook])
+  books: BibleBook[];
+  @Field(type => [ProductMedium])
+  mediums: ProductMedium[];
+  @Field(type => [ProductPurpose])
+  purposes: ProductPurpose[];
+  @Field(type => ProductApproach)
+  approach: ProductApproach;
+  @Field(type => ProductMethodology)
+  methodology: ProductMethodology;
+}
+@ObjectType()
+export class ReadProductOutputDto {
+  @Field({ nullable: true }) // nullable in case of error
+  product: ReadProductOutput;
+
+  constructor() {
+    this.product = new ReadProductOutput();
+  }
+}
+
+// UPDATE
+
+@InputType()
+export class UpdateProductInput {
+  @Field(type => ID)
+  id: string;
+  @Field(type => ProductType)
+  type: ProductType;
+  @Field(type => [BibleBook])
+  books: BibleBook[];
+  @Field(type => [ProductMedium])
+  mediums: ProductMedium[];
+  @Field(type => [ProductPurpose])
+  purposes: ProductPurpose[];
+  @Field(type => ProductApproach)
+  approach: ProductApproach;
+  @Field(type => ProductMethodology)
+  methodology: ProductMethodology;
+}
+
+@InputType()
+export class UpdateProductInputDto {
+  @Field()
+  product: UpdateProductInput;
+}
+
+@ObjectType()
+export class UpdateProductOutput {
+  @Field(type => ID)
+  id: string;
+  @Field(type => ProductType)
+  type: ProductType;
+  @Field(type => [BibleBook])
+  books: BibleBook[];
+  @Field(type => [ProductMedium])
+  mediums: ProductMedium[];
+  @Field(type => [ProductPurpose])
+  purposes: ProductPurpose[];
+  @Field(type => ProductApproach)
+  approach: ProductApproach;
+  @Field(type => ProductMethodology)
+  methodology: ProductMethodology;
+}
+
+@ObjectType()
+export class UpdateProductOutputDto {
+  @Field({ nullable: true }) // nullable in case of error
+  product: UpdateProductOutput;
+
+  constructor() {
+    this.product = new UpdateProductOutput();
+  }
+}
+
+// DELETE
+
+@InputType()
+export class DeleteProductInput {
+  @Field(type => String)
+  id: string;
+}
+
+@InputType()
+export class DeleteProductInputDto {
+  @Field()
+  product: DeleteProductInput;
+}
+
+@ObjectType()
+export class DeleteProductOutput {
+  @Field(type => String)
+  id: string;
+}
+
+@ObjectType()
+export class DeleteProductOutputDto {
+  @Field({ nullable: true }) // nullable in case of error
+  product: DeleteProductOutput;
+
+  constructor() {
+    this.product = new DeleteProductOutput();
   }
 }
