@@ -28,6 +28,7 @@
     "@types/luxon": "^1.21.0",
     "@types/shortid": "^0.0.29",
     "apollo-server-express": "^2.9.15",
+    "aws-sdk": "^2.608.0",
     "class-transformer": "^0.2.3",
     "class-validator": "^0.11.0",
     "common-tags": "^1.8.0",
