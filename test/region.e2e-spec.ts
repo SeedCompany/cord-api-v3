@@ -1,9 +1,11 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import * as request from 'supertest';
-import { INestApplication } from '@nestjs/common';
+
+import { Test, TestingModule } from '@nestjs/testing';
+
 import { AppModule } from '../src/app.module';
-import { isValid } from 'shortid';
 import { CreateRegionInput } from '../src/components/region/region.dto';
+import { INestApplication } from '@nestjs/common';
+import { isValid } from 'shortid';
 
 describe('Region e2e', () => {
   let app: INestApplication;
@@ -92,7 +94,7 @@ describe('Region e2e', () => {
   });
 
   it('update Region', async () => {
-    
+
     const oldRegion = 'RegionName' + Date.now();
     const newRegion = 'RegionNameForUpdate' + Date.now();
 

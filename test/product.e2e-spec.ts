@@ -1,18 +1,13 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import * as request from 'supertest';
-import { INestApplication } from '@nestjs/common';
+
+import { Test, TestingModule } from '@nestjs/testing';
+
 import { AppModule } from '../src/app.module';
-import { generate, isValid } from 'shortid';
+import { INestApplication } from '@nestjs/common';
 import { Product } from 'src/components/product/product';
-import { ProductType } from 'src/components/product/product-type';
-import { BibleBook } from 'src/components/product/bible-book';
-import { ProductApproach } from 'src/components/product/product-approach';
-import { ProductMedium } from 'src/components/product/product-medium';
-import { ProductMethodology } from 'src/components/product/product-methodology';
-import { ProductPurpose } from 'src/components/product/product-purpose';
 
 async function createProduct(app: INestApplication): Promise<Product> {
-  const product = new Product();
+  let productId;
   await request(app.getHttpServer())
     .post('/graphql')
     .send({
@@ -29,11 +24,9 @@ async function createProduct(app: INestApplication): Promise<Product> {
     `,
     })
     .then(({ body }) => {
-      product.id = body.data.createProduct.product.id;
-      expect(isValid(product.id)).toBe(true);
-      expect(body.data.createProduct.product.type).toBe('BibleStories');
+      productId = body.data.createProduct.product.id;
     });
-  return product;
+  return productId;
 }
 
 describe('Product e2e', () => {
@@ -49,7 +42,7 @@ describe('Product e2e', () => {
   });
 
   it('read one product by id', async () => {
-    const product = await createProduct(app);
+    const productId = await createProduct(app);
     const type = 'BibleStories';
     return request(app.getHttpServer())
       .post('/graphql')
@@ -57,7 +50,7 @@ describe('Product e2e', () => {
         operationName: null,
         query: `
         query {
-          readProduct ( input: { product: { id: "${product.id}" } }){
+          readProduct ( input: { product: { id: "${productId}" } }){
             product{
               id
               type,
@@ -72,7 +65,7 @@ describe('Product e2e', () => {
         `,
       })
       .expect(({ body }) => {
-        expect(body.data.readProduct.product.id).toBe(product.id);
+        expect(body.data.readProduct.product.id).toBe(productId);
         expect(body.data.readProduct.product.type).toBe(type);
       })
       .expect(200);

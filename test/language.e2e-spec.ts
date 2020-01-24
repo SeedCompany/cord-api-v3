@@ -4,7 +4,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { generate, isValid } from 'shortid';
 
 import { AppModule } from '../src/app.module';
-import { CreateLanguageInput } from '../src/components/language/language.dto';
 import { INestApplication } from '@nestjs/common';
 import { Language } from 'src/components/language/language';
 
