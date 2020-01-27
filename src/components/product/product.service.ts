@@ -85,7 +85,7 @@ export class ProductService {
     const session = this.db.driver.session();
     await session
       .run(
-        `MATCH (product:Product {active: true, owningOrg: "seedcompany", id: $id}) SET product.type = $type, product.books=$books,product.mediums = $mediums,product.purposes=$purposes,product.approach=$approach,product.methodology=$methodology  RETURN product.id as id, product.type as type,product.books as books, product.mediums as mediums,product.purposes as purposes,product.approach as approach, product.methodology as methodology`,
+        `MATCH (product:Product {active: true, owningOrg: "seedcompany", id: $id}) SET product.type = $type  RETURN product.id as id, product.type as type,product.books as books, product.mediums as mediums,product.purposes as purposes,product.approach as approach, product.methodology as methodology`,
         {
           id: input.id,
           type: input.type,
