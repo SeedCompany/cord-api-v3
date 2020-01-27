@@ -70,6 +70,55 @@ describe('Product e2e', () => {
       })
       .expect(200);
   });
+  it('update Product', async () => {
+    const productId = await createProduct(app);
+    const typenew = 'Songs';
+
+    return await request(app.getHttpServer())
+      .post('/graphql')
+      .send({
+        operationName: null,
+        query: `
+        mutation {
+          updateProduct (input: { product: {
+            id: "${productId}",
+            type: ${typenew},books:[Genesis],mediums:[Print],purposes:[ChurchLife],approach:Written,methodology:Paratext
+          } }){
+            product {
+            id
+            type
+            }
+          }
+        }
+          `,
+      })
+      .expect(({ body }) => {
+        expect(body.data.updateProduct.product.id).toBe(productId);
+        expect(body.data.updateProduct.product.type).toBe(typenew);
+      })
+      .expect(200);
+  });
+  it('delete product', async () => {
+    const productId = await createProduct(app);
+    return request(app.getHttpServer())
+      .post('/graphql')
+      .send({
+        operationName: null,
+        query: `
+        mutation {
+          deleteProduct (input: { product: { id: "${productId}" } }){
+            product {
+            id
+            }
+          }
+        }
+        `,
+      })
+      .expect(({ body }) => {
+        expect(body.data.deleteProduct.product.id).toBe(productId);
+      })
+      .expect(200);
+  });
 
   afterAll(async () => {
     await app.close();

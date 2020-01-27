@@ -32,7 +32,7 @@ export class CreateProductInputDto {
 
 @ObjectType()
 export class CreateProductOutput extends BaseNode {
-  @Field(type => ID)
+  @Field(type => String)
   id: string;
   @Field(type => ProductType)
   type: ProductType;
@@ -50,7 +50,7 @@ export class CreateProductOutput extends BaseNode {
 
 @ObjectType()
 export class CreateProductOutputDto {
-  @Field(type => CreateProductOutput, { nullable: true })
+  @Field({ nullable: true }) // nullable in case of error
   product: CreateProductOutput;
 
   constructor() {
@@ -72,7 +72,7 @@ export class ReadProductInputDto {
 }
 @ObjectType()
 export class ReadProductOutput {
-  @Field(type => ID)
+  @Field(type => String)
   id: string;
   @Field(type => ProductType)
   type: ProductType;
