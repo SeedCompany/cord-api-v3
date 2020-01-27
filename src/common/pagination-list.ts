@@ -1,8 +1,6 @@
 import { stripIndent } from 'common-tags';
 import { ClassType, Field, Int, ObjectType } from 'type-graphql';
-
-// tslint:disable-next-line:ban-types
-type AbstractClassType<T> = Function & { prototype: T };
+import { AbstractClassType } from './types';
 
 export function PaginatedList<T>(
   ItemClass: ClassType<T> | AbstractClassType<T>,
