@@ -1,6 +1,6 @@
 import { DateTime } from 'luxon';
+import { DateField } from 'src/common/luxon.graphql';
 import { Location } from '../location/location';
-
 import { InternshipEngagementPosition } from './position';
 import { InternshipEngagementStatus } from './status';
 import { InternshipEngagementTag } from './tag';
@@ -14,8 +14,20 @@ export class InternshipEngagement {
   @Field()
   id: string;
 
-  @Field(type => User)
+  @Field(type => User, { nullable: true })
   intern: User;
+
+  @Field(type => [InternshipEngagementStatus], { nullable: true })
+  possibleStatuses: InternshipEngagementStatus[];
+
+  @DateField({ nullable: true })
+  initialEndDate: DateTime | null;
+
+  @DateField({ nullable: true })
+  currentEndDate: DateTime | null;
+
+  @DateField({ nullable: true })
+  updatedAt: DateTime | null;
 }
 
 export interface InternshipEngagement extends EditableInternshipEngagement {

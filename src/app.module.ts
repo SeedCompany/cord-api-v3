@@ -19,6 +19,8 @@ import { GqlContextType } from './common';
 import { GraphQLModule } from '@nestjs/graphql';
 import { InternshipResolver } from './components/internship/internship.resolver';
 import { InternshipService } from './components/internship/internship.service';
+import { InternshipEngagementResolver } from './components/internship-engagement/internship-engagement.resolver';
+import { InternshipEngagementService } from './components/internship-engagement/internship-engagement.service';
 import { LanguageResolver } from './components/language/language.resolver';
 import { LanguageService } from './components/language/language.service';
 import { LocationResolver } from './components/location/location.resolver';
@@ -72,6 +74,8 @@ const context: ContextFunction<{ req: Request; res: Response }, GqlContextType> 
     DateScalar,
     InternshipResolver,
     InternshipService,
+    InternshipEngagementResolver,
+    InternshipEngagementService,
     LanguageResolver,
     LanguageService,
     LocationResolver,
