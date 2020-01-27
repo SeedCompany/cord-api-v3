@@ -1,16 +1,17 @@
-import { Injectable } from '@nestjs/common';
-import { DatabaseService } from '../../core/database.service';
-import { generate } from 'shortid';
 import {
-  CreateUserOutputDto,
-  ReadUserOutputDto,
-  UpdateUserOutputDto,
-  DeleteUserOutputDto,
   CreateUserInput,
-  ReadUserInput,
-  UpdateUserInput,
+  CreateUserOutputDto,
   DeleteUserInput,
+  DeleteUserOutputDto,
+  ReadUserInput,
+  ReadUserOutputDto,
+  UpdateUserInput,
+  UpdateUserOutputDto,
 } from './user.dto';
+
+import { DatabaseService } from '../../core/database.service';
+import { Injectable } from '@nestjs/common';
+import { generate } from 'shortid';
 
 @Injectable()
 export class UserService {

@@ -1,7 +1,9 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import * as request from 'supertest';
-import { INestApplication } from '@nestjs/common';
+
+import { Test, TestingModule } from '@nestjs/testing';
+
 import { AppModule } from '../src/app.module';
+import { INestApplication } from '@nestjs/common';
 import { createUser } from './test-utility';
 
 describe('User e2e', () => {

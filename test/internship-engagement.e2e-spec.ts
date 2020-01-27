@@ -5,31 +5,50 @@ import { generate, isValid } from 'shortid';
 
 import { AppModule } from '../src/app.module';
 import { INestApplication } from '@nestjs/common';
+import { createUser } from './test-utility';
 
 async function createInternshipEngagement(
   app: INestApplication,
-  possibleStatuses: string,
+  internName: string = 'George',
 ): Promise<string> {
-  let internshipengagementId = '';
+  let internshipEngagementId = '';
+  // create a test user to link
+  const userId = await createUser(app);
+
+  // create an internshipEngagement to that user
   await request(app.getHttpServer())
     .post('/graphql')
     .send({
       operationName: null,
       query: `
     mutation {
-      createInternshipEngagement (input: { internshipengagement: { possibleStatuses: "${possibleStatuses}" } }){
-        internshipengagement {
-        id,
-        possibleStatuses
+      createInternshipEngagement (input:
+        { internshipEngagement:
+          {  internId = "$internId"}
+        }){
+          internshipEngagement {
+            id
+            initialEndDate
+            currentEndDate
+          }
+          intern {
+            id
+            email
+            displayFirstName
+            displayLastName
+            realFirstName
+            realLastName
+          }
         }
       }
     }
     `,
     })
     .then(({ body }) => {
-      internshipengagementId = body.data.createInternshipEngagement.internshipengagement.id;
+      internshipEngagementId =
+        body.data.createInternshipEngagement.internshipEngagement.id;
     });
-  return internshipengagementId;
+  return internshipEngagementId;
 }
 
 describe('InternshipEngagement e2e', () => {
@@ -44,36 +63,42 @@ describe('InternshipEngagement e2e', () => {
     await app.init();
   });
 
-  it('create internshipengagement', async () => {
-    const internshipengagementName = 'internshipengagementName' + generate();
+  it('create internshipEngagement', async () => {
+    const internshipEngagementName = 'internshipEngagementName' + generate();
     await request(app.getHttpServer())
       .post('/graphql')
       .send({
         operationName: null,
         query: `
         mutation {
-          createInternshipEngagement (input: { internshipengagement: { possibleStatuses: "${internshipengagementName}" } }){
-            internshipengagement {
+          createInternshipEngagement (input: { internshipEngagement: { } }){
+            internshipEngagement {
             id
-            possibleStatuses
             }
           }
         }
         `,
       })
       .expect(({ body }) => {
-        const projId = body.data.createInternshipEngagement.internshipengagement.id;
+        const projId =
+          body.data.createInternshipEngagement.internshipEngagement.id;
         expect(isValid(projId)).toBe(true);
-        expect(body.data.createInternshipEngagement.internshipengagement.possibleStatuses).toBe(internshipengagementName);
+        expect(
+          body.data.createInternshipEngagement.internshipEngagement
+            .possibleStatuses,
+        ).toBe(internshipEngagementName);
       })
       .expect(200);
   });
 
-  it('read one internshipengagement by id', async () => {
-    const internshipengagementName = 'internshipengagementName' + Date.now();
+  it('read one internshipEngagement by id', async () => {
+    const internshipEngagementName = 'internshipEngagementName' + Date.now();
 
-    // create internshipengagement first
-    const projId = await createInternshipEngagement(app, internshipengagementName);
+    // create internshipEngagement first
+    const projId = await createInternshipEngagement(
+      app,
+      internshipEngagementName,
+    );
 
     // test reading new internship
     await request(app.getHttpServer())
@@ -82,8 +107,8 @@ describe('InternshipEngagement e2e', () => {
         operationName: null,
         query: `
         query {
-          readInternshipEngagement ( input: { internshipengagement: { id: "${projId}" } }){
-            internshipengagement{
+          readInternshipEngagement ( input: { internshipEngagement: { id: "${projId}" } }){
+            internshipEngagement{
             id
             possibleStatuses
             }
@@ -92,18 +117,22 @@ describe('InternshipEngagement e2e', () => {
         `,
       })
       .expect(({ body }) => {
-        expect(body.data.readInternshipEngagement.internshipengagement.id).toBe(projId);
-        expect(body.data.readInternshipEngagement.internshipengagement.possibleStatuses).toBe(internshipengagementName);
+        expect(body.data.readInternshipEngagement.internshipEngagement.id).toBe(
+          projId,
+        );
       })
       .expect(200);
   });
 
-  it('update internshipengagement', async () => {
-    const internshipengagementName = 'internshipengagementOld' + Date.now();
-    const internshipengagementNameNew = 'internshipengagementNew' + Date.now();
+  it('update internshipEngagement', async () => {
+    const internshipEngagementName = 'internshipEngagementOld' + Date.now();
+    const internshipEngagementNameNew = 'internshipEngagementNew' + Date.now();
 
-    // create internshipengagement first
-    const projId = await createInternshipEngagement(app, internshipengagementName);
+    // create internshipEngagement first
+    const projId = await createInternshipEngagement(
+      app,
+      internshipEngagementName,
+    );
 
     return request(app.getHttpServer())
       .post('/graphql')
@@ -111,9 +140,9 @@ describe('InternshipEngagement e2e', () => {
         operationName: null,
         query: `
         mutation {
-          updateInternshipEngagement (input: { internshipengagement: {
+          updateInternshipEngagement (input: { internshipEngagement: {
             id: "${projId}",
-            possibleStatuses: "${internshipengagementNameNew}",
+            possibleStatuses: "${internshipEngagementNameNew}",
             deptId: null,
             status: null,
             location: null,
@@ -127,7 +156,7 @@ describe('InternshipEngagement e2e', () => {
             estimatedSubmission: null,
             engagements: null,
           } }){
-            internshipengagement {
+            internshipEngagement {
             id
             possibleStatuses
             }
@@ -136,17 +165,21 @@ describe('InternshipEngagement e2e', () => {
         `,
       })
       .expect(({ body }) => {
-        expect(body.data.updateInternshipEngagement.internshipengagement.id).toBe(projId);
-        expect(body.data.updateInternshipEngagement.internshipengagement.possibleStatuses).toBe(internshipengagementNameNew);
+        expect(
+          body.data.updateInternshipEngagement.internshipEngagement.id,
+        ).toBe(projId);
       })
       .expect(200);
   });
 
-  it('delete internshipengagement', async () => {
-    const internshipengagementName = 'internshipengagementName' + Date.now();
+  it('delete internshipEngagement', async () => {
+    const internshipEngagementName = 'internshipEngagementName' + Date.now();
 
     // create internshipengagement first
-    const projId = await createInternshipEngagement(app, internshipengagementName);
+    const projId = await createInternshipEngagement(
+      app,
+      internshipEngagementName,
+    );
 
     return request(app.getHttpServer())
       .post('/graphql')
@@ -154,8 +187,8 @@ describe('InternshipEngagement e2e', () => {
         operationName: null,
         query: `
         mutation {
-          deleteInternshipEngagement (input: { internshipengagement: { id: "${projId}" } }){
-            internshipengagement {
+          deleteInternshipEngagement (input: { internshipEngagement: { id: "${projId}" } }){
+            internshipEngagement {
             id
             }
           }
@@ -163,7 +196,9 @@ describe('InternshipEngagement e2e', () => {
         `,
       })
       .expect(({ body }) => {
-        expect(body.data.deleteInternshipEngagement.internshipengagement.id).toBe(projId);
+        expect(
+          body.data.deleteInternshipEngagement.internshipEngagement.id,
+        ).toBe(projId);
       })
       .expect(200);
   });

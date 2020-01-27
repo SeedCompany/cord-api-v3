@@ -4,14 +4,15 @@ import { DateField } from 'src/common/luxon.graphql';
 import { DateTime } from 'luxon';
 import { InternshipEngagement } from './engagement';
 import { InternshipEngagementStatus } from './status';
+import { ReadUserOutput } from '../user/user.dto';
 import { User } from '../user/user';
 
 // CREATE
 
 @InputType()
 export class CreateInternshipEngagementInput {
-  @Field(type => User, { nullable: true })
-  intern: User;
+  @Field(type => String)
+  internName: string;
 
   @DateField({ nullable: true })
   initialEndDate: DateTime | null;
@@ -31,9 +32,6 @@ export class CreateInternshipEngagementOutput {
   @Field(type => String)
   id: string;
 
-  @Field(type => User, { nullable: true })
-  intern: User;
-
   @DateField({ nullable: true })
   initialEndDate: DateTime | null;
 
@@ -45,8 +43,10 @@ export class CreateInternshipEngagementOutput {
 export class CreateInternshipEngagementOutputDto {
   @Field({ nullable: true }) // nullable in case of error
   internshipEngagement: CreateInternshipEngagementOutput;
+  intern: ReadUserOutput;
   constructor() {
     this.internshipEngagement = new CreateInternshipEngagementOutput();
+    this.intern = new ReadUserOutput();
   }
 }
 
@@ -69,9 +69,6 @@ export class ReadInternshipEngagementOutput {
   @Field(type => String)
   id: string;
 
-  @Field(type => User, { nullable: true })
-  intern: User;
-
   @DateField({ nullable: true })
   initialEndDate: DateTime | null;
 
@@ -83,8 +80,10 @@ export class ReadInternshipEngagementOutput {
 export class ReadInternshipEngagementOutputDto {
   @Field({ nullable: true }) // nullable in case of error
   internshipEngagement: ReadInternshipEngagementOutput;
+  intern: ReadUserOutput;
   constructor() {
     this.internshipEngagement = new ReadInternshipEngagementOutput();
+    this.intern = new ReadUserOutput();
   }
 }
 
@@ -95,8 +94,8 @@ export class UpdateInternshipEngagementInput {
   @Field(type => String)
   id: string;
 
-  @Field(type => User, { nullable: true })
-  intern: User;
+  @Field(type => String)
+  internId: string;
 
   @DateField({ nullable: true })
   initialEndDate: DateTime | null;
@@ -116,8 +115,8 @@ export class UpdateInternshipEngagementOutput {
   @Field(type => String)
   id: string;
 
-  @Field(type => User, { nullable: true })
-  intern: User;
+  @Field(type => String)
+  internName: string;
 
   @DateField({ nullable: true })
   initialEndDate: DateTime | null;
@@ -130,8 +129,10 @@ export class UpdateInternshipEngagementOutput {
 export class UpdateInternshipEngagementOutputDto {
   @Field({ nullable: true }) // nullable in case of error
   internshipEngagement: UpdateInternshipEngagementOutput;
+  intern: ReadUserOutput;
   constructor() {
     this.internshipEngagement = new UpdateInternshipEngagementOutput();
+    this.intern = new ReadUserOutput();
   }
 }
 
