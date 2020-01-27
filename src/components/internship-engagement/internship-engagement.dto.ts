@@ -12,7 +12,7 @@ import { User } from '../user/user';
 @InputType()
 export class CreateInternshipEngagementInput {
   @Field(type => String)
-  internName: string;
+  internId: string;
 
   @DateField({ nullable: true })
   initialEndDate: DateTime | null;
@@ -43,6 +43,8 @@ export class CreateInternshipEngagementOutput {
 export class CreateInternshipEngagementOutputDto {
   @Field({ nullable: true }) // nullable in case of error
   internshipEngagement: CreateInternshipEngagementOutput;
+
+  @Field({ nullable: true }) // nullable in case of error
   intern: ReadUserOutput;
   constructor() {
     this.internshipEngagement = new CreateInternshipEngagementOutput();
@@ -80,6 +82,8 @@ export class ReadInternshipEngagementOutput {
 export class ReadInternshipEngagementOutputDto {
   @Field({ nullable: true }) // nullable in case of error
   internshipEngagement: ReadInternshipEngagementOutput;
+
+  @Field({ nullable: true }) // nullable in case of error
   intern: ReadUserOutput;
   constructor() {
     this.internshipEngagement = new ReadInternshipEngagementOutput();
@@ -93,9 +97,6 @@ export class ReadInternshipEngagementOutputDto {
 export class UpdateInternshipEngagementInput {
   @Field(type => String)
   id: string;
-
-  @Field(type => String)
-  internId: string;
 
   @DateField({ nullable: true })
   initialEndDate: DateTime | null;
@@ -115,9 +116,6 @@ export class UpdateInternshipEngagementOutput {
   @Field(type => String)
   id: string;
 
-  @Field(type => String)
-  internName: string;
-
   @DateField({ nullable: true })
   initialEndDate: DateTime | null;
 
@@ -129,6 +127,8 @@ export class UpdateInternshipEngagementOutput {
 export class UpdateInternshipEngagementOutputDto {
   @Field({ nullable: true }) // nullable in case of error
   internshipEngagement: UpdateInternshipEngagementOutput;
+
+  @Field({ nullable: true }) // nullable in case of error
   intern: ReadUserOutput;
   constructor() {
     this.internshipEngagement = new UpdateInternshipEngagementOutput();

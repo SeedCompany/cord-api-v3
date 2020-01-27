@@ -25,17 +25,21 @@ export class InternshipEngagementService {
     const id = generate();
     await session
       .run(
-        `MATCH (intern:User {name: "$internName"})
-        CREATE (internshipEngagement:InternshipEngagement
-          {id: "$id",
-          active: true,
-          timestamp: datetime()})
-          -[:intern {active: true, timestamp: datetime()}]->(intern)
-          (intern)-[:displayFirstName {active: true}]->(displayFirstName:Property {active: true})
-          (intern)-[:displayLastName {active: true}]->(displayLastName:Property {active: true})
-          (intern)-[:email {active: true}]->(email:Property {active: true})
-          (intern)-[:realFirstName {active: true}]->(realFirstName:Property {active: true})
+        `MATCH (intern:User {id: $internId}),
+          (intern)-[:displayFirstName {active: true}]->(displayFirstName:Property {active: true}),
+          (intern)-[:displayLastName {active: true}]->(displayLastName:Property {active: true}),
+          (intern)-[:email {active: true}]->(email:Property {active: true}),
+          (intern)-[:realFirstName {active: true}]->(realFirstName:Property {active: true}),
           (intern)-[:realLastName {active: true}]->(realLastName:Property {active: true})
+        CREATE (internshipEngagement:InternshipEngagement
+          {id: $id,
+          active: true,
+          timestamp: datetime(),
+          owningOrg: "seedcompany",
+          initialEndDate: "$initialEndDate",
+          currentEndDate: "$currentEndDate"
+          })
+          -[:intern {active: true, timestamp: datetime()}]->(intern)
         RETURN internshipEngagement.id as id,
           email.value as email,
           displayFirstName.value as displayFirstName,
@@ -48,13 +52,12 @@ export class InternshipEngagementService {
          `,
         {
           id,
-          internName: input.internName,
+          internId: input.internId,
           initialEndDate: input.initialEndDate,
           currentEndData: input.currentEndDate,
         },
       )
       .then(result => {
-        console.log(JSON.stringify(result.records));
         response.internshipEngagement.id = result.records[0].get('id');
         response.intern.displayFirstName = result.records[0].get(
           'displayFirstName',
@@ -88,15 +91,14 @@ export class InternshipEngagementService {
     const session = this.db.driver.session();
     await session
       .run(
-        `MATCH (internshipEngagement:InternshipEngagement {active: true, owningOrg: "seedcompany"})
+        `MATCH (internshipEngagement:InternshipEngagement {id: "${input.id}", active: true, owningOrg: "seedcompany"})
         -[:intern {active: true}]
-        ->(intern:User {active: true})
-        (intern)-[:displayFirstName {active: true}]->(displayFirstName:Property {active: true})
-        (intern)-[:displayLastName {active: true}]->(displayLastName:Property {active: true})
-        (intern)-[:email {active: true}]->(email:Property {active: true})
-        (intern)-[:realFirstName {active: true}]->(realFirstName:Property {active: true})
+        ->(intern:User {active: true}),
+        (intern)-[:displayFirstName {active: true}]->(displayFirstName:Property {active: true}),
+        (intern)-[:displayLastName {active: true}]->(displayLastName:Property {active: true}),
+        (intern)-[:email {active: true}]->(email:Property {active: true}),
+        (intern)-[:realFirstName {active: true}]->(realFirstName:Property {active: true}),
         (intern)-[:realLastName {active: true}]->(realLastName:Property {active: true})
-          WHERE internshipEngagement.id = "$id"
           RETURN internshipEngagement.id as id,
           email.value as email,
           displayFirstName.value as displayFirstName,
@@ -145,15 +147,27 @@ export class InternshipEngagementService {
     const session = this.db.driver.session();
     await session
       .run(
-        `MATCH (internshipEngagement:InternshipEngagement {active: true, owningOrg: "seedcompany", id: $id})
-          SET
-           internshipEngagement.initialEndDate = $initialEndDate,
-           internshipEngagement.currentEndDate = $currentEndDate,
-           timestamp = datetime()
-            RETURN internshipEngagement.id as id,
-            internshipEngagement.intern as intern,
-            internshipEngagement.initialEndDate as initialEndDate,
-            internshipEngagement.currentEndDate as currentEndDate`,
+        `MATCH
+          (internshipEngagement:InternshipEngagement {active: true, owningOrg: "seedcompany", id: $id})
+          -[:intern {active: true}]->(intern:User {active: true}),
+          (intern)-[:displayFirstName {active: true}]->(displayFirstName:Property {active: true}),
+          (intern)-[:displayLastName {active: true}]->(displayLastName:Property {active: true}),
+          (intern)-[:email {active: true}]->(email:Property {active: true}),
+          (intern)-[:realFirstName {active: true}]->(realFirstName:Property {active: true}),
+          (intern)-[:realLastName {active: true}]->(realLastName:Property {active: true})
+        SET
+          internshipEngagement.initialEndDate = $initialEndDate,
+          internshipEngagement.currentEndDate = $currentEndDate
+        RETURN internshipEngagement.id as id,
+          email.value as email,
+          displayFirstName.value as displayFirstName,
+          displayLastName.value as displayLastName,
+          realFirstName.value as realFirstName,
+          realLastName.value as realLastName,
+          intern.id as userId,
+          internshipEngagement.initialEndDate as initialEndDate,
+          internshipEngagement.currentEndDate as currentEndDate
+           `,
         {
           id: input.id,
           initialEndDate: input.initialEndDate,
@@ -163,6 +177,18 @@ export class InternshipEngagementService {
       .then(result => {
         if (result.records.length > 0) {
           response.internshipEngagement.id = result.records[0].get('id');
+          response.intern.displayFirstName = result.records[0].get(
+            'displayFirstName',
+          );
+          response.intern.displayLastName = result.records[0].get(
+            'displayLastName',
+          );
+          response.intern.realFirstName = result.records[0].get(
+            'realFirstName',
+          );
+          response.intern.realLastName = result.records[0].get('realLastName');
+          response.intern.email = result.records[0].get('email');
+          response.intern.id = result.records[0].get('userId');
           response.internshipEngagement.initialEndDate = result.records[0].get(
             'initialEndDate',
           );
