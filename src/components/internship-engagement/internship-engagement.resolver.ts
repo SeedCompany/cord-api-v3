@@ -55,4 +55,3 @@ export class InternshipEngagementResolver {
     return await this.internshipEngagementService.delete(input);
   }
 }
-

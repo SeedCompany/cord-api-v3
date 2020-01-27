@@ -1,16 +1,11 @@
-import {
-    Field,
-    ID,
-    InputType,
-    ObjectType,
-  } from 'type-graphql';
-  
-import { InternshipEngagementStatus } from './status';
-import { InternshipEngagement } from './engagement';
+import { Field, ID, InputType, ObjectType } from 'type-graphql';
+
 import { DateField } from 'src/common/luxon.graphql';
 import { DateTime } from 'luxon';
+import { InternshipEngagement } from './engagement';
+import { InternshipEngagementStatus } from './status';
 import { User } from '../user/user';
-  
+
 // CREATE
 
 @InputType()
@@ -18,17 +13,11 @@ export class CreateInternshipEngagementInput {
   @Field(type => User, { nullable: true })
   intern: User;
 
-  @Field(type => String, { nullable: true })
-  possibleStatuses: InternshipEngagementStatus;
-
   @DateField({ nullable: true })
   initialEndDate: DateTime | null;
 
   @DateField({ nullable: true })
   currentEndDate: DateTime | null;
-
-  @DateField({ nullable: true })
-  updatedAt: DateTime | null;
 }
 
 @InputType()
@@ -36,7 +25,7 @@ export class CreateInternshipEngagementInputDto {
   @Field()
   internshipEngagement: CreateInternshipEngagementInput;
 }
-  
+
 @ObjectType()
 export class CreateInternshipEngagementOutput {
   @Field(type => String)
@@ -45,19 +34,13 @@ export class CreateInternshipEngagementOutput {
   @Field(type => User, { nullable: true })
   intern: User;
 
-  @Field(type => String, { nullable: true })
-  possibleStatuses: InternshipEngagementStatus;
-
   @DateField({ nullable: true })
   initialEndDate: DateTime | null;
 
   @DateField({ nullable: true })
   currentEndDate: DateTime | null;
-
-  @DateField({ nullable: true })
-  updatedAt: DateTime | null;
 }
-  
+
 @ObjectType()
 export class CreateInternshipEngagementOutputDto {
   @Field({ nullable: true }) // nullable in case of error
@@ -66,7 +49,7 @@ export class CreateInternshipEngagementOutputDto {
     this.internshipEngagement = new CreateInternshipEngagementOutput();
   }
 }
-  
+
 // READ
 
 @InputType()
@@ -80,7 +63,7 @@ export class ReadInternshipEngagementInputDto {
   @Field()
   internshipEngagement: ReadInternshipEngagementInput;
 }
-  
+
 @ObjectType()
 export class ReadInternshipEngagementOutput {
   @Field(type => String)
@@ -89,19 +72,13 @@ export class ReadInternshipEngagementOutput {
   @Field(type => User, { nullable: true })
   intern: User;
 
-  @Field(type => String, { nullable: true })
-  possibleStatuses: InternshipEngagementStatus;
-
   @DateField({ nullable: true })
   initialEndDate: DateTime | null;
 
   @DateField({ nullable: true })
   currentEndDate: DateTime | null;
-
-  @DateField({ nullable: true })
-  updatedAt: DateTime | null;
 }
-  
+
 @ObjectType()
 export class ReadInternshipEngagementOutputDto {
   @Field({ nullable: true }) // nullable in case of error
@@ -110,7 +87,7 @@ export class ReadInternshipEngagementOutputDto {
     this.internshipEngagement = new ReadInternshipEngagementOutput();
   }
 }
-  
+
 // UPDATE
 
 @InputType()
@@ -121,19 +98,13 @@ export class UpdateInternshipEngagementInput {
   @Field(type => User, { nullable: true })
   intern: User;
 
-  @Field(type => String, { nullable: true })
-  possibleStatuses: InternshipEngagementStatus;
-
   @DateField({ nullable: true })
   initialEndDate: DateTime | null;
 
   @DateField({ nullable: true })
   currentEndDate: DateTime | null;
-
-  @DateField({ nullable: true })
-  updatedAt: DateTime | null;
 }
-  
+
 @InputType()
 export class UpdateInternshipEngagementInputDto {
   @Field()
@@ -148,17 +119,11 @@ export class UpdateInternshipEngagementOutput {
   @Field(type => User, { nullable: true })
   intern: User;
 
-  @Field(type => String, { nullable: true })
-  possibleStatuses: InternshipEngagementStatus;
-
   @DateField({ nullable: true })
   initialEndDate: DateTime | null;
 
   @DateField({ nullable: true })
   currentEndDate: DateTime | null;
-
-  @DateField({ nullable: true })
-  updatedAt: DateTime | null;
 }
 
 @ObjectType()
@@ -169,7 +134,7 @@ export class UpdateInternshipEngagementOutputDto {
     this.internshipEngagement = new UpdateInternshipEngagementOutput();
   }
 }
-  
+
 // DELETE
 
 @InputType()
@@ -177,7 +142,7 @@ export class DeleteInternshipEngagementInput {
   @Field(type => String)
   id: string;
 }
-  
+
 @InputType()
 export class DeleteInternshipEngagementInputDto {
   @Field()
@@ -198,9 +163,9 @@ export class DeleteInternshipEngagementOutputDto {
     this.internshipEngagement = new DeleteInternshipEngagementOutput();
   }
 }
-  
+
 // List all interns (query)
-  
+
 @InputType()
 export class ListInternshipEngagementsInput {
   @Field(type => String, { nullable: true, defaultValue: '' })
@@ -214,19 +179,19 @@ export class ListInternshipEngagementsInput {
   @Field(type => String, { nullable: true, defaultValue: 'name' })
   sort: string;
 }
-  
+
 @InputType()
 export class ListInternshipEngagementsInputDto {
   @Field()
   query: ListInternshipEngagementsInput;
 }
-  
+
 @ObjectType()
 export class ListInternshipEngagementsOutput {
   @Field(type => InternshipEngagement, { nullable: true })
   internshipEngagement: InternshipEngagement;
 }
-  
+
 @ObjectType()
 export class ListInternshipEngagementsOutputDto {
   @Field(type => [InternshipEngagement], { nullable: true }) // nullable in case of error
@@ -235,4 +200,3 @@ export class ListInternshipEngagementsOutputDto {
     this.internshipEngagements = [];
   }
 }
-  
