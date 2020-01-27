@@ -1,6 +1,7 @@
 import { DateTime } from 'luxon';
 import { DateField } from 'src/common/luxon.graphql';
-import { Location } from '../location/location';import { InternshipEngagementPosition } from './position';
+import { Location } from '../location/location';
+import { InternshipEngagementPosition } from './position';
 import { InternshipEngagementStatus } from './status';
 import { InternshipEngagementTag } from './tag';
 import { User } from '../user/user';
