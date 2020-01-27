@@ -1,9 +1,10 @@
 import { stripIndent } from 'common-tags';
+import { GraphQLScalarType } from 'graphql';
 import { ClassType, Field, Int, ObjectType } from 'type-graphql';
 import { AbstractClassType } from './types';
 
 export function PaginatedList<T>(
-  ItemClass: ClassType<T> | AbstractClassType<T>,
+  ItemClass: ClassType<T> | AbstractClassType<T> | GraphQLScalarType,
 ) {
   @ObjectType({ isAbstract: true })
   abstract class PaginatedListClass {
