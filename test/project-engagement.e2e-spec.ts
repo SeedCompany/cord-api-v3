@@ -70,7 +70,6 @@ describe('ProjectEngagement e2e', () => {
         `,
       })
       .expect(({ body }) => {
-        console.log(JSON.stringify(body));
         const projId = body.data.createProjectEngagement.projectEngagement.id;
         expect(isValid(projId)).toBe(true);
         expect(
