@@ -60,18 +60,30 @@ export abstract class CursorPaginationInput {
   }
 }
 
-@InputType({
-  isAbstract: true,
-})
-export abstract class SortablePaginationInput extends PaginationInput {
-  @Field({
-    nullable: true,
-    description: 'The field in which to sort on',
+export const SortablePaginationInput = <SortKey extends string = string>({
+  defaultSort,
+  defaultOrder,
+}: {
+  defaultSort: SortKey;
+  defaultOrder?: Order;
+}) => {
+  @InputType({
+    isAbstract: true,
   })
-  readonly sort?: string;
+  abstract class SortablePaginationInputClass extends PaginationInput {
+    @Field(() => String, {
+      nullable: true,
+      description: 'The field in which to sort on',
+      defaultValue: defaultSort,
+    })
+    readonly sort: SortKey = defaultSort;
 
-  @Field(() => Order, {
-    description: 'The order in which to sort the list',
-  })
-  readonly order = Order.ASC;
-}
+    @Field(() => Order, {
+      description: 'The order in which to sort the list',
+      defaultValue: defaultOrder ?? Order.ASC,
+    })
+    readonly order: Order = defaultOrder ?? Order.ASC;
+  }
+
+  return SortablePaginationInputClass;
+};

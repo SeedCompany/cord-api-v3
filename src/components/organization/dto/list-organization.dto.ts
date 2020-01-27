@@ -3,7 +3,9 @@ import { PaginatedList, SortablePaginationInput } from '../../../common';
 import { Organization } from './organization';
 
 @InputType()
-export class OrganizationListInput extends SortablePaginationInput {
+export class OrganizationListInput extends SortablePaginationInput<keyof Organization>({
+  defaultSort: 'name',
+}) {
   static defaultVal = new OrganizationListInput();
 
   @Field({
@@ -11,8 +13,6 @@ export class OrganizationListInput extends SortablePaginationInput {
     nullable: true,
   })
   readonly name?: string;
-
-  readonly sort: keyof Organization = 'name';
 }
 
 @ObjectType()
