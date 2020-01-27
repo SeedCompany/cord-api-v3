@@ -2,26 +2,7 @@ import { Field, InputType, ObjectType } from 'type-graphql';
 
 import { DateField } from 'src/common/luxon.graphql';
 import { DateTime } from 'luxon';
-<<<<<<< HEAD
 import { ProjectEngagement } from './engagement';
-=======
-
-@ObjectType()
-@InputType('ProjectEngagementInput')
-export class ProjectEngagement {
-  @Field({ nullable: true })
-  id: string;
-
-  @DateField({ nullable: true })
-  initialEndDate: DateTime | null;
-
-  @DateField({ nullable: true })
-  currentEndDate: DateTime | null;
-
-  @DateField({ nullable: true })
-  updatedAt: DateTime | null;
-}
->>>>>>> 72feb79... datefield
 
 // CREATE
 
@@ -42,12 +23,9 @@ export class CreateProjectEngagementOutput {
   @Field(type => String)
   id: string;
 
-<<<<<<< HEAD
   @Field(type => String)
   languageName: string;
 
-=======
->>>>>>> 72feb79... datefield
   @DateField({ nullable: true })
   initialEndDate: DateTime | null;
 
