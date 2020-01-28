@@ -1,3 +1,4 @@
+import { DateTime } from 'luxon';
 import {
   CreateInternshipEngagementInput,
   CreateInternshipEngagementOutputDto,
@@ -59,16 +60,30 @@ export class InternshipEngagementService {
       )
       .then(result => {
         response.internshipEngagement.id = result.records[0].get('id');
-        response.intern.displayFirstName = result.records[0].get(
-          'displayFirstName',
-        );
-        response.intern.displayLastName = result.records[0].get(
-          'displayLastName',
-        );
-        response.intern.realFirstName = result.records[0].get('realFirstName');
-        response.intern.realLastName = result.records[0].get('realLastName');
-        response.intern.email = result.records[0].get('email');
-        response.intern.id = result.records[0].get('userId');
+        response.intern = {
+          displayFirstName: result.records[0].get('displayFirstName'),
+          displayLastName: result.records[0].get('displayLastName'),
+          realFirstName: result.records[0].get('realFirstName'),
+          realLastName: result.records[0].get('realLastName'),
+          email: result.records[0].get('email'),
+          id: result.records[0].get('userId'),
+          createdAt: DateTime.local(),
+          timezone: {
+            value: null,
+            canRead: true,
+            canEdit: true,
+          },
+          phone: {
+            value: null,
+            canRead: true,
+            canEdit: true,
+          },
+          bio: {
+            value: null,
+            canRead: true,
+            canEdit: true,
+          },
+        };
         response.internshipEngagement.initialEndDate = result.records[0].get(
           'initialEndDate',
         );
@@ -115,16 +130,30 @@ export class InternshipEngagementService {
       )
       .then(result => {
         response.internshipEngagement.id = result.records[0].get('id');
-        response.intern.displayFirstName = result.records[0].get(
-          'displayFirstName',
-        );
-        response.intern.displayLastName = result.records[0].get(
-          'displayLastName',
-        );
-        response.intern.realFirstName = result.records[0].get('realFirstName');
-        response.intern.realLastName = result.records[0].get('realLastName');
-        response.intern.email = result.records[0].get('email');
-        response.intern.id = result.records[0].get('userId');
+        response.intern = {
+          displayFirstName: result.records[0].get('displayFirstName'),
+          displayLastName: result.records[0].get('displayLastName'),
+          realFirstName: result.records[0].get('realFirstName'),
+          realLastName: result.records[0].get('realLastName'),
+          email: result.records[0].get('email'),
+          id: result.records[0].get('userId'),
+          createdAt: DateTime.local(),
+          timezone: {
+            value: null,
+            canRead: true,
+            canEdit: true,
+          },
+          phone: {
+            value: null,
+            canRead: true,
+            canEdit: true,
+          },
+          bio: {
+            value: null,
+            canRead: true,
+            canEdit: true,
+          },
+        };
         response.internshipEngagement.initialEndDate = result.records[0].get(
           'initialEndDate',
         );
@@ -177,18 +206,30 @@ export class InternshipEngagementService {
       .then(result => {
         if (result.records.length > 0) {
           response.internshipEngagement.id = result.records[0].get('id');
-          response.intern.displayFirstName = result.records[0].get(
-            'displayFirstName',
-          );
-          response.intern.displayLastName = result.records[0].get(
-            'displayLastName',
-          );
-          response.intern.realFirstName = result.records[0].get(
-            'realFirstName',
-          );
-          response.intern.realLastName = result.records[0].get('realLastName');
-          response.intern.email = result.records[0].get('email');
-          response.intern.id = result.records[0].get('userId');
+          response.intern = {
+            displayFirstName: result.records[0].get('displayFirstName'),
+            displayLastName: result.records[0].get('displayLastName'),
+            realFirstName: result.records[0].get('realFirstName'),
+            realLastName: result.records[0].get('realLastName'),
+            email: result.records[0].get('email'),
+            id: result.records[0].get('userId'),
+            createdAt: DateTime.local(),
+            timezone: {
+              value: null,
+              canRead: true,
+              canEdit: true,
+            },
+            phone: {
+              value: null,
+              canRead: true,
+              canEdit: true,
+            },
+            bio: {
+              value: null,
+              canRead: true,
+              canEdit: true,
+            },
+          };
           response.internshipEngagement.initialEndDate = result.records[0].get(
             'initialEndDate',
           );

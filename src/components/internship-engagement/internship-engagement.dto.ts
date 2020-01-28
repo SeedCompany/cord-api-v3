@@ -2,10 +2,9 @@ import { Field, ID, InputType, ObjectType } from 'type-graphql';
 
 import { DateField } from 'src/common/luxon.graphql';
 import { DateTime } from 'luxon';
+import { User } from '../user';
 import { InternshipEngagement } from './engagement';
 import { InternshipEngagementStatus } from './status';
-import { ReadUserOutput } from '../user/user.dto';
-import { User } from '../user/user';
 
 // CREATE
 
@@ -45,10 +44,9 @@ export class CreateInternshipEngagementOutputDto {
   internshipEngagement: CreateInternshipEngagementOutput;
 
   @Field({ nullable: true }) // nullable in case of error
-  intern: ReadUserOutput;
+  intern: User;
   constructor() {
     this.internshipEngagement = new CreateInternshipEngagementOutput();
-    this.intern = new ReadUserOutput();
   }
 }
 
@@ -84,10 +82,9 @@ export class ReadInternshipEngagementOutputDto {
   internshipEngagement: ReadInternshipEngagementOutput;
 
   @Field({ nullable: true }) // nullable in case of error
-  intern: ReadUserOutput;
+  intern: User;
   constructor() {
     this.internshipEngagement = new ReadInternshipEngagementOutput();
-    this.intern = new ReadUserOutput();
   }
 }
 
@@ -129,10 +126,9 @@ export class UpdateInternshipEngagementOutputDto {
   internshipEngagement: UpdateInternshipEngagementOutput;
 
   @Field({ nullable: true }) // nullable in case of error
-  intern: ReadUserOutput;
+  intern: User;
   constructor() {
     this.internshipEngagement = new UpdateInternshipEngagementOutput();
-    this.intern = new ReadUserOutput();
   }
 }
 
