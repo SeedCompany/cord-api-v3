@@ -1,24 +1,17 @@
-import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import { gql } from 'apollo-server-core';
+import { TestApp } from './create-app';
 
-export async function createToken(app: INestApplication): Promise<string> {
-  let token;
-  await request(app.getHttpServer())
-    .post('/graphql')
-    .send({
-      operationName: null,
-      query: `
-      mutation{
-        createToken{
-          token
-        }
+export async function createToken(app: TestApp): Promise<string> {
+  const result = await app.graphql.mutate(gql`
+    mutation {
+      createToken {
+        token
       }
-    `,
-    })
-    .expect(({ body }) => {
-      token = body.data.createToken.token;
-    })
-    .expect(200);
+    }
+  `);
+  const token = result.createToken?.token;
+  expect(token).toBeTruthy();
+  app.graphql.authToken = token;
 
   return token;
 }
