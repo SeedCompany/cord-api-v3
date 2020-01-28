@@ -2,6 +2,7 @@
 /dist
 /node_modules
 schema.gql
+package-lock.json
 
 # local configuration
 .env.local
