@@ -211,7 +211,7 @@ export class OrganizationService {
   }
 
   async list(
-    { page, count, sort, order, name }: OrganizationListInput,
+    { page, count, sort, order, filter }: OrganizationListInput,
     token: string,
   ): Promise<OrganizationListOutput> {
     const result = await this.db
@@ -250,7 +250,7 @@ export class OrganizationService {
       LIMIT $count
       `,
         {
-          // filter: name, // TODO Handle no filter
+          // filter: filter.name, // TODO Handle no filter
           skip: (page - 1) * count,
           count,
           token,

@@ -1,6 +1,23 @@
-import { Field, InputType, ObjectType } from 'type-graphql';
+import { Type } from 'class-transformer';
+import { ValidateNested } from 'class-validator';
+import { Field, ID, InputType, ObjectType } from 'type-graphql';
 import { PaginatedList, SortablePaginationInput } from '../../../common';
 import { Organization } from './organization';
+
+@InputType()
+export abstract class OrganizationFilters {
+  @Field({
+    description: 'Only organizations matching this name',
+    nullable: true,
+  })
+  readonly name?: string;
+
+  @Field(() => [ID], {
+    description: 'User IDs ANY of which must belong to the organizations',
+    nullable: true,
+  })
+  readonly userIds?: string[];
+}
 
 @InputType()
 export class OrganizationListInput extends SortablePaginationInput<keyof Organization>({
@@ -8,11 +25,10 @@ export class OrganizationListInput extends SortablePaginationInput<keyof Organiz
 }) {
   static defaultVal = new OrganizationListInput();
 
-  @Field({
-    description: 'Filter to matching names',
-    nullable: true,
-  })
-  readonly name?: string;
+  @Field({ nullable: true })
+  @Type(() => OrganizationFilters)
+  @ValidateNested()
+  readonly filter: OrganizationFilters = {};
 }
 
 @ObjectType()
