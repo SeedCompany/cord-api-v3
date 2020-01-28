@@ -60,7 +60,7 @@ export class OrganizationService {
       .first();
 
     if (!result) {
-      throw new NotFoundException('Could not find organization');
+      throw new Error('Could not create organization');
     }
 
     return {
@@ -150,6 +150,7 @@ export class OrganizationService {
           name.value = $name
         RETURN
           org.id as id,
+          org.createdAt as createdAt,
           name.value as name,
           user.canCreateOrg as canCreateOrg,
           user.canReadOrgs as canReadOrgs
@@ -226,10 +227,10 @@ export class OrganizationService {
         (org:Organization {
           active: true
         })
-      WHERE
-        org.name CONTAINS $filter
+//      WHERE
+//        org.name CONTAINS $filter
       WITH count(org) as orgs, user
-      MATCH 
+      MATCH
         (org:Organization {
           active: true
         })
@@ -249,7 +250,7 @@ export class OrganizationService {
       LIMIT $count
       `,
         {
-          filter: name, // TODO Handle no filter
+          // filter: name, // TODO Handle no filter
           skip: (page - 1) * count,
           count,
           token,
