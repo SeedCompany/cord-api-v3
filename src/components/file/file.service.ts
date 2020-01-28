@@ -76,7 +76,31 @@ export class FileService {
     { parentId, uploadId, name }: CreateFileInput,
     session: ISession,
   ): Promise<File> {
-    throw new NotImplementedError();
+    await this.bucket.moveObject(`temp/${uploadId}`, `${parentId}/${uploadId}`);
+    const result = await this.db
+      .query()
+      .raw(
+        `
+        MATCH (token:Token {active: true, value: $token})
+        CREATE
+            (file:FileNode { id: $id, type: $type, name: $name })
+        RETURN
+           file
+          `,
+        {
+          id: uploadId,
+          token: session.token,
+          type: FileNodeType.File,
+          name,
+        },
+      )
+      .first();
+
+    if (!result) {
+      throw new Error('Could not create file');
+    }
+
+    return result.file.properties;
   }
 
   async updateFile(
