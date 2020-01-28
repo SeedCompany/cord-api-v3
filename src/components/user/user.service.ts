@@ -3,6 +3,11 @@ import { Connection } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import {
+  OrganizationListInput,
+  SecuredOrganizationList,
+  OrganizationService,
+} from '../organization';
+import {
   CreateUser,
   UpdateUser,
   User,
@@ -12,10 +17,37 @@ import {
 
 @Injectable()
 export class UserService {
-  constructor(private readonly db: Connection) {}
+  constructor(
+    private readonly organizations: OrganizationService,
+    private readonly db: Connection,
+  ) {}
 
   async list(input: UserListInput, token: string): Promise<UserListOutput> {
     throw new Error('Method not implemented.');
+  }
+
+  async listOrganizations(
+    userId: string,
+    input: OrganizationListInput,
+    token: string,
+  ): Promise<SecuredOrganizationList> {
+    // Just a thought, seemed like a good idea to try to reuse the logic/query there.
+    const result = await this.organizations.list(
+      {
+        ...input,
+        filter: {
+          ...input.filter,
+          userIds: [userId],
+        },
+      },
+      token,
+    );
+
+    return {
+      ...result,
+      canRead: true, // TODO
+      canCreate: true, // TODO
+    };
   }
 
   async create(input: CreateUser, token: string): Promise<User> {

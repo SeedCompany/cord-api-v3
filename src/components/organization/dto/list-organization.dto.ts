@@ -1,7 +1,7 @@
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { Field, ID, InputType, ObjectType } from 'type-graphql';
-import { PaginatedList, SortablePaginationInput } from '../../../common';
+import { PaginatedList, SecuredList, SortablePaginationInput } from '../../../common';
 import { Organization } from './organization';
 
 @InputType()
@@ -33,3 +33,10 @@ export class OrganizationListInput extends SortablePaginationInput<keyof Organiz
 
 @ObjectType()
 export class OrganizationListOutput extends PaginatedList(Organization) {}
+
+@ObjectType({
+  description: SecuredList.descriptionFor('organizations'),
+})
+export abstract class SecuredOrganizationList extends SecuredList(
+  Organization,
+) {}

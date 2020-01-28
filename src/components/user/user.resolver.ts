@@ -8,6 +8,10 @@ import {
 } from '@nestjs/graphql';
 import { IdArg, Token } from '../../common';
 import {
+  OrganizationListInput,
+  SecuredOrganizationList,
+} from '../organization';
+import {
   CreateUserInput,
   CreateUserOutput,
   UpdateUserInput,
@@ -64,6 +68,20 @@ export class UserResolver {
     input: UnavailabilityListInput,
   ): Promise<SecuredUnavailabilityList> {
     return this.unavailabilityService.list(id, input, token);
+  }
+
+  @ResolveProperty(() => SecuredOrganizationList)
+  async organizations(
+    @Token() token: string,
+    @Parent() { id }: User,
+    @Args({
+      name: 'input',
+      type: () => OrganizationListInput,
+      defaultValue: OrganizationListInput.defaultVal,
+    })
+    input: OrganizationListInput,
+  ): Promise<SecuredOrganizationList> {
+    return this.userService.listOrganizations(id, input, token);
   }
 
   @Mutation(() => CreateUserOutput, {
