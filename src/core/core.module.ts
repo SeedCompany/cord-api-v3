@@ -13,6 +13,7 @@ import { DatabaseService } from './database.service';
     DatabaseService,
   ],
   exports: [
+    ConfigModule,
     CypherFactory,
     DatabaseService,
   ],
