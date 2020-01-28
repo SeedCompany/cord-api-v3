@@ -4,7 +4,7 @@ import { Location } from '../location/location';
 import { InternshipEngagementPosition } from './position';
 import { InternshipEngagementStatus } from './status';
 import { InternshipEngagementTag } from './tag';
-import { User } from '../user/user';
+import { User } from '../user';
 import { ProductMethodology } from '../product/product-methodology';
 import { ObjectType, InputType, Field } from 'type-graphql';
 

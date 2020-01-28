@@ -34,8 +34,7 @@ import { ProjectResolver } from './components/project/project.resolver';
 import { ProjectService } from './components/project/project.service';
 import { RegionResolver } from './components/region/region.resolver';
 import { RegionService } from './components/region/region.service';
-import { UserResolver } from './components/user/user.resolver';
-import { UserService } from './components/user/user.service';
+import { UserModule } from './components/user';
 import { CoreModule } from './core';
 
 const context: ContextFunction<{ req: Request; res: Response }, GqlContextType> = ({
@@ -52,6 +51,7 @@ const context: ContextFunction<{ req: Request; res: Response }, GqlContextType> 
       autoSchemaFile: 'schema.gql',
       context,
     }),
+    UserModule,
   ],
   controllers: [],
   providers: [
@@ -86,8 +86,6 @@ const context: ContextFunction<{ req: Request; res: Response }, GqlContextType> 
     RegionResolver,
     RegionResolver,
     RegionService,
-    UserResolver,
-    UserService,
     PartnershipResolver,
     PartnershipService,
   ],

@@ -3,7 +3,7 @@ import { Location } from '../location/location';
 import { Sensitivity } from '../project/sensitivity';
 
 import { InternshipStatus } from './status';
-import { User } from '../user/user';
+import { User } from '../user';
 
 export interface InternshipFilter extends DateFilter {
   status?: InternshipStatus[];
