@@ -5,7 +5,6 @@ import { User } from '.';
 import { ObjectType, InputType, Field } from 'type-graphql';
 
 @ObjectType()
-@InputType('TeamMemberInput')
 export class TeamMember {
   @Field(type => User, { nullable: true })
   user: User;

@@ -14,7 +14,6 @@ export class InternshipEngagement {
   @Field()
   id: string;
 
-  @Field(type => User, { nullable: true })
   intern: User;
 
   @Field(type => [InternshipEngagementStatus], { nullable: true })

@@ -11,7 +11,6 @@ import { ProjectEngagement } from '../project-engagement/engagement';
 import { Field, ID, ObjectType, InputType } from 'type-graphql';
 
 @ObjectType()
-@InputType('ProjectInput')
 export class Project implements IProject {
   @Field(() => ID)
   id: string;

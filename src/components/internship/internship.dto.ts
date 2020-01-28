@@ -39,16 +39,13 @@ export class CreateInternshipInput {
   @Field(type => String, { nullable: true })
   sensitivity: Sensitivity;
 
-  @Field(type => [TeamMember], { nullable: true })
   team: TeamMember[];
 
-  @Field(type => [Budget], { nullable: true })
   budgets: Budget[];
 
   @DateField({ nullable: true })
   estimatedSubmission: DateTime | null;
 
-  @Field(type => [InternshipEngagement], { nullable: true })
   engagements: InternshipEngagement[];
 }
 
@@ -211,22 +208,18 @@ export class UpdateInternshipInput {
   @DateField({ nullable: true })
   mouEnd: DateTime | null;
 
-  @Field(type => [Partnership], { nullable: true })
   partnerships: Partnership[];
 
   @Field(type => String, { nullable: true })
   sensitivity: Sensitivity;
 
-  @Field(type => [TeamMember], { nullable: true })
   team: TeamMember[];
 
-  @Field(type => [Budget], { nullable: true })
   budgets: Budget[];
 
   @DateField({ nullable: true })
   estimatedSubmission: DateTime | null;
 
-  @Field(type => [InternshipEngagement], { nullable: true })
   engagements: InternshipEngagement[];
 }
 

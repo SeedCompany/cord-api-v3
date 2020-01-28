@@ -24,32 +24,24 @@ export class CreateProjectInput {
   @Field(type => Location, { nullable: true })
   location: Location | null;
 
-  /** A version of the location that a "non-authorized" user would see. */
-  @Field(type => Location, { nullable: true })
-  publicLocation: Location | null;
-
   @DateField({ nullable: true })
   mouStart: DateTime | null;
 
   @DateField({ nullable: true })
   mouEnd: DateTime | null;
 
-  @Field(type => [Partnership], { nullable: true })
   partnerships: Partnership[];
 
   @Field(type => Sensitivity, { nullable: true })
   sensitivity: Sensitivity;
 
-  @Field(type => [TeamMember], { nullable: true })
   team: TeamMember[];
 
-  @Field(type => [Budget], { nullable: true })
   budgets: Budget[];
 
   @DateField({ nullable: true })
   estimatedSubmission: DateTime | null;
 
-  @Field(type => [ProjectEngagement], { nullable: true })
   engagements: ProjectEngagement[];
 }
 
@@ -205,32 +197,24 @@ export class UpdateProjectInput {
   @Field(type => Location, { nullable: true })
   location: Location | null;
 
-  /** A version of the location that a "non-authorized" user would see. */
-  @Field(type => Location, { nullable: true })
-  publicLocation: Location | null;
-
   @DateField({ nullable: true })
   mouStart: DateTime | null;
 
   @DateField({ nullable: true })
   mouEnd: DateTime | null;
 
-  @Field(type => [Partnership], { nullable: true })
   partnerships: Partnership[];
 
   @Field(type => Sensitivity, { nullable: true })
   sensitivity: Sensitivity;
 
-  @Field(type => [TeamMember], { nullable: true })
   team: TeamMember[];
 
-  @Field(type => [Budget], { nullable: true })
   budgets: Budget[];
 
   @DateField({ nullable: true })
   estimatedSubmission: DateTime | null;
 
-  @Field(type => [ProjectEngagement], { nullable: true })
   engagements: ProjectEngagement[];
 }
 
