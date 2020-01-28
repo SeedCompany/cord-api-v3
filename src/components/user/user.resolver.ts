@@ -1,4 +1,11 @@
-import { Resolver, Args, Query, Mutation } from '@nestjs/graphql';
+import {
+  Resolver,
+  Args,
+  Query,
+  Mutation,
+  ResolveProperty,
+  Parent,
+} from '@nestjs/graphql';
 import { IdArg, Token } from '../../common';
 import {
   CreateUserInput,
@@ -9,11 +16,19 @@ import {
   UserListInput,
   UserListOutput,
 } from './dto';
+import {
+  SecuredUnavailabilityList,
+  UnavailabilityListInput,
+  UnavailabilityService,
+} from './unavailability';
 import { UserService } from './user.service';
 
-@Resolver()
+@Resolver(User.classType)
 export class UserResolver {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly unavailabilityService: UnavailabilityService,
+  ) {}
 
   @Query(() => User, {
     description: 'Look up a user by its ID',
@@ -35,6 +50,20 @@ export class UserResolver {
     input: UserListInput,
   ): Promise<UserListOutput> {
     return this.userService.list(input, token);
+  }
+
+  @ResolveProperty(() => SecuredUnavailabilityList)
+  async unavailabilities(
+    @Token() token: string,
+    @Parent() { id }: User,
+    @Args({
+      name: 'input',
+      type: () => UnavailabilityListInput,
+      defaultValue: UnavailabilityListInput.defaultVal,
+    })
+    input: UnavailabilityListInput,
+  ): Promise<SecuredUnavailabilityList> {
+    return this.unavailabilityService.list(id, input, token);
   }
 
   @Mutation(() => CreateUserOutput, {

@@ -1,8 +1,12 @@
+import { Type } from '@nestjs/common';
 import { Field, ObjectType } from 'type-graphql';
 import { Resource, SecuredString } from '../../../common';
 
 @ObjectType()
 export class User extends Resource {
+  /* TS wants a public constructor for "ClassType" */
+  static classType = (User as any) as Type<User>;
+
   @Field()
   readonly email: SecuredString;
 
