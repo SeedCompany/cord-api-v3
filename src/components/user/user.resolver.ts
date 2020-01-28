@@ -21,6 +21,11 @@ import {
   UserListOutput,
 } from './dto';
 import {
+  EducationListInput,
+  EducationService,
+  SecuredEducationList,
+} from './education';
+import {
   SecuredUnavailabilityList,
   UnavailabilityListInput,
   UnavailabilityService,
@@ -31,6 +36,7 @@ import { UserService } from './user.service';
 export class UserResolver {
   constructor(
     private readonly userService: UserService,
+    private readonly educationService: EducationService,
     private readonly unavailabilityService: UnavailabilityService,
   ) {}
 
@@ -82,6 +88,20 @@ export class UserResolver {
     input: OrganizationListInput,
   ): Promise<SecuredOrganizationList> {
     return this.userService.listOrganizations(id, input, token);
+  }
+
+  @ResolveProperty(() => SecuredEducationList)
+  async education(
+    @Token() token: string,
+    @Parent() { id }: User,
+    @Args({
+      name: 'input',
+      type: () => EducationListInput,
+      defaultValue: EducationListInput.defaultVal,
+    })
+    input: EducationListInput,
+  ): Promise<SecuredEducationList> {
+    return this.educationService.list(id, input, token);
   }
 
   @Mutation(() => CreateUserOutput, {
