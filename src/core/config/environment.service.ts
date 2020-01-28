@@ -20,6 +20,7 @@ export class EnvironmentService {
     @Optional() rootPath = process.cwd(),
     @Optional() env = process.env.NODE_ENV,
   ) {
+    Logger.overrideLogger(['error', 'warn']);
     if (!env) {
       throw new Error(
         'Env was not given and NODE_ENV environment variable is not set',
