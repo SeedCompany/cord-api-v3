@@ -67,8 +67,7 @@ export class OrganizationResolver {
   })
   async deleteOrganization(
     @Token() token: string,
-    @IdArg()
-    id: string,
+    @IdArg() id: string,
   ): Promise<boolean> {
     await this.orgs.delete(id, token);
     return true;
