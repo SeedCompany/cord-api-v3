@@ -22,8 +22,7 @@ import { LanguageResolver } from './components/language/language.resolver';
 import { LanguageService } from './components/language/language.service';
 import { LocationResolver } from './components/location/location.resolver';
 import { LocationService } from './components/location/location.service';
-import { OrganizationResolver } from './components/organization/organization.resolver';
-import { OrganizationService } from './components/organization/organization.service';
+import { OrganizationModule } from './components/organization';
 import { PartnershipResolver } from './components/partnership/partnership.resolver';
 import { PartnershipService } from './components/partnership/partnership.service';
 import { ProductResolver } from './components/product/product.resolver';
@@ -51,6 +50,7 @@ const context: ContextFunction<{ req: Request; res: Response }, GqlContextType> 
       autoSchemaFile: 'schema.gql',
       context,
     }),
+    OrganizationModule,
     UserModule,
   ],
   controllers: [],
@@ -75,8 +75,6 @@ const context: ContextFunction<{ req: Request; res: Response }, GqlContextType> 
     LanguageService,
     LocationResolver,
     LocationService,
-    OrganizationResolver,
-    OrganizationService,
     ProductResolver,
     ProductService,
     ProjectEngagementResolver,
