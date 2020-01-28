@@ -10,7 +10,6 @@ import { InternshipEngagement } from '../internship-engagement/engagement';
 import { ObjectType, InputType, Field } from 'type-graphql';
 
 @ObjectType()
-@InputType('InternshipInput')
 export class Internship {
   @Field(type => String)
   id: string;

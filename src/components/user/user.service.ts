@@ -1,31 +1,59 @@
-import {
-  CreateUserInput,
-  CreateUserOutputDto,
-  DeleteUserInput,
-  DeleteUserOutputDto,
-  ReadUserInput,
-  ReadUserOutputDto,
-  UpdateUserInput,
-  UpdateUserOutputDto,
-} from './user.dto';
-
-import { DatabaseService } from '../../core/database.service';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { Connection } from 'cypher-query-builder';
+import { DateTime } from 'luxon';
 import { generate } from 'shortid';
+import {
+  OrganizationListInput,
+  SecuredOrganizationList,
+  OrganizationService,
+} from '../organization';
+import {
+  CreateUser,
+  UpdateUser,
+  User,
+  UserListInput,
+  UserListOutput,
+} from './dto';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(
+    private readonly organizations: OrganizationService,
+    private readonly db: Connection,
+  ) {}
 
-  async create(
-    input: CreateUserInput,
+  async list(input: UserListInput, token: string): Promise<UserListOutput> {
+    throw new Error('Method not implemented.');
+  }
+
+  async listOrganizations(
+    userId: string,
+    input: OrganizationListInput,
     token: string,
-  ): Promise<CreateUserOutputDto> {
-    const response = new CreateUserOutputDto();
-    const session = this.db.driver.session();
-    const id = generate();
-    await session
-      .run(
+  ): Promise<SecuredOrganizationList> {
+    // Just a thought, seemed like a good idea to try to reuse the logic/query there.
+    const result = await this.organizations.list(
+      {
+        ...input,
+        filter: {
+          ...input.filter,
+          userIds: [userId],
+        },
+      },
+      token,
+    );
+
+    return {
+      ...result,
+      canRead: true, // TODO
+      canCreate: true, // TODO
+    };
+  }
+
+  async create(input: CreateUser, token: string): Promise<User> {
+    const result = await this.db
+      .query()
+      .raw(
         `
         MATCH (token:Token {active: true, value: $token})
         CREATE
@@ -76,7 +104,7 @@ export class UserService {
           displayLastName.value as displayLastName
         `,
         {
-          id,
+          id: generate(),
           token,
           email: input.email,
           realFirstName: input.realFirstName,
@@ -86,34 +114,53 @@ export class UserService {
           password: input.password,
         },
       )
-      .then(result => {
-        response.user.id = result.records[0].get('id');
-        response.user.email = result.records[0].get('email');
-        response.user.realFirstName = result.records[0].get('realFirstName');
-        response.user.realLastName = result.records[0].get('realLastName');
-        response.user.displayFirstName = result.records[0].get(
-          'displayFirstName',
-        );
-        response.user.displayLastName = result.records[0].get(
-          'displayLastName',
-        );
-      })
-      .catch(error => {
-        console.log(error);
-      })
-      .then(() => session.close());
+      .first();
+    if (!result) {
+      throw new Error('Could not create user');
+    }
 
-    return response;
+    return {
+      id: result.id,
+      createdAt: DateTime.local(), // TODO
+      email: {
+        value: result.email,
+        canRead: true, // TODO
+        canEdit: true, // TODO
+      },
+      realFirstName: {
+        value: result.realFirstName,
+        canRead: true, // TODO
+        canEdit: true, // TODO
+      },
+      realLastName: {
+        value: result.realLastName,
+        canRead: true, // TODO
+        canEdit: true, // TODO
+      },
+      displayFirstName: result.displayFirstName,
+      displayLastName: result.displayFirstName,
+      phone: {
+        value: '', // TODO
+        canRead: true, // TODO
+        canEdit: true, // TODO
+      },
+      timezone: {
+        value: '', // TODO
+        canRead: true, // TODO
+        canEdit: true, // TODO
+      },
+      bio: {
+        value: '', // TODO
+        canRead: true, // TODO
+        canEdit: true, // TODO
+      },
+    };
   }
 
-  async readOne(
-    input: ReadUserInput,
-    token: string,
-  ): Promise<ReadUserOutputDto> {
-    const response = new ReadUserOutputDto();
-    const session = this.db.driver.session();
-    await session
-      .run(
+  async readOne(id: string, token: string): Promise<User> {
+    const result = await this.db
+      .query()
+      .raw(
         `
         MATCH
           (user:User {active: true, id: $id}),
@@ -131,37 +178,57 @@ export class UserService {
           displayLastName.value as displayLastName
         `,
         {
-          id: input.id,
+          id,
+          token,
         },
       )
-      .then(result => {
-        response.user.id = result.records[0].get('id');
-        response.user.email = result.records[0].get('email');
-        response.user.realFirstName = result.records[0].get('realFirstName');
-        response.user.realLastName = result.records[0].get('realLastName');
-        response.user.displayFirstName = result.records[0].get(
-          'displayFirstName',
-        );
-        response.user.displayLastName = result.records[0].get(
-          'displayLastName',
-        );
-      })
-      .catch(error => {
-        console.log(error);
-      })
-      .then(() => session.close());
+      .first();
+    if (!result) {
+      throw new NotFoundException('Could not find user');
+    }
 
-    return response;
+    return {
+      id: result.id,
+      createdAt: DateTime.local(), // TODO
+      email: {
+        value: result.email,
+        canRead: true, // TODO
+        canEdit: true, // TODO
+      },
+      realFirstName: {
+        value: result.realFirstName,
+        canRead: true, // TODO
+        canEdit: true, // TODO
+      },
+      realLastName: {
+        value: result.realLastName,
+        canRead: true, // TODO
+        canEdit: true, // TODO
+      },
+      displayFirstName: result.displayFirstName,
+      displayLastName: result.displayFirstName,
+      phone: {
+        value: '', // TODO
+        canRead: true, // TODO
+        canEdit: true, // TODO
+      },
+      timezone: {
+        value: '', // TODO
+        canRead: true, // TODO
+        canEdit: true, // TODO
+      },
+      bio: {
+        value: '', // TODO
+        canRead: true, // TODO
+        canEdit: true, // TODO
+      },
+    };
   }
 
-  async update(
-    input: UpdateUserInput,
-    token: string,
-  ): Promise<UpdateUserOutputDto> {
-    const response = new UpdateUserOutputDto();
-    const session = this.db.driver.session();
-    await session
-      .run(
+  async update(input: UpdateUser, token: string): Promise<User> {
+    const result = await this.db
+      .query()
+      .raw(
         `
         MATCH
           (user:User {active: true, id: $id}),
@@ -186,45 +253,60 @@ export class UserService {
         `,
         {
           id: input.id,
-          email: input.email,
+          // email: input.email,
           realFirstName: input.realFirstName,
           realLastName: input.realLastName,
           displayFirstName: input.displayFirstName,
           displayLastName: input.displayLastName,
         },
       )
-      .then(result => {
-        if (result.records.length > 0) {
-          response.user.id = result.records[0].get('id');
-          response.user.email = result.records[0].get('email');
-          response.user.realFirstName = result.records[0].get('realFirstName');
-          response.user.realLastName = result.records[0].get('realLastName');
-          response.user.displayFirstName = result.records[0].get(
-            'displayFirstName',
-          );
-          response.user.displayLastName = result.records[0].get(
-            'displayLastName',
-          );
-        } else {
-          response.user = null;
-        }
-      })
-      .catch(error => {
-        console.log(error);
-      })
-      .then(() => session.close());
+      .first();
+    if (!result) {
+      throw new NotFoundException('Could not find user');
+    }
 
-    return response;
+    return {
+      id: result.id,
+      createdAt: DateTime.local(), // TODO
+      email: {
+        value: result.email,
+        canRead: true, // TODO
+        canEdit: true, // TODO
+      },
+      realFirstName: {
+        value: result.realFirstName,
+        canRead: true, // TODO
+        canEdit: true, // TODO
+      },
+      realLastName: {
+        value: result.realLastName,
+        canRead: true, // TODO
+        canEdit: true, // TODO
+      },
+      displayFirstName: result.displayFirstName,
+      displayLastName: result.displayFirstName,
+      phone: {
+        value: '', // TODO
+        canRead: true, // TODO
+        canEdit: true, // TODO
+      },
+      timezone: {
+        value: '', // TODO
+        canRead: true, // TODO
+        canEdit: true, // TODO
+      },
+      bio: {
+        value: '', // TODO
+        canRead: true, // TODO
+        canEdit: true, // TODO
+      },
+    };
   }
 
-  async delete(
-    input: DeleteUserInput,
-    token: string,
-  ): Promise<DeleteUserOutputDto> {
-    const response = new DeleteUserOutputDto();
-    const session = this.db.driver.session();
-    await session
-      .run(
+  async delete(id: string, token: string): Promise<void> {
+    await this.db
+      .query()
+      .raw(
         `
         MATCH
           (user:User {active: true, id: $id})
@@ -234,17 +316,9 @@ export class UserService {
           user.id as id
         `,
         {
-          id: input.id,
+          id,
         },
       )
-      .then(result => {
-        response.user.id = result.records[0].get('id');
-      })
-      .catch(error => {
-        console.log(error);
-      })
-      .then(() => session.close());
-
-    return response;
+      .run();
   }
 }

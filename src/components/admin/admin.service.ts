@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { AdminOutputDto } from './admin.dto';
 import { OrganizationService } from '../organization';
-import { UserService } from '../user/user.service';
-import { CreateUserInput } from '../user/user.dto';
+import { UserService } from '../user';
 import { generate } from 'shortid';
 import { DatabaseService } from 'src/core/database.service';
 
@@ -115,14 +114,17 @@ export class AdminService {
 
     // USERS
     for (let i = 0; i < totalUsers; i++) {
-      const user = new CreateUserInput();
       const s = 'user_' + generate();
-      user.displayFirstName = s;
-      user.displayLastName = s;
-      user.email = s;
-      user.realFirstName = s;
-      user.realLastName = s;
-      this.userService.create(user, 'token - replace me later');
+      await this.userService.create(
+        {
+          displayFirstName: s,
+          displayLastName: s,
+          email: s,
+          realFirstName: s,
+          realLastName: s,
+        },
+        'token - replace me later',
+      );
     }
 
     response.success = true;

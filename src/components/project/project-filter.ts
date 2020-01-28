@@ -4,7 +4,7 @@ import { Location } from '../location/location';
 import { Sensitivity } from './sensitivity';
 
 import { ProjectStatus } from './status';
-import { User } from '../user/user';
+import { User } from '../user';
 
 export interface ProjectFilter extends DateFilter {
   status?: ProjectStatus[];
