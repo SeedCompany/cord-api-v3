@@ -5,8 +5,7 @@ import {
   ObjectType,
   registerEnumType,
 } from 'type-graphql';
-
-import { Organization } from '../organization/organization';
+import { Organization } from '../organization';
 
 @ObjectType()
 @InputType('BudgetInput')
@@ -29,7 +28,6 @@ export interface Budget {
 @ObjectType()
 @InputType('BudgetDetailsInput')
 export class BudgetDetails {
-  @Field(type => Organization, { nullable: true })
   organization: Organization;
 
   @Field({ nullable: true })

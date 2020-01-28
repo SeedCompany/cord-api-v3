@@ -1,33 +1,26 @@
-import { Injectable } from '@nestjs/common';
-import { Organization } from './organization';
-import { DatabaseService } from '../../core/database.service';
-import { generate } from 'shortid';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import {
-  CreateOrganizationOutputDto,
-  ReadOrganizationOutputDto,
-  UpdateOrganizationOutputDto,
-  DeleteOrganizationOutputDto,
-  CreateOrganizationInput,
-  ReadOrganizationInput,
-  UpdateOrganizationInput,
-  DeleteOrganizationInput,
-  ListOrganizationsInput,
-  ListOrganizationsOutputDto,
-} from './organization.dto';
+  CreateOrganization,
+  Organization,
+  OrganizationListInput,
+  OrganizationListOutput,
+  UpdateOrganization,
+} from './dto';
+import { DatabaseService } from '../../core';
+import { generate } from 'shortid';
 
 @Injectable()
 export class OrganizationService {
   constructor(private readonly db: DatabaseService) {}
 
   async create(
-    input: CreateOrganizationInput,
+    { name }: CreateOrganization,
     token: string,
-  ): Promise<CreateOrganizationOutputDto> {
-    const response = new CreateOrganizationOutputDto();
-    const id = generate();
-    const session = this.db.driver.session();
-    const result = await session.run(
-      `
+  ): Promise<Organization> {
+    const result = await this.db
+      .query()
+      .raw(
+        `
         MATCH
           (token:Token {
             active: true,
@@ -53,36 +46,38 @@ export class OrganizationService {
           nameRel.createdAt = datetime()
         RETURN
           org.id as id,
-          name.value as name
-        `,
-      {
-        id,
-        token,
-        name: input.name,
-      },
-    );
+          org.createdAt as createdAt,
+          name.value as name,
+          user.canCreateOrg as canCreateOrg,
+          user.canReadOrgs as canReadOrgs
+      `,
+        {
+          token,
+          name,
+          id: generate(),
+        },
+      )
+      .first();
 
-    session.close();
-
-    if (result.records.length === 0) {
-      return response;
+    if (!result) {
+      throw new Error('Could not create organization');
     }
 
-    response.organization.id = result.records[0].get('id');
-    response.organization.name = result.records[0].get('name');
-
-    return response;
+    return {
+      id: result.id,
+      name: {
+        value: result.name,
+        canRead: result.canReadOrgs,
+        canEdit: result.canCreateOrg,
+      },
+      createdAt: result.createdAt,
+    };
   }
 
-  async readOne(
-    input: ReadOrganizationInput,
-    token: string,
-  ): Promise<ReadOrganizationOutputDto> {
-    const response = new ReadOrganizationOutputDto();
-    const session = this.db.driver.session();
-    
-    await session
-      .run(
+  async readOne(id: string, token: string): Promise<Organization> {
+    const result = await this.db
+      .query()
+      .raw(
         `
         MATCH
           (token:Token {active: true, value: $token})
@@ -98,33 +93,46 @@ export class OrganizationService {
           (name:OrgName {active: true})
         RETURN
           org.id as id,
-          name.value as name
+          org.createdAt as createdAt,
+          name.value as name,
+          user.canCreateOrg as canCreateOrg,
+          user.canReadOrgs as canReadOrgs
         `,
         {
-          id: input.id,
+          id,
           token,
         },
       )
-      .then(result => {
-        response.organization.id = result.records[0].get('id');
-        response.organization.name = result.records[0].get('name');
-      })
-      .catch(error => {
-        console.log(error);
-      })
-      .then(() => session.close());
+      .first();
 
-    return response;
+    if (!result) {
+      throw new NotFoundException('Could not find organization');
+    }
+
+    if (!result.canCreateOrg) {
+      throw new Error(
+        'User does not have permission to create an organization',
+      );
+    }
+
+    return {
+      id: result.id,
+      name: {
+        value: result.name,
+        canRead: result.canReadOrgs,
+        canEdit: result.canCreateOrg,
+      },
+      createdAt: result.createdAt,
+    };
   }
 
   async update(
-    input: UpdateOrganizationInput,
+    input: UpdateOrganization,
     token: string,
-  ): Promise<UpdateOrganizationOutputDto> {
-    const response = new UpdateOrganizationOutputDto();
-    const session = this.db.driver.session();
-    await session
-      .run(
+  ): Promise<Organization> {
+    const result = await this.db
+      .query()
+      .raw(
         `
         MATCH
           (token:Token {active: true, value: $token})
@@ -142,7 +150,10 @@ export class OrganizationService {
           name.value = $name
         RETURN
           org.id as id,
-          name.value as name
+          org.createdAt as createdAt,
+          name.value as name,
+          user.canCreateOrg as canCreateOrg,
+          user.canReadOrgs as canReadOrgs
         `,
         {
           id: input.id,
@@ -150,30 +161,27 @@ export class OrganizationService {
           token,
         },
       )
-      .then(result => {
-        if (result.records.length > 0) {
-          response.organization.id = result.records[0].get('id');
-          response.organization.name = result.records[0].get('name');
-        } else {
-          response.organization = null;
-        }
-      })
-      .catch(error => {
-        console.log(error);
-      })
-      .then(() => session.close());
+      .first();
 
-    return response;
+    if (!result) {
+      throw new NotFoundException('Could not find organization');
+    }
+
+    return {
+      id: result.id,
+      name: {
+        value: result.name,
+        canRead: result.canReadOrgs,
+        canEdit: result.canCreateOrg,
+      },
+      createdAt: result.createdAt,
+    };
   }
 
-  async delete(
-    input: DeleteOrganizationInput,
-    token: string,
-  ): Promise<DeleteOrganizationOutputDto> {
-    const response = new DeleteOrganizationOutputDto();
-    const session = this.db.driver.session();
-    await session
-      .run(
+  async delete(id: string, token: string): Promise<void> {
+    const result = await this.db
+      .query()
+      .raw(
         `
         MATCH
           (token:Token {active: true, value: $token})
@@ -191,31 +199,25 @@ export class OrganizationService {
           org.id as id
         `,
         {
-          id: input.id,
+          id,
           token,
         },
       )
-      .then(result => {
-        response.organization.id = result.records[0].get('id');
-      })
-      .catch(error => {
-        console.log(error);
-      })
-      .then(() => session.close());
+      .first();
 
-    return response;
+    if (!result) {
+      throw new NotFoundException('Could not find organization');
+    }
   }
 
-  async queryOrganizations(
-    query: ListOrganizationsInput,
+  async list(
+    { page, count, sort, order, name }: OrganizationListInput,
     token: string,
-  ): Promise<ListOrganizationsOutputDto> {
-    const response = new ListOrganizationsOutputDto();
-    const session = this.db.driver.session();
-    const skipIt = query.page * query.count;
-
-    const result = await session.run(
-      `
+  ): Promise<OrganizationListOutput> {
+    const result = await this.db
+      .query()
+      .raw(
+        `
       MATCH
         (token:Token {active: true, value: $token})
         <-[:token {active: true}]-
@@ -225,34 +227,53 @@ export class OrganizationService {
         (org:Organization {
           active: true
         })
-      WHERE
-        org.name CONTAINS $filter
+//      WHERE
+//        org.name CONTAINS $filter
+      WITH count(org) as orgs, user
+      MATCH
+        (org:Organization {
+          active: true
+        })
+        -[:name {active: true}]->
+        (name:OrgName {
+          active: true
+        })
       RETURN
         org.id as id,
-        org.name as name
-      ORDER BY ${query.sort} ${query.order}
+        org.createdAt as createdAt,
+        name.value as name,
+        user.canCreateOrg as canCreateOrg,
+        user.canReadOrgs as canReadOrgs,
+        orgs as total
+      ORDER BY org.${sort} ${order}
       SKIP $skip
       LIMIT $count
       `,
-      {
-        filter: query.filter,
-        skip: skipIt,
-        count: query.count,
-        sort: query.sort,
-        order: query.order,
-        token,
+        {
+          // filter: name, // TODO Handle no filter
+          skip: (page - 1) * count,
+          count,
+          token,
+        },
+      )
+      .run();
+
+    const items = result.map<Organization>(row => ({
+      id: row.id,
+      createdAt: row.createdAt,
+      name: {
+        value: row.name,
+        canRead: row.canReadOrgs,
+        canEdit: row.canCreateOrg,
       },
-    );
+    }));
 
-    session.close();
+    const hasMore = (((page - 1) * count) + count < result[0].total); // if skip + count is less than total there is more
 
-    response.organizations = result.records.map(record => {
-      const org = new Organization();
-      org.id = record.get('id');
-      org.name = record.get('name');
-      return org;
-    });
-
-    return response;
+    return {
+      items,
+      hasMore,
+      total: result[0].total,
+    };
   }
 }

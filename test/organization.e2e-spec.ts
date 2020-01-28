@@ -1,142 +1,118 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import * as request from 'supertest';
-import { INestApplication } from '@nestjs/common';
-import { AppModule } from '../src/app.module';
-import { Organization } from '../src/components/organization/organization';
-import { createOrg } from './test-utility';
+import { gql } from 'apollo-server-core';
+import { isValid } from 'shortid';
+import {
+  createOrganization,
+  createTestApp,
+  createToken,
+  createUser,
+  fragments,
+  TestApp,
+} from './utility';
+import { times } from 'lodash';
+import * as faker from 'faker';
 
 describe('Organization e2e', () => {
-  let app: INestApplication;
+  let app: TestApp;
 
   beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
+    app = await createTestApp();
+    await createToken(app);
+    await createUser(app);
+  });
+  afterEach(async () => {
+    await app.close();
   });
 
   // READ ORG
-  it('read one organization by id', async () => {
-    const org = await createOrg(app);
+  it('create & read organization by id', async () => {
+    const org = await createOrganization(app);
 
-    // test reading new org
-    return request(app.getHttpServer())
-      .post('/graphql')
-      .set('token', org.createdBy.token)
-      .send({
-        operationName: null,
-        query: `
-        query {
-          readOrganization ( input: { organization: { id: "${org.id}" } }){
-            organization{
-            id
-            name
-            }
+    const { organization: actual } = await app.graphql.query(
+      gql`
+        query org($id: ID!) {
+          organization(id: $id) {
+            ...org
           }
         }
-        `,
-      })
-      .expect(({ body }) => {
-        expect(body.data.readOrganization.organization.id).toBe(org.id);
-        expect(body.data.readOrganization.organization.name).toBe(org.name);
-      })
-      .expect(200);
+        ${fragments.org}
+      `,
+      {
+        id: org.id,
+      },
+    );
+
+    expect(actual.id).toBe(org.id);
+    expect(isValid(actual.id)).toBe(true);
+    expect(actual.name.value).toBe(org.name.value);
   });
 
   // UPDATE ORG
   it('update organization', async () => {
-    const org = await createOrg(app);
+    const org = await createOrganization(app);
+    const newName = faker.company.companyName();
 
-    return request(app.getHttpServer())
-      .post('/graphql')
-      .set('token', org.createdBy.token)
-      .send({
-        operationName: null,
-        query: `
-        mutation {
-          updateOrganization (input: { organization: {id: "${org.id}", name: "${org.name}" } }){
+    const result = await app.graphql.mutate(
+      gql`
+        mutation updateOrganization($input: UpdateOrganizationInput!) {
+          updateOrganization(input: $input) {
             organization {
-            id
-            name
+              ...org
             }
           }
         }
-        `,
-      })
-      .expect(({ body }) => {
-        expect(body.data.updateOrganization.organization.id).toBe(org.id);
-        expect(body.data.updateOrganization.organization.name).toBe(
-          org.name,
-        );
-      })
-      .expect(200);
+        ${fragments.org}
+      `,
+      {
+        input: {
+          organization: {
+            id: org.id,
+            name: newName,
+          },
+        },
+      },
+    );
+    const updated = result?.updateOrganization?.organization;
+    expect(updated).toBeTruthy();
+    expect(updated.id).toBe(org.id);
+    expect(updated.name.value).toBe(newName);
   });
 
   // DELETE ORG
   it('delete organization', async () => {
-    const org = await createOrg(app);
+    const org = await createOrganization(app);
 
-    return request(app.getHttpServer())
-      .post('/graphql')
-      .set('token', org.createdBy.token)
-      .send({
-        operationName: null,
-        query: `
-        mutation {
-          deleteOrganization (input: { organization: { id: "${org.id}" } }){
-            organization {
-            id
-            }
-          }
+    await app.graphql.mutate(
+      gql`
+        mutation deleteOrganization($id: ID!) {
+          deleteOrganization(id: $id)
         }
-        `,
-      })
-      .expect(({ body }) => {
-        expect(body.data.deleteOrganization.organization.id).toBe(org.id);
-      })
-      .expect(200);
+      `,
+      {
+        id: org.id,
+      },
+    );
   });
 
   // LIST ORGs
   it('list view of organizations', async () => {
     // create a bunch of orgs
-    const totalOrgs = 10;
-    const orgs: Organization[] = [];
-    for (let i = 0; i < totalOrgs; i++) {
-      const org = await createOrg(app);
-      orgs.push(org);
-    }
+    const orgs = await Promise.all(
+      times(10).map(() => createOrganization(app)),
+    );
 
-    // test reading new org
-    return request(app.getHttpServer())
-      .post('/graphql')
-      .set('token', orgs[0].createdBy.token)
-      .send({
-        operationName: null,
-        query: `
-        query {
-          organizations(
-            input: {
-              query: { filter: "", page: 0, count: ${totalOrgs}, sort: "name", order: "asc" }
-            }
-          ) {
-            organizations {
-              id
-              name
-            }
+    const { organizations } = await app.graphql.query(gql`
+      query {
+        organizations {
+          items {
+            ...org
           }
+          hasMore
+          total
         }
-          `,
-      })
-      .expect(({ body }) => {
-        expect(body.data.organizations.organizations.length).toBe(totalOrgs);
-      })
-      .expect(200);
-  });
+      }
+      ${fragments.org}
+    `);
 
-  afterAll(async () => {
-    await app.close();
+    expect(organizations.items).toHaveLength(orgs.length);
   });
 });

@@ -4,7 +4,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 
 import { AppModule } from '../src/app.module';
 import { INestApplication } from '@nestjs/common';
-import { createUser } from './test-utility';
+import { createUser } from './utility/test-utility';
 
 describe('User e2e', () => {
   let app: INestApplication;

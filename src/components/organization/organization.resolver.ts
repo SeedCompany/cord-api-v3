@@ -1,78 +1,75 @@
+import { Resolver, Args, Query, Mutation } from '@nestjs/graphql';
+import { IdArg, Token } from '../../common';
 import {
-  Resolver,
-  Args,
-  Query,
-  Mutation,
-} from '@nestjs/graphql';
-import { Token } from '../../common';
-import { Organization } from './organization';
+  CreateOrganizationInput,
+  CreateOrganizationOutput,
+  Organization,
+  OrganizationListInput,
+  OrganizationListOutput,
+  UpdateOrganizationInput,
+  UpdateOrganizationOutput,
+} from './dto';
 import { OrganizationService } from './organization.service';
-import {
-  CreateOrganizationInputDto,
-  CreateOrganizationOutputDto,
-  ReadOrganizationInputDto,
-  ReadOrganizationOutputDto,
-  UpdateOrganizationInputDto,
-  UpdateOrganizationOutputDto,
-  DeleteOrganizationInputDto,
-  DeleteOrganizationOutputDto,
-  ListOrganizationsOutputDto,
-  ListOrganizationsInputDto,
-} from './organization.dto';
 
-@Resolver(of => Organization)
+@Resolver(Organization.name)
 export class OrganizationResolver {
-  constructor(private readonly orgService: OrganizationService) {}
+  constructor(private readonly orgs: OrganizationService) {}
 
-  @Mutation(returns => CreateOrganizationOutputDto, {
+  @Mutation(() => CreateOrganizationOutput, {
     description: 'Create an organization',
   })
   async createOrganization(
     @Token() token: string,
-    @Args('input') { organization: input }: CreateOrganizationInputDto,
-  ): Promise<CreateOrganizationOutputDto> {
-    return await this.orgService.create(input, token);
+    @Args('input') { organization: input }: CreateOrganizationInput,
+  ): Promise<CreateOrganizationOutput> {
+    const organization = await this.orgs.create(input, token);
+    return { organization };
   }
 
-  @Query(returns => ReadOrganizationOutputDto, {
-    description: 'Read one organization by id',
+  @Query(() => Organization, {
+    description: 'Look up an organization by its ID',
   })
-  async readOrganization(
+  async organization(
     @Token() token: string,
-    @Args('input') { organization: input }: ReadOrganizationInputDto,
-  ): Promise<ReadOrganizationOutputDto> {
-    return await this.orgService.readOne(input, token);
+    @IdArg() id: string,
+  ): Promise<Organization> {
+    return this.orgs.readOne(id, token);
   }
 
-  @Query(returns => ListOrganizationsOutputDto, {
-    description: 'Query orgainzations',
+  @Query(() => OrganizationListOutput, {
+    description: 'Look up organizations',
   })
   async organizations(
     @Token() token: string,
-    @Args('input') { query: input }: ListOrganizationsInputDto,
-  ): Promise<ListOrganizationsOutputDto> {
-    return await this.orgService.queryOrganizations(input, token);
+    @Args({
+      name: 'input',
+      type: () => OrganizationListInput,
+      defaultValue: OrganizationListInput.defaultVal,
+    })
+    input: OrganizationListInput,
+  ): Promise<OrganizationListOutput> {
+    return this.orgs.list(input, token);
   }
 
-  @Mutation(returns => UpdateOrganizationOutputDto, {
+  @Mutation(() => UpdateOrganizationOutput, {
     description: 'Update an organization',
   })
   async updateOrganization(
     @Token() token: string,
-    @Args('input')
-    { organization: input }: UpdateOrganizationInputDto,
-  ): Promise<UpdateOrganizationOutputDto> {
-    return await this.orgService.update(input, token);
+    @Args('input') { organization: input }: UpdateOrganizationInput,
+  ): Promise<UpdateOrganizationOutput> {
+    const organization = await this.orgs.update(input, token);
+    return { organization };
   }
 
-  @Mutation(returns => DeleteOrganizationOutputDto, {
+  @Mutation(() => Boolean, {
     description: 'Delete an organization',
   })
   async deleteOrganization(
     @Token() token: string,
-    @Args('input')
-    { organization: input }: DeleteOrganizationInputDto,
-  ): Promise<DeleteOrganizationOutputDto> {
-    return await this.orgService.delete(input, token);
+    @IdArg() id: string,
+  ): Promise<boolean> {
+    await this.orgs.delete(id, token);
+    return true;
   }
 }

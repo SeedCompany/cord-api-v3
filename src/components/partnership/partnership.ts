@@ -1,7 +1,7 @@
 import { Field, InputType, ObjectType } from 'type-graphql';
 import { DateTime } from 'luxon';
 import { DateField } from '../../common';
-import { Organization } from '../organization/organization';
+import { Organization } from '../organization';
 import { PartnershipAgreementStatus } from './agreement-status';
 import { PartnershipType } from './partnership-type';
 
@@ -20,7 +20,6 @@ export class Partnership {
   @DateField({ nullable: true })
   mouEnd: DateTime | null;
 
-  @Field(type => Organization, { nullable: true })
   organization: Organization;
 
   @Field(type => [PartnershipType], { nullable: true })

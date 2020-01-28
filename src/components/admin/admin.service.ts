@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { AdminOutputDto } from './admin.dto';
-import { OrganizationService } from '../organization/organization.service';
+import { OrganizationService } from '../organization';
 import { UserService } from '../user/user.service';
 import { CreateUserInput } from '../user/user.dto';
-import { CreateOrganizationInput } from '../organization/organization.dto';
 import { generate } from 'shortid';
 import { DatabaseService } from 'src/core/database.service';
 
@@ -109,9 +108,9 @@ export class AdminService {
 
     // ORGS
     for (let i = 0; i < totalOrgs; i++) {
-      const org = new CreateOrganizationInput();
-      org.name = 'org_' + generate();
-      // this.orgService.create(org );
+      // this.orgService.create({
+      //   name: 'org_' + generate(),
+      // });
     }
 
     // USERS
