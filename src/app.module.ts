@@ -12,8 +12,6 @@ import { AuthResolver } from './components/auth/auth.resolver';
 import { AuthService } from './components/auth/auth.service';
 import { BudgetResolver } from './components/budget/budget.resolver';
 import { BudgetService } from './components/budget/budget.service';
-import { AwsS3Factory } from './core/aws-s3.factory';
-import { AwsS3Service } from './core/aws-s3.service';
 import { InternshipResolver } from './components/internship/internship.resolver';
 import { InternshipService } from './components/internship/internship.service';
 import { InternshipEngagementResolver } from './components/internship-engagement/internship-engagement.resolver';
@@ -61,8 +59,6 @@ const context: ContextFunction<{ req: Request; res: Response }, GqlContextType> 
     AreaService,
     AuthResolver,
     AuthService,
-    AwsS3Service,
-    AwsS3Factory,
     BudgetResolver,
     BudgetService,
     DateTimeScalar,
