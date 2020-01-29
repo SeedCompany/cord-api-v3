@@ -31,13 +31,5 @@ export class ConfigService {
     };
   }
 
-  @Lazy() get aws() {
-    return {
-      accessKeyId: this.env.string('AWS_ACCESS_KEY_ID').required(),
-      secretAccessKey: this.env.string('AWS_SECRET_ACCESS_KEY').required(),
-      region: this.env.string('AWS_DEFAULT_REGION').optional('us-east-2'),
-    };
-  }
-
   constructor(private readonly env: EnvironmentService) {}
 }
