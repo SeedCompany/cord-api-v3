@@ -41,6 +41,7 @@
     "dotenv-expand": "^5.1.0",
     "graphql": "^14.5.8",
     "graphql-tools": "^4.0.6",
+    "js-yaml": "^3.13.1",
     "lazy-get-decorator": "^2.2.0",
     "lodash": "^4.17.15",
     "luxon": "^1.21.3",
@@ -51,7 +52,8 @@
     "rimraf": "^3.0.0",
     "rxjs": "^6.5.3",
     "shortid": "^2.2.15",
-    "type-graphql": "^0.17.6"
+    "type-graphql": "^0.17.6",
+    "winston": "^3.2.1"
   },
   "devDependencies": {
     "@nestjs/cli": "^6.9.0",
@@ -60,9 +62,11 @@
     "@types/express": "^4.17.1",
     "@types/faker": "^4.1.9",
     "@types/jest": "^24.0.18",
+    "@types/js-yaml": "^3.12.2",
     "@types/lodash": "^4.14.149",
     "@types/node": "^12.7.5",
     "@types/passport-local": "^1.0.33",
+    "@types/stack-trace": "^0.0.29",
     "@types/supertest": "^2.0.8",
     "apollo-server-testing": "^2.9.16",
     "faker": "^4.1.0",

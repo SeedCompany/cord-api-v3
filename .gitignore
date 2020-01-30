@@ -7,6 +7,7 @@ package-lock.json
 # local configuration
 .env.local
 .env.*.local
+logging.yml
 
 # Logs
 logs

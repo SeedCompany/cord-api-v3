@@ -32,7 +32,7 @@ import { ProjectService } from './components/project/project.service';
 import { RegionResolver } from './components/region/region.resolver';
 import { RegionService } from './components/region/region.service';
 import { UserModule } from './components/user';
-import { CoreModule } from './core';
+import { CoreModule, LoggerModule } from './core';
 
 const context: ContextFunction<{ req: Request; res: Response }, GqlContextType> = ({
   req,
@@ -43,6 +43,7 @@ const context: ContextFunction<{ req: Request; res: Response }, GqlContextType> 
 
 @Module({
   imports: [
+    LoggerModule.forRoot(),
     CoreModule,
     GraphQLModule.forRoot({
       autoSchemaFile: 'schema.gql',

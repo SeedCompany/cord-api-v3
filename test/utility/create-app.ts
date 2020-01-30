@@ -1,7 +1,9 @@
-import { INestApplication, Logger } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import { GRAPHQL_MODULE_OPTIONS } from '@nestjs/graphql/dist/graphql.constants';
 import { Test } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
+import { LogLevel } from '../../src/core/logger';
+import { LevelMatcher } from '../../src/core/logger/level-matcher';
 import {
   createGraphqlClient,
   getGraphQLOptions,
@@ -13,13 +15,13 @@ export interface TestApp extends INestApplication {
 }
 
 export const createTestApp = async () => {
-  Logger.overrideLogger(['error', 'warn']);
-
   const moduleFixture = await Test.createTestingModule({
     imports: [AppModule],
   })
     .overrideProvider(GRAPHQL_MODULE_OPTIONS)
     .useValue(getGraphQLOptions())
+    .overrideProvider(LevelMatcher)
+    .useValue(new LevelMatcher({}, LogLevel.ERROR))
     .compile();
 
   const app: TestApp = moduleFixture.createNestApplication();

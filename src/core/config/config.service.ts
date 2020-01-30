@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { LazyGetter as Lazy } from 'lazy-get-decorator';
 import { Config as Neo4JDriverConfig } from 'neo4j-driver/types/v1';
+import { LogLevel } from '../logger';
 import { EnvironmentService } from './environment.service';
 
 /**
@@ -30,6 +31,19 @@ export class ConfigService {
       bucket: this.env.string('FILES_S3_BUCKET').required(),
     };
   }
+
+  /**
+   * Default configuration for logging.
+   * These can be overridden with logging.yml file at project root
+   * This needs to be static to prevent circular dependency.
+   */
+  static logging = {
+    defaultLevel: LogLevel.INFO,
+    levels: {
+      'nest,nest:*': LogLevel.DEBUG,
+      'config:environment': LogLevel.INFO,
+    },
+  };
 
   constructor(private readonly env: EnvironmentService) {}
 }

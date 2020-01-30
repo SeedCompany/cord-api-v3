@@ -1,10 +1,10 @@
-import { Injectable, Logger, Optional } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 import { parse as parseEnv } from 'dotenv';
 import * as dotEnvExpand from 'dotenv-expand';
 import * as fs from 'fs';
-import { isString, mapKeys, mapValues, pickBy } from 'lodash';
+import { isString, mapKeys, pickBy } from 'lodash';
 import { join } from 'path';
-import { inspect } from 'util';
+import { Logger, ILogger } from '../logger';
 
 /**
  * Handle reading values from environment and env files.
@@ -14,9 +14,9 @@ import { inspect } from 'util';
 @Injectable()
 export class EnvironmentService {
   private readonly env: Record<string, string>;
-  private readonly logger = new Logger(EnvironmentService.name);
 
   constructor(
+    @Logger('config:environment') private readonly logger: ILogger,
     @Optional() rootPath = process.cwd(),
     @Optional() env = process.env.NODE_ENV,
   ) {
@@ -41,10 +41,10 @@ export class EnvironmentService {
 
     for (const file of files) {
       if (!fs.existsSync(file)) {
-        this.logger.verbose(`Skipping file ${file}`);
+        this.logger.debug(`Skipping file`, { file });
         continue;
       }
-      this.logger.debug(`Loading file ${file}`);
+      this.logger.info(`Loading file`, { file });
 
       const parsed = parseEnv(fs.readFileSync(file));
 
@@ -64,12 +64,7 @@ export class EnvironmentService {
     // Convert all keys to uppercase
     this.env = mapKeys(this.env, (_, key) => key.toUpperCase());
 
-    const safeEnv = mapValues(this.env, (val: string, key) =>
-      /(password|token|key)/i.exec(key)
-        ? `${'*'.repeat(val.slice(0, -3).length) + val.slice(-3)}`
-        : val,
-    );
-    // this.logger.verbose(`Loaded environment ${inspect(safeEnv)}`);
+    this.logger.debug(`Loaded environment`, this.env);
   }
 
   string(key: string) {

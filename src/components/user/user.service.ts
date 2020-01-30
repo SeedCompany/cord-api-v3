@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Connection } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
+import { ILogger, Logger } from '../../core/logger';
 import {
   OrganizationListInput,
   SecuredOrganizationList,
@@ -20,9 +21,11 @@ export class UserService {
   constructor(
     private readonly organizations: OrganizationService,
     private readonly db: Connection,
+    @Logger('user:service') private readonly logger: ILogger,
   ) {}
 
   async list(input: UserListInput, token: string): Promise<UserListOutput> {
+    this.logger.info('Listing users', { input, token });
     throw new Error('Method not implemented.');
   }
 

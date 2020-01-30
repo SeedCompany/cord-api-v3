@@ -1,0 +1,18 @@
+# This allows you to have a custom log mapping for your machine.
+# The levels here match the string values of the LogLevel enum.
+# Note that any changes to this file will require a manually restart of the server to apply them.
+# See docs in LevelMatcher for details.
+
+levels:
+  # Only show errors for nest related loggers
+  # Note that we hook into the logger after bootstrap so this won't
+  # suppress those bootstrapping log messages
+  nest, nest:*: errors
+  # Show info logs up for config logger, but not for the environment service keep that at warning.
+  config, -config:environment: info
+  # Say you are dev-ing on project service right now so you could show everything there
+  project:resolver, project:service: debug
+
+# Optionally change the default level which is used for all loggers that
+# do not match in any of the levels mapping.
+defaultLevel: warning
