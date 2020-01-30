@@ -19,6 +19,8 @@ export abstract class OrganizationFilters {
   readonly userIds?: string[];
 }
 
+const defaultFilters = {};
+
 @InputType()
 export class OrganizationListInput extends SortablePaginationInput<keyof Organization>({
   defaultSort: 'name',
@@ -28,7 +30,7 @@ export class OrganizationListInput extends SortablePaginationInput<keyof Organiz
   @Field({ nullable: true })
   @Type(() => OrganizationFilters)
   @ValidateNested()
-  readonly filter: OrganizationFilters = {};
+  readonly filter: OrganizationFilters = defaultFilters;
 }
 
 @ObjectType()
