@@ -17,10 +17,10 @@ export class User extends Resource {
   readonly realLastName: SecuredString;
 
   @Field()
-  readonly displayFirstName: string;
+  readonly displayFirstName: SecuredString;
 
   @Field()
-  readonly displayLastName: string;
+  readonly displayLastName: SecuredString;
 
   @Field()
   readonly phone: SecuredString;

@@ -20,8 +20,16 @@ export const fragments = {
         canEdit
         canRead
       }
-      displayFirstName
-      displayLastName
+      displayFirstName {
+        value
+        canEdit
+        canRead
+      }
+      displayLastName {
+        value
+        canEdit
+        canRead
+      }
       realFirstName {
         value
         canEdit
