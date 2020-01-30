@@ -1,11 +1,8 @@
 import * as request from 'supertest';
-
-import { Test, TestingModule } from '@nestjs/testing';
 import { generate, isValid } from 'shortid';
-
-import { AppModule } from '../src/app.module';
 import { INestApplication } from '@nestjs/common';
-import { Language } from 'src/components/language/language';
+import { Language } from '../src/components/language/language';
+import { createTestApp, TestApp } from './utility';
 
 export async function createLanguage(
   app: INestApplication,
@@ -34,15 +31,10 @@ export async function createLanguage(
 }
 
 describe('Language e2 e', () => {
-  let app: INestApplication;
+  let app: TestApp;
 
   beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
+    app = await createTestApp();
   });
 
   it('create language', () => {

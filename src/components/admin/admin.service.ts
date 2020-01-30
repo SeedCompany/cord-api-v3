@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
+import { DatabaseService } from '../../core';
 import { AdminOutputDto } from './admin.dto';
 import { OrganizationService } from '../organization';
 import { UserService } from '../user';
 import { generate } from 'shortid';
-import { DatabaseService } from 'src/core/database.service';
 
 @Injectable()
 export class AdminService {

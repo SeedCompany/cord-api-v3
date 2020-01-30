@@ -1,30 +1,21 @@
 import * as request from 'supertest';
-
-import { Test, TestingModule } from '@nestjs/testing';
-
-import { AppModule } from '../src/app.module';
-import { INestApplication } from '@nestjs/common';
-import { createUser } from './utility/test-utility';
+import { createTestApp, createToken, createUser, TestApp } from './utility';
 
 describe('User e2e', () => {
-  let app: INestApplication;
+  let app: TestApp;
 
   beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
+    app = await createTestApp();
   });
 
   it('read one user by id', async () => {
     // create user first
+    const token = await createToken(app);
     const user = await createUser(app);
 
     return request(app.getHttpServer())
       .post('/graphql')
-      .set('token', user.token)
+      .set('token', token)
       .send({
         operationName: null,
         query: `
@@ -44,19 +35,19 @@ describe('User e2e', () => {
       })
       .expect(({ body }) => {
         expect(body.data.readUser.user.id).toBe(user.id);
-        expect(body.data.readUser.user.email).toBe(user.email);
+        expect(body.data.readUser.user.email.value).toBe(user.email);
       })
       .expect(200);
   });
 
   it('update user', async () => {
     const newEmail = 'newUser@test.com' + Date.now();
-
+    const token = await createToken(app);
     const user = await createUser(app);
 
-    return await request(app.getHttpServer())
+    await request(app.getHttpServer())
       .post('/graphql')
-      .set('token', user.token)
+      .set('token', token)
       .send({
         operationName: null,
         query: `
@@ -87,17 +78,18 @@ describe('User e2e', () => {
       })
       .expect(({ body }) => {
         expect(body.data.updateUser.user.id).toBe(user.id);
-        expect(body.data.updateUser.user.email).toBe(newEmail);
+        expect(body.data.updateUser.user.email.value).toBe(newEmail);
       })
       .expect(200);
   });
 
   it('delete user', async () => {
+    const token = await createToken(app);
     const user = await createUser(app);
 
     return request(app.getHttpServer())
       .post('/graphql')
-      .set('token', user.token)
+      .set('token', token)
       .send({
         operationName: null,
         query: `

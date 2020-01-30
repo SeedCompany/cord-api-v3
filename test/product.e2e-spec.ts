@@ -1,10 +1,7 @@
-import * as request from 'supertest';
-
-import { Test, TestingModule } from '@nestjs/testing';
-
-import { AppModule } from '../src/app.module';
 import { INestApplication } from '@nestjs/common';
-import { Product } from 'src/components/product/product';
+import * as request from 'supertest';
+import { Product } from '../src/components/product/product';
+import { createTestApp, TestApp } from './utility';
 
 async function createProduct(app: INestApplication): Promise<Product> {
   let productId;
@@ -30,15 +27,10 @@ async function createProduct(app: INestApplication): Promise<Product> {
 }
 
 describe('Product e2e', () => {
-  let app: INestApplication;
+  let app: TestApp;
 
   beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
+    app = await createTestApp();
   });
 
   it('read one product by id', async () => {

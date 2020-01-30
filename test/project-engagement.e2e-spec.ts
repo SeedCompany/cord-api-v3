@@ -1,12 +1,9 @@
 import * as request from 'supertest';
-
-import { INestApplication, Logger } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
+import { INestApplication } from '@nestjs/common';
 import { generate, isValid } from 'shortid';
-
-import { AppModule } from '../src/app.module';
 import { DateTime } from 'luxon';
 import { createLanguage } from './language.e2e-spec';
+import { createTestApp, TestApp } from './utility';
 
 async function createProjectEngagement(
   app: INestApplication,
@@ -38,16 +35,10 @@ async function createProjectEngagement(
 }
 
 describe('ProjectEngagement e2e', () => {
-  let app: INestApplication;
+  let app: TestApp;
 
   beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
-    Logger.overrideLogger(['error']);
+    app = await createTestApp();
   });
 
   it('create projectEngagement', async () => {

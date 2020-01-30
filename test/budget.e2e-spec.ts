@@ -1,10 +1,7 @@
-import * as request from 'supertest';
-
-import { Test, TestingModule } from '@nestjs/testing';
-import { generate, isValid } from 'shortid';
-
-import { AppModule } from '../src/app.module';
 import { INestApplication } from '@nestjs/common';
+import * as request from 'supertest';
+import { generate, isValid } from 'shortid';
+import { createTestApp, TestApp } from './utility';
 
 async function createBudget(
   app: INestApplication,
@@ -32,15 +29,10 @@ async function createBudget(
 }
 
 describe('Budget e2e', () => {
-  let app: INestApplication;
+  let app: TestApp;
 
   beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
+    app = await createTestApp();
   });
 
   it('create budget', async () => {

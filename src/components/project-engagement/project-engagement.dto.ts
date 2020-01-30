@@ -1,7 +1,6 @@
-import { Field, InputType, ObjectType } from 'type-graphql';
-
-import { DateField } from 'src/common/luxon.graphql';
 import { DateTime } from 'luxon';
+import { Field, InputType, ObjectType } from 'type-graphql';
+import { DateField } from '../../common';
 import { ProjectEngagement } from './engagement';
 
 // CREATE

@@ -1,23 +1,14 @@
 import * as request from 'supertest';
-
-import { Test, TestingModule } from '@nestjs/testing';
-
-import { AppModule } from '../src/app.module';
-import { CreateAreaInput } from '../src/components/area/area.dto';
-import { INestApplication } from '@nestjs/common';
 import { generate } from 'shortid';
 import { isValid } from 'shortid';
+import { CreateAreaInput } from '../src/components/area/area.dto';
+import { createTestApp, TestApp } from './utility';
 
 describe('Area e2e', () => {
-  let app: INestApplication;
+  let app: TestApp;
 
   beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
+    app = await createTestApp();
   });
 
   it('create Area', async () => {

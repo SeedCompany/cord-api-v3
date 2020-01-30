@@ -1,13 +1,11 @@
-import * as request from 'supertest';
-
-import { Test, TestingModule } from '@nestjs/testing';
-import { generate, isValid } from 'shortid';
-
-import { AppModule } from '../src/app.module';
-import { CreatePartnershipInput } from '../src/components/partnership/partnership.dto';
 import { INestApplication } from '@nestjs/common';
-import { Partnership } from 'src/components/partnership/partnership';
-import { PartnershipAgreementStatus } from 'src/components/partnership/agreement-status';
+import { DateTime } from 'luxon';
+import { generate, isValid } from 'shortid';
+import * as request from 'supertest';
+import { PartnershipAgreementStatus } from '../src/components/partnership/agreement-status';
+import { Partnership } from '../src/components/partnership/partnership';
+import { CreatePartnershipInput } from '../src/components/partnership/partnership.dto';
+import { createTestApp, TestApp } from './utility';
 
 async function createPartnership(app: INestApplication): Promise<string> {
   let partnershipId = '';
@@ -53,15 +51,10 @@ async function createPartnership(app: INestApplication): Promise<string> {
 }
 
 describe('Partnership e2e', () => {
-  let app: INestApplication;
+  let app: TestApp;
 
   beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
+    app = await createTestApp();
   });
 
   // CREATE PARTNERSHIP
@@ -101,12 +94,12 @@ describe('Partnership e2e', () => {
     const orgName = 'partnershipName_' + generate();
     newPartnership.organization = {
       id: generate(),
-      name: orgName,
-      owningOrg: null,
-      modifiedByUser: null,
-      createdOn: null,
-      deletedOn: null,
-      createdBy: null,
+      name: {
+        value: orgName,
+        canRead: true,
+        canEdit: true,
+      },
+      createdAt: DateTime.local(),
     };
     const partnershipId = await createPartnership(app);
 
@@ -168,12 +161,12 @@ describe('Partnership e2e', () => {
     const orgName = 'partnershipName_' + generate();
     newPartnership.organization = {
       id: generate(),
-      name: orgName,
-      owningOrg: null,
-      modifiedByUser: null,
-      createdOn: null,
-      deletedOn: null,
-      createdBy: null,
+      name: {
+        value: orgName,
+        canRead: true,
+        canEdit: true,
+      },
+      createdAt: DateTime.local(),
     };
     const partnershipId = await createPartnership(app);
 
@@ -208,12 +201,12 @@ describe('Partnership e2e', () => {
       const orgName = 'partnershipName_' + generate();
       newPartnership.organization = {
         id: generate(),
-        name: orgName,
-        owningOrg: null,
-        modifiedByUser: null,
-        createdOn: null,
-        deletedOn: null,
-        createdBy: null,
+        name: {
+          value: orgName,
+          canRead: true,
+          canEdit: true,
+        },
+        createdAt: DateTime.local(),
       };
       partnerships.push(newPartnership);
     }

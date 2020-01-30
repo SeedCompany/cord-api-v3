@@ -1,6 +1,6 @@
 import { ObjectType, Field, ID } from 'type-graphql';
-import { User } from 'src/components/user';
 import { Organization } from '../components/organization';
+import { User } from '../components/user';
 
 @ObjectType()
 export class BaseNode {

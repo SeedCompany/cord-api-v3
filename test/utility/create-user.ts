@@ -1,16 +1,15 @@
 import { gql } from 'apollo-server-core';
-import { User } from 'src/components/user/user';
 import { isValid } from 'shortid';
-import { CreateUserInput } from '../../src/components/user/user.dto';
+import { CreateUser, User } from '../../src/components/user';
 import { TestApp } from './create-app';
 import * as faker from 'faker';
 import { fragments } from './fragments';
 
 export async function createUser(
   app: TestApp,
-  input: Partial<CreateUserInput> = {},
+  input: Partial<CreateUser> = {},
 ) {
-  const user: CreateUserInput = {
+  const user: CreateUser = {
     email: faker.internet.email(),
     realFirstName: faker.name.firstName(),
     realLastName: faker.name.lastName(),
@@ -22,7 +21,7 @@ export async function createUser(
 
   const result = await app.graphql.mutate(
     gql`
-      mutation createUser($input: CreateUserInputDto!) {
+      mutation createUser($input: CreateUserInput!) {
         createUser(input: $input) {
           user {
             ...user
@@ -42,7 +41,7 @@ export async function createUser(
   expect(actual).toBeTruthy();
 
   expect(isValid(actual.id)).toBe(true);
-  expect(actual.email).toBe(user.email);
+  expect(actual.email.value).toBe(user.email);
 
   return actual;
 }

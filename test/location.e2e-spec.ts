@@ -1,11 +1,8 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import * as request from 'supertest';
 import { INestApplication } from '@nestjs/common';
-import { AppModule } from '../src/app.module';
 import { isValid } from 'shortid';
-import { generate } from 'shortid';
-import { serialize } from 'v8';
-import { Location } from 'src/components/location/location';
+import { Location } from '../src/components/location';
+import { createTestApp, TestApp } from './utility';
 
 async function createLocation(app: INestApplication): Promise<Location> {
   const location = new Location();
@@ -40,15 +37,10 @@ async function createLocation(app: INestApplication): Promise<Location> {
 }
 
 describe('Location e2e', () => {
-  let app: INestApplication;
+  let app: TestApp;
 
   beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
+    app = await createTestApp();
   });
 
   it('read one location by id', async () => {

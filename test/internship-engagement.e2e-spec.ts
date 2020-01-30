@@ -1,15 +1,10 @@
-import * as request from 'supertest';
-
-import { Test, TestingModule } from '@nestjs/testing';
-import { generate, isValid } from 'shortid';
-
-import { AppModule } from '../src/app.module';
-import { INestApplication } from '@nestjs/common';
-import { createUser } from './test-utility';
 import { DateTime } from 'luxon';
+import { isValid } from 'shortid';
+import * as request from 'supertest';
+import { createTestApp, createUser, TestApp } from './utility';
 
 async function createInternshipEngagement(
-  app: INestApplication,
+  app: TestApp,
 ): Promise<string> {
   let internshipEngagementId = '';
   // create a test user to link
@@ -51,15 +46,10 @@ async function createInternshipEngagement(
 }
 
 describe('InternshipEngagement e2e', () => {
-  let app: INestApplication;
+  let app: TestApp;
 
   beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
+    app = await createTestApp();
   });
 
   it('create internshipEngagement', async () => {

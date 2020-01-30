@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DatabaseService } from 'src/core/database.service';
+import { DatabaseService } from '../../core';
 import { CreateTokenOutputDto, LoginUserOutputDto } from './auth.dto';
 import { generate } from 'shortid';
 

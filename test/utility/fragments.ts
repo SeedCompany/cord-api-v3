@@ -13,13 +13,25 @@ export const fragments = {
     }
   `,
   user: gql`
-    fragment user on CreateUserOutput {
+    fragment user on User {
       id
-      email
+      email {
+        value
+        canEdit
+        canRead
+      }
       displayFirstName
       displayLastName
-      realFirstName
-      realLastName
+      realFirstName {
+        value
+        canEdit
+        canRead
+      }
+      realLastName {
+        value
+        canEdit
+        canRead
+      }
     }
   `,
 };
