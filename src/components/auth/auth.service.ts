@@ -46,10 +46,7 @@ export class AuthService {
   }
 
   // LOG IN
-  async login(
-    password: string,
-    token: string,
-  ): Promise<LoginUserOutputDto> {
+  async login(password: string, token: string): Promise<LoginUserOutputDto> {
     const response = new LoginUserOutputDto();
     const session = this.db.driver.session();
 
