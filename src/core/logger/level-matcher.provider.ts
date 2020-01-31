@@ -8,7 +8,7 @@ export const LevelMatcherProvider: Provider<Promise<LevelMatcher>> = {
   provide: LevelMatcher,
   useFactory: async () => {
     let rawYaml = '';
-    const path = await fs.realpath('logging.yml');
+    const path = 'logging.yml';
     try {
       rawYaml = await fs.readFile(path, { encoding: 'utf8' });
     } catch (e) {
