@@ -33,7 +33,11 @@ export class AuthService {
           createdAt: datetime(),
           value: $token
         })
+<<<<<<< HEAD
       RETURN
+=======
+      RETURN 
+>>>>>>> got create user refactored. added argon2. refactored auth and tokens.
         token.value as token
       `,
       {
