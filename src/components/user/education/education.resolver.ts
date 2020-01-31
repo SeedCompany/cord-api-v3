@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Args, Mutation } from '@nestjs/graphql';
-import { IdArg, Token } from '../../../common';
+import { IdArg, RequestUser } from '../../../common';
 import {
   CreateEducationInput,
   CreateEducationOutput,
@@ -17,7 +17,7 @@ export class EducationResolver {
     description: 'Create an education entry',
   })
   async createEducation(
-    @Token() token: string,
+    @RequestUser() token: string,
     @Args('input') { education: input }: CreateEducationInput,
   ): Promise<CreateEducationOutput> {
     const education = await this.service.create(input, token);
@@ -28,7 +28,7 @@ export class EducationResolver {
     description: 'Update an education entry',
   })
   async updateEducation(
-    @Token() token: string,
+    @RequestUser() token: string,
     @Args('input') { education: input }: UpdateEducationInput,
   ): Promise<UpdateEducationOutput> {
     const education = await this.service.update(input, token);
@@ -39,7 +39,7 @@ export class EducationResolver {
     description: 'Delete an education entry',
   })
   async deleteEducation(
-    @Token() token: string,
+    @RequestUser() token: string,
     @IdArg() id: string,
   ): Promise<boolean> {
     await this.service.delete(id, token);

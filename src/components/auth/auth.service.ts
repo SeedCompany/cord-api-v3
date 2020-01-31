@@ -1,16 +1,30 @@
 import { Injectable } from '@nestjs/common';
-import { DatabaseService } from '../../core';
+import { DatabaseService, ConfigService, ILogger, Logger } from '../../core';
 import { CreateTokenOutputDto, LoginUserOutputDto } from './auth.dto';
 import { generate } from 'shortid';
+import { decode, JsonWebTokenError, verify, sign } from 'jsonwebtoken';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(
+    private readonly db: DatabaseService,
+    private readonly config: ConfigService,
+    @Logger('auth:service') private readonly logger: ILogger,
+  ) {}
 
   // CREATE TOKEN
   async createToken(): Promise<CreateTokenOutputDto> {
     const response = new CreateTokenOutputDto();
-    const token = 'token_' + generate();
+
+    const token = sign(
+      {
+        iat: Date.now(),
+        owningOrdId: null,
+        userId: null,
+      },
+      this.config.jwtKey,
+    );
+
     const session = this.db.driver.session();
     const result = await session.run(
       `
@@ -58,9 +72,7 @@ export class AuthService {
   }
 
   // LOG OUT
-  async logout(
-    token: string,
-  ): Promise<LoginUserOutputDto> {
+  async logout(token: string): Promise<LoginUserOutputDto> {
     const response = new LoginUserOutputDto();
     const session = this.db.driver.session();
     const result = await session.run(
@@ -78,5 +90,4 @@ export class AuthService {
     session.close();
     return response;
   }
-
 }

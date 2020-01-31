@@ -1,5 +1,5 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { IdArg, Token } from '../../common';
+import { IdArg, RequestUser } from '../../common';
 import {
   Language,
   LanguageListInput,
@@ -19,7 +19,7 @@ export class LanguageResolver {
     description: 'Look up a language by its ID',
   })
   async language(
-    @Token() token: string,
+    @RequestUser() token: string,
     @IdArg() id: string,
   ): Promise<Language> {
     return await this.langService.readOne(id, token);
@@ -29,7 +29,7 @@ export class LanguageResolver {
     description: 'Look up languages',
   })
   async languages(
-    @Token() token: string,
+    @RequestUser() token: string,
     @Args({
       name: 'input',
       type: () => LanguageListInput,
@@ -44,7 +44,7 @@ export class LanguageResolver {
     description: 'Create a language',
   })
   async createLanguage(
-    @Token() token: string,
+    @RequestUser() token: string,
     @Args('input') { language: input }: CreateLanguageInput,
   ): Promise<CreateLanguageOutput> {
     const language = await this.langService.create(input, token);
@@ -55,7 +55,7 @@ export class LanguageResolver {
     description: 'Update a language',
   })
   async updateLanguage(
-    @Token() token: string,
+    @RequestUser() token: string,
     @Args('input') { language: input }: UpdateLanguageInput,
   ): Promise<UpdateLanguageOutput> {
     const language = await this.langService.update(input, token);
@@ -66,7 +66,7 @@ export class LanguageResolver {
     description: 'Delete a language',
   })
   async deleteLanguage(
-    @Token() token: string,
+    @RequestUser() token: string,
     @IdArg() id: string,
   ): Promise<boolean> {
     await this.langService.delete(id, token);

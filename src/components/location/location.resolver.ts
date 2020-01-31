@@ -1,5 +1,5 @@
 import { Resolver, Args, Query, Mutation } from '@nestjs/graphql';
-import { IdArg, Token } from '../../common';
+import { IdArg, RequestUser } from '../../common';
 import {
   CreateCountryInput,
   CreateCountryOutput,
@@ -27,7 +27,7 @@ export class LocationResolver {
     description: 'Read one Location by id',
   })
   async location(
-    @Token() token: string,
+    @RequestUser() token: string,
     @IdArg() id: string,
   ): Promise<Location> {
     return this.locationService.readOne(id, token);
@@ -37,7 +37,7 @@ export class LocationResolver {
     description: 'Look up locations',
   })
   async locations(
-    @Token() token: string,
+    @RequestUser() token: string,
     @Args({
       name: 'input',
       type: () => LocationListInput,
@@ -52,7 +52,7 @@ export class LocationResolver {
     description: 'Create a zone',
   })
   async createZone(
-    @Token() token: string,
+    @RequestUser() token: string,
     @Args('input') { zone: input }: CreateZoneInput,
   ): Promise<CreateZoneOutput> {
     const zone = await this.locationService.createZone(input, token);
@@ -63,7 +63,7 @@ export class LocationResolver {
     description: 'Create a region',
   })
   async createRegion(
-    @Token() token: string,
+    @RequestUser() token: string,
     @Args('input') { region: input }: CreateRegionInput,
   ): Promise<CreateRegionOutput> {
     const region = await this.locationService.createRegion(input, token);
@@ -74,7 +74,7 @@ export class LocationResolver {
     description: 'Create a country',
   })
   async createCountry(
-    @Token() token: string,
+    @RequestUser() token: string,
     @Args('input') { country: input }: CreateCountryInput,
   ): Promise<CreateCountryOutput> {
     const country = await this.locationService.createCountry(input, token);
@@ -85,7 +85,7 @@ export class LocationResolver {
     description: 'Update a zone',
   })
   async updateZone(
-    @Token() token: string,
+    @RequestUser() token: string,
     @Args('input') { zone: input }: UpdateZoneInput,
   ): Promise<UpdateZoneOutput> {
     const zone = await this.locationService.updateZone(input, token);
@@ -96,7 +96,7 @@ export class LocationResolver {
     description: 'Update a region',
   })
   async updateRegion(
-    @Token() token: string,
+    @RequestUser() token: string,
     @Args('input') { region: input }: UpdateRegionInput,
   ): Promise<UpdateRegionOutput> {
     const region = await this.locationService.updateRegion(input, token);
@@ -107,7 +107,7 @@ export class LocationResolver {
     description: 'Update a country',
   })
   async updateCountry(
-    @Token() token: string,
+    @RequestUser() token: string,
     @Args('input') { country: input }: UpdateCountryInput,
   ): Promise<UpdateCountryOutput> {
     const country = await this.locationService.updateCountry(input, token);
@@ -118,7 +118,7 @@ export class LocationResolver {
     description: 'Delete a location',
   })
   async deleteLocation(
-    @Token() token: string,
+    @RequestUser() token: string,
     @IdArg() id: string,
   ): Promise<boolean> {
     await this.locationService.delete(id, token);

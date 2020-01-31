@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Args, Mutation } from '@nestjs/graphql';
-import { IdArg, Token } from '../../../common';
+import { IdArg, RequestUser } from '../../../common';
 import {
   CreateUnavailabilityInput,
   CreateUnavailabilityOutput,
@@ -17,7 +17,7 @@ export class UnavailabilityResolver {
     description: 'Create an unavailability',
   })
   async createUnavailability(
-    @Token() token: string,
+    @RequestUser() token: string,
     @Args('input') { unavailability: input }: CreateUnavailabilityInput,
   ): Promise<CreateUnavailabilityOutput> {
     const unavailability = await this.service.create(input, token);
@@ -28,7 +28,7 @@ export class UnavailabilityResolver {
     description: 'Update an unavailability',
   })
   async updateUnavailability(
-    @Token() token: string,
+    @RequestUser() token: string,
     @Args('input') { unavailability: input }: UpdateUnavailabilityInput,
   ): Promise<UpdateUnavailabilityOutput> {
     const unavailability = await this.service.update(input, token);
@@ -39,7 +39,7 @@ export class UnavailabilityResolver {
     description: 'Delete an unavailability',
   })
   async deleteUnavailability(
-    @Token() token: string,
+    @RequestUser() token: string,
     @IdArg() id: string,
   ): Promise<boolean> {
     await this.service.delete(id, token);

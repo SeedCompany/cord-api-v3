@@ -6,7 +6,7 @@ import {
   ResolveProperty,
   Parent,
 } from '@nestjs/graphql';
-import { IdArg, Token } from '../../common';
+import { IdArg, RequestUser } from '../../common';
 import {
   OrganizationListInput,
   SecuredOrganizationList,
@@ -43,7 +43,7 @@ export class UserResolver {
   @Query(() => User, {
     description: 'Look up a user by its ID',
   })
-  async user(@Token() token: string, @IdArg() id: string): Promise<User> {
+  async user(@RequestUser() token: string, @IdArg() id: string): Promise<User> {
     return this.userService.readOne(id, token);
   }
 
@@ -51,7 +51,7 @@ export class UserResolver {
     description: 'Look up users',
   })
   async users(
-    @Token() token: string,
+    @RequestUser() token: string,
     @Args({
       name: 'input',
       type: () => UserListInput,
@@ -64,7 +64,7 @@ export class UserResolver {
 
   @ResolveProperty(() => SecuredUnavailabilityList)
   async unavailabilities(
-    @Token() token: string,
+    @RequestUser() token: string,
     @Parent() { id }: User,
     @Args({
       name: 'input',
@@ -78,7 +78,7 @@ export class UserResolver {
 
   @ResolveProperty(() => SecuredOrganizationList)
   async organizations(
-    @Token() token: string,
+    @RequestUser() token: string,
     @Parent() { id }: User,
     @Args({
       name: 'input',
@@ -92,7 +92,7 @@ export class UserResolver {
 
   @ResolveProperty(() => SecuredEducationList)
   async education(
-    @Token() token: string,
+    @RequestUser() token: string,
     @Parent() { id }: User,
     @Args({
       name: 'input',
@@ -108,7 +108,7 @@ export class UserResolver {
     description: 'Create a user',
   })
   async createUser(
-    @Token() token: string,
+    @RequestUser() token: string,
     @Args('input') { user: input }: CreateUserInput,
   ): Promise<CreateUserOutput> {
     const user = await this.userService.create(input, token);
@@ -119,7 +119,7 @@ export class UserResolver {
     description: 'Update a user',
   })
   async updateUser(
-    @Token() token: string,
+    @RequestUser() token: string,
     @Args('input') { user: input }: UpdateUserInput,
   ): Promise<UpdateUserOutput> {
     const user = await this.userService.update(input, token);
@@ -129,7 +129,7 @@ export class UserResolver {
   @Mutation(() => Boolean, {
     description: 'Delete a user',
   })
-  async deleteUser(@Token() token: string, @IdArg() id: string) {
+  async deleteUser(@RequestUser() token: string, @IdArg() id: string) {
     await this.userService.delete(id, token);
     return true;
   }
