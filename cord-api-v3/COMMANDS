@@ -1,0 +1,25 @@
+https://docs.aws.amazon.com/cdk/latest/guide/getting_started.html
+
+sudo npm install -g aws-cdk
+sudo npx npm-check-updates -u
+
+* `npm run build`   compile typescript to js
+* `npm run watch`   watch for changes and compile
+* `npm run test`    perform the jest unit tests
+* `cdk deploy`      deploy this stack to your default AWS account/region
+* `cdk diff`        compare deployed stack with current state
+* `cdk synth`       emits the synthesized CloudFormation template
+
+npm install @aws-cdk/aws-ec2
+npm install @aws-cdk/aws-ecs
+npm install @aws-cdk/aws-ecs-patterns
+npm install @aws-cdk/aws-codepipeline-actions
+
+cdk ls
+npm run build
+cdk synth
+cdk deploy --require-approval never
+cdk diff
+cdk destroy --require-approval never
+
+npm run build && cdk synth && cdk deploy --require-approval never

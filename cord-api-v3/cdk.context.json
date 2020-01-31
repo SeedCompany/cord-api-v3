@@ -1,0 +1,13 @@
+{
+  "@aws-cdk/core:enableStackNameDuplicates": "true",
+  "aws-cdk:enableDiffNoFail": "true",
+  "availability-zones:account=954870218083:region=us-east-2": [
+    "us-east-2a",
+    "us-east-2b",
+    "us-east-2c"
+  ],
+  "hosted-zone:account=954870218083:domainName=cordapi3test.com:region=us-east-2": {
+    "Id": "/hostedzone/Z1IM2J563JF5X2",
+    "Name": "cordapi3test.com."
+  }
+}

@@ -1,0 +1,3 @@
+{
+  "app": "npx ts-node bin/cord-api-v3.ts"
+}

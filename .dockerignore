@@ -1,0 +1,13 @@
+.github
+.idea
+dist
+docs
+node_modules
+test
+.dockerignore
+.git
+.gitignore
+.cache
+README*
+create_image.sh
+cord-api-v3

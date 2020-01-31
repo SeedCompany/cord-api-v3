@@ -15,6 +15,7 @@ Bible translation project management API.
 export NEO4J_URL=bolt://localhost
 export NEO4J_USERNAME=neo4j
 export NEO4J_PASSWORD=asdf
+export NODE_ENV=development
 ```
 You will also need the following environment variables set:  get values from the team
 ```

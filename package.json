@@ -23,6 +23,10 @@
     "test:e2e": "jest --forceExit --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@aws-cdk/aws-codepipeline-actions": "^1.22.0",
+    "@aws-cdk/aws-ec2": "^1.22.0",
+    "@aws-cdk/aws-ecs": "^1.22.0",
+    "@aws-cdk/aws-ecs-patterns": "^1.22.0",
     "@nestjs/common": "^6.7.2",
     "@nestjs/core": "^6.7.2",
     "@nestjs/graphql": "^6.5.3",

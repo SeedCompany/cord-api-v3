@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+export CDK_DEFAULT_REGION=$AWS_DEFAULT_REGION
+export AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION
+export CDK_DEFAULT_ACCOUNT=$CDK_DEFAULT_ACCOUNT
+export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+
+#cd cord-api-v3
+#
+#npm run build
+#cdk synth
+#cdk deploy

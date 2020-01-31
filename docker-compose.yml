@@ -1,0 +1,20 @@
+version: '3'
+services:
+
+  cord-api-v3:
+    image: 954870218083.dkr.ecr.us-east-2.amazonaws.com/cord-api-v3:latest
+    container_name: cord-api-v3
+    restart: unless-stopped
+    environment:
+      NEO4J_URL: bolt://localhost
+      NEO4J_USERNAME: neo4j
+      NEO4J_PASSWORD: asdf
+      NODE_ENV: development
+    ports:
+      - "3000:3000"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
