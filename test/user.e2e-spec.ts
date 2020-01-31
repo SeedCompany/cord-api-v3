@@ -1,8 +1,10 @@
 import * as request from 'supertest';
-import { gql } from 'apollo-server-core';
-import { createTestApp, createToken, createUser, TestApp } from './utility';
-import { fragments } from './utility/fragments';
+
 import { CreateUser, User } from '../src/components/user';
+import { TestApp, createTestApp, createToken, createUser } from './utility';
+
+import { fragments } from './utility/fragments';
+import { gql } from 'apollo-server-core';
 import { isValid } from 'shortid';
 
 describe('User e2e', () => {
