@@ -113,19 +113,19 @@ export class AdminService {
     }
 
     // USERS
-    for (let i = 0; i < totalUsers; i++) {
-      const s = 'user_' + generate();
-      await this.userService.create(
-        {
-          displayFirstName: s,
-          displayLastName: s,
-          email: s,
-          realFirstName: s,
-          realLastName: s,
-        },
-        'token - replace me later',
-      );
-    }
+    // for (let i = 0; i < totalUsers; i++) {
+    //   const s = 'user_' + generate();
+    //   await this.userService.create(
+    //     {
+    //       displayFirstName: s,
+    //       displayLastName: s,
+    //       email: s,
+    //       realFirstName: s,
+    //       realLastName: s,
+    //     },
+    //     'token - replace me later',
+    //   );
+    // }
 
     response.success = true;
 

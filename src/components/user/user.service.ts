@@ -15,6 +15,7 @@ import {
   UserListInput,
   UserListOutput,
 } from './dto';
+import { IRequestUser } from '../../common';
 
 @Injectable()
 export class UserService {
@@ -53,7 +54,11 @@ export class UserService {
     };
   }
 
-  async create(input: CreateUser, token: string): Promise<User> {
+  async create(input: CreateUser, token: IRequestUser): Promise<User> {
+    /** CREATE USER
+     * get the token, then create the user with minimum properties
+     * create an ACL node and ensure the user can edit their own properties
+     */
     const result = await this.db
       .query()
       .raw(
@@ -64,6 +69,7 @@ export class UserService {
             id: $id,
             active: true,
             createdAt: datetime(),
+            createdByUserId: "system",
             canCreateOrg: true,
             canReadOrgs: true
           })
@@ -97,18 +103,47 @@ export class UserService {
           (displayLastName:Property {
             active: true,
             value: $displayLastName
+          }),
+          (user)<-[:member]-
+          (acl:ACL {
+            canReadRealFirstName: true,
+            canEditRealFirstName: true,
+            canReadRealLastName: true,
+            canEditRealLastName: true,
+            canReadDisplayFirstName: true,
+            canEditDisplayFirstName: true,
+            canReadDisplayLastName: true,
+            canEditDisplayLastName: true,
+            canReadPassword: true,
+            canEditPassword: true,
+            canReadEmail: true,
+            canEditEmail: true
           })
+          -[:toNode]->(user)
         RETURN
           user.id as id,
           email.value as email,
+          user.createdAt as createdAt,
           realFirstName.value as realFirstName,
           realLastName.value as realLastName,
           displayFirstName.value as displayFirstName,
-          displayLastName.value as displayLastName
+          displayLastName.value as displayLastName,
+          acl.canReadRealFirstName as canReadRealFirstName,
+          acl.canEditRealFirstName as canEditRealFirstName,
+          acl.canReadRealLastName as canReadRealLastName,
+          acl.canEditRealLastName as canEditRealLastName,
+          acl.canReadDisplayFirstName as canReadDisplayFirstName,
+          acl.canEditDisplayFirstName as canEditDisplayFirstName,
+          acl.canReadDisplayLastName as canReadDisplayLastName,
+          acl.canEditDisplayLastName as canEditDisplayLastName,
+          acl.canReadPassword as canReadPassword,
+          acl.canEditPassword as canEditPassword,
+          acl.canReadEmail as canReadEmail,
+          acl.canEditEmail as canEditEmail
         `,
         {
           id: generate(),
-          token,
+          token: token.token,
           email: input.email,
           realFirstName: input.realFirstName,
           realLastName: input.realLastName,
@@ -124,24 +159,32 @@ export class UserService {
 
     return {
       id: result.id,
-      createdAt: DateTime.local(), // TODO
+      createdAt: result.createdAt,
       email: {
         value: result.email,
-        canRead: true, // TODO
-        canEdit: true, // TODO
+        canRead: result.canReadEmail,
+        canEdit: result.canEditEmail,
       },
       realFirstName: {
         value: result.realFirstName,
-        canRead: true, // TODO
-        canEdit: true, // TODO
+        canRead: result.canReadRealFirstName,
+        canEdit: result.canEditRealFirstName,
       },
       realLastName: {
         value: result.realLastName,
-        canRead: true, // TODO
-        canEdit: true, // TODO
+        canRead: result.canReadRealLastName,
+        canEdit: result.canEditRealLastName,
       },
-      displayFirstName: result.displayFirstName,
-      displayLastName: result.displayFirstName,
+      displayFirstName: {
+        value: result.displayLastName,
+        canRead: result.canReadDisplayLastName,
+        canEdit: result.canEditDisplayLastName,
+      },
+      displayLastName: {
+        value: result.displayLastName,
+        canRead: result.canReadDisplayLastName,
+        canEdit: result.canEditDisplayLastName,
+      },
       phone: {
         value: '', // TODO
         canRead: true, // TODO

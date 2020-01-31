@@ -3,6 +3,7 @@ import { DatabaseService, ConfigService, ILogger, Logger } from '../../core';
 import { CreateTokenOutputDto, LoginUserOutputDto } from './auth.dto';
 import { generate } from 'shortid';
 import { decode, JsonWebTokenError, verify, sign } from 'jsonwebtoken';
+import * as argon2 from 'argon2';
 
 @Injectable()
 export class AuthService {
@@ -28,12 +29,14 @@ export class AuthService {
     const session = this.db.driver.session();
     const result = await session.run(
       `
-      CREATE (token:Token {
-        active: true,
-        createdAt: datetime(),
-        value: $token
-      })
-      RETURN token.value as token
+      CREATE
+        (token:Token {
+          active: true,
+          createdAt: datetime(),
+          value: $token
+        })
+      RETURN 
+        token.value as token
       `,
       {
         token,
@@ -46,24 +49,33 @@ export class AuthService {
 
   // LOG IN
   async login(
-    username: string,
     password: string,
     token: string,
   ): Promise<LoginUserOutputDto> {
     const response = new LoginUserOutputDto();
     const session = this.db.driver.session();
+
+    const pash = await argon2.hash(password);
+
     const result = await session.run(
       `
       MATCH
-        (token:Token {active: true, value: $token}),
-        (user:User {username: $username, password: $password})
-      CREATE (user)-[:token {createdAt: datetime()}]->(token)
-      RETURN token.value as token
+        (token:Token {
+          active: true,
+          value: $token
+        }),
+        (user:User {
+          active: true,
+          password: $pash
+        })
+      CREATE
+        (user)-[:token {createdAt: datetime()}]->(token)
+      RETURN
+        token.value as token
       `,
       {
         token,
-        username,
-        password,
+        pash,
       },
     );
     response.success = result.records[0].get('token') === token;
@@ -79,8 +91,10 @@ export class AuthService {
       `
       MATCH
         (token:Token)-[r]-()
-      DELETE r
-      RETURN token.value as token
+      DELETE
+        r
+      RETURN
+        token.value as token
       `,
       {
         token,

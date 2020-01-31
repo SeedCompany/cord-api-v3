@@ -6,7 +6,7 @@ import {
   ResolveProperty,
   Parent,
 } from '@nestjs/graphql';
-import { IdArg, RequestUser } from '../../common';
+import { IdArg, RequestUser, IRequestUser } from '../../common';
 import {
   OrganizationListInput,
   SecuredOrganizationList,
@@ -108,7 +108,7 @@ export class UserResolver {
     description: 'Create a user',
   })
   async createUser(
-    @RequestUser() token: string,
+    @RequestUser() token: IRequestUser,
     @Args('input') { user: input }: CreateUserInput,
   ): Promise<CreateUserOutput> {
     const user = await this.userService.create(input, token);

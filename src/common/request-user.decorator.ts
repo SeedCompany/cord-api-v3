@@ -51,6 +51,7 @@ class RequiredPipe implements PipeTransform {
     }
 
     const decoded = verify(value, this.config.jwtKey) as IRequestUser;
+    decoded.token = value; // set raw jwt string to prop so db can use it
 
     if (decoded.owningOrdId === null && decoded.userId === null) {
       return decoded; // user isn't logged in, we don't need to hit the db

@@ -23,10 +23,9 @@ export class AuthResolver {
   })
   async loginUser(
     @RequestUser() token: string,
-    @Args('username') username: string,
     @Args('password') password: string,
   ): Promise<LoginUserOutputDto> {
-    return await this.authService.login(username, password, token);
+    return await this.authService.login(password, token);
   }
 
   @Mutation(returns => LogoutUserOutputDto, {
