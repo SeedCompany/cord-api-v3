@@ -16,8 +16,7 @@ import { InternshipResolver } from './components/internship/internship.resolver'
 import { InternshipService } from './components/internship/internship.service';
 import { InternshipEngagementResolver } from './components/internship-engagement/internship-engagement.resolver';
 import { InternshipEngagementService } from './components/internship-engagement/internship-engagement.service';
-import { LanguageResolver } from './components/language/language.resolver';
-import { LanguageService } from './components/language/language.service';
+import { LanguageModule } from './components/language';
 import { LocationResolver } from './components/location/location.resolver';
 import { LocationService } from './components/location/location.service';
 import { OrganizationModule } from './components/organization';
@@ -49,6 +48,7 @@ const context: ContextFunction<{ req: Request; res: Response }, GqlContextType> 
       autoSchemaFile: 'schema.gql',
       context,
     }),
+    LanguageModule,
     OrganizationModule,
     UserModule,
   ],
@@ -68,8 +68,6 @@ const context: ContextFunction<{ req: Request; res: Response }, GqlContextType> 
     InternshipService,
     InternshipEngagementResolver,
     InternshipEngagementService,
-    LanguageResolver,
-    LanguageService,
     LocationResolver,
     LocationService,
     ProductResolver,

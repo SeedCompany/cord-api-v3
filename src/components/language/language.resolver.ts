@@ -1,68 +1,75 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-
-import { LanguageService } from './language.service';
+import { IdArg, Token } from '../../common';
 import {
-  CreateLanguageInputDto,
-  CreateLanguageOutputDto,
-  ReadLanguageInputDto,
-  ReadLanguageOutputDto,
-  UpdateLanguageInputDto,
-  UpdateLanguageOutputDto,
-  DeleteLanguageInputDto,
-  DeleteLanguageOutputDto,
-  ListLanguagesInputDto,
-  ListLanguagesOutputDto,
-} from './language.dto';
-import { Language } from './language';
+  Language,
+  LanguageListInput,
+  LanguageListOutput,
+  CreateLanguageOutput,
+  CreateLanguageInput,
+  UpdateLanguageOutput,
+  UpdateLanguageInput,
+} from './dto';
+import { LanguageService } from './language.service';
 
-@Resolver(of => Language)
+@Resolver()
 export class LanguageResolver {
   constructor(private readonly langService: LanguageService) {}
 
-  @Mutation(returns => CreateLanguageOutputDto, {
+  @Query(() => Language, {
+    description: 'Look up a language by its ID',
+  })
+  async language(
+    @Token() token: string,
+    @IdArg() id: string,
+  ): Promise<Language> {
+    return await this.langService.readOne(id, token);
+  }
+
+  @Query(() => LanguageListOutput, {
+    description: 'Look up languages',
+  })
+  async languages(
+    @Token() token: string,
+    @Args({
+      name: 'input',
+      type: () => LanguageListInput,
+      defaultValue: LanguageListInput.defaultVal,
+    })
+    input: LanguageListInput,
+  ): Promise<LanguageListOutput> {
+    return this.langService.list(input, token);
+  }
+
+  @Mutation(() => CreateLanguageOutput, {
     description: 'Create a language',
   })
   async createLanguage(
-    @Args('input') { language: input }: CreateLanguageInputDto,
-  ): Promise<CreateLanguageOutputDto> {
-    return await this.langService.create(input);
+    @Token() token: string,
+    @Args('input') { language: input }: CreateLanguageInput,
+  ): Promise<CreateLanguageOutput> {
+    const language = await this.langService.create(input, token);
+    return { language };
   }
 
-  @Query(returns => ReadLanguageOutputDto, {
-    description: 'Read one language by id',
-  })
-  async readLanguage(
-    @Args('input') { language: input }: ReadLanguageInputDto,
-  ): Promise<ReadLanguageOutputDto> {
-    return await this.langService.readOne(input);
-  }
-
-  @Mutation(returns => UpdateLanguageOutputDto, {
+  @Mutation(() => UpdateLanguageOutput, {
     description: 'Update a language',
   })
   async updateLanguage(
-    @Args('input')
-    { language: input }: UpdateLanguageInputDto,
-  ): Promise<UpdateLanguageOutputDto> {
-    return await this.langService.update(input);
+    @Token() token: string,
+    @Args('input') { language: input }: UpdateLanguageInput,
+  ): Promise<UpdateLanguageOutput> {
+    const language = await this.langService.update(input, token);
+    return { language };
   }
 
-  @Mutation(returns => DeleteLanguageOutputDto, {
+  @Mutation(() => Boolean, {
     description: 'Delete a language',
   })
   async deleteLanguage(
-    @Args('input')
-    { language: input }: DeleteLanguageInputDto,
-  ): Promise<DeleteLanguageOutputDto> {
-    return await this.langService.delete(input);
-  }
-
-  @Query(returns => ListLanguagesOutputDto, {
-    description: 'Query organizations',
-  })
-  async languages(
-    @Args('input') { query: input }: ListLanguagesInputDto,
-  ): Promise<ListLanguagesOutputDto> {
-    return await this.langService.queryLanguages(input);
+    @Token() token: string,
+    @IdArg() id: string,
+  ): Promise<boolean> {
+    await this.langService.delete(id, token);
+    return true;
   }
 }

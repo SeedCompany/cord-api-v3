@@ -1,7 +1,7 @@
 import * as request from 'supertest';
 import { generate, isValid } from 'shortid';
 import { INestApplication } from '@nestjs/common';
-import { Language } from '../src/components/language/language';
+import { Language } from '../src/components/language';
 import { createTestApp, TestApp } from './utility';
 
 export async function createLanguage(
