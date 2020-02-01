@@ -173,7 +173,7 @@ export class ProjectService {
           name: input.name,
           deptId: input.deptId,
           status: input.status,
-          location: input.location,
+          location: input.locationId,
           mouStart: input.mouStart,
           mouEnd: input.mouEnd,
           partnerships: input.partnerships,

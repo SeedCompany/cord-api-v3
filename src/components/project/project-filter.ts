@@ -1,6 +1,6 @@
 import { DateFilter } from '../../common/date-filter';
 import { Language } from '../language';
-import { Location } from '../location/location';
+import { Location } from '../location';
 import { Sensitivity } from './sensitivity';
 
 import { ProjectStatus } from './status';

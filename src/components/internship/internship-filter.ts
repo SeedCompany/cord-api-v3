@@ -1,5 +1,5 @@
 import { DateFilter } from '../../common/date-filter';
-import { Location } from '../location/location';
+import { Location } from '../location';
 import { Sensitivity } from '../project/sensitivity';
 
 import { InternshipStatus } from './status';

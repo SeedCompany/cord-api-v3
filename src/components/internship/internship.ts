@@ -1,7 +1,7 @@
 import { DateTime } from 'luxon';
 import { DateField } from '../../common';
 import { Budget } from '../budget/budget';
-import { Location } from '../location/location';
+import { Location } from '../location';
 import { Sensitivity } from '../project/sensitivity';
 import { TeamMember } from '../user/team-member';
 import { InternshipStatus } from './status';

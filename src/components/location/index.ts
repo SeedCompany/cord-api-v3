@@ -1,3 +1,3 @@
-export * from '../area/area';
-export * from './location';
-export * from '../region/region';
+export * from './dto';
+export * from './location.service';
+export * from './location.module';

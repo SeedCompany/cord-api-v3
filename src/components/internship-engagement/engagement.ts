@@ -1,6 +1,6 @@
 import { DateTime } from 'luxon';
 import { DateField } from '../../common';
-import { Location } from '../location/location';
+import { Location } from '../location';
 import { InternshipEngagementPosition } from './position';
 import { InternshipEngagementStatus } from './status';
 import { InternshipEngagementTag } from './tag';

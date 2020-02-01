@@ -1,4 +1,4 @@
-import { Location } from '../location/location';
+import { Location } from '../location';
 import { Role } from './role';
 import { ObjectType, InputType } from 'type-graphql';
 

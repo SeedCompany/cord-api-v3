@@ -1,8 +1,8 @@
-import { ObjectType, Field, InputType } from 'type-graphql';
+import { ObjectType, Field, InputType, ID } from 'type-graphql';
 import { DateTime } from 'luxon';
 import { DateField } from '../../common';
 import { Budget } from '../budget/budget';
-import { Location } from '../location/location';
+import { Location } from '../location';
 import { Partnership } from '../partnership/partnership';
 import { Sensitivity } from '../project/sensitivity';
 import { TeamMember } from '../user/team-member';
@@ -24,8 +24,8 @@ export class CreateInternshipInput {
   @Field(type => String, { nullable: true })
   status: InternshipStatus;
 
-  @Field(type => Location, { nullable: true })
-  location: Location | null;
+  @Field(() => ID, { nullable: true })
+  locationId?: Location;
 
   @DateField({ nullable: true })
   mouStart: DateTime | null;
@@ -199,8 +199,8 @@ export class UpdateInternshipInput {
   @Field(type => String, { nullable: true })
   status: InternshipStatus;
 
-  @Field(type => Location, { nullable: true })
-  location: Location | null;
+  @Field(() => ID, { nullable: true })
+  locationId?: Location;
 
   @DateField({ nullable: true })
   mouStart: DateTime | null;

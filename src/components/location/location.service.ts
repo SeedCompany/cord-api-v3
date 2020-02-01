@@ -1,156 +1,143 @@
 import { Injectable } from '@nestjs/common';
-import { DatabaseService } from '../../core/database.service';
+import { Connection } from 'cypher-query-builder';
+import * as faker from 'faker';
+import { times } from 'lodash';
+import { DateTime } from 'luxon';
 import { generate } from 'shortid';
-import { Location } from './location';
+import { User } from '../user/dto';
 import {
-  CreateLocationOutputDto,
-  ReadLocationOutputDto,
-  UpdateLocationOutputDto,
-  DeleteLocationOutputDto,
-  CreateLocationInput,
-  ReadLocationInput,
-  UpdateLocationInput,
-  DeleteLocationInput,
-  ListLocationsOutputDto,
-  ListLocationsInputDto,
-  ListLocationsInput,
-} from './location.dto';
+  Area,
+  Country,
+  CreateArea,
+  CreateCountry,
+  CreateRegion,
+  Location,
+  LocationListInput,
+  LocationListOutput,
+  Region,
+  UpdateArea,
+  UpdateCountry,
+  UpdateRegion,
+} from './dto';
 
 @Injectable()
 export class LocationService {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(private readonly db: Connection) {}
 
-  async create(input: CreateLocationInput): Promise<CreateLocationOutputDto> {
-    const response = new CreateLocationOutputDto();
-    const session = this.db.driver.session();
-    const id = generate();
-    await session
-      .run(
-        'MERGE (location:Location {active: true, owningOrg: "seedcompany", country: $country, area: $area, editable: $editable}) ON CREATE SET location.id = $id, location.timestamp = datetime() RETURN location.id as id, location.country as country, location.area as area , location.editable as editable ',
-        {
-          id,
-          country: input.country,
-          area: input.area,
-          editable: input.editable,
-        },
-      )
-      .then(result => {
-        response.location.id = result.records[0].get('id');
-        response.location.country = result.records[0].get('country');
-        response.location.area = result.records[0].get('area');
-        response.location.editable = result.records[0].get('editable');
-      })
-      .catch(error => {
-        console.log(error);
-      })
-      .then(() => session.close());
-
-    return response;
+  async readOne(id: string, token: string): Promise<Location> {
+    return this.randomLocation();
   }
 
-  async readOne(input: ReadLocationInput): Promise<ReadLocationOutputDto> {
-    const response = new ReadLocationOutputDto();
-    const session = this.db.driver.session();
-    await session
-      .run(
-        'MATCH (location:Location {active: true, owningOrg: "seedcompany"}) WHERE location.id = $id RETURN location.id as id, location.country as country, location.area as area , location.editable as editable ',
+  async list(
+    { page, count, sort, order, filter }: LocationListInput,
+    token: string,
+  ): Promise<LocationListOutput> {
+    const items = times(faker.random.number(), this.randomLocation);
+
+    return {
+      items,
+      total: items.length,
+      hasMore: false,
+    };
+
+    const result = await this.db
+      .query()
+      .raw(
+        `
+          MATCH (location:Location {active: true})
+          WHERE location.country CONTAINS $filter
+          RETURN location.id as id, location.country as country
+          ORDER BY ${sort} ${order}
+          SKIP $skip LIMIT $count
+        `,
         {
-          id: input.id,
+          skip: (page - 1) * count,
+          count,
         },
       )
-      .then(result => {
-        response.location.id = result.records[0].get('id');
-        response.location.country = result.records[0].get('country');
-        response.location.area = result.records[0].get('area');
-        response.location.editable = result.records[0].get('editable');
-      })
-      .catch(error => {
-        console.log(error);
-      })
-      .then(() => session.close());
-
-    return response;
+      .run();
   }
 
-  async update(input: UpdateLocationInput): Promise<UpdateLocationOutputDto> {
-    const response = new UpdateLocationOutputDto();
-    const session = this.db.driver.session();
-    await session
-      .run(
-        'MATCH (location:Location {active: true, owningOrg: "seedcompany", id: $id}) SET location.country = $country RETURN location.id as id,location.country as country,location.area as area , location.editable as editable',
-        {
-          id: input.id,
-          country: input.country,
-          area: input.area,
-          editable: input.editable,
-        },
-      )
-      .then(result => {
-        if (result.records.length > 0) {
-          response.location.id = result.records[0].get('id');
-          response.location.country = result.records[0].get('country');
-          response.location.area = result.records[0].get('area');
-          response.location.editable = result.records[0].get('editable');
-        } else {
-          response.location = null;
-        }
-      })
-      .catch(error => {
-        console.log(error);
-      })
-      .then(() => session.close());
-
-    return response;
-  }
-
-  async delete(input: DeleteLocationInput): Promise<DeleteLocationOutputDto> {
-    const response = new DeleteLocationOutputDto();
-    const session = this.db.driver.session();
-    await session
-      .run(
-        'MATCH (location:Location {active: true, owningOrg: "seedcompany", id: $id}) SET location.active = false RETURN location.id as id',
-        {
-          id: input.id,
-        },
-      )
-      .then(result => {
-        response.location.id = result.records[0].get('id');
-      })
-      .catch(error => {
-        console.log(error);
-      })
-      .then(() => session.close());
-
-    return response;
-  }
-
-  async queryLocations(
-    query: ListLocationsInput,
-  ): Promise<ListLocationsOutputDto> {
-    const response = new ListLocationsOutputDto();
-    const session = this.db.driver.session();
-    const skipIt = query.page * query.count;
-
-    const result = await session.run(
-      `MATCH (location:Location {active: true}) WHERE location.country CONTAINS $filter RETURN location.id as id, location.country as country ORDER BY ${query.sort} ${query.order} SKIP $skip LIMIT $count`,
-      {
-        filter: query.filter,
-        skip: skipIt,
-        count: query.count,
-        sort: query.sort,
-        order: query.order,
-      },
-    );
-
-    session.close();
-
-    response.countries = result.records.map(record => {
-      const location = new Location();
-      location.id = record.get('id');
-      location.country = record.get('country');
-      return location;
+  private randomLocation() {
+    const id = () => faker.random.alphaNumeric(8);
+    const inPast = () => DateTime.fromJSDate(faker.date.past());
+    const ro = <T>(value: T) => ({
+      value,
+      canRead: true,
+      canEdit: false,
     });
 
-    return response;
+    const user = (): User => ({
+      id: id(),
+      createdAt: inPast(),
+      bio: ro(''),
+      displayFirstName: ro(faker.name.firstName()),
+      displayLastName: ro(faker.name.lastName()),
+      realFirstName: ro(faker.name.firstName()),
+      realLastName: ro(faker.name.lastName()),
+      email: ro(faker.internet.email()),
+      phone: ro(faker.phone.phoneNumber()),
+      timezone: ro(faker.lorem.words(2)),
+    });
+
+    const region: Region = {
+      id: id(),
+      createdAt: inPast(),
+      name: ro(faker.address.country()),
+      director: ro(user()),
+    };
+
+    const area: Area = {
+      id: id(),
+      createdAt: inPast(),
+      name: ro(faker.address.state()),
+      region: ro(region),
+      director: ro(user()),
+    };
+
+    const country: Country = {
+      id: id(),
+      createdAt: inPast(),
+      name: ro(faker.address.city()),
+      area: ro(area),
+    };
+
+    return faker.random.arrayElement([area, region, country]);
+  }
+
+  async createRegion(input: CreateRegion, token: string): Promise<Region> {
+    throw new Error('Not implemented');
+  }
+
+  async createArea(input: CreateArea, token: string): Promise<Area> {
+    throw new Error('Not implemented');
+  }
+
+  async createCountry(input: CreateCountry, token: string): Promise<Country> {
+    throw new Error('Not implemented');
+  }
+
+  async updateRegion(input: UpdateRegion, token: string): Promise<Region> {
+    throw new Error('Not implemented');
+  }
+
+  async updateArea(input: UpdateArea, token: string): Promise<Area> {
+    throw new Error('Not implemented');
+  }
+
+  async updateCountry(input: UpdateCountry, token: string): Promise<Country> {
+    throw new Error('Not implemented');
+  }
+
+  async delete(id: string, token: string): Promise<void> {
+    await this.db
+      .query()
+      .raw(
+        'MATCH (location:Location {active: true, owningOrg: "seedcompany", id: $id}) SET location.active = false RETURN location.id as id',
+        {
+          id,
+        },
+      )
+      .run();
   }
 }

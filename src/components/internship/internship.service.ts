@@ -175,7 +175,7 @@ export class InternshipService {
           name: input.name,
           deptId: input.deptId,
           status: input.status,
-          location: input.location,
+          location: input.locationId,
           publicLocation: input.publicLocation,
           mouStart: input.mouStart,
           mouEnd: input.mouEnd,

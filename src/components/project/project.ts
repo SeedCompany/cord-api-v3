@@ -2,7 +2,7 @@ import { DateTime } from 'luxon';
 import { DateField } from '../../common';
 import { Budget } from '../budget/budget';
 import { Language } from '../language';
-import { Location } from '../location/location';
+import { Location } from '../location';
 import { Sensitivity } from './sensitivity';
 import { TeamMember } from '../user/team-member';
 import { ProjectStatus } from './status';
@@ -25,7 +25,7 @@ export class Project implements IProject {
   status: ProjectStatus;
 
   @Field(type => Location, { nullable: true })
-  location: Location | null;
+  location: Location | null; // SecuredCountry
 
   /** A version of the location that a "non-authorized" user would see. */
   @Field(type => Location, { nullable: true })

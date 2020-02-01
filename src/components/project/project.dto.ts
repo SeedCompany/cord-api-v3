@@ -1,8 +1,8 @@
-import { ObjectType, Field, InputType } from 'type-graphql';
+import { ObjectType, Field, InputType, ID } from 'type-graphql';
 import { DateTime } from 'luxon';
 import { DateField } from '../../common';
 import { Budget } from '../budget/budget';
-import { Location } from '../location/location';
+import { Location } from '../location';
 import { Partnership } from '../partnership/partnership';
 import { Sensitivity } from './sensitivity';
 import { TeamMember } from '../user/team-member';
@@ -21,8 +21,8 @@ export class CreateProjectInput {
   @Field(type => ProjectStatus, { nullable: true })
   status: ProjectStatus;
 
-  @Field(type => Location, { nullable: true })
-  location: Location | null;
+  @Field(() => ID, { nullable: true })
+  locationId?: Location;
 
   @DateField({ nullable: true })
   mouStart: DateTime | null;
@@ -194,8 +194,8 @@ export class UpdateProjectInput {
   @Field(type => ProjectStatus, { nullable: true })
   status: ProjectStatus;
 
-  @Field(type => Location, { nullable: true })
-  location: Location | null;
+  @Field(() => ID, { nullable: true })
+  locationId?: Location;
 
   @DateField({ nullable: true })
   mouStart: DateTime | null;
