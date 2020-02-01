@@ -20,8 +20,6 @@ export class AuthService {
     const token = sign(
       {
         iat: Date.now(),
-        owningOrdId: null,
-        userId: null,
       },
       this.config.jwtKey,
     );
@@ -35,7 +33,7 @@ export class AuthService {
           createdAt: datetime(),
           value: $token
         })
-      RETURN 
+      RETURN
         token.value as token
       `,
       {

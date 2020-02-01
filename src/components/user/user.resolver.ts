@@ -43,7 +43,11 @@ export class UserResolver {
   @Query(() => User, {
     description: 'Look up a user by its ID',
   })
-  async user(@RequestUser() token: string, @IdArg() id: string): Promise<User> {
+  async user(
+    @RequestUser() token: IRequestUser,
+    @IdArg() id: string,
+    //
+  ): Promise<User> {
     return this.userService.readOne(id, token);
   }
 

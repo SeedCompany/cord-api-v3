@@ -48,4 +48,4 @@ This schema pattern is used on EVERY property the frontend has access to. This m
 
 To facilitate multiple organizations using Cord Field for their own projects, all `:BaseNode`s and `:ObjectNode`s have an `owningOrgId` property (on the node itself) that corresponds to the `id(node)` (Neo4j node id) of the `Organization` node. 
 
-This means that all queries must first resolve a user's affiliation and then filter the user's request by their organization's `owningOrdId` when they access the properties of a `:BaseNode` or `:ObjectNode`.
+This means that all queries must first resolve a user's affiliation and then filter the user's request by their organization's `owningOrgId` when they access the properties of a `:BaseNode` or `:ObjectNode`.

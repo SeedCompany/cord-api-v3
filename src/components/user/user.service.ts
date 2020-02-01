@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Connection } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
+import * as argon2 from 'argon2';
 import { ILogger, Logger } from '../../core/logger';
 import {
   OrganizationListInput,
@@ -15,12 +16,15 @@ import {
   UserListInput,
   UserListOutput,
 } from './dto';
+import { decode, JsonWebTokenError, verify, sign } from 'jsonwebtoken';
 import { IRequestUser } from '../../common';
+import { ConfigService } from '../../core';
 
 @Injectable()
 export class UserService {
   constructor(
     private readonly organizations: OrganizationService,
+    private readonly config: ConfigService,
     private readonly db: Connection,
     @Logger('user:service') private readonly logger: ILogger,
   ) {}
@@ -55,6 +59,7 @@ export class UserService {
   }
 
   async create(input: CreateUser, token: IRequestUser): Promise<User> {
+    const pash = await argon2.hash(input.password);
     /** CREATE USER
      * get the token, then create the user with minimum properties
      * create an ACL node and ensure the user can edit their own properties
@@ -71,7 +76,8 @@ export class UserService {
             createdAt: datetime(),
             createdByUserId: "system",
             canCreateOrg: true,
-            canReadOrgs: true
+            canReadOrgs: true,
+            owningOrgId: "Seed Company"
           })
           -[:email {active: true}]->
           (email:EmailAddress:Property {
@@ -82,7 +88,7 @@ export class UserService {
           (user)-[:password {active: true, createdAt: datetime()}]->
           (password:Property {
             active: true,
-            value: $password
+            value: $pash
           }),
           (user)-[:realFirstName {active: true, createdAt: datetime()}]->
           (realFirstName:Property {
@@ -149,7 +155,7 @@ export class UserService {
           realLastName: input.realLastName,
           displayFirstName: input.displayFirstName,
           displayLastName: input.displayLastName,
-          password: input.password,
+          pash,
         },
       )
       .first();
@@ -177,8 +183,8 @@ export class UserService {
       },
       displayFirstName: {
         value: result.displayLastName,
-        canRead: result.canReadDisplayLastName,
-        canEdit: result.canEditDisplayLastName,
+        canRead: result.canReadDisplayFirstName,
+        canEdit: result.canEditDisplayFirstName,
       },
       displayLastName: {
         value: result.displayLastName,
@@ -203,29 +209,57 @@ export class UserService {
     };
   }
 
-  async readOne(id: string, token: string): Promise<User> {
+  async readOne(id: string, token: IRequestUser): Promise<User> {
+    
     const result = await this.db
       .query()
       .raw(
         `
         MATCH
-          (user:User {active: true, id: $id}),
-          (user)-[:email {active: true}]->(email:EmailAddress {active: true}),
-          (user)-[:realFirstName {active: true}]->(realFirstName:Property {active: true}),
-          (user)-[:realLastName {active: true}]->(realLastName:Property {active: true}),
-          (user)-[:displayFirstName {active: true}]->(displayFirstName:Property {active: true}),
-          (user)-[:displayLastName {active: true}]->(displayLastName:Property {active: true})
+        (token:Token {
+          active: true,
+          value: $token
+        })
+        <-[:token {active: true}]-
+        (requestingUser:User {
+          active: true,
+          id: $requestingUserId
+        })
+      WITH * OPTIONAL MATCH (user:User {active: true, id: $id, owningOrgId: $owningOrgId})
+      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl1:ACL {canReadEmail: true})-[:toNode]->(user)-[:email {active: true}]->(email:EmailAddress {active: true})
+      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl2:ACL {canEditEmail: true})-[:toNode]->(user)
+      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl3:ACL {canReadRealFirstName: true})-[:toNode]->(user)-[:realFirstName {active: true}]->(realFirstName:Property {active: true})
+      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl4:ACL {canEditRealFirstName: true})-[:toNode]->(user)
+      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl5:ACL {canReadRealLastName: true})-[:toNode]->(user)-[:realLastName {active: true}]->(realLastName:Property {active: true})
+      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl6:ACL {canEditRealLastName: true})-[:toNode]->(user)
+      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl7:ACL {canReadDisplayFirstName: true})-[:toNode]->(user)-[:displayFirstName {active: true}]->(displayFirstName:Property {active: true})
+      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl8:ACL {canEditDisplayFirstName: true})-[:toNode]->(user)
+      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl9:ACL {canReadDisplayLastName: true})-[:toNode]->(user)-[:displayLastName {active: true}]->(displayLastName:Property {active: true})
+      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl10:ACL {canEditDisplayLastName: true})-[:toNode]->(user)
         RETURN
-          user.id as id,
-          email.value as email,
-          realFirstName.value as realFirstName,
-          realLastName.value as realLastName,
-          displayFirstName.value as displayFirstName,
-          displayLastName.value as displayLastName
+        user.id as id,
+        user.createdAt as createdAt,
+        email.value as email,
+        realFirstName.value as realFirstName,
+        realLastName.value as realLastName,
+        displayFirstName.value as displayFirstName,
+        displayLastName.value as displayLastName,
+        acl1.canReadEmail as canReadEmail,
+        acl2.canEditEmail as canEditEmail,
+        acl3.canReadRealFirstName as canReadRealFirstName,
+        acl4.canEditRealFirstName as canEditRealFirstName,
+        acl5.canReadRealLastName as canReadRealLastName,
+        acl6.canEditRealLastName as canEditRealLastName,
+        acl7.canReadDisplayFirstName as canReadDisplayFirstName,
+        acl8.canEditDisplayFirstName as canEditDisplayFirstName,
+        acl9.canReadDisplayLastName as canReadDisplayLastName,
+        acl10.canEditDisplayLastName as canEditDisplayLastName
         `,
         {
+          token: token.token,
+          requestingUserId: token.userId,
           id,
-          token,
+          owningOrgId: token.owningOrgId,
         },
       )
       .first();
@@ -235,24 +269,32 @@ export class UserService {
 
     return {
       id: result.id,
-      createdAt: DateTime.local(), // TODO
+      createdAt: result.createdAt,
       email: {
         value: result.email,
-        canRead: true, // TODO
-        canEdit: true, // TODO
+        canRead: result.canReadEmail,
+        canEdit: result.canEditEmail,
       },
       realFirstName: {
         value: result.realFirstName,
-        canRead: true, // TODO
-        canEdit: true, // TODO
+        canRead: result.canReadRealFirstName,
+        canEdit: result.canEditRealFirstName,
       },
       realLastName: {
         value: result.realLastName,
-        canRead: true, // TODO
-        canEdit: true, // TODO
+        canRead: result.canReadRealLastName,
+        canEdit: result.canEditRealLastName,
       },
-      displayFirstName: result.displayFirstName,
-      displayLastName: result.displayFirstName,
+      displayFirstName: {
+        value: result.displayFirstName,
+        canRead: result.canReadDisplayFirstName,
+        canEdit: result.canEditDisplayFirstName,
+      },
+      displayLastName: {
+        value: result.displayLastName,
+        canRead: result.canReadDisplayLastName,
+        canEdit: result.canEditDisplayLastName,
+      },
       phone: {
         value: '', // TODO
         canRead: true, // TODO

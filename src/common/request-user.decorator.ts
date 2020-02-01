@@ -53,12 +53,6 @@ class RequiredPipe implements PipeTransform {
     const decoded = verify(value, this.config.jwtKey) as IRequestUser;
     decoded.token = value; // set raw jwt string to prop so db can use it
 
-    if (decoded.owningOrdId === null && decoded.userId === null) {
-      return decoded; // user isn't logged in, we don't need to hit the db
-    } else if (decoded.owningOrdId === null || decoded.userId === null) {
-      throw UnauthorizedException; // token is in an invalid state
-    }
-
     // check token in db to verify the user id and owning org id.
     const result = await this.db
       .query()
@@ -72,10 +66,10 @@ class RequiredPipe implements PipeTransform {
         OPTIONAL MATCH
           (token)<-[:token {active: true}]-(user:User {active: true})
         RETURN
-          token, user.owningOrdId as owningOrdId, user.id as userId
+          token, user.owningOrgId as owningOrgId, user.id as userId
         `,
         {
-          token: decoded,
+          token: decoded.token,
         },
       )
       .first();
@@ -83,14 +77,9 @@ class RequiredPipe implements PipeTransform {
       throw new UnauthorizedException();
     }
 
-    if (
-      result.userId !== undefined &&
-      (decoded.owningOrdId !== result.owningOrdId ||
-        decoded.userId !== result.userId)
-    ) {
-      return decoded;
-    }
+    decoded.owningOrgId = result.owningOrgId;
+    decoded.userId = result.userId;
 
-    throw UnauthorizedException;
+    return decoded;
   }
 }
