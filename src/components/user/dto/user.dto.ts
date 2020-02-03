@@ -8,28 +8,28 @@ export class User extends Resource {
   static classType = (User as any) as Type<User>;
 
   @Field()
-  readonly email: SecuredString;
+  email: SecuredString;
 
   @Field()
-  readonly realFirstName: SecuredString;
+  realFirstName: SecuredString;
 
   @Field()
-  readonly realLastName: SecuredString;
+  realLastName: SecuredString;
 
   @Field()
-  readonly displayFirstName: SecuredString;
+  displayFirstName: SecuredString;
 
   @Field()
-  readonly displayLastName: SecuredString;
+  displayLastName: SecuredString;
 
   @Field()
-  readonly phone: SecuredString;
+  phone: SecuredString;
 
   @Field()
-  readonly timezone: SecuredString;
+  timezone: SecuredString;
 
   @Field()
-  readonly bio: SecuredString;
+  bio: SecuredString;
 }
 
 @ObjectType({

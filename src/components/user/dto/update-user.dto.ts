@@ -22,7 +22,7 @@ export abstract class UpdateUser {
   @MinLength(2)
   readonly displayFirstName?: string;
 
-  @Field()
+  @Field( {nullable: true})
   @MinLength(2)
   readonly displayLastName?: string;
 

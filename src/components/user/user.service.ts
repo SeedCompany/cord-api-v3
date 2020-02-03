@@ -210,7 +210,6 @@ export class UserService {
   }
 
   async readOne(id: string, token: IRequestUser): Promise<User> {
-    
     const result = await this.db
       .query()
       .raw(
@@ -313,39 +312,51 @@ export class UserService {
     };
   }
 
-  async update(input: UpdateUser, token: string): Promise<User> {
+  // async _updateProperty<T>(input: UpdateUser, token: IRequestUser): Promise<Partial<T>> {
+
+    // const asdf = new T();
+
+    // return await new T();
+  // }
+
+  async _updateRealFirstName(
+    input: UpdateUser,
+    token: IRequestUser,
+  ): Promise<Partial<User>> {
     const result = await this.db
       .query()
       .raw(
         `
         MATCH
-          (user:User {active: true, id: $id}),
-          (user)-[:email {active: true}]->(email:EmailAddress {active: true}),
-          (user)-[:realFirstName {active: true}]->(realFirstName:Property {active: true}),
-          (user)-[:realLastName {active: true}]->(realLastName:Property {active: true}),
-          (user)-[:displayFirstName {active: true}]->(displayFirstName:Property {active: true}),
-          (user)-[:displayLastName {active: true}]->(displayLastName:Property {active: true})
+          (token:Token {
+            active: true,
+            value: $token
+          })
+          <-[:token {active: true}]-
+          (requestingUser:User {
+            active: true,
+            id: $requestingUserId
+          })
+          WITH * OPTIONAL MATCH (user:User {active: true, id: $id, owningOrgId: $owningOrgId})
+          WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl4:ACL {canEditRealFirstName: true})-[:toNode]->(user)-[oldToProp:realFirstName {active: true}]->(oldRealFirstName:Property {active: true})
         SET
-          email.value = $email,
-          realFirstName.value = $realFirstName,
-          realLastName.value = $realLastName,
-          displayFirstName.value = $displayFirstName,
-          displayLastName.value = $displayLastName
+          oldToProp.active = false,
+          oldRealFirstName.active = false
+        CREATE
+          (user)-[toProp:realFirstName {active: true, createdAt: datetime()}]->(realFirstName:Property {active: true, createdAt: datetime(), value: $realFirstName})
         RETURN
           user.id as id,
-          email.value as email,
+          realFirstName.createdAt as createdAt,
           realFirstName.value as realFirstName,
-          realLastName.value as realLastName,
-          displayFirstName.value as displayFirstName,
-          displayLastName.value as displayLastName
-        `,
+          acl4.canReadRealFirstName as canReadRealFirstName,
+          acl4.canEditRealFirstName as canEditRealFirstName
+      `,
         {
+          requestingUserId: token.userId,
           id: input.id,
-          // email: input.email,
           realFirstName: input.realFirstName,
-          realLastName: input.realLastName,
-          displayFirstName: input.displayFirstName,
-          displayLastName: input.displayLastName,
+          owningOrgId: token.owningOrgId,
+          token: token.token,
         },
       )
       .first();
@@ -355,40 +366,25 @@ export class UserService {
 
     return {
       id: result.id,
-      createdAt: DateTime.local(), // TODO
-      email: {
-        value: result.email,
-        canRead: true, // TODO
-        canEdit: true, // TODO
-      },
+      createdAt: result.createdAt,
       realFirstName: {
         value: result.realFirstName,
-        canRead: true, // TODO
-        canEdit: true, // TODO
-      },
-      realLastName: {
-        value: result.realLastName,
-        canRead: true, // TODO
-        canEdit: true, // TODO
-      },
-      displayFirstName: result.displayFirstName,
-      displayLastName: result.displayFirstName,
-      phone: {
-        value: '', // TODO
-        canRead: true, // TODO
-        canEdit: true, // TODO
-      },
-      timezone: {
-        value: '', // TODO
-        canRead: true, // TODO
-        canEdit: true, // TODO
-      },
-      bio: {
-        value: '', // TODO
-        canRead: true, // TODO
-        canEdit: true, // TODO
+        canRead: result.canReadRealFirstName,
+        canEdit: result.canEditRealFirstName,
       },
     };
+  }
+
+  async update(input: UpdateUser, token: IRequestUser): Promise<User> {
+    // read current user object in db, diff the request, then update fields in separate queries
+    const user = await this.readOne(input.id, token);
+
+    if (user.realFirstName.value !== input.realFirstName) {
+      const updatedUser = await this._updateRealFirstName(input, token);
+      user.realFirstName = updatedUser.realFirstName;
+    }
+
+    return user;
   }
 
   async delete(id: string, token: string): Promise<void> {

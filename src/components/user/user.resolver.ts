@@ -123,7 +123,7 @@ export class UserResolver {
     description: 'Update a user',
   })
   async updateUser(
-    @RequestUser() token: string,
+    @RequestUser() token: IRequestUser,
     @Args('input') { user: input }: UpdateUserInput,
   ): Promise<UpdateUserOutput> {
     const user = await this.userService.update(input, token);

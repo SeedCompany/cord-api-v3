@@ -25,6 +25,7 @@ export async function createLanguage(
     `,
     })
     .then(({ body }) => {
+      console.log(body);
       langId = body.data.createLanguage.language.id;
     });
   return langId;
