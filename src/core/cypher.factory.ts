@@ -2,6 +2,7 @@ import { FactoryProvider } from '@nestjs/common/interfaces';
 import { Connection } from 'cypher-query-builder';
 import { ConfigService } from './config/config.service';
 import { MyTransformer } from './database-transformer';
+import './database/transaction'; // import our transaction augmentation
 
 export const CypherFactory: FactoryProvider<Connection> = {
   provide: Connection,
