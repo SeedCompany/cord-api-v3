@@ -312,16 +312,13 @@ export class UserService {
     };
   }
 
-  // async _updateProperty<T>(input: UpdateUser, token: IRequestUser): Promise<Partial<T>> {
-
-    // const asdf = new T();
-
-    // return await new T();
-  // }
-
-  async _updateRealFirstName(
+  async _updateProperty(
     input: UpdateUser,
     token: IRequestUser,
+    aclEditPropName: string,
+    aclReadPropName: string,
+    relationshipTypeName: string,
+    newPropNodeValue: string | number | boolean,
   ): Promise<Partial<User>> {
     const result = await this.db
       .query()
@@ -338,23 +335,23 @@ export class UserService {
             id: $requestingUserId
           })
           WITH * OPTIONAL MATCH (user:User {active: true, id: $id, owningOrgId: $owningOrgId})
-          WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl4:ACL {canEditRealFirstName: true})-[:toNode]->(user)-[oldToProp:realFirstName {active: true}]->(oldRealFirstName:Property {active: true})
+          WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl:ACL {${aclEditPropName}: true})-[:toNode]->(user)-[oldToProp:${relationshipTypeName} {active: true}]->(oldPropVar:Property {active: true})
         SET
           oldToProp.active = false,
-          oldRealFirstName.active = false
+          oldPropVar.active = false
         CREATE
-          (user)-[toProp:realFirstName {active: true, createdAt: datetime()}]->(realFirstName:Property {active: true, createdAt: datetime(), value: $realFirstName})
+          (user)-[toProp:${relationshipTypeName} {active: true, createdAt: datetime()}]->(newPropNode:Property {active: true, createdAt: datetime(), value: $newPropNodeValue})
         RETURN
           user.id as id,
-          realFirstName.createdAt as createdAt,
-          realFirstName.value as realFirstName,
-          acl4.canReadRealFirstName as canReadRealFirstName,
-          acl4.canEditRealFirstName as canEditRealFirstName
+          newPropNode.createdAt as createdAt,
+          newPropNode.value as ${relationshipTypeName},
+          acl.${aclReadPropName} as ${aclReadPropName},
+          acl.${aclEditPropName} as ${aclEditPropName}
       `,
         {
           requestingUserId: token.userId,
           id: input.id,
-          realFirstName: input.realFirstName,
+          newPropNodeValue,
           owningOrgId: token.owningOrgId,
           token: token.token,
         },
@@ -367,10 +364,10 @@ export class UserService {
     return {
       id: result.id,
       createdAt: result.createdAt,
-      realFirstName: {
-        value: result.realFirstName,
-        canRead: result.canReadRealFirstName,
-        canEdit: result.canEditRealFirstName,
+      [relationshipTypeName]: {
+        value: result[relationshipTypeName],
+        canRead: result[aclReadPropName],
+        canEdit: result[aclEditPropName],
       },
     };
   }
@@ -379,9 +376,58 @@ export class UserService {
     // read current user object in db, diff the request, then update fields in separate queries
     const user = await this.readOne(input.id, token);
 
-    if (user.realFirstName.value !== input.realFirstName) {
-      const updatedUser = await this._updateRealFirstName(input, token);
+    if (
+      input.realFirstName !== undefined &&
+      user.realFirstName.value !== input.realFirstName
+    ) {
+      const updatedUser = await this._updateProperty(
+        input,
+        token,
+        'canEditRealFirstName',
+        'canReadRealFirstName',
+        'realFirstName',
+        input.realFirstName,
+      );
       user.realFirstName = updatedUser.realFirstName;
+    } else if (
+      input.realLastName !== undefined &&
+      user.realLastName.value !== input.realLastName
+    ) {
+      const updatedUser = await this._updateProperty(
+        input,
+        token,
+        'canEditRealLastName',
+        'canReadRealLastName',
+        'realLastName',
+        input.realLastName,
+      );
+      user.realLastName = updatedUser.realLastName;
+    } else if (
+      input.displayFirstName !== undefined &&
+      user.displayFirstName.value !== input.displayFirstName
+    ) {
+      const updatedUser = await this._updateProperty(
+        input,
+        token,
+        'canEditDisplayFirstName',
+        'canReadDisplayFirstName',
+        'displayFirstName',
+        input.displayFirstName,
+      );
+      user.displayFirstName = updatedUser.displayFirstName;
+    } else if (
+      input.displayLastName !== undefined &&
+      user.displayLastName.value !== input.displayLastName
+    ) {
+      const updatedUser = await this._updateProperty(
+        input,
+        token,
+        'canEditDisplayLastName',
+        'canReadDisplayLastName',
+        'displayLastName',
+        input.displayLastName,
+      );
+      user.displayLastName = updatedUser.displayLastName;
     }
 
     return user;
