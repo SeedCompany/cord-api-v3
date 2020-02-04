@@ -20,7 +20,6 @@ import { LevelMatcherProvider } from './level-matcher.provider';
 import { ILogger } from './logger.interface';
 import { LoggerOptions, WinstonLoggerService } from './winston-logger.service';
 import { NestLoggerAdapterService } from './nest-logger-adapter.service';
-import { getLoggerToken } from './logger.utils';
 import { NamedLoggerService } from './named-logger.service';
 
 @Global()
@@ -39,7 +38,7 @@ import { NamedLoggerService } from './named-logger.service';
   ],
 })
 export class LoggerModule {
-  static prefixesForLoggers: string[] = new Array<string>();
+  static loggerNames: string[] = new Array<string>();
 
   static forRoot(): DynamicModule {
     // Just CLI for now. We'll handle hooking up to cloudwatch later.
@@ -58,7 +57,7 @@ export class LoggerModule {
       ),
     };
 
-    const namedLoggerProviders = this.prefixesForLoggers.map(
+    const namedLoggerProviders = this.loggerNames.map(
       namedLoggerProvider,
     );
     return {
@@ -75,8 +74,19 @@ export class LoggerModule {
   }
 }
 
-const namedLoggerProvider = (prefix: string): Provider<ILogger> => ({
-  provide: getLoggerToken(prefix),
-  useFactory: (logger: NamedLoggerService) => logger.setName(prefix),
+/**
+ * Creates the token for a named logger
+ * @param name The name of the logger
+ */
+export const LoggerToken = (name: string) => {
+  if (!LoggerModule.loggerNames.includes(name)) {
+    LoggerModule.loggerNames.push(name);
+  }
+  return `Logger(${name})`;
+};
+
+const namedLoggerProvider = (name: string): Provider<ILogger> => ({
+  provide: LoggerToken(name),
+  useFactory: (logger: NamedLoggerService) => logger.setName(name),
   inject: [NamedLoggerService],
 });

@@ -1,6 +1,5 @@
 import { Inject } from '@nestjs/common';
-import { getLoggerToken } from './logger.utils';
-import { LoggerModule } from './logger.module';
+import { LoggerToken } from './logger.module';
 
 /**
  * Injects a `ILogger`
@@ -8,9 +7,4 @@ import { LoggerModule } from './logger.module';
  * @param name Should be lower-cased and namespaced with colons
  *             Ex: `foo:bar:service`
  */
-export function Logger(name: string) {
-  if (!LoggerModule.prefixesForLoggers.includes(name)) {
-    LoggerModule.prefixesForLoggers.push(name);
-  }
-  return Inject(getLoggerToken(name));
-}
+export const Logger = (name: string) => Inject(LoggerToken(name));
