@@ -1,21 +1,21 @@
 import { Resolver, Args, Query, Mutation } from '@nestjs/graphql';
 import { IdArg, Token } from '../../common';
 import {
-  Location,
+  CreateCountryInput,
+  CreateCountryOutput,
+  CreateRegionInput,
   CreateRegionOutput,
+  CreateZoneInput,
+  CreateZoneOutput,
+  Location,
   LocationListInput,
   LocationListOutput,
-  CreateRegionInput,
-  CreateAreaOutput,
-  CreateAreaInput,
-  CreateCountryOutput,
-  CreateCountryInput,
+  UpdateCountryInput,
+  UpdateCountryOutput,
   UpdateRegionOutput,
   UpdateRegionInput,
-  UpdateAreaOutput,
-  UpdateAreaInput,
-  UpdateCountryOutput,
-  UpdateCountryInput,
+  UpdateZoneOutput,
+  UpdateZoneInput,
 } from './dto';
 import { LocationService } from './location.service';
 
@@ -48,6 +48,17 @@ export class LocationResolver {
     return this.locationService.list(input, token);
   }
 
+  @Mutation(() => CreateZoneOutput, {
+    description: 'Create a zone',
+  })
+  async createZone(
+    @Token() token: string,
+    @Args('input') { zone: input }: CreateZoneInput,
+  ): Promise<CreateZoneOutput> {
+    const zone = await this.locationService.createZone(input, token);
+    return { zone };
+  }
+
   @Mutation(() => CreateRegionOutput, {
     description: 'Create a region',
   })
@@ -57,17 +68,6 @@ export class LocationResolver {
   ): Promise<CreateRegionOutput> {
     const region = await this.locationService.createRegion(input, token);
     return { region };
-  }
-
-  @Mutation(() => CreateAreaOutput, {
-    description: 'Create an area',
-  })
-  async createArea(
-    @Token() token: string,
-    @Args('input') { area: input }: CreateAreaInput,
-  ): Promise<CreateAreaOutput> {
-    const area = await this.locationService.createArea(input, token);
-    return { area };
   }
 
   @Mutation(() => CreateCountryOutput, {
@@ -81,6 +81,17 @@ export class LocationResolver {
     return { country };
   }
 
+  @Mutation(() => UpdateZoneOutput, {
+    description: 'Update a zone',
+  })
+  async updateZone(
+    @Token() token: string,
+    @Args('input') { zone: input }: UpdateZoneInput,
+  ): Promise<UpdateZoneOutput> {
+    const zone = await this.locationService.updateZone(input, token);
+    return { zone };
+  }
+
   @Mutation(() => UpdateRegionOutput, {
     description: 'Update a region',
   })
@@ -90,17 +101,6 @@ export class LocationResolver {
   ): Promise<UpdateRegionOutput> {
     const region = await this.locationService.updateRegion(input, token);
     return { region };
-  }
-
-  @Mutation(() => UpdateAreaOutput, {
-    description: 'Update an area',
-  })
-  async updateArea(
-    @Token() token: string,
-    @Args('input') { area: input }: UpdateAreaInput,
-  ): Promise<UpdateAreaOutput> {
-    const area = await this.locationService.updateArea(input, token);
-    return { area };
   }
 
   @Mutation(() => UpdateCountryOutput, {

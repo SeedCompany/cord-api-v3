@@ -1,7 +1,23 @@
 import { Type } from 'class-transformer';
 import { MinLength, ValidateNested } from 'class-validator';
 import { Field, ID, InputType, ObjectType } from 'type-graphql';
-import { Area, Country, Region } from './location.dto';
+import { Region, Country, Zone } from './location.dto';
+
+@InputType()
+export abstract class UpdateZone {
+  @Field(() => ID)
+  readonly id: string;
+
+  @Field({ nullable: true })
+  @MinLength(2)
+  readonly name?: string;
+
+  @Field(() => ID, {
+    description: 'A user ID that will be the new director of the zone',
+    nullable: true,
+  })
+  readonly directorId?: string;
+}
 
 @InputType()
 export abstract class UpdateRegion {
@@ -13,26 +29,10 @@ export abstract class UpdateRegion {
   readonly name?: string;
 
   @Field(() => ID, {
-    description: 'A user ID that will be the new director of the region',
+    description: 'The zone ID that the region will be associated with',
     nullable: true,
   })
-  readonly directorId?: string;
-}
-
-@InputType()
-export abstract class UpdateArea {
-  @Field(() => ID)
-  readonly id: string;
-
-  @Field({ nullable: true })
-  @MinLength(2)
-  readonly name?: string;
-
-  @Field(() => ID, {
-    description: 'The region ID that the area will be associated with',
-    nullable: true,
-  })
-  readonly regionId?: string;
+  readonly zoneId?: string;
 
   @Field(() => ID, {
     description: 'A user ID that will be the director of the region',
@@ -57,19 +57,19 @@ export abstract class UpdateCountry {
 }
 
 @InputType()
+export abstract class UpdateZoneInput {
+  @Field()
+  @Type(() => UpdateZone)
+  @ValidateNested()
+  readonly zone: UpdateZone;
+}
+
+@InputType()
 export abstract class UpdateRegionInput {
   @Field()
   @Type(() => UpdateRegion)
   @ValidateNested()
   readonly region: UpdateRegion;
-}
-
-@InputType()
-export abstract class UpdateAreaInput {
-  @Field()
-  @Type(() => UpdateArea)
-  @ValidateNested()
-  readonly area: UpdateArea;
 }
 
 @InputType()
@@ -81,15 +81,15 @@ export abstract class UpdateCountryInput {
 }
 
 @ObjectType()
-export abstract class UpdateRegionOutput {
+export abstract class UpdateZoneOutput {
   @Field()
-  readonly region: Region;
+  readonly zone: Zone;
 }
 
 @ObjectType()
-export abstract class UpdateAreaOutput {
+export abstract class UpdateRegionOutput {
   @Field()
-  readonly area: Area;
+  readonly region: Region;
 }
 
 @ObjectType()

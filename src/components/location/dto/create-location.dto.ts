@@ -1,7 +1,19 @@
 import { Type } from 'class-transformer';
 import { MinLength, ValidateNested } from 'class-validator';
 import { Field, ID, InputType, ObjectType } from 'type-graphql';
-import { Area, Country, Region } from './location.dto';
+import { Region, Country, Zone } from './location.dto';
+
+@InputType()
+export abstract class CreateZone {
+  @Field()
+  @MinLength(2)
+  readonly name: string;
+
+  @Field(() => ID, {
+    description: 'A user ID that will be the director of the zone',
+  })
+  readonly directorId: string;
+}
 
 @InputType()
 export abstract class CreateRegion {
@@ -10,21 +22,9 @@ export abstract class CreateRegion {
   readonly name: string;
 
   @Field(() => ID, {
-    description: 'A user ID that will be the director of the region',
+    description: 'The zone ID that the region will be associated with',
   })
-  readonly directorId: string;
-}
-
-@InputType()
-export abstract class CreateArea {
-  @Field()
-  @MinLength(2)
-  readonly name: string;
-
-  @Field(() => ID, {
-    description: 'The region ID that the area will be associated with',
-  })
-  readonly regionId: string;
+  readonly zoneId: string;
 
   @Field(() => ID, {
     description: 'A user ID that will be the director of the region',
@@ -39,7 +39,15 @@ export abstract class CreateCountry {
   readonly name: string;
 
   @Field(() => ID)
-  readonly areaId: string;
+  readonly regionId: string;
+}
+
+@InputType()
+export abstract class CreateZoneInput {
+  @Field()
+  @Type(() => CreateZone)
+  @ValidateNested()
+  readonly zone: CreateZone;
 }
 
 @InputType()
@@ -51,14 +59,6 @@ export abstract class CreateRegionInput {
 }
 
 @InputType()
-export abstract class CreateAreaInput {
-  @Field()
-  @Type(() => CreateArea)
-  @ValidateNested()
-  readonly area: CreateArea;
-}
-
-@InputType()
 export abstract class CreateCountryInput {
   @Field()
   @Type(() => CreateCountry)
@@ -67,15 +67,15 @@ export abstract class CreateCountryInput {
 }
 
 @ObjectType()
-export abstract class CreateRegionOutput {
+export abstract class CreateZoneOutput {
   @Field()
-  readonly region: Region;
+  readonly zone: Zone;
 }
 
 @ObjectType()
-export abstract class CreateAreaOutput {
+export abstract class CreateRegionOutput {
   @Field()
-  readonly area: Area;
+  readonly region: Region;
 }
 
 @ObjectType()

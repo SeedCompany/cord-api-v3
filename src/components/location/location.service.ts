@@ -6,18 +6,18 @@ import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { User } from '../user/dto';
 import {
-  Area,
+  Region,
   Country,
-  CreateArea,
-  CreateCountry,
   CreateRegion,
+  CreateCountry,
+  CreateZone,
   Location,
   LocationListInput,
   LocationListOutput,
-  Region,
-  UpdateArea,
-  UpdateCountry,
+  Zone,
   UpdateRegion,
+  UpdateCountry,
+  UpdateZone,
 } from './dto';
 
 @Injectable()
@@ -80,18 +80,18 @@ export class LocationService {
       timezone: ro(faker.lorem.words(2)),
     });
 
-    const region: Region = {
+    const region: Zone = {
       id: id(),
       createdAt: inPast(),
       name: ro(faker.address.country()),
       director: ro(user()),
     };
 
-    const area: Area = {
+    const area: Region = {
       id: id(),
       createdAt: inPast(),
       name: ro(faker.address.state()),
-      region: ro(region),
+      zone: ro(region),
       director: ro(user()),
     };
 
@@ -99,17 +99,17 @@ export class LocationService {
       id: id(),
       createdAt: inPast(),
       name: ro(faker.address.city()),
-      area: ro(area),
+      region: ro(area),
     };
 
     return faker.random.arrayElement([area, region, country]);
   }
 
-  async createRegion(input: CreateRegion, token: string): Promise<Region> {
+  async createZone(input: CreateZone, token: string): Promise<Zone> {
     throw new Error('Not implemented');
   }
 
-  async createArea(input: CreateArea, token: string): Promise<Area> {
+  async createRegion(input: CreateRegion, token: string): Promise<Region> {
     throw new Error('Not implemented');
   }
 
@@ -117,11 +117,11 @@ export class LocationService {
     throw new Error('Not implemented');
   }
 
-  async updateRegion(input: UpdateRegion, token: string): Promise<Region> {
+  async updateZone(input: UpdateZone, token: string): Promise<Zone> {
     throw new Error('Not implemented');
   }
 
-  async updateArea(input: UpdateArea, token: string): Promise<Area> {
+  async updateRegion(input: UpdateRegion, token: string): Promise<Region> {
     throw new Error('Not implemented');
   }
 
