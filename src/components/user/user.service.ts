@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Connection } from 'cypher-query-builder';
-import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import * as argon2 from 'argon2';
+import { PropertyUpdaterService } from '../../core';
 import { ILogger, Logger } from '../../core/logger';
 import {
   OrganizationListInput,
@@ -16,7 +16,6 @@ import {
   UserListInput,
   UserListOutput,
 } from './dto';
-import { decode, JsonWebTokenError, verify, sign } from 'jsonwebtoken';
 import { IRequestUser } from '../../common';
 import { ConfigService } from '../../core';
 
@@ -26,6 +25,7 @@ export class UserService {
     private readonly organizations: OrganizationService,
     private readonly config: ConfigService,
     private readonly db: Connection,
+    private readonly propertyUpdater: PropertyUpdaterService,
     @Logger('user:service') private readonly logger: ILogger,
   ) {}
 
@@ -312,125 +312,20 @@ export class UserService {
     };
   }
 
-  async _updateProperty(
-    input: UpdateUser,
-    token: IRequestUser,
-    aclEditPropName: string,
-    aclReadPropName: string,
-    relationshipTypeName: string,
-    newPropNodeValue: string | number | boolean,
-  ): Promise<Partial<User>> {
-    const result = await this.db
-      .query()
-      .raw(
-        `
-        MATCH
-          (token:Token {
-            active: true,
-            value: $token
-          })
-          <-[:token {active: true}]-
-          (requestingUser:User {
-            active: true,
-            id: $requestingUserId
-          })
-          WITH * OPTIONAL MATCH (user:User {active: true, id: $id, owningOrgId: $owningOrgId})
-          WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl:ACL {${aclEditPropName}: true})-[:toNode]->(user)-[oldToProp:${relationshipTypeName} {active: true}]->(oldPropVar:Property {active: true})
-        SET
-          oldToProp.active = false,
-          oldPropVar.active = false
-        CREATE
-          (user)-[toProp:${relationshipTypeName} {active: true, createdAt: datetime()}]->(newPropNode:Property {active: true, createdAt: datetime(), value: $newPropNodeValue})
-        RETURN
-          user.id as id,
-          newPropNode.createdAt as createdAt,
-          newPropNode.value as ${relationshipTypeName},
-          acl.${aclReadPropName} as ${aclReadPropName},
-          acl.${aclEditPropName} as ${aclEditPropName}
-      `,
-        {
-          requestingUserId: token.userId,
-          id: input.id,
-          newPropNodeValue,
-          owningOrgId: token.owningOrgId,
-          token: token.token,
-        },
-      )
-      .first();
-    if (!result) {
-      throw new NotFoundException('Could not find user');
-    }
-
-    return {
-      id: result.id,
-      createdAt: result.createdAt,
-      [relationshipTypeName]: {
-        value: result[relationshipTypeName],
-        canRead: result[aclReadPropName],
-        canEdit: result[aclEditPropName],
-      },
-    };
-  }
-
   async update(input: UpdateUser, token: IRequestUser): Promise<User> {
-    // read current user object in db, diff the request, then update fields in separate queries
     const user = await this.readOne(input.id, token);
 
-    if (
-      input.realFirstName !== undefined &&
-      user.realFirstName.value !== input.realFirstName
-    ) {
-      const updatedUser = await this._updateProperty(
-        input,
-        token,
-        'canEditRealFirstName',
-        'canReadRealFirstName',
+    return this.propertyUpdater.updateProperties({
+      token,
+      object: user,
+      props: [
         'realFirstName',
-        input.realFirstName,
-      );
-      user.realFirstName = updatedUser.realFirstName;
-    } else if (
-      input.realLastName !== undefined &&
-      user.realLastName.value !== input.realLastName
-    ) {
-      const updatedUser = await this._updateProperty(
-        input,
-        token,
-        'canEditRealLastName',
-        'canReadRealLastName',
         'realLastName',
-        input.realLastName,
-      );
-      user.realLastName = updatedUser.realLastName;
-    } else if (
-      input.displayFirstName !== undefined &&
-      user.displayFirstName.value !== input.displayFirstName
-    ) {
-      const updatedUser = await this._updateProperty(
-        input,
-        token,
-        'canEditDisplayFirstName',
-        'canReadDisplayFirstName',
         'displayFirstName',
-        input.displayFirstName,
-      );
-      user.displayFirstName = updatedUser.displayFirstName;
-    } else if (
-      input.displayLastName !== undefined &&
-      user.displayLastName.value !== input.displayLastName
-    ) {
-      const updatedUser = await this._updateProperty(
-        input,
-        token,
-        'canEditDisplayLastName',
-        'canReadDisplayLastName',
         'displayLastName',
-        input.displayLastName,
-      );
-      user.displayLastName = updatedUser.displayLastName;
-    }
-
-    return user;
+      ],
+      changes: input,
+    });
   }
 
   async delete(id: string, token: string): Promise<void> {
