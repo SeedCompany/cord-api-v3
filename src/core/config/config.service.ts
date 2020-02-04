@@ -14,7 +14,7 @@ export class ConfigService {
   port = this.env.number('port').optional(3000);
   globalPrefix = 'api';
 
-  jwtKey = this.env.string('JWT_AUTH_KEY').required();
+  jwtKey = this.env.string('JWT_AUTH_KEY').optional('cord-field');
 
   @Lazy() get neo4j() {
     const driverConfig: Neo4JDriverConfig = {
