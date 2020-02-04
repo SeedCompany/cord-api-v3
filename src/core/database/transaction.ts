@@ -1,8 +1,10 @@
+import { stripIndent } from 'common-tags';
 import { Query, Transformer } from 'cypher-query-builder';
 import { Connection } from 'cypher-query-builder';
 import Observable from 'any-observable';
 import { Dictionary } from 'lodash';
 import { Session, Transaction as NeoTransaction } from 'neo4j-driver/types/v1';
+import { ILogger } from '../logger';
 
 declare module 'cypher-query-builder/dist/typings/connection' {
   interface Connection {
@@ -38,7 +40,7 @@ Connection.prototype.withTransaction = async function withTransaction<R>(
 };
 
 Connection.prototype.transaction = function transaction(this: Connection) {
-  return new Transaction(this, this.transformer);
+  return new Transaction(this, this.transformer, (this as any).logger);
 };
 
 /** A type matching what Query actually uses from its connection parameter */
@@ -51,6 +53,7 @@ export class Transaction implements QueryConnection {
   constructor(
     private connection: Connection,
     private transformer: Transformer,
+    private logger: ILogger,
   ) {}
 
   query(): Query {
@@ -121,7 +124,10 @@ export class Transaction implements QueryConnection {
     this.begin();
 
     const { query: q, params } = query.buildQueryObject();
-    const result = await this.wrapped.run(q, params);
+    const statement = stripIndent(q);
+    this.logger.debug('\n' + statement, params);
+
+    const result = await this.wrapped.run(statement, params);
 
     return this.transformer.transformRecords(result.records);
   }
