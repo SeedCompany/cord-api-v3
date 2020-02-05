@@ -1,187 +1,131 @@
-import * as request from 'supertest';
-import { generate, isValid } from 'shortid';
-import { INestApplication } from '@nestjs/common';
-import { Language } from '../src/components/language';
-import { createTestApp, TestApp } from './utility';
+import * as faker from 'faker';
 
-export async function createLanguage(
-  app: INestApplication,
-  langName: string,
-): Promise<string> {
-  let langId = '0';
-  await request(app.getHttpServer())
-    .post('/graphql')
-    .send({
-      operationName: null,
-      query: `
-    mutation {
-      createLanguage (input: { language: { name: "${langName}" } }){
-        language{
-        id
-        name
-        }
-      }
-    }
-    `,
-    })
-    .then(({ body }) => {
-      console.log(body);
-      langId = body.data.createLanguage.language.id;
-    });
-  return langId;
-}
+import {
+  TestApp,
+  createLanguage,
+  createTestApp,
+  createToken,
+  createUser,
+} from './utility';
 
-describe.skip('Language e2 e', () => {
+import { Language } from '../src/components/language/dto/language.dto';
+import { fragments } from './utility/fragments';
+import { gql } from 'apollo-server-core';
+import { isValid } from 'shortid';
+import { times } from 'lodash';
+
+describe('Language e2e', () => {
   let app: TestApp;
 
   beforeEach(async () => {
     app = await createTestApp();
+    await createToken(app);
+    await createUser(app);
   });
 
-  it('create language', () => {
-    const langName = 'bestLangEver12345' + Date.now();
-    return request(app.getHttpServer())
-      .post('/graphql')
-      .send({
-        operationName: null,
-        query: `
-        mutation {
-          createLanguage (input: { language: { name: "${langName}" } }){
-            language{
-            id
-            name
-            }
-          }
-        }
-        `,
-      })
-      .expect(({ body }) => {
-        const langId = body.data.createLanguage.language.id;
-        expect(isValid(langId)).toBe(true);
-        expect(body.data.createLanguage.language.name).toBe(langName);
-      })
-      .expect(200);
+  afterAll(async () => {
+    await app.close();
+  });
+
+  it('create a language', async () => {
+    const language = await createLanguage(app);
+    expect(language.id).toBeDefined();
   });
 
   it('read one language by id', async () => {
-    const newLangName = 'langNameForReadLangTest1' + Date.now();
-    // create lang first
-    const langId = await createLanguage(app, newLangName);
+    const language = await createLanguage(app);
 
-    // test reading new lang
-    return request(app.getHttpServer())
-      .post('/graphql')
-      .send({
-        operationName: null,
-        query: `
-        query {
-          readLanguage ( input: { language: { id: "${langId}" } }){
-            language{
-            id
-            name
+    try {
+      const { language: actual } = await app.graphql.query(
+        gql`
+          query language($id: ID!) {
+            language(id: $id) {
+              ...language
             }
           }
-        }
+          ${fragments.language}
         `,
-      })
-      .expect(({ body }) => {
-        expect(body.data.readLanguage.language.id).toBe(langId);
-        expect(body.data.readLanguage.language.name).toBe(newLangName);
-      })
-      .expect(200);
+        {
+          id: language.id,
+        },
+      );
+
+      expect(actual.id).toBe(language.id);
+      expect(isValid(actual.id)).toBe(true);
+      expect(actual.name.value).toBe(language.name.value);
+    } catch (e) {
+      console.error(e);
+    }
   });
 
-  it('update language', async () => {
-    const newLangName = 'langNameForReadLangTest1' + Date.now();
-    // create lang first
-    const langId = await createLanguage(app, 'oldLangName');
+  // UPDATE LANGUAGE
+  it.skip('update language', async () => {
+    const language = await createLanguage(app);
+    const newName = faker.company.companyName();
 
-    return request(app.getHttpServer())
-      .post('/graphql')
-      .send({
-        operationName: null,
-        query: `
-        mutation {
-          updateLanguage (input: { language: {id: "${langId}", name: "${newLangName}" } }){
+    const result = await app.graphql.mutate(
+      gql`
+        mutation updateLanguage($input: UpdateLanguageInput!) {
+          updateLanguage(input: $input) {
             language {
-            id
-            name
+              ...language
             }
           }
         }
-        `,
-      })
-      .expect(({ body }) => {
-        expect(body.data.updateLanguage.language.id).toBe(langId);
-        expect(body.data.updateLanguage.language.name).toBe(newLangName);
-      })
-      .expect(200);
+        ${fragments.language}
+      `,
+      {
+        input: {
+          language: {
+            id: language.id,
+            name: newName,
+          },
+        },
+      },
+    );
+    const updated = result?.updateLanguage?.language;
+    expect(updated).toBeTruthy();
+    expect(updated.id).toBe(language.id);
+    expect(updated.name.value).toBe(newName);
   });
 
+  // DELETE LANGUAGE
   it('delete language', async () => {
-    const newLangName = 'langNameForReadLangTest1' + Date.now();
-    // create lang first
-    const langId = await createLanguage(app, newLangName);
+    const language = await createLanguage(app);
 
-    return request(app.getHttpServer())
-      .post('/graphql')
-      .send({
-        operationName: null,
-        query: `
-        mutation {
-          deleteLanguage (input: { language: { id: "${langId}" } }){
-            language {
-            id
-            }
-          }
+    const result = await app.graphql.mutate(
+      gql`
+        mutation deleteLanguage($id: ID!) {
+          deleteLanguage(id: $id)
         }
-        `,
-      })
-      .expect(({ body }) => {
-        expect(body.data.deleteLanguage.language.id).toBe(langId);
-      })
-      .expect(200);
+      `,
+      {
+        id: language.id,
+      },
+    );
+    const actual: Language | undefined = result.deleteLanguage;
+    expect(actual).toBeTruthy();
   });
 
   // LIST Languages
   it('List view of languages', async () => {
     // create a bunch of languages
     const numLanguages = 10;
-    const langs: Language[] = [];
-    // for (let i = 0; i < numLanguages; i++) {
-    //   const lang = new Language();
-    //   lang.name = 'langName_' + generate() + 'ian';
-    //   lang.id = await createLanguage(app, lang.name);
-    //   langs.push(lang);
-    // }
-
+    await Promise.all(times(numLanguages).map(() => createLanguage(app)));
     // test reading new lang
-    return request(app.getHttpServer())
-      .post('/graphql')
-      .send({
-        operationName: null,
-        query: `
-        query {
-          languages(
-            input: {
-              query: { filter: "", page: 0, count: ${numLanguages}, sort: "name", order: "asc" }
-            }
-          ) {
-            languages {
-              id
-              name
-            }
+    const { languages } = await app.graphql.query(gql`
+      query {
+        languages {
+          items {
+            ...org
           }
+          hasMore
+          total
         }
-          `,
-      })
-      .expect(({ body }) => {
-        expect(body.data.languages.languages.length).toBe(numLanguages);
-      })
-      .expect(200);
-  });
+      }
+      ${fragments.org}
+    `);
 
-  afterAll(async () => {
-    await app.close();
+    expect(languages.items.length).toBeGreaterThan(numLanguages);
   });
 });
