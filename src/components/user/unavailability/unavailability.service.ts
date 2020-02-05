@@ -31,14 +31,22 @@ export class UnavailabilityService {
       .query()
       .raw(
         `
-      MATCH (token:Token {active: true, value: $token})
-      CREATE
-        (unavailability:Unavailability {
-          id: 'BEUCYk9B',
+      MATCH
+        (token:Token {
           active: true,
-          createdAt: datetime(),
-          canCreateOrg: true,
-          canReadOrgs: true
+          value: $token
+        })
+        <-[:token {active: true}]-
+        (user:User {
+          active: true,
+          canCreateOrg: true
+        })
+      CREATE
+        (user)
+          -[:unavailability {active: true}]->
+        (unavailability:Unavailability {
+          active: true,
+          createdAt: datetime()
         })
         -[:description {active: true}]->
         (description:description:Property {
