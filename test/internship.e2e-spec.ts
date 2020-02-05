@@ -29,7 +29,7 @@ async function createInternship(
   return internshipId;
 }
 
-describe('Internship e2e', () => {
+describe.skip('Internship e2e', () => {
   let app: TestApp;
 
   beforeEach(async () => {

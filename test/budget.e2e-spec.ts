@@ -28,7 +28,7 @@ async function createBudget(
   return budgetId;
 }
 
-describe('Budget e2e', () => {
+describe.skip('Budget e2e', () => {
   let app: TestApp;
 
   beforeEach(async () => {

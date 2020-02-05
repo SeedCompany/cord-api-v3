@@ -34,7 +34,7 @@ async function createProjectEngagement(
   return projectEngagementId;
 }
 
-describe('ProjectEngagement e2e', () => {
+describe.skip('ProjectEngagement e2e', () => {
   let app: TestApp;
 
   beforeEach(async () => {
