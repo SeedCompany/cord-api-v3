@@ -329,7 +329,7 @@ export class UserService {
     });
   }
 
-  async delete(id: string, token: string): Promise<void> {
+  async delete(id: string, token: IRequestUser): Promise<void> {
     await this.db
       .query()
       .raw(
@@ -347,15 +347,21 @@ export class UserService {
         (requestingUser)
         <-[:member]-(acl:ACL {
           canDeleteOwnUser: true
-        }]-
-        (requestingUser)
+        })
+        -[:toNode]->
+        (user:User {
+          active: true,
+          id: $userToDeleteId
+        })
         SET
           user.active = false
         RETURN
           user.id as id
         `,
         {
-          id,
+          requestingUserId: token.userId,
+          token: token.token,
+          userToDeleteId: id,
         },
       )
       .run();

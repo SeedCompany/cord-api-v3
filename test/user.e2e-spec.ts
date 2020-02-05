@@ -12,89 +12,64 @@ describe('User e2e', () => {
     app = await createTestApp();
   });
 
-  // it('read one user by id', async () => {
-  //   // create user first
-  //   const token = await createToken(app);
-  //   const user = await createUser(app);
-  //   const result = await app.graphql.query(
-  //     gql`
-  //       query user($id: ID!){
-  //         user(id: $id) {
-  //             ...user
-  //         }
-  //       }
-  //       ${fragments.user}
-  //     `,
-  //     {
-  //       id: user.id,
-  //     },
-  //   );
+  it('read one user by id', async () => {
+    // create user first
+    const token = await createToken(app);
+    const user = await createUser(app);
+    const result = await app.graphql.query(
+      gql`
+        query user($id: ID!){
+          user(id: $id) {
+              ...user
+          }
+        }
+        ${fragments.user}
+      `,
+      {
+        id: user.id,
+      },
+    );
 
-  //   const actual: User | undefined = result.user;
-  //   expect(actual).toBeTruthy();
+    const actual: User | undefined = result.user;
+    expect(actual).toBeTruthy();
 
-  //   expect(isValid(actual.id)).toBe(true);
-  //   expect(actual.email.value).toBe(user.email.value);
+    expect(isValid(actual.id)).toBe(true);
+    expect(actual.email.value).toBe(user.email.value);
 
-  //   return true;
-  // });
+    return true;
+  });
 
-  // it('update user', async () => {
-  //   // create user first
-  //   const token = await createToken(app);
-  //   const user = await createUser(app);
-  //   const result = await app.graphql.query(
-  //     gql`
-  //       mutation updateUser($id: ID!, $realFirstName: String) {
-  //         updateUser(
-  //           input: { user: { id: $id, realFirstName: $realFirstName } }
-  //         ) {
-  //           user {
-  //             ...user
-  //           }
-  //         }
-  //       }
-  //       ${fragments.user}
-  //     `,
-  //     {
-  //       id: user.id,
-  //       realFirstName: user.realFirstName.value + ' 2',
-  //     },
-  //   );
+  it('update user', async () => {
+    // create user first
+    const token = await createToken(app);
+    const user = await createUser(app);
+    const result = await app.graphql.query(
+      gql`
+        mutation updateUser($id: ID!, $realFirstName: String) {
+          updateUser(
+            input: { user: { id: $id, realFirstName: $realFirstName } }
+          ) {
+            user {
+              ...user
+            }
+          }
+        }
+        ${fragments.user}
+      `,
+      {
+        id: user.id,
+        realFirstName: user.realFirstName.value + ' 2',
+      },
+    );
 
-  //   const actual: User | undefined = result.updateUser.user;
-  //   expect(actual).toBeTruthy();
+    const actual: User | undefined = result.updateUser.user;
+    expect(actual).toBeTruthy();
 
-  //   expect(isValid(actual.id)).toBe(true);
-  //   expect(actual.email.value).toBe(user.email.value);
+    expect(isValid(actual.id)).toBe(true);
+    expect(actual.email.value).toBe(user.email.value);
 
-  //   return true;
-  // });
-
-  // it('delete user', async () => {
-  //   const token = await createToken(app);
-  //   const user = await createUser(app);
-
-  //   return request(app.getHttpServer())
-  //     .post('/graphql')
-  //     .set('token', token)
-  //     .send({
-  //       operationName: null,
-  //       query: `
-  //       mutation {
-  //         deleteUser (input: { user: { id: "${user.id}" } }){
-  //           user {
-  //           id
-  //           }
-  //         }
-  //       }
-  //       `,
-  //     })
-  //     .expect(({ body }) => {
-  //       expect(body.data.deleteUser.user.id).toBe(user.id);
-  //     })
-  //     .expect(200);
-  // });
+    return true;
+  });
 
   it('delete user', async () => {
     // create user first
@@ -112,7 +87,7 @@ describe('User e2e', () => {
     );
 
     const actual: User | undefined = result.deleteUser;
-    expect(actual).toBeFalsy();
+    expect(actual).toBeTruthy();
 
     return true;
   });
