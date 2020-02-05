@@ -148,12 +148,12 @@ describe.skip('Language e2 e', () => {
     // create a bunch of languages
     const numLanguages = 10;
     const langs: Language[] = [];
-    for (let i = 0; i < numLanguages; i++) {
-      const lang = new Language();
-      lang.name = 'langName_' + generate() + 'ian';
-      lang.id = await createLanguage(app, lang.name);
-      langs.push(lang);
-    }
+    // for (let i = 0; i < numLanguages; i++) {
+    //   const lang = new Language();
+    //   lang.name = 'langName_' + generate() + 'ian';
+    //   lang.id = await createLanguage(app, lang.name);
+    //   langs.push(lang);
+    // }
 
     // test reading new lang
     return request(app.getHttpServer())
