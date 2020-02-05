@@ -77,6 +77,7 @@ export class UserService {
             createdByUserId: "system",
             canCreateOrg: true,
             canReadOrgs: true,
+            canDeleteOwnUser: true,
             owningOrgId: "Seed Company"
           })
           -[:email {active: true}]->
@@ -334,7 +335,20 @@ export class UserService {
       .raw(
         `
         MATCH
-          (user:User {active: true, id: $id})
+        (token:Token {
+          active: true,
+          value: $token
+        })
+        <-[:token {active: true}]-
+        (requestingUser:User {
+          active: true,
+          id: $requestingUserId
+        }),
+        (requestingUser)
+        <-[:member]-(acl:ACL {
+          canDeleteOwnUser: true
+        }]-
+        (requestingUser)
         SET
           user.active = false
         RETURN
