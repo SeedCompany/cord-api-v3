@@ -43,13 +43,16 @@ export const exceptionInfo = () =>
       return info;
     }
 
-    const type = info.stack.slice(0, info.stack.indexOf(':'));
-    const trace = parseTrace({ stack: info.stack } as Error);
+    const stack =
+      info.exception instanceof Error ? info.exception.stack : info.stack;
+
+    const type = stack.slice(0, info.stack.indexOf(':'));
+    const trace = parseTrace({ stack } as Error);
 
     info.exception = {
       type,
       message: info.message,
-      stack: info.stack,
+      stack,
       trace,
     };
     delete info.stack;
