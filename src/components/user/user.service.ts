@@ -37,7 +37,7 @@ export class UserService {
   async listOrganizations(
     userId: string,
     input: OrganizationListInput,
-    token: string,
+    token: IRequestUser,
   ): Promise<SecuredOrganizationList> {
     // Just a thought, seemed like a good idea to try to reuse the logic/query there.
     const result = await this.organizations.list(
