@@ -3,7 +3,13 @@ import * as argon2 from 'argon2';
 import { Connection } from 'cypher-query-builder';
 import { verify, sign } from 'jsonwebtoken';
 import { DateTime } from 'luxon';
-import { ConfigService, ILogger, Logger } from '../../core';
+import {
+  ConfigService,
+  ILogger,
+  Logger,
+  OnIndex,
+  OnIndexParams,
+} from '../../core';
 import { ISession } from './session';
 
 interface JwtPayload {
@@ -17,6 +23,9 @@ export class AuthService {
     private readonly config: ConfigService,
     @Logger('auth:service') private readonly logger: ILogger,
   ) {}
+
+  @OnIndex()
+  async createIndexes({ db, logger }: OnIndexParams) {}
 
   async createToken(): Promise<string> {
     const token = this.encodeJWT();
