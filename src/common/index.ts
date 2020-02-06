@@ -9,5 +9,3 @@ export * from './readable.interface';
 export * from './resource.dto';
 export * from './secured-list';
 export * from './secured-property';
-export * from './request-user.decorator';
-export * from './request-user.interface';

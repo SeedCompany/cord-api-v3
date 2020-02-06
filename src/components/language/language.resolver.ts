@@ -1,5 +1,6 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { IdArg, RequestUser, IRequestUser } from '../../common';
+import { IdArg } from '../../common';
+import { ISession, Session } from '../auth';
 import {
   Language,
   LanguageListInput,
@@ -19,17 +20,17 @@ export class LanguageResolver {
     description: 'Look up a language by its ID',
   })
   async language(
-    @RequestUser() token: IRequestUser,
+    @Session() session: ISession,
     @IdArg() id: string,
   ): Promise<Language> {
-    return await this.langService.readOne(id, token);
+    return await this.langService.readOne(id, session);
   }
 
   @Query(() => LanguageListOutput, {
     description: 'Look up languages',
   })
   async languages(
-    @RequestUser() token: IRequestUser,
+    @Session() session: ISession,
     @Args({
       name: 'input',
       type: () => LanguageListInput,
@@ -37,17 +38,17 @@ export class LanguageResolver {
     })
     input: LanguageListInput,
   ): Promise<LanguageListOutput> {
-    return this.langService.list(input, token);
+    return this.langService.list(input, session);
   }
 
   @Mutation(() => CreateLanguageOutput, {
     description: 'Create a language',
   })
   async createLanguage(
-    @RequestUser() token: IRequestUser,
+    @Session() session: ISession,
     @Args('input') { language: input }: CreateLanguageInput,
   ): Promise<CreateLanguageOutput> {
-    const language = await this.langService.create(input, token);
+    const language = await this.langService.create(input, session);
     return { language };
   }
 
@@ -55,10 +56,10 @@ export class LanguageResolver {
     description: 'Update a language',
   })
   async updateLanguage(
-    @RequestUser() token: IRequestUser,
+    @Session() session: ISession,
     @Args('input') { language: input }: UpdateLanguageInput,
   ): Promise<UpdateLanguageOutput> {
-    const language = await this.langService.update(input, token);
+    const language = await this.langService.update(input, session);
     return { language };
   }
 
@@ -66,10 +67,10 @@ export class LanguageResolver {
     description: 'Delete a language',
   })
   async deleteLanguage(
-    @RequestUser() token: IRequestUser,
+    @Session() session: ISession,
     @IdArg() id: string,
   ): Promise<boolean> {
-    await this.langService.delete(id, token);
+    await this.langService.delete(id, session);
     return true;
   }
 }

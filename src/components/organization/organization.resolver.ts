@@ -1,5 +1,6 @@
 import { Resolver, Args, Query, Mutation } from '@nestjs/graphql';
-import { IdArg, RequestUser, IRequestUser } from '../../common';
+import { IdArg } from '../../common';
+import { ISession, Session } from '../auth';
 import {
   CreateOrganizationInput,
   CreateOrganizationOutput,
@@ -19,10 +20,10 @@ export class OrganizationResolver {
     description: 'Create an organization',
   })
   async createOrganization(
-    @RequestUser() token: IRequestUser,
+    @Session() session: ISession,
     @Args('input') { organization: input }: CreateOrganizationInput,
   ): Promise<CreateOrganizationOutput> {
-    const organization = await this.orgs.create(input, token);
+    const organization = await this.orgs.create(input, session);
     return { organization };
   }
 
@@ -30,17 +31,17 @@ export class OrganizationResolver {
     description: 'Look up an organization by its ID',
   })
   async organization(
-    @RequestUser() token: IRequestUser,
+    @Session() session: ISession,
     @IdArg() id: string,
   ): Promise<Organization> {
-    return this.orgs.readOne(id, token);
+    return this.orgs.readOne(id, session);
   }
 
   @Query(() => OrganizationListOutput, {
     description: 'Look up organizations',
   })
   async organizations(
-    @RequestUser() token: IRequestUser,
+    @Session() session: ISession,
     @Args({
       name: 'input',
       type: () => OrganizationListInput,
@@ -48,17 +49,17 @@ export class OrganizationResolver {
     })
     input: OrganizationListInput,
   ): Promise<OrganizationListOutput> {
-    return this.orgs.list(input, token);
+    return this.orgs.list(input, session);
   }
 
   @Mutation(() => UpdateOrganizationOutput, {
     description: 'Update an organization',
   })
   async updateOrganization(
-    @RequestUser() token: IRequestUser,
+    @Session() session: ISession,
     @Args('input') { organization: input }: UpdateOrganizationInput,
   ): Promise<UpdateOrganizationOutput> {
-    const organization = await this.orgs.update(input, token);
+    const organization = await this.orgs.update(input, session);
     return { organization };
   }
 
@@ -66,10 +67,10 @@ export class OrganizationResolver {
     description: 'Delete an organization',
   })
   async deleteOrganization(
-    @RequestUser() token: IRequestUser,
+    @Session() session: ISession,
     @IdArg() id: string,
   ): Promise<boolean> {
-    await this.orgs.delete(id, token);
+    await this.orgs.delete(id, session);
     return true;
   }
 }

@@ -6,32 +6,18 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { Context } from '@nestjs/graphql';
-import { decode, JsonWebTokenError, verify } from 'jsonwebtoken';
 import { Connection } from 'cypher-query-builder';
-import { IRequestUser } from './request-user.interface';
-import { ILogger, Logger, ConfigService } from '../core';
+import { verify } from 'jsonwebtoken';
+import { ILogger, Logger, ConfigService } from '../../core';
 
-export function RequestUser() {
-  return applyDecorators(Context('token', RequiredPipe)) as ParameterDecorator;
-}
+export const Session = () =>
+  applyDecorators(Context('token', RequiredPipe)) as ParameterDecorator;
 
-interface Decoded {
-  header: {
-    typ: string;
-    alg: string;
-    kid: string;
-  };
-  payload: JwtPayload;
-  signature: string;
-}
-interface JwtPayload {
-  iss: string;
-  sub: string;
-  aud: string;
+export interface ISession {
+  token: string;
   iat: number;
-  exp: number;
-  azp: string;
-  gty: string;
+  owningOrgId?: string;
+  userId?: string;
 }
 
 @Injectable()
@@ -39,18 +25,15 @@ class RequiredPipe implements PipeTransform {
   constructor(
     private readonly db: Connection,
     private readonly config: ConfigService,
-    @Logger('request-user:decorator') private readonly logger: ILogger,
+    @Logger('session') private readonly logger: ILogger,
   ) {}
 
-  async transform(
-    value: any,
-    metadata: ArgumentMetadata,
-  ): Promise<IRequestUser> {
+  async transform(value: any, metadata: ArgumentMetadata): Promise<ISession> {
     if (!value) {
       throw new UnauthorizedException();
     }
 
-    const decoded = verify(value, this.config.jwtKey) as IRequestUser;
+    const decoded = verify(value, this.config.jwtKey) as ISession;
     decoded.token = value; // set raw jwt string to prop so db can use it
 
     // check token in db to verify the user id and owning org id.

@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { IdArg, RequestUser } from '../../../common';
+import { IdArg } from '../../../common';
+import { ISession, Session } from '../../auth';
 import {
   CreateUnavailabilityInput,
   CreateUnavailabilityOutput,
@@ -11,7 +11,6 @@ import {
   Unavailability,
 } from './dto';
 import { UnavailabilityService } from './unavailability.service';
-import { IRequestUser } from '../../../common/request-user.interface';
 
 @Resolver()
 export class UnavailabilityResolver {
@@ -21,10 +20,10 @@ export class UnavailabilityResolver {
     description: 'Look up a unavailability by its ID',
   })
   async unavailability(
-    @RequestUser() token: IRequestUser,
+    @Session() session: ISession,
     @IdArg() id: string,
   ): Promise<Unavailability> {
-    return await this.service.readOne(id, token);
+    return await this.service.readOne(id, session);
   }
 
   // @Query(() => SecuredUnavailabilityList, {
@@ -46,10 +45,10 @@ export class UnavailabilityResolver {
     description: 'Create an unavailability',
   })
   async createUnavailability(
-    @RequestUser() token: IRequestUser,
+    @Session() session: ISession,
     @Args('input') { unavailability: input }: CreateUnavailabilityInput,
   ): Promise<CreateUnavailabilityOutput> {
-    const unavailability = await this.service.create(input, token);
+    const unavailability = await this.service.create(input, session);
     return { unavailability };
   }
 
@@ -57,10 +56,10 @@ export class UnavailabilityResolver {
     description: 'Update an unavailability',
   })
   async updateUnavailability(
-    @RequestUser() token: IRequestUser,
+    @Session() session: ISession,
     @Args('input') { unavailability: input }: UpdateUnavailabilityInput,
   ): Promise<UpdateUnavailabilityOutput> {
-    const unavailability = await this.service.update(input, token);
+    const unavailability = await this.service.update(input, session);
     return { unavailability };
   }
 
@@ -68,10 +67,10 @@ export class UnavailabilityResolver {
     description: 'Delete an unavailability',
   })
   async deleteUnavailability(
-    @RequestUser() token: IRequestUser,
+    @Session() session: ISession,
     @IdArg() id: string,
   ): Promise<boolean> {
-    await this.service.delete(id, token);
+    await this.service.delete(id, session);
     return true;
   }
 }

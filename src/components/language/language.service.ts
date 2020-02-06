@@ -1,3 +1,12 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { generate } from 'shortid';
+import {
+  DatabaseService,
+  ILogger,
+  Logger,
+  PropertyUpdaterService,
+} from '../../core';
+import { ISession } from '../auth';
 import {
   CreateLanguage,
   Language,
@@ -5,12 +14,6 @@ import {
   LanguageListOutput,
   UpdateLanguage,
 } from './dto';
-import { ILogger, Logger, PropertyUpdaterService } from '../../core';
-import { Injectable, NotFoundException } from '@nestjs/common';
-
-import { DatabaseService } from '../../core';
-import { IRequestUser } from '../../common';
-import { generate } from 'shortid';
 
 @Injectable()
 export class LanguageService {
@@ -20,9 +23,9 @@ export class LanguageService {
     @Logger('user:service') private readonly logger: ILogger,
   ) {}
 
-  async create(input: CreateLanguage, token: IRequestUser): Promise<Language> {
+  async create(input: CreateLanguage, session: ISession): Promise<Language> {
     this.logger.info(
-      `Mutation create Language: ${input.name} by ${token.userId}`,
+      `Mutation create Language: ${input.name} by ${session.userId}`,
     );
     const result = await this.db
       .query()
@@ -86,7 +89,7 @@ export class LanguageService {
           rodNumber.value as rodNumber
       `,
         {
-          token: token.token,
+          token: session.token,
           name: input.name,
           displayName: input.displayName,
           beginFiscalYear: input.beginFiscalYear,
@@ -101,7 +104,7 @@ export class LanguageService {
 
     if (!result) {
       this.logger.error(
-        `Could not create language: ${input.name} by ${token.userId}`,
+        `Could not create language: ${input.name} by ${session.userId}`,
       );
       throw new Error('Could not create language');
     }
@@ -147,8 +150,10 @@ export class LanguageService {
     };
   }
 
-  async readOne(langId: string, token: IRequestUser): Promise<Language> {
-    this.logger.info(`Query readOne Language: id ${langId} by ${token.userId}`);
+  async readOne(langId: string, session: ISession): Promise<Language> {
+    this.logger.info(
+      `Query readOne Language: id ${langId} by ${session.userId}`,
+    );
     const result = await this.db
       .query()
       .raw(
@@ -186,7 +191,7 @@ export class LanguageService {
         `,
         {
           id: langId,
-          token: token.token,
+          token: session.token,
         },
       )
       .first();
@@ -241,13 +246,15 @@ export class LanguageService {
     };
   }
 
-  async update(input: UpdateLanguage, token: IRequestUser): Promise<Language> {
+  async update(input: UpdateLanguage, session: ISession): Promise<Language> {
     throw new Error('Not implemented');
-    this.logger.info(`mutation update language ${input.id} by ${token.userId}`);
-    const language = await this.readOne(input.id, token);
+    this.logger.info(
+      `mutation update language ${input.id} by ${session.userId}`,
+    );
+    const language = await this.readOne(input.id, session);
 
     return this.propertyUpdater.updateProperties({
-      token,
+      session,
       object: language,
       props: [
         'name',
@@ -263,8 +270,8 @@ export class LanguageService {
     });
   }
 
-  async delete(id: string, token: IRequestUser): Promise<void> {
-    this.logger.info(`mutation delete language: ${id} by ${token.userId}`);
+  async delete(id: string, session: ISession): Promise<void> {
+    this.logger.info(`mutation delete language: ${id} by ${session.userId}`);
     const result = await this.db
       .query()
       .raw(
@@ -286,7 +293,7 @@ export class LanguageService {
         `,
         {
           id,
-          token: token.token,
+          token: session.token,
         },
       )
       .first();
@@ -298,9 +305,9 @@ export class LanguageService {
 
   async list(
     { page, count, sort, order, filter }: LanguageListInput,
-    token: IRequestUser,
+    session: ISession,
   ): Promise<LanguageListOutput> {
-    this.logger.info(`query list Languages by ${token.userId}`);
+    this.logger.info(`query list Languages by ${session.userId}`);
     const result = await this.db
       .query()
       .raw(
@@ -346,7 +353,7 @@ export class LanguageService {
           // filter: filter.name, // TODO Handle no filter
           skip: (page - 1) * count,
           count,
-          token: token.token,
+          token: session.token,
         },
       )
       .run();
