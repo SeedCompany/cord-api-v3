@@ -42,4 +42,15 @@ export const fragments = {
       }
     }
   `,
+  educt: gql`
+  fragment educt on Education {
+    id
+    degree
+    major
+    institution
+    canRead
+    canEdit
+    createdAt
+  }
+`,
 };

@@ -130,7 +130,7 @@ export class EducationService {
 
   async update(
     input: UpdateEducation,
-    token: string,
+    token: IRequestUser,
   ): Promise<Education> {
     const result = await this.db
       .query()
@@ -174,7 +174,7 @@ export class EducationService {
     };
   }
 
-  async delete(id: string, token: string): Promise<void> {
+  async delete(id: string, token: IRequestUser): Promise<void> {
     await this.db
       .query()
       .raw(
