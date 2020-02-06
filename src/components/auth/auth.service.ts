@@ -1,15 +1,10 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import * as argon2 from 'argon2';
+import { Connection } from 'cypher-query-builder';
 import { verify, sign } from 'jsonwebtoken';
 import { DateTime } from 'luxon';
-import {
-  DatabaseService,
-  ConfigService,
-  ILogger,
-  ISession,
-  Logger,
-} from '../../core';
-import { CreateTokenOutputDto, LoginUserOutputDto } from './auth.dto';
+import { ConfigService, ILogger, Logger } from '../../core';
+import { ISession } from './session';
 
 interface JwtPayload {
   iat: number;
@@ -18,20 +13,18 @@ interface JwtPayload {
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly db: DatabaseService,
+    private readonly db: Connection,
     private readonly config: ConfigService,
     @Logger('auth:service') private readonly logger: ILogger,
   ) {}
 
-  // CREATE TOKEN
-  async createToken(): Promise<CreateTokenOutputDto> {
-    const response = new CreateTokenOutputDto();
-
+  async createToken(): Promise<string> {
     const token = this.encodeJWT();
 
-    const session = this.db.driver.session();
-    const result = await session.run(
-      `
+    const result = await this.db
+      .query()
+      .raw(
+        `
       CREATE
         (token:Token {
           active: true,
@@ -41,24 +34,29 @@ export class AuthService {
       RETURN
         token.value as token
       `,
-      {
-        token,
-      },
-    );
-    response.token = result.records[0].get('token');
-    session.close();
-    return response;
+        {
+          token,
+        },
+      )
+      .first();
+    if (!result) {
+      throw new Error('Could not save session token to database');
+    }
+
+    return result.token;
   }
 
-  // LOG IN
-  async login(password: string, token: string): Promise<LoginUserOutputDto> {
-    const response = new LoginUserOutputDto();
-    const session = this.db.driver.session();
-
+  async login(
+    email: string,
+    password: string,
+    token: string,
+  ): Promise<string | undefined> {
     const pash = await argon2.hash(password);
 
-    const result = await session.run(
-      `
+    const result = await this.db
+      .query()
+      .raw(
+        `
       MATCH
         (token:Token {
           active: true,
@@ -71,24 +69,23 @@ export class AuthService {
       CREATE
         (user)-[:token {createdAt: datetime()}]->(token)
       RETURN
-        token.value as token
+        user.id as id
       `,
-      {
-        token,
-        pash,
-      },
-    );
-    response.success = result.records[0].get('token') === token;
-    session.close();
-    return response;
+        {
+          token,
+          pash,
+        },
+      )
+      .first();
+
+    return result?.id;
   }
 
-  // LOG OUT
-  async logout(token: string): Promise<LoginUserOutputDto> {
-    const response = new LoginUserOutputDto();
-    const session = this.db.driver.session();
-    const result = await session.run(
-      `
+  async logout(token: string): Promise<void> {
+    await this.db
+      .query()
+      .raw(
+        `
       MATCH
         (token:Token)-[r]-()
       DELETE
@@ -96,13 +93,11 @@ export class AuthService {
       RETURN
         token.value as token
       `,
-      {
-        token,
-      },
-    );
-    response.success = result.records[0].get('token') === token;
-    session.close();
-    return response;
+        {
+          token,
+        },
+      )
+      .run();
   }
 
   async decodeAndVerifyToken(token?: string): Promise<ISession> {

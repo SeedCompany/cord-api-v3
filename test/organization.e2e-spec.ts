@@ -4,7 +4,7 @@ import {
   TestApp,
   createOrganization,
   createTestApp,
-  createToken,
+  createSession,
   createUser,
   fragments,
 } from './utility';
@@ -19,7 +19,7 @@ describe('Organization e2e', () => {
 
   beforeEach(async () => {
     app = await createTestApp();
-    await createToken(app);
+    await createSession(app);
     await createUser(app);
   });
 

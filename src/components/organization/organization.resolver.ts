@@ -1,6 +1,6 @@
 import { Resolver, Args, Query, Mutation } from '@nestjs/graphql';
 import { IdArg } from '../../common';
-import { ISession, Session } from '../auth';
+import { ISession, Session } from '../auth/session'; // avoid cyclic dep (auth -> user -> org)
 import {
   CreateOrganizationInput,
   CreateOrganizationOutput,
