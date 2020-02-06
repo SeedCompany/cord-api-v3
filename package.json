@@ -96,7 +96,6 @@
       "^.+\\.(t|j)s$": "ts-jest"
     },
     "coverageDirectory": "../coverage",
-    "testEnvironment": "node",
-    "setupFilesAfterEnv": ["./jest.setup.js"]
+    "testEnvironment": "node"
   }
 }
