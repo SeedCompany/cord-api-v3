@@ -52,7 +52,11 @@ const validateResult = (res: GraphQLResponse) => {
   expect(res.data).toBeTruthy();
 };
 
-const reportError = (e: GraphQLFormattedError) => {
+const reportError = (e: GraphQLFormattedError & { originalError?: Error }) => {
+  if (e.originalError instanceof Error) {
+    return e.originalError;
+  }
+
   let msg =
     typeof e.message === 'object'
       ? JSON.stringify(e.message, undefined, 2)
