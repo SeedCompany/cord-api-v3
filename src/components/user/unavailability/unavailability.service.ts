@@ -10,6 +10,7 @@ import {
   UnavailabilityListInput,
   UpdateUnavailability,
 } from './dto';
+import { IRequestUser } from '../../../common/request-user.interface';
 
 @Injectable()
 export class UnavailabilityService {
@@ -22,10 +23,9 @@ export class UnavailabilityService {
   ): Promise<SecuredUnavailabilityList> {
     throw new Error('Not implemented');
   }
-
   async create(
     input: CreateUnavailability,
-    token: string,
+    token: IRequestUser,
   ): Promise<Unavailability> {
     const result = await this.db
       .query()
@@ -65,14 +65,14 @@ export class UnavailabilityService {
           value: $end
         })
       RETURN
-      unavailability.id as userId,
+      unavailability.id as token.userId,
       description.value as description,
         start.value as start,
         end.value as end,
       `,
         {
-          id: input.userId,
-          token,
+          id: token.userId,
+          token: token.token,
           description: input.description,
           start: input.start,
           end: input.end,
@@ -80,11 +80,13 @@ export class UnavailabilityService {
       )
       .first();
     if (!result) {
+      console.log('KKKK');
       throw new Error('Could not create user');
     }
+    console.log('token', token);
 
     return {
-      id: result.userId,
+      id: result.id,
       createdAt: DateTime.local(), // TODO
       description: result.description,
       start: result.start,

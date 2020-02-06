@@ -8,6 +8,7 @@ import {
   UpdateUnavailabilityOutput,
 } from './dto';
 import { UnavailabilityService } from './unavailability.service';
+import { IRequestUser } from '../../../common/request-user.interface';
 
 @Injectable()
 export class UnavailabilityResolver {
@@ -17,7 +18,7 @@ export class UnavailabilityResolver {
     description: 'Create an unavailability',
   })
   async createUnavailability(
-    @RequestUser() token: string,
+    @RequestUser() token: IRequestUser,
     @Args('input') { unavailability: input }: CreateUnavailabilityInput,
   ): Promise<CreateUnavailabilityOutput> {
     const unavailability = await this.service.create(input, token);

@@ -6,7 +6,9 @@ import {
   ResolveProperty,
   Parent,
 } from '@nestjs/graphql';
-import { IdArg, RequestUser, IRequestUser } from '../../common';
+import { IdArg, RequestUser } from '../../common';
+import { IRequestUser } from '../../common/request-user.interface';
+
 import {
   OrganizationListInput,
   SecuredOrganizationList,
