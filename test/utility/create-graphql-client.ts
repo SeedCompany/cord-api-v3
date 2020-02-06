@@ -4,7 +4,9 @@ import { GRAPHQL_MODULE_OPTIONS } from '@nestjs/graphql/dist/graphql.constants';
 import { ApolloServerBase } from 'apollo-server-core';
 import { createTestClient } from 'apollo-server-testing';
 import { GraphQLResponse } from 'apollo-server-types';
+import { Request } from 'express';
 import { DocumentNode, GraphQLFormattedError } from 'graphql';
+import { GqlContextType } from '../../src/common';
 
 export interface GraphQLTestClient {
   query: (
@@ -22,25 +24,46 @@ export const createGraphqlClient = async (
   app: INestApplicationContext,
 ): Promise<GraphQLTestClient> => {
   const server = await getServer(app);
-  const options = app.get(GRAPHQL_MODULE_OPTIONS);
+  const options: GqlModuleOptions & { context: GqlContextType } = app.get(
+    GRAPHQL_MODULE_OPTIONS,
+  );
   const { query, mutate } = createTestClient(server);
+
+  const resetRequest = () => {
+    // Session data changes between requests
+    // Next request shouldn't rely on previously calculated data.
+    // It doesn't when using actual requests.
+    if (options.context?.request?.session) {
+      delete options.context.request.session;
+    }
+  };
 
   return {
     query: async (q, variables) => {
       const result = await query({ query: q, variables });
+      resetRequest();
       validateResult(result);
       return result.data;
     },
     mutate: async (mutation, variables) => {
       const result = await mutate({ mutation, variables });
+      resetRequest();
       validateResult(result);
       return result.data;
     },
     get authToken() {
-      return options.context.token;
+      return options.context.request?.headers?.authorization?.replace(
+        'Bearer ',
+        '',
+      );
     },
     set authToken(token: string) {
-      options.context.token = token;
+      const fakeRequest = {
+        headers: {
+          authorization: `Bearer ${token}`,
+        },
+      } as Request;
+      options.context.request = fakeRequest;
     },
   };
 };

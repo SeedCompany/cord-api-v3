@@ -6,8 +6,7 @@ import { GqlContextType } from './common';
 import { DateScalar, DateTimeScalar } from './common/luxon.graphql';
 import { AdminResolver } from './components/admin/admin.resolver';
 import { AdminService } from './components/admin/admin.service';
-import { AuthResolver } from './components/auth/auth.resolver';
-import { AuthService } from './components/auth/auth.service';
+import { AuthModule } from './components/auth';
 import { BudgetResolver } from './components/budget/budget.resolver';
 import { BudgetService } from './components/budget/budget.service';
 import { InternshipResolver } from './components/internship/internship.resolver';
@@ -28,11 +27,11 @@ import { ProjectService } from './components/project/project.service';
 import { UserModule } from './components/user';
 import { CoreModule, LoggerModule } from './core';
 
-const context: ContextFunction<{ req: Request; res: Response }, GqlContextType> = ({
-  req,
-  res,
-}) => ({
-  token: req.header('token'),
+const context: ContextFunction<
+  { req: Request; res: Response },
+  GqlContextType
+> = ({ req, res }) => ({
+  request: req,
 });
 
 @Module({
@@ -43,6 +42,7 @@ const context: ContextFunction<{ req: Request; res: Response }, GqlContextType> 
       autoSchemaFile: 'schema.gql',
       context,
     }),
+    AuthModule,
     LanguageModule,
     LocationModule,
     OrganizationModule,
@@ -52,8 +52,6 @@ const context: ContextFunction<{ req: Request; res: Response }, GqlContextType> 
   providers: [
     AdminResolver,
     AdminService,
-    AuthResolver,
-    AuthService,
     BudgetResolver,
     BudgetService,
     DateTimeScalar,

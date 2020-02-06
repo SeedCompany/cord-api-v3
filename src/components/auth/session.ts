@@ -1,68 +1,61 @@
 import {
   applyDecorators,
   ArgumentMetadata,
+  Injectable,
   PipeTransform,
   UnauthorizedException,
-  Injectable,
 } from '@nestjs/common';
 import { Context } from '@nestjs/graphql';
-import { Connection } from 'cypher-query-builder';
-import { verify } from 'jsonwebtoken';
-import { ILogger, Logger, ConfigService } from '../../core';
+import { Request } from 'express';
+import { DateTime } from 'luxon';
+import { AuthService } from './auth.service';
 
 export const Session = () =>
-  applyDecorators(Context('token', RequiredPipe)) as ParameterDecorator;
+  applyDecorators(Context('request', SessionPipe)) as ParameterDecorator;
 
 export interface ISession {
   token: string;
-  iat: number;
+  issuedAt: DateTime;
   owningOrgId?: string;
   userId?: string;
 }
 
+declare module 'express' {
+  interface Request {
+    session?: ISession;
+  }
+}
+
 @Injectable()
-class RequiredPipe implements PipeTransform {
-  constructor(
-    private readonly db: Connection,
-    private readonly config: ConfigService,
-    @Logger('session') private readonly logger: ILogger,
-  ) {}
+export class SessionPipe implements PipeTransform {
+  constructor(private readonly auth: AuthService) {}
 
-  async transform(value: any, metadata: ArgumentMetadata): Promise<ISession> {
-    if (!value) {
-      throw new UnauthorizedException();
+  async transform(
+    request: Request,
+    metadata: ArgumentMetadata,
+  ): Promise<ISession> {
+    if (request?.session) {
+      return request.session;
     }
 
-    const decoded = verify(value, this.config.jwtKey) as ISession;
-    decoded.token = value; // set raw jwt string to prop so db can use it
-
-    // check token in db to verify the user id and owning org id.
-    const result = await this.db
-      .query()
-      .raw(
-        `
-        MATCH
-          (token:Token {
-            active: true,
-            value: $token
-          })
-        OPTIONAL MATCH
-          (token)<-[:token {active: true}]-(user:User {active: true})
-        RETURN
-          token, user.owningOrgId as owningOrgId, user.id as userId
-        `,
-        {
-          token: decoded.token,
-        },
-      )
-      .first();
-    if (!result) {
+    const session = await this.createSessionFromRequest(request);
+    if (!session) {
       throw new UnauthorizedException();
     }
+    request.session = session;
 
-    decoded.owningOrgId = result.owningOrgId;
-    decoded.userId = result.userId;
+    return session;
+  }
 
-    return decoded;
+  async createSessionFromRequest(req: Request): Promise<ISession | undefined> {
+    const header = req?.headers?.authorization;
+    if (!header) {
+      return;
+    }
+    if (!header.startsWith('Bearer ')) {
+      return;
+    }
+    const token = header.replace('Bearer ', '');
+    return this.auth.decodeAndVerifyToken(token);
   }
 }
