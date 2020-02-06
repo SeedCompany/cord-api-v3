@@ -15,11 +15,13 @@ describe('Organization e2e', () => {
   let app: TestApp;
 
   beforeEach(async () => {
+    jest.setTimeout(20000);
     app = await createTestApp();
     await createToken(app);
     await createUser(app);
   });
-  afterEach(async () => {
+
+  afterAll(async () => {
     await app.close();
   });
 
@@ -48,8 +50,6 @@ describe('Organization e2e', () => {
 
   // UPDATE ORG
   it('update organization', async () => {
-    const token = await createToken(app);
-    const user = await createUser(app);
     const org = await createOrganization(app);
     
     const newName = faker.company.companyName();
@@ -74,8 +74,6 @@ describe('Organization e2e', () => {
         },
       },
     );
-
-    console.log(result);
 
     const updated = result?.updateOrganization?.organization;
     expect(updated).toBeTruthy();
