@@ -47,12 +47,16 @@ export const createGraphqlClient = async (
 
 const validateResult = (res: GraphQLResponse) => {
   if (res.errors && res.errors.length > 0) {
-    fail(reportError(res.errors[0]));
+    throw reportError(res.errors[0]);
   }
   expect(res.data).toBeTruthy();
 };
 
-const reportError = (e: GraphQLFormattedError) => {
+const reportError = (e: GraphQLFormattedError & { originalError?: Error }) => {
+  if (e.originalError instanceof Error) {
+    return e.originalError;
+  }
+
   let msg =
     typeof e.message === 'object'
       ? JSON.stringify(e.message, undefined, 2)
