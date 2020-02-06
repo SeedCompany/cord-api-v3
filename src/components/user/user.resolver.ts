@@ -82,7 +82,7 @@ export class UserResolver {
 
   @ResolveProperty(() => SecuredOrganizationList)
   async organizations(
-    @RequestUser() token: string,
+    @RequestUser() token: IRequestUser,
     @Parent() { id }: User,
     @Args({
       name: 'input',

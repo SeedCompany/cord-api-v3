@@ -18,9 +18,9 @@ describe('User e2e', () => {
     const user = await createUser(app);
     const result = await app.graphql.query(
       gql`
-        query user($id: ID!){
+        query user($id: ID!) {
           user(id: $id) {
-              ...user
+            ...user
           }
         }
         ${fragments.user}
@@ -43,11 +43,11 @@ describe('User e2e', () => {
     // create user first
     const token = await createToken(app);
     const user = await createUser(app);
-    const result = await app.graphql.query(
+    const result = await app.graphql.mutate(
       gql`
-        mutation updateUser($id: ID!, $realFirstName: String) {
+        mutation updateUser($input: UpdateUserInput!) {
           updateUser(
-            input: { user: { id: $id, realFirstName: $realFirstName } }
+            input: $input
           ) {
             user {
               ...user
@@ -57,8 +57,12 @@ describe('User e2e', () => {
         ${fragments.user}
       `,
       {
-        id: user.id,
-        realFirstName: user.realFirstName.value + ' 2',
+        input: {
+          user: {
+            id: user.id,
+            realFirstName: user.realFirstName.value + ' 2',
+          },
+        },
       },
     );
 

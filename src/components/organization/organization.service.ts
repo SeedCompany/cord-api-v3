@@ -8,6 +8,7 @@ import {
 } from './dto';
 import { DatabaseService } from '../../core';
 import { generate } from 'shortid';
+import { IRequestUser } from '../../common';
 
 @Injectable()
 export class OrganizationService {
@@ -15,7 +16,7 @@ export class OrganizationService {
 
   async create(
     { name }: CreateOrganization,
-    token: string,
+    token: IRequestUser,
   ): Promise<Organization> {
     const result = await this.db
       .query()
@@ -52,7 +53,7 @@ export class OrganizationService {
           user.canReadOrgs as canReadOrgs
       `,
         {
-          token,
+          token: token.token,
           name,
           id: generate(),
         },
@@ -74,7 +75,7 @@ export class OrganizationService {
     };
   }
 
-  async readOne(id: string, token: string): Promise<Organization> {
+  async readOne(orgId: string, token: IRequestUser): Promise<Organization> {
     const result = await this.db
       .query()
       .raw(
@@ -99,8 +100,8 @@ export class OrganizationService {
           user.canReadOrgs as canReadOrgs
         `,
         {
-          id,
-          token,
+          id: orgId,
+          token: token.token,
         },
       )
       .first();
@@ -128,7 +129,7 @@ export class OrganizationService {
 
   async update(
     input: UpdateOrganization,
-    token: string,
+    token: IRequestUser,
   ): Promise<Organization> {
     const result = await this.db
       .query()
@@ -158,7 +159,7 @@ export class OrganizationService {
         {
           id: input.id,
           name: input.name,
-          token,
+          token: token.token,
         },
       )
       .first();
@@ -178,7 +179,7 @@ export class OrganizationService {
     };
   }
 
-  async delete(id: string, token: string): Promise<void> {
+  async delete(id: string, token: IRequestUser): Promise<void> {
     const result = await this.db
       .query()
       .raw(
@@ -200,7 +201,7 @@ export class OrganizationService {
         `,
         {
           id,
-          token,
+          token: token.token,
         },
       )
       .first();
@@ -212,7 +213,7 @@ export class OrganizationService {
 
   async list(
     { page, count, sort, order, filter }: OrganizationListInput,
-    token: string,
+    token: IRequestUser,
   ): Promise<OrganizationListOutput> {
     const result = await this.db
       .query()
@@ -253,7 +254,7 @@ export class OrganizationService {
           // filter: filter.name, // TODO Handle no filter
           skip: (page - 1) * count,
           count,
-          token,
+          token: token.token,
         },
       )
       .run();
