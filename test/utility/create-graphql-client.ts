@@ -47,7 +47,7 @@ export const createGraphqlClient = async (
 
 const validateResult = (res: GraphQLResponse) => {
   if (res.errors && res.errors.length > 0) {
-    fail(reportError(res.errors[0]));
+    throw reportError(res.errors[0]);
   }
   expect(res.data).toBeTruthy();
 };
