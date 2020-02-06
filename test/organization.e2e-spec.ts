@@ -15,7 +15,6 @@ describe('Organization e2e', () => {
   let app: TestApp;
 
   beforeEach(async () => {
-    jest.setTimeout(10000); 
     app = await createTestApp();
     await createToken(app);
     await createUser(app);
@@ -75,6 +74,9 @@ describe('Organization e2e', () => {
         },
       },
     );
+
+    console.log(result);
+
     const updated = result?.updateOrganization?.organization;
     expect(updated).toBeTruthy();
     expect(updated.id).toBe(org.id);

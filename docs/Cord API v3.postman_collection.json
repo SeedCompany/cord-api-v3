@@ -1,0 +1,380 @@
+{
+	"info": {
+		"_postman_id": "1ec33494-e940-43ae-a631-1595613dc969",
+		"name": "Cord API v3",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "createToken",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "token",
+						"value": "asdf",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "graphql",
+					"graphql": {
+						"query": "mutation{\n  createToken{\n    token\n  }\n}",
+						"variables": ""
+					}
+				},
+				"url": {
+					"raw": "localhost:3000/graphql",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"graphql"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "createUser",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODA0OTExMTA4NjAsIm93bmluZ09yZElkIjpudWxsLCJ1c2VySWQiOm51bGx9.n_NOlikBQpfW2i7oszpbTJsiWJuVLb5qxvSWKgNnar0",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "graphql",
+					"graphql": {
+						"query": "mutation{\n    createUser( input: { user: {\n        email: \"email\"\n        realFirstName: \"asdf\"\n        realLastName: \"asdf\"\n        displayFirstName: \"asdf\"\n        displayLastName: \"asdf\"\n        password: \"asdf\"\n    }\n    }\n        ){\n        user{\n            id\n        }\n        }\n}",
+						"variables": ""
+					}
+				},
+				"url": {
+					"raw": "localhost:3000/graphql",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"graphql"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "login",
+			"request": {
+				"auth": {
+					"type": "bearer"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "token",
+						"value": "token_oUMLIbbU",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "graphql",
+					"graphql": {
+						"query": "mutation{\n  loginUser(username: \"asdf\" password: \"asdf\"){\n    success\n  }\n}",
+						"variables": ""
+					}
+				},
+				"url": {
+					"raw": "localhost:3000/graphql",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"graphql"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "readUser",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "graphql",
+					"graphql": {
+						"query": "query{\n    readUser( input: { user: {\n        id: \"4CA6Gumj\"\n        }\n    }\n    ){\n        user{\n            id\n            realFirstName\n        }\n        }\n}",
+						"variables": ""
+					}
+				},
+				"url": {
+					"raw": "localhost:3000/graphql",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"graphql"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "updateUser",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODA3NDUwNDM5MTR9.flOU2_Fh6rOt8bGH03mZdNcER2QF_sawH0RKbBRN5qY",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "graphql",
+					"graphql": {
+						"query": "mutation{\n    updateUser( input: { user: {\n        id: \"UXNsxiSm\"\n        realLastName: \"lastname 2\"\n    }\n    }\n        ){\n            user {\n            id\n            createdAt\n            email {\n                value\n                canRead\n                canEdit\n            }\n            realFirstName {\n                value\n                canRead\n                canEdit\n            }\n            realLastName {\n                value\n                canRead\n                canEdit\n            }\n            displayFirstName {\n                value\n                canRead\n                canEdit\n            }\n            displayLastName {\n                value\n                canRead\n                canEdit\n            }\n        }\n        }\n}",
+						"variables": ""
+					}
+				},
+				"url": {
+					"raw": "localhost:3000/graphql",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"graphql"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "createOrg",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "token",
+						"value": "token_w3Yw9_-x",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "graphql",
+					"graphql": {
+						"query": "# Write your query or mutation here\nmutation {\n  createOrganization(input: { \n      organization: { \n          name: \"org9\" \n      } \n  }) {\n    organization {\n      id\n      name {\n          value\n          canRead\n          canEdit\n      }\n    }\n  }\n}\n",
+						"variables": ""
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/graphql",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"graphql"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "readOneOrg",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "token",
+						"value": "token_w3Yw9_-x",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "graphql",
+					"graphql": {
+						"query": "query {\n  organization( id: \"g44bGwdT\"  ) {\n      id\n      name {\n          value\n          canRead\n          canEdit\n      \n    }\n  }\n}",
+						"variables": ""
+					}
+				},
+				"url": {
+					"raw": "localhost:3000/graphql",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"graphql"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "updateOrganization",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODA3NDUwNDM5MTR9.flOU2_Fh6rOt8bGH03mZdNcER2QF_sawH0RKbBRN5qY",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "graphql",
+					"graphql": {
+						"query": "# Write your query or mutation here\nmutation {\n  updateOrganization(input: { organization: { id: \"2KbFmg6d\" name: \"asdf was here\" } }) {\n    organization {\n      id\n      name {\n          value\n          canRead\n          canEdit\n      }\n    }\n  }\n}",
+						"variables": ""
+					}
+				},
+				"url": {
+					"raw": "localhost:3000/graphql",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"graphql"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "deleteOrganization",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "token",
+						"value": "token_jPUFciM4",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "graphql",
+					"graphql": {
+						"query": "# Write your query or mutation here\nmutation {\n  deleteOrganization(id: \"2KbFmg6d\") \n}",
+						"variables": ""
+					}
+				},
+				"url": {
+					"raw": "localhost:3000/graphql",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"graphql"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "listOrganizations",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "token",
+						"value": "token_jPUFciM4",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "graphql",
+					"graphql": {
+						"query": "# Write your query or mutation here\nquery {\n  organizations(input: { name: \"\", count: 5, sort: \"name\",  }) {\n      hasMore\n      total\n      items{\n          id\n          name {\n              value\n              canRead\n              canEdit\n          }\n       \n      }\n  }\n}",
+						"variables": ""
+					}
+				},
+				"url": {
+					"raw": "localhost:3000/graphql",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"graphql"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "deleteUser",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODA3NDUwNDM5MTR9.flOU2_Fh6rOt8bGH03mZdNcER2QF_sawH0RKbBRN5qY",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "graphql",
+					"graphql": {
+						"query": "mutation{\n    deleteUser( \n        id: \"UXNsxiSm\"\n        )\n        }",
+						"variables": ""
+					}
+				},
+				"url": {
+					"raw": "localhost:3000/graphql",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"graphql"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "createUnavailability",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODA3NDUwNDM5MTR9.flOU2_Fh6rOt8bGH03mZdNcER2QF_sawH0RKbBRN5qY",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "graphql",
+					"graphql": {
+						"query": "mutation {\n  createUnavailability(\n    input: {\n      unavailability: {\n        userId: \"asdf\"\n        description: \"asdf\"\n        start: \"asdf\"\n        end: \"asdf\"\n      }\n    }\n  ) {\n    unavailability {\n      id\n      description\n      start\n      end\n    }\n  }\n}\n",
+						"variables": ""
+					}
+				},
+				"url": {
+					"raw": "localhost:3000/graphql",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"graphql"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}
