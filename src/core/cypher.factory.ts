@@ -4,6 +4,7 @@ import { Connection } from 'cypher-query-builder';
 import Session from 'neo4j-driver/types/v1/session';
 import { ConfigService } from './config/config.service';
 import { MyTransformer } from './database-transformer';
+import { jestSkipFileInExceptionSource } from './jest-skip-source-file';
 import { ILogger, LoggerToken, LogLevel } from './logger';
 import './database/transaction'; // import our transaction augmentation
 
@@ -42,7 +43,11 @@ export const CypherFactory: FactoryProvider<Connection> = {
         session.run = function(this: never, origStatement, parameters, conf) {
           const statement = stripIndent(origStatement);
           logger.debug('\n' + statement, parameters);
-          return origRun.call(session, statement, parameters, conf);
+          return origRun
+            .call(session, statement, parameters, conf)
+            .catch(e => {
+              throw jestSkipFileInExceptionSource(e, __filename);
+            });
         };
       }
 

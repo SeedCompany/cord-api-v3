@@ -32,6 +32,11 @@ export class WinstonLoggerService extends AbstractLogger
   }
 
   logEntry({ level, message, name = 'unknown', ...context }: LogEntry): void {
+    // Skip logging exceptions as Jest will display them properly.
+    if (name === 'nest:exception' && (global as any).jasmine) {
+      return;
+    }
+
     if (!this.matcher.isEnabled(name, level)) {
       return;
     }
