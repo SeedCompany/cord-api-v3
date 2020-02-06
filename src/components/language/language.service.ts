@@ -242,28 +242,6 @@ export class LanguageService {
     };
   }
 
-  async update(input: UpdateLanguage, token: IRequestUser): Promise<Language> {
-    throw new Error('Not implemented');
-    this.logger.info(`mutation update language ${input.id} by ${token.userId}`);
-    const language = await this.readOne(input.id, token);
-
-    return this.propertyUpdater.updateProperties({
-      token,
-      object: language,
-      props: [
-        'name',
-        'displayName',
-        'beginFiscalYear',
-        'ethnologueName',
-        'ethnologuePopulation',
-        'organizationPopulation',
-        'rodNumber',
-      ],
-      changes: input,
-      nodevar: 'language', // not sure if this is right, just trying to get this to compile - michael
-    });
-  }
-
   async delete(id: string, token: IRequestUser): Promise<void> {
     this.logger.info(`mutation delete language: ${id} by ${token.userId}`);
     const result = await this.db
