@@ -98,7 +98,7 @@ describe('Organization e2e', () => {
       },
     );
 
-    const actual: Organization | undefined = result.deleteUser;
+    const actual: Organization | undefined = result.deleteOrganization;
     expect(actual).toBeTruthy();
   });
 
@@ -121,7 +121,7 @@ describe('Organization e2e', () => {
       }
       ${fragments.org}
     `);
-
+    console.log(JSON.stringify(organizations));
     expect(organizations.items.length).toBeGreaterThan(10);
   });
 });

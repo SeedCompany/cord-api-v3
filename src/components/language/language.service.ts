@@ -313,18 +313,18 @@ export class LanguageService {
         }),
         (lang:Language {
           active: true
-        })
-//      WHERE
-//        lang.name CONTAINS $filter
+        })-[:name {active: true}]->(name:Property {active: true})
+      // WHERE
+      //   lang.name CONTAINS $filter
       WITH count(lang) as langs, user
       MATCH
-        (lang:Language {
-          active: true
-        })
-        -[:name {active: true}]->
-        (name:LangName {
-          active: true
-        })
+        (lang:Language {active: true})-[:name {active: true}]->(name:Property {active: true}),
+        (lang)-[:displayName {active: true}]->(displayName:Property {active: true}),
+        (lang)-[:beginFiscalYear {active: true}]->(beginFiscalYear:Property {active: true}),
+        (lang)-[:ethnologueName {active: true}]->(ethnologueName:Property {active: true}),
+        (lang)-[:ethnologuePopulation {active: true}]->(ethnologuePopulation:Property {active: true}),
+        (lang)-[:organizationPopulation {active: true}]->(organizationPopulation:Property {active: true}),
+        (lang)-[:rodNumber {active: true}]->(rodNumber:Property {active: true})
       RETURN
         lang.id as id,
         lang.createdAt as createdAt,
@@ -338,7 +338,7 @@ export class LanguageService {
         user.canCreateLang as canCreateLang,
         user.canReadLangs as canReadLangs,
         langs as total
-      ORDER BY lang.${sort} ${order}
+      ORDER BY ${sort} ${order}
       SKIP $skip
       LIMIT $count
       `,
