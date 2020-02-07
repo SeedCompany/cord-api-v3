@@ -1,3 +1,4 @@
+import { Unavailability } from '../../src/components/user';
 import { gql } from 'apollo-server-core';
 
 export const fragments = {
@@ -71,6 +72,31 @@ export const fragments = {
       canRead
     }
     rodNumber {
+      value
+      canEdit
+      canRead
+    }
+  }
+`,
+unavailability: gql`
+  fragment unavailability on Unavailability {
+    id
+    userId {
+      value
+      canEdit
+      canRead
+    }
+    description {
+      value
+      canEdit
+      canRead
+    }
+    start {
+      value
+      canEdit
+      canRead
+    }
+    end {
       value
       canEdit
       canRead
