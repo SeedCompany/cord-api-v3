@@ -16,7 +16,7 @@ export const maskSecrets = () =>
   format(info => {
     info.metadata = mapValues(info.metadata, (val: string, key) =>
       /(password|token|key)/i.exec(key)
-        ? `${'*'.repeat(val.slice(0, -3).length) + val.slice(-3)}`
+        ? `${'*'.repeat(Math.min(val.slice(0, -3).length, 20)) + val.slice(-3)}`
         : val,
     );
     return info;
