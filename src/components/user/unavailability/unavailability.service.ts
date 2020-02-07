@@ -1,8 +1,3 @@
-import { Injectable } from '@nestjs/common';
-import { Connection } from 'cypher-query-builder';
-import { generate } from 'shortid';
-import { DateTime } from 'luxon';
-
 import {
   CreateUnavailability,
   SecuredUnavailabilityList,
@@ -10,7 +5,12 @@ import {
   UnavailabilityListInput,
   UpdateUnavailability,
 } from './dto';
+
+import { Connection } from 'cypher-query-builder';
+import { DateTime } from 'luxon';
 import { IRequestUser } from '../../../common/request-user.interface';
+import { Injectable } from '@nestjs/common';
+import { generate } from 'shortid';
 
 @Injectable()
 export class UnavailabilityService {
@@ -37,12 +37,16 @@ export class UnavailabilityService {
           value: $token
         })
         <-[:token {active: true}]-
-        (user:User {
+        (requestingUser:User {
           active: true,
-          canCreateOrg: true
+          id: $requestingUserId
+        }),
+        (targetUser:User {
+          active: true,
+          id: $targetUserId
         })
       CREATE
-        (user)
+        (targetUser)
           -[:unavailability {active: true}]->
         (unavailability:Unavailability {
           active: true,
