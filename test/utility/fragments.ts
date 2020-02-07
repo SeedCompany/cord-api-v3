@@ -44,62 +44,54 @@ export const fragments = {
     }
   `,
   language: gql`
-  fragment language on Language {
-    id
-    name {
-      value
-      canEdit
-      canRead
+    fragment language on Language {
+      id
+      name {
+        value
+        canEdit
+        canRead
+      }
+      displayName {
+        value
+        canEdit
+        canRead
+      }
+      beginFiscalYear {
+        value
+        canEdit
+        canRead
+      }
+      ethnologueName {
+        value
+        canEdit
+        canRead
+      }
+      organizationPopulation {
+        value
+        canEdit
+        canRead
+      }
+      rodNumber {
+        value
+        canEdit
+        canRead
+      }
     }
-    displayName {
-      value
-      canEdit
-      canRead
+  `,
+  unavailability: gql`
+    fragment unavailability on Unavailability {
+      id
+      createdAt
+      description {
+        value
+        canEdit
+        canRead
+      }
+      start
+      end
     }
-    beginFiscalYear {
-      value
-      canEdit
-      canRead
-    }
-    ethnologueName {
-      value
-      canEdit
-      canRead
-    }
-    organizationPopulation {
-      value
-      canEdit
-      canRead
-    }
-    rodNumber {
-      value
-      canEdit
-      canRead
-    }
-  }
-`,
-unavailability: gql`
-  fragment unavailability on Unavailability {
-    id
-    createdAt
-    description {
-      value
-      canEdit
-      canRead
-    }
-    start {
-      value
-      canEdit
-      canRead
-    }
-    end {
-      value
-      canEdit
-      canRead
-    }
-  }
-`,
-education: gql`
+  `,
+  education: gql`
     fragment education on Education {
       id
       createdAt

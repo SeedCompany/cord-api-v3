@@ -4,6 +4,7 @@ import { CreateUnavailability, Unavailability } from '../../src/components/user/
 
 import { DateTime } from 'luxon';
 import { TestApp } from './create-app';
+import { createUser } from './create-user';
 import { fragments } from './fragments';
 import { gql } from 'apollo-server-core';
 import { isValid } from 'shortid';
@@ -12,8 +13,8 @@ export async function createUnavailability(
   app: TestApp,
   input: Partial<CreateUnavailability> = {},
 ) {
-  const fakeUnavailability: CreateUnavailability = {
-    userId: input.userId,
+  const unavailability: CreateUnavailability = {
+    userId: input.userId ,
     description: faker.address.country(),
     start:  DateTime.utc(),
     end: DateTime.utc().plus({years: 1}),
@@ -34,7 +35,7 @@ export async function createUnavailability(
     {
       input: {
         unavailability: {
-          ...fakeUnavailability,
+          ...unavailability,
         },
       },
     },

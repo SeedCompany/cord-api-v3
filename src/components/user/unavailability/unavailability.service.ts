@@ -48,8 +48,9 @@ export class UnavailabilityService {
         (targetUser)
           -[:unavailability {active: true}]->
         (unavailability:Unavailability {
+          id: $id,
           active: true,
-          createdAt: datetime()
+          createdAt: datetime(),
           owningOrgId: $owningOrgId
         })
         -[:description {active: true}]->
@@ -66,7 +67,7 @@ export class UnavailabilityService {
         (end:Property {
           active: true,
           value: $end
-        })
+        }),
         (requestingUser)
           <-[:member]-
           (acl:ACL {
@@ -78,7 +79,7 @@ export class UnavailabilityService {
             canEditEnd: true
           })-[:toNode]->(unavailability)
       RETURN
-        unavailability.id as token.userId,
+        unavailability.id as id,
         description.value as description,
         start.value as start,
         end.value as end,
@@ -87,7 +88,7 @@ export class UnavailabilityService {
         acl.canReadStart as canReadStart,
         acl.canEditStart as canEditStart,
         acl.canReadEnd as canReadEnd,
-        acl.canEditEnd as canEditEnd,
+        acl.canEditEnd as canEditEnd
       `,
         {
           id: generate(),
@@ -95,8 +96,8 @@ export class UnavailabilityService {
           targetUserId: input.userId,
           token: token.token,
           description: input.description,
-          start: input.start,
-          end: input.end,
+          start: input.start.toISO(),
+          end: input.end.toISO(),
           owningOrgId: token.owningOrgId,
         },
       )
@@ -107,7 +108,8 @@ export class UnavailabilityService {
       );
       throw new Error('Could not create unavailability');
     }
-    console.log('token', token);
+
+    this.logger.info(`unavailability for user ${input.userId} created, id ${result.id}`)
 
     return {
       id: result.id,

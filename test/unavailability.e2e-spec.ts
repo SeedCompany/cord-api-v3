@@ -9,6 +9,7 @@ import {
 } from './utility';
 
 import { Unavailability } from '../src/components/user/unavailability';
+import { User } from '../src/components/user';
 import { fragments } from './utility/fragments';
 import { gql } from 'apollo-server-core';
 import { isValid } from 'shortid';
@@ -16,11 +17,12 @@ import { times } from 'lodash';
 
 describe('Unavailability e2e', () => {
   let app: TestApp;
+  let user: User;
 
   beforeEach(async () => {
     app = await createTestApp();
     await createToken(app);
-    await createUser(app);
+    user = await createUser(app);
   });
 
   afterAll(async () => {
@@ -28,7 +30,7 @@ describe('Unavailability e2e', () => {
   });
 
   it.only('create a unavailability', async () => {
-    const unavailability = await createUnavailability(app);
+    const unavailability = await createUnavailability(app, {userId: user.id });
     expect(unavailability.id).toBeDefined();
   });
 
