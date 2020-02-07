@@ -111,7 +111,9 @@ describe('Language e2e', () => {
   it('List view of languages', async () => {
     // create a bunch of languages
     const numLanguages = 10;
-    await Promise.all(times(numLanguages).map(() => createLanguage(app,{name: 'Italian'})));
+    await Promise.all(
+      times(numLanguages).map(() => createLanguage(app, { name: 'Italian' })),
+    );
     // test reading new lang
     const { languages } = await app.graphql.query(gql`
       query {
