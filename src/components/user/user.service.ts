@@ -326,6 +326,7 @@ export class UserService {
         'displayLastName',
       ],
       changes: input,
+      nodevar: 'user',
     });
   }
 

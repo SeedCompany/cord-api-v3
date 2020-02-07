@@ -221,6 +221,7 @@ export class EducationService {
         'institution',
       ],
       changes: input,
+      nodevar: 'education',
     });
 
 
