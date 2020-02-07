@@ -2,40 +2,44 @@ import { gql } from 'apollo-server-core';
 import {
   CreateEducation,
   Education,
+  Degree,
 } from '../../src/components/user/education';
 import { TestApp } from './create-app';
 import * as faker from 'faker';
 import { fragments } from './fragments';
+import { IRequestUser } from '../../src/common';
 
 export async function createEducation(
   app: TestApp,
-  input: Partial<CreateEducation> = {},
+  userId: string,
 ) {
-  const institution = input.institution || faker.company.companyName();
+  const education: CreateEducation = {
+    userId,
+    degree: Degree.Associates,
+    major: faker.hacker.adjective() + ' Degree',
+    institution: faker.company.companyName(),
+  };
 
   const result = await app.graphql.mutate(
     gql`
       mutation createEducation($input: CreateEducationInput!) {
         createEducation(input: $input) {
           education {
-            ...educt
+            ...education
           }
         }
       }
-      ${fragments.educt}
+      ${fragments.education}
     `,
     {
       input: {
-        education: {
-          ...input,
-          institution,
-        },
+        education,
       },
     },
   );
-  const educt: Education | undefined = result.createEducation?.education;
+  const actual: Education | undefined = result.createEducation?.education;
 
-  expect(educt).toBeTruthy();
+  expect(actual).toBeTruthy();
 
-  return educt;
+  return actual;
 }

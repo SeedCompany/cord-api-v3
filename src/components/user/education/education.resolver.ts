@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { Args, Mutation } from '@nestjs/graphql';
+import { Args, Mutation, Query } from '@nestjs/graphql';
 import { IdArg, RequestUser, IRequestUser } from '../../../common';
 import {
   CreateEducationInput,
   CreateEducationOutput,
   UpdateEducationInput,
   UpdateEducationOutput,
+  Education,
 } from './dto';
 import { EducationService } from './education.service';
 
@@ -22,6 +23,16 @@ export class EducationResolver {
   ): Promise<CreateEducationOutput> {
     const education = await this.service.create(input, token);
     return { education };
+  }
+
+  @Query(() => Education, {
+    description: 'Read an education entry by user id',
+  })
+  async education(
+    @RequestUser() token: IRequestUser,
+    @IdArg() id: string,
+  ): Promise<Education> {
+    return await this.service.readOne(id, token);
   }
 
   @Mutation(() => UpdateEducationOutput, {
