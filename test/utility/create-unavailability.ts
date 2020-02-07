@@ -12,11 +12,11 @@ export async function createUnavailability(
   app: TestApp,
   input: Partial<CreateUnavailability> = {},
 ) {
-  const unavailability: CreateUnavailability = {
+  const fakeUnavailability: CreateUnavailability = {
     userId: input.userId,
-    description: input.description || faker.address.country(),
-    start: input.start || DateTime.utc(),
-    end: input.end || DateTime.utc().plus({years: 1}),
+    description: faker.address.country(),
+    start:  DateTime.utc(),
+    end: DateTime.utc().plus({years: 1}),
     ...input,
   };
 
@@ -34,8 +34,7 @@ export async function createUnavailability(
     {
       input: {
         unavailability: {
-          ...input,
-          ...unavailability,
+          ...fakeUnavailability,
         },
       },
     },

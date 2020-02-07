@@ -91,10 +91,12 @@ export class UnavailabilityService {
       `,
         {
           id: generate(),
+          requestingUserId: token.userId,
+          targetUserId: input.userId,
           token: token.token,
           description: input.description,
-          start: input.start.toISO(),
-          end: input.end.toISO(),
+          start: input.start,
+          end: input.end,
           owningOrgId: token.owningOrgId,
         },
       )
@@ -116,12 +118,12 @@ export class UnavailabilityService {
         canEdit: result.canEditDescription,
       },
       start: {
-        value: DateTime.fromISO(result.start),
+        value: result.start,
         canRead: result.canReadStart,
         canEdit: result.canEditStart,
       },
       end: {
-        value: DateTime.fromISO(result.end),
+        value: result.end,
         canRead: result.canReadEnd,
         canEdit: result.canEditEnd,
       },

@@ -119,13 +119,13 @@ describe('Language e2e', () => {
       query {
         languages {
           items {
-            ...org
+            ...language
           }
           hasMore
           total
         }
       }
-      ${fragments.org}
+      ${fragments.language}
     `);
 
     expect(languages.items.length).toBeGreaterThan(numLanguages);
