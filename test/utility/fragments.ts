@@ -81,11 +81,7 @@ export const fragments = {
 unavailability: gql`
   fragment unavailability on Unavailability {
     id
-    userId {
-      value
-      canEdit
-      canRead
-    }
+    createdAt
     description {
       value
       canEdit
@@ -103,4 +99,25 @@ unavailability: gql`
     }
   }
 `,
+education: gql`
+    fragment education on Education {
+      id
+      createdAt
+      degree {
+        value
+        canRead
+        canEdit
+      }
+      major {
+        value
+        canRead
+        canEdit
+      }
+      institution {
+        value
+        canRead
+        canEdit
+      }
+    }
+  `,
 };

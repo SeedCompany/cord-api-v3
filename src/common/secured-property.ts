@@ -1,10 +1,16 @@
 import { stripIndent } from 'common-tags';
 import { GraphQLScalarType, GraphQLString } from 'graphql';
 import { isObject } from 'lodash';
-import { ClassType, Field, Int, ObjectType } from 'type-graphql';
+import {
+  ClassType,
+  Field,
+  Int,
+  ObjectType,
+} from 'type-graphql';
 import { Editable } from './editable.interface';
 import { Readable } from './readable.interface';
 import { AbstractClassType } from './types';
+import { DateTime } from 'luxon';
 
 export interface Secured<T> {
   readonly value?: T;
@@ -54,3 +60,10 @@ export abstract class SecuredString extends SecuredProperty<string>(
   description: SecuredProperty.descriptionFor('an integer'),
 })
 export abstract class SecuredInt extends SecuredProperty<number>(Int) {}
+
+@ObjectType({
+  description: SecuredProperty.descriptionFor('a datetime'),
+})
+export abstract class SecuredDateTime extends SecuredProperty<DateTime>(
+  DateTime,
+) {}

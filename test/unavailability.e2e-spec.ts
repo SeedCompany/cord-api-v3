@@ -27,7 +27,7 @@ describe('Unavailability e2e', () => {
     await app.close();
   });
 
-  it('create a unavailability', async () => {
+  it.only('create a unavailability', async () => {
     const unavailability = await createUnavailability(app);
     expect(unavailability.id).toBeDefined();
   });
@@ -59,7 +59,7 @@ describe('Unavailability e2e', () => {
   });
 
   // UPDATE LANGUAGE
-  it.only('update unavailability', async () => {
+  it.skip('update unavailability', async () => {
     const unavailability = await createUnavailability(app);
     const newName = faker.company.companyName();
 
@@ -107,15 +107,15 @@ describe('Unavailability e2e', () => {
     expect(actual).toBeTruthy();
   });
 
-  // LIST Unavailabilitys
-  it('List view of unavailabilitys', async () => {
-    // create a bunch of unavailabilitys
-    const numUnavailabilitys = 10;
-    await Promise.all(times(numUnavailabilitys).map(() => createUnavailability(app)));
+  // LIST Unavailabilities
+  it('List view of unavailabilities', async () => {
+    // create a bunch of unavailabilities
+    const numUnavailables = 10;
+    await Promise.all(times(numUnavailables).map(() => createUnavailability(app)));
     // test reading new lang
-    const { unavailabilitys } = await app.graphql.query(gql`
+    const { unavailables } = await app.graphql.query(gql`
       query {
-        unavailabilitys {
+        unavailabilities {
           items {
             ...org
           }
@@ -126,6 +126,6 @@ describe('Unavailability e2e', () => {
       ${fragments.org}
     `);
 
-    expect(unavailabilitys.items.length).toBeGreaterThan(numUnavailabilitys);
+    expect(unavailables.items.length).toBeGreaterThan(numUnavailables);
   });
 });
