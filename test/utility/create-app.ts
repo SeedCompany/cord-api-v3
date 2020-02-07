@@ -28,5 +28,7 @@ export const createTestApp = async () => {
   await app.init();
   app.graphql = await createGraphqlClient(app);
 
+  console.log('app created');
+
   return app;
 };

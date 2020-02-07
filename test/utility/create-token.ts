@@ -13,5 +13,7 @@ export async function createToken(app: TestApp): Promise<string> {
   expect(token).toBeTruthy();
   app.graphql.authToken = token;
 
+  console.log('Token created: ' + token);
+
   return token;
 }

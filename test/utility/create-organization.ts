@@ -37,5 +37,7 @@ export async function createOrganization(
 
   expect(org).toBeTruthy();
 
+  console.log('Organization created: ' + org.id);
+
   return org;
 }

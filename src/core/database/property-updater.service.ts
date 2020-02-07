@@ -46,10 +46,7 @@ export class PropertyUpdaterService {
     return updated;
   }
 
-  async updateProperty<
-    TObject extends Resource,
-    Key extends keyof TObject
-  >({
+  async updateProperty<TObject extends Resource, Key extends keyof TObject>({
     token,
     object,
     key,
@@ -118,7 +115,10 @@ export class PropertyUpdaterService {
         }),
       ])
       .return('newPropNode')
-      .first();
+      .build();
+    console.log(result);
+    
+    // .first();
 
     if (!result) {
       throw new NotFoundException('Could not find object');

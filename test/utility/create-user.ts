@@ -43,5 +43,7 @@ export async function createUser(
   expect(isValid(actual.id)).toBe(true);
   expect(actual.email.value).toBe(user.email);
 
+  console.log('user created: ' + actual.id);
+
   return actual;
 }
