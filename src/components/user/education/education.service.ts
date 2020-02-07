@@ -58,7 +58,8 @@ export class EducationService {
           (education:Education {
             active: true,
             createdAt: datetime(),
-            id: $id
+            id: $id,
+            owningOrgId: $owningOrgId
           })
           -[:degree {active: true}]->
           (degree:Property {
@@ -108,6 +109,7 @@ export class EducationService {
           major: input.major,
           institution: input.institution,
           id: generate(),
+          owningOrgId: token.owningOrgId,
         },
       )
       .first();
@@ -199,8 +201,14 @@ export class EducationService {
       },
       institution: {
         value: result.institution,
-        canRead: result.canReadInstitution !== null ? result.canReadInstitution : false,
-        canEdit: result.canEditInstitution !== null ? result.canEditInstitution : false,
+        canRead:
+          result.canReadInstitution !== null
+            ? result.canReadInstitution
+            : false,
+        canEdit:
+          result.canEditInstitution !== null
+            ? result.canEditInstitution
+            : false,
       },
     };
   }
@@ -209,58 +217,15 @@ export class EducationService {
     input: UpdateEducation,
     token: IRequestUser,
   ): Promise<Education> {
-
     const ed = await this.readOne(input.id, token);
 
     return this.propertyUpdater.updateProperties({
       token,
       object: ed,
-      props: [
-        'degree',
-        'major',
-        'institution',
-      ],
+      props: ['degree', 'major', 'institution'],
       changes: input,
       nodevar: 'education',
     });
-
-
-    // const result = await this.db
-    //   .query()
-    //   .raw(
-    //     `
-    //     MATCH
-    //       (education:Education {active: true, id: $id}),
-    //       (education)-[:degree {active: true}]->(degree:Property {active: true}),
-    //       (education)-[:major {active: true}]->(major:Property {active: true}),
-    //       (education)-[:institution {active: true}]->(institution:Property {active: true})
-    //     SET
-    //       degree.value = $degree,
-    //       major.value = $major,
-    //       institution.value = $institution
-    //     RETURN
-    //       education.id as id,
-    //       degree.value as degree,
-    //       major.value as major,
-    //       institution.value as institution
-    //     `,
-    //     {
-    //       id: input.id,
-    //       degree: input.degree,
-    //       major: input.major,
-    //       institution: input.institution,
-    //     },
-    //   )
-    //   .first();
-    // if (!result) {
-    //   throw new NotFoundException('Could not find education');
-    // }
-
-    // return {
-    //   degree: result.degree,
-    //   major: result.major,
-    //   institution: result.institution,
-    // };
   }
 
   async delete(id: string, token: IRequestUser): Promise<void> {
@@ -269,14 +234,26 @@ export class EducationService {
       .raw(
         `
         MATCH
-          (education:Education {active: true, id: $id})
+        (token:Token {
+          active: true,
+          value: $token
+        })
+          <-[:token {active: true}]-
+        (requestingUser:User {
+          active: true,
+          id: $requestingUserId,
+          owningOrgId: $owningOrgId
+        }),
+          (requestingUser)<-[:member]-(acl:ACL {canEditEducation: true})-[:toNode]->(user)-[toEd:education {active: true}]->(education:Education {active: true, id: $id})
         SET
+          toEd.active = false,
           education.active = false
-        RETURN
-          education.id as id
         `,
         {
           id,
+          token: token.token,
+          requestingUserId: token.userId,
+          owningOrgId: token.owningOrgId,
         },
       )
       .run();

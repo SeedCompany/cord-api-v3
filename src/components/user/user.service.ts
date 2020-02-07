@@ -124,7 +124,9 @@ export class UserService {
             canReadPassword: true,
             canEditPassword: true,
             canReadEmail: true,
-            canEditEmail: true
+            canEditEmail: true,
+            canReadEducation: true,
+            canEditEducation: true
           })
           -[:toNode]->(user)
         RETURN

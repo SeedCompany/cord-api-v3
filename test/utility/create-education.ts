@@ -41,7 +41,5 @@ export async function createEducation(
 
   expect(actual).toBeTruthy();
 
-  console.log('education created: ' + actual.id);
-
   return actual;
 }

@@ -72,26 +72,28 @@ describe('Education e2e', () => {
       },
     );
     const updated = result?.updateEducation?.education;
-    console.log(updated);
     expect(updated).toBeTruthy();
     expect(updated.institution.value).toBe(newInstitution);
   });
 
   // DELETE EDUCATION
-  // it('delete education', async () => {
-  //   const educt = await createEducation(app);
+  it('delete education', async () => {
+    const user = await createUser(app);
+    const educt = await createEducation(app, user.id);
 
-  //   await app.graphql.mutate(
-  //     gql`
-  //       mutation deleteEducation($id: ID!) {
-  //         deleteEducation(id: $id)
-  //       }
-  //     `,
-  //     {
-  //       id: educt.id,
-  //     },
-  //   );
-  // });
+    const result = await app.graphql.mutate(
+      gql`
+        mutation deleteEducation($id: ID!) {
+          deleteEducation(id: $id)
+        }
+      `,
+      {
+        id: educt.id,
+      },
+    );
+    const actual: Education | undefined = result.deleteEducation;
+    expect(actual).toBeTruthy();
+  });
 
   // LIST EDUCATIONS
   //   it('list view of educations', async () => {
