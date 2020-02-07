@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { Connection } from 'cypher-query-builder';
 import { generate } from 'shortid';
 import * as argon2 from 'argon2';
@@ -20,14 +20,110 @@ import { IRequestUser } from '../../common';
 import { ConfigService } from '../../core';
 
 @Injectable()
-export class UserService {
+export class UserService implements OnModuleInit {
+  private isGud = false;
   constructor(
     private readonly organizations: OrganizationService,
     private readonly config: ConfigService,
     private readonly db: Connection,
     private readonly propertyUpdater: PropertyUpdaterService,
     @Logger('user:service') private readonly logger: ILogger,
-  ) {}
+  ) {
+    this.checkConstraintsAndIndexes();
+
+  }
+
+  onModuleInit() {
+    if (!this.isGud) {
+      this.isGud = true;
+    }
+  }
+
+  async checkConstraintsAndIndexes() {
+    const session = this.db.session();
+    const wait = [];
+
+    console.log('asdf');
+
+    // USER NODE
+    wait.push(
+      session.run(
+        'CREATE CONSTRAINT userIdExists ON (n:User) ASSERT EXISTS(n.id)',
+      ),
+    );
+    wait.push(
+      session.run(
+        'CREATE CONSTRAINT userIdUnique ON (n:User) ASSERT n.id IS UNIQUE',
+      ),
+    );
+    wait.push(
+      session.run(
+        'CREATE CONSTRAINT userActiveExists ON (n:User) ASSERT EXISTS(n.active)',
+      ),
+    );
+    wait.push(
+      session.run(
+        'CREATE CONSTRAINT userCreatedAtExists ON (n:User) ASSERT EXISTS(n.createdAt)',
+      ),
+    );
+    wait.push(
+      session.run(
+        'CREATE CONSTRAINT userOwningOrgIdExists ON (n:User) ASSERT EXISTS(n.owningOrgId)',
+      ),
+    );
+    wait.push(
+      session.run(
+        'CREATE CONSTRAINT userOwningOrgIdExists ON (n:User) ASSERT EXISTS(n.owningOrgId)',
+      ),
+    );
+    // EMAIL REL
+    wait.push(
+      session.run(
+        'CREATE CONSTRAINT emailRelActiveExists ON ()-[r:email]-() ASSERT EXISTS(r.active)',
+      ),
+    );
+    wait.push(
+      session.run(
+        'CREATE CONSTRAINT emailRelCreatedAtExists ON ()-[r:email]-() ASSERT EXISTS(r.createdAt)',
+      ),
+    );
+    // EMAIL NODE
+    wait.push(
+      session.run(
+        'CREATE CONSTRAINT emailAddressValueExists ON (n:EmailAddress) ASSERT EXISTS(n.value)',
+      ),
+    );
+    wait.push(
+      session.run(
+        'CREATE CONSTRAINT emailAddressValueUnique ON (n:EmailAddress) ASSERT n.value IS UNIQUE',
+      ),
+    );
+    // PASSWORD REL
+    wait.push(
+      session.run(
+        'CREATE CONSTRAINT passwordRelActiveExists ON ()-[r:password]-() ASSERT EXISTS(r.active)',
+      ),
+    );
+    wait.push(
+      session.run(
+        'CREATE CONSTRAINT passwordRelCreatedAtExists ON ()-[r:password]-() ASSERT EXISTS(r.createdAt)',
+      ),
+    );
+    // PROPERTY NODE
+    wait.push(
+      session.run(
+        'CREATE CONSTRAINT propertyValueExists ON (n:Property) ASSERT EXISTS(n.value)',
+      ),
+    );
+    wait.push(
+      session.run(
+        'CREATE CONSTRAINT propertyActiveExists ON (n:Property) ASSERT EXISTS(n.active)',
+      ),
+    );
+
+    await Promise.all(wait);
+    session.close();
+  }
 
   async list(input: UserListInput, token: string): Promise<UserListOutput> {
     this.logger.info('Listing users', { input, token });
@@ -59,7 +155,6 @@ export class UserService {
   }
 
   async create(input: CreateUser, token: IRequestUser): Promise<User> {
-
     const pash = await argon2.hash(input.password);
     /** CREATE USER
      * get the token, then create the user with minimum properties
@@ -83,7 +178,7 @@ export class UserService {
             canDeleteOwnUser: true,
             owningOrgId: "Seed Company"
           })
-          -[:email {active: true}]->
+          -[:email {active: true, createdAt: datetime()}]->
           (email:EmailAddress:Property {
             active: true,
             value: $email
