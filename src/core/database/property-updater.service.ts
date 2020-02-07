@@ -4,6 +4,7 @@ import {
   UnwrapSecured,
   isSecured,
   unwrapSecured,
+  Resource,
 } from '../../common';
 import { Injectable, NotFoundException } from '@nestjs/common';
 
@@ -14,16 +15,18 @@ import { upperFirst } from 'lodash';
 export class PropertyUpdaterService {
   constructor(private readonly db: Connection) {}
 
-  async updateProperties<TObject extends { id: string }>({
+  async updateProperties<TObject extends Resource>({
     token,
     object,
     props,
     changes,
+    nodevar,
   }: {
     token: IRequestUser;
     object: TObject;
     props: ReadonlyArray<keyof TObject>;
     changes: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> };
+    nodevar: string;
   }) {
     let updated = object;
     for (const prop of props) {
@@ -38,26 +41,26 @@ export class PropertyUpdaterService {
         token,
         key: prop,
         value: changes[prop],
+        nodevar,
       });
     }
     return updated;
   }
 
-  async updateProperty<
-    TObject extends { id: string },
-    Key extends keyof TObject
-  >({
+  async updateProperty<TObject extends Resource, Key extends keyof TObject>({
     token,
     object,
     key,
     value,
     aclEditProp,
+    nodevar,
   }: {
     token: IRequestUser;
     object: TObject;
     key: Key;
     value: UnwrapSecured<TObject[Key]>;
     aclEditProp?: string;
+    nodevar: string;
   }): Promise<TObject> {
     const aclEditPropName =
       aclEditProp || `canEdit${upperFirst(key as string)}`;
@@ -80,7 +83,7 @@ export class PropertyUpdaterService {
       ])
       .with('*')
       .optionalMatch([
-        node('user', 'User', {
+        node(nodevar, upperFirst(nodevar), {
           active: true,
           id: object.id,
           owningOrgId: token.owningOrgId,
@@ -92,7 +95,7 @@ export class PropertyUpdaterService {
         relation('in', '', 'member'),
         node('acl', 'ACL', { [aclEditPropName]: true }),
         relation('out', '', 'toNode'),
-        node('user'),
+        node(nodevar),
         relation('out', 'oldToProp', key as string, { active: true }),
         node('oldPropVar', 'Property', { active: true }),
       ])
@@ -101,7 +104,7 @@ export class PropertyUpdaterService {
         'oldPropVar.active': false,
       })
       .create([
-        node('user'),
+        node(nodevar),
         relation('out', 'toProp', key as string, {
           active: true,
           createdAt: now,

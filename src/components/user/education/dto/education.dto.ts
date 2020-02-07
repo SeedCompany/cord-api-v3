@@ -1,6 +1,14 @@
 import { Field, ObjectType } from 'type-graphql';
-import { Editable, Readable, Resource } from '../../../../common';
+import {
+  Editable,
+  Readable,
+  Resource,
+  SecuredString,
+  Secured,
+  SecuredProperty,
+} from '../../../../common';
 import { registerEnumType } from 'type-graphql';
+import { GraphQLString } from 'graphql';
 
 export enum Degree {
   Primary = 'primary',
@@ -14,21 +22,20 @@ export enum Degree {
 registerEnumType(Degree, { name: 'Degree' });
 
 @ObjectType({
-  implements: [Readable, Editable],
+  description: SecuredProperty.descriptionFor('a string'),
 })
-export class Education extends Resource implements Readable, Editable {
+export abstract class SecuredDegree extends SecuredProperty<string>(
+  GraphQLString,
+) {}
+
+@ObjectType()
+export class Education extends Resource{
   @Field()
-  readonly degree: Degree;
+  readonly degree: SecuredDegree;
 
   @Field()
-  readonly major: string;
+  readonly major: SecuredString;
 
   @Field()
-  readonly institution: string;
-
-  @Field()
-  readonly canRead: boolean;
-
-  @Field()
-  readonly canEdit: boolean;
+  readonly institution: SecuredString;
 }

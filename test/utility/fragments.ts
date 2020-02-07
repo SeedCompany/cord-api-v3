@@ -42,6 +42,27 @@ export const fragments = {
       }
     }
   `,
+  education: gql`
+    fragment education on Education {
+      id
+      createdAt
+      degree {
+        value
+        canRead
+        canEdit
+      }
+      major {
+        value
+        canRead
+        canEdit
+      }
+      institution {
+        value
+        canRead
+        canEdit
+      }
+    }
+  `,
   language: gql`
   fragment language on Language {
     id

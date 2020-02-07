@@ -2,8 +2,7 @@ import * as request from 'supertest';
 import { INestApplication } from '@nestjs/common';
 import { generate, isValid } from 'shortid';
 import { DateTime } from 'luxon';
-import { createLanguage } from './language.e2e-spec';
-import { createTestApp, TestApp } from './utility';
+import { createTestApp, TestApp, createLanguage } from './utility';
 
 async function createProjectEngagement(
   app: INestApplication,

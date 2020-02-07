@@ -127,7 +127,9 @@ export class UserService {
             canReadPassword: true,
             canEditPassword: true,
             canReadEmail: true,
-            canEditEmail: true
+            canEditEmail: true,
+            canReadEducation: true,
+            canEditEducation: true
           })
           -[:toNode]->(user)
         RETURN
@@ -329,6 +331,7 @@ export class UserService {
         'displayLastName',
       ],
       changes: input,
+      nodevar: 'user',
     });
   }
 
