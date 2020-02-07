@@ -121,7 +121,7 @@ describe('Organization e2e', () => {
       }
       ${fragments.org}
     `);
-    
+
     expect(organizations.items.length).toBeGreaterThan(10);
   });
 });
