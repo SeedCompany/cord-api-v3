@@ -1,14 +1,15 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
 import { Connection, node, relation } from 'cypher-query-builder';
-import { upperFirst } from 'lodash';
-import { DateTime } from 'luxon';
 import {
   IRequestUser,
+  UnwrapSecured,
   isSecured,
   unwrapSecured,
-  UnwrapSecured,
   Resource,
 } from '../../common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+
+import { DateTime } from 'luxon';
+import { upperFirst } from 'lodash';
 
 @Injectable()
 export class PropertyUpdaterService {
