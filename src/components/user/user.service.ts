@@ -59,6 +59,7 @@ export class UserService {
   }
 
   async create(input: CreateUser, token: IRequestUser): Promise<User> {
+
     const pash = await argon2.hash(input.password);
     /** CREATE USER
      * get the token, then create the user with minimum properties
@@ -77,6 +78,8 @@ export class UserService {
             createdByUserId: "system",
             canCreateOrg: true,
             canReadOrgs: true,
+            canCreateLang: true,
+            canReadLangs: true,
             canDeleteOwnUser: true,
             owningOrgId: "Seed Company"
           })

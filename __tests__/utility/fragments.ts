@@ -42,39 +42,4 @@ export const fragments = {
       }
     }
   `,
-  language: gql`
-  fragment language on Language {
-    id
-    name {
-      value
-      canEdit
-      canRead
-    }
-    displayName {
-      value
-      canEdit
-      canRead
-    }
-    beginFiscalYear {
-      value
-      canEdit
-      canRead
-    }
-    ethnologueName {
-      value
-      canEdit
-      canRead
-    }
-    organizationPopulation {
-      value
-      canEdit
-      canRead
-    }
-    rodNumber {
-      value
-      canEdit
-      canRead
-    }
-  }
-`,
 };
