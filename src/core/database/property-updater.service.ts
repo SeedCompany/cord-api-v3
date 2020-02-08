@@ -6,14 +6,17 @@ import {
   isSecured,
   unwrapSecured,
 } from '../../common';
-
+import { ILogger, Logger } from '../../core';
 import { DateTime } from 'luxon';
 import { ISession } from '../../components/auth';
 import { upperFirst } from 'lodash';
 
 @Injectable()
 export class PropertyUpdaterService {
-  constructor(private readonly db: Connection) {}
+  constructor(
+    private readonly db: Connection,
+    @Logger('EducationService:service') private readonly logger: ILogger,
+  ) {}
 
   async updateProperties<TObject extends Resource>({
     session,
@@ -180,30 +183,10 @@ export class PropertyUpdaterService {
           },
         )
         .run();
-
-      // .match([
-      //   node('token', 'Token', {
-      //     active: true,
-      //     value: session.token,
-      //   }),
-      //   relation('in', '', 'token', {
-      //     active: true,
-      //   }),
-      //   node('requestingUser', 'User', {
-      //     active: true,
-      //     id: session.userId,
-      //     [aclEditProp]: true,
-      //   }),
-      // ])
-      // .with('*')
-      // .match([node('item', '', { active: true, id: object.id })])
-      // .setValues({ 'item.active': false })
-      // .return({ id: object.id })
-      // .first();
-      // console.log(JSON.stringify(result));
     } catch (e) {
       throw e;
     }
+    this.logger.info(``);
   }
 
   async deleteProperties<TObject extends Resource>({
@@ -292,4 +275,16 @@ export class PropertyUpdaterService {
       throw new NotFoundException('Could not find object');
     }
   }
+
+  async createBaseNode<TObject extends Resource>({
+    session,
+    baseNode,
+    baseProps,
+  }: {
+    session: ISession;
+    baseNode: TObject;
+    baseProps: string[];
+    aclEditProp?: string;
+    nodevar: string;
+  }): Promise<void> {}
 }
