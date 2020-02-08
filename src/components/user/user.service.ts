@@ -28,10 +28,7 @@ export class UserService implements OnModuleInit {
     private readonly db: Connection,
     private readonly propertyUpdater: PropertyUpdaterService,
     @Logger('user:service') private readonly logger: ILogger,
-  ) {
-    this.checkConstraintsAndIndexes();
-
-  }
+  ) {}
 
   onModuleInit() {
     if (!this.isGud) {
