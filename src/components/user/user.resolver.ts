@@ -6,7 +6,9 @@ import {
   ResolveProperty,
   Parent,
 } from '@nestjs/graphql';
-import { IdArg, RequestUser, IRequestUser } from '../../common';
+import { IdArg, RequestUser } from '../../common';
+import { IRequestUser } from '../../common/request-user.interface';
+
 import {
   OrganizationListInput,
   SecuredOrganizationList,
@@ -68,7 +70,7 @@ export class UserResolver {
 
   @ResolveProperty(() => SecuredUnavailabilityList)
   async unavailabilities(
-    @RequestUser() token: string,
+    @RequestUser() token: IRequestUser,
     @Parent() { id }: User,
     @Args({
       name: 'input',
