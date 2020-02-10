@@ -227,11 +227,11 @@ export class UnavailabilityService {
     input: UpdateUnavailability,
     token: IRequestUser,
   ): Promise<Unavailability> {
-    const ed = await this.readOne(input.id, token);
+    const unavailability = await this.readOne(input.id, token);
 
     return this.propertyUpdater.updateProperties({
       token,
-      object: ed,
+      object: unavailability,
       props: ['description', 'start', 'end'],
       changes: input,
       nodevar: 'unavailability',
