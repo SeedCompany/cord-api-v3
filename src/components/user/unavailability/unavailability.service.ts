@@ -227,7 +227,15 @@ export class UnavailabilityService {
     input: UpdateUnavailability,
     token: IRequestUser,
   ): Promise<Unavailability> {
-    throw new Error('Not implemented');
+    const ed = await this.readOne(input.id, token);
+
+    return this.propertyUpdater.updateProperties({
+      token,
+      object: ed,
+      props: ['description', 'start', 'end'],
+      changes: input,
+      nodevar: 'unavailability',
+    });
   }
 
   async delete(id: string, token: IRequestUser): Promise<void> {

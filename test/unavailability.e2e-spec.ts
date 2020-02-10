@@ -61,9 +61,9 @@ describe('Unavailability e2e', () => {
   });
 
   // UPDATE LANGUAGE
-  it.skip('update unavailability', async () => {
+  it('update unavailability', async () => {
     const unavailability = await createUnavailability(app, { userId: user.id });
-    const newName = faker.company.companyName();
+    const newDesc = faker.company.companyName();
 
     const result = await app.graphql.mutate(
       gql`
@@ -80,7 +80,7 @@ describe('Unavailability e2e', () => {
         input: {
           unavailability: {
             id: unavailability.id,
-            name: newName,
+            description: newDesc,
           },
         },
       },
@@ -88,7 +88,7 @@ describe('Unavailability e2e', () => {
     const updated = result?.updateUnavailability?.unavailability;
     expect(updated).toBeTruthy();
     expect(updated.id).toBe(unavailability.id);
-    expect(updated.name.value).toBe(newName);
+    expect(updated.description.value).toBe(newDesc);
   });
 
   // DELETE LANGUAGE
