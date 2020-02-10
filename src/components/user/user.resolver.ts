@@ -70,7 +70,7 @@ export class UserResolver {
 
   @ResolveProperty(() => SecuredUnavailabilityList)
   async unavailabilities(
-    @RequestUser() token: string,
+    @RequestUser() token: IRequestUser,
     @Parent() { id }: User,
     @Args({
       name: 'input',

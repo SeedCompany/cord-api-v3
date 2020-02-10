@@ -9,7 +9,7 @@ import {
 import { Connection } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { IRequestUser } from '../../../common/request-user.interface';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Logger, ILogger } from '../../../core/logger';
 import { generate } from 'shortid';
 import { PropertyUpdaterService } from '../../../core';
@@ -109,8 +109,93 @@ export class UnavailabilityService {
       throw new Error('Could not create unavailability');
     }
 
-    this.logger.info(`unavailability for user ${input.userId} created, id ${result.id}`)
+    this.logger.info(
+      `unavailability for user ${input.userId} created, id ${result.id}`,
+    );
 
+    return {
+      id: result.id,
+      createdAt: DateTime.local(), // TODO
+      description: {
+        value: result.description,
+        canRead: result.canReadDescription,
+        canEdit: result.canEditDescription,
+      },
+      start: {
+        value: result.start,
+        canRead: result.canReadStart,
+        canEdit: result.canEditStart,
+      },
+      end: {
+        value: result.end,
+        canRead: result.canReadEnd,
+        canEdit: result.canEditEnd,
+      },
+    };
+  }
+
+  async readOne(id: string, token: IRequestUser): Promise<Unavailability> {
+    this.logger.info(
+      `Query readOne Unavailability: id ${id} by ${token.userId}`,
+    );
+    const result = await this.db
+      .query()
+      .raw(
+        `
+      MATCH
+        (token:Token {
+          active: true,
+          value: $token
+        })
+        <-[:token {active: true}]-
+        (requestingUser:User {
+          active: true,
+          id: $requestingUserId
+        }),
+        (unavailability:Unavailability {
+          active: true,
+          id: $id
+        }),
+        (requestingUser)
+          <-[:member]-
+          (acl:ACL {
+            canReadDescription: true,
+            canEditDescription: true,
+            canReadStart: true,
+            canEditStart: true,
+            canReadEnd: true,
+            canEditEnd: true
+          })-[:toNode]->(unavailability)
+      RETURN
+        unavailability.id as id,
+        description.value as description,
+        start.value as start,
+        end.value as end,
+        acl.canReadDescription as canReadDescription,
+        acl.canEditDescription as canEditDescription,
+        acl.canReadStart as canReadStart,
+        acl.canEditStart as canEditStart,
+        acl.canReadEnd as canReadEnd,
+        acl.canEditEnd as canEditEnd
+      `,
+        {
+          id,
+          token: token.token,
+          requestingUserId: token.userId,
+        },
+      )
+      .first();
+
+    if (!result) {
+      this.logger.error(`Could not find unavailability: ${id} `);
+      throw new NotFoundException('Could not find language');
+    }
+
+    if (!result.canReadLang) {
+      throw new Error(
+        'User does not have permission to read these unavailabilities',
+      );
+    }
     return {
       id: result.id,
       createdAt: DateTime.local(), // TODO
@@ -134,19 +219,19 @@ export class UnavailabilityService {
 
   async update(
     input: UpdateUnavailability,
-    token: string,
+    token: IRequestUser,
   ): Promise<Unavailability> {
     throw new Error('Not implemented');
   }
 
-  async delete(id: string, token: string): Promise<void> {
+  async delete(id: string, token: IRequestUser): Promise<void> {
     throw new Error('Not implemented');
   }
 
   async list(
     userId: string,
     input: UnavailabilityListInput,
-    token: string,
+    token: IRequestUser,
   ): Promise<SecuredUnavailabilityList> {
     throw new Error('Not implemented');
   }

@@ -29,14 +29,15 @@ describe('Unavailability e2e', () => {
     await app.close();
   });
 
-  it.only('create a unavailability', async () => {
-    const unavailability = await createUnavailability(app, {userId: user.id });
+  it('create a unavailability', async () => {
+    const unavailability = await createUnavailability(app, { userId: user.id });
     expect(unavailability.id).toBeDefined();
   });
 
-  it('read one unavailability by id', async () => {
-    const unavailability = await createUnavailability(app);
+  it.only('read one unavailability by id', async () => {
+    const unavailability = await createUnavailability(app, { userId: user.id });
 
+    console.log(JSON.stringify(unavailability));
     try {
       const { unavailability: actual } = await app.graphql.query(
         gql`
@@ -62,7 +63,7 @@ describe('Unavailability e2e', () => {
 
   // UPDATE LANGUAGE
   it.skip('update unavailability', async () => {
-    const unavailability = await createUnavailability(app);
+    const unavailability = await createUnavailability(app, { userId: user.id });
     const newName = faker.company.companyName();
 
     const result = await app.graphql.mutate(
@@ -93,7 +94,7 @@ describe('Unavailability e2e', () => {
 
   // DELETE LANGUAGE
   it('delete unavailability', async () => {
-    const unavailability = await createUnavailability(app);
+    const unavailability = await createUnavailability(app, { userId: user.id });
 
     const result = await app.graphql.mutate(
       gql`
@@ -113,7 +114,9 @@ describe('Unavailability e2e', () => {
   it('List view of unavailabilities', async () => {
     // create a bunch of unavailabilities
     const numUnavailables = 10;
-    await Promise.all(times(numUnavailables).map(() => createUnavailability(app)));
+    await Promise.all(
+      times(numUnavailables).map(() => createUnavailability(app, { userId: user.id })),
+    );
     // test reading new lang
     const { unavailables } = await app.graphql.query(gql`
       query {

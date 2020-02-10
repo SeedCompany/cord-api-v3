@@ -11,7 +11,6 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '../../core';
 import { IRequestUser } from '../../common';
 import { generate } from 'shortid';
-import { loggers } from 'winston';
 
 @Injectable()
 export class LanguageService {
@@ -197,8 +196,8 @@ export class LanguageService {
       throw new NotFoundException('Could not find language');
     }
 
-    if (!result.canCreateLang) {
-      throw new Error('User does not have permission to create an language');
+    if (!result.canReadLangs) {
+      throw new Error('User does not have permission to read this language');
     }
 
     return {
