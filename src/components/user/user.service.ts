@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Connection } from 'cypher-query-builder';
 import { generate } from 'shortid';
 import * as argon2 from 'argon2';
-import { PropertyUpdaterService } from '../../core';
+import { PropertyUpdaterService } from '../../core/index';
 import { ILogger, Logger } from '../../core/logger';
 import {
   OrganizationListInput,
@@ -16,7 +16,7 @@ import {
   UserListInput,
   UserListOutput,
 } from './dto';
-import { IRequestUser } from '../../common';
+import { IRequestUser } from '../../common/request-user.interface';
 import { ConfigService } from '../../core';
 
 @Injectable()
@@ -80,6 +80,8 @@ export class UserService {
             canReadOrgs: true,
             canCreateLang: true,
             canReadLangs: true,
+            canCreateUnavailability: true,
+            canReadUnavailability: true,
             canDeleteOwnUser: true,
             owningOrgId: "Seed Company"
           })

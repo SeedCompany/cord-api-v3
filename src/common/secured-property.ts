@@ -5,6 +5,8 @@ import { ClassType, Field, Int, ObjectType } from 'type-graphql';
 import { Editable } from './editable.interface';
 import { Readable } from './readable.interface';
 import { AbstractClassType } from './types';
+import { DateTime } from 'luxon';
+import { DateTimeField, DateField } from '.';
 
 export interface Secured<T> {
   readonly value?: T;
@@ -54,3 +56,29 @@ export abstract class SecuredString extends SecuredProperty<string>(
   description: SecuredProperty.descriptionFor('an integer'),
 })
 export abstract class SecuredInt extends SecuredProperty<number>(Int) {}
+
+@ObjectType({ implements: [Readable, Editable] })
+export abstract class SecuredDateTime
+  implements Readable, Editable, Secured<DateTime> {
+  @DateTimeField({ nullable: true })
+  readonly value?: DateTime;
+
+  @Field()
+  readonly canRead: boolean;
+
+  @Field()
+  readonly canEdit: boolean;
+}
+
+@ObjectType({ implements: [Readable, Editable] })
+export abstract class SecuredDate
+  implements Readable, Editable, Secured<Date> {
+  @DateField({ nullable: true })
+  readonly value?: Date;
+
+  @Field()
+  readonly canRead: boolean;
+
+  @Field()
+  readonly canEdit: boolean;
+}

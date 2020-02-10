@@ -1,23 +1,21 @@
-import { DateTime } from 'luxon';
+import {
+  DateTimeField,
+  Resource,
+  SecuredDateTime,
+  SecuredString,
+} from '../../../../common';
 import { Field, ObjectType } from 'type-graphql';
-import { DateTimeField, Editable, Readable, Resource } from '../../../../common';
 
-@ObjectType({
-  implements: [Readable, Editable],
-})
-export class Unavailability extends Resource implements Readable, Editable {
+import { DateTime } from 'luxon';
+
+@ObjectType()
+export class Unavailability extends Resource {
   @Field()
-  readonly description: string;
+  readonly description: SecuredString;
 
   @DateTimeField()
-  readonly start: DateTime;
+  readonly start: SecuredDateTime;
 
   @DateTimeField()
-  readonly end: DateTime;
-
-  @Field()
-  readonly canRead: boolean;
-
-  @Field()
-  readonly canEdit: boolean;
+  readonly end: SecuredDateTime;
 }
