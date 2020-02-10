@@ -38,7 +38,8 @@ export class UnavailabilityService {
         <-[:token {active: true}]-
         (requestingUser:User {
           active: true,
-          id: $requestingUserId
+          id: $requestingUserId,
+          canCreateUnavailability: true
         }),
         (targetUser:User {
           active: true,
@@ -150,7 +151,8 @@ export class UnavailabilityService {
         <-[:token {active: true}]-
         (requestingUser:User {
           active: true,
-          id: $requestingUserId
+          id: $requestingUserId,
+          canReadUnavailability: true
         }),
         (unavailability:Unavailability {
           active: true,
@@ -165,7 +167,10 @@ export class UnavailabilityService {
             canEditStart: true,
             canReadEnd: true,
             canEditEnd: true
-          })-[:toNode]->(unavailability)
+          })-[:toNode]->(unavailability),
+          (unavailability)-[:description {active: true}]->(description:Property {active: true}),
+          (unavailability)-[:start {active: true}]->(start:Property {active: true}),
+          (unavailability)-[:end {active: true}]->(end:Property {active: true})
       RETURN
         unavailability.id as id,
         description.value as description,
@@ -176,7 +181,8 @@ export class UnavailabilityService {
         acl.canReadStart as canReadStart,
         acl.canEditStart as canEditStart,
         acl.canReadEnd as canReadEnd,
-        acl.canEditEnd as canEditEnd
+        acl.canEditEnd as canEditEnd,
+        requestingUser.canReadUnavailability as canReadUnavailability
       `,
         {
           id,
@@ -191,7 +197,7 @@ export class UnavailabilityService {
       throw new NotFoundException('Could not find language');
     }
 
-    if (!result.canReadLang) {
+    if (!result.canReadUnavailability) {
       throw new Error(
         'User does not have permission to read these unavailabilities',
       );
@@ -225,7 +231,38 @@ export class UnavailabilityService {
   }
 
   async delete(id: string, token: IRequestUser): Promise<void> {
-    throw new Error('Not implemented');
+    this.logger.info(
+      `mutation delete unavailability: ${id} by ${token.userId}`,
+    );
+    const result = await this.db
+      .query()
+      .raw(
+        `
+      MATCH
+        (token:Token {active: true, value: $token})
+          <-[:token {active: true}]-
+          (user:User {
+            canCreateUnavailability: true
+          }),
+        (unavailability:Unavailability {active: true, id: $id})
+      SET
+        unavailability.active = false
+      RETURN
+        unavailability.id as id
+      `,
+        {
+          id,
+          token: token.token,
+        },
+      )
+      .first();
+
+    if (!result) {
+      this.logger.error(
+        `Could not find unavailability ${id}. Might not be active`,
+      );
+      throw new NotFoundException(`Could not find unavailability`);
+    }
   }
 
   async list(

@@ -80,6 +80,8 @@ export class UserService {
             canReadOrgs: true,
             canCreateLang: true,
             canReadLangs: true,
+            canCreateUnavailability: true,
+            canReadUnavailability: true,
             canDeleteOwnUser: true,
             owningOrgId: "Seed Company"
           })
