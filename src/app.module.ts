@@ -9,6 +9,7 @@ import { AdminService } from './components/admin/admin.service';
 import { AuthModule } from './components/auth';
 import { BudgetResolver } from './components/budget/budget.resolver';
 import { BudgetService } from './components/budget/budget.service';
+import { FileModule } from './components/file';
 import { InternshipResolver } from './components/internship/internship.resolver';
 import { InternshipService } from './components/internship/internship.service';
 import { InternshipEngagementResolver } from './components/internship-engagement/internship-engagement.resolver';
@@ -43,6 +44,7 @@ const context: ContextFunction<
       context,
     }),
     AuthModule,
+    FileModule,
     LanguageModule,
     LocationModule,
     OrganizationModule,
