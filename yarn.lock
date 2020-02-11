@@ -217,6 +217,13 @@
     is-absolute "^1.0.0"
     is-negated-glob "^1.0.0"
 
+"@golevelup/nestjs-discovery@^2.2.3":
+  version "2.2.3"
+  resolved "https://registry.yarnpkg.com/@golevelup/nestjs-discovery/-/nestjs-discovery-2.2.3.tgz#69584b15f21a15e1b70b00dd4ab598dea8b1225f"
+  integrity sha512-xT5VkyHtcFKG8k7P7HadsfAMJzdJeE0ujSgegszTVlGLAeg4pl2cxcroAitVf6T12IPd7Nju5gVFjL9HLTHBSg==
+  dependencies:
+    lodash "^4.17.15"
+
 "@graphql-toolkit/common@0.9.0":
   version "0.9.0"
   resolved "https://registry.yarnpkg.com/@graphql-toolkit/common/-/common-0.9.0.tgz#24d1744fa0d6b9331e8032097fcebb74390bad92"
