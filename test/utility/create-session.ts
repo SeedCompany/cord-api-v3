@@ -1,15 +1,15 @@
 import { gql } from 'apollo-server-core';
 import { TestApp } from './create-app';
 
-export async function createToken(app: TestApp): Promise<string> {
+export async function createSession(app: TestApp): Promise<string> {
   const result = await app.graphql.mutate(gql`
     mutation {
-      createToken {
+      createSession {
         token
       }
     }
   `);
-  const token = result.createToken?.token;
+  const token = result.createSession?.token;
   expect(token).toBeTruthy();
   app.graphql.authToken = token;
   return token;

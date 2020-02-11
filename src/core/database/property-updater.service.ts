@@ -1,28 +1,27 @@
-import { Connection, node, relation } from 'cypher-query-builder';
-import {
-  IRequestUser,
-  UnwrapSecured,
-  isSecured,
-  unwrapSecured,
-  Resource,
-} from '../../common';
 import { Injectable, NotFoundException } from '@nestjs/common';
-
-import { DateTime } from 'luxon';
+import { Connection, node, relation } from 'cypher-query-builder';
 import { upperFirst } from 'lodash';
+import { DateTime } from 'luxon';
+import {
+  isSecured,
+  Resource,
+  unwrapSecured,
+  UnwrapSecured,
+} from '../../common';
+import { ISession } from '../../components/auth';
 
 @Injectable()
 export class PropertyUpdaterService {
   constructor(private readonly db: Connection) {}
 
   async updateProperties<TObject extends Resource>({
-    token,
+    session,
     object,
     props,
     changes,
     nodevar,
   }: {
-    token: IRequestUser;
+    session: ISession;
     object: TObject;
     props: ReadonlyArray<keyof TObject>;
     changes: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> };
@@ -38,7 +37,7 @@ export class PropertyUpdaterService {
       }
       updated = await this.updateProperty({
         object,
-        token,
+        session,
         key: prop,
         value: changes[prop],
         nodevar,
@@ -48,14 +47,14 @@ export class PropertyUpdaterService {
   }
 
   async updateProperty<TObject extends Resource, Key extends keyof TObject>({
-    token,
+    session,
     object,
     key,
     value,
     aclEditProp,
     nodevar,
   }: {
-    token: IRequestUser;
+    session: ISession;
     object: TObject;
     key: Key;
     value: UnwrapSecured<TObject[Key]>;
@@ -71,14 +70,14 @@ export class PropertyUpdaterService {
       .match([
         node('token', 'Token', {
           active: true,
-          value: token.token,
+          value: session.token,
         }),
         relation('in', '', 'token', {
           active: true,
         }),
         node('requestingUser', 'User', {
           active: true,
-          id: token.userId,
+          id: session.userId,
         }),
       ])
       .with('*')
@@ -86,7 +85,7 @@ export class PropertyUpdaterService {
         node(nodevar, upperFirst(nodevar), {
           active: true,
           id: object.id,
-          owningOrgId: token.owningOrgId,
+          owningOrgId: session.owningOrgId,
         }),
       ])
       .with('*')

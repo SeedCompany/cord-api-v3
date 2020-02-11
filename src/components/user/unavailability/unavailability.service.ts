@@ -1,3 +1,9 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { Connection } from 'cypher-query-builder';
+import { DateTime } from 'luxon';
+import { generate } from 'shortid';
+import { ILogger, Logger, PropertyUpdaterService } from '../../../core';
+import { ISession } from '../../auth';
 import {
   CreateUnavailability,
   SecuredUnavailabilityList,
@@ -5,14 +11,6 @@ import {
   UnavailabilityListInput,
   UpdateUnavailability,
 } from './dto';
-
-import { Connection } from 'cypher-query-builder';
-import { DateTime } from 'luxon';
-import { IRequestUser } from '../../../common/request-user.interface';
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { Logger, ILogger } from '../../../core/logger';
-import { generate } from 'shortid';
-import { PropertyUpdaterService } from '../../../core';
 
 @Injectable()
 export class UnavailabilityService {
@@ -24,7 +22,7 @@ export class UnavailabilityService {
 
   async create(
     input: CreateUnavailability,
-    token: IRequestUser,
+    session: ISession,
   ): Promise<Unavailability> {
     const result = await this.db
       .query()
@@ -93,13 +91,13 @@ export class UnavailabilityService {
       `,
         {
           id: generate(),
-          requestingUserId: token.userId,
+          requestingUserId: session.userId,
           targetUserId: input.userId,
-          token: token.token,
+          token: session.token,
           description: input.description,
           start: input.start.toISO(),
           end: input.end.toISO(),
-          owningOrgId: token.owningOrgId,
+          owningOrgId: session.owningOrgId,
         },
       )
       .first();
@@ -135,9 +133,9 @@ export class UnavailabilityService {
     };
   }
 
-  async readOne(id: string, token: IRequestUser): Promise<Unavailability> {
+  async readOne(id: string, session: ISession): Promise<Unavailability> {
     this.logger.info(
-      `Query readOne Unavailability: id ${id} by ${token.userId}`,
+      `Query readOne Unavailability: id ${id} by ${session.userId}`,
     );
     const result = await this.db
       .query()
@@ -186,8 +184,8 @@ export class UnavailabilityService {
       `,
         {
           id,
-          token: token.token,
-          requestingUserId: token.userId,
+          token: session.token,
+          requestingUserId: session.userId,
         },
       )
       .first();
@@ -225,12 +223,12 @@ export class UnavailabilityService {
 
   async update(
     input: UpdateUnavailability,
-    token: IRequestUser,
+    session: ISession,
   ): Promise<Unavailability> {
-    const unavailability = await this.readOne(input.id, token);
+    const unavailability = await this.readOne(input.id, session);
 
     return this.propertyUpdater.updateProperties({
-      token,
+      session,
       object: unavailability,
       props: ['description', 'start', 'end'],
       changes: input,
@@ -238,9 +236,9 @@ export class UnavailabilityService {
     });
   }
 
-  async delete(id: string, token: IRequestUser): Promise<void> {
+  async delete(id: string, session: ISession): Promise<void> {
     this.logger.info(
-      `mutation delete unavailability: ${id} by ${token.userId}`,
+      `mutation delete unavailability: ${id} by ${session.userId}`,
     );
     const result = await this.db
       .query()
@@ -260,7 +258,7 @@ export class UnavailabilityService {
       `,
         {
           id,
-          token: token.token,
+          token: session.token,
         },
       )
       .first();
@@ -276,7 +274,7 @@ export class UnavailabilityService {
   async list(
     userId: string,
     input: UnavailabilityListInput,
-    token: IRequestUser,
+    session: ISession,
   ): Promise<SecuredUnavailabilityList> {
     throw new Error('Not implemented');
   }

@@ -3,7 +3,7 @@ export * from './create-education';
 export * from './create-graphql-client';
 export * from './create-language';
 export * from './create-organization';
-export * from './create-token';
+export * from './create-session';
 export * from './create-unavailability';
 export * from './create-user';
 export * from './fragments';

@@ -1,9 +1,11 @@
-import * as request from 'supertest';
-
-import { CreateUser, User } from '../src/components/user';
-import { TestApp, createTestApp, createToken, createUser } from './utility';
-
-import { fragments } from './utility/fragments';
+import { User } from '../src/components/user';
+import {
+  TestApp,
+  createTestApp,
+  createSession,
+  createUser,
+  fragments,
+} from './utility';
 import { gql } from 'apollo-server-core';
 import { isValid } from 'shortid';
 
@@ -16,7 +18,7 @@ describe('User e2e', () => {
 
   it('read one user by id', async () => {
     // create user first
-    const token = await createToken(app);
+    const token = await createSession(app);
     const user = await createUser(app);
     const result = await app.graphql.query(
       gql`
@@ -43,14 +45,12 @@ describe('User e2e', () => {
 
   it('update user', async () => {
     // create user first
-    const token = await createToken(app);
+    const token = await createSession(app);
     const user = await createUser(app);
     const result = await app.graphql.mutate(
       gql`
         mutation updateUser($input: UpdateUserInput!) {
-          updateUser(
-            input: $input
-          ) {
+          updateUser(input: $input) {
             user {
               ...user
             }
@@ -79,7 +79,7 @@ describe('User e2e', () => {
 
   it('delete user', async () => {
     // create user first
-    const token = await createToken(app);
+    const token = await createSession(app);
     const user = await createUser(app);
     const result = await app.graphql.query(
       gql`
