@@ -29,7 +29,7 @@ export class UserService {
     @Logger('user:service') private readonly logger: ILogger,
   ) {}
 
-  async list(input: UserListInput, token: string): Promise<UserListOutput> {
+  async list(input: UserListInput, token: IRequestUser): Promise<UserListOutput> {
     this.logger.info('Listing users', { input, token });
     throw new Error('Method not implemented.');
   }
@@ -83,7 +83,8 @@ export class UserService {
             canCreateUnavailability: true,
             canReadUnavailability: true,
             canDeleteOwnUser: true,
-            owningOrgId: "Seed Company"
+            owningOrgId: "Seed Company",
+            isAdmin: true
           })
           -[:email {active: true}]->
           (email:EmailAddress:Property {

@@ -57,7 +57,7 @@ export class UserResolver {
     description: 'Look up users',
   })
   async users(
-    @RequestUser() token: string,
+    @RequestUser() token: IRequestUser,
     @Args({
       name: 'input',
       type: () => UserListInput,

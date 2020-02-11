@@ -269,12 +269,46 @@ export class OrganizationService {
       },
     }));
 
-    const hasMore = (((page - 1) * count) + count < result[0].total); // if skip + count is less than total there is more
+    const hasMore = (page - 1) * count + count < result[0].total; // if skip + count is less than total there is more
 
     return {
       items,
       hasMore,
       total: result[0].total,
     };
+  }
+
+  async check(token?: IRequestUser): Promise<void> {
+    const result = await this.db
+      .query()
+      .raw(
+        `
+    MATCH
+     (token:Token {active: true, value: $token})
+     <-[:token {active: true}]-
+     (user:User {
+      isAdmin: true
+     })
+     WITH user
+     MATCH
+      (org:Organization {
+        active: true
+      })
+    RETURN
+      id(org) as id
+    `,
+        {
+          token: token.token,
+        },
+      )
+      .run();
+
+    // console.log(result);
+    const orgs = [];
+    result.map(row => {
+      orgs.push(row.id);
+    });
+    console.log(orgs);
+    return;
   }
 }
