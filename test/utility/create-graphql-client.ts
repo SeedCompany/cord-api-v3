@@ -75,9 +75,14 @@ const validateResult = (res: GraphQLResponse) => {
   expect(res.data).toBeTruthy();
 };
 
-const reportError = (e: GraphQLFormattedError & { originalError?: Error }) => {
+const reportError = (e: GraphQLFormattedError & { originalError?: Error & { response?: any } }) => {
   if (e.originalError instanceof Error) {
-    return e.originalError;
+    const e2 = e.originalError;
+    if (e2.response?.message && e2.stack?.startsWith('Error: [object Object]\n')) {
+      e2.stack = e2.stack.replace('[object Object]', e2.response.message);
+      e2.message = e2.response.message;
+    }
+    return e2;
   }
 
   let msg =
