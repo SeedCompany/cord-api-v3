@@ -7,6 +7,7 @@ import { MyTransformer } from './database-transformer';
 import { jestSkipFileInExceptionSource } from './jest-skip-source-file';
 import { ILogger, LoggerToken, LogLevel } from './logger';
 import './database/transaction'; // import our transaction augmentation
+import './database/query'; // import our query augmentation
 
 export const CypherFactory: FactoryProvider<Connection> = {
   provide: Connection,
