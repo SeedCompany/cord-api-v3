@@ -17,9 +17,10 @@ import {
   UserListInput,
   UserListOutput,
 } from './dto';
+import { OnIndex, OnIndexParams } from '../../core/database/indexer';
 
 @Injectable()
-export class UserService implements OnModuleInit {
+export class UserService {
   private isGud = false;
   constructor(
     private readonly organizations: OrganizationService,
@@ -28,13 +29,8 @@ export class UserService implements OnModuleInit {
     @Logger('user:service') private readonly logger: ILogger,
   ) {}
 
-  onModuleInit() {
-    if (!this.isGud) {
-      this.isGud = true;
-    }
-  }
-
-  async checkConstraintsAndIndexes() {
+  @OnIndex()
+  async createIndexes({ db, logger }: OnIndexParams) {
     const session = this.db.session();
     const wait = [];
 
@@ -120,7 +116,7 @@ export class UserService implements OnModuleInit {
     session.close();
   }
 
-  async list(input: UserListInput, token: string): Promise<UserListOutput> {
+  async list(input: UserListInput, token: ISession): Promise<UserListOutput> {
     this.logger.info('Listing users', { input, token });
     throw new Error('Method not implemented.');
   }
