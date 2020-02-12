@@ -3,7 +3,7 @@ import * as faker from 'faker';
 import {
   TestApp,
   createTestApp,
-  createToken,
+  createSession,
   createUnavailability,
   createUser,
 } from './utility';
@@ -21,7 +21,7 @@ describe('Unavailability e2e', () => {
 
   beforeEach(async () => {
     app = await createTestApp();
-    await createToken(app);
+    await createSession(app);
     user = await createUser(app);
   });
 

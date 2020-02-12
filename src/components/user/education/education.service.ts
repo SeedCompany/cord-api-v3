@@ -1,8 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Connection } from 'cypher-query-builder';
-import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ILogger, Logger } from '../../../core/logger';
+import { PropertyUpdaterService } from '../../../core';
+import { ISession } from '../../auth';
 import {
   CreateEducation,
   SecuredEducationList,
@@ -10,8 +11,6 @@ import {
   EducationListInput,
   UpdateEducation,
 } from './dto';
-import { IRequestUser } from '../../../common';
-import { PropertyUpdaterService } from '../../../core';
 
 @Injectable()
 export class EducationService {
@@ -32,7 +31,7 @@ export class EducationService {
 
   async create(
     input: CreateEducation,
-    token: IRequestUser,
+    session: ISession,
   ): Promise<Education> {
     const result = await this.db
       .query()
@@ -102,14 +101,14 @@ export class EducationService {
           acl.canEditInstitution as canEditInstitution
         `,
         {
-          token: token.token,
-          requestingUserId: token.userId,
+          token: session.token,
+          requestingUserId: session.userId,
           targetUserId: input.userId,
           degree: input.degree,
           major: input.major,
           institution: input.institution,
           id: generate(),
-          owningOrgId: token.owningOrgId,
+          owningOrgId: session.owningOrgId,
         },
       )
       .first();
@@ -138,7 +137,7 @@ export class EducationService {
     };
   }
 
-  async readOne(id: string, token: IRequestUser): Promise<Education> {
+  async readOne(id: string, session: ISession): Promise<Education> {
     const result = await this.db
       .query()
       .raw(
@@ -175,9 +174,9 @@ export class EducationService {
           acl6.canEditInstitution as canEditInstitution
         `,
         {
-          token: token.token,
-          requestingUserId: token.userId,
-          owningOrgId: token.owningOrgId,
+          token: session.token,
+          requestingUserId: session.userId,
+          owningOrgId: session.owningOrgId,
           id,
         },
       )
@@ -215,12 +214,12 @@ export class EducationService {
 
   async update(
     input: UpdateEducation,
-    token: IRequestUser,
+    session: ISession,
   ): Promise<Education> {
-    const ed = await this.readOne(input.id, token);
+    const ed = await this.readOne(input.id, session);
 
     return this.propertyUpdater.updateProperties({
-      token,
+      session,
       object: ed,
       props: ['degree', 'major', 'institution'],
       changes: input,
@@ -228,7 +227,7 @@ export class EducationService {
     });
   }
 
-  async delete(id: string, token: IRequestUser): Promise<void> {
+  async delete(id: string, session: ISession): Promise<void> {
     await this.db
       .query()
       .raw(
@@ -251,9 +250,9 @@ export class EducationService {
         `,
         {
           id,
-          token: token.token,
-          requestingUserId: token.userId,
-          owningOrgId: token.owningOrgId,
+          token: session.token,
+          requestingUserId: session.userId,
+          owningOrgId: session.owningOrgId,
         },
       )
       .run();

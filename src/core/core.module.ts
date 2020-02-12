@@ -4,11 +4,13 @@ import { ConfigModule } from './config/config.module';
 import { CypherFactory } from './cypher.factory';
 import { DatabaseService } from './database.service';
 import { PropertyUpdaterService } from './database/property-updater.service';
+import { IndexerModule } from './database/indexer/indexer.module';
 
 @Global()
 @Module({
   imports: [
     ConfigModule,
+    IndexerModule,
   ],
   providers: [
     AwsS3Factory,

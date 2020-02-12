@@ -23,6 +23,7 @@
     "test:e2e": "jest --forceExit --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@golevelup/nestjs-discovery": "^2.2.3",
     "@nestjs/common": "^6.7.2",
     "@nestjs/core": "^6.7.2",
     "@nestjs/graphql": "^6.5.3",
