@@ -76,8 +76,9 @@ export class OrganizationResolver {
   @Query(returns => Boolean, {
     description: 'Check all organization nodes for consistency',
   })
-  async checkOrganizations(@RequestUser() token: IRequestUser): Promise<boolean> {
-    this.orgs.check(token);
-    return true;
+  async checkOrganizations(
+    @RequestUser() token: IRequestUser,
+  ): Promise<boolean> {
+    return this.orgs.checkAllOrgs(token);
   }
 }

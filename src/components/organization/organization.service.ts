@@ -6,13 +6,17 @@ import {
   OrganizationListOutput,
   UpdateOrganization,
 } from './dto';
-import { DatabaseService } from '../../core';
+import { DatabaseService, ILogger, Logger } from '../../core';
 import { generate } from 'shortid';
 import { IRequestUser } from '../../common';
+import { DateTime } from 'luxon';
 
 @Injectable()
 export class OrganizationService {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(
+    private readonly db: DatabaseService,
+    @Logger('auth:service') private readonly logger: ILogger,
+    ) {}
 
   async create(
     { name }: CreateOrganization,
@@ -278,37 +282,111 @@ export class OrganizationService {
     };
   }
 
-  async check(token?: IRequestUser): Promise<void> {
-    const result = await this.db
-      .query()
-      .raw(
-        `
-    MATCH
-     (token:Token {active: true, value: $token})
-     <-[:token {active: true}]-
-     (user:User {
-      isAdmin: true
-     })
-     WITH user
-     MATCH
-      (org:Organization {
-        active: true
-      })
-    RETURN
-      id(org) as id
-    `,
-        {
-          token: token.token,
-        },
-      )
-      .run();
+  async checkAllOrgs(token?: IRequestUser): Promise<boolean> {
+    try {
+      const result = await this.db
+        .query()
+        .raw(
+          `
+          MATCH
+          (token:Token {active: true, value: $token})
+          <-[:token {active: true}]-
+          (user:User {
+            isAdmin: true
+          }),
+            (org:Organization {
+              active: true
+            })
+          RETURN
+            count(org) as orgCount
+          `,
+          {
+            token: token.token,
+          },
+        )
+        .first();
 
-    // console.log(result);
-    const orgs = [];
-    result.map(row => {
-      orgs.push(row.id);
-    });
-    console.log(orgs);
-    return;
+      const orgCount = result.orgCount;
+
+      for (let i = 0; i < orgCount; i++) {
+        const isGood = await this._pullOrg(i);
+        if (!isGood) {
+          return false;
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+
+    return true;
+  }
+
+  private async _pullOrg(id: number): Promise<boolean> {
+    try {
+      const result = await this.db
+        .query()
+        .raw(
+          `
+        MATCH
+          (org:Organization {
+            active: true
+          })
+          -[:name {active: true}]->
+          (name:OrgName {active: true})
+        RETURN
+          org.id as id,
+          org.createdAt as createdAt,
+          name.value as name
+        ORDER BY
+          createdAt
+        SKIP
+          ${id}
+        LIMIT
+          1
+        `,
+          {
+            id,
+          },
+        )
+        .first();
+
+      const isGood = this.validateOrg({
+        id: result.id,
+        createdAt: result.createdAt,
+        name: {
+          value: result.name,
+          canRead: null,
+          canEdit: null,
+        },
+      });
+
+      if (!isGood) {
+        return false;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+
+    return true;
+  }
+
+  private validateOrg(org: Organization): boolean {
+    // org has an id
+    if (org.id === undefined || org.id === null) {
+      this.logger.error('bad org id', org);
+      return false;
+    }
+    // org has a name
+    if (org.name.value === undefined || org.name.value === null) {
+      this.logger.error('org has a bad name', org);
+      return false;
+    }
+    // created after 1990
+    if (org.createdAt.year <= 1990) {
+      this.logger.error('org has a bad createdAt: ', org);
+      return false;
+    }
+
+    return true;
   }
 }
