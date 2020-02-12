@@ -3,8 +3,8 @@ import * as faker from 'faker';
 import {
   TestApp,
   createLanguage,
-  createTestApp,
   createSession,
+  createTestApp,
   createUser,
 } from './utility';
 
@@ -51,9 +51,10 @@ describe('Language e2e', () => {
       );
 
       expect(actual.id).toBe(language.id);
-      expect(isValid(actual.id)).toBe(true);
-      expect(actual.name.value).toBe(language.name.value);
+      expect(isValid(actual.id)).toBeTruthy();
+      expect(actual.name.value).toEqual(language.name.value);
     } catch (e) {
+      console.log(`language id is ${language.id}`);
       console.error(e);
     }
   });
@@ -103,8 +104,26 @@ describe('Language e2e', () => {
         id: language.id,
       },
     );
-    const actual: Language | undefined = result.deleteLanguage;
-    expect(actual).toBeTruthy();
+
+    expect(result.deleteLanguage).toBeTruthy();
+    try {
+      await app.graphql.query(
+        gql`
+          query language($id: ID!) {
+            language(id: $id) {
+              ...language
+            }
+          }
+          ${fragments.language}
+        `,
+        {
+          id: language.id,
+        },
+      );
+    } catch (e) {
+      expect(e.response.statusCode).toBe(404);
+    }
+    // expect(actual.id).toBe(language.id);
   });
 
   // LIST Languages

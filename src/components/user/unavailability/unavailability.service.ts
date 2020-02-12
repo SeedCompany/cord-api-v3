@@ -240,34 +240,19 @@ export class UnavailabilityService {
     this.logger.info(
       `mutation delete unavailability: ${id} by ${session.userId}`,
     );
-    const result = await this.db
-      .query()
-      .raw(
-        `
-      MATCH
-        (token:Token {active: true, value: $token})
-          <-[:token {active: true}]-
-          (user:User {
-            canCreateUnavailability: true
-          }),
-        (unavailability:Unavailability {active: true, id: $id})
-      SET
-        unavailability.active = false
-      RETURN
-        unavailability.id as id
-      `,
-        {
-          id,
-          token: session.token,
-        },
-      )
-      .first();
-
-    if (!result) {
-      this.logger.error(
-        `Could not find unavailability ${id}. Might not be active`,
-      );
-      throw new NotFoundException(`Could not find unavailability`);
+    const ua = await this.readOne(id, session);
+    if (!ua) {
+      throw new NotFoundException('Unavailability not found');
+    }
+    try {
+      this.propertyUpdater.deleteNode({
+        session,
+        object: ua,
+        aclEditProp: 'canDeleteOwnUser',
+      });
+    } catch (e) {
+      console.log(e);
+      throw e;
     }
   }
 
