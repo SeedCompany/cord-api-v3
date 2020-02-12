@@ -136,6 +136,7 @@ export class UserResolver {
     description: 'Delete a user',
   })
   async deleteUser(@RequestUser() token: IRequestUser, @IdArg() id: string) {
-    return await this.userService.delete(id, token);
+    await this.userService.delete(id, token);
+    return true;
   }
 }

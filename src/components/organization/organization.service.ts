@@ -309,7 +309,7 @@ export class OrganizationService {
       const orgCount = result.orgCount;
 
       for (let i = 0; i < orgCount; i++) {
-        const isGood = await this._pullOrg(i);
+        const isGood = await this.pullOrg(i);
         if (!isGood) {
           return false;
         }
@@ -321,7 +321,7 @@ export class OrganizationService {
     return true;
   }
 
-  private async _pullOrg(id: number): Promise<boolean> {
+  private async pullOrg(id: number): Promise<boolean> {
     try {
       const result = await this.db
         .query()
