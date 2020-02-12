@@ -29,10 +29,7 @@ export class EducationService {
     throw new Error('Not implemented');
   }
 
-  async create(
-    input: CreateEducation,
-    session: ISession,
-  ): Promise<Education> {
+  async create(input: CreateEducation, session: ISession): Promise<Education> {
     const result = await this.db
       .query()
       .raw(
@@ -212,10 +209,7 @@ export class EducationService {
     };
   }
 
-  async update(
-    input: UpdateEducation,
-    session: ISession,
-  ): Promise<Education> {
+  async update(input: UpdateEducation, session: ISession): Promise<Education> {
     const ed = await this.readOne(input.id, session);
 
     return this.propertyUpdater.updateProperties({
@@ -228,33 +222,16 @@ export class EducationService {
   }
 
   async delete(id: string, session: ISession): Promise<void> {
-    await this.db
-      .query()
-      .raw(
-        `
-        MATCH
-        (token:Token {
-          active: true,
-          value: $token
-        })
-          <-[:token {active: true}]-
-        (requestingUser:User {
-          active: true,
-          id: $requestingUserId,
-          owningOrgId: $owningOrgId
-        }),
-          (requestingUser)<-[:member]-(acl:ACL {canEditEducation: true})-[:toNode]->(user)-[toEd:education {active: true}]->(education:Education {active: true, id: $id})
-        SET
-          toEd.active = false,
-          education.active = false
-        `,
-        {
-          id,
-          token: session.token,
-          requestingUserId: session.userId,
-          owningOrgId: session.owningOrgId,
-        },
-      )
-      .run();
+    const ed = await this.readOne(id, session);
+    try {
+      this.propertyUpdater.deleteNode({
+        session,
+        object: ed,
+        aclEditProp: 'canDeleteOwnUser',
+      });
+    } catch (e) {
+      console.log(e);
+      throw e;
+    }
   }
 }
