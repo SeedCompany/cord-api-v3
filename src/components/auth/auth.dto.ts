@@ -1,42 +1,36 @@
+import { stripIndent } from 'common-tags';
 import { InputType, Field, ObjectType } from 'type-graphql';
-
-// CREATE TOKEN
-@InputType()
-export class CreateTokenInputDto {
-  @Field(type => String)
-  header: string;
-}
+import { User } from '../user';
 
 @ObjectType()
-export class CreateTokenOutputDto {
-  @Field(type => String)
+export abstract class CreateSessionOutput {
+  @Field({
+    description: stripIndent`
+      Use this token in future requests in the Authorization header.
+      Authorization: Bearer {token}`,
+  })
   token: string;
 }
 
-// LOGIN USER
 @InputType()
-export class LoginUserInputDto {
+export abstract class LoginInput {
   @Field()
-  username: string;
+  email: string;
+
   @Field()
   password: string;
 }
 
 @ObjectType()
-export class LoginUserOutputDto {
+export class LoginOutput {
   @Field()
   success: boolean;
-}
 
-// LOGOUT USER
-@InputType()
-export class LogoutUserInputDto {
-  @Field()
-  token: string;
-}
+  @Field({
+    nullable: true,
+    description: 'Only returned if login was successful',
+  })
+  user?: User;
 
-@ObjectType()
-export class LogoutUserOutputDto {
-  @Field()
-  success: boolean;
+  // TODO Global Permissions
 }

@@ -4,6 +4,7 @@ import { generate } from 'shortid';
 import * as argon2 from 'argon2';
 import { PropertyUpdaterService } from '../../core';
 import { ILogger, Logger } from '../../core/logger';
+import { ISession } from '../auth';
 import {
   OrganizationListInput,
   SecuredOrganizationList,
@@ -16,15 +17,12 @@ import {
   UserListInput,
   UserListOutput,
 } from './dto';
-import { IRequestUser } from '../../common';
-import { ConfigService } from '../../core';
 
 @Injectable()
 export class UserService implements OnModuleInit {
   private isGud = false;
   constructor(
     private readonly organizations: OrganizationService,
-    private readonly config: ConfigService,
     private readonly db: Connection,
     private readonly propertyUpdater: PropertyUpdaterService,
     @Logger('user:service') private readonly logger: ILogger,
@@ -130,7 +128,7 @@ export class UserService implements OnModuleInit {
   async listOrganizations(
     userId: string,
     input: OrganizationListInput,
-    token: IRequestUser,
+    session: ISession,
   ): Promise<SecuredOrganizationList> {
     // Just a thought, seemed like a good idea to try to reuse the logic/query there.
     const result = await this.organizations.list(
@@ -141,7 +139,7 @@ export class UserService implements OnModuleInit {
           userIds: [userId],
         },
       },
-      token,
+      session,
     );
 
     return {
@@ -151,7 +149,7 @@ export class UserService implements OnModuleInit {
     };
   }
 
-  async create(input: CreateUser, token: IRequestUser): Promise<User> {
+  async create(input: CreateUser, session: ISession): Promise<User> {
     const pash = await argon2.hash(input.password);
     /** CREATE USER
      * get the token, then create the user with minimum properties
@@ -172,8 +170,11 @@ export class UserService implements OnModuleInit {
             canReadOrgs: true,
             canCreateLang: true,
             canReadLangs: true,
+            canCreateUnavailability: true,
+            canReadUnavailability: true,
             canDeleteOwnUser: true,
-            owningOrgId: "Seed Company"
+            owningOrgId: "Seed Company",
+            isAdmin: true
           })
           -[:email {active: true, createdAt: datetime()}]->
           (email:EmailAddress:Property {
@@ -247,7 +248,7 @@ export class UserService implements OnModuleInit {
         `,
         {
           id: generate(),
-          token: token.token,
+          token: session.token,
           email: input.email,
           realFirstName: input.realFirstName,
           realLastName: input.realLastName,
@@ -307,7 +308,7 @@ export class UserService implements OnModuleInit {
     };
   }
 
-  async readOne(id: string, token: IRequestUser): Promise<User> {
+  async readOne(id: string, session: ISession): Promise<User> {
     const result = await this.db
       .query()
       .raw(
@@ -353,10 +354,10 @@ export class UserService implements OnModuleInit {
         acl10.canEditDisplayLastName as canEditDisplayLastName
         `,
         {
-          token: token.token,
-          requestingUserId: token.userId,
+          token: session.token,
+          requestingUserId: session.userId,
           id,
-          owningOrgId: token.owningOrgId,
+          owningOrgId: session.owningOrgId,
         },
       )
       .first();
@@ -410,11 +411,11 @@ export class UserService implements OnModuleInit {
     };
   }
 
-  async update(input: UpdateUser, token: IRequestUser): Promise<User> {
-    const user = await this.readOne(input.id, token);
+  async update(input: UpdateUser, session: ISession): Promise<User> {
+    const user = await this.readOne(input.id, session);
 
     return this.propertyUpdater.updateProperties({
-      token,
+      session,
       object: user,
       props: [
         'realFirstName',
@@ -427,7 +428,7 @@ export class UserService implements OnModuleInit {
     });
   }
 
-  async delete(id: string, token: IRequestUser): Promise<void> {
+  async delete(id: string, session: ISession): Promise<void> {
     await this.db
       .query()
       .raw(
@@ -457,8 +458,8 @@ export class UserService implements OnModuleInit {
           user.id as id
         `,
         {
-          requestingUserId: token.userId,
-          token: token.token,
+          requestingUserId: session.userId,
+          token: session.token,
           userToDeleteId: id,
         },
       )

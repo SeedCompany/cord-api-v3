@@ -18,6 +18,7 @@ export class LoggerOptions {
 export class WinstonLoggerService extends AbstractLogger
   implements OnModuleDestroy {
   private logger: WinstonLogger;
+  private closing = false;
 
   constructor(private matcher: LevelMatcher, options: LoggerOptions) {
     super();
@@ -32,6 +33,10 @@ export class WinstonLoggerService extends AbstractLogger
   }
 
   logEntry({ level, message, name = 'unknown', ...context }: LogEntry): void {
+    if (this.closing) {
+      return;
+    }
+
     // Skip logging exceptions as Jest will display them properly.
     if (name === 'nest:exception' && (global as any).jasmine) {
       return;
@@ -49,6 +54,7 @@ export class WinstonLoggerService extends AbstractLogger
         t => new Promise(resolve => t.on('finish', resolve)),
       ),
     );
+    this.closing = true;
     this.logger.end();
     await finish;
   }

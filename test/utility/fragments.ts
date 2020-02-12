@@ -1,3 +1,4 @@
+import { Unavailability } from '../../src/components/user';
 import { gql } from 'apollo-server-core';
 
 export const fragments = {
@@ -42,6 +43,54 @@ export const fragments = {
       }
     }
   `,
+  language: gql`
+    fragment language on Language {
+      id
+      name {
+        value
+        canEdit
+        canRead
+      }
+      displayName {
+        value
+        canEdit
+        canRead
+      }
+      beginFiscalYear {
+        value
+        canEdit
+        canRead
+      }
+      ethnologueName {
+        value
+        canEdit
+        canRead
+      }
+      organizationPopulation {
+        value
+        canEdit
+        canRead
+      }
+      rodNumber {
+        value
+        canEdit
+        canRead
+      }
+    }
+  `,
+  unavailability: gql`
+    fragment unavailability on Unavailability {
+      id
+      createdAt
+      description {
+        value
+        canEdit
+        canRead
+      }
+      start
+      end
+    }
+  `,
   education: gql`
     fragment education on Education {
       id
@@ -63,39 +112,4 @@ export const fragments = {
       }
     }
   `,
-  language: gql`
-  fragment language on Language {
-    id
-    name {
-      value
-      canEdit
-      canRead
-    }
-    displayName {
-      value
-      canEdit
-      canRead
-    }
-    beginFiscalYear {
-      value
-      canEdit
-      canRead
-    }
-    ethnologueName {
-      value
-      canEdit
-      canRead
-    }
-    organizationPopulation {
-      value
-      canEdit
-      canRead
-    }
-    rodNumber {
-      value
-      canEdit
-      canRead
-    }
-  }
-`,
 };

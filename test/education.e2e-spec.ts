@@ -3,7 +3,7 @@ import { isValid } from 'shortid';
 import {
   createEducation,
   createTestApp,
-  createToken,
+  createSession,
   createUser,
   fragments,
   TestApp,
@@ -17,7 +17,7 @@ describe('Education e2e', () => {
 
   beforeEach(async () => {
     app = await createTestApp();
-    await createToken(app);
+    await createSession(app);
   });
   afterAll(async () => {
     await app.close();

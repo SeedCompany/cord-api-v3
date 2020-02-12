@@ -7,7 +7,6 @@ import {
 import { TestApp } from './create-app';
 import * as faker from 'faker';
 import { fragments } from './fragments';
-import { IRequestUser } from '../../src/common';
 
 export async function createEducation(
   app: TestApp,

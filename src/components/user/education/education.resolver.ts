@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Args, Mutation, Query } from '@nestjs/graphql';
-import { IdArg, RequestUser, IRequestUser } from '../../../common';
+import { IdArg } from '../../../common';
+import { ISession, Session } from '../../auth';
 import {
   CreateEducationInput,
   CreateEducationOutput,
@@ -18,10 +19,10 @@ export class EducationResolver {
     description: 'Create an education entry',
   })
   async createEducation(
-    @RequestUser() token: IRequestUser,
+    @Session() session: ISession,
     @Args('input') { education: input }: CreateEducationInput,
   ): Promise<CreateEducationOutput> {
-    const education = await this.service.create(input, token);
+    const education = await this.service.create(input, session);
     return { education };
   }
 
@@ -29,20 +30,20 @@ export class EducationResolver {
     description: 'Read an education entry by user id',
   })
   async education(
-    @RequestUser() token: IRequestUser,
+    @Session() session: ISession,
     @IdArg() id: string,
   ): Promise<Education> {
-    return await this.service.readOne(id, token);
+    return await this.service.readOne(id, session);
   }
 
   @Mutation(() => UpdateEducationOutput, {
     description: 'Update an education entry',
   })
   async updateEducation(
-    @RequestUser() token: IRequestUser,
+    @Session() session: ISession,
     @Args('input') { education: input }: UpdateEducationInput,
   ): Promise<UpdateEducationOutput> {
-    const education = await this.service.update(input, token);
+    const education = await this.service.update(input, session);
     return { education };
   }
 
@@ -50,10 +51,10 @@ export class EducationResolver {
     description: 'Delete an education entry',
   })
   async deleteEducation(
-    @RequestUser() token: IRequestUser,
+    @Session() session: ISession,
     @IdArg() id: string,
   ): Promise<boolean> {
-    await this.service.delete(id, token);
+    await this.service.delete(id, session);
     return true;
   }
 }

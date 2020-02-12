@@ -12,12 +12,12 @@ export async function createLanguage(
   input: Partial<CreateLanguage> = {},
 ) {
   const language: CreateLanguage = {
-    name: input.name || faker.address.country(),
-    displayName: input.displayName || 'lang',
-    beginFiscalYear: input.beginFiscalYear ||  2019,
-    ethnologueName: input.ethnologueName || 'ethno1',
-    ethnologuePopulation: input.ethnologuePopulation ||  20000,
-    organizationPopulation: input.organizationPopulation || 500000,
+    name: faker.address.country(),
+    displayName: 'lang',
+    beginFiscalYear: 2019,
+    ethnologueName: 'ethno1',
+    ethnologuePopulation: 20000,
+    organizationPopulation: 500000,
     rodNumber: input.rodNumber || 12,
     ...input,
   };
@@ -36,7 +36,6 @@ export async function createLanguage(
     {
       input: {
         language: {
-          ...input,
           ...language,
         },
       },
