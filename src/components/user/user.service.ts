@@ -1,9 +1,12 @@
-import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Connection } from 'cypher-query-builder';
 import { generate } from 'shortid';
 import * as argon2 from 'argon2';
-import { PropertyUpdaterService } from '../../core';
-import { ILogger, Logger } from '../../core/logger';
+import { ILogger, Logger, OnIndex, PropertyUpdaterService } from '../../core';
 import { ISession } from '../auth';
 import {
   OrganizationListInput,
@@ -17,12 +20,9 @@ import {
   UserListInput,
   UserListOutput,
 } from './dto';
-import { OnIndex, OnIndexParams } from '../../core/database/indexer';
-import { UnauthorizedError } from 'type-graphql';
 
 @Injectable()
 export class UserService {
-  private isGud = false;
   constructor(
     private readonly organizations: OrganizationService,
     private readonly db: Connection,
@@ -31,77 +31,45 @@ export class UserService {
   ) {}
 
   @OnIndex()
-  async createIndexes({ db, logger }: OnIndexParams) {
-    const session = this.db.session();
-    const wait = [];
+  async createIndexes() {
+    // language=Cypher (for webstorm)
+    const constraints = [
+      // USER NODE
+      'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.id)',
+      'CREATE CONSTRAINT ON (n:User) ASSERT n.id IS UNIQUE',
+      'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.active)',
+      'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.createdAt)',
+      'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.owningOrgId)',
+      'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.owningOrgId)',
 
-    // USER NODE
-    wait.push(session.run('CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.id)'));
-    wait.push(
-      session.run('CREATE CONSTRAINT ON (n:User) ASSERT n.id IS UNIQUE'),
-    );
-    wait.push(
-      session.run('CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.active)'),
-    );
-    wait.push(
-      session.run('CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.createdAt)'),
-    );
-    wait.push(
-      session.run('CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.owningOrgId)'),
-    );
-    wait.push(
-      session.run('CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.owningOrgId)'),
-    );
-    // EMAIL REL
-    wait.push(
-      session.run(
-        'CREATE CONSTRAINT ON ()-[r:email]-() ASSERT EXISTS(r.active)',
-      ),
-    );
-    wait.push(
-      session.run(
-        'CREATE CONSTRAINT ON ()-[r:email]-() ASSERT EXISTS(r.createdAt)',
-      ),
-    );
-    // EMAIL NODE
-    wait.push(
-      session.run(
-        'CREATE CONSTRAINT ON (n:EmailAddress) ASSERT EXISTS(n.value)',
-      ),
-    );
-    wait.push(
-      session.run(
-        'CREATE CONSTRAINT ON (n:EmailAddress) ASSERT n.value IS UNIQUE',
-      ),
-    );
-    // PASSWORD REL
-    wait.push(
-      session.run(
-        'CREATE CONSTRAINT ON ()-[r:password]-() ASSERT EXISTS(r.active)',
-      ),
-    );
-    wait.push(
-      session.run(
-        'CREATE CONSTRAINT ON ()-[r:password]-() ASSERT EXISTS(r.createdAt)',
-      ),
-    );
-    // PROPERTY NODE
-    wait.push(
-      session.run('CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.value)'),
-    );
-    wait.push(
-      session.run('CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.active)'),
-    );
+      // EMAIL REL
+      'CREATE CONSTRAINT ON ()-[r:email]-() ASSERT EXISTS(r.active)',
+      'CREATE CONSTRAINT ON ()-[r:email]-() ASSERT EXISTS(r.createdAt)',
 
-    await Promise.all(wait);
-    session.close();
+      // EMAIL NODE
+      'CREATE CONSTRAINT ON (n:EmailAddress) ASSERT EXISTS(n.value)',
+      'CREATE CONSTRAINT ON (n:EmailAddress) ASSERT n.value IS UNIQUE',
+
+      // PASSWORD REL
+      'CREATE CONSTRAINT ON ()-[r:password]-() ASSERT EXISTS(r.active)',
+      'CREATE CONSTRAINT ON ()-[r:password]-() ASSERT EXISTS(r.createdAt)',
+
+      // PROPERTY NODE
+      'CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.value)',
+      'CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.active)',
+    ];
+    for (const query of constraints) {
+      await this.db
+        .query()
+        .raw(query)
+        .run();
+    }
   }
 
   async list(
     { page, count, sort, order, filter }: UserListInput,
     session: ISession,
   ): Promise<UserListOutput> {
-
     // first we'll check if the user has permission to list all users for their org
     const permCheck = await this.db
       .query()
@@ -125,11 +93,8 @@ export class UserService {
         },
       )
       .first();
-
-    const canReadUsers = permCheck?.canReadUsers;
-
-    if (!canReadUsers) {
-      throw UnauthorizedError;
+    if (!permCheck?.canReadUsers) {
+      throw new UnauthorizedException();
     }
 
     // now we'll get all users
