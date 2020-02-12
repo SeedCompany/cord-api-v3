@@ -73,4 +73,13 @@ export class OrganizationResolver {
     await this.orgs.delete(id, session);
     return true;
   }
+
+  @Query(returns => Boolean, {
+    description: 'Check all organization nodes for consistency',
+  })
+  async checkOrganizations(
+    @Session() session: ISession,
+  ): Promise<boolean> {
+    return this.orgs.checkAllOrgs(session);
+  }
 }

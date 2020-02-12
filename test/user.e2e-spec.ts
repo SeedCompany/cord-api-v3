@@ -8,11 +8,12 @@ import {
 } from './utility';
 import { gql } from 'apollo-server-core';
 import { isValid } from 'shortid';
+import { times } from 'lodash';
 
 describe('User e2e', () => {
   let app: TestApp;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     app = await createTestApp();
   });
 
@@ -98,73 +99,26 @@ describe('User e2e', () => {
     return true;
   });
 
-  // it('update user', async () => {
-  //   const newEmail = 'newUser@test.com' + Date.now();
-  //   const token = await createToken(app);
-  //   const user = await createUser(app);
+  // LIST USERS
+  it('list view of users', async () => {
+    // create a bunch of users
+    await Promise.all(times(10).map(() => createUser(app)));
 
-  //   await request(app.getHttpServer())
-  //     .post('/graphql')
-  //     .set('token', token)
-  //     .send({
-  //       operationName: null,
-  //       query: `
-  //       mutation {
-  //         updateUser (
-  //           input: {
-  //             user: {
-  //               id: "${user.id}"
-  //               email: "${newEmail}"
-  //               realFirstName: "${user.realFirstName}"
-  //               realLastName: "${user.realLastName}"
-  //               displayFirstName: "${user.displayFirstName}"
-  //               displayLastName: "${user.displayLastName}"
-  //             }
-  //           }
-  //           ) {
-  //           user {
-  //             id
-  //             email
-  //             realFirstName
-  //             realLastName
-  //             displayFirstName
-  //             displayLastName
-  //           }
-  //         }
-  //       }
-  //       `,
-  //     })
-  //     .expect(({ body }) => {
-  //       expect(body.data.updateUser.user.id).toBe(user.id);
-  //       expect(body.data.updateUser.user.email.value).toBe(newEmail);
-  //     })
-  //     .expect(200);
-  // });
+    const { users } = await app.graphql.query(gql`
+      query {
+        users {
+          items {
+            ...user
+          }
+          hasMore
+          total
+        }
+      }
+      ${fragments.user}
+    `);
 
-  // it('delete user', async () => {
-  //   const token = await createToken(app);
-  //   const user = await createUser(app);
-
-  //   return request(app.getHttpServer())
-  //     .post('/graphql')
-  //     .set('token', token)
-  //     .send({
-  //       operationName: null,
-  //       query: `
-  //       mutation {
-  //         deleteUser (input: { user: { id: "${user.id}" } }){
-  //           user {
-  //           id
-  //           }
-  //         }
-  //       }
-  //       `,
-  //     })
-  //     .expect(({ body }) => {
-  //       expect(body.data.deleteUser.user.id).toBe(user.id);
-  //     })
-  //     .expect(200);
-  // });
+    expect(users.items.length).toBeGreaterThan(9);
+  });
 
   afterAll(async () => {
     await app.close();

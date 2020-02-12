@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { Connection } from 'cypher-query-builder';
 import { generate } from 'shortid';
 import * as argon2 from 'argon2';
@@ -17,9 +17,12 @@ import {
   UserListInput,
   UserListOutput,
 } from './dto';
+import { OnIndex, OnIndexParams } from '../../core/database/indexer';
+import { UnauthorizedError } from 'type-graphql';
 
 @Injectable()
 export class UserService {
+  private isGud = false;
   constructor(
     private readonly organizations: OrganizationService,
     private readonly db: Connection,
@@ -27,9 +30,199 @@ export class UserService {
     @Logger('user:service') private readonly logger: ILogger,
   ) {}
 
-  async list(input: UserListInput, token: string): Promise<UserListOutput> {
-    this.logger.info('Listing users', { input, token });
-    throw new Error('Method not implemented.');
+  @OnIndex()
+  async createIndexes({ db, logger }: OnIndexParams) {
+    const session = this.db.session();
+    const wait = [];
+
+    // USER NODE
+    wait.push(session.run('CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.id)'));
+    wait.push(
+      session.run('CREATE CONSTRAINT ON (n:User) ASSERT n.id IS UNIQUE'),
+    );
+    wait.push(
+      session.run('CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.active)'),
+    );
+    wait.push(
+      session.run('CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.createdAt)'),
+    );
+    wait.push(
+      session.run('CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.owningOrgId)'),
+    );
+    wait.push(
+      session.run('CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.owningOrgId)'),
+    );
+    // EMAIL REL
+    wait.push(
+      session.run(
+        'CREATE CONSTRAINT ON ()-[r:email]-() ASSERT EXISTS(r.active)',
+      ),
+    );
+    wait.push(
+      session.run(
+        'CREATE CONSTRAINT ON ()-[r:email]-() ASSERT EXISTS(r.createdAt)',
+      ),
+    );
+    // EMAIL NODE
+    wait.push(
+      session.run(
+        'CREATE CONSTRAINT ON (n:EmailAddress) ASSERT EXISTS(n.value)',
+      ),
+    );
+    wait.push(
+      session.run(
+        'CREATE CONSTRAINT ON (n:EmailAddress) ASSERT n.value IS UNIQUE',
+      ),
+    );
+    // PASSWORD REL
+    wait.push(
+      session.run(
+        'CREATE CONSTRAINT ON ()-[r:password]-() ASSERT EXISTS(r.active)',
+      ),
+    );
+    wait.push(
+      session.run(
+        'CREATE CONSTRAINT ON ()-[r:password]-() ASSERT EXISTS(r.createdAt)',
+      ),
+    );
+    // PROPERTY NODE
+    wait.push(
+      session.run('CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.value)'),
+    );
+    wait.push(
+      session.run('CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.active)'),
+    );
+
+    await Promise.all(wait);
+    session.close();
+  }
+
+  async list(
+    { page, count, sort, order, filter }: UserListInput,
+    session: ISession,
+  ): Promise<UserListOutput> {
+
+    // first we'll check if the user has permission to list all users for their org
+    const permCheck = await this.db
+      .query()
+      .raw(
+        `
+      MATCH
+        (token:Token {
+          active: true,
+          value: $token
+        })
+          <-[:token {active: true}]-
+        (requestingUser:User {
+          active: true,
+          canReadUsers: true
+        })
+      RETURN
+        requestingUser.canReadUsers as canReadUsers
+    `,
+        {
+          token: session.token,
+        },
+      )
+      .first();
+
+    const canReadUsers = permCheck?.canReadUsers;
+
+    if (!canReadUsers) {
+      throw UnauthorizedError;
+    }
+
+    // now we'll get all users
+    const result = await this.db
+      .query()
+      .raw(
+        `
+          MATCH
+            (user:User {active: true, owningOrgId: $owningOrgId})
+          WITH count(user) as total
+          MATCH
+            (user:User {active: true, owningOrgId: $owningOrgId}),
+            (user)-[:email {active: true}]->(email:EmailAddress {active: true}),
+            (user)-[:realFirstName {active: true}]->(realFirstName:Property {active: true}),
+            (user)-[:realLastName {active: true}]->(realLastName:Property {active: true}),
+            (user)-[:displayFirstName {active: true}]->(displayFirstName:Property {active: true}),
+            (user)-[:displayLastName {active: true}]->(displayLastName:Property {active: true})
+        RETURN
+          total,
+          user.id as id,
+          user.createdAt as createdAt,
+          email.value as email,
+          realFirstName.value as realFirstName,
+          realLastName.value as realLastName,
+          displayFirstName.value as displayFirstName,
+          displayLastName.value as displayLastName
+        ORDER BY ${sort} ${order}
+        SKIP $skip
+        LIMIT $count
+        `,
+        {
+          // filter: filter.name, // TODO Handle no filter
+          skip: (page - 1) * count,
+          count,
+          token: session.token,
+          id: session.userId,
+          owningOrgId: session.owningOrgId,
+        },
+      )
+      .run();
+
+    const items = result.map<User>(row => ({
+      id: row.id,
+      createdAt: row.createdAt,
+      email: {
+        value: row.email,
+        canRead: true,
+        canEdit: false,
+      },
+      realFirstName: {
+        value: row.realFirstName,
+        canRead: true,
+        canEdit: false,
+      },
+      realLastName: {
+        value: row.realLastName,
+        canRead: true,
+        canEdit: false,
+      },
+      displayFirstName: {
+        value: row.displayFirstName,
+        canRead: true,
+        canEdit: false,
+      },
+      displayLastName: {
+        value: row.displayLastName,
+        canRead: true,
+        canEdit: false,
+      },
+      phone: {
+        value: '', // TODO
+        canRead: true, // TODO
+        canEdit: false, // TODO
+      },
+      timezone: {
+        value: '', // TODO
+        canRead: true, // TODO
+        canEdit: false, // TODO
+      },
+      bio: {
+        value: '', // TODO
+        canRead: true, // TODO
+        canEdit: false, // TODO
+      },
+    }));
+
+    const hasMore = (page - 1) * count + count < result[0].total; // if skip + count is less than total there is more
+
+    return {
+      items,
+      hasMore,
+      total: result[0].total,
+    };
   }
 
   async listOrganizations(
@@ -75,17 +268,20 @@ export class UserService {
             createdByUserId: "system",
             canCreateOrg: true,
             canReadOrgs: true,
+            canReadUsers: true,
             canCreateLang: true,
             canReadLangs: true,
             canCreateUnavailability: true,
             canReadUnavailability: true,
             canDeleteOwnUser: true,
-            owningOrgId: "Seed Company"
+            owningOrgId: "Seed Company",
+            isAdmin: true
           })
-          -[:email {active: true}]->
+          -[:email {active: true, createdAt: datetime()}]->
           (email:EmailAddress:Property {
             active: true,
-            value: $email
+            value: $email,
+            createdAt: datetime()
           }),
           (user)-[:token {active: true, createdAt: datetime()}]->(token),
           (user)-[:password {active: true, createdAt: datetime()}]->
@@ -358,8 +554,11 @@ export class UserService {
           active: true,
           id: $userToDeleteId
         })
+        <-[oldTokenRels:token]-
+        ()
         SET
           user.active = false
+        DELETE oldTokenRels
         RETURN
           user.id as id
         `,
