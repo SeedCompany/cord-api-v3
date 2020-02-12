@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { Connection } from 'cypher-query-builder';
 import { generate } from 'shortid';
 import * as argon2 from 'argon2';
@@ -17,15 +17,104 @@ import {
   UserListInput,
   UserListOutput,
 } from './dto';
+import { OnIndex, OnIndexParams } from '../../core/database/indexer';
 
 @Injectable()
 export class UserService {
+  private isGud = false;
   constructor(
     private readonly organizations: OrganizationService,
     private readonly db: Connection,
     private readonly propertyUpdater: PropertyUpdaterService,
     @Logger('user:service') private readonly logger: ILogger,
   ) {}
+
+
+  @OnIndex()
+  async createIndexes({ db, logger }: OnIndexParams) {
+    const session = this.db.session();
+    const wait = [];
+
+    // USER NODE
+    wait.push(
+      session.run(
+        'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.id)',
+      ),
+    );
+    wait.push(
+      session.run(
+        'CREATE CONSTRAINT ON (n:User) ASSERT n.id IS UNIQUE',
+      ),
+    );
+    wait.push(
+      session.run(
+        'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.active)',
+      ),
+    );
+    wait.push(
+      session.run(
+        'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.createdAt)',
+      ),
+    );
+    wait.push(
+      session.run(
+        'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.owningOrgId)',
+      ),
+    );
+    wait.push(
+      session.run(
+        'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.owningOrgId)',
+      ),
+    );
+    // EMAIL REL
+    wait.push(
+      session.run(
+        'CREATE CONSTRAINT ON ()-[r:email]-() ASSERT EXISTS(r.active)',
+      ),
+    );
+    wait.push(
+      session.run(
+        'CREATE CONSTRAINT ON ()-[r:email]-() ASSERT EXISTS(r.createdAt)',
+      ),
+    );
+    // EMAIL NODE
+    wait.push(
+      session.run(
+        'CREATE CONSTRAINT ON (n:EmailAddress) ASSERT EXISTS(n.value)',
+      ),
+    );
+    wait.push(
+      session.run(
+        'CREATE CONSTRAINT ON (n:EmailAddress) ASSERT n.value IS UNIQUE',
+      ),
+    );
+    // PASSWORD REL
+    wait.push(
+      session.run(
+        'CREATE CONSTRAINT ON ()-[r:password]-() ASSERT EXISTS(r.active)',
+      ),
+    );
+    wait.push(
+      session.run(
+        'CREATE CONSTRAINT ON ()-[r:password]-() ASSERT EXISTS(r.createdAt)',
+      ),
+    );
+    // PROPERTY NODE
+    wait.push(
+      session.run(
+        'CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.value)',
+      ),
+    );
+    wait.push(
+      session.run(
+        'CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.active)',
+      ),
+    );
+
+    await Promise.all(wait);
+    session.close();
+  }
+
 
   async list(
     { page, count, sort, order, filter }: UserListInput,
@@ -140,6 +229,7 @@ export class UserService {
       hasMore,
       total: result[0].total,
     };
+
   }
 
   async listOrganizations(
@@ -470,8 +560,11 @@ export class UserService {
           active: true,
           id: $userToDeleteId
         })
+        <-[oldTokenRels:token]-
+        ()
         SET
           user.active = false
+        DELETE oldTokenRels
         RETURN
           user.id as id
         `,
