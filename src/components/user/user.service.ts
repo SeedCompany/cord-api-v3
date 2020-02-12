@@ -27,9 +27,119 @@ export class UserService {
     @Logger('user:service') private readonly logger: ILogger,
   ) {}
 
-  async list(input: UserListInput, session: ISession): Promise<UserListOutput> {
-    this.logger.info('Listing users', { input, token: session });
-    throw new Error('Method not implemented.');
+  async list(
+    { page, count, sort, order, filter }: UserListInput,
+    session: ISession,
+  ): Promise<UserListOutput> {
+    const result = await this.db
+      .query()
+      .raw(
+        `
+        MATCH
+        (token:Token {
+          active: true,
+          value: $token
+        })
+        <-[:token {active: true}]-
+        (requestingUser:User {
+          active: true
+        })
+      WITH count(user) as users
+      WITH * OPTIONAL MATCH (user:User {active: true, id: $id, owningOrgId: $owningOrgId})
+      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl1:ACL {canReadEmail: true})-[:toNode]->(user)-[:email {active: true}]->(email:EmailAddress {active: true})
+      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl2:ACL {canEditEmail: true})-[:toNode]->(user)
+      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl3:ACL {canReadRealFirstName: true})-[:toNode]->(user)-[:realFirstName {active: true}]->(realFirstName:Property {active: true})
+      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl4:ACL {canEditRealFirstName: true})-[:toNode]->(user)
+      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl5:ACL {canReadRealLastName: true})-[:toNode]->(user)-[:realLastName {active: true}]->(realLastName:Property {active: true})
+      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl6:ACL {canEditRealLastName: true})-[:toNode]->(user)
+      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl7:ACL {canReadDisplayFirstName: true})-[:toNode]->(user)-[:displayFirstName {active: true}]->(displayFirstName:Property {active: true})
+      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl8:ACL {canEditDisplayFirstName: true})-[:toNode]->(user)
+      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl9:ACL {canReadDisplayLastName: true})-[:toNode]->(user)-[:displayLastName {active: true}]->(displayLastName:Property {active: true})
+      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl10:ACL {canEditDisplayLastName: true})-[:toNode]->(user)
+        RETURN
+        user.id as id,
+        user.createdAt as createdAt,
+        email.value as email,
+        realFirstName.value as realFirstName,
+        realLastName.value as realLastName,
+        displayFirstName.value as displayFirstName,
+        displayLastName.value as displayLastName,
+        acl1.canReadEmail as canReadEmail,
+        acl2.canEditEmail as canEditEmail,
+        acl3.canReadRealFirstName as canReadRealFirstName,
+        acl4.canEditRealFirstName as canEditRealFirstName,
+        acl5.canReadRealLastName as canReadRealLastName,
+        acl6.canEditRealLastName as canEditRealLastName,
+        acl7.canReadDisplayFirstName as canReadDisplayFirstName,
+        acl8.canEditDisplayFirstName as canEditDisplayFirstName,
+        acl9.canReadDisplayLastName as canReadDisplayLastName,
+        acl10.canEditDisplayLastName as canEditDisplayLastName,
+        users as total
+      ORDER BY ${sort} ${order}
+      SKIP $skip
+      LIMIT $count
+        `,
+        {
+          // filter: filter.name, // TODO Handle no filter
+          skip: (page - 1) * count,
+          count,
+          token: session.token,
+        },
+      )
+      .run();
+
+    const items = result.map<User>(row => ({ 
+      id: row.id,
+      createdAt: row.createdAt,
+      email: {
+        value: row.email,
+        canRead: row.canReadEmail,
+        canEdit: row.canEditEmail,
+      },
+      realFirstName: {
+        value: row.realFirstName,
+        canRead: row.canReadRealFirstName,
+        canEdit: row.canEditRealFirstName,
+      },
+      realLastName: {
+        value: row.realLastName,
+        canRead: row.canReadRealLastName,
+        canEdit: row.canEditRealLastName,
+      },
+      displayFirstName: {
+        value: row.displayFirstName,
+        canRead: row.canReadDisplayFirstName,
+        canEdit: row.canEditDisplayFirstName,
+      },
+      displayLastName: {
+        value: row.displayLastName,
+        canRead: row.canReadDisplayLastName,
+        canEdit: row.canEditDisplayLastName,
+      },
+      phone: {
+        value: '', // TODO
+        canRead: true, // TODO
+        canEdit: true, // TODO
+      },
+      timezone: {
+        value: '', // TODO
+        canRead: true, // TODO
+        canEdit: true, // TODO
+      },
+      bio: {
+        value: '', // TODO
+        canRead: true, // TODO
+        canEdit: true, // TODO
+      },
+    }));
+
+    const hasMore = (page - 1) * count + count < result[0].total; // if skip + count is less than total there is more
+
+    return {
+      items,
+      hasMore,
+      total: result[0].total,
+    };
   }
 
   async listOrganizations(
