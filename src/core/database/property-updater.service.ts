@@ -10,6 +10,7 @@ import { ILogger, Logger } from '../../core';
 import { DateTime } from 'luxon';
 import { ISession } from '../../components/auth';
 import { upperFirst } from 'lodash';
+import { convertToObject } from 'typescript';
 
 @Injectable()
 export class PropertyUpdaterService {
@@ -276,15 +277,66 @@ export class PropertyUpdaterService {
     }
   }
 
+  async createNode<TObject extends Resource>({
+    session,
+    props,
+    input,
+    aclEditProp,
+  }: {
+    session: ISession;
+    props: ReadonlyArray<keyof TObject>;
+    input: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> };
+    aclEditProp?: string;
+  }): Promise<void> {
+    const now = DateTime.local().toNeo4JDateTime();
+    // const baseNode = await this.createBaseNode(
+    //   session,
+
+    //   props,
+    //   input,
+    //   aclEditProp,
+    // );
+  }
+
   async createBaseNode<TObject extends Resource>({
     session,
     baseNode,
-    baseProps,
+    props,
+    input,
+    aclEditProp,
   }: {
     session: ISession;
     baseNode: TObject;
-    baseProps: string[];
+    props: ReadonlyArray<keyof TObject>;
+    input: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> };
     aclEditProp?: string;
-    nodevar: string;
-  }): Promise<void> {}
+  }): Promise<void> {
+    const now = DateTime.local().toNeo4JDateTime();
+    try {
+      const result = await this.db
+        .query()
+        .raw(
+          `
+          MATCH
+            (token:Token {
+              active: true,
+              value: $token
+            })
+            <-[:token {active: true}]-
+            (requestingUser:User {
+              active: true,
+              id: $requestingUserId,
+              ${aclEditProp}: true
+            })
+          CREATE
+            (item:)
+        `,
+          {},
+        )
+        .run();
+    } catch (e) {
+      this.logger.error(`create Node error`);
+      throw e;
+    }
+  }
 }
