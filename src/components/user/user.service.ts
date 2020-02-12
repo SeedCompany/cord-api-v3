@@ -193,10 +193,11 @@ export class UserService {
             owningOrgId: "Seed Company",
             isAdmin: true
           })
-          -[:email {active: true}]->
+          -[:email {active: true, createdAt: datetime()}]->
           (email:EmailAddress:Property {
             active: true,
-            value: $email
+            value: $email,
+            createdAt: datetime()
           }),
           (user)-[:token {active: true, createdAt: datetime()}]->(token),
           (user)-[:password {active: true, createdAt: datetime()}]->
