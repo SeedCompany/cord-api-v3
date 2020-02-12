@@ -18,6 +18,7 @@ import {
   UserListOutput,
 } from './dto';
 import { OnIndex, OnIndexParams } from '../../core/database/indexer';
+import { UnauthorizedError } from 'type-graphql';
 
 @Injectable()
 export class UserService {
@@ -29,42 +30,27 @@ export class UserService {
     @Logger('user:service') private readonly logger: ILogger,
   ) {}
 
-
   @OnIndex()
   async createIndexes({ db, logger }: OnIndexParams) {
     const session = this.db.session();
     const wait = [];
 
     // USER NODE
+    wait.push(session.run('CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.id)'));
     wait.push(
-      session.run(
-        'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.id)',
-      ),
+      session.run('CREATE CONSTRAINT ON (n:User) ASSERT n.id IS UNIQUE'),
     );
     wait.push(
-      session.run(
-        'CREATE CONSTRAINT ON (n:User) ASSERT n.id IS UNIQUE',
-      ),
+      session.run('CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.active)'),
     );
     wait.push(
-      session.run(
-        'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.active)',
-      ),
+      session.run('CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.createdAt)'),
     );
     wait.push(
-      session.run(
-        'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.createdAt)',
-      ),
+      session.run('CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.owningOrgId)'),
     );
     wait.push(
-      session.run(
-        'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.owningOrgId)',
-      ),
-    );
-    wait.push(
-      session.run(
-        'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.owningOrgId)',
-      ),
+      session.run('CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.owningOrgId)'),
     );
     // EMAIL REL
     wait.push(
@@ -101,124 +87,129 @@ export class UserService {
     );
     // PROPERTY NODE
     wait.push(
-      session.run(
-        'CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.value)',
-      ),
+      session.run('CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.value)'),
     );
     wait.push(
-      session.run(
-        'CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.active)',
-      ),
+      session.run('CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.active)'),
     );
 
     await Promise.all(wait);
     session.close();
   }
 
-
   async list(
     { page, count, sort, order, filter }: UserListInput,
     session: ISession,
   ): Promise<UserListOutput> {
-    const result = await this.db
+    const permCheck = await this.db
       .query()
       .raw(
         `
-        MATCH
+      MATCH
         (token:Token {
           active: true,
           value: $token
         })
-        <-[:token {active: true}]-
+          <-[:token {active: true}]-
         (requestingUser:User {
-          active: true
+          active: true,
+          canReadUsers: true
         })
-      WITH count(user) as users
-      WITH * OPTIONAL MATCH (user:User {active: true, id: $id, owningOrgId: $owningOrgId})
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl1:ACL {canReadEmail: true})-[:toNode]->(user)-[:email {active: true}]->(email:EmailAddress {active: true})
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl2:ACL {canEditEmail: true})-[:toNode]->(user)
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl3:ACL {canReadRealFirstName: true})-[:toNode]->(user)-[:realFirstName {active: true}]->(realFirstName:Property {active: true})
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl4:ACL {canEditRealFirstName: true})-[:toNode]->(user)
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl5:ACL {canReadRealLastName: true})-[:toNode]->(user)-[:realLastName {active: true}]->(realLastName:Property {active: true})
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl6:ACL {canEditRealLastName: true})-[:toNode]->(user)
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl7:ACL {canReadDisplayFirstName: true})-[:toNode]->(user)-[:displayFirstName {active: true}]->(displayFirstName:Property {active: true})
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl8:ACL {canEditDisplayFirstName: true})-[:toNode]->(user)
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl9:ACL {canReadDisplayLastName: true})-[:toNode]->(user)-[:displayLastName {active: true}]->(displayLastName:Property {active: true})
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl10:ACL {canEditDisplayLastName: true})-[:toNode]->(user)
+      RETURN
+        requestingUser.canReadUsers as canReadUsers
+    `,
+        {
+          token: session.token,
+        },
+      )
+      .first();
+
+    const canReadUsers = permCheck?.canReadUsers;
+
+    if (!canReadUsers) {
+      throw UnauthorizedError;
+    }
+
+    const result = await this.db
+      .query()
+      .raw(
+        `
+          MATCH
+            (user:User {active: true, owningOrgId: $owningOrgId})
+          WITH count(user) as total
+          MATCH
+            (user:User {active: true, owningOrgId: $owningOrgId}),
+            (user)-[:email {active: true}]->(email:EmailAddress {active: true}),
+            (user)-[:realFirstName {active: true}]->(realFirstName:Property {active: true}),
+            (user)-[:realLastName {active: true}]->(realLastName:Property {active: true}),
+            (user)-[:displayFirstName {active: true}]->(displayFirstName:Property {active: true}),
+            (user)-[:displayLastName {active: true}]->(displayLastName:Property {active: true})
         RETURN
-        user.id as id,
-        user.createdAt as createdAt,
-        email.value as email,
-        realFirstName.value as realFirstName,
-        realLastName.value as realLastName,
-        displayFirstName.value as displayFirstName,
-        displayLastName.value as displayLastName,
-        acl1.canReadEmail as canReadEmail,
-        acl2.canEditEmail as canEditEmail,
-        acl3.canReadRealFirstName as canReadRealFirstName,
-        acl4.canEditRealFirstName as canEditRealFirstName,
-        acl5.canReadRealLastName as canReadRealLastName,
-        acl6.canEditRealLastName as canEditRealLastName,
-        acl7.canReadDisplayFirstName as canReadDisplayFirstName,
-        acl8.canEditDisplayFirstName as canEditDisplayFirstName,
-        acl9.canReadDisplayLastName as canReadDisplayLastName,
-        acl10.canEditDisplayLastName as canEditDisplayLastName,
-        users as total
-      ORDER BY ${sort} ${order}
-      SKIP $skip
-      LIMIT $count
+          total,
+          user.id as id,
+          user.createdAt as createdAt,
+          email.value as email,
+          realFirstName.value as realFirstName,
+          realLastName.value as realLastName,
+          displayFirstName.value as displayFirstName,
+          displayLastName.value as displayLastName
+        ORDER BY ${sort} ${order}
+        SKIP $skip
+        LIMIT $count
         `,
         {
           // filter: filter.name, // TODO Handle no filter
           skip: (page - 1) * count,
           count,
           token: session.token,
+          id: session.userId,
+          owningOrgId: session.owningOrgId,
         },
       )
       .run();
 
-    const items = result.map<User>(row => ({ 
+    const items = result.map<User>(row => ({
       id: row.id,
       createdAt: row.createdAt,
       email: {
         value: row.email,
-        canRead: row.canReadEmail,
-        canEdit: row.canEditEmail,
+        canRead: true,
+        canEdit: false,
       },
       realFirstName: {
         value: row.realFirstName,
-        canRead: row.canReadRealFirstName,
-        canEdit: row.canEditRealFirstName,
+        canRead: true,
+        canEdit: false,
       },
       realLastName: {
         value: row.realLastName,
-        canRead: row.canReadRealLastName,
-        canEdit: row.canEditRealLastName,
+        canRead: true,
+        canEdit: false,
       },
       displayFirstName: {
         value: row.displayFirstName,
-        canRead: row.canReadDisplayFirstName,
-        canEdit: row.canEditDisplayFirstName,
+        canRead: true,
+        canEdit: false,
       },
       displayLastName: {
         value: row.displayLastName,
-        canRead: row.canReadDisplayLastName,
-        canEdit: row.canEditDisplayLastName,
+        canRead: true,
+        canEdit: false,
       },
       phone: {
         value: '', // TODO
         canRead: true, // TODO
-        canEdit: true, // TODO
+        canEdit: false, // TODO
       },
       timezone: {
         value: '', // TODO
         canRead: true, // TODO
-        canEdit: true, // TODO
+        canEdit: false, // TODO
       },
       bio: {
         value: '', // TODO
         canRead: true, // TODO
-        canEdit: true, // TODO
+        canEdit: false, // TODO
       },
     }));
 
@@ -229,7 +220,6 @@ export class UserService {
       hasMore,
       total: result[0].total,
     };
-
   }
 
   async listOrganizations(
@@ -275,6 +265,7 @@ export class UserService {
             createdByUserId: "system",
             canCreateOrg: true,
             canReadOrgs: true,
+            canReadUsers: true,
             canCreateLang: true,
             canReadLangs: true,
             canCreateUnavailability: true,
