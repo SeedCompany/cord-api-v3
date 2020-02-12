@@ -26,7 +26,7 @@ export class IndexerModule implements OnModuleInit {
         class: parentClass.name,
         method: methodName,
       });
-      const maybeStatements = await handler({
+      const maybeStatements = await handler.call(parentClass.instance, {
         db: this.db,
         logger: this.logger,
       });
