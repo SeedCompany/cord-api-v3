@@ -1,5 +1,4 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { DatabaseService } from '../../core';
 import { ISession } from '../auth';
 import {
   CreateOrganization,
@@ -8,14 +7,11 @@ import {
   OrganizationListOutput,
   UpdateOrganization,
 } from './dto';
-<<<<<<< HEAD
 import { DatabaseService, ILogger, Logger } from '../../core';
 import { generate } from 'shortid';
 import { IRequestUser } from '../../common';
 import { DateTime } from 'luxon';
-=======
-import { generate } from 'shortid';
->>>>>>> master
+
 
 @Injectable()
 export class OrganizationService {
