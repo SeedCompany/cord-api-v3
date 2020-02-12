@@ -1,4 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { DatabaseService } from '../../core';
+import { ISession } from '../auth';
 import {
   CreateOrganization,
   Organization,
@@ -6,10 +8,14 @@ import {
   OrganizationListOutput,
   UpdateOrganization,
 } from './dto';
+<<<<<<< HEAD
 import { DatabaseService, ILogger, Logger } from '../../core';
 import { generate } from 'shortid';
 import { IRequestUser } from '../../common';
 import { DateTime } from 'luxon';
+=======
+import { generate } from 'shortid';
+>>>>>>> master
 
 @Injectable()
 export class OrganizationService {
@@ -20,7 +26,7 @@ export class OrganizationService {
 
   async create(
     { name }: CreateOrganization,
-    token: IRequestUser,
+    { token }: ISession,
   ): Promise<Organization> {
     const result = await this.db
       .query()
@@ -57,7 +63,7 @@ export class OrganizationService {
           user.canReadOrgs as canReadOrgs
       `,
         {
-          token: token.token,
+          token,
           name,
           id: generate(),
         },
@@ -79,7 +85,7 @@ export class OrganizationService {
     };
   }
 
-  async readOne(orgId: string, token: IRequestUser): Promise<Organization> {
+  async readOne(orgId: string, { token }: ISession): Promise<Organization> {
     const result = await this.db
       .query()
       .raw(
@@ -105,7 +111,7 @@ export class OrganizationService {
         `,
         {
           id: orgId,
-          token: token.token,
+          token,
         },
       )
       .first();
@@ -133,7 +139,7 @@ export class OrganizationService {
 
   async update(
     input: UpdateOrganization,
-    token: IRequestUser,
+    { token }: ISession,
   ): Promise<Organization> {
     const result = await this.db
       .query()
@@ -163,7 +169,7 @@ export class OrganizationService {
         {
           id: input.id,
           name: input.name,
-          token: token.token,
+          token,
         },
       )
       .first();
@@ -183,7 +189,7 @@ export class OrganizationService {
     };
   }
 
-  async delete(id: string, token: IRequestUser): Promise<void> {
+  async delete(id: string, { token }: ISession): Promise<void> {
     const result = await this.db
       .query()
       .raw(
@@ -205,7 +211,7 @@ export class OrganizationService {
         `,
         {
           id,
-          token: token.token,
+          token,
         },
       )
       .first();
@@ -217,7 +223,7 @@ export class OrganizationService {
 
   async list(
     { page, count, sort, order, filter }: OrganizationListInput,
-    token: IRequestUser,
+    { token }: ISession,
   ): Promise<OrganizationListOutput> {
     const result = await this.db
       .query()
@@ -258,7 +264,7 @@ export class OrganizationService {
           // filter: filter.name, // TODO Handle no filter
           skip: (page - 1) * count,
           count,
-          token: token.token,
+          token,
         },
       )
       .run();

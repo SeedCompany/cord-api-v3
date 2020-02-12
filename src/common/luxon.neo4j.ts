@@ -1,5 +1,6 @@
 import { DateTime } from 'luxon';
 import { v1 as Neo } from 'neo4j-driver';
+import { inspect, InspectOptions } from 'util';
 
 const { Date: NeoDate, DateTime: NeoDateTime } = Neo.types;
 
@@ -28,4 +29,13 @@ DateTime.prototype.toNeo4JDateTime = function(this: DateTime) {
     this.zone.universal ? this.offset * 60 : undefined,
     this.zone.universal ? undefined : this.zoneName
   );
+};
+
+DateTime.prototype[inspect.custom] = function(
+  this: DateTime,
+  depth: number,
+  options: InspectOptions,
+) {
+  const str = this.toLocaleString(DateTime.DATETIME_SHORT_WITH_SECONDS);
+  return `[DateTime] ${str}`;
 };

@@ -6,9 +6,8 @@ import {
   ResolveProperty,
   Parent,
 } from '@nestjs/graphql';
-import { IdArg, RequestUser } from '../../common';
-import { IRequestUser } from '../../common/request-user.interface';
-
+import { IdArg } from '../../common';
+import { ISession, Session } from '../auth';
 import {
   OrganizationListInput,
   SecuredOrganizationList,
@@ -45,19 +44,15 @@ export class UserResolver {
   @Query(() => User, {
     description: 'Look up a user by its ID',
   })
-  async user(
-    @RequestUser() token: IRequestUser,
-    @IdArg() id: string,
-    //
-  ): Promise<User> {
-    return this.userService.readOne(id, token);
+  async user(@Session() session: ISession, @IdArg() id: string): Promise<User> {
+    return this.userService.readOne(id, session);
   }
 
   @Query(() => UserListOutput, {
     description: 'Look up users',
   })
   async users(
-    @RequestUser() token: IRequestUser,
+    @Session() session: ISession,
     @Args({
       name: 'input',
       type: () => UserListInput,
@@ -65,12 +60,12 @@ export class UserResolver {
     })
     input: UserListInput,
   ): Promise<UserListOutput> {
-    return this.userService.list(input, token);
+    return this.userService.list(input, session.token);
   }
 
   @ResolveProperty(() => SecuredUnavailabilityList)
   async unavailabilities(
-    @RequestUser() token: IRequestUser,
+    @Session() session: ISession,
     @Parent() { id }: User,
     @Args({
       name: 'input',
@@ -79,12 +74,12 @@ export class UserResolver {
     })
     input: UnavailabilityListInput,
   ): Promise<SecuredUnavailabilityList> {
-    return this.unavailabilityService.list(id, input, token);
+    return this.unavailabilityService.list(id, input, session);
   }
 
   @ResolveProperty(() => SecuredOrganizationList)
   async organizations(
-    @RequestUser() token: IRequestUser,
+    @Session() session: ISession,
     @Parent() { id }: User,
     @Args({
       name: 'input',
@@ -93,12 +88,12 @@ export class UserResolver {
     })
     input: OrganizationListInput,
   ): Promise<SecuredOrganizationList> {
-    return this.userService.listOrganizations(id, input, token);
+    return this.userService.listOrganizations(id, input, session);
   }
 
   @ResolveProperty(() => SecuredEducationList)
   async education(
-    @RequestUser() token: string,
+    @Session() session: ISession,
     @Parent() { id }: User,
     @Args({
       name: 'input',
@@ -107,17 +102,17 @@ export class UserResolver {
     })
     input: EducationListInput,
   ): Promise<SecuredEducationList> {
-    return this.educationService.list(id, input, token);
+    return this.educationService.list(id, input, session.token);
   }
 
   @Mutation(() => CreateUserOutput, {
     description: 'Create a user',
   })
   async createUser(
-    @RequestUser() token: IRequestUser,
+    @Session() session: ISession,
     @Args('input') { user: input }: CreateUserInput,
   ): Promise<CreateUserOutput> {
-    const user = await this.userService.create(input, token);
+    const user = await this.userService.create(input, session);
     return { user };
   }
 
@@ -125,18 +120,18 @@ export class UserResolver {
     description: 'Update a user',
   })
   async updateUser(
-    @RequestUser() token: IRequestUser,
+    @Session() session: ISession,
     @Args('input') { user: input }: UpdateUserInput,
   ): Promise<UpdateUserOutput> {
-    const user = await this.userService.update(input, token);
+    const user = await this.userService.update(input, session);
     return { user };
   }
 
   @Mutation(() => Boolean, {
     description: 'Delete a user',
   })
-  async deleteUser(@RequestUser() token: IRequestUser, @IdArg() id: string) {
-    await this.userService.delete(id, token);
+  async deleteUser(@Session() session: ISession, @IdArg() id: string) {
+    await this.userService.delete(id, session);
     return true;
   }
 }

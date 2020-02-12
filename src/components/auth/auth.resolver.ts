@@ -1,37 +1,55 @@
 import { Resolver, Mutation, Args } from '@nestjs/graphql';
-import { RequestUser } from '../../common';
+import { UserService } from '../user';
 import { AuthService } from './auth.service';
 import {
-  CreateTokenOutputDto,
-  LoginUserOutputDto,
-  LogoutUserOutputDto,
+  CreateSessionOutput,
+  LoginInput,
+  LoginOutput,
 } from './auth.dto';
+import { ISession, Session } from './session';
 
-@Resolver('Auth')
+@Resolver()
 export class AuthResolver {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly userService: UserService,
+  ) {}
 
-  @Mutation(returns => CreateTokenOutputDto, {
-    description: 'Create a token',
+  @Mutation(() => CreateSessionOutput, {
+    description: 'Create a session',
   })
-  async createToken(): Promise<CreateTokenOutputDto> {
-    return await this.authService.createToken();
+  async createSession(): Promise<CreateSessionOutput> {
+    const token = await this.authService.createToken();
+    return { token };
   }
 
-  @Mutation(returns => LoginUserOutputDto, {
+  @Mutation(() => LoginOutput, {
     description: 'Login a user',
   })
-  async loginUser(
-    @RequestUser() token: string,
-    @Args('password') password: string,
-  ): Promise<LoginUserOutputDto> {
-    return await this.authService.login(password, token);
+  async login(
+    @Session() session: ISession,
+    @Args('input') input: LoginInput,
+  ): Promise<LoginOutput> {
+    const userId = await this.authService.login(
+      input.email,
+      input.password,
+      session.token,
+    );
+    if (!userId) {
+      return { success: false };
+    }
+    const user = await this.userService.readOne(userId, session);
+    return {
+      success: true,
+      user,
+    };
   }
 
-  @Mutation(returns => LogoutUserOutputDto, {
+  @Mutation(() => Boolean, {
     description: 'Logout a user',
   })
-  async logout(@RequestUser() token: string): Promise<LogoutUserOutputDto> {
-    return await this.authService.logout(token);
+  async logout(@Session() session: ISession): Promise<boolean> {
+    await this.authService.logout(session.token);
+    return true;
   }
 }
