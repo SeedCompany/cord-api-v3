@@ -27,8 +27,8 @@ export class UserService {
     @Logger('user:service') private readonly logger: ILogger,
   ) {}
 
-  async list(input: UserListInput, token: IRequestUser): Promise<UserListOutput> {
-    this.logger.info('Listing users', { input, token });
+  async list(input: UserListInput, session: ISession): Promise<UserListOutput> {
+    this.logger.info('Listing users', { input, token: session });
     throw new Error('Method not implemented.');
   }
 

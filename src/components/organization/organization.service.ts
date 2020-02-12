@@ -9,7 +9,6 @@ import {
 } from './dto';
 import { DatabaseService, ILogger, Logger } from '../../core';
 import { generate } from 'shortid';
-import { IRequestUser } from '../../common';
 import { DateTime } from 'luxon';
 
 
@@ -284,7 +283,7 @@ export class OrganizationService {
     };
   }
 
-  async checkAllOrgs(token?: IRequestUser): Promise<boolean> {
+  async checkAllOrgs(session?: ISession): Promise<boolean> {
     try {
       const result = await this.db
         .query()
@@ -303,7 +302,7 @@ export class OrganizationService {
             count(org) as orgCount
           `,
           {
-            token: token.token,
+            token: session.token,
           },
         )
         .first();

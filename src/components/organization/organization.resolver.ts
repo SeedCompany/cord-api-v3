@@ -78,8 +78,8 @@ export class OrganizationResolver {
     description: 'Check all organization nodes for consistency',
   })
   async checkOrganizations(
-    @RequestUser() token: IRequestUser,
+    @Session() session: ISession,
   ): Promise<boolean> {
-    return this.orgs.checkAllOrgs(token);
+    return this.orgs.checkAllOrgs(session);
   }
 }

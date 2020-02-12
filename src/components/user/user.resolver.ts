@@ -60,7 +60,7 @@ export class UserResolver {
     })
     input: UserListInput,
   ): Promise<UserListOutput> {
-    return this.userService.list(input, session.token);
+    return this.userService.list(input, session);
   }
 
   @ResolveProperty(() => SecuredUnavailabilityList)
