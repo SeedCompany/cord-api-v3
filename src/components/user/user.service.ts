@@ -34,81 +34,79 @@ export class UserService {
     const session = this.db.session();
     const wait = [];
 
-    console.log('asdf');
-
     // USER NODE
     wait.push(
       session.run(
-        'CREATE CONSTRAINT userIdExists ON (n:User) ASSERT EXISTS(n.id)',
+        'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.id)',
       ),
     );
     wait.push(
       session.run(
-        'CREATE CONSTRAINT userIdUnique ON (n:User) ASSERT n.id IS UNIQUE',
+        'CREATE CONSTRAINT ON (n:User) ASSERT n.id IS UNIQUE',
       ),
     );
     wait.push(
       session.run(
-        'CREATE CONSTRAINT userActiveExists ON (n:User) ASSERT EXISTS(n.active)',
+        'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.active)',
       ),
     );
     wait.push(
       session.run(
-        'CREATE CONSTRAINT userCreatedAtExists ON (n:User) ASSERT EXISTS(n.createdAt)',
+        'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.createdAt)',
       ),
     );
     wait.push(
       session.run(
-        'CREATE CONSTRAINT userOwningOrgIdExists ON (n:User) ASSERT EXISTS(n.owningOrgId)',
+        'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.owningOrgId)',
       ),
     );
     wait.push(
       session.run(
-        'CREATE CONSTRAINT userOwningOrgIdExists ON (n:User) ASSERT EXISTS(n.owningOrgId)',
+        'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.owningOrgId)',
       ),
     );
     // EMAIL REL
     wait.push(
       session.run(
-        'CREATE CONSTRAINT emailRelActiveExists ON ()-[r:email]-() ASSERT EXISTS(r.active)',
+        'CREATE CONSTRAINT ON ()-[r:email]-() ASSERT EXISTS(r.active)',
       ),
     );
     wait.push(
       session.run(
-        'CREATE CONSTRAINT emailRelCreatedAtExists ON ()-[r:email]-() ASSERT EXISTS(r.createdAt)',
+        'CREATE CONSTRAINT ON ()-[r:email]-() ASSERT EXISTS(r.createdAt)',
       ),
     );
     // EMAIL NODE
     wait.push(
       session.run(
-        'CREATE CONSTRAINT emailAddressValueExists ON (n:EmailAddress) ASSERT EXISTS(n.value)',
+        'CREATE CONSTRAINT ON (n:EmailAddress) ASSERT EXISTS(n.value)',
       ),
     );
     wait.push(
       session.run(
-        'CREATE CONSTRAINT emailAddressValueUnique ON (n:EmailAddress) ASSERT n.value IS UNIQUE',
+        'CREATE CONSTRAINT ON (n:EmailAddress) ASSERT n.value IS UNIQUE',
       ),
     );
     // PASSWORD REL
     wait.push(
       session.run(
-        'CREATE CONSTRAINT passwordRelActiveExists ON ()-[r:password]-() ASSERT EXISTS(r.active)',
+        'CREATE CONSTRAINT ON ()-[r:password]-() ASSERT EXISTS(r.active)',
       ),
     );
     wait.push(
       session.run(
-        'CREATE CONSTRAINT passwordRelCreatedAtExists ON ()-[r:password]-() ASSERT EXISTS(r.createdAt)',
+        'CREATE CONSTRAINT ON ()-[r:password]-() ASSERT EXISTS(r.createdAt)',
       ),
     );
     // PROPERTY NODE
     wait.push(
       session.run(
-        'CREATE CONSTRAINT propertyValueExists ON (n:Property) ASSERT EXISTS(n.value)',
+        'CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.value)',
       ),
     );
     wait.push(
       session.run(
-        'CREATE CONSTRAINT propertyActiveExists ON (n:Property) ASSERT EXISTS(n.active)',
+        'CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.active)',
       ),
     );
 
@@ -448,8 +446,11 @@ export class UserService {
           active: true,
           id: $userToDeleteId
         })
+        <-[oldTokenRels:token]-
+        ()
         SET
           user.active = false
+        DELETE oldTokenRels
         RETURN
           user.id as id
         `,
