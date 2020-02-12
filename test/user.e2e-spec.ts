@@ -13,7 +13,7 @@ import { times } from 'lodash';
 describe('User e2e', () => {
   let app: TestApp;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     app = await createTestApp();
   });
 
@@ -102,9 +102,7 @@ describe('User e2e', () => {
   // LIST USERS
   it('list view of users', async () => {
     // create a bunch of users
-    await Promise.all(
-      times(10).map(() => createUser(app)),
-    );
+    await Promise.all(times(10).map(() => createUser(app)));
 
     const { users } = await app.graphql.query(gql`
       query {
@@ -119,7 +117,7 @@ describe('User e2e', () => {
       ${fragments.user}
     `);
 
-    expect(users.items.length).toBeGreaterThan(10);
+    expect(users.items.length).toBeGreaterThan(9);
   });
 
   afterAll(async () => {

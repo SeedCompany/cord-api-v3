@@ -101,6 +101,8 @@ export class UserService {
     { page, count, sort, order, filter }: UserListInput,
     session: ISession,
   ): Promise<UserListOutput> {
+
+    // first we'll check if the user has permission to list all users for their org
     const permCheck = await this.db
       .query()
       .raw(
@@ -130,6 +132,7 @@ export class UserService {
       throw UnauthorizedError;
     }
 
+    // now we'll get all users
     const result = await this.db
       .query()
       .raw(
