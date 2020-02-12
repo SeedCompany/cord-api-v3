@@ -27,6 +27,7 @@ export class LanguageService {
     this.logger.info(
       `Mutation create Language: ${input.name} by ${session.userId}`,
     );
+
     const result = await this.db
       .query()
       .raw(
@@ -51,30 +52,49 @@ export class LanguageService {
             active: true,
             value: $name
           }),
-          (lang)-[:displayName {active: true}]->(displayName:Property {
+          (lang)-[:displayName {active: true, createdAt: datetime()}]->(displayName:Property {
             active: true,
             value: $displayName
           }),
-          (lang)-[:beginFiscalYear {active: true}]->(beginFiscalYear:Property {
+          (lang)-[:beginFiscalYear {active: true, createdAt: datetime()}]->(beginFiscalYear:Property {
             active: true,
             value: $beginFiscalYear
           }),
-          (lang)-[:ethnologueName {active: true}]->(ethnologueName:Property {
+          (lang)-[:ethnologueName {active: true, createdAt: datetime()}]->(ethnologueName:Property {
             active: true,
             value: $ethnologueName
           }),
-          (lang)-[:ethnologuePopulation {active: true}]->(ethnologuePopulation:Property {
+          (lang)-[:ethnologuePopulation {active: true, createdAt: datetime()}]->(ethnologuePopulation:Property {
             active: true,
             value: $ethnologuePopulation
           }),
-          (lang)-[:organizationPopulation {active: true}]->(organizationPopulation:Property {
+          (lang)-[:organizationPopulation {active: true, createdAt: datetime()}]->(organizationPopulation:Property {
             active: true,
             value: $organizationPopulation
           }),
-          (lang)-[:rodNumber {active: true}]->(rodNumber:Property {
+          (lang)-[:rodNumber {active: true, createdAt: datetime()}]->(rodNumber:Property {
             active: true,
             value: $rodNumber
+          }),
+          (user)
+          <-[:member]-
+          (acl:ACL {
+            canReadName: true,
+            canEditName: true,
+            canReadDisplayName: true,
+            canEditDisplayName: true,
+            canReadBeginFiscalYear: true,
+            canEditBeginFiscalYear: true,
+            canReadEthnologueName: true,
+            canEditEthnologueName: true,
+            canReadEthnologuePopulation: true,
+            canEditEthnologuePopulation: true,
+            canReadOrganizationPopulation: true,
+            canEditOrganizationPopulation: true,
+            canReadRodNumber: true,
+            canEditRodNumber: true
           })
+          -[:toNode]->(lang)
         RETURN
           lang.id as id,
           lang.createdAt as createdAt,
@@ -154,6 +174,7 @@ export class LanguageService {
     this.logger.info(
       `Query readOne Language: id ${langId} by ${session.userId}`,
     );
+
     const result = await this.db
       .query()
       .raw(
@@ -168,14 +189,13 @@ export class LanguageService {
             active: true,
             id: $id
           })
-          -[:name {active: true}]->
-          (name:LangName {active: true}),
-          (lang)-[:displayName {active: true}]->(displayName:Property {active: true}),
-          (lang)-[:beginFiscalYear {active: true}]->(beginFiscalYear:Property {active: true}),
-          (lang)-[:ethnologueName {active: true}]->(ethnologueName:Property {active: true}),
-          (lang)-[:ethnologuePopulation {active: true}]->(ethnologuePopulation:Property {active: true}),
-          (lang)-[:organizationPopulation {active: true}]->(organizationPopulation:Property {active: true}),
-          (lang)-[:rodNumber {active: true}]->(rodNumber:Property {active: true})
+        WITH * OPTIONAL MATCH (user)<-[:member]-(acl1:ACL {canReadName: true})-[:toNode]->(lang)-[:name {active: true}]->(name:LangName {active: true})
+        WITH * OPTIONAL MATCH (user)<-[:member]-(acl2:ACL {canReadDisplayName: true})-[:toNode]->(lang)-[:displayName {active: true}]->(displayName:Property {active: true})
+        WITH * OPTIONAL MATCH (user)<-[:member]-(acl3:ACL {canReadBeginFiscalYear: true})-[:toNode]->(lang)-[:beginFiscalYear {active: true}]->(beginFiscalYear:Property {active: true})
+        WITH * OPTIONAL MATCH (user)<-[:member]-(acl4:ACL {canReadEthnologueName: true})-[:toNode]->(lang)-[:ethnologueName {active: true}]->(ethnologueName:Property {active: true})
+        WITH * OPTIONAL MATCH (user)<-[:member]-(acl5:ACL {canReadEthnologuePopulation: true})-[:toNode]->(lang)-[:ethnologuePopulation {active: true}]->(ethnologuePopulation:Property {active: true})
+        WITH * OPTIONAL MATCH (user)<-[:member]-(acl6:ACL {canReadOrganizationPopulation: true})-[:toNode]->(lang)-[:organizationPopulation {active: true}]->(organizationPopulation:Property {active: true})
+        WITH * OPTIONAL MATCH (user)<-[:member]-(acl7:ACL {canReadRodNumber: true})-[:toNode]->(lang)-[:rodNumber {active: true}]->(rodNumber:Property {active: true})
         RETURN
           lang.id as id,
           lang.createdAt as createdAt,
@@ -187,7 +207,22 @@ export class LanguageService {
           ethnologueName.value as ethnologueName,
           ethnologuePopulation.value as ethnologuePopulation,
           organizationPopulation.value as organizationPopulation,
-          rodNumber.value as rodNumber
+          rodNumber.value as rodNumber,
+          acl1.canReadName as canReadName,
+          acl2.canReadDisplayName as canReadDisplayName,
+          acl3.canReadBeginFiscalYear as canReadBeginFiscalYear,
+          acl4.canReadEthnologueName as canReadEthnologueName,
+          acl5.canReadEthnologuePopulation as canReadEthnologuePopulation,
+          acl6.canReadOrganizationPopulation as canReadOrganizationPopulation,
+          acl7.canReadRodNumber as canReadRodNumber,
+          acl1.canEditName as canEditName,
+          acl2.canEditDisplayName as canEditDisplayName,
+          acl3.canEditBeginFiscalYear as canEditBeginFiscalYear,
+          acl4.canEditEthnologueName as canEditEthnologueName,
+          acl5.canEditEthnologuePopulation as canEditEthnologuePopulation,
+          acl6.canEditOrganizationPopulation as canEditOrganizationPopulation,
+          acl7.canEditRodNumber as canEditRodNumber
+
         `,
         {
           id: langId,
@@ -214,33 +249,33 @@ export class LanguageService {
       },
       displayName: {
         value: result.displayName,
-        canRead: result.canReadLangs,
-        canEdit: result.canCreateLang,
+        canRead: result.canReadDisplayName,
+        canEdit: result.canEditDisplayName,
       },
       beginFiscalYear: {
         value: result.beginFiscalYear,
-        canRead: result.canReadLangs,
-        canEdit: result.canCreateLang,
+        canRead: result.canReadBeginFiscalYear,
+        canEdit: result.canEditBeginFiscalYear,
       },
       ethnologueName: {
         value: result.ethnologueName,
-        canRead: result.canReadLangs,
-        canEdit: result.canCreateLang,
+        canRead: result.canReadEthnologueName,
+        canEdit: result.canEditEthnologueName,
       },
       ethnologuePopulation: {
         value: result.ethnologuePopulation,
-        canRead: result.canReadLangs,
-        canEdit: result.canCreateLang,
+        canRead: result.canReadEthnologuePopulation,
+        canEdit: result.canEditEthnologuePopulation,
       },
       organizationPopulation: {
         value: result.organizationPopulation,
-        canRead: result.canReadLangs,
-        canEdit: result.canCreateLang,
+        canRead: result.canReadOrganizationPopulation,
+        canEdit: result.canEditOrganizationPopulation,
       },
       rodNumber: {
         value: result.rodNumber,
-        canRead: result.canReadLangs,
-        canEdit: result.canCreateLang,
+        canRead: result.canReadRodNumber,
+        canEdit: result.canEditRodNumber,
       },
       createdAt: result.createdAt,
     };

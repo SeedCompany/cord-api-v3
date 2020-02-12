@@ -1,16 +1,18 @@
-import { gql } from 'apollo-server-core';
-import { isValid } from 'shortid';
+import * as faker from 'faker';
+
 import {
+  TestApp,
   createEducation,
-  createTestApp,
   createSession,
+  createTestApp,
   createUser,
   fragments,
-  TestApp,
 } from './utility';
-import { times } from 'lodash';
-import * as faker from 'faker';
+
 import { Education } from '../src/components/user/education';
+import { gql } from 'apollo-server-core';
+import { isValid } from 'shortid';
+import { times } from 'lodash';
 
 describe('Education e2e', () => {
   let app: TestApp;
@@ -30,7 +32,7 @@ describe('Education e2e', () => {
 
     const result = await app.graphql.query(
       gql`
-        query educt($id: ID!) {
+        query education($id: ID!) {
           education(id: $id) {
             ...education
           }
@@ -48,8 +50,8 @@ describe('Education e2e', () => {
   // UPDATE EDUCATION
   it('update education', async () => {
     const user = await createUser(app);
-    const educt = await createEducation(app, user.id);
-    const newInstitution = educt.institution.value + ' updated';
+    const education = await createEducation(app, user.id);
+    const newInstitution = education.institution.value + ' updated';
 
     const result = await app.graphql.mutate(
       gql`
@@ -65,7 +67,7 @@ describe('Education e2e', () => {
       {
         input: {
           education: {
-            id: educt.id,
+            id: education.id,
             institution: newInstitution,
           },
         },
@@ -79,8 +81,8 @@ describe('Education e2e', () => {
   // DELETE EDUCATION
   it('delete education', async () => {
     const user = await createUser(app);
-    const educt = await createEducation(app, user.id);
-
+    const education = await createEducation(app, user.id);
+    expect(education.id).toBeTruthy();
     const result = await app.graphql.mutate(
       gql`
         mutation deleteEducation($id: ID!) {
@@ -88,17 +90,36 @@ describe('Education e2e', () => {
         }
       `,
       {
-        id: educt.id,
+        id: education.id,
       },
     );
+    console.log(JSON.stringify(result));
+    console.log(education.id);
     const actual: Education | undefined = result.deleteEducation;
     expect(actual).toBeTruthy();
+    try {
+      await app.graphql.query(
+        gql`
+          query education($id: ID!) {
+            education(id: $id) {
+              ...education
+            }
+          }
+          ${fragments.education}
+        `,
+        {
+          id: education.id,
+        },
+      );
+    } catch (e) {
+      expect(e.response.statusCode).toBe(404);
+    }
   });
 
   // LIST EDUCATIONS
   //   it('list view of educations', async () => {
   //     // create a bunch of educations
-  //     const educts = await Promise.all(
+  //     const educations = await Promise.all(
   //       times(10).map(() => createEducation(app)),
   //     );
 
@@ -106,15 +127,15 @@ describe('Education e2e', () => {
   //       query {
   //         educations {
   //           items {
-  //             ...educt
+  //             ...education
   //           }
   //           hasMore
   //           total
   //         }
   //       }
-  //       ${fragments.educt}
+  //       ${fragments.education}
   //     `);
 
-  //     expect(educations.items).toHaveLength(educts.length);
+  //     expect(educations.items).toHaveLength(educations.length);
   //   });
 });
