@@ -8,11 +8,12 @@ import {
 } from './utility';
 import { gql } from 'apollo-server-core';
 import { isValid } from 'shortid';
+import { times } from 'lodash';
 
 describe('User e2e', () => {
   let app: TestApp;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     app = await createTestApp();
   });
 
@@ -96,6 +97,27 @@ describe('User e2e', () => {
     expect(actual).toBeTruthy();
 
     return true;
+  });
+
+  // LIST USERS
+  it('list view of users', async () => {
+    // create a bunch of users
+    await Promise.all(times(10).map(() => createUser(app)));
+
+    const { users } = await app.graphql.query(gql`
+      query {
+        users {
+          items {
+            ...user
+          }
+          hasMore
+          total
+        }
+      }
+      ${fragments.user}
+    `);
+
+    expect(users.items.length).toBeGreaterThan(9);
   });
 
   afterAll(async () => {
