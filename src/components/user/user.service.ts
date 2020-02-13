@@ -111,7 +111,10 @@ export class UserService {
             (user)-[:realFirstName {active: true}]->(realFirstName:Property {active: true}),
             (user)-[:realLastName {active: true}]->(realLastName:Property {active: true}),
             (user)-[:displayFirstName {active: true}]->(displayFirstName:Property {active: true}),
-            (user)-[:displayLastName {active: true}]->(displayLastName:Property {active: true})
+            (user)-[:displayLastName {active: true}]->(displayLastName:Property {active: true}),
+            (user)-[:phone {active: true}]->(phone:Property {active: true}),
+            (user)-[:timezone {active: true}]->(timezone:Property {active: true}),
+            (user)-[:bio {active: true}]->(bio:Property {active: true})
         RETURN
           total,
           user.id as id,
@@ -120,7 +123,10 @@ export class UserService {
           realFirstName.value as realFirstName,
           realLastName.value as realLastName,
           displayFirstName.value as displayFirstName,
-          displayLastName.value as displayLastName
+          displayLastName.value as displayLastName,
+          phone.value as phone,
+          timezone.value as timezone,
+          bio.value as bio
         ORDER BY ${sort} ${order}
         SKIP $skip
         LIMIT $count
@@ -165,19 +171,19 @@ export class UserService {
         canEdit: false,
       },
       phone: {
-        value: '', // TODO
-        canRead: true, // TODO
-        canEdit: false, // TODO
+        value: row.phone,
+        canRead: true,
+        canEdit: false,
       },
       timezone: {
-        value: '', // TODO
-        canRead: true, // TODO
-        canEdit: false, // TODO
+        value: row.timezone,
+        canRead: true,
+        canEdit: false,
       },
       bio: {
-        value: '', // TODO
-        canRead: true, // TODO
-        canEdit: false, // TODO
+        value: row.bio,
+        canRead: true,
+        canEdit: false,
       },
     }));
 
@@ -274,6 +280,21 @@ export class UserService {
             active: true,
             value: $displayLastName
           }),
+          (user)-[:phone {active: true, createdAt: datetime()}]->
+          (phone:Property {
+            active: true,
+            value: $phone
+          }),
+          (user)-[:timezone {active: true, createdAt: datetime()}]->
+          (timezone:Property {
+            active: true,
+            value: $timezone
+          }),
+          (user)-[:bio {active: true, createdAt: datetime()}]->
+          (bio:Property {
+            active: true,
+            value: $bio
+          }),
           (user)<-[:member]-
           (acl:ACL {
             canReadRealFirstName: true,
@@ -289,7 +310,13 @@ export class UserService {
             canReadEmail: true,
             canEditEmail: true,
             canReadEducation: true,
-            canEditEducation: true
+            canEditEducation: true,
+            canReadPhone: true,
+            canEditPhone: true,
+            canReadTimezone: true,
+            canEditTimezone: true,
+            canReadBio: true,
+            canEditBio: true
           })
           -[:toNode]->(user)
         RETURN
@@ -300,6 +327,9 @@ export class UserService {
           realLastName.value as realLastName,
           displayFirstName.value as displayFirstName,
           displayLastName.value as displayLastName,
+          phone.value as phone,
+          timezone.value as timezone,
+          bio.value as bio,
           acl.canReadRealFirstName as canReadRealFirstName,
           acl.canEditRealFirstName as canEditRealFirstName,
           acl.canReadRealLastName as canReadRealLastName,
@@ -311,7 +341,13 @@ export class UserService {
           acl.canReadPassword as canReadPassword,
           acl.canEditPassword as canEditPassword,
           acl.canReadEmail as canReadEmail,
-          acl.canEditEmail as canEditEmail
+          acl.canEditEmail as canEditEmail,
+          acl.canReadPhone as canReadPhone,
+          acl.canEditPhone as canEditPhone,
+          acl.canReadTimezone as canReadTimezone,
+          acl.canEditTimezone as canEditTimezone,
+          acl.canReadBio as canReadBio,
+          acl.canEditBio as canEditBio
         `,
         {
           id: generate(),
@@ -321,6 +357,9 @@ export class UserService {
           realLastName: input.realLastName,
           displayFirstName: input.displayFirstName,
           displayLastName: input.displayLastName,
+          phone: input.phone,
+          timezone: input.timezone,
+          bio: input.bio,
           pash,
         },
       )
@@ -358,19 +397,19 @@ export class UserService {
         canEdit: result.canEditDisplayLastName,
       },
       phone: {
-        value: '', // TODO
-        canRead: true, // TODO
-        canEdit: true, // TODO
+        value: result.phone,
+        canRead: result.canReadPhone,
+        canEdit: result.canEditPhone,
       },
       timezone: {
-        value: '', // TODO
-        canRead: true, // TODO
-        canEdit: true, // TODO
+        value: result.timezone,
+        canRead: result.canReadTimezone,
+        canEdit: result.canEditTimezone,
       },
       bio: {
-        value: '', // TODO
-        canRead: true, // TODO
-        canEdit: true, // TODO
+        value: result.bio,
+        canRead: result.canReadBio,
+        canEdit: result.canEditBio,
       },
     };
   }
@@ -401,6 +440,12 @@ export class UserService {
       WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl8:ACL {canEditDisplayFirstName: true})-[:toNode]->(user)
       WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl9:ACL {canReadDisplayLastName: true})-[:toNode]->(user)-[:displayLastName {active: true}]->(displayLastName:Property {active: true})
       WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl10:ACL {canEditDisplayLastName: true})-[:toNode]->(user)
+      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl11:ACL {canReadPhone: true})-[:toNode]->(user)-[:phone {active: true}]->(phone:Property {active: true})
+      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl12:ACL {canEditPhone: true})-[:toNode]->(user)
+      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl13:ACL {canReadTimezone: true})-[:toNode]->(user)-[:timezone {active: true}]->(timezone:Property {active: true})
+      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl14:ACL {canEditTimezone: true})-[:toNode]->(user)
+      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl15:ACL {canReadBio: true})-[:toNode]->(user)-[:bio {active: true}]->(bio:Property {active: true})
+      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl16:ACL {canEditBio: true})-[:toNode]->(user)
         RETURN
         user.id as id,
         user.createdAt as createdAt,
@@ -409,6 +454,9 @@ export class UserService {
         realLastName.value as realLastName,
         displayFirstName.value as displayFirstName,
         displayLastName.value as displayLastName,
+        phone.value as phone,
+        timezone.value as timezone,
+        bio.value as bio,
         acl1.canReadEmail as canReadEmail,
         acl2.canEditEmail as canEditEmail,
         acl3.canReadRealFirstName as canReadRealFirstName,
@@ -418,7 +466,13 @@ export class UserService {
         acl7.canReadDisplayFirstName as canReadDisplayFirstName,
         acl8.canEditDisplayFirstName as canEditDisplayFirstName,
         acl9.canReadDisplayLastName as canReadDisplayLastName,
-        acl10.canEditDisplayLastName as canEditDisplayLastName
+        acl10.canEditDisplayLastName as canEditDisplayLastName,
+        acl11.canReadPhone as canReadPhone,
+        acl12.canEditPhone as canEditPhone,
+        acl13.canReadTimezone as canReadTimezone,
+        acl14.canEditTimezone as canEditTimezone,
+        acl15.canReadBio as canReadBio,
+        acl16.canEditBio as canEditBio
         `,
         {
           token: session.token,
@@ -461,19 +515,19 @@ export class UserService {
         canEdit: result.canEditDisplayLastName,
       },
       phone: {
-        value: '', // TODO
-        canRead: true, // TODO
-        canEdit: true, // TODO
+        value: result.phone,
+        canRead: result.canReadPhone,
+        canEdit: result.canEditPhone,
       },
       timezone: {
-        value: '', // TODO
-        canRead: true, // TODO
-        canEdit: true, // TODO
+        value: result.timezone,
+        canRead: result.canReadTimezone,
+        canEdit: result.canEditTimezone,
       },
       bio: {
-        value: '', // TODO
-        canRead: true, // TODO
-        canEdit: true, // TODO
+        value: result.bio,
+        canRead: result.canReadBio,
+        canEdit: result.canEditBio,
       },
     };
   }
@@ -489,6 +543,9 @@ export class UserService {
         'realLastName',
         'displayFirstName',
         'displayLastName',
+        'phone',
+        'timezone',
+        'bio'
       ],
       changes: input,
       nodevar: 'user',
