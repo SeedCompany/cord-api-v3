@@ -4,14 +4,13 @@ import { Field, InputType, ObjectType } from 'type-graphql';
 import { PaginatedList, SortablePaginationInput } from '../../../common';
 import { User } from './user.dto';
 
-
 @InputType()
 export abstract class UserFilters {
   @Field({
-    description: 'Only users matching this email',
+    description: 'Only users matching this name',
     nullable: true,
   })
-  readonly email?: string;
+  readonly name?: string;
 }
 
 const defaultFilters = {};

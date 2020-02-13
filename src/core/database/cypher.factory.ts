@@ -2,11 +2,12 @@ import { FactoryProvider } from '@nestjs/common/interfaces';
 import { stripIndent } from 'common-tags';
 import { Connection } from 'cypher-query-builder';
 import Session from 'neo4j-driver/types/v1/session';
-import { ConfigService } from './config/config.service';
-import { MyTransformer } from './database-transformer';
-import { jestSkipFileInExceptionSource } from './jest-skip-source-file';
-import { ILogger, LoggerToken, LogLevel } from './logger';
-import './database/transaction'; // import our transaction augmentation
+import { ConfigService } from '..';
+import { MyTransformer } from './transformer';
+import { jestSkipFileInExceptionSource } from '../jest-skip-source-file';
+import { ILogger, LoggerToken, LogLevel } from '../logger';
+import './transaction'; // import our transaction augmentation
+import './query'; // import our query augmentation
 
 export const CypherFactory: FactoryProvider<Connection> = {
   provide: Connection,
