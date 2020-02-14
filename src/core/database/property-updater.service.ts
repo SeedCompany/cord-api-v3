@@ -281,14 +281,19 @@ export class PropertyUpdaterService {
     session,
     props,
     input,
+    baseNodeLabel,
     aclEditProp,
   }: {
     session: ISession;
     props: ReadonlyArray<keyof TObject>;
     input: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> };
+    baseNodeLabel: string;
     aclEditProp?: string;
   }): Promise<void> {
     const now = DateTime.local().toNeo4JDateTime();
+
+    const aclEditPropName =
+    aclEditProp || `canEdit${upperFirst(baseNodeLabel as string)}`;
     // const baseNode = await this.createBaseNode(
     //   session,
 
@@ -300,18 +305,20 @@ export class PropertyUpdaterService {
 
   async createBaseNode<TObject extends Resource>({
     session,
-    baseNode,
+    baseNodeLabel,
     props,
     input,
     aclEditProp,
   }: {
     session: ISession;
-    baseNode: TObject;
+    baseNodeLabel: string;
     props: ReadonlyArray<keyof TObject>;
     input: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> };
     aclEditProp?: string;
   }): Promise<void> {
     const now = DateTime.local().toNeo4JDateTime();
+    // tslint:disable-next-line: ban-types
+
     try {
       const result = await this.db
         .query()
@@ -329,7 +336,11 @@ export class PropertyUpdaterService {
               ${aclEditProp}: true
             })
           CREATE
-            (item:)
+            (item:${upperFirst(baseNodeLabel)} {
+              active: true,
+              createdAt: datetime(),
+              id: $id
+            })
         `,
           {},
         )

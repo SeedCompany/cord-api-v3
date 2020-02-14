@@ -24,83 +24,92 @@ export class UnavailabilityService {
     input: CreateUnavailability,
     session: ISession,
   ): Promise<Unavailability> {
-    const result = await this.db
-      .query()
-      .raw(
-        `
-      MATCH
-        (token:Token {
-          active: true,
-          value: $token
-        })
-        <-[:token {active: true}]-
-        (requestingUser:User {
-          active: true,
-          id: $requestingUserId,
-          canCreateUnavailability: true
-        }),
-        (targetUser:User {
-          active: true,
-          id: $targetUserId
-        })
-      CREATE
-        (targetUser)
-          -[:unavailability {active: true}]->
-        (unavailability:Unavailability {
-          id: $id,
-          active: true,
-          createdAt: datetime(),
-          owningOrgId: $owningOrgId
-        })
-        -[:description {active: true}]->
-        (description:description:Property {
-          active: true,
-          value: $description
-        }),
-        (unavailability)-[:start {active: true, createdAt: datetime()}]->
-        (start:Property {
-          active: true,
-          value: $start
-        }),
-        (unavailability)-[:end {active: true, createdAt: datetime()}]->
-        (end:Property {
-          active: true,
-          value: $end
-        }),
-        (requestingUser)
-          <-[:member]-
-          (acl:ACL {
-            canReadDescription: true,
-            canEditDescription: true,
-            canReadStart: true,
-            canEditStart: true,
-            canReadEnd: true,
-            canEditEnd: true
-          })-[:toNode]->(unavailability)
-      RETURN
-        unavailability.id as id,
-        description.value as description,
-        start.value as start,
-        end.value as end,
-        acl.canReadDescription as canReadDescription,
-        acl.canEditDescription as canEditDescription,
-        acl.canReadStart as canReadStart,
-        acl.canEditStart as canEditStart,
-        acl.canReadEnd as canReadEnd,
-        acl.canEditEnd as canEditEnd
-      `,
-        {
-          id: generate(),
-          requestingUserId: session.userId,
-          targetUserId: input.userId,
-          token: session.token,
-          description: input.description,
-          start: input.start.toISO(),
-          end: input.end.toISO(),
-          owningOrgId: session.owningOrgId,
-        },
-      )
-      .first();
+    // const result = await this.db
+    //   .query()
+    //   .raw(
+    //     `
+    //   MATCH
+    //     (token:Token {
+    //       active: true,
+    //       value: $token
+    //     })
+    //     <-[:token {active: true}]-
+    //     (requestingUser:User {
+    //       active: true,
+    //       id: $requestingUserId,
+    //       canCreateUnavailability: true
+    //     }),
+    //     (targetUser:User {
+    //       active: true,
+    //       id: $targetUserId
+    //     })
+    //   CREATE
+    //     (targetUser)
+    //       -[:unavailability {active: true}]->
+    //     (unavailability:Unavailability {
+    //       id: $id,
+    //       active: true,
+    //       createdAt: datetime(),
+    //       owningOrgId: $owningOrgId
+    //     })
+    //     -[:description {active: true}]->
+    //     (description:description:Property {
+    //       active: true,
+    //       value: $description
+    //     }),
+    //     (unavailability)-[:start {active: true, createdAt: datetime()}]->
+    //     (start:Property {
+    //       active: true,
+    //       value: $start
+    //     }),
+    //     (unavailability)-[:end {active: true, createdAt: datetime()}]->
+    //     (end:Property {
+    //       active: true,
+    //       value: $end
+    //     }),
+    //     (requestingUser)
+    //       <-[:member]-
+    //       (acl:ACL {
+    //         canReadDescription: true,
+    //         canEditDescription: true,
+    //         canReadStart: true,
+    //         canEditStart: true,
+    //         canReadEnd: true,
+    //         canEditEnd: true
+    //       })-[:toNode]->(unavailability)
+    //   RETURN
+    //     unavailability.id as id,
+    //     description.value as description,
+    //     start.value as start,
+    //     end.value as end,
+    //     acl.canReadDescription as canReadDescription,
+    //     acl.canEditDescription as canEditDescription,
+    //     acl.canReadStart as canReadStart,
+    //     acl.canEditStart as canEditStart,
+    //     acl.canReadEnd as canReadEnd,
+    //     acl.canEditEnd as canEditEnd
+    //   `,
+    //     {
+    //       id: generate(),
+    //       requestingUserId: session.userId,
+    //       targetUserId: input.userId,
+    //       token: session.token,
+    //       description: input.description,
+    //       start: input.start.toISO(),
+    //       end: input.end.toISO(),
+    //       owningOrgId: session.owningOrgId,
+    //     },
+    //   )
+    //   .first();
+    const id = generate();
+    const result = await this.propertyUpdater.createBaseNode({
+      session,
+      baseNodeLabel: 'Unavailability',
+      props: ['description', 'start', 'end'],
+      input: {id,
+        ...input},
+      aclEditProp: 'canEditUnavailability',
+    });
     if (!result) {
       this.logger.error(
         `Could not create unavailability for user ${input.userId}`,
