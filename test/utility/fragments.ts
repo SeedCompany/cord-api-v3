@@ -41,6 +41,21 @@ export const fragments = {
         canEdit
         canRead
       }
+      phone {
+        value
+        canEdit
+        canRead
+      }
+      timezone {
+        value
+        canEdit
+        canRead
+      }
+      bio {
+        value
+        canEdit
+        canRead
+      }
     }
   `,
   language: gql`
