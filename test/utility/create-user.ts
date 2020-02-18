@@ -16,6 +16,9 @@ export async function createUser(
     displayFirstName: faker.name.firstName(),
     displayLastName: faker.name.lastName(),
     password: faker.internet.password(),
+    phone: faker.phone.phoneNumber(),
+    timezone: 'timezone detail',
+    bio: 'bio detail',
     ...input,
   };
 
