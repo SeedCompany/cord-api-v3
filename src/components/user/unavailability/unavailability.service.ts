@@ -53,6 +53,22 @@ export class UnavailabilityService {
     );
     console.log(`unavailability for user ${input.userId} created, id ${id}`);
 
+    // connect the Unavailability to the User.
+
+    const query = `
+    MATCH (user: User {id: $userId, active: true}),
+      (unavailability:Unavailability {id: $id, active: true})
+    CREATE (user)-[:unavailability {active: true, createdAt: datetime()}]->(unavailability)
+    RETURN  unavailability.id as id
+    `;
+    const result = await this.db
+      .query()
+      .raw(query, {
+        userId: session.userId,
+        id,
+      })
+      .first();
+    console.log(result);
     return await this.readOne(id, session);
   }
 
