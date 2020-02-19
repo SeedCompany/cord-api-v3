@@ -2,8 +2,8 @@ import * as faker from 'faker';
 
 import {
   TestApp,
-  createTestApp,
   createSession,
+  createTestApp,
   createUnavailability,
   createUser,
 } from './utility';
@@ -29,7 +29,7 @@ describe('Unavailability e2e', () => {
     await app.close();
   });
 
-  it('create a unavailability', async () => {
+  it.only('create a unavailability', async () => {
     const unavailability = await createUnavailability(app, { userId: user.id });
     expect(unavailability.id).toBeDefined();
   });

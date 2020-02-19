@@ -11,6 +11,8 @@ import { DateTime } from 'luxon';
 import { ISession } from '../../components/auth';
 import { upperFirst } from 'lodash';
 import { convertToObject } from 'typescript';
+import { ObjectType } from 'type-graphql';
+import { ForbiddenError } from 'apollo-server-core';
 
 @Injectable()
 export class PropertyUpdaterService {
@@ -279,75 +281,161 @@ export class PropertyUpdaterService {
 
   async createNode<TObject extends Resource>({
     session,
-    props,
     input,
+    acls,
     baseNodeLabel,
     aclEditProp,
   }: {
     session: ISession;
-    props: ReadonlyArray<keyof TObject>;
     input: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> };
+    acls: Record<string, boolean>;
     baseNodeLabel: string;
     aclEditProp?: string;
   }): Promise<void> {
-    const now = DateTime.local().toNeo4JDateTime();
-
     const aclEditPropName =
-    aclEditProp || `canEdit${upperFirst(baseNodeLabel as string)}`;
-    // const baseNode = await this.createBaseNode(
-    //   session,
+      aclEditProp || `canEdit${upperFirst(baseNodeLabel as string)}`;
 
-    //   props,
-    //   input,
-    //   aclEditProp,
-    // );
+    await this.createBaseNode<TObject>({
+      session,
+      baseNodeLabel,
+      input,
+      acls,
+      aclEditProp: aclEditPropName,
+    });
+
+    const wait = [];
+    Object.keys(input).map(async key => {
+      if (key === 'id' || key === 'userId') {
+        return;
+      }
+      wait.push(
+        this.createProperty({
+          session,
+          key,
+          value: input[key],
+          id: input.id,
+        }),
+      );
+    });
+    await Promise.all(wait);
   }
 
   async createBaseNode<TObject extends Resource>({
     session,
     baseNodeLabel,
-    props,
     input,
+    acls,
     aclEditProp,
   }: {
     session: ISession;
     baseNodeLabel: string;
-    props: ReadonlyArray<keyof TObject>;
     input: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> };
+    acls: Record<string, boolean>;
     aclEditProp?: string;
   }): Promise<void> {
-    const now = DateTime.local().toNeo4JDateTime();
-    // tslint:disable-next-line: ban-types
-
+    const aclString = JSON.stringify(acls).replace(/\"/g, '');
+    const query = `
+        MATCH
+          (token:Token {
+            active: true,
+            value: "${session.token}"
+          })
+          <-[:token {active: true}]-
+          (requestingUser:User {
+            active: true,
+            id: "${session.userId}",
+            ${aclEditProp}: true
+          })
+        CREATE
+          (item:${upperFirst(baseNodeLabel)} {
+            active: true,
+            createdAt: datetime(),
+            id: "${input.id}",
+            owningOrg: "seedcompany"
+          })<-[:toNode]-(acl:ACL
+            ${aclString}
+          )-[:member]->(requestingUser)
+        RETURN item
+      `;
+    // console.log(query);
     try {
       const result = await this.db
         .query()
-        .raw(
-          `
-          MATCH
-            (token:Token {
-              active: true,
-              value: $token
-            })
-            <-[:token {active: true}]-
-            (requestingUser:User {
-              active: true,
-              id: $requestingUserId,
-              ${aclEditProp}: true
-            })
-          CREATE
-            (item:${upperFirst(baseNodeLabel)} {
-              active: true,
-              createdAt: datetime(),
-              id: $id
-            })
-        `,
-          {},
-        )
+        .raw(query, {
+          requestingUserId: session.userId,
+          token: session.token,
+          id: input.id,
+        })
         .run();
     } catch (e) {
-      this.logger.error(`create Node error`);
+      const ACLQuery = `MATCH
+      (token:Token {
+        active: true,
+        value: "${session.token}"
+      })
+      <-[:token {active: true}]-
+      (requestingUser:User {
+        active: true,
+        id: "${session.userId}"
+      })
+      RETURN requestingUser.${aclEditProp}
+      `;
+
+      const result = ((await this.db
+        .query()
+        .raw(ACLQuery, {})
+        .run()) as unknown) as { requestingUser: boolean } | null;
+      if (!result || !result.requestingUser) {
+        throw new ForbiddenError(`${aclEditProp} missing or false`);
+      }
+      this.logger.error(`${e} create Node error`);
       throw e;
     }
+  }
+
+  async createProperty({
+    session,
+    key,
+    value,
+    id,
+  }: {
+    session: ISession;
+    key: string;
+    value: string;
+    id: string;
+  }) {
+    const query = `
+      MATCH
+        (token:Token {
+          active: true,
+          value: $token
+        })
+        <-[:token {active: true}]-
+        (requestingUser:User {
+          active: true,
+          id: $requestingUserId
+        }),
+        (item {id: $id, active: true})
+      CREATE
+        (item)-[rel :${key} { active: true , createdAt: datetime()}]->
+           (${key}: Property {
+             active: true,
+             value: $value
+           })
+      RETURN
+        ${key}, rel
+      `;
+    console.log(query);
+    const result = await this.db
+      .query()
+      .raw(query, {
+        token: session.token,
+        requestingUserId: session.userId,
+        id,
+        key,
+        value,
+      })
+      .run();
+    console.log(result);
   }
 }
