@@ -7,17 +7,23 @@ import {
   OrganizationListOutput,
   UpdateOrganization,
 } from './dto';
-import { DatabaseService, ILogger, Logger } from '../../core';
+import {
+  DatabaseService,
+  ILogger,
+  Logger,
+  PropertyUpdaterService,
+} from '../../core';
 import { generate } from 'shortid';
 import { DateTime } from 'luxon';
-
+import { User } from '../user';
 
 @Injectable()
 export class OrganizationService {
   constructor(
     private readonly db: DatabaseService,
     @Logger('auth:service') private readonly logger: ILogger,
-    ) {}
+    private readonly propertyUpdater: PropertyUpdaterService,
+  ) {}
 
   async create(
     { name }: CreateOrganization,
@@ -132,58 +138,70 @@ export class OrganizationService {
     };
   }
 
+  // async update(input: UpdateOrganization,
+  //   { token }: ISession,
+  // ): Promise<Organization> {
+  //   const result = await this.db
+  //     .query()
+  //     .raw(
+  //       `
+  //       MATCH
+  //         (token:Token {active: true, value: $token})
+  //         <-[:token {active: true}]-
+  //         (user:User {
+  //           canCreateOrg: true
+  //         }),
+  //         (org:Organization {
+  //           active: true,
+  //           id: $id
+  //         })
+  //         -[:name {active: true}]->
+  //         (name:OrgName {active: true})
+  //       SET
+  //         name.value = $name
+  //       RETURN
+  //         org.id as id,
+  //         org.createdAt as createdAt,
+  //         name.value as name,
+  //         user.canCreateOrg as canCreateOrg,
+  //         user.canReadOrgs as canReadOrgs
+  //       `,
+  //       {
+  //         id: input.id,
+  //         name: input.name,
+  //         token,
+  //       },
+  //     )
+  //     .first();
+
+  //   if (!result) {
+  //     throw new NotFoundException('Could not find organization');
+  //   }
+
+  //   return {
+  //     id: result.id,
+  //     name: {
+  //       value: result.name,
+  //       canRead: result.canReadOrgs,
+  //       canEdit: result.canCreateOrg,
+  //     },
+  //     createdAt: result.createdAt,
+  //   };
+  // }
+
   async update(
     input: UpdateOrganization,
-    { token }: ISession,
+    session: ISession,
   ): Promise<Organization> {
-    const result = await this.db
-      .query()
-      .raw(
-        `
-        MATCH
-          (token:Token {active: true, value: $token})
-          <-[:token {active: true}]-
-          (user:User {
-            canCreateOrg: true
-          }),
-          (org:Organization {
-            active: true,
-            id: $id
-          })
-          -[:name {active: true}]->
-          (name:OrgName {active: true})
-        SET
-          name.value = $name
-        RETURN
-          org.id as id,
-          org.createdAt as createdAt,
-          name.value as name,
-          user.canCreateOrg as canCreateOrg,
-          user.canReadOrgs as canReadOrgs
-        `,
-        {
-          id: input.id,
-          name: input.name,
-          token,
-        },
-      )
-      .first();
-
-    if (!result) {
-      throw new NotFoundException('Could not find organization');
-    }
-
-    return {
-      id: result.id,
-      name: {
-        value: result.name,
-        canRead: result.canReadOrgs,
-        canEdit: result.canCreateOrg,
-      },
-      createdAt: result.createdAt,
-    };
+    const organization = await this.readOne(input.id, session);
+    return this.propertyUpdater.updateProperties({
+      session,
+      object: organization,
+      props: ['name'],
+      changes: input,
+      nodevar: 'org',
+    });
   }
-
   async delete(id: string, { token }: ISession): Promise<void> {
     const result = await this.db
       .query()
