@@ -29,7 +29,7 @@ describe('Unavailability e2e', () => {
     await app.close();
   });
 
-  it.only('create a unavailability', async () => {
+  it('create a unavailability', async () => {
     const unavailability = await createUnavailability(app, { userId: user.id });
     expect(unavailability.id).toBeDefined();
   });

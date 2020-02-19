@@ -357,7 +357,7 @@ export class PropertyUpdaterService {
           )-[:member]->(requestingUser)
         RETURN item
       `;
-    // console.log(query);
+
     try {
       const result = await this.db
         .query()
@@ -420,22 +420,25 @@ export class PropertyUpdaterService {
         (item)-[rel :${key} { active: true , createdAt: datetime()}]->
            (${key}: Property {
              active: true,
-             value: $value
+             value: "${value}"
            })
       RETURN
-        ${key}, rel
+        ${key}.value, rel
       `;
-    console.log(query);
-    const result = await this.db
-      .query()
-      .raw(query, {
-        token: session.token,
-        requestingUserId: session.userId,
-        id,
-        key,
-        value,
-      })
-      .run();
-    console.log(result);
+
+    try {
+      const result = await this.db
+        .query()
+        .raw(query, {
+          token: session.token,
+          requestingUserId: session.userId,
+          id,
+          key,
+          value,
+        })
+        .run();
+    } catch (e) {
+      console.log(e);
+    }
   }
 }
