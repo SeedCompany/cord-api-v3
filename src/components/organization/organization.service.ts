@@ -45,7 +45,8 @@ export class OrganizationService {
           })
         MERGE
           (org:Organization {
-            active: true
+            active: true,
+            owningOrgId: "Seed Company"
           })-[nameRel:name {active: true}]->
           (name:OrgName:Property {
             active: true,
@@ -99,7 +100,8 @@ export class OrganizationService {
           }),
           (org:Organization {
             active: true,
-            id: $id
+            id: $id,
+            owningOrgId: "Seed Company"
           })
           -[:name {active: true}]->
           (name:OrgName {active: true})
@@ -199,7 +201,7 @@ export class OrganizationService {
       object: organization,
       props: ['name'],
       changes: input,
-      nodevar: 'org',
+      nodevar: 'organization',
     });
   }
   async delete(id: string, { token }: ISession): Promise<void> {

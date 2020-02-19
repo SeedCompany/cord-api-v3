@@ -117,6 +117,8 @@ export class PropertyUpdaterService {
       ])
       .return('newPropNode')
       .first();
+      
+
 
     if (!result) {
       throw new NotFoundException('Could not find object');
