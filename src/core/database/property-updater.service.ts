@@ -351,7 +351,7 @@ export class PropertyUpdaterService {
             active: true,
             createdAt: datetime(),
             id: "${input.id}",
-            owningOrg: "seedcompany"
+            owningOrg: "${session.owningOrgId}"
           })<-[:toNode]-(acl:ACL
             ${aclString}
           )-[:member]->(requestingUser)
