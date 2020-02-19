@@ -2,8 +2,8 @@ import * as faker from 'faker';
 
 import {
   TestApp,
-  createTestApp,
   createSession,
+  createTestApp,
   createUnavailability,
   createUser,
 } from './utility';
