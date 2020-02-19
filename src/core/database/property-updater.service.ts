@@ -200,7 +200,7 @@ export class PropertyUpdaterService {
       // .setValues({ 'item.active': false })
       // .return({ id: object.id })
       // .first();
-      console.log(JSON.stringify(result));
+      // console.log(JSON.stringify(result));
     } catch (e) {
       throw e;
     }

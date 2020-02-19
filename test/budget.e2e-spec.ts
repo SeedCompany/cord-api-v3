@@ -31,7 +31,7 @@ async function createBudget(
 describe.skip('Budget e2e', () => {
   let app: TestApp;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     app = await createTestApp();
   });
 
