@@ -220,200 +220,247 @@ export class UserService {
     };
   }
 
+  // **** TODO : Remove the commented code later once it verified *****
+  // async create(input: CreateUser, session: ISession): Promise<User> {
+  //   const pash = await argon2.hash(input.password);
+  //   /** CREATE USER
+  //    * get the token, then create the user with minimum properties
+  //    * create an ACL node and ensure the user can edit their own properties
+  //    */
+  //   const result = await this.db
+  //     .query()
+  //     .raw(
+  //       `
+  //       MATCH (token:Token {active: true, value: $token})
+  //       CREATE
+  //         (user:User {
+  //           id: $id,
+  //           active: true,
+  //           createdAt: datetime(),
+  //           createdByUserId: "system",
+  //           canCreateOrg: true,
+  //           canReadOrgs: true,
+  //           canReadUsers: true,
+  //           canCreateLang: true,
+  //           canReadLangs: true,
+  //           canCreateUnavailability: true,
+  //           canReadUnavailability: true,
+  //           canDeleteOwnUser: true,
+  //           owningOrgId: "Seed Company",
+  //           isAdmin: true
+  //         })
+  //         -[:email {active: true, createdAt: datetime()}]->
+  //         (email:EmailAddress:Property {
+  //           active: true,
+  //           value: $email,
+  //           createdAt: datetime()
+  //         }),
+  //         (user)-[:token {active: true, createdAt: datetime()}]->(token),
+  //         (user)-[:password {active: true, createdAt: datetime()}]->
+  //         (password:Property {
+  //           active: true,
+  //           value: $pash
+  //         }),
+  //         (user)-[:realFirstName {active: true, createdAt: datetime()}]->
+  //         (realFirstName:Property {
+  //           active: true,
+  //           value: $realFirstName
+  //         }),
+  //         (user)-[:realLastName {active: true, createdAt: datetime()}]->
+  //         (realLastName:Property {
+  //           active: true,
+  //           value: $realLastName
+  //         }),
+  //         (user)-[:displayFirstName {active: true, createdAt: datetime()}]->
+  //         (displayFirstName:Property {
+  //           active: true,
+  //           value: $displayFirstName
+  //         }),
+  //         (user)-[:displayLastName {active: true, createdAt: datetime()}]->
+  //         (displayLastName:Property {
+  //           active: true,
+  //           value: $displayLastName
+  //         }),
+  //         (user)-[:phone {active: true, createdAt: datetime()}]->
+  //         (phone:Property {
+  //           active: true,
+  //           value: $phone
+  //         }),
+  //         (user)-[:timezone {active: true, createdAt: datetime()}]->
+  //         (timezone:Property {
+  //           active: true,
+  //           value: $timezone
+  //         }),
+  //         (user)-[:bio {active: true, createdAt: datetime()}]->
+  //         (bio:Property {
+  //           active: true,
+  //           value: $bio
+  //         }),
+  //         (user)<-[:member]-
+  //         (acl:ACL {
+  //           canReadRealFirstName: true,
+  //           canEditRealFirstName: true,
+  //           canReadRealLastName: true,
+  //           canEditRealLastName: true,
+  //           canReadDisplayFirstName: true,
+  //           canEditDisplayFirstName: true,
+  //           canReadDisplayLastName: true,
+  //           canEditDisplayLastName: true,
+  //           canReadPassword: true,
+  //           canEditPassword: true,
+  //           canReadEmail: true,
+  //           canEditEmail: true,
+  //           canReadEducation: true,
+  //           canEditEducation: true,
+  //           canReadPhone: true,
+  //           canEditPhone: true,
+  //           canReadTimezone: true,
+  //           canEditTimezone: true,
+  //           canReadBio: true,
+  //           canEditBio: true
+  //         })
+  //         -[:toNode]->(user)
+  //       RETURN
+  //         user.id as id,
+  //         email.value as email,
+  //         user.createdAt as createdAt,
+  //         realFirstName.value as realFirstName,
+  //         realLastName.value as realLastName,
+  //         displayFirstName.value as displayFirstName,
+  //         displayLastName.value as displayLastName,
+  //         phone.value as phone,
+  //         timezone.value as timezone,
+  //         bio.value as bio,
+  //         acl.canReadRealFirstName as canReadRealFirstName,
+  //         acl.canEditRealFirstName as canEditRealFirstName,
+  //         acl.canReadRealLastName as canReadRealLastName,
+  //         acl.canEditRealLastName as canEditRealLastName,
+  //         acl.canReadDisplayFirstName as canReadDisplayFirstName,
+  //         acl.canEditDisplayFirstName as canEditDisplayFirstName,
+  //         acl.canReadDisplayLastName as canReadDisplayLastName,
+  //         acl.canEditDisplayLastName as canEditDisplayLastName,
+  //         acl.canReadPassword as canReadPassword,
+  //         acl.canEditPassword as canEditPassword,
+  //         acl.canReadEmail as canReadEmail,
+  //         acl.canEditEmail as canEditEmail,
+  //         acl.canReadPhone as canReadPhone,
+  //         acl.canEditPhone as canEditPhone,
+  //         acl.canReadTimezone as canReadTimezone,
+  //         acl.canEditTimezone as canEditTimezone,
+  //         acl.canReadBio as canReadBio,
+  //         acl.canEditBio as canEditBio
+  //       `,
+  //       {
+  //         id: generate(),
+  //         token: session.token,
+  //         email: input.email,
+  //         realFirstName: input.realFirstName,
+  //         realLastName: input.realLastName,
+  //         displayFirstName: input.displayFirstName,
+  //         displayLastName: input.displayLastName,
+  //         phone: input.phone,
+  //         timezone: input.timezone,
+  //         bio: input.bio,
+  //         pash,
+  //       },
+  //     )
+  //     .first();
+  //   if (!result) {
+  //     throw new Error('Could not create user');
+  //   }
+
+  //   return {
+  //     id: result.id,
+  //     createdAt: result.createdAt,
+  //     email: {
+  //       value: result.email,
+  //       canRead: result.canReadEmail,
+  //       canEdit: result.canEditEmail,
+  //     },
+  //     realFirstName: {
+  //       value: result.realFirstName,
+  //       canRead: result.canReadRealFirstName,
+  //       canEdit: result.canEditRealFirstName,
+  //     },
+  //     realLastName: {
+  //       value: result.realLastName,
+  //       canRead: result.canReadRealLastName,
+  //       canEdit: result.canEditRealLastName,
+  //     },
+  //     displayFirstName: {
+  //       value: result.displayLastName,
+  //       canRead: result.canReadDisplayFirstName,
+  //       canEdit: result.canEditDisplayFirstName,
+  //     },
+  //     displayLastName: {
+  //       value: result.displayLastName,
+  //       canRead: result.canReadDisplayLastName,
+  //       canEdit: result.canEditDisplayLastName,
+  //     },
+  //     phone: {
+  //       value: result.phone,
+  //       canRead: result.canReadPhone,
+  //       canEdit: result.canEditPhone,
+  //     },
+  //     timezone: {
+  //       value: result.timezone,
+  //       canRead: result.canReadTimezone,
+  //       canEdit: result.canEditTimezone,
+  //     },
+  //     bio: {
+  //       value: result.bio,
+  //       canRead: result.canReadBio,
+  //       canEdit: result.canEditBio,
+  //     },
+  //   };
+  // }
+
   async create(input: CreateUser, session: ISession): Promise<User> {
-    const pash = await argon2.hash(input.password);
     /** CREATE USER
      * get the token, then create the user with minimum properties
      * create an ACL node and ensure the user can edit their own properties
      */
-    const result = await this.db
-      .query()
-      .raw(
-        `
-        MATCH (token:Token {active: true, value: $token})
-        CREATE
-          (user:User {
-            id: $id,
-            active: true,
-            createdAt: datetime(),
-            createdByUserId: "system",
-            canCreateOrg: true,
-            canReadOrgs: true,
-            canReadUsers: true,
-            canCreateLang: true,
-            canReadLangs: true,
-            canCreateUnavailability: true,
-            canReadUnavailability: true,
-            canDeleteOwnUser: true,
-            owningOrgId: "Seed Company",
-            isAdmin: true
-          })
-          -[:email {active: true, createdAt: datetime()}]->
-          (email:EmailAddress:Property {
-            active: true,
-            value: $email,
-            createdAt: datetime()
-          }),
-          (user)-[:token {active: true, createdAt: datetime()}]->(token),
-          (user)-[:password {active: true, createdAt: datetime()}]->
-          (password:Property {
-            active: true,
-            value: $pash
-          }),
-          (user)-[:realFirstName {active: true, createdAt: datetime()}]->
-          (realFirstName:Property {
-            active: true,
-            value: $realFirstName
-          }),
-          (user)-[:realLastName {active: true, createdAt: datetime()}]->
-          (realLastName:Property {
-            active: true,
-            value: $realLastName
-          }),
-          (user)-[:displayFirstName {active: true, createdAt: datetime()}]->
-          (displayFirstName:Property {
-            active: true,
-            value: $displayFirstName
-          }),
-          (user)-[:displayLastName {active: true, createdAt: datetime()}]->
-          (displayLastName:Property {
-            active: true,
-            value: $displayLastName
-          }),
-          (user)-[:phone {active: true, createdAt: datetime()}]->
-          (phone:Property {
-            active: true,
-            value: $phone
-          }),
-          (user)-[:timezone {active: true, createdAt: datetime()}]->
-          (timezone:Property {
-            active: true,
-            value: $timezone
-          }),
-          (user)-[:bio {active: true, createdAt: datetime()}]->
-          (bio:Property {
-            active: true,
-            value: $bio
-          }),
-          (user)<-[:member]-
-          (acl:ACL {
-            canReadRealFirstName: true,
-            canEditRealFirstName: true,
-            canReadRealLastName: true,
-            canEditRealLastName: true,
-            canReadDisplayFirstName: true,
-            canEditDisplayFirstName: true,
-            canReadDisplayLastName: true,
-            canEditDisplayLastName: true,
-            canReadPassword: true,
-            canEditPassword: true,
-            canReadEmail: true,
-            canEditEmail: true,
-            canReadEducation: true,
-            canEditEducation: true,
-            canReadPhone: true,
-            canEditPhone: true,
-            canReadTimezone: true,
-            canEditTimezone: true,
-            canReadBio: true,
-            canEditBio: true
-          })
-          -[:toNode]->(user)
-        RETURN
-          user.id as id,
-          email.value as email,
-          user.createdAt as createdAt,
-          realFirstName.value as realFirstName,
-          realLastName.value as realLastName,
-          displayFirstName.value as displayFirstName,
-          displayLastName.value as displayLastName,
-          phone.value as phone,
-          timezone.value as timezone,
-          bio.value as bio,
-          acl.canReadRealFirstName as canReadRealFirstName,
-          acl.canEditRealFirstName as canEditRealFirstName,
-          acl.canReadRealLastName as canReadRealLastName,
-          acl.canEditRealLastName as canEditRealLastName,
-          acl.canReadDisplayFirstName as canReadDisplayFirstName,
-          acl.canEditDisplayFirstName as canEditDisplayFirstName,
-          acl.canReadDisplayLastName as canReadDisplayLastName,
-          acl.canEditDisplayLastName as canEditDisplayLastName,
-          acl.canReadPassword as canReadPassword,
-          acl.canEditPassword as canEditPassword,
-          acl.canReadEmail as canReadEmail,
-          acl.canEditEmail as canEditEmail,
-          acl.canReadPhone as canReadPhone,
-          acl.canEditPhone as canEditPhone,
-          acl.canReadTimezone as canReadTimezone,
-          acl.canEditTimezone as canEditTimezone,
-          acl.canReadBio as canReadBio,
-          acl.canEditBio as canEditBio
-        `,
-        {
-          id: generate(),
-          token: session.token,
-          email: input.email,
-          realFirstName: input.realFirstName,
-          realLastName: input.realLastName,
-          displayFirstName: input.displayFirstName,
-          displayLastName: input.displayLastName,
-          phone: input.phone,
-          timezone: input.timezone,
-          bio: input.bio,
-          pash,
-        },
-      )
-      .first();
-    if (!result) {
+    const pash = await argon2.hash(input.password);
+    const id = generate();
+    const acls = {
+      canReadRealFirstName: true,
+      canEditRealFirstName: true,
+      canReadRealLastName: true,
+      canEditRealLastName: true,
+      canReadDisplayFirstName: true,
+      canEditDisplayFirstName: true,
+      canReadDisplayLastName: true,
+      canEditDisplayLastName: true,
+      canReadPassword: true,
+      canEditPassword: true,
+      canReadEmail: true,
+      canEditEmail: true,
+      canReadEducation: true,
+      canEditEducation: true,
+      canReadPhone: true,
+      canEditPhone: true,
+      canReadTimezone: true,
+      canEditTimezone: true,
+      canReadBio: true,
+      canEditBio: true
+    };
+    try {
+      await this.propertyUpdater.createNode({
+        session,
+        input: { id, ...input },
+        acls,
+        baseNodeLabel: 'User',
+        aclEditProp: 'canCreateUser',
+      });
+
+      return await this.readOne(id, session);
+    } catch (e) {
+      console.log(e);
+      this.logger.error(`Could not create user`);
       throw new Error('Could not create user');
     }
-
-    return {
-      id: result.id,
-      createdAt: result.createdAt,
-      email: {
-        value: result.email,
-        canRead: result.canReadEmail,
-        canEdit: result.canEditEmail,
-      },
-      realFirstName: {
-        value: result.realFirstName,
-        canRead: result.canReadRealFirstName,
-        canEdit: result.canEditRealFirstName,
-      },
-      realLastName: {
-        value: result.realLastName,
-        canRead: result.canReadRealLastName,
-        canEdit: result.canEditRealLastName,
-      },
-      displayFirstName: {
-        value: result.displayLastName,
-        canRead: result.canReadDisplayFirstName,
-        canEdit: result.canEditDisplayFirstName,
-      },
-      displayLastName: {
-        value: result.displayLastName,
-        canRead: result.canReadDisplayLastName,
-        canEdit: result.canEditDisplayLastName,
-      },
-      phone: {
-        value: result.phone,
-        canRead: result.canReadPhone,
-        canEdit: result.canEditPhone,
-      },
-      timezone: {
-        value: result.timezone,
-        canRead: result.canReadTimezone,
-        canEdit: result.canEditTimezone,
-      },
-      bio: {
-        value: result.bio,
-        canRead: result.canReadBio,
-        canEdit: result.canEditBio,
-      },
-    };
   }
-
+  
   async readOne(id: string, session: ISession): Promise<User> {
     const result = await this.db
       .query()
