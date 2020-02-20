@@ -28,6 +28,45 @@ export class LanguageService {
       `Mutation create Language: ${input.name} by ${session.userId}`,
     );
 
+    // TODO: the commented block works almost perfectly but for some reason the `name` field is not getting populated
+    /*
+    const id = generate();
+    const acls = {
+      canReadName: true,
+      canEditName: true,
+      canReadDisplayName: true,
+      canEditDisplayName: true,
+      canReadBeginFiscalYear: true,
+      canEditBeginFiscalYear: true,
+      canReadEthnologueName: true,
+      canEditEthnologueName: true,
+      canReadEthnologuePopulation: true,
+      canEditEthnologuePopulation: true,
+      canReadOrganizationPopulation: true,
+      canEditOrganizationPopulation: true,
+      canReadRodNumber: true,
+      canEditRodNumber: true,
+    };
+
+    try {
+      await this.propertyUpdater.createNode({
+        session,
+        input: { id, ...input },
+        acls,
+        baseNodeLabel: 'Language',
+        aclEditProp: 'canCreateLang'
+      });
+
+      const result = await this.readOne(id, session);
+
+      return result;
+    } catch (e) {
+      console.log(e);
+      this.logger.error(`Could not create language`);
+      throw new Error('Could not create language');
+    }
+    */
+
     const result = await this.db
       .query()
       .raw(
@@ -307,34 +346,21 @@ export class LanguageService {
 
   async delete(id: string, session: ISession): Promise<void> {
     this.logger.info(`mutation delete language: ${id} by ${session.userId}`);
-    const result = await this.db
-      .query()
-      .raw(
-        `
-        MATCH
-          (token:Token {active: true, value: $token})
-          <-[:token {active: true}]-
-          (user:User {
-            canCreateLang: true
-          }),
-          (lang:Language {
-            active: true,
-            id: $id
-          })
-        SET
-          lang.active = false
-        RETURN
-          lang.id as id
-        `,
-        {
-          id,
-          token: session.token,
-        },
-      )
-      .first();
+    const object = await this.readOne(id, session);
 
-    if (!result) {
-      throw new NotFoundException('Could not find language');
+    if (!object) {
+      throw new NotFoundException('Could not find language')
+    }
+
+    try {
+      await this.propertyUpdater.deleteNode({
+        session,
+        object,
+        aclEditProp: 'canDeleteOwnUser'
+      });
+    } catch (e) {
+      console.log(e);
+      throw e;
     }
   }
 
