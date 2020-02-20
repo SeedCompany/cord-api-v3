@@ -17,7 +17,7 @@ import { times } from 'lodash';
 describe('Language e2e', () => {
   let app: TestApp;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
     await createUser(app);
@@ -56,6 +56,7 @@ describe('Language e2e', () => {
     } catch (e) {
       console.log(`language id is ${language.id}`);
       console.error(e);
+      fail();
     }
   });
 
@@ -121,6 +122,7 @@ describe('Language e2e', () => {
         },
       );
     } catch (e) {
+      // we expect this to throw. the language should have been deleted, therefor a subsequent read should fail
       expect(e.response.statusCode).toBe(404);
     }
     // expect(actual.id).toBe(language.id);

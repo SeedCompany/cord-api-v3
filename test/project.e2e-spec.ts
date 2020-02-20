@@ -32,7 +32,7 @@ async function createProject(
 describe.skip('Project e2e', () => {
   let app: TestApp;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     app = await createTestApp();
   });
 

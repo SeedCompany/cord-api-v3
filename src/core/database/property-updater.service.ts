@@ -6,14 +6,20 @@ import {
   isSecured,
   unwrapSecured,
 } from '../../common';
-
+import { ILogger, Logger } from '../../core';
 import { DateTime } from 'luxon';
 import { ISession } from '../../components/auth';
 import { upperFirst } from 'lodash';
+import { convertToObject } from 'typescript';
+import { ObjectType } from 'type-graphql';
+import { ForbiddenError } from 'apollo-server-core';
 
 @Injectable()
 export class PropertyUpdaterService {
-  constructor(private readonly db: Connection) {}
+  constructor(
+    private readonly db: Connection,
+    @Logger('EducationService:service') private readonly logger: ILogger,
+  ) {}
 
   async updateProperties<TObject extends Resource>({
     session,
@@ -117,6 +123,8 @@ export class PropertyUpdaterService {
       ])
       .return('newPropNode')
       .first();
+      
+
 
     if (!result) {
       throw new NotFoundException('Could not find object');
@@ -178,30 +186,10 @@ export class PropertyUpdaterService {
           },
         )
         .run();
-
-      // .match([
-      //   node('token', 'Token', {
-      //     active: true,
-      //     value: session.token,
-      //   }),
-      //   relation('in', '', 'token', {
-      //     active: true,
-      //   }),
-      //   node('requestingUser', 'User', {
-      //     active: true,
-      //     id: session.userId,
-      //     [aclEditProp]: true,
-      //   }),
-      // ])
-      // .with('*')
-      // .match([node('item', '', { active: true, id: object.id })])
-      // .setValues({ 'item.active': false })
-      // .return({ id: object.id })
-      // .first();
-      console.log(JSON.stringify(result));
     } catch (e) {
       throw e;
     }
+    this.logger.info(``);
   }
 
   async deleteProperties<TObject extends Resource>({
@@ -288,6 +276,169 @@ export class PropertyUpdaterService {
 
     if (!result) {
       throw new NotFoundException('Could not find object');
+    }
+  }
+
+  async createNode<TObject extends Resource>({
+    session,
+    input,
+    acls,
+    baseNodeLabel,
+    aclEditProp,
+  }: {
+    session: ISession;
+    input: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> };
+    acls: Record<string, boolean>;
+    baseNodeLabel: string;
+    aclEditProp?: string;
+  }): Promise<void> {
+    const aclEditPropName =
+      aclEditProp || `canEdit${upperFirst(baseNodeLabel as string)}`;
+
+    await this.createBaseNode<TObject>({
+      session,
+      baseNodeLabel,
+      input,
+      acls,
+      aclEditProp: aclEditPropName,
+    });
+
+    const wait = [];
+    Object.keys(input).map(async key => {
+      if (key === 'id' || key === 'userId') {
+        return;
+      }
+      wait.push(
+        this.createProperty({
+          session,
+          key,
+          value: input[key],
+          id: input.id,
+        }),
+      );
+    });
+    await Promise.all(wait);
+  }
+
+  async createBaseNode<TObject extends Resource>({
+    session,
+    baseNodeLabel,
+    input,
+    acls,
+    aclEditProp,
+  }: {
+    session: ISession;
+    baseNodeLabel: string;
+    input: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> };
+    acls: Record<string, boolean>;
+    aclEditProp?: string;
+  }): Promise<void> {
+    const aclString = JSON.stringify(acls).replace(/\"/g, '');
+    const query = `
+        MATCH
+          (token:Token {
+            active: true,
+            value: "${session.token}"
+          })
+          <-[:token {active: true}]-
+          (requestingUser:User {
+            active: true,
+            id: "${session.userId}",
+            ${aclEditProp}: true
+          })
+        CREATE
+          (item:${upperFirst(baseNodeLabel)} {
+            active: true,
+            createdAt: datetime(),
+            id: "${input.id}",
+            owningOrg: "${session.owningOrgId}"
+          })<-[:toNode]-(acl:ACL
+            ${aclString}
+          )-[:member]->(requestingUser)
+        RETURN item
+      `;
+
+    try {
+      const result = await this.db
+        .query()
+        .raw(query, {
+          requestingUserId: session.userId,
+          token: session.token,
+          id: input.id,
+        })
+        .run();
+    } catch (e) {
+      const ACLQuery = `MATCH
+      (token:Token {
+        active: true,
+        value: "${session.token}"
+      })
+      <-[:token {active: true}]-
+      (requestingUser:User {
+        active: true,
+        id: "${session.userId}"
+      })
+      RETURN requestingUser.${aclEditProp}
+      `;
+
+      const result = ((await this.db
+        .query()
+        .raw(ACLQuery, {})
+        .run()) as unknown) as { requestingUser: boolean } | null;
+      if (!result || !result.requestingUser) {
+        throw new ForbiddenError(`${aclEditProp} missing or false`);
+      }
+      this.logger.error(`${e} create Node error`);
+      throw e;
+    }
+  }
+
+  async createProperty({
+    session,
+    key,
+    value,
+    id,
+  }: {
+    session: ISession;
+    key: string;
+    value: string;
+    id: string;
+  }) {
+    const query = `
+      MATCH
+        (token:Token {
+          active: true,
+          value: $token
+        })
+        <-[:token {active: true}]-
+        (requestingUser:User {
+          active: true,
+          id: $requestingUserId
+        }),
+        (item {id: $id, active: true})
+      CREATE
+        (item)-[rel :${key} { active: true , createdAt: datetime()}]->
+           (${key}: Property {
+             active: true,
+             value: "${value}"
+           })
+      RETURN
+        ${key}.value, rel
+      `;
+
+    try {
+      const result = await this.db
+        .query()
+        .raw(query, {
+          token: session.token,
+          requestingUserId: session.userId,
+          id,
+          key,
+          value,
+        })
+        .run();
+    } catch (e) {
+      console.log(e);
     }
   }
 }

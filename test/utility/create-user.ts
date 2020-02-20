@@ -10,7 +10,7 @@ export async function createUser(
   input: Partial<CreateUser> = {},
 ) {
   const user: CreateUser = {
-    email: faker.internet.email(),
+    email: faker.internet.email() + ' ' + Date.now(),
     realFirstName: faker.name.firstName(),
     realLastName: faker.name.lastName(),
     displayFirstName: faker.name.firstName(),
@@ -45,6 +45,6 @@ export async function createUser(
 
   expect(isValid(actual.id)).toBe(true);
   expect(actual.email.value).toBe(user.email);
-  
+
   return actual;
 }

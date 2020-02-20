@@ -2,8 +2,8 @@ import * as faker from 'faker';
 
 import {
   TestApp,
-  createTestApp,
   createSession,
+  createTestApp,
   createUnavailability,
   createUser,
 } from './utility';
@@ -19,7 +19,7 @@ describe('Unavailability e2e', () => {
   let app: TestApp;
   let user: User;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
     user = await createUser(app);
@@ -57,6 +57,7 @@ describe('Unavailability e2e', () => {
       expect(actual.description).toEqual(unavailability.description);
     } catch (e) {
       console.error(e);
+      fail();
     }
   });
 
@@ -110,6 +111,7 @@ describe('Unavailability e2e', () => {
       expect(actual).toBeTruthy();
     } catch (e) {
       console.log(e);
+      fail();
     }
   });
 
