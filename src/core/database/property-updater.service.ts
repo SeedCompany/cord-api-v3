@@ -124,8 +124,6 @@ export class PropertyUpdaterService {
       ])
       .return('newPropNode')
       .first();
-      
-
 
     if (!result) {
       throw new NotFoundException('Could not find object');
@@ -135,36 +133,51 @@ export class PropertyUpdaterService {
       ...object,
       ...(isSecured(object[key])
         ? // replace value in secured object keeping can* properties
-        {
-          [key]: {
-            ...object[key],
-            value,
-          },
-        }
+          {
+            [key]: {
+              ...object[key],
+              value,
+            },
+          }
         : // replace value directly
-        { [key]: value }),
+          { [key]: value }),
     };
   }
 
-  async readProperties<TObject extends User>({
-    id, session, props, nodevar
-  }: { id: string, session: ISession, props: ReadonlyArray<keyof TObject>, nodevar: string }) {
-    let result: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> } = {};
+  async readProperties<TObject extends Resource>({
+    id,
+    session,
+    props,
+    nodevar,
+  }: {
+    id: string;
+    session: ISession;
+    props: ReadonlyArray<keyof TObject>;
+    nodevar: string;
+  }) {
+    const result: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> } = {};
     for (const prop of props) {
       const key = prop as string;
-      result[key] = await this.readProperty({ id, session, key, nodevar })
+      result[key] = await this.readProperty({ id, session, key, nodevar });
     }
-    return result
+    return result;
   }
 
-  async readProperty<TObject extends User, Key extends keyof TObject>({ id, session, key, nodevar, aclReadProp }: {
-    id: string,
-    session: ISession,
-    key: string,
-    nodevar: string,
-    aclReadProp?: string
-  }): Promise<{ value: string, canEdit?: boolean, canRead?: boolean }> {
-    const aclReadPropName = aclReadProp || `canRead${upperFirst(key as string)}`;
+  async readProperty<TObject extends Resource, Key extends keyof TObject>({
+    id,
+    session,
+    key,
+    nodevar,
+    aclReadProp,
+  }: {
+    id: string;
+    session: ISession;
+    key: string;
+    nodevar: string;
+    aclReadProp?: string;
+  }): Promise<{ value: string; canEdit?: boolean; canRead?: boolean }> {
+    const aclReadPropName =
+      aclReadProp || `canRead${upperFirst(key as string)}`;
     const aclEditPropName = `canEdit${upperFirst(key as string)}`;
     const query = `
     match  (token:Token { 
@@ -189,8 +202,9 @@ export class PropertyUpdaterService {
         token: session.token,
         userId: session.userId,
         owningOrgId: session.owningOrgId,
-        id
-      }).run();
+        id,
+      })
+      .run();
 
     if (!result.length) {
       throw new NotFoundException('Could not find requested key');
@@ -198,9 +212,9 @@ export class PropertyUpdaterService {
 
     const { value, canRead, canEdit } = result[0];
     if (value && canRead && canEdit) {
-      return { value, canRead, canEdit }
+      return { value, canRead, canEdit };
     } else {
-      return { value: result[0][key] }
+      return { value: result[0][key] };
     }
   }
 
