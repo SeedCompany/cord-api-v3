@@ -1,6 +1,8 @@
 import { Resolver, Args, Query, Mutation } from '@nestjs/graphql';
+import { IdArg } from '../../common';
 import { Budget } from './budget';
 import { BudgetService } from './budget.service';
+import { ISession, Session } from '../auth/session';
 import {
   CreateBudgetInputDto,
   CreateBudgetOutputDto,
@@ -20,36 +22,39 @@ export class BudgetResolver {
     description: 'Create a Budget',
   })
   async createBudget(
+    @Session() session: ISession,
     @Args('input') { budget: input }: CreateBudgetInputDto,
   ): Promise<CreateBudgetOutputDto> {
-    return await this.budgetService.create(input);
+    return await this.budgetService.create(input, session);
   }
   @Query(returns => ReadBudgetOutputDto, {
     description: 'Read one Budget by id',
   })
   async readBudget(
-    @Args('input') { budget: input }: ReadBudgetInputDto,
+    @Session() session: ISession,
+    @IdArg() id: string,
   ): Promise<ReadBudgetOutputDto> {
-    return await this.budgetService.readOne(input);
+    return await this.budgetService.readOne(id, session);
   }
 
   @Mutation(returns => UpdateBudgetOutputDto, {
-    description: 'Update an Budget',
+    description: 'Update a Budget',
   })
   async updateBudget(
-    @Args('input')
-    { budget: input }: UpdateBudgetInputDto,
+    @Session() session: ISession,
+    @Args('input') { budget: input }: UpdateBudgetInputDto,
   ): Promise<UpdateBudgetOutputDto> {
-    return await this.budgetService.update(input);
+    return await this.budgetService.update(input, session);
   }
 
   @Mutation(returns => DeleteBudgetOutputDto, {
-    description: 'Delete an Budget',
+    description: 'Delete a Budget',
   })
   async deleteBudget(
-    @Args('input')
-    { budget: input }: DeleteBudgetInputDto,
-  ): Promise<DeleteBudgetOutputDto> {
-    return await this.budgetService.delete(input);
+    @Session() session: ISession,
+    @IdArg() id: string,
+  ): Promise<boolean> {
+    await this.budgetService.delete(id, session);
+    return true;
   }
 }

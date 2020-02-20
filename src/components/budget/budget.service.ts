@@ -13,105 +13,73 @@ import {
   UpdateBudgetOutputDto,
 } from './budget.dto';
 
-import { DatabaseService } from '../../core/database.service';
 import { Injectable } from '@nestjs/common';
 import { generate } from 'shortid';
+import { DatabaseService, ILogger, Logger, PropertyUpdaterService } from '../../core';
+import { ISession } from '../auth';
 @Injectable()
 export class BudgetService {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(
+    private readonly db: DatabaseService,
+    @Logger('BudgetService:service') private readonly logger: ILogger,
+    private readonly propertyUpdater: PropertyUpdaterService,
+  ) {}
 
-  async create(input: CreateBudgetInput): Promise<CreateBudgetOutputDto> {
-    const response = new CreateBudgetOutputDto();
-    const session = this.db.driver.session();
-    const id = generate();
-    await session
-      .run(
-        'MERGE (budget:Budget {active: true, owningOrg: "seedcompany", id: $id}) ON CREATE SET budget.id = $id, budget.status  = $status, budget.timestamp = datetime() RETURN budget.id as id, budget.status as status, budget.budgetDetails as budgetDetails',
-        {
-          id,
-          status: input.status,
-          budgetDetails: input.budgetDetails,
-        },
-      )
-      .then(result => {
-        response.budget.id = result.records[0].get('id');
-        response.budget.status = result.records[0].get('status');
-        response.budget.budgetDetails = result.records[0].get('budgetDetails');
-      })
-      .catch(error => {
-        console.log(error);
-      })
-      .then(() => session.close());
-
-    return response;
-  }
-  async readOne(input: ReadBudgetInput): Promise<ReadBudgetOutputDto> {
-    const response = new ReadBudgetOutputDto();
-    const session = this.db.driver.session();
-    await session
-      .run(
-        `MATCH (budget:Budget {active: true, owningOrg: "seedcompany"}) WHERE budget.id = "${input.id}" RETURN budget.id as id, budget.status as status`,
-        {
-          id: input.id,
-        },
-      )
-      .then(result => {
-        response.budget.id = result.records[0].get('id');
-        response.budget.status = result.records[0].get('status');
-      })
-      .catch(error => {
-        console.log(error);
-      })
-      .then(() => session.close());
-
-    return response;
+  async create(
+    input: CreateBudgetInput, 
+    { token }: ISession
+  ): Promise<CreateBudgetOutputDto> {
+    //TODO : Remove after verification
+    // await session
+    //   .run(
+    //     'MERGE (budget:Budget {active: true, owningOrg: "seedcompany", id: $id}) ON CREATE SET budget.id = $id, budget.status  = $status, budget.timestamp = datetime() RETURN budget.id as id, budget.status as status, budget.budgetDetails as budgetDetails',
+    //     {
+    //       id,
+    //       status: input.status,
+    //       budgetDetails: input.budgetDetails,
+    //     },
+    //   )
+    this.logger.info('create budget', { input, token });
+    throw new Error('Not implemented');
   }
 
-  async update(input: UpdateBudgetInput): Promise<UpdateBudgetOutputDto> {
-    const response = new UpdateBudgetOutputDto();
-    const session = this.db.driver.session();
-    await session
-      .run(
-        `MATCH (budget:Budget {active: true, owningOrg: "seedcompany", id: $id}) SET budget.status = $status  RETURN budget.id as id,budget.status as status`,
-        {
-          id: input.id,
-          status: input.status,
-        },
-      )
-      .then(result => {
-        if (result.records.length > 0) {
-          response.budget.id = result.records[0].get('id');
-          response.budget.status = result.records[0].get('status');
-        } else {
-          response.budget = null;
-        }
-      })
-      .catch(error => {
-        console.log(error);
-      })
-      .then(() => session.close());
-
-    return response;
+  async readOne(budgetId, { token }: ISession): Promise<ReadBudgetOutputDto> {
+    //TODO : Remove after verification
+    // await session
+    //   .run(
+    //     `MATCH (budget:Budget {active: true, owningOrg: "seedcompany"}) WHERE budget.id = "${input.id}" RETURN budget.id as id, budget.status as status`,
+    //     {
+    //       id: input.id,
+    //     },
+    //   )
+    this.logger.info('find budget');
+    throw new Error('Not implemented');
   }
 
-  async delete(input: DeleteBudgetInput): Promise<DeleteBudgetOutputDto> {
-    const response = new DeleteBudgetOutputDto();
-    const session = this.db.driver.session();
-    await session
-      .run(
-        'MATCH (budget:Budget {active: true, owningOrg: "seedcompany", id: $id}) SET budget.active = false RETURN budget.id as id',
-        {
-          id: input.id,
-        },
-      )
-      .then(result => {
-        response.budget.id = result.records[0].get('id');
-      })
-      .catch(error => {
-        console.log(error);
-      })
-      .then(() => session.close());
+  async update(input: UpdateBudgetInput, { token }: ISession): Promise<UpdateBudgetOutputDto> {
+    //TODO : Remove after verification
+    // await session
+    //   .run(
+    //     `MATCH (budget:Budget {active: true, owningOrg: "seedcompany", id: $id}) SET budget.status = $status  RETURN budget.id as id,budget.status as status`,
+    //     {
+    //       id: input.id,
+    //       status: input.status,
+    //     },
+    //   )
+    this.logger.info('update budget', { input, token });
+    throw new Error('Not implemented');
+  }
 
-    return response;
+  async delete(id: string, { token }: ISession): Promise<void> {
+    //TODO : Remove after verification
+    // await session
+    //   .run(
+    //     'MATCH (budget:Budget {active: true, owningOrg: "seedcompany", id: $id}) SET budget.active = false RETURN budget.id as id',
+    //     {
+    //       id: input.id,
+    //     },
+    //   )
+    this.logger.info('delete budget');
+    throw new Error('Not implemented');
   }
 }
