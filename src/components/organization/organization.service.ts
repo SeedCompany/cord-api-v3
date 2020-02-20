@@ -50,7 +50,6 @@ export class OrganizationService {
     }
 
     this.logger.info(`organization created, id ${id}`);
-    console.log(`organization created, id ${id}`);
 
     return await this.readOne(id, session);
   }
@@ -85,8 +84,7 @@ export class OrganizationService {
         owningOrgId: session.owningOrgId,
       })
       .first();
-    console.log(JSON.stringify(session));
-    console.log(orgId);
+    
     if (!result) {
       throw new NotFoundException('Could not find organization');
     }
@@ -161,7 +159,7 @@ export class OrganizationService {
           active: true
         })
         -[:name {active: true}]->
-        (name:OrgName {
+        (name:Property {
           active: true
         })
       RETURN
@@ -253,7 +251,7 @@ export class OrganizationService {
             active: true
           })
           -[:name {active: true}]->
-          (name:OrgName {active: true})
+          (name:Property {active: true})
         RETURN
           org.id as id,
           org.createdAt as createdAt,
