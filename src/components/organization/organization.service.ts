@@ -21,7 +21,7 @@ import { User } from '../user';
 export class OrganizationService {
   constructor(
     private readonly db: DatabaseService,
-    @Logger('auth:service') private readonly logger: ILogger,
+    @Logger('org:service') private readonly logger: ILogger,
     private readonly propertyUpdater: PropertyUpdaterService,
   ) {}
 

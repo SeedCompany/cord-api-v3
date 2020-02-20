@@ -19,7 +19,7 @@ import { ForbiddenError } from 'apollo-server-core';
 export class PropertyUpdaterService {
   constructor(
     private readonly db: Connection,
-    @Logger('EducationService:service') private readonly logger: ILogger,
+    @Logger('PropertyUpdater:service') private readonly logger: ILogger,
   ) {}
 
   async updateProperties<TObject extends Resource>({

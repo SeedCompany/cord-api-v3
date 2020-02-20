@@ -20,7 +20,7 @@ export class LanguageService {
   constructor(
     private readonly db: DatabaseService,
     private readonly propertyUpdater: PropertyUpdaterService,
-    @Logger('user:service') private readonly logger: ILogger,
+    @Logger('language:service') private readonly logger: ILogger,
   ) {}
 
   async create(input: CreateLanguage, session: ISession): Promise<Language> {
