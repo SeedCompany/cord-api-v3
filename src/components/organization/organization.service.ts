@@ -26,99 +26,67 @@ export class OrganizationService {
   ) {}
 
   async create(
-    { name }: CreateOrganization,
-    { token }: ISession,
+    input: CreateOrganization,
+    session: ISession,
   ): Promise<Organization> {
-    const result = await this.db
-      .query()
-      .raw(
-        `
-        MATCH
-          (token:Token {
-            active: true,
-            value: $token
-          })
-          <-[:token {active: true}]-
-          (user:User {
-            active: true,
-            canCreateOrg: true
-          })
-        MERGE
-          (org:Organization {
-            active: true,
-            owningOrgId: "Seed Company"
-          })-[nameRel:name {active: true}]->
-          (name:OrgName:Property {
-            active: true,
-            value: $name
-          })
-        ON CREATE SET
-          org.id = $id,
-          org.createdAt = datetime(),
-          org.createdById = user.id,
-          nameRel.createdAt = datetime()
-        RETURN
-          org.id as id,
-          org.createdAt as createdAt,
-          name.value as name,
-          user.canCreateOrg as canCreateOrg,
-          user.canReadOrgs as canReadOrgs
-      `,
-        {
-          token,
-          name,
-          id: generate(),
-        },
-      )
-      .first();
-
-    if (!result) {
-      throw new Error('Could not create organization');
+    const id = generate();
+    const acls = {
+      canReadOrg: true,
+      canEditOrg: true,
+    };
+    try {
+      await this.propertyUpdater.createNode({
+        session,
+        input: { id, ...input },
+        acls,
+        baseNodeLabel: 'Organization',
+        aclEditProp: 'canCreateOrg',
+      });
+    } catch {
+      this.logger.error(
+        `Could not create organization for user ${session.userId}`,
+      );
+      throw new Error('Could not create unavailability');
     }
 
-    return {
-      id: result.id,
-      name: {
-        value: result.name,
-        canRead: result.canReadOrgs,
-        canEdit: result.canCreateOrg,
-      },
-      createdAt: result.createdAt,
-    };
+    this.logger.info(`organization created, id ${id}`);
+    console.log(`organization created, id ${id}`);
+
+    return await this.readOne(id, session);
   }
 
-  async readOne(orgId: string, { token }: ISession): Promise<Organization> {
+  async readOne(orgId: string, session: ISession): Promise<Organization> {
+    const query = `
+    MATCH
+      (token:Token {active: true, value: $token})
+      <-[:token {active: true}]-
+      (user:User {
+        canReadOrgs: true
+      }),
+      (org:Organization {
+        active: true,
+        id: $id,
+        owningOrgId: $owningOrgId
+      })
+      -[:name {active: true}]->
+      (name:Property {active: true})
+    RETURN
+      org.id as id,
+      org.createdAt as createdAt,
+      name.value as name,
+      user.canCreateOrg as canCreateOrg,
+      user.canReadOrgs as canReadOrgs
+    `;
     const result = await this.db
       .query()
-      .raw(
-        `
-        MATCH
-          (token:Token {active: true, value: $token})
-          <-[:token {active: true}]-
-          (user:User {
-            canReadOrgs: true
-          }),
-          (org:Organization {
-            active: true,
-            id: $id,
-            owningOrgId: "Seed Company"
-          })
-          -[:name {active: true}]->
-          (name:OrgName {active: true})
-        RETURN
-          org.id as id,
-          org.createdAt as createdAt,
-          name.value as name,
-          user.canCreateOrg as canCreateOrg,
-          user.canReadOrgs as canReadOrgs
-        `,
-        {
-          id: orgId,
-          token,
-        },
-      )
+      .raw(query, {
+        id: orgId,
+        token: session.token,
+        owningOrgId: session.owningOrgId,
+      })
       .first();
-
+    console.log(JSON.stringify(session));
+    console.log(orgId);
     if (!result) {
       throw new NotFoundException('Could not find organization');
     }
