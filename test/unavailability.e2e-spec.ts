@@ -10,7 +10,7 @@ import {
 
 import { Unavailability } from '../src/components/user/unavailability';
 import { User } from '../src/components/user';
-import { fragments } from './utility/fragments';
+import { fragments } from './utility';
 import { gql } from 'apollo-server-core';
 import { isValid } from 'shortid';
 import { times } from 'lodash';
