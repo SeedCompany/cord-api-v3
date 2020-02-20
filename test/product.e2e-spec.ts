@@ -29,7 +29,7 @@ async function createProduct(app: INestApplication): Promise<Product> {
 describe.skip('Product e2e', () => {
   let app: TestApp;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     app = await createTestApp();
   });
 

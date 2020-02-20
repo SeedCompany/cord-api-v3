@@ -48,7 +48,7 @@ async function createInternshipEngagement(
 describe.skip('InternshipEngagement e2e', () => {
   let app: TestApp;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     app = await createTestApp();
   });
 

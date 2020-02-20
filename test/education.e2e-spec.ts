@@ -17,7 +17,7 @@ import { times } from 'lodash';
 describe('Education e2e', () => {
   let app: TestApp;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
   });
@@ -93,8 +93,7 @@ describe('Education e2e', () => {
         id: education.id,
       },
     );
-    console.log(JSON.stringify(result));
-    console.log(education.id);
+
     const actual: Education | undefined = result.deleteEducation;
     expect(actual).toBeTruthy();
     try {

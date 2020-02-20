@@ -53,7 +53,7 @@ async function createPartnership(app: INestApplication): Promise<string> {
 describe.skip('Partnership e2e', () => {
   let app: TestApp;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     app = await createTestApp();
   });
 

@@ -16,7 +16,7 @@ import {
 export class UnavailabilityService {
   constructor(
     private readonly db: Connection,
-    @Logger('EducationService:service') private readonly logger: ILogger,
+    @Logger('UnavailabilityService:service') private readonly logger: ILogger,
     private readonly propertyUpdater: PropertyUpdaterService,
   ) {}
 
@@ -24,84 +24,24 @@ export class UnavailabilityService {
     input: CreateUnavailability,
     session: ISession,
   ): Promise<Unavailability> {
-    const result = await this.db
-      .query()
-      .raw(
-        `
-      MATCH
-        (token:Token {
-          active: true,
-          value: $token
-        })
-        <-[:token {active: true}]-
-        (requestingUser:User {
-          active: true,
-          id: $requestingUserId,
-          canCreateUnavailability: true
-        }),
-        (targetUser:User {
-          active: true,
-          id: $targetUserId
-        })
-      CREATE
-        (targetUser)
-          -[:unavailability {active: true}]->
-        (unavailability:Unavailability {
-          id: $id,
-          active: true,
-          createdAt: datetime(),
-          owningOrgId: $owningOrgId
-        })
-        -[:description {active: true}]->
-        (description:description:Property {
-          active: true,
-          value: $description
-        }),
-        (unavailability)-[:start {active: true, createdAt: datetime()}]->
-        (start:Property {
-          active: true,
-          value: $start
-        }),
-        (unavailability)-[:end {active: true, createdAt: datetime()}]->
-        (end:Property {
-          active: true,
-          value: $end
-        }),
-        (requestingUser)
-          <-[:member]-
-          (acl:ACL {
-            canReadDescription: true,
-            canEditDescription: true,
-            canReadStart: true,
-            canEditStart: true,
-            canReadEnd: true,
-            canEditEnd: true
-          })-[:toNode]->(unavailability)
-      RETURN
-        unavailability.id as id,
-        description.value as description,
-        start.value as start,
-        end.value as end,
-        acl.canReadDescription as canReadDescription,
-        acl.canEditDescription as canEditDescription,
-        acl.canReadStart as canReadStart,
-        acl.canEditStart as canEditStart,
-        acl.canReadEnd as canReadEnd,
-        acl.canEditEnd as canEditEnd
-      `,
-        {
-          id: generate(),
-          requestingUserId: session.userId,
-          targetUserId: input.userId,
-          token: session.token,
-          description: input.description,
-          start: input.start.toISO(),
-          end: input.end.toISO(),
-          owningOrgId: session.owningOrgId,
-        },
-      )
-      .first();
-    if (!result) {
+    const id = generate();
+    const acls = {
+      canReadDescription: true,
+      canEditDescription: true,
+      canReadStart: true,
+      canEditStart: true,
+      canReadEnd: true,
+      canEditEnd: true,
+    };
+    try {
+      await this.propertyUpdater.createNode({
+        session,
+        input: { id, ...input },
+        acls,
+        baseNodeLabel: 'Unavailability',
+        aclEditProp: 'canCreateUnavailability',
+      });
+    } catch {
       this.logger.error(
         `Could not create unavailability for user ${input.userId}`,
       );
@@ -109,28 +49,27 @@ export class UnavailabilityService {
     }
 
     this.logger.info(
-      `unavailability for user ${input.userId} created, id ${result.id}`,
+      `unavailability for user ${input.userId} created, id ${id}`,
     );
+    console.log(`unavailability for user ${input.userId} created, id ${id}`);
 
-    return {
-      id: result.id,
-      createdAt: DateTime.local(), // TODO
-      description: {
-        value: result.description,
-        canRead: result.canReadDescription,
-        canEdit: result.canEditDescription,
-      },
-      start: {
-        value: result.start,
-        canRead: result.canReadStart,
-        canEdit: result.canEditStart,
-      },
-      end: {
-        value: result.end,
-        canRead: result.canReadEnd,
-        canEdit: result.canEditEnd,
-      },
-    };
+    // connect the Unavailability to the User.
+
+    const query = `
+    MATCH (user: User {id: $userId, active: true}),
+      (unavailability:Unavailability {id: $id, active: true})
+    CREATE (user)-[:unavailability {active: true, createdAt: datetime()}]->(unavailability)
+    RETURN  unavailability.id as id
+    `;
+    const result = await this.db
+      .query()
+      .raw(query, {
+        userId: session.userId,
+        id,
+      })
+      .first();
+    console.log(result);
+    return await this.readOne(id, session);
   }
 
   async readOne(id: string, session: ISession): Promise<Unavailability> {
@@ -192,7 +131,7 @@ export class UnavailabilityService {
 
     if (!result) {
       this.logger.error(`Could not find unavailability: ${id} `);
-      throw new NotFoundException('Could not find language');
+      throw new NotFoundException(`Could not find unavailability ${id}`);
     }
 
     if (!result.canReadUnavailability) {

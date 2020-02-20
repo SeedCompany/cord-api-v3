@@ -457,7 +457,7 @@ export class UserService {
         'displayLastName',
         'phone',
         'timezone',
-        'bio'
+        'bio',
       ],
       changes: input,
       nodevar: 'user',
