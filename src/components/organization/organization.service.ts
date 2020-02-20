@@ -140,57 +140,6 @@ export class OrganizationService {
     };
   }
 
-  // async update(input: UpdateOrganization,
-  //   { token }: ISession,
-  // ): Promise<Organization> {
-  //   const result = await this.db
-  //     .query()
-  //     .raw(
-  //       `
-  //       MATCH
-  //         (token:Token {active: true, value: $token})
-  //         <-[:token {active: true}]-
-  //         (user:User {
-  //           canCreateOrg: true
-  //         }),
-  //         (org:Organization {
-  //           active: true,
-  //           id: $id
-  //         })
-  //         -[:name {active: true}]->
-  //         (name:OrgName {active: true})
-  //       SET
-  //         name.value = $name
-  //       RETURN
-  //         org.id as id,
-  //         org.createdAt as createdAt,
-  //         name.value as name,
-  //         user.canCreateOrg as canCreateOrg,
-  //         user.canReadOrgs as canReadOrgs
-  //       `,
-  //       {
-  //         id: input.id,
-  //         name: input.name,
-  //         token,
-  //       },
-  //     )
-  //     .first();
-
-  //   if (!result) {
-  //     throw new NotFoundException('Could not find organization');
-  //   }
-
-  //   return {
-  //     id: result.id,
-  //     name: {
-  //       value: result.name,
-  //       canRead: result.canReadOrgs,
-  //       canEdit: result.canCreateOrg,
-  //     },
-  //     createdAt: result.createdAt,
-  //   };
-  // }
-
   async update(
     input: UpdateOrganization,
     session: ISession,
@@ -204,35 +153,18 @@ export class OrganizationService {
       nodevar: 'organization',
     });
   }
-  async delete(id: string, { token }: ISession): Promise<void> {
-    const result = await this.db
-      .query()
-      .raw(
-        `
-        MATCH
-          (token:Token {active: true, value: $token})
-          <-[:token {active: true}]-
-          (user:User {
-            canCreateOrg: true
-          }),
-          (org:Organization {
-            active: true,
-            id: $id
-          })
-        SET
-          org.active = false
-        RETURN
-          org.id as id
-        `,
-        {
-          id,
-          token,
-        },
-      )
-      .first();
 
-    if (!result) {
-      throw new NotFoundException('Could not find organization');
+  async delete(id: string, session: ISession): Promise<void> {
+    const ed = await this.readOne(id, session);
+    try {
+      this.propertyUpdater.deleteNode({
+        session,
+        object: ed,
+        aclEditProp: 'canDeleteOwnUser',
+      });
+    } catch (e) {
+      console.log(e);
+      throw e;
     }
   }
 
