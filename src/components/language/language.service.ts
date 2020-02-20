@@ -29,7 +29,7 @@ export class LanguageService {
     );
 
     // TODO: the commented block works almost perfectly but for some reason the `name` field is not getting populated
-    /*
+
     const id = generate();
     const acls = {
       canReadName: true,
@@ -54,7 +54,7 @@ export class LanguageService {
         input: { id, ...input },
         acls,
         baseNodeLabel: 'Language',
-        aclEditProp: 'canCreateLang'
+        aclEditProp: 'canCreateLang',
       });
 
       const result = await this.readOne(id, session);
@@ -65,148 +65,147 @@ export class LanguageService {
       this.logger.error(`Could not create language`);
       throw new Error('Could not create language');
     }
-    */
 
-    const result = await this.db
-      .query()
-      .raw(
-        `
-        MATCH
-          (token:Token {
-            active: true,
-            value: $token
-          })
-          <-[:token {active: true}]-
-          (user:User {
-            active: true,
-            canCreateLang: true
-          })
-        CREATE
-          (lang:Language {
-            active: true,
-            createdAt: datetime(),
-            id: $id
-          })-[nameRel:name {active: true}]->
-          (name:LangName:Property {
-            active: true,
-            value: $name
-          }),
-          (lang)-[:displayName {active: true, createdAt: datetime()}]->(displayName:Property {
-            active: true,
-            value: $displayName
-          }),
-          (lang)-[:beginFiscalYear {active: true, createdAt: datetime()}]->(beginFiscalYear:Property {
-            active: true,
-            value: $beginFiscalYear
-          }),
-          (lang)-[:ethnologueName {active: true, createdAt: datetime()}]->(ethnologueName:Property {
-            active: true,
-            value: $ethnologueName
-          }),
-          (lang)-[:ethnologuePopulation {active: true, createdAt: datetime()}]->(ethnologuePopulation:Property {
-            active: true,
-            value: $ethnologuePopulation
-          }),
-          (lang)-[:organizationPopulation {active: true, createdAt: datetime()}]->(organizationPopulation:Property {
-            active: true,
-            value: $organizationPopulation
-          }),
-          (lang)-[:rodNumber {active: true, createdAt: datetime()}]->(rodNumber:Property {
-            active: true,
-            value: $rodNumber
-          }),
-          (user)
-          <-[:member]-
-          (acl:ACL {
-            canReadName: true,
-            canEditName: true,
-            canReadDisplayName: true,
-            canEditDisplayName: true,
-            canReadBeginFiscalYear: true,
-            canEditBeginFiscalYear: true,
-            canReadEthnologueName: true,
-            canEditEthnologueName: true,
-            canReadEthnologuePopulation: true,
-            canEditEthnologuePopulation: true,
-            canReadOrganizationPopulation: true,
-            canEditOrganizationPopulation: true,
-            canReadRodNumber: true,
-            canEditRodNumber: true
-          })
-          -[:toNode]->(lang)
-        RETURN
-          lang.id as id,
-          lang.createdAt as createdAt,
-          name.value as name,
-          user.canCreateLang as canCreateLang,
-          user.canReadLangs as canReadLangs,
-          displayName.value as displayName,
-          beginFiscalYear.value as beginFiscalYear,
-          ethnologueName.value as ethnologueName,
-          ethnologuePopulation.value as ethnologuePopulation,
-          organizationPopulation.value as organizationPopulation,
-          rodNumber.value as rodNumber
-      `,
-        {
-          token: session.token,
-          name: input.name,
-          displayName: input.displayName,
-          beginFiscalYear: input.beginFiscalYear,
-          ethnologueName: input.ethnologueName,
-          ethnologuePopulation: input.ethnologuePopulation,
-          organizationPopulation: input.organizationPopulation,
-          rodNumber: input.rodNumber,
-          id: generate(),
-        },
-      )
-      .first();
+    // const result = await this.db
+    //   .query()
+    //   .raw(
+    //     `
+    //     MATCH
+    //       (token:Token {
+    //         active: true,
+    //         value: $token
+    //       })
+    //       <-[:token {active: true}]-
+    //       (user:User {
+    //         active: true,
+    //         canCreateLang: true
+    //       })
+    //     CREATE
+    //       (lang:Language {
+    //         active: true,
+    //         createdAt: datetime(),
+    //         id: $id
+    //       })-[nameRel:name {active: true}]->
+    //       (name:LangName:Property {
+    //         active: true,
+    //         value: $name
+    //       }),
+    //       (lang)-[:displayName {active: true, createdAt: datetime()}]->(displayName:Property {
+    //         active: true,
+    //         value: $displayName
+    //       }),
+    //       (lang)-[:beginFiscalYear {active: true, createdAt: datetime()}]->(beginFiscalYear:Property {
+    //         active: true,
+    //         value: $beginFiscalYear
+    //       }),
+    //       (lang)-[:ethnologueName {active: true, createdAt: datetime()}]->(ethnologueName:Property {
+    //         active: true,
+    //         value: $ethnologueName
+    //       }),
+    //       (lang)-[:ethnologuePopulation {active: true, createdAt: datetime()}]->(ethnologuePopulation:Property {
+    //         active: true,
+    //         value: $ethnologuePopulation
+    //       }),
+    //       (lang)-[:organizationPopulation {active: true, createdAt: datetime()}]->(organizationPopulation:Property {
+    //         active: true,
+    //         value: $organizationPopulation
+    //       }),
+    //       (lang)-[:rodNumber {active: true, createdAt: datetime()}]->(rodNumber:Property {
+    //         active: true,
+    //         value: $rodNumber
+    //       }),
+    //       (user)
+    //       <-[:member]-
+    //       (acl:ACL {
+    //         canReadName: true,
+    //         canEditName: true,
+    //         canReadDisplayName: true,
+    //         canEditDisplayName: true,
+    //         canReadBeginFiscalYear: true,
+    //         canEditBeginFiscalYear: true,
+    //         canReadEthnologueName: true,
+    //         canEditEthnologueName: true,
+    //         canReadEthnologuePopulation: true,
+    //         canEditEthnologuePopulation: true,
+    //         canReadOrganizationPopulation: true,
+    //         canEditOrganizationPopulation: true,
+    //         canReadRodNumber: true,
+    //         canEditRodNumber: true
+    //       })
+    //       -[:toNode]->(lang)
+    //     RETURN
+    //       lang.id as id,
+    //       lang.createdAt as createdAt,
+    //       name.value as name,
+    //       user.canCreateLang as canCreateLang,
+    //       user.canReadLangs as canReadLangs,
+    //       displayName.value as displayName,
+    //       beginFiscalYear.value as beginFiscalYear,
+    //       ethnologueName.value as ethnologueName,
+    //       ethnologuePopulation.value as ethnologuePopulation,
+    //       organizationPopulation.value as organizationPopulation,
+    //       rodNumber.value as rodNumber
+    //   `,
+    //     {
+    //       token: session.token,
+    //       name: input.name,
+    //       displayName: input.displayName,
+    //       beginFiscalYear: input.beginFiscalYear,
+    //       ethnologueName: input.ethnologueName,
+    //       ethnologuePopulation: input.ethnologuePopulation,
+    //       organizationPopulation: input.organizationPopulation,
+    //       rodNumber: input.rodNumber,
+    //       id: generate(),
+    //     },
+    //   )
+    //   .first();
 
-    if (!result) {
-      this.logger.error(
-        `Could not create language: ${input.name} by ${session.userId}`,
-      );
-      throw new Error('Could not create language');
-    }
+    // if (!result) {
+    //   this.logger.error(
+    //     `Could not create language: ${input.name} by ${session.userId}`,
+    //   );
+    //   throw new Error('Could not create language');
+    // }
 
-    return {
-      id: result.id,
-      name: {
-        value: result.name,
-        canRead: result.canReadLangs,
-        canEdit: result.canCreateLang,
-      },
-      displayName: {
-        value: result.displayName,
-        canRead: result.canReadLangs,
-        canEdit: result.canCreateLang,
-      },
-      beginFiscalYear: {
-        value: result.beginFiscalYear,
-        canRead: result.canReadLangs,
-        canEdit: result.canCreateLang,
-      },
-      ethnologueName: {
-        value: result.ethnologueName,
-        canRead: result.canReadLangs,
-        canEdit: result.canCreateLang,
-      },
-      ethnologuePopulation: {
-        value: result.ethnologuePopulation,
-        canRead: result.canReadLangs,
-        canEdit: result.canCreateLang,
-      },
-      organizationPopulation: {
-        value: result.organizationPopulation,
-        canRead: result.canReadLangs,
-        canEdit: result.canCreateLang,
-      },
-      rodNumber: {
-        value: result.rodNumber,
-        canRead: result.canReadLangs,
-        canEdit: result.canCreateLang,
-      },
-      createdAt: result.createdAt,
-    };
+    // return {
+    //   id: result.id,
+    //   name: {
+    //     value: result.name,
+    //     canRead: result.canReadLangs,
+    //     canEdit: result.canCreateLang,
+    //   },
+    //   displayName: {
+    //     value: result.displayName,
+    //     canRead: result.canReadLangs,
+    //     canEdit: result.canCreateLang,
+    //   },
+    //   beginFiscalYear: {
+    //     value: result.beginFiscalYear,
+    //     canRead: result.canReadLangs,
+    //     canEdit: result.canCreateLang,
+    //   },
+    //   ethnologueName: {
+    //     value: result.ethnologueName,
+    //     canRead: result.canReadLangs,
+    //     canEdit: result.canCreateLang,
+    //   },
+    //   ethnologuePopulation: {
+    //     value: result.ethnologuePopulation,
+    //     canRead: result.canReadLangs,
+    //     canEdit: result.canCreateLang,
+    //   },
+    //   organizationPopulation: {
+    //     value: result.organizationPopulation,
+    //     canRead: result.canReadLangs,
+    //     canEdit: result.canCreateLang,
+    //   },
+    //   rodNumber: {
+    //     value: result.rodNumber,
+    //     canRead: result.canReadLangs,
+    //     canEdit: result.canCreateLang,
+    //   },
+    //   createdAt: result.createdAt,
+    // };
   }
 
   async readOne(langId: string, session: ISession): Promise<Language> {
@@ -228,7 +227,7 @@ export class LanguageService {
             active: true,
             id: $id
           })
-        WITH * OPTIONAL MATCH (user)<-[:member]-(acl1:ACL {canReadName: true})-[:toNode]->(lang)-[:name {active: true}]->(name:LangName {active: true})
+        WITH * OPTIONAL MATCH (user)<-[:member]-(acl1:ACL {canReadName: true})-[:toNode]->(lang)-[:name {active: true}]->(name:Property {active: true})
         WITH * OPTIONAL MATCH (user)<-[:member]-(acl2:ACL {canReadDisplayName: true})-[:toNode]->(lang)-[:displayName {active: true}]->(displayName:Property {active: true})
         WITH * OPTIONAL MATCH (user)<-[:member]-(acl3:ACL {canReadBeginFiscalYear: true})-[:toNode]->(lang)-[:beginFiscalYear {active: true}]->(beginFiscalYear:Property {active: true})
         WITH * OPTIONAL MATCH (user)<-[:member]-(acl4:ACL {canReadEthnologueName: true})-[:toNode]->(lang)-[:ethnologueName {active: true}]->(ethnologueName:Property {active: true})
@@ -349,14 +348,14 @@ export class LanguageService {
     const object = await this.readOne(id, session);
 
     if (!object) {
-      throw new NotFoundException('Could not find language')
+      throw new NotFoundException('Could not find language');
     }
 
     try {
       await this.propertyUpdater.deleteNode({
         session,
         object,
-        aclEditProp: 'canDeleteOwnUser'
+        aclEditProp: 'canDeleteOwnUser',
       });
     } catch (e) {
       console.log(e);
