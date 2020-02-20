@@ -1,9 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
 import { times } from 'lodash';
 import { DateTime } from 'luxon';
+import { ILogger, Logger, PropertyUpdaterService } from '../../core';
 import { generate } from 'shortid';
+import { ISession } from '../auth';
 import { User } from '../user/dto';
 import {
   Region,
@@ -22,15 +24,19 @@ import {
 
 @Injectable()
 export class LocationService {
-  constructor(private readonly db: Connection) {}
+  constructor(
+    private readonly db: Connection,
+    @Logger('LocationService:service') private readonly logger: ILogger,
+    private readonly propertyUpdater: PropertyUpdaterService,
+  ) {}
 
-  async readOne(id: string, token: string): Promise<Location> {
+  async readOne(id: string, session: ISession): Promise<Location> {
     return this.randomLocation();
   }
 
   async list(
     { page, count, sort, order, filter }: LocationListInput,
-    token: string,
+    session: ISession,
   ): Promise<LocationListOutput> {
     const items = times(faker.random.number(), this.randomLocation);
 
@@ -105,39 +111,46 @@ export class LocationService {
     return faker.random.arrayElement([area, region, country]);
   }
 
-  async createZone(input: CreateZone, token: string): Promise<Zone> {
+  async createZone(input: CreateZone, session: ISession): Promise<Zone> {
     throw new Error('Not implemented');
   }
 
-  async createRegion(input: CreateRegion, token: string): Promise<Region> {
+  async createRegion(input: CreateRegion, session: ISession): Promise<Region> {
     throw new Error('Not implemented');
   }
 
-  async createCountry(input: CreateCountry, token: string): Promise<Country> {
+  async createCountry(input: CreateCountry, session: ISession): Promise<Country> {
     throw new Error('Not implemented');
   }
 
-  async updateZone(input: UpdateZone, token: string): Promise<Zone> {
+  async updateZone(input: UpdateZone, session: ISession): Promise<Zone> {
     throw new Error('Not implemented');
   }
 
-  async updateRegion(input: UpdateRegion, token: string): Promise<Region> {
+  async updateRegion(input: UpdateRegion, session: ISession): Promise<Region> {
     throw new Error('Not implemented');
   }
 
-  async updateCountry(input: UpdateCountry, token: string): Promise<Country> {
+  async updateCountry(input: UpdateCountry, session: ISession): Promise<Country> {
     throw new Error('Not implemented');
   }
 
-  async delete(id: string, token: string): Promise<void> {
-    await this.db
-      .query()
-      .raw(
-        'MATCH (location:Location {active: true, owningOrg: "seedcompany", id: $id}) SET location.active = false RETURN location.id as id',
-        {
-          id,
-        },
-      )
-      .run();
+  async delete(id: string, session: ISession): Promise<void> {
+    const object = await this.readOne(id, session);
+
+    if (!object) {
+      throw new NotFoundException('Location not found');
+    }
+
+    try {
+      this.propertyUpdater.deleteNode({
+        session,
+        object,
+        aclEditProp: 'canDeleteOwnUser',
+      });
+    } catch (e) {
+      console.log(e);
+      throw e;
+    }
   }
 }
