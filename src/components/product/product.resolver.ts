@@ -5,17 +5,30 @@ import {
   CreateProductInputDto,
   CreateProductOutputDto,
   ReadProductInputDto,
-  ReadProductOutputDto,
   UpdateProductInput,
   UpdateProductInputDto,
   UpdateProductOutputDto,
   DeleteProductOutputDto,
   DeleteProductInputDto,
 } from './product.dto';
+import { Session, ISession } from '../auth';
+import { IdArg } from '../../common';
+import { ReadProductOutput } from './dto';
 
 @Resolver('Product')
 export class ProductResolver {
   constructor(private readonly productService: ProductService) {}
+
+  @Query(returns => ReadProductOutput, {
+    description: 'Read one Product by id',
+  })
+  async readProduct(
+    @Args('input') { product: input }: ReadProductInputDto,
+  ): Promise<ReadProductOutput> {
+    return {
+      product: await this.productService.readOne(input.id),
+    }
+  }
 
   @Mutation(returns => CreateProductOutputDto, {
     description: 'Create a product',
@@ -24,14 +37,6 @@ export class ProductResolver {
     @Args('input') { product: input }: CreateProductInputDto,
   ): Promise<CreateProductOutputDto> {
     return await this.productService.create(input);
-  }
-  @Query(returns => ReadProductOutputDto, {
-    description: 'Read one Product by id',
-  })
-  async readProduct(
-    @Args('input') { product: input }: ReadProductInputDto,
-  ): Promise<ReadProductOutputDto> {
-    return await this.productService.readOne(input);
   }
 
   @Mutation(returns => UpdateProductOutputDto, {
@@ -48,9 +53,10 @@ export class ProductResolver {
     description: 'Delete an Product',
   })
   async deleteProduct(
-    @Args('input')
-    { product: input }: DeleteProductInputDto,
-  ): Promise<DeleteProductOutputDto> {
-    return await this.productService.delete(input);
+    @Session() session: ISession,
+    @IdArg() id: string,
+  ): Promise<void> {
+
+    return await this.productService.delete(id, session);
   }
 }

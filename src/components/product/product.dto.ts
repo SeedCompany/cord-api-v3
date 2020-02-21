@@ -69,32 +69,6 @@ export class ReadProductInputDto {
   @Field()
   product: ReadProductInput;
 }
-@ObjectType()
-export class ReadProductOutput {
-  @Field(type => String)
-  id: string;
-  @Field(type => ProductType)
-  type: ProductType;
-  @Field(type => [BibleBook])
-  books: BibleBook[];
-  @Field(type => [ProductMedium])
-  mediums: ProductMedium[];
-  @Field(type => [ProductPurpose])
-  purposes: ProductPurpose[];
-  @Field(type => ProductApproach)
-  approach: ProductApproach;
-  @Field(type => ProductMethodology)
-  methodology: ProductMethodology;
-}
-@ObjectType()
-export class ReadProductOutputDto {
-  @Field({ nullable: true }) // nullable in case of error
-  product: ReadProductOutput;
-
-  constructor() {
-    this.product = new ReadProductOutput();
-  }
-}
 
 // UPDATE
 
