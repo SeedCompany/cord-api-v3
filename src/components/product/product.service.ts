@@ -133,79 +133,79 @@ export class ProductService {
     };
   }
 
-  async create(input: CreateProduct, session: ISession): Promise<Product> {
-    const id = generate();
-    const acls = {
-      canReadType: true,
-      canEditType: true,
-    };
+  // async create(input: CreateProduct, session: ISession): Promise<Product> {
+  //   const id = generate();
+  //   const acls = {
+  //     canReadType: true,
+  //     canEditType: true,
+  //   };
 
-    try {
-      await this.propertyUpdater.createNode({
-        session,
-        input: { id, ...input },
-        acls,
-        baseNodeLabel: 'Product',
-      });
-    } catch (e) {
-      console.log(e);
-      throw new Error('Could not create product');
-    }
+  //   try {
+  //     await this.propertyUpdater.createNode({
+  //       session,
+  //       input: { id, ...input },
+  //       acls,
+  //       baseNodeLabel: 'Product',
+  //     });
+  //   } catch (e) {
+  //     console.log(e);
+  //     throw new Error('Could not create product');
+  //   }
 
-    return await this.readOne(id);
+  //   return await this.readOne(id);
 
-    const response = new CreateProductOutputDto();
-    const session = this.db.driver.session();
-    const id = generate();
-    await session
-      .run(
-        `
-          MERGE
-            (product:Product {active: true, owningOrg: "seedcompany", id: $id})
-          ON CREATE SET
-            product.id = $id,
-            product.type  = $type,
-            product.books=$books,
-            product.mediums = $mediums,
-            product.purposes=$purposes,
-            product.approach=$approach,
-            product.methodology=$methodology,
-            product.timestamp = datetime()
-          RETURN
-            product.id as id,
-            product.type as type,
-            product.books as books,
-            product.mediums as mediums,
-            product.purposes as purposes,
-            product.approach as approach,
-            product.methodology as methodology
-          `,
-        {
-          id,
-          type: input.type,
-          books: input.books,
-          mediums: input.mediums,
-          purposes: input.purposes,
-          approach: input.approach,
-          methodology: input.methodology,
-        },
-      )
-      .then(result => {
-        response.product.id = result.records[0].get('id');
-        response.product.type = result.records[0].get('type');
-        response.product.books = result.records[0].get('books');
-        response.product.mediums = result.records[0].get('mediums');
-        response.product.purposes = result.records[0].get('purposes');
-        response.product.approach = result.records[0].get('approach');
-        response.product.methodology = result.records[0].get('methodology');
-      })
-      .catch(error => {
-        console.log(error);
-      })
-      .then(() => session.close());
+  //   const response = new CreateProductOutputDto();
+  //   const session = this.db.driver.session();
+  //   const id = generate();
+  //   await session
+  //     .run(
+  //       `
+  //         MERGE
+  //           (product:Product {active: true, owningOrg: "seedcompany", id: $id})
+  //         ON CREATE SET
+  //           product.id = $id,
+  //           product.type  = $type,
+  //           product.books=$books,
+  //           product.mediums = $mediums,
+  //           product.purposes=$purposes,
+  //           product.approach=$approach,
+  //           product.methodology=$methodology,
+  //           product.timestamp = datetime()
+  //         RETURN
+  //           product.id as id,
+  //           product.type as type,
+  //           product.books as books,
+  //           product.mediums as mediums,
+  //           product.purposes as purposes,
+  //           product.approach as approach,
+  //           product.methodology as methodology
+  //         `,
+  //       {
+  //         id,
+  //         type: input.type,
+  //         books: input.books,
+  //         mediums: input.mediums,
+  //         purposes: input.purposes,
+  //         approach: input.approach,
+  //         methodology: input.methodology,
+  //       },
+  //     )
+  //     .then(result => {
+  //       response.product.id = result.records[0].get('id');
+  //       response.product.type = result.records[0].get('type');
+  //       response.product.books = result.records[0].get('books');
+  //       response.product.mediums = result.records[0].get('mediums');
+  //       response.product.purposes = result.records[0].get('purposes');
+  //       response.product.approach = result.records[0].get('approach');
+  //       response.product.methodology = result.records[0].get('methodology');
+  //     })
+  //     .catch(error => {
+  //       console.log(error);
+  //     })
+  //     .then(() => session.close());
 
-    return response;
-  }
+  //   return response;
+  // }
 
   async readOne(id: string): Promise<Product> {
     const result = await this.db
