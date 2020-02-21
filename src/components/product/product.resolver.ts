@@ -1,9 +1,6 @@
 import { Resolver, Args, Query, Mutation } from '@nestjs/graphql';
 import { ProductService } from './product.service';
 import {
-  CreateProductInput,
-  CreateProductInputDto,
-  CreateProductOutputDto,
   ReadProductInputDto,
   UpdateProductInput,
   UpdateProductInputDto,
@@ -13,7 +10,7 @@ import {
 } from './product.dto';
 import { Session, ISession } from '../auth';
 import { IdArg } from '../../common';
-import { ReadProductOutput } from './dto';
+import { ReadProductOutput, CreateProductInput, CreateProductOutput } from './dto';
 
 @Resolver('Product')
 export class ProductResolver {
@@ -30,13 +27,16 @@ export class ProductResolver {
     }
   }
 
-  @Mutation(returns => CreateProductOutputDto, {
+  @Mutation(returns => CreateProductOutput, {
     description: 'Create a product',
   })
   async createProduct(
-    @Args('input') { product: input }: CreateProductInputDto,
-  ): Promise<CreateProductOutputDto> {
-    return await this.productService.create(input);
+    @Session() session: ISession,
+    @Args('input') { product: input }: CreateProductInput,
+  ): Promise<CreateProductOutput> {
+    return {
+      product: await this.productService.create(input, session)
+    };
   }
 
   @Mutation(returns => UpdateProductOutputDto, {

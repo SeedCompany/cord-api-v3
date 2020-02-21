@@ -7,55 +7,55 @@ import { ProductApproach } from './product-approach';
 import { ProductMethodology } from './product-methodology';
 import { ProductPurpose } from './product-purpose';
 
-@InputType()
-export class CreateProductInput {
-  @Field(type => ProductType)
-  type: ProductType;
-  @Field(type => [BibleBook])
-  books: BibleBook[];
-  @Field(type => [ProductMedium])
-  mediums: ProductMedium[];
-  @Field(type => [ProductPurpose])
-  purposes: ProductPurpose[];
-  @Field(type => ProductApproach)
-  approach: ProductApproach;
-  @Field(type => ProductMethodology)
-  methodology: ProductMethodology;
-}
+// @InputType()
+// export class CreateProductInput {
+//   @Field(type => ProductType)
+//   type: ProductType;
+//   @Field(type => [BibleBook])
+//   books: BibleBook[];
+//   @Field(type => [ProductMedium])
+//   mediums: ProductMedium[];
+//   @Field(type => [ProductPurpose])
+//   purposes: ProductPurpose[];
+//   @Field(type => ProductApproach)
+//   approach: ProductApproach;
+//   @Field(type => ProductMethodology)
+//   methodology: ProductMethodology;
+// }
 
-@InputType()
-export class CreateProductInputDto {
-  @Field(type => CreateProductInput)
-  product: CreateProductInput;
-}
+// @InputType()
+// export class CreateProductInputDto {
+//   @Field(type => CreateProductInput)
+//   product: CreateProductInput;
+// }
 
-@ObjectType()
-export class CreateProductOutput extends BaseNode {
-  @Field(type => String)
-  id: string;
-  @Field(type => ProductType)
-  type: ProductType;
-  @Field(type => [BibleBook])
-  books: BibleBook[];
-  @Field(type => [ProductMedium])
-  mediums: ProductMedium[];
-  @Field(type => [ProductPurpose])
-  purposes: ProductPurpose[];
-  @Field(type => ProductApproach)
-  approach: ProductApproach;
-  @Field(type => ProductMethodology)
-  methodology: ProductMethodology;
-}
+// @ObjectType()
+// export class CreateProductOutput extends BaseNode {
+//   @Field(type => String)
+//   id: string;
+//   @Field(type => ProductType)
+//   type: ProductType;
+//   @Field(type => [BibleBook])
+//   books: BibleBook[];
+//   @Field(type => [ProductMedium])
+//   mediums: ProductMedium[];
+//   @Field(type => [ProductPurpose])
+//   purposes: ProductPurpose[];
+//   @Field(type => ProductApproach)
+//   approach: ProductApproach;
+//   @Field(type => ProductMethodology)
+//   methodology: ProductMethodology;
+// }
 
-@ObjectType()
-export class CreateProductOutputDto {
-  @Field({ nullable: true }) // nullable in case of error
-  product: CreateProductOutput;
+// @ObjectType()
+// export class CreateProductOutputDto {
+//   @Field({ nullable: true }) // nullable in case of error
+//   product: CreateProductOutput;
 
-  constructor() {
-    this.product = new CreateProductOutput();
-  }
-}
+//   constructor() {
+//     this.product = new CreateProductOutput();
+//   }
+// }
 // READ
 
 @InputType()

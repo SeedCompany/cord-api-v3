@@ -32,16 +32,16 @@ export abstract class CreateProduct {
   readonly methodology: ProductMethodology;
 }
 
-// @InputType()
-// export abstract class CreateProductInput {
-//   @Field()
-//   @Type(() => CreateProduct)
-//   @ValidateNested()
-//   readonly product: CreateProduct;
-// }
+@InputType()
+export abstract class CreateProductInput {
+  @Field()
+  @Type(() => CreateProduct)
+  @ValidateNested()
+  readonly product: CreateProduct;
+}
 
-// @ObjectType()
-// export abstract class CreateProductOutput {
-//   @Field()
-//   readonly product: Product;
-// }
+@ObjectType()
+export abstract class CreateProductOutput {
+  @Field()
+  readonly product: Product;
+}
