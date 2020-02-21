@@ -30,7 +30,7 @@ export class ConfigService {
 
   @Lazy() get files() {
     return {
-      bucket: this.env.string('FILES_S3_BUCKET').required(),
+      bucket: this.env.string('FILES_S3_BUCKET').optional(),
     };
   }
 

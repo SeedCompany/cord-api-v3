@@ -3,8 +3,8 @@ import * as faker from 'faker';
 import {
   TestApp,
   createOrganization,
-  createTestApp,
   createSession,
+  createTestApp,
   createUser,
   fragments,
 } from './utility';
