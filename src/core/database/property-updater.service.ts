@@ -431,6 +431,13 @@ export class PropertyUpdaterService {
         RETURN item
       `;
 
+    console.log('QUERY', query);
+    console.log({
+      requestingUserId: session.userId,
+      token: session.token,
+      id: input.id,
+    })
+
     try {
       const result = await this.db
         .query()
@@ -440,6 +447,8 @@ export class PropertyUpdaterService {
           id: input.id,
         })
         .run();
+
+      console.log('RESULT', result);
     } catch (e) {
       const ACLQuery = `MATCH
       (token:Token {

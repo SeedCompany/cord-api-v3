@@ -46,168 +46,122 @@ export class ProductService {
       throw new Error('Could not create product');
     }
 
-    return await this.readOne(id);
-
-
-    // try {
-    //   const result = await this.db
-    //   .query()
-    //   .raw(
-    //     `
-    //     MATCH
-    //       (token:Token {
-    //         active: true,
-    //         value: $token
-    //       })
-    //       <-[:token {active: true}]-
-    //       (user:User {
-    //         active: true,
-    //         canCreateProduct: true
-    //       })
-    //     CREATE
-    //       (prod:Product {
-    //         id: $id,
-    //         active: true,
-    //         createdAt: datetime(),
-    //         owningOrgId: "Seed Company"
-    //       })
-    //       -[:type {active: true}]->
-    //       (type:Property {
-    //         active: true,
-    //         value: $type
-    //       }),
-    //       (prod)-[:books {active: true}]->(books:Property {
-    //         active: true,
-    //         value: $books
-    //       }),
-    //       (prod)-[:mediums {active: true}]->(mediums:Property {
-    //         active: true,
-    //         value: $mediums
-    //       }),
-    //       (prod)-[:purposes {active: true}]->(purposes:Property {
-    //         active: true,
-    //         value: $purposes
-    //       }),
-    //       (prod)-[:approach {active: true}]->(approach:Property {
-    //         active: true,
-    //         value: $approach
-    //       }),
-    //       (prod)-[:methodology {active: true}]->(methodology:Property {
-    //         active: true,
-    //         value: $methodology
-    //       }),
-    //       (user)
-    //       <-[:member]-
-    //       (acl:ACL {
-    //         canReadType: true,
-    //         canEditType: true,
-    //         canReadBooks: true,
-    //         canEditBooks: true,
-    //         canReadMediums: true,
-    //         canEditMediums: true,
-    //         canReadPurposes: true,
-    //         canEditPurposes: true,
-    //         canReadApproach: true,
-    //         canEditApproach: true,
-    //         canReadMethodology: true,
-    //         canEditMethodology: true
-    //       })
-    //       -[:toNode]->(prod)
-    //     RETURN
-    //       prod.id as id,
-    //       prod.type as type,
-    //       prod.books as books,
-    //       prod.mediums as mediums,
-    //       prod.purposes as purposes,
-    //       prod.approach as approach,
-    //       prod.methodology as methodology,
-    //       acl.canReadType as canReadType,
-    //       acl.canEditType as canEditType,
-    //       acl.canReadBooks as canReadBooks,
-    //       acl.canEditBooks as canEditBooks,
-    //       acl.canReadMediums as canReadMediums,
-    //       acl.canEditMediums as canEditMediums,
-    //       acl.canReadPurposes as canReadPurposes,
-    //       acl.canEditPurposes as canEditPurposes,
-    //       acl.canReadApproach as canReadApproach,
-    //       acl.canEditApproach as canEditApproach,
-    //       acl.canReadMethodology as canReadMethodology,
-    //       acl.canEditMethodology as canEditMethodology
-
-    //     `,
-    //     {
-    //       token: session.token,
-    //       id: generate(),
-    //       type: input.type,
-    //       books: input.books,
-    //       mediums: input.mediums,
-    //       purposes: input.purposes,
-    //       approach: input.approach,
-    //       methodology: input.methodology,
-    //     },
-    //   )
-    //   .first();
-
-    //   if (!result) {
-    //     throw new Error('Could not create product');
-    //   }
-  
-    //   return {
-    //     id: result.id,
-    //     type: result.type,
-    //     books: result.books,
-    //     mediums: result.mediums,
-    //     purposes: result.purposes,
-    //     approach: result.approach,
-    //     methodology: result.methodology,
-    //     createdAt: result.createdAt,
-    //   };  
-    // } catch (e) {
-    //   console.log(e);
-    //   throw e;
-    // }
+    return await this.readOne(id, session);
   }
 
-  async readOne(id: string): Promise<Product> {
+  async readOne(id: string, session: ISession): Promise<Product> {
     const result = await this.db
       .query()
       .raw(
         `
         MATCH
-          (product:Product {active: true, owningOrg: "seedcompany"})
-        WHERE
-          product.id = $id
+        (token:Token {
+          active: true,
+          value: $token
+        })
+          <-[:token {active: true}]-
+        (requestingUser:User {
+          active: true,
+          id: $requestingUserId,
+          owningOrgId: $owningOrgId
+        }),
+        (prod:Product {active: true, id: $id})
+
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl1:ACL {canReadType: true})-[:toNode]->(prod)-[:type {active: true}]->(type:Property {active: true})
+
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl2:ACL {canReadBooks: true})-[:toNode]->(prod)-[:books {active: true}]->(books:Property {active: true})
+
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl3:ACL {canReadMediums: true})-[:toNode]->(prod)-[:mediums {active: true}]->(mediums:Property {active: true})
+
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl4:ACL {canReadPurposes: true})-[:toNode]->(prod)-[:purposes {active: true}]->(purposes:Property {active: true})
+
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl5:ACL {canReadApproach: true})-[:toNode]->(prod)-[:approach {active: true}]->(approach:Property {active: true})
+
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl6:ACL {canReadMethodology: true})-[:toNode]->(prod)-[:methodology {active: true}]->(methodology:Property {active: true})
         RETURN
-          product.id as id,
-          product.type as type,
-          product.books as books,
-          product.mediums as mediums,
-          product.purposes as purposes,
-          product.approach as approach,
-          product.methodology as methodology,
-          product.createdAt as createdAt
+          prod.id as id,
+          prod.createdAt as createdAt,
+          type.value as type,
+          books.value as books,
+          mediums.value as mediums,
+          purposes.value as purposes,
+          approach.value as approach,
+          methodology.value as methodology,
+          acl1.canReadType as canReadType,
+          acl2.canReadBooks as canReadBooks,
+          acl3.canReadMediums as canReadMediums,
+          acl4.canReadPurposes as canReadPurposes,
+          acl5.canReadApproach as canReadApproach,
+          acl6.canReadMethodology as canReadMethodology
         `,
         {
+          token: session.token,
+          requestingUserId: session.userId,
+          owningOrgId: session.owningOrgId,
           id,
         },
       )
       .first();
+    if (!result) {
+      throw new NotFoundException('Could not find product');
+    }
 
-      if (!result) {
-        throw new NotFoundException('Could not find product');
-      }
+    console.log('RESULT', result);
 
-      return {
-        id: result.id,
-        type: result.type,
-        books: result.books,
-        mediums: result.mediums,
-        purposes: result.purposes,
-        approach: result.approach,
-        methodology: result.methodology,
-        createdAt: result.createdAt,
-      }
+    return {
+      id,
+      createdAt: result.createdAt,
+      type: result.type,
+      books: result.books,
+      mediums: result.mediums,
+      purposes: result.purposes,
+      approach: result.approach,
+      methodology: result.methodology,
+    };
   }
+
+  // async readOne(id: string, session: ISession): Promise<Product> {
+  //   const result = await this.db
+  //     .query()
+  //     .raw(
+  //       `
+  //       MATCH
+  //         (product:Product {active: true, owningOrgId: "Seed Company"})
+  //       WHERE
+  //         product.id = $id
+  //       RETURN
+  //         product.id as id,
+  //         product.type as type,
+  //         product.books as books,
+  //         product.mediums as mediums,
+  //         product.purposes as purposes,
+  //         product.approach as approach,
+  //         product.methodology as methodology,
+  //         product.createdAt as createdAt
+  //       `,
+  //       {
+  //         id,
+  //       },
+  //     )
+  //     .first();
+
+  //     if (!result) {
+  //       throw new NotFoundException('Could not find product');
+  //     }
+
+  //     console.log('RESULT', result)
+
+  //     return {
+  //       id: result.id,
+  //       type: result.type,
+  //       books: result.books,
+  //       mediums: result.mediums,
+  //       purposes: result.purposes,
+  //       approach: result.approach,
+  //       methodology: result.methodology,
+  //       createdAt: result.createdAt,
+  //     }
+  // }
 
   async update(input: UpdateProductInput): Promise<UpdateProductOutputDto> {
     const response = new UpdateProductOutputDto();
@@ -247,7 +201,7 @@ export class ProductService {
   }
 
   async delete(id: string, session: ISession): Promise<void> {
-    const object = await this.readOne(id);
+    const object = await this.readOne(id, session);
 
     if (!object) {
       throw new NotFoundException('Could not find product');

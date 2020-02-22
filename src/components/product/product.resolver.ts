@@ -20,10 +20,11 @@ export class ProductResolver {
     description: 'Read one Product by id',
   })
   async readProduct(
+    @Session() session: ISession,
     @Args('input') { product: input }: ReadProductInputDto,
   ): Promise<ReadProductOutput> {
     return {
-      product: await this.productService.readOne(input.id),
+      product: await this.productService.readOne(input.id, session),
     }
   }
 
