@@ -106,15 +106,13 @@ export class ProductService {
       throw new NotFoundException('Could not find product');
     }
 
-    console.log('RESULT', result);
-
     return {
       id,
       createdAt: result.createdAt,
       type: result.type,
-      books: result.books,
-      mediums: result.mediums,
-      purposes: result.purposes,
+      books: result.books.split(','),
+      mediums: result.mediums.split(','),
+      purposes: result.purposes.split(','),
       approach: result.approach,
       methodology: result.methodology,
     };

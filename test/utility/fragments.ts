@@ -127,4 +127,15 @@ export const fragments = {
       }
     }
   `,
+  product: gql`
+    fragment product on Product {
+      id
+      type
+      books
+      mediums
+      purposes
+      approach
+      methodology
+    }
+  `
 };

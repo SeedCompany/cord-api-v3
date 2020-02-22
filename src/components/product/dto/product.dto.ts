@@ -1,4 +1,4 @@
-import { Field, ObjectType } from 'type-graphql';
+import { Field, ObjectType, registerEnumType } from 'type-graphql';
 import { Resource } from '../../../common';
 import { BibleBook } from '../bible-book';
 import { ProductType } from '../product-type';

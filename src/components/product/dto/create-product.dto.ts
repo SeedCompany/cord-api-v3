@@ -32,6 +32,17 @@ export abstract class CreateProduct {
   readonly methodology: ProductMethodology;
 }
 
+// Used for GQL testing, where enum values must be key-based as opposed to value-based
+// e.g. in gql, type: 'bible_stories' should be type: 'BibleStories'
+export abstract class CreateProductRaw {
+  type: keyof typeof ProductType;
+  books: [keyof typeof BibleBook];
+  mediums: [keyof typeof ProductMedium];
+  purposes: [keyof typeof ProductPurpose];
+  approach: keyof typeof ProductApproach;
+  methodology: keyof typeof ProductMethodology;
+}
+
 @InputType()
 export abstract class CreateProductInput {
   @Field()

@@ -60,7 +60,7 @@ import { ProductPurpose } from './product-purpose';
 
 @InputType()
 export class ReadProductInput {
-  @Field(type => String)
+  @Field(type => ID)
   id: string;
 }
 
