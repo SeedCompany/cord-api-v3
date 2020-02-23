@@ -1,11 +1,11 @@
 import { Field, ObjectType, registerEnumType } from 'type-graphql';
 import { Resource } from '../../../common';
-import { BibleBook } from '../bible-book';
-import { ProductType } from '../product-type';
-import { ProductMedium } from '../product-medium';
-import { ProductApproach } from '../product-approach';
-import { ProductMethodology } from '../product-methodology';
-import { ProductPurpose } from '../product-purpose';
+import { BibleBook } from './bible-book';
+import { ProductType } from './product-type';
+import { ProductMedium } from './product-medium';
+import { ProductApproach } from './product-approach';
+import { ProductMethodology } from './product-methodology';
+import { ProductPurpose } from './product-purpose';
 
 @ObjectType({
   implements: [Resource],

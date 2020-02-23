@@ -1,19 +1,13 @@
 import { Type } from 'class-transformer';
-import {
-  MinLength,
-  ValidateNested,
-  Min,
-  Max,
-  IsPositive,
-} from 'class-validator';
+import { ValidateNested } from 'class-validator';
 import { Field, ID, InputType, ObjectType, Int } from 'type-graphql';
 import { Product } from './product.dto';
-import { BibleBook } from '../bible-book';
-import { ProductType } from '../product-type';
-import { ProductMedium } from '../product-medium';
-import { ProductApproach } from '../product-approach';
-import { ProductMethodology } from '../product-methodology';
-import { ProductPurpose } from '../product-purpose';
+import { BibleBook } from './bible-book';
+import { ProductType } from './product-type';
+import { ProductMedium } from './product-medium';
+import { ProductApproach } from './product-approach';
+import { ProductMethodology } from './product-methodology';
+import { ProductPurpose } from './product-purpose';
 
 @InputType()
 export abstract class UpdateProduct {

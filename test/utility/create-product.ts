@@ -6,12 +6,6 @@ import { TestApp } from './create-app';
 import { fragments } from './fragments';
 import { gql } from 'apollo-server-core';
 import { isValid } from 'shortid';
-import { ProductType } from '../../src/components/product/product-type';
-import { BibleBook } from '../../src/components/product/bible-book';
-import { ProductMedium } from '../../src/components/product/product-medium';
-import { ProductPurpose } from '../../src/components/product/product-purpose';
-import { ProductApproach } from '../../src/components/product/product-approach';
-import { ProductMethodology } from '../../src/components/product/product-methodology';
 
 export async function createProduct(
   app: TestApp,

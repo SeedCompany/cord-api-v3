@@ -4,12 +4,12 @@ import {
 } from 'class-validator';
 import { Field, InputType, ObjectType } from 'type-graphql';
 import { Product } from './product.dto';
-import { BibleBook } from '../bible-book';
-import { ProductType } from '../product-type';
-import { ProductMedium } from '../product-medium';
-import { ProductApproach } from '../product-approach';
-import { ProductMethodology } from '../product-methodology';
-import { ProductPurpose } from '../product-purpose';
+import { BibleBook } from './bible-book';
+import { ProductType } from './product-type';
+import { ProductMedium } from './product-medium';
+import { ProductApproach } from './product-approach';
+import { ProductMethodology } from './product-methodology';
+import { ProductPurpose } from './product-purpose';
 
 @InputType()
 export abstract class CreateProduct {

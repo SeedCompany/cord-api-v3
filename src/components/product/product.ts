@@ -1,9 +1,9 @@
-import { ProductType } from './product-type';
-import { BibleBook } from './bible-book';
-import { ProductApproach } from './product-approach';
-import { ProductMedium } from './product-medium';
-import { ProductMethodology } from './product-methodology';
-import { ProductPurpose } from './product-purpose';
+import { ProductType } from './dto/product-type';
+import { BibleBook } from './dto/bible-book';
+import { ProductApproach } from './dto/product-approach';
+import { ProductMedium } from './dto/product-medium';
+import { ProductMethodology } from './dto/product-methodology';
+import { ProductPurpose } from './dto/product-purpose';
 import {
   Field,
   ID,
