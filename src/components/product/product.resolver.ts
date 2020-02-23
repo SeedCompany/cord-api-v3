@@ -9,7 +9,7 @@ export class ProductResolver {
   constructor(private readonly productService: ProductService) {}
 
   @Query(returns => Product, {
-    description: 'Read one Product by id',
+    description: 'Read a product by id',
   })
   async product(
     @Session() session: ISession,
@@ -19,7 +19,7 @@ export class ProductResolver {
   }
 
   @Mutation(returns => CreateProductOutput, {
-    description: 'Create a product',
+    description: 'Create a product entry',
   })
   async createProduct(
     @Session() session: ISession,
@@ -31,7 +31,7 @@ export class ProductResolver {
   }
 
   @Mutation(() => UpdateProductOutput, {
-    description: 'Update a Product',
+    description: 'Update a product entry',
   })
   async updateProduct(
     @Session() session: ISession,
@@ -42,7 +42,7 @@ export class ProductResolver {
   }
 
   @Mutation(returns => Boolean, {
-    description: 'Delete a Product',
+    description: 'Delete a product entry',
   })
   async deleteProduct(
     @Session() session: ISession,
