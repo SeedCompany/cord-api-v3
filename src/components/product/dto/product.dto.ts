@@ -29,9 +29,3 @@ export class Product extends Resource {
   @Field(type => ProductMethodology)
   readonly methodology: ProductMethodology;
 }
-
-@ObjectType()
-export class ReadProductOutput {
-  @Field({ nullable: true }) // nullable in case of error
-  product: Product;
-}

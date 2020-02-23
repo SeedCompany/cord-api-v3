@@ -1,31 +1,21 @@
 import { Resolver, Args, Query, Mutation } from '@nestjs/graphql';
 import { ProductService } from './product.service';
-import {
-  ReadProductInputDto,
-  UpdateProductInput,
-  UpdateProductInputDto,
-  UpdateProductOutputDto,
-  DeleteProductOutputDto,
-  DeleteProductInputDto,
-} from './product.dto';
 import { Session, ISession } from '../auth';
 import { IdArg } from '../../common';
-import { ReadProductOutput, CreateProductInput, CreateProductOutput } from './dto';
+import { CreateProductInput, CreateProductOutput, UpdateProductInput, UpdateProductOutput, Product } from './dto';
 
 @Resolver('Product')
 export class ProductResolver {
   constructor(private readonly productService: ProductService) {}
 
-  @Query(returns => ReadProductOutput, {
+  @Query(returns => Product, {
     description: 'Read one Product by id',
   })
-  async readProduct(
+  async product(
     @Session() session: ISession,
-    @Args('input') { product: input }: ReadProductInputDto,
-  ): Promise<ReadProductOutput> {
-    return {
-      product: await this.productService.readOne(input.id, session),
-    }
+    @IdArg() id: string,
+  ): Promise<Product> {
+    return await this.productService.readOne(id, session);
   }
 
   @Mutation(returns => CreateProductOutput, {
@@ -40,24 +30,25 @@ export class ProductResolver {
     };
   }
 
-  @Mutation(returns => UpdateProductOutputDto, {
-    description: 'Update an Product',
+  @Mutation(() => UpdateProductOutput, {
+    description: 'Update a Product',
   })
   async updateProduct(
-    @Args('input')
-    { product: input }: UpdateProductInputDto,
-  ): Promise<UpdateProductOutputDto> {
-    return await this.productService.update(input);
+    @Session() session: ISession,
+    @Args('input') { product: input }: UpdateProductInput,
+  ): Promise<UpdateProductOutput> {
+    const product = await this.productService.update(input, session);
+    return { product };
   }
 
-  @Mutation(returns => DeleteProductOutputDto, {
-    description: 'Delete an Product',
+  @Mutation(returns => Boolean, {
+    description: 'Delete a Product',
   })
   async deleteProduct(
     @Session() session: ISession,
     @IdArg() id: string,
-  ): Promise<void> {
-
-    return await this.productService.delete(id, session);
+  ): Promise<boolean> {
+    await this.productService.delete(id, session);
+    return true;
   }
 }

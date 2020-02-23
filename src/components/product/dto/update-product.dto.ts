@@ -39,16 +39,16 @@ export abstract class UpdateProduct {
   readonly methodology: ProductMethodology;
 }
 
-// @InputType()
-// export abstract class UpdateProductInput {
-//   @Field()
-//   @Type(() => UpdateProduct)
-//   @ValidateNested()
-//   readonly product: UpdateProduct;
-// }
+@InputType()
+export abstract class UpdateProductInput {
+  @Field()
+  @Type(() => UpdateProduct)
+  @ValidateNested()
+  readonly product: UpdateProduct;
+}
 
-// @ObjectType()
-// export abstract class UpdateProductOutput {
-//   @Field()
-//   readonly product: Product;
-// }
+@ObjectType()
+export abstract class UpdateProductOutput {
+  @Field()
+  readonly product: Product;
+}
