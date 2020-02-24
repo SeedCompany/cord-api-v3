@@ -1,140 +1,153 @@
-import { Injectable } from '@nestjs/common';
-import { DatabaseService } from '../../core';
-import {
-  CreateProductInput,
-  CreateProductInputDto,
-  CreateProductOutputDto,
-  DeleteProductInput,
-  DeleteProductInputDto,
-  DeleteProductOutputDto,
-  ReadProductInput,
-  ReadProductInputDto,
-  ReadProductOutputDto,
-  UpdateProductInput,
-  UpdateProductInputDto,
-  UpdateProductOutputDto,
-} from './product.dto';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { DatabaseService, PropertyUpdaterService, Logger, ILogger } from '../../core';
 import { generate } from 'shortid';
+import { ISession } from '../auth';
+import { Product, CreateProduct, UpdateProduct } from './dto';
 
 @Injectable()
 export class ProductService {
-  constructor(private readonly db: DatabaseService) {}
-  async create(input: CreateProductInput): Promise<CreateProductOutputDto> {
-    const response = new CreateProductOutputDto();
-    const session = this.db.driver.session();
+  constructor(
+    private readonly db: DatabaseService,
+    private readonly propertyUpdater: PropertyUpdaterService,
+    @Logger('product:service') private readonly logger: ILogger,
+  ) {}
+
+
+  async create(input: CreateProduct, session: ISession): Promise<Product> {
     const id = generate();
-    await session
-      .run(
-        'MERGE (product:Product {active: true, owningOrg: "seedcompany", id: $id}) ON CREATE SET product.id = $id, product.type  = $type, product.books=$books,product.mediums = $mediums,product.purposes=$purposes,product.approach=$approach,product.methodology=$methodology, product.timestamp = datetime() RETURN product.id as id, product.type as type,product.books as books, product.mediums as mediums,product.purposes as purposes,product.approach as approach, product.methodology as methodology',
+    const acls = {
+      canReadType: true,
+      canEditType: true,
+      canReadBooks: true,
+      canEditBooks: true,
+      canReadMediums: true,
+      canEditMediums: true,
+      canReadPurposes: true,
+      canEditPurposes: true,
+      canReadApproach: true,
+      canEditApproach: true,
+      canReadMethodology: true,
+      canEditMethodology: true,
+    };
+
+    try {
+      await this.propertyUpdater.createNode({
+        session,
+        input: { id, ...input },
+        acls,
+        baseNodeLabel: 'Product',
+        aclEditProp: 'canCreateProduct',
+      });
+    } catch (e) {
+      this.logger.warning('Failed to create product', {
+        exception: e
+      });
+
+      throw new Error('Could not create product');
+    }
+
+    return await this.readOne(id, session);
+  }
+
+  async readOne(id: string, session: ISession): Promise<Product> {
+    const result = await this.db
+      .query()
+      .raw(
+        `
+        MATCH
+        (token:Token {
+          active: true,
+          value: $token
+        })
+          <-[:token {active: true}]-
+        (requestingUser:User {
+          active: true,
+          id: $requestingUserId,
+          owningOrgId: $owningOrgId
+        }),
+        (prod:Product {active: true, id: $id})
+
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl1:ACL {canReadType: true})-[:toNode]->(prod)-[:type {active: true}]->(type:Property {active: true})
+
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl2:ACL {canReadBooks: true})-[:toNode]->(prod)-[:books {active: true}]->(books:Property {active: true})
+
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl3:ACL {canReadMediums: true})-[:toNode]->(prod)-[:mediums {active: true}]->(mediums:Property {active: true})
+
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl4:ACL {canReadPurposes: true})-[:toNode]->(prod)-[:purposes {active: true}]->(purposes:Property {active: true})
+
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl5:ACL {canReadApproach: true})-[:toNode]->(prod)-[:approach {active: true}]->(approach:Property {active: true})
+
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl6:ACL {canReadMethodology: true})-[:toNode]->(prod)-[:methodology {active: true}]->(methodology:Property {active: true})
+        RETURN
+          prod.id as id,
+          prod.createdAt as createdAt,
+          type.value as type,
+          books.value as books,
+          mediums.value as mediums,
+          purposes.value as purposes,
+          approach.value as approach,
+          methodology.value as methodology,
+          acl1.canReadType as canReadType,
+          acl2.canReadBooks as canReadBooks,
+          acl3.canReadMediums as canReadMediums,
+          acl4.canReadPurposes as canReadPurposes,
+          acl5.canReadApproach as canReadApproach,
+          acl6.canReadMethodology as canReadMethodology
+        `,
         {
+          token: session.token,
+          requestingUserId: session.userId,
+          owningOrgId: session.owningOrgId,
           id,
-          type: input.type,
-          books: input.books,
-          mediums: input.mediums,
-          purposes: input.purposes,
-          approach: input.approach,
-          methodology: input.methodology,
         },
       )
-      .then(result => {
-        response.product.id = result.records[0].get('id');
-        response.product.type = result.records[0].get('type');
-        response.product.books = result.records[0].get('books');
-        response.product.mediums = result.records[0].get('mediums');
-        response.product.purposes = result.records[0].get('purposes');
-        response.product.approach = result.records[0].get('approach');
-        response.product.methodology = result.records[0].get('methodology');
-      })
-      .catch(error => {
-        console.log(error);
-      })
-      .then(() => session.close());
+      .first();
+    if (!result) {
+      throw new NotFoundException('Could not find product');
+    }
 
-    return response;
+    return {
+      id,
+      createdAt: result.createdAt,
+      type: result.type,
+      books: result.books.split(','),
+      mediums: result.mediums.split(','),
+      purposes: result.purposes.split(','),
+      approach: result.approach,
+      methodology: result.methodology,
+    };
   }
 
-  async readOne(input: ReadProductInput): Promise<ReadProductOutputDto> {
-    const response = new ReadProductOutputDto();
-    const session = this.db.driver.session();
-    await session
-      .run(
-        `MATCH (product:Product {active: true, owningOrg: "seedcompany"}) WHERE product.id = "${input.id}" RETURN product.id as id, product.type as type,product.books as books, product.mediums as mediums,product.purposes as purposes,product.approach as approach, product.methodology as methodology`,
-        {
-          id: input.id,
-        },
-      )
-      .then(result => {
-        response.product.id = result.records[0].get('id');
-        response.product.type = result.records[0].get('type');
-        response.product.books = result.records[0].get('books');
-        response.product.mediums = result.records[0].get('mediums');
-        response.product.purposes = result.records[0].get('purposes');
-        response.product.approach = result.records[0].get('approach');
-        response.product.methodology = result.records[0].get('methodology');
-      })
-      .catch(error => {
-        console.log(error);
-      })
-      .then(() => session.close());
+  async update(input: UpdateProduct, session: ISession): Promise<Product> {
+    const object = await this.readOne(input.id, session);
 
-    return response;
+    return this.propertyUpdater.updateProperties({
+      session,
+      object,
+      props: ['type', 'books', 'mediums', 'purposes', 'approach', 'methodology'],
+      changes: input,
+      nodevar: 'product',
+    });
   }
 
-  async update(input: UpdateProductInput): Promise<UpdateProductOutputDto> {
-    const response = new UpdateProductOutputDto();
-    const session = this.db.driver.session();
-    await session
-      .run(
-        `MATCH (product:Product {active: true, owningOrg: "seedcompany", id: $id}) SET product.type = $type  RETURN product.id as id, product.type as type,product.books as books, product.mediums as mediums,product.purposes as purposes,product.approach as approach, product.methodology as methodology`,
-        {
-          id: input.id,
-          type: input.type,
-          books: input.books,
-          mediums: input.mediums,
-          purposes: input.purposes,
-          approach: input.approach,
-          methodology: input.methodology,
-        },
-      )
-      .then(result => {
-        if (result.records.length > 0) {
-          response.product.id = result.records[0].get('id');
-          response.product.type = result.records[0].get('type');
-          response.product.books = result.records[0].get('books');
-          response.product.mediums = result.records[0].get('mediums');
-          response.product.purposes = result.records[0].get('purposes');
-          response.product.approach = result.records[0].get('approach');
-          response.product.methodology = result.records[0].get('methodology');
-        } else {
-          response.product = null;
-        }
-      })
-      .catch(error => {
-        console.log(error);
-      })
-      .then(() => session.close());
+  async delete(id: string, session: ISession): Promise<void> {
+    const object = await this.readOne(id, session);
 
-    return response;
-  }
+    if (!object) {
+      throw new NotFoundException('Could not find product');
+    }
 
-  async delete(input: DeleteProductInput): Promise<DeleteProductOutputDto> {
-    const response = new DeleteProductOutputDto();
-    const session = this.db.driver.session();
-    await session
-      .run(
-        'MATCH (product:Product {active: true, owningOrg: "seedcompany", id: $id}) SET product.active = false RETURN product.id as id',
-        {
-          id: input.id,
-        },
-      )
-      .then(result => {
-        response.product.id = result.records[0].get('id');
-      })
-      .catch(error => {
-        console.log(error);
-      })
-      .then(() => session.close());
-
-    return response;
+    try {
+      await this.propertyUpdater.deleteNode({
+        session,
+        object,
+        aclEditProp: 'canDeleteOwnUser',
+      });
+    } catch (e) {
+      this.logger.warning('Failed to delete product', {
+        exception: e
+      });
+      throw e;
+    }
   }
 }

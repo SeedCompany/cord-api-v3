@@ -440,6 +440,7 @@ export class PropertyUpdaterService {
           id: input.id,
         })
         .run();
+
     } catch (e) {
       const ACLQuery = `MATCH
       (token:Token {

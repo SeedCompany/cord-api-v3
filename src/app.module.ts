@@ -16,11 +16,10 @@ import { InternshipEngagementResolver } from './components/internship-engagement
 import { InternshipEngagementService } from './components/internship-engagement/internship-engagement.service';
 import { LanguageModule } from './components/language';
 import { LocationModule } from './components/location';
+import { ProductModule } from './components/product';
 import { OrganizationModule } from './components/organization';
 import { PartnershipResolver } from './components/partnership/partnership.resolver';
 import { PartnershipService } from './components/partnership/partnership.service';
-import { ProductResolver } from './components/product/product.resolver';
-import { ProductService } from './components/product/product.service';
 import { ProjectEngagementResolver } from './components/project-engagement/project-engagement.resolver';
 import { ProjectEngagementService } from './components/project-engagement/project-engagement.service';
 import { ProjectResolver } from './components/project/project.resolver';
@@ -46,6 +45,7 @@ const context: ContextFunction<
     AuthModule,
     FileModule,
     LanguageModule,
+    ProductModule,
     LocationModule,
     OrganizationModule,
     UserModule,
@@ -62,8 +62,6 @@ const context: ContextFunction<
     InternshipService,
     InternshipEngagementResolver,
     InternshipEngagementService,
-    ProductResolver,
-    ProductService,
     ProjectEngagementResolver,
     ProjectEngagementService,
     ProjectResolver,
