@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { DatabaseService, PropertyUpdaterService } from '../../core';
+import { DatabaseService, PropertyUpdaterService, Logger, ILogger } from '../../core';
 import { generate } from 'shortid';
 import { ISession } from '../auth';
 import { Product, CreateProduct, UpdateProduct } from './dto';
@@ -9,6 +9,7 @@ export class ProductService {
   constructor(
     private readonly db: DatabaseService,
     private readonly propertyUpdater: PropertyUpdaterService,
+    @Logger('product:service') private readonly logger: ILogger,
   ) {}
 
 
@@ -38,7 +39,10 @@ export class ProductService {
         aclEditProp: 'canCreateProduct',
       });
     } catch (e) {
-      console.log(e);
+      this.logger.warning('Failed to create product', {
+        exception: e
+      });
+
       throw new Error('Could not create product');
     }
 
@@ -140,7 +144,9 @@ export class ProductService {
         aclEditProp: 'canDeleteOwnUser',
       });
     } catch (e) {
-      console.log(e);
+      this.logger.warning('Failed to delete product', {
+        exception: e
+      });
       throw e;
     }
   }
