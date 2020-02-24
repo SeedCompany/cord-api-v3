@@ -17,7 +17,7 @@ import { times } from 'lodash';
 
 describe('Unavailability e2e', () => {
   let app: TestApp;
-  let user: User;
+  let user: User | undefined;
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -30,12 +30,12 @@ describe('Unavailability e2e', () => {
   });
 
   it('create a unavailability', async () => {
-    const unavailability = await createUnavailability(app, { userId: user.id });
-    expect(unavailability.id).toBeDefined();
+    const unavailability = await createUnavailability(app, { userId: user?.id });
+    expect(unavailability?.id).toBeDefined();
   });
 
   it('read one unavailability by id', async () => {
-    const unavailability = await createUnavailability(app, { userId: user.id });
+    const unavailability = await createUnavailability(app, { userId: user?.id });
 
     try {
       const { unavailability: actual } = await app.graphql.query(
@@ -48,13 +48,13 @@ describe('Unavailability e2e', () => {
           ${fragments.unavailability}
         `,
         {
-          id: unavailability.id,
+          id: unavailability?.id,
         },
       );
 
-      expect(actual.id).toBe(unavailability.id);
+      expect(actual.id).toBe(unavailability?.id);
       expect(isValid(actual.id)).toBe(true);
-      expect(actual.description).toEqual(unavailability.description);
+      expect(actual.description).toEqual(unavailability?.description);
     } catch (e) {
       console.error(e);
       fail();
@@ -63,7 +63,7 @@ describe('Unavailability e2e', () => {
 
   // UPDATE LANGUAGE
   it('update unavailability', async () => {
-    const unavailability = await createUnavailability(app, { userId: user.id });
+    const unavailability = await createUnavailability(app, { userId: user?.id });
     const newDesc = faker.company.companyName();
 
     const result = await app.graphql.mutate(
@@ -80,7 +80,7 @@ describe('Unavailability e2e', () => {
       {
         input: {
           unavailability: {
-            id: unavailability.id,
+            id: unavailability?.id,
             description: newDesc,
           },
         },
@@ -88,13 +88,13 @@ describe('Unavailability e2e', () => {
     );
     const updated = result?.updateUnavailability?.unavailability;
     expect(updated).toBeTruthy();
-    expect(updated.id).toBe(unavailability.id);
+    expect(updated.id).toBe(unavailability?.id);
     expect(updated.description.value).toBe(newDesc);
   });
 
   // DELETE LANGUAGE
   it('delete unavailability', async () => {
-    const unavailability = await createUnavailability(app, { userId: user.id });
+    const unavailability = await createUnavailability(app, { userId: user?.id });
 
     try {
       const result = await app.graphql.mutate(
@@ -104,7 +104,7 @@ describe('Unavailability e2e', () => {
           }
         `,
         {
-          id: unavailability.id,
+          id: unavailability?.id,
         },
       );
       const actual: Unavailability | undefined = result.deleteUnavailability;
@@ -121,7 +121,7 @@ describe('Unavailability e2e', () => {
     const numUnavailables = 10;
     await Promise.all(
       times(numUnavailables).map(() =>
-        createUnavailability(app, { userId: user.id }),
+        createUnavailability(app, { userId: user?.id }),
       ),
     );
     // test reading new lang

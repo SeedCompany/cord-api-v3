@@ -30,17 +30,17 @@ describe('Product e2e', () => {
         ${fragments.product}
       `,
       {
-        id: product.id,
+        id: product?.id,
       }
     );
     const actual: Product | undefined = result.product;
-    expect(actual.id).toBe(product.id);
-    expect(actual.type).toBe(product.type);
-    expect(actual.books).toEqual(expect.arrayContaining(product.books));
-    expect(actual.mediums).toEqual(expect.arrayContaining(product.mediums));
-    expect(actual.purposes).toEqual(expect.arrayContaining(product.purposes));
-    expect(actual.approach).toBe(product.approach);
-    expect(actual.methodology).toBe(product.methodology);
+    expect(actual?.id).toBe(product?.id);
+    expect(actual?.type).toBe(product?.type);
+    expect(actual?.books).toEqual(expect.arrayContaining(product?.books!));
+    expect(actual?.mediums).toEqual(expect.arrayContaining(product?.mediums!));
+    expect(actual?.purposes).toEqual(expect.arrayContaining(product?.purposes!));
+    expect(actual?.approach).toBe(product?.approach);
+    expect(actual?.methodology).toBe(product?.methodology);
   });
 
   it('update product', async () => {
@@ -64,18 +64,18 @@ describe('Product e2e', () => {
         ${fragments.product}
       `,
       {
-        id: product.id,
+        id: product?.id,
         type: typenew,
       }
     );
 
-    expect(result.updateProduct.product.id).toBe(product.id);
+    expect(result.updateProduct.product.id).toBe(product?.id);
     expect(result.updateProduct.product.type).toBe(typenew);
   });
 
   it('delete product', async () => {
     const product = await createProduct(app);
-    expect(product.id).toBeTruthy();
+    expect(product?.id).toBeTruthy();
     const result = await app.graphql.mutate(
       gql`
         mutation deleteProduct($id: ID!) {
@@ -83,7 +83,7 @@ describe('Product e2e', () => {
         }
       `,
       {
-        id: product.id,
+        id: product?.id,
       },
     );
 
@@ -100,7 +100,7 @@ describe('Product e2e', () => {
           ${fragments.product}
         `,
         {
-          id: product.id,
+          id: product?.id,
         },
       );
     } catch (e) {

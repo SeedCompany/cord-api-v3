@@ -17,7 +17,7 @@ import { times } from 'lodash';
 
 describe('Education e2e', () => {
   let app: TestApp;
-  let user: User;
+  let user: User | undefined;
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -30,12 +30,12 @@ describe('Education e2e', () => {
   });
 
   it('create a education', async () => {
-    const education = await createEducation(app, { userId: user.id });
-    expect(education.id).toBeDefined();
+    const education = await createEducation(app, { userId: user?.id });
+    expect(education?.id).toBeDefined();
   });
 
   it('read one education by id', async () => {
-    const education = await createEducation(app, { userId: user.id });
+    const education = await createEducation(app, { userId: user?.id });
 
     try {
       const { education: actual } = await app.graphql.query(
@@ -48,13 +48,13 @@ describe('Education e2e', () => {
           ${fragments.education}
         `,
         {
-          id: education.id,
+          id: education?.id,
         },
       );
 
-      expect(actual.id).toBe(education.id);
+      expect(actual.id).toBe(education?.id);
       expect(isValid(actual.id)).toBe(true);
-      expect(actual.institution).toEqual(education.institution);
+      expect(actual.institution).toEqual(education?.institution);
     } catch (e) {
       console.error(e);
       fail();
@@ -63,7 +63,7 @@ describe('Education e2e', () => {
 
   // UPDATE EDUCATION
   it('update education', async () => {
-    const education = await createEducation(app, { userId: user.id });
+    const education = await createEducation(app, { userId: user?.id });
     const newInstitution = faker.company.companyName();
 
     const result = await app.graphql.mutate(
@@ -80,7 +80,7 @@ describe('Education e2e', () => {
       {
         input: {
           education: {
-            id: education.id,
+            id: education?.id,
             institution: newInstitution,
           },
         },
@@ -88,13 +88,13 @@ describe('Education e2e', () => {
     );
     const updated = result?.updateEducation?.education;
     expect(updated).toBeTruthy();
-    expect(updated.id).toBe(education.id);
+    expect(updated.id).toBe(education?.id);
     expect(updated.institution.value).toBe(newInstitution);
   });
 
   // DELETE EDUCATION
   it('delete education', async () => {
-    const education = await createEducation(app, { userId: user.id });
+    const education = await createEducation(app, { userId: user?.id });
 
     try {
       const result = await app.graphql.mutate(
@@ -104,7 +104,7 @@ describe('Education e2e', () => {
           }
         `,
         {
-          id: education.id,
+          id: education?.id,
         },
       );
       const actual: Education | undefined = result.deleteEducation;

@@ -29,7 +29,7 @@ describe('Language e2e', () => {
 
   it('create a language', async () => {
     const language = await createLanguage(app);
-    expect(language.id).toBeDefined();
+    expect(language?.id).toBeDefined();
   });
 
   it('read one language by id', async () => {
@@ -46,15 +46,15 @@ describe('Language e2e', () => {
           ${fragments.language}
         `,
         {
-          id: language.id,
+          id: language?.id,
         },
       );
 
-      expect(actual.id).toBe(language.id);
+      expect(actual.id).toBe(language?.id);
       expect(isValid(actual.id)).toBeTruthy();
-      expect(actual.name.value).toEqual(language.name.value);
+      expect(actual.name.value).toEqual(language?.name.value);
     } catch (e) {
-      console.log(`language id is ${language.id}`);
+      console.log(`language id is ${language?.id}`);
       console.error(e);
       fail();
     }
@@ -79,7 +79,7 @@ describe('Language e2e', () => {
       {
         input: {
           language: {
-            id: language.id,
+            id: language?.id,
             name: newName,
           },
         },
@@ -87,7 +87,7 @@ describe('Language e2e', () => {
     );
     const updated = result?.updateLanguage?.language;
     expect(updated).toBeTruthy();
-    expect(updated.id).toBe(language.id);
+    expect(updated.id).toBe(language?.id);
     expect(updated.name.value).toBe(newName);
   });
 
@@ -102,7 +102,7 @@ describe('Language e2e', () => {
         }
       `,
       {
-        id: language.id,
+        id: language?.id,
       },
     );
 
@@ -118,7 +118,7 @@ describe('Language e2e', () => {
           ${fragments.language}
         `,
         {
-          id: language.id,
+          id: language?.id,
         },
       );
     } catch (e) {
