@@ -2,56 +2,69 @@ import * as faker from 'faker';
 
 import {
   TestApp,
-  createEducation,
   createSession,
   createTestApp,
+  createEducation,
   createUser,
-  fragments,
 } from './utility';
 
 import { Education } from '../src/components/user/education';
+import { User } from '../src/components/user';
+import { fragments } from './utility/fragments';
 import { gql } from 'apollo-server-core';
 import { isValid } from 'shortid';
 import { times } from 'lodash';
 
 describe('Education e2e', () => {
   let app: TestApp;
+  let user: User;
 
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
+    user = await createUser(app);
   });
+
   afterAll(async () => {
     await app.close();
   });
 
-  // READ EDUCATION
-  it('create & read education by id', async () => {
-    const user = await createUser(app);
-    const ed = await createEducation(app, user.id);
+  it('create a education', async () => {
+    const education = await createEducation(app, { userId: user.id });
+    expect(education.id).toBeDefined();
+  });
 
-    const result = await app.graphql.query(
-      gql`
-        query education($id: ID!) {
-          education(id: $id) {
-            ...education
+  it('read one education by id', async () => {
+    const education = await createEducation(app, { userId: user.id });
+
+    try {
+      const { education: actual } = await app.graphql.query(
+        gql`
+          query education($id: ID!) {
+            education(id: $id) {
+              ...education
+            }
           }
-        }
-        ${fragments.education}
-      `,
-      {
-        id: ed.id,
-      },
-    );
-    const actual: Education | undefined = result.education;
-    expect(actual.institution.value).toBe(ed.institution.value);
+          ${fragments.education}
+        `,
+        {
+          id: education.id,
+        },
+      );
+
+      expect(actual.id).toBe(education.id);
+      expect(isValid(actual.id)).toBe(true);
+      expect(actual.institution).toEqual(education.institution);
+    } catch (e) {
+      console.error(e);
+      fail();
+    }
   });
 
   // UPDATE EDUCATION
   it('update education', async () => {
-    const user = await createUser(app);
-    const education = await createEducation(app, user.id);
-    const newInstitution = education.institution.value + ' updated';
+    const education = await createEducation(app, { userId: user.id });
+    const newInstitution = faker.company.companyName();
 
     const result = await app.graphql.mutate(
       gql`
@@ -75,66 +88,56 @@ describe('Education e2e', () => {
     );
     const updated = result?.updateEducation?.education;
     expect(updated).toBeTruthy();
+    expect(updated.id).toBe(education.id);
     expect(updated.institution.value).toBe(newInstitution);
   });
 
   // DELETE EDUCATION
   it('delete education', async () => {
-    const user = await createUser(app);
-    const education = await createEducation(app, user.id);
-    expect(education.id).toBeTruthy();
-    const result = await app.graphql.mutate(
-      gql`
-        mutation deleteEducation($id: ID!) {
-          deleteEducation(id: $id)
-        }
-      `,
-      {
-        id: education.id,
-      },
-    );
+    const education = await createEducation(app, { userId: user.id });
 
-    const actual: Education | undefined = result.deleteEducation;
-    expect(actual).toBeTruthy();
     try {
-      await app.graphql.query(
+      const result = await app.graphql.mutate(
         gql`
-          query education($id: ID!) {
-            education(id: $id) {
-              ...education
-            }
+          mutation deleteEducation($id: ID!) {
+            deleteEducation(id: $id)
           }
-          ${fragments.education}
         `,
         {
           id: education.id,
         },
       );
+      const actual: Education | undefined = result.deleteEducation;
+      expect(actual).toBeTruthy();
     } catch (e) {
-      expect(e.response.statusCode).toBe(404);
+      console.log(e);
+      fail();
     }
   });
 
-  // LIST EDUCATIONS
-  //   it('list view of educations', async () => {
-  //     // create a bunch of educations
-  //     const educations = await Promise.all(
-  //       times(10).map(() => createEducation(app)),
-  //     );
+  // LIST Educations
+  it.skip('List view of educations', async () => {
+    // create a bunch of educations
+    const numEducations = 10;
+    await Promise.all(
+      times(numEducations).map(() =>
+        createEducation(app, { userId: user.id }),
+      ),
+    );
+    // test reading new lang
+    const { educations } = await app.graphql.query(gql`
+      query {
+        educations {
+          items {
+            ...org
+          }
+          hasMore
+          total
+        }
+      }
+      ${fragments.org}
+    `);
 
-  //     const { educations } = await app.graphql.query(gql`
-  //       query {
-  //         educations {
-  //           items {
-  //             ...education
-  //           }
-  //           hasMore
-  //           total
-  //         }
-  //       }
-  //       ${fragments.education}
-  //     `);
-
-  //     expect(educations.items).toHaveLength(educations.length);
-  //   });
+    expect(educations.items.length).toBeGreaterThan(numEducations);
+  });
 });
