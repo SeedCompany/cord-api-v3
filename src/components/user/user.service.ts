@@ -242,6 +242,8 @@ export class UserService {
             canReadUsers: true,
             canCreateLang: true,
             canReadLangs: true,
+            canCreateEducation: true,
+            canReadEducation: true,
             canCreateUnavailability: true,
             canReadUnavailability: true,
             canDeleteOwnUser: true,
