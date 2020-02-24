@@ -116,28 +116,28 @@ describe('Education e2e', () => {
   });
 
   // LIST Educations
-  it.skip('List view of educations', async () => {
-    // create a bunch of educations
-    const numEducations = 10;
-    await Promise.all(
-      times(numEducations).map(() =>
-        createEducation(app, { userId: user.id }),
-      ),
-    );
-    // test reading new lang
-    const { educations } = await app.graphql.query(gql`
-      query {
-        educations {
-          items {
-            ...org
-          }
-          hasMore
-          total
-        }
-      }
-      ${fragments.org}
-    `);
+  // it.skip('List view of educations', async () => {
+  //   // create a bunch of educations
+  //   const numEducations = 10;
+  //   await Promise.all(
+  //     times(numEducations).map(() =>
+  //       createEducation(app, { userId: user.id }),
+  //     ),
+  //   );
+  //   // test reading new lang
+  //   const { educations } = await app.graphql.query(gql`
+  //     query {
+  //       educations {
+  //         items {
+  //           ...org
+  //         }
+  //         hasMore
+  //         total
+  //       }
+  //     }
+  //     ${fragments.org}
+  //   `);
 
-    expect(educations.items.length).toBeGreaterThan(numEducations);
-  });
+  //   expect(educations.items.length).toBeGreaterThan(numEducations);
+  // });
 });
