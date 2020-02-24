@@ -1,56 +1,54 @@
 import { Resolver, Args, Query, Mutation } from '@nestjs/graphql';
 import { ProductService } from './product.service';
-import {
-  CreateProductInput,
-  CreateProductInputDto,
-  CreateProductOutputDto,
-  ReadProductInputDto,
-  ReadProductOutputDto,
-  UpdateProductInput,
-  UpdateProductInputDto,
-  UpdateProductOutputDto,
-  DeleteProductOutputDto,
-  DeleteProductInputDto,
-} from './product.dto';
+import { Session, ISession } from '../auth';
+import { IdArg } from '../../common';
+import { CreateProductInput, CreateProductOutput, UpdateProductInput, UpdateProductOutput, Product } from './dto';
 
 @Resolver('Product')
 export class ProductResolver {
   constructor(private readonly productService: ProductService) {}
 
-  @Mutation(returns => CreateProductOutputDto, {
-    description: 'Create a product',
+  @Query(returns => Product, {
+    description: 'Read a product by id',
+  })
+  async product(
+    @Session() session: ISession,
+    @IdArg() id: string,
+  ): Promise<Product> {
+    return await this.productService.readOne(id, session);
+  }
+
+  @Mutation(returns => CreateProductOutput, {
+    description: 'Create a product entry',
   })
   async createProduct(
-    @Args('input') { product: input }: CreateProductInputDto,
-  ): Promise<CreateProductOutputDto> {
-    return await this.productService.create(input);
-  }
-  @Query(returns => ReadProductOutputDto, {
-    description: 'Read one Product by id',
-  })
-  async readProduct(
-    @Args('input') { product: input }: ReadProductInputDto,
-  ): Promise<ReadProductOutputDto> {
-    return await this.productService.readOne(input);
+    @Session() session: ISession,
+    @Args('input') { product: input }: CreateProductInput,
+  ): Promise<CreateProductOutput> {
+    return {
+      product: await this.productService.create(input, session)
+    };
   }
 
-  @Mutation(returns => UpdateProductOutputDto, {
-    description: 'Update an Product',
+  @Mutation(() => UpdateProductOutput, {
+    description: 'Update a product entry',
   })
   async updateProduct(
-    @Args('input')
-    { product: input }: UpdateProductInputDto,
-  ): Promise<UpdateProductOutputDto> {
-    return await this.productService.update(input);
+    @Session() session: ISession,
+    @Args('input') { product: input }: UpdateProductInput,
+  ): Promise<UpdateProductOutput> {
+    const product = await this.productService.update(input, session);
+    return { product };
   }
 
-  @Mutation(returns => DeleteProductOutputDto, {
-    description: 'Delete an Product',
+  @Mutation(returns => Boolean, {
+    description: 'Delete a product entry',
   })
   async deleteProduct(
-    @Args('input')
-    { product: input }: DeleteProductInputDto,
-  ): Promise<DeleteProductOutputDto> {
-    return await this.productService.delete(input);
+    @Session() session: ISession,
+    @IdArg() id: string,
+  ): Promise<boolean> {
+    await this.productService.delete(id, session);
+    return true;
   }
 }
