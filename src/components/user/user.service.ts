@@ -242,8 +242,12 @@ export class UserService {
             canReadUsers: true,
             canCreateLang: true,
             canReadLangs: true,
+            canCreateEducation: true,
+            canReadEducation: true,
             canCreateUnavailability: true,
             canReadUnavailability: true,
+            canCreateProduct: true,
+            canReadProducts: true,
             canDeleteOwnUser: true,
             owningOrgId: "Seed Company",
             isAdmin: true
@@ -545,7 +549,7 @@ export class UserService {
         'displayLastName',
         'phone',
         'timezone',
-        'bio'
+        'bio',
       ],
       changes: input,
       nodevar: 'user',
@@ -553,43 +557,16 @@ export class UserService {
   }
 
   async delete(id: string, session: ISession): Promise<void> {
-    await this.db
-      .query()
-      .raw(
-        `
-        MATCH
-        (token:Token {
-          active: true,
-          value: $token
-        })
-        <-[:token {active: true}]-
-        (requestingUser:User {
-          active: true,
-          id: $requestingUserId
-        }),
-        (requestingUser)
-        <-[:member]-(acl:ACL {
-          canDeleteOwnUser: true
-        })
-        -[:toNode]->
-        (user:User {
-          active: true,
-          id: $userToDeleteId
-        })
-        <-[oldTokenRels:token]-
-        ()
-        SET
-          user.active = false
-        DELETE oldTokenRels
-        RETURN
-          user.id as id
-        `,
-        {
-          requestingUserId: session.userId,
-          token: session.token,
-          userToDeleteId: id,
-        },
-      )
-      .run();
+    const user = await this.readOne(id, session);
+    try {
+      this.propertyUpdater.deleteNode({
+        session,
+        object: user,
+        aclEditProp: 'canDeleteOwnUser',
+      });
+    } catch (e) {
+      console.log(e);
+      throw e;
+    }
   }
 }

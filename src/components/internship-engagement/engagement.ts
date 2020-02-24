@@ -5,7 +5,7 @@ import { InternshipEngagementPosition } from './position';
 import { InternshipEngagementStatus } from './status';
 import { InternshipEngagementTag } from './tag';
 import { User } from '../user';
-import { ProductMethodology } from '../product/product-methodology';
+import { ProductMethodology } from '../product/dto/product-methodology';
 import { ObjectType, InputType, Field } from 'type-graphql';
 
 @ObjectType()

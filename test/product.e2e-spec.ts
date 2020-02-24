@@ -1,115 +1,111 @@
 import { INestApplication } from '@nestjs/common';
+import { gql } from 'apollo-server-core';
 import * as request from 'supertest';
 import { Product } from '../src/components/product/product';
-import { createTestApp, TestApp } from './utility';
+import { createTestApp, TestApp, fragments, createSession, createUser } from './utility';
+import { createProduct } from './utility/create-product';
 
-async function createProduct(app: INestApplication): Promise<Product> {
-  let productId;
-  await request(app.getHttpServer())
-    .post('/graphql')
-    .send({
-      operationName: null,
-      query: `
-    mutation {
-        createProduct (input: { product: { type: BibleStories,books:[Genesis],mediums:[Print],purposes:[ChurchLife],approach:Written,methodology:Paratext }}){
-        product {
-        id
-        type
-        }
-      }
-    }
-    `,
-    })
-    .then(({ body }) => {
-      productId = body.data.createProduct.product.id;
-    });
-  return productId;
-}
-
-describe.skip('Product e2e', () => {
+describe('Product e2e', () => {
   let app: TestApp;
 
   beforeAll(async () => {
     app = await createTestApp();
+    await createSession(app);
+    await createUser(app);
+  });
+  afterAll(async () => {
+    await app.close();
   });
 
-  it('read one product by id', async () => {
-    const productId = await createProduct(app);
-    const type = 'BibleStories';
-    return request(app.getHttpServer())
-      .post('/graphql')
-      .send({
-        operationName: null,
-        query: `
-        query {
-          readProduct ( input: { product: { id: "${productId}" } }){
-            product{
-              id
-              type,
-              books,
-              mediums,
-              purposes,
-              approach,
-              methodology
-            }
+  it('create & read product by id', async () => {
+    const product = await createProduct(app);
+
+    const result = await app.graphql.query(
+      gql`
+        query product($id: ID!) {
+          product(id: $id) {
+            ...product
           }
         }
-        `,
-      })
-      .expect(({ body }) => {
-        expect(body.data.readProduct.product.id).toBe(productId);
-        expect(body.data.readProduct.product.type).toBe(type);
-      })
-      .expect(200);
+        ${fragments.product}
+      `,
+      {
+        id: product.id,
+      }
+    );
+    const actual: Product | undefined = result.product;
+    expect(actual.id).toBe(product.id);
+    expect(actual.type).toBe(product.type);
+    expect(actual.books).toEqual(expect.arrayContaining(product.books));
+    expect(actual.mediums).toEqual(expect.arrayContaining(product.mediums));
+    expect(actual.purposes).toEqual(expect.arrayContaining(product.purposes));
+    expect(actual.approach).toBe(product.approach);
+    expect(actual.methodology).toBe(product.methodology);
   });
-  it('update Product', async () => {
-    const productId = await createProduct(app);
+
+  it('update product', async () => {
+    const product = await createProduct(app);
     const typenew = 'Songs';
 
-    return await request(app.getHttpServer())
-      .post('/graphql')
-      .send({
-        operationName: null,
-        query: `
-        mutation {
-          updateProduct (input: { product: {
-            id: "${productId}",
-            type: ${typenew},books:[Genesis],mediums:[Print],purposes:[ChurchLife],approach:Written,methodology:Paratext
-          } }){
+    const result = await app.graphql.query(
+      gql`
+        mutation updateProduct($id: ID!, $type: ProductType!) {
+          updateProduct(input: {
+            product: {
+              id: $id,
+              type: $type
+            }
+          }) {
             product {
-            id
-            type
+              ...product
             }
           }
         }
-          `,
-      })
-      .expect(({ body }) => {
-        expect(body.data.updateProduct.product.id).toBe(productId);
-        expect(body.data.updateProduct.product.type).toBe(typenew);
-      })
-      .expect(200);
+        ${fragments.product}
+      `,
+      {
+        id: product.id,
+        type: typenew,
+      }
+    );
+
+    expect(result.updateProduct.product.id).toBe(product.id);
+    expect(result.updateProduct.product.type).toBe(typenew);
   });
+
   it('delete product', async () => {
-    const productId = await createProduct(app);
-    return request(app.getHttpServer())
-      .post('/graphql')
-      .send({
-        operationName: null,
-        query: `
-        mutation {
-          deleteProduct (input: { product: { id: "${productId}" } }){
-            product {
-            id
+    const product = await createProduct(app);
+    expect(product.id).toBeTruthy();
+    const result = await app.graphql.mutate(
+      gql`
+        mutation deleteProduct($id: ID!) {
+          deleteProduct(id: $id)
+        }
+      `,
+      {
+        id: product.id,
+      },
+    );
+
+    const actual: boolean | undefined = result.deleteProduct;
+    expect(actual).toBeTruthy();
+    try {
+      await app.graphql.query(
+        gql`
+          query product($id: ID!) {
+            product(id: $id) {
+              ...product
             }
           }
-        }
+          ${fragments.product}
         `,
-      })
-      .expect(({ body }) => {
-        expect(body.data.deleteProduct.product.id).toBe(productId);
-      })
-      .expect(200);
+        {
+          id: product.id,
+        },
+      );
+    } catch (e) {
+      expect(e.response.statusCode).toBe(404);
+    }
   });
 
   afterAll(async () => {

@@ -31,7 +31,7 @@ export class LocationResolver {
     @Session() session: ISession,
     @IdArg() id: string,
   ): Promise<Location> {
-    return this.locationService.readOne(id, session.token);
+    return this.locationService.readOne(id, session);
   }
 
   @Query(() => LocationListOutput, {
@@ -46,7 +46,7 @@ export class LocationResolver {
     })
     input: LocationListInput,
   ): Promise<LocationListOutput> {
-    return this.locationService.list(input, session.token);
+    return this.locationService.list(input, session);
   }
 
   @Mutation(() => CreateZoneOutput, {
@@ -56,7 +56,7 @@ export class LocationResolver {
     @Session() session: ISession,
     @Args('input') { zone: input }: CreateZoneInput,
   ): Promise<CreateZoneOutput> {
-    const zone = await this.locationService.createZone(input, session.token);
+    const zone = await this.locationService.createZone(input, session);
     return { zone };
   }
 
@@ -67,7 +67,7 @@ export class LocationResolver {
     @Session() session: ISession,
     @Args('input') { region: input }: CreateRegionInput,
   ): Promise<CreateRegionOutput> {
-    const region = await this.locationService.createRegion(input, session.token);
+    const region = await this.locationService.createRegion(input, session);
     return { region };
   }
 
@@ -78,7 +78,7 @@ export class LocationResolver {
     @Session() session: ISession,
     @Args('input') { country: input }: CreateCountryInput,
   ): Promise<CreateCountryOutput> {
-    const country = await this.locationService.createCountry(input, session.token);
+    const country = await this.locationService.createCountry(input, session);
     return { country };
   }
 
@@ -89,7 +89,7 @@ export class LocationResolver {
     @Session() session: ISession,
     @Args('input') { zone: input }: UpdateZoneInput,
   ): Promise<UpdateZoneOutput> {
-    const zone = await this.locationService.updateZone(input, session.token);
+    const zone = await this.locationService.updateZone(input, session);
     return { zone };
   }
 
@@ -100,7 +100,7 @@ export class LocationResolver {
     @Session() session: ISession,
     @Args('input') { region: input }: UpdateRegionInput,
   ): Promise<UpdateRegionOutput> {
-    const region = await this.locationService.updateRegion(input, session.token);
+    const region = await this.locationService.updateRegion(input, session);
     return { region };
   }
 
@@ -111,7 +111,7 @@ export class LocationResolver {
     @Session() session: ISession,
     @Args('input') { country: input }: UpdateCountryInput,
   ): Promise<UpdateCountryOutput> {
-    const country = await this.locationService.updateCountry(input, session.token);
+    const country = await this.locationService.updateCountry(input, session);
     return { country };
   }
 
@@ -122,7 +122,7 @@ export class LocationResolver {
     @Session() session: ISession,
     @IdArg() id: string,
   ): Promise<boolean> {
-    await this.locationService.delete(id, session.token);
+    await this.locationService.delete(id, session);
     return true;
   }
 }
