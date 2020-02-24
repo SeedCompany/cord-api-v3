@@ -1,8 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Connection } from 'cypher-query-builder';
 import { generate } from 'shortid';
-import { ILogger, Logger } from '../../../core/logger';
-import { PropertyUpdaterService } from '../../../core';
+import { ILogger, Logger, PropertyUpdaterService } from '../../../core';
 import { ISession } from '../../auth';
 import {
   CreateEducation,
@@ -29,111 +28,56 @@ export class EducationService {
     throw new Error('Not implemented');
   }
 
-  async create(input: CreateEducation, session: ISession): Promise<Education> {
-    const result = await this.db
-      .query()
-      .raw(
-        `
-        MATCH
-          (token:Token {
-            active: true,
-            value: $token
-          })
-          <-[:token {active: true}]-
-          (requestingUser:User {
-            active: true,
-            id: $requestingUserId
-          }),
-          (targetUser:User {
-            active: true,
-            id: $targetUserId
-          })
-        CREATE
-          (targetUser)
-          -[:education {active: true, createdAt: datetime()}]->
-          (education:Education {
-            active: true,
-            createdAt: datetime(),
-            id: $id,
-            owningOrgId: $owningOrgId
-          })
-          -[:degree {active: true}]->
-          (degree:Property {
-            active: true,
-            value: $degree
-          }),
-          (education)-[:major {active: true, createdAt: datetime()}]->
-          (major:Property {
-            active: true,
-            value: $major
-          }),
-          (education)-[:institution {active: true, createdAt: datetime()}]->
-          (institution:Property {
-            active: true,
-            value: $institution
-          }),
-          (requestingUser)
-          <-[:member]-
-          (acl:ACL {
-            canReadDegree: true,
-            canEditDegree: true,
-            canReadMajor: true,
-            canEditMajor: true,
-            canReadInstitution: true,
-            canEditInstitution: true
-          })
-          -[:toNode]->
-          (education)
-        RETURN
-          education.id as id,
-          education.createdAt as createdAt,
-          degree.value as degree,
-          acl.canReadDegree as canReadDegree,
-          acl.canEditDegree as canEditDegree,
-          major.value as major,
-          acl.canReadMajor as canReadMajor,
-          acl.canEditMajor as canEditMajor,
-          institution.value as institution,
-          acl.canReadInstitution as canReadInstitution,
-          acl.canEditInstitution as canEditInstitution
-        `,
-        {
-          token: session.token,
-          requestingUserId: session.userId,
-          targetUserId: input.userId,
-          degree: input.degree,
-          major: input.major,
-          institution: input.institution,
-          id: generate(),
-          owningOrgId: session.owningOrgId,
-        },
-      )
-      .first();
-    if (!result) {
+  async create(
+    input: CreateEducation,
+    session: ISession,
+  ): Promise<Education> {
+    const id = generate();
+    const acls = {
+      canReadDegree: true,
+      canEditDegree: true,
+      canReadMajor: true,
+      canEditMajor: true,
+      canReadInstitution: true,
+      canEditInstitution: true
+    };
+
+    try {
+      await this.propertyUpdater.createNode({
+        session,
+        input: { id, ...input },
+        acls,
+        baseNodeLabel: 'Education',
+        aclEditProp: 'canCreateEducation',
+      });
+    } catch (e) {
+      console.log(e);
+      this.logger.error(`Could not create education for user ${input.userId}`,);
       throw new Error('Could not create education');
     }
 
-    return {
-      id: result.id,
-      createdAt: result.createdAt,
-      degree: {
-        value: result.degree,
-        canRead: result.canReadDegree,
-        canEdit: result.canEditDegree,
-      },
-      major: {
-        value: result.major,
-        canRead: result.canReadMajor,
-        canEdit: result.canEditMajor,
-      },
-      institution: {
-        value: result.institution,
-        canRead: result.canReadInstitution,
-        canEdit: result.canEditInstitution,
-      },
-    };
-  }
+    this.logger.info(`education for user ${input.userId} created, id ${id}`,);
+    console.log(`education for user ${input.userId} created, id ${id}`);
 
+    // connect the Education to the User.
+    const query = `
+      MATCH (user: User {id: $userId, active: true}),
+        (education:Education {id: $id, active: true})
+      CREATE (user)-[:education {active: true, createdAt: datetime()}]->(education)
+      RETURN  education.id as id
+      `;
+
+    const result = await this.db
+      .query()
+      .raw(query, {
+        userId: session.userId,
+        id,
+      })
+      .first();
+    
+    return await this.readOne(id, session);
+  }
+  
   async readOne(id: string, session: ISession): Promise<Education> {
     const result = await this.db
       .query()
