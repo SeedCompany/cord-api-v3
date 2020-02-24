@@ -31,15 +31,15 @@ describe('User e2e', () => {
         ${fragments.user}
       `,
       {
-        id: user.id,
+        id: user?.id,
       },
     );
 
     const actual: User | undefined = result.user;
     expect(actual).toBeTruthy();
 
-    expect(isValid(actual.id)).toBe(true);
-    expect(actual.email.value).toBe(user.email.value);
+    expect(isValid(actual?.id)).toBe(true);
+    expect(actual?.email.value).toBe(user?.email.value);
 
     return true;
   });
@@ -62,8 +62,8 @@ describe('User e2e', () => {
       {
         input: {
           user: {
-            id: user.id,
-            realFirstName: user.realFirstName.value + ' 2',
+            id: user?.id,
+            realFirstName: user?.realFirstName.value + ' 2',
           },
         },
       },
@@ -72,8 +72,8 @@ describe('User e2e', () => {
     const actual: User | undefined = result.updateUser.user;
     expect(actual).toBeTruthy();
 
-    expect(isValid(actual.id)).toBe(true);
-    expect(actual.email.value).toBe(user.email.value);
+    expect(isValid(actual?.id)).toBe(true);
+    expect(actual?.email.value).toBe(user?.email.value);
 
     return true;
   });
@@ -89,7 +89,7 @@ describe('User e2e', () => {
         }
       `,
       {
-        id: user.id,
+        id: user?.id,
       },
     );
 

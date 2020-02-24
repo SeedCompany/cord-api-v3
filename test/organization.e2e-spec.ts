@@ -41,13 +41,13 @@ describe('Organization e2e', () => {
         ${fragments.org}
       `,
       {
-        id: org.id,
+        id: org?.id,
       },
     );
 
-    expect(actual.id).toBe(org.id);
+    expect(actual.id).toBe(org?.id);
     expect(isValid(actual.id)).toBe(true);
-    expect(actual.name.value).toBe(org.name.value);
+    expect(actual.name.value).toBe(org?.name.value);
   });
 
   // UPDATE ORG
@@ -70,7 +70,7 @@ describe('Organization e2e', () => {
       {
         input: {
           organization: {
-            id: org.id,
+            id: org?.id,
             name: newName,
           },
         },
@@ -79,7 +79,7 @@ describe('Organization e2e', () => {
 
     const updated = result?.updateOrganization?.organization;
     expect(updated).toBeTruthy();
-    expect(updated.id).toBe(org.id);
+    expect(updated.id).toBe(org?.id);
     expect(updated.name.value).toBe(newName);
   });
 
@@ -94,7 +94,7 @@ describe('Organization e2e', () => {
         }
       `,
       {
-        id: org.id,
+        id: org?.id,
       },
     );
 
