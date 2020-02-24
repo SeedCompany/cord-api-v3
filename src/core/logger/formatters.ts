@@ -46,7 +46,7 @@ export const exceptionInfo = () =>
     const stack =
       info.exception instanceof Error ? info.exception.stack : info.stack;
 
-    const type = stack.slice(0, info.stack.indexOf(':'));
+    const type = stack.slice(0, stack.indexOf(':'));
     const trace = parseTrace({ stack } as Error);
 
     info.exception = {
