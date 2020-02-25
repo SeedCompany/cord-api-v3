@@ -201,7 +201,7 @@ export class OrganizationService {
     };
   }
 
-  async checkAllOrgs(session?: ISession): Promise<boolean> {
+  async checkAllOrgs(session: ISession): Promise<boolean> {
     try {
       const result = await this.db
         .query()
@@ -220,7 +220,7 @@ export class OrganizationService {
             count(org) as orgCount
           `,
           {
-            token: session?.token,
+            token: session.token,
           },
         )
         .first();

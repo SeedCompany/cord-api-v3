@@ -7,7 +7,7 @@ export const FilesBucketToken = Symbol('FilesBucket');
 export const FilesBucketFactory = {
   provide: FilesBucketToken,
   useFactory: (s3: S3, config: ConfigService) => {
-    return new S3Bucket(s3, config.files.bucket || '', {});
+    return new S3Bucket(s3, config.files.bucket, {});
   },
   inject: [S3, ConfigService],
 };
