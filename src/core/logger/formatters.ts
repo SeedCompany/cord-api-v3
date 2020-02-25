@@ -7,6 +7,13 @@ import { MESSAGE } from 'triple-beam';
 import { inspect } from 'util';
 import { format } from 'winston';
 
+interface Trace {
+  getFunctionName(): string;
+  getFileName(): string;
+  getLineNumber(): number;
+  getColumnNumber(): number;
+}
+
 export const metadata = () =>
   format.metadata({
     fillExcept: ['level', 'message', 'name', 'exception'],
@@ -68,7 +75,7 @@ export const formatException = () =>
     const ex = info.exception;
 
     const formattedTrace = ex.trace
-      .map(t => {
+      .map((t: Trace) => {
         const subject = t.getFunctionName();
 
         const file = relative(`${__dirname}/../../..`, t.getFileName());

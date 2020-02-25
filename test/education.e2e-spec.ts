@@ -38,7 +38,7 @@ describe('Education e2e', () => {
     const education = await createEducation(app, { userId: user?.id });
 
     try {
-      const { education: actual } = await app.graphql.query(
+      const result = await app.graphql.query(
         gql`
           query education($id: ID!) {
             education(id: $id) {
@@ -52,9 +52,9 @@ describe('Education e2e', () => {
         },
       );
 
-      expect(actual.id).toBe(education?.id);
-      expect(isValid(actual.id)).toBe(true);
-      expect(actual.institution).toEqual(education?.institution);
+      expect(result?.education.id).toBe(education?.id);
+      expect(isValid(result?.education.id)).toBe(true);
+      expect(result?.education.institution).toEqual(education?.institution);
     } catch (e) {
       console.error(e);
       fail();
@@ -107,7 +107,7 @@ describe('Education e2e', () => {
           id: education?.id,
         },
       );
-      const actual: Education | undefined = result.deleteEducation;
+      const actual: Education | undefined = result?.deleteEducation;
       expect(actual).toBeTruthy();
     } catch (e) {
       console.log(e);

@@ -9,7 +9,7 @@ export async function createSession(app: TestApp): Promise<string> {
       }
     }
   `);
-  const token = result.createSession?.token;
+  const token = result?.createSession?.token;
   expect(token).toBeTruthy();
   app.graphql.authToken = token;
   return token;

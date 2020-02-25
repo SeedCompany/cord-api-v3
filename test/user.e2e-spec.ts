@@ -35,7 +35,7 @@ describe('User e2e', () => {
       },
     );
 
-    const actual: User | undefined = result.user;
+    const actual: User | undefined = result?.user;
     expect(actual).toBeTruthy();
 
     expect(isValid(actual?.id)).toBe(true);
@@ -69,7 +69,7 @@ describe('User e2e', () => {
       },
     );
 
-    const actual: User | undefined = result.updateUser.user;
+    const actual: User | undefined = result?.updateUser.user;
     expect(actual).toBeTruthy();
 
     expect(isValid(actual?.id)).toBe(true);
@@ -93,7 +93,7 @@ describe('User e2e', () => {
       },
     );
 
-    const actual: User | undefined = result.deleteUser;
+    const actual: User | undefined = result?.deleteUser;
     expect(actual).toBeTruthy();
 
     return true;
@@ -104,7 +104,7 @@ describe('User e2e', () => {
     // create a bunch of users
     await Promise.all(times(10).map(() => createUser(app)));
 
-    const { users } = await app.graphql.query(gql`
+    const result = await app.graphql.query(gql`
       query {
         users {
           items {
@@ -117,7 +117,7 @@ describe('User e2e', () => {
       ${fragments.user}
     `);
 
-    expect(users.items.length).toBeGreaterThan(9);
+    expect(result?.users.items.length).toBeGreaterThan(9);
   });
 
   afterAll(async () => {

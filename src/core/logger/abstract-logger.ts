@@ -55,7 +55,7 @@ export abstract class AbstractLogger implements ILogger {
         ? { message: msgOrContext }
         : msgOrContext),
       ...(typeof levelOrEntry === 'string'
-        ? { level: levelOrEntry }
+        ? { level: levelOrEntry, message: '' }
         : levelOrEntry),
     });
   }

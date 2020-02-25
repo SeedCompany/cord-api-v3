@@ -65,7 +65,7 @@ export class PropertyUpdaterService {
     session: ISession;
     object: TObject;
     key: Key;
-    value: UnwrapSecured<TObject[Key]>;
+    value?: UnwrapSecured<TObject[Key]>;
     aclEditProp?: string;
     nodevar: string;
   }): Promise<TObject> {
@@ -158,7 +158,8 @@ export class PropertyUpdaterService {
     const result: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> } = {};
     for (const prop of props) {
       const key = prop as string;
-      result[key] = await this.readProperty({ id, session, key, nodevar });
+      // FIXME: the "as" statement here is a workaround to weird type inferance issue
+      result[prop] = await this.readProperty({ id, session, key, nodevar }) as UnwrapSecured<TObject[keyof TObject]>;
     }
     return result;
   }
@@ -376,7 +377,7 @@ export class PropertyUpdaterService {
       aclEditProp: aclEditPropName,
     });
 
-    const wait = [];
+    const wait: Promise<void>[] = [];
     Object.keys(input).map(async key => {
       if (key === 'id' || key === 'userId') {
         return;
