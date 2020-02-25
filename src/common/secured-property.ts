@@ -19,7 +19,7 @@ export type UnwrapSecured<T> = T extends Secured<infer P> ? P : T;
 export const isSecured = <T>(value: T | Secured<T>): value is Secured<T> =>
   isObject(value);
 
-export const unwrapSecured = <T>(value: T | Secured<T>): T | undefined =>
+export const unwrapSecured = <T>(value: T | Secured<T>): T =>
   isSecured(value) ? value.value : value;
 
 export function SecuredProperty<T>(
@@ -48,7 +48,7 @@ SecuredProperty.descriptionFor = (value: string) => stripIndent`
 @ObjectType({
   description: SecuredProperty.descriptionFor('a string'),
 })
-export abstract class SecuredString extends SecuredProperty<string | null>(
+export abstract class SecuredString extends SecuredProperty<string>(
   GraphQLString,
 ) {}
 
