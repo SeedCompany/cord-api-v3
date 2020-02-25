@@ -270,12 +270,12 @@ export class OrganizationService {
         .first();
 
       const isGood = this.validateOrg({
-        id: result.id,
-        createdAt: result.createdAt,
+        id: result?.id,
+        createdAt: result?.createdAt,
         name: {
-          value: result.name,
-          canRead: null,
-          canEdit: null,
+          value: result?.name,
+          canRead: false,
+          canEdit: false,
         },
       });
 
