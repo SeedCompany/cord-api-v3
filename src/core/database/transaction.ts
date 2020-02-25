@@ -47,7 +47,7 @@ Connection.prototype.transaction = function transaction(this: Connection) {
 type QueryConnection = Pick<Connection, 'run' | 'stream'>;
 
 export class Transaction implements QueryConnection {
-  private session: Session;
+  private session: Session | null;
   private wrapped: NeoTransaction;
 
   constructor(
@@ -91,7 +91,7 @@ export class Transaction implements QueryConnection {
    */
   async close() {
     if (this.session) {
-      await new Promise(resolve => this.session.close(resolve));
+      await new Promise(resolve => this.session?.close(resolve));
       this.session = null;
     }
   }

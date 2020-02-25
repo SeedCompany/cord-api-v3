@@ -31,7 +31,7 @@ describe('Organization e2e', () => {
   it('create & read organization by id', async () => {
     const org = await createOrganization(app);
 
-    const { organization: actual } = await app.graphql.query(
+    const result = await app.graphql.query(
       gql`
         query org($id: ID!) {
           organization(id: $id) {
@@ -45,9 +45,9 @@ describe('Organization e2e', () => {
       },
     );
 
-    expect(actual.id).toBe(org?.id);
-    expect(isValid(actual.id)).toBe(true);
-    expect(actual.name.value).toBe(org?.name.value);
+    expect(result?.organization.id).toBe(org?.id);
+    expect(isValid(result?.organization.id)).toBe(true);
+    expect(result?.organization.name.value).toBe(org?.name.value);
   });
 
   // UPDATE ORG
@@ -98,7 +98,7 @@ describe('Organization e2e', () => {
       },
     );
 
-    const actual: Organization | undefined = result.deleteOrganization;
+    const actual: Organization | undefined = result?.deleteOrganization;
     expect(actual).toBeTruthy();
   });
 
@@ -109,7 +109,7 @@ describe('Organization e2e', () => {
       times(10).map(() => createOrganization(app)),
     );
 
-    const { organizations } = await app.graphql.query(gql`
+    const result = await app.graphql.query(gql`
       query {
         organizations {
           items {
@@ -122,6 +122,6 @@ describe('Organization e2e', () => {
       ${fragments.org}
     `);
 
-    expect(organizations.items.length).toBeGreaterThan(10);
+    expect(result?.organizations.items.length).toBeGreaterThan(10);
   });
 });

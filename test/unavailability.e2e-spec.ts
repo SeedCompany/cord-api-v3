@@ -38,7 +38,7 @@ describe('Unavailability e2e', () => {
     const unavailability = await createUnavailability(app, { userId: user?.id });
 
     try {
-      const { unavailability: actual } = await app.graphql.query(
+      const result = await app.graphql.query(
         gql`
           query unavailability($id: ID!) {
             unavailability(id: $id) {
@@ -52,9 +52,9 @@ describe('Unavailability e2e', () => {
         },
       );
 
-      expect(actual.id).toBe(unavailability?.id);
-      expect(isValid(actual.id)).toBe(true);
-      expect(actual.description).toEqual(unavailability?.description);
+      expect(result?.unavailability.id).toBe(unavailability?.id);
+      expect(isValid(result?.unavailability.id)).toBe(true);
+      expect(result?.unavailability.description).toEqual(unavailability?.description);
     } catch (e) {
       console.error(e);
       fail();
@@ -107,7 +107,7 @@ describe('Unavailability e2e', () => {
           id: unavailability?.id,
         },
       );
-      const actual: Unavailability | undefined = result.deleteUnavailability;
+      const actual: Unavailability | undefined = result?.deleteUnavailability;
       expect(actual).toBeTruthy();
     } catch (e) {
       console.log(e);
@@ -125,7 +125,7 @@ describe('Unavailability e2e', () => {
       ),
     );
     // test reading new lang
-    const { unavailables } = await app.graphql.query(gql`
+    const result = await app.graphql.query(gql`
       query {
         unavailabilities {
           items {
@@ -138,6 +138,6 @@ describe('Unavailability e2e', () => {
       ${fragments.org}
     `);
 
-    expect(unavailables.items.length).toBeGreaterThan(numUnavailables);
+    expect(result?.unavailables.items.length).toBeGreaterThan(numUnavailables);
   });
 });

@@ -36,7 +36,7 @@ describe('Language e2e', () => {
     const language = await createLanguage(app);
 
     try {
-      const { language: actual } = await app.graphql.query(
+      const result = await app.graphql.query(
         gql`
           query language($id: ID!) {
             language(id: $id) {
@@ -50,9 +50,9 @@ describe('Language e2e', () => {
         },
       );
 
-      expect(actual.id).toBe(language?.id);
-      expect(isValid(actual.id)).toBeTruthy();
-      expect(actual.name.value).toEqual(language?.name.value);
+      expect(result?.language.id).toBe(language?.id);
+      expect(isValid(result?.language.id)).toBeTruthy();
+      expect(result?.language.name.value).toEqual(language?.name.value);
     } catch (e) {
       console.log(`language id is ${language?.id}`);
       console.error(e);
@@ -106,7 +106,7 @@ describe('Language e2e', () => {
       },
     );
 
-    expect(result.deleteLanguage).toBeTruthy();
+    expect(result?.deleteLanguage).toBeTruthy();
     try {
       await app.graphql.query(
         gql`
@@ -136,7 +136,7 @@ describe('Language e2e', () => {
       times(numLanguages).map(() => createLanguage(app, { name: 'Italian' })),
     );
     // test reading new lang
-    const { languages } = await app.graphql.query(gql`
+    const result = await app.graphql.query(gql`
       query {
         languages {
           items {
@@ -149,6 +149,6 @@ describe('Language e2e', () => {
       ${fragments.language}
     `);
 
-    expect(languages.items.length).toBeGreaterThan(numLanguages);
+    expect(result?.languages.items.length).toBeGreaterThan(numLanguages);
   });
 });

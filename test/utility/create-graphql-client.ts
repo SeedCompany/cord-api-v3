@@ -12,11 +12,11 @@ export interface GraphQLTestClient {
   query: (
     query: DocumentNode,
     variables?: { [name: string]: any },
-  ) => Promise<Record<string, any>>;
+  ) => Promise<Record<string, any> | null | undefined>;
   mutate: (
     mutation: DocumentNode,
     variables?: { [name: string]: any },
-  ) => Promise<Record<string, any>>;
+  ) => Promise<Record<string, any> | null | undefined>;
   authToken: string;
 }
 
@@ -55,7 +55,7 @@ export const createGraphqlClient = async (
       return options.context.request?.headers?.authorization?.replace(
         'Bearer ',
         '',
-      );
+      ) || '';
     },
     set authToken(token: string) {
       const fakeRequest = {

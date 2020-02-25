@@ -42,7 +42,7 @@ export async function createLanguage(
     },
   );
 
-  const actual: Language | undefined = result.createLanguage?.language;
+  const actual: Language | undefined = result?.createLanguage?.language;
   expect(actual).toBeTruthy();
 
   expect(isValid(actual?.id)).toBe(true);

@@ -273,7 +273,7 @@ export class UpdateProjectOutput {
 @ObjectType()
 export class UpdateProjectOutputDto {
   @Field({ nullable: true }) // nullable in case of error
-  project: UpdateProjectOutput;
+  project: UpdateProjectOutput | null;
 
   constructor() {
     this.project = new UpdateProjectOutput();
