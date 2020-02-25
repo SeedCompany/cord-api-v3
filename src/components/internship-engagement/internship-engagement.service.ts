@@ -69,17 +69,17 @@ export class InternshipEngagementService {
           id: result.records[0].get('userId'),
           createdAt: DateTime.local(),
           timezone: {
-            value: null,
+            value: undefined,
             canRead: true,
             canEdit: true,
           },
           phone: {
-            value: null,
+            value: undefined,
             canRead: true,
             canEdit: true,
           },
           bio: {
-            value: null,
+            value: undefined,
             canRead: true,
             canEdit: true,
           },
@@ -139,17 +139,17 @@ export class InternshipEngagementService {
           id: result.records[0].get('userId'),
           createdAt: DateTime.local(),
           timezone: {
-            value: null,
+            value: undefined,
             canRead: true,
             canEdit: true,
           },
           phone: {
-            value: null,
+            value: undefined,
             canRead: true,
             canEdit: true,
           },
           bio: {
-            value: null,
+            value: undefined,
             canRead: true,
             canEdit: true,
           },
@@ -214,17 +214,17 @@ export class InternshipEngagementService {
             id: result.records[0].get('userId'),
             createdAt: DateTime.local(),
             timezone: {
-              value: null,
+              value: undefined,
               canRead: true,
               canEdit: true,
             },
             phone: {
-              value: null,
+              value: undefined,
               canRead: true,
               canEdit: true,
             },
             bio: {
-              value: null,
+              value: undefined,
               canRead: true,
               canEdit: true,
             },
