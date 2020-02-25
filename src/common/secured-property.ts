@@ -48,7 +48,7 @@ SecuredProperty.descriptionFor = (value: string) => stripIndent`
 @ObjectType({
   description: SecuredProperty.descriptionFor('a string'),
 })
-export abstract class SecuredString extends SecuredProperty<string>(
+export abstract class SecuredString extends SecuredProperty<string | null>(
   GraphQLString,
 ) {}
 

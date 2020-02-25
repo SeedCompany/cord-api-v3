@@ -12,7 +12,7 @@ import {
   DeleteProjectOutputDto,
 } from './project.dto';
 
-@Resolver(of => Project)
+@Resolver()
 export class ProjectResolver {
   constructor(private readonly projectService: ProjectService) {
   }
