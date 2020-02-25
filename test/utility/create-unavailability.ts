@@ -41,7 +41,7 @@ export async function createUnavailability(
     },
   );
 
-  const actual: Unavailability | undefined = result?.createUnavailability?.unavailability;
+  const actual: Unavailability | undefined = result.createUnavailability.unavailability;
   expect(actual).toBeTruthy();
 
   expect(isValid(actual?.id)).toBe(true);

@@ -33,7 +33,7 @@ describe('Product e2e', () => {
         id: product?.id,
       }
     );
-    const actual: Product | undefined = result?.product;
+    const actual: Product | undefined = result.product;
     expect(actual?.id).toBe(product?.id);
     expect(actual?.type).toBe(product?.type);
     expect(actual?.books).toEqual(expect.arrayContaining(product?.books!));
@@ -69,8 +69,8 @@ describe('Product e2e', () => {
       }
     );
 
-    expect(result?.updateProduct.product.id).toBe(product?.id);
-    expect(result?.updateProduct.product.type).toBe(typenew);
+    expect(result.updateProduct.product.id).toBe(product?.id);
+    expect(result.updateProduct.product.type).toBe(typenew);
   });
 
   it('delete product', async () => {
@@ -87,7 +87,7 @@ describe('Product e2e', () => {
       },
     );
 
-    const actual: boolean | undefined = result?.deleteProduct;
+    const actual: boolean | undefined = result.deleteProduct;
     expect(actual).toBeTruthy();
     try {
       await app.graphql.query(

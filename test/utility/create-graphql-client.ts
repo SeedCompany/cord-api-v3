@@ -12,11 +12,11 @@ export interface GraphQLTestClient {
   query: (
     query: DocumentNode,
     variables?: { [name: string]: any },
-  ) => Promise<Record<string, any> | null | undefined>;
+  ) => Promise<Record<string, any>>;
   mutate: (
     mutation: DocumentNode,
     variables?: { [name: string]: any },
-  ) => Promise<Record<string, any> | null | undefined>;
+  ) => Promise<Record<string, any>>;
   authToken: string;
 }
 
@@ -43,13 +43,13 @@ export const createGraphqlClient = async (
       const result = await query({ query: q, variables });
       resetRequest();
       validateResult(result);
-      return result.data;
+      return result.data!;
     },
     mutate: async (mutation, variables) => {
       const result = await mutate({ mutation, variables });
       resetRequest();
       validateResult(result);
-      return result.data;
+      return result.data!;
     },
     get authToken() {
       return options.context.request?.headers?.authorization?.replace(

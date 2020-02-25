@@ -41,7 +41,7 @@ export async function createEducation(
     },
   );
 
-  const actual: Education | undefined = result?.createEducation?.education;
+  const actual: Education | undefined = result.createEducation?.education;
   expect(actual).toBeTruthy();
 
   expect(isValid(actual?.id)).toBe(true);

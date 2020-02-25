@@ -131,7 +131,7 @@ export const fragments = {
     fragment file on FileNode {
       type
     }
-    `,
+  `,
   product: gql`
     fragment product on Product {
       id
@@ -141,6 +141,24 @@ export const fragments = {
       purposes
       approach
       methodology
+    }
+  `,
+  project: gql`
+    fragment project on Project {
+      id
+      name
+      deptId
+      status
+      location
+      publicLocation
+      mouStart
+      mouEnd
+      partnerships
+      sensitivity
+      team
+      budgets
+      estimatedSubmission
+      engagements
     }
   `
 };

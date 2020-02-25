@@ -45,9 +45,9 @@ describe('Organization e2e', () => {
       },
     );
 
-    expect(result?.organization.id).toBe(org?.id);
-    expect(isValid(result?.organization.id)).toBe(true);
-    expect(result?.organization.name.value).toBe(org?.name.value);
+    expect(result.organization.id).toBe(org?.id);
+    expect(isValid(result.organization.id)).toBe(true);
+    expect(result.organization.name.value).toBe(org?.name.value);
   });
 
   // UPDATE ORG
@@ -77,7 +77,7 @@ describe('Organization e2e', () => {
       },
     );
 
-    const updated = result?.updateOrganization?.organization;
+    const updated = result.updateOrganization?.organization;
     expect(updated).toBeTruthy();
     expect(updated.id).toBe(org?.id);
     expect(updated.name.value).toBe(newName);
@@ -98,7 +98,7 @@ describe('Organization e2e', () => {
       },
     );
 
-    const actual: Organization | undefined = result?.deleteOrganization;
+    const actual: Organization | undefined = result.deleteOrganization;
     expect(actual).toBeTruthy();
   });
 
@@ -122,6 +122,6 @@ describe('Organization e2e', () => {
       ${fragments.org}
     `);
 
-    expect(result?.organizations.items.length).toBeGreaterThan(10);
+    expect(result.organizations.items.length).toBeGreaterThan(10);
   });
 });
