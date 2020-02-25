@@ -240,11 +240,12 @@ export class InternshipEngagementService {
             ),
           }
         } else {
-          response.internshipEngagement = null;
+          throw new Error('Could not update internship.');
         }
       })
       .catch(error => {
         console.log(error);
+        throw error;
       })
       .then(() => session.close());
 

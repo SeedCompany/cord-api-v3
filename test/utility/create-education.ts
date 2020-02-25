@@ -14,7 +14,7 @@ export async function createEducation(
   input: Partial<CreateEducation> = {},
 ) {
   const education: CreateEducation = {
-    userId: input.userId,
+    userId: input.userId!,
     degree: Degree.Associates,
     major: faker.hacker.adjective() + ' Degree',
     institution: faker.company.companyName(),
