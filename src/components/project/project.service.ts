@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ISession } from '../auth';
 import { DatabaseService } from '../../core/database.service';
 import { generate } from 'shortid';
 import {
@@ -12,6 +13,7 @@ import {
   DeleteProjectInput,
 } from './project.dto';
 
+import { Project, ProjectListInput, ProjectListOutput } from './dto';
 @Injectable()
 export class ProjectService {
   constructor(private readonly db: DatabaseService) {}
@@ -239,5 +241,72 @@ export class ProjectService {
       .then(() => session.close());
 
     return response;
+  }
+
+  async list(
+    { page, count, sort, order, filter }: ProjectListInput,
+    { token }: ISession,
+  ): Promise<ProjectListOutput> {
+    const result = await this.db
+      .query()
+      .raw(
+        `
+      MATCH
+        (token:Token {active: true, value: $token})
+        <-[:token {active: true}]-
+        (user:User {
+          canReadOrgs: true
+        }),
+        (proj:Project {
+          active: true
+        })
+//      WHERE
+//        proj.name CONTAINS $filter
+      WITH count(proj) as projs, user
+      MATCH
+        (proj:Project {
+          active: true
+        })
+        -[:name {active: true}]->
+        (name:Property {
+          active: true
+        })
+      RETURN
+        proj.id as id,
+        proj.createdAt as createdAt,
+        name.value as name,
+        user.canCreateOrg as canCreateOrg,
+        user.canReadOrgs as canReadOrgs,
+        projs as total
+      ORDER BY proj.${sort} ${order}
+      SKIP $skip
+      LIMIT $count
+      `,
+        {
+          // filter: filter.name, // TODO Handle no filter
+          skip: (page - 1) * count,
+          count,
+          token,
+        },
+      )
+      .run();
+
+    const items = result.map<Project>(row => ({
+      id: row.id,
+      createdAt: row.createdAt,
+      name: {
+        value: row.name,
+        canRead: row.canReadOrgs,
+        canEdit: row.canCreateOrg,
+      },
+    }));
+
+    const hasMore = (page - 1) * count + count < result[0].total; // if skip + count is less than total there is more
+
+    return {
+      items,
+      hasMore,
+      total: result[0].total,
+    };
   }
 }
