@@ -419,121 +419,36 @@ export class UserService {
   }
 
   async readOne(id: string, session: ISession): Promise<User> {
-    const result = await this.db
-      .query()
-      .raw(
-        `
-        MATCH
-        (token:Token {
-          active: true,
-          value: $token
-        })
-        <-[:token {active: true}]-
-        (requestingUser:User {
-          active: true,
-          id: $requestingUserId
-        })
-      WITH * OPTIONAL MATCH (user:User {active: true, id: $id, owningOrgId: $owningOrgId})
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl1:ACL {canReadEmail: true})-[:toNode]->(user)-[:email {active: true}]->(email:EmailAddress {active: true})
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl2:ACL {canEditEmail: true})-[:toNode]->(user)
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl3:ACL {canReadRealFirstName: true})-[:toNode]->(user)-[:realFirstName {active: true}]->(realFirstName:Property {active: true})
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl4:ACL {canEditRealFirstName: true})-[:toNode]->(user)
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl5:ACL {canReadRealLastName: true})-[:toNode]->(user)-[:realLastName {active: true}]->(realLastName:Property {active: true})
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl6:ACL {canEditRealLastName: true})-[:toNode]->(user)
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl7:ACL {canReadDisplayFirstName: true})-[:toNode]->(user)-[:displayFirstName {active: true}]->(displayFirstName:Property {active: true})
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl8:ACL {canEditDisplayFirstName: true})-[:toNode]->(user)
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl9:ACL {canReadDisplayLastName: true})-[:toNode]->(user)-[:displayLastName {active: true}]->(displayLastName:Property {active: true})
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl10:ACL {canEditDisplayLastName: true})-[:toNode]->(user)
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl11:ACL {canReadPhone: true})-[:toNode]->(user)-[:phone {active: true}]->(phone:Property {active: true})
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl12:ACL {canEditPhone: true})-[:toNode]->(user)
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl13:ACL {canReadTimezone: true})-[:toNode]->(user)-[:timezone {active: true}]->(timezone:Property {active: true})
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl14:ACL {canEditTimezone: true})-[:toNode]->(user)
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl15:ACL {canReadBio: true})-[:toNode]->(user)-[:bio {active: true}]->(bio:Property {active: true})
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl16:ACL {canEditBio: true})-[:toNode]->(user)
-        RETURN
-        user.id as id,
-        user.createdAt as createdAt,
-        email.value as email,
-        realFirstName.value as realFirstName,
-        realLastName.value as realLastName,
-        displayFirstName.value as displayFirstName,
-        displayLastName.value as displayLastName,
-        phone.value as phone,
-        timezone.value as timezone,
-        bio.value as bio,
-        acl1.canReadEmail as canReadEmail,
-        acl2.canEditEmail as canEditEmail,
-        acl3.canReadRealFirstName as canReadRealFirstName,
-        acl4.canEditRealFirstName as canEditRealFirstName,
-        acl5.canReadRealLastName as canReadRealLastName,
-        acl6.canEditRealLastName as canEditRealLastName,
-        acl7.canReadDisplayFirstName as canReadDisplayFirstName,
-        acl8.canEditDisplayFirstName as canEditDisplayFirstName,
-        acl9.canReadDisplayLastName as canReadDisplayLastName,
-        acl10.canEditDisplayLastName as canEditDisplayLastName,
-        acl11.canReadPhone as canReadPhone,
-        acl12.canEditPhone as canEditPhone,
-        acl13.canReadTimezone as canReadTimezone,
-        acl14.canEditTimezone as canEditTimezone,
-        acl15.canReadBio as canReadBio,
-        acl16.canEditBio as canEditBio
-        `,
-        {
-          token: session.token,
-          requestingUserId: session.userId,
-          id,
-          owningOrgId: session.owningOrgId,
-        },
-      )
-      .first();
+
+    const result = await this.propertyUpdater.readProperties({
+      id,
+      session,
+      props: [
+        "email",
+        "realFirstName",
+        "realLastName",
+        "displayFirstName",
+        "displayLastName",
+        "phone",
+        "timezone",
+        "bio",
+        "createdAt",
+        "id"
+      ],
+      nodevar: "user"
+    });
+
     if (!result) {
       throw new NotFoundException('Could not find user');
     }
 
+    const { id:Id, createdAt, ...rest } = result;
+
     return {
-      id: result.id,
-      createdAt: result.createdAt,
-      email: {
-        value: result.email,
-        canRead: result.canReadEmail,
-        canEdit: result.canEditEmail,
-      },
-      realFirstName: {
-        value: result.realFirstName,
-        canRead: result.canReadRealFirstName,
-        canEdit: result.canEditRealFirstName,
-      },
-      realLastName: {
-        value: result.realLastName,
-        canRead: result.canReadRealLastName,
-        canEdit: result.canEditRealLastName,
-      },
-      displayFirstName: {
-        value: result.displayFirstName,
-        canRead: result.canReadDisplayFirstName,
-        canEdit: result.canEditDisplayFirstName,
-      },
-      displayLastName: {
-        value: result.displayLastName,
-        canRead: result.canReadDisplayLastName,
-        canEdit: result.canEditDisplayLastName,
-      },
-      phone: {
-        value: result.phone,
-        canRead: result.canReadPhone,
-        canEdit: result.canEditPhone,
-      },
-      timezone: {
-        value: result.timezone,
-        canRead: result.canReadTimezone,
-        canEdit: result.canEditTimezone,
-      },
-      bio: {
-        value: result.bio,
-        canRead: result.canReadBio,
-        canEdit: result.canEditBio,
-      },
-    };
+      id: Id.value,
+      createdAt: createdAt.value,
+      ...rest
+    } as User;
   }
 
   async update(input: UpdateUser, session: ISession): Promise<User> {

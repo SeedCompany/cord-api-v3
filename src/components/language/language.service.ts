@@ -21,7 +21,7 @@ export class LanguageService {
     private readonly db: DatabaseService,
     private readonly propertyUpdater: PropertyUpdaterService,
     @Logger('language:service') private readonly logger: ILogger,
-  ) {}
+  ) { }
 
   async create(input: CreateLanguage, session: ISession): Promise<Language> {
     this.logger.info(
@@ -70,110 +70,24 @@ export class LanguageService {
       `Query readOne Language: id ${langId} by ${session.userId}`,
     );
 
-    const result = await this.db
-      .query()
-      .raw(
-        `
-        MATCH
-          (token:Token {active: true, value: $token})
-          <-[:token {active: true}]-
-          (user:User {
-            canReadLangs: true
-          }),
-          (lang:Language {
-            active: true,
-            id: $id
-          })
-        WITH * OPTIONAL MATCH (user)<-[:member]-(acl1:ACL {canReadName: true})-[:toNode]->(lang)-[:name {active: true}]->(name:Property {active: true})
-        WITH * OPTIONAL MATCH (user)<-[:member]-(acl2:ACL {canReadDisplayName: true})-[:toNode]->(lang)-[:displayName {active: true}]->(displayName:Property {active: true})
-        WITH * OPTIONAL MATCH (user)<-[:member]-(acl3:ACL {canReadBeginFiscalYear: true})-[:toNode]->(lang)-[:beginFiscalYear {active: true}]->(beginFiscalYear:Property {active: true})
-        WITH * OPTIONAL MATCH (user)<-[:member]-(acl4:ACL {canReadEthnologueName: true})-[:toNode]->(lang)-[:ethnologueName {active: true}]->(ethnologueName:Property {active: true})
-        WITH * OPTIONAL MATCH (user)<-[:member]-(acl5:ACL {canReadEthnologuePopulation: true})-[:toNode]->(lang)-[:ethnologuePopulation {active: true}]->(ethnologuePopulation:Property {active: true})
-        WITH * OPTIONAL MATCH (user)<-[:member]-(acl6:ACL {canReadOrganizationPopulation: true})-[:toNode]->(lang)-[:organizationPopulation {active: true}]->(organizationPopulation:Property {active: true})
-        WITH * OPTIONAL MATCH (user)<-[:member]-(acl7:ACL {canReadRodNumber: true})-[:toNode]->(lang)-[:rodNumber {active: true}]->(rodNumber:Property {active: true})
-        RETURN
-          lang.id as id,
-          lang.createdAt as createdAt,
-          name.value as name,
-          user.canCreateLang as canCreateLang,
-          user.canReadLangs as canReadLangs,
-          displayName.value as displayName,
-          beginFiscalYear.value as beginFiscalYear,
-          ethnologueName.value as ethnologueName,
-          ethnologuePopulation.value as ethnologuePopulation,
-          organizationPopulation.value as organizationPopulation,
-          rodNumber.value as rodNumber,
-          acl1.canReadName as canReadName,
-          acl2.canReadDisplayName as canReadDisplayName,
-          acl3.canReadBeginFiscalYear as canReadBeginFiscalYear,
-          acl4.canReadEthnologueName as canReadEthnologueName,
-          acl5.canReadEthnologuePopulation as canReadEthnologuePopulation,
-          acl6.canReadOrganizationPopulation as canReadOrganizationPopulation,
-          acl7.canReadRodNumber as canReadRodNumber,
-          acl1.canEditName as canEditName,
-          acl2.canEditDisplayName as canEditDisplayName,
-          acl3.canEditBeginFiscalYear as canEditBeginFiscalYear,
-          acl4.canEditEthnologueName as canEditEthnologueName,
-          acl5.canEditEthnologuePopulation as canEditEthnologuePopulation,
-          acl6.canEditOrganizationPopulation as canEditOrganizationPopulation,
-          acl7.canEditRodNumber as canEditRodNumber
-
-        `,
-        {
-          id: langId,
-          token: session.token,
-        },
-      )
-      .first();
+    const result = await this.propertyUpdater.readProperties({
+      session, id: langId,
+      nodevar: "lang",
+      props: ['id', 'createdAt', 'name', 'displayName', 'beginFiscalYear', 'ethnologueName', 'ethnologuePopulation', 'organizationPopulation', 'rodNumber']
+    });
 
     if (!result) {
       this.logger.error(`Could not find language: ${langId} `);
       throw new NotFoundException('Could not find language');
-    }
-
-    if (!result.canReadLangs) {
-      throw new Error('User does not have permission to read this language');
-    }
+    } 
+    
+    const { id, createdAt, ...rest } = result;
 
     return {
-      id: result.id,
-      name: {
-        value: result.name,
-        canRead: result.canReadLangs,
-        canEdit: result.canCreateLang,
-      },
-      displayName: {
-        value: result.displayName,
-        canRead: result.canReadDisplayName,
-        canEdit: result.canEditDisplayName,
-      },
-      beginFiscalYear: {
-        value: result.beginFiscalYear,
-        canRead: result.canReadBeginFiscalYear,
-        canEdit: result.canEditBeginFiscalYear,
-      },
-      ethnologueName: {
-        value: result.ethnologueName,
-        canRead: result.canReadEthnologueName,
-        canEdit: result.canEditEthnologueName,
-      },
-      ethnologuePopulation: {
-        value: result.ethnologuePopulation,
-        canRead: result.canReadEthnologuePopulation,
-        canEdit: result.canEditEthnologuePopulation,
-      },
-      organizationPopulation: {
-        value: result.organizationPopulation,
-        canRead: result.canReadOrganizationPopulation,
-        canEdit: result.canEditOrganizationPopulation,
-      },
-      rodNumber: {
-        value: result.rodNumber,
-        canRead: result.canReadRodNumber,
-        canEdit: result.canEditRodNumber,
-      },
-      createdAt: result.createdAt,
-    };
+      id: id.value,
+      createdAt: createdAt.value,
+      ...rest
+    } as Language
   }
 
   async update(input: UpdateLanguage, session: ISession): Promise<Language> {
