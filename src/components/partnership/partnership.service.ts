@@ -142,17 +142,19 @@ export class PartnershipService {
       )
       .then(result => {
         if (result.records.length > 0) {
-          response.partnership.id = result.records[0].get('id');
-          response.partnership.agreementStatus = result.records[0].get(
-            'agreementStatus',
-          );
-          response.partnership.mouStatus = result.records[0].get('mouStatus');
-          response.partnership.mouStart = result.records[0].get('mouStart');
-          response.partnership.mouEnd = result.records[0].get('mouEnd');
-          response.partnership.organization = result.records[0].get(
-            'organization',
-          );
-          response.partnership.types = result.records[0].get('types');
+          response.partnership = {
+            id: result.records[0].get('id'),
+            agreementStatus: result.records[0].get(
+              'agreementStatus',
+            ),
+            mouStatus: result.records[0].get('mouStatus'),
+            mouStart: result.records[0].get('mouStart'),
+            mouEnd: result.records[0].get('mouEnd'),
+            organization: result.records[0].get(
+              'organization',
+            ),
+            types: result.records[0].get('types'),
+          }
         } else {
           response.partnership = null;
         }

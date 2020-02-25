@@ -220,12 +220,12 @@ export class OrganizationService {
             count(org) as orgCount
           `,
           {
-            token: session.token,
+            token: session?.token,
           },
         )
         .first();
 
-      const orgCount = result.orgCount;
+      const orgCount = result?.orgCount;
 
       for (let i = 0; i < orgCount; i++) {
         const isGood = await this.pullOrg(i);

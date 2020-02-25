@@ -83,11 +83,11 @@ export class BudgetService {
           response.budget.id = result.records[0].get('id');
           response.budget.status = result.records[0].get('status');
         } else {
-          response.budget = null;
+          throw new Error('Could not update budget.');
         }
       })
       .catch(error => {
-        console.log(error);
+        throw error;
       })
       .then(() => session.close());
 

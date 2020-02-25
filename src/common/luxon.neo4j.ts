@@ -31,6 +31,7 @@ DateTime.prototype.toNeo4JDateTime = function(this: DateTime) {
   );
 };
 
+// @ts-ignore FIXME: unclear how to get around the TS error here
 DateTime.prototype[inspect.custom] = function(
   this: DateTime,
   depth: number,

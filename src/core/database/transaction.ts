@@ -136,8 +136,9 @@ export class Transaction implements QueryConnection {
    * Streaming is not supported on transactions
    * This observable will immediately emit an error.
    */
+  // @ts-ignore FIXME: unclear how to get around the TS error here
   stream<R = any>(query: Query): Observable<Dictionary<R>> {
-    return new Observable(subscriber => {
+    return new Observable((subscriber: { error(e: Error): void}) => {
       subscriber.error(new Error('Transactions cannot be streamed.'));
     });
   }

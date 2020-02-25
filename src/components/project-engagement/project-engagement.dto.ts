@@ -112,7 +112,7 @@ export class UpdateProjectEngagementOutput {
 @ObjectType()
 export class UpdateProjectEngagementOutputDto {
   @Field({ nullable: true }) // nullable in case of error
-  projectEngagement: UpdateProjectEngagementOutput;
+  projectEngagement: UpdateProjectEngagementOutput | null;
   constructor() {
     this.projectEngagement = new UpdateProjectEngagementOutput();
   }

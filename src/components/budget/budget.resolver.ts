@@ -12,7 +12,7 @@ import {
   DeleteBudgetOutputDto,
 } from './budget.dto';
 
-@Resolver(of => Budget)
+@Resolver()
 export class BudgetResolver {
   constructor(private readonly budgetService: BudgetService) {}
 

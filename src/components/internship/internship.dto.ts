@@ -277,7 +277,7 @@ export class UpdateInternshipOutput {
 @ObjectType()
 export class UpdateInternshipOutputDto {
   @Field({ nullable: true }) // nullable in case of error
-  internship: UpdateInternshipOutput | null;
+  internship: UpdateInternshipOutput;
 
   constructor() {
     this.internship = new UpdateInternshipOutput();

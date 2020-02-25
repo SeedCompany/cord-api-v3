@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '../../core/database.service';
 import { generate } from 'shortid';
 import {
@@ -140,8 +140,9 @@ export class InternshipService {
   async update(input: UpdateInternshipInput): Promise<UpdateInternshipOutputDto> {
     const response = new UpdateInternshipOutputDto();
     const session = this.db.driver.session();
-    await session
-      .run(
+
+    try {
+      const result = await session.run(
         `MATCH (internship:Internship {active: true, owningOrg: "seedcompany", id: $id})
         SET internship.name = $name,
         internship.deptId = $deptId,
@@ -186,39 +187,40 @@ export class InternshipService {
           estimatedSubmission: input.estimatedSubmission,
           engagements: input.engagements,
         },
-      )
-      .then(result => {
-        if (result.records.length > 0) {
-          response.internship = {
-            id: result.records[0].get('id'),
-            name: result.records[0].get('name'),
-            deptId: result.records[0].get('deptId'),
-            status: result.records[0].get('status'),
-            location: result.records[0].get('location'),
-            publicLocation: result.records[0].get(
-              'publicLocation',
-            ),
-            mouStart: result.records[0].get('mouStart'),
-            mouEnd: result.records[0].get('mouEnd'),
-            partnerships: result.records[0].get('partnerships'),
-            sensitivity: result.records[0].get('sensitivity'),
-            team: result.records[0].get('team'),
-            budgets: result.records[0].get('budgets'),
-            estimatedSubmission: result.records[0].get(
-              'estimatedSubmission',
-            ),
-            engagements: result.records[0].get('engagements'),
-          }
-        } else {
-          response.internship = null;
-        }
-      })
-      .catch(error => {
-        console.log(error);
-      })
-      .then(() => session.close());
+      );
 
-    return response;
+      if (!result.records.length) {
+        throw new NotFoundException('Could not find internship.');
+      }
+
+      response.internship = {
+        id: result.records[0].get('id'),
+        name: result.records[0].get('name'),
+        deptId: result.records[0].get('deptId'),
+        status: result.records[0].get('status'),
+        location: result.records[0].get('location'),
+        publicLocation: result.records[0].get(
+          'publicLocation',
+        ),
+        mouStart: result.records[0].get('mouStart'),
+        mouEnd: result.records[0].get('mouEnd'),
+        partnerships: result.records[0].get('partnerships'),
+        sensitivity: result.records[0].get('sensitivity'),
+        team: result.records[0].get('team'),
+        budgets: result.records[0].get('budgets'),
+        estimatedSubmission: result.records[0].get(
+          'estimatedSubmission',
+        ),
+        engagements: result.records[0].get('engagements'),
+      }
+
+      session.close();
+
+      return response;
+    } catch (e) {
+      session.close();
+      throw new NotFoundException('Could not find internship.');
+    }
   }
 
   async delete(input: DeleteInternshipInput): Promise<DeleteInternshipOutputDto> {

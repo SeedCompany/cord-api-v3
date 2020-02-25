@@ -221,6 +221,10 @@ export class UserService {
   }
 
   async create(input: CreateUser, session: ISession): Promise<User> {
+    if (!input.password) {
+      throw new Error('Password is required when creating a new user');
+    }
+
     const pash = await argon2.hash(input.password);
     /** CREATE USER
      * get the token, then create the user with minimum properties

@@ -41,6 +41,7 @@ export const CypherFactory: FactoryProvider<Connection> = {
       const session: Session | null = origSession.call(conn);
       if (session) {
         const origRun = session.run;
+        // @ts-ignore FIXME: unclear how to get around the TS error here
         session.run = function(this: never, origStatement, parameters, conf) {
           const statement = stripIndent(origStatement);
           logger.debug('\n' + statement, parameters);

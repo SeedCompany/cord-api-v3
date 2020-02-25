@@ -205,7 +205,6 @@ export class InternshipEngagementService {
       )
       .then(result => {
         if (result.records.length > 0) {
-          response.internshipEngagement.id = result.records[0].get('id');
           response.intern = {
             displayFirstName: result.records[0].get('displayFirstName'),
             displayLastName: result.records[0].get('displayLastName'),
@@ -230,12 +229,16 @@ export class InternshipEngagementService {
               canEdit: true,
             },
           };
-          response.internshipEngagement.initialEndDate = result.records[0].get(
-            'initialEndDate',
-          );
-          response.internshipEngagement.currentEndDate = result.records[0].get(
-            'currentEndDate',
-          );
+
+          response.internshipEngagement = {
+            id: result.records[0].get('id'),
+            initialEndDate: result.records[0].get(
+              'initialEndDate',
+            ),
+            currentEndDate: result.records[0].get(
+              'currentEndDate',
+            ),
+          }
         } else {
           response.internshipEngagement = null;
         }
