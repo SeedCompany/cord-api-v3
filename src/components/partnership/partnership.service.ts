@@ -156,11 +156,12 @@ export class PartnershipService {
             types: result.records[0].get('types'),
           }
         } else {
-          response.partnership = null;
+          throw new Error('Could not update partnership.');
         }
       })
       .catch(error => {
         console.log(error);
+        throw error;
       })
       .then(() => session.close());
 

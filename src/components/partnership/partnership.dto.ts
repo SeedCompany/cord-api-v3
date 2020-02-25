@@ -179,7 +179,7 @@ export class UpdatePartnershipOutput {
 @ObjectType()
 export class UpdatePartnershipOutputDto {
   @Field({ nullable: true }) // nullable in case of error
-  partnership: UpdatePartnershipOutput | null;
+  partnership: UpdatePartnershipOutput;
 
   constructor() {
     this.partnership = new UpdatePartnershipOutput();

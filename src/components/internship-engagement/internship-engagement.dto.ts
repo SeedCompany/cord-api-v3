@@ -121,7 +121,7 @@ export class UpdateInternshipEngagementOutput {
 @ObjectType()
 export class UpdateInternshipEngagementOutputDto {
   @Field({ nullable: true }) // nullable in case of error
-  internshipEngagement: UpdateInternshipEngagementOutput | null;
+  internshipEngagement: UpdateInternshipEngagementOutput;
 
   @Field({ nullable: true }) // nullable in case of error
   intern: User;

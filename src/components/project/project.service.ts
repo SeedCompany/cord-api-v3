@@ -208,11 +208,12 @@ export class ProjectService {
   
           }
         } else {
-          response.project = null;
+          throw new Error('Could not update project engagement.');
         }
       })
       .catch(error => {
         console.log(error);
+        throw new Error(error);
       })
       .then(() => session.close());
 
