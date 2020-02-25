@@ -54,8 +54,7 @@ export class NestLoggerAdapterService implements INestLogger, OnModuleInit {
   }
 
   private mapName(context?: string) {
-    return context
-      ? NestLoggerAdapterService.nameMap[context] || context
-      : 'nest';
+    // @ts-ignore FIXME: unclear how to get around the TS error here
+    return context ? NestLoggerAdapterService.nameMap[context] || context : 'nest';
   }
 }

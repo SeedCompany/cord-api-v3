@@ -19,7 +19,7 @@ export type UnwrapSecured<T> = T extends Secured<infer P> ? P : T;
 export const isSecured = <T>(value: T | Secured<T>): value is Secured<T> =>
   isObject(value);
 
-export const unwrapSecured = <T>(value: T | Secured<T>): T =>
+export const unwrapSecured = <T>(value: T | Secured<T>): T | undefined =>
   isSecured(value) ? value.value : value;
 
 export function SecuredProperty<T>(

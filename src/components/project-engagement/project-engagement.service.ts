@@ -95,13 +95,15 @@ export class ProjectEngagementService {
       )
       .then(result => {
         if (result.records.length > 0) {
-          response.projectEngagement.id = result.records[0].get('id');
-          response.projectEngagement.initialEndDate = result.records[0].get(
-            'initialEndDate',
-          );
-          response.projectEngagement.currentEndDate = result.records[0].get(
-            'currentEndDate',
-          );
+          response.projectEngagement = {
+            id: result.records[0].get('id'),
+            initialEndDate: result.records[0].get(
+              'initialEndDate',
+            ),
+            currentEndDate: result.records[0].get(
+              'currentEndDate',
+            ),
+          }
         } else {
           response.projectEngagement = null;
         }
