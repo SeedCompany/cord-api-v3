@@ -52,9 +52,9 @@ describe('Education e2e', () => {
         },
       );
 
-      expect(result?.education.id).toBe(education?.id);
-      expect(isValid(result?.education.id)).toBe(true);
-      expect(result?.education.institution).toEqual(education?.institution);
+      expect(result.education.id).toBe(education?.id);
+      expect(isValid(result.education.id)).toBe(true);
+      expect(result.education.institution).toEqual(education?.institution);
     } catch (e) {
       console.error(e);
       fail();
@@ -86,7 +86,7 @@ describe('Education e2e', () => {
         },
       },
     );
-    const updated = result?.updateEducation?.education;
+    const updated = result.updateEducation?.education;
     expect(updated).toBeTruthy();
     expect(updated.id).toBe(education?.id);
     expect(updated.institution.value).toBe(newInstitution);
@@ -107,7 +107,7 @@ describe('Education e2e', () => {
           id: education?.id,
         },
       );
-      const actual: Education | undefined = result?.deleteEducation;
+      const actual: Education | undefined = result.deleteEducation;
       expect(actual).toBeTruthy();
     } catch (e) {
       console.log(e);

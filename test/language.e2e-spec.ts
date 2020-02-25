@@ -50,9 +50,9 @@ describe('Language e2e', () => {
         },
       );
 
-      expect(result?.language.id).toBe(language?.id);
-      expect(isValid(result?.language.id)).toBeTruthy();
-      expect(result?.language.name.value).toEqual(language?.name.value);
+      expect(result.language.id).toBe(language?.id);
+      expect(isValid(result.language.id)).toBeTruthy();
+      expect(result.language.name.value).toEqual(language?.name.value);
     } catch (e) {
       console.log(`language id is ${language?.id}`);
       console.error(e);
@@ -85,7 +85,7 @@ describe('Language e2e', () => {
         },
       },
     );
-    const updated = result?.updateLanguage?.language;
+    const updated = result.updateLanguage?.language;
     expect(updated).toBeTruthy();
     expect(updated.id).toBe(language?.id);
     expect(updated.name.value).toBe(newName);
@@ -106,7 +106,7 @@ describe('Language e2e', () => {
       },
     );
 
-    expect(result?.deleteLanguage).toBeTruthy();
+    expect(result.deleteLanguage).toBeTruthy();
     try {
       await app.graphql.query(
         gql`
@@ -149,6 +149,6 @@ describe('Language e2e', () => {
       ${fragments.language}
     `);
 
-    expect(result?.languages.items.length).toBeGreaterThan(numLanguages);
+    expect(result.languages.items.length).toBeGreaterThan(numLanguages);
   });
 });

@@ -52,9 +52,9 @@ describe('Unavailability e2e', () => {
         },
       );
 
-      expect(result?.unavailability.id).toBe(unavailability?.id);
-      expect(isValid(result?.unavailability.id)).toBe(true);
-      expect(result?.unavailability.description).toEqual(unavailability?.description);
+      expect(result.unavailability.id).toBe(unavailability?.id);
+      expect(isValid(result.unavailability.id)).toBe(true);
+      expect(result.unavailability.description).toEqual(unavailability?.description);
     } catch (e) {
       console.error(e);
       fail();
@@ -86,7 +86,7 @@ describe('Unavailability e2e', () => {
         },
       },
     );
-    const updated = result?.updateUnavailability?.unavailability;
+    const updated = result.updateUnavailability?.unavailability;
     expect(updated).toBeTruthy();
     expect(updated.id).toBe(unavailability?.id);
     expect(updated.description.value).toBe(newDesc);
@@ -107,7 +107,7 @@ describe('Unavailability e2e', () => {
           id: unavailability?.id,
         },
       );
-      const actual: Unavailability | undefined = result?.deleteUnavailability;
+      const actual: Unavailability | undefined = result.deleteUnavailability;
       expect(actual).toBeTruthy();
     } catch (e) {
       console.log(e);
@@ -138,6 +138,6 @@ describe('Unavailability e2e', () => {
       ${fragments.org}
     `);
 
-    expect(result?.unavailables.items.length).toBeGreaterThan(numUnavailables);
+    expect(result.unavailables.items.length).toBeGreaterThan(numUnavailables);
   });
 });

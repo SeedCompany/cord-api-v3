@@ -60,7 +60,7 @@ export class FileService {
           },
         )
         .first();
-      return result.file.properties;
+      return result?.file.properties;
     } catch (e) {
       throw new Error(e);
     }
@@ -122,7 +122,7 @@ export class FileService {
         )
         .first();
 
-      return result.file.properties;
+      return result?.file.properties;
     } catch (e) {
       throw new Error(e);
     }
