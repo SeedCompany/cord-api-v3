@@ -31,15 +31,15 @@ describe('User e2e', () => {
         ${fragments.user}
       `,
       {
-        id: user?.id,
+        id: user.id,
       },
     );
 
-    const actual: User | undefined = result.user;
+    const actual: User = result.user;
     expect(actual).toBeTruthy();
 
-    expect(isValid(actual?.id)).toBe(true);
-    expect(actual?.email.value).toBe(user?.email.value);
+    expect(isValid(actual.id)).toBe(true);
+    expect(actual.email.value).toBe(user.email.value);
 
     return true;
   });
@@ -62,18 +62,18 @@ describe('User e2e', () => {
       {
         input: {
           user: {
-            id: user?.id,
-            realFirstName: user?.realFirstName.value + ' 2',
+            id: user.id,
+            realFirstName: user.realFirstName.value + ' 2',
           },
         },
       },
     );
 
-    const actual: User | undefined = result.updateUser.user;
+    const actual: User = result.updateUser.user;
     expect(actual).toBeTruthy();
 
-    expect(isValid(actual?.id)).toBe(true);
-    expect(actual?.email.value).toBe(user?.email.value);
+    expect(isValid(actual.id)).toBe(true);
+    expect(actual.email.value).toBe(user.email.value);
 
     return true;
   });
@@ -89,7 +89,7 @@ describe('User e2e', () => {
         }
       `,
       {
-        id: user?.id,
+        id: user.id,
       },
     );
 
@@ -104,7 +104,7 @@ describe('User e2e', () => {
     // create a bunch of users
     await Promise.all(times(10).map(() => createUser(app)));
 
-    const result = await app.graphql.query(gql`
+    const { users } = await app.graphql.query(gql`
       query {
         users {
           items {
@@ -117,7 +117,7 @@ describe('User e2e', () => {
       ${fragments.user}
     `);
 
-    expect(result.users.items.length).toBeGreaterThan(9);
+    expect(users.items.length).toBeGreaterThan(9);
   });
 
   afterAll(async () => {

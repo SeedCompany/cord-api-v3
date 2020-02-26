@@ -31,7 +31,7 @@ describe('Organization e2e', () => {
   it('create & read organization by id', async () => {
     const org = await createOrganization(app);
 
-    const result = await app.graphql.query(
+    const { organization: actual } = await app.graphql.query(
       gql`
         query org($id: ID!) {
           organization(id: $id) {
@@ -41,13 +41,13 @@ describe('Organization e2e', () => {
         ${fragments.org}
       `,
       {
-        id: org?.id,
+        id: org.id,
       },
     );
 
-    expect(result.organization.id).toBe(org?.id);
-    expect(isValid(result.organization.id)).toBe(true);
-    expect(result.organization.name.value).toBe(org?.name.value);
+    expect(actual.id).toBe(org.id);
+    expect(isValid(actual.id)).toBe(true);
+    expect(actual.name.value).toBe(org.name.value);
   });
 
   // UPDATE ORG
@@ -70,16 +70,16 @@ describe('Organization e2e', () => {
       {
         input: {
           organization: {
-            id: org?.id,
+            id: org.id,
             name: newName,
           },
         },
       },
     );
 
-    const updated = result.updateOrganization?.organization;
+    const updated = result.updateOrganization.organization;
     expect(updated).toBeTruthy();
-    expect(updated.id).toBe(org?.id);
+    expect(updated.id).toBe(org.id);
     expect(updated.name.value).toBe(newName);
   });
 
@@ -94,7 +94,7 @@ describe('Organization e2e', () => {
         }
       `,
       {
-        id: org?.id,
+        id: org.id,
       },
     );
 
@@ -109,7 +109,7 @@ describe('Organization e2e', () => {
       times(10).map(() => createOrganization(app)),
     );
 
-    const result = await app.graphql.query(gql`
+    const { organizations } = await app.graphql.query(gql`
       query {
         organizations {
           items {
@@ -122,6 +122,6 @@ describe('Organization e2e', () => {
       ${fragments.org}
     `);
 
-    expect(result.organizations.items.length).toBeGreaterThan(10);
+    expect(organizations.items.length).toBeGreaterThan(10);
   });
 });

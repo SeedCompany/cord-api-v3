@@ -19,7 +19,7 @@ async function createInternshipEngagement(
     mutation {
       createInternshipEngagement (input:
         { internshipEngagement:
-          {  internId: "${user?.id}"}
+          {  internId: "${user.id}"}
         }){
           internshipEngagement {
             id
@@ -64,7 +64,7 @@ describe.skip('InternshipEngagement e2e', () => {
         mutation {
           createInternshipEngagement (input:
             { internshipEngagement:
-              {  internId : "${user?.id}"}
+              {  internId : "${user.id}"}
             }){
               internshipEngagement {
                 id

@@ -40,11 +40,11 @@ export async function createUser(
     },
   );
 
-  const actual: User | undefined = result.createUser.user;
+  const actual: User = result.createUser.user;
   expect(actual).toBeTruthy();
 
-  expect(isValid(actual?.id)).toBe(true);
-  expect(actual?.email.value).toBe(user.email);
+  expect(isValid(actual.id)).toBe(true);
+  expect(actual.email.value).toBe(user.email);
 
   return actual;
 }
