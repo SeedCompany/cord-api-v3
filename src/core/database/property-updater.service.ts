@@ -5,6 +5,7 @@ import {
   UnwrapSecured,
   isSecured,
   unwrapSecured,
+  SortablePaginationInput,
 } from '../../common';
 import { User } from '../../components/user/dto';
 import { ILogger, Logger } from '../../core';
@@ -216,6 +217,94 @@ export class PropertyUpdaterService {
     } else {
       return { value: result[0][key] };
     }
+  }
+
+  // FIXME: eliminate this. Here for testing the query builder - richardgirges
+  async testList<TObject extends Resource>({
+    session,
+    props,
+    nodevar,
+    aclReadProp,
+    aclEditProp,
+    input,
+
+  }: {
+    session: ISession,
+    props: ReadonlyArray<keyof TObject>,
+    nodevar: string;
+    aclReadProp?: string;
+    aclEditProp?: string;
+    input: { page: number, count: number, sort: string, order: string, filter: any },
+  }): Promise<{ hasMore: boolean, total: number, items: TObject[] }> {
+    const nodeName = upperFirst(nodevar);
+    const aclReadPropName = aclReadProp || `canRead${nodeName}`;
+    const aclEditPropName = aclEditProp || `canEdit${nodeName}`;
+
+    let filter = {};
+
+    const query = `
+      MATCH
+        (token:Token {active: true, value: $token})
+        <-[:token {active: true}]-
+        (user:User {
+          ${aclReadPropName}: true
+        }),
+        (n:${nodeName} {
+          active: true
+        })
+      WITH count(n) as total, user
+      MATCH
+        ${props.map(prop => {
+          return `
+            (n)-[:${prop} {active: true}]->(${prop}:Property {active:true})
+          `;
+        }).join(',')}
+      RETURN
+        n.id as id,
+        n.createdAt as createdAt,
+        total as total,
+        user.${aclReadPropName} as ${aclReadPropName},
+        user.${aclEditPropName} as ${aclEditPropName},
+        ${props.map(prop => {
+          return `${prop}.value as ${prop}`
+        }).join(',')}
+      ORDER BY ${input.sort} ${input.order}
+      SKIP $skip
+      LIMIT $count
+    `;
+
+    const result = await this.db
+        .query()
+        .raw(query, {
+          skip: (input.page - 1) * input.count,
+          count: input.count,
+          token: session.token,
+        })
+        .run();
+
+    const items = result.map<TObject>(row => {
+      const item: any = {
+        id: row.id,
+        createdAt: row.createdAt,
+      };
+
+      for (const prop of props) {
+        item[prop] = {
+          value: row[prop as string],
+          canRead: row[aclReadPropName],
+          canEdit: row[aclEditPropName],
+        };
+      }
+
+      return item;
+    });
+
+    return {
+      // if skip + count is less than total, there is more
+      hasMore: (input.page - 1) * input.count + input.count < result[0].total,
+      total: result[0].total,
+      items,
+    };
   }
 
   async deleteNode<TObject extends Resource>({
