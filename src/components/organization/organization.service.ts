@@ -147,15 +147,15 @@ export class OrganizationService {
       }),
       (org:Organization {
         active: true
-      })-[:name {active: true}]->(orgName:Property {active: true})`;
+      })-[:name {active: true}]->(name:Property {active: true})`;
 
     if (filter) {
       query += `
            WHERE
-        org.name CONTAINS $filter`;
+        name.value CONTAINS $filter`;
     }
     query += `
-      WITH count(org) as orgs, user
+      WITH count(org) as total, org, user
       MATCH
         (org:Organization {
           active: true
@@ -165,13 +165,13 @@ export class OrganizationService {
           active: true
         })
       RETURN
+        total,
         org.id as id,
         org.createdAt as createdAt,
         name.value as name,
         user.canCreateOrg as canCreateOrg,
-        user.canReadOrgs as canReadOrgs,
-        orgs as total
-      ORDER BY org.${sort} ${order}
+        user.canReadOrgs as canReadOrgs
+      ORDER BY ${sort} ${order}
       SKIP $skip
       LIMIT $count`;
 
