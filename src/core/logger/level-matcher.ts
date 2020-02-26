@@ -58,7 +58,7 @@ export class LevelMatcher {
 
   constructor(
     levelMap: Record<string, LogLevel>,
-    private readonly defaultLevel,
+    private readonly defaultLevel: LogLevel,
   ) {
     for (const [namespaces, level] of Object.entries(levelMap)) {
       const matcher: MatcherConfig = {

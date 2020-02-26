@@ -85,7 +85,7 @@ describe('Language e2e', () => {
         },
       },
     );
-    const updated = result?.updateLanguage?.language;
+    const updated = result.updateLanguage.language;
     expect(updated).toBeTruthy();
     expect(updated.id).toBe(language.id);
     expect(updated.name.value).toBe(newName);

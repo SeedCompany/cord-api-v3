@@ -29,7 +29,7 @@ export async function createFile(
     },
   );
 
-  const actual: File | undefined = result.createFile?.file;
+  const actual: File = result.createFile.file;
   expect(actual).toBeTruthy();
 
   expect(actual.name.valueOf()).toBe(file.name);

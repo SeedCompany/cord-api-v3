@@ -31,7 +31,7 @@ DateTime.prototype.toNeo4JDateTime = function(this: DateTime) {
   );
 };
 
-DateTime.prototype[inspect.custom] = function(
+(DateTime.prototype as any)[inspect.custom] = function(
   this: DateTime,
   depth: number,
   options: InspectOptions,

@@ -201,7 +201,7 @@ export class OrganizationService {
     };
   }
 
-  async checkAllOrgs(session?: ISession): Promise<boolean> {
+  async checkAllOrgs(session: ISession): Promise<boolean> {
     try {
       const result = await this.db
         .query()
@@ -225,7 +225,7 @@ export class OrganizationService {
         )
         .first();
 
-      const orgCount = result.orgCount;
+      const orgCount = result?.orgCount;
 
       for (let i = 0; i < orgCount; i++) {
         const isGood = await this.pullOrg(i);
@@ -270,12 +270,12 @@ export class OrganizationService {
         .first();
 
       const isGood = this.validateOrg({
-        id: result.id,
-        createdAt: result.createdAt,
+        id: result?.id,
+        createdAt: result?.createdAt,
         name: {
-          value: result.name,
-          canRead: null,
-          canEdit: null,
+          value: result?.name,
+          canRead: false,
+          canEdit: false,
         },
       });
 

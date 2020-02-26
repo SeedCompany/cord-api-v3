@@ -69,17 +69,17 @@ export class InternshipEngagementService {
           id: result.records[0].get('userId'),
           createdAt: DateTime.local(),
           timezone: {
-            value: null,
+            value: undefined,
             canRead: true,
             canEdit: true,
           },
           phone: {
-            value: null,
+            value: undefined,
             canRead: true,
             canEdit: true,
           },
           bio: {
-            value: null,
+            value: undefined,
             canRead: true,
             canEdit: true,
           },
@@ -139,17 +139,17 @@ export class InternshipEngagementService {
           id: result.records[0].get('userId'),
           createdAt: DateTime.local(),
           timezone: {
-            value: null,
+            value: undefined,
             canRead: true,
             canEdit: true,
           },
           phone: {
-            value: null,
+            value: undefined,
             canRead: true,
             canEdit: true,
           },
           bio: {
-            value: null,
+            value: undefined,
             canRead: true,
             canEdit: true,
           },
@@ -205,7 +205,6 @@ export class InternshipEngagementService {
       )
       .then(result => {
         if (result.records.length > 0) {
-          response.internshipEngagement.id = result.records[0].get('id');
           response.intern = {
             displayFirstName: result.records[0].get('displayFirstName'),
             displayLastName: result.records[0].get('displayLastName'),
@@ -215,33 +214,38 @@ export class InternshipEngagementService {
             id: result.records[0].get('userId'),
             createdAt: DateTime.local(),
             timezone: {
-              value: null,
+              value: undefined,
               canRead: true,
               canEdit: true,
             },
             phone: {
-              value: null,
+              value: undefined,
               canRead: true,
               canEdit: true,
             },
             bio: {
-              value: null,
+              value: undefined,
               canRead: true,
               canEdit: true,
             },
           };
-          response.internshipEngagement.initialEndDate = result.records[0].get(
-            'initialEndDate',
-          );
-          response.internshipEngagement.currentEndDate = result.records[0].get(
-            'currentEndDate',
-          );
+
+          response.internshipEngagement = {
+            id: result.records[0].get('id'),
+            initialEndDate: result.records[0].get(
+              'initialEndDate',
+            ),
+            currentEndDate: result.records[0].get(
+              'currentEndDate',
+            ),
+          }
         } else {
-          response.internshipEngagement = null;
+          throw new Error('Could not update internship.');
         }
       })
       .catch(error => {
         console.log(error);
+        throw error;
       })
       .then(() => session.close());
 

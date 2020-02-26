@@ -12,7 +12,7 @@ import {
   DeleteInternshipEngagementOutputDto,
 } from './internship-engagement.dto';
 
-@Resolver(of => InternshipEngagement)
+@Resolver()
 export class InternshipEngagementResolver {
   constructor(private readonly internshipEngagementService: InternshipEngagementService) {
   }

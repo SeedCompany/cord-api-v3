@@ -2,7 +2,7 @@ import { yellow, red, enabled as colorsEnabled } from 'colors/safe';
 import { identity, mapValues } from 'lodash';
 import { DateTime } from 'luxon';
 import { relative } from 'path';
-import { parse as parseTrace } from 'stack-trace';
+import { parse as parseTrace, StackFrame } from 'stack-trace';
 import { MESSAGE } from 'triple-beam';
 import { inspect } from 'util';
 import { format } from 'winston';
@@ -68,7 +68,7 @@ export const formatException = () =>
     const ex = info.exception;
 
     const formattedTrace = ex.trace
-      .map(t => {
+      .map((t: StackFrame) => {
         const subject = t.getFunctionName();
 
         const file = relative(`${__dirname}/../../..`, t.getFileName());

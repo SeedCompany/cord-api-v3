@@ -43,19 +43,19 @@ export const createGraphqlClient = async (
       const result = await query({ query: q, variables });
       resetRequest();
       validateResult(result);
-      return result.data;
+      return result.data!;
     },
     mutate: async (mutation, variables) => {
       const result = await mutate({ mutation, variables });
       resetRequest();
       validateResult(result);
-      return result.data;
+      return result.data!;
     },
     get authToken() {
       return options.context.request?.headers?.authorization?.replace(
         'Bearer ',
         '',
-      );
+      ) || '';
     },
     set authToken(token: string) {
       const fakeRequest = {

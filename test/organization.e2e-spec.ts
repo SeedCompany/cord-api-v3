@@ -77,7 +77,7 @@ describe('Organization e2e', () => {
       },
     );
 
-    const updated = result?.updateOrganization?.organization;
+    const updated = result.updateOrganization.organization;
     expect(updated).toBeTruthy();
     expect(updated.id).toBe(org.id);
     expect(updated.name.value).toBe(newName);

@@ -188,30 +188,34 @@ export class ProjectService {
       )
       .then(result => {
         if (result.records.length > 0) {
-          response.project.id = result.records[0].get('id');
-          response.project.name = result.records[0].get('name');
-          response.project.deptId = result.records[0].get('deptId');
-          response.project.status = result.records[0].get('status');
-          response.project.location = result.records[0].get('location');
-          response.project.publicLocation = result.records[0].get(
-            'publicLocation',
-          );
-          response.project.mouStart = result.records[0].get('mouStart');
-          response.project.mouEnd = result.records[0].get('mouEnd');
-          response.project.partnerships = result.records[0].get('partnerships');
-          response.project.sensitivity = result.records[0].get('sensitivity');
-          response.project.team = result.records[0].get('team');
-          response.project.budgets = result.records[0].get('budgets');
-          response.project.estimatedSubmission = result.records[0].get(
-            'estimatedSubmission',
-          );
-          response.project.engagements = result.records[0].get('engagements');
+          response.project = {
+            id: result.records[0].get('id'),
+            name: result.records[0].get('name'),
+            deptId: result.records[0].get('deptId'),
+            status: result.records[0].get('status'),
+            location: result.records[0].get('location'),
+            publicLocation: result.records[0].get(
+              'publicLocation',
+            ),
+            mouStart: result.records[0].get('mouStart'),
+            mouEnd: result.records[0].get('mouEnd'),
+            partnerships: result.records[0].get('partnerships'),
+            sensitivity: result.records[0].get('sensitivity'),
+            team: result.records[0].get('team'),
+            budgets: result.records[0].get('budgets'),
+            estimatedSubmission: result.records[0].get(
+              'estimatedSubmission',
+            ),
+            engagements: result.records[0].get('engagements'),
+  
+          }
         } else {
-          response.project = null;
+          throw new Error('Could not update project engagement.');
         }
       })
       .catch(error => {
         console.log(error);
+        throw new Error(error);
       })
       .then(() => session.close());
 

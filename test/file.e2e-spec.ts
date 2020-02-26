@@ -41,7 +41,7 @@ describe('File e2e', () => {
         operationName: null,
         query: `
         query {
-          file (id:"${testFile.file.properties.id}")
+          file (id:"${testFile!.file.properties.id}")
           {
             type
           }

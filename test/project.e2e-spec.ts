@@ -150,7 +150,7 @@ describe.skip('Project e2e', () => {
         mutation {
           deleteProject (input: { project: { id: "${projId}" } }){
             project {
-            id
+              id
             }
           }
         }

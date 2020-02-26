@@ -33,7 +33,7 @@ describe('Product e2e', () => {
         id: product.id,
       }
     );
-    const actual: Product | undefined = result.product;
+    const actual: Product = result.product;
     expect(actual.id).toBe(product.id);
     expect(actual.type).toBe(product.type);
     expect(actual.books).toEqual(expect.arrayContaining(product.books));

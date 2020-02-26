@@ -12,7 +12,7 @@ import { ILogger } from './logger.interface';
  */
 @Injectable()
 export class NestLoggerAdapterService implements INestLogger, OnModuleInit {
-  private static nameMap = {
+  private static nameMap: Record<string, string> = {
     NestFactory: 'nest:factory',
     InstanceLoader: 'nest:loader',
     ExceptionsHandler: 'nest:exception',
@@ -54,8 +54,6 @@ export class NestLoggerAdapterService implements INestLogger, OnModuleInit {
   }
 
   private mapName(context?: string) {
-    return context
-      ? NestLoggerAdapterService.nameMap[context] || context
-      : 'nest';
+    return context ? NestLoggerAdapterService.nameMap[context] || context : 'nest';
   }
 }

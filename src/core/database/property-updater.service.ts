@@ -65,7 +65,7 @@ export class PropertyUpdaterService {
     session: ISession;
     object: TObject;
     key: Key;
-    value: UnwrapSecured<TObject[Key]>;
+    value?: UnwrapSecured<TObject[Key]>;
     aclEditProp?: string;
     nodevar: string;
   }): Promise<TObject> {
@@ -158,7 +158,7 @@ export class PropertyUpdaterService {
     const result: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> } = {};
     for (const prop of props) {
       const key = prop as string;
-      result[key] = await this.readProperty({ id, session, key, nodevar });
+      result[prop] = await this.readProperty({ id, session, key, nodevar }) as UnwrapSecured<TObject[keyof TObject]>;
     }
     return result;
   }
@@ -376,7 +376,7 @@ export class PropertyUpdaterService {
       aclEditProp: aclEditPropName,
     });
 
-    const wait = [];
+    const wait: Promise<void>[] = [];
     Object.keys(input).map(async key => {
       if (key === 'id' || key === 'userId') {
         return;
@@ -385,8 +385,8 @@ export class PropertyUpdaterService {
         this.createProperty({
           session,
           key,
-          value: input[key],
-          id: input.id,
+          value: input[key as keyof TObject] as string,
+          id: input.id!,
         }),
       );
     });
