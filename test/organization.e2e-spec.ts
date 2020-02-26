@@ -103,7 +103,7 @@ describe('Organization e2e', () => {
   });
 
   // LIST ORGs
-  it.only('list view of organizations', async () => {
+  it('list view of organizations', async () => {
     // create a bunch of orgs
     const orgs = await Promise.all(
       times(10).map(() => createOrganization(app,{name: generate() + ' Inc'})),
