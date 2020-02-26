@@ -97,16 +97,19 @@ export class UserService {
       throw new UnauthorizedException();
     }
 
-    // now we'll get all users
-    const result = await this.db
-      .query()
-      .raw(
-        `
-          MATCH
-            (user:User {active: true, owningOrgId: $owningOrgId})-
-            [:displayFirstName {active: true}]->(displayFirstName:Property {active: true})
-            WHERE displayFirstName.value CONTAINS $filter
-          WITH count(user) as total
+    let query1 = `
+      MATCH
+        (user:User {active: true, owningOrgId: $owningOrgId})
+      `
+    if (filter) {
+      query1 += `
+        -[:displayFirstName {active: true}]->(displayFirstName:Property {active: true})
+        WHERE displayFirstName.value CONTAINS $filter
+      `;
+    }
+
+    let query2 = `
+      WITH count(user) as total
           MATCH
             (user:User {active: true, owningOrgId: $owningOrgId}),
             (user)-[:email {active: true}]->(email:EmailAddress {active: true}),
@@ -132,7 +135,11 @@ export class UserService {
         ORDER BY ${sort} ${order}
         SKIP $skip
         LIMIT $count
-        `,
+    `
+    // now we'll get all users
+    const result = await this.db
+      .query()
+      .raw(query1 + query2,
         {
           // filter: filter.name, // TODO Handle no filter
           skip: (page - 1) * count,
