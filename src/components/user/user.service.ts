@@ -103,7 +103,9 @@ export class UserService {
       .raw(
         `
           MATCH
-            (user:User {active: true, owningOrgId: $owningOrgId})
+            (user:User {active: true, owningOrgId: $owningOrgId})-
+            [:displayFirstName {active: true}]->(displayFirstName:Property {active: true})
+            WHERE displayFirstName.value CONTAINS $filter
           WITH count(user) as total
           MATCH
             (user:User {active: true, owningOrgId: $owningOrgId}),
