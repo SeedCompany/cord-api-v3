@@ -84,7 +84,7 @@ export class OrganizationService {
         owningOrgId: session.owningOrgId,
       })
       .first();
-    
+
     if (!result) {
       throw new NotFoundException('Could not find organization');
     }
@@ -138,22 +138,24 @@ export class OrganizationService {
     { page, count, sort, order, filter }: OrganizationListInput,
     { token }: ISession,
   ): Promise<OrganizationListOutput> {
-    const result = await this.db
-      .query()
-      .raw(
-        `
-      MATCH
-        (token:Token {active: true, value: $token})
-        <-[:token {active: true}]-
-        (user:User {
-          canReadOrgs: true
-        }),
-        (org:Organization {
-          active: true
-        })
-//      WHERE
-//        org.name CONTAINS $filter
-      WITH count(org) as orgs, user
+    let query = `
+    MATCH
+      (token:Token {active: true, value: $token})
+      <-[:token {active: true}]-
+      (user:User {
+        canReadOrgs: true
+      }),
+      (org:Organization {
+        active: true
+      })-[:name {active: true}]->(name:Property {active: true})`;
+
+    if (filter) {
+      query += `
+           WHERE
+        name.value CONTAINS $filter`;
+    }
+    query += `
+      WITH count(org) as total, org, user
       MATCH
         (org:Organization {
           active: true
@@ -163,23 +165,24 @@ export class OrganizationService {
           active: true
         })
       RETURN
+        total,
         org.id as id,
         org.createdAt as createdAt,
         name.value as name,
         user.canCreateOrg as canCreateOrg,
-        user.canReadOrgs as canReadOrgs,
-        orgs as total
-      ORDER BY org.${sort} ${order}
+        user.canReadOrgs as canReadOrgs
+      ORDER BY ${sort} ${order}
       SKIP $skip
-      LIMIT $count
-      `,
-        {
-          // filter: filter.name, // TODO Handle no filter
-          skip: (page - 1) * count,
-          count,
-          token,
-        },
-      )
+      LIMIT $count`;
+
+    const result = await this.db
+      .query()
+      .raw(query, {
+        filter: filter.name, // TODO Handle no filter
+        skip: (page - 1) * count,
+        count,
+        token,
+      })
       .run();
 
     const items = result.map<Organization>(row => ({
