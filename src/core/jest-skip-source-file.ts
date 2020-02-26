@@ -15,7 +15,7 @@ export const jestSkipFileInExceptionSource = (e: Error, filepath: string) => {
   }
   const relativePath = relative(projectRoot, filepath);
   const maskedPath = `${projectRoot}/node_modules/../${relativePath}`;
-  e.stack = e.stack.replace(filepath, maskedPath);
+  e.stack = e.stack?.replace(filepath, maskedPath);
 
   return e;
 };

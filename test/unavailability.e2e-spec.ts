@@ -10,7 +10,7 @@ import {
 
 import { Unavailability } from '../src/components/user/unavailability';
 import { User } from '../src/components/user';
-import { fragments } from './utility/fragments';
+import { fragments } from './utility';
 import { gql } from 'apollo-server-core';
 import { isValid } from 'shortid';
 import { times } from 'lodash';
@@ -86,7 +86,7 @@ describe('Unavailability e2e', () => {
         },
       },
     );
-    const updated = result?.updateUnavailability?.unavailability;
+    const updated = result.updateUnavailability.unavailability;
     expect(updated).toBeTruthy();
     expect(updated.id).toBe(unavailability.id);
     expect(updated.description.value).toBe(newDesc);

@@ -33,7 +33,7 @@ export async function createOrganization(
       },
     },
   );
-  const org: Organization | undefined = result.createOrganization?.organization;
+  const org: Organization = result.createOrganization.organization;
 
   expect(org).toBeTruthy();
 

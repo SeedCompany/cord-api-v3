@@ -35,7 +35,7 @@ describe('User e2e', () => {
       },
     );
 
-    const actual: User | undefined = result.user;
+    const actual: User = result.user;
     expect(actual).toBeTruthy();
 
     expect(isValid(actual.id)).toBe(true);
@@ -69,7 +69,7 @@ describe('User e2e', () => {
       },
     );
 
-    const actual: User | undefined = result.updateUser.user;
+    const actual: User = result.updateUser.user;
     expect(actual).toBeTruthy();
 
     expect(isValid(actual.id)).toBe(true);

@@ -44,11 +44,11 @@ export const CypherFactory: FactoryProvider<Connection> = {
         session.run = function(this: never, origStatement, parameters, conf) {
           const statement = stripIndent(origStatement);
           logger.debug('\n' + statement, parameters);
-          return origRun
-            .call(session, statement, parameters, conf)
-            .catch(e => {
-              throw jestSkipFileInExceptionSource(e, __filename);
-            });
+          const result = origRun.call(session, statement, parameters, conf);
+          result.catch(e => {
+            throw jestSkipFileInExceptionSource(e, __filename);
+          });
+          return result;
         };
       }
 

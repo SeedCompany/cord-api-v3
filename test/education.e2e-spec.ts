@@ -86,7 +86,7 @@ describe('Education e2e', () => {
         },
       },
     );
-    const updated = result?.updateEducation?.education;
+    const updated = result.updateEducation.education;
     expect(updated).toBeTruthy();
     expect(updated.id).toBe(education.id);
     expect(updated.institution.value).toBe(newInstitution);

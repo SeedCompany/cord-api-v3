@@ -12,7 +12,7 @@ import {
   DeleteProjectEngagementOutputDto,
 } from './project-engagement.dto';
 
-@Resolver(of => ProjectEngagement)
+@Resolver()
 export class ProjectEngagementResolver {
   constructor(private readonly projectEngagementService: ProjectEngagementService) {
   }

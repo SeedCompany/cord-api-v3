@@ -57,7 +57,7 @@ export abstract class AbstractLogger implements ILogger {
       ...(typeof levelOrEntry === 'string'
         ? { level: levelOrEntry }
         : levelOrEntry),
-    });
+    } as LogEntry);
   }
 
   private createEntry(

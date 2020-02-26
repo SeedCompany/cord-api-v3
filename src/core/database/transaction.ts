@@ -1,7 +1,7 @@
 import { stripIndent } from 'common-tags';
 import { Query, Transformer } from 'cypher-query-builder';
 import { Connection } from 'cypher-query-builder';
-import Observable from 'any-observable';
+import { Observable } from 'rxjs';
 import { Dictionary } from 'lodash';
 import { Session, Transaction as NeoTransaction } from 'neo4j-driver/types/v1';
 import { ILogger } from '../logger';
@@ -47,7 +47,7 @@ Connection.prototype.transaction = function transaction(this: Connection) {
 type QueryConnection = Pick<Connection, 'run' | 'stream'>;
 
 export class Transaction implements QueryConnection {
-  private session: Session;
+  private session: Session | null;
   private wrapped: NeoTransaction;
 
   constructor(
@@ -91,7 +91,7 @@ export class Transaction implements QueryConnection {
    */
   async close() {
     if (this.session) {
-      await new Promise(resolve => this.session.close(resolve));
+      await new Promise(resolve => this.session?.close(resolve));
       this.session = null;
     }
   }
@@ -137,7 +137,7 @@ export class Transaction implements QueryConnection {
    * This observable will immediately emit an error.
    */
   stream<R = any>(query: Query): Observable<Dictionary<R>> {
-    return new Observable(subscriber => {
+    return new Observable((subscriber: { error(e: Error): void}) => {
       subscriber.error(new Error('Transactions cannot be streamed.'));
     });
   }

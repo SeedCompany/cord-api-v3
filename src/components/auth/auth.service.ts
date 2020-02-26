@@ -109,7 +109,7 @@ export class AuthService {
       .run();
   }
 
-  async decodeAndVerifyToken(token?: string): Promise<ISession> {
+  async decodeAndVerifyToken(token: string): Promise<ISession> {
     this.logger.debug('Decoding token', { token });
 
     const { iat } = this.decodeJWT(token);

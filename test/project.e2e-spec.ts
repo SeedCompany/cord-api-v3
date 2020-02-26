@@ -1,7 +1,9 @@
 import * as request from 'supertest';
 import { INestApplication } from '@nestjs/common';
 import { isValid, generate } from 'shortid';
-import { createTestApp, TestApp } from './utility';
+import { createTestApp, TestApp, fragments } from './utility';
+import { gql } from 'apollo-server-core';
+import { times } from 'lodash';
 
 async function createProject(
   app: INestApplication,
@@ -67,7 +69,7 @@ describe.skip('Project e2e', () => {
     // create project first
     const projId = await createProject(app, projectName);
 
-    // test reading new org
+    // test reading new project
     await request(app.getHttpServer())
       .post('/graphql')
       .send({
@@ -148,7 +150,7 @@ describe.skip('Project e2e', () => {
         mutation {
           deleteProject (input: { project: { id: "${projId}" } }){
             project {
-            id
+              id
             }
           }
         }
@@ -158,6 +160,28 @@ describe.skip('Project e2e', () => {
         expect(body.data.deleteProject.project.id).toBe(projId);
       })
       .expect(200);
+  });
+
+  // LIST PROJECTS
+  it('list view of projects', async () => {
+    // create a bunch of projects
+    const projectName = 'projectName' + Date.now();
+    await Promise.all(times(10).map(() => createProject(app, projectName)));
+
+    const { projects } = await app.graphql.query(gql`
+      query {
+        projects {
+          items {
+            ...project
+          }
+          hasMore
+          total
+        }
+      }
+      ${fragments.project}
+    `);
+
+    expect(projects.items.length).toBeGreaterThan(9);
   });
 
   afterAll(async () => {

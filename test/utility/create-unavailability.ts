@@ -14,7 +14,7 @@ export async function createUnavailability(
   input: Partial<CreateUnavailability> = {},
 ) {
   const unavailability: CreateUnavailability = {
-    userId: input.userId ,
+    userId: input.userId!,
     description: faker.address.country(),
     start:  DateTime.utc(),
     end: DateTime.utc().plus({years: 1}),
@@ -41,7 +41,7 @@ export async function createUnavailability(
     },
   );
 
-  const actual: Unavailability | undefined = result.createUnavailability?.unavailability;
+  const actual: Unavailability = result.createUnavailability.unavailability;
   expect(actual).toBeTruthy();
 
   expect(isValid(actual.id)).toBe(true);

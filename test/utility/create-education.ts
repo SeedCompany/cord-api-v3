@@ -14,7 +14,7 @@ export async function createEducation(
   input: Partial<CreateEducation> = {},
 ) {
   const education: CreateEducation = {
-    userId: input.userId,
+    userId: input.userId!,
     degree: Degree.Associates,
     major: faker.hacker.adjective() + ' Degree',
     institution: faker.company.companyName(),
@@ -41,7 +41,7 @@ export async function createEducation(
     },
   );
 
-  const actual: Education | undefined = result.createEducation?.education;
+  const actual: Education = result.createEducation.education;
   expect(actual).toBeTruthy();
 
   expect(isValid(actual.id)).toBe(true);

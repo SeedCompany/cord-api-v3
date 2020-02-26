@@ -44,11 +44,36 @@ export class FileService {
   }
 
   async getFileNode(id: string, session: ISession): Promise<FileOrDirectory> {
-    throw new NotImplementedError();
+    try {
+      const result = await this.db
+        .query()
+        .raw(
+          `
+        MATCH (token:Token {active: true, value: $token})
+        WITH * OPTIONAL MATCH (file: FileNode { id: $id})
+        RETURN
+           file
+          `,
+          {
+            id,
+            token: session.token,
+          },
+        )
+        .first();
+      return result?.file.properties;
+    } catch (e) {
+      throw new Error(e);
+    }
   }
 
   async getDownloadUrl(fileId: string, session: ISession): Promise<string> {
-    throw new NotImplementedError();
+    // before sending link, first check if object exists in s3,
+    const obj = await this.bucket.getObject(fileId);
+    if (!obj) {
+      throw new BadRequestException('object not found');
+    }
+
+    return this.bucket.getSignedUrlForPutObject(fileId);
   }
 
   async listChildren(
@@ -76,31 +101,31 @@ export class FileService {
     { parentId, uploadId, name }: CreateFileInput,
     session: ISession,
   ): Promise<File> {
-    await this.bucket.moveObject(`temp/${uploadId}`, `${parentId}/${uploadId}`);
-    const result = await this.db
-      .query()
-      .raw(
-        `
+    try {
+      // TODO find a better way to check if object exists in s3 and move
+      const result = await this.db
+        .query()
+        .raw(
+          `
         MATCH (token:Token {active: true, value: $token})
         CREATE
             (file:FileNode { id: $id, type: $type, name: $name })
         RETURN
            file
           `,
-        {
-          id: uploadId,
-          token: session.token,
-          type: FileNodeType.File,
-          name,
-        },
-      )
-      .first();
+          {
+            id: uploadId,
+            token: session.token,
+            type: FileNodeType.File,
+            name,
+          },
+        )
+        .first();
 
-    if (!result) {
-      throw new Error('Could not create file');
+      return result?.file.properties;
+    } catch (e) {
+      throw new Error(e);
     }
-
-    return result.file.properties;
   }
 
   async updateFile(
