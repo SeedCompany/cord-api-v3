@@ -2,7 +2,7 @@ import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { Connection } from 'cypher-query-builder';
 import { generate } from 'shortid';
 import { NotImplementedError } from '../../common';
-import { ISession } from '../auth';
+import { ISession, AuthService } from '../auth';
 import {
   CreateFileInput,
   Directory,
@@ -19,12 +19,16 @@ import {
 } from './dto';
 import { FilesBucketToken } from './files-s3-bucket.factory';
 import { S3Bucket } from './s3-bucket';
+import { UserService, User } from '../user';
+import { DateTime } from 'luxon';
 
 @Injectable()
 export class FileService {
   constructor(
     private readonly db: Connection,
     @Inject(FilesBucketToken) private readonly bucket: S3Bucket,
+    private readonly userService: UserService,
+    private readonly authService: AuthService,
   ) {}
 
   async getDirectory(id: string, session: ISession): Promise<Directory> {
@@ -103,25 +107,50 @@ export class FileService {
   ): Promise<File> {
     try {
       // TODO find a better way to check if object exists in s3 and move
+      let user: User | null;
+      const userSession: ISession = await this.authService.decodeAndVerifyToken(session.token);
+      user = (userSession.userId) ? await this.userService.readOne(userSession.userId, session) : null;
+
       const result = await this.db
         .query()
         .raw(
           `
-        MATCH (token:Token {active: true, value: $token})
+        MATCH
+        (token:Token {
+          active: true,
+          value: $token
+        })
+        <-[:token {active: true}]-
+        (requestingUser:User {
+          active: true,
+          id: $requestingUserId
+        })
         CREATE
-            (file:FileNode { id: $id, type: $type, name: $name })
+          (file:FileNode {
+            id: $id,
+            type: $type,
+            name: $name,
+            size: $size,
+            createdAt: datetime(),
+            modifiedAt: datetime()
+          })
+          <-[:createdBy {active: true, owningOrgId: $owningOrgId}]-
+          (requestingUser)
         RETURN
-           file
+            file
           `,
           {
             id: uploadId,
+            parentId,
             token: session.token,
+            requestingUserId: session.userId,
             type: FileNodeType.File,
+            owningOrgId: session.owningOrgId,
+            size: '1024', // TODO get file info from s3 with fileMove implementation
             name,
           },
-        )
-        .first();
-
+          )
+          .first();
       return result?.file.properties;
     } catch (e) {
       throw new Error(e);
