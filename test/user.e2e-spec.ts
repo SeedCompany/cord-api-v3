@@ -1,11 +1,12 @@
-import { User } from '../src/components/user';
 import {
   TestApp,
-  createTestApp,
   createSession,
+  createTestApp,
   createUser,
   fragments,
 } from './utility';
+
+import { User } from '../src/components/user';
 import { gql } from 'apollo-server-core';
 import { isValid } from 'shortid';
 import { times } from 'lodash';
@@ -15,11 +16,11 @@ describe('User e2e', () => {
 
   beforeAll(async () => {
     app = await createTestApp();
+    await createSession(app);
   });
 
   it('read one user by id', async () => {
     // create user first
-    const token = await createSession(app);
     const user = await createUser(app);
     const result = await app.graphql.query(
       gql`
@@ -46,7 +47,6 @@ describe('User e2e', () => {
 
   it('update user', async () => {
     // create user first
-    const token = await createSession(app);
     const user = await createUser(app);
     const result = await app.graphql.mutate(
       gql`
@@ -80,7 +80,6 @@ describe('User e2e', () => {
 
   it('delete user', async () => {
     // create user first
-    const token = await createSession(app);
     const user = await createUser(app);
     const result = await app.graphql.query(
       gql`
@@ -102,11 +101,13 @@ describe('User e2e', () => {
   // LIST USERS
   it('list view of users', async () => {
     // create a bunch of users
-    await Promise.all(times(10).map(() => createUser(app)));
+    await Promise.all(
+      times(10).map(() => createUser(app, { displayFirstName: 'Tammy' })),
+    );
 
     const { users } = await app.graphql.query(gql`
       query {
-        users {
+        users (input: {filter: {name: "Tammy"}}){
           items {
             ...user
           }

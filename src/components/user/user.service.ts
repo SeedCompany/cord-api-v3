@@ -70,41 +70,28 @@ export class UserService {
     { page, count, sort, order, filter }: UserListInput,
     session: ISession,
   ): Promise<UserListOutput> {
-    // first we'll check if the user has permission to list all users for their org
-    const permCheck = await this.db
-      .query()
-      .raw(
-        `
-      MATCH
-        (token:Token {
-          active: true,
-          value: $token
-        })
-          <-[:token {active: true}]-
-        (requestingUser:User {
-          active: true,
-          canReadUsers: true
-        })
-      RETURN
-        requestingUser.canReadUsers as canReadUsers
-    `,
-        {
-          token: session.token,
-        },
-      )
-      .first();
-    if (!permCheck?.canReadUsers) {
-      throw new UnauthorizedException();
+    let query = `
+    MATCH
+    (token:Token {
+      active: true,
+      value: $token
+    })
+      <-[:token {active: true}]-
+    (requestingUser:User {
+      active: true,
+      canReadUsers: true
+    }),
+    (user:User {active: true, owningOrgId: $owningOrgId})-[:displayFirstName {active: true}]->(displayFirstName:Property {active: true}),
+    (user:User {active: true, owningOrgId: $owningOrgId})-[:displayLastName {active: true}]->(displayLastName:Property {active: true})
+      `;
+    if (filter.name) {
+      query += `
+        WHERE (displayFirstName.value CONTAINS "${filter.name}") OR (displayLastName.value CONTAINS "${filter.name}")
+      `;
     }
 
-    // now we'll get all users
-    const result = await this.db
-      .query()
-      .raw(
-        `
-          MATCH
-            (user:User {active: true, owningOrgId: $owningOrgId})
-          WITH count(user) as total
+    query += `
+      WITH count(user) as total, user
           MATCH
             (user:User {active: true, owningOrgId: $owningOrgId}),
             (user)-[:email {active: true}]->(email:EmailAddress {active: true}),
@@ -130,16 +117,18 @@ export class UserService {
         ORDER BY ${sort} ${order}
         SKIP $skip
         LIMIT $count
-        `,
-        {
-          // filter: filter.name, // TODO Handle no filter
-          skip: (page - 1) * count,
-          count,
-          token: session.token,
-          id: session.userId,
-          owningOrgId: session.owningOrgId,
-        },
-      )
+    `;
+    // now we'll get all users
+    const result = await this.db
+      .query()
+      .raw(query, {
+        filter: filter.name,
+        skip: (page - 1) * count,
+        count,
+        token: session.token,
+        id: session.userId,
+        owningOrgId: session.owningOrgId,
+      })
       .run();
 
     const items = result.map<User>(row => ({
