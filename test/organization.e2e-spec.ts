@@ -8,10 +8,10 @@ import {
   createUser,
   fragments,
 } from './utility';
+import { generate, isValid } from 'shortid';
 
 import { Organization } from '../src/components/organization';
 import { gql } from 'apollo-server-core';
-import { isValid } from 'shortid';
 import { times } from 'lodash';
 
 describe('Organization e2e', () => {
@@ -103,15 +103,15 @@ describe('Organization e2e', () => {
   });
 
   // LIST ORGs
-  it('list view of organizations', async () => {
+  it.only('list view of organizations', async () => {
     // create a bunch of orgs
     const orgs = await Promise.all(
-      times(10).map(() => createOrganization(app)),
+      times(10).map(() => createOrganization(app,{name: generate() + ' Inc'})),
     );
 
     const { organizations } = await app.graphql.query(gql`
       query {
-        organizations {
+        organizations (input: {filter: {name: "Inc"}}) {
           items {
             ...org
           }
