@@ -39,11 +39,11 @@ export async function createProduct(
     },
   );
 
-  const actual: Product | undefined = result.createProduct?.product;
+  const actual: Product = result.createProduct.product;
   expect(actual).toBeTruthy();
 
-  expect(isValid(actual?.id)).toBe(true);
-  expect(actual?.type).toBe(product.type);
+  expect(isValid(actual.id)).toBe(true);
+  expect(actual.type).toBe(product.type);
 
   return actual;
 }
