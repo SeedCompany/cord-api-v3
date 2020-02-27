@@ -1,4 +1,4 @@
-import { Connection, node, relation } from 'cypher-query-builder';
+import { Connection, node, relation, contains } from 'cypher-query-builder';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import {
   Resource,
@@ -6,6 +6,7 @@ import {
   isSecured,
   unwrapSecured,
   SortablePaginationInput,
+  Order,
 } from '../../common';
 import { User } from '../../components/user/dto';
 import { ILogger, Logger } from '../../core';
@@ -224,63 +225,114 @@ export class PropertyUpdaterService {
     session,
     props,
     nodevar,
+    owningOrgId,
+    skipOwningOrgCheck,
     aclReadProp,
     aclEditProp,
     input,
-
   }: {
     session: ISession,
     props: ReadonlyArray<keyof TObject>,
     nodevar: string;
+    owningOrgId?: string;
+    skipOwningOrgCheck?: boolean;
     aclReadProp?: string;
     aclEditProp?: string;
-    input: { page: number, count: number, sort: string, order: string, filter: any },
+    input: { page: number, count: number, sort: string, order: Order, filter: Record<string, any> },
   }): Promise<{ hasMore: boolean, total: number, items: TObject[] }> {
     const nodeName = upperFirst(nodevar);
     const aclReadPropName = aclReadProp || `canRead${nodeName}`;
     const aclEditPropName = aclEditProp || `canEdit${nodeName}`;
+    const owningOrgFilter = skipOwningOrgCheck ? {} : { owningOrgId: owningOrgId || session.owningOrgId };
 
-    let filter = {};
+    // FIXME: filtering not working for some reason
+    const filters = '';
+    // const filters = Object.keys(input.filter).length
+    //   ? `WHERE ` + Object.keys(input.filter).map(key => `(toLower(n.${key}.value) CONTAINS toLower('Argentina') OR n.${key}.value = 'Argentina')`).join(',')
+    //   : '';
+    const query = this.db
+      .query()
+      .match([
+        [
+          node('token', 'Token', {
+            active: true,
+            value: session.token,
+          }),
+          relation('in', '', 'token', {
+            active: true,
+          }),
+          node('requestingUser', 'User', {
+            active: true,
+            [aclReadPropName]: true,
+          }),  
+        ],
+        [
+          node('n', nodeName, {
+            active: true,
+            ...owningOrgFilter,
+          }),  
+        ]
+      ])
+      .with('count(n) as total, requestingUser')
+      .match(props.map(prop => {
+        return [
+          node('n', nodeName, {
+            active: true,
+            ...owningOrgFilter,
+          }),
+          relation('out', '', prop as string, { active: true }),
+          node(prop as string, 'Property', { active: true }),
+        ]
+      }));
 
-    const query = `
-      MATCH
-        (token:Token {active: true, value: $token})
-        <-[:token {active: true}]-
-        (user:User {
-          ${aclReadPropName}: true
-        }),
-        (n:${nodeName} {
-          active: true
+    if (input.filter && Object.keys(input.filter).length) {
+      const where: Record<string, any> = {};
+
+      for (const k in input.filter) {
+        where[k + '.value'] = contains(input.filter[k]);
+      }
+
+      query.where(where);
+    }
+  
+    query
+      .return([
+        // return total count
+        'total',
+
+        // return the ACL fields
+        {
+          requestingUser: [
+            { [aclReadPropName]: aclReadPropName },
+            { [aclEditPropName]: aclEditPropName },
+          ]
+        },
+
+        // always return the <node>.id and <node>.createdAt field
+        {
+          n: [ { id: 'id' }, { createdAt: 'createdAt' } ]
+        },
+
+        // return the rest of the requested properties
+        ...props.map(prop => {
+          const propName: string = prop as string;
+          return { [propName + '.value']: propName };
         })
-      WITH count(n) as total, user
-      MATCH
-        ${props.map(prop => {
-          return `
-            (n)-[:${prop} {active: true}]->(${prop}:Property {active:true})
-          `;
-        }).join(',')}
-      RETURN
-        n.id as id,
-        n.createdAt as createdAt,
-        total as total,
-        user.${aclReadPropName} as ${aclReadPropName},
-        user.${aclEditPropName} as ${aclEditPropName},
-        ${props.map(prop => {
-          return `${prop}.value as ${prop}`
-        }).join(',')}
-      ORDER BY ${input.sort} ${input.order}
-      SKIP $skip
-      LIMIT $count
-    `;
+      ])
+      .orderBy([input.sort], input.order)
+      .skip((input.page - 1) * input.count)
+      .limit(input.count);
 
-    const result = await this.db
-        .query()
-        .raw(query, {
-          skip: (input.page - 1) * input.count,
-          count: input.count,
-          token: session.token,
-        })
-        .run();
+    const result = await query.run();
+
+      console.log(result);
+
+      console.log(query.toString())
+
+    const total = result.length ? result[0].total : 0;
+
+    // if skip + count is less than total, there is more
+    const hasMore = (input.page - 1) * input.count + input.count < total;
 
     const items = result.map<TObject>(row => {
       const item: any = {
@@ -291,8 +343,8 @@ export class PropertyUpdaterService {
       for (const prop of props) {
         item[prop] = {
           value: row[prop as string],
-          canRead: row[aclReadPropName],
-          canEdit: row[aclEditPropName],
+          canRead: Boolean(row[aclReadPropName]),
+          canEdit: Boolean(row[aclEditPropName]),
         };
       }
 
@@ -300,11 +352,95 @@ export class PropertyUpdaterService {
     });
 
     return {
-      // if skip + count is less than total, there is more
-      hasMore: (input.page - 1) * input.count + input.count < result[0].total,
-      total: result[0].total,
+      hasMore,
+      total,
       items,
     };
+
+    // console.log(foo.toString());
+
+    // console.log('RESULT', await foo.run())
+
+    // const query = `
+    //   MATCH
+    //     (token:Token {active: true, value: $token})
+    //     <-[:token {active: true}]-
+    //     (user:User {
+    //       ${aclReadPropName}: true
+    //     }),
+    //     (n:${nodeName} {
+    //       active: true
+    //     })
+    //   ${filters}
+    //   WITH count(n) as total, user
+    //   MATCH
+    //     ${props.map(prop => {
+    //       return `
+    //         (n:${nodeName} { active: true ${owningOrgId ? ', owningOrgId: $owningOrgId' : ''}})
+    //         -[:${prop} {active: true}]->(${prop}:Property {active:true})
+    //       `;
+    //     }).join(',')}
+    //   RETURN
+    //     n.id as id,
+    //     n.createdAt as createdAt,
+    //     total as total,
+    //     user.${aclReadPropName} as ${aclReadPropName},
+    //     user.${aclEditPropName} as ${aclEditPropName},
+    //     ${props.map(prop => {
+    //       return `${prop}.value as ${prop}`
+    //     }).join(',')}
+    //   ORDER BY ${input.sort} ${input.order}
+    //   SKIP $skip
+    //   LIMIT $count
+    // `;
+
+    // // console.log(query)
+    // // console.log('input.filter', input.filter);
+    // // console.log('input.filter.name', input.filter.name)
+    // // console.log('test', {
+    // //   skip: (input.page - 1) * input.count,
+    // //   count: input.count,
+    // //   token: session.token,
+    // //   filter: input.filter.name,
+    // // })
+
+    // const result = await this.db
+    //     .query()
+    //     .raw(query, {
+    //       owningOrgId,
+    //       skip: (input.page - 1) * input.count,
+    //       count: input.count,
+    //       token: session.token,
+    //     })
+    //     .run();
+
+    // const total = result.length ? result[0].total : 0;
+
+    // // if skip + count is less than total, there is more
+    // const hasMore = (input.page - 1) * input.count + input.count < total;
+
+    // const items = result.map<TObject>(row => {
+    //   const item: any = {
+    //     id: row.id,
+    //     createdAt: row.createdAt,
+    //   };
+
+    //   for (const prop of props) {
+    //     item[prop] = {
+    //       value: row[prop as string],
+    //       canRead: Boolean(row[aclReadPropName]),
+    //       canEdit: Boolean(row[aclEditPropName]),
+    //     };
+    //   }
+
+    //   return item;
+    // });
+
+    // return {
+    //   hasMore,
+    //   total,
+    //   items,
+    // };
   }
 
   async deleteNode<TObject extends Resource>({

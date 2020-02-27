@@ -221,7 +221,6 @@ export class LanguageService {
   }
 
   async list({ page, count, sort, order, filter }: LanguageListInput, session: ISession): Promise<LanguageListOutput> {
-
     const result = await this.propertyUpdater.testList<Language>({
       session,
       nodevar: 'language',
@@ -234,23 +233,22 @@ export class LanguageService {
         'ethnologueName',
         'ethnologuePopulation',
         'organizationPopulation',
-        'rodNumber'
+        'rodNumber',
       ],
       input: {
         page,
         count,
         sort,
         order,
-        filter,
+        filter: {},
       }
-    })
+    });
 
     return {
       items: result.items,
       hasMore: result.hasMore,
       total: result.total,
     };
-
   }
 
   // async list(
