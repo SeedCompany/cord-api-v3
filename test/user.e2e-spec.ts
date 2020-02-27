@@ -1,3 +1,6 @@
+import * as faker from 'faker';
+
+import { CreateUser, CreateUserInput, User } from '../src/components/user';
 import {
   TestApp,
   createSession,
@@ -6,7 +9,6 @@ import {
   fragments,
 } from './utility';
 
-import { User } from '../src/components/user';
 import { gql } from 'apollo-server-core';
 import { isValid } from 'shortid';
 import { times } from 'lodash';
@@ -20,8 +22,19 @@ describe('User e2e', () => {
   });
 
   it('read one user by id', async () => {
+    const fakeUser: CreateUser = {
+      email: faker.internet.email(),
+      realFirstName: faker.name.firstName(),
+      realLastName: faker.name.lastName(),
+      displayFirstName: faker.name.firstName(),
+      displayLastName: faker.name.lastName(),
+      password: faker.internet.password(),
+      phone: faker.phone.phoneNumber(),
+      timezone: 'timezone detail',
+      bio: 'bio detail',
+    };
     // create user first
-    const user = await createUser(app);
+    const user = await createUser(app, fakeUser);
     const result = await app.graphql.query(
       gql`
         query user($id: ID!) {
@@ -40,7 +53,14 @@ describe('User e2e', () => {
     expect(actual).toBeTruthy();
 
     expect(isValid(actual.id)).toBe(true);
-    expect(actual.email.value).toBe(user.email.value);
+    expect(actual.email.value).toBe(fakeUser.email);
+    expect(actual.realFirstName.value).toBe(fakeUser.realFirstName);
+    expect(actual.realLastName.value).toBe(fakeUser.realLastName);
+    expect(actual.displayFirstName.value).toBe(fakeUser.displayFirstName);
+    expect(actual.displayLastName.value).toBe(fakeUser.displayLastName);
+    expect(actual.phone.value).toBe(fakeUser.phone);
+    expect(actual.timezone.value).toBe(fakeUser.timezone);
+    expect(actual.bio.value).toBe(fakeUser.bio);
 
     return true;
   });
@@ -107,7 +127,7 @@ describe('User e2e', () => {
 
     const { users } = await app.graphql.query(gql`
       query {
-        users (input: {filter: {name: "Tammy"}}){
+        users(input: { filter: { name: "Tammy" } }) {
           items {
             ...user
           }
