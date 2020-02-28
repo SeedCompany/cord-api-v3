@@ -8,6 +8,7 @@ import {
   SecuredEducationList,
   Education,
   EducationListInput,
+  EducationListOutput,
   UpdateEducation,
 } from './dto';
 
@@ -26,6 +27,95 @@ export class EducationService {
   ): Promise<SecuredEducationList> {
     this.logger.info('Listing educations', { input, token });
     throw new Error('Not implemented');
+  }
+
+  async educationlist(
+    { page, count, sort, order, filter }: EducationListInput,
+    { token }: ISession,
+  ): Promise<EducationListOutput> {
+    let query = `
+      MATCH
+        (token:Token {
+          active: true,
+          value: $token
+        })
+          <-[:token {active: true}]-
+        (requestingUser:User {
+          active: true,
+          id: $requestingUserId,
+          owningOrgId: $owningOrgId
+        }),
+        (education:Education {active: true, id: $id})`;
+
+    if (filter) {
+      query += `
+           WHERE
+        name.value CONTAINS $filter`;
+    }
+    query += `
+      WITH count(education) as total, education
+      MATCH
+        (education:Education {active: true, id: $id})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl1:ACL {canReadDegree: true})-[:toNode]->(education)-[:degree {active: true}]->(degree:Property {active: true})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl2:ACL {canEditDegree: true})-[:toNode]->(education)
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl3:ACL {canReadMajor: true})-[:toNode]->(education)-[:major {active: true}]->(major:Property {active: true})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl4:ACL {canEditMajor: true})-[:toNode]->(education)
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl5:ACL {canReadInstitution: true})-[:toNode]->(education)-[:institution {active: true}]->(institution:Property {active: true})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl6:ACL {canEditInstitution: true})-[:toNode]->(education)
+        RETURN
+          education.id as id,
+          education.createdAt as createdAt,
+          degree.value as degree,
+          acl1.canReadDegree as canReadDegree,
+          acl2.canEditDegree as canEditDegree,
+          major.value as major,
+          acl3.canReadMajor as canReadMajor,
+          acl4.canEditMajor as canEditMajor,
+          institution.value as institution,
+          acl5.canReadInstitution as canReadInstitution,
+          acl6.canEditInstitution as canEditInstitution
+        ORDER BY ${sort} ${order}
+        SKIP $skip
+        LIMIT $count
+      `;
+
+    const result = await this.db
+      .query()
+      .raw(query, {
+        filter: filter.userId, // TODO Handle no filter
+        skip: (page - 1) * count,
+        count,
+        token,
+      })
+      .run();
+
+    const items = result.map<Education>(row => ({
+      id: row.id,
+      createdAt: row.createdAt,
+      degree: {
+        value: row.degree,
+        canRead: row.canReadDegree !== null ? row.canReadDegree : false,
+        canEdit: row.canEditDegree !== null ? row.canEditDegree : false,
+      },
+      major: {
+        value: row.major,
+        canRead: row.canReadMajor !== null ? row.canReadMajor : false,
+        canEdit: row.canEditMajor !== null ? row.canEditMajor : false,
+      },
+      institution: {
+        value: row.institution,
+        canRead: row.canReadInstitution !== null ? row.canReadInstitution : false,
+        canEdit: row.canEditInstitution !== null ? row.canEditInstitution : false,
+      },
+    }));
+
+    const hasMore = (page - 1) * count + count < result[0].total; // if skip + count is less than total there is more
+
+    return {
+      items,
+      hasMore,
+      total: result[0].total,
+    };
   }
 
   async create(
