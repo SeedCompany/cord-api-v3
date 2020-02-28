@@ -38,6 +38,4 @@ export class EducationListOutput extends PaginatedList(Education) {}
 @ObjectType({
   description: SecuredList.descriptionFor('education objects'),
 })
-export abstract class SecuredEducationList extends SecuredList(
-  Education,
-) {}
+export abstract class SecuredEducationList extends SecuredList(Education) {}
