@@ -5,6 +5,8 @@ import { ISession, Session } from '../../auth';
 import {
   CreateEducationInput,
   CreateEducationOutput,
+  EducationListInput,
+  EducationListOutput,
   UpdateEducationInput,
   UpdateEducationOutput,
   Education,
@@ -27,7 +29,7 @@ export class EducationResolver {
   }
 
   @Query(() => Education, {
-    description: 'Read an education entry by user id',
+    description: 'Look up an education by its ID',
   })
   async education(
     @Session() session: ISession,
@@ -36,8 +38,23 @@ export class EducationResolver {
     return await this.service.readOne(id, session);
   }
 
+  @Query(() => EducationListOutput, {
+    description: 'Look up educations by user id',
+  })
+  async educations(
+    @Session() session: ISession,
+    @Args({
+      name: 'input',
+      type: () => EducationListInput,
+      defaultValue: EducationListInput.defaultVal,
+    })
+    input: EducationListInput,
+  ): Promise<EducationListOutput> {
+    return this.service.list(input, session);
+  }
+
   @Mutation(() => UpdateEducationOutput, {
-    description: 'Update an education entry',
+    description: 'Update an education',
   })
   async updateEducation(
     @Session() session: ISession,
@@ -48,7 +65,7 @@ export class EducationResolver {
   }
 
   @Mutation(() => Boolean, {
-    description: 'Delete an education entry',
+    description: 'Delete an education',
   })
   async deleteEducation(
     @Session() session: ISession,
