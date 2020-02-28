@@ -2,9 +2,9 @@ import * as faker from 'faker';
 
 import {
   TestApp,
+  createEducation,
   createSession,
   createTestApp,
-  createEducation,
   createUser,
 } from './utility';
 
@@ -116,28 +116,29 @@ describe('Education e2e', () => {
   });
 
   // LIST Educations
-  // it.skip('List view of educations', async () => {
-  //   // create a bunch of educations
-  //   const numEducations = 10;
-  //   await Promise.all(
-  //     times(numEducations).map(() =>
-  //       createEducation(app, { userId: user.id }),
-  //     ),
-  //   );
-  //   // test reading new lang
-  //   const { educations } = await app.graphql.query(gql`
-  //     query {
-  //       educations {
-  //         items {
-  //           ...org
-  //         }
-  //         hasMore
-  //         total
-  //       }
-  //     }
-  //     ${fragments.org}
-  //   `);
+  it('List view of educations', async () => {
+    // create a bunch of educations
+    const numEducations = 10;
+    await Promise.all(
+      times(numEducations).map(() =>
+        createEducation(app, { userId: user.id }),
+      ),
+    );
+    // test reading new lang
+    const { educations } = await app.graphql.query(gql`
+      query {
+        educations (input: { filter: { userId : "${user.id}" }}) {
+          items {
+            ...education
+          }
+          hasMore
+          total
+        }
+      }
+      ${fragments.education}
+    `,
+    );
 
-  //   expect(educations.items.length).toBeGreaterThan(numEducations);
-  // });
+    expect(educations.items.length).toBeGreaterThanOrEqual(numEducations);
+  });
 });

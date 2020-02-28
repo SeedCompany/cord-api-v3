@@ -1,13 +1,12 @@
 import * as faker from 'faker';
 
-import { CreateEducation, Education, Degree } from '../../src/components/user/education';
+import { CreateEducation, Degree, Education } from '../../src/components/user/education';
 
-import { DateTime } from 'luxon';
 import { TestApp } from './create-app';
-import { createUser } from './create-user';
 import { fragments } from './fragments';
 import { gql } from 'apollo-server-core';
 import { isValid } from 'shortid';
+import { upperFirst } from 'lodash';
 
 export async function createEducation(
   app: TestApp,
@@ -16,7 +15,7 @@ export async function createEducation(
   const education: CreateEducation = {
     userId: input.userId!,
     degree: Degree.Associates,
-    major: faker.hacker.adjective() + ' Degree',
+    major: upperFirst(faker.hacker.adjective()) + ' Degree',
     institution: faker.company.companyName(),
     ...input,
   };

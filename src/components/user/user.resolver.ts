@@ -102,7 +102,7 @@ export class UserResolver {
     })
     input: EducationListInput,
   ): Promise<SecuredEducationList> {
-    return this.educationService.list(id, input, session.token);
+    return this.educationService.list(input, session);
   }
 
   @Mutation(() => CreateUserOutput, {

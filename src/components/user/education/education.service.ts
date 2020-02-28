@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { Connection } from 'cypher-query-builder';
 import { generate } from 'shortid';
 import { ILogger, Logger, PropertyUpdaterService } from '../../../core';
@@ -8,7 +12,6 @@ import {
   SecuredEducationList,
   Education,
   EducationListInput,
-  EducationListOutput,
   UpdateEducation,
 } from './dto';
 
@@ -21,19 +24,13 @@ export class EducationService {
   ) {}
 
   async list(
-    educationId: string,
-    input: EducationListInput,
-    token: string,
-  ): Promise<SecuredEducationList> {
-    this.logger.info('Listing educations', { input, token });
-    throw new Error('Not implemented');
-  }
-
-  async educationlist(
     { page, count, sort, order, filter }: EducationListInput,
-    { token }: ISession,
-  ): Promise<EducationListOutput> {
-    let query = `
+    session: ISession,
+  ): Promise<SecuredEducationList> {
+    if (!filter?.userId) {
+      throw new BadRequestException('no userId specified');
+    }
+    const query = `
       MATCH
         (token:Token {
           active: true,
@@ -45,35 +42,30 @@ export class EducationService {
           id: $requestingUserId,
           owningOrgId: $owningOrgId
         }),
-        (education:Education {active: true, id: $id})`;
-
-    if (filter) {
-      query += `
-           WHERE
-        name.value CONTAINS $filter`;
-    }
-    query += `
+        (user: User {owningOrgId: $owningOrgId, active: true, id: $userId} )
+          -[:education {active: true}]
+          ->(education:Education {active: true})
       WITH count(education) as total, education
       MATCH
-        (education:Education {active: true, id: $id})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl1:ACL {canReadDegree: true})-[:toNode]->(education)-[:degree {active: true}]->(degree:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl2:ACL {canEditDegree: true})-[:toNode]->(education)
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl3:ACL {canReadMajor: true})-[:toNode]->(education)-[:major {active: true}]->(major:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl4:ACL {canEditMajor: true})-[:toNode]->(education)
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl5:ACL {canReadInstitution: true})-[:toNode]->(education)-[:institution {active: true}]->(institution:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl6:ACL {canEditInstitution: true})-[:toNode]->(education)
+        (requestingUser)<-[:member]-(acl:ACL {canReadDegree: true, canReadMajor: true, canReadInstitution: true})-[:toNode]->(education),
+        (education)-[:degree {active: true}]->(degree:Property {active: true}),
+        (education)-[:major {active: true}]->(major:Property {active: true}),
+        (education)-[:institution {active: true}]->(institution:Property {active: true})
         RETURN
+          total,
           education.id as id,
           education.createdAt as createdAt,
           degree.value as degree,
-          acl1.canReadDegree as canReadDegree,
-          acl2.canEditDegree as canEditDegree,
+          acl.canReadDegree as canReadDegree,
+          acl.canEditDegree as canEditDegree,
           major.value as major,
-          acl3.canReadMajor as canReadMajor,
-          acl4.canEditMajor as canEditMajor,
+          acl.canReadMajor as canReadMajor,
+          acl.canEditMajor as canEditMajor,
           institution.value as institution,
-          acl5.canReadInstitution as canReadInstitution,
-          acl6.canEditInstitution as canEditInstitution
+          acl.canReadInstitution as canReadInstitution,
+          acl.canEditInstitution as canEditInstitution,
+          requestingUser.canReadEducation,
+          requestingUser.canCreateEducation
         ORDER BY ${sort} ${order}
         SKIP $skip
         LIMIT $count
@@ -82,10 +74,12 @@ export class EducationService {
     const result = await this.db
       .query()
       .raw(query, {
-        filter: filter.name, // TODO Handle no filter
+        userId: filter.userId,
+        requestingUserId: session.userId,
+        owningOrgId: session.owningOrgId,
         skip: (page - 1) * count,
         count,
-        token,
+        token: session.token,
       })
       .run();
 
@@ -104,24 +98,25 @@ export class EducationService {
       },
       institution: {
         value: row.institution,
-        canRead: row.canReadInstitution !== null ? row.canReadInstitution : false,
-        canEdit: row.canEditInstitution !== null ? row.canEditInstitution : false,
+        canRead:
+          row.canReadInstitution !== null ? row.canReadInstitution : false,
+        canEdit:
+          row.canEditInstitution !== null ? row.canEditInstitution : false,
       },
     }));
 
-    const hasMore = (page - 1) * count + count < result[0].total; // if skip + count is less than total there is more
+    const hasMore = result ? (page - 1) * count + count < result[0].total : false ; // if skip + count is less than total there is more
 
     return {
       items,
       hasMore,
-      total: result[0].total,
+      total: result ? result[0].total : 0,
+      canCreate: result ? result[0].canCreateEducation : false,
+      canRead: result ? result[0].canReadEducation : false,
     };
   }
 
-  async create(
-    input: CreateEducation,
-    session: ISession,
-  ): Promise<Education> {
+  async create(input: CreateEducation, session: ISession): Promise<Education> {
     const id = generate();
     const acls = {
       canReadDegree: true,
@@ -129,7 +124,7 @@ export class EducationService {
       canReadMajor: true,
       canEditMajor: true,
       canReadInstitution: true,
-      canEditInstitution: true
+      canEditInstitution: true,
     };
 
     try {
@@ -142,12 +137,11 @@ export class EducationService {
       });
     } catch (e) {
       console.log(e);
-      this.logger.error(`Could not create education for user ${input.userId}`,);
+      this.logger.error(`Could not create education for user ${input.userId}`);
       throw new Error('Could not create education');
     }
 
-    this.logger.info(`education for user ${input.userId} created, id ${id}`,);
-    console.log(`education for user ${input.userId} created, id ${id}`);
+    this.logger.info(`education for user ${input.userId} created, id ${id}`);
 
     // connect the Education to the User.
     const query = `
@@ -164,10 +158,10 @@ export class EducationService {
         id,
       })
       .first();
-    
+
     return await this.readOne(id, session);
   }
-  
+
   async readOne(id: string, session: ISession): Promise<Education> {
     const result = await this.db
       .query()
