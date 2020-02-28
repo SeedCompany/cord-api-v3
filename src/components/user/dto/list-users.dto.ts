@@ -7,10 +7,16 @@ import { User } from './user.dto';
 @InputType()
 export abstract class UserFilters {
   @Field({
-    description: 'Only users matching this name',
+    description: 'Only users matching this first name',
     nullable: true,
   })
-  readonly name?: string;
+  readonly displayFirstName?: string;
+
+  @Field({
+    description: 'Only users matching this last name',
+    nullable: true,
+  })
+  readonly displayLastName?: string;
 }
 
 const defaultFilters = {};
