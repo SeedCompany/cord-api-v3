@@ -10,36 +10,34 @@ Bible translation project management API.
 1. Create a new database using the Neo4j Desktop GUI with the username and password shown in the environment variables below  
 1. Click the `plugins` tab on the new database management view and add the APOC plugin  
 1. Start the database   
-1. Set enironment variables:   
+1. Set an environment variable: `export NODE_ENV=development`
+1. Setup the AWS Javscript [SDK](https://aws.amazon.com/sdk-for-node-js/). 
+1. Create a `.env.local` file in the root of the project with the following contents:
 ```
-export NEO4J_URL=bolt://localhost
-export NEO4J_USERNAME=neo4j
-export NEO4J_PASSWORD=asdf
-export JWT_AUTH_KEY=asdf
+NEO4J_USERNAME=neo4j
+NEO4J_URL=bolt://localhost
+NEO4J_PASSWORD=asdf
+JWT_AUTH_KEY=asdf
+FILES_S3_BUCKET=asdf
+PORT=3333
 ```
-You will also need the following environment variables set:  get values from the team
-```
-export AWS_SECRET_ACCESS_KEY=
-export AWS_ACCESS_KEY_ID=
-export FILES_S3_BUCKET=
-```
-
 
 ## Usage
 
-Install: 
-1. `brew install gcc`
-1. `npm install -g node-gyp`
-1. `CXX=g++ yarn install argon2`
-1. `yarn`  
+Install: `yarn`  
+Develop: `yarn start:dev`  
+Test: `yarn test:e2e`  
 
-See [argon2](https://www.npmjs.com/package/argon2) for more info on installing argon2.
+## Other Docs
 
-Develop: `yarn run start:dev`  
-Test: `yarn run test:e2e`  
-Create new model class: `nest g class model/className --no-spec`  
-Create new resolver: `nest g resolver components/className --no-spec`  
-Create new service: `nest g service components/className --no-spec`  
+[Nest.js](https://docs.nestjs.com/)  
+Neo4j javascript [driver](https://neo4j.com/developer/javascript/) and [api](https://neo4j.com/docs/api/javascript-driver/current/)  
+[Cypher Query Builder](https://jamesfer.me/cypher-query-builder/)  
+[GraphQL](https://graphql.org/learn/)
+[Cypher](https://neo4j.com/developer/cypher-basics-i/)
+
+
+See [argon2](https://www.npmjs.com/package/argon2) for more info on installing argon2.  
 
 
 ## License
