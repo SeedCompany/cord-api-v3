@@ -26,20 +26,20 @@ export class UnavailabilityResolver {
     return await this.service.readOne(id, session);
   }
 
-  // @Query(() => SecuredUnavailabilityList, {
-  //   description: 'Look up unavailabilities for a user',
-  // })
-  // async unavailabilities(
-  //   @RequestUser() token: IRequestUser,
-  //   @Args({
-  //     userId: 'id',
-  //     type: () => UnavailabilityListInput,
-  //     defaultValue: UnavailabilityListInput.defaultVal,
-  //   })
-  //   input: UnavailabilityListInput,
-  // ): Promise<SecuredUnavailabilityList> {
-  //   return this.service.list(userId, input, token);
-  // }
+  @Query(() => SecuredUnavailabilityList, {
+    description: 'Look up unavailabilities for a user',
+  })
+  async unavailabilities(
+    @Session() session: ISession,
+    @Args({
+      name: 'input',
+      type: () => UnavailabilityListInput,
+      defaultValue: UnavailabilityListInput.defaultVal,
+    })
+    input: UnavailabilityListInput,
+  ): Promise<SecuredUnavailabilityList> {
+    return this.service.list(input, session);
+  }
 
   @Mutation(() => CreateUnavailabilityOutput, {
     description: 'Create an unavailability',

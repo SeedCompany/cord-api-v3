@@ -16,12 +16,6 @@ export abstract class EducationFilters {
     nullable: true,
   })
   readonly userId?: string;
-
-  // @Field(() => ID, {
-  //   description: 'Only educations matching this user id',
-  //   nullable: true,
-  // })
-  // readonly userId?: string;
 }
 
 const defaultFilters = {};

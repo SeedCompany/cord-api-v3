@@ -116,28 +116,28 @@ describe('Unavailability e2e', () => {
   });
 
   // LIST Unavailabilities
-  it.skip('List view of unavailabilities', async () => {
-    // create a bunch of unavailabilities
-    const numUnavailables = 10;
+  it('List view of unavailabilities', async () => {
+    // create 10 unavailabilities
+    const num = 10;
     await Promise.all(
-      times(numUnavailables).map(() =>
+      times(num).map(() =>
         createUnavailability(app, { userId: user.id }),
       ),
     );
-    // test reading new lang
-    const { unavailables } = await app.graphql.query(gql`
+
+    const { unavailabilities } = await app.graphql.query(gql`
       query {
-        unavailabilities {
+        unavailabilities (input: { filter: { userId : "${user.id}" }}){
           items {
-            ...org
+            ...unavailability
           }
           hasMore
           total
         }
       }
-      ${fragments.org}
+      ${fragments.unavailability}
     `);
 
-    expect(unavailables.items.length).toBeGreaterThan(numUnavailables);
+    expect(unavailabilities.items.length).toBeGreaterThanOrEqual(num);
   });
 });

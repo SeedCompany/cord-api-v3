@@ -1,19 +1,36 @@
-import { InputType, ObjectType } from 'type-graphql';
+import { Field, InputType, ObjectType } from 'type-graphql';
 import {
   Order,
   SecuredList,
   SortablePaginationInput,
 } from '../../../../common';
+
+import { Type } from 'class-transformer';
 import { Unavailability } from './unavailability.dto';
+import { ValidateNested } from 'class-validator';
 
 @InputType()
-export class UnavailabilityListInput extends SortablePaginationInput<
-  keyof Unavailability
->({
+export abstract class UnavailabilityFilters {
+  @Field({
+    description: 'Only unavailability matching this name',
+    nullable: true,
+  })
+  readonly userId?: string;
+}
+
+const defaultFilters = {};
+
+@InputType()
+export class UnavailabilityListInput extends SortablePaginationInput<keyof Unavailability>({
   defaultSort: 'start',
   defaultOrder: Order.DESC,
 }) {
   static defaultVal = new UnavailabilityListInput();
+
+  @Field({ nullable: true })
+  @Type(() => UnavailabilityFilters)
+  @ValidateNested()
+  readonly filter: UnavailabilityFilters = defaultFilters;
 }
 
 @ObjectType({
