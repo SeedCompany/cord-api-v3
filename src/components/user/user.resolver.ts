@@ -74,7 +74,8 @@ export class UserResolver {
     })
     input: UnavailabilityListInput,
   ): Promise<SecuredUnavailabilityList> {
-    return this.unavailabilityService.list(id, input, session);
+    input = {...input, filter: {userId: id}};
+    return this.unavailabilityService.list(input, session);
   }
 
   @ResolveProperty(() => SecuredOrganizationList)
@@ -102,6 +103,7 @@ export class UserResolver {
     })
     input: EducationListInput,
   ): Promise<SecuredEducationList> {
+    input = {...input, filter: {userId: id}};
     return this.educationService.list(input, session);
   }
 

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { Connection } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
@@ -51,7 +51,6 @@ export class UnavailabilityService {
     this.logger.info(
       `unavailability for user ${input.userId} created, id ${id}`,
     );
-    console.log(`unavailability for user ${input.userId} created, id ${id}`);
 
     // connect the Unavailability to the User.
 
@@ -68,7 +67,7 @@ export class UnavailabilityService {
         id,
       })
       .first();
-    console.log(result);
+
     return await this.readOne(id, session);
   }
 
@@ -196,10 +195,95 @@ export class UnavailabilityService {
   }
 
   async list(
-    userId: string,
-    input: UnavailabilityListInput,
+    { page, count, sort, order, filter }: UnavailabilityListInput,
     session: ISession,
   ): Promise<SecuredUnavailabilityList> {
-    throw new Error('Not implemented');
+    if (!filter?.userId) {
+      throw new BadRequestException('no userId specified');
+    }
+    const query = `
+      MATCH
+        (token:Token {
+          active: true,
+          value: $token
+        })
+          <-[:token {active: true}]-
+        (requestingUser:User {
+          active: true,
+          id: $requestingUserId,
+          owningOrgId: $owningOrgId
+        }),
+        (user: User {owningOrgId: $owningOrgId, active: true, id: $userId} )
+          -[:unavailability {active: true}]
+          ->(unavailability:Unavailability {active: true})
+      WITH count(unavailability) as total, unavailability
+      MATCH
+        (requestingUser)<-[:member]-(acl:ACL {canReadDescription: true, canReadStart: true, canReadEnd: true})-[:toNode]->(unavailability),
+        (unavailability)-[:description {active: true}]->(description:Property {active: true}),
+        (unavailability)-[:start {active: true}]->(start:Property {active: true}),
+        (unavailability)-[:end {active: true}]->(end:Property {active: true})
+        RETURN
+          total,
+          unavailability.id as id,
+          unavailability.createdAt as createdAt,
+          description.value as description,
+          acl.canReadDescription as canReadDescription,
+          acl.canEditDescription as canEditDescription,
+          start.value as start,
+          acl.canReadStart as canReadStart,
+          acl.canEditStart as canEditStart,
+          end.value as end,
+          acl.canReadEnd as canReadEnd,
+          acl.canEditEnd as canEditEnd,
+          requestingUser.canReadUnavailability,
+          requestingUser.canCreateUnavailability
+        ORDER BY ${sort} ${order}
+        SKIP $skip
+        LIMIT $count
+      `;
+
+    const result = await this.db
+      .query()
+      .raw(query, {
+        userId: filter.userId,
+        requestingUserId: session.userId,
+        owningOrgId: session.owningOrgId,
+        skip: (page - 1) * count,
+        count,
+        token: session.token,
+      })
+      .run();
+
+    const items = result.map<Unavailability>(row => ({
+      id: row.id,
+      createdAt: row.createdAt,
+      description: {
+        value: row.description,
+        canRead: row.canReadDescription !== null ? row.canReadDescription : false,
+        canEdit: row.canEditDescription !== null ? row.canEditDescription : false,
+      },
+      start: {
+        value: row.start,
+        canRead: row.canReadStart !== null ? row.canReadStart : false,
+        canEdit: row.canEditStart !== null ? row.canEditStart : false,
+      },
+      end: {
+        value: row.end,
+        canRead:
+          row.canReadEnd !== null ? row.canReadEnd : false,
+        canEdit:
+          row.canEditEnd !== null ? row.canEditEnd : false,
+      },
+    }));
+
+    const hasMore = result ? (page - 1) * count + count < result[0].total : false ; // if skip + count is less than total there is more
+
+    return {
+      items,
+      hasMore,
+      total: result ? result[0].total : 0,
+      canCreate: result ? result[0].canCreateUnavailability : false,
+      canRead: result ? result[0].canReadUnavailability : false,
+    };
   }
 }

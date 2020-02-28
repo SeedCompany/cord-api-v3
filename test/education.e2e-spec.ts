@@ -117,14 +117,12 @@ describe('Education e2e', () => {
 
   // LIST Educations
   it('List view of educations', async () => {
-    // create a bunch of educations
+    // create 10 educations
     const numEducations = 10;
     await Promise.all(
-      times(numEducations).map(() =>
-        createEducation(app, { userId: user.id }),
-      ),
+      times(numEducations).map(() => createEducation(app, { userId: user.id })),
     );
-    // test reading new lang
+
     const { educations } = await app.graphql.query(gql`
       query {
         educations (input: { filter: { userId : "${user.id}" }}) {
@@ -136,8 +134,7 @@ describe('Education e2e', () => {
         }
       }
       ${fragments.education}
-    `,
-    );
+    `);
 
     expect(educations.items.length).toBeGreaterThanOrEqual(numEducations);
   });
