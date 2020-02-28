@@ -138,7 +138,7 @@ export class OrganizationService {
     { page, count, sort, order, filter }: OrganizationListInput,
     session: ISession,
   ): Promise<OrganizationListOutput> {
-    const result = await this.propertyUpdater.testList<Organization>({
+    const result = await this.propertyUpdater.list<Organization>({
       session,
       nodevar: 'organization',
       aclReadProp: 'canReadOrgs',

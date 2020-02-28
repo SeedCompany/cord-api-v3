@@ -70,7 +70,7 @@ export class UserService {
     { page, count, sort, order, filter }: UserListInput,
     session: ISession,
   ): Promise<UserListOutput> {
-    const result = await this.propertyUpdater.testList<User>({
+    const result = await this.propertyUpdater.list<User>({
       session,
       nodevar: 'user',
       aclReadProp: 'canReadUsers',

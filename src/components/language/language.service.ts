@@ -221,7 +221,7 @@ export class LanguageService {
   }
 
   async list({ page, count, sort, order, filter }: LanguageListInput, session: ISession): Promise<LanguageListOutput> {
-    const result = await this.propertyUpdater.testList<Language>({
+    const result = await this.propertyUpdater.list<Language>({
       session,
       nodevar: 'language',
       aclReadProp: 'canReadLangs',
