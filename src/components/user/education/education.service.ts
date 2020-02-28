@@ -82,7 +82,7 @@ export class EducationService {
     const result = await this.db
       .query()
       .raw(query, {
-        filter: filter.userId, // TODO Handle no filter
+        filter: filter.name, // TODO Handle no filter
         skip: (page - 1) * count,
         count,
         token,
