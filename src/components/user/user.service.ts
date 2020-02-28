@@ -411,6 +411,7 @@ export class UserService {
   }
 
   async readOne(id: string, session: ISession): Promise<User> {
+    
     const result = await this.db
       .query()
       .raw(
