@@ -27,7 +27,7 @@ phases:
   build:
     commands:
       - echo Test started on `date`
-      - docker run --env NEO4J_URL=$NEO4J_URL --env NEO4J_USERNAME=$NEO4J_USERNAME --env NEO4J_PASSWORD=$NEO4J_PASSWORD --env NODE_ENV=$NODE_ENV --rm $REPOSITORY_URI:$IMAGE_TAG yarn run test:e2e
+      - docker run --env NEO4J_URL=$NEO4J_URL --env NEO4J_USERNAME=$NEO4J_USERNAME1 --env NEO4J_PASSWORD=$NEO4J_PASSWORD --env NODE_ENV=$NODE_ENV --rm $REPOSITORY_URI:$IMAGE_TAG yarn run test:e2e
       - echo Build completed on `date`
       - echo Pushing the Docker images...
       - docker push $REPOSITORY_URI:latest
