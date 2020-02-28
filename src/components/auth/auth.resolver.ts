@@ -30,15 +30,12 @@ export class AuthResolver {
     @Session() session: ISession,
     @Args('input') input: LoginInput,
   ): Promise<LoginOutput> {
-    const userId = await this.authService.login(
-      input.email,
-      input.password,
-      session.token,
-    );
+    const userId = await this.authService.login(input, session);
+    const loggedInSession = await this.authService.decodeAndVerifyToken(session.token);
     if (!userId) {
       return { success: false };
     }
-    const user = await this.userService.readOne(userId, session);
+    const user = await this.userService.readOne(userId, loggedInSession);
     return {
       success: true,
       user,

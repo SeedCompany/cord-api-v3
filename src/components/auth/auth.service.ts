@@ -11,6 +11,7 @@ import {
   OnIndexParams,
 } from '../../core';
 import { ISession } from './session';
+import { LoginInput, LoginOutput } from './auth.dto';
 
 interface JwtPayload {
   iat: number;
@@ -55,14 +56,8 @@ export class AuthService {
     return result.token;
   }
 
-  async login(
-    email: string,
-    password: string,
-    token: string,
-  ): Promise<string | undefined> {
-    const pash = await argon2.hash(password);
-
-    const result = await this.db
+  async login(input: LoginInput, session: ISession): Promise<string> {
+    const result1 = await this.db
       .query()
       .raw(
         `
@@ -70,24 +65,72 @@ export class AuthService {
         (token:Token {
           active: true,
           value: $token
-        }),
-        (user:User {
-          active: true,
-          password: $pash
         })
-      CREATE
-        (user)-[:token {createdAt: datetime()}]->(token)
+      MATCH
+        (:EmailAddress {active: true, value: $email})
+        <-[:email {active: true}]-
+        (user:User {
+          active: true
+        })
+        -[:password {active: true}]->
+        (password:Property {active: true})
       RETURN
-        user.id as id
+        password.value as pash
       `,
         {
-          token,
-          pash,
+          token: session.token,
+          email: input.email,
         },
       )
       .first();
 
-    return result?.id;
+    try {
+      if (result1 === undefined) {
+        throw Error('Email or Password are incorrect');
+      }
+      if (await argon2.verify(result1.pash, input.password)) {
+        // password match
+      } else {
+        // password did not match
+        throw Error('Email or Password are incorrect');
+      }
+    } catch (err) {
+      // internal failure
+      console.log(err);
+      throw err;
+    }
+
+    const result2 = await this.db
+      .query()
+      .raw(
+        `
+          MATCH
+            (token:Token {
+              active: true,
+              value: $token
+            }),
+            (:EmailAddress {active: true, value: $email})
+            <-[:email {active: true}]-
+            (user:User {
+              active: true
+            })
+          CREATE
+            (user)-[:token {active: true, createdAt: datetime()}]->(token)
+          RETURN
+            user.id as id
+        `,
+        {
+          token: session.token,
+          email: input.email,
+        },
+      )
+      .first();
+
+    if (result2 === undefined) {
+      throw Error('Login failed. Please contact your administrator.');
+    }
+
+    return result2.id;
   }
 
   async logout(token: string): Promise<void> {
@@ -134,6 +177,7 @@ export class AuthService {
         },
       )
       .first();
+    
     if (!result) {
       this.logger.warning('Failed to find active token in database', { token });
       throw new UnauthorizedException();
