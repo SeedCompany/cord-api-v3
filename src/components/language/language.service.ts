@@ -220,107 +220,34 @@ export class LanguageService {
     }
   }
 
-  async list(
-    { page, count, sort, order, filter }: LanguageListInput,
-    session: ISession,
-  ): Promise<LanguageListOutput> {
-    this.logger.info(`query list Languages by ${session.userId}`);
-    const result = await this.db
-      .query()
-      .raw(
-        `
-      MATCH
-        (token:Token {active: true, value: $token})
-        <-[:token {active: true}]-
-        (user:User {
-          canReadLangs: true
-        }),
-        (lang:Language {
-          active: true
-        })-[:name {active: true}]->(name:Property {active: true})
-      // WHERE
-      //   lang.name CONTAINS $filter
-      WITH count(lang) as langs, user
-      MATCH
-        (lang:Language {active: true})-[:name {active: true}]->(name:Property {active: true}),
-        (lang)-[:displayName {active: true}]->(displayName:Property {active: true}),
-        (lang)-[:beginFiscalYear {active: true}]->(beginFiscalYear:Property {active: true}),
-        (lang)-[:ethnologueName {active: true}]->(ethnologueName:Property {active: true}),
-        (lang)-[:ethnologuePopulation {active: true}]->(ethnologuePopulation:Property {active: true}),
-        (lang)-[:organizationPopulation {active: true}]->(organizationPopulation:Property {active: true}),
-        (lang)-[:rodNumber {active: true}]->(rodNumber:Property {active: true})
-      RETURN
-        lang.id as id,
-        lang.createdAt as createdAt,
-        name.value as name,
-        displayName.value as displayName,
-        beginFiscalYear.value as beginFiscalYear,
-        ethnologueName.value as ethnologueName,
-        ethnologuePopulation.value as ethnologuePopulation,
-        organizationPopulation.value as organizationPopulation,
-        rodNumber.value as rodNumber,
-        user.canCreateLang as canCreateLang,
-        user.canReadLangs as canReadLangs,
-        langs as total
-      ORDER BY ${sort} ${order}
-      SKIP $skip
-      LIMIT $count
-      `,
-        {
-          // filter: filter.name, // TODO Handle no filter
-          skip: (page - 1) * count,
-          count,
-          token: session.token,
-        },
-      )
-      .run();
-
-    const items = result.map<Language>(row => ({
-      id: row.id,
-      createdAt: row.createdAt,
-      name: {
-        value: row.name,
-        canRead: row.canReadLangs,
-        canEdit: row.canCreateLang,
-      },
-      displayName: {
-        value: row.displayName,
-        canRead: row.canReadLangs,
-        canEdit: row.canCreateLang,
-      },
-      beginFiscalYear: {
-        value: row.beginFiscalYear,
-        canRead: row.canReadLangs,
-        canEdit: row.canCreateLang,
-      },
-      ethnologueName: {
-        value: row.ethnologueName,
-        canRead: row.canReadLangs,
-        canEdit: row.canCreateLang,
-      },
-      ethnologuePopulation: {
-        value: row.ethnologuePopulation,
-        canRead: row.canReadLangs,
-        canEdit: row.canCreateLang,
-      },
-      organizationPopulation: {
-        value: row.organizationPopulation,
-        canRead: row.canReadLangs,
-        canEdit: row.canCreateLang,
-      },
-      rodNumber: {
-        value: row.rodNumber,
-        canRead: row.canReadLangs,
-        canEdit: row.canCreateLang,
-      },
-    }));
-
-    const hasMore = (page - 1) * count + count < result[0].total; // if skip + count is less than total there is more
+  async list({ page, count, sort, order, filter }: LanguageListInput, session: ISession): Promise<LanguageListOutput> {
+    const result = await this.propertyUpdater.list<Language>({
+      session,
+      nodevar: 'language',
+      aclReadProp: 'canReadLangs',
+      aclEditProp: 'canCreateLang',
+      props: [
+        'name',
+        'displayName',
+        'beginFiscalYear',
+        'ethnologueName',
+        'ethnologuePopulation',
+        'organizationPopulation',
+        'rodNumber',
+      ],
+      input: {
+        page,
+        count,
+        sort,
+        order,
+        filter,
+      }
+    });
 
     return {
-      items,
-      hasMore,
-      total: result[0].total,
+      items: result.items,
+      hasMore: result.hasMore,
+      total: result.total,
     };
   }
 }

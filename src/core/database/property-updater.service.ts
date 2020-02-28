@@ -1,18 +1,16 @@
-import { Connection, node, relation } from 'cypher-query-builder';
+import { Connection, node, relation, contains } from 'cypher-query-builder';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import {
   Resource,
   UnwrapSecured,
   isSecured,
   unwrapSecured,
+  Order,
 } from '../../common';
-import { User } from '../../components/user/dto';
 import { ILogger, Logger } from '../../core';
 import { DateTime } from 'luxon';
 import { ISession } from '../../components/auth';
 import { upperFirst } from 'lodash';
-import { convertToObject } from 'typescript';
-import { ObjectType } from 'type-graphql';
 import { ForbiddenError } from 'apollo-server-core';
 
 @Injectable()
@@ -216,6 +214,134 @@ export class PropertyUpdaterService {
     } else {
       return { value: result[0][key] };
     }
+  }
+
+  async list<TObject extends Resource>({
+    session,
+    props,
+    nodevar,
+    owningOrgId,
+    skipOwningOrgCheck,
+    aclReadProp,
+    aclEditProp,
+    input,
+  }: {
+    session: ISession,
+    props: ReadonlyArray<keyof TObject>,
+    nodevar: string;
+    owningOrgId?: string;
+    skipOwningOrgCheck?: boolean;
+    aclReadProp?: string;
+    aclEditProp?: string;
+    input: { page: number, count: number, sort: string, order: Order, filter: Record<string, any> },
+  }): Promise<{ hasMore: boolean, total: number, items: TObject[] }> {
+    const nodeName = upperFirst(nodevar);
+    const aclReadPropName = aclReadProp || `canRead${nodeName}`;
+    const aclEditPropName = aclEditProp || `canEdit${nodeName}`;
+    const owningOrgFilter = skipOwningOrgCheck ? {} : { owningOrgId: owningOrgId || session.owningOrgId };
+
+    const query = this.db
+      .query()
+      .match([
+        [
+          node('token', 'Token', {
+            active: true,
+            value: session.token,
+          }),
+          relation('in', '', 'token', {
+            active: true,
+          }),
+          node('requestingUser', 'User', {
+            active: true,
+            [aclReadPropName]: true,
+          }),  
+        ],
+        [
+          node('n', nodeName, {
+            active: true,
+            ...owningOrgFilter,
+          }),  
+        ]
+      ])
+      .with('count(n) as total, requestingUser')
+      .match(props.map(prop => {
+        return [
+          node('n', nodeName, {
+            active: true,
+            ...owningOrgFilter,
+          }),
+          relation('out', '', prop as string, { active: true }),
+          node(prop as string, 'Property', { active: true }),
+        ]
+      }));
+
+    if (input.filter && Object.keys(input.filter).length) {
+      const where: Record<string, any> = {};
+
+      for (const k in input.filter) {
+        where[k + '.value'] = contains(input.filter[k]);
+      }
+
+      query.where(where);
+    }
+  
+    query
+      .returnDistinct([
+        // return total count
+        'total',
+
+        // return the ACL fields
+        {
+          requestingUser: [
+            { [aclReadPropName]: aclReadPropName },
+            { [aclEditPropName]: aclEditPropName },
+          ]
+        },
+
+        // always return the <node>.id and <node>.createdAt field
+        {
+          n: [ { id: 'id' }, { createdAt: 'createdAt' } ]
+        },
+
+        // return the rest of the requested properties
+        ...props.map(prop => {
+          const propName: string = prop as string;
+          return { [propName + '.value']: propName };
+        })
+      ])
+      .orderBy([input.sort], input.order)
+      .skip((input.page - 1) * input.count)
+      .limit(input.count);
+
+    const result = await query.run();
+
+    const total = result.length ? result[0].total : 0;
+
+    // if skip + count is less than total, there is more
+    const hasMore = (input.page - 1) * input.count + input.count < total;
+
+    const items = result.map<TObject>(row => {
+      const item: any = {
+        id: row.id,
+        createdAt: row.createdAt,
+      };
+
+      for (const prop of props) {
+        item[prop] = {
+          value: row[prop as string],
+          canRead: Boolean(row[aclReadPropName]),
+          canEdit: Boolean(row[aclEditPropName]),
+        };
+      }
+
+      return item;
+    });
+
+    return {
+      hasMore,
+      total,
+      items,
+    };
   }
 
   async deleteNode<TObject extends Resource>({

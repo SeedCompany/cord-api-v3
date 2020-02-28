@@ -167,7 +167,7 @@ describe('User e2e', () => {
 
     const { users } = await app.graphql.query(gql`
       query {
-        users(input: { filter: { name: "Tammy" } }) {
+        users(input: { filter: { displayFirstName: "Tammy" } }) {
           items {
             ...user
           }
