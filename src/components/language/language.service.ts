@@ -240,7 +240,7 @@ export class LanguageService {
         count,
         sort,
         order,
-        filter: {},
+        filter,
       }
     });
 

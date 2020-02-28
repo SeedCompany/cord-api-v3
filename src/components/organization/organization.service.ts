@@ -138,91 +138,91 @@ export class OrganizationService {
     { page, count, sort, order, filter }: OrganizationListInput,
     session: ISession,
   ): Promise<OrganizationListOutput> {
-    const result = await this.propertyUpdater.testList<Organization>({
-      session,
-      nodevar: 'organization',
-      aclReadProp: 'canReadOrgs',
-      aclEditProp: 'canCreateOrg',
-      props: ['name'],
-      input: {
-        page,
-        count,
-        sort,
-        order,
-        filter: {}
-      }
-    });
-
-    return {
-      items: result.items,
-      hasMore: result.hasMore,
-      total: result.total,
-    };
-
-    // let query = `
-    // MATCH
-    //   (token:Token {active: true, value: $token})
-    //   <-[:token {active: true}]-
-    //   (user:User {
-    //     canReadOrgs: true
-    //   }),
-    //   (org:Organization {
-    //     active: true
-    //   })-[:name {active: true}]->(name:Property {active: true})`;
-
-    // if (filter) {
-    //   query += `
-    //        WHERE
-    //     name.value CONTAINS $filter`;
-    // }
-    // query += `
-    //   WITH count(org) as total, org, user
-    //   MATCH
-    //     (org:Organization {
-    //       active: true
-    //     })
-    //     -[:name {active: true}]->
-    //     (name:Property {
-    //       active: true
-    //     })
-    //   RETURN
-    //     total,
-    //     org.id as id,
-    //     org.createdAt as createdAt,
-    //     name.value as name,
-    //     user.canCreateOrg as canCreateOrg,
-    //     user.canReadOrgs as canReadOrgs
-    //   ORDER BY ${sort} ${order}
-    //   SKIP $skip
-    //   LIMIT $count`;
-
-    // const result = await this.db
-    //   .query()
-    //   .raw(query, {
-    //     filter: filter.name, // TODO Handle no filter
-    //     skip: (page - 1) * count,
+    // const result = await this.propertyUpdater.testList<Organization>({
+    //   session,
+    //   nodevar: 'organization',
+    //   aclReadProp: 'canReadOrgs',
+    //   aclEditProp: 'canCreateOrg',
+    //   props: ['name'],
+    //   input: {
+    //     page,
     //     count,
-    //     token: session.token,
-    //   })
-    //   .run();
-
-    // const items = result.map<Organization>(row => ({
-    //   id: row.id,
-    //   createdAt: row.createdAt,
-    //   name: {
-    //     value: row.name,
-    //     canRead: row.canReadOrgs,
-    //     canEdit: row.canCreateOrg,
-    //   },
-    // }));
-
-    // const hasMore = (page - 1) * count + count < result[0].total; // if skip + count is less than total there is more
+    //     sort,
+    //     order,
+    //     filter,
+    //   }
+    // });
 
     // return {
-    //   items,
-    //   hasMore,
-    //   total: result[0].total,
+    //   items: result.items,
+    //   hasMore: result.hasMore,
+    //   total: result.total,
     // };
+
+    let query = `
+    MATCH
+      (token:Token {active: true, value: $token})
+      <-[:token {active: true}]-
+      (user:User {
+        canReadOrgs: true
+      }),
+      (org:Organization {
+        active: true
+      })-[:name {active: true}]->(name:Property {active: true})`;
+
+    if (filter) {
+      query += `
+           WHERE
+        name.value CONTAINS $filter`;
+    }
+    query += `
+      WITH count(org) as total, org, user
+      MATCH
+        (org:Organization {
+          active: true
+        })
+        -[:name {active: true}]->
+        (name:Property {
+          active: true
+        })
+      RETURN
+        total,
+        org.id as id,
+        org.createdAt as createdAt,
+        name.value as name,
+        user.canCreateOrg as canCreateOrg,
+        user.canReadOrgs as canReadOrgs
+      ORDER BY ${sort} ${order}
+      SKIP $skip
+      LIMIT $count`;
+
+    const result = await this.db
+      .query()
+      .raw(query, {
+        filter: filter.name, // TODO Handle no filter
+        skip: (page - 1) * count,
+        count,
+        token: session.token,
+      })
+      .run();
+
+    const items = result.map<Organization>(row => ({
+      id: row.id,
+      createdAt: row.createdAt,
+      name: {
+        value: row.name,
+        canRead: row.canReadOrgs,
+        canEdit: row.canCreateOrg,
+      },
+    }));
+
+    const hasMore = (page - 1) * count + count < result[0].total; // if skip + count is less than total there is more
+
+    return {
+      items,
+      hasMore,
+      total: result[0].total,
+    };
   }
 
   async checkAllOrgs(session: ISession): Promise<boolean> {
