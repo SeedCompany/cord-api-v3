@@ -5,16 +5,12 @@ import {
   UnwrapSecured,
   isSecured,
   unwrapSecured,
-  SortablePaginationInput,
   Order,
 } from '../../common';
-import { User } from '../../components/user/dto';
 import { ILogger, Logger } from '../../core';
 import { DateTime } from 'luxon';
 import { ISession } from '../../components/auth';
 import { upperFirst } from 'lodash';
-import { convertToObject } from 'typescript';
-import { ObjectType } from 'type-graphql';
 import { ForbiddenError } from 'apollo-server-core';
 
 @Injectable()
