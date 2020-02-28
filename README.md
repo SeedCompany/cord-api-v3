@@ -28,6 +28,10 @@ Install: `yarn`
 Develop: `yarn start:dev`  
 Test: `yarn test:e2e`  
 
+## Database Schema
+
+[Here]()
+
 ## Other Docs
 
 [Nest.js](https://docs.nestjs.com/)  
