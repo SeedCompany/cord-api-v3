@@ -41,7 +41,7 @@ export class EducationResolver {
   @Query(() => EducationListOutput, {
     description: 'Look up educations by user id',
   })
-  async organizations(
+  async educations(
     @Session() session: ISession,
     @Args({
       name: 'input',
@@ -50,7 +50,7 @@ export class EducationResolver {
     })
     input: EducationListInput,
   ): Promise<EducationListOutput> {
-    return this.service.educationlist(input, session);
+    return this.service.list(input, session);
   }
 
   @Mutation(() => UpdateEducationOutput, {
