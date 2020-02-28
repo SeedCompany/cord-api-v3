@@ -51,7 +51,6 @@ export class UnavailabilityService {
     this.logger.info(
       `unavailability for user ${input.userId} created, id ${id}`,
     );
-    console.log(`unavailability for user ${input.userId} created, id ${id}`);
 
     // connect the Unavailability to the User.
 
