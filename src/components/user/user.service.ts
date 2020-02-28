@@ -414,7 +414,7 @@ export class UserService {
         canEdit: result.canEditRealLastName,
       },
       displayFirstName: {
-        value: result.displayLastName,
+        value: result.displayFirstName,
         canRead: result.canReadDisplayFirstName,
         canEdit: result.canEditDisplayFirstName,
       },
@@ -463,10 +463,10 @@ export class UserService {
       WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl4:ACL {canEditRealFirstName: true})-[:toNode]->(user)
       WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl5:ACL {canReadRealLastName: true})-[:toNode]->(user)-[:realLastName {active: true}]->(realLastName:Property {active: true})
       WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl6:ACL {canEditRealLastName: true})-[:toNode]->(user)
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl7:ACL {canReadDisplayFirstName: true})-[:toNode]->(user)-[:displayFirstName {active: true}]->(displayFirstName:Property {active: true})
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl8:ACL {canEditDisplayFirstName: true})-[:toNode]->(user)
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl9:ACL {canReadDisplayLastName: true})-[:toNode]->(user)-[:displayLastName {active: true}]->(displayLastName:Property {active: true})
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl10:ACL {canEditDisplayLastName: true})-[:toNode]->(user)
+      WITH * MATCH (requestingUser)<-[:member]-(acl7:ACL {canReadDisplayFirstName: true})-[:toNode]->(user)-[:displayFirstName {active: true}]->(displayFirstName:Property {active: true})
+      WITH * MATCH (requestingUser)<-[:member]-(acl8:ACL {canEditDisplayFirstName: true})-[:toNode]->(user)
+      WITH * MATCH (requestingUser)<-[:member]-(acl9:ACL {canReadDisplayLastName: true})-[:toNode]->(user)-[:displayLastName {active: true}]->(displayLastName:Property {active: true})
+      WITH * MATCH (requestingUser)<-[:member]-(acl10:ACL {canEditDisplayLastName: true})-[:toNode]->(user)
       WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl11:ACL {canReadPhone: true})-[:toNode]->(user)-[:phone {active: true}]->(phone:Property {active: true})
       WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl12:ACL {canEditPhone: true})-[:toNode]->(user)
       WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl13:ACL {canReadTimezone: true})-[:toNode]->(user)-[:timezone {active: true}]->(timezone:Property {active: true})
