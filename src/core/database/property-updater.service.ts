@@ -220,7 +220,7 @@ export class PropertyUpdaterService {
     }
   }
 
-  async testList<TObject extends Resource>({
+  async list<TObject extends Resource>({
     session,
     props,
     nodevar,
