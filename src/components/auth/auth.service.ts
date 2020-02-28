@@ -57,7 +57,6 @@ export class AuthService {
   }
 
   async login(input: LoginInput, session: ISession): Promise<string> {
-    
     const result1 = await this.db
       .query()
       .raw(
@@ -116,7 +115,7 @@ export class AuthService {
               active: true
             })
           CREATE
-            (user)-[:token {createdAt: datetime()}]->(token)
+            (user)-[:token {active: true, createdAt: datetime()}]->(token)
           RETURN
             user.id as id
         `,
@@ -131,7 +130,6 @@ export class AuthService {
       throw Error('Login failed. Please contact your administrator.');
     }
 
-    console.log(result2);
     return result2.id;
   }
 
@@ -179,6 +177,7 @@ export class AuthService {
         },
       )
       .first();
+    
     if (!result) {
       this.logger.warning('Failed to find active token in database', { token });
       throw new UnauthorizedException();
