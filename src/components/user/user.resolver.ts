@@ -23,6 +23,7 @@ import {
 } from './dto';
 import {
   EducationListInput,
+  EducationListOutput,
   EducationService,
   SecuredEducationList,
 } from './education';
@@ -102,7 +103,7 @@ export class UserResolver {
       defaultValue: EducationListInput.defaultVal,
     })
     input: EducationListInput,
-  ): Promise<SecuredEducationList> {
+  ): Promise<EducationListOutput> {
     input = {...input, filter: {userId: id}};
     return this.educationService.list(input, session);
   }
