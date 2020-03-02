@@ -30,7 +30,7 @@ Test: `yarn test:e2e`
 
 ## Database Schema
 
-[Here]()
+[Here](https://www.lucidchart.com/documents/view/d9131673-4ad4-4e9c-ae60-5c18029cd606)
 
 ## Other Docs
 
