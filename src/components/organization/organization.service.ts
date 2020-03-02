@@ -33,6 +33,8 @@ export class OrganizationService {
     const acls = {
       canReadOrg: true,
       canEditOrg: true,
+      canEditName: true,
+      canReadName: true,
     };
     try {
       await this.propertyUpdater.createNode({
