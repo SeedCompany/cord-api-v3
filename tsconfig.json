@@ -10,7 +10,10 @@
     "outDir": "./dist",
     "incremental": true,
     "strictPropertyInitialization": false,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "noImplicitReturns": true
   },
   "exclude": ["node_modules", "dist"]
 }
