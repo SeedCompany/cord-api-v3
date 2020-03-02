@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { Connection } from 'cypher-query-builder';
 import { generate } from 'shortid';
 import { NotImplementedError } from '../../common';
@@ -21,6 +21,8 @@ import { FilesBucketToken } from './files-s3-bucket.factory';
 import { S3Bucket } from './s3-bucket';
 import { UserService, User } from '../user';
 import { DateTime } from 'luxon';
+import { PropertyUpdaterService } from '../../core';
+import { Dictionary } from 'lodash';
 
 @Injectable()
 export class FileService {
@@ -29,6 +31,7 @@ export class FileService {
     @Inject(FilesBucketToken) private readonly bucket: S3Bucket,
     private readonly userService: UserService,
     private readonly authService: AuthService,
+    private readonly propertyUpdater: PropertyUpdaterService,
   ) {}
 
   async getDirectory(id: string, session: ISession): Promise<Directory> {
@@ -53,18 +56,40 @@ export class FileService {
         .query()
         .raw(
           `
-        MATCH (token:Token {active: true, value: $token})
+        MATCH
+        (token:Token {active: true, value: $token})
+        <-[:token {active: true}]-
+        (requestingUser:User {
+          active: true,
+          id: $requestingUserId
+        })
         WITH * OPTIONAL MATCH (file: FileNode { id: $id})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl:ACL {canReadFile: true})-[:toNode]->(file)-[:type {active: true}]->(type:Property {active: true})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl:ACL {canReadFile: true})-[:toNode]->(file)-[:size {active: true}]->(size:Property {active: true})
         RETURN
-           file
+        file.id as id,
+        file.createdAt as createdAt,
+        type.value as type,
+        size.value as size
           `,
           {
             id,
             token: session.token,
+            requestingUserId: session.userId,
+            owningOrgId: session.owningOrgId,
           },
         )
         .first();
-      return result?.file.properties;
+
+      if (!result) {
+        throw new NotFoundException('Could not find file');
+      }
+      return {
+        id: result.id,
+        createdAt: result.createdAt,
+        type: result.type,
+        size: result.size,
+      } as File;
     } catch (e) {
       throw new Error(e);
     }
@@ -110,6 +135,25 @@ export class FileService {
       let user: User | null;
       const userSession: ISession = await this.authService.decodeAndVerifyToken(session.token);
       user = (userSession.userId) ? await this.userService.readOne(userSession.userId, session) : null;
+      const acls = {
+        canReadFile: true,
+        canEditFile: true,
+      };
+      const input = {
+        id: uploadId,
+        parentId,
+        name,
+        type: FileNodeType.File,
+        size: 1024, // TODO get from amazon
+      };
+
+      await this.propertyUpdater.createNode({
+        session,
+        input: {...input},
+        acls,
+        baseNodeLabel: 'FileNode',
+        aclEditProp: 'canCreateFileNode',
+      });
 
       const result = await this.db
         .query()
@@ -124,32 +168,16 @@ export class FileService {
         (requestingUser:User {
           active: true,
           id: $requestingUserId
-        })
-        CREATE
-          (file:FileNode {
-            id: $id,
-            type: $type,
-            name: $name,
-            size: $size,
-            createdAt: datetime(),
-            modifiedAt: datetime()
-          })
-          <-[:createdBy {active: true, owningOrgId: $owningOrgId}]-
-          (requestingUser)
+        }),
+        (file: FileNode {id: $id})
         RETURN
-            file
+          file
           `,
           {
             id: uploadId,
-            parentId,
+            requestingUserId: user?.id,
             token: session.token,
-            requestingUserId: session.userId,
-            type: FileNodeType.File,
-            owningOrgId: session.owningOrgId,
-            size: '1024', // TODO get file info from s3 with fileMove implementation
-            name,
-          },
-          )
+          })
           .first();
       return result?.file.properties;
     } catch (e) {

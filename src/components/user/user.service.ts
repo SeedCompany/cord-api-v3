@@ -169,6 +169,7 @@ export class UserService {
             active: true,
             createdAt: datetime(),
             createdByUserId: "system",
+            canCreateFileNode: true,
             canCreateOrg: true,
             canReadOrgs: true,
             canReadUsers: true,
@@ -252,7 +253,10 @@ export class UserService {
             canReadTimezone: true,
             canEditTimezone: true,
             canReadBio: true,
-            canEditBio: true
+            canEditBio: true,
+            canReadFile: true,
+            canEditFile: true,
+            canCreateFile: true
           })
           -[:toNode]->(user)
         RETURN

@@ -12,6 +12,7 @@ import { DateTime } from 'luxon';
 import { ISession } from '../../components/auth';
 import { upperFirst } from 'lodash';
 import { ForbiddenError } from 'apollo-server-core';
+import { FileNodeType } from '../../components/file';
 
 @Injectable()
 export class PropertyUpdaterService {
@@ -530,7 +531,6 @@ export class PropertyUpdaterService {
   }): Promise<void> {
     const aclEditPropName =
       aclEditProp || `canEdit${upperFirst(baseNodeLabel as string)}`;
-
     await this.createBaseNode<TObject>({
       session,
       baseNodeLabel,
@@ -538,22 +538,21 @@ export class PropertyUpdaterService {
       acls,
       aclEditProp: aclEditPropName,
     });
-
-    const wait: Array<Promise<void>> = [];
-    Object.keys(input).map(async key => {
+    console.log('inputs after base node', Object.keys(input));
+    await Promise.all(Object.keys(input).filter(async (key, item) => {
       if (key === 'id' || key === 'userId') {
-        return;
+          return false;
       }
-      wait.push(
-        this.createProperty({
-          session,
-          key,
-          value: input[key as keyof TObject] as string,
-          id: input.id!,
-        }),
-      );
-    });
-    await Promise.all(wait);
+      return true;
+    })
+    .map(async (key, item) => {
+      await this.createProperty({
+        session,
+        key,
+        value: input[key as keyof TObject] as string,
+        id: input.id!,
+      });
+    }));
   }
 
   async createBaseNode<TObject extends Resource>({
@@ -562,12 +561,14 @@ export class PropertyUpdaterService {
     input,
     acls,
     aclEditProp,
+    type,
   }: {
     session: ISession;
     baseNodeLabel: string;
     input: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> };
     acls: Record<string, boolean>;
     aclEditProp?: string;
+    type?: string;
   }): Promise<void> {
     const aclString = JSON.stringify(acls).replace(/\"/g, '');
     const query = `
@@ -664,7 +665,7 @@ export class PropertyUpdaterService {
       `;
 
     try {
-      const result = await this.db
+       await this.db
         .query()
         .raw(query, {
           token: session.token,

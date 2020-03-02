@@ -6,20 +6,19 @@ import {
   createSession,
   createTestApp,
   createUser,
-  fragments,
 } from './utility';
-import { generate, isValid } from 'shortid';
-
-import { Connection } from 'cypher-query-builder';
+import { generate } from 'shortid';
 import { User } from '../src/components/user';
-import { createFile } from './utility/create-file';
-import { gql } from 'apollo-server-core';
 
 describe('File e2e', () => {
   let app: TestApp;
+  let session: string;
+  let user: User;
 
   beforeAll(async () => {
     app = await createTestApp();
+    session = await createSession(app);
+    user = await createUser(app);
   });
 
   afterAll(async () => {
@@ -27,14 +26,10 @@ describe('File e2e', () => {
   });
 
   it('Create FileNode', async () => {
-    const token = await createSession(app);
-    const testUser = await createUser(app);
-    const dbService = await app.get(Connection);
     const id = generate();
     let testFile: File;
     await request(app.getHttpServer())
       .post('/graphql')
-      .set('authorization', `Bearer ${token}`)
       .send({
         operationName: null,
         query: `
@@ -42,12 +37,14 @@ describe('File e2e', () => {
           createFile( input: { uploadId:"${id}", parentId: "test-parent", name: "test-file"})
           {
             id
+            type
           }
         }
         `,
       })
       .expect(({ body }) => {
-        testFile = body.data.file;
+        console.log('body is---->', body);
+        testFile = body.data.createFile;
       });
 
     await request(app.getHttpServer())
@@ -64,41 +61,8 @@ describe('File e2e', () => {
         `,
       })
       .expect(({ body }) => {
-        expect(body.data.file.id).toBe(id);
-      })
-      .expect(200);
-  });
-
-  it('read FileNode by id', async () => {
-
-    const dbService = await app.get(Connection);
-    const testFile = await dbService
-      .query()
-      .raw(`
-        CREATE (file:FileNode { id: $id, type: $type, name: $name})
-        RETURN file
-        `,
-        {
-          id: generate(),
-          type: FileNodeType.File,
-          name: 'test-file',
-        })
-      .first();
-    await request(app.getHttpServer())
-      .post('/graphql')
-      .send({
-        operationName: null,
-        query: `
-        query {
-          file (id:"${testFile!.file.properties.id}")
-          {
-            type
-          }
-        }
-        `,
-      })
-      .expect(({ body }) => {
-        expect(body.data.file.type).toBe('File');
+        expect(body.data.file.id).toBe(testFile.id);
+        expect(body.data.file.type).toBe(testFile.type);
       })
       .expect(200);
   });
