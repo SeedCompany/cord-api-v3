@@ -10,3 +10,4 @@ export * from './readable.interface';
 export * from './resource.dto';
 export * from './secured-list';
 export * from './secured-property';
+export * from './sensitivity.enum';
