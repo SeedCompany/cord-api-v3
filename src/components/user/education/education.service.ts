@@ -24,16 +24,6 @@ export class EducationService {
     private readonly propertyUpdater: PropertyUpdaterService,
   ) {}
 
-  // async list(
-  //   { page, count, sort, order, filter }: EducationListInput,
-  //   session: ISession,
-  // ): Promise<SecuredEducationList> {
-  //   if (!filter?.userId) {
-  //     throw new BadRequestException('no userId specified');
-  //   }
-  //   throw new NotFoundException("Not implemented");
-  // }
-
   async list(
     { page, count, sort, order, filter }: EducationListInput,
     session: ISession,
