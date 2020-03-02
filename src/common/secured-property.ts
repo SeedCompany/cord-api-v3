@@ -72,9 +72,9 @@ export abstract class SecuredDateTime
 
 @ObjectType({ implements: [Readable, Editable] })
 export abstract class SecuredDate
-  implements Readable, Editable, Secured<Date> {
+  implements Readable, Editable, Secured<DateTime> {
   @DateField({ nullable: true })
-  readonly value?: Date;
+  readonly value?: DateTime;
 
   @Field()
   readonly canRead: boolean;
