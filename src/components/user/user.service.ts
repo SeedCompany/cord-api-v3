@@ -152,6 +152,8 @@ export class UserService {
             canReadLangs: true,
             canCreateEducation: true,
             canReadEducation: true,
+            canCreatePartnership: true,
+            canReadPartnership: true,
             canCreateUnavailability: true,
             canReadUnavailability: true,
             canCreateProduct: true,

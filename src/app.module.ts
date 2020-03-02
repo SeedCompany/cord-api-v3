@@ -18,14 +18,13 @@ import { LanguageModule } from './components/language';
 import { LocationModule } from './components/location';
 import { ProductModule } from './components/product';
 import { OrganizationModule } from './components/organization';
-import { PartnershipResolver } from './components/partnership/partnership.resolver';
-import { PartnershipService } from './components/partnership/partnership.service';
 import { ProjectEngagementResolver } from './components/project-engagement/project-engagement.resolver';
 import { ProjectEngagementService } from './components/project-engagement/project-engagement.service';
 import { ProjectResolver } from './components/project/project.resolver';
 import { ProjectService } from './components/project/project.service';
 import { UserModule } from './components/user';
 import { CoreModule, LoggerModule } from './core';
+import { PartnershipModule } from './components/partnership/partnership.module';
 
 const context: ContextFunction<
   { req: Request; res: Response },
@@ -49,6 +48,7 @@ const context: ContextFunction<
     LocationModule,
     OrganizationModule,
     UserModule,
+    PartnershipModule,
   ],
   controllers: [],
   providers: [
@@ -66,8 +66,6 @@ const context: ContextFunction<
     ProjectEngagementService,
     ProjectResolver,
     ProjectService,
-    PartnershipResolver,
-    PartnershipService,
   ],
 })
 export class AppModule {}
