@@ -6,13 +6,13 @@ import {
   LoginInput,
   LoginOutput,
   ResetPasswordInput,
-} from './auth.dto';
-import { AuthService } from './auth.service';
+} from './authentication.dto';
+import { AuthenticationService } from './authentication.service';
 
 @Resolver()
-export class AuthResolver {
+export class AuthenticationResolver {
   constructor(
-    private readonly authService: AuthService,
+    private readonly authService: AuthenticationService,
     private readonly userService: UserService
   ) {}
 

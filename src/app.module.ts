@@ -6,7 +6,7 @@ import { GqlContextType } from './common';
 import { DateScalar, DateTimeScalar } from './common/luxon.graphql';
 import { AdminResolver } from './components/admin/admin.resolver';
 import { AdminService } from './components/admin/admin.service';
-import { AuthModule } from './components/auth';
+import { AuthenticationModule } from './components/authentication';
 import { BudgetModule } from './components/budget/budget.module';
 import { CeremonyModule } from './components/ceremony';
 import { EngagementModule } from './components/engagement';
@@ -37,7 +37,7 @@ const context: ContextFunction<
       playground: true, // enabled in all environments
       introspection: true, // needed for playground
     }),
-    AuthModule,
+    AuthenticationModule,
     BudgetModule,
     CeremonyModule,
     FileModule,
