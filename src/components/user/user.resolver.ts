@@ -68,7 +68,6 @@ export class UserResolver {
     description: "Check out whether a provided email exists or not in User Table"
   })
   async checkEmail(
-    @Session() session: ISession,
     @Args({
       name: "input",
       type: () => UserEmailInput
@@ -76,7 +75,7 @@ export class UserResolver {
     input: UserEmailInput,
   ): Promise<Boolean>
   {
-    return this.userService.checkEmail(input, session)
+    return this.userService.checkEmail(input)
   }
 
   @ResolveProperty(() => SecuredUnavailabilityList)
