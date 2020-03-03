@@ -273,21 +273,30 @@ export class PropertyUpdaterService {
       ],
     ]);
 
-    query.match([
-      [
-        node('user', 'User', {
-          active: true,
-          ...userIdFilter,
-        }),
-        relation('out', '', nodevar, {
-          active: true,
-        }),
+    if (Object.keys(userIdFilter).length) {
+      query.match([
+        [
+          node('user', 'User', {
+            active: true,
+            ...userIdFilter,
+          }),
+          relation('out', '', nodevar, {
+            active: true,
+          }),
+          node('n', nodeName, {
+            active: true,
+            ...idFilter,
+          }),
+        ],
+      ]);
+    } else {
+      query.match([
         node('n', nodeName, {
           active: true,
           ...idFilter,
         }),
-      ],
-    ]);
+      ]);
+    }
     query.with('count(n) as total, requestingUser').match(
       props.map(prop => {
         return [
@@ -339,7 +348,7 @@ export class PropertyUpdaterService {
       ])
       .orderBy([input.sort], input.order)
       .skip((input.page - 1) * input.count)
-      .limit(input.count); 
+      .limit(input.count);
 
     const result = await query.run();
 
