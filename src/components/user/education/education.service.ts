@@ -31,7 +31,7 @@ export class EducationService {
     const result = await this.propertyUpdater.list<Education>({
       session,
       nodevar: 'education',
-      aclReadProp: 'canReadEducations',
+      aclReadProp: 'canReadEducationList',
       aclEditProp: 'canCreateEducation',
       props: [
         'degree',
@@ -44,7 +44,7 @@ export class EducationService {
         sort,
         order,
         filter,
-      }
+      },
     });
 
     return {
