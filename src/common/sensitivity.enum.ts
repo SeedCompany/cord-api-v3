@@ -1,9 +1,9 @@
 import { registerEnumType } from 'type-graphql';
 
 export enum Sensitivity {
-  Low = 1,
-  Medium,
-  High,
+  Low = 'Low',
+  Medium = 'Medium',
+  High = 'High',
 }
 
 registerEnumType(Sensitivity, {

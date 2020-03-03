@@ -1,3 +1,4 @@
+import { Injectable } from '@nestjs/common';
 import {
   Args,
   Mutation,
@@ -17,7 +18,7 @@ import {
 } from './dto';
 import { ProjectService } from './project.service';
 
-@Resolver()
+@Resolver('Project')
 export class ProjectResolver {
   constructor(private readonly projectService: ProjectService) {}
 

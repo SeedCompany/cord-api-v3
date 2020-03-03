@@ -1,6 +1,6 @@
 import { Type } from '@nestjs/common';
 import { DateTime } from 'luxon';
-import { Field, InterfaceType, ObjectType } from 'type-graphql';
+import { Field, ObjectType, InterfaceType } from 'type-graphql';
 import {
   DateTimeField,
   Resource,
@@ -13,7 +13,7 @@ import { ProjectStatus } from './status.enum';
 import { SecuredProjectStep } from './step.enum';
 import { ProjectType } from './type.enum';
 
-@InterfaceType()
+@ObjectType()
 export class Project extends Resource {
   @Field(() => ProjectType)
   readonly type: ProjectType;
@@ -52,9 +52,7 @@ export class Project extends Resource {
   readonly modifiedAt: DateTime;
 }
 
-@ObjectType({
-  implements: [Project, Resource],
-})
+@ObjectType()
 export class TranslationProject extends Project {
   /* TS wants a public constructor for "ClassType" */
   static classType = (TranslationProject as any) as Type<TranslationProject>;
@@ -62,9 +60,7 @@ export class TranslationProject extends Project {
   readonly type: ProjectType.Translation;
 }
 
-@ObjectType({
-  implements: [Project, Resource],
-})
+@ObjectType()
 export class InternshipProject extends Project {
   /* TS wants a public constructor for "ClassType" */
   static classType = (InternshipProject as any) as Type<InternshipProject>;

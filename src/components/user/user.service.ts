@@ -156,6 +156,8 @@ export class UserService {
             canReadUnavailability: true,
             canCreateProduct: true,
             canReadProducts: true,
+            canCreateProject: true,
+            canReadProjects: true,
             canDeleteOwnUser: true,
             owningOrgId: "Seed Company",
             isAdmin: true
