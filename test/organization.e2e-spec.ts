@@ -106,12 +106,14 @@ describe('Organization e2e', () => {
   it('list view of organizations', async () => {
     // create a bunch of orgs
     const orgs = await Promise.all(
-      times(10).map(() => createOrganization(app,{name: generate() + ' Inc'})),
+      times(10).map(() =>
+        createOrganization(app, { name: generate() + ' Inc' }),
+      ),
     );
 
     const { organizations } = await app.graphql.query(gql`
       query {
-        organizations (input: {filter: {name: "Inc"}}) {
+        organizations(input: { filter: { name: "Inc" } }) {
           items {
             ...org
           }

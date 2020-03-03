@@ -152,7 +152,7 @@ export class OrganizationService {
         sort,
         order,
         filter,
-      }
+      },
     });
 
     return {
