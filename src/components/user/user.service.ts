@@ -20,7 +20,7 @@ import {
   User,
   UserListInput,
   UserListOutput,
-  UserEmail,
+  UserEmailInput,
 } from './dto';
 
 @Injectable()
@@ -127,7 +127,7 @@ export class UserService {
     };
   }
 
-  async checkEmail(input: UserEmail, session: ISession): Promise<Boolean> {
+  async checkEmail(input: UserEmailInput, session: ISession): Promise<Boolean> {
     const result = await this.db
     .query()
     .raw(

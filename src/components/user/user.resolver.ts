@@ -20,7 +20,7 @@ import {
   User,
   UserListInput,
   UserListOutput,
-  UserEmail,
+  UserEmailInput,
 } from './dto';
 import {
   EducationListInput,
@@ -71,9 +71,9 @@ export class UserResolver {
     @Session() session: ISession,
     @Args({
       name: "input",
-      type: () => UserEmail
+      type: () => UserEmailInput
     })
-    input: UserEmail,
+    input: UserEmailInput,
   ): Promise<Boolean>
   {
     return this.userService.checkEmail(input, session)
