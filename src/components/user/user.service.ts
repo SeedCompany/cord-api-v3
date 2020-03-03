@@ -128,7 +128,31 @@ export class UserService {
   }
 
   async checkEmail(input: UserEmail, session: ISession): Promise<Boolean> {
-    console.log(input.email);
+    const result = await this.db
+    .query()
+    .raw(
+      `
+      MATCH
+      (token:Token {
+        active: true,
+        value: $token
+      })
+    WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl1:ACL {canReadEmail: true})-[:toNode]->(user)-[:email {active: true}]->(email:EmailAddress {active: true, value: $email})
+      RETURN
+      count(email) as count
+      `,
+      {
+        token: session.token,
+        requestingUserId: session.userId,
+        owningOrgId: session.owningOrgId,
+        email: input.email,
+      },
+    )
+    .first();
+    if(result){
+      if(result.count > 0)
+        return false;
+    }
     return true;
   }
 
