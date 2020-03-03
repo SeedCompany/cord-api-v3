@@ -339,11 +339,9 @@ export class PropertyUpdaterService {
       ])
       .orderBy([input.sort], input.order)
       .skip((input.page - 1) * input.count)
-      .limit(input.count);
+      .limit(input.count); 
 
-    console.log(query.toString());
     const result = await query.run();
-    console.log(JSON.stringify(result, null, 2));
 
     const total = result.length ? result[0].total : 0;
 
