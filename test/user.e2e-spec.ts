@@ -3,6 +3,7 @@ import * as faker from 'faker';
 import {
   CreateUser,
   CreateUserInput,
+  UserEmailInput,
   UpdateUser,
   User,
 } from '../src/components/user';
@@ -27,6 +28,51 @@ describe('User e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     session = await createSession(app);
+  });
+
+  it('check email existance', async () => {
+    const email = faker.internet.email();
+    const fakeUser: CreateUser = {
+      email: email,
+      realFirstName: faker.name.firstName(),
+      realLastName: faker.name.lastName(),
+      displayFirstName: faker.name.firstName(),
+      displayLastName: faker.name.lastName(),
+      password: faker.internet.password(),
+      phone: faker.phone.phoneNumber(),
+      timezone: 'timezone detail',
+      bio: 'bio detail',
+    };
+    // create user first
+    await createUser(app, fakeUser);
+    const exist_email_res = await app.graphql.query(
+      gql`
+        query checkEmail($input: UserEmailInput!) {
+          checkEmail(input: $input)
+        }
+      `,
+      {
+        input: {
+          email: email
+        }
+      },
+    );
+
+    const non_exist_email = faker.internet.email();
+    const non_exist_email_res = await app.graphql.query(
+      gql`
+        query checkEmail($input: UserEmailInput!) {
+          checkEmail(input: $input)
+        }
+      `,
+      {
+        input: {
+          email: non_exist_email
+        }
+      },
+    );
+    expect(exist_email_res.checkEmail).toBe(false);
+    expect(non_exist_email_res.checkEmail).toBe(true);
   });
 
   it('read one user by id', async () => {
