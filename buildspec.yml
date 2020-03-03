@@ -13,6 +13,7 @@ phases:
       docker: 18
     commands:
       - echo Logging in to Amazon ECR...
+      - echo CODEBUILD_BUILD_NUMBER=$CODEBUILD_BUILD_NUMBER
       - aws --version
       - $(aws ecr get-login --region $AWS_DEFAULT_REGION --no-include-email)
       - REPOSITORY_URI=954870218083.dkr.ecr.us-east-2.amazonaws.com/cord-api-v3
