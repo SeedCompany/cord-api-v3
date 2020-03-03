@@ -1,6 +1,6 @@
 import { ObjectType, Field, registerEnumType } from "type-graphql";
-import { Resource, SecuredProperty, DateTimeField, SecuredDateTime } from "../../../common";
-import { GraphQLString } from "graphql";
+import { Resource, SecuredProperty, DateTimeField, SecuredDateTime, SecuredList } from "../../../common";
+import { GraphQLString, GraphQLNonNull, GraphQLList } from "graphql";
 import { Organization } from "../../organization";
 
 export enum PartnershipAgreementStatus {
@@ -22,9 +22,9 @@ registerEnumType(PartnershipAgreementStatus, { name: 'PartnershipAgreementStatus
 registerEnumType(PartnershipType, { name: 'PartnershipType' });
 
 @ObjectType({
-  description: SecuredProperty.descriptionFor('a string'),
+  description: SecuredProperty.descriptionFor('a partnership agreement status'),
 })
-export abstract class SecuredPartnershipAgreementStatus extends SecuredProperty<string>(
+export abstract class SecuredPartnershipAgreementStatus extends SecuredProperty<PartnershipAgreementStatus>(
   GraphQLString,
 ) {}
 
@@ -44,6 +44,6 @@ export class Partnership extends Resource {
   @Field(type => Organization, { nullable: true })
   readonly organization: Organization;
 
-  @Field(type => [PartnershipType])
+  @Field(() => [PartnershipType])
   readonly types: PartnershipType[];
 }

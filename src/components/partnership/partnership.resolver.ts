@@ -33,8 +33,8 @@ export class PartnershipResolver {
     return await this.service.readOne(id, session);
   }
 
-  @Query(returns => PartnershipListOutput, {
-    description: 'Query partnership',
+  @Query(() => PartnershipListOutput, {
+    description: 'Look up partnerships',
   })
   async partnerships(
     @Session() session: ISession,
@@ -43,9 +43,9 @@ export class PartnershipResolver {
       type: () => PartnershipListInput,
       defaultValue: PartnershipListInput.defaultVal,
     })
-    input: PartnershipListInput
+    input: PartnershipListInput,
   ): Promise<PartnershipListOutput> {
-    return await this.service.list(input, session);
+    return this.service.list(input, session);
   }
 
   @Mutation(() => UpdatePartnershipOutput, {

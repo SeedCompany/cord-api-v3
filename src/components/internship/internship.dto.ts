@@ -3,11 +3,11 @@ import { DateTime } from 'luxon';
 import { DateField } from '../../common';
 import { Budget } from '../budget/budget';
 import { Location } from '../location';
-import { Partnership } from '../partnership/partnership';
 import { Sensitivity } from '../project/sensitivity';
 import { TeamMember } from '../user/team-member';
 import { InternshipEngagement } from '../internship-engagement/engagement';
 import { InternshipStatus } from './status';
+import { Partnership } from '../partnership/dto';
 
 // CREATE
 @InputType()

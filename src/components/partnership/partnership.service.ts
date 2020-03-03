@@ -1,12 +1,7 @@
-import {
-  ListPartnershipsInput,
-  ListPartnershipsOutputDto,
-} from './partnership.dto';
-
 import { DatabaseService } from '../../core/database.service';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { generate } from 'shortid';
-import { CreatePartnership, Partnership, UpdatePartnership } from './dto';
+import { CreatePartnership, Partnership, UpdatePartnership, PartnershipListInput, PartnershipListOutput } from './dto';
 import { ISession } from '../auth';
 import { PropertyUpdaterService, ILogger, Logger } from '../../core';
 
@@ -208,11 +203,15 @@ export class PartnershipService {
         canRead: !!result.canReadMouEnd,
         canEdit: !!result.canEditMouEnd,
       },
-      types: {
-        value: result.types,
-        canRead: !!result.canReadTypes,
-        canEdit: !!result.canEditTypes,
-      },
+      types: result.types,
+      // FIXME
+      // types: {
+      //   value: result.types,
+      //   canRead: !!result.canReadTypes,
+      //   canEdit: !!result.canEditTypes,
+      // },
+      // FIXME
+      organization: result.organization
     }
   }
 
@@ -374,56 +373,85 @@ export class PartnershipService {
   //   return response;
   // }
 
-  async queryPartnerships(
-    query: ListPartnershipsInput,
-  ): Promise<ListPartnershipsOutputDto> {
-    const response = new ListPartnershipsOutputDto();
-    const session = this.db.driver.session();
-    const skipIt = query.page * query.count;
-
-    //TO DO : List all partnerships by projectId
-    // const result = await session.run(
-    //   `
-    //     MATCH
-    //       (project:Project {id: "$projectId"})-[partnerships:Partnership {active:true}]->
-    //       (partner:Partnership {active:true}),
-    //       (partner)-[:agreementStatus {active: true}]->(agreementStatus: Property)
-    //       (partner)-[:mouStatus {active: true}]->(mouStatus: Property),
-    //       (partner)-[:mouStart {active: true}]->(mouStart: Property),
-    //       (partner)-[:mouEnd {active: true}]->(mouEnd: Property),
-    //     RETURN
-    //       partner.id as id,
-    //       agreementStatus.value as agreementStatus,
-    //       mouStatus.value as mouStatus,
-    //       mouStart.value as mouStart,
-    //       mouEnd.value as mouEnd,
-    //     `,
-    //     },
-    // );
-
-    const result = await session.run(
-      `MATCH (partnership:Partnership {active: true}) WHERE partnership.agreementStatus CONTAINS $filter RETURN partnership.agreementStatus as agreementStatus, partnership.organization as organization ORDER BY ${query.sort} ${query.order} SKIP $skip LIMIT $count`,
-      {
-        filter: query.filter,
-        skip: skipIt,
-        count: query.count,
-        sort: query.sort,
-        order: query.order,
-      },
-    );
-
-    session.close();
-
-    response.partnerships = result.records.map(record => {
-      const partnership = new Partnership();
-      //partnership.id = record.get('id');
-      partnership.agreementStatus = record.get('agreementStatus');
-      partnership.organization = record.get('organization');
-      return partnership;
+  async list({ page, count, sort, order, filter}: PartnershipListInput, session: ISession): Promise<PartnershipListOutput> {
+    const result = await this.propertyUpdater.list<Partnership>({
+      session,
+      nodevar: 'partnership',
+      aclReadProp: 'canReadPartnership',
+      aclEditProp: 'canCreatePartnership',
+      props: [
+        'agreementStatus',
+        'mouStatus',
+        'mouStart',
+        'mouEnd',
+        'types'
+      ],
+      input: {
+        page,
+        count,
+        sort,
+        order,
+        filter,
+      }
     });
 
-    return response;
+    return {
+      items: result.items,
+      hasMore: result.hasMore,
+      total: result.total,
+    }
   }
+
+  // async queryPartnerships(
+  //   query: ListPartnershipsInput,
+  // ): Promise<ListPartnershipsOutputDto> {
+  //   const response = new ListPartnershipsOutputDto();
+  //   const session = this.db.driver.session();
+  //   const skipIt = query.page * query.count;
+
+  //   //TO DO : List all partnerships by projectId
+  //   // const result = await session.run(
+  //   //   `
+  //   //     MATCH
+  //   //       (project:Project {id: "$projectId"})-[partnerships:Partnership {active:true}]->
+  //   //       (partner:Partnership {active:true}),
+  //   //       (partner)-[:agreementStatus {active: true}]->(agreementStatus: Property)
+  //   //       (partner)-[:mouStatus {active: true}]->(mouStatus: Property),
+  //   //       (partner)-[:mouStart {active: true}]->(mouStart: Property),
+  //   //       (partner)-[:mouEnd {active: true}]->(mouEnd: Property),
+  //   //     RETURN
+  //   //       partner.id as id,
+  //   //       agreementStatus.value as agreementStatus,
+  //   //       mouStatus.value as mouStatus,
+  //   //       mouStart.value as mouStart,
+  //   //       mouEnd.value as mouEnd,
+  //   //     `,
+  //   //     },
+  //   // );
+
+  //   const result = await session.run(
+  //     `MATCH (partnership:Partnership {active: true}) WHERE partnership.agreementStatus CONTAINS $filter RETURN partnership.agreementStatus as agreementStatus, partnership.organization as organization ORDER BY ${query.sort} ${query.order} SKIP $skip LIMIT $count`,
+  //     {
+  //       filter: query.filter,
+  //       skip: skipIt,
+  //       count: query.count,
+  //       sort: query.sort,
+  //       order: query.order,
+  //     },
+  //   );
+
+  //   session.close();
+
+  //   response.partnerships = result.records.map(record => {
+  //     const partnership = new Partnership();
+  //     //partnership.id = record.get('id');
+  //     partnership.agreementStatus = record.get('agreementStatus');
+  //     partnership.organization = record.get('organization');
+  //     return partnership;
+  //   });
+
+  //   return response;
+  // }
 }
 
 

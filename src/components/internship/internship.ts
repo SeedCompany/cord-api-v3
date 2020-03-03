@@ -5,9 +5,9 @@ import { Location } from '../location';
 import { Sensitivity } from '../project/sensitivity';
 import { TeamMember } from '../user/team-member';
 import { InternshipStatus } from './status';
-import { Partnership } from '../partnership/partnership';
 import { InternshipEngagement } from '../internship-engagement/engagement';
 import { ObjectType, InputType, Field } from 'type-graphql';
+import { Partnership } from '../partnership/dto';
 
 @ObjectType()
 export class Internship {

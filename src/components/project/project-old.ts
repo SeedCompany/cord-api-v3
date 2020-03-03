@@ -6,9 +6,9 @@ import { Location } from '../location';
 import { Sensitivity } from './sensitivity';
 import { TeamMember } from '../user/team-member';
 import { ProjectStatus } from './status';
-import { Partnership } from '../partnership/partnership';
 import { ProjectEngagement } from '../project-engagement/engagement';
 import { Field, ID, ObjectType, InputType } from 'type-graphql';
+import { Partnership } from '../partnership/dto';
 
 @ObjectType()
 export class Project implements IProject {
