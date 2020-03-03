@@ -1,3 +1,5 @@
+
+
 import {
   Injectable,
   NotFoundException,
@@ -18,6 +20,7 @@ import {
   User,
   UserListInput,
   UserListOutput,
+  UserEmail,
 } from './dto';
 
 @Injectable()
@@ -122,6 +125,11 @@ export class UserService {
       canRead: true, // TODO
       canCreate: true, // TODO
     };
+  }
+
+  async checkEmail(input: UserEmail, session: ISession): Promise<Boolean> {
+    console.log(input.email);
+    return true;
   }
 
   async create(input: CreateUser, session: ISession): Promise<User> {
