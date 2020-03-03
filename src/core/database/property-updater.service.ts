@@ -113,11 +113,13 @@ export class PropertyUpdaterService {
         relation('out', 'toProp', key as string, {
           active: true,
           createdAt: now,
+          owningOrgId: session.owningOrgId,
         }),
         node('newPropNode', 'Property', {
           active: true,
           createdAt: now,
           value,
+          owningOrgId: session.owningOrgId,
         }),
       ])
       .return('newPropNode')
@@ -156,7 +158,12 @@ export class PropertyUpdaterService {
     const result: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> } = {};
     for (const prop of props) {
       const key = prop as string;
-      result[prop] = await this.readProperty({ id, session, key, nodevar }) as UnwrapSecured<TObject[keyof TObject]>;
+      result[prop] = (await this.readProperty({
+        id,
+        session,
+        key,
+        nodevar,
+      })) as UnwrapSecured<TObject[keyof TObject]>;
     }
     return result;
   }
@@ -178,12 +185,12 @@ export class PropertyUpdaterService {
       aclReadProp || `canRead${upperFirst(key as string)}`;
     const aclEditPropName = `canEdit${upperFirst(key as string)}`;
     const query = `
-    match  (token:Token { 
+    match  (token:Token {
       active: true,
       value: $token
     })
     <-[:token { active: true }]-
-    (requestingUser:User { 
+    (requestingUser:User {
       active: true,
       id: $userId
     })
@@ -226,45 +233,63 @@ export class PropertyUpdaterService {
     aclEditProp,
     input,
   }: {
-    session: ISession,
-    props: ReadonlyArray<keyof TObject>,
+    session: ISession;
+    props: ReadonlyArray<keyof TObject>;
     nodevar: string;
     owningOrgId?: string;
     skipOwningOrgCheck?: boolean;
     aclReadProp?: string;
     aclEditProp?: string;
-    input: { page: number, count: number, sort: string, order: Order, filter: Record<string, any> },
-  }): Promise<{ hasMore: boolean, total: number, items: TObject[] }> {
+    input: {
+      page: number;
+      count: number;
+      sort: string;
+      order: Order;
+      filter: Record<string, any>;
+    };
+  }): Promise<{ hasMore: boolean; total: number; items: TObject[] }> {
     const nodeName = upperFirst(nodevar);
     const aclReadPropName = aclReadProp || `canRead${nodeName}`;
     const aclEditPropName = aclEditProp || `canEdit${nodeName}`;
-    const owningOrgFilter = skipOwningOrgCheck ? {} : { owningOrgId: owningOrgId || session.owningOrgId };
+    const owningOrgFilter = skipOwningOrgCheck
+      ? {}
+      : { owningOrgId: owningOrgId || session.owningOrgId };
+    const idFilter = input.filter.id ? { id: input.filter.id } : {};
+    const userIdFilter = input.filter.userId ? { id: input.filter.userId } : {};
 
-    const query = this.db
-      .query()
-      .match([
-        [
-          node('token', 'Token', {
-            active: true,
-            value: session.token,
-          }),
-          relation('in', '', 'token', {
-            active: true,
-          }),
-          node('requestingUser', 'User', {
-            active: true,
-            [aclReadPropName]: true,
-          }),  
-        ],
-        [
-          node('n', nodeName, {
-            active: true,
-            ...owningOrgFilter,
-          }),  
-        ]
-      ])
-      .with('count(n) as total, requestingUser')
-      .match(props.map(prop => {
+    const query = this.db.query().match([
+      [
+        node('token', 'Token', {
+          active: true,
+          value: session.token,
+        }),
+        relation('in', '', 'token', {
+          active: true,
+        }),
+        node('requestingUser', 'User', {
+          active: true,
+          [aclReadPropName]: true,
+        }),
+      ],
+    ]);
+
+    query.match([
+      [
+        node('user', 'User', {
+          active: true,
+          ...userIdFilter,
+        }),
+        relation('out', '', nodevar, {
+          active: true,
+        }),
+        node('n', nodeName, {
+          active: true,
+          ...idFilter,
+        }),
+      ],
+    ]);
+    query.with('count(n) as total, requestingUser').match(
+      props.map(prop => {
         return [
           node('n', nodeName, {
             active: true,
@@ -272,19 +297,22 @@ export class PropertyUpdaterService {
           }),
           relation('out', '', prop as string, { active: true }),
           node(prop as string, 'Property', { active: true }),
-        ]
-      }));
+        ];
+      }),
+    );
 
     if (input.filter && Object.keys(input.filter).length) {
       const where: Record<string, any> = {};
-
       for (const k in input.filter) {
-        where[k + '.value'] = contains(input.filter[k]);
+        if (k !== 'id' && k !== 'userId') {
+          where[k + '.value'] = contains(input.filter[k]);
+        }
       }
-
-      query.where(where);
+      if (Object.keys(where).length) {
+        query.where(where);
+      }
     }
-  
+
     query
       .returnDistinct([
         // return total count
@@ -295,23 +323,23 @@ export class PropertyUpdaterService {
           requestingUser: [
             { [aclReadPropName]: aclReadPropName },
             { [aclEditPropName]: aclEditPropName },
-          ]
+          ],
         },
 
         // always return the <node>.id and <node>.createdAt field
         {
-          n: [ { id: 'id' }, { createdAt: 'createdAt' } ]
+          n: [{ id: 'id' }, { createdAt: 'createdAt' }],
         },
 
         // return the rest of the requested properties
         ...props.map(prop => {
           const propName: string = prop as string;
           return { [propName + '.value']: propName };
-        })
+        }),
       ])
       .orderBy([input.sort], input.order)
       .skip((input.page - 1) * input.count)
-      .limit(input.count);
+      .limit(input.count); 
 
     const result = await query.run();
 
@@ -502,7 +530,7 @@ export class PropertyUpdaterService {
       aclEditProp: aclEditPropName,
     });
 
-    const wait: Promise<void>[] = [];
+    const wait: Array<Promise<void>> = [];
     Object.keys(input).map(async key => {
       if (key === 'id' || key === 'userId') {
         return;
@@ -566,7 +594,6 @@ export class PropertyUpdaterService {
           id: input.id,
         })
         .run();
-
     } catch (e) {
       const ACLQuery = `MATCH
       (token:Token {
@@ -617,10 +644,11 @@ export class PropertyUpdaterService {
         }),
         (item {id: $id, active: true})
       CREATE
-        (item)-[rel :${key} { active: true , createdAt: datetime()}]->
+        (item)-[rel :${key} { active: true , createdAt: datetime(), owningOrgId: $owningOrgId}]->
            (${key}: Property {
              active: true,
-             value: "${value}"
+             value: "${value}",
+             owningOrgId: $owningOrgId
            })
       RETURN
         ${key}.value, rel
@@ -632,6 +660,7 @@ export class PropertyUpdaterService {
         .raw(query, {
           token: session.token,
           requestingUserId: session.userId,
+          owningOrgId: session.owningOrgId,
           id,
           key,
           value,
