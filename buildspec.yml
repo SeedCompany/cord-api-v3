@@ -6,9 +6,9 @@ env:
     NEO4J_USERNAME: /CodeBuild/NEO4J_USERNAME
     NEO4J_PASSWORD: /CodeBuild/NEO4J_PASSWORD
     NODE_ENV: /CodeBuild/NODE_ENV
-    AWS_ACCESS_KEY_ID: /CodeBuild/AWS_ACCESS_KEY_ID_BUILD
-    AWS_SECRET_ACCESS_KEY: /CodeBuild/AWS_SECRET_ACCESS_KEY
-    AWS_DEFAULT_REGION: /CodeBuild/AWS_DEFAULT_REGION
+    AWS_ACCESS_KEY_ID_BUILD: /CodeBuild/AWS_ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY_BUILD: /CodeBuild/AWS_SECRET_ACCESS_KEY
+    AWS_DEFAULT_REGION_BUILD: /CodeBuild/AWS_DEFAULT_REGION
 
 phases:
   install:
@@ -22,6 +22,9 @@ phases:
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - IMAGE_TAG=${COMMIT_HASH:=latest}
       - echo 'SSM'
+      - export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID_BUILD
+      - export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY_BUILD
+      - export AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION_BUILD
       - echo 11111
       - aws ssm get-parameter --name "/CodeBuild/CODEBUILD_BUILD_NUMBER" --output text | awk '{print $6}'
       - echo 11111
