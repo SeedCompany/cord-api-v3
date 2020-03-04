@@ -10,7 +10,7 @@ import {
 
 import { Unavailability } from '../src/components/user/unavailability';
 import { User } from '../src/components/user';
-import { fragments } from './utility';
+import { fragments } from './utility/fragments';
 import { gql } from 'apollo-server-core';
 import { isValid } from 'shortid';
 import { times } from 'lodash';
@@ -120,14 +120,12 @@ describe('Unavailability e2e', () => {
     // create 10 unavailabilities
     const num = 10;
     await Promise.all(
-      times(num).map(() =>
-        createUnavailability(app, { userId: user.id }),
-      ),
+      times(num).map(() => createUnavailability(app, { userId: user.id })),
     );
 
     const { unavailabilities } = await app.graphql.query(gql`
       query {
-        unavailabilities (input: { filter: { userId : "${user.id}" }}){
+        unavailabilities (input: { filter: { userId : "${user.id}" }}) {
           items {
             ...unavailability
           }
