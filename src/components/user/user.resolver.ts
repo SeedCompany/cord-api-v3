@@ -31,6 +31,7 @@ import {
 import {
   SecuredUnavailabilityList,
   UnavailabilityListInput,
+  UnavailabilityListOutput,
   UnavailabilityService,
 } from './unavailability';
 import { UserService } from './user.service';
@@ -89,7 +90,7 @@ export class UserResolver {
       defaultValue: UnavailabilityListInput.defaultVal,
     })
     input: UnavailabilityListInput,
-  ): Promise<SecuredUnavailabilityList> {
+  ): Promise<UnavailabilityListOutput> {
     input = {...input, filter: {userId: id}};
     return this.unavailabilityService.list(input, session);
   }

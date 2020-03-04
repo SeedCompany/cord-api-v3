@@ -7,7 +7,7 @@ import {
   UpdateUnavailabilityInput,
   UpdateUnavailabilityOutput,
   UnavailabilityListInput,
-  SecuredUnavailabilityList,
+  UnavailabilityListOutput,
   Unavailability,
 } from './dto';
 import { UnavailabilityService } from './unavailability.service';
@@ -26,8 +26,8 @@ export class UnavailabilityResolver {
     return await this.service.readOne(id, session);
   }
 
-  @Query(() => SecuredUnavailabilityList, {
-    description: 'Look up unavailabilities for a user',
+  @Query(() => UnavailabilityListOutput, {
+    description: 'Look up unavailabilities by user id',
   })
   async unavailabilities(
     @Session() session: ISession,
@@ -37,7 +37,7 @@ export class UnavailabilityResolver {
       defaultValue: UnavailabilityListInput.defaultVal,
     })
     input: UnavailabilityListInput,
-  ): Promise<SecuredUnavailabilityList> {
+  ): Promise<UnavailabilityListOutput> {
     return this.service.list(input, session);
   }
 
