@@ -20,6 +20,7 @@ import {
   User,
   UserListInput,
   UserListOutput,
+  UserEmailInput,
 } from './dto';
 import {
   EducationListInput,
@@ -62,6 +63,20 @@ export class UserResolver {
     input: UserListInput,
   ): Promise<UserListOutput> {
     return this.userService.list(input, session);
+  }
+
+  @Query(() => Boolean, {
+    description: "Check out whether a provided email exists or not in User Table"
+  })
+  async checkEmail(
+    @Args({
+      name: "input",
+      type: () => UserEmailInput
+    })
+    input: UserEmailInput,
+  ): Promise<Boolean>
+  {
+    return this.userService.checkEmail(input)
   }
 
   @ResolveProperty(() => SecuredUnavailabilityList)

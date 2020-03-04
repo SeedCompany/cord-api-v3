@@ -18,6 +18,7 @@ import {
   User,
   UserListInput,
   UserListOutput,
+  UserEmailInput,
 } from './dto';
 
 @Injectable()
@@ -122,6 +123,29 @@ export class UserService {
       canRead: true, // TODO
       canCreate: true, // TODO
     };
+  }
+
+  async checkEmail(input: UserEmailInput): Promise<Boolean> {
+    const result = await this.db
+      .query()
+      .raw(
+        `
+        MATCH
+        (email:EmailAddress {
+          value: $email
+        })
+        RETURN
+        email.value as email
+        `,
+        {
+          email: input.email,
+        },
+      )
+      .first();
+    if(result){
+      return false;
+    }
+    return true;
   }
 
   async create(input: CreateUser, session: ISession): Promise<User> {
