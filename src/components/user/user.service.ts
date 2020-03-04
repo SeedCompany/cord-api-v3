@@ -18,6 +18,7 @@ import {
   User,
   UserListInput,
   UserListOutput,
+  UserEmailInput,
 } from './dto';
 
 @Injectable()
@@ -124,6 +125,29 @@ export class UserService {
     };
   }
 
+  async checkEmail(input: UserEmailInput): Promise<Boolean> {
+    const result = await this.db
+      .query()
+      .raw(
+        `
+        MATCH
+        (email:EmailAddress {
+          value: $email
+        })
+        RETURN
+        email.value as email
+        `,
+        {
+          email: input.email,
+        },
+      )
+      .first();
+    if(result){
+      return false;
+    }
+    return true;
+  }
+
   async create(input: CreateUser, session: ISession): Promise<User> {
     if (!input.password) {
       throw new Error('Password is required when creating a new user');
@@ -153,7 +177,7 @@ export class UserService {
             canCreateEducation: true,
             canReadEducationList: true,
             canCreateUnavailability: true,
-            canReadUnavailability: true,
+            canReadUnavailabilityList: true,
             canCreateProduct: true,
             canReadProducts: true,
             canCreateProject: true,

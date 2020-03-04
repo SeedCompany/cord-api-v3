@@ -33,7 +33,7 @@ export class EnvironmentService {
     const files = [
       `.env.${env}.local`,
       `.env.${env}`,
-      env !== 'test' && `.env.local`,
+      `.env.local`,
       `.env`,
     ]
       .filter(isString)

@@ -20,6 +20,7 @@ import {
   User,
   UserListInput,
   UserListOutput,
+  UserEmailInput,
 } from './dto';
 import {
   EducationListInput,
@@ -30,6 +31,7 @@ import {
 import {
   SecuredUnavailabilityList,
   UnavailabilityListInput,
+  UnavailabilityListOutput,
   UnavailabilityService,
 } from './unavailability';
 import { UserService } from './user.service';
@@ -64,6 +66,20 @@ export class UserResolver {
     return this.userService.list(input, session);
   }
 
+  @Query(() => Boolean, {
+    description: "Check out whether a provided email exists or not in User Table"
+  })
+  async checkEmail(
+    @Args({
+      name: "input",
+      type: () => UserEmailInput
+    })
+    input: UserEmailInput,
+  ): Promise<Boolean>
+  {
+    return this.userService.checkEmail(input)
+  }
+
   @ResolveProperty(() => SecuredUnavailabilityList)
   async unavailabilities(
     @Session() session: ISession,
@@ -74,7 +90,7 @@ export class UserResolver {
       defaultValue: UnavailabilityListInput.defaultVal,
     })
     input: UnavailabilityListInput,
-  ): Promise<SecuredUnavailabilityList> {
+  ): Promise<UnavailabilityListOutput> {
     input = {...input, filter: {userId: id}};
     return this.unavailabilityService.list(input, session);
   }
