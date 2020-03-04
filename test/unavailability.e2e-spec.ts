@@ -61,7 +61,7 @@ describe('Unavailability e2e', () => {
     }
   });
 
-  // UPDATE LANGUAGE
+  // UPDATE UNAVAILABILITY
   it('update unavailability', async () => {
     const unavailability = await createUnavailability(app, { userId: user.id });
     const newDesc = faker.company.companyName();
@@ -92,7 +92,7 @@ describe('Unavailability e2e', () => {
     expect(updated.description.value).toBe(newDesc);
   });
 
-  // DELETE LANGUAGE
+  // DELETE UNAVAILABILITY
   it('delete unavailability', async () => {
     const unavailability = await createUnavailability(app, { userId: user.id });
 
@@ -115,7 +115,7 @@ describe('Unavailability e2e', () => {
     }
   });
 
-  // LIST Unavailabilities
+  // LIST UNAVAILABILITIES
   it('List view of unavailabilities', async () => {
     // create 10 unavailabilities
     const num = 10;

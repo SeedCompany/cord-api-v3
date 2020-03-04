@@ -6,9 +6,9 @@ import { ILogger, Logger, PropertyUpdaterService } from '../../../core';
 import { ISession } from '../../auth';
 import {
   CreateUnavailability,
-  SecuredUnavailabilityList,
   Unavailability,
   UnavailabilityListInput,
+  UnavailabilityListOutput,
   UpdateUnavailability,
 } from './dto';
 
@@ -197,93 +197,29 @@ export class UnavailabilityService {
   async list(
     { page, count, sort, order, filter }: UnavailabilityListInput,
     session: ISession,
-  ): Promise<SecuredUnavailabilityList> {
-    if (!filter?.userId) {
-      throw new BadRequestException('no userId specified');
-    }
-    const query = `
-      MATCH
-        (token:Token {
-          active: true,
-          value: $token
-        })
-          <-[:token {active: true}]-
-        (requestingUser:User {
-          active: true,
-          id: $requestingUserId,
-          owningOrgId: $owningOrgId
-        }),
-        (user: User {owningOrgId: $owningOrgId, active: true, id: $userId} )
-          -[:unavailability {active: true}]
-          ->(unavailability:Unavailability {active: true})
-      WITH count(unavailability) as total, unavailability
-      MATCH
-        (requestingUser)<-[:member]-(acl:ACL {canReadDescription: true, canReadStart: true, canReadEnd: true})-[:toNode]->(unavailability),
-        (unavailability)-[:description {active: true}]->(description:Property {active: true}),
-        (unavailability)-[:start {active: true}]->(start:Property {active: true}),
-        (unavailability)-[:end {active: true}]->(end:Property {active: true})
-        RETURN
-          total,
-          unavailability.id as id,
-          unavailability.createdAt as createdAt,
-          description.value as description,
-          acl.canReadDescription as canReadDescription,
-          acl.canEditDescription as canEditDescription,
-          start.value as start,
-          acl.canReadStart as canReadStart,
-          acl.canEditStart as canEditStart,
-          end.value as end,
-          acl.canReadEnd as canReadEnd,
-          acl.canEditEnd as canEditEnd,
-          requestingUser.canReadUnavailability,
-          requestingUser.canCreateUnavailability
-        ORDER BY ${sort} ${order}
-        SKIP $skip
-        LIMIT $count
-      `;
-
-    const result = await this.db
-      .query()
-      .raw(query, {
-        userId: filter.userId,
-        requestingUserId: session.userId,
-        owningOrgId: session.owningOrgId,
-        skip: (page - 1) * count,
+  ): Promise<UnavailabilityListOutput> {
+    const result = await this.propertyUpdater.list<Unavailability>({
+      session,
+      nodevar: 'user',
+      aclReadProp: 'canReadUnavailability',
+      aclEditProp: 'canCreateUnavailability',
+      props: [
+        'description',
+        'start',
+        'end',
+      ],
+      input: {
+        page,
         count,
-        token: session.token,
-      })
-      .run();
-
-    const items = result.map<Unavailability>(row => ({
-      id: row.id,
-      createdAt: row.createdAt,
-      description: {
-        value: row.description,
-        canRead: row.canReadDescription !== null ? row.canReadDescription : false,
-        canEdit: row.canEditDescription !== null ? row.canEditDescription : false,
-      },
-      start: {
-        value: row.start,
-        canRead: row.canReadStart !== null ? row.canReadStart : false,
-        canEdit: row.canEditStart !== null ? row.canEditStart : false,
-      },
-      end: {
-        value: row.end,
-        canRead:
-          row.canReadEnd !== null ? row.canReadEnd : false,
-        canEdit:
-          row.canEditEnd !== null ? row.canEditEnd : false,
-      },
-    }));
-
-    const hasMore = result ? (page - 1) * count + count < result[0].total : false ; // if skip + count is less than total there is more
-
+        sort,
+        order,
+        filter,
+      }
+    });
     return {
-      items,
-      hasMore,
-      total: result ? result[0].total : 0,
-      canCreate: result ? result[0].canCreateUnavailability : false,
-      canRead: result ? result[0].canReadUnavailability : false,
+      items: result.items,
+      hasMore: result.hasMore,
+      total: result.total,
     };
   }
 }
