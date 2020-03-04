@@ -22,8 +22,13 @@ phases:
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - IMAGE_TAG=${COMMIT_HASH:=latest}
       - echo 'SSM'
+      - aws ssm get-parameter --name "/CodeBuild/CODEBUILD_BUILD_NUMBER" --output text | awk '{print $6}'
+      - echo 11111
+      - aws ssm put-parameter --name "/CodeBuild/CODEBUILD_BUILD_NUMBER"  --type "String" --value "$CODEBUILD_BUILD_NUMBER" --overwrite
       - echo 11111
       - aws ssm get-parameter --name "/CodeBuild/CODEBUILD_BUILD_NUMBER" --output text | awk '{print $6}'
+      - echo 11111
+
       - echo 11111
   pre_build:
     commands:
