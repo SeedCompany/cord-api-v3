@@ -177,7 +177,7 @@ export class UserService {
             canCreateEducation: true,
             canReadEducationList: true,
             canCreateUnavailability: true,
-            canReadUnavailability: true,
+            canReadUnavailabilityList: true,
             canCreateProduct: true,
             canReadProducts: true,
             canDeleteOwnUser: true,

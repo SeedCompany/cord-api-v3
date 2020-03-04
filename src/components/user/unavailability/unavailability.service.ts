@@ -6,9 +6,9 @@ import { ILogger, Logger, PropertyUpdaterService } from '../../../core';
 import { ISession } from '../../auth';
 import {
   CreateUnavailability,
-  SecuredUnavailabilityList,
   Unavailability,
   UnavailabilityListInput,
+  UnavailabilityListOutput,
   UpdateUnavailability,
 } from './dto';
 
@@ -72,93 +72,80 @@ export class UnavailabilityService {
   }
 
   async readOne(id: string, session: ISession): Promise<Unavailability> {
-    this.logger.info(
-      `Query readOne Unavailability: id ${id} by ${session.userId}`,
-    );
     const result = await this.db
       .query()
       .raw(
         `
-      MATCH
+        MATCH
         (token:Token {
           active: true,
           value: $token
         })
-        <-[:token {active: true}]-
+          <-[:token {active: true}]-
         (requestingUser:User {
           active: true,
           id: $requestingUserId,
-          canReadUnavailability: true
+          owningOrgId: $owningOrgId
         }),
-        (unavailability:Unavailability {
-          active: true,
-          id: $id
-        }),
-        (requestingUser)
-          <-[:member]-
-          (acl:ACL {
-            canReadDescription: true,
-            canEditDescription: true,
-            canReadStart: true,
-            canEditStart: true,
-            canReadEnd: true,
-            canEditEnd: true
-          })-[:toNode]->(unavailability),
-          (unavailability)-[:description {active: true}]->(description:Property {active: true}),
-          (unavailability)-[:start {active: true}]->(start:Property {active: true}),
-          (unavailability)-[:end {active: true}]->(end:Property {active: true})
-      RETURN
-        unavailability.id as id,
-        description.value as description,
-        start.value as start,
-        end.value as end,
-        acl.canReadDescription as canReadDescription,
-        acl.canEditDescription as canEditDescription,
-        acl.canReadStart as canReadStart,
-        acl.canEditStart as canEditStart,
-        acl.canReadEnd as canReadEnd,
-        acl.canEditEnd as canEditEnd,
-        requestingUser.canReadUnavailability as canReadUnavailability
-      `,
+        (unavailability:Unavailability {active: true, id: $id})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl1:ACL {canReadDescription: true})-[:toNode]->(unavailability)-[:description {active: true}]->(description:Property {active: true})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl2:ACL {canEditDescription: true})-[:toNode]->(unavailability)
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl3:ACL {canReadStart: true})-[:toNode]->(unavailability)-[:start {active: true}]->(start:Property {active: true})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl4:ACL {canEditStart: true})-[:toNode]->(unavailability)
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl5:ACL {canReadEnd: true})-[:toNode]->(unavailability)-[:end {active: true}]->(end:Property {active: true})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl6:ACL {canEditEnd: true})-[:toNode]->(unavailability)
+        RETURN
+          unavailability.id as id,
+          unavailability.createdAt as createdAt,
+          description.value as description,
+          acl1.canReadDescription as canReadDescription,
+          acl2.canEditDescription as canEditDescription,
+          start.value as start,
+          acl3.canReadStart as canReadStart,
+          acl4.canEditStart as canEditStart,
+          end.value as end,
+          acl5.canReadEnd as canReadEnd,
+          acl6.canEditEnd as canEditEnd
+        `,
         {
-          id,
           token: session.token,
           requestingUserId: session.userId,
+          owningOrgId: session.owningOrgId,
+          id,
         },
       )
       .first();
-
     if (!result) {
-      this.logger.error(`Could not find unavailability: ${id} `);
-      throw new NotFoundException(`Could not find unavailability ${id}`);
+      throw new NotFoundException('Could not find unavailability');
     }
 
-    if (!result.canReadUnavailability) {
-      throw new Error(
-        'User does not have permission to read these unavailabilities',
-      );
-    }
     return {
-      id: result.id,
-      createdAt: DateTime.local(), // TODO
+      id,
+      createdAt: result.createdAt,
       description: {
         value: result.description,
-        canRead: result.canReadDescription,
-        canEdit: result.canEditDescription,
+        canRead: result.canReadDescription !== null ? result.canReadDescription : false,
+        canEdit: result.canEditDescription !== null ? result.canEditDescription : false,
       },
       start: {
         value: result.start,
-        canRead: result.canReadStart,
-        canEdit: result.canEditStart,
+        canRead: result.canReadStart !== null ? result.canReadStart : false,
+        canEdit: result.canEditStart !== null ? result.canEditStart : false,
       },
       end: {
         value: result.end,
-        canRead: result.canReadEnd,
-        canEdit: result.canEditEnd,
+        canRead:
+          result.canReadEnd !== null
+            ? result.canReadEnd
+            : false,
+        canEdit:
+          result.canEditEnd !== null
+            ? result.canEditEnd
+            : false,
       },
     };
   }
-
+  
   async update(
     input: UpdateUnavailability,
     session: ISession,
@@ -197,93 +184,30 @@ export class UnavailabilityService {
   async list(
     { page, count, sort, order, filter }: UnavailabilityListInput,
     session: ISession,
-  ): Promise<SecuredUnavailabilityList> {
-    if (!filter?.userId) {
-      throw new BadRequestException('no userId specified');
-    }
-    const query = `
-      MATCH
-        (token:Token {
-          active: true,
-          value: $token
-        })
-          <-[:token {active: true}]-
-        (requestingUser:User {
-          active: true,
-          id: $requestingUserId,
-          owningOrgId: $owningOrgId
-        }),
-        (user: User {owningOrgId: $owningOrgId, active: true, id: $userId} )
-          -[:unavailability {active: true}]
-          ->(unavailability:Unavailability {active: true})
-      WITH count(unavailability) as total, unavailability
-      MATCH
-        (requestingUser)<-[:member]-(acl:ACL {canReadDescription: true, canReadStart: true, canReadEnd: true})-[:toNode]->(unavailability),
-        (unavailability)-[:description {active: true}]->(description:Property {active: true}),
-        (unavailability)-[:start {active: true}]->(start:Property {active: true}),
-        (unavailability)-[:end {active: true}]->(end:Property {active: true})
-        RETURN
-          total,
-          unavailability.id as id,
-          unavailability.createdAt as createdAt,
-          description.value as description,
-          acl.canReadDescription as canReadDescription,
-          acl.canEditDescription as canEditDescription,
-          start.value as start,
-          acl.canReadStart as canReadStart,
-          acl.canEditStart as canEditStart,
-          end.value as end,
-          acl.canReadEnd as canReadEnd,
-          acl.canEditEnd as canEditEnd,
-          requestingUser.canReadUnavailability,
-          requestingUser.canCreateUnavailability
-        ORDER BY ${sort} ${order}
-        SKIP $skip
-        LIMIT $count
-      `;
-
-    const result = await this.db
-      .query()
-      .raw(query, {
-        userId: filter.userId,
-        requestingUserId: session.userId,
-        owningOrgId: session.owningOrgId,
-        skip: (page - 1) * count,
+  ): Promise<UnavailabilityListOutput> {
+    const result = await this.propertyUpdater.list<Unavailability>({
+      session,
+      nodevar: 'unavailability',
+      aclReadProp: 'canReadUnavailabilityList',
+      aclEditProp: 'canCreateUnavailability',
+      props: [
+        'description',
+        'start',
+        'end',
+      ],
+      input: {
+        page,
         count,
-        token: session.token,
-      })
-      .run();
-
-    const items = result.map<Unavailability>(row => ({
-      id: row.id,
-      createdAt: row.createdAt,
-      description: {
-        value: row.description,
-        canRead: row.canReadDescription !== null ? row.canReadDescription : false,
-        canEdit: row.canEditDescription !== null ? row.canEditDescription : false,
+        sort,
+        order,
+        filter,
       },
-      start: {
-        value: row.start,
-        canRead: row.canReadStart !== null ? row.canReadStart : false,
-        canEdit: row.canEditStart !== null ? row.canEditStart : false,
-      },
-      end: {
-        value: row.end,
-        canRead:
-          row.canReadEnd !== null ? row.canReadEnd : false,
-        canEdit:
-          row.canEditEnd !== null ? row.canEditEnd : false,
-      },
-    }));
-
-    const hasMore = result ? (page - 1) * count + count < result[0].total : false ; // if skip + count is less than total there is more
+    });
 
     return {
-      items,
-      hasMore,
-      total: result ? result[0].total : 0,
-      canCreate: result ? result[0].canCreateUnavailability : false,
-      canRead: result ? result[0].canReadUnavailability : false,
+      items: result.items,
+      hasMore: result.hasMore,
+      total: result.total,
     };
   }
 }
