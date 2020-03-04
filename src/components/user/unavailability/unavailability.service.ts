@@ -200,8 +200,8 @@ export class UnavailabilityService {
   ): Promise<UnavailabilityListOutput> {
     const result = await this.propertyUpdater.list<Unavailability>({
       session,
-      nodevar: 'user',
-      aclReadProp: 'canReadUnavailability',
+      nodevar: 'unavailability',
+      aclReadProp: 'canReadUnavailabilityList',
       aclEditProp: 'canCreateUnavailability',
       props: [
         'description',
@@ -214,8 +214,9 @@ export class UnavailabilityService {
         sort,
         order,
         filter,
-      }
+      },
     });
+
     return {
       items: result.items,
       hasMore: result.hasMore,
