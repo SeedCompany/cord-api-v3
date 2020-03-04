@@ -71,94 +71,169 @@ export class UnavailabilityService {
     return await this.readOne(id, session);
   }
 
+  // async readOne(id: string, session: ISession): Promise<Unavailability> {
+  //   this.logger.info(
+  //     `Query readOne Unavailability: id ${id} by ${session.userId}`,
+  //   );
+  //   const result = await this.db
+  //     .query()
+  //     .raw(
+  //       `
+  //     MATCH
+  //       (token:Token {
+  //         active: true,
+  //         value: $token
+  //       })
+  //       <-[:token {active: true}]-
+  //       (requestingUser:User {
+  //         active: true,
+  //         id: $requestingUserId,
+  //         canReadUnavailability: true
+  //       }),
+  //       (unavailability:Unavailability {
+  //         active: true,
+  //         id: $id
+  //       }),
+  //       (requestingUser)
+  //         <-[:member]-
+  //         (acl:ACL {
+  //           canReadDescription: true,
+  //           canEditDescription: true,
+  //           canReadStart: true,
+  //           canEditStart: true,
+  //           canReadEnd: true,
+  //           canEditEnd: true
+  //         })-[:toNode]->(unavailability),
+  //         (unavailability)-[:description {active: true}]->(description:Property {active: true}),
+  //         (unavailability)-[:start {active: true}]->(start:Property {active: true}),
+  //         (unavailability)-[:end {active: true}]->(end:Property {active: true})
+  //     RETURN
+  //       unavailability.id as id,
+  //       description.value as description,
+  //       start.value as start,
+  //       end.value as end,
+  //       acl.canReadDescription as canReadDescription,
+  //       acl.canEditDescription as canEditDescription,
+  //       acl.canReadStart as canReadStart,
+  //       acl.canEditStart as canEditStart,
+  //       acl.canReadEnd as canReadEnd,
+  //       acl.canEditEnd as canEditEnd,
+  //       requestingUser.canReadUnavailability as canReadUnavailability
+  //     `,
+  //       {
+  //         id,
+  //         token: session.token,
+  //         requestingUserId: session.userId,
+  //       },
+  //     )
+  //     .first();
+
+  //   if (!result) {
+  //     this.logger.error(`Could not find unavailability: ${id} `);
+  //     throw new NotFoundException(`Could not find unavailability ${id}`);
+  //   }
+
+  //   if (!result.canReadUnavailability) {
+  //     throw new Error(
+  //       'User does not have permission to read these unavailabilities',
+  //     );
+  //   }
+  //   return {
+  //     id: result.id,
+  //     createdAt: DateTime.local(), // TODO
+  //     description: {
+  //       value: result.description,
+  //       canRead: result.canReadDescription,
+  //       canEdit: result.canEditDescription,
+  //     },
+  //     start: {
+  //       value: result.start,
+  //       canRead: result.canReadStart,
+  //       canEdit: result.canEditStart,
+  //     },
+  //     end: {
+  //       value: result.end,
+  //       canRead: result.canReadEnd,
+  //       canEdit: result.canEditEnd,
+  //     },
+  //   };
+  // }
+
   async readOne(id: string, session: ISession): Promise<Unavailability> {
-    this.logger.info(
-      `Query readOne Unavailability: id ${id} by ${session.userId}`,
-    );
     const result = await this.db
       .query()
       .raw(
         `
-      MATCH
+        MATCH
         (token:Token {
           active: true,
           value: $token
         })
-        <-[:token {active: true}]-
+          <-[:token {active: true}]-
         (requestingUser:User {
           active: true,
           id: $requestingUserId,
-          canReadUnavailability: true
+          owningOrgId: $owningOrgId
         }),
-        (unavailability:Unavailability {
-          active: true,
-          id: $id
-        }),
-        (requestingUser)
-          <-[:member]-
-          (acl:ACL {
-            canReadDescription: true,
-            canEditDescription: true,
-            canReadStart: true,
-            canEditStart: true,
-            canReadEnd: true,
-            canEditEnd: true
-          })-[:toNode]->(unavailability),
-          (unavailability)-[:description {active: true}]->(description:Property {active: true}),
-          (unavailability)-[:start {active: true}]->(start:Property {active: true}),
-          (unavailability)-[:end {active: true}]->(end:Property {active: true})
-      RETURN
-        unavailability.id as id,
-        description.value as description,
-        start.value as start,
-        end.value as end,
-        acl.canReadDescription as canReadDescription,
-        acl.canEditDescription as canEditDescription,
-        acl.canReadStart as canReadStart,
-        acl.canEditStart as canEditStart,
-        acl.canReadEnd as canReadEnd,
-        acl.canEditEnd as canEditEnd,
-        requestingUser.canReadUnavailability as canReadUnavailability
-      `,
+        (unavailability:Unavailability {active: true, id: $id})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl1:ACL {canReadDescription: true})-[:toNode]->(unavailability)-[:description {active: true}]->(description:Property {active: true})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl2:ACL {canEditDescription: true})-[:toNode]->(unavailability)
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl3:ACL {canReadStart: true})-[:toNode]->(unavailability)-[:start {active: true}]->(start:Property {active: true})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl4:ACL {canEditStart: true})-[:toNode]->(unavailability)
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl5:ACL {canReadEnd: true})-[:toNode]->(unavailability)-[:end {active: true}]->(end:Property {active: true})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl6:ACL {canEditEnd: true})-[:toNode]->(unavailability)
+        RETURN
+          unavailability.id as id,
+          unavailability.createdAt as createdAt,
+          description.value as description,
+          acl1.canReadDescription as canReadDescription,
+          acl2.canEditDescription as canEditDescription,
+          start.value as start,
+          acl3.canReadStart as canReadStart,
+          acl4.canEditStart as canEditStart,
+          end.value as end,
+          acl5.canReadEnd as canReadEnd,
+          acl6.canEditEnd as canEditEnd
+        `,
         {
-          id,
           token: session.token,
           requestingUserId: session.userId,
+          owningOrgId: session.owningOrgId,
+          id,
         },
       )
       .first();
-
     if (!result) {
-      this.logger.error(`Could not find unavailability: ${id} `);
-      throw new NotFoundException(`Could not find unavailability ${id}`);
+      throw new NotFoundException('Could not find unavailability');
     }
 
-    if (!result.canReadUnavailability) {
-      throw new Error(
-        'User does not have permission to read these unavailabilities',
-      );
-    }
     return {
-      id: result.id,
-      createdAt: DateTime.local(), // TODO
+      id,
+      createdAt: result.createdAt,
       description: {
         value: result.description,
-        canRead: result.canReadDescription,
-        canEdit: result.canEditDescription,
+        canRead: result.canReadDescription !== null ? result.canReadDescription : false,
+        canEdit: result.canEditDescription !== null ? result.canEditDescription : false,
       },
       start: {
         value: result.start,
-        canRead: result.canReadStart,
-        canEdit: result.canEditStart,
+        canRead: result.canReadStart !== null ? result.canReadStart : false,
+        canEdit: result.canEditStart !== null ? result.canEditStart : false,
       },
       end: {
         value: result.end,
-        canRead: result.canReadEnd,
-        canEdit: result.canEditEnd,
+        canRead:
+          result.canReadEnd !== null
+            ? result.canReadEnd
+            : false,
+        canEdit:
+          result.canEditEnd !== null
+            ? result.canEditEnd
+            : false,
       },
     };
   }
-
+  
   async update(
     input: UpdateUnavailability,
     session: ISession,
