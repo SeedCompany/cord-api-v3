@@ -221,4 +221,37 @@ export const fragments = {
       }
     }
   `,
+  zone: gql`
+    fragment zone on Zone {
+      id
+      createdAt
+      name {
+        value
+        canEdit
+        canRead
+      }
+    }
+  `,
+  region: gql`
+    fragment region on Region {
+      id
+      createdAt
+      name {
+        value
+        canEdit
+        canRead
+      }
+    }
+  `,
+  country: gql`
+    fragment country on Country {
+      id
+      createdAt
+      name {
+        value
+        canEdit
+        canRead
+      }
+    }
+  `,
 };
