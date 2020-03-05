@@ -12,6 +12,7 @@ import {
 } from '../../core';
 import { ISession } from './session';
 import { LoginInput, LoginOutput } from './auth.dto';
+import { UserEmailInput } from '../user';
 
 interface JwtPayload {
   iat: number;
@@ -191,6 +192,11 @@ export class AuthService {
     };
     this.logger.debug('Created session', session);
     return session;
+  }
+
+  async forget(input: UserEmailInput): Promise<boolean> {
+    
+    return true;
   }
 
   private encodeJWT() {
