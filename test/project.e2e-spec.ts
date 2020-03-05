@@ -122,7 +122,7 @@ describe('Project e2e', () => {
   it('List view of projects', async () => {
     // create 10 projects
     const numProjects = 10;
-    const type = ProjectType.Internship;
+    const type = ProjectType.Translation;
     await Promise.all(
       times(numProjects).map(() =>
         createProject(app, {
