@@ -41,6 +41,7 @@ const context: ContextFunction<
     GraphQLModule.forRoot({
       autoSchemaFile: 'schema.gql',
       context,
+      playground: true, // enabled in all environments
     }),
     AuthModule,
     FileModule,
