@@ -12,6 +12,7 @@ import { DateTime } from 'luxon';
 import { ISession } from '../../components/auth';
 import { upperFirst } from 'lodash';
 import { ForbiddenError } from 'apollo-server-core';
+import { FileNodeType } from '../../components/file';
 
 @Injectable()
 export class PropertyUpdaterService {
@@ -545,7 +546,6 @@ export class PropertyUpdaterService {
   }): Promise<void> {
     const aclEditPropName =
       aclEditProp || `canEdit${upperFirst(baseNodeLabel as string)}`;
-
     await this.createBaseNode<TObject>({
       session,
       baseNodeLabel,
@@ -553,22 +553,18 @@ export class PropertyUpdaterService {
       acls,
       aclEditProp: aclEditPropName,
     });
-
-    const wait: Array<Promise<void>> = [];
-    Object.keys(input).map(async key => {
-      if (key === 'id' || key === 'userId') {
-        return;
-      }
-      wait.push(
-        this.createProperty({
-          session,
-          key,
-          value: input[key as keyof TObject] as string,
-          id: input.id!,
+    await Promise.all(
+      Object.keys(input)
+        .filter(key => !(key === 'id' || key === 'userId'))
+        .map(async (key, item) => {
+          await this.createProperty({
+            session,
+            key,
+            value: input[key as keyof TObject] as string,
+            id: input.id!,
+          });
         }),
-      );
-    });
-    await Promise.all(wait);
+    );
   }
 
   async createBaseNode<TObject extends Resource>({
@@ -679,7 +675,7 @@ export class PropertyUpdaterService {
       `;
 
     try {
-      const result = await this.db
+      await this.db
         .query()
         .raw(query, {
           token: session.token,

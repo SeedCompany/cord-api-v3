@@ -129,7 +129,12 @@ export const fragments = {
   `,
   file: gql`
     fragment file on FileNode {
+      id
       type
+      createdBy
+      modifiedBy
+      size
+      name
     }
   `,
   product: gql`
