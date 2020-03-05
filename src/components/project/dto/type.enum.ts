@@ -1,8 +1,8 @@
 import { registerEnumType } from 'type-graphql';
 
 export enum ProjectType {
-  Translation = 'translation',
-  Internship = 'internship',
+  Translation = 'Translation',
+  Internship = 'Internship',
 }
 
 registerEnumType(ProjectType, {

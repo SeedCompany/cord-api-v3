@@ -1,4 +1,4 @@
-import { Injectable, NotImplementedException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { ISession } from '../auth';
 import { generate } from 'shortid';
 import {
@@ -10,7 +10,12 @@ import {
   stepToStatus,
   ProjectStep,
 } from './dto';
-import { PropertyUpdaterService, DatabaseService, ILogger, Logger } from '../../core';
+import {
+  PropertyUpdaterService,
+  DatabaseService,
+  ILogger,
+  Logger,
+} from '../../core';
 import { Sensitivity } from '../../common';
 import { DateTime } from 'luxon';
 
@@ -23,7 +28,149 @@ export class ProjectService {
   ) {}
 
   async readOne(id: string, session: ISession): Promise<Project> {
-    throw new NotImplementedException();
+    const result = await this.db
+      .query()
+      .raw(
+        `
+        MATCH
+        (token:Token {
+          active: true,
+          value: $token
+        })
+          <-[:token {active: true}]-
+        (requestingUser:User {
+          active: true,
+          id: $requestingUserId,
+          owningOrgId: $owningOrgId
+        }),
+        (project:Project {active: true, id: $id})
+
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadType:ACL {canReadType: true})-[:toNode]->(project)-[:type {active: true}]->(type:Property {active: true})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditType:ACL {canEditType: true})-[:toNode]->(project)
+
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadSensitivity:ACL {canReadSensitivity: true})-[:toNode]->(project)-[:sensitivity {active: true}]->(sensitivity:Property {active: true})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditSensitivity:ACL {canEditSensitivity: true})-[:toNode]->(project)
+
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadName:ACL {canReadName: true})-[:toNode]->(project)-[:name {active: true}]->(name:Property {active: true})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditName:ACL {canEditName: true})-[:toNode]->(project)
+
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadDeptId:ACL {canReadDeptId: true})-[:toNode]->(project)-[:deptId {active: true}]->(deptId:Property {active: true})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditDeptId:ACL {canEditDeptId: true})-[:toNode]->(project)
+
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadStep:ACL {canReadStep: true})-[:toNode]->(project)-[:step {active: true}]->(step:Property {active: true})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditStep:ACL {canEditStep: true})-[:toNode]->(project)
+
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadStatus:ACL {canReadStatus: true})-[:toNode]->(project)-[:status {active: true}]->(status:Property {active: true})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditStatus:ACL {canEditStatus: true})-[:toNode]->(project)
+
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadLocation:ACL {canReadLocation: true})-[:toNode]->(project)-[:location {active: true}]->(location:Property {active: true})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditLocation:ACL {canEditLocation: true})-[:toNode]->(project)
+
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadMouStart:ACL {canReadMouStart: true})-[:toNode]->(project)-[:mouStart {active: true}]->(mouStart:Property {active: true})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditMouStart:ACL {canEditMouStart: true})-[:toNode]->(project)
+
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadMouEnd:ACL {canReadMouEnd: true})-[:toNode]->(project)-[:mouEnd {active: true}]->(mouEnd:Property {active: true})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditMouEnd:ACL {canEditMouEnd: true})-[:toNode]->(project)
+
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadEstimatedSubmission:ACL {canReadEstimatedSubmission: true})-[:toNode]->(project)-[:estimatedSubmission {active: true}]->(estimatedSubmission:Property {active: true})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditEstimatedSubmission:ACL {canEditEstimatedSubmission: true})-[:toNode]->(project)
+
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadModifiedAt:ACL {canReadModifiedAt: true})-[:toNode]->(project)-[:modifiedAt {active: true}]->(modifiedAt:Property {active: true})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditModifiedAt:ACL {canEditModifiedAt: true})-[:toNode]->(project)
+
+        RETURN
+          project.id as id,
+          project.createdAt as createdAt,
+          type.value as type,
+          sensitivity.value as sensitivity,
+          name.value as name,
+          deptId.value as deptId,
+          step.value as step,
+          status.value as status,
+          location.value as location,
+          mouStart.value as mouStart,
+          mouEnd.value as mouEnd,
+          estimatedSubmission.value as estimatedSubmission,
+          modifiedAt.value as modifiedAt,
+          canReadType.canReadType as canReadType,
+          canEditType.canEditType as canEditType,
+          canReadSensitivity.canReadSensitivity as canReadSensitivity,
+          canEditSensitivity.canEditSensitivity as canEditSensitivity,
+          canReadName.canReadName as canReadName,
+          canEditName.canEditName as canEditName,
+          canReadDeptId.canReadDeptId as canReadDeptId,
+          canEditDeptId.canEditDeptId as canEditDeptId,
+          canReadStep.canReadStep as canReadStep,
+          canEditStep.canEditStep as canEditStep,
+          canReadStatus.canReadStatus as canReadStatus,
+          canEditStatus.canEditStatus as canEditStatus,
+          canReadLocation.canReadLocation as canReadLocation,
+          canEditLocation.canEditLocation as canEditLocation,
+          canReadMouStart.canReadMouStart as canReadMouStart,
+          canEditMouStart.canEditMouStart as canEditMouStart,
+          canReadMouEnd.canReadMouEnd as canReadMouEnd,
+          canEditMouEnd.canEditMouEnd as canEditMouEnd,
+          canReadEstimatedSubmission.canReadEstimatedSubmission as canReadEstimatedSubmission,
+          canEditEstimatedSubmission.canEditEstimatedSubmission as canEditEstimatedSubmission,
+          canReadModifiedAt.canReadModifiedAt as canReadModifiedAt,
+          canEditModifiedAt.canEditModifiedAt as canEditModifiedAt
+      `,
+        {
+          token: session.token,
+          requestingUserId: session.userId,
+          owningOrgId: session.owningOrgId,
+          id,
+        },
+      )
+      .first();
+
+    if (!result) {
+      throw new NotFoundException('Could not find project');
+    }
+
+    return {
+      id,
+      createdAt: result.createdAt,
+      modifiedAt: result.modifiedAt,
+      type: result.type,
+      sensitivity: result.sensitivity,
+      name: {
+        value: result.name,
+        canRead: !!result.canReadName,
+        canEdit: !!result.canEditName,
+      },
+      deptId: {
+        value: result.deptId,
+        canRead: !!result.canReadDeptId,
+        canEdit: !!result.canEditDeptId,
+      },
+      step: {
+        value: result.step,
+        canRead: !!result.canReadStep,
+        canEdit: !!result.canEditStep,
+      },
+      status: result.status,
+      location: {
+        value: undefined, // TODO: location not implemented yet
+        canRead: !!result.canReadLocation,
+        canEdit: !!result.canEditLocation,
+      },
+      mouStart: {
+        value: result.mouStart,
+        canRead: !!result.canReadMouStart,
+        canEdit: !!result.canEditMouStart,
+      },
+      mouEnd: {
+        value: result.mouEnd,
+        canRead: !!result.canReadMouEnd,
+        canEdit: !!result.canEditMouEnd,
+      },
+      estimatedSubmission: {
+        value: result.estimatedSubmission,
+        canRead: !!result.canReadEstimatedSubmission,
+        canEdit: !!result.canEditEstimatedSubmission,
+      },
+    };
   }
 
   async list(
@@ -71,14 +218,26 @@ export class ProjectService {
     };
   }
 
-  async create({ locationId, ...input }: CreateProject, session: ISession): Promise<Project> {
+  async create(
+    { locationId, ...input }: CreateProject,
+    session: ISession,
+  ): Promise<Project> {
     const id = generate();
     const acls = {
-      // these are not user-defined properties but should still be readable
+      canReadModifiedAt: true,
+      canEditModifiedAt: true,
       canReadType: true,
       canEditType: true,
+      canReadSensitivity: true,
+      canEditSensitivity: true,
       canReadName: true,
       canEditName: true,
+      canReadDeptId: true,
+      canEditDeptId: true,
+      canReadStatus: true,
+      canEditStatus: true,
+      canReadLocation: true,
+      canEditLocation: true,
       canReadMouStart: true,
       canEditMouStart: true,
       canReadMouEnd: true,
@@ -105,7 +264,7 @@ export class ProjectService {
         aclEditProp: 'canCreateProject',
       });
 
-      // TODO: locations don't appear to be hooked up yet
+      // TODO: locations are not hooked up yet
       // if (locationId) {
       //   const query = `
       //     MATCH (location:Location {id: $locationId, active: true}),
@@ -126,17 +285,61 @@ export class ProjectService {
       return this.readOne(id, session);
     } catch (e) {
       this.logger.warning(`Could not create project`, {
-        exception: e
+        exception: e,
       });
       throw new Error('Could not create project');
     }
   }
 
   async update(input: UpdateProject, session: ISession): Promise<Project> {
-    throw new NotImplementedException();
+    const object = await this.readOne(input.id, session);
+
+    const changes = {
+      ...input,
+      modifiedAt: DateTime.local().toNeo4JDateTime() as any,
+      status: object.step.value
+        ? stepToStatus(object.step.value)
+        : object.status,
+    };
+
+    // TODO: re-connect the locationId node when locations are hooked up
+
+    const result = await this.propertyUpdater.updateProperties({
+      session,
+      object,
+      props: [
+        'name',
+        'mouStart',
+        'mouEnd',
+        'estimatedSubmission',
+        'status',
+        'modifiedAt',
+      ],
+      changes,
+      nodevar: 'project',
+    });
+
+    return result;
   }
 
   async delete(id: string, session: ISession): Promise<void> {
-    throw new NotImplementedException();
+    const object = await this.readOne(id, session);
+
+    if (!object) {
+      throw new NotFoundException('Could not find project');
+    }
+
+    try {
+      await this.propertyUpdater.deleteNode({
+        session,
+        object,
+        aclEditProp: 'canDeleteOwnUser',
+      });
+    } catch (e) {
+      this.logger.warning('Failed to delete project', {
+        exception: e,
+      });
+      throw e;
+    }
   }
 }
