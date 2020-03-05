@@ -538,16 +538,18 @@ export class PropertyUpdaterService {
       acls,
       aclEditProp: aclEditPropName,
     });
-    await Promise.all(Object.keys(input)
-      .filter((key) => !(key === 'id' || key === 'userId'))
-      .map(async (key, item) => {
-        await this.createProperty({
-        session,
-        key,
-        value: input[key as keyof TObject] as string,
-        id: input.id!,
-      });
-    }));
+    await Promise.all(
+      Object.keys(input)
+        .filter(key => !(key === 'id' || key === 'userId'))
+        .map(async (key, item) => {
+          await this.createProperty({
+            session,
+            key,
+            value: input[key as keyof TObject] as string,
+            id: input.id!,
+          });
+        }),
+    );
   }
 
   async createBaseNode<TObject extends Resource>({
@@ -556,14 +558,12 @@ export class PropertyUpdaterService {
     input,
     acls,
     aclEditProp,
-    type,
   }: {
     session: ISession;
     baseNodeLabel: string;
     input: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> };
     acls: Record<string, boolean>;
     aclEditProp?: string;
-    type?: string;
   }): Promise<void> {
     const aclString = JSON.stringify(acls).replace(/\"/g, '');
     const query = `
@@ -660,7 +660,7 @@ export class PropertyUpdaterService {
       `;
 
     try {
-       await this.db
+      await this.db
         .query()
         .raw(query, {
           token: session.token,
