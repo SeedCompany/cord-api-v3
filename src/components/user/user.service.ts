@@ -173,7 +173,7 @@ export class UserService {
     }
 
     // ensure token doesn't have any users attached to it
-    await this.logout(session.token);
+    // await this.logout(session.token);
 
     const pash = await argon2.hash(input.password);
     /** CREATE USER
