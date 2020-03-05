@@ -13,7 +13,7 @@ import { ProjectStatus } from './status.enum';
 import { SecuredProjectStep } from './step.enum';
 import { ProjectType } from './type.enum';
 
-@ObjectType()
+@InterfaceType()
 export class Project extends Resource {
   @Field(() => ProjectType)
   readonly type: ProjectType;
@@ -52,7 +52,9 @@ export class Project extends Resource {
   readonly modifiedAt: DateTime;
 }
 
-@ObjectType()
+@ObjectType({
+  implements: [Project, Resource],
+})
 export class TranslationProject extends Project {
   /* TS wants a public constructor for "ClassType" */
   static classType = (TranslationProject as any) as Type<TranslationProject>;
@@ -60,7 +62,9 @@ export class TranslationProject extends Project {
   readonly type: ProjectType.Translation;
 }
 
-@ObjectType()
+@ObjectType({
+  implements: [Project, Resource],
+})
 export class InternshipProject extends Project {
   /* TS wants a public constructor for "ClassType" */
   static classType = (InternshipProject as any) as Type<InternshipProject>;
