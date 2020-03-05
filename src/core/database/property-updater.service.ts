@@ -538,15 +538,10 @@ export class PropertyUpdaterService {
       acls,
       aclEditProp: aclEditPropName,
     });
-    console.log('inputs after base node', Object.keys(input));
-    await Promise.all(Object.keys(input).filter(async (key, item) => {
-      if (key === 'id' || key === 'userId') {
-          return false;
-      }
-      return true;
-    })
-    .map(async (key, item) => {
-      await this.createProperty({
+    await Promise.all(Object.keys(input)
+      .filter((key) => !(key === 'id' || key === 'userId'))
+      .map(async (key, item) => {
+        await this.createProperty({
         session,
         key,
         value: input[key as keyof TObject] as string,

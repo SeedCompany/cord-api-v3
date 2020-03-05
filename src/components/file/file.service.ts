@@ -51,7 +51,6 @@ export class FileService {
   }
 
   async getFileNode(id: string, session: ISession): Promise<FileOrDirectory> {
-    try {
       const result = await this.db
         .query()
         .raw(
@@ -80,7 +79,6 @@ export class FileService {
           },
         )
         .first();
-
       if (!result) {
         throw new NotFoundException('Could not find file');
       }
@@ -90,9 +88,6 @@ export class FileService {
         type: result.type,
         size: result.size,
       } as File;
-    } catch (e) {
-      throw new Error(e);
-    }
   }
 
   async getDownloadUrl(fileId: string, session: ISession): Promise<string> {
@@ -132,9 +127,6 @@ export class FileService {
   ): Promise<File> {
     try {
       // TODO find a better way to check if object exists in s3 and move
-      let user: User | null;
-      const userSession: ISession = await this.authService.decodeAndVerifyToken(session.token);
-      user = (userSession.userId) ? await this.userService.readOne(userSession.userId, session) : null;
       const acls = {
         canReadFile: true,
         canEditFile: true,
@@ -144,7 +136,6 @@ export class FileService {
         parentId,
         name,
         type: FileNodeType.File,
-        size: 1024, // TODO get from amazon
       };
 
       await this.propertyUpdater.createNode({
@@ -155,31 +146,7 @@ export class FileService {
         aclEditProp: 'canCreateFileNode',
       });
 
-      const result = await this.db
-        .query()
-        .raw(
-          `
-        MATCH
-        (token:Token {
-          active: true,
-          value: $token
-        })
-        <-[:token {active: true}]-
-        (requestingUser:User {
-          active: true,
-          id: $requestingUserId
-        }),
-        (file: FileNode {id: $id})
-        RETURN
-          file
-          `,
-          {
-            id: uploadId,
-            requestingUserId: user?.id,
-            token: session.token,
-          })
-          .first();
-      return result?.file.properties;
+      return this.getFile(uploadId, session);
     } catch (e) {
       throw new Error(e);
     }

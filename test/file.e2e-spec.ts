@@ -43,7 +43,6 @@ describe('File e2e', () => {
         `,
       })
       .expect(({ body }) => {
-        console.log('body is---->', body);
         testFile = body.data.createFile;
       });
 
@@ -56,6 +55,7 @@ describe('File e2e', () => {
           file (id:"${id}")
           {
             id
+            type
           }
         }
         `,
