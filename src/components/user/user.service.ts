@@ -6,7 +6,7 @@ import { Connection } from 'cypher-query-builder';
 import { generate } from 'shortid';
 import * as argon2 from 'argon2';
 import { ILogger, Logger, OnIndex, PropertyUpdaterService } from '../../core';
-import { ISession } from '../auth';
+import { ISession, AuthService } from '../auth';
 import {
   OrganizationListInput,
   SecuredOrganizationList,
@@ -148,10 +148,32 @@ export class UserService {
     return true;
   }
 
+  async logout(token: string): Promise<void> {
+    await this.db
+      .query()
+      .raw(
+        `
+      MATCH
+        (token:Token)-[r]-()
+      DELETE
+        r
+      RETURN
+        token.value as token
+      `,
+        {
+          token,
+        },
+      )
+      .run();
+  }
+
   async create(input: CreateUser, session: ISession): Promise<User> {
     if (!input.password) {
       throw new Error('Password is required when creating a new user');
     }
+
+    // ensure token doesn't have any users attached to it
+    await this.logout(session.token);
 
     const pash = await argon2.hash(input.password);
     /** CREATE USER
