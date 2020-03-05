@@ -70,6 +70,9 @@ export class File extends FileNode {
   @DateTimeField()
   readonly modifiedAt: DateTime;
 
+  @Field()
+  readonly mimeType: string;
+
   @Field(() => Int)
   readonly size: number;
 }

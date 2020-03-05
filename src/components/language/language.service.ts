@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { generate } from 'shortid';
+import { Sensitivity } from '../../common';
 import {
   DatabaseService,
   ILogger,
@@ -172,6 +173,7 @@ export class LanguageService {
         canRead: result.canReadRodNumber,
         canEdit: result.canEditRodNumber,
       },
+      sensitivity: Sensitivity.High, // TODO
       createdAt: result.createdAt,
     };
   }
@@ -220,7 +222,10 @@ export class LanguageService {
     }
   }
 
-  async list({ page, count, sort, order, filter }: LanguageListInput, session: ISession): Promise<LanguageListOutput> {
+  async list(
+    { page, count, sort, order, filter }: LanguageListInput,
+    session: ISession,
+  ): Promise<LanguageListOutput> {
     const result = await this.propertyUpdater.list<Language>({
       session,
       nodevar: 'language',
@@ -241,7 +246,7 @@ export class LanguageService {
         sort,
         order,
         filter,
-      }
+      },
     });
 
     return {
