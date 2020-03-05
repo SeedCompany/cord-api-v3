@@ -1,7 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Connection } from 'cypher-query-builder';
 import { generate } from 'shortid';
 import * as argon2 from 'argon2';
@@ -18,6 +15,7 @@ import {
   User,
   UserListInput,
   UserListOutput,
+  UserEmailInput,
 } from './dto';
 
 @Injectable()
@@ -90,7 +88,7 @@ export class UserService {
         sort,
         order,
         filter,
-      }
+      },
     });
 
     return {
@@ -124,6 +122,29 @@ export class UserService {
     };
   }
 
+  async checkEmail(input: UserEmailInput): Promise<Boolean> {
+    const result = await this.db
+      .query()
+      .raw(
+        `
+        MATCH
+        (email:EmailAddress {
+          value: $email
+        })
+        RETURN
+        email.value as email
+        `,
+        {
+          email: input.email,
+        },
+      )
+      .first();
+    if (result) {
+      return false;
+    }
+    return true;
+  }
+
   async create(input: CreateUser, session: ISession): Promise<User> {
     if (!input.password) {
       throw new Error('Password is required when creating a new user');
@@ -151,11 +172,11 @@ export class UserService {
             canCreateLang: true,
             canReadLangs: true,
             canCreateEducation: true,
-            canReadEducation: true,
-            canCreatePartnership: true,
-            canReadPartnership: true,
+            canReadEducationList: true,
             canCreateUnavailability: true,
-            canReadUnavailability: true,
+            canReadUnavailabilityList: true,
+            canCreatePartnership: true,
+            canReadPartnerships: true,
             canCreateProduct: true,
             canReadProducts: true,
             canDeleteOwnUser: true,
@@ -223,7 +244,7 @@ export class UserService {
             canEditPassword: true,
             canReadEmail: true,
             canEditEmail: true,
-            canReadEducation: true,
+            canReadEducationList: true,
             canEditEducation: true,
             canReadPhone: true,
             canEditPhone: true,
@@ -329,7 +350,6 @@ export class UserService {
   }
 
   async readOne(id: string, session: ISession): Promise<User> {
-    
     const result = await this.db
       .query()
       .raw(

@@ -10,7 +10,7 @@ import {
 
 import { Unavailability } from '../src/components/user/unavailability';
 import { User } from '../src/components/user';
-import { fragments } from './utility';
+import { fragments } from './utility/fragments';
 import { gql } from 'apollo-server-core';
 import { isValid } from 'shortid';
 import { times } from 'lodash';
@@ -61,7 +61,7 @@ describe('Unavailability e2e', () => {
     }
   });
 
-  // UPDATE LANGUAGE
+  // UPDATE UNAVAILABILITY
   it('update unavailability', async () => {
     const unavailability = await createUnavailability(app, { userId: user.id });
     const newDesc = faker.company.companyName();
@@ -92,7 +92,7 @@ describe('Unavailability e2e', () => {
     expect(updated.description.value).toBe(newDesc);
   });
 
-  // DELETE LANGUAGE
+  // DELETE UNAVAILABILITY
   it('delete unavailability', async () => {
     const unavailability = await createUnavailability(app, { userId: user.id });
 
@@ -115,19 +115,17 @@ describe('Unavailability e2e', () => {
     }
   });
 
-  // LIST Unavailabilities
+  // LIST UNAVAILABILITIES
   it('List view of unavailabilities', async () => {
     // create 10 unavailabilities
     const num = 10;
     await Promise.all(
-      times(num).map(() =>
-        createUnavailability(app, { userId: user.id }),
-      ),
+      times(num).map(() => createUnavailability(app, { userId: user.id })),
     );
 
     const { unavailabilities } = await app.graphql.query(gql`
       query {
-        unavailabilities (input: { filter: { userId : "${user.id}" }}){
+        unavailabilities (input: { filter: { userId : "${user.id}" }}) {
           items {
             ...unavailability
           }

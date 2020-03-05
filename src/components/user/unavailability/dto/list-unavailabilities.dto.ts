@@ -1,5 +1,6 @@
 import { Field, InputType, ObjectType } from 'type-graphql';
 import {
+  PaginatedList,
   Order,
   SecuredList,
   SortablePaginationInput,
@@ -33,6 +34,8 @@ export class UnavailabilityListInput extends SortablePaginationInput<keyof Unava
   readonly filter: UnavailabilityFilters = defaultFilters;
 }
 
+@ObjectType()
+export class UnavailabilityListOutput extends PaginatedList(Unavailability) {}
 @ObjectType({
   description: SecuredList.descriptionFor('unavailabilities'),
 })
