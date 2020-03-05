@@ -5,6 +5,7 @@ import { UnavailabilityModule } from './unavailability';
 import { UserResolver } from './user.resolver';
 import { UserService } from './user.service';
 
+
 @Module({
   imports: [
     OrganizationModule,
