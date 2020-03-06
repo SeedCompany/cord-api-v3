@@ -1,14 +1,17 @@
 import { gql } from 'apollo-server-core';
-import { CreateFileInput } from '../../src/components/file/dto';
+import { CreateFileInput, File } from '../../src/components/file/dto';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
+import { generate } from 'shortid';
 
 export async function createFile(
   app: TestApp,
   input: Partial<CreateFileInput> = {},
 ) {
-  const file: Partial<CreateFileInput> = {
-    ...input,
+  const file: CreateFileInput = {
+    uploadId: generate(),
+    parentId: 'test-parent',
+    name: 'test-file',
   };
 
   const result = await app.graphql.mutate(

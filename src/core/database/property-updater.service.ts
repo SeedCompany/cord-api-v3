@@ -12,6 +12,7 @@ import { DateTime } from 'luxon';
 import { ISession } from '../../components/auth';
 import { upperFirst } from 'lodash';
 import { ForbiddenError } from 'apollo-server-core';
+import { FileNodeType } from '../../components/file';
 
 @Injectable()
 export class PropertyUpdaterService {
@@ -42,7 +43,7 @@ export class PropertyUpdaterService {
         continue;
       }
       updated = await this.updateProperty({
-        object,
+        object: updated,
         session,
         key: prop,
         value: changes[prop],
@@ -234,7 +235,9 @@ export class PropertyUpdaterService {
     input,
   }: {
     session: ISession;
-    props: ReadonlyArray<keyof TObject>;
+    props: ReadonlyArray<
+      keyof TObject | { secure: boolean; name: keyof TObject }
+    >;
     nodevar: string;
     owningOrgId?: string;
     skipOwningOrgCheck?: boolean;
@@ -297,18 +300,20 @@ export class PropertyUpdaterService {
         }),
       ]);
     }
-    query.with('count(n) as total, requestingUser').match(
-      props.map(prop => {
-        return [
-          node('n', nodeName, {
-            active: true,
-            ...owningOrgFilter,
-          }),
-          relation('out', '', prop as string, { active: true }),
-          node(prop as string, 'Property', { active: true }),
-        ];
-      }),
-    );
+    query.with('count(n) as total, requestingUser');
+
+    for (const prop of props) {
+      const propName = typeof prop === 'object' ? prop.name : prop;
+
+      query.optionalMatch([
+        node('n', nodeName, {
+          active: true,
+          ...owningOrgFilter,
+        }),
+        relation('out', '', propName as string, { active: true }),
+        node(propName as string, 'Property', { active: true }),
+      ]);
+    }
 
     if (input.filter && Object.keys(input.filter).length) {
       const where: Record<string, any> = {};
@@ -342,7 +347,9 @@ export class PropertyUpdaterService {
 
         // return the rest of the requested properties
         ...props.map(prop => {
-          const propName: string = prop as string;
+          const propName = (typeof prop === 'object'
+            ? prop.name
+            : prop) as string;
           return { [propName + '.value']: propName };
         }),
       ])
@@ -364,11 +371,20 @@ export class PropertyUpdaterService {
       };
 
       for (const prop of props) {
-        item[prop] = {
-          value: row[prop as string],
-          canRead: Boolean(row[aclReadPropName]),
-          canEdit: Boolean(row[aclEditPropName]),
-        };
+        const propName = (typeof prop === 'object'
+          ? prop.name
+          : prop) as string;
+        const secure = typeof prop === 'object' ? prop.secure : true;
+
+        if (secure) {
+          item[propName] = {
+            value: row[propName],
+            canRead: Boolean(row[aclReadPropName]),
+            canEdit: Boolean(row[aclEditPropName]),
+          };
+        } else {
+          item[propName] = row[propName];
+        }
       }
 
       return item;
@@ -530,7 +546,6 @@ export class PropertyUpdaterService {
   }): Promise<void> {
     const aclEditPropName =
       aclEditProp || `canEdit${upperFirst(baseNodeLabel as string)}`;
-
     await this.createBaseNode<TObject>({
       session,
       baseNodeLabel,
@@ -538,22 +553,18 @@ export class PropertyUpdaterService {
       acls,
       aclEditProp: aclEditPropName,
     });
-
-    const wait: Array<Promise<void>> = [];
-    Object.keys(input).map(async key => {
-      if (key === 'id' || key === 'userId') {
-        return;
-      }
-      wait.push(
-        this.createProperty({
-          session,
-          key,
-          value: input[key as keyof TObject] as string,
-          id: input.id!,
+    await Promise.all(
+      Object.keys(input)
+        .filter(key => !(key === 'id' || key === 'userId'))
+        .map(async (key, item) => {
+          await this.createProperty({
+            session,
+            key,
+            value: input[key as keyof TObject] as string,
+            id: input.id!,
+          });
         }),
-      );
-    });
-    await Promise.all(wait);
+    );
   }
 
   async createBaseNode<TObject extends Resource>({
@@ -664,7 +675,7 @@ export class PropertyUpdaterService {
       `;
 
     try {
-      const result = await this.db
+      await this.db
         .query()
         .raw(query, {
           token: session.token,

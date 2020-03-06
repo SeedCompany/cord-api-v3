@@ -64,6 +64,11 @@ export class Country extends Resource implements Place {
   region: SecuredRegion;
 }
 
+@ObjectType({
+  description: SecuredProperty.descriptionFor('a country'),
+})
+export class SecuredCountry extends SecuredProperty(Country) {}
+
 export const Location = createUnionType({
   name: 'Location',
   types: () => [Country.classType, Region.classType, Zone.classType],

@@ -1,9 +1,11 @@
+import * as faker from 'faker';
+
+import { CreateUser, User } from '../../src/components/user';
+
+import { TestApp } from './create-app';
+import { fragments } from './fragments';
 import { gql } from 'apollo-server-core';
 import { isValid } from 'shortid';
-import { CreateUser, User } from '../../src/components/user';
-import { TestApp } from './create-app';
-import * as faker from 'faker';
-import { fragments } from './fragments';
 
 export async function createUser(
   app: TestApp,

@@ -1,5 +1,10 @@
 import { Field, ObjectType } from 'type-graphql';
-import { Resource, SecuredInt, SecuredString } from '../../../common';
+import {
+  Resource,
+  SecuredInt,
+  SecuredString,
+  Sensitivity,
+} from '../../../common';
 
 @ObjectType({
   implements: [Resource],
@@ -25,4 +30,7 @@ export class Language extends Resource {
 
   @Field()
   readonly rodNumber: SecuredInt;
+
+  @Field(() => Sensitivity)
+  readonly sensitivity: Sensitivity;
 }

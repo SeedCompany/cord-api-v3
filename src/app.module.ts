@@ -10,18 +10,17 @@ import { AuthModule } from './components/auth';
 import { BudgetResolver } from './components/budget/budget.resolver';
 import { BudgetService } from './components/budget/budget.service';
 import { FileModule } from './components/file';
-import { InternshipResolver } from './components/internship/internship.resolver';
-import { InternshipService } from './components/internship/internship.service';
 import { InternshipEngagementResolver } from './components/internship-engagement/internship-engagement.resolver';
 import { InternshipEngagementService } from './components/internship-engagement/internship-engagement.service';
 import { LanguageModule } from './components/language';
 import { LocationModule } from './components/location';
 import { ProductModule } from './components/product';
 import { OrganizationModule } from './components/organization';
+import { PartnershipResolver } from './components/partnership/partnership.resolver';
+import { PartnershipService } from './components/partnership/partnership.service';
+import { ProjectModule } from './components/project';
 import { ProjectEngagementResolver } from './components/project-engagement/project-engagement.resolver';
 import { ProjectEngagementService } from './components/project-engagement/project-engagement.service';
-import { ProjectResolver } from './components/project/project.resolver';
-import { ProjectService } from './components/project/project.service';
 import { UserModule } from './components/user';
 import { CoreModule, LoggerModule } from './core';
 import { PartnershipModule } from './components/partnership/partnership.module';
@@ -40,11 +39,13 @@ const context: ContextFunction<
     GraphQLModule.forRoot({
       autoSchemaFile: 'schema.gql',
       context,
+      playground: true, // enabled in all environments
     }),
     AuthModule,
     FileModule,
     LanguageModule,
     ProductModule,
+    ProjectModule,
     LocationModule,
     OrganizationModule,
     UserModule,
@@ -58,14 +59,12 @@ const context: ContextFunction<
     BudgetService,
     DateTimeScalar,
     DateScalar,
-    InternshipResolver,
-    InternshipService,
     InternshipEngagementResolver,
     InternshipEngagementService,
     ProjectEngagementResolver,
     ProjectEngagementService,
-    ProjectResolver,
-    ProjectService,
+    PartnershipResolver,
+    PartnershipService,
   ],
 })
 export class AppModule {}

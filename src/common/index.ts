@@ -1,4 +1,5 @@
 export * from './context.type';
+export * from './date-filter.input';
 export * from './editable.interface';
 export * from './id.arg';
 export { DateField, DateTimeField } from './luxon.graphql';
@@ -10,3 +11,4 @@ export * from './readable.interface';
 export * from './resource.dto';
 export * from './secured-list';
 export * from './secured-property';
+export * from './sensitivity.enum';
