@@ -1,6 +1,6 @@
 import { Type } from '@nestjs/common';
 import { DateTime } from 'luxon';
-import { Field, ObjectType, InterfaceType } from 'type-graphql';
+import { Field, InterfaceType, ObjectType } from 'type-graphql';
 import {
   DateTimeField,
   Resource,
@@ -13,7 +13,17 @@ import { ProjectStatus } from './status.enum';
 import { SecuredProjectStep } from './step.enum';
 import { ProjectType } from './type.enum';
 
-@InterfaceType()
+@InterfaceType({
+  resolveType: (val: Project) => {
+    if (val.type === ProjectType.Translation) {
+      return TranslationProject.classType;
+    }
+    if (val.type === ProjectType.Internship) {
+      return InternshipProject.classType;
+    }
+    throw new Error('Could not resolve project type');
+  },
+})
 export class Project extends Resource {
   @Field(() => ProjectType)
   readonly type: ProjectType;
