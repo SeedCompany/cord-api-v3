@@ -1,5 +1,10 @@
 import { Field, ObjectType } from 'type-graphql';
-import { Resource, SecuredBoolean, SecuredDate } from '../../../common';
+import {
+  Resource,
+  SecuredBoolean,
+  SecuredDate,
+  SecuredProperty,
+} from '../../../common';
 import { CeremonyType } from './type.enum';
 
 @ObjectType({
@@ -18,3 +23,8 @@ export class Ceremony extends Resource {
   @Field()
   readonly actualDate: SecuredDate;
 }
+
+@ObjectType({
+  description: SecuredProperty.descriptionFor('a ceremony'),
+})
+export class SecuredCeremony extends SecuredProperty(Ceremony) {}

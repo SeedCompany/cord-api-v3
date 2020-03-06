@@ -63,7 +63,7 @@ export function SecuredPropertyList<T>(
 }
 
 SecuredPropertyList.descriptionFor = (value: string) => stripIndent`
-  An object with ${value} \`value\` and additional authorization information.
+  An object whose \`value\` is a list of ${value} and has additional authorization information.
   The value is only given if \`canRead\` is \`true\` otherwise it is empty: \`[]\`.
   These \`can*\` authorization properties are specific to the user making the request.
 `;

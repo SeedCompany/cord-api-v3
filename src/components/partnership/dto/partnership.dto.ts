@@ -17,9 +17,7 @@ export abstract class SecuredPartnershipAgreementStatus extends SecuredProperty(
 ) {}
 
 @ObjectType({
-  description: SecuredPropertyList.descriptionFor(
-    'a list of partnership types'
-  ),
+  description: SecuredPropertyList.descriptionFor('partnership types'),
 })
 export abstract class SecuredPartnershipTypes extends SecuredPropertyList(
   PartnershipType

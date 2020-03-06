@@ -1,4 +1,5 @@
-import { registerEnumType } from 'type-graphql';
+import { ObjectType, registerEnumType } from 'type-graphql';
+import { SecuredPropertyList } from '../../../common';
 
 export enum ProductMethodology {
   // Written
@@ -24,3 +25,10 @@ export enum ProductMethodology {
 registerEnumType(ProductMethodology, {
   name: 'ProductMethodology',
 });
+
+@ObjectType({
+  description: SecuredPropertyList.descriptionFor('methodologies'),
+})
+export class SecuredMethodologies extends SecuredPropertyList(
+  ProductMethodology
+) {}
