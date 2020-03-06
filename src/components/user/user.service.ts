@@ -50,6 +50,11 @@ export class UserService {
       'CREATE CONSTRAINT ON (n:EmailAddress) ASSERT EXISTS(n.value)',
       'CREATE CONSTRAINT ON (n:EmailAddress) ASSERT n.value IS UNIQUE',
 
+      // EMAIL TOKEN
+      'CREATE CONSTRAINT ON (n:EmailToken) ASSERT EXISTS(n.value)',
+      'CREATE CONSTRAINT ON (n:EmailToken) ASSERT EXISTS(n.token)',
+      'CREATE CONSTRAINT ON (n:EmailToken) ASSERT EXISTS(n.expire)',
+
       // PASSWORD REL
       'CREATE CONSTRAINT ON ()-[r:password]-() ASSERT EXISTS(r.active)',
       'CREATE CONSTRAINT ON ()-[r:password]-() ASSERT EXISTS(r.createdAt)',

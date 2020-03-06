@@ -11,8 +11,10 @@ import {
   OnIndexParams,
 } from '../../core';
 import { ISession } from './session';
-import { LoginInput, LoginOutput } from './auth.dto';
+import { LoginInput, LoginOutput, ResetInput } from './auth.dto';
 import { UserEmailInput } from '../user';
+import { SesService } from '../../core'
+import { EnvironmentService } from '../../core/config/environment.service';
 
 interface JwtPayload {
   iat: number;
@@ -23,6 +25,8 @@ export class AuthService {
   constructor(
     private readonly db: Connection,
     private readonly config: ConfigService,
+    private readonly sesService: SesService,
+    private readonly env: EnvironmentService,
     @Logger('auth:service') private readonly logger: ILogger,
   ) {}
 
@@ -195,7 +199,46 @@ export class AuthService {
   }
 
   async forget(input: UserEmailInput): Promise<boolean> {
+    const token = this.encodeJWT();
+    const email = input.email;
+    const expire = new Date();
+
+    const params = {
+      Destination: { ToAddresses: ["leopard3551@gmail.com"] },
+      Message: {
+          Body: {
+              Html: {
+                  Charset: 'UTF-8',
+                  Data: `<html><body><p>This is your secret login code:</p>
+                          <a href="http://localhost:3333/auth/reset?token=${token}">Go to Login</a></body></html>`
+              },
+              Text: {
+                  Charset: 'UTF-8',
+                  Data: `http://localhost:3333/auth/reset?token=${token}`
+              }
+          },
+          Subject: {
+              Charset: 'UTF-8',
+              Data: 'Forget Password'
+          }
+      },
+      Source: this.env.string("SOURCE_EMAIL").optional("core-field")
+    };
+
+    this.sesService.sendEmail(params);
     
+    return true;
+  }
+
+  async reset(input: ResetInput): Promise<boolean> {
+    const checkDate = new Date();
+    // Check Token and Expire Date from DB
+    const expireData = new Date("05/03/2020");
+    const tokenExist = false;
+    if(((checkDate.getTime() - expireData.getTime()) / (1000 * 3600)) < 24 || !tokenExist){
+      return false;
+    }
+    //Reset Password and Remove element including token from DB
     return true;
   }
 
