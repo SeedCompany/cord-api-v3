@@ -1,5 +1,5 @@
 import { stripIndent } from 'common-tags';
-import { GraphQLScalarType, GraphQLString } from 'graphql';
+import { GraphQLBoolean, GraphQLScalarType, GraphQLString } from 'graphql';
 import { isObject } from 'lodash';
 import { DateTime } from 'luxon';
 import { ClassType, Field, Int, ObjectType } from 'type-graphql';
@@ -56,6 +56,13 @@ export abstract class SecuredString extends SecuredProperty<string>(
   description: SecuredProperty.descriptionFor('an integer'),
 })
 export abstract class SecuredInt extends SecuredProperty<number>(Int) {}
+
+@ObjectType({
+  description: SecuredProperty.descriptionFor('a boolean'),
+})
+export abstract class SecuredBoolean extends SecuredProperty<boolean>(
+  GraphQLBoolean
+) {}
 
 @ObjectType({ implements: [Readable, Editable] })
 export abstract class SecuredDateTime
