@@ -1,38 +1,28 @@
-import { ObjectType, Field, registerEnumType } from "type-graphql";
-import { Resource, SecuredProperty, DateTimeField, SecuredDateTime, SecuredList } from "../../../common";
-import { GraphQLString, GraphQLNonNull, GraphQLList } from "graphql";
-import { Organization } from "../../organization";
-
-export enum PartnershipAgreementStatus {
-  NonAttached = 'NonAttached',
-  AwaitingSignature = 'AwaitingSignature',
-  Signed = 'Signed',
-}
-
-export enum PartnershipType {
-  Managing = 'Managing',
-  Funding = 'Funding',
-  Impact = 'Impact',
-  Technical = 'Technical',
-  Resource = 'Resource',
-}
-
-registerEnumType(PartnershipAgreementStatus, { name: 'PartnershipAgreementStatus' });
-
-registerEnumType(PartnershipType, { name: 'PartnershipType' });
+import { ObjectType, Field, registerEnumType } from 'type-graphql';
+import {
+  Resource,
+  SecuredProperty,
+  DateTimeField,
+  SecuredDateTime,
+} from '../../../common';
+import { GraphQLString, GraphQLNonNull, GraphQLList } from 'graphql';
+import { Organization } from '../../organization';
+import { PartnershipAgreementStatus } from './partnership-agreement-status.enum';
+import { PartnershipType } from './partnership-type.enum';
 
 @ObjectType({
   description: SecuredProperty.descriptionFor('a partnership agreement status'),
 })
-export abstract class SecuredPartnershipAgreementStatus extends SecuredProperty<PartnershipAgreementStatus>(
-  GraphQLString,
-) {}
+export abstract class SecuredPartnershipAgreementStatus extends SecuredProperty<
+  PartnershipAgreementStatus
+>(GraphQLString) {}
 
 @ObjectType()
 export class Partnership extends Resource {
   @Field()
   readonly agreementStatus: SecuredPartnershipAgreementStatus;
 
+  @Field()
   readonly mouStatus: SecuredPartnershipAgreementStatus;
 
   @DateTimeField()

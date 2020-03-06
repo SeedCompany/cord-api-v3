@@ -1,7 +1,13 @@
 import { DatabaseService } from '../../core/database.service';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { generate } from 'shortid';
-import { CreatePartnership, Partnership, UpdatePartnership, PartnershipListInput, PartnershipListOutput } from './dto';
+import {
+  CreatePartnership,
+  Partnership,
+  UpdatePartnership,
+  PartnershipListInput,
+  PartnershipListOutput,
+} from './dto';
 import { ISession } from '../auth';
 import { PropertyUpdaterService, ILogger, Logger } from '../../core';
 
@@ -13,7 +19,10 @@ export class PartnershipService {
     @Logger('partnership:service') private readonly logger: ILogger,
   ) {}
 
-  async create(input: CreatePartnership, session: ISession): Promise<Partnership> {
+  async create(
+    { organizationId, ...input }: CreatePartnership,
+    session: ISession,
+  ): Promise<Partnership> {
     const id = generate();
     const acls = {
       canReadAgreementStatus: true,
@@ -26,6 +35,8 @@ export class PartnershipService {
       canEditMouEnd: true,
       canReadTypes: true,
       canEditTypes: true,
+      canReadOrganization: true,
+      canEditOrganization: true,
     };
 
     try {
@@ -37,27 +48,26 @@ export class PartnershipService {
         aclEditProp: 'canCreatePartnership',
       });
 
-    // connect the Organization to the Partnership
-    const query = `
-      MATCH (org:Organization {id: $organizationId, active: true}),
-        (partnership:Partnership {id: $id, active: true})
-      CREATE (org)-[:partnership {active: true, createdAt: datetime()}]->(partnership)
-      RETURN partnership.id as id
-    `;
+      // connect the Organization to the Partnership
+      const query = `
+        MATCH (org:Organization {id: $organizationId, active: true}),
+          (partnership:Partnership {id: $id, active: true})
+        CREATE (partnership)-[:org {active: true, createdAt: datetime()}]->(org)
+        RETURN partnership.id as id
+      `;
 
       await this.db
         .query()
         .raw(query, {
-          organizationId: input.organizationId,
-          id
+          organizationId,
+          id,
         })
         .first();
 
       return await this.readOne(id, session);
-
     } catch (e) {
       this.logger.warning('Failed to create partnership', {
-        exception: e
+        exception: e,
       });
 
       throw new Error('Could not create partnership');
@@ -115,9 +125,10 @@ export class PartnershipService {
   async readOne(id: string, session: ISession): Promise<Partnership> {
     const result = await this.db
       .query()
-      .raw(`
+      .raw(
+        `
         MATCH
-        (token:token {
+        (token:Token {
           active: true,
           value: $token
         })
@@ -129,25 +140,23 @@ export class PartnershipService {
         }),
         (partnership:Partnership {active: true, id: $id})
 
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl1:ACL {canReadAgreementStatus: true})-[:toNode]->(prod)-[:agreementStatus {active: true}]->(agreementStatus:Property {active: true})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadAgreementStatus:ACL {canReadAgreementStatus: true})-[:toNode]->(partnership)-[:agreementStatus {active: true}]->(agreementStatus:Property {active: true})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditAgreementStatus:ACL {canEditAgreementStatus: true})-[:toNode]->(partnership)
 
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl2:ACL {canEditAgreementStatus: true})-[:toNode]->(partnership)
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadMouStatus:ACL {canReadMouStatus: true})-[:toNode]->(partnership)-[:mouStatus {active: true}]->(mouStatus:Property {active: true})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditMouStatus:ACL {canEditMouStatus: true})-[:toNode]->(partnership)
 
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl3:ACL {canReadMouStatus: true})-[:toNode]->(prod)-[:mouStatus {active: true}]->(mouStatus:Property {active: true})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadMouStart:ACL {canReadMouStart: true})-[:toNode]->(partnership)-[:mouStart {active: true}]->(mouStart:Property {active: true})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditMouStart:ACL {canEditMouStart: true})-[:toNode]->(partnership)
 
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl4:ACL {canEditMouStatus: true})-[:toNode]->(partnership)
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadMouEnd:ACL {canReadMouEnd: true})-[:toNode]->(partnership)-[:mouEnd {active: true}]->(mouEnd:Property {active: true})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditMouEnd:ACL {canEditMouEnd: true})-[:toNode]->(partnership)
 
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl5:ACL {canReadMouStart: true})-[:toNode]->(prod)-[:mouStart {active: true}]->(mouStart:Property {active: true})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadTypes:ACL {canReadTypes: true})-[:toNode]->(partnership)-[:types {active: true}]->(types:Property {active: true})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditTypes:ACL {canEditTypes: true})-[:toNode]->(partnership)
 
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl6:ACL {canEditMouStart: true})-[:toNode]->(partnership)
-
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl7:ACL {canReadMouEnd: true})-[:toNode]->(prod)-[:mouEnd {active: true}]->(mouEnd:Property {active: true})
-
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl8:ACL {canEditMouEnd: true})-[:toNode]->(partnership)
-
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl9:ACL {canReadTypes: true})-[:toNode]->(prod)-[:types {active: true}]->(types:Property {active: true})
-
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl10:ACL {canEditTypes: true})-[:toNode]->(partnership)
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadOrganization:ACL {canReadOrganization: true})-[:toNode]->(partnership)-[:org {active: true}]->(org:Property {active: true})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditOrganization:ACL {canEditOrganization: true})-[:toNode]->(partnership)
 
         RETURN
           partnership.id as id,
@@ -157,27 +166,28 @@ export class PartnershipService {
           mouStart.value as mouStart,
           mouEnd.value as mouEnd,
           types.value as types,
-          acl1.canReadAgreementStatus as canReadAgreementStatus,
-          acl2.canEditAgreementStatus as canEditAgreementStatus,
-          acl3.canReadMouStatus as canReadMouStatus,
-          acl4.canEditMouStatus as canEditMouStatus,
-          acl5.canReadMouStart as canReadMouStart,
-          acl6.canEditMouStart as canEditMouStart,
-          acl7.canReadMouEnd as canReadMouEnd,
-          acl8.canEditMouEnd as canEditMouEnd,
-          acl9.canReadTypes as canReadTypes,
-          acl10.canEditTypes as canEditTypes
-      `, {
-        token: session.token,
-        requestingUserId: session.userId,
-        owningOrgId: session.owningOrgId,
-        id,
-      }
-    )
-    .first();
+          canReadAgreementStatus.canReadAgreementStatus as canReadAgreementStatus,
+          canEditAgreementStatus.canEditAgreementStatus as canEditAgreementStatus,
+          canReadMouStatus.canReadMouStatus as canReadMouStatus,
+          canEditMouStatus.canEditMouStatus as canEditMouStatus,
+          canReadMouStart.canReadMouStart as canReadMouStart,
+          canEditMouStart.canEditMouStart as canEditMouStart,
+          canReadMouEnd.canReadMouEnd as canReadMouEnd,
+          canEditMouEnd.canEditMouEnd as canEditMouEnd,
+          canReadTypes.canReadTypes as canReadTypes,
+          canEditTypes.canEditTypes as canEditTypes
+      `,
+        {
+          token: session.token,
+          requestingUserId: session.userId,
+          owningOrgId: session.owningOrgId,
+          id,
+        },
+      )
+      .first();
 
     if (!result) {
-      throw new NotFoundException('Could not find paratnership');
+      throw new NotFoundException('Could not find partnership');
     }
 
     return {
@@ -203,7 +213,7 @@ export class PartnershipService {
         canRead: !!result.canReadMouEnd,
         canEdit: !!result.canEditMouEnd,
       },
-      types: result.types,
+      types: result.types?.length ? result.types.split(',') : [],
       // FIXME
       // types: {
       //   value: result.types,
@@ -211,8 +221,8 @@ export class PartnershipService {
       //   canEdit: !!result.canEditTypes,
       // },
       // FIXME
-      organization: result.organization
-    }
+      organization: result.org,
+    };
   }
 
   // async readOne(
@@ -265,7 +275,7 @@ export class PartnershipService {
       props: ['agreementStatus', 'mouStatus', 'mouStart', 'mouEnd', 'types'],
       changes: input,
       nodevar: 'partnership',
-    })
+    });
   }
 
   // async update(
@@ -339,11 +349,11 @@ export class PartnershipService {
         session,
         object,
         aclEditProp: 'canDeleteOwnUser',
-      })
+      });
     } catch (e) {
       this.logger.warning('Failed to delete partnership', {
         exception: e,
-      })
+      });
 
       throw e;
     }
@@ -373,33 +383,30 @@ export class PartnershipService {
   //   return response;
   // }
 
-  async list({ page, count, sort, order, filter}: PartnershipListInput, session: ISession): Promise<PartnershipListOutput> {
+  async list(
+    { page, count, sort, order, filter }: PartnershipListInput,
+    session: ISession,
+  ): Promise<PartnershipListOutput> {
     const result = await this.propertyUpdater.list<Partnership>({
       session,
       nodevar: 'partnership',
-      aclReadProp: 'canReadPartnership',
+      aclReadProp: 'canReadPartnerships',
       aclEditProp: 'canCreatePartnership',
-      props: [
-        'agreementStatus',
-        'mouStatus',
-        'mouStart',
-        'mouEnd',
-        'types'
-      ],
+      props: ['agreementStatus', 'mouStatus', 'mouStart', 'mouEnd', 'types'],
       input: {
         page,
         count,
         sort,
         order,
         filter,
-      }
+      },
     });
 
     return {
       items: result.items,
       hasMore: result.hasMore,
       total: result.total,
-    }
+    };
   }
 
   // async queryPartnerships(
@@ -453,5 +460,3 @@ export class PartnershipService {
   //   return response;
   // }
 }
-
-

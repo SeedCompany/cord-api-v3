@@ -7,7 +7,8 @@ import {
 
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { PartnershipAgreementStatus, Partnership } from './partnership.dto';
+import { Partnership } from './partnership.dto';
+import { PartnershipAgreementStatus } from './partnership-agreement-status.enum';
 
 @InputType()
 export abstract class PartnershipFilters {
@@ -21,7 +22,9 @@ export abstract class PartnershipFilters {
 const defaultFilters = {};
 
 @InputType()
-export class PartnershipListInput extends SortablePaginationInput<keyof Partnership>({
+export class PartnershipListInput extends SortablePaginationInput<
+  keyof Partnership
+>({
   defaultSort: 'createdAt',
 }) {
   static defaultVal = new PartnershipListInput();

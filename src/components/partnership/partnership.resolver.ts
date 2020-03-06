@@ -1,14 +1,18 @@
-
-import { Args, Query, Mutation } from '@nestjs/graphql';
+import { Args, Query, Mutation, Resolver } from '@nestjs/graphql';
 import { PartnershipService } from './partnership.service';
 import {
-  CreatePartnershipOutput, CreatePartnershipInput, Partnership, UpdatePartnershipOutput, UpdatePartnershipInput, PartnershipListInput, PartnershipListOutput
+  CreatePartnershipOutput,
+  CreatePartnershipInput,
+  Partnership,
+  UpdatePartnershipOutput,
+  UpdatePartnershipInput,
+  PartnershipListInput,
+  PartnershipListOutput,
 } from './dto';
-import { Injectable } from '@nestjs/common';
 import { Session, ISession } from '../auth';
 import { IdArg } from '../../common';
 
-@Injectable()
+@Resolver()
 export class PartnershipResolver {
   constructor(private readonly service: PartnershipService) {}
 

@@ -1,28 +1,30 @@
-import { InputType, Field, ID, ObjectType } from "type-graphql";
-import { DateTime } from "luxon";
-import { DateTimeField } from "../../../common";
-import { Type } from "class-transformer";
-import { ValidateNested } from "class-validator";
-import { Partnership, PartnershipAgreementStatus, PartnershipType } from "./partnership.dto";
+import { InputType, Field, ID, ObjectType } from 'type-graphql';
+import { DateTime } from 'luxon';
+import { DateTimeField } from '../../../common';
+import { Type } from 'class-transformer';
+import { ValidateNested } from 'class-validator';
+import { Partnership } from './partnership.dto';
+import { PartnershipAgreementStatus } from './partnership-agreement-status.enum';
+import { PartnershipType } from './partnership-type.enum';
 
 @InputType()
 export class CreatePartnership {
-  @Field()
+  @Field(() => PartnershipAgreementStatus)
   readonly agreementStatus: PartnershipAgreementStatus;
 
-  @Field()
+  @Field(() => PartnershipAgreementStatus)
   readonly mouStatus: PartnershipAgreementStatus;
-  
+
   @DateTimeField({ nullable: true })
   readonly mouStart: DateTime | null;
-  
+
   @DateTimeField({ nullable: true })
   readonly mouEnd: DateTime | null;
 
   @Field(() => ID)
   readonly organizationId: string;
 
-  @Field(type => [PartnershipType])
+  @Field(() => [PartnershipType])
   readonly types: PartnershipType[];
 }
 
