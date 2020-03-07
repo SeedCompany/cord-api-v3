@@ -126,7 +126,6 @@ export class FileService {
     session: ISession,
   ): Promise<File> {
     try {
-      // TODO find a better way to check if object exists in s3 and move
       const acls = {
         canReadFile: true,
         canEditFile: true,
