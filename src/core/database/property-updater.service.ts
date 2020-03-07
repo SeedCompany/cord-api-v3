@@ -378,7 +378,7 @@ export class PropertyUpdaterService {
         const list = typeof prop === 'object' ? prop.list : true;
 
         if (list) {
-          item[propName] = row[propName].split(',');
+          item[propName] = row[propName] ? row[propName].split(',') : [];
         } else {
           if (secure) {
             item[propName] = {

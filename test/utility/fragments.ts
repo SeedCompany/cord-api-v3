@@ -196,4 +196,24 @@ export const fragments = {
       modifiedAt
     }
   `,
+  partnership: gql`
+    fragment partnership on Partnership {
+      id
+      agreementStatus {
+        value
+      }
+      mouStatus {
+        value
+      }
+      mouStart
+      mouEnd
+      types
+      organization {
+        id
+        name {
+          value
+        }
+      }
+    }
+  `,
 };

@@ -1,7 +1,4 @@
 import * as faker from 'faker';
-import * as request from 'supertest';
-import { INestApplication } from '@nestjs/common';
-import { isValid, generate } from 'shortid';
 import {
   createTestApp,
   TestApp,

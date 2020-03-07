@@ -19,109 +19,6 @@ export class PartnershipService {
     @Logger('partnership:service') private readonly logger: ILogger,
   ) {}
 
-  async create(
-    { organizationId, ...input }: CreatePartnership,
-    session: ISession,
-  ): Promise<Partnership> {
-    const id = generate();
-    const acls = {
-      canReadAgreementStatus: true,
-      canEditAgreementStatus: true,
-      canReadMouStatus: true,
-      canEditMouStatus: true,
-      canReadMouStart: true,
-      canEditMouStart: true,
-      canReadMouEnd: true,
-      canEditMouEnd: true,
-      canReadTypes: true,
-      canEditTypes: true,
-      canReadOrganization: true,
-      canEditOrganization: true,
-    };
-
-    try {
-      await this.propertyUpdater.createNode({
-        session,
-        input: { id, ...input },
-        acls,
-        baseNodeLabel: 'Partnership',
-        aclEditProp: 'canCreatePartnership',
-      });
-
-      // connect the Organization to the Partnership
-      const query = `
-        MATCH (organization:Organization {id: $organizationId, active: true}),
-          (partnership:Partnership {id: $id, active: true})
-        CREATE (partnership)-[:organization {active: true, createdAt: datetime()}]->(organization)
-        RETURN partnership.id as id
-      `;
-
-      await this.db
-        .query()
-        .raw(query, {
-          organizationId,
-          id,
-        })
-        .first();
-
-      return await this.readOne(id, session);
-    } catch (e) {
-      this.logger.warning('Failed to create partnership', {
-        exception: e,
-      });
-
-      throw new Error('Could not create partnership');
-    }
-  }
-
-  // async create(
-  //   input: CreatePartnershipInput,
-  // ): Promise<CreatePartnershipOutputDto> {
-  //   const response = new CreatePartnershipOutputDto();
-  //   const session = this.db.driver.session();
-  //   const id = generate();
-  //   await session
-  //     .run(
-  //       `MERGE (partnership:Partnership {active: true, owningOrg: "seedcompany", id: $id}) ON CREATE SET partnership.id = $id, partnership.timestamp = datetime() RETURN
-  //       partnership.id as id,
-  //       partnership.agreementStatus as agreementStatus,
-  //       partnership.mouStatus as mouStatus,
-  //       partnership.mouStart as mouStart,
-  //       partnership.mouEnd as mouEnd,
-  //       partnership.organization as organization,
-  //       partnership.types as types
-  //      `,
-  //       {
-  //         id,
-  //         agreementStatus: input.agreementStatus,
-  //         mouStatus: input.mouStatus,
-  //         mouStart: input.mouStart,
-  //         mouEnd: input.mouEnd,
-  //         organization: input.organization,
-  //         types: input.types,
-  //       },
-  //     )
-  //     .then(result => {
-  //       response.partnership.id = result.records[0].get('id');
-  //       response.partnership.agreementStatus = result.records[0].get(
-  //         'agreementStatus',
-  //       );
-  //       response.partnership.mouStatus = result.records[0].get('mouStatus');
-  //       response.partnership.mouStart = result.records[0].get('mouStart');
-  //       response.partnership.mouEnd = result.records[0].get('mouEnd');
-  //       response.partnership.organization = result.records[0].get(
-  //         'organization',
-  //       );
-  //       response.partnership.types = result.records[0].get('types');
-  //     })
-  //     .catch(error => {
-  //       console.log(error);
-  //     })
-  //     .then(() => session.close());
-
-  //   return response;
-  // }
-
   async readOne(id: string, session: ISession): Promise<Partnership> {
     const result = await this.db
       .query()
@@ -216,7 +113,7 @@ export class PartnershipService {
         canRead: !!result.canReadMouEnd,
         canEdit: !!result.canEditMouEnd,
       },
-      types: result.types?.length ? result.types.split(',') : [],
+      types: result.types ? result.types.split(',') : [],
       organization:
         result.organization && result.organization.properties
           ? {
@@ -231,164 +128,6 @@ export class PartnershipService {
           : null,
     };
   }
-
-  // async readOne(
-  //   input: ReadPartnershipInput,
-  // ): Promise<ReadPartnershipOutputDto> {
-  //   const response = new ReadPartnershipOutputDto();
-  //   const session = this.db.driver.session();
-  //   await session
-  //     .run(
-  //       `MATCH (partnership:Partnership {active: true, owningOrg: "seedcompany"})
-  //       WHERE partnership.id = "${input.id}"
-  //       RETURN partnership.id as id,
-  //       partnership.agreementStatus as agreementStatus,
-  //       partnership.mouStatus as mouStatus,
-  //       partnership.mouStart as mouStart,
-  //       partnership.mouEnd as mouEnd,
-  //       partnership.organization as organization,
-  //       partnership.types as types`,
-  //       {
-  //         id: input.id,
-  //       },
-  //     )
-  //     .then(result => {
-  //       response.partnership.id = result.records[0].get('id');
-  //       response.partnership.agreementStatus = result.records[0].get(
-  //         'agreementStatus',
-  //       );
-  //       response.partnership.mouStatus = result.records[0].get('mouStatus');
-  //       response.partnership.mouStart = result.records[0].get('mouStart');
-  //       response.partnership.mouEnd = result.records[0].get('mouEnd');
-  //       response.partnership.organization = result.records[0].get(
-  //         'organization',
-  //       );
-  //       response.partnership.types = result.records[0].get('types');
-  //     })
-  //     .catch(error => {
-  //       console.log(error);
-  //     })
-  //     .then(() => session.close());
-
-  //   return response;
-  // }
-
-  async update(input: UpdatePartnership, session: ISession) {
-    const object = await this.readOne(input.id, session);
-
-    return this.propertyUpdater.updateProperties({
-      session,
-      object,
-      props: ['agreementStatus', 'mouStatus', 'mouStart', 'mouEnd', 'types'],
-      changes: input,
-      nodevar: 'partnership',
-    });
-  }
-
-  // async update(
-  //   input: UpdatePartnershipInput,
-  // ): Promise<UpdatePartnershipOutputDto> {
-  //   const response = new UpdatePartnershipOutputDto();
-  //   const session = this.db.driver.session();
-  //   await session
-  //     .run(
-  //       `MATCH (partnership:Partnership {active: true, owningOrg: "seedcompany", id: $id})
-  //       SET partnership.agreementStatus = $agreementStatus
-  //       // partnership.mouStatus = $mouStatus,
-  //       // partnership.mouStart = $mouStart,
-  //       // partnership.mouEnd = $mouEnd,
-  //       // partnership.organization = $organization,
-  //       // partnership.types = $types
-  //         RETURN partnership.id as id,
-  //         partnership.agreementStatus as agreementStatus,
-  //         partnership.mouStatus as mouStatus,
-  //         partnership.mouStart as mouStart,
-  //         partnership.mouEnd as mouEnd,
-  //         partnership.organization as organization,
-  //         partnership.types as types`,
-  //       {
-  //         id: input.id,
-  //         agreementStatus: input.agreementStatus,
-  //         mouStatus: input.mouStatus,
-  //         mouStart: input.mouStart,
-  //         mouEnd: input.mouEnd,
-  //         organization: input.organization,
-  //         types: input.types,
-  //       },
-  //     )
-  //     .then(result => {
-  //       if (result.records.length > 0) {
-  //         response.partnership = {
-  //           id: result.records[0].get('id'),
-  //           agreementStatus: result.records[0].get(
-  //             'agreementStatus',
-  //           ),
-  //           mouStatus: result.records[0].get('mouStatus'),
-  //           mouStart: result.records[0].get('mouStart'),
-  //           mouEnd: result.records[0].get('mouEnd'),
-  //           organization: result.records[0].get(
-  //             'organization',
-  //           ),
-  //           types: result.records[0].get('types'),
-  //         }
-  //       } else {
-  //         throw new Error('Could not update partnership.');
-  //       }
-  //     })
-  //     .catch(error => {
-  //       console.log(error);
-  //       throw error;
-  //     })
-  //     .then(() => session.close());
-
-  //   return response;
-  // }
-
-  async delete(id: string, session: ISession): Promise<void> {
-    const object = await this.readOne(id, session);
-
-    if (!object) {
-      throw new NotFoundException('Could not find partnership');
-    }
-
-    try {
-      await this.propertyUpdater.deleteNode({
-        session,
-        object,
-        aclEditProp: 'canDeleteOwnUser',
-      });
-    } catch (e) {
-      this.logger.warning('Failed to delete partnership', {
-        exception: e,
-      });
-
-      throw e;
-    }
-  }
-
-  // async delete(
-  //   input: DeletePartnershipInput,
-  // ): Promise<DeletePartnershipOutputDto> {
-  //   const response = new DeletePartnershipOutputDto();
-  //   const session = this.db.driver.session();
-  //   await session
-  //     .run(
-  //       `MATCH (partnership:Partnership {active: true, owningOrg: "seedcompany", id: $id})
-  //        SET partnership.active = false RETURN partnership.id as id`,
-  //       {
-  //         id: input.id,
-  //       },
-  //     )
-  //     .then(result => {
-  //       response.partnership.id = result.records[0].get('id');
-  //     })
-  //     .catch(error => {
-  //       console.log(error);
-  //     })
-  //     .then(() => session.close());
-
-  //   return response;
-  // }
 
   async list(
     { page, count, sort, order, filter }: PartnershipListInput,
@@ -423,54 +162,98 @@ export class PartnershipService {
     };
   }
 
-  // async queryPartnerships(
-  //   query: ListPartnershipsInput,
-  // ): Promise<ListPartnershipsOutputDto> {
-  //   const response = new ListPartnershipsOutputDto();
-  //   const session = this.db.driver.session();
-  //   const skipIt = query.page * query.count;
+  async create(
+    { organizationId, ...input }: CreatePartnership,
+    session: ISession,
+  ): Promise<Partnership> {
+    const id = generate();
+    const acls = {
+      canReadAgreementStatus: true,
+      canEditAgreementStatus: true,
+      canReadMouStatus: true,
+      canEditMouStatus: true,
+      canReadMouStart: true,
+      canEditMouStart: true,
+      canReadMouEnd: true,
+      canEditMouEnd: true,
+      canReadTypes: true,
+      canEditTypes: true,
+      canReadOrganization: true,
+      canEditOrganization: true,
+    };
 
-  //   //TO DO : List all partnerships by projectId
-  //   // const result = await session.run(
-  //   //   `
-  //   //     MATCH
-  //   //       (project:Project {id: "$projectId"})-[partnerships:Partnership {active:true}]->
-  //   //       (partner:Partnership {active:true}),
-  //   //       (partner)-[:agreementStatus {active: true}]->(agreementStatus: Property)
-  //   //       (partner)-[:mouStatus {active: true}]->(mouStatus: Property),
-  //   //       (partner)-[:mouStart {active: true}]->(mouStart: Property),
-  //   //       (partner)-[:mouEnd {active: true}]->(mouEnd: Property),
-  //   //     RETURN
-  //   //       partner.id as id,
-  //   //       agreementStatus.value as agreementStatus,
-  //   //       mouStatus.value as mouStatus,
-  //   //       mouStart.value as mouStart,
-  //   //       mouEnd.value as mouEnd,
-  //   //     `,
-  //   //     },
-  //   // );
+    try {
+      await this.propertyUpdater.createNode({
+        session,
+        input: { id, ...input },
+        acls,
+        baseNodeLabel: 'Partnership',
+        aclEditProp: 'canCreatePartnership',
+      });
 
-  //   const result = await session.run(
-  //     `MATCH (partnership:Partnership {active: true}) WHERE partnership.agreementStatus CONTAINS $filter RETURN partnership.agreementStatus as agreementStatus, partnership.organization as organization ORDER BY ${query.sort} ${query.order} SKIP $skip LIMIT $count`,
-  //     {
-  //       filter: query.filter,
-  //       skip: skipIt,
-  //       count: query.count,
-  //       sort: query.sort,
-  //       order: query.order,
-  //     },
-  //   );
+      // connect the Organization to the Partnership
+      const query = `
+        MATCH (organization:Organization {id: $organizationId, active: true}),
+          (partnership:Partnership {id: $id, active: true})
+        CREATE (partnership)-[:organization {active: true, createdAt: datetime()}]->(organization)
+        RETURN partnership.id as id
+      `;
 
-  //   session.close();
+      await this.db
+        .query()
+        .raw(query, {
+          organizationId,
+          id,
+        })
+        .first();
 
-  //   response.partnerships = result.records.map(record => {
-  //     const partnership = new Partnership();
-  //     //partnership.id = record.get('id');
-  //     partnership.agreementStatus = record.get('agreementStatus');
-  //     partnership.organization = record.get('organization');
-  //     return partnership;
-  //   });
+      return await this.readOne(id, session);
+    } catch (e) {
+      this.logger.warning('Failed to create partnership', {
+        exception: e,
+      });
 
-  //   return response;
-  // }
+      throw new Error('Could not create partnership');
+    }
+  }
+
+  async update(input: UpdatePartnership, session: ISession) {
+    const object = await this.readOne(input.id, session);
+
+    await this.propertyUpdater.updateProperties({
+      session,
+      object,
+      props: ['agreementStatus', 'mouStatus', 'mouStart', 'mouEnd', 'types'],
+      changes: {
+        ...input,
+        // TODO: propertyService.update and propertyService.createNode appear to handle array types differently...
+        types: (input.types ? input.types.join(',') : undefined) as any,
+      },
+      nodevar: 'partnership',
+    });
+
+    return this.readOne(input.id, session);
+  }
+
+  async delete(id: string, session: ISession): Promise<void> {
+    const object = await this.readOne(id, session);
+
+    if (!object) {
+      throw new NotFoundException('Could not find partnership');
+    }
+
+    try {
+      await this.propertyUpdater.deleteNode({
+        session,
+        object,
+        aclEditProp: 'canDeleteOwnUser',
+      });
+    } catch (e) {
+      this.logger.warning('Failed to delete partnership', {
+        exception: e,
+      });
+
+      throw e;
+    }
+  }
 }

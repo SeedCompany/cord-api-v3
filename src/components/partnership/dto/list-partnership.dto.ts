@@ -12,7 +12,7 @@ import { PartnershipAgreementStatus } from './partnership-agreement-status.enum'
 
 @InputType()
 export abstract class PartnershipFilters {
-  @Field({
+  @Field(() => PartnershipAgreementStatus, {
     description: 'Only partnerships matching this agreement status',
     nullable: true,
   })
