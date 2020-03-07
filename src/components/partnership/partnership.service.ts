@@ -50,9 +50,9 @@ export class PartnershipService {
 
       // connect the Organization to the Partnership
       const query = `
-        MATCH (org:Organization {id: $organizationId, active: true}),
+        MATCH (organization:Organization {id: $organizationId, active: true}),
           (partnership:Partnership {id: $id, active: true})
-        CREATE (partnership)-[:org {active: true, createdAt: datetime()}]->(org)
+        CREATE (partnership)-[:organization {active: true, createdAt: datetime()}]->(organization)
         RETURN partnership.id as id
       `;
 
@@ -155,7 +155,7 @@ export class PartnershipService {
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadTypes:ACL {canReadTypes: true})-[:toNode]->(partnership)-[:types {active: true}]->(types:Property {active: true})
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditTypes:ACL {canEditTypes: true})-[:toNode]->(partnership)
 
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadOrganization:ACL {canReadOrganization: true})-[:toNode]->(partnership)-[:org {active: true}]->(org:Property {active: true})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadOrganization:ACL {canReadOrganization: true})-[:toNode]->(partnership)-[:organization {active: true}]->(organization)
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditOrganization:ACL {canEditOrganization: true})-[:toNode]->(partnership)
 
         RETURN
@@ -166,6 +166,7 @@ export class PartnershipService {
           mouStart.value as mouStart,
           mouEnd.value as mouEnd,
           types.value as types,
+          organization as organization,
           canReadAgreementStatus.canReadAgreementStatus as canReadAgreementStatus,
           canEditAgreementStatus.canEditAgreementStatus as canEditAgreementStatus,
           canReadMouStatus.canReadMouStatus as canReadMouStatus,
@@ -175,7 +176,9 @@ export class PartnershipService {
           canReadMouEnd.canReadMouEnd as canReadMouEnd,
           canEditMouEnd.canEditMouEnd as canEditMouEnd,
           canReadTypes.canReadTypes as canReadTypes,
-          canEditTypes.canEditTypes as canEditTypes
+          canEditTypes.canEditTypes as canEditTypes,
+          canReadOrganization.canReadOrganization as canReadOrganization,
+          canEditOrganization.canEditOrganization as canEditOrganization
       `,
         {
           token: session.token,
@@ -214,14 +217,18 @@ export class PartnershipService {
         canEdit: !!result.canEditMouEnd,
       },
       types: result.types?.length ? result.types.split(',') : [],
-      // FIXME
-      // types: {
-      //   value: result.types,
-      //   canRead: !!result.canReadTypes,
-      //   canEdit: !!result.canEditTypes,
-      // },
-      // FIXME
-      organization: result.org,
+      organization:
+        result.organization && result.organization.properties
+          ? {
+              id: result.organization.properties.id,
+              createdAt: result.organization.properties.createdAt,
+              name: {
+                value: result.organization.properties.name,
+                canRead: true,
+                canEdit: true,
+              },
+            }
+          : null,
     };
   }
 
@@ -392,7 +399,14 @@ export class PartnershipService {
       nodevar: 'partnership',
       aclReadProp: 'canReadPartnerships',
       aclEditProp: 'canCreatePartnership',
-      props: ['agreementStatus', 'mouStatus', 'mouStart', 'mouEnd', 'types'],
+      props: [
+        { name: 'agreementStatus', secure: true },
+        { name: 'mouStatus', secure: true },
+        { name: 'mouStart', secure: true },
+        { name: 'mouEnd', secure: true },
+        { name: 'organization', secure: false },
+        { name: 'types', secure: false, list: true },
+      ],
       input: {
         page,
         count,

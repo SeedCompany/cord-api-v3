@@ -12,10 +12,10 @@ export abstract class UpdatePartnership {
   @Field(() => ID)
   readonly id: string;
 
-  @Field({ nullable: true })
+  @Field(() => PartnershipAgreementStatus, { nullable: true })
   readonly agreementStatus?: PartnershipAgreementStatus;
 
-  @Field({ nullable: true })
+  @Field(() => PartnershipAgreementStatus, { nullable: true })
   readonly mouStatus?: PartnershipAgreementStatus;
 
   @DateTimeField({ nullable: true })

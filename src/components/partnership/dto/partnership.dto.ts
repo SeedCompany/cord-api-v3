@@ -32,7 +32,7 @@ export class Partnership extends Resource {
   readonly mouEnd: SecuredDateTime;
 
   @Field(type => Organization, { nullable: true })
-  readonly organization: Organization;
+  readonly organization: Organization | null;
 
   @Field(() => [PartnershipType])
   readonly types: PartnershipType[];
