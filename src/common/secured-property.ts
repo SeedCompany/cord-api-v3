@@ -46,17 +46,13 @@ SecuredProperty.descriptionFor = (value: string) => stripIndent`
 `;
 
 export function SecuredPropertyList<T>(
-  ValueClassList:
-    | Array<ClassType<T>>
-    | Array<AbstractClassType<T>>
-    | GraphQLScalarType[]
-    | object[]
+  ValueClass: ClassType<T> | AbstractClassType<T> | GraphQLScalarType | object
 ) {
   @ObjectType({ isAbstract: true, implements: [Readable, Editable] })
   abstract class SecuredPropertyListClass
-    implements Readable, Editable, Secured<T> {
-    @Field(() => ValueClassList, { nullable: true })
-    readonly value?: T;
+    implements Readable, Editable, Secured<T[]> {
+    @Field(() => [ValueClass], { nullable: true })
+    readonly value?: T[];
     @Field()
     readonly canRead: boolean;
     @Field()
