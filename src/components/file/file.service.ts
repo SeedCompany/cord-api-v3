@@ -133,6 +133,7 @@ export class FileService {
     session: ISession
   ): Promise<File> {
     try {
+      await this.move({id: uploadId, parentId}, session);
       const acls = {
         canReadFile: true,
         canEditFile: true,
@@ -170,10 +171,17 @@ export class FileService {
   }
 
   async move(
-    _input: MoveFileInput,
-    _session: ISession
+    input: MoveFileInput,
+    session: ISession
   ): Promise<FileOrDirectory> {
-    throw new NotImplementedError();
+    // TODO findout options for name usage here
+    const {id, parentId} = input;
+    const file = await this.bucket.getObject(id);
+    if (!file) {
+      throw new BadRequestException('object not found');
+    }
+    await this.bucket.moveObject(`test/${id}`, `${parentId}/${id}`);
+    return this.getFile(id, session);
   }
 
   async delete(_id: string, _session: ISession): Promise<void> {
