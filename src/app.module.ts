@@ -16,8 +16,6 @@ import { LanguageModule } from './components/language';
 import { LocationModule } from './components/location';
 import { OrganizationModule } from './components/organization';
 import { PartnershipModule } from './components/partnership/partnership.module';
-import { PartnershipResolver } from './components/partnership/partnership.resolver';
-import { PartnershipService } from './components/partnership/partnership.service';
 import { ProductModule } from './components/product';
 import { ProjectModule } from './components/project';
 import { ProjectEngagementResolver } from './components/project-engagement/project-engagement.resolver';
@@ -63,8 +61,6 @@ const context: ContextFunction<
     InternshipEngagementService,
     ProjectEngagementResolver,
     ProjectEngagementService,
-    PartnershipResolver,
-    PartnershipService,
   ],
 })
 export class AppModule {}
