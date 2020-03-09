@@ -1,69 +1,60 @@
+import { Connection } from 'cypher-query-builder';
 import * as request from 'supertest';
-
-import { File, FileNodeType } from '../src/components/file/dto';
+import { FileNodeType } from '../src/components/file/dto';
+import { User } from '../src/components/user';
 import {
   TestApp,
-  createSession,
   createTestApp,
-  createUser,
+  createSession,
+  fragments,
 } from './utility';
-import { generate } from 'shortid';
-import { User } from '../src/components/user';
+import { gql } from 'apollo-server-core';
+import { generate, isValid } from 'shortid';
 
 describe('File e2e', () => {
   let app: TestApp;
-  let session: string;
-  let user: User;
 
   beforeAll(async () => {
     app = await createTestApp();
-    session = await createSession(app);
-    user = await createUser(app);
   });
 
-  afterAll(async () => {
-    await app.close();
-  });
+  it('read file node by id', async () => {
+    const token = await createSession(app);
 
-  it('Create FileNode', async () => {
-    const id = generate();
-    let testFile: File;
-    await request(app.getHttpServer())
-      .post('/graphql')
-      .send({
-        operationName: null,
-        query: `
-        mutation {
-          createFile( input: { uploadId:"${id}", parentId: "test-parent", name: "test-file"})
-          {
-            id
-            type
-          }
-        }
+    const dbService = await app.get(Connection);
+    const testFile = await dbService
+      .query()
+      .raw(`
+        CREATE (file:FileNode { id: $id, type: $type, name: $name})
+        RETURN file
         `,
-      })
-      .expect(({ body }) => {
-        testFile = body.data.createFile;
-      });
-
+        {
+          id: generate(),
+          type: FileNodeType.File,
+          name: 'test-file',
+        })
+      .first();
+    // since file is created, it can be read.
     await request(app.getHttpServer())
       .post('/graphql')
       .send({
         operationName: null,
         query: `
         query {
-          file (id:"${id}")
+          file (id:"${testFile!.file.properties.id}")
           {
-            id
             type
           }
         }
         `,
       })
       .expect(({ body }) => {
-        expect(body.data.file.id).toBe(testFile.id);
-        expect(body.data.file.type).toBe(testFile.type);
+        expect(body.data.file.type).toBe('File');
       })
       .expect(200);
+  });
+
+  afterAll(async () => {
+    await app.close();
   });
 });

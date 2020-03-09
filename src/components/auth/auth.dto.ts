@@ -34,3 +34,12 @@ export class LoginOutput {
 
   // TODO Global Permissions
 }
+
+@InputType()
+export abstract class ResetInput {
+  @Field()
+  token: string;
+
+  @Field()
+  password: string
+}

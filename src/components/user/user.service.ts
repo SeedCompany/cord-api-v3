@@ -6,7 +6,7 @@ import { Connection } from 'cypher-query-builder';
 import { generate } from 'shortid';
 import * as argon2 from 'argon2';
 import { ILogger, Logger, OnIndex, PropertyUpdaterService } from '../../core';
-import { ISession, AuthService } from '../auth';
+import { ISession } from '../auth';
 import {
   OrganizationListInput,
   SecuredOrganizationList,
@@ -49,6 +49,11 @@ export class UserService {
       // EMAIL NODE
       'CREATE CONSTRAINT ON (n:EmailAddress) ASSERT EXISTS(n.value)',
       'CREATE CONSTRAINT ON (n:EmailAddress) ASSERT n.value IS UNIQUE',
+
+      // EMAIL TOKEN NODE
+      'CREATE CONSTRAINT ON (n:EmailToken) ASSERT EXISTS(n.value)',
+      'CREATE CONSTRAINT ON (n:EmailToken) ASSERT EXISTS(n.token)',
+      'CREATE CONSTRAINT ON (n:EmailToken) ASSERT EXISTS(n.createdOn)',
 
       // PASSWORD REL
       'CREATE CONSTRAINT ON ()-[r:password]-() ASSERT EXISTS(r.active)',
@@ -148,32 +153,10 @@ export class UserService {
     return true;
   }
 
-  async logout(token: string): Promise<void> {
-    await this.db
-      .query()
-      .raw(
-        `
-      MATCH
-        (token:Token)-[r]-()
-      DELETE
-        r
-      RETURN
-        token.value as token
-      `,
-        {
-          token,
-        },
-      )
-      .run();
-  }
-
   async create(input: CreateUser, session: ISession): Promise<User> {
     if (!input.password) {
       throw new Error('Password is required when creating a new user');
     }
-
-    // ensure token doesn't have any users attached to it
-    // await this.logout(session.token);
 
     const pash = await argon2.hash(input.password);
     /** CREATE USER
@@ -191,7 +174,6 @@ export class UserService {
             active: true,
             createdAt: datetime(),
             createdByUserId: "system",
-            canCreateFileNode: true,
             canCreateOrg: true,
             canReadOrgs: true,
             canReadUsers: true,
@@ -277,10 +259,7 @@ export class UserService {
             canReadTimezone: true,
             canEditTimezone: true,
             canReadBio: true,
-            canEditBio: true,
-            canReadFile: true,
-            canEditFile: true,
-            canCreateFile: true
+            canEditBio: true
           })
           -[:toNode]->(user)
         RETURN
