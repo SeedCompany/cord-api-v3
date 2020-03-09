@@ -14,10 +14,10 @@ import { InternshipEngagementResolver } from './components/internship-engagement
 import { InternshipEngagementService } from './components/internship-engagement/internship-engagement.service';
 import { LanguageModule } from './components/language';
 import { LocationModule } from './components/location';
-import { ProductModule } from './components/product';
 import { OrganizationModule } from './components/organization';
 import { PartnershipResolver } from './components/partnership/partnership.resolver';
 import { PartnershipService } from './components/partnership/partnership.service';
+import { ProductModule } from './components/product';
 import { ProjectModule } from './components/project';
 import { ProjectEngagementResolver } from './components/project-engagement/project-engagement.resolver';
 import { ProjectEngagementService } from './components/project-engagement/project-engagement.service';
@@ -27,7 +27,7 @@ import { CoreModule, LoggerModule } from './core';
 const context: ContextFunction<
   { req: Request; res: Response },
   GqlContextType
-> = ({ req, res }) => ({
+> = ({ req }) => ({
   request: req,
 });
 

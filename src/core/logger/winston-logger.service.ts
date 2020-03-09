@@ -17,10 +17,10 @@ export class LoggerOptions {
 @Injectable()
 export class WinstonLoggerService extends AbstractLogger
   implements OnModuleDestroy {
-  private logger: WinstonLogger;
+  private readonly logger: WinstonLogger;
   private closing = false;
 
-  constructor(private matcher: LevelMatcher, options: LoggerOptions) {
+  constructor(private readonly matcher: LevelMatcher, options: LoggerOptions) {
     super();
     this.logger = createLogger({
       format: options.format,
@@ -51,8 +51,8 @@ export class WinstonLoggerService extends AbstractLogger
   async onModuleDestroy() {
     const finish = Promise.all(
       this.logger.transports.map(
-        t => new Promise(resolve => t.on('finish', resolve)),
-      ),
+        t => new Promise(resolve => t.on('finish', resolve))
+      )
     );
     this.closing = true;
     this.logger.end();

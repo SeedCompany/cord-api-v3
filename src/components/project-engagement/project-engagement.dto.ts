@@ -7,7 +7,7 @@ import { ProjectEngagement } from './engagement';
 
 @InputType()
 export class CreateProjectEngagementInput {
-  @Field(type => String)
+  @Field(() => String)
   languageName: string;
 }
 
@@ -19,10 +19,10 @@ export class CreateProjectEngagementInputDto {
 
 @ObjectType()
 export class CreateProjectEngagementOutput {
-  @Field(type => String)
+  @Field(() => String)
   id: string;
 
-  @Field(type => String)
+  @Field(() => String)
   languageName: string;
 
   @DateField({ nullable: true })
@@ -48,7 +48,7 @@ export class CreateProjectEngagementOutputDto {
 
 @InputType()
 export class ReadProjectEngagementInput {
-  @Field(type => String)
+  @Field(() => String)
   id: string;
 }
 
@@ -60,10 +60,10 @@ export class ReadProjectEngagementInputDto {
 
 @ObjectType()
 export class ReadProjectEngagementOutput {
-  @Field(type => String)
+  @Field(() => String)
   id: string;
 
-  @Field(type => String)
+  @Field(() => String)
   languageName: string;
 }
 
@@ -80,7 +80,7 @@ export class ReadProjectEngagementOutputDto {
 
 @InputType()
 export class UpdateProjectEngagementInput {
-  @Field(type => String)
+  @Field(() => String)
   id: string;
 
   @DateField({ nullable: true })
@@ -98,7 +98,7 @@ export class UpdateProjectEngagementInputDto {
 
 @ObjectType()
 export class UpdateProjectEngagementOutput {
-  @Field(type => String)
+  @Field(() => String)
   id: string;
 
   @DateField({ nullable: true })
@@ -106,7 +106,6 @@ export class UpdateProjectEngagementOutput {
 
   @DateField({ nullable: true })
   currentEndDate: DateTime | null;
-
 }
 
 @ObjectType()
@@ -122,7 +121,7 @@ export class UpdateProjectEngagementOutputDto {
 
 @InputType()
 export class DeleteProjectEngagementInput {
-  @Field(type => String)
+  @Field(() => String)
   id: string;
 }
 
@@ -134,7 +133,7 @@ export class DeleteProjectEngagementInputDto {
 
 @ObjectType()
 export class DeleteProjectEngagementOutput {
-  @Field(type => String)
+  @Field(() => String)
   id: string;
 }
 
@@ -150,15 +149,15 @@ export class DeleteProjectEngagementOutputDto {
 
 @InputType()
 export class ListProjectEngagementsInput {
-  @Field(type => String, { nullable: true, defaultValue: '' })
+  @Field(() => String, { nullable: true, defaultValue: '' })
   filter: string;
-  @Field(type => Number, { nullable: true, defaultValue: 0 })
+  @Field(() => Number, { nullable: true, defaultValue: 0 })
   page: number;
-  @Field(type => Number, { nullable: true, defaultValue: 25 })
+  @Field(() => Number, { nullable: true, defaultValue: 25 })
   count: number;
-  @Field(type => String, { nullable: true, defaultValue: 'DESC' })
+  @Field(() => String, { nullable: true, defaultValue: 'DESC' })
   order: string;
-  @Field(type => String, { nullable: true, defaultValue: 'name' })
+  @Field(() => String, { nullable: true, defaultValue: 'name' })
   sort: string;
 }
 
@@ -170,13 +169,13 @@ export class ListProjectEngagementsInputDto {
 
 @ObjectType()
 export class ListProjectEngagementsOutput {
-  @Field(type => ProjectEngagement, { nullable: true })
+  @Field(() => ProjectEngagement, { nullable: true })
   projectEngagement: ProjectEngagement;
 }
 
 @ObjectType()
 export class ListProjectEngagementsOutputDto {
-  @Field(type => [ProjectEngagement], { nullable: true }) // nullable in case of error
+  @Field(() => [ProjectEngagement], { nullable: true }) // nullable in case of error
   projectEngagements: ProjectEngagement[];
   constructor() {
     this.projectEngagements = [];

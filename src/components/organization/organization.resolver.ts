@@ -1,4 +1,4 @@
-import { Resolver, Args, Query, Mutation } from '@nestjs/graphql';
+import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { IdArg } from '../../common';
 import { ISession, Session } from '../auth/session'; // avoid cyclic dep (auth -> user -> org)
 import {
@@ -21,7 +21,7 @@ export class OrganizationResolver {
   })
   async createOrganization(
     @Session() session: ISession,
-    @Args('input') { organization: input }: CreateOrganizationInput,
+    @Args('input') { organization: input }: CreateOrganizationInput
   ): Promise<CreateOrganizationOutput> {
     const organization = await this.orgs.create(input, session);
     return { organization };
@@ -32,7 +32,7 @@ export class OrganizationResolver {
   })
   async organization(
     @Session() session: ISession,
-    @IdArg() id: string,
+    @IdArg() id: string
   ): Promise<Organization> {
     return this.orgs.readOne(id, session);
   }
@@ -47,7 +47,7 @@ export class OrganizationResolver {
       type: () => OrganizationListInput,
       defaultValue: OrganizationListInput.defaultVal,
     })
-    input: OrganizationListInput,
+    input: OrganizationListInput
   ): Promise<OrganizationListOutput> {
     return this.orgs.list(input, session);
   }
@@ -57,7 +57,7 @@ export class OrganizationResolver {
   })
   async updateOrganization(
     @Session() session: ISession,
-    @Args('input') { organization: input }: UpdateOrganizationInput,
+    @Args('input') { organization: input }: UpdateOrganizationInput
   ): Promise<UpdateOrganizationOutput> {
     const organization = await this.orgs.update(input, session);
     return { organization };
@@ -68,18 +68,16 @@ export class OrganizationResolver {
   })
   async deleteOrganization(
     @Session() session: ISession,
-    @IdArg() id: string,
+    @IdArg() id: string
   ): Promise<boolean> {
     await this.orgs.delete(id, session);
     return true;
   }
 
-  @Query(returns => Boolean, {
+  @Query(() => Boolean, {
     description: 'Check all organization nodes for consistency',
   })
-  async checkOrganizations(
-    @Session() session: ISession,
-  ): Promise<boolean> {
+  async checkOrganizations(@Session() session: ISession): Promise<boolean> {
     return this.orgs.checkAllOrgs(session);
   }
 }

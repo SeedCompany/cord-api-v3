@@ -1,18 +1,14 @@
-import { Resolver, Mutation, Args } from '@nestjs/graphql';
+import { Args, Mutation, Resolver } from '@nestjs/graphql';
 import { UserService } from '../user';
+import { CreateSessionOutput, LoginInput, LoginOutput } from './auth.dto';
 import { AuthService } from './auth.service';
-import {
-  CreateSessionOutput,
-  LoginInput,
-  LoginOutput,
-} from './auth.dto';
 import { ISession, Session } from './session';
 
 @Resolver()
 export class AuthResolver {
   constructor(
     private readonly authService: AuthService,
-    private readonly userService: UserService,
+    private readonly userService: UserService
   ) {}
 
   @Mutation(() => CreateSessionOutput, {
@@ -28,10 +24,12 @@ export class AuthResolver {
   })
   async login(
     @Session() session: ISession,
-    @Args('input') input: LoginInput,
+    @Args('input') input: LoginInput
   ): Promise<LoginOutput> {
     const userId = await this.authService.login(input, session);
-    const loggedInSession = await this.authService.decodeAndVerifyToken(session.token);
+    const loggedInSession = await this.authService.decodeAndVerifyToken(
+      session.token
+    );
     if (!userId) {
       return { success: false };
     }

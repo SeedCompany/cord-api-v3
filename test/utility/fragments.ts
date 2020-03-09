@@ -1,4 +1,3 @@
-import { Unavailability } from '../../src/components/user';
 import { gql } from 'apollo-server-core';
 
 export const fragments = {

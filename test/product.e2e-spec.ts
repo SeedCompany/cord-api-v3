@@ -1,8 +1,12 @@
-import { INestApplication } from '@nestjs/common';
 import { gql } from 'apollo-server-core';
-import * as request from 'supertest';
 import { Product } from '../src/components/product/product';
-import { createTestApp, TestApp, fragments, createSession, createUser } from './utility';
+import {
+  createSession,
+  createTestApp,
+  createUser,
+  fragments,
+  TestApp,
+} from './utility';
 import { createProduct } from './utility/create-product';
 
 describe('Product e2e', () => {
@@ -50,12 +54,7 @@ describe('Product e2e', () => {
     const result = await app.graphql.query(
       gql`
         mutation updateProduct($id: ID!, $type: ProductType!) {
-          updateProduct(input: {
-            product: {
-              id: $id,
-              type: $type
-            }
-          }) {
+          updateProduct(input: { product: { id: $id, type: $type } }) {
             product {
               ...product
             }
@@ -84,7 +83,7 @@ describe('Product e2e', () => {
       `,
       {
         id: product.id,
-      },
+      }
     );
 
     const actual: boolean | undefined = result.deleteProduct;
@@ -101,7 +100,7 @@ describe('Product e2e', () => {
         `,
         {
           id: product.id,
-        },
+        }
       );
     } catch (e) {
       expect(e.response.statusCode).toBe(404);

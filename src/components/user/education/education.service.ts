@@ -1,15 +1,10 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Connection } from 'cypher-query-builder';
 import { generate } from 'shortid';
 import { ILogger, Logger, PropertyUpdaterService } from '../../../core';
 import { ISession } from '../../auth';
 import {
   CreateEducation,
-  SecuredEducationList,
   Education,
   EducationListInput,
   EducationListOutput,
@@ -21,23 +16,19 @@ export class EducationService {
   constructor(
     private readonly db: Connection,
     @Logger('EducationService:service') private readonly logger: ILogger,
-    private readonly propertyUpdater: PropertyUpdaterService,
+    private readonly propertyUpdater: PropertyUpdaterService
   ) {}
 
   async list(
     { page, count, sort, order, filter }: EducationListInput,
-    session: ISession,
+    session: ISession
   ): Promise<EducationListOutput> {
     const result = await this.propertyUpdater.list<Education>({
       session,
       nodevar: 'education',
       aclReadProp: 'canReadEducationList',
       aclEditProp: 'canCreateEducation',
-      props: [
-        'degree',
-        'major',
-        'institution',
-      ],
+      props: ['degree', 'major', 'institution'],
       input: {
         page,
         count,
@@ -89,7 +80,7 @@ export class EducationService {
       RETURN  education.id as id
       `;
 
-    const result = await this.db
+    await this.db
       .query()
       .raw(query, {
         userId: session.userId,
@@ -141,7 +132,7 @@ export class EducationService {
           requestingUserId: session.userId,
           owningOrgId: session.owningOrgId,
           id,
-        },
+        }
       )
       .first();
     if (!result) {
@@ -190,7 +181,7 @@ export class EducationService {
   async delete(id: string, session: ISession): Promise<void> {
     const ed = await this.readOne(id, session);
     try {
-      this.propertyUpdater.deleteNode({
+      await this.propertyUpdater.deleteNode({
         session,
         object: ed,
         aclEditProp: 'canDeleteOwnUser',

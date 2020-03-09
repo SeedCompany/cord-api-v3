@@ -1,17 +1,21 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { DatabaseService, PropertyUpdaterService, Logger, ILogger } from '../../core';
 import { generate } from 'shortid';
+import {
+  DatabaseService,
+  ILogger,
+  Logger,
+  PropertyUpdaterService,
+} from '../../core';
 import { ISession } from '../auth';
-import { Product, CreateProduct, UpdateProduct } from './dto';
+import { CreateProduct, Product, UpdateProduct } from './dto';
 
 @Injectable()
 export class ProductService {
   constructor(
     private readonly db: DatabaseService,
     private readonly propertyUpdater: PropertyUpdaterService,
-    @Logger('product:service') private readonly logger: ILogger,
+    @Logger('product:service') private readonly logger: ILogger
   ) {}
-
 
   async create(input: CreateProduct, session: ISession): Promise<Product> {
     const id = generate();
@@ -40,7 +44,7 @@ export class ProductService {
       });
     } catch (e) {
       this.logger.warning('Failed to create product', {
-        exception: e
+        exception: e,
       });
 
       throw new Error('Could not create product');
@@ -99,7 +103,7 @@ export class ProductService {
           requestingUserId: session.userId,
           owningOrgId: session.owningOrgId,
           id,
-        },
+        }
       )
       .first();
     if (!result) {
@@ -124,7 +128,14 @@ export class ProductService {
     return this.propertyUpdater.updateProperties({
       session,
       object,
-      props: ['type', 'books', 'mediums', 'purposes', 'approach', 'methodology'],
+      props: [
+        'type',
+        'books',
+        'mediums',
+        'purposes',
+        'approach',
+        'methodology',
+      ],
       changes: input,
       nodevar: 'product',
     });
@@ -145,7 +156,7 @@ export class ProductService {
       });
     } catch (e) {
       this.logger.warning('Failed to delete product', {
-        exception: e
+        exception: e,
       });
       throw e;
     }

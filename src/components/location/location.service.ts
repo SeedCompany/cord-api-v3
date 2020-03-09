@@ -4,22 +4,21 @@ import * as faker from 'faker';
 import { times } from 'lodash';
 import { DateTime } from 'luxon';
 import { ILogger, Logger, PropertyUpdaterService } from '../../core';
-import { generate } from 'shortid';
 import { ISession } from '../auth';
 import { User } from '../user/dto';
 import {
-  Region,
   Country,
-  CreateRegion,
   CreateCountry,
+  CreateRegion,
   CreateZone,
   Location,
   LocationListInput,
   LocationListOutput,
-  Zone,
-  UpdateRegion,
+  Region,
   UpdateCountry,
+  UpdateRegion,
   UpdateZone,
+  Zone,
 } from './dto';
 
 @Injectable()
@@ -27,18 +26,18 @@ export class LocationService {
   constructor(
     private readonly db: Connection,
     @Logger('LocationService:service') private readonly logger: ILogger,
-    private readonly propertyUpdater: PropertyUpdaterService,
+    private readonly propertyUpdater: PropertyUpdaterService
   ) {}
 
-  async readOne(id: string, session: ISession): Promise<Location> {
+  async readOne(_id: string, _session: ISession): Promise<Location> {
     return this.randomLocation();
   }
 
   async list(
-    { page, count, sort, order, filter }: LocationListInput,
-    session: ISession,
+    { page, count, sort, order }: LocationListInput,
+    _session: ISession
   ): Promise<LocationListOutput> {
-    const items = times(faker.random.number(), this.randomLocation);
+    const items = times(faker.random.number(), () => this.randomLocation());
 
     return {
       items,
@@ -46,7 +45,7 @@ export class LocationService {
       hasMore: false,
     };
 
-    const result = await this.db
+    await this.db
       .query()
       .raw(
         `
@@ -59,7 +58,7 @@ export class LocationService {
         {
           skip: (page - 1) * count,
           count,
-        },
+        }
       )
       .run();
   }
@@ -111,27 +110,39 @@ export class LocationService {
     return faker.random.arrayElement([area, region, country]);
   }
 
-  async createZone(input: CreateZone, session: ISession): Promise<Zone> {
+  async createZone(_input: CreateZone, _session: ISession): Promise<Zone> {
     throw new Error('Not implemented');
   }
 
-  async createRegion(input: CreateRegion, session: ISession): Promise<Region> {
+  async createRegion(
+    _input: CreateRegion,
+    _session: ISession
+  ): Promise<Region> {
     throw new Error('Not implemented');
   }
 
-  async createCountry(input: CreateCountry, session: ISession): Promise<Country> {
+  async createCountry(
+    _input: CreateCountry,
+    _session: ISession
+  ): Promise<Country> {
     throw new Error('Not implemented');
   }
 
-  async updateZone(input: UpdateZone, session: ISession): Promise<Zone> {
+  async updateZone(_input: UpdateZone, _session: ISession): Promise<Zone> {
     throw new Error('Not implemented');
   }
 
-  async updateRegion(input: UpdateRegion, session: ISession): Promise<Region> {
+  async updateRegion(
+    _input: UpdateRegion,
+    _session: ISession
+  ): Promise<Region> {
     throw new Error('Not implemented');
   }
 
-  async updateCountry(input: UpdateCountry, session: ISession): Promise<Country> {
+  async updateCountry(
+    _input: UpdateCountry,
+    _session: ISession
+  ): Promise<Country> {
     throw new Error('Not implemented');
   }
 
@@ -143,13 +154,13 @@ export class LocationService {
     }
 
     try {
-      this.propertyUpdater.deleteNode({
+      await this.propertyUpdater.deleteNode({
         session,
         object,
         aclEditProp: 'canDeleteOwnUser',
       });
     } catch (e) {
-      console.log(e);
+      this.logger.error('Could not delete location', { exception: e });
       throw e;
     }
   }

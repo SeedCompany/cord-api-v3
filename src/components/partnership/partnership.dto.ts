@@ -1,24 +1,18 @@
-import {
-  Field,
-  ID,
-  InputType,
-  ObjectType,
-} from 'type-graphql';
-
 import { DateTime } from 'luxon';
+import { Field, InputType, ObjectType } from 'type-graphql';
 import { DateField } from '../../common';
 import { Organization } from '../organization';
 import { PartnershipAgreementStatus } from './agreement-status';
-import { PartnershipType } from './partnership-type';
 import { Partnership } from './partnership';
+import { PartnershipType } from './partnership-type';
 
 // CREATE
 @InputType()
 export class CreatePartnershipInput {
-  @Field(type => String, { nullable: true })
+  @Field(() => String, { nullable: true })
   agreementStatus: PartnershipAgreementStatus;
 
-  @Field(type => String, { nullable: true })
+  @Field(() => String, { nullable: true })
   mouStatus: PartnershipAgreementStatus;
 
   @DateField({ nullable: true })
@@ -29,25 +23,25 @@ export class CreatePartnershipInput {
 
   organization: Organization;
 
-  @Field(type => [PartnershipType], { nullable: true })
+  @Field(() => [PartnershipType], { nullable: true })
   types: PartnershipType;
 }
 
 @InputType()
 export class CreatePartnershipInputDto {
-  @Field(type => CreatePartnershipInput)
+  @Field(() => CreatePartnershipInput)
   partnership: CreatePartnershipInput;
 }
 
 @ObjectType()
 export class CreatePartnershipOutput {
-  @Field(type => String)
+  @Field(() => String)
   id: string;
 
-  @Field(type => String, { nullable: true })
+  @Field(() => String, { nullable: true })
   agreementStatus: PartnershipAgreementStatus;
 
-  @Field(type => String, { nullable: true })
+  @Field(() => String, { nullable: true })
   mouStatus: PartnershipAgreementStatus;
 
   @DateField({ nullable: true })
@@ -56,10 +50,10 @@ export class CreatePartnershipOutput {
   @DateField({ nullable: true })
   mouEnd: DateTime | null;
 
-  @Field(type => Organization, { nullable: true })
+  @Field(() => Organization, { nullable: true })
   organization: Organization;
 
-  @Field(type => [PartnershipType], { nullable: true })
+  @Field(() => [PartnershipType], { nullable: true })
   types: PartnershipType;
 }
 
@@ -77,7 +71,7 @@ export class CreatePartnershipOutputDto {
 
 @InputType()
 export class ReadPartnershipInput {
-  @Field(type => String)
+  @Field(() => String)
   id: string;
 }
 
@@ -89,13 +83,13 @@ export class ReadPartnershipInputDto {
 
 @ObjectType()
 export class ReadPartnershipOutput {
-  @Field(type => String)
+  @Field(() => String)
   id: string;
 
-  @Field(type => String, { nullable: true })
+  @Field(() => String, { nullable: true })
   agreementStatus: PartnershipAgreementStatus;
 
-  @Field(type => String, { nullable: true })
+  @Field(() => String, { nullable: true })
   mouStatus: PartnershipAgreementStatus;
 
   @DateField({ nullable: true })
@@ -104,10 +98,10 @@ export class ReadPartnershipOutput {
   @DateField({ nullable: true })
   mouEnd: DateTime | null;
 
-  @Field(type => Organization, { nullable: true })
+  @Field(() => Organization, { nullable: true })
   organization: Organization;
 
-  @Field(type => [PartnershipType], { nullable: true })
+  @Field(() => [PartnershipType], { nullable: true })
   types: PartnershipType;
 }
 
@@ -125,13 +119,13 @@ export class ReadPartnershipOutputDto {
 
 @InputType()
 export class UpdatePartnershipInput {
-  @Field(type => String)
+  @Field(() => String)
   id: string;
 
-  @Field(type => String, { nullable: true })
+  @Field(() => String, { nullable: true })
   agreementStatus: PartnershipAgreementStatus;
 
-  @Field(type => String, { nullable: true })
+  @Field(() => String, { nullable: true })
   mouStatus: PartnershipAgreementStatus;
 
   @DateField({ nullable: true })
@@ -142,7 +136,7 @@ export class UpdatePartnershipInput {
 
   organization: Organization;
 
-  @Field(type => [PartnershipType], { nullable: true })
+  @Field(() => [PartnershipType], { nullable: true })
   types: PartnershipType;
 }
 
@@ -154,13 +148,13 @@ export class UpdatePartnershipInputDto {
 
 @ObjectType()
 export class UpdatePartnershipOutput {
-  @Field(type => String)
+  @Field(() => String)
   id: string;
 
-  @Field(type => String, { nullable: true })
+  @Field(() => String, { nullable: true })
   agreementStatus: PartnershipAgreementStatus;
 
-  @Field(type => String, { nullable: true })
+  @Field(() => String, { nullable: true })
   mouStatus: PartnershipAgreementStatus;
 
   @DateField({ nullable: true })
@@ -169,10 +163,10 @@ export class UpdatePartnershipOutput {
   @DateField({ nullable: true })
   mouEnd: DateTime | null;
 
-  @Field(type => Organization, { nullable: true })
+  @Field(() => Organization, { nullable: true })
   organization: Organization;
 
-  @Field(type => [PartnershipType], { nullable: true })
+  @Field(() => [PartnershipType], { nullable: true })
   types: PartnershipType;
 }
 
@@ -190,7 +184,7 @@ export class UpdatePartnershipOutputDto {
 
 @InputType()
 export class DeletePartnershipInput {
-  @Field(type => String)
+  @Field(() => String)
   id: string;
 }
 
@@ -202,7 +196,7 @@ export class DeletePartnershipInputDto {
 
 @ObjectType()
 export class DeletePartnershipOutput {
-  @Field(type => String)
+  @Field(() => String)
   id: string;
 }
 
@@ -220,15 +214,15 @@ export class DeletePartnershipOutputDto {
 
 @InputType()
 export class ListPartnershipsInput {
-  @Field(type => String, { nullable: true, defaultValue: '' })
+  @Field(() => String, { nullable: true, defaultValue: '' })
   filter: string;
-  @Field(type => Number, { nullable: true, defaultValue: 0 })
+  @Field(() => Number, { nullable: true, defaultValue: 0 })
   page: number;
-  @Field(type => Number, { nullable: true, defaultValue: 25 })
+  @Field(() => Number, { nullable: true, defaultValue: 25 })
   count: number;
-  @Field(type => String, { nullable: true, defaultValue: 'DESC' })
+  @Field(() => String, { nullable: true, defaultValue: 'DESC' })
   order: string;
-  @Field(type => String, { nullable: true, defaultValue: 'agreementStatus' })
+  @Field(() => String, { nullable: true, defaultValue: 'agreementStatus' })
   sort: string;
 }
 
@@ -240,13 +234,13 @@ export class ListPartnershipsInputDto {
 
 @ObjectType()
 export class ListPartnershipsOutput {
-  @Field(type => Partnership, { nullable: true })
+  @Field(() => Partnership, { nullable: true })
   partnership: Partnership;
 }
 
 @ObjectType()
 export class ListPartnershipsOutputDto {
-  @Field(type => [Partnership], { nullable: true }) // nullable in case of error
+  @Field(() => [Partnership], { nullable: true }) // nullable in case of error
   partnerships: Partnership[];
   constructor() {
     this.partnerships = [];

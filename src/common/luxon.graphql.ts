@@ -15,7 +15,7 @@ export const DateTimeField = (options?: AdvancedOptions) =>
     Field(() => DateTime, options),
     Transform(value => DateTime.fromISO(value), {
       toClassOnly: true,
-    }) as PropertyDecorator,
+    }) as PropertyDecorator
   );
 
 export const DateField = (options?: AdvancedOptions) =>
@@ -23,7 +23,7 @@ export const DateField = (options?: AdvancedOptions) =>
     Field(() => Date, options),
     Transform(value => DateTime.fromISO(value).startOf('day'), {
       toClassOnly: true,
-    }) as PropertyDecorator,
+    }) as PropertyDecorator
   );
 
 // A marker to connect DateField decorator to DateScalar

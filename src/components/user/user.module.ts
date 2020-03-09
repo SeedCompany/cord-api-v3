@@ -6,19 +6,8 @@ import { UserResolver } from './user.resolver';
 import { UserService } from './user.service';
 
 @Module({
-  imports: [
-    OrganizationModule,
-    EducationModule,
-    UnavailabilityModule,
-  ],
-  providers: [
-    UserResolver,
-    UserService,
-  ],
-  exports: [
-    UserService,
-    EducationModule,
-    UnavailabilityModule,
-  ],
+  imports: [OrganizationModule, EducationModule, UnavailabilityModule],
+  providers: [UserResolver, UserService],
+  exports: [UserService, EducationModule, UnavailabilityModule],
 })
 export class UserModule {}

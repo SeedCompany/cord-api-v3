@@ -1,3 +1,7 @@
+import { Injectable } from '@nestjs/common';
+import { generate } from 'shortid';
+import { DatabaseService } from '../../core/database.service';
+import { Partnership } from './partnership';
 import {
   CreatePartnershipInput,
   CreatePartnershipOutputDto,
@@ -11,17 +15,12 @@ import {
   UpdatePartnershipOutputDto,
 } from './partnership.dto';
 
-import { DatabaseService } from '../../core/database.service';
-import { Injectable } from '@nestjs/common';
-import { generate } from 'shortid';
-import { Partnership } from './partnership';
-
 @Injectable()
 export class PartnershipService {
   constructor(private readonly db: DatabaseService) {}
 
   async create(
-    input: CreatePartnershipInput,
+    input: CreatePartnershipInput
   ): Promise<CreatePartnershipOutputDto> {
     const response = new CreatePartnershipOutputDto();
     const session = this.db.driver.session();
@@ -45,18 +44,18 @@ export class PartnershipService {
           mouEnd: input.mouEnd,
           organization: input.organization,
           types: input.types,
-        },
+        }
       )
       .then(result => {
         response.partnership.id = result.records[0].get('id');
         response.partnership.agreementStatus = result.records[0].get(
-          'agreementStatus',
+          'agreementStatus'
         );
         response.partnership.mouStatus = result.records[0].get('mouStatus');
         response.partnership.mouStart = result.records[0].get('mouStart');
         response.partnership.mouEnd = result.records[0].get('mouEnd');
         response.partnership.organization = result.records[0].get(
-          'organization',
+          'organization'
         );
         response.partnership.types = result.records[0].get('types');
       })
@@ -69,7 +68,7 @@ export class PartnershipService {
   }
 
   async readOne(
-    input: ReadPartnershipInput,
+    input: ReadPartnershipInput
   ): Promise<ReadPartnershipOutputDto> {
     const response = new ReadPartnershipOutputDto();
     const session = this.db.driver.session();
@@ -86,18 +85,18 @@ export class PartnershipService {
         partnership.types as types`,
         {
           id: input.id,
-        },
+        }
       )
       .then(result => {
         response.partnership.id = result.records[0].get('id');
         response.partnership.agreementStatus = result.records[0].get(
-          'agreementStatus',
+          'agreementStatus'
         );
         response.partnership.mouStatus = result.records[0].get('mouStatus');
         response.partnership.mouStart = result.records[0].get('mouStart');
         response.partnership.mouEnd = result.records[0].get('mouEnd');
         response.partnership.organization = result.records[0].get(
-          'organization',
+          'organization'
         );
         response.partnership.types = result.records[0].get('types');
       })
@@ -110,7 +109,7 @@ export class PartnershipService {
   }
 
   async update(
-    input: UpdatePartnershipInput,
+    input: UpdatePartnershipInput
   ): Promise<UpdatePartnershipOutputDto> {
     const response = new UpdatePartnershipOutputDto();
     const session = this.db.driver.session();
@@ -138,23 +137,19 @@ export class PartnershipService {
           mouEnd: input.mouEnd,
           organization: input.organization,
           types: input.types,
-        },
+        }
       )
       .then(result => {
         if (result.records.length > 0) {
           response.partnership = {
             id: result.records[0].get('id'),
-            agreementStatus: result.records[0].get(
-              'agreementStatus',
-            ),
+            agreementStatus: result.records[0].get('agreementStatus'),
             mouStatus: result.records[0].get('mouStatus'),
             mouStart: result.records[0].get('mouStart'),
             mouEnd: result.records[0].get('mouEnd'),
-            organization: result.records[0].get(
-              'organization',
-            ),
+            organization: result.records[0].get('organization'),
             types: result.records[0].get('types'),
-          }
+          };
         } else {
           throw new Error('Could not update partnership.');
         }
@@ -169,7 +164,7 @@ export class PartnershipService {
   }
 
   async delete(
-    input: DeletePartnershipInput,
+    input: DeletePartnershipInput
   ): Promise<DeletePartnershipOutputDto> {
     const response = new DeletePartnershipOutputDto();
     const session = this.db.driver.session();
@@ -179,7 +174,7 @@ export class PartnershipService {
          SET partnership.active = false RETURN partnership.id as id`,
         {
           id: input.id,
-        },
+        }
       )
       .then(result => {
         response.partnership.id = result.records[0].get('id');
@@ -193,7 +188,7 @@ export class PartnershipService {
   }
 
   async queryPartnerships(
-    query: ListPartnershipsInput,
+    query: ListPartnershipsInput
   ): Promise<ListPartnershipsOutputDto> {
     const response = new ListPartnershipsOutputDto();
     const session = this.db.driver.session();
@@ -227,7 +222,7 @@ export class PartnershipService {
         count: query.count,
         sort: query.sort,
         order: query.order,
-      },
+      }
     );
 
     session.close();
@@ -243,5 +238,3 @@ export class PartnershipService {
     return response;
   }
 }
-
-

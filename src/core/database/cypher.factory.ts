@@ -3,9 +3,9 @@ import { stripIndent } from 'common-tags';
 import { Connection } from 'cypher-query-builder';
 import Session from 'neo4j-driver/types/v1/session';
 import { ConfigService } from '..';
-import { MyTransformer } from './transformer';
 import { jestSkipFileInExceptionSource } from '../jest-skip-source-file';
 import { ILogger, LoggerToken, LogLevel } from '../logger';
+import { MyTransformer } from './transformer';
 import './transaction'; // import our transaction augmentation
 import './query'; // import our query augmentation
 
@@ -14,7 +14,7 @@ export const CypherFactory: FactoryProvider<Connection> = {
   useFactory: (
     config: ConfigService,
     logger: ILogger,
-    driverLogger: ILogger,
+    driverLogger: ILogger
   ) => {
     const { url, username, password, driverConfig } = config.neo4j;
     const conn = new Connection(
@@ -32,10 +32,11 @@ export const CypherFactory: FactoryProvider<Connection> = {
             },
           },
         },
-      },
+      }
     );
 
     // wrap session.run calls to add logging
+    /* eslint-disable @typescript-eslint/unbound-method */
     const origSession = conn.session;
     conn.session = function(this: never) {
       const session: Session | null = origSession.call(conn);
@@ -51,6 +52,7 @@ export const CypherFactory: FactoryProvider<Connection> = {
           return result;
         };
       }
+      /* eslint-enable @typescript-eslint/unbound-method */
 
       return session;
     };

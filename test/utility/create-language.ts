@@ -1,15 +1,13 @@
+import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
-
+import { isValid } from 'shortid';
 import { CreateLanguage, Language } from '../../src/components/language';
-
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
-import { gql } from 'apollo-server-core';
-import { isValid } from 'shortid';
 
 export async function createLanguage(
   app: TestApp,
-  input: Partial<CreateLanguage> = {},
+  input: Partial<CreateLanguage> = {}
 ) {
   const language: CreateLanguage = {
     name: faker.address.country(),
@@ -39,7 +37,7 @@ export async function createLanguage(
           ...language,
         },
       },
-    },
+    }
   );
 
   const actual: Language = result.createLanguage.language;

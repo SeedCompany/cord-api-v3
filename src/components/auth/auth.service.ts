@@ -1,20 +1,13 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import * as argon2 from 'argon2';
 import { Connection } from 'cypher-query-builder';
-import { verify, sign } from 'jsonwebtoken';
+import { sign, verify } from 'jsonwebtoken';
 import { DateTime } from 'luxon';
-import {
-  ConfigService,
-  ILogger,
-  Logger,
-  OnIndex,
-  OnIndexParams,
-} from '../../core';
-import { ISession } from './session';
-import { LoginInput, LoginOutput, ResetInput } from './auth.dto';
-import { UserEmailInput } from '../user';
-import { SesService } from '../../core'
+import { ConfigService, ILogger, Logger, SesService } from '../../core';
 import { EnvironmentService } from '../../core/config/environment.service';
+import { UserEmailInput } from '../user';
+import { LoginInput, ResetInput } from './auth.dto';
+import { ISession } from './session';
 
 interface JwtPayload {
   iat: number;
@@ -27,11 +20,8 @@ export class AuthService {
     private readonly config: ConfigService,
     private readonly sesService: SesService,
     private readonly env: EnvironmentService,
-    @Logger('auth:service') private readonly logger: ILogger,
+    @Logger('auth:service') private readonly logger: ILogger
   ) {}
-
-  @OnIndex()
-  async createIndexes({ db, logger }: OnIndexParams) {}
 
   async createToken(): Promise<string> {
     const token = this.encodeJWT();
@@ -51,7 +41,7 @@ export class AuthService {
       `,
         {
           token,
-        },
+        }
       )
       .first();
     if (!result) {
@@ -85,7 +75,7 @@ export class AuthService {
         {
           token: session.token,
           email: input.email,
-        },
+        }
       )
       .first();
 
@@ -127,7 +117,7 @@ export class AuthService {
         {
           token: session.token,
           email: input.email,
-        },
+        }
       )
       .first();
 
@@ -152,7 +142,7 @@ export class AuthService {
       `,
         {
           token,
-        },
+        }
       )
       .run();
   }
@@ -179,10 +169,10 @@ export class AuthService {
         `,
         {
           token,
-        },
+        }
       )
       .first();
-    
+
     if (!result) {
       this.logger.warning('Failed to find active token in database', { token });
       throw new UnauthorizedException();
@@ -205,46 +195,45 @@ export class AuthService {
     await this.db
       .query()
       .raw(
-      `
+        `
       CREATE(et:EmailToken{value:$value, token: $token, createdOn:datetime()})
       RETURN et as emailToken
       `,
-      {
-        $value: email,
-        $token: token
-      }
+        {
+          $value: email,
+          $token: token,
+        }
       )
-      .first()
+      .first();
     const params = {
-      Destination: { ToAddresses: ["leopard3551@gmail.com"] },
+      Destination: { ToAddresses: ['leopard3551@gmail.com'] },
       Message: {
-          Body: {
-              Html: {
-                  Charset: 'UTF-8',
-                  Data: `<html><body><p>This is your secret login code:</p>
-                          <a href="http://localhost:3333/auth/reset?token=${token}">Go to Login</a></body></html>`
-              },
-              Text: {
-                  Charset: 'UTF-8',
-                  Data: `http://localhost:3333/auth/reset?token=${token}`
-              }
+        Body: {
+          Html: {
+            Charset: 'UTF-8',
+            Data: `<html><body><p>This is your secret login code:</p>
+                          <a href="http://localhost:3333/auth/reset?token=${token}">Go to Login</a></body></html>`,
           },
-          Subject: {
-              Charset: 'UTF-8',
-              Data: 'Forget Password'
-          }
+          Text: {
+            Charset: 'UTF-8',
+            Data: `http://localhost:3333/auth/reset?token=${token}`,
+          },
+        },
+        Subject: {
+          Charset: 'UTF-8',
+          Data: 'Forget Password',
+        },
       },
-      Source: this.env.string("SOURCE_EMAIL").optional("core-field")
+      Source: this.env.string('SOURCE_EMAIL').optional('core-field'),
     };
 
-    this.sesService.sendEmail(params);
-    
+    await this.sesService.sendEmail(params);
+
     return true;
   }
 
   async reset(input: ResetInput): Promise<boolean> {
-    const checkDate = new Date();
-    const { token, password } = input
+    const { token, password } = input;
 
     const result = await this.db
       .query()
@@ -254,11 +243,11 @@ export class AuthService {
         RETURN emailToken.value as email, emailToken.token as token, emailToken.createdOn as createdOn
         `,
         {
-          $token: token 
+          $token: token,
         }
       )
-      .first()
-    if(result){
+      .first();
+    if (result) {
       await this.db
         .query()
         .raw(
@@ -269,12 +258,12 @@ export class AuthService {
           `,
           {
             $token: token,
-            $password: password
+            $password: password,
           }
         )
-        .first()
+        .first();
       return true;
-    }    
+    }
     return false;
   }
 
@@ -288,12 +277,17 @@ export class AuthService {
         RETURN emailToken.value as email, emailToken.token as token, emailToken.createdOn as createdOn
         `,
         {
-          $token: token 
+          $token: token,
         }
       )
-      .first()
-    if(result){
-      if(Math.abs((checkDate.getTime() - Date.parse(result.createdOn)) / (1000 * 3600)) > 24) return false;
+      .first();
+    if (result) {
+      if (
+        Math.abs(
+          (checkDate.getTime() - Date.parse(result.createdOn)) / (1000 * 3600)
+        ) > 24
+      )
+        return false;
       else return true;
     }
     return false;

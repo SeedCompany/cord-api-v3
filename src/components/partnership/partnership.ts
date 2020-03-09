@@ -1,5 +1,5 @@
-import { Field, InputType, ObjectType } from 'type-graphql';
 import { DateTime } from 'luxon';
+import { Field, InputType, ObjectType } from 'type-graphql';
 import { DateField } from '../../common';
 import { Organization } from '../organization';
 import { PartnershipAgreementStatus } from './agreement-status';
@@ -8,10 +8,10 @@ import { PartnershipType } from './partnership-type';
 @ObjectType()
 @InputType('PartnershipInput')
 export class Partnership {
-  @Field(type => String, { nullable: true })
+  @Field(() => String, { nullable: true })
   agreementStatus: PartnershipAgreementStatus;
 
-  @Field(type => String, { nullable: true })
+  @Field(() => String, { nullable: true })
   mouStatus: PartnershipAgreementStatus;
 
   @DateField({ nullable: true })
@@ -22,7 +22,7 @@ export class Partnership {
 
   organization: Organization;
 
-  @Field(type => [PartnershipType], { nullable: true })
+  @Field(() => [PartnershipType], { nullable: true })
   types: PartnershipType[];
 }
 

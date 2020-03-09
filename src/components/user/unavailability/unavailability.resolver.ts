@@ -4,11 +4,11 @@ import { ISession, Session } from '../../auth';
 import {
   CreateUnavailabilityInput,
   CreateUnavailabilityOutput,
-  UpdateUnavailabilityInput,
-  UpdateUnavailabilityOutput,
+  Unavailability,
   UnavailabilityListInput,
   UnavailabilityListOutput,
-  Unavailability,
+  UpdateUnavailabilityInput,
+  UpdateUnavailabilityOutput,
 } from './dto';
 import { UnavailabilityService } from './unavailability.service';
 
@@ -21,7 +21,7 @@ export class UnavailabilityResolver {
   })
   async unavailability(
     @Session() session: ISession,
-    @IdArg() id: string,
+    @IdArg() id: string
   ): Promise<Unavailability> {
     return await this.service.readOne(id, session);
   }
@@ -36,7 +36,7 @@ export class UnavailabilityResolver {
       type: () => UnavailabilityListInput,
       defaultValue: UnavailabilityListInput.defaultVal,
     })
-    input: UnavailabilityListInput,
+    input: UnavailabilityListInput
   ): Promise<UnavailabilityListOutput> {
     return this.service.list(input, session);
   }
@@ -46,7 +46,7 @@ export class UnavailabilityResolver {
   })
   async createUnavailability(
     @Session() session: ISession,
-    @Args('input') { unavailability: input }: CreateUnavailabilityInput,
+    @Args('input') { unavailability: input }: CreateUnavailabilityInput
   ): Promise<CreateUnavailabilityOutput> {
     const unavailability = await this.service.create(input, session);
     return { unavailability };
@@ -57,7 +57,7 @@ export class UnavailabilityResolver {
   })
   async updateUnavailability(
     @Session() session: ISession,
-    @Args('input') { unavailability: input }: UpdateUnavailabilityInput,
+    @Args('input') { unavailability: input }: UpdateUnavailabilityInput
   ): Promise<UpdateUnavailabilityOutput> {
     const unavailability = await this.service.update(input, session);
     return { unavailability };
@@ -68,7 +68,7 @@ export class UnavailabilityResolver {
   })
   async deleteUnavailability(
     @Session() session: ISession,
-    @IdArg() id: string,
+    @IdArg() id: string
   ): Promise<boolean> {
     await this.service.delete(id, session);
     return true;

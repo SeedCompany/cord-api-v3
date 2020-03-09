@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Connection, Query } from 'cypher-query-builder';
-import { Driver } from 'neo4j-driver/types/v1';
 import { Dictionary } from 'lodash';
+import { Driver } from 'neo4j-driver/types/v1';
 import { Observable } from 'rxjs';
 
 /**

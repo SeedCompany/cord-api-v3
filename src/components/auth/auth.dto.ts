@@ -1,5 +1,5 @@
 import { stripIndent } from 'common-tags';
-import { InputType, Field, ObjectType } from 'type-graphql';
+import { Field, InputType, ObjectType } from 'type-graphql';
 import { User } from '../user';
 
 @ObjectType()
@@ -41,5 +41,5 @@ export abstract class ResetInput {
   token: string;
 
   @Field()
-  password: string
+  password: string;
 }

@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon';
-import { Field, ID, InputType, ObjectType } from 'type-graphql';
+import { Field, InputType, ObjectType } from 'type-graphql';
 import { DateField } from '../../common';
 import { User } from '../user';
 import { InternshipEngagement } from './engagement';
@@ -8,7 +8,7 @@ import { InternshipEngagement } from './engagement';
 
 @InputType()
 export class CreateInternshipEngagementInput {
-  @Field(type => String)
+  @Field(() => String)
   internId: string;
 
   @DateField({ nullable: true })
@@ -26,7 +26,7 @@ export class CreateInternshipEngagementInputDto {
 
 @ObjectType()
 export class CreateInternshipEngagementOutput {
-  @Field(type => String)
+  @Field(() => String)
   id: string;
 
   @DateField({ nullable: true })
@@ -52,7 +52,7 @@ export class CreateInternshipEngagementOutputDto {
 
 @InputType()
 export class ReadInternshipEngagementInput {
-  @Field(type => String)
+  @Field(() => String)
   id: string;
 }
 
@@ -64,7 +64,7 @@ export class ReadInternshipEngagementInputDto {
 
 @ObjectType()
 export class ReadInternshipEngagementOutput {
-  @Field(type => String)
+  @Field(() => String)
   id: string;
 
   @DateField({ nullable: true })
@@ -90,7 +90,7 @@ export class ReadInternshipEngagementOutputDto {
 
 @InputType()
 export class UpdateInternshipEngagementInput {
-  @Field(type => String)
+  @Field(() => String)
   id: string;
 
   @DateField({ nullable: true })
@@ -108,7 +108,7 @@ export class UpdateInternshipEngagementInputDto {
 
 @ObjectType()
 export class UpdateInternshipEngagementOutput {
-  @Field(type => String)
+  @Field(() => String)
   id: string;
 
   @DateField({ nullable: true })
@@ -134,7 +134,7 @@ export class UpdateInternshipEngagementOutputDto {
 
 @InputType()
 export class DeleteInternshipEngagementInput {
-  @Field(type => String)
+  @Field(() => String)
   id: string;
 }
 
@@ -146,7 +146,7 @@ export class DeleteInternshipEngagementInputDto {
 
 @ObjectType()
 export class DeleteInternshipEngagementOutput {
-  @Field(type => String)
+  @Field(() => String)
   id: string;
 }
 
@@ -163,15 +163,15 @@ export class DeleteInternshipEngagementOutputDto {
 
 @InputType()
 export class ListInternshipEngagementsInput {
-  @Field(type => String, { nullable: true, defaultValue: '' })
+  @Field(() => String, { nullable: true, defaultValue: '' })
   filter: string;
-  @Field(type => Number, { nullable: true, defaultValue: 0 })
+  @Field(() => Number, { nullable: true, defaultValue: 0 })
   page: number;
-  @Field(type => Number, { nullable: true, defaultValue: 25 })
+  @Field(() => Number, { nullable: true, defaultValue: 25 })
   count: number;
-  @Field(type => String, { nullable: true, defaultValue: 'DESC' })
+  @Field(() => String, { nullable: true, defaultValue: 'DESC' })
   order: string;
-  @Field(type => String, { nullable: true, defaultValue: 'name' })
+  @Field(() => String, { nullable: true, defaultValue: 'name' })
   sort: string;
 }
 
@@ -183,13 +183,13 @@ export class ListInternshipEngagementsInputDto {
 
 @ObjectType()
 export class ListInternshipEngagementsOutput {
-  @Field(type => InternshipEngagement, { nullable: true })
+  @Field(() => InternshipEngagement, { nullable: true })
   internshipEngagement: InternshipEngagement;
 }
 
 @ObjectType()
 export class ListInternshipEngagementsOutputDto {
-  @Field(type => [InternshipEngagement], { nullable: true }) // nullable in case of error
+  @Field(() => [InternshipEngagement], { nullable: true }) // nullable in case of error
   internshipEngagements: InternshipEngagement[];
   constructor() {
     this.internshipEngagements = [];

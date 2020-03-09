@@ -8,11 +8,8 @@ import {
   Sensitivity,
   SortablePaginationInput,
 } from '../../../common';
-import { Language } from '../../language/dto';
-import { Location } from '../../location/dto';
-import { User } from '../../user/dto';
 import { Project } from './project.dto';
-import { ProjectStatus, ProjectStatusOrStep } from './status.enum';
+import { ProjectStatus } from './status.enum';
 import { ProjectStep } from './step.enum';
 import { ProjectType } from './type.enum';
 

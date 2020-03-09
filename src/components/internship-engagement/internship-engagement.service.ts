@@ -1,4 +1,7 @@
+import { Injectable } from '@nestjs/common';
 import { DateTime } from 'luxon';
+import { generate } from 'shortid';
+import { DatabaseService } from '../../core/database.service';
 import {
   CreateInternshipEngagementInput,
   CreateInternshipEngagementOutputDto,
@@ -10,16 +13,12 @@ import {
   UpdateInternshipEngagementOutputDto,
 } from './internship-engagement.dto';
 
-import { DatabaseService } from '../../core/database.service';
-import { Injectable } from '@nestjs/common';
-import { generate } from 'shortid';
-
 @Injectable()
 export class InternshipEngagementService {
   constructor(private readonly db: DatabaseService) {}
 
   async create(
-    input: CreateInternshipEngagementInput,
+    input: CreateInternshipEngagementInput
   ): Promise<CreateInternshipEngagementOutputDto> {
     const response = new CreateInternshipEngagementOutputDto();
     const session = this.db.driver.session();
@@ -56,7 +55,7 @@ export class InternshipEngagementService {
           internId: input.internId,
           initialEndDate: input.initialEndDate,
           currentEndData: input.currentEndDate,
-        },
+        }
       )
       .then(result => {
         response.internshipEngagement.id = result.records[0].get('id');
@@ -85,10 +84,10 @@ export class InternshipEngagementService {
           },
         };
         response.internshipEngagement.initialEndDate = result.records[0].get(
-          'initialEndDate',
+          'initialEndDate'
         );
         response.internshipEngagement.currentEndDate = result.records[0].get(
-          'currentEndDate',
+          'currentEndDate'
         );
       })
       .catch(error => {
@@ -100,7 +99,7 @@ export class InternshipEngagementService {
   }
 
   async readOne(
-    input: ReadInternshipEngagementInput,
+    input: ReadInternshipEngagementInput
   ): Promise<ReadInternshipEngagementOutputDto> {
     const response = new ReadInternshipEngagementOutputDto();
     const session = this.db.driver.session();
@@ -126,7 +125,7 @@ export class InternshipEngagementService {
           `,
         {
           id: input.id,
-        },
+        }
       )
       .then(result => {
         response.internshipEngagement.id = result.records[0].get('id');
@@ -155,10 +154,10 @@ export class InternshipEngagementService {
           },
         };
         response.internshipEngagement.initialEndDate = result.records[0].get(
-          'initialEndDate',
+          'initialEndDate'
         );
         response.internshipEngagement.currentEndDate = result.records[0].get(
-          'currentEndDate',
+          'currentEndDate'
         );
       })
       .catch(error => {
@@ -170,7 +169,7 @@ export class InternshipEngagementService {
   }
 
   async update(
-    input: UpdateInternshipEngagementInput,
+    input: UpdateInternshipEngagementInput
   ): Promise<UpdateInternshipEngagementOutputDto> {
     const response = new UpdateInternshipEngagementOutputDto();
     const session = this.db.driver.session();
@@ -201,7 +200,7 @@ export class InternshipEngagementService {
           id: input.id,
           initialEndDate: input.initialEndDate,
           currentEndDate: input.currentEndDate,
-        },
+        }
       )
       .then(result => {
         if (result.records.length > 0) {
@@ -232,13 +231,9 @@ export class InternshipEngagementService {
 
           response.internshipEngagement = {
             id: result.records[0].get('id'),
-            initialEndDate: result.records[0].get(
-              'initialEndDate',
-            ),
-            currentEndDate: result.records[0].get(
-              'currentEndDate',
-            ),
-          }
+            initialEndDate: result.records[0].get('initialEndDate'),
+            currentEndDate: result.records[0].get('currentEndDate'),
+          };
         } else {
           throw new Error('Could not update internship.');
         }
@@ -253,7 +248,7 @@ export class InternshipEngagementService {
   }
 
   async delete(
-    input: DeleteInternshipEngagementInput,
+    input: DeleteInternshipEngagementInput
   ): Promise<DeleteInternshipEngagementOutputDto> {
     const response = new DeleteInternshipEngagementOutputDto();
     const session = this.db.driver.session();
@@ -263,7 +258,7 @@ export class InternshipEngagementService {
            SET internshipEngagement.active = false RETURN internshipEngagement.id as id`,
         {
           id: input.id,
-        },
+        }
       )
       .then(result => {
         response.internshipEngagement.id = result.records[0].get('id');

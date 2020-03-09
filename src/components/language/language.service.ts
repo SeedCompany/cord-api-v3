@@ -21,12 +21,12 @@ export class LanguageService {
   constructor(
     private readonly db: DatabaseService,
     private readonly propertyUpdater: PropertyUpdaterService,
-    @Logger('language:service') private readonly logger: ILogger,
+    @Logger('language:service') private readonly logger: ILogger
   ) {}
 
   async create(input: CreateLanguage, session: ISession): Promise<Language> {
     this.logger.info(
-      `Mutation create Language: ${input.name} by ${session.userId}`,
+      `Mutation create Language: ${input.name} by ${session.userId}`
     );
 
     const id = generate();
@@ -68,7 +68,7 @@ export class LanguageService {
 
   async readOne(langId: string, session: ISession): Promise<Language> {
     this.logger.info(
-      `Query readOne Language: id ${langId} by ${session.userId}`,
+      `Query readOne Language: id ${langId} by ${session.userId}`
     );
 
     const result = await this.db
@@ -123,7 +123,7 @@ export class LanguageService {
         {
           id: langId,
           token: session.token,
-        },
+        }
       )
       .first();
 
@@ -181,7 +181,7 @@ export class LanguageService {
   async update(input: UpdateLanguage, session: ISession): Promise<Language> {
     throw new Error('Not implemented');
     this.logger.info(
-      `mutation update language ${input.id} by ${session.userId}`,
+      `mutation update language ${input.id} by ${session.userId}`
     );
     const language = await this.readOne(input.id, session);
 
@@ -224,7 +224,7 @@ export class LanguageService {
 
   async list(
     { page, count, sort, order, filter }: LanguageListInput,
-    session: ISession,
+    session: ISession
   ): Promise<LanguageListOutput> {
     const result = await this.propertyUpdater.list<Language>({
       session,
