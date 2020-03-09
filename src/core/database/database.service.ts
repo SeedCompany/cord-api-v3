@@ -627,12 +627,11 @@ export class DatabaseService {
             createdAt: datetime(),
             id: "${input.id}",
             owningOrgId: "${session.owningOrgId}"
-          })<-[:toNode]-(acl:ACL
+          })<-[:toNode]-(acl:ACL    
             ${aclString}
           )-[:member]->(requestingUser)
         RETURN item
       `;
-
     try {
       await this.db
         .query()

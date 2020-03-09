@@ -1,13 +1,10 @@
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { NotImplementedError } from '../../common';
-import { DatabaseService } from '../../core';
-import { AuthService, ISession } from '../auth';
+import { ILogger, Logger } from '../../core';
+import { DatabaseService } from '../../core/database/database.service';
+import { ISession } from '../auth';
 import { UserService } from '../user';
 import {
   CreateFileInput,
@@ -15,6 +12,7 @@ import {
   File,
   FileListInput,
   FileListOutput,
+  FileNodeCategory,
   FileNodeType,
   FileOrDirectory,
   FileVersion,
@@ -30,10 +28,11 @@ import { S3Bucket } from './s3-bucket';
 export class FileService {
   constructor(
     @Inject(FilesBucketToken) private readonly bucket: S3Bucket,
-    private readonly userService: UserService,
-    private readonly authService: AuthService,
-    private readonly db: DatabaseService
+    private readonly db: DatabaseService,
+    @Logger('language:service') private readonly logger: ILogger,
+    private readonly userService: UserService
   ) {}
+  // eslint-disable-next-line prettier/prettier
 
   async getDirectory(id: string, session: ISession): Promise<Directory> {
     const node = await this.getFileNode(id, session);
@@ -52,6 +51,8 @@ export class FileService {
   }
 
   async getFileNode(id: string, session: ISession): Promise<FileOrDirectory> {
+    this.logger.info(`Query readOne FileNode: id ${id} by ${session.userId}`);
+    const user = await this.userService.readOne(session.userId!, session);
     const result = await this.db
       .query()
       .raw(
@@ -62,34 +63,48 @@ export class FileService {
         (requestingUser:User {
           active: true,
           id: $requestingUserId
-        })
-        WITH * OPTIONAL MATCH (file: FileNode { id: $id})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl:ACL {canReadFile: true})-[:toNode]->(file)-[:type {active: true}]->(type:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl:ACL {canReadFile: true})-[:toNode]->(file)-[:size {active: true}]->(size:Property {active: true})
+        }),
+        (fv: FileVersion {id: $uploadId, active: true}),
+        (fv)-[:parent {active: true}]->(parent:Property {active: true}),
+        (fv)<-[:version {active: true}]-(file:FileNode)
+        WITH * OPTIONAL MATCH (file)-[:type {active: true}]->(type:Property {active: true})
+        WITH * OPTIONAL MATCH (file)-[:name {active: true}]->(name:Property {active: true})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl:ACL {canReadSize: true})-[:toNode]->(fv)-[:size {active: true}]->(size:Property {active: true})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl:ACL {canReadMimeType: true})-[:toNode]->(fv)-[:mimeType {active: true}]->(mimeType:Property {active: true})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl:ACL {canReadCategory: true})-[:toNode]->(fv)-[:category {active: true}]->(category:Property {active: true})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl:ACL {canReadModifiedAt: true})-[:toNode]->(fv)-[:modifiedAt {active: true}]->(modifiedAt:Property {active: true})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl:ACL {canReadName: true})-[:toNode]->(fv)-[:name {active: true}]->(name:Property {active: true})
         RETURN
-        file.id as id,
+        size.value as size,
+        mimeType.value as mimeType,
+        category.value as category,
+        modifiedAt.value as modifiedAt,
+        parent.value as parent,
         file.createdAt as createdAt,
+        fv.id as id,
         type.value as type,
-        size.value as size
-          `,
+        name.value as name
+        `,
         {
-          id,
-          token: session.token,
+          uploadId: id,
           requestingUserId: session.userId,
-          owningOrgId: session.owningOrgId,
+          token: session.token,
         }
       )
       .first();
-    if (!result) {
-      throw new NotFoundException('Could not find file');
-    }
-    throw new Error('Returned object is not complete');
-    // return {
-    //   id: result.id,
-    //   createdAt: result.createdAt,
-    //   type: result.type,
-    //   size: result.size,
-    // };
+
+    return {
+      category: FileNodeCategory.Document, //TODO category should be derived based on the mimeType
+      createdAt: result!.createdAt,
+      createdBy: { ...user },
+      id: result!.id,
+      mimeType: result!.mimeType,
+      modifiedAt: result!.modifiedAt,
+      name: result!.name,
+      parents: [], // TODO
+      size: result!.size,
+      type: result!.type,
+    };
   }
 
   async getDownloadUrl(fileId: string, _session: ISession): Promise<string> {
@@ -131,24 +146,86 @@ export class FileService {
     session: ISession
   ): Promise<File> {
     try {
-      const acls = {
-        canReadFile: true,
-        canEditFile: true,
-      };
-      const input = {
-        id: uploadId,
-        parentId,
+      const file = await this.bucket.getObject(`${uploadId}`);
+      const fileId = generate();
+      if (!file) {
+        throw new BadRequestException('object not found');
+      }
+      await this.bucket.moveObject(`temp/${uploadId}`, `${uploadId}`);
+      const inputForFile = {
+        id: fileId,
+        mimeType: file.ContentType,
         name,
+        parent: parentId,
+        size: file.ContentLength,
         type: FileNodeType.File,
       };
-
       await this.db.createNode({
         session,
-        input: { ...input },
-        acls,
+        input: { ...inputForFile },
+        acls: {
+          canReadParent: true,
+          canEditParent: true,
+          canReadName: true,
+          canEditName: true,
+          canReadType: true,
+          canEditType: true,
+        },
         baseNodeLabel: 'FileNode',
         aclEditProp: 'canCreateFileNode',
       });
+      const inputForFileVersion = {
+        category: FileNodeCategory.Document, // TODO
+        id: uploadId,
+        mimeType: file.ContentType,
+        modifiedAt: DateTime.local().toNeo4JDateTime(),
+        name,
+        parent: parentId,
+        size: file.ContentLength,
+      };
+      const acls = {
+        canReadSize: true,
+        canEditSize: true,
+        canReadParent: true,
+        canEditParent: true,
+        canReadMimeType: true,
+        canEditMimeType: true,
+        canReadCategory: true,
+        canEditCategory: true,
+        canReadName: true,
+        canEditName: true,
+        canReadModifiedAt: true,
+        canEditModifiedAt: true,
+      };
+      await this.db.createNode({
+        session,
+        input: { ...inputForFileVersion },
+        acls,
+        baseNodeLabel: 'FileVersion',
+        aclEditProp: 'canCreateFileVersion',
+      });
+      const qry = `
+        MATCH
+          (file:FileNode {id: "${fileId}"})
+        WITH * OPTIONAL MATCH (file)-[:parent {active: true}]->(prop:Property {active: true, value: "${parentId}"}),
+          (fv:FileVersion {id: "${uploadId}"}),
+          (user:User { id: "${session.userId}", active: true})
+        CREATE
+          (file)-[:version {active: true, createdAt: datetime()}]->(fv),
+          (file)-[:createdBy {active: true, createdAt: datetime()}]->(user),
+          (fv)-[:createdBy {active: true, createdAt: datetime()}]->(user)
+        RETURN
+          file, fv, user
+      `;
+      await this.db
+        .query()
+        .raw(qry, {
+          fileId: fileId,
+          name,
+          parentId,
+          userId: session.userId,
+        })
+        .run();
 
       return this.getFile(uploadId, session);
     } catch (e) {
@@ -168,10 +245,17 @@ export class FileService {
   }
 
   async move(
-    _input: MoveFileInput,
-    _session: ISession
+    input: MoveFileInput,
+    session: ISession
   ): Promise<FileOrDirectory> {
-    throw new NotImplementedError();
+    // TODO findout options for name usage here
+    const { id, parentId } = input;
+    const file = await this.bucket.getObject(id);
+    if (!file) {
+      throw new BadRequestException('object not found');
+    }
+    await this.bucket.moveObject(`test/${id}`, `${parentId}/${id}`);
+    return this.getFile(id, session);
   }
 
   async delete(_id: string, _session: ISession): Promise<void> {
