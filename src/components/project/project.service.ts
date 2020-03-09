@@ -1,30 +1,30 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { ISession } from '../auth';
+import { DateTime } from 'luxon';
 import { generate } from 'shortid';
+import { Sensitivity } from '../../common';
 import {
-  CreateProject,
-  ProjectListInput,
-  ProjectListOutput,
-  UpdateProject,
-  Project,
-  stepToStatus,
-  ProjectStep,
-} from './dto';
-import {
-  PropertyUpdaterService,
   DatabaseService,
   ILogger,
   Logger,
+  PropertyUpdaterService,
 } from '../../core';
-import { Sensitivity } from '../../common';
-import { DateTime } from 'luxon';
+import { ISession } from '../auth';
+import {
+  CreateProject,
+  Project,
+  ProjectListInput,
+  ProjectListOutput,
+  ProjectStep,
+  stepToStatus,
+  UpdateProject,
+} from './dto';
 
 @Injectable()
 export class ProjectService {
   constructor(
     private readonly db: DatabaseService,
     private readonly propertyUpdater: PropertyUpdaterService,
-    @Logger('project:service') private readonly logger: ILogger,
+    @Logger('project:service') private readonly logger: ILogger
   ) {}
 
   async readOne(id: string, session: ISession): Promise<Project> {
@@ -120,7 +120,7 @@ export class ProjectService {
           requestingUserId: session.userId,
           owningOrgId: session.owningOrgId,
           id,
-        },
+        }
       )
       .first();
 
@@ -175,7 +175,7 @@ export class ProjectService {
 
   async list(
     { page, count, sort, order, filter }: ProjectListInput,
-    session: ISession,
+    session: ISession
   ): Promise<ProjectListOutput> {
     const result = await this.propertyUpdater.list<Project>({
       session,
@@ -220,7 +220,7 @@ export class ProjectService {
 
   async create(
     { locationId, ...input }: CreateProject,
-    session: ISession,
+    session: ISession
   ): Promise<Project> {
     const id = generate();
     const acls = {

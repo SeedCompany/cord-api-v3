@@ -1,15 +1,15 @@
 import { gql } from 'apollo-server-core';
+import * as faker from 'faker';
 import {
   CreateOrganization,
   Organization,
 } from '../../src/components/organization';
 import { TestApp } from './create-app';
-import * as faker from 'faker';
 import { fragments } from './fragments';
 
 export async function createOrganization(
   app: TestApp,
-  input: Partial<CreateOrganization> = {},
+  input: Partial<CreateOrganization> = {}
 ) {
   const name = input.name || faker.company.companyName();
 
@@ -31,7 +31,7 @@ export async function createOrganization(
           name,
         },
       },
-    },
+    }
   );
   const org: Organization = result.createOrganization.organization;
 

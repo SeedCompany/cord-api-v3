@@ -22,9 +22,10 @@ declare module 'cypher-query-builder/dist/typings/query' {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/unbound-method
 Query.prototype.call = function call(
   this: Query,
-  fn: (q: Query) => Query | void,
+  fn: (q: Query) => Query | void
 ): Query {
   return fn(this) || this;
 };

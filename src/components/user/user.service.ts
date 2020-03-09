@@ -1,21 +1,21 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import * as argon2 from 'argon2';
 import { Connection } from 'cypher-query-builder';
 import { generate } from 'shortid';
-import * as argon2 from 'argon2';
 import { ILogger, Logger, OnIndex, PropertyUpdaterService } from '../../core';
-import { ISession, AuthService } from '../auth';
+import { ISession } from '../auth';
 import {
   OrganizationListInput,
-  SecuredOrganizationList,
   OrganizationService,
+  SecuredOrganizationList,
 } from '../organization';
 import {
   CreateUser,
   UpdateUser,
   User,
+  UserEmailInput,
   UserListInput,
   UserListOutput,
-  UserEmailInput,
 } from './dto';
 
 @Injectable()
@@ -24,7 +24,7 @@ export class UserService {
     private readonly organizations: OrganizationService,
     private readonly db: Connection,
     private readonly propertyUpdater: PropertyUpdaterService,
-    @Logger('user:service') private readonly logger: ILogger,
+    @Logger('user:service') private readonly logger: ILogger
   ) {}
 
   @OnIndex()
@@ -65,7 +65,7 @@ export class UserService {
 
   async list(
     { page, count, sort, order, filter }: UserListInput,
-    session: ISession,
+    session: ISession
   ): Promise<UserListOutput> {
     const result = await this.propertyUpdater.list<User>({
       session,
@@ -101,7 +101,7 @@ export class UserService {
   async listOrganizations(
     userId: string,
     input: OrganizationListInput,
-    session: ISession,
+    session: ISession
   ): Promise<SecuredOrganizationList> {
     // Just a thought, seemed like a good idea to try to reuse the logic/query there.
     const result = await this.organizations.list(
@@ -112,7 +112,7 @@ export class UserService {
           userIds: [userId],
         },
       },
-      session,
+      session
     );
 
     return {
@@ -122,7 +122,7 @@ export class UserService {
     };
   }
 
-  async checkEmail(input: UserEmailInput): Promise<Boolean> {
+  async checkEmail(input: UserEmailInput): Promise<boolean> {
     const result = await this.db
       .query()
       .raw(
@@ -136,7 +136,7 @@ export class UserService {
         `,
         {
           email: input.email,
-        },
+        }
       )
       .first();
     if (result) {
@@ -159,7 +159,7 @@ export class UserService {
       `,
         {
           token,
-        },
+        }
       )
       .run();
   }
@@ -324,7 +324,7 @@ export class UserService {
           timezone: input.timezone,
           bio: input.bio,
           pash,
-        },
+        }
       )
       .first();
     if (!result) {
@@ -442,7 +442,7 @@ export class UserService {
           requestingUserId: session.userId,
           id,
           owningOrgId: session.owningOrgId,
-        },
+        }
       )
       .first();
     if (!result) {
@@ -518,13 +518,13 @@ export class UserService {
   async delete(id: string, session: ISession): Promise<void> {
     const user = await this.readOne(id, session);
     try {
-      this.propertyUpdater.deleteNode({
+      await this.propertyUpdater.deleteNode({
         session,
         object: user,
         aclEditProp: 'canDeleteOwnUser',
       });
     } catch (e) {
-      console.log(e);
+      this.logger.error('Could not delete user', { exception: e });
       throw e;
     }
   }

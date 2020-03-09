@@ -40,13 +40,13 @@ describe('Partnership e2e', () => {
       `,
       {
         id: partnership.id,
-      },
+      }
     );
 
     const actual: Partnership = result.partnership;
     expect(actual.id).toBe(partnership.id);
     expect(actual.agreementStatus.value).toBe(
-      partnership.agreementStatus.value,
+      partnership.agreementStatus.value
     );
     expect(actual.mouStatus.value).toBe(partnership.mouStatus.value);
     expect(actual.mouStart).toMatchObject(partnership.mouStart);
@@ -61,7 +61,7 @@ describe('Partnership e2e', () => {
 
     // lodash.sample used to grab a random enum value
     const newAgreementStatus = sample(
-      Object.values(PartnershipAgreementStatus),
+      Object.values(PartnershipAgreementStatus)
     );
     const newMouStatus = sample(Object.values(PartnershipAgreementStatus));
     const newTypes = [sample(Object.values(PartnershipType))];
@@ -96,18 +96,18 @@ describe('Partnership e2e', () => {
         agreementStatus: newAgreementStatus,
         mouStatus: newMouStatus,
         types: newTypes,
-      },
+      }
     );
 
     expect(result.updatePartnership.partnership.id).toBe(partnership.id);
     expect(result.updatePartnership.partnership.agreementStatus.value).toBe(
-      newAgreementStatus,
+      newAgreementStatus
     );
     expect(result.updatePartnership.partnership.mouStatus.value).toBe(
-      newMouStatus,
+      newMouStatus
     );
     expect(result.updatePartnership.partnership.types).toEqual(
-      expect.arrayContaining(newTypes),
+      expect.arrayContaining(newTypes)
     );
   });
 
@@ -122,7 +122,7 @@ describe('Partnership e2e', () => {
       `,
       {
         id: partnership.id,
-      },
+      }
     );
 
     const actual: boolean | undefined = result.deletePartnership;
@@ -139,7 +139,7 @@ describe('Partnership e2e', () => {
         `,
         {
           id: partnership.id,
-        },
+        }
       );
     } catch (e) {
       expect(e.response.statusCode).toBe(404);
@@ -154,8 +154,8 @@ describe('Partnership e2e', () => {
       times(numPartnerships).map(() =>
         createPartnership(app, {
           agreementStatus,
-        }),
-      ),
+        })
+      )
     );
 
     const { partnerships } = await app.graphql.query(
@@ -175,7 +175,7 @@ describe('Partnership e2e', () => {
       `,
       {
         agreementStatus,
-      },
+      }
     );
 
     expect(partnerships.items.length).toBeGreaterThanOrEqual(numPartnerships);

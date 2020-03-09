@@ -94,7 +94,14 @@ export abstract class ILogger {
   /**
    * Logs with an arbitrary level.
    */
-  abstract log(level: LogLevel, message: string, context?: LogEntryContext): void;
-  abstract log(level: LogLevel, entry: { message: string } & LogEntryContext): void;
+  abstract log(
+    level: LogLevel,
+    message: string,
+    context?: LogEntryContext
+  ): void;
+  abstract log(
+    level: LogLevel,
+    entry: { message: string } & LogEntryContext
+  ): void;
   abstract log(entry: LogEntry): void;
 }

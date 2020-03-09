@@ -1,13 +1,13 @@
 import { Type } from 'class-transformer';
 import {
+  IsPositive,
+  Max,
+  Min,
   MinLength,
   ValidateNested,
-  Min,
-  Max,
-  IsPositive,
 } from 'class-validator';
 import { DateTime } from 'luxon';
-import { Field, ID, InputType, ObjectType, Int } from 'type-graphql';
+import { Field, ID, InputType, Int, ObjectType } from 'type-graphql';
 import { Language } from './language.dto';
 
 @InputType()

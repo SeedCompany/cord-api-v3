@@ -1,54 +1,53 @@
-import { Resolver, Args, Query, Mutation } from '@nestjs/graphql';
-import { Budget } from './budget';
-import { BudgetService } from './budget.service';
+import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import {
   CreateBudgetInputDto,
   CreateBudgetOutputDto,
+  DeleteBudgetInputDto,
+  DeleteBudgetOutputDto,
   ReadBudgetInputDto,
   ReadBudgetOutputDto,
   UpdateBudgetInputDto,
   UpdateBudgetOutputDto,
-  DeleteBudgetInputDto,
-  DeleteBudgetOutputDto,
 } from './budget.dto';
+import { BudgetService } from './budget.service';
 
 @Resolver()
 export class BudgetResolver {
   constructor(private readonly budgetService: BudgetService) {}
 
-  @Mutation(returns => CreateBudgetOutputDto, {
+  @Mutation(() => CreateBudgetOutputDto, {
     description: 'Create a Budget',
   })
   async createBudget(
-    @Args('input') { budget: input }: CreateBudgetInputDto,
+    @Args('input') { budget: input }: CreateBudgetInputDto
   ): Promise<CreateBudgetOutputDto> {
     return await this.budgetService.create(input);
   }
-  @Query(returns => ReadBudgetOutputDto, {
+  @Query(() => ReadBudgetOutputDto, {
     description: 'Read one Budget by id',
   })
   async readBudget(
-    @Args('input') { budget: input }: ReadBudgetInputDto,
+    @Args('input') { budget: input }: ReadBudgetInputDto
   ): Promise<ReadBudgetOutputDto> {
     return await this.budgetService.readOne(input);
   }
 
-  @Mutation(returns => UpdateBudgetOutputDto, {
+  @Mutation(() => UpdateBudgetOutputDto, {
     description: 'Update an Budget',
   })
   async updateBudget(
     @Args('input')
-    { budget: input }: UpdateBudgetInputDto,
+    { budget: input }: UpdateBudgetInputDto
   ): Promise<UpdateBudgetOutputDto> {
     return await this.budgetService.update(input);
   }
 
-  @Mutation(returns => DeleteBudgetOutputDto, {
+  @Mutation(() => DeleteBudgetOutputDto, {
     description: 'Delete an Budget',
   })
   async deleteBudget(
     @Args('input')
-    { budget: input }: DeleteBudgetInputDto,
+    { budget: input }: DeleteBudgetInputDto
   ): Promise<DeleteBudgetOutputDto> {
     return await this.budgetService.delete(input);
   }

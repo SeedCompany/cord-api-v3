@@ -1,18 +1,17 @@
-import * as faker from 'faker';
-
-import { TestApp } from './create-app';
-import { fragments } from './fragments';
 import { gql } from 'apollo-server-core';
+import * as faker from 'faker';
 import { isValid } from 'shortid';
 import {
   CreateProject,
   Project,
   ProjectType,
 } from '../../src/components/project';
+import { TestApp } from './create-app';
+import { fragments } from './fragments';
 
 export async function createProject(
   app: TestApp,
-  input: Partial<CreateProject> = {},
+  input: Partial<CreateProject> = {}
 ) {
   const project: CreateProject = {
     name: faker.random.word() + ' Project',
@@ -35,7 +34,7 @@ export async function createProject(
       input: {
         project,
       },
-    },
+    }
   );
 
   const actual: Project = result.createProject.project;

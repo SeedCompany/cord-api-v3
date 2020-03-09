@@ -1,8 +1,8 @@
-import { EnvironmentService } from './environment.service';
 import { Injectable } from '@nestjs/common';
 import { LazyGetter as Lazy } from 'lazy-get-decorator';
-import { LogLevel } from '../logger';
 import { Config as Neo4JDriverConfig } from 'neo4j-driver/types/v1';
+import { LogLevel } from '../logger';
+import { EnvironmentService } from './environment.service';
 
 /**
  * Application configuration.

@@ -1,8 +1,15 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Connection } from 'cypher-query-builder';
 import { generate } from 'shortid';
 import { NotImplementedError } from '../../common';
-import { ISession, AuthService } from '../auth';
+import { PropertyUpdaterService } from '../../core';
+import { AuthService, ISession } from '../auth';
+import { UserService } from '../user';
 import {
   CreateFileInput,
   Directory,
@@ -19,10 +26,6 @@ import {
 } from './dto';
 import { FilesBucketToken } from './files-s3-bucket.factory';
 import { S3Bucket } from './s3-bucket';
-import { UserService, User } from '../user';
-import { DateTime } from 'luxon';
-import { PropertyUpdaterService } from '../../core';
-import { Dictionary } from 'lodash';
 
 @Injectable()
 export class FileService {
@@ -31,7 +34,7 @@ export class FileService {
     @Inject(FilesBucketToken) private readonly bucket: S3Bucket,
     private readonly userService: UserService,
     private readonly authService: AuthService,
-    private readonly propertyUpdater: PropertyUpdaterService,
+    private readonly propertyUpdater: PropertyUpdaterService
   ) {}
 
   async getDirectory(id: string, session: ISession): Promise<Directory> {
@@ -51,10 +54,10 @@ export class FileService {
   }
 
   async getFileNode(id: string, session: ISession): Promise<FileOrDirectory> {
-      const result = await this.db
-        .query()
-        .raw(
-          `
+    const result = await this.db
+      .query()
+      .raw(
+        `
         MATCH
         (token:Token {active: true, value: $token})
         <-[:token {active: true}]-
@@ -71,26 +74,27 @@ export class FileService {
         type.value as type,
         size.value as size
           `,
-          {
-            id,
-            token: session.token,
-            requestingUserId: session.userId,
-            owningOrgId: session.owningOrgId,
-          },
-        )
-        .first();
-      if (!result) {
-        throw new NotFoundException('Could not find file');
-      }
-      return {
-        id: result.id,
-        createdAt: result.createdAt,
-        type: result.type,
-        size: result.size,
-      } as File;
+        {
+          id,
+          token: session.token,
+          requestingUserId: session.userId,
+          owningOrgId: session.owningOrgId,
+        }
+      )
+      .first();
+    if (!result) {
+      throw new NotFoundException('Could not find file');
+    }
+    throw new Error('Returned object is not complete');
+    // return {
+    //   id: result.id,
+    //   createdAt: result.createdAt,
+    //   type: result.type,
+    //   size: result.size,
+    // };
   }
 
-  async getDownloadUrl(fileId: string, session: ISession): Promise<string> {
+  async getDownloadUrl(fileId: string, _session: ISession): Promise<string> {
     // before sending link, first check if object exists in s3,
     const obj = await this.bucket.getObject(fileId);
     if (!obj) {
@@ -101,17 +105,20 @@ export class FileService {
   }
 
   async listChildren(
-    input: FileListInput,
-    session: ISession,
+    _input: FileListInput,
+    _session: ISession
   ): Promise<FileListOutput> {
     throw new NotImplementedError();
   }
 
-  async getVersions(fileId: string, session: ISession): Promise<FileVersion[]> {
+  async getVersions(
+    _fileId: string,
+    _session: ISession
+  ): Promise<FileVersion[]> {
     throw new NotImplementedError();
   }
 
-  async createDirectory(name: string, session: ISession): Promise<Directory> {
+  async createDirectory(_name: string, _session: ISession): Promise<Directory> {
     throw new NotImplementedError();
   }
 
@@ -123,7 +130,7 @@ export class FileService {
 
   async createFile(
     { parentId, uploadId, name }: CreateFileInput,
-    session: ISession,
+    session: ISession
   ): Promise<File> {
     try {
       const acls = {
@@ -139,7 +146,7 @@ export class FileService {
 
       await this.propertyUpdater.createNode({
         session,
-        input: {...input},
+        input: { ...input },
         acls,
         baseNodeLabel: 'FileNode',
         aclEditProp: 'canCreateFileNode',
@@ -151,28 +158,25 @@ export class FileService {
     }
   }
 
-  async updateFile(
-    { parentId, uploadId }: UpdateFileInput,
-    session: ISession,
-  ): Promise<File> {
+  async updateFile(_input: UpdateFileInput, _session: ISession): Promise<File> {
     throw new NotImplementedError();
   }
 
   async rename(
-    { id, name }: RenameFileInput,
-    session: ISession,
+    _input: RenameFileInput,
+    _session: ISession
   ): Promise<FileOrDirectory> {
     throw new NotImplementedError();
   }
 
   async move(
-    { id, parentId, name }: MoveFileInput,
-    session: ISession,
+    _input: MoveFileInput,
+    _session: ISession
   ): Promise<FileOrDirectory> {
     throw new NotImplementedError();
   }
 
-  async delete(id: string, session: ISession): Promise<void> {
+  async delete(_id: string, _session: ISession): Promise<void> {
     throw new NotImplementedError();
   }
 }

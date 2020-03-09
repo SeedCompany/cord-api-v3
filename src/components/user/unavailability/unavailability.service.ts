@@ -1,6 +1,5 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Connection } from 'cypher-query-builder';
-import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ILogger, Logger, PropertyUpdaterService } from '../../../core';
 import { ISession } from '../../auth';
@@ -17,12 +16,12 @@ export class UnavailabilityService {
   constructor(
     private readonly db: Connection,
     @Logger('UnavailabilityService:service') private readonly logger: ILogger,
-    private readonly propertyUpdater: PropertyUpdaterService,
+    private readonly propertyUpdater: PropertyUpdaterService
   ) {}
 
   async create(
     input: CreateUnavailability,
-    session: ISession,
+    session: ISession
   ): Promise<Unavailability> {
     const id = generate();
     const acls = {
@@ -43,13 +42,13 @@ export class UnavailabilityService {
       });
     } catch {
       this.logger.error(
-        `Could not create unavailability for user ${input.userId}`,
+        `Could not create unavailability for user ${input.userId}`
       );
       throw new Error('Could not create unavailability');
     }
 
     this.logger.info(
-      `unavailability for user ${input.userId} created, id ${id}`,
+      `unavailability for user ${input.userId} created, id ${id}`
     );
 
     // connect the Unavailability to the User.
@@ -60,7 +59,7 @@ export class UnavailabilityService {
     CREATE (user)-[:unavailability {active: true, createdAt: datetime()}]->(unavailability)
     RETURN  unavailability.id as id
     `;
-    const result = await this.db
+    await this.db
       .query()
       .raw(query, {
         userId: session.userId,
@@ -112,7 +111,7 @@ export class UnavailabilityService {
           requestingUserId: session.userId,
           owningOrgId: session.owningOrgId,
           id,
-        },
+        }
       )
       .first();
     if (!result) {
@@ -124,8 +123,14 @@ export class UnavailabilityService {
       createdAt: result.createdAt,
       description: {
         value: result.description,
-        canRead: result.canReadDescription !== null ? result.canReadDescription : false,
-        canEdit: result.canEditDescription !== null ? result.canEditDescription : false,
+        canRead:
+          result.canReadDescription !== null
+            ? result.canReadDescription
+            : false,
+        canEdit:
+          result.canEditDescription !== null
+            ? result.canEditDescription
+            : false,
       },
       start: {
         value: result.start,
@@ -134,21 +139,15 @@ export class UnavailabilityService {
       },
       end: {
         value: result.end,
-        canRead:
-          result.canReadEnd !== null
-            ? result.canReadEnd
-            : false,
-        canEdit:
-          result.canEditEnd !== null
-            ? result.canEditEnd
-            : false,
+        canRead: result.canReadEnd !== null ? result.canReadEnd : false,
+        canEdit: result.canEditEnd !== null ? result.canEditEnd : false,
       },
     };
   }
-  
+
   async update(
     input: UpdateUnavailability,
-    session: ISession,
+    session: ISession
   ): Promise<Unavailability> {
     const unavailability = await this.readOne(input.id, session);
 
@@ -163,38 +162,29 @@ export class UnavailabilityService {
 
   async delete(id: string, session: ISession): Promise<void> {
     this.logger.info(
-      `mutation delete unavailability: ${id} by ${session.userId}`,
+      `mutation delete unavailability: ${id} by ${session.userId}`
     );
     const ua = await this.readOne(id, session);
     if (!ua) {
       throw new NotFoundException('Unavailability not found');
     }
-    try {
-      this.propertyUpdater.deleteNode({
-        session,
-        object: ua,
-        aclEditProp: 'canDeleteOwnUser',
-      });
-    } catch (e) {
-      console.log(e);
-      throw e;
-    }
+    await this.propertyUpdater.deleteNode({
+      session,
+      object: ua,
+      aclEditProp: 'canDeleteOwnUser',
+    });
   }
 
   async list(
     { page, count, sort, order, filter }: UnavailabilityListInput,
-    session: ISession,
+    session: ISession
   ): Promise<UnavailabilityListOutput> {
     const result = await this.propertyUpdater.list<Unavailability>({
       session,
       nodevar: 'unavailability',
       aclReadProp: 'canReadUnavailabilityList',
       aclEditProp: 'canCreateUnavailability',
-      props: [
-        'description',
-        'start',
-        'end',
-      ],
+      props: ['description', 'start', 'end'],
       input: {
         page,
         count,

@@ -1,5 +1,10 @@
 import { Type } from '@nestjs/common';
-import { Field, ObjectType, InterfaceType, createUnionType } from 'type-graphql';
+import {
+  createUnionType,
+  Field,
+  InterfaceType,
+  ObjectType,
+} from 'type-graphql';
 import { Resource, SecuredProperty, SecuredString } from '../../../common';
 import { SecuredUser } from '../../user/dto';
 

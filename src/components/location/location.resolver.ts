@@ -1,4 +1,4 @@
-import { Resolver, Args, Query, Mutation } from '@nestjs/graphql';
+import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { IdArg } from '../../common';
 import { ISession, Session } from '../auth';
 import {
@@ -13,10 +13,10 @@ import {
   LocationListOutput,
   UpdateCountryInput,
   UpdateCountryOutput,
-  UpdateRegionOutput,
   UpdateRegionInput,
-  UpdateZoneOutput,
+  UpdateRegionOutput,
   UpdateZoneInput,
+  UpdateZoneOutput,
 } from './dto';
 import { LocationService } from './location.service';
 
@@ -29,7 +29,7 @@ export class LocationResolver {
   })
   async location(
     @Session() session: ISession,
-    @IdArg() id: string,
+    @IdArg() id: string
   ): Promise<Location> {
     return this.locationService.readOne(id, session);
   }
@@ -44,7 +44,7 @@ export class LocationResolver {
       type: () => LocationListInput,
       defaultValue: LocationListInput.defaultVal,
     })
-    input: LocationListInput,
+    input: LocationListInput
   ): Promise<LocationListOutput> {
     return this.locationService.list(input, session);
   }
@@ -54,7 +54,7 @@ export class LocationResolver {
   })
   async createZone(
     @Session() session: ISession,
-    @Args('input') { zone: input }: CreateZoneInput,
+    @Args('input') { zone: input }: CreateZoneInput
   ): Promise<CreateZoneOutput> {
     const zone = await this.locationService.createZone(input, session);
     return { zone };
@@ -65,7 +65,7 @@ export class LocationResolver {
   })
   async createRegion(
     @Session() session: ISession,
-    @Args('input') { region: input }: CreateRegionInput,
+    @Args('input') { region: input }: CreateRegionInput
   ): Promise<CreateRegionOutput> {
     const region = await this.locationService.createRegion(input, session);
     return { region };
@@ -76,7 +76,7 @@ export class LocationResolver {
   })
   async createCountry(
     @Session() session: ISession,
-    @Args('input') { country: input }: CreateCountryInput,
+    @Args('input') { country: input }: CreateCountryInput
   ): Promise<CreateCountryOutput> {
     const country = await this.locationService.createCountry(input, session);
     return { country };
@@ -87,7 +87,7 @@ export class LocationResolver {
   })
   async updateZone(
     @Session() session: ISession,
-    @Args('input') { zone: input }: UpdateZoneInput,
+    @Args('input') { zone: input }: UpdateZoneInput
   ): Promise<UpdateZoneOutput> {
     const zone = await this.locationService.updateZone(input, session);
     return { zone };
@@ -98,7 +98,7 @@ export class LocationResolver {
   })
   async updateRegion(
     @Session() session: ISession,
-    @Args('input') { region: input }: UpdateRegionInput,
+    @Args('input') { region: input }: UpdateRegionInput
   ): Promise<UpdateRegionOutput> {
     const region = await this.locationService.updateRegion(input, session);
     return { region };
@@ -109,7 +109,7 @@ export class LocationResolver {
   })
   async updateCountry(
     @Session() session: ISession,
-    @Args('input') { country: input }: UpdateCountryInput,
+    @Args('input') { country: input }: UpdateCountryInput
   ): Promise<UpdateCountryOutput> {
     const country = await this.locationService.updateCountry(input, session);
     return { country };
@@ -120,7 +120,7 @@ export class LocationResolver {
   })
   async deleteLocation(
     @Session() session: ISession,
-    @IdArg() id: string,
+    @IdArg() id: string
   ): Promise<boolean> {
     await this.locationService.delete(id, session);
     return true;

@@ -1,16 +1,16 @@
-import { Args, Query, Mutation, Resolver } from '@nestjs/graphql';
-import { PartnershipService } from './partnership.service';
+import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { IdArg } from '../../common';
+import { ISession, Session } from '../auth';
 import {
-  CreatePartnershipOutput,
   CreatePartnershipInput,
+  CreatePartnershipOutput,
   Partnership,
-  UpdatePartnershipOutput,
-  UpdatePartnershipInput,
   PartnershipListInput,
   PartnershipListOutput,
+  UpdatePartnershipInput,
+  UpdatePartnershipOutput,
 } from './dto';
-import { Session, ISession } from '../auth';
-import { IdArg } from '../../common';
+import { PartnershipService } from './partnership.service';
 
 @Resolver()
 export class PartnershipResolver {
@@ -21,7 +21,7 @@ export class PartnershipResolver {
   })
   async createPartnership(
     @Session() session: ISession,
-    @Args('input') { partnership: input }: CreatePartnershipInput,
+    @Args('input') { partnership: input }: CreatePartnershipInput
   ): Promise<CreatePartnershipOutput> {
     const partnership = await this.service.create(input, session);
     return { partnership };
@@ -32,7 +32,7 @@ export class PartnershipResolver {
   })
   async partnership(
     @Session() session: ISession,
-    @IdArg() id: string,
+    @IdArg() id: string
   ): Promise<Partnership> {
     return await this.service.readOne(id, session);
   }
@@ -47,7 +47,7 @@ export class PartnershipResolver {
       type: () => PartnershipListInput,
       defaultValue: PartnershipListInput.defaultVal,
     })
-    input: PartnershipListInput,
+    input: PartnershipListInput
   ): Promise<PartnershipListOutput> {
     return this.service.list(input, session);
   }
@@ -57,7 +57,7 @@ export class PartnershipResolver {
   })
   async updatePartnership(
     @Session() session: ISession,
-    @Args('input') { partnership: input }: UpdatePartnershipInput,
+    @Args('input') { partnership: input }: UpdatePartnershipInput
   ): Promise<UpdatePartnershipOutput> {
     const partnership = await this.service.update(input, session);
     return { partnership };
@@ -68,7 +68,7 @@ export class PartnershipResolver {
   })
   async deletePartnership(
     @Session() session: ISession,
-    @IdArg() id: string,
+    @IdArg() id: string
   ): Promise<boolean> {
     await this.service.delete(id, session);
     return true;

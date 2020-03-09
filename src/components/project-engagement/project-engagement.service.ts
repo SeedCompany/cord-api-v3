@@ -1,3 +1,6 @@
+import { Injectable } from '@nestjs/common';
+import { generate } from 'shortid';
+import { DatabaseService } from '../../core/database.service';
 import {
   CreateProjectEngagementInput,
   CreateProjectEngagementOutputDto,
@@ -9,16 +12,12 @@ import {
   UpdateProjectEngagementOutputDto,
 } from './project-engagement.dto';
 
-import { DatabaseService } from '../../core/database.service';
-import { Injectable } from '@nestjs/common';
-import { generate } from 'shortid';
-
 @Injectable()
 export class ProjectEngagementService {
   constructor(private readonly db: DatabaseService) {}
 
   async create(
-    input: CreateProjectEngagementInput,
+    input: CreateProjectEngagementInput
   ): Promise<CreateProjectEngagementOutputDto> {
     const response = new CreateProjectEngagementOutputDto();
     const session = this.db.driver.session();
@@ -32,12 +31,12 @@ export class ProjectEngagementService {
         {
           id,
           languageName: input.languageName,
-        },
+        }
       )
       .then(result => {
         response.projectEngagement.id = result.records[0].get('id');
         response.projectEngagement.languageName = result.records[0].get(
-          'languageName',
+          'languageName'
         );
       })
       .catch(error => {
@@ -49,7 +48,7 @@ export class ProjectEngagementService {
   }
 
   async readOne(
-    input: ReadProjectEngagementInput,
+    input: ReadProjectEngagementInput
   ): Promise<ReadProjectEngagementOutputDto> {
     const response = new ReadProjectEngagementOutputDto();
     const session = this.db.driver.session();
@@ -58,12 +57,12 @@ export class ProjectEngagementService {
         `MATCH (projectEngagement:ProjectEngagement {active: true, owningOrg: "seedcompany"}) -[:language]-> (language:Language)WHERE projectEngagement.id = $id RETURN projectEngagement.id as id, language.name as languageName`,
         {
           id: input.id,
-        },
+        }
       )
       .then(result => {
         response.projectEngagement.id = result.records[0].get('id');
         response.projectEngagement.languageName = result.records[0].get(
-          'languageName',
+          'languageName'
         );
       })
       .catch(error => {
@@ -75,7 +74,7 @@ export class ProjectEngagementService {
   }
 
   async update(
-    input: UpdateProjectEngagementInput,
+    input: UpdateProjectEngagementInput
   ): Promise<UpdateProjectEngagementOutputDto> {
     const response = new UpdateProjectEngagementOutputDto();
     const session = this.db.driver.session();
@@ -91,19 +90,15 @@ export class ProjectEngagementService {
           id: input.id,
           initialEndDate: input.initialEndDate,
           currentEndDate: input.currentEndDate,
-        },
+        }
       )
       .then(result => {
         if (result.records.length > 0) {
           response.projectEngagement = {
             id: result.records[0].get('id'),
-            initialEndDate: result.records[0].get(
-              'initialEndDate',
-            ),
-            currentEndDate: result.records[0].get(
-              'currentEndDate',
-            ),
-          }
+            initialEndDate: result.records[0].get('initialEndDate'),
+            currentEndDate: result.records[0].get('currentEndDate'),
+          };
         } else {
           throw new Error('Could not update project engagement.');
         }
@@ -118,7 +113,7 @@ export class ProjectEngagementService {
   }
 
   async delete(
-    input: DeleteProjectEngagementInput,
+    input: DeleteProjectEngagementInput
   ): Promise<DeleteProjectEngagementOutputDto> {
     const response = new DeleteProjectEngagementOutputDto();
     const session = this.db.driver.session();
@@ -127,7 +122,7 @@ export class ProjectEngagementService {
         'MATCH (projectEngagement:ProjectEngagement {active: true, owningOrg: "seedcompany", id: $id}) SET projectEngagement.active = false RETURN projectEngagement.id as id',
         {
           id: input.id,
-        },
+        }
       )
       .then(result => {
         response.projectEngagement.id = result.records[0].get('id');

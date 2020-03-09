@@ -1,15 +1,15 @@
-import * as faker from 'faker';
-import {
-  createTestApp,
-  TestApp,
-  fragments,
-  createSession,
-  createUser,
-} from './utility';
 import { gql } from 'apollo-server-core';
+import * as faker from 'faker';
 import { times } from 'lodash';
-import { createProject } from './utility/create-project';
 import { Project, ProjectType } from '../src/components/project';
+import {
+  createSession,
+  createTestApp,
+  createUser,
+  fragments,
+  TestApp,
+} from './utility';
+import { createProject } from './utility/create-project';
 
 describe('Project e2e', () => {
   let app: TestApp;
@@ -37,7 +37,7 @@ describe('Project e2e', () => {
       `,
       {
         id: project.id,
-      },
+      }
     );
 
     const actual: Project = result.project;
@@ -51,7 +51,7 @@ describe('Project e2e', () => {
     expect(actual.mouStart.value).toBe(project.mouStart.value);
     expect(actual.mouEnd.value).toBe(project.mouEnd.value);
     expect(actual.estimatedSubmission.value).toBe(
-      project.estimatedSubmission.value,
+      project.estimatedSubmission.value
     );
     expect(actual.modifiedAt).toBeTruthy();
   });
@@ -74,7 +74,7 @@ describe('Project e2e', () => {
       {
         id: project.id,
         name: namenew,
-      },
+      }
     );
 
     expect(result.updateProject.project.id).toBe(project.id);
@@ -92,7 +92,7 @@ describe('Project e2e', () => {
       `,
       {
         id: project.id,
-      },
+      }
     );
 
     const actual: boolean | undefined = result.deleteProject;
@@ -109,7 +109,7 @@ describe('Project e2e', () => {
         `,
         {
           id: project.id,
-        },
+        }
       );
     } catch (e) {
       expect(e.response.statusCode).toBe(404);
@@ -124,8 +124,8 @@ describe('Project e2e', () => {
       times(numProjects).map(() =>
         createProject(app, {
           type,
-        }),
-      ),
+        })
+      )
     );
 
     const { projects } = await app.graphql.query(
@@ -143,7 +143,7 @@ describe('Project e2e', () => {
       `,
       {
         type,
-      },
+      }
     );
 
     expect(projects.items.length).toBeGreaterThanOrEqual(numProjects);

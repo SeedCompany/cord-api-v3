@@ -3,7 +3,7 @@ import { ValidateNested } from 'class-validator';
 import { Field, InputType, ObjectType } from 'type-graphql';
 import { PaginatedList, SortablePaginationInput } from '../../../common';
 import { FileNodeCategory } from './category';
-import { File, Directory, FileOrDirectory } from './node';
+import { Directory, File, FileOrDirectory } from './node';
 import { FileNodeType } from './type';
 
 @InputType()

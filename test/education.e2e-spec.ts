@@ -1,19 +1,17 @@
+import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
-
+import { times } from 'lodash';
+import { isValid } from 'shortid';
+import { User } from '../src/components/user';
+import { Education } from '../src/components/user/education';
 import {
-  TestApp,
   createEducation,
   createSession,
   createTestApp,
   createUser,
+  TestApp,
 } from './utility';
-
-import { Education } from '../src/components/user/education';
-import { User } from '../src/components/user';
 import { fragments } from './utility/fragments';
-import { gql } from 'apollo-server-core';
-import { isValid } from 'shortid';
-import { times } from 'lodash';
 
 describe('Education e2e', () => {
   let app: TestApp;
@@ -49,7 +47,7 @@ describe('Education e2e', () => {
         `,
         {
           id: education.id,
-        },
+        }
       );
 
       expect(actual.id).toBe(education.id);
@@ -84,7 +82,7 @@ describe('Education e2e', () => {
             institution: newInstitution,
           },
         },
-      },
+      }
     );
     const updated = result.updateEducation.education;
     expect(updated).toBeTruthy();
@@ -105,7 +103,7 @@ describe('Education e2e', () => {
         `,
         {
           id: education.id,
-        },
+        }
       );
       const actual: Education | undefined = result.deleteEducation;
       expect(actual).toBeTruthy();
@@ -120,7 +118,7 @@ describe('Education e2e', () => {
     // create 10 educations
     const numEducations = 10;
     await Promise.all(
-      times(numEducations).map(() => createEducation(app, { userId: user.id })),
+      times(numEducations).map(() => createEducation(app, { userId: user.id }))
     );
 
     const { educations } = await app.graphql.query(gql`

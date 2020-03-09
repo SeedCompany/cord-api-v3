@@ -11,12 +11,12 @@ export class IndexerModule implements OnModuleInit {
   constructor(
     private readonly db: Connection,
     private readonly discover: DiscoveryService,
-    @Logger('database:indexer') private readonly logger: ILogger,
+    @Logger('database:indexer') private readonly logger: ILogger
   ) {}
 
   async onModuleInit() {
     const discovered = await this.discover.providerMethodsWithMetaAtKey(
-      DB_INDEX_KEY,
+      DB_INDEX_KEY
     );
     this.logger.info('Discovered indexers', { count: discovered.length });
 

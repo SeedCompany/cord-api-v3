@@ -1,22 +1,22 @@
-import { DatabaseService } from '../../core/database.service';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { generate } from 'shortid';
+import { ILogger, Logger, PropertyUpdaterService } from '../../core';
+import { DatabaseService } from '../../core/database.service';
+import { ISession } from '../auth';
 import {
   CreatePartnership,
   Partnership,
-  UpdatePartnership,
   PartnershipListInput,
   PartnershipListOutput,
+  UpdatePartnership,
 } from './dto';
-import { ISession } from '../auth';
-import { PropertyUpdaterService, ILogger, Logger } from '../../core';
 
 @Injectable()
 export class PartnershipService {
   constructor(
     private readonly db: DatabaseService,
     private readonly propertyUpdater: PropertyUpdaterService,
-    @Logger('partnership:service') private readonly logger: ILogger,
+    @Logger('partnership:service') private readonly logger: ILogger
   ) {}
 
   async readOne(id: string, session: ISession): Promise<Partnership> {
@@ -82,7 +82,7 @@ export class PartnershipService {
           requestingUserId: session.userId,
           owningOrgId: session.owningOrgId,
           id,
-        },
+        }
       )
       .first();
 
@@ -131,7 +131,7 @@ export class PartnershipService {
 
   async list(
     { page, count, sort, order, filter }: PartnershipListInput,
-    session: ISession,
+    session: ISession
   ): Promise<PartnershipListOutput> {
     const result = await this.propertyUpdater.list<Partnership>({
       session,
@@ -164,7 +164,7 @@ export class PartnershipService {
 
   async create(
     { organizationId, ...input }: CreatePartnership,
-    session: ISession,
+    session: ISession
   ): Promise<Partnership> {
     const id = generate();
     const acls = {
