@@ -2,7 +2,7 @@ import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { DateTime } from 'luxon';
 import { Field, ID, InputType, ObjectType } from 'type-graphql';
-import { DateTimeField } from '../../../common';
+import { DateField } from '../../../common';
 import { PartnershipAgreementStatus } from './partnership-agreement-status.enum';
 import { PartnershipType } from './partnership-type.enum';
 import { Partnership } from './partnership.dto';
@@ -15,10 +15,10 @@ export class CreatePartnership {
   @Field(() => PartnershipAgreementStatus)
   readonly mouStatus: PartnershipAgreementStatus;
 
-  @DateTimeField({ nullable: true })
+  @DateField({ nullable: true })
   readonly mouStart: DateTime | null;
 
-  @DateTimeField({ nullable: true })
+  @DateField({ nullable: true })
   readonly mouEnd: DateTime | null;
 
   @Field(() => ID)
