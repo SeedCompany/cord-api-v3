@@ -23,7 +23,7 @@ export const unwrapSecured = <T>(value: T | Secured<T>): T | undefined =>
   isSecured(value) ? value.value : value;
 
 export function SecuredProperty<T>(
-  ValueClass: ClassType<T> | AbstractClassType<T> | GraphQLScalarType
+  ValueClass: ClassType<T> | AbstractClassType<T> | GraphQLScalarType | object
 ) {
   @ObjectType({ isAbstract: true, implements: [Readable, Editable] })
   abstract class SecuredPropertyClass

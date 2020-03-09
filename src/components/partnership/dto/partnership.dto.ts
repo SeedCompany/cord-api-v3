@@ -1,4 +1,3 @@
-import { GraphQLString } from 'graphql';
 import { Field, ObjectType } from 'type-graphql';
 import { Resource, SecuredDate, SecuredProperty } from '../../../common';
 import { Organization } from '../../organization';
@@ -10,7 +9,7 @@ import { PartnershipType } from './partnership-type.enum';
 })
 export abstract class SecuredPartnershipAgreementStatus extends SecuredProperty<
   PartnershipAgreementStatus
->(GraphQLString) {}
+>(PartnershipAgreementStatus) {}
 
 @ObjectType()
 export class Partnership extends Resource {
