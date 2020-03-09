@@ -15,7 +15,7 @@ import { InternshipEngagementService } from './components/internship-engagement/
 import { LanguageModule } from './components/language';
 import { LocationModule } from './components/location';
 import { OrganizationModule } from './components/organization';
-import { PartnershipModule } from './components/partnership/partnership.module';
+import { PartnershipModule } from './components/partnership';
 import { ProductModule } from './components/product';
 import { ProjectModule } from './components/project';
 import { ProjectEngagementResolver } from './components/project-engagement/project-engagement.resolver';

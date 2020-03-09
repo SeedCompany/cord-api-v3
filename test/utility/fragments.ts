@@ -204,8 +204,12 @@ export const fragments = {
       mouStatus {
         value
       }
-      mouStart
-      mouEnd
+      mouStart {
+        value
+      }
+      mouEnd {
+        value
+      }
       types
       organization {
         id

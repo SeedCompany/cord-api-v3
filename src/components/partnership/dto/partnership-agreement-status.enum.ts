@@ -1,7 +1,7 @@
 import { registerEnumType } from 'type-graphql';
 
 export enum PartnershipAgreementStatus {
-  NonAttached = 'NonAttached',
+  NotAttached = 'NotAttached',
   AwaitingSignature = 'AwaitingSignature',
   Signed = 'Signed',
 }

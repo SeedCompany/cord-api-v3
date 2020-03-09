@@ -1,11 +1,6 @@
 import { GraphQLString } from 'graphql';
 import { Field, ObjectType } from 'type-graphql';
-import {
-  DateTimeField,
-  Resource,
-  SecuredDateTime,
-  SecuredProperty,
-} from '../../../common';
+import { Resource, SecuredDate, SecuredProperty } from '../../../common';
 import { Organization } from '../../organization';
 import { PartnershipAgreementStatus } from './partnership-agreement-status.enum';
 import { PartnershipType } from './partnership-type.enum';
@@ -25,14 +20,14 @@ export class Partnership extends Resource {
   @Field()
   readonly mouStatus: SecuredPartnershipAgreementStatus;
 
-  @DateTimeField()
-  readonly mouStart: SecuredDateTime;
+  @Field()
+  readonly mouStart: SecuredDate;
 
-  @DateTimeField()
-  readonly mouEnd: SecuredDateTime;
+  @Field()
+  readonly mouEnd: SecuredDate;
 
-  @Field(() => Organization, { nullable: true })
-  readonly organization: Organization | null;
+  @Field(() => Organization)
+  readonly organization: Organization;
 
   @Field(() => [PartnershipType])
   readonly types: PartnershipType[];

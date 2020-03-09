@@ -6,6 +6,7 @@ import { ISession } from '../auth';
 import {
   CreatePartnership,
   Partnership,
+  PartnershipAgreementStatus,
   PartnershipListInput,
   PartnershipListOutput,
   UpdatePartnership,
@@ -114,18 +115,15 @@ export class PartnershipService {
         canEdit: !!result.canEditMouEnd,
       },
       types: result.types ? result.types.split(',') : [],
-      organization:
-        result.organization && result.organization.properties
-          ? {
-              id: result.organization.properties.id,
-              createdAt: result.organization.properties.createdAt,
-              name: {
-                value: result.organization.properties.name,
-                canRead: true,
-                canEdit: true,
-              },
-            }
-          : null,
+      organization: {
+        id: result.organization.properties.id,
+        createdAt: result.organization.properties.createdAt,
+        name: {
+          value: result.organization.properties.name,
+          canRead: true,
+          canEdit: true,
+        },
+      },
     };
   }
 
@@ -185,7 +183,12 @@ export class PartnershipService {
     try {
       await this.propertyUpdater.createNode({
         session,
-        input: { id, ...input },
+        input: {
+          id,
+          agreementStatus: PartnershipAgreementStatus.NotAttached,
+          mouStatus: PartnershipAgreementStatus.NotAttached,
+          ...input,
+        },
         acls,
         baseNodeLabel: 'Partnership',
         aclEditProp: 'canCreatePartnership',

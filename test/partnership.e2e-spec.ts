@@ -49,8 +49,8 @@ describe('Partnership e2e', () => {
       partnership.agreementStatus.value
     );
     expect(actual.mouStatus.value).toBe(partnership.mouStatus.value);
-    expect(actual.mouStart).toMatchObject(partnership.mouStart);
-    expect(actual.mouEnd).toMatchObject(partnership.mouEnd);
+    expect(actual.mouStart.value).toBe(partnership.mouStart.value);
+    expect(actual.mouEnd.value).toBe(partnership.mouEnd.value);
     expect(actual.types).toEqual(expect.arrayContaining(partnership.types));
     expect(actual.organization).toBeTruthy();
     expect(actual.organization?.id).toBe(partnership.organization?.id);
@@ -165,13 +165,15 @@ describe('Partnership e2e', () => {
             input: { filter: { agreementStatus: $agreementStatus } }
           ) {
             items {
-              ...partnership
+              id
+              agreementStatus {
+                value
+              }
             }
             hasMore
             total
           }
         }
-        ${fragments.partnership}
       `,
       {
         agreementStatus,
