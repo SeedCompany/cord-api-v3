@@ -1,4 +1,4 @@
-import { ValidationPipe, Logger } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from './core';
@@ -12,14 +12,14 @@ async function bootstrap() {
     new ValidationPipe({
       transform: true,
       skipMissingProperties: true,
-    }),
+    })
   );
   app.enableShutdownHooks();
   await app.listen(config.port, () => {
     app
       .get(Logger)
       .log(
-        `Listening at http://localhost:${config.port}/${config.globalPrefix}`,
+        `Listening at http://localhost:${config.port}/${config.globalPrefix}`
       );
   });
 }

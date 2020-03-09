@@ -1,18 +1,15 @@
+import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
-
+import { times } from 'lodash';
+import { isValid } from 'shortid';
 import {
-  TestApp,
   createLanguage,
   createSession,
   createTestApp,
   createUser,
+  TestApp,
 } from './utility';
-
-import { Language } from '../src/components/language/dto/language.dto';
 import { fragments } from './utility/fragments';
-import { gql } from 'apollo-server-core';
-import { isValid } from 'shortid';
-import { times } from 'lodash';
 
 describe('Language e2e', () => {
   let app: TestApp;
@@ -47,7 +44,7 @@ describe('Language e2e', () => {
         `,
         {
           id: language.id,
-        },
+        }
       );
 
       expect(actual.id).toBe(language.id);
@@ -83,7 +80,7 @@ describe('Language e2e', () => {
             name: newName,
           },
         },
-      },
+      }
     );
     const updated = result.updateLanguage.language;
     expect(updated).toBeTruthy();
@@ -103,7 +100,7 @@ describe('Language e2e', () => {
       `,
       {
         id: language.id,
-      },
+      }
     );
 
     expect(result.deleteLanguage).toBeTruthy();
@@ -119,7 +116,7 @@ describe('Language e2e', () => {
         `,
         {
           id: language.id,
-        },
+        }
       );
     } catch (e) {
       // we expect this to throw. the language should have been deleted, therefor a subsequent read should fail
@@ -133,7 +130,7 @@ describe('Language e2e', () => {
     // create a bunch of languages
     const numLanguages = 10;
     await Promise.all(
-      times(numLanguages).map(() => createLanguage(app, { name: 'Italian' })),
+      times(numLanguages).map(() => createLanguage(app, { name: 'Italian' }))
     );
     // test reading new lang
     const { languages } = await app.graphql.query(gql`

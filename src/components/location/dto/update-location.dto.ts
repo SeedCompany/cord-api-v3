@@ -1,7 +1,7 @@
 import { Type } from 'class-transformer';
 import { MinLength, ValidateNested } from 'class-validator';
 import { Field, ID, InputType, ObjectType } from 'type-graphql';
-import { Region, Country, Zone } from './location.dto';
+import { Country, Region, Zone } from './location.dto';
 
 @InputType()
 export abstract class UpdateZone {

@@ -1,14 +1,13 @@
+import { Type } from 'class-transformer';
+import { ValidateNested } from 'class-validator';
 import { Field, InputType, ObjectType } from 'type-graphql';
 import {
-  PaginatedList,
   Order,
+  PaginatedList,
   SecuredList,
   SortablePaginationInput,
 } from '../../../../common';
-
-import { Type } from 'class-transformer';
 import { Unavailability } from './unavailability.dto';
-import { ValidateNested } from 'class-validator';
 
 @InputType()
 export abstract class UnavailabilityFilters {
@@ -22,7 +21,9 @@ export abstract class UnavailabilityFilters {
 const defaultFilters = {};
 
 @InputType()
-export class UnavailabilityListInput extends SortablePaginationInput<keyof Unavailability>({
+export class UnavailabilityListInput extends SortablePaginationInput<
+  keyof Unavailability
+>({
   defaultSort: 'start',
   defaultOrder: Order.DESC,
 }) {
@@ -40,5 +41,5 @@ export class UnavailabilityListOutput extends PaginatedList(Unavailability) {}
   description: SecuredList.descriptionFor('unavailabilities'),
 })
 export abstract class SecuredUnavailabilityList extends SecuredList(
-  Unavailability,
+  Unavailability
 ) {}

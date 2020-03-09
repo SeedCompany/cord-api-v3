@@ -1,15 +1,15 @@
 import { DateTime } from 'luxon';
+import { Field, ObjectType } from 'type-graphql';
+import { User } from '.';
 import { DateTimeField } from '../../common';
 import { Role } from './role';
-import { User } from '.';
-import { ObjectType, InputType, Field } from 'type-graphql';
 
 @ObjectType()
 export class TeamMember {
-  @Field(type => User, { nullable: true })
+  @Field(() => User, { nullable: true })
   user: User;
 
-  @Field(type => [Role], { nullable: true })
+  @Field(() => [Role], { nullable: true })
   roles: Role[];
 
   @Field({ nullable: true })

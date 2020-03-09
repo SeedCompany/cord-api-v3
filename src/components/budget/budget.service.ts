@@ -1,21 +1,16 @@
-import {
-  CreateBudgetInput,
-  CreateBudgetInputDto,
-  CreateBudgetOutputDto,
-  DeleteBudgetInput,
-  DeleteBudgetInputDto,
-  DeleteBudgetOutputDto,
-  ReadBudgetInput,
-  ReadBudgetInputDto,
-  ReadBudgetOutputDto,
-  UpdateBudgetInput,
-  UpdateBudgetInputDto,
-  UpdateBudgetOutputDto,
-} from './budget.dto';
-
-import { DatabaseService } from '../../core/database.service';
 import { Injectable } from '@nestjs/common';
 import { generate } from 'shortid';
+import { DatabaseService } from '../../core/database.service';
+import {
+  CreateBudgetInput,
+  CreateBudgetOutputDto,
+  DeleteBudgetInput,
+  DeleteBudgetOutputDto,
+  ReadBudgetInput,
+  ReadBudgetOutputDto,
+  UpdateBudgetInput,
+  UpdateBudgetOutputDto,
+} from './budget.dto';
 @Injectable()
 export class BudgetService {
   constructor(private readonly db: DatabaseService) {}
@@ -31,7 +26,7 @@ export class BudgetService {
           id,
           status: input.status,
           budgetDetails: input.budgetDetails,
-        },
+        }
       )
       .then(result => {
         response.budget.id = result.records[0].get('id');
@@ -53,7 +48,7 @@ export class BudgetService {
         `MATCH (budget:Budget {active: true, owningOrg: "seedcompany"}) WHERE budget.id = "${input.id}" RETURN budget.id as id, budget.status as status`,
         {
           id: input.id,
-        },
+        }
       )
       .then(result => {
         response.budget.id = result.records[0].get('id');
@@ -76,7 +71,7 @@ export class BudgetService {
         {
           id: input.id,
           status: input.status,
-        },
+        }
       )
       .then(result => {
         if (result.records.length > 0) {
@@ -102,7 +97,7 @@ export class BudgetService {
         'MATCH (budget:Budget {active: true, owningOrg: "seedcompany", id: $id}) SET budget.active = false RETURN budget.id as id',
         {
           id: input.id,
-        },
+        }
       )
       .then(result => {
         response.budget.id = result.records[0].get('id');

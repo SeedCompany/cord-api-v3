@@ -1,4 +1,4 @@
-import { yellow, red, enabled as colorsEnabled } from 'colors/safe';
+import { enabled as colorsEnabled, red, yellow } from 'colors/safe';
 import { identity, mapValues } from 'lodash';
 import { DateTime } from 'luxon';
 import { relative } from 'path';
@@ -17,14 +17,14 @@ export const maskSecrets = () =>
     info.metadata = mapValues(info.metadata, (val: string, key) =>
       /(password|token|key)/i.exec(key)
         ? `${'*'.repeat(Math.min(val.slice(0, -3).length, 20)) + val.slice(-3)}`
-        : val,
+        : val
     );
     return info;
   })();
 
 export const timestamp = format(info => {
   info.timestamp = DateTime.local().toLocaleString(
-    DateTime.DATETIME_SHORT_WITH_SECONDS,
+    DateTime.DATETIME_SHORT_WITH_SECONDS
   );
   return info;
 });
@@ -47,7 +47,7 @@ export const exceptionInfo = () =>
       info.exception instanceof Error ? info.exception.stack : info.stack;
 
     const type = stack.slice(0, stack.indexOf(':'));
-    const trace = parseTrace({ stack } as Error);
+    const trace = parseTrace({ stack } as any);
 
     info.exception = {
       type,
@@ -84,7 +84,9 @@ export const formatException = () =>
       })
       .join('\n');
 
-    info[MESSAGE] = red(`\n${ex.type}: ${ex.message}\n\n`) + formattedTrace;
+    info[MESSAGE] = `${red(
+      `\n${ex.type}: ${ex.message}\n\n`
+    )}${formattedTrace}`;
 
     return info;
   })();

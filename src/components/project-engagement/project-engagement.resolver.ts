@@ -1,56 +1,56 @@
-import { Resolver, Args, Query, Mutation } from '@nestjs/graphql';
-import { ProjectEngagement } from './engagement';
-import { ProjectEngagementService } from './project-engagement.service';
+import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import {
   CreateProjectEngagementInputDto,
   CreateProjectEngagementOutputDto,
+  DeleteProjectEngagementInputDto,
+  DeleteProjectEngagementOutputDto,
   ReadProjectEngagementInputDto,
   ReadProjectEngagementOutputDto,
   UpdateProjectEngagementInputDto,
   UpdateProjectEngagementOutputDto,
-  DeleteProjectEngagementInputDto,
-  DeleteProjectEngagementOutputDto,
 } from './project-engagement.dto';
+import { ProjectEngagementService } from './project-engagement.service';
 
 @Resolver()
 export class ProjectEngagementResolver {
-  constructor(private readonly projectEngagementService: ProjectEngagementService) {
-  }
+  constructor(
+    private readonly projectEngagementService: ProjectEngagementService
+  ) {}
 
-  @Mutation(returns => CreateProjectEngagementOutputDto, {
+  @Mutation(() => CreateProjectEngagementOutputDto, {
     description: 'Create a ProjectEngagement',
   })
   async createProjectEngagement(
-    @Args('input') { projectEngagement: input }: CreateProjectEngagementInputDto,
+    @Args('input') { projectEngagement: input }: CreateProjectEngagementInputDto
   ): Promise<CreateProjectEngagementOutputDto> {
     return await this.projectEngagementService.create(input);
   }
 
-  @Query(returns => ReadProjectEngagementOutputDto, {
+  @Query(() => ReadProjectEngagementOutputDto, {
     description: 'Read one ProjectEngagement by id',
   })
   async readProjectEngagement(
-    @Args('input') { projectEngagement: input }: ReadProjectEngagementInputDto,
+    @Args('input') { projectEngagement: input }: ReadProjectEngagementInputDto
   ): Promise<ReadProjectEngagementOutputDto> {
     return await this.projectEngagementService.readOne(input);
   }
 
-  @Mutation(returns => UpdateProjectEngagementOutputDto, {
+  @Mutation(() => UpdateProjectEngagementOutputDto, {
     description: 'Update an ProjectEngagement',
   })
   async updateProjectEngagement(
     @Args('input')
-      { projectEngagement: input }: UpdateProjectEngagementInputDto,
+    { projectEngagement: input }: UpdateProjectEngagementInputDto
   ): Promise<UpdateProjectEngagementOutputDto> {
     return await this.projectEngagementService.update(input);
   }
 
-  @Mutation(returns => DeleteProjectEngagementOutputDto, {
+  @Mutation(() => DeleteProjectEngagementOutputDto, {
     description: 'Delete an ProjectEngagement',
   })
   async deleteProjectEngagement(
     @Args('input')
-      { projectEngagement: input }: DeleteProjectEngagementInputDto,
+    { projectEngagement: input }: DeleteProjectEngagementInputDto
   ): Promise<DeleteProjectEngagementOutputDto> {
     return await this.projectEngagementService.delete(input);
   }

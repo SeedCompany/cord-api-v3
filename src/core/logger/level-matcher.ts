@@ -1,5 +1,5 @@
-import { LogLevel } from './logger.interface';
 import { config } from 'winston';
+import { LogLevel } from './logger.interface';
 
 interface MatcherConfig {
   include: RegExp[];
@@ -53,12 +53,12 @@ interface MatcherConfig {
  * logging.yml file in the project root. See the example file as a starting point.
  */
 export class LevelMatcher {
-  private matchers: MatcherConfig[] = [];
+  private readonly matchers: MatcherConfig[] = [];
   private cached: Record<string, LogLevel> = {};
 
   constructor(
     levelMap: Record<string, LogLevel>,
-    private readonly defaultLevel: LogLevel,
+    private readonly defaultLevel: LogLevel
   ) {
     for (const [namespaces, level] of Object.entries(levelMap)) {
       const matcher: MatcherConfig = {
@@ -67,7 +67,7 @@ export class LevelMatcher {
         level,
       };
       for (const namespace of namespaces.split(/[\s,]+/)) {
-        const exclude = namespace[0] === '-';
+        const exclude = namespace.startsWith('-');
         const regPart = namespace.replace(/\*/g, '.*?');
         if (exclude) {
           matcher.exclude.push(new RegExp(`^${regPart.substr(1)}$`));

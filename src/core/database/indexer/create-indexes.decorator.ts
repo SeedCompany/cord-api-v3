@@ -17,5 +17,5 @@ export interface OnIndexParams {
 }
 
 export type Indexer = (
-  params: OnIndexParams,
+  params: OnIndexParams
 ) => Promise<string | string[] | void>;

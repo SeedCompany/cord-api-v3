@@ -1,19 +1,17 @@
+import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
-
+import { times } from 'lodash';
+import { isValid } from 'shortid';
+import { User } from '../src/components/user';
+import { Unavailability } from '../src/components/user/unavailability';
 import {
-  TestApp,
   createSession,
   createTestApp,
   createUnavailability,
   createUser,
+  TestApp,
 } from './utility';
-
-import { Unavailability } from '../src/components/user/unavailability';
-import { User } from '../src/components/user';
 import { fragments } from './utility/fragments';
-import { gql } from 'apollo-server-core';
-import { isValid } from 'shortid';
-import { times } from 'lodash';
 
 describe('Unavailability e2e', () => {
   let app: TestApp;
@@ -49,7 +47,7 @@ describe('Unavailability e2e', () => {
         `,
         {
           id: unavailability.id,
-        },
+        }
       );
 
       expect(actual.id).toBe(unavailability.id);
@@ -84,7 +82,7 @@ describe('Unavailability e2e', () => {
             description: newDesc,
           },
         },
-      },
+      }
     );
     const updated = result.updateUnavailability.unavailability;
     expect(updated).toBeTruthy();
@@ -105,7 +103,7 @@ describe('Unavailability e2e', () => {
         `,
         {
           id: unavailability.id,
-        },
+        }
       );
       const actual: Unavailability | undefined = result.deleteUnavailability;
       expect(actual).toBeTruthy();
@@ -120,7 +118,7 @@ describe('Unavailability e2e', () => {
     // create 10 unavailabilities
     const num = 10;
     await Promise.all(
-      times(num).map(() => createUnavailability(app, { userId: user.id })),
+      times(num).map(() => createUnavailability(app, { userId: user.id }))
     );
 
     const { unavailabilities } = await app.graphql.query(gql`

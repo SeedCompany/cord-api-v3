@@ -1,12 +1,12 @@
 import { stripIndent } from 'common-tags';
 import { GraphQLScalarType, GraphQLString } from 'graphql';
 import { isObject } from 'lodash';
+import { DateTime } from 'luxon';
 import { ClassType, Field, Int, ObjectType } from 'type-graphql';
+import { DateField, DateTimeField } from '.';
 import { Editable } from './editable.interface';
 import { Readable } from './readable.interface';
 import { AbstractClassType } from './types';
-import { DateTime } from 'luxon';
-import { DateTimeField, DateField } from '.';
 
 export interface Secured<T> {
   readonly value?: T;
@@ -23,7 +23,7 @@ export const unwrapSecured = <T>(value: T | Secured<T>): T | undefined =>
   isSecured(value) ? value.value : value;
 
 export function SecuredProperty<T>(
-  ValueClass: ClassType<T> | AbstractClassType<T> | GraphQLScalarType,
+  ValueClass: ClassType<T> | AbstractClassType<T> | GraphQLScalarType
 ) {
   @ObjectType({ isAbstract: true, implements: [Readable, Editable] })
   abstract class SecuredPropertyClass
@@ -49,7 +49,7 @@ SecuredProperty.descriptionFor = (value: string) => stripIndent`
   description: SecuredProperty.descriptionFor('a string'),
 })
 export abstract class SecuredString extends SecuredProperty<string>(
-  GraphQLString,
+  GraphQLString
 ) {}
 
 @ObjectType({

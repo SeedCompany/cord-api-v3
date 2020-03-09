@@ -3,12 +3,7 @@ import { UnavailabilityResolver } from './unavailability.resolver';
 import { UnavailabilityService } from './unavailability.service';
 
 @Module({
-  providers: [
-    UnavailabilityResolver,
-    UnavailabilityService,
-  ],
-  exports: [
-    UnavailabilityService,
-  ],
+  providers: [UnavailabilityResolver, UnavailabilityService],
+  exports: [UnavailabilityService],
 })
 export class UnavailabilityModule {}

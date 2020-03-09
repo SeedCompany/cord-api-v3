@@ -1,12 +1,12 @@
 import { DateTime } from 'luxon';
+import { Field, InputType, ObjectType } from 'type-graphql';
 import { DateField } from '../../common';
 import { Location } from '../location';
+import { ProductMethodology } from '../product/dto/product-methodology';
+import { User } from '../user';
 import { InternshipEngagementPosition } from './position';
 import { InternshipEngagementStatus } from './status';
 import { InternshipEngagementTag } from './tag';
-import { User } from '../user';
-import { ProductMethodology } from '../product/dto/product-methodology';
-import { ObjectType, InputType, Field } from 'type-graphql';
 
 @ObjectType()
 @InputType('InternshipEngagementInput')
@@ -16,7 +16,7 @@ export class InternshipEngagement {
 
   intern: User;
 
-  @Field(type => [InternshipEngagementStatus], { nullable: true })
+  @Field(() => [InternshipEngagementStatus], { nullable: true })
   possibleStatuses: InternshipEngagementStatus[];
 
   @DateField({ nullable: true })

@@ -1,6 +1,6 @@
+import { InputType, ObjectType } from 'type-graphql';
 import { Location } from '../location';
 import { Role } from './role';
-import { ObjectType, InputType } from 'type-graphql';
 
 export interface UserRole {
   role: Role;
@@ -9,4 +9,4 @@ export interface UserRole {
 
 @ObjectType()
 @InputType('UserRoleInput')
-export class UserRole{}
+export class UserRole {}

@@ -1,24 +1,24 @@
-import { ObjectType, Field, ID } from 'type-graphql';
+import { Field, ID, ObjectType } from 'type-graphql';
 import { Organization } from '../components/organization';
 import { User } from '../components/user';
 
 @ObjectType()
 export class BaseNode {
-  @Field(type => ID)
+  @Field(() => ID)
   id: string;
 
-  @Field(type => User)
+  @Field(() => User)
   modifiedByUser: User;
 
-  @Field(type => Organization)
+  @Field(() => Organization)
   owningOrg: Organization;
 
-  @Field(type => String)
+  @Field(() => String)
   createdOn: string;
 
-  @Field(type => String, { nullable: true })
+  @Field(() => String, { nullable: true })
   deletedOn: string;
 
-  @Field(type => User)
+  @Field(() => User)
   createdBy: User;
 }

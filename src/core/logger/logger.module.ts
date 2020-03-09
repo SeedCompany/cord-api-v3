@@ -1,8 +1,8 @@
 import {
   DynamicModule,
   Global,
-  Logger as NestLogger,
   Module,
+  Logger as NestLogger,
   Provider,
 } from '@nestjs/common';
 import { format, transports } from 'winston';
@@ -18,9 +18,9 @@ import {
 } from './formatters';
 import { LevelMatcherProvider } from './level-matcher.provider';
 import { ILogger } from './logger.interface';
-import { LoggerOptions, WinstonLoggerService } from './winston-logger.service';
-import { NestLoggerAdapterService } from './nest-logger-adapter.service';
 import { NamedLoggerService } from './named-logger.service';
+import { NestLoggerAdapterService } from './nest-logger-adapter.service';
+import { LoggerOptions, WinstonLoggerService } from './winston-logger.service';
 
 @Global()
 @Module({
@@ -53,13 +53,11 @@ export class LoggerModule {
         pid(),
         colorize(),
         formatException(),
-        printForCli(),
+        printForCli()
       ),
     };
 
-    const namedLoggerProviders = this.loggerNames.map(
-      namedLoggerProvider,
-    );
+    const namedLoggerProviders = this.loggerNames.map(namedLoggerProvider);
     return {
       module: LoggerModule,
       providers: [

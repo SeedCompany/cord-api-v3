@@ -1,17 +1,11 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import * as argon2 from 'argon2';
 import { Connection } from 'cypher-query-builder';
-import { verify, sign } from 'jsonwebtoken';
+import { sign, verify } from 'jsonwebtoken';
 import { DateTime } from 'luxon';
-import {
-  ConfigService,
-  ILogger,
-  Logger,
-  OnIndex,
-  OnIndexParams,
-} from '../../core';
+import { ConfigService, ILogger, Logger } from '../../core';
+import { LoginInput } from './auth.dto';
 import { ISession } from './session';
-import { LoginInput, LoginOutput } from './auth.dto';
 
 interface JwtPayload {
   iat: number;
@@ -22,11 +16,8 @@ export class AuthService {
   constructor(
     private readonly db: Connection,
     private readonly config: ConfigService,
-    @Logger('auth:service') private readonly logger: ILogger,
+    @Logger('auth:service') private readonly logger: ILogger
   ) {}
-
-  @OnIndex()
-  async createIndexes({ db, logger }: OnIndexParams) {}
 
   async createToken(): Promise<string> {
     const token = this.encodeJWT();
@@ -46,7 +37,7 @@ export class AuthService {
       `,
         {
           token,
-        },
+        }
       )
       .first();
     if (!result) {
@@ -80,7 +71,7 @@ export class AuthService {
         {
           token: session.token,
           email: input.email,
-        },
+        }
       )
       .first();
 
@@ -122,7 +113,7 @@ export class AuthService {
         {
           token: session.token,
           email: input.email,
-        },
+        }
       )
       .first();
 
@@ -147,7 +138,7 @@ export class AuthService {
       `,
         {
           token,
-        },
+        }
       )
       .run();
   }
@@ -174,10 +165,10 @@ export class AuthService {
         `,
         {
           token,
-        },
+        }
       )
       .first();
-    
+
     if (!result) {
       this.logger.warning('Failed to find active token in database', { token });
       throw new UnauthorizedException();

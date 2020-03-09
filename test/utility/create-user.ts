@@ -1,18 +1,16 @@
+import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
-
+import { isValid } from 'shortid';
 import { CreateUser, User } from '../../src/components/user';
-
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
-import { gql } from 'apollo-server-core';
-import { isValid } from 'shortid';
 
 export async function createUser(
   app: TestApp,
-  input: Partial<CreateUser> = {},
+  input: Partial<CreateUser> = {}
 ) {
   const user: CreateUser = {
-    email: faker.internet.email() + ' ' + Date.now(),
+    email: `${faker.internet.email()} ${Date.now()}`,
     realFirstName: faker.name.firstName(),
     realLastName: faker.name.lastName(),
     displayFirstName: faker.name.firstName(),
@@ -39,7 +37,7 @@ export async function createUser(
       input: {
         user,
       },
-    },
+    }
   );
 
   const actual: User = result.createUser.user;
