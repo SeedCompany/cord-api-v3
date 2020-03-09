@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { generate } from 'shortid';
-import { DatabaseService } from '../../core/database.service';
+import { DeprecatedDBService } from '../../core/deprecated-database.service';
 import {
   CreateBudgetInput,
   CreateBudgetOutputDto,
@@ -13,7 +13,7 @@ import {
 } from './budget.dto';
 @Injectable()
 export class BudgetService {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(private readonly db: DeprecatedDBService) {}
 
   async create(input: CreateBudgetInput): Promise<CreateBudgetOutputDto> {
     const response = new CreateBudgetOutputDto();

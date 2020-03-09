@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { generate } from 'shortid';
-import { DatabaseService } from '../../core/database.service';
+import { DeprecatedDBService } from '../../core/deprecated-database.service';
 import {
   CreateProjectEngagementInput,
   CreateProjectEngagementOutputDto,
@@ -14,7 +14,7 @@ import {
 
 @Injectable()
 export class ProjectEngagementService {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(private readonly db: DeprecatedDBService) {}
 
   async create(
     input: CreateProjectEngagementInput

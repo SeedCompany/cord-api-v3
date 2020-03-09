@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
-import { DatabaseService } from '../../core/database.service';
+import { DeprecatedDBService } from '../../core/deprecated-database.service';
 import {
   CreateInternshipEngagementInput,
   CreateInternshipEngagementOutputDto,
@@ -15,7 +15,7 @@ import {
 
 @Injectable()
 export class InternshipEngagementService {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(private readonly db: DeprecatedDBService) {}
 
   async create(
     input: CreateInternshipEngagementInput

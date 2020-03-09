@@ -1,12 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { generate } from 'shortid';
 import { Sensitivity } from '../../common';
-import {
-  DatabaseService,
-  ILogger,
-  Logger,
-  PropertyUpdaterService,
-} from '../../core';
+import { DatabaseService, ILogger, Logger } from '../../core';
 import { ISession } from '../auth';
 import {
   CreateLanguage,
@@ -20,7 +15,6 @@ import {
 export class LanguageService {
   constructor(
     private readonly db: DatabaseService,
-    private readonly propertyUpdater: PropertyUpdaterService,
     @Logger('language:service') private readonly logger: ILogger
   ) {}
 
@@ -48,7 +42,7 @@ export class LanguageService {
     };
 
     try {
-      await this.propertyUpdater.createNode({
+      await this.db.createNode({
         session,
         input: { id, ...input },
         acls,
@@ -185,7 +179,7 @@ export class LanguageService {
     );
     const language = await this.readOne(input.id, session);
 
-    return this.propertyUpdater.updateProperties({
+    return this.db.updateProperties({
       session,
       object: language,
       props: [
@@ -211,7 +205,7 @@ export class LanguageService {
     }
 
     try {
-      await this.propertyUpdater.deleteNode({
+      await this.db.deleteNode({
         session,
         object,
         aclEditProp: 'canDeleteOwnUser',
@@ -226,7 +220,7 @@ export class LanguageService {
     { page, count, sort, order, filter }: LanguageListInput,
     session: ISession
   ): Promise<LanguageListOutput> {
-    const result = await this.propertyUpdater.list<Language>({
+    const result = await this.db.list<Language>({
       session,
       nodevar: 'language',
       aclReadProp: 'canReadLangs',

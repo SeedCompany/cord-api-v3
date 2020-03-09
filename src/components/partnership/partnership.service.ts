@@ -1,7 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { generate } from 'shortid';
-import { ILogger, Logger, PropertyUpdaterService } from '../../core';
-import { DatabaseService } from '../../core/database.service';
+import { DatabaseService, ILogger, Logger } from '../../core';
 import { ISession } from '../auth';
 import {
   CreatePartnership,
@@ -16,7 +15,6 @@ import {
 export class PartnershipService {
   constructor(
     private readonly db: DatabaseService,
-    private readonly propertyUpdater: PropertyUpdaterService,
     @Logger('partnership:service') private readonly logger: ILogger
   ) {}
 
@@ -135,7 +133,7 @@ export class PartnershipService {
     { page, count, sort, order, filter }: PartnershipListInput,
     session: ISession
   ): Promise<PartnershipListOutput> {
-    const result = await this.propertyUpdater.list<Partnership>({
+    const result = await this.db.list<Partnership>({
       session,
       nodevar: 'partnership',
       aclReadProp: 'canReadPartnerships',
@@ -185,7 +183,7 @@ export class PartnershipService {
     };
 
     try {
-      await this.propertyUpdater.createNode({
+      await this.db.createNode({
         session,
         input: {
           id,
@@ -227,7 +225,7 @@ export class PartnershipService {
   async update(input: UpdatePartnership, session: ISession) {
     const object = await this.readOne(input.id, session);
 
-    await this.propertyUpdater.updateProperties({
+    await this.db.updateProperties({
       session,
       object,
       props: ['agreementStatus', 'mouStatus', 'mouStart', 'mouEnd', 'types'],
@@ -250,7 +248,7 @@ export class PartnershipService {
     }
 
     try {
-      await this.propertyUpdater.deleteNode({
+      await this.db.deleteNode({
         session,
         object,
         aclEditProp: 'canDeleteOwnUser',

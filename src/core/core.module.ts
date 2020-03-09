@@ -1,10 +1,10 @@
 import { Global, Module } from '@nestjs/common';
 import { AwsS3Factory } from './aws-s3.factory';
 import { ConfigModule } from './config/config.module';
-import { DatabaseService } from './database.service';
 import { CypherFactory } from './database/cypher.factory';
+import { DatabaseService } from './database/database.service';
 import { IndexerModule } from './database/indexer/indexer.module';
-import { PropertyUpdaterService } from './database/property-updater.service';
+import { DeprecatedDBService } from './deprecated-database.service';
 
 @Global()
 @Module({
@@ -12,15 +12,15 @@ import { PropertyUpdaterService } from './database/property-updater.service';
   providers: [
     AwsS3Factory,
     CypherFactory,
+    DeprecatedDBService,
     DatabaseService,
-    PropertyUpdaterService,
   ],
   exports: [
     AwsS3Factory,
     ConfigModule,
     CypherFactory,
+    DeprecatedDBService,
     DatabaseService,
-    PropertyUpdaterService,
   ],
 })
 export class CoreModule {}

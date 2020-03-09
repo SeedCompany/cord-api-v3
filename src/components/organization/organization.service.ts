@@ -1,11 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { generate } from 'shortid';
-import {
-  DatabaseService,
-  ILogger,
-  Logger,
-  PropertyUpdaterService,
-} from '../../core';
+import { DatabaseService, ILogger, Logger } from '../../core';
 import { ISession } from '../auth';
 import {
   CreateOrganization,
@@ -18,9 +13,8 @@ import {
 @Injectable()
 export class OrganizationService {
   constructor(
-    private readonly db: DatabaseService,
     @Logger('org:service') private readonly logger: ILogger,
-    private readonly propertyUpdater: PropertyUpdaterService
+    private readonly db: DatabaseService
   ) {}
 
   async create(
@@ -35,7 +29,7 @@ export class OrganizationService {
       canReadName: true,
     };
     try {
-      await this.propertyUpdater.createNode({
+      await this.db.createNode({
         session,
         input: { id, ...input },
         acls,
@@ -111,7 +105,7 @@ export class OrganizationService {
     session: ISession
   ): Promise<Organization> {
     const organization = await this.readOne(input.id, session);
-    return this.propertyUpdater.updateProperties({
+    return this.db.updateProperties({
       session,
       object: organization,
       props: ['name'],
@@ -123,7 +117,7 @@ export class OrganizationService {
   async delete(id: string, session: ISession): Promise<void> {
     const ed = await this.readOne(id, session);
     try {
-      await this.propertyUpdater.deleteNode({
+      await this.db.deleteNode({
         session,
         object: ed,
         aclEditProp: 'canDeleteOwnUser',
@@ -138,7 +132,7 @@ export class OrganizationService {
     { page, count, sort, order, filter }: OrganizationListInput,
     session: ISession
   ): Promise<OrganizationListOutput> {
-    const result = await this.propertyUpdater.list<Organization>({
+    const result = await this.db.list<Organization>({
       session,
       nodevar: 'organization',
       aclReadProp: 'canReadOrgs',

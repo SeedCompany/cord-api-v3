@@ -1,6 +1,6 @@
 import { SetMetadata } from '@nestjs/common';
-import { Connection } from 'cypher-query-builder';
 import { ILogger } from '../../logger';
+import { DatabaseService } from '../database.service';
 import { DB_INDEX_KEY } from './indexer.constants';
 
 /**
@@ -12,7 +12,7 @@ import { DB_INDEX_KEY } from './indexer.constants';
 export const OnIndex = () => SetMetadata(DB_INDEX_KEY, true);
 
 export interface OnIndexParams {
-  db: Connection;
+  db: DatabaseService;
   logger: ILogger;
 }
 
