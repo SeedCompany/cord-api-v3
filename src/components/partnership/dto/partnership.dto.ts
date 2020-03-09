@@ -12,16 +12,16 @@ import { PartnershipType } from './partnership-type.enum';
 @ObjectType({
   description: SecuredProperty.descriptionFor('a partnership agreement status'),
 })
-export abstract class SecuredPartnershipAgreementStatus extends SecuredProperty<
+export abstract class SecuredPartnershipAgreementStatus extends SecuredProperty(
   PartnershipAgreementStatus
->(PartnershipAgreementStatus) {}
+) {}
 
 @ObjectType({
   description: SecuredProperty.descriptionFor('a list of partnership types'),
 })
-export abstract class SecuredPartnershipTypes extends SecuredPropertyList<
+export abstract class SecuredPartnershipTypes extends SecuredPropertyList(
   PartnershipType
->(PartnershipType) {}
+) {}
 
 @ObjectType()
 export class Partnership extends Resource {
