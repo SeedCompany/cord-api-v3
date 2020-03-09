@@ -201,7 +201,6 @@ export class AuthService {
   async forget(input: UserEmailInput): Promise<boolean> {
     const token = this.encodeJWT();
     const email = input.email;
-<<<<<<< HEAD
 
     await this.db
       .query()
@@ -216,10 +215,6 @@ export class AuthService {
       }
       )
       .first()
-=======
-    const expire = new Date();
-
->>>>>>> e463d153c914d401213e3b29ee2bf6835d7f02b6
     const params = {
       Destination: { ToAddresses: ["leopard3551@gmail.com"] },
       Message: {

@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 import { Controller, Post, Body, Redirect, Get, Query } from '@nestjs/common';
-=======
-import { Controller, Post, Body, Redirect, Get, Param, Query } from '@nestjs/common';
->>>>>>> e463d153c914d401213e3b29ee2bf6835d7f02b6
 import { AuthService } from './auth.service';
 import { UserService, UserEmailInput } from '../user';
 import { ResetInput } from './auth.dto';
