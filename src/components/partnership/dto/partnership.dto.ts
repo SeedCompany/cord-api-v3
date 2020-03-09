@@ -20,8 +20,8 @@ export abstract class SecuredPartnershipAgreementStatus extends SecuredProperty<
   description: SecuredProperty.descriptionFor('a list of partnership types'),
 })
 export abstract class SecuredPartnershipTypes extends SecuredPropertyList<
-  PartnershipType[]
->([PartnershipType]) {}
+  PartnershipType
+>(PartnershipType) {}
 
 @ObjectType()
 export class Partnership extends Resource {
