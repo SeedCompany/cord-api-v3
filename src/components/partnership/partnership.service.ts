@@ -114,7 +114,11 @@ export class PartnershipService {
         canRead: !!result.canReadMouEnd,
         canEdit: !!result.canEditMouEnd,
       },
-      types: result.types ? result.types.split(',') : [],
+      types: {
+        value: result.types ? result.types.split(',') : [],
+        canRead: !!result.canReadTypes,
+        canEdit: !!result.canEditTypes,
+      },
       organization: {
         id: result.organization.properties.id,
         createdAt: result.organization.properties.createdAt,
@@ -142,7 +146,7 @@ export class PartnershipService {
         { name: 'mouStart', secure: true },
         { name: 'mouEnd', secure: true },
         { name: 'organization', secure: false },
-        { name: 'types', secure: false, list: true },
+        { name: 'types', secure: true, list: true },
       ],
       input: {
         page,

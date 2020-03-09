@@ -210,7 +210,9 @@ export const fragments = {
       mouEnd {
         value
       }
-      types
+      types {
+        value
+      }
       organization {
         id
         name {

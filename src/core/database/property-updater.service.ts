@@ -376,7 +376,17 @@ export class PropertyUpdaterService {
         const list = typeof prop === 'object' ? prop.list : false;
 
         if (list) {
-          item[propName] = row[propName] ? row[propName].split(',') : [];
+          const value = row[propName] ? row[propName].split(',') : [];
+
+          if (secure) {
+            item[propName] = {
+              value,
+              canRead: Boolean(row[aclReadPropName]),
+              canEdit: Boolean(row[aclEditPropName]),
+            };
+          } else {
+            item[propName] = value;
+          }
         } else {
           if (secure) {
             item[propName] = {

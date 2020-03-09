@@ -51,7 +51,9 @@ describe('Partnership e2e', () => {
     expect(actual.mouStatus.value).toBe(partnership.mouStatus.value);
     expect(actual.mouStart.value).toBe(partnership.mouStart.value);
     expect(actual.mouEnd.value).toBe(partnership.mouEnd.value);
-    expect(actual.types).toEqual(expect.arrayContaining(partnership.types));
+    expect(actual.types.value).toEqual(
+      expect.arrayContaining(partnership.types.value!)
+    );
     expect(actual.organization).toBeTruthy();
     expect(actual.organization?.id).toBe(partnership.organization?.id);
   });
@@ -106,7 +108,7 @@ describe('Partnership e2e', () => {
     expect(result.updatePartnership.partnership.mouStatus.value).toBe(
       newMouStatus
     );
-    expect(result.updatePartnership.partnership.types).toEqual(
+    expect(result.updatePartnership.partnership.types.value).toEqual(
       expect.arrayContaining(newTypes)
     );
   });

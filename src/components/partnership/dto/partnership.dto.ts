@@ -1,5 +1,10 @@
 import { Field, ObjectType } from 'type-graphql';
-import { Resource, SecuredDate, SecuredProperty } from '../../../common';
+import {
+  Resource,
+  SecuredDate,
+  SecuredProperty,
+  SecuredPropertyList,
+} from '../../../common';
 import { Organization } from '../../organization';
 import { PartnershipAgreementStatus } from './partnership-agreement-status.enum';
 import { PartnershipType } from './partnership-type.enum';
@@ -10,6 +15,13 @@ import { PartnershipType } from './partnership-type.enum';
 export abstract class SecuredPartnershipAgreementStatus extends SecuredProperty<
   PartnershipAgreementStatus
 >(PartnershipAgreementStatus) {}
+
+@ObjectType({
+  description: SecuredProperty.descriptionFor('a list of partnership types'),
+})
+export abstract class SecuredPartnershipTypes extends SecuredPropertyList<
+  PartnershipType[]
+>([PartnershipType]) {}
 
 @ObjectType()
 export class Partnership extends Resource {
@@ -28,6 +40,6 @@ export class Partnership extends Resource {
   @Field(() => Organization)
   readonly organization: Organization;
 
-  @Field(() => [PartnershipType])
-  readonly types: PartnershipType[];
+  @Field()
+  readonly types: SecuredPartnershipTypes;
 }
