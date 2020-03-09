@@ -1,17 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../../core';
 import { AdminOutputDto } from './admin.dto';
-import { OrganizationService } from '../organization';
-import { UserService } from '../user';
-import { generate } from 'shortid';
 
 @Injectable()
 export class AdminService {
-  constructor(
-    private readonly db: DatabaseService,
-    private readonly orgService: OrganizationService,
-    private readonly userService: UserService,
-  ) {}
+  constructor(private readonly db: DatabaseService) {}
+
   async prepareDatabaseConstraintsAndIndexes(): Promise<AdminOutputDto> {
     const response = new AdminOutputDto();
 
@@ -21,74 +15,66 @@ export class AdminService {
     // ORGANIZATION
     wait.push(
       session.run(
-        'CREATE CONSTRAINT ON (org:Organization) ASSERT org.name IS UNIQUE',
-      ),
+        'CREATE CONSTRAINT ON (org:Organization) ASSERT org.name IS UNIQUE'
+      )
     );
     wait.push(
       session.run(
-        'CREATE CONSTRAINT ON (org:Organization) ASSERT org.id IS UNIQUE',
-      ),
+        'CREATE CONSTRAINT ON (org:Organization) ASSERT org.id IS UNIQUE'
+      )
     );
     wait.push(
       session.run(
-        'CREATE CONSTRAINT ON (org:Organization) ASSERT exists(org.id)',
-      ),
+        'CREATE CONSTRAINT ON (org:Organization) ASSERT exists(org.id)'
+      )
     );
     wait.push(
       session.run(
-        'CREATE CONSTRAINT ON (org:Organization) ASSERT exists(org.name)',
-      ),
+        'CREATE CONSTRAINT ON (org:Organization) ASSERT exists(org.name)'
+      )
     );
     wait.push(
       session.run(
-        'CREATE CONSTRAINT ON (org:Organization) ASSERT exists(org.active)',
-      ),
+        'CREATE CONSTRAINT ON (org:Organization) ASSERT exists(org.active)'
+      )
     );
 
     // LOCATION
     wait.push(
       session.run(
-        'CREATE CONSTRAINT ON (loc:Location) ASSERT loc.name IS UNIQUE',
-      ),
+        'CREATE CONSTRAINT ON (loc:Location) ASSERT loc.name IS UNIQUE'
+      )
+    );
+    wait.push(
+      session.run('CREATE CONSTRAINT ON (loc:Location) ASSERT loc.id IS UNIQUE')
+    );
+    wait.push(
+      session.run('CREATE CONSTRAINT ON (loc:Location) ASSERT exists(loc.id)')
+    );
+    wait.push(
+      session.run('CREATE CONSTRAINT ON (loc:Location) ASSERT exists(loc.name)')
     );
     wait.push(
       session.run(
-        'CREATE CONSTRAINT ON (loc:Location) ASSERT loc.id IS UNIQUE',
-      ),
-    );
-    wait.push(
-      session.run('CREATE CONSTRAINT ON (loc:Location) ASSERT exists(loc.id)'),
-    );
-    wait.push(
-      session.run(
-        'CREATE CONSTRAINT ON (loc:Location) ASSERT exists(loc.name)',
-      ),
-    );
-    wait.push(
-      session.run(
-        'CREATE CONSTRAINT ON (loc:Location) ASSERT exists(loc.active)',
-      ),
+        'CREATE CONSTRAINT ON (loc:Location) ASSERT exists(loc.active)'
+      )
     );
 
     // AREA
     wait.push(
-      session.run(
-        'CREATE CONSTRAINT ON (area:Area) ASSERT area.name IS UNIQUE',
-      ),
+      session.run('CREATE CONSTRAINT ON (area:Area) ASSERT area.name IS UNIQUE')
     );
     wait.push(
-      session.run('CREATE CONSTRAINT ON (area:Area) ASSERT area.id IS UNIQUE'),
+      session.run('CREATE CONSTRAINT ON (area:Area) ASSERT area.id IS UNIQUE')
     );
     wait.push(
-      session.run('CREATE CONSTRAINT ON (area:Area) ASSERT exists(area.id)'),
+      session.run('CREATE CONSTRAINT ON (area:Area) ASSERT exists(area.id)')
     );
     wait.push(
-      session.run('CREATE CONSTRAINT ON (area:Area) ASSERT exists(area.name)'),
+      session.run('CREATE CONSTRAINT ON (area:Area) ASSERT exists(area.name)')
     );
     wait.push(
-      session.run(
-        'CREATE CONSTRAINT ON (area:Area) ASSERT exists(area.active)',
-      ),
+      session.run('CREATE CONSTRAINT ON (area:Area) ASSERT exists(area.active)')
     );
 
     await Promise.all(wait);
@@ -113,19 +99,19 @@ export class AdminService {
     }
 
     // USERS
-    // for (let i = 0; i < totalUsers; i++) {
-    //   const s = 'user_' + generate();
-    //   await this.userService.create(
-    //     {
-    //       displayFirstName: s,
-    //       displayLastName: s,
-    //       email: s,
-    //       realFirstName: s,
-    //       realLastName: s,
-    //     },
-    //     'token - replace me later',
-    //   );
-    // }
+    for (let i = 0; i < totalUsers; i++) {
+      // const s = 'user_' + generate();
+      // await this.userService.create(
+      //   {
+      //     displayFirstName: s,
+      //     displayLastName: s,
+      //     email: s,
+      //     realFirstName: s,
+      //     realLastName: s,
+      //   },
+      //   'token - replace me later',
+      // );
+    }
 
     response.success = true;
 

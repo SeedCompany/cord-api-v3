@@ -12,7 +12,7 @@ export class S3Bucket {
   constructor(
     private readonly s3: S3,
     readonly bucket: string,
-    options: BucketOptions = {},
+    options: BucketOptions = {}
   ) {
     this.signedUrlExpires =
       options.signedUrlExpiration ?? Duration.fromObject({ minutes: 15 });

@@ -1,15 +1,12 @@
-import * as faker from 'faker';
-
-import { Product, CreateProductRaw } from '../../src/components/product';
-
-import { TestApp } from './create-app';
-import { fragments } from './fragments';
 import { gql } from 'apollo-server-core';
 import { isValid } from 'shortid';
+import { CreateProductRaw, Product } from '../../src/components/product';
+import { TestApp } from './create-app';
+import { fragments } from './fragments';
 
 export async function createProduct(
   app: TestApp,
-  input: Partial<CreateProductRaw> = {},
+  input: Partial<CreateProductRaw> = {}
 ) {
   const product: CreateProductRaw = {
     type: 'BibleStories',
@@ -36,7 +33,7 @@ export async function createProduct(
       input: {
         product,
       },
-    },
+    }
   );
 
   const actual: Product = result.createProduct.product;

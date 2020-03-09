@@ -1,11 +1,11 @@
 import { INestApplication } from '@nestjs/common';
+import { isValid } from 'shortid';
 import * as request from 'supertest';
-import { generate, isValid } from 'shortid';
 import { createTestApp, TestApp } from './utility';
 
 async function createBudget(
   app: INestApplication,
-  budgetStatus: string,
+  _budgetStatus: string
 ): Promise<string> {
   let budgetId = '';
   await request(app.getHttpServer())
@@ -122,7 +122,7 @@ describe.skip('Budget e2e', () => {
   });
 
   it('delete budget', async () => {
-    const budgetStatus = 'budgetStatus' + Date.now();
+    const budgetStatus = `budgetStatus${Date.now()}`;
 
     // create budget first
     const budgetId = await createBudget(app, budgetStatus);

@@ -1,7 +1,11 @@
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { Field, ID, InputType, ObjectType } from 'type-graphql';
-import { PaginatedList, SecuredList, SortablePaginationInput } from '../../../common';
+import {
+  PaginatedList,
+  SecuredList,
+  SortablePaginationInput,
+} from '../../../common';
 import { Organization } from './organization';
 
 @InputType()
@@ -22,7 +26,9 @@ export abstract class OrganizationFilters {
 const defaultFilters = {};
 
 @InputType()
-export class OrganizationListInput extends SortablePaginationInput<keyof Organization>({
+export class OrganizationListInput extends SortablePaginationInput<
+  keyof Organization
+>({
   defaultSort: 'name',
 }) {
   static defaultVal = new OrganizationListInput();
@@ -40,5 +46,5 @@ export class OrganizationListOutput extends PaginatedList(Organization) {}
   description: SecuredList.descriptionFor('organizations'),
 })
 export abstract class SecuredOrganizationList extends SecuredList(
-  Organization,
+  Organization
 ) {}

@@ -59,14 +59,14 @@ describe.skip('Partnership e2e', () => {
 
   // CREATE PARTNERSHIP
   it('create partnership', () => {
-    const orgName = 'partnershipName_' + generate();
-    const organization = {
-      id: generate(),
-      name: orgName,
-      owningOrg: null,
-      createdAt: null,
-      createdBy: null,
-    };
+    // const orgName = 'partnershipName_' + generate();
+    // const organization = {
+    //   id: generate(),
+    //   name: orgName,
+    //   owningOrg: null,
+    //   createdAt: null,
+    //   createdBy: null,
+    // };
     return request(app.getHttpServer())
       .post('/graphql')
       .send({
@@ -149,7 +149,7 @@ describe.skip('Partnership e2e', () => {
       .expect(({ body }) => {
         expect(body.data.updatePartnership.partnership.id).toBe(partnershipId);
         expect(body.data.updatePartnership.partnership.agreementStatus).toBe(
-          agreementStatus,
+          agreementStatus
         );
       })
       .expect(200);
@@ -234,7 +234,7 @@ describe.skip('Partnership e2e', () => {
       })
       .expect(({ body }) => {
         expect(body.data.partnerships.partnerships.length).toBe(
-          body.data.partnerships.partnerships.length,
+          body.data.partnerships.partnerships.length
         );
       })
       .expect(200);

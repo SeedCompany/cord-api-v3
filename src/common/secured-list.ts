@@ -6,7 +6,7 @@ import { Readable } from './readable.interface';
 import { AbstractClassType } from './types';
 
 export function SecuredList<T>(
-  ItemClass: ClassType<T> | AbstractClassType<T> | GraphQLScalarType,
+  ItemClass: ClassType<T> | AbstractClassType<T> | GraphQLScalarType
 ) {
   @ObjectType({ isAbstract: true, implements: [Readable] })
   abstract class SecuredListClass extends PaginatedList<T>(ItemClass)

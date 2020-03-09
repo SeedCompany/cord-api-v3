@@ -2,13 +2,13 @@ import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { IdArg } from '../../common';
 import { ISession, Session } from '../auth';
 import {
+  CreateLanguageInput,
+  CreateLanguageOutput,
   Language,
   LanguageListInput,
   LanguageListOutput,
-  CreateLanguageOutput,
-  CreateLanguageInput,
-  UpdateLanguageOutput,
   UpdateLanguageInput,
+  UpdateLanguageOutput,
 } from './dto';
 import { LanguageService } from './language.service';
 
@@ -21,7 +21,7 @@ export class LanguageResolver {
   })
   async language(
     @Session() session: ISession,
-    @IdArg() id: string,
+    @IdArg() id: string
   ): Promise<Language> {
     return await this.langService.readOne(id, session);
   }
@@ -36,7 +36,7 @@ export class LanguageResolver {
       type: () => LanguageListInput,
       defaultValue: LanguageListInput.defaultVal,
     })
-    input: LanguageListInput,
+    input: LanguageListInput
   ): Promise<LanguageListOutput> {
     return this.langService.list(input, session);
   }
@@ -46,7 +46,7 @@ export class LanguageResolver {
   })
   async createLanguage(
     @Session() session: ISession,
-    @Args('input') { language: input }: CreateLanguageInput,
+    @Args('input') { language: input }: CreateLanguageInput
   ): Promise<CreateLanguageOutput> {
     const language = await this.langService.create(input, session);
     return { language };
@@ -57,7 +57,7 @@ export class LanguageResolver {
   })
   async updateLanguage(
     @Session() session: ISession,
-    @Args('input') { language: input }: UpdateLanguageInput,
+    @Args('input') { language: input }: UpdateLanguageInput
   ): Promise<UpdateLanguageOutput> {
     const language = await this.langService.update(input, session);
     return { language };
@@ -68,7 +68,7 @@ export class LanguageResolver {
   })
   async deleteLanguage(
     @Session() session: ISession,
-    @IdArg() id: string,
+    @IdArg() id: string
   ): Promise<boolean> {
     await this.langService.delete(id, session);
     return true;

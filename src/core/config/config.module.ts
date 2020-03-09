@@ -3,12 +3,7 @@ import { ConfigService } from './config.service';
 import { EnvironmentService } from './environment.service';
 
 @Module({
-  providers: [
-    ConfigService,
-    EnvironmentService,
-  ],
-  exports: [
-    ConfigService,
-  ],
+  providers: [ConfigService, EnvironmentService],
+  exports: [ConfigService],
 })
 export class ConfigModule {}

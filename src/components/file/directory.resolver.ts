@@ -1,10 +1,10 @@
 import {
+  Args,
+  Mutation,
   Parent,
   Query,
   ResolveProperty,
   Resolver,
-  Args,
-  Mutation,
 } from '@nestjs/graphql';
 import { IdArg } from '../../common';
 import { ISession, Session } from '../auth';
@@ -31,7 +31,7 @@ export class DirectoryResolver {
       type: () => FileListInput,
       defaultValue: FileListInput.defaultVal,
     })
-    input: FileListInput,
+    input: FileListInput
   ): Promise<FileListOutput> {
     return this.service.listChildren(input, session);
   }
@@ -39,7 +39,7 @@ export class DirectoryResolver {
   @Mutation(() => Directory)
   async createDirectory(
     @Session() session: ISession,
-    @Args('name') name: string,
+    @Args('name') name: string
   ): Promise<Directory> {
     return this.service.createDirectory(name, session);
   }

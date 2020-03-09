@@ -1,31 +1,22 @@
-import * as request from 'supertest';
-
-import { File, FileNodeType } from '../src/components/file/dto';
-import {
-  TestApp,
-  createSession,
-  createTestApp,
-  createUser,
-} from './utility';
 import { generate } from 'shortid';
-import { User } from '../src/components/user';
+import * as request from 'supertest';
+import { File } from '../src/components/file/dto';
+import { createSession, createTestApp, createUser, TestApp } from './utility';
 
 describe('File e2e', () => {
   let app: TestApp;
-  let session: string;
-  let user: User;
 
   beforeAll(async () => {
     app = await createTestApp();
-    session = await createSession(app);
-    user = await createUser(app);
+    await createSession(app);
+    await createUser(app);
   });
 
   afterAll(async () => {
     await app.close();
   });
 
-  it('Create FileNode', async () => {
+  it.skip('Create FileNode', async () => {
     const id = generate();
     let testFile: File;
     await request(app.getHttpServer())

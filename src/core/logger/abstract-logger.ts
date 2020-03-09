@@ -1,4 +1,9 @@
-import { LogEntry, LogEntryContext, ILogger, LogLevel } from './logger.interface';
+import {
+  ILogger,
+  LogEntry,
+  LogEntryContext,
+  LogLevel,
+} from './logger.interface';
 
 type MsgOrContext = string | ({ message: string } & LogEntryContext);
 
@@ -47,8 +52,12 @@ export abstract class AbstractLogger implements ILogger {
       | LogLevel
       | ({ level: LogLevel; message: string } & LogEntryContext),
     msgOrContext?: string | ({ message: string } & LogEntryContext),
-    context?: LogEntryContext,
+    context?: LogEntryContext
   ): void {
+    // This is logically correct, but TS doesn't think so.
+    // So without the unsafe typecast there's an error.
+    // Don't copy this. I just want to get this PR in.
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
     this.logEntry({
       ...(context || {}),
       ...(typeof msgOrContext === 'string'
@@ -63,7 +72,7 @@ export abstract class AbstractLogger implements ILogger {
   private createEntry(
     level: LogLevel,
     msgOrContext: MsgOrContext,
-    context?: LogEntryContext,
+    context?: LogEntryContext
   ): LogEntry {
     return {
       ...(context || {}),

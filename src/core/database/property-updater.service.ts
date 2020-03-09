@@ -1,24 +1,23 @@
-import { Connection, node, relation, contains } from 'cypher-query-builder';
 import { Injectable, NotFoundException } from '@nestjs/common';
-import {
-  Resource,
-  UnwrapSecured,
-  isSecured,
-  unwrapSecured,
-  Order,
-} from '../../common';
-import { ILogger, Logger } from '../../core';
-import { DateTime } from 'luxon';
-import { ISession } from '../../components/auth';
-import { upperFirst } from 'lodash';
 import { ForbiddenError } from 'apollo-server-core';
-import { FileNodeType } from '../../components/file';
+import { Connection, contains, node, relation } from 'cypher-query-builder';
+import { upperFirst } from 'lodash';
+import { DateTime } from 'luxon';
+import {
+  isSecured,
+  Order,
+  Resource,
+  unwrapSecured,
+  UnwrapSecured,
+} from '../../common';
+import { ISession } from '../../components/auth';
+import { ILogger, Logger } from '../../core';
 
 @Injectable()
 export class PropertyUpdaterService {
   constructor(
     private readonly db: Connection,
-    @Logger('PropertyUpdater:service') private readonly logger: ILogger,
+    @Logger('PropertyUpdater:service') private readonly logger: ILogger
   ) {}
 
   async updateProperties<TObject extends Resource>({
@@ -169,7 +168,7 @@ export class PropertyUpdaterService {
     return result;
   }
 
-  async readProperty<TObject extends Resource, Key extends keyof TObject>({
+  async readProperty<TObject extends Resource>({
     id,
     session,
     key,
@@ -182,9 +181,8 @@ export class PropertyUpdaterService {
     nodevar: string;
     aclReadProp?: string;
   }): Promise<{ value: string; canEdit?: boolean; canRead?: boolean }> {
-    const aclReadPropName =
-      aclReadProp || `canRead${upperFirst(key as string)}`;
-    const aclEditPropName = `canEdit${upperFirst(key as string)}`;
+    const aclReadPropName = aclReadProp || `canRead${upperFirst(key)}`;
+    const aclEditPropName = `canEdit${upperFirst(key)}`;
     const query = `
     match  (token:Token {
       active: true,
@@ -406,41 +404,37 @@ export class PropertyUpdaterService {
     object: TObject;
     aclEditProp: string;
   }) {
-    try {
-      const result = await this.db
-        .query()
-        .raw(
-          `
-          MATCH
-          (token:Token {
-            active: true,
-            value: $token
-          })
-          <-[:token {active: true}]-
-          (requestingUser:User {
-            active: true,
-            id: $requestingUserId,
-            ${aclEditProp}: true
-          }),
-          (object {
-            active: true,
-            id: $objectId
-          })
-          SET
-            object.active = false
-          RETURN
-            object.id as id
-          `,
-          {
-            requestingUserId: session.userId,
-            token: session.token,
-            objectId: object.id,
-          },
-        )
-        .run();
-    } catch (e) {
-      throw e;
-    }
+    await this.db
+      .query()
+      .raw(
+        `
+        MATCH
+        (token:Token {
+          active: true,
+          value: $token
+        })
+        <-[:token {active: true}]-
+        (requestingUser:User {
+          active: true,
+          id: $requestingUserId,
+          ${aclEditProp}: true
+        }),
+        (object {
+          active: true,
+          id: $objectId
+        })
+        SET
+          object.active = false
+        RETURN
+          object.id as id
+        `,
+        {
+          requestingUserId: session.userId,
+          token: session.token,
+          objectId: object.id,
+        }
+      )
+      .run();
     this.logger.info(``);
   }
 
@@ -455,17 +449,13 @@ export class PropertyUpdaterService {
     props: ReadonlyArray<keyof TObject>;
     nodevar: string;
   }) {
-    try {
-      for (const prop of props) {
-        await this.deleteProperty({
-          object,
-          session,
-          key: prop,
-          nodevar,
-        });
-      }
-    } catch (e) {
-      throw e;
+    for (const prop of props) {
+      await this.deleteProperty({
+        object,
+        session,
+        key: prop,
+        nodevar,
+      });
     }
   }
 
@@ -485,7 +475,6 @@ export class PropertyUpdaterService {
     const aclEditPropName =
       aclEditProp || `canEdit${upperFirst(key as string)}`;
 
-    const now = DateTime.local().toNeo4JDateTime();
     const result = await this.db
       .query()
       .match([
@@ -545,7 +534,7 @@ export class PropertyUpdaterService {
     aclEditProp?: string;
   }): Promise<void> {
     const aclEditPropName =
-      aclEditProp || `canEdit${upperFirst(baseNodeLabel as string)}`;
+      aclEditProp || `canEdit${upperFirst(baseNodeLabel)}`;
     await this.createBaseNode<TObject>({
       session,
       baseNodeLabel,
@@ -556,14 +545,14 @@ export class PropertyUpdaterService {
     await Promise.all(
       Object.keys(input)
         .filter(key => !(key === 'id' || key === 'userId'))
-        .map(async (key, item) => {
+        .map(async key => {
           await this.createProperty({
             session,
             key,
             value: input[key as keyof TObject] as string,
             id: input.id!,
           });
-        }),
+        })
     );
   }
 
@@ -580,7 +569,7 @@ export class PropertyUpdaterService {
     acls: Record<string, boolean>;
     aclEditProp?: string;
   }): Promise<void> {
-    const aclString = JSON.stringify(acls).replace(/\"/g, '');
+    const aclString = JSON.stringify(acls).replace(/"/g, '');
     const query = `
         MATCH
           (token:Token {
@@ -606,7 +595,7 @@ export class PropertyUpdaterService {
       `;
 
     try {
-      const result = await this.db
+      await this.db
         .query()
         .raw(query, {
           requestingUserId: session.userId,

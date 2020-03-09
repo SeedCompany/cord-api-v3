@@ -14,7 +14,7 @@ import { ILogger, LogEntry } from './logger.interface';
 export class NamedLoggerService extends AbstractLogger {
   private name?: string;
 
-  constructor(private realLogger: ILogger) {
+  constructor(private readonly realLogger: ILogger) {
     super();
   }
 

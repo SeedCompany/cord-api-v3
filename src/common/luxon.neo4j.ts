@@ -34,7 +34,7 @@ DateTime.prototype.toNeo4JDateTime = function(this: DateTime) {
 (DateTime.prototype as any)[inspect.custom] = function(
   this: DateTime,
   depth: number,
-  options: InspectOptions,
+  _options: InspectOptions
 ) {
   const str = this.toLocaleString(DateTime.DATETIME_SHORT_WITH_SECONDS);
   return `[DateTime] ${str}`;

@@ -3,9 +3,7 @@ import { isValid } from 'shortid';
 import * as request from 'supertest';
 import { createTestApp, createUser, TestApp } from './utility';
 
-async function createInternshipEngagement(
-  app: TestApp,
-): Promise<string> {
+async function createInternshipEngagement(app: TestApp): Promise<string> {
   let internshipEngagementId = '';
   // create a test user to link
   const user = await createUser(app);
@@ -93,9 +91,7 @@ describe.skip('InternshipEngagement e2e', () => {
 
   it('read one internshipEngagement by id', async () => {
     // create user first
-    const internshipEngagementId = await createInternshipEngagement(
-      app,
-    );
+    const internshipEngagementId = await createInternshipEngagement(app);
 
     // test reading new internship
     await request(app.getHttpServer())
@@ -117,18 +113,15 @@ describe.skip('InternshipEngagement e2e', () => {
       })
       .expect(({ body }) => {
         expect(body.data.readInternshipEngagement.internshipEngagement.id).toBe(
-          internshipEngagementId,
+          internshipEngagementId
         );
       })
       .expect(200);
   });
 
   it('update internshipEngagement', async () => {
-
     // create internshipEngagement first
-    const internshipEngagementId = await createInternshipEngagement(
-      app,
-    );
+    const internshipEngagementId = await createInternshipEngagement(app);
     const initialEndDate = DateTime.local().toString();
     const currentEndDate = DateTime.local().toString();
 
@@ -154,24 +147,23 @@ describe.skip('InternshipEngagement e2e', () => {
       })
       .expect(({ body }) => {
         expect(
-          body.data.updateInternshipEngagement.internshipEngagement.id,
+          body.data.updateInternshipEngagement.internshipEngagement.id
         ).toBe(internshipEngagementId);
         expect(
-          body.data.updateInternshipEngagement.internshipEngagement.currentEndDate,
+          body.data.updateInternshipEngagement.internshipEngagement
+            .currentEndDate
         ).toBe(currentEndDate);
         expect(
-          body.data.updateInternshipEngagement.internshipEngagement.initialEndDate,
+          body.data.updateInternshipEngagement.internshipEngagement
+            .initialEndDate
         ).toBe(initialEndDate);
       })
       .expect(200);
   });
 
   it('delete internshipEngagement', async () => {
-
     // create internshipEngagement first
-    const internshipEngagementId = await createInternshipEngagement(
-      app,
-    );
+    const internshipEngagementId = await createInternshipEngagement(app);
 
     return request(app.getHttpServer())
       .post('/graphql')
@@ -189,7 +181,7 @@ describe.skip('InternshipEngagement e2e', () => {
       })
       .expect(({ body }) => {
         expect(
-          body.data.deleteInternshipEngagement.internshipEngagement.id,
+          body.data.deleteInternshipEngagement.internshipEngagement.id
         ).toBe(internshipEngagementId);
       })
       .expect(200);

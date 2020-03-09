@@ -1,12 +1,12 @@
-import { ObjectType, Field, InputType } from 'type-graphql';
+import { Field, InputType, ObjectType } from 'type-graphql';
 import { BudgetDetails, BudgetStatus } from './budget';
 
 // CREATE
 @InputType()
 export class CreateBudgetInput {
-  @Field(type => BudgetStatus)
+  @Field(() => BudgetStatus)
   status: BudgetStatus;
-  @Field(type => [BudgetDetails], { nullable: true })
+  @Field(() => [BudgetDetails], { nullable: true })
   budgetDetails: BudgetDetails[];
 }
 
@@ -18,11 +18,11 @@ export class CreateBudgetInputDto {
 
 @ObjectType()
 export class CreateBudgetOutput {
-  @Field(type => String)
+  @Field(() => String)
   id: string;
-  @Field(type => BudgetStatus)
+  @Field(() => BudgetStatus)
   status: BudgetStatus;
-  @Field(type => [BudgetDetails], { nullable: true })
+  @Field(() => [BudgetDetails], { nullable: true })
   budgetDetails: BudgetDetails[];
 }
 @ObjectType()
@@ -38,7 +38,7 @@ export class CreateBudgetOutputDto {
 
 @InputType()
 export class ReadBudgetInput {
-  @Field(type => String)
+  @Field(() => String)
   id: string;
 }
 
@@ -49,11 +49,11 @@ export class ReadBudgetInputDto {
 }
 @ObjectType()
 export class ReadBudgetOutput {
-  @Field(type => String)
+  @Field(() => String)
   id: string;
-  @Field(type => BudgetStatus)
+  @Field(() => BudgetStatus)
   status: BudgetStatus;
-  @Field(type => [BudgetDetails], { nullable: true })
+  @Field(() => [BudgetDetails], { nullable: true })
   budgetDetails: BudgetDetails[];
 }
 @ObjectType()
@@ -70,12 +70,12 @@ export class ReadBudgetOutputDto {
 
 @InputType()
 export class UpdateBudgetInput {
-  @Field(type => String)
+  @Field(() => String)
   id: string;
 
-  @Field(type => BudgetStatus)
+  @Field(() => BudgetStatus)
   status: BudgetStatus;
-  @Field(type => [BudgetDetails], { nullable: true })
+  @Field(() => [BudgetDetails], { nullable: true })
   budgetDetails: BudgetDetails[];
 }
 
@@ -87,11 +87,11 @@ export class UpdateBudgetInputDto {
 
 @ObjectType()
 export class UpdateBudgetOutput {
-  @Field(type => String)
+  @Field(() => String)
   id: string;
-  @Field(type => BudgetStatus)
+  @Field(() => BudgetStatus)
   status: BudgetStatus;
-  @Field(type => [BudgetDetails], { nullable: true })
+  @Field(() => [BudgetDetails], { nullable: true })
   budgetDetails: BudgetDetails[];
 }
 
@@ -109,7 +109,7 @@ export class UpdateBudgetOutputDto {
 
 @InputType()
 export class DeleteBudgetInput {
-  @Field(type => String)
+  @Field(() => String)
   id: string;
 }
 
@@ -121,7 +121,7 @@ export class DeleteBudgetInputDto {
 
 @ObjectType()
 export class DeleteBudgetOutput {
-  @Field(type => String)
+  @Field(() => String)
   id: string;
 }
 

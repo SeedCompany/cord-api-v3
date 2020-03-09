@@ -9,14 +9,14 @@ import {
 import { IdArg } from '../../common';
 import { ISession, Session } from '../auth';
 import {
+  CreateFileInput,
   File,
   FileOrDirectory,
   FileVersion,
-  RequestUploadOutput,
-  CreateFileInput,
-  UpdateFileInput,
-  RenameFileInput,
   MoveFileInput,
+  RenameFileInput,
+  RequestUploadOutput,
+  UpdateFileInput,
 } from './dto';
 import { FileService } from './file.service';
 
@@ -32,7 +32,7 @@ export class FileResolver {
   @Query(() => FileOrDirectory)
   async fileNode(
     @IdArg() id: string,
-    @Session() session: ISession,
+    @Session() session: ISession
   ): Promise<FileOrDirectory> {
     return this.service.getFileNode(id, session);
   }
@@ -42,7 +42,7 @@ export class FileResolver {
   })
   async versions(
     @Session() session: ISession,
-    @Parent() node: File,
+    @Parent() node: File
   ): Promise<FileVersion[]> {
     return this.service.getVersions(node.id, session);
   }
@@ -52,7 +52,7 @@ export class FileResolver {
   })
   downloadUrl(
     @Parent() node: File,
-    @Session() session: ISession,
+    @Session() session: ISession
   ): Promise<string> {
     return this.service.getDownloadUrl(node.id, session);
   }
@@ -62,7 +62,7 @@ export class FileResolver {
   })
   async deleteFileNode(
     @IdArg() id: string,
-    @Session() session: ISession,
+    @Session() session: ISession
   ): Promise<boolean> {
     await this.service.delete(id, session);
     return true;
@@ -72,7 +72,7 @@ export class FileResolver {
     description: 'Start the file upload process by requesting an upload',
   })
   async requestUpload(
-    @Session() session: ISession,
+    @Session() _session: ISession // require authorized
   ): Promise<RequestUploadOutput> {
     return this.service.requestUpload();
   }
@@ -82,7 +82,7 @@ export class FileResolver {
   })
   createFile(
     @Args('input') input: CreateFileInput,
-    @Session() session: ISession,
+    @Session() session: ISession
   ): Promise<File> {
     return this.service.createFile(input, session);
   }
@@ -93,7 +93,7 @@ export class FileResolver {
   })
   updateFile(
     @Args('input') input: UpdateFileInput,
-    @Session() session: ISession,
+    @Session() session: ISession
   ): Promise<File> {
     return this.service.updateFile(input, session);
   }
@@ -103,7 +103,7 @@ export class FileResolver {
   })
   renameFileNode(
     @Args('input') input: RenameFileInput,
-    @Session() session: ISession,
+    @Session() session: ISession
   ): Promise<FileOrDirectory> {
     return this.service.rename(input, session);
   }
@@ -113,7 +113,7 @@ export class FileResolver {
   })
   moveFileNode(
     @Args('input') input: MoveFileInput,
-    @Session() session: ISession,
+    @Session() session: ISession
   ): Promise<FileOrDirectory> {
     return this.service.move(input, session);
   }

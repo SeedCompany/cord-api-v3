@@ -4,7 +4,7 @@ import { Field, ID, InputType } from 'type-graphql';
 @InputType()
 export abstract class RenameFileInput {
   @Field(() => ID, {
-    description: 'The file or directory\'s ID',
+    description: "The file or directory's ID",
   })
   readonly id: string;
 
@@ -17,7 +17,7 @@ export abstract class RenameFileInput {
 @InputType()
 export abstract class MoveFileInput {
   @Field(() => ID, {
-    description: 'The file or directory\'s ID',
+    description: "The file or directory's ID",
   })
   readonly id: string;
 

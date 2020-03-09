@@ -1,0 +1,153 @@
+root: true
+parser: "@typescript-eslint/parser"
+parserOptions:
+  ecmaVersion: 2018
+  sourceType: module
+  project: ./tsconfig.json
+plugins:
+  - "@typescript-eslint"
+  - import
+  - import-helpers
+  - prettier
+  - local-rules
+extends:
+  - eslint:recommended
+  - plugin:@typescript-eslint/eslint-recommended
+  - plugin:@typescript-eslint/recommended
+  - plugin:@typescript-eslint/recommended-requiring-type-checking
+  - prettier
+  - prettier/@typescript-eslint
+rules:
+  ## typescript-eslint recommended rules overrides
+  '@typescript-eslint/consistent-type-assertions':
+    - warn
+    - assertionStyle: as
+      # disallow since it hides errors (required fields that are missing)
+      objectLiteralTypeAssertions: never
+  # Allow return types to be inferred
+  "@typescript-eslint/explicit-function-return-type": off
+  '@typescript-eslint/no-explicit-any': off
+  # Loosen because we are still smarter than the compiler sometimes
+  '@typescript-eslint/no-non-null-assertion': off
+  '@typescript-eslint/no-unused-vars': off
+  local-rules/no-unused-vars:
+    - warn
+    - ignoreArgsIfArgsAfterAreUsed: true
+  '@typescript-eslint/no-use-before-define':
+    - error
+    # This disallows referencing before declaration
+    - functions: false
+      classes: false
+      variables: false
+      typedefs: false
+  # I think we should be able to define async functions without using await
+  # We are defining the contract and setting up usages to be async which
+  # requires design work. async code could come later.
+  '@typescript-eslint/require-await': off
+  '@typescript-eslint/unbound-method':
+    - error
+    # We'll assume statics don't need scope, so don't need to be bound
+    # We should have another lint rule to enforce static methods have (this: unknown) so this isn't misused
+    - ignoreStatic: true
+
+  ## Other typescript-eslint rules
+  '@typescript-eslint/array-type':
+    - warn
+    # Simple is more friendly until generics are thrown in
+    - default: array-simple
+  '@typescript-eslint/consistent-type-definitions': error
+  '@typescript-eslint/explicit-member-accessibility':
+    - error
+    # public is default, omit it. Follows same thought process as inferred types.
+    # This doesn't need an override for parameter properties, because those should always be readonly.
+    - accessibility: no-public
+  # This gives false positives for NestJS modules
+  '@typescript-eslint/no-extraneous-class': off
+  '@typescript-eslint/no-floating-promises': error
+  '@typescript-eslint/no-unused-expressions':
+    - error
+    - allowShortCircuit: true
+      allowTernary: true
+      allowTaggedTemplates: true
+  no-useless-constructor: off # replace with TS version
+  '@typescript-eslint/no-useless-constructor': error
+  '@typescript-eslint/no-unnecessary-qualifier': error
+  '@typescript-eslint/no-unnecessary-type-arguments': error
+  '@typescript-eslint/prefer-for-of': error
+  '@typescript-eslint/prefer-function-type': error
+  '@typescript-eslint/prefer-readonly': error
+  '@typescript-eslint/require-array-sort-compare': error
+  '@typescript-eslint/restrict-plus-operands': error
+  '@typescript-eslint/unified-signatures': error
+
+  ## Rules taken from Create React App which apply everywhere
+  # Some have been omitted if they are already covered by
+  # TypeScript, Prettier, or other configured rules
+  eqeqeq:
+    - error
+    - always
+    - null: ignore
+  no-caller: warn
+  no-cond-assign: error
+  no-control-regex: warn
+  no-eval: warn
+  no-extend-native: warn
+  no-extra-bind: warn
+  no-extra-label: warn
+  no-implied-eval: warn
+  no-labels: warn
+  no-lone-blocks: warn
+  no-loop-func: warn
+  no-mixed-operators:
+    - warn
+    - groups:
+        - ["&", "|", "^", "~", !!str '<<', ">>", ">>>"]
+        - ["==", "!=", "===", "!==", ">", ">=", "<", "<="]
+        - ["&&", "||"]
+        - [in, instanceof]
+      allowSamePrecedence: false
+  no-multi-str: warn
+  no-new-func: warn
+  no-new-object: warn
+  no-new-wrappers: warn
+  no-octal-escape: warn
+  no-script-url: warn
+  no-self-compare: warn
+  no-sequences: warn
+  no-template-curly-in-string: warn
+  no-throw-literal: warn
+  no-useless-computed-key: warn
+  no-useless-concat: warn
+  no-useless-rename: warn
+  strict: [warn, never]
+  unicode-bom: [warn, never]
+
+  ## Import/Export rules - TS handles errors, so these are just for styling
+  import/first: error
+  import/newline-after-import: error
+  import/no-default-export: error
+  import/no-useless-path-segments: error
+  import/no-duplicates: error
+  # Orders import statements
+  import-helpers/order-imports:
+    - error
+    - newlinesBetween: never
+      groups:
+        - module
+        - absolute
+        - [parent, sibling, index]
+      alphabetize:
+        order: asc
+        ignoreCase: true
+  # Alphabetizes imports within modules (curly brackets)
+  sort-imports:
+    - error
+    - ignoreDeclarationSort: true # leave it to import-helpers/order-imports
+      ignoreCase: true # a,Z instead of Z,a
+
+  ## More of our rules
+  prettier/prettier: warn
+
+overrides:
+  - files:
+      - "*.ts"

@@ -1,4 +1,3 @@
-import { Injectable } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { IdArg } from '../../common';
 import { ISession, Session } from '../auth';
@@ -22,7 +21,7 @@ export class ProjectResolver {
   })
   async project(
     @IdArg() id: string,
-    @Session() session: ISession,
+    @Session() session: ISession
   ): Promise<Project> {
     return this.projectService.readOne(id, session);
   }
@@ -38,7 +37,7 @@ export class ProjectResolver {
       defaultValue: ProjectListInput.defaultVal,
     })
     input: ProjectListInput,
-    @Session() session: ISession,
+    @Session() session: ISession
   ): Promise<ProjectListOutput> {
     return this.projectService.list(input, session);
   }
@@ -48,7 +47,7 @@ export class ProjectResolver {
   })
   async createProject(
     @Args('input') { project: input }: CreateProjectInput,
-    @Session() session: ISession,
+    @Session() session: ISession
   ): Promise<CreateProjectOutput> {
     const project = await this.projectService.create(input, session);
     return { project };
@@ -59,7 +58,7 @@ export class ProjectResolver {
   })
   async updateProject(
     @Args('input') { project: input }: UpdateProjectInput,
-    @Session() session: ISession,
+    @Session() session: ISession
   ): Promise<UpdateProjectOutput> {
     const project = await this.projectService.update(input, session);
     return { project };
@@ -70,7 +69,7 @@ export class ProjectResolver {
   })
   async deleteProject(
     @IdArg() id: string,
-    @Session() session: ISession,
+    @Session() session: ISession
   ): Promise<boolean> {
     await this.projectService.delete(id, session);
     return true;

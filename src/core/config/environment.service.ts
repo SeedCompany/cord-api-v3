@@ -4,7 +4,7 @@ import * as dotEnvExpand from 'dotenv-expand';
 import * as fs from 'fs';
 import { isString, mapKeys, pickBy } from 'lodash';
 import { join } from 'path';
-import { Logger, ILogger } from '../logger';
+import { ILogger, Logger } from '../logger';
 
 /**
  * Handle reading values from environment and env files.
@@ -18,11 +18,11 @@ export class EnvironmentService {
   constructor(
     @Logger('config:environment') private readonly logger: ILogger,
     @Optional() rootPath = process.cwd(),
-    @Optional() env = process.env.NODE_ENV,
+    @Optional() env = process.env.NODE_ENV
   ) {
     if (!env) {
       throw new Error(
-        'Env was not given and NODE_ENV environment variable is not set',
+        'Env was not given and NODE_ENV environment variable is not set'
       );
     }
 
@@ -30,12 +30,7 @@ export class EnvironmentService {
     // as pairs could be passed in instead of in env files
     this.env = pickBy(process.env) as Record<string, string>;
 
-    const files = [
-      `.env.${env}.local`,
-      `.env.${env}`,
-      `.env.local`,
-      `.env`,
-    ]
+    const files = [`.env.${env}.local`, `.env.${env}`, `.env.local`, `.env`]
       .filter(isString)
       .map(file => join(rootPath, file));
 
@@ -87,7 +82,7 @@ export class EnvironmentService {
       const parsed = parseFloat(val);
       if (isNaN(parsed)) {
         throw new Error(
-          `Environment "${key}" has value "${val}" which cannot be parsed to a number`,
+          `Environment "${key}" has value "${val}" which cannot be parsed to a number`
         );
       }
 
@@ -106,7 +101,7 @@ class ConfigValue<T> {
     readonly exists: boolean,
     readonly key: string,
     private readonly rawValue: string,
-    private readonly parse: (raw: string) => T,
+    private readonly parse: (raw: string) => T
   ) {}
 
   required() {

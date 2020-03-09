@@ -1,34 +1,28 @@
-import { ProductType } from './dto/product-type';
+import { Field, ID, InputType, ObjectType } from 'type-graphql';
+import { BaseNode } from '../../common/base-node';
 import { BibleBook } from './dto/bible-book';
 import { ProductApproach } from './dto/product-approach';
 import { ProductMedium } from './dto/product-medium';
 import { ProductMethodology } from './dto/product-methodology';
 import { ProductPurpose } from './dto/product-purpose';
-import {
-  Field,
-  ID,
-  InputType,
-  ObjectType,
-  registerEnumType,
-} from 'type-graphql';
-import { BaseNode } from '../../common/base-node';
+import { ProductType } from './dto/product-type';
 
 @ObjectType()
 @InputType('productInput')
 export class Product {
   @Field(() => ID)
   id: string;
-  @Field(type => ProductType)
+  @Field(() => ProductType)
   type: ProductType;
-  @Field(type => [BibleBook])
+  @Field(() => [BibleBook])
   books: BibleBook[];
-  @Field(type => [ProductMedium])
+  @Field(() => [ProductMedium])
   mediums: ProductMedium[];
-  @Field(type => [ProductPurpose])
+  @Field(() => [ProductPurpose])
   purposes: ProductPurpose[];
-  @Field(type => ProductApproach)
+  @Field(() => ProductApproach)
   approach: ProductApproach;
-  @Field(type => ProductMethodology)
+  @Field(() => ProductMethodology)
   methodology: ProductMethodology;
 }
 export interface Product extends BaseNode {

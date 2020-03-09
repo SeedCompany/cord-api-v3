@@ -7,15 +7,24 @@ import {
 } from 'type-graphql';
 import { Organization } from '../organization';
 
+export enum BudgetStatus {
+  Pending = 'pending',
+  Current = 'current',
+  Superceded = 'superceded',
+  Rejected = 'rejected',
+}
+
+registerEnumType(BudgetStatus, { name: 'BudgetStatus' });
+
 @ObjectType()
 @InputType('BudgetInput')
 export class Budget {
   @Field(() => ID)
   id: string;
 
-  @Field(type => BudgetStatus, { nullable: true })
+  @Field(() => BudgetStatus, { nullable: true })
   status: BudgetStatus;
-  @Field(type => [BudgetDetails], { nullable: true })
+  @Field(() => [BudgetDetails], { nullable: true })
   budgetDetails: BudgetDetails[];
 }
 
@@ -41,12 +50,3 @@ export interface BudgetDetails {
   fiscalYear: number;
   amount: number;
 }
-
-export enum BudgetStatus {
-  Pending = 'pending',
-  Current = 'current',
-  Superceded = 'superceded',
-  Rejected = 'rejected',
-}
-
-registerEnumType(BudgetStatus, { name: 'BudgetStatus' });

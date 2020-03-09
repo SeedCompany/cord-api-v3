@@ -1,10 +1,10 @@
 import {
-  Resolver,
   Args,
-  Query,
   Mutation,
-  ResolveProperty,
   Parent,
+  Query,
+  ResolveProperty,
+  Resolver,
 } from '@nestjs/graphql';
 import { IdArg } from '../../common';
 import { ISession, Session } from '../auth';
@@ -18,9 +18,9 @@ import {
   UpdateUserInput,
   UpdateUserOutput,
   User,
+  UserEmailInput,
   UserListInput,
   UserListOutput,
-  UserEmailInput,
 } from './dto';
 import {
   EducationListInput,
@@ -41,7 +41,7 @@ export class UserResolver {
   constructor(
     private readonly userService: UserService,
     private readonly educationService: EducationService,
-    private readonly unavailabilityService: UnavailabilityService,
+    private readonly unavailabilityService: UnavailabilityService
   ) {}
 
   @Query(() => User, {
@@ -61,23 +61,23 @@ export class UserResolver {
       type: () => UserListInput,
       defaultValue: UserListInput.defaultVal,
     })
-    input: UserListInput,
+    input: UserListInput
   ): Promise<UserListOutput> {
     return this.userService.list(input, session);
   }
 
   @Query(() => Boolean, {
-    description: "Check out whether a provided email exists or not in User Table"
+    description:
+      'Check out whether a provided email exists or not in User Table',
   })
   async checkEmail(
     @Args({
-      name: "input",
-      type: () => UserEmailInput
+      name: 'input',
+      type: () => UserEmailInput,
     })
-    input: UserEmailInput,
-  ): Promise<Boolean>
-  {
-    return this.userService.checkEmail(input)
+    input: UserEmailInput
+  ): Promise<boolean> {
+    return this.userService.checkEmail(input);
   }
 
   @ResolveProperty(() => SecuredUnavailabilityList)
@@ -89,9 +89,9 @@ export class UserResolver {
       type: () => UnavailabilityListInput,
       defaultValue: UnavailabilityListInput.defaultVal,
     })
-    input: UnavailabilityListInput,
+    input: UnavailabilityListInput
   ): Promise<UnavailabilityListOutput> {
-    input = {...input, filter: {userId: id}};
+    input = { ...input, filter: { userId: id } };
     return this.unavailabilityService.list(input, session);
   }
 
@@ -104,7 +104,7 @@ export class UserResolver {
       type: () => OrganizationListInput,
       defaultValue: OrganizationListInput.defaultVal,
     })
-    input: OrganizationListInput,
+    input: OrganizationListInput
   ): Promise<SecuredOrganizationList> {
     return this.userService.listOrganizations(id, input, session);
   }
@@ -118,9 +118,9 @@ export class UserResolver {
       type: () => EducationListInput,
       defaultValue: EducationListInput.defaultVal,
     })
-    input: EducationListInput,
+    input: EducationListInput
   ): Promise<EducationListOutput> {
-    input = {...input, filter: {userId: id}};
+    input = { ...input, filter: { userId: id } };
     return this.educationService.list(input, session);
   }
 
@@ -129,7 +129,7 @@ export class UserResolver {
   })
   async createUser(
     @Session() session: ISession,
-    @Args('input') { user: input }: CreateUserInput,
+    @Args('input') { user: input }: CreateUserInput
   ): Promise<CreateUserOutput> {
     const user = await this.userService.create(input, session);
     return { user };
@@ -140,7 +140,7 @@ export class UserResolver {
   })
   async updateUser(
     @Session() session: ISession,
-    @Args('input') { user: input }: UpdateUserInput,
+    @Args('input') { user: input }: UpdateUserInput
   ): Promise<UpdateUserOutput> {
     const user = await this.userService.update(input, session);
     return { user };
