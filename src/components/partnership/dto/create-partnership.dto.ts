@@ -10,22 +10,22 @@ import { Partnership } from './partnership.dto';
 @InputType()
 export class CreatePartnership {
   @Field(() => PartnershipAgreementStatus)
-  readonly agreementStatus: PartnershipAgreementStatus;
+  readonly agreementStatus?: PartnershipAgreementStatus;
 
   @Field(() => PartnershipAgreementStatus)
-  readonly mouStatus: PartnershipAgreementStatus;
+  readonly mouStatus?: PartnershipAgreementStatus;
 
   @DateField({ nullable: true })
-  readonly mouStart: DateTime | null;
+  readonly mouStart?: DateTime | null;
 
   @DateField({ nullable: true })
-  readonly mouEnd: DateTime | null;
+  readonly mouEnd?: DateTime | null;
 
   @Field(() => ID)
   readonly organizationId: string;
 
   @Field(() => [PartnershipType])
-  readonly types: PartnershipType[];
+  readonly types?: PartnershipType[];
 }
 
 @InputType()
