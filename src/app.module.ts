@@ -9,6 +9,7 @@ import { AdminService } from './components/admin/admin.service';
 import { AuthModule } from './components/auth';
 import { BudgetResolver } from './components/budget/budget.resolver';
 import { BudgetService } from './components/budget/budget.service';
+import { CeremonyModule } from './components/cermony';
 import { FileModule } from './components/file';
 import { InternshipEngagementResolver } from './components/internship-engagement/internship-engagement.resolver';
 import { InternshipEngagementService } from './components/internship-engagement/internship-engagement.service';
@@ -41,6 +42,7 @@ const context: ContextFunction<
       playground: true, // enabled in all environments
     }),
     AuthModule,
+    CeremonyModule,
     FileModule,
     LanguageModule,
     ProductModule,
