@@ -16,6 +16,14 @@ export class ConfigService {
 
   jwtKey = this.env.string('JWT_AUTH_KEY').optional('cord-field');
 
+  emailForm = this.env.string('EMAIL_FORM').optional('noreply@cordfield.com');
+
+  awsRegion = this.env.string('AWS_REGION').optional('us-east-2');
+
+  resetPasswordURL = this.env
+    .string('RESET_PASSWORD_URL')
+    .optional('https://cordfield.com/login/reset-password/');
+
   @Lazy() get neo4j() {
     const driverConfig: Neo4JDriverConfig = {
       maxTransactionRetryTime: 30_000,

@@ -1,9 +1,10 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import * as argon2 from 'argon2';
+import { SES } from 'aws-sdk';
 import { sign, verify } from 'jsonwebtoken';
 import { DateTime } from 'luxon';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
-import { LoginInput } from './auth.dto';
+import { LoginInput, ResetPasswordInput } from './auth.dto';
 import { ISession } from './session';
 
 interface JwtPayload {
@@ -15,6 +16,7 @@ export class AuthService {
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
+    private readonly ses: SES,
     @Logger('auth:service') private readonly logger: ILogger
   ) {}
 
@@ -181,6 +183,112 @@ export class AuthService {
     };
     this.logger.debug('Created session', session);
     return session;
+  }
+
+  async forgotPassword(email: string): Promise<void> {
+    const result = await this.db
+      .query()
+      .raw(
+        `
+        MATCH
+        (email:EmailAddress {
+          value: $email
+        })
+        RETURN
+        email.value as email
+        `,
+        {
+          email: email,
+        }
+      )
+      .first();
+
+    if (!result) {
+      throw new Error('Could not find email on database');
+    }
+
+    const token = this.encodeJWT();
+    await this.db
+      .query()
+      .raw(
+        `
+      CREATE(et:EmailToken{value:$value, token: $token, createdOn:datetime()})
+      RETURN et as emailToken
+      `,
+        {
+          value: email,
+          token: token,
+        }
+      )
+      .first();
+    const params = {
+      Destination: { ToAddresses: [email] },
+      Message: {
+        Body: {
+          Html: {
+            Charset: 'UTF-8',
+            Data: `<html><body><p>This is your secret login code:</p>
+                          <a href="${this.config.resetPasswordURL}?token=${token}">Go to Login</a></body></html>`,
+          },
+          Text: {
+            Charset: 'UTF-8',
+            Data: `${this.config.resetPasswordURL}?token=${token}`,
+          },
+        },
+        Subject: {
+          Charset: 'UTF-8',
+          Data: 'Forget Password - CORD Field',
+        },
+      },
+      Source: this.config.emailForm,
+    };
+
+    await this.ses.sendEmail(params).promise();
+  }
+
+  async resetPassword(input: ResetPasswordInput): Promise<void> {
+    const { token, password } = input;
+    const checkDate = new Date();
+
+    const result = await this.db
+      .query()
+      .raw(
+        `
+        MATCH(emailToken: EmailToken{token: $token})
+        RETURN emailToken.value as email, emailToken.token as token, emailToken.createdOn as createdOn
+        `,
+        {
+          token: token,
+        }
+      )
+      .first();
+
+    if (!result) {
+      throw new Error('Could not find token on database');
+    } else {
+      if (
+        Math.abs(
+          (checkDate.getTime() - Date.parse(result.createdOn)) / (1000 * 3600)
+        ) > 24
+      ) {
+        throw new Error('token has been expired');
+      }
+      await this.db
+        .query()
+        .raw(
+          `
+          MATCH(e:EmailToken{token: $token})
+          DELETE e WITH * OPTIONAL MATCH(:EmailAddress{active: true, value:$email})<-[:email{active:true}]-(user:User{active:true})-[:password{active:true}]->(password:Property{active:true})
+          SET password.value=$password return password
+          `,
+          {
+            token: token,
+            email: result.email,
+            password: password,
+          }
+        )
+        .first();
+    }
   }
 
   private encodeJWT() {
