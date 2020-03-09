@@ -41,7 +41,7 @@ jobs:
         run: yarn type-check
 
       - name: Lint
-        run: eslint --ext .ts,.tsx --max-warnings 0 .
+        run: yarn eslint --ext .ts,.tsx --max-warnings 0 .
 
       - name: Tests
         run: yarn test:e2e
