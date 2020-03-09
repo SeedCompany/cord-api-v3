@@ -198,6 +198,8 @@ export class UserService {
             canReadEducationList: true,
             canCreateUnavailability: true,
             canReadUnavailabilityList: true,
+            canCreatePartnership: true,
+            canReadPartnerships: true,
             canCreateProduct: true,
             canReadProducts: true,
             canCreateProject: true,

@@ -1,66 +1,76 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { IdArg } from '../../common';
+import { ISession, Session } from '../auth';
 import {
-  CreatePartnershipInputDto,
-  CreatePartnershipOutputDto,
-  DeletePartnershipInputDto,
-  DeletePartnershipOutputDto,
-  ListPartnershipsInputDto,
-  ListPartnershipsOutputDto,
-  ReadPartnershipInputDto,
-  ReadPartnershipOutputDto,
-  UpdatePartnershipInputDto,
-  UpdatePartnershipOutputDto,
-} from './partnership.dto';
+  CreatePartnershipInput,
+  CreatePartnershipOutput,
+  Partnership,
+  PartnershipListInput,
+  PartnershipListOutput,
+  UpdatePartnershipInput,
+  UpdatePartnershipOutput,
+} from './dto';
 import { PartnershipService } from './partnership.service';
 
-@Resolver('Partnership')
+@Resolver()
 export class PartnershipResolver {
-  constructor(private readonly partnershipService: PartnershipService) {}
+  constructor(private readonly service: PartnershipService) {}
 
-  @Mutation(() => CreatePartnershipOutputDto, {
-    description: 'Create a Partnership',
+  @Mutation(() => CreatePartnershipOutput, {
+    description: 'Create a Partnership entry',
   })
   async createPartnership(
-    @Args('input') { partnership: input }: CreatePartnershipInputDto
-  ): Promise<CreatePartnershipOutputDto> {
-    return await this.partnershipService.create(input);
+    @Session() session: ISession,
+    @Args('input') { partnership: input }: CreatePartnershipInput
+  ): Promise<CreatePartnershipOutput> {
+    const partnership = await this.service.create(input, session);
+    return { partnership };
   }
 
-  @Query(() => ReadPartnershipOutputDto, {
-    description: 'Read one Partnership by id',
+  @Query(() => Partnership, {
+    description: 'Look up a partnership by ID',
   })
-  async readPartnership(
-    @Args('input') { partnership: input }: ReadPartnershipInputDto
-  ): Promise<ReadPartnershipOutputDto> {
-    return await this.partnershipService.readOne(input);
+  async partnership(
+    @Session() session: ISession,
+    @IdArg() id: string
+  ): Promise<Partnership> {
+    return await this.service.readOne(id, session);
   }
 
-  @Query(() => ListPartnershipsOutputDto, {
-    description: 'Query partnership',
+  @Query(() => PartnershipListOutput, {
+    description: 'Look up partnerships',
   })
   async partnerships(
-    @Args('input') { query: input }: ListPartnershipsInputDto
-  ): Promise<ListPartnershipsOutputDto> {
-    return await this.partnershipService.queryPartnerships(input);
+    @Session() session: ISession,
+    @Args({
+      name: 'input',
+      type: () => PartnershipListInput,
+      defaultValue: PartnershipListInput.defaultVal,
+    })
+    input: PartnershipListInput
+  ): Promise<PartnershipListOutput> {
+    return this.service.list(input, session);
   }
 
-  @Mutation(() => UpdatePartnershipOutputDto, {
+  @Mutation(() => UpdatePartnershipOutput, {
     description: 'Update a Partnership',
   })
   async updatePartnership(
-    @Args('input')
-    { partnership: input }: UpdatePartnershipInputDto
-  ): Promise<UpdatePartnershipOutputDto> {
-    return await this.partnershipService.update(input);
+    @Session() session: ISession,
+    @Args('input') { partnership: input }: UpdatePartnershipInput
+  ): Promise<UpdatePartnershipOutput> {
+    const partnership = await this.service.update(input, session);
+    return { partnership };
   }
 
-  @Mutation(() => DeletePartnershipOutputDto, {
+  @Mutation(() => Boolean, {
     description: 'Delete a Partnership',
   })
   async deletePartnership(
-    @Args('input')
-    { partnership: input }: DeletePartnershipInputDto
-  ): Promise<DeletePartnershipOutputDto> {
-    return await this.partnershipService.delete(input);
+    @Session() session: ISession,
+    @IdArg() id: string
+  ): Promise<boolean> {
+    await this.service.delete(id, session);
+    return true;
   }
 }

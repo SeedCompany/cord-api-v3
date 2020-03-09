@@ -234,7 +234,7 @@ export class PropertyUpdaterService {
   }: {
     session: ISession;
     props: ReadonlyArray<
-      keyof TObject | { secure: boolean; name: keyof TObject }
+      keyof TObject | { secure: boolean; name: keyof TObject; list?: boolean }
     >;
     nodevar: string;
     owningOrgId?: string;
@@ -373,15 +373,30 @@ export class PropertyUpdaterService {
           ? prop.name
           : prop) as string;
         const secure = typeof prop === 'object' ? prop.secure : true;
+        const list = typeof prop === 'object' ? prop.list : false;
 
-        if (secure) {
-          item[propName] = {
-            value: row[propName],
-            canRead: Boolean(row[aclReadPropName]),
-            canEdit: Boolean(row[aclEditPropName]),
-          };
+        if (list) {
+          const value = row[propName] ? row[propName].split(',') : [];
+
+          if (secure) {
+            item[propName] = {
+              value,
+              canRead: Boolean(row[aclReadPropName]),
+              canEdit: Boolean(row[aclEditPropName]),
+            };
+          } else {
+            item[propName] = value;
+          }
         } else {
-          item[propName] = row[propName];
+          if (secure) {
+            item[propName] = {
+              value: row[propName],
+              canRead: Boolean(row[aclReadPropName]),
+              canEdit: Boolean(row[aclEditPropName]),
+            };
+          } else {
+            item[propName] = row[propName];
+          }
         }
       }
 

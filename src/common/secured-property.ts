@@ -23,7 +23,7 @@ export const unwrapSecured = <T>(value: T | Secured<T>): T | undefined =>
   isSecured(value) ? value.value : value;
 
 export function SecuredProperty<T>(
-  ValueClass: ClassType<T> | AbstractClassType<T> | GraphQLScalarType
+  ValueClass: ClassType<T> | AbstractClassType<T> | GraphQLScalarType | object
 ) {
   @ObjectType({ isAbstract: true, implements: [Readable, Editable] })
   abstract class SecuredPropertyClass
@@ -42,6 +42,29 @@ export function SecuredProperty<T>(
 SecuredProperty.descriptionFor = (value: string) => stripIndent`
   An object with ${value} \`value\` and additional authorization information.
   The value is only given if \`canRead\` is \`true\` otherwise it is \`null\`.
+  These \`can*\` authorization properties are specific to the user making the request.
+`;
+
+export function SecuredPropertyList<T>(
+  ValueClass: ClassType<T> | AbstractClassType<T> | GraphQLScalarType | object
+) {
+  @ObjectType({ isAbstract: true, implements: [Readable, Editable] })
+  abstract class SecuredPropertyListClass
+    implements Readable, Editable, Secured<T[]> {
+    @Field(() => [ValueClass])
+    readonly value: T[];
+    @Field()
+    readonly canRead: boolean;
+    @Field()
+    readonly canEdit: boolean;
+  }
+
+  return SecuredPropertyListClass;
+}
+
+SecuredPropertyList.descriptionFor = (value: string) => stripIndent`
+  An object with ${value} \`value\` and additional authorization information.
+  The value is only given if \`canRead\` is \`true\` otherwise it is empty: \`[]\`.
   These \`can*\` authorization properties are specific to the user making the request.
 `;
 

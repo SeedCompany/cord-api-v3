@@ -1,246 +1,187 @@
-import { INestApplication } from '@nestjs/common';
-import { DateTime } from 'luxon';
-import { generate, isValid } from 'shortid';
-import * as request from 'supertest';
-import { PartnershipAgreementStatus } from '../src/components/partnership/agreement-status';
-import { Partnership } from '../src/components/partnership/partnership';
-import { CreatePartnershipInput } from '../src/components/partnership/partnership.dto';
-import { createTestApp, TestApp } from './utility';
+import { gql } from 'apollo-server-core';
+import { sample, times } from 'lodash';
+import {
+  Partnership,
+  PartnershipAgreementStatus,
+  PartnershipType,
+} from '../src/components/partnership';
+import {
+  createSession,
+  createTestApp,
+  createUser,
+  fragments,
+  TestApp,
+} from './utility';
+import { createPartnership } from './utility/create-partnership';
 
-async function createPartnership(app: INestApplication): Promise<string> {
-  let partnershipId = '';
-  await request(app.getHttpServer())
-    .post('/graphql')
-    .send({
-      operationName: null,
-      // TODO : Use Later
-      // query: `
-      //   mutation {
-      //     createPartnership(
-      //       input: {
-      //         partnership: {
-      //           agreementStatus: AwaitingSignature
-      //           mouStatus: Signed
-      //           mouStart: null
-      //           mouEnd: null
-      //           organization: organization
-      //           types: [Managing, Technical]
-      //         }
-      //       }
-      //     ) {
-      //       partnership {
-      //         id
-      //       }
-      //     }
-      //   }
-      //   `,
-      query: `
-          mutation {
-            createPartnership (input: { partnership: {} }){
-              partnership {
-                id
-              }
-            }
-          }
-          `,
-    })
-    .then(({ body }) => {
-      partnershipId = body.data.createPartnership.partnership.id;
-    });
-  return partnershipId;
-}
-
-describe.skip('Partnership e2e', () => {
+describe('Partnership e2e', () => {
   let app: TestApp;
 
   beforeAll(async () => {
     app = await createTestApp();
+    await createSession(app);
+    await createUser(app);
   });
-
-  // CREATE PARTNERSHIP
-  it('create partnership', () => {
-    // const orgName = 'partnershipName_' + generate();
-    // const organization = {
-    //   id: generate(),
-    //   name: orgName,
-    //   owningOrg: null,
-    //   createdAt: null,
-    //   createdBy: null,
-    // };
-    return request(app.getHttpServer())
-      .post('/graphql')
-      .send({
-        operationName: null,
-        query: `
-        mutation {
-          createPartnership (input: { partnership: {  } }){
-            partnership {
-              id
-            }
-          }
-        }
-        `,
-      })
-      .expect(({ body }) => {
-        const partnershipId = body.data.createPartnership.partnership.id;
-        expect(isValid(partnershipId)).toBe(true);
-      })
-      .expect(200);
-  });
-
-  // READ PARTNERSHIP
-  it('read one partnership by id', async () => {
-    const newPartnership = new CreatePartnershipInput();
-    const orgName = 'partnershipName_' + generate();
-    newPartnership.organization = {
-      id: generate(),
-      name: {
-        value: orgName,
-        canRead: true,
-        canEdit: true,
-      },
-      createdAt: DateTime.local(),
-    };
-    const partnershipId = await createPartnership(app);
-
-    // test reading new partnership
-    return request(app.getHttpServer())
-      .post('/graphql')
-      .send({
-        operationName: null,
-        query: `
-        query {
-          readPartnership ( input: { partnership: { id: "${partnershipId}" } }){
-            partnership {
-              id
-            }
-          }
-        }
-        `,
-      })
-      .expect(({ body }) => {
-        expect(body.data.readPartnership.partnership.id).toBe(partnershipId);
-      })
-      .expect(200);
-  });
-
-  // UPDATE PARTNERSHIP
-  it('update partnership', async () => {
-    const partnershipId = await createPartnership(app);
-    const agreementStatus: PartnershipAgreementStatus =
-      PartnershipAgreementStatus.NotAttached;
-
-    return request(app.getHttpServer())
-      .post('/graphql')
-      .send({
-        operationName: null,
-        query: `
-        mutation {
-          updatePartnership (input: { partnership: {id: "${partnershipId}",
-          agreementStatus: "${agreementStatus}" } }){
-            partnership {
-              id
-              agreementStatus
-            }
-          }
-        }
-        `,
-      })
-      .expect(({ body }) => {
-        expect(body.data.updatePartnership.partnership.id).toBe(partnershipId);
-        expect(body.data.updatePartnership.partnership.agreementStatus).toBe(
-          agreementStatus
-        );
-      })
-      .expect(200);
-  });
-
-  // DELETE PARTNERSHIP
-  it('delete partnership', async () => {
-    const newPartnership = new CreatePartnershipInput();
-    const orgName = 'partnershipName_' + generate();
-    newPartnership.organization = {
-      id: generate(),
-      name: {
-        value: orgName,
-        canRead: true,
-        canEdit: true,
-      },
-      createdAt: DateTime.local(),
-    };
-    const partnershipId = await createPartnership(app);
-
-    return request(app.getHttpServer())
-      .post('/graphql')
-      .send({
-        operationName: null,
-        query: `
-        mutation {
-          deletePartnership (input: { partnership: { id: "${partnershipId}" } }){
-            partnership {
-            id
-            }
-          }
-        }
-        `,
-      })
-      .expect(({ body }) => {
-        expect(body.data.deletePartnership.partnership.id).toBe(partnershipId);
-      })
-      .expect(200);
-  });
-
-  // LIST PARTNERSHIPS
-  it('list view of partnerships', async () => {
-    // create a bunch of partnership
-    const totalPartnership = 10;
-    const partnerships: Partnership[] = [];
-
-    for (let i = 0; i < totalPartnership; i++) {
-      const newPartnership = new Partnership();
-      const orgName = 'partnershipName_' + generate();
-      newPartnership.organization = {
-        id: generate(),
-        name: {
-          value: orgName,
-          canRead: true,
-          canEdit: true,
-        },
-        createdAt: DateTime.local(),
-      };
-      partnerships.push(newPartnership);
-    }
-
-    // test reading new partnership
-    return request(app.getHttpServer())
-      .post('/graphql')
-      .send({
-        operationName: null,
-        query: `
-        query {
-          partnerships(
-            input: {
-              query: { filter: "", page: 0, count: ${totalPartnership}, sort: "organization", order: "asc" }
-            }
-          ) {
-            partnerships {
-              organization {
-                name
-              }
-            }
-          }
-        }
-          `,
-      })
-      .expect(({ body }) => {
-        expect(body.data.partnerships.partnerships.length).toBe(
-          body.data.partnerships.partnerships.length
-        );
-      })
-      .expect(200);
-  });
-
   afterAll(async () => {
     await app.close();
+  });
+
+  it('create & read partnership by id', async () => {
+    const partnership = await createPartnership(app);
+
+    const result = await app.graphql.query(
+      gql`
+        query partnership($id: ID!) {
+          partnership(id: $id) {
+            ...partnership
+          }
+        }
+        ${fragments.partnership}
+      `,
+      {
+        id: partnership.id,
+      }
+    );
+
+    const actual: Partnership = result.partnership;
+    expect(actual.id).toBe(partnership.id);
+    expect(actual.agreementStatus.value).toBe(
+      partnership.agreementStatus.value
+    );
+    expect(actual.mouStatus.value).toBe(partnership.mouStatus.value);
+    expect(actual.mouStart.value).toBe(partnership.mouStart.value);
+    expect(actual.mouEnd.value).toBe(partnership.mouEnd.value);
+    expect(actual.types.value).toEqual(
+      expect.arrayContaining(partnership.types.value)
+    );
+    expect(actual.organization).toBeTruthy();
+    expect(actual.organization?.id).toBe(partnership.organization?.id);
+  });
+
+  it('update partnership', async () => {
+    const partnership = await createPartnership(app);
+
+    // lodash.sample used to grab a random enum value
+    const newAgreementStatus = sample(
+      Object.values(PartnershipAgreementStatus)
+    );
+    const newMouStatus = sample(Object.values(PartnershipAgreementStatus));
+    const newTypes = [sample(Object.values(PartnershipType))];
+
+    const result = await app.graphql.query(
+      gql`
+        mutation updatePartnership(
+          $id: ID!
+          $agreementStatus: PartnershipAgreementStatus!
+          $mouStatus: PartnershipAgreementStatus!
+          $types: [PartnershipType!]!
+        ) {
+          updatePartnership(
+            input: {
+              partnership: {
+                id: $id
+                agreementStatus: $agreementStatus
+                mouStatus: $mouStatus
+                types: $types
+              }
+            }
+          ) {
+            partnership {
+              ...partnership
+            }
+          }
+        }
+        ${fragments.partnership}
+      `,
+      {
+        id: partnership.id,
+        agreementStatus: newAgreementStatus,
+        mouStatus: newMouStatus,
+        types: newTypes,
+      }
+    );
+
+    expect(result.updatePartnership.partnership.id).toBe(partnership.id);
+    expect(result.updatePartnership.partnership.agreementStatus.value).toBe(
+      newAgreementStatus
+    );
+    expect(result.updatePartnership.partnership.mouStatus.value).toBe(
+      newMouStatus
+    );
+    expect(result.updatePartnership.partnership.types.value).toEqual(
+      expect.arrayContaining(newTypes)
+    );
+  });
+
+  it('delete partnership', async () => {
+    const partnership = await createPartnership(app);
+    expect(partnership.id).toBeTruthy();
+    const result = await app.graphql.mutate(
+      gql`
+        mutation deletePartnership($id: ID!) {
+          deletePartnership(id: $id)
+        }
+      `,
+      {
+        id: partnership.id,
+      }
+    );
+
+    const actual: boolean | undefined = result.deletePartnership;
+    expect(actual).toBeTruthy();
+    try {
+      await app.graphql.query(
+        gql`
+          query partnership($id: ID!) {
+            partnership(id: $id) {
+              ...partnership
+            }
+          }
+          ${fragments.partnership}
+        `,
+        {
+          id: partnership.id,
+        }
+      );
+    } catch (e) {
+      expect(e.response.statusCode).toBe(404);
+    }
+  });
+
+  it('List view of partnerships', async () => {
+    // create 10 partnerships
+    const numPartnerships = 10;
+    const agreementStatus = PartnershipAgreementStatus.Signed;
+    await Promise.all(
+      times(numPartnerships).map(() =>
+        createPartnership(app, {
+          agreementStatus,
+        })
+      )
+    );
+
+    const { partnerships } = await app.graphql.query(
+      gql`
+        query partnerships($agreementStatus: PartnershipAgreementStatus!) {
+          partnerships(
+            input: { filter: { agreementStatus: $agreementStatus } }
+          ) {
+            items {
+              id
+              agreementStatus {
+                value
+              }
+            }
+            hasMore
+            total
+          }
+        }
+      `,
+      {
+        agreementStatus,
+      }
+    );
+
+    expect(partnerships.items.length).toBeGreaterThanOrEqual(numPartnerships);
   });
 });
