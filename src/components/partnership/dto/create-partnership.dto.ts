@@ -1,11 +1,11 @@
-import { InputType, Field, ID, ObjectType } from 'type-graphql';
-import { DateTime } from 'luxon';
-import { DateTimeField } from '../../../common';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { Partnership } from './partnership.dto';
+import { DateTime } from 'luxon';
+import { Field, ID, InputType, ObjectType } from 'type-graphql';
+import { DateTimeField } from '../../../common';
 import { PartnershipAgreementStatus } from './partnership-agreement-status.enum';
 import { PartnershipType } from './partnership-type.enum';
+import { Partnership } from './partnership.dto';
 
 @InputType()
 export class CreatePartnership {

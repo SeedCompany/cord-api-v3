@@ -1,11 +1,11 @@
-import { InputType, Field, ID, ObjectType } from 'type-graphql';
-import { Partnership } from './partnership.dto';
-import { DateTimeField } from '../../../common';
-import { DateTime } from 'luxon';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
+import { DateTime } from 'luxon';
+import { Field, ID, InputType, ObjectType } from 'type-graphql';
+import { DateTimeField } from '../../../common';
 import { PartnershipAgreementStatus } from './partnership-agreement-status.enum';
 import { PartnershipType } from './partnership-type.enum';
+import { Partnership } from './partnership.dto';
 
 @InputType()
 export abstract class UpdatePartnership {
@@ -27,7 +27,7 @@ export abstract class UpdatePartnership {
   @Field(() => ID, { nullable: true })
   readonly organizationId?: string;
 
-  @Field(type => [PartnershipType], { nullable: true })
+  @Field(() => [PartnershipType], { nullable: true })
   readonly types?: PartnershipType[];
 }
 

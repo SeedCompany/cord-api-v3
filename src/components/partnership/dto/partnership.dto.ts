@@ -1,11 +1,11 @@
-import { ObjectType, Field, registerEnumType } from 'type-graphql';
+import { GraphQLString } from 'graphql';
+import { Field, ObjectType } from 'type-graphql';
 import {
-  Resource,
-  SecuredProperty,
   DateTimeField,
+  Resource,
   SecuredDateTime,
+  SecuredProperty,
 } from '../../../common';
-import { GraphQLString, GraphQLNonNull, GraphQLList } from 'graphql';
 import { Organization } from '../../organization';
 import { PartnershipAgreementStatus } from './partnership-agreement-status.enum';
 import { PartnershipType } from './partnership-type.enum';
@@ -31,7 +31,7 @@ export class Partnership extends Resource {
   @DateTimeField()
   readonly mouEnd: SecuredDateTime;
 
-  @Field(type => Organization, { nullable: true })
+  @Field(() => Organization, { nullable: true })
   readonly organization: Organization | null;
 
   @Field(() => [PartnershipType])

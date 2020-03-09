@@ -1,18 +1,18 @@
-import {
-  createTestApp,
-  TestApp,
-  createSession,
-  createUser,
-  fragments,
-} from './utility';
-import { createPartnership } from './utility/create-partnership';
 import { gql } from 'apollo-server-core';
+import { sample, times } from 'lodash';
 import {
   Partnership,
   PartnershipAgreementStatus,
   PartnershipType,
 } from '../src/components/partnership';
-import { sample, times } from 'lodash';
+import {
+  createSession,
+  createTestApp,
+  createUser,
+  fragments,
+  TestApp,
+} from './utility';
+import { createPartnership } from './utility/create-partnership';
 
 describe('Partnership e2e', () => {
   let app: TestApp;

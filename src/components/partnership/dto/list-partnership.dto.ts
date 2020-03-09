@@ -1,14 +1,13 @@
+import { Type } from 'class-transformer';
+import { ValidateNested } from 'class-validator';
 import { Field, InputType, ObjectType } from 'type-graphql';
 import {
   PaginatedList,
   SecuredList,
   SortablePaginationInput,
 } from '../../../common';
-
-import { Type } from 'class-transformer';
-import { ValidateNested } from 'class-validator';
-import { Partnership } from './partnership.dto';
 import { PartnershipAgreementStatus } from './partnership-agreement-status.enum';
+import { Partnership } from './partnership.dto';
 
 @InputType()
 export abstract class PartnershipFilters {

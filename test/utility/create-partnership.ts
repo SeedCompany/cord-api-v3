@@ -1,21 +1,19 @@
-import * as faker from 'faker';
-
-import { TestApp } from './create-app';
-import { fragments } from './fragments';
 import { gql } from 'apollo-server-core';
+import { DateTime } from 'luxon';
 import { isValid } from 'shortid';
 import {
   CreatePartnership,
   Partnership,
-  PartnershipType,
   PartnershipAgreementStatus,
+  PartnershipType,
 } from '../../src/components/partnership';
+import { TestApp } from './create-app';
 import { createOrganization } from './create-organization';
-import { DateTime } from 'luxon';
+import { fragments } from './fragments';
 
 export async function createPartnership(
   app: TestApp,
-  input: Partial<CreatePartnership> = {},
+  input: Partial<CreatePartnership> = {}
 ) {
   const org = await createOrganization(app);
   const partnership: CreatePartnership = {
@@ -43,7 +41,7 @@ export async function createPartnership(
       input: {
         partnership,
       },
-    },
+    }
   );
 
   const actual: Partnership = result.createPartnership.partnership;
