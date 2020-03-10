@@ -188,10 +188,16 @@
 									"const moment = require('moment');",
 									"pm.globals.set(\"timeStamp\", moment().format(\"DDMYYYYhhmmss\"));",
 									"",
-									"pm.test(\"Your test name\", function () {",
+									"pm.test(\"Saving userid to gloable variable 'userid'\", function () {",
 									"    var jsonData = pm.response.json();",
 									"    var id = jsonData.data.createUser.user.id;",
 									"    pm.globals.set(\"userid\",id);",
+									"});",
+									"",
+									"pm.test(\"Saving email to  gloable variable 'email'\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    var email = jsonData.data.createUser.user.email.value;",
+									"    pm.globals.set(\"email\",email);",
 									"});"
 								],
 								"type": "text/javascript"
@@ -225,95 +231,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation createUser($input:CreateUserInput!){\r\n  createUser(input : $input)\r\n  {\r\n   user{\r\n      id\r\n      realFirstName{\r\n        canRead\r\n      }\r\n      displayLastName{\r\n        canRead\r\n      }\r\n      email{\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      bio{\r\n        canRead\r\n      }\r\n      phone{\r\n        value\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": " {\r\n \t\"input\": \r\n  {\r\n    \"user\" :\r\n    {\r\n\t\t\"email\": \"{{timeStamp}}invalid@mailinator.com\",\r\n        \"realFirstName\":\"Firstname\",\r\n        \"realLastName\":\"Lastname\",\r\n        \"password\":\"test@123\",\r\n        \"displayFirstName\": \"Test\",\r\n        \"displayLastName\":\"User\",\r\n        \"phone\":\"12345678\",\r\n        \"timezone\":\"2\",\r\n        \"bio\":\"Bio\"\r\n        \r\n\t  }\r\n  }\r\n}"
-							}
-						},
-						"url": {
-							"raw": "{{env}}/graphql",
-							"host": [
-								"{{env}}"
-							],
-							"path": [
-								"graphql"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Update User",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"id": "ece2246d-50da-4c34-8593-648e87a1be36",
-								"exec": [
-									"pm.test(\"Status code is 200\", function () {",
-									"    pm.response.to.have.status(200);",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "token",
-								"type": "text",
-								"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODA3NDUwNDM5MTR9.flOU2_Fh6rOt8bGH03mZdNcER2QF_sawH0RKbBRN5qY"
-							}
-						],
-						"body": {
-							"mode": "graphql",
-							"graphql": {
-								"query": "mutation updateUser( $input:UpdateUserInput! ){ \r\n    updateUser(input : $input)\r\n      {\r\n       user {\r\n            id\r\n            createdAt\r\n            email {\r\n                value\r\n                canRead\r\n                canEdit\r\n            }\r\n            realFirstName {\r\n                value\r\n                canRead\r\n                canEdit\r\n            }\r\n            realLastName {\r\n                value\r\n                canRead\r\n                canEdit\r\n            }\r\n            displayFirstName {\r\n                value\r\n                canRead\r\n                canEdit\r\n            }\r\n            displayLastName {\r\n                value\r\n                canRead\r\n                canEdit\r\n            }\r\n        }\r\n        }\r\n}",
-								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"user\" :\r\n    {\r\n\t\t\"id\": \"{{userid}}\",\r\n        \"realLastName\": \"Lastname\"\r\n\t  }\r\n  }\r\n}"
-							}
-						},
-						"url": {
-							"raw": "{{env}}/graphql",
-							"host": [
-								"{{env}}"
-							],
-							"path": [
-								"graphql"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Delete User",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"id": "d8ea5549-3ec5-4554-93d0-86cd9713fcbc",
-								"exec": [
-									"pm.test(\"Status code is 200\", function () {",
-									"    pm.response.to.have.status(200);",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "token",
-								"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODA3NDUwNDM5MTR9.flOU2_Fh6rOt8bGH03mZdNcER2QF_sawH0RKbBRN5qY",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "graphql",
-							"graphql": {
-								"query": "mutation ($id: ID!) {\r\n  deleteOrganization(id:$id)\r\n}",
-								"variables": "{\r\n  \"id\": \"{{organizationid}}\"\r\n  \r\n}"
+								"variables": " {\r\n \t\"input\": \r\n  {\r\n    \"user\" :\r\n    {\r\n\t\t\"email\": \"{{timeStamp}}invalid@mailinator.com\",\r\n        \"realFirstName\":\"Firstname\",\r\n        \"realLastName\":\"Lastname\",\r\n        \"password\":\"{{password}}\",\r\n        \"displayFirstName\": \"Test\",\r\n        \"displayLastName\":\"User\",\r\n        \"phone\":\"12345678\",\r\n        \"timezone\":\"2\",\r\n        \"bio\":\"Bio\"\r\n        \r\n\t  }\r\n  }\r\n}"
 							}
 						},
 						"url": {
@@ -420,6 +338,114 @@
 							"graphql": {
 								"query": " query user\r\n {\r\n     user(id:\"{{userid}}\")\r\n  {\r\n    id\r\n    email\r\n\t  {\r\n\t    value\r\n\t  }\r\n  }\r\n }",
 								"variables": ""
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "ece2246d-50da-4c34-8593-648e87a1be36",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "token",
+								"type": "text",
+								"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODA3NDUwNDM5MTR9.flOU2_Fh6rOt8bGH03mZdNcER2QF_sawH0RKbBRN5qY"
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation updateUser( $input:UpdateUserInput! ){ \r\n    updateUser(input : $input)\r\n      {\r\n       user {\r\n            id\r\n            createdAt\r\n            email {\r\n                value\r\n                canRead\r\n                canEdit\r\n            }\r\n            realFirstName {\r\n                value\r\n                canRead\r\n                canEdit\r\n            }\r\n            realLastName {\r\n                value\r\n                canRead\r\n                canEdit\r\n            }\r\n            displayFirstName {\r\n                value\r\n                canRead\r\n                canEdit\r\n            }\r\n            displayLastName {\r\n                value\r\n                canRead\r\n                canEdit\r\n            }\r\n        }\r\n        }\r\n}",
+								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"user\" :\r\n    {\r\n\t\t\"id\": \"{{userid}}\",\r\n        \"realLastName\": \"Lastname{{timeStamp}}\"\r\n\t  }\r\n  }\r\n}"
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "d8ea5549-3ec5-4554-93d0-86cd9713fcbc",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "token",
+								"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODA3NDUwNDM5MTR9.flOU2_Fh6rOt8bGH03mZdNcER2QF_sawH0RKbBRN5qY",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation ($id: ID!) {\r\n  deleteUser(id:$id)\r\n}",
+								"variables": "{\r\n  \"id\": \"{{userid}}\"\r\n}"
 							}
 						},
 						"url": {
@@ -674,6 +700,16 @@
 						}
 					],
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "POST",
 						"header": [
 							{
@@ -686,7 +722,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation  updateOrganization($input:UpdateOrganizationInput!) \r\n{ \r\n    updateOrganization(input : $input)\r\n  {\r\n    organization {\r\n      id\r\n      name {\r\n          value\r\n          canRead\r\n          canEdit\r\n      }\r\n    }\r\n  }\r\n}",
-								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"organization\" :\r\n    {\r\n\t\t\t\t \r\n      \"id\":\"{{organizationid}}\",\r\n      \"name\": \"asdf was here\"\r\n    } \r\n        \r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"organization\" :\r\n    {\r\n\t\t\t\t \r\n      \"id\":\"{{organizationid}}\",\r\n      \"name\": \"{{timeStamp}} updated org name\"\r\n    } \r\n        \r\n  }\r\n}"
 							}
 						},
 						"url": {
@@ -718,6 +754,16 @@
 						}
 					],
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "POST",
 						"header": [
 							{
@@ -869,6 +915,16 @@
 						}
 					],
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "POST",
 						"header": [
 							{
@@ -903,7 +959,7 @@
 			"name": "Authentication",
 			"item": [
 				{
-					"name": "login",
+					"name": "login - invalid details",
 					"event": [
 						{
 							"listen": "test",
@@ -920,7 +976,14 @@
 					],
 					"request": {
 						"auth": {
-							"type": "bearer"
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
 						},
 						"method": "POST",
 						"header": [
@@ -935,6 +998,60 @@
 							"graphql": {
 								"query": "mutation login($input:LoginInput!)\r\n    {\r\n    login(input:$input)\r\n      {\r\n        user{\r\n          email\r\n          {\r\n            canRead\r\n            canEdit\r\n            value\r\n          } \r\n       }\r\n        success\r\n      }    \r\n  }",
 								"variables": "{\r\n  \"input\": \r\n  {\r\n   \r\n\t\t\"email\": \"{{timeStamp}}invalid@mailinator.com\",\r\n        \"password\": \"test@123\"\r\n   \r\n\t  }\r\n  }"
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "login - valid",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "3b4b2359-765f-47d4-ba6f-fbd0406eacba",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "token",
+								"type": "text",
+								"value": "token_oUMLIbbU"
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation login($input:LoginInput!)\r\n    {\r\n    login(input:$input)\r\n      {\r\n        user{\r\n          email\r\n          {\r\n            canRead\r\n            canEdit\r\n            value\r\n          } \r\n       }\r\n        success\r\n      }    \r\n  }",
+								"variables": "{\r\n  \"input\": \r\n  {\r\n   \r\n\t\t\"email\": \"{{email}}\",\r\n        \"password\": \"{{password}}\"\r\n\t  }\r\n  }"
 							}
 						},
 						"url": {
@@ -972,6 +1089,16 @@
 						}
 					],
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "POST",
 						"header": [
 							{
@@ -983,8 +1110,997 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation {\r\n  createUnavailability(\r\n    input: {\r\n      unavailability: {\r\n        userId: \"1rTePB8e3\"\r\n        description: \"asdf\"\r\n        start: \"2020/03/06 18:36:47\"\r\n        end: \"2020/03/10 18:36:47\"\r\n        \r\n      }\r\n    }\r\n  ) \r\n  {\r\n    unavailability {\r\n     id\r\n     description\r\n      {\r\n        value\r\n      }\r\n      start\r\n      end\r\n  }\r\n}\r\n}\r\n",
+								"query": "mutation {\r\n  createUnavailability(\r\n    input: {\r\n      unavailability: {\r\n        userId: \"{{userid}}\"\r\n        description: \"asdf\"\r\n        start: \"2020/03/06 18:36:47\"\r\n        end: \"2020/03/10 18:36:47\"\r\n        \r\n      }\r\n    }\r\n  ) \r\n  {\r\n    unavailability {\r\n     id\r\n     description\r\n      {\r\n        value\r\n      }\r\n      start\r\n      end\r\n  }\r\n}\r\n}\r\n",
 								"variables": ""
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Language",
+			"item": [
+				{
+					"name": "Create Language",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "aa41d7d5-2b53-4d1b-88cd-d083e8e4aa14",
+								"exec": [
+									" ",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation CreateLanguage($input:CreateLanguageInput!)\r\n{\r\n  createLanguage(input:$input)\r\n  {\r\n    language\r\n    {\r\n      name{\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayName\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      beginFiscalYear\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      ethnologueName\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      organizationPopulation\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      rodNumber\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n    }\r\n  }\r\n}",
+								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"language\": \r\n    {\r\n      \"name\": \"test\",\r\n      \"displayName\": \"testdisplay\",\r\n      \"beginFiscalYear\": 2020,\r\n      \"ethnologueName\": \"ethnotest\",\r\n      \"ethnologuePopulation\": 123,\r\n      \"organizationPopulation\": 456,\r\n      \"rodNumber\": 789\r\n    }\r\n  }\r\n}"
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Language",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "79fbea3f-16de-440c-b678-c7abf382232c",
+								"exec": [
+									" ",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation updateLanguage($input:UpdateLanguageInput!)\r\n{\r\n  updateLanguage(input:$input)\r\n{\r\n  language\r\n  {\r\n    id\r\n    name\r\n  {\r\n    canRead\r\n    canEdit\r\n    value\r\n  } \r\n    displayName\r\n    {\r\n      canRead\r\n       canEdit\r\n       value\r\n    }\r\n    beginFiscalYear\r\n    {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    ethnologueName\r\n    {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    ethnologuePopulation\r\n    {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    organizationPopulation\r\n    {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    rodNumber\r\n    {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n  }\r\n}\r\n}",
+								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"language\": \r\n    {\r\n      \"id\": \"znPyBYxt\",\r\n      \"name\": \"test1\",\r\n      \"displayName\": \"dispaly123\",\r\n      \"beginFiscalYear\": 2012,\r\n      \"ethnologueName\": \"name123\",\r\n      \"ethnologuePopulation\": 450,\r\n      \"organizationPopulation\": 500,\r\n      \"rodNumber\": 5\r\n    }\r\n  }\r\n}"
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Language",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "95d53e47-04b5-46b5-b384-de68cb99b3b5",
+								"exec": [
+									" ",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation deleteLanguage($id:ID!)\r\n{\r\n  deleteLanguage(id:$id)\r\n}\r\n  \r\n  ",
+								"variables": "{\r\n  \"id\": \"znPyBYxt\"\r\n}"
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Language",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fecc7796-5222-45f9-9bf3-79ba8c516735",
+								"exec": [
+									" ",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query($input:LanguageListInput!)\r\n{\r\n  languages(input:$input)\r\n  {\r\n    items\r\n    {\r\n      id\r\n      \r\n    }\r\n    total\r\n    hasMore\r\n  }\r\n \r\n}",
+								"variables": "{\r\n  \"input\": \r\n  {\r\n    \r\n    \"count\": 12,\r\n    \"page\": 13,\r\n    \"order\": \"ASC\",\r\n    \"filter\": {\r\n    \"name\": \"test\"\r\n    }\r\n  }\r\n}"
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Partnership",
+			"item": [
+				{
+					"name": "Create Partnership",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "e7ff46fc-4a47-4f97-9990-5f331a1b6766",
+								"exec": [
+									"pm.test(\"Your test name\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    var id = jsonData.data.createPartnership.partnership.id;",
+									"    pm.globals.set(\"partnershipid\",id);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation createPartnership($input:CreatePartnershipInputDto!)\r\n{\r\n  createPartnership(input:$input)\r\n  {\r\n    partnership\r\n    {\r\n      id\r\n      agreementStatus\r\n      mouStatus\r\n      mouStart\r\n      mouEnd\r\n      types\r\n    }\r\n  }\r\n}",
+								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"partnership\": \r\n \r\n    {\r\n      \"agreementStatus\": \"testagrrement\",\r\n      \"mouStatus\": \"abc\",\r\n      \"mouStart\": \"2020/03/06 18:36:47\",\r\n      \"mouEnd\": \"2020/03/10 18:36:47\",\r\n      \"types\": \"Managing\"\r\n    }\r\n  }\r\n}\r\n"
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Read PartnerShip",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "ca92cf25-f3f7-48c9-a61e-2b678fbb1024",
+								"exec": [
+									" ",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query($input:ReadPartnershipInputDto! )\r\n{\r\n  readPartnership(input:$input)\r\n  {\r\n    partnership\r\n    {\r\n      id\r\n     \r\n    }\r\n  }\r\n}",
+								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"partnership\": \r\n    { \r\n    \"id\": \"{{partnershipid}}\"\r\n      \r\n     }\r\n  }\r\n}"
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Partnership",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "6b8a3942-37e5-4618-8992-febc30ef915f",
+								"exec": [
+									" ",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation updatePartnership($input:UpdatePartnershipInputDto! )\r\n{\r\n  updatePartnership(input:$input)\r\n  {\r\n    partnership\r\n    {\r\n      id\r\n      agreementStatus\r\n      mouStart\r\n      mouEnd\r\n      types\r\n      \r\n    }\r\n  }\r\n}",
+								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"partnership\": \r\n    {\r\n      \"id\": \"{{partnershipid}}\",\r\n      \"agreementStatus\": \"AwaitingSignature\",\r\n      \"mouStart\": \"2020/03/04 18:36:47\",\r\n      \"mouEnd\": \"2020/03/15 18:36:47\",\r\n      \"types\": \"Funding\"\r\n      \r\n      \r\n    }\r\n  }\r\n}"
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Partnership",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "9733fdd9-6e10-4920-a5f5-87b3e203af39",
+								"exec": [
+									" ",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation deleteParnership($input:DeletePartnershipInputDto!)\r\n{\r\n  deletePartnership(input:$input)\r\n  {\r\n    partnership\r\n    {\r\n      id\r\n    }\r\n  }\r\n}",
+								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"partnership\": \r\n    {\r\n      \"id\": \"{{partnershipid}}\"\r\n    }\r\n  }\r\n}\r\n"
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Partnership",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "32b04cc7-9d81-423e-be05-85e5d29e4d3b",
+								"exec": [
+									" ",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query($input:ListPartnershipsInputDto!)\r\n{\r\n  partnerships(input:$input)\r\n  {\r\n    partnerships\r\n    {\r\n      agreementStatus\r\n      \r\n    }\r\n  }\r\n}",
+								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"query\": \r\n    {\r\n      \"filter\": \"abc\",\r\n      \"page\": 0.5,\r\n      \"count\": 25.5,\r\n      \"order\": \"DESC\",\r\n      \"sort\": \"agreementStatus\"\r\n      \r\n    }\r\n  }\r\n}"
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Product",
+			"item": [
+				{
+					"name": "Update Product",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "48e1c8b7-05ef-4d15-a7db-c49fdca5e0a5",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation updateProduct($input:UpdateProductInput!)\r\n{\r\n  updateProduct(input:$input)\r\n  {\r\n    product\r\n    {\r\n      id\r\n      type\r\n      books\r\n      mediums\r\n      purposes\r\n      approach\r\n      methodology\r\n    }\r\n  }\r\n}",
+								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"product\": {\r\n      \"id\":\"G8Kf3OvE\",\r\n      \"type\": \"OldTestamentFull\"\r\n      \r\n    }\r\n  }\r\n}"
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Product",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "52f0f522-6cea-464a-8148-74f8f1d276ca",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation createProduct($input:CreateProductInput!)\r\n{\r\n  createProduct(input:$input){\r\n    \r\n    product\r\n    {\r\n      id\r\n      type\r\n      books\r\n      mediums\r\n      purposes\r\n      approach\r\n      methodology\r\n    }\r\n  }\r\n}",
+								"variables": "{\r\n  \"input\":\r\n  {\r\n    \"product\":\r\n    {\r\n      \"type\":\"JesusFilm\",\r\n      \"books\":\"Genesis\",\r\n      \"mediums\":\"Print\",\r\n      \"purposes\":\"Discipleship\",\r\n      \"approach\":\"Written\",\r\n      \"methodology\":\"Paratext\"\r\n    }\r\n  }\r\n}"
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Product",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "02d5cdfb-de9d-44e0-a82a-f6939a95c92e",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation deleteProduct($id:ID!)\r\n{\r\n  deleteProduct(id:$id)\r\n}",
+								"variables": "{\r\n  \"id\": \"G8Kf3OvE\"\r\n}"
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Project",
+			"item": [
+				{
+					"name": "Create Project",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "d0248d1d-1a33-4f04-80a0-2a27ba012fda",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"const moment = require('moment');",
+									"pm.globals.set(\"timeStamp\", moment().format(\"DDMYYYYhhmmss\"));",
+									"",
+									"",
+									"pm.test(\"Your test name\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    var id = jsonData.data.createProject.project.id;",
+									"    pm.globals.set(\"projectid\",id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation createProject\r\n($input:CreateProjectInputDto!)\r\n{\r\n  createProject(input:$input)\r\n  {\r\n    project\r\n    {\r\n    id \r\n    name\r\n    deptId\r\n    status\r\n    mouStart\r\n    mouEnd\r\n    estimatedSubmission\r\n     \r\n    }  \r\n   }\r\n}\r\n",
+								"variables": "{\r\n \"input\": \r\n  {\r\n    \"project\":\r\n   {\r\n    \"name\":\"{{timeStamp}}\",\r\n    \"status\":\"Active\",\r\n    \"mouStart\":\"2020/03/06 18:36:47\",\r\n    \"mouEnd\":\"2020/03/10 18:36:47\",\r\n    \"estimatedSubmission\":\"2020/03/15 18:36:47\"\r\n  }\r\n  }\r\n  }"
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Project",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fadde1e4-8e9c-4656-8e74-69014c95ad3c",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation updateProject($input:UpdateProjectInputDto!)\r\n{\r\n  updateProject(input:$input)\r\n  {\r\n    project\r\n    {\r\n      id\r\n      name\r\n      deptId\r\n      status\r\n      mouStart\r\n      mouEnd\r\n      estimatedSubmission\r\n      \r\n    }\r\n  }\r\n  }",
+								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"project\": \r\n    {\r\n      \"id\": \"{{projectid}}\",\r\n      \"name\": \"hjbc\"\r\n    }\r\n  }\r\n}"
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Project",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "ce7bd27a-025c-4555-b41a-e0ca7354427c",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation($input:DeleteProjectInputDto!)\r\n{\r\n  deleteProject(input:$input)\r\n  {\r\n    project\r\n    {\r\n      id\r\n    }\r\n  }\r\n  \r\n}",
+								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"project\":  \r\n    {\r\n      \"id\": \"{{projectid}}\"\r\n    }\r\n  }\r\n}"
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Read Project",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "78b229f6-a568-4504-b426-1acb23bc7175",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query($input:ReadProjectInputDto!)\r\n{\r\n  readProject(input:$input){\r\n    project\r\n    {\r\n      id\r\n      name\r\n    }\r\n  }\r\n}",
+								"variables": "{\r\n  \"input\":\r\n  {\r\n    \"project\":\r\n    {\r\n      \"id\":\"{{projectid}}\"\r\n    }\r\n  }\r\n  \r\n}"
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Project Engagement",
+			"item": [
+				{
+					"name": "Create ProjectEngagement",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation createProjectEngagement($input:CreateProjectEngagementInputDto!)\r\n{\r\n  createProjectEngagement(input:$input)\r\n  {\r\n    projectEngagement\r\n    {\r\n      languageName\r\n    }\r\n  }\r\n}",
+								"variables": "{\r\n\t\"input\": \r\n  {\r\n    \"projectEngagement\": \r\n    {\r\n      \"languageName\": \"english\"\r\n    }\r\n  }\r\n}"
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Read ProjectEngagement",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "e38142e4-945c-45aa-8638-a09a96ef4baa",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query($input:ReadProjectEngagementInputDto!)\r\n{\r\n  readProject(input:$input)\r\n  {\r\n    project\r\n    {\r\n      id\r\n    }\r\n  }\r\n}",
+								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"projectEngagement\": \r\n    {\r\n      \"id\": \"\"\r\n    }\r\n  }\r\n}"
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Project Engagement",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "4e129143-921f-442d-bf16-73a77bf951be",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation updateProjectEngagement($input:UpdateProjectEngagementInputDto!)\r\n{\r\n  updateProjectEngagement(input:$input)\r\n  {\r\n    projectEngagement\r\n    {\r\n      id\r\n      initialEndDate\r\n      currentEndDate\r\n    }\r\n  }\r\n}",
+								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"projectEngagement\": \r\n    {\r\n      \"id\": \"\",\r\n      \"initialEndDate\": \"\",\r\n      \"currentEndDate\": \"\"\r\n    }\r\n  }\r\n}"
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Project Engagement",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation deleteProjectEngagement($input:DeleteProjectEngagementInputDto!)\r\n{\r\n  deleteProjectEngagement(input:$input)\r\n  {\r\n    projectEngagement\r\n    {\r\n      id\r\n    }\r\n  }\r\n}",
+								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"projectEngagement\": \r\n    {\r\n      \"id\": \"\"\r\n    }\r\n  }\r\n}"
 							}
 						},
 						"url": {
