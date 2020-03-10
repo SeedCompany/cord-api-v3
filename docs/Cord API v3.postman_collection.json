@@ -1143,6 +1143,12 @@
 									" ",
 									"pm.test(\"Status code is 200\", function () {",
 									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									" pm.test(\"Save language Id\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    var id = jsonData.data.createLanguage.language.id;",
+									"    pm.globals.set(\"languageid\",id);",
 									"});"
 								],
 								"type": "text/javascript"
@@ -1165,8 +1171,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation CreateLanguage($input:CreateLanguageInput!)\r\n{\r\n  createLanguage(input:$input)\r\n  {\r\n    language\r\n    {\r\n      name{\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayName\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      beginFiscalYear\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      ethnologueName\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      organizationPopulation\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      rodNumber\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n    }\r\n  }\r\n}",
-								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"language\": \r\n    {\r\n      \"name\": \"test\",\r\n      \"displayName\": \"testdisplay\",\r\n      \"beginFiscalYear\": 2020,\r\n      \"ethnologueName\": \"ethnotest\",\r\n      \"ethnologuePopulation\": 123,\r\n      \"organizationPopulation\": 456,\r\n      \"rodNumber\": 789\r\n    }\r\n  }\r\n}"
+								"query": "mutation CreateLanguage($input:CreateLanguageInput!)\r\n{\r\n  createLanguage(input:$input)\r\n  {\r\n    language\r\n    {\r\n      id\r\n      createdAt\r\n      name{\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayName\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      beginFiscalYear\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      ethnologueName\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      organizationPopulation\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      rodNumber\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n    }\r\n  }\r\n}",
+								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"language\": \r\n    {\r\n      \"name\": \"test{{timeStamp}}\",\r\n      \"displayName\": \"testdisplay{{timeStamp}}\",\r\n      \"beginFiscalYear\": 2020,\r\n      \"ethnologueName\": \"ethnotest\",\r\n      \"ethnologuePopulation\": 123,\r\n      \"organizationPopulation\": 456,\r\n      \"rodNumber\": 789\r\n    }\r\n  }\r\n}"
 							}
 						},
 						"url": {
@@ -1214,8 +1220,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateLanguage($input:UpdateLanguageInput!)\r\n{\r\n  updateLanguage(input:$input)\r\n{\r\n  language\r\n  {\r\n    id\r\n    name\r\n  {\r\n    canRead\r\n    canEdit\r\n    value\r\n  } \r\n    displayName\r\n    {\r\n      canRead\r\n       canEdit\r\n       value\r\n    }\r\n    beginFiscalYear\r\n    {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    ethnologueName\r\n    {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    ethnologuePopulation\r\n    {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    organizationPopulation\r\n    {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    rodNumber\r\n    {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n  }\r\n}\r\n}",
-								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"language\": \r\n    {\r\n      \"id\": \"znPyBYxt\",\r\n      \"name\": \"test1\",\r\n      \"displayName\": \"dispaly123\",\r\n      \"beginFiscalYear\": 2012,\r\n      \"ethnologueName\": \"name123\",\r\n      \"ethnologuePopulation\": 450,\r\n      \"organizationPopulation\": 500,\r\n      \"rodNumber\": 5\r\n    }\r\n  }\r\n}"
+								"query": "    mutation updateLanguage($input:UpdateLanguageInput!)\r\n    {\r\n      updateLanguage(input:$input)\r\n    {\r\n      language\r\n      {\r\n        id\r\n        name\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      } \r\n        displayName\r\n        {\r\n          canRead\r\n           canEdit\r\n           value\r\n        }\r\n        beginFiscalYear\r\n        {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        ethnologueName\r\n        {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        ethnologuePopulation\r\n        {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        organizationPopulation\r\n        {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        rodNumber\r\n        {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n      }\r\n    }\r\n    }",
+								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"language\": \r\n    {\r\n      \"id\": \"{{languageid}}\",\r\n      \"name\": \"test1Updated{{timeStamp}}\",\r\n      \"displayName\": \"dispaly123{{timeStamp}}\",\r\n      \"beginFiscalYear\": 2012,\r\n      \"ethnologueName\": \"name123\",\r\n      \"ethnologuePopulation\": 450,\r\n      \"organizationPopulation\": 500,\r\n      \"rodNumber\": 5\r\n    }\r\n  }\r\n}"
 							}
 						},
 						"url": {
@@ -1264,7 +1270,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation deleteLanguage($id:ID!)\r\n{\r\n  deleteLanguage(id:$id)\r\n}\r\n  \r\n  ",
-								"variables": "{\r\n  \"id\": \"znPyBYxt\"\r\n}"
+								"variables": "{\r\n  \"id\": \"{{languageid}}\"\r\n}"
 							}
 						},
 						"url": {
@@ -1312,8 +1318,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query($input:LanguageListInput!)\r\n{\r\n  languages(input:$input)\r\n  {\r\n    items\r\n    {\r\n      id\r\n      \r\n    }\r\n    total\r\n    hasMore\r\n  }\r\n \r\n}",
-								"variables": "{\r\n  \"input\": \r\n  {\r\n    \r\n    \"count\": 12,\r\n    \"page\": 13,\r\n    \"order\": \"ASC\",\r\n    \"filter\": {\r\n    \"name\": \"test\"\r\n    }\r\n  }\r\n}"
+								"query": "query($input:LanguageListInput!)\r\n{\r\n  languages(input:$input)\r\n  {\r\n    items\r\n    {\r\n      id\r\n      name{\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n    }\r\n    total\r\n    hasMore\r\n  }\r\n \r\n}",
+								"variables": "{\r\n  \"input\": \r\n  {\r\n    \r\n    \"count\": 5,\r\n    \"page\": 1,\r\n    \"order\": \"ASC\",\r\n    \"filter\": {\r\n    \"name\": \"test\"\r\n    }\r\n  }\r\n}"
 							}
 						},
 						"url": {
@@ -1342,11 +1348,17 @@
 							"script": {
 								"id": "e7ff46fc-4a47-4f97-9990-5f331a1b6766",
 								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"",
 									"pm.test(\"Your test name\", function () {",
 									"    var jsonData = pm.response.json();",
 									"    var id = jsonData.data.createPartnership.partnership.id;",
 									"    pm.globals.set(\"partnershipid\",id);",
 									"});",
+									"",
 									""
 								],
 								"type": "text/javascript"
@@ -1386,7 +1398,7 @@
 					"response": []
 				},
 				{
-					"name": "Read PartnerShip",
+					"name": "Read Partnership",
 					"event": [
 						{
 							"listen": "test",
@@ -1418,7 +1430,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query($input:ReadPartnershipInputDto! )\r\n{\r\n  readPartnership(input:$input)\r\n  {\r\n    partnership\r\n    {\r\n      id\r\n     \r\n    }\r\n  }\r\n}",
+								"query": "query($input:ReadPartnershipInputDto! )\r\n{\r\n  readPartnership(input:$input)\r\n  {\r\n    partnership\r\n    {\r\n      id\r\n      agreementStatus\r\n      mouStatus\r\n      mouStart\r\n      mouEnd\r\n      types\r\n     \r\n    }\r\n  }\r\n}",
 								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"partnership\": \r\n    { \r\n    \"id\": \"{{partnershipid}}\"\r\n      \r\n     }\r\n  }\r\n}"
 							}
 						},
@@ -1467,7 +1479,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updatePartnership($input:UpdatePartnershipInputDto! )\r\n{\r\n  updatePartnership(input:$input)\r\n  {\r\n    partnership\r\n    {\r\n      id\r\n      agreementStatus\r\n      mouStart\r\n      mouEnd\r\n      types\r\n      \r\n    }\r\n  }\r\n}",
+								"query": "mutation updatePartnership($input:UpdatePartnershipInputDto! )\r\n{\r\n  updatePartnership(input:$input)\r\n  {\r\n    partnership\r\n    {\r\n      id\r\n      agreementStatus\r\n      mouStatus\r\n      mouStart\r\n      mouEnd\r\n      types\r\n    }\r\n  }\r\n}",
 								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"partnership\": \r\n    {\r\n      \"id\": \"{{partnershipid}}\",\r\n      \"agreementStatus\": \"AwaitingSignature\",\r\n      \"mouStart\": \"2020/03/04 18:36:47\",\r\n      \"mouEnd\": \"2020/03/15 18:36:47\",\r\n      \"types\": \"Funding\"\r\n      \r\n      \r\n    }\r\n  }\r\n}"
 							}
 						},
@@ -1566,7 +1578,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query($input:ListPartnershipsInputDto!)\r\n{\r\n  partnerships(input:$input)\r\n  {\r\n    partnerships\r\n    {\r\n      agreementStatus\r\n      \r\n    }\r\n  }\r\n}",
-								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"query\": \r\n    {\r\n      \"filter\": \"abc\",\r\n      \"page\": 0.5,\r\n      \"count\": 25.5,\r\n      \"order\": \"DESC\",\r\n      \"sort\": \"agreementStatus\"\r\n      \r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"query\": \r\n    {\r\n      \"filter\": \"\",\r\n      \"page\": 1,\r\n      \"count\": 10,\r\n      \"order\": \"DESC\",\r\n      \"sort\": \"agreementStatus\"\r\n      \r\n    }\r\n  }\r\n}"
 							}
 						},
 						"url": {
@@ -1587,6 +1599,61 @@
 		{
 			"name": "Product",
 			"item": [
+				{
+					"name": "Create Product",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "52f0f522-6cea-464a-8148-74f8f1d276ca",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Save product id\", function () {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    var id = jsonData.data.createProduct.product.id;\r",
+									"    pm.globals.set(\"productid\",id);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation createProduct($input:CreateProductInput!)\r\n{\r\n  createProduct(input:$input){\r\n    \r\n    product\r\n    {\r\n      id\r\n      type\r\n      books\r\n      mediums\r\n      purposes\r\n      approach\r\n      methodology\r\n    }\r\n  }\r\n}",
+								"variables": "{\r\n  \"input\":\r\n  {\r\n    \"product\":\r\n    {\r\n      \"type\":\"JesusFilm\",\r\n      \"books\":\"Genesis\",\r\n      \"mediums\":\"Print\",\r\n      \"purposes\":\"Discipleship\",\r\n      \"approach\":\"Written\",\r\n      \"methodology\":\"Paratext\"\r\n    }\r\n  }\r\n}"
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
 				{
 					"name": "Update Product",
 					"event": [
@@ -1618,57 +1685,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation updateProduct($input:UpdateProductInput!)\r\n{\r\n  updateProduct(input:$input)\r\n  {\r\n    product\r\n    {\r\n      id\r\n      type\r\n      books\r\n      mediums\r\n      purposes\r\n      approach\r\n      methodology\r\n    }\r\n  }\r\n}",
-								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"product\": {\r\n      \"id\":\"G8Kf3OvE\",\r\n      \"type\": \"OldTestamentFull\"\r\n      \r\n    }\r\n  }\r\n}"
-							}
-						},
-						"url": {
-							"raw": "{{env}}/graphql",
-							"host": [
-								"{{env}}"
-							],
-							"path": [
-								"graphql"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Create Product",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"id": "52f0f522-6cea-464a-8148-74f8f1d276ca",
-								"exec": [
-									"pm.test(\"Status code is 200\", function () {\r",
-									"    pm.response.to.have.status(200);\r",
-									"});\r",
-									"\r",
-									""
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "graphql",
-							"graphql": {
-								"query": "mutation createProduct($input:CreateProductInput!)\r\n{\r\n  createProduct(input:$input){\r\n    \r\n    product\r\n    {\r\n      id\r\n      type\r\n      books\r\n      mediums\r\n      purposes\r\n      approach\r\n      methodology\r\n    }\r\n  }\r\n}",
-								"variables": "{\r\n  \"input\":\r\n  {\r\n    \"product\":\r\n    {\r\n      \"type\":\"JesusFilm\",\r\n      \"books\":\"Genesis\",\r\n      \"mediums\":\"Print\",\r\n      \"purposes\":\"Discipleship\",\r\n      \"approach\":\"Written\",\r\n      \"methodology\":\"Paratext\"\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"product\": {\r\n      \"id\":\"{{productid}}\",\r\n      \"type\": \"OldTestamentPortions\"\r\n    }\r\n  }\r\n}"
 							}
 						},
 						"url": {
@@ -1718,7 +1735,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation deleteProduct($id:ID!)\r\n{\r\n  deleteProduct(id:$id)\r\n}",
-								"variables": "{\r\n  \"id\": \"G8Kf3OvE\"\r\n}"
+								"variables": "{\r\n  \"id\": \"{{productid}}\"\r\n}"
 							}
 						},
 						"url": {
@@ -1751,10 +1768,6 @@
 									"    pm.response.to.have.status(200);",
 									"});",
 									"",
-									"const moment = require('moment');",
-									"pm.globals.set(\"timeStamp\", moment().format(\"DDMYYYYhhmmss\"));",
-									"",
-									"",
 									"pm.test(\"Your test name\", function () {",
 									"    var jsonData = pm.response.json();",
 									"    var id = jsonData.data.createProject.project.id;",
@@ -1782,7 +1795,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation createProject\r\n($input:CreateProjectInputDto!)\r\n{\r\n  createProject(input:$input)\r\n  {\r\n    project\r\n    {\r\n    id \r\n    name\r\n    deptId\r\n    status\r\n    mouStart\r\n    mouEnd\r\n    estimatedSubmission\r\n     \r\n    }  \r\n   }\r\n}\r\n",
-								"variables": "{\r\n \"input\": \r\n  {\r\n    \"project\":\r\n   {\r\n    \"name\":\"{{timeStamp}}\",\r\n    \"status\":\"Active\",\r\n    \"mouStart\":\"2020/03/06 18:36:47\",\r\n    \"mouEnd\":\"2020/03/10 18:36:47\",\r\n    \"estimatedSubmission\":\"2020/03/15 18:36:47\"\r\n  }\r\n  }\r\n  }"
+								"variables": "{\r\n \"input\": \r\n  {\r\n    \"project\":\r\n   {\r\n    \"name\":\"{{timeStamp}}project\",\r\n    \"status\":\"Active\",\r\n    \"deptId\":\"1\",\r\n    \"mouStart\":\"2020/03/06 18:36:47\",\r\n    \"mouEnd\":\"2020/03/10 18:36:47\",\r\n    \"estimatedSubmission\":\"2020/03/15 18:36:47\"\r\n  }\r\n  }\r\n  }"
 							}
 						},
 						"url": {
@@ -1830,7 +1843,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation updateProject($input:UpdateProjectInputDto!)\r\n{\r\n  updateProject(input:$input)\r\n  {\r\n    project\r\n    {\r\n      id\r\n      name\r\n      deptId\r\n      status\r\n      mouStart\r\n      mouEnd\r\n      estimatedSubmission\r\n      \r\n    }\r\n  }\r\n  }",
-								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"project\": \r\n    {\r\n      \"id\": \"{{projectid}}\",\r\n      \"name\": \"hjbc\"\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"project\": \r\n    {\r\n      \"id\": \"{{projectid}}\",\r\n      \"name\": \"updatedproject{{timeStamp}}\"\r\n    }\r\n  }\r\n}"
 							}
 						},
 						"url": {
@@ -1965,8 +1978,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createProjectEngagement($input:CreateProjectEngagementInputDto!)\r\n{\r\n  createProjectEngagement(input:$input)\r\n  {\r\n    projectEngagement\r\n    {\r\n      languageName\r\n    }\r\n  }\r\n}",
-								"variables": "{\r\n\t\"input\": \r\n  {\r\n    \"projectEngagement\": \r\n    {\r\n      \"languageName\": \"english\"\r\n    }\r\n  }\r\n}"
+								"query": "mutation createProjectEngagement($input:CreateProjectEngagementInputDto!)\r\n{\r\n  createProjectEngagement(input:$input)\r\n  {\r\n    projectEngagement\r\n    {\r\n      languageName\r\n      id\r\n      initialEndDate\r\n      currentEndDate\r\n      updatedAt\r\n    }\r\n  }\r\n}",
+								"variables": "{\r\n\t\"input\": \r\n  {\r\n    \"projectEngagement\": \r\n    {\r\n      \"languageName\": \"test\"\r\n    }\r\n  }\r\n}"
 							}
 						},
 						"url": {
