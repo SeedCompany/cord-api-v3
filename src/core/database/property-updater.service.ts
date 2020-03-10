@@ -13,6 +13,15 @@ import {
 import { ISession } from '../../components/auth';
 import { ILogger, Logger } from '../../core';
 
+interface ReadPropertyResult {
+  value: any;
+  canEdit?: boolean;
+  canRead?: boolean;
+}
+interface ReadPropertiesResult {
+  [key: string]: ReadPropertyResult;
+}
+
 @Injectable()
 export class PropertyUpdaterService {
   constructor(
@@ -144,7 +153,7 @@ export class PropertyUpdaterService {
     };
   }
 
-  async readProperties<TObject extends Resource>({
+  async readProperties<T>({
     id,
     session,
     props,
@@ -152,53 +161,67 @@ export class PropertyUpdaterService {
   }: {
     id: string;
     session: ISession;
-    props: ReadonlyArray<keyof TObject>;
+    props: readonly string[];
     nodevar: string;
-  }) {
-    const result: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> } = {};
+  }): Promise<T> {
+    const result: ReadPropertiesResult = {};
     for (const prop of props) {
-      const key = prop as string;
-      result[prop] = (await this.readProperty({
+      result[prop] = await this.readProperty({
         id,
         session,
-        key,
+        aclReadProp: prop,
         nodevar,
-      })) as UnwrapSecured<TObject[keyof TObject]>;
+      });
     }
-    return result;
+    const initial: { [index: string]: any } = {};
+    return props.reduce((prev, current) => {
+      prev[current] = result[current].value;
+      return prev;
+    }, initial) as T;
   }
 
-  async readProperty<TObject extends Resource>({
+  async readProperty({
     id,
     session,
-    key,
     nodevar,
     aclReadProp,
   }: {
     id: string;
     session: ISession;
-    key: string;
     nodevar: string;
-    aclReadProp?: string;
-  }): Promise<{ value: string; canEdit?: boolean; canRead?: boolean }> {
-    const aclReadPropName = aclReadProp || `canRead${upperFirst(key)}`;
-    const aclEditPropName = `canEdit${upperFirst(key)}`;
+    aclReadProp: string;
+  }): Promise<ReadPropertyResult> {
+    const aclReadPropName = `canRead${upperFirst(aclReadProp)}`;
+    const aclEditPropName = `canEdit${upperFirst(aclReadProp)}`;
+    const aclReadNodeName = `canRead${upperFirst(nodevar)}s`;
+    let content: string,
+      type: string = nodevar;
+
+    if (nodevar === 'lang') {
+      type = 'language';
+    }
+
+    if (aclReadProp === 'id' || aclReadProp === 'createdAt') {
+      content = `
+      (${nodevar}:${upperFirst(type)} { active: true, id: $id })
+      return ${nodevar}.${aclReadProp} as value, ${nodevar}.${aclReadNodeName} as canRead, null as canEdit
+      `;
+    } else {
+      content = `
+      (${nodevar}: ${upperFirst(type)} { active: true, id: $id })
+      WITH * OPTIONAL MATCH (user)<-[:member]-(acl:ACL { ${aclReadPropName}: true })
+      -[:toNode]->(${nodevar})-[:${aclReadProp} {active: true}]->(${aclReadProp}:Property {active: true})
+      RETURN ${aclReadProp}.value as value, acl.${aclReadPropName} as canRead, acl.${aclEditPropName} as canEdit
+      `;
+    }
+
     const query = `
     match  (token:Token {
       active: true,
       value: $token
     })
     <-[:token { active: true }]-
-    (requestingUser:User {
-      active: true,
-      id: $userId
-    })
-    with * optional match (user:User {active: true, id: $id, owningOrgId: $owningOrgId})
-    with * optional match  (requestingUser) <- [:member]-(acl:ACL { ${aclReadPropName}:true })
-    with * optional match  (user) <- [:member]-(acl2:ACL { ${aclReadPropName}:true })
-    -[:toNode]->(${nodevar})-[:${key} {active: true}]->(${key})
-    return ${key}.value as value, acl2.${aclReadPropName} as canRead, acl2.${aclEditPropName} as canEdit, user.${key} as ${key}
-    `;
+    (user:User {  ${aclReadNodeName}: true }),${content}`;
 
     const result = await this.db
       .query()
@@ -211,15 +234,11 @@ export class PropertyUpdaterService {
       .run();
 
     if (!result.length) {
+      if (nodevar === 'lang') console.info('QUERY', query, aclReadProp);
       throw new NotFoundException('Could not find requested key');
     }
 
-    const { value, canRead, canEdit } = result[0];
-    if (value && canRead && canEdit) {
-      return { value, canRead, canEdit };
-    } else {
-      return { value: result[0][key] };
-    }
+    return result[0] as ReadPropertyResult;
   }
 
   async list<TObject extends Resource>({
