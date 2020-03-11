@@ -4,11 +4,11 @@ import { ISession, Session } from '../../auth';
 import {
   CreateUnavailabilityInput,
   CreateUnavailabilityOutput,
+  Unavailability,
+  UnavailabilityListInput,
+  UnavailabilityListOutput,
   UpdateUnavailabilityInput,
   UpdateUnavailabilityOutput,
-  UnavailabilityListInput,
-  SecuredUnavailabilityList,
-  Unavailability,
 } from './dto';
 import { UnavailabilityService } from './unavailability.service';
 
@@ -21,13 +21,13 @@ export class UnavailabilityResolver {
   })
   async unavailability(
     @Session() session: ISession,
-    @IdArg() id: string,
+    @IdArg() id: string
   ): Promise<Unavailability> {
     return await this.service.readOne(id, session);
   }
 
-  @Query(() => SecuredUnavailabilityList, {
-    description: 'Look up unavailabilities for a user',
+  @Query(() => UnavailabilityListOutput, {
+    description: 'Look up unavailabilities by user id',
   })
   async unavailabilities(
     @Session() session: ISession,
@@ -36,8 +36,8 @@ export class UnavailabilityResolver {
       type: () => UnavailabilityListInput,
       defaultValue: UnavailabilityListInput.defaultVal,
     })
-    input: UnavailabilityListInput,
-  ): Promise<SecuredUnavailabilityList> {
+    input: UnavailabilityListInput
+  ): Promise<UnavailabilityListOutput> {
     return this.service.list(input, session);
   }
 
@@ -46,7 +46,7 @@ export class UnavailabilityResolver {
   })
   async createUnavailability(
     @Session() session: ISession,
-    @Args('input') { unavailability: input }: CreateUnavailabilityInput,
+    @Args('input') { unavailability: input }: CreateUnavailabilityInput
   ): Promise<CreateUnavailabilityOutput> {
     const unavailability = await this.service.create(input, session);
     return { unavailability };
@@ -57,7 +57,7 @@ export class UnavailabilityResolver {
   })
   async updateUnavailability(
     @Session() session: ISession,
-    @Args('input') { unavailability: input }: UpdateUnavailabilityInput,
+    @Args('input') { unavailability: input }: UpdateUnavailabilityInput
   ): Promise<UpdateUnavailabilityOutput> {
     const unavailability = await this.service.update(input, session);
     return { unavailability };
@@ -68,7 +68,7 @@ export class UnavailabilityResolver {
   })
   async deleteUnavailability(
     @Session() session: ISession,
-    @IdArg() id: string,
+    @IdArg() id: string
   ): Promise<boolean> {
     await this.service.delete(id, session);
     return true;

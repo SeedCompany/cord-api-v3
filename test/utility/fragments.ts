@@ -1,4 +1,3 @@
-import { Unavailability } from '../../src/components/user';
 import { gql } from 'apollo-server-core';
 
 export const fragments = {
@@ -129,7 +128,12 @@ export const fragments = {
   `,
   file: gql`
     fragment file on FileNode {
+      id
       type
+      createdBy
+      modifiedBy
+      size
+      name
     }
   `,
   product: gql`
@@ -146,19 +150,75 @@ export const fragments = {
   project: gql`
     fragment project on Project {
       id
-      name
-      deptId
-      status
-      location
-      publicLocation
-      mouStart
-      mouEnd
-      partnerships
+      createdAt
+      type
       sensitivity
-      team
-      budgets
-      estimatedSubmission
-      engagements
+      name {
+        value
+        canRead
+        canEdit
+      }
+      deptId {
+        value
+        canRead
+        canEdit
+      }
+      step {
+        value
+        canRead
+        canEdit
+      }
+      status
+      location {
+        value {
+          id
+          name {
+            value
+          }
+        }
+      }
+      mouStart {
+        value
+        canRead
+        canEdit
+      }
+      mouEnd {
+        value
+        canRead
+        canEdit
+      }
+      estimatedSubmission {
+        value
+        canRead
+        canEdit
+      }
+      modifiedAt
     }
-  `
+  `,
+  partnership: gql`
+    fragment partnership on Partnership {
+      id
+      agreementStatus {
+        value
+      }
+      mouStatus {
+        value
+      }
+      mouStart {
+        value
+      }
+      mouEnd {
+        value
+      }
+      types {
+        value
+      }
+      organization {
+        id
+        name {
+          value
+        }
+      }
+    }
+  `,
 };

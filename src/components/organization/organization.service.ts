@@ -1,4 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { generate } from 'shortid';
+import {
+  DatabaseService,
+  ILogger,
+  Logger,
+  PropertyUpdaterService,
+} from '../../core';
 import { ISession } from '../auth';
 import {
   CreateOrganization,
@@ -7,32 +14,25 @@ import {
   OrganizationListOutput,
   UpdateOrganization,
 } from './dto';
-import {
-  DatabaseService,
-  ILogger,
-  Logger,
-  PropertyUpdaterService,
-} from '../../core';
-import { generate } from 'shortid';
-import { DateTime } from 'luxon';
-import { User } from '../user';
 
 @Injectable()
 export class OrganizationService {
   constructor(
     private readonly db: DatabaseService,
     @Logger('org:service') private readonly logger: ILogger,
-    private readonly propertyUpdater: PropertyUpdaterService,
+    private readonly propertyUpdater: PropertyUpdaterService
   ) {}
 
   async create(
     input: CreateOrganization,
-    session: ISession,
+    session: ISession
   ): Promise<Organization> {
     const id = generate();
     const acls = {
       canReadOrg: true,
       canEditOrg: true,
+      canEditName: true,
+      canReadName: true,
     };
     try {
       await this.propertyUpdater.createNode({
@@ -44,7 +44,7 @@ export class OrganizationService {
       });
     } catch {
       this.logger.error(
-        `Could not create organization for user ${session.userId}`,
+        `Could not create organization for user ${session.userId}`
       );
       throw new Error('Could not create unavailability');
     }
@@ -91,7 +91,7 @@ export class OrganizationService {
 
     if (!result.canCreateOrg) {
       throw new Error(
-        'User does not have permission to create an organization',
+        'User does not have permission to create an organization'
       );
     }
 
@@ -108,7 +108,7 @@ export class OrganizationService {
 
   async update(
     input: UpdateOrganization,
-    session: ISession,
+    session: ISession
   ): Promise<Organization> {
     const organization = await this.readOne(input.id, session);
     return this.propertyUpdater.updateProperties({
@@ -123,7 +123,7 @@ export class OrganizationService {
   async delete(id: string, session: ISession): Promise<void> {
     const ed = await this.readOne(id, session);
     try {
-      this.propertyUpdater.deleteNode({
+      await this.propertyUpdater.deleteNode({
         session,
         object: ed,
         aclEditProp: 'canDeleteOwnUser',
@@ -136,7 +136,7 @@ export class OrganizationService {
 
   async list(
     { page, count, sort, order, filter }: OrganizationListInput,
-    session: ISession,
+    session: ISession
   ): Promise<OrganizationListOutput> {
     const result = await this.propertyUpdater.list<Organization>({
       session,
@@ -150,7 +150,7 @@ export class OrganizationService {
         sort,
         order,
         filter,
-      }
+      },
     });
 
     return {
@@ -180,7 +180,7 @@ export class OrganizationService {
           `,
           {
             token: session.token,
-          },
+          }
         )
         .first();
 
@@ -224,7 +224,7 @@ export class OrganizationService {
         `,
           {
             id,
-          },
+          }
         )
         .first();
 

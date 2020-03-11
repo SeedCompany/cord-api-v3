@@ -1,13 +1,12 @@
-import { Field, ID, InputType, ObjectType } from 'type-graphql';
+import { Type } from 'class-transformer';
+import { ValidateNested } from 'class-validator';
+import { Field, InputType, ObjectType } from 'type-graphql';
 import {
   PaginatedList,
   SecuredList,
   SortablePaginationInput,
 } from '../../../../common';
-
 import { Education } from './education.dto';
-import { Type } from 'class-transformer';
-import { ValidateNested } from 'class-validator';
 
 @InputType()
 export abstract class EducationFilters {
@@ -21,7 +20,9 @@ export abstract class EducationFilters {
 const defaultFilters = {};
 
 @InputType()
-export class EducationListInput extends SortablePaginationInput<keyof Education>({
+export class EducationListInput extends SortablePaginationInput<
+  keyof Education
+>({
   defaultSort: 'institution',
 }) {
   static defaultVal = new EducationListInput();
