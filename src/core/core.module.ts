@@ -1,4 +1,5 @@
-import { Global, Module } from '@nestjs/common';
+import { Global, Module, OnApplicationShutdown } from '@nestjs/common';
+import { Connection } from 'cypher-query-builder';
 import { AwsS3Factory } from './aws-s3.factory';
 import { AwsSESFactory } from './aws-ses.factory';
 import { ConfigModule } from './config/config.module';
@@ -26,4 +27,10 @@ import { DeprecatedDBService } from './deprecated-database.service';
     DatabaseService,
   ],
 })
-export class CoreModule {}
+export class CoreModule implements OnApplicationShutdown {
+  constructor(private readonly db: Connection) {}
+
+  async onApplicationShutdown() {
+    this.db.close();
+  }
+}
