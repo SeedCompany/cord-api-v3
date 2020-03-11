@@ -1,18 +1,16 @@
-import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
-import { upperFirst } from 'lodash';
-import { isValid } from 'shortid';
-import {
-  CreateEducation,
-  Degree,
-  Education,
-} from '../../src/components/user/education';
+
+import { CreateEducation, Degree, Education } from '../../src/components/user/education';
+
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
+import { gql } from 'apollo-server-core';
+import { isValid } from 'shortid';
+import { upperFirst } from 'lodash';
 
 export async function createEducation(
   app: TestApp,
-  input: Partial<CreateEducation> = {}
+  input: Partial<CreateEducation> = {},
 ) {
   const education: CreateEducation = {
     userId: input.userId!,
@@ -39,7 +37,7 @@ export async function createEducation(
           ...education,
         },
       },
-    }
+    },
   );
 
   const actual: Education = result.createEducation.education;

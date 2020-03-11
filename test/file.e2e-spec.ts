@@ -1,60 +1,60 @@
-import { generate } from 'shortid';
+import { Connection } from 'cypher-query-builder';
 import * as request from 'supertest';
-import { File } from '../src/components/file/dto';
-import { createSession, createTestApp, createUser, TestApp } from './utility';
+import { FileNodeType } from '../src/components/file/dto';
+import { User } from '../src/components/user';
+import {
+  TestApp,
+  createTestApp,
+  createSession,
+  fragments,
+} from './utility';
+import { gql } from 'apollo-server-core';
+import { generate, isValid } from 'shortid';
 
 describe('File e2e', () => {
   let app: TestApp;
 
   beforeAll(async () => {
     app = await createTestApp();
-    await createSession(app);
-    await createUser(app);
   });
 
-  afterAll(async () => {
-    await app.close();
-  });
+  it('read file node by id', async () => {
+    const token = await createSession(app);
 
-  it.skip('Create FileNode', async () => {
-    const id = generate();
-    let testFile: File;
-    await request(app.getHttpServer())
-      .post('/graphql')
-      .send({
-        operationName: null,
-        query: `
-        mutation {
-          createFile( input: { uploadId:"${id}", parentId: "test-parent", name: "test-file"})
-          {
-            id
-            type
-          }
-        }
+    const dbService = await app.get(Connection);
+    const testFile = await dbService
+      .query()
+      .raw(`
+        CREATE (file:FileNode { id: $id, type: $type, name: $name})
+        RETURN file
         `,
-      })
-      .expect(({ body }) => {
-        testFile = body.data.createFile;
-      });
-
+        {
+          id: generate(),
+          type: FileNodeType.File,
+          name: 'test-file',
+        })
+      .first();
+    // since file is created, it can be read.
     await request(app.getHttpServer())
       .post('/graphql')
       .send({
         operationName: null,
         query: `
         query {
-          file (id:"${id}")
+          file (id:"${testFile!.file.properties.id}")
           {
-            id
             type
           }
         }
         `,
       })
       .expect(({ body }) => {
-        expect(body.data.file.id).toBe(testFile.id);
-        expect(body.data.file.type).toBe(testFile.type);
+        expect(body.data.file.type).toBe('File');
       })
       .expect(200);
+  });
+
+  afterAll(async () => {
+    await app.close();
   });
 });

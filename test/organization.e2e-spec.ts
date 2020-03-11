@@ -1,16 +1,18 @@
-import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
-import { times } from 'lodash';
-import { generate, isValid } from 'shortid';
-import { Organization } from '../src/components/organization';
+
 import {
+  TestApp,
   createOrganization,
   createSession,
   createTestApp,
   createUser,
   fragments,
-  TestApp,
 } from './utility';
+import { generate, isValid } from 'shortid';
+
+import { Organization } from '../src/components/organization';
+import { gql } from 'apollo-server-core';
+import { times } from 'lodash';
 
 describe('Organization e2e', () => {
   let app: TestApp;
@@ -40,7 +42,7 @@ describe('Organization e2e', () => {
       `,
       {
         id: org.id,
-      }
+      },
     );
 
     expect(actual.id).toBe(org.id);
@@ -72,7 +74,7 @@ describe('Organization e2e', () => {
             name: newName,
           },
         },
-      }
+      },
     );
 
     const updated = result.updateOrganization.organization;
@@ -93,7 +95,7 @@ describe('Organization e2e', () => {
       `,
       {
         id: org.id,
-      }
+      },
     );
 
     const actual: Organization | undefined = result.deleteOrganization;
@@ -103,15 +105,13 @@ describe('Organization e2e', () => {
   // LIST ORGs
   it('list view of organizations', async () => {
     // create a bunch of orgs
-    await Promise.all(
-      times(10).map(() =>
-        createOrganization(app, { name: generate() + ' Inc' })
-      )
+    const orgs = await Promise.all(
+      times(10).map(() => createOrganization(app,{name: generate() + ' Inc'})),
     );
 
     const { organizations } = await app.graphql.query(gql`
       query {
-        organizations(input: { filter: { name: "Inc" } }) {
+        organizations (input: {filter: {name: "Inc"}}) {
           items {
             ...org
           }

@@ -1,67 +1,32 @@
-import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
-import { times } from 'lodash';
-import { isValid } from 'shortid';
-import { CreateUser, UpdateUser, User } from '../src/components/user';
+
 import {
+  CreateUser,
+  CreateUserInput,
+  UpdateUser,
+  User,
+} from '../src/components/user';
+import {
+  TestApp,
   createSession,
   createTestApp,
   createUser,
   fragments,
-  TestApp,
 } from './utility';
+
+import { ISession } from '../src/components/auth';
+import { UserService } from '../src/components/user/user.service';
+import { gql } from 'apollo-server-core';
+import { isValid } from 'shortid';
+import { times } from 'lodash';
 
 describe('User e2e', () => {
   let app: TestApp;
+  let session: string;
 
   beforeAll(async () => {
     app = await createTestApp();
-    await createSession(app);
-  });
-
-  it('check email existance', async () => {
-    const email = faker.internet.email();
-    const fakeUser: CreateUser = {
-      email: email,
-      realFirstName: faker.name.firstName(),
-      realLastName: faker.name.lastName(),
-      displayFirstName: faker.name.firstName(),
-      displayLastName: faker.name.lastName(),
-      password: faker.internet.password(),
-      phone: faker.phone.phoneNumber(),
-      timezone: 'timezone detail',
-      bio: 'bio detail',
-    };
-    // create user first
-    await createUser(app, fakeUser);
-    const existsEmailRes = await app.graphql.query(
-      gql`
-        query checkEmail($input: UserEmailInput!) {
-          checkEmail(input: $input)
-        }
-      `,
-      {
-        input: {
-          email: email,
-        },
-      }
-    );
-
-    const nonExistentEmail = faker.internet.email();
-    const nonExistentEmailRes = await app.graphql.query(
-      gql`
-        query checkEmail($input: UserEmailInput!) {
-          checkEmail(input: $input)
-        }
-      `,
-      {
-        input: {
-          email: nonExistentEmail,
-        },
-      }
-    );
-    expect(existsEmailRes.checkEmail).toBe(false);
-    expect(nonExistentEmailRes.checkEmail).toBe(true);
+    session = await createSession(app);
   });
 
   it('read one user by id', async () => {
@@ -89,7 +54,7 @@ describe('User e2e', () => {
       `,
       {
         id: user.id,
-      }
+      },
     );
 
     const actual: User = result.user;
@@ -140,7 +105,7 @@ describe('User e2e', () => {
             ...fakeUser,
           },
         },
-      }
+      },
     );
     // get the user from the ID
     const result = await app.graphql.query(
@@ -154,7 +119,7 @@ describe('User e2e', () => {
       `,
       {
         id: user.id,
-      }
+      },
     );
     const actual: User = result.user;
 
@@ -184,7 +149,7 @@ describe('User e2e', () => {
       `,
       {
         id: user.id,
-      }
+      },
     );
 
     const actual: User | undefined = result.deleteUser;
@@ -197,7 +162,7 @@ describe('User e2e', () => {
   it('list view of users', async () => {
     // create a bunch of users
     await Promise.all(
-      times(10).map(() => createUser(app, { displayFirstName: 'Tammy' }))
+      times(10).map(() => createUser(app, { displayFirstName: 'Tammy' })),
     );
 
     const { users } = await app.graphql.query(gql`

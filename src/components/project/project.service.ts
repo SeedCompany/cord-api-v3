@@ -1,345 +1,312 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { DateTime } from 'luxon';
-import { generate } from 'shortid';
-import { Sensitivity } from '../../common';
-import {
-  DatabaseService,
-  ILogger,
-  Logger,
-  PropertyUpdaterService,
-} from '../../core';
+import { Injectable } from '@nestjs/common';
 import { ISession } from '../auth';
+import { DatabaseService } from '../../core/database.service';
+import { generate } from 'shortid';
 import {
-  CreateProject,
-  Project,
-  ProjectListInput,
-  ProjectListOutput,
-  ProjectStep,
-  stepToStatus,
-  UpdateProject,
-} from './dto';
+  CreateProjectOutputDto,
+  ReadProjectOutputDto,
+  UpdateProjectOutputDto,
+  DeleteProjectOutputDto,
+  CreateProjectInput,
+  ReadProjectInput,
+  UpdateProjectInput,
+  DeleteProjectInput,
+} from './project.dto';
 
+import { Project, ProjectListInput, ProjectListOutput } from './dto';
 @Injectable()
 export class ProjectService {
-  constructor(
-    private readonly db: DatabaseService,
-    private readonly propertyUpdater: PropertyUpdaterService,
-    @Logger('project:service') private readonly logger: ILogger
-  ) {}
+  constructor(private readonly db: DatabaseService) {}
 
-  async readOne(id: string, session: ISession): Promise<Project> {
-    const result = await this.db
-      .query()
-      .raw(
-        `
-        MATCH
-        (token:Token {
-          active: true,
-          value: $token
-        })
-          <-[:token {active: true}]-
-        (requestingUser:User {
-          active: true,
-          id: $requestingUserId,
-          owningOrgId: $owningOrgId
-        }),
-        (project:Project {active: true, id: $id})
-
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadType:ACL {canReadType: true})-[:toNode]->(project)-[:type {active: true}]->(type:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditType:ACL {canEditType: true})-[:toNode]->(project)
-
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadSensitivity:ACL {canReadSensitivity: true})-[:toNode]->(project)-[:sensitivity {active: true}]->(sensitivity:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditSensitivity:ACL {canEditSensitivity: true})-[:toNode]->(project)
-
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadName:ACL {canReadName: true})-[:toNode]->(project)-[:name {active: true}]->(name:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditName:ACL {canEditName: true})-[:toNode]->(project)
-
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadDeptId:ACL {canReadDeptId: true})-[:toNode]->(project)-[:deptId {active: true}]->(deptId:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditDeptId:ACL {canEditDeptId: true})-[:toNode]->(project)
-
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadStep:ACL {canReadStep: true})-[:toNode]->(project)-[:step {active: true}]->(step:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditStep:ACL {canEditStep: true})-[:toNode]->(project)
-
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadStatus:ACL {canReadStatus: true})-[:toNode]->(project)-[:status {active: true}]->(status:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditStatus:ACL {canEditStatus: true})-[:toNode]->(project)
-
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadLocation:ACL {canReadLocation: true})-[:toNode]->(project)-[:location {active: true}]->(location:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditLocation:ACL {canEditLocation: true})-[:toNode]->(project)
-
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadMouStart:ACL {canReadMouStart: true})-[:toNode]->(project)-[:mouStart {active: true}]->(mouStart:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditMouStart:ACL {canEditMouStart: true})-[:toNode]->(project)
-
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadMouEnd:ACL {canReadMouEnd: true})-[:toNode]->(project)-[:mouEnd {active: true}]->(mouEnd:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditMouEnd:ACL {canEditMouEnd: true})-[:toNode]->(project)
-
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadEstimatedSubmission:ACL {canReadEstimatedSubmission: true})-[:toNode]->(project)-[:estimatedSubmission {active: true}]->(estimatedSubmission:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditEstimatedSubmission:ACL {canEditEstimatedSubmission: true})-[:toNode]->(project)
-
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadModifiedAt:ACL {canReadModifiedAt: true})-[:toNode]->(project)-[:modifiedAt {active: true}]->(modifiedAt:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditModifiedAt:ACL {canEditModifiedAt: true})-[:toNode]->(project)
-
-        RETURN
-          project.id as id,
-          project.createdAt as createdAt,
-          type.value as type,
-          sensitivity.value as sensitivity,
-          name.value as name,
-          deptId.value as deptId,
-          step.value as step,
-          status.value as status,
-          location.value as location,
-          mouStart.value as mouStart,
-          mouEnd.value as mouEnd,
-          estimatedSubmission.value as estimatedSubmission,
-          modifiedAt.value as modifiedAt,
-          canReadType.canReadType as canReadType,
-          canEditType.canEditType as canEditType,
-          canReadSensitivity.canReadSensitivity as canReadSensitivity,
-          canEditSensitivity.canEditSensitivity as canEditSensitivity,
-          canReadName.canReadName as canReadName,
-          canEditName.canEditName as canEditName,
-          canReadDeptId.canReadDeptId as canReadDeptId,
-          canEditDeptId.canEditDeptId as canEditDeptId,
-          canReadStep.canReadStep as canReadStep,
-          canEditStep.canEditStep as canEditStep,
-          canReadStatus.canReadStatus as canReadStatus,
-          canEditStatus.canEditStatus as canEditStatus,
-          canReadLocation.canReadLocation as canReadLocation,
-          canEditLocation.canEditLocation as canEditLocation,
-          canReadMouStart.canReadMouStart as canReadMouStart,
-          canEditMouStart.canEditMouStart as canEditMouStart,
-          canReadMouEnd.canReadMouEnd as canReadMouEnd,
-          canEditMouEnd.canEditMouEnd as canEditMouEnd,
-          canReadEstimatedSubmission.canReadEstimatedSubmission as canReadEstimatedSubmission,
-          canEditEstimatedSubmission.canEditEstimatedSubmission as canEditEstimatedSubmission,
-          canReadModifiedAt.canReadModifiedAt as canReadModifiedAt,
-          canEditModifiedAt.canEditModifiedAt as canEditModifiedAt
-      `,
+  async create(input: CreateProjectInput): Promise<CreateProjectOutputDto> {
+    const response = new CreateProjectOutputDto();
+    const session = this.db.driver.session();
+    const id = generate();
+    await session
+      .run(
+        `MERGE (project:Project {active: true, name: $name, owningOrg: "seedcompany"}) ON CREATE SET project.id = $id, project.timestamp = datetime() RETURN
+        project.id as id,
+        project.name as name,
+        project.deptId as deptId,
+        project.status as status,
+        project.location as location,
+        project.mouStart as mouStart,
+        project.mouEnd as mouEnd,
+        project.partnerships as partnerships,
+        project.sensitivity as sensitivity,
+        project.team as team,
+        project.budgets as budgets,
+        project.estimatedSubmission as estimatedSubmission,
+        project.engagements as engagements
+       `,
         {
-          token: session.token,
-          requestingUserId: session.userId,
-          owningOrgId: session.owningOrgId,
           id,
-        }
+          name: input.name,
+          // deptId: input.deptId,
+          // status: input.status,
+          // location: input.location,
+          // mouStart: input.mouStart,
+          // mouEnd: input.mouEnd,
+          // partnerships: input.partnerships,
+          // sensitivity: input.sensitivity,
+          // team: input.team,
+          // budgets: input.budgets,
+          // estimatedSubmission: input.estimatedSubmission,
+          // engagements: input.engagements,
+        },
       )
-      .first();
+      .then(result => {
+        response.project.id = result.records[0].get('id');
+        response.project.name = result.records[0].get('name');
+        response.project.deptId = result.records[0].get('deptId');
+        response.project.status = result.records[0].get('status');
+        response.project.location = result.records[0].get('location');
+        response.project.publicLocation = result.records[0].get(
+          'publicLocation',
+        );
+        response.project.mouStart = result.records[0].get('mouStart');
+        response.project.mouEnd = result.records[0].get('mouEnd');
+        response.project.partnerships = result.records[0].get('partnerships');
+        response.project.sensitivity = result.records[0].get('sensitivity');
+        response.project.team = result.records[0].get('team');
+        response.project.budgets = result.records[0].get('budgets');
+        response.project.estimatedSubmission = result.records[0].get(
+          'estimatedSubmission',
+        );
+        response.project.engagements = result.records[0].get('engagements');
+      })
+      .catch(error => {
+        console.log(error);
+      })
+      .then(() => session.close());
 
-    if (!result) {
-      throw new NotFoundException('Could not find project');
-    }
+    return response;
+  }
 
-    return {
-      id,
-      createdAt: result.createdAt,
-      modifiedAt: result.modifiedAt,
-      type: result.type,
-      sensitivity: result.sensitivity,
-      name: {
-        value: result.name,
-        canRead: !!result.canReadName,
-        canEdit: !!result.canEditName,
-      },
-      deptId: {
-        value: result.deptId,
-        canRead: !!result.canReadDeptId,
-        canEdit: !!result.canEditDeptId,
-      },
-      step: {
-        value: result.step,
-        canRead: !!result.canReadStep,
-        canEdit: !!result.canEditStep,
-      },
-      status: result.status,
-      location: {
-        value: undefined, // TODO: location not implemented yet
-        canRead: !!result.canReadLocation,
-        canEdit: !!result.canEditLocation,
-      },
-      mouStart: {
-        value: result.mouStart,
-        canRead: !!result.canReadMouStart,
-        canEdit: !!result.canEditMouStart,
-      },
-      mouEnd: {
-        value: result.mouEnd,
-        canRead: !!result.canReadMouEnd,
-        canEdit: !!result.canEditMouEnd,
-      },
-      estimatedSubmission: {
-        value: result.estimatedSubmission,
-        canRead: !!result.canReadEstimatedSubmission,
-        canEdit: !!result.canEditEstimatedSubmission,
-      },
-    };
+  async readOne(input: ReadProjectInput): Promise<ReadProjectOutputDto> {
+    const response = new ReadProjectOutputDto();
+    const session = this.db.driver.session();
+    await session
+      .run(
+        `MATCH (project:Project {active: true, owningOrg: "seedcompany"})
+        WHERE project.id = "${input.id}"
+        RETURN project.id as id,
+        project.name as name,
+        project.deptId as deptId,
+        project.status as status,
+        project.location as location,
+        project.publicLocation as publicLocation,
+        project.mouStart as mouStart,
+        project.mouEnd as mouEnd,
+        project.languages as languages,
+        project.partnerships as partnerships,
+        project.sensitivity as sensitivity,
+        project.team as team,
+        project.budgets as budgets,
+        project.estimatedSubmission as estimatedSubmission,
+        project.engagements as engagements`,
+        {
+          id: input.id,
+        },
+      )
+      .then(result => {
+        response.project.id = result.records[0].get('id');
+        response.project.name = result.records[0].get('name');
+        response.project.deptId = result.records[0].get('deptId');
+        response.project.status = result.records[0].get('status');
+        response.project.location = result.records[0].get('location');
+        response.project.publicLocation = result.records[0].get(
+          'publicLocation',
+        );
+        response.project.mouStart = result.records[0].get('mouStart');
+        response.project.mouEnd = result.records[0].get('mouEnd');
+        response.project.partnerships = result.records[0].get('partnerships');
+        response.project.sensitivity = result.records[0].get('sensitivity');
+        response.project.team = result.records[0].get('team');
+        response.project.budgets = result.records[0].get('budgets');
+        response.project.estimatedSubmission = result.records[0].get(
+          'estimatedSubmission',
+        );
+        response.project.engagements = result.records[0].get('engagements');
+      })
+      .catch(error => {
+        console.log(error);
+      })
+      .then(() => session.close());
+
+    return response;
+  }
+
+  async update(input: UpdateProjectInput): Promise<UpdateProjectOutputDto> {
+    const response = new UpdateProjectOutputDto();
+    const session = this.db.driver.session();
+    await session
+      .run(
+        `MATCH (project:Project {active: true, owningOrg: "seedcompany", id: $id})
+        SET project.name = $name,
+        project.deptId = $deptId,
+        project.status = $status,
+        project.location = $location,
+        project.publicLocation = $publicLocation,
+        project.mouStart = $mouStart,
+        project.mouEnd = $mouEnd,
+        project.partnerships = $partnerships,
+        project.sensitivity = $sensitivity,
+        project.team = $team,
+        project.budgets = $budgets,
+        project.estimatedSubmission = $estimatedSubmission,
+        project.engagements = $engagements
+          RETURN project.id as id,
+          project.name as name,
+          project.deptId as deptId,
+          project.status as status,
+          project.location as location,
+          project.publicLocation as publicLocation,
+          project.mouStart as mouStart,
+          project.mouEnd as mouEnd,
+          project.partnerships as partnerships,
+          project.sensitivity as sensitivity,
+          project.team as team,
+          project.budgets as budgets,
+          project.estimatedSubmission as estimatedSubmission,
+          project.engagements as engagements`,
+        {
+          id: input.id,
+          name: input.name,
+          deptId: input.deptId,
+          status: input.status,
+          location: input.locationId,
+          mouStart: input.mouStart,
+          mouEnd: input.mouEnd,
+          partnerships: input.partnerships,
+          sensitivity: input.sensitivity,
+          team: input.team,
+          budgets: input.budgets,
+          estimatedSubmission: input.estimatedSubmission,
+          engagements: input.engagements,
+        },
+      )
+      .then(result => {
+        if (result.records.length > 0) {
+          response.project = {
+            id: result.records[0].get('id'),
+            name: result.records[0].get('name'),
+            deptId: result.records[0].get('deptId'),
+            status: result.records[0].get('status'),
+            location: result.records[0].get('location'),
+            publicLocation: result.records[0].get(
+              'publicLocation',
+            ),
+            mouStart: result.records[0].get('mouStart'),
+            mouEnd: result.records[0].get('mouEnd'),
+            partnerships: result.records[0].get('partnerships'),
+            sensitivity: result.records[0].get('sensitivity'),
+            team: result.records[0].get('team'),
+            budgets: result.records[0].get('budgets'),
+            estimatedSubmission: result.records[0].get(
+              'estimatedSubmission',
+            ),
+            engagements: result.records[0].get('engagements'),
+  
+          }
+        } else {
+          throw new Error('Could not update project engagement.');
+        }
+      })
+      .catch(error => {
+        console.log(error);
+        throw new Error(error);
+      })
+      .then(() => session.close());
+
+    return response;
+  }
+
+  async delete(input: DeleteProjectInput): Promise<DeleteProjectOutputDto> {
+    const response = new DeleteProjectOutputDto();
+    const session = this.db.driver.session();
+    await session
+      .run(
+        'MATCH (project:Project {active: true, owningOrg: "seedcompany", id: $id}) SET project.active = false RETURN project.id as id',
+        {
+          id: input.id,
+        },
+      )
+      .then(result => {
+        response.project.id = result.records[0].get('id');
+      })
+      .catch(error => {
+        console.log(error);
+      })
+      .then(() => session.close());
+
+    return response;
   }
 
   async list(
     { page, count, sort, order, filter }: ProjectListInput,
-    session: ISession
+    { token }: ISession,
   ): Promise<ProjectListOutput> {
-    const result = await this.propertyUpdater.list<Project>({
-      session,
-      nodevar: 'project',
-      aclReadProp: 'canReadProjects',
-      aclEditProp: 'canCreateProject',
-      props: [
-        { name: 'type', secure: false },
-        { name: 'sensitivity', secure: false },
-        { name: 'name', secure: true },
-        { name: 'deptId', secure: true },
-        { name: 'step', secure: true },
-        { name: 'status', secure: false },
-        { name: 'location', secure: true },
-        { name: 'mouStart', secure: true },
-        { name: 'mouEnd', secure: true },
-        { name: 'estimatedSubmission', secure: true },
-        { name: 'modifiedAt', secure: false },
-      ],
-      input: {
-        page,
-        count,
-        sort,
-        order,
-        filter,
+    const result = await this.db
+      .query()
+      .raw(
+        `
+      MATCH
+        (token:Token {active: true, value: $token})
+        <-[:token {active: true}]-
+        (user:User {
+          canReadOrgs: true
+        }),
+        (proj:Project {
+          active: true
+        })
+//      WHERE
+//        proj.name CONTAINS $filter
+      WITH count(proj) as projs, user
+      MATCH
+        (proj:Project {
+          active: true
+        })
+        -[:name {active: true}]->
+        (name:Property {
+          active: true
+        })
+      RETURN
+        proj.id as id,
+        proj.createdAt as createdAt,
+        name.value as name,
+        user.canCreateOrg as canCreateOrg,
+        user.canReadOrgs as canReadOrgs,
+        projs as total
+      ORDER BY proj.${sort} ${order}
+      SKIP $skip
+      LIMIT $count
+      `,
+        {
+          // filter: filter.name, // TODO Handle no filter
+          skip: (page - 1) * count,
+          count,
+          token,
+        },
+      )
+      .run();
+
+    const items = result.map<Project>(row => ({
+      id: row.id,
+      createdAt: row.createdAt,
+      name: {
+        value: row.name,
+        canRead: row.canReadOrgs,
+        canEdit: row.canCreateOrg,
       },
-    });
+    }));
+
+    const hasMore = (page - 1) * count + count < result[0].total; // if skip + count is less than total there is more
 
     return {
-      items: result.items.map(item => ({
-        ...item,
-        location: {
-          value: undefined,
-          canEdit: true,
-          canRead: true,
-        },
-      })),
-      hasMore: result.hasMore,
-      total: result.total,
+      items,
+      hasMore,
+      total: result[0].total,
     };
-  }
-
-  async create(
-    { locationId, ...input }: CreateProject,
-    session: ISession
-  ): Promise<Project> {
-    const id = generate();
-    const acls = {
-      canReadModifiedAt: true,
-      canEditModifiedAt: true,
-      canReadType: true,
-      canEditType: true,
-      canReadSensitivity: true,
-      canEditSensitivity: true,
-      canReadName: true,
-      canEditName: true,
-      canReadDeptId: true,
-      canEditDeptId: true,
-      canReadStatus: true,
-      canEditStatus: true,
-      canReadLocation: true,
-      canEditLocation: true,
-      canReadMouStart: true,
-      canEditMouStart: true,
-      canReadMouEnd: true,
-      canEditMouEnd: true,
-      canReadEstimatedSubmission: true,
-      canEditEstimatedSubmission: true,
-    };
-
-    const createInput = {
-      id,
-      sensitivity: Sensitivity.High, // TODO: this needs to be calculated based on language engagement
-      step: ProjectStep.EarlyConversations,
-      status: stepToStatus(ProjectStep.EarlyConversations),
-      modifiedAt: DateTime.local().toNeo4JDateTime(),
-      ...input,
-    };
-
-    try {
-      await this.propertyUpdater.createNode({
-        session,
-        input: createInput,
-        acls,
-        baseNodeLabel: 'Project',
-        aclEditProp: 'canCreateProject',
-      });
-
-      // TODO: locations are not hooked up yet
-      // if (locationId) {
-      //   const query = `
-      //     MATCH (location:Location {id: $locationId, active: true}),
-      //       (project:Project {id: $id, active: true})
-      //     CREATE (project)-[:location { active: true, createdAt: datetime()}]->(location)
-      //     RETURN project.id as id
-      //   `;
-
-      //   await this.db
-      //     .query()
-      //     .raw(query, {
-      //       locationId,
-      //       id,
-      //     })
-      //     .first();
-      // }
-
-      return this.readOne(id, session);
-    } catch (e) {
-      this.logger.warning(`Could not create project`, {
-        exception: e,
-      });
-      throw new Error('Could not create project');
-    }
-  }
-
-  async update(input: UpdateProject, session: ISession): Promise<Project> {
-    const object = await this.readOne(input.id, session);
-
-    const changes = {
-      ...input,
-      modifiedAt: DateTime.local().toNeo4JDateTime() as any,
-      status: object.step.value
-        ? stepToStatus(object.step.value)
-        : object.status,
-    };
-
-    // TODO: re-connect the locationId node when locations are hooked up
-
-    const result = await this.propertyUpdater.updateProperties({
-      session,
-      object,
-      props: [
-        'name',
-        'mouStart',
-        'mouEnd',
-        'estimatedSubmission',
-        'status',
-        'modifiedAt',
-      ],
-      changes,
-      nodevar: 'project',
-    });
-
-    return result;
-  }
-
-  async delete(id: string, session: ISession): Promise<void> {
-    const object = await this.readOne(id, session);
-
-    if (!object) {
-      throw new NotFoundException('Could not find project');
-    }
-
-    try {
-      await this.propertyUpdater.deleteNode({
-        session,
-        object,
-        aclEditProp: 'canDeleteOwnUser',
-      });
-    } catch (e) {
-      this.logger.warning('Failed to delete project', {
-        exception: e,
-      });
-      throw e;
-    }
   }
 }

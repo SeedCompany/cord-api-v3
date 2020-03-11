@@ -1,7 +1,7 @@
 import {
-  LoggerService as INestLogger,
   Injectable,
   Logger as NestLogger,
+  LoggerService as INestLogger,
   OnModuleInit,
 } from '@nestjs/common';
 import { ILogger } from './logger.interface';
@@ -12,14 +12,14 @@ import { ILogger } from './logger.interface';
  */
 @Injectable()
 export class NestLoggerAdapterService implements INestLogger, OnModuleInit {
-  private static readonly nameMap: Record<string, string> = {
+  private static nameMap: Record<string, string> = {
     NestFactory: 'nest:factory',
     InstanceLoader: 'nest:loader',
     ExceptionsHandler: 'nest:exception',
     NestApplication: 'nest:application',
   };
 
-  constructor(private readonly logger: ILogger) {}
+  constructor(private logger: ILogger) {}
 
   onModuleInit() {
     NestLogger.overrideLogger(this);
@@ -54,8 +54,6 @@ export class NestLoggerAdapterService implements INestLogger, OnModuleInit {
   }
 
   private mapName(context?: string) {
-    return context
-      ? NestLoggerAdapterService.nameMap[context] || context
-      : 'nest';
+    return context ? NestLoggerAdapterService.nameMap[context] || context : 'nest';
   }
 }

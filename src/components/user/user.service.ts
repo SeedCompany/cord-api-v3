@@ -1,19 +1,21 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import * as argon2 from 'argon2';
+import {
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Connection } from 'cypher-query-builder';
 import { generate } from 'shortid';
+import * as argon2 from 'argon2';
 import { ILogger, Logger, OnIndex, PropertyUpdaterService } from '../../core';
 import { ISession } from '../auth';
 import {
   OrganizationListInput,
-  OrganizationService,
   SecuredOrganizationList,
+  OrganizationService,
 } from '../organization';
 import {
   CreateUser,
   UpdateUser,
   User,
-  UserEmailInput,
   UserListInput,
   UserListOutput,
 } from './dto';
@@ -24,7 +26,7 @@ export class UserService {
     private readonly organizations: OrganizationService,
     private readonly db: Connection,
     private readonly propertyUpdater: PropertyUpdaterService,
-    @Logger('user:service') private readonly logger: ILogger
+    @Logger('user:service') private readonly logger: ILogger,
   ) {}
 
   @OnIndex()
@@ -65,7 +67,7 @@ export class UserService {
 
   async list(
     { page, count, sort, order, filter }: UserListInput,
-    session: ISession
+    session: ISession,
   ): Promise<UserListOutput> {
     const result = await this.propertyUpdater.list<User>({
       session,
@@ -88,7 +90,7 @@ export class UserService {
         sort,
         order,
         filter,
-      },
+      }
     });
 
     return {
@@ -101,7 +103,7 @@ export class UserService {
   async listOrganizations(
     userId: string,
     input: OrganizationListInput,
-    session: ISession
+    session: ISession,
   ): Promise<SecuredOrganizationList> {
     // Just a thought, seemed like a good idea to try to reuse the logic/query there.
     const result = await this.organizations.list(
@@ -112,7 +114,7 @@ export class UserService {
           userIds: [userId],
         },
       },
-      session
+      session,
     );
 
     return {
@@ -122,55 +124,10 @@ export class UserService {
     };
   }
 
-  async checkEmail(input: UserEmailInput): Promise<boolean> {
-    const result = await this.db
-      .query()
-      .raw(
-        `
-        MATCH
-        (email:EmailAddress {
-          value: $email
-        })
-        RETURN
-        email.value as email
-        `,
-        {
-          email: input.email,
-        }
-      )
-      .first();
-    if (result) {
-      return false;
-    }
-    return true;
-  }
-
-  async logout(token: string): Promise<void> {
-    await this.db
-      .query()
-      .raw(
-        `
-      MATCH
-        (token:Token)-[r]-()
-      DELETE
-        r
-      RETURN
-        token.value as token
-      `,
-        {
-          token,
-        }
-      )
-      .run();
-  }
-
   async create(input: CreateUser, session: ISession): Promise<User> {
     if (!input.password) {
       throw new Error('Password is required when creating a new user');
     }
-
-    // ensure token doesn't have any users attached to it
-    // await this.logout(session.token);
 
     const pash = await argon2.hash(input.password);
     /** CREATE USER
@@ -188,22 +145,17 @@ export class UserService {
             active: true,
             createdAt: datetime(),
             createdByUserId: "system",
-            canCreateFileNode: true,
             canCreateOrg: true,
             canReadOrgs: true,
             canReadUsers: true,
             canCreateLang: true,
             canReadLangs: true,
             canCreateEducation: true,
-            canReadEducationList: true,
+            canReadEducation: true,
             canCreateUnavailability: true,
-            canReadUnavailabilityList: true,
-            canCreatePartnership: true,
-            canReadPartnerships: true,
+            canReadUnavailability: true,
             canCreateProduct: true,
             canReadProducts: true,
-            canCreateProject: true,
-            canReadProjects: true,
             canDeleteOwnUser: true,
             owningOrgId: "Seed Company",
             isAdmin: true
@@ -269,17 +221,14 @@ export class UserService {
             canEditPassword: true,
             canReadEmail: true,
             canEditEmail: true,
-            canReadEducationList: true,
+            canReadEducation: true,
             canEditEducation: true,
             canReadPhone: true,
             canEditPhone: true,
             canReadTimezone: true,
             canEditTimezone: true,
             canReadBio: true,
-            canEditBio: true,
-            canReadFile: true,
-            canEditFile: true,
-            canCreateFile: true
+            canEditBio: true
           })
           -[:toNode]->(user)
         RETURN
@@ -324,7 +273,7 @@ export class UserService {
           timezone: input.timezone,
           bio: input.bio,
           pash,
-        }
+        },
       )
       .first();
     if (!result) {
@@ -378,6 +327,7 @@ export class UserService {
   }
 
   async readOne(id: string, session: ISession): Promise<User> {
+    
     const result = await this.db
       .query()
       .raw(
@@ -442,7 +392,7 @@ export class UserService {
           requestingUserId: session.userId,
           id,
           owningOrgId: session.owningOrgId,
-        }
+        },
       )
       .first();
     if (!result) {
@@ -518,13 +468,13 @@ export class UserService {
   async delete(id: string, session: ISession): Promise<void> {
     const user = await this.readOne(id, session);
     try {
-      await this.propertyUpdater.deleteNode({
+      this.propertyUpdater.deleteNode({
         session,
         object: user,
         aclEditProp: 'canDeleteOwnUser',
       });
     } catch (e) {
-      this.logger.error('Could not delete user', { exception: e });
+      console.log(e);
       throw e;
     }
   }

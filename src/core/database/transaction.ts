@@ -1,9 +1,9 @@
-/* eslint-disable @typescript-eslint/unbound-method */
 import { stripIndent } from 'common-tags';
-import { Connection, Query, Transformer } from 'cypher-query-builder';
-import { Dictionary } from 'lodash';
-import { Transaction as NeoTransaction, Session } from 'neo4j-driver/types/v1';
+import { Query, Transformer } from 'cypher-query-builder';
+import { Connection } from 'cypher-query-builder';
 import { Observable } from 'rxjs';
+import { Dictionary } from 'lodash';
+import { Session, Transaction as NeoTransaction } from 'neo4j-driver/types/v1';
 import { ILogger } from '../logger';
 
 declare module 'cypher-query-builder/dist/typings/connection' {
@@ -25,7 +25,7 @@ declare module 'cypher-query-builder/dist/typings/connection' {
 
 Connection.prototype.withTransaction = async function withTransaction<R>(
   this: Connection,
-  inner: (tx: Transaction) => Promise<R>
+  inner: (tx: Transaction) => Promise<R>,
 ): Promise<R> {
   const tx = this.transaction();
   let res: R;
@@ -51,9 +51,9 @@ export class Transaction implements QueryConnection {
   private wrapped: NeoTransaction;
 
   constructor(
-    private readonly connection: Connection,
-    private readonly transformer: Transformer,
-    private readonly logger: ILogger
+    private connection: Connection,
+    private transformer: Transformer,
+    private logger: ILogger,
   ) {}
 
   query(): Query {
@@ -136,8 +136,8 @@ export class Transaction implements QueryConnection {
    * Streaming is not supported on transactions
    * This observable will immediately emit an error.
    */
-  stream<R = any>(_query: Query): Observable<Dictionary<R>> {
-    return new Observable((subscriber: { error(e: Error): void }) => {
+  stream<R = any>(query: Query): Observable<Dictionary<R>> {
+    return new Observable((subscriber: { error(e: Error): void}) => {
       subscriber.error(new Error('Transactions cannot be streamed.'));
     });
   }

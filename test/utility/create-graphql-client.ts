@@ -1,5 +1,5 @@
 import { INestApplicationContext } from '@nestjs/common';
-import { GqlModuleOptions, GraphQLModule } from '@nestjs/graphql';
+import { GraphQLModule, GqlModuleOptions } from '@nestjs/graphql';
 import { GRAPHQL_MODULE_OPTIONS } from '@nestjs/graphql/dist/graphql.constants';
 import { ApolloServerBase } from 'apollo-server-core';
 import { createTestClient } from 'apollo-server-testing';
@@ -11,21 +11,21 @@ import { GqlContextType } from '../../src/common';
 export interface GraphQLTestClient {
   query: (
     query: DocumentNode,
-    variables?: { [name: string]: any }
+    variables?: { [name: string]: any },
   ) => Promise<Record<string, any>>;
   mutate: (
     mutation: DocumentNode,
-    variables?: { [name: string]: any }
+    variables?: { [name: string]: any },
   ) => Promise<Record<string, any>>;
   authToken: string;
 }
 
 export const createGraphqlClient = async (
-  app: INestApplicationContext
+  app: INestApplicationContext,
 ): Promise<GraphQLTestClient> => {
   const server = await getServer(app);
   const options: GqlModuleOptions & { context: GqlContextType } = app.get(
-    GRAPHQL_MODULE_OPTIONS
+    GRAPHQL_MODULE_OPTIONS,
   );
   const { query, mutate } = createTestClient(server);
 
@@ -52,19 +52,17 @@ export const createGraphqlClient = async (
       return result.data!;
     },
     get authToken() {
-      return (
-        options.context.request?.headers?.authorization?.replace(
-          'Bearer ',
-          ''
-        ) || ''
-      );
+      return options.context.request?.headers?.authorization?.replace(
+        'Bearer ',
+        '',
+      ) || '';
     },
     set authToken(token: string) {
-      const fakeRequest: Request = {
+      const fakeRequest = {
         headers: {
           authorization: `Bearer ${token}`,
         },
-      } as any;
+      } as Request;
       options.context.request = fakeRequest;
     },
   };
@@ -77,15 +75,10 @@ const validateResult = (res: GraphQLResponse) => {
   expect(res.data).toBeTruthy();
 };
 
-const reportError = (
-  e: GraphQLFormattedError & { originalError?: Error & { response?: any } }
-) => {
+const reportError = (e: GraphQLFormattedError & { originalError?: Error & { response?: any } }) => {
   if (e.originalError instanceof Error) {
     const e2 = e.originalError;
-    if (
-      e2.response?.message &&
-      e2.stack?.startsWith('Error: [object Object]\n')
-    ) {
+    if (e2.response?.message && e2.stack?.startsWith('Error: [object Object]\n')) {
       e2.stack = e2.stack.replace('[object Object]', e2.response.message);
       e2.message = e2.response.message;
     }

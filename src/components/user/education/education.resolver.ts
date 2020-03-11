@@ -5,11 +5,11 @@ import { ISession, Session } from '../../auth';
 import {
   CreateEducationInput,
   CreateEducationOutput,
-  Education,
   EducationListInput,
   EducationListOutput,
   UpdateEducationInput,
   UpdateEducationOutput,
+  Education,
 } from './dto';
 import { EducationService } from './education.service';
 
@@ -22,7 +22,7 @@ export class EducationResolver {
   })
   async createEducation(
     @Session() session: ISession,
-    @Args('input') { education: input }: CreateEducationInput
+    @Args('input') { education: input }: CreateEducationInput,
   ): Promise<CreateEducationOutput> {
     const education = await this.service.create(input, session);
     return { education };
@@ -33,7 +33,7 @@ export class EducationResolver {
   })
   async education(
     @Session() session: ISession,
-    @IdArg() id: string
+    @IdArg() id: string,
   ): Promise<Education> {
     return await this.service.readOne(id, session);
   }
@@ -48,7 +48,7 @@ export class EducationResolver {
       type: () => EducationListInput,
       defaultValue: EducationListInput.defaultVal,
     })
-    input: EducationListInput
+    input: EducationListInput,
   ): Promise<EducationListOutput> {
     return this.service.list(input, session);
   }
@@ -58,7 +58,7 @@ export class EducationResolver {
   })
   async updateEducation(
     @Session() session: ISession,
-    @Args('input') { education: input }: UpdateEducationInput
+    @Args('input') { education: input }: UpdateEducationInput,
   ): Promise<UpdateEducationOutput> {
     const education = await this.service.update(input, session);
     return { education };
@@ -69,7 +69,7 @@ export class EducationResolver {
   })
   async deleteEducation(
     @Session() session: ISession,
-    @IdArg() id: string
+    @IdArg() id: string,
   ): Promise<boolean> {
     await this.service.delete(id, session);
     return true;

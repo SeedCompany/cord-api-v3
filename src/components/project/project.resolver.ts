@@ -1,77 +1,57 @@
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { IdArg } from '../../common';
-import { ISession, Session } from '../auth';
-import {
-  CreateProjectInput,
-  CreateProjectOutput,
-  Project,
-  ProjectListInput,
-  ProjectListOutput,
-  UpdateProjectInput,
-  UpdateProjectOutput,
-} from './dto';
+import { Resolver, Args, Query, Mutation } from '@nestjs/graphql';
+//import { Project } from './project-1';
 import { ProjectService } from './project.service';
+import {
+  CreateProjectInputDto,
+  CreateProjectOutputDto,
+  ReadProjectInputDto,
+  ReadProjectOutputDto,
+  UpdateProjectInputDto,
+  UpdateProjectOutputDto,
+  DeleteProjectInputDto,
+  DeleteProjectOutputDto,
+} from './project.dto';
 
-@Resolver('Project')
+@Resolver()
 export class ProjectResolver {
-  constructor(private readonly projectService: ProjectService) {}
-
-  @Query(() => Project, {
-    description: 'Look up a project by its ID',
-  })
-  async project(
-    @IdArg() id: string,
-    @Session() session: ISession
-  ): Promise<Project> {
-    return this.projectService.readOne(id, session);
+  constructor(private readonly projectService: ProjectService) {
   }
 
-  @Query(() => ProjectListOutput, {
-    description: 'Look up projects',
-  })
-  async projects(
-    @Args({
-      name: 'input',
-      type: () => ProjectListInput,
-      nullable: true,
-      defaultValue: ProjectListInput.defaultVal,
-    })
-    input: ProjectListInput,
-    @Session() session: ISession
-  ): Promise<ProjectListOutput> {
-    return this.projectService.list(input, session);
-  }
-
-  @Mutation(() => CreateProjectOutput, {
-    description: 'Create a project',
+  @Mutation(returns => CreateProjectOutputDto, {
+    description: 'Create a Project',
   })
   async createProject(
-    @Args('input') { project: input }: CreateProjectInput,
-    @Session() session: ISession
-  ): Promise<CreateProjectOutput> {
-    const project = await this.projectService.create(input, session);
-    return { project };
+    @Args('input') { project: input }: CreateProjectInputDto,
+  ): Promise<CreateProjectOutputDto> {
+    return await this.projectService.create(input);
   }
 
-  @Mutation(() => UpdateProjectOutput, {
-    description: 'Update a project',
+  @Query(returns => ReadProjectOutputDto, {
+    description: 'Read one Project by id',
+  })
+  async readProject(
+    @Args('input') { project: input }: ReadProjectInputDto,
+  ): Promise<ReadProjectOutputDto> {
+    return await this.projectService.readOne(input);
+  }
+
+  @Mutation(returns => UpdateProjectOutputDto, {
+    description: 'Update an Project',
   })
   async updateProject(
-    @Args('input') { project: input }: UpdateProjectInput,
-    @Session() session: ISession
-  ): Promise<UpdateProjectOutput> {
-    const project = await this.projectService.update(input, session);
-    return { project };
+    @Args('input')
+      { project: input }: UpdateProjectInputDto,
+  ): Promise<UpdateProjectOutputDto> {
+    return await this.projectService.update(input);
   }
 
-  @Mutation(() => Boolean, {
-    description: 'Delete a project',
+  @Mutation(returns => DeleteProjectOutputDto, {
+    description: 'Delete an Project',
   })
   async deleteProject(
-    @IdArg() id: string,
-    @Session() session: ISession
-  ): Promise<boolean> {
-    await this.projectService.delete(id, session);
-    return true;
+    @Args('input')
+      { project: input }: DeleteProjectInputDto,
+  ): Promise<DeleteProjectOutputDto> {
+    return await this.projectService.delete(input);
   }
 }

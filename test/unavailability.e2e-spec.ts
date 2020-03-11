@@ -1,17 +1,19 @@
-import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
-import { times } from 'lodash';
-import { isValid } from 'shortid';
-import { User } from '../src/components/user';
-import { Unavailability } from '../src/components/user/unavailability';
+
 import {
+  TestApp,
   createSession,
   createTestApp,
   createUnavailability,
   createUser,
-  TestApp,
 } from './utility';
-import { fragments } from './utility/fragments';
+
+import { Unavailability } from '../src/components/user/unavailability';
+import { User } from '../src/components/user';
+import { fragments } from './utility';
+import { gql } from 'apollo-server-core';
+import { isValid } from 'shortid';
+import { times } from 'lodash';
 
 describe('Unavailability e2e', () => {
   let app: TestApp;
@@ -47,7 +49,7 @@ describe('Unavailability e2e', () => {
         `,
         {
           id: unavailability.id,
-        }
+        },
       );
 
       expect(actual.id).toBe(unavailability.id);
@@ -59,7 +61,7 @@ describe('Unavailability e2e', () => {
     }
   });
 
-  // UPDATE UNAVAILABILITY
+  // UPDATE LANGUAGE
   it('update unavailability', async () => {
     const unavailability = await createUnavailability(app, { userId: user.id });
     const newDesc = faker.company.companyName();
@@ -82,7 +84,7 @@ describe('Unavailability e2e', () => {
             description: newDesc,
           },
         },
-      }
+      },
     );
     const updated = result.updateUnavailability.unavailability;
     expect(updated).toBeTruthy();
@@ -90,7 +92,7 @@ describe('Unavailability e2e', () => {
     expect(updated.description.value).toBe(newDesc);
   });
 
-  // DELETE UNAVAILABILITY
+  // DELETE LANGUAGE
   it('delete unavailability', async () => {
     const unavailability = await createUnavailability(app, { userId: user.id });
 
@@ -103,7 +105,7 @@ describe('Unavailability e2e', () => {
         `,
         {
           id: unavailability.id,
-        }
+        },
       );
       const actual: Unavailability | undefined = result.deleteUnavailability;
       expect(actual).toBeTruthy();
@@ -113,17 +115,19 @@ describe('Unavailability e2e', () => {
     }
   });
 
-  // LIST UNAVAILABILITIES
+  // LIST Unavailabilities
   it('List view of unavailabilities', async () => {
     // create 10 unavailabilities
     const num = 10;
     await Promise.all(
-      times(num).map(() => createUnavailability(app, { userId: user.id }))
+      times(num).map(() =>
+        createUnavailability(app, { userId: user.id }),
+      ),
     );
 
     const { unavailabilities } = await app.graphql.query(gql`
       query {
-        unavailabilities (input: { filter: { userId : "${user.id}" }}) {
+        unavailabilities (input: { filter: { userId : "${user.id}" }}){
           items {
             ...unavailability
           }
