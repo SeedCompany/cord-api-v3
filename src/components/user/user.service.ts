@@ -378,7 +378,7 @@ export class UserService {
   }
 
   async readOne(id: string, session: ISession): Promise<User> {
-    const result = await this.propertyUpdater.readProperties<User>({
+    const result = await this.propertyUpdater.readProperties({
       id,
       session,
       props: [
@@ -400,7 +400,12 @@ export class UserService {
       throw new NotFoundException('Could not find user');
     }
 
-    return result;
+    let user = result as any;
+    user.id = result.id.value;
+    user.createdAt = result.createdAt.value;
+    user = user as User;
+
+    return user;
   }
 
   async update(input: UpdateUser, session: ISession): Promise<User> {

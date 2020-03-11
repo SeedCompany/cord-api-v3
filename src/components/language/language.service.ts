@@ -83,7 +83,7 @@ export class LanguageService {
       'rodNumber',
     ];
 
-    const result = await this.propertyUpdater.readProperties<Language>({
+    const result = await this.propertyUpdater.readProperties({
       session,
       id: langId,
       nodevar: 'lang',
@@ -95,7 +95,12 @@ export class LanguageService {
       throw new NotFoundException('Could not find language');
     }
 
-    return result;
+    let language = result as any;
+    language.id = result.id.value;
+    language.createdAt = result.createdAt.value;
+    language = language as Language;
+
+    return language;
   }
 
   async update(input: UpdateLanguage, session: ISession): Promise<Language> {

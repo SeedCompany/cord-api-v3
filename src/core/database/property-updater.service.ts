@@ -153,7 +153,7 @@ export class PropertyUpdaterService {
     };
   }
 
-  async readProperties<T>({
+  async readProperties({
     id,
     session,
     props,
@@ -163,7 +163,7 @@ export class PropertyUpdaterService {
     session: ISession;
     props: readonly string[];
     nodevar: string;
-  }): Promise<T> {
+  }): Promise<ReadPropertiesResult> {
     const result: ReadPropertiesResult = {};
     for (const prop of props) {
       result[prop] = await this.readProperty({
@@ -173,11 +173,7 @@ export class PropertyUpdaterService {
         nodevar,
       });
     }
-    const initial: { [index: string]: any } = {};
-    return props.reduce((prev, current) => {
-      prev[current] = result[current].value;
-      return prev;
-    }, initial) as T;
+    return result;
   }
 
   async readProperty({
