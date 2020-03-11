@@ -70,24 +70,22 @@ export class LanguageService {
       `Query readOne Language: id ${langId} by ${session.userId}`
     );
 
-    const props = [
-      'id',
-      'createdAt',
-      'name',
-      'displayName',
-      'beginFiscalYear',
-      'ethnologueName',
-      'ethnologuePopulation',
-      'organizationPopulation',
-      'sensitivity',
-      'rodNumber',
-    ];
-
     const result = await this.propertyUpdater.readProperties({
       session,
       id: langId,
+      props: [
+        'id',
+        'createdAt',
+        'name',
+        'displayName',
+        'beginFiscalYear',
+        'ethnologueName',
+        'ethnologuePopulation',
+        'organizationPopulation',
+        'sensitivity',
+        'rodNumber',
+      ],
       nodevar: 'lang',
-      props,
     });
 
     if (!result) {
@@ -95,12 +93,7 @@ export class LanguageService {
       throw new NotFoundException('Could not find language');
     }
 
-    let language = result as any;
-    language.id = result.id.value;
-    language.createdAt = result.createdAt.value;
-    language = language as Language;
-
-    return language;
+    return result as Language;
   }
 
   async update(input: UpdateLanguage, session: ISession): Promise<Language> {

@@ -13,15 +13,6 @@ import {
 import { ISession } from '../../components/auth';
 import { ILogger, Logger } from '../../core';
 
-interface ReadPropertyResult {
-  value: any;
-  canEdit?: boolean;
-  canRead?: boolean;
-}
-interface ReadPropertiesResult {
-  [key: string]: ReadPropertyResult;
-}
-
 @Injectable()
 export class PropertyUpdaterService {
   constructor(
@@ -153,7 +144,7 @@ export class PropertyUpdaterService {
     };
   }
 
-  async readProperties({
+  async readProperties<TObject extends Resource>({
     id,
     session,
     props,
@@ -161,22 +152,22 @@ export class PropertyUpdaterService {
   }: {
     id: string;
     session: ISession;
-    props: readonly string[];
+    props: ReadonlyArray<keyof TObject>;
     nodevar: string;
-  }): Promise<ReadPropertiesResult> {
-    const result: ReadPropertiesResult = {};
+  }): Promise<{ [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> }> {
+    const result: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> } = {};
     for (const prop of props) {
-      result[prop] = await this.readProperty({
+      result[prop] = (await this.readProperty({
         id,
         session,
-        aclReadProp: prop,
+        aclReadProp: prop as string,
         nodevar,
-      });
+      })) as UnwrapSecured<TObject[keyof TObject]>;
     }
     return result;
   }
 
-  async readProperty({
+  async readProperty<TObject extends Resource>({
     id,
     session,
     nodevar,
@@ -186,7 +177,11 @@ export class PropertyUpdaterService {
     session: ISession;
     nodevar: string;
     aclReadProp: string;
-  }): Promise<ReadPropertyResult> {
+  }): Promise<{
+    value: any;
+    canEdit?: boolean;
+    canRead?: boolean;
+  }> {
     const aclReadPropName = `canRead${upperFirst(aclReadProp)}`;
     const aclEditPropName = `canEdit${upperFirst(aclReadProp)}`;
     const aclReadNodeName = `canRead${upperFirst(nodevar)}s`;
@@ -234,7 +229,11 @@ export class PropertyUpdaterService {
       throw new NotFoundException('Could not find requested key');
     }
 
-    return result[0] as ReadPropertyResult;
+    return result[0] as {
+      value: any;
+      canEdit?: boolean;
+      canRead?: boolean;
+    };
   }
 
   async list<TObject extends Resource>({
