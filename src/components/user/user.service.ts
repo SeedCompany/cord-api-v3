@@ -399,7 +399,12 @@ export class UserService {
     if (!result) {
       throw new NotFoundException('Could not find user');
     }
-    return result as User;
+    let user = result as any;
+    user.id = result.id.value;
+    user.createdAt = result.createdAt.value;
+    user = user as User;
+
+    return user;
   }
 
   async update(input: UpdateUser, session: ISession): Promise<User> {

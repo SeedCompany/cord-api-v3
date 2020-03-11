@@ -13,6 +13,12 @@ import {
 import { ISession } from '../../components/auth';
 import { ILogger, Logger } from '../../core';
 
+interface ReadPropertyResult {
+  value: any;
+  canEdit: boolean;
+  canRead: boolean;
+}
+
 @Injectable()
 export class PropertyUpdaterService {
   constructor(
@@ -154,15 +160,15 @@ export class PropertyUpdaterService {
     session: ISession;
     props: ReadonlyArray<keyof TObject>;
     nodevar: string;
-  }): Promise<{ [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> }> {
-    const result: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> } = {};
+  }): Promise<{ [Key in keyof TObject]: ReadPropertyResult }> {
+    const result: { [Key in keyof TObject]: ReadPropertyResult } = {} as any;
     for (const prop of props) {
-      result[prop] = (await this.readProperty({
+      result[prop] = await this.readProperty({
         id,
         session,
         aclReadProp: prop as string,
         nodevar,
-      })) as UnwrapSecured<TObject[keyof TObject]>;
+      });
     }
     return result;
   }
@@ -177,11 +183,7 @@ export class PropertyUpdaterService {
     session: ISession;
     nodevar: string;
     aclReadProp: string;
-  }): Promise<{
-    value: any;
-    canEdit?: boolean;
-    canRead?: boolean;
-  }> {
+  }): Promise<ReadPropertyResult> {
     const aclReadPropName = `canRead${upperFirst(aclReadProp)}`;
     const aclEditPropName = `canEdit${upperFirst(aclReadProp)}`;
     const aclReadNodeName = `canRead${upperFirst(nodevar)}s`;
@@ -214,7 +216,7 @@ export class PropertyUpdaterService {
     <-[:token { active: true }]-
     (user:User {  ${aclReadNodeName}: true }),${content}`;
 
-    const result = await this.db
+    const result = (await this.db
       .query()
       .raw(query, {
         token: session.token,
@@ -222,18 +224,15 @@ export class PropertyUpdaterService {
         owningOrgId: session.owningOrgId,
         id,
       })
-      .run();
+      .run()) as ReadPropertyResult[];
 
     if (!result.length) {
       if (nodevar === 'lang') console.info('QUERY', query, aclReadProp);
       throw new NotFoundException('Could not find requested key');
     }
 
-    return result[0] as {
-      value: any;
-      canEdit?: boolean;
-      canRead?: boolean;
-    };
+    const property = result[0];
+    return property;
   }
 
   async list<TObject extends Resource>({

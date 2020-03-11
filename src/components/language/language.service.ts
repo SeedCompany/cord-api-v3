@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { generate } from 'shortid';
+import { Sensitivity } from '../../common';
 import {
   DatabaseService,
   ILogger,
@@ -93,7 +94,13 @@ export class LanguageService {
       throw new NotFoundException('Could not find language');
     }
 
-    return result as Language;
+    let language = result as any;
+    language.id = result.id.value;
+    language.createdAt = result.createdAt.value;
+    language.sensitivity = result.sensitivity.value as Sensitivity;
+    language = language as Language;
+
+    return language;
   }
 
   async update(input: UpdateLanguage, session: ISession): Promise<Language> {
