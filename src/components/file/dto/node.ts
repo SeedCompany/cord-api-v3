@@ -65,10 +65,10 @@ export class File extends FileNode {
   @Field({
     description: 'The user who uploaded the most recent version of this file',
   })
-  readonly modifiedBy: User;
+  readonly modifiedBy?: User;
 
   @DateTimeField()
-  readonly modifiedAt: DateTime;
+  readonly modifiedAt?: DateTime;
 
   @Field()
   readonly mimeType: string;

@@ -16,6 +16,7 @@ import {
   File,
   FileListInput,
   FileListOutput,
+  FileNodeCategory,
   FileNodeType,
   FileOrDirectory,
   FileVersion,
@@ -66,13 +67,22 @@ export class FileService {
           id: $requestingUserId
         })
         WITH * OPTIONAL MATCH (file: FileNode { id: $id})
+        WITH * OPTIONAL MATCH (user:User {active: true, id: $id, owningOrgId: $owningOrgId})
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl:ACL {canReadFile: true})-[:toNode]->(file)-[:type {active: true}]->(type:Property {active: true})
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl:ACL {canReadFile: true})-[:toNode]->(file)-[:size {active: true}]->(size:Property {active: true})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl:ACL {canReadFile: true})-[:toNode]->(file)-[:mimeType {active: true}]->(mimeType:Property {active: true})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl:ACL {canReadFile: true})-[:toNode]->(file)-[:category {active: true}]->(category:Property {active: true})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl:ACL {canReadFile: true})-[:toNode]->(file)-[:name {active: true}]->(name:Property {active: true})
         RETURN
         file.id as id,
         file.createdAt as createdAt,
+        file.category as category,
+        name.value as name,
         type.value as type,
-        size.value as size
+        size.value as size,
+        mimeType.value as mimeType,
+        requestingUser,
+        user 
           `,
         {
           id,
@@ -82,16 +92,65 @@ export class FileService {
         }
       )
       .first();
+    console.log('result is', result);
     if (!result) {
       throw new NotFoundException('Could not find file');
     }
-    throw new Error('Returned object is not complete');
-    // return {
-    //   id: result.id,
-    //   createdAt: result.createdAt,
-    //   type: result.type,
-    //   size: result.size,
-    // };
+    console.log('result is', result);
+    return {
+      id: result.id,
+      category: FileNodeCategory.Directory, //TODO category should be derived based on the mimeType
+      createdAt: result.createdAt,
+      createdBy: {
+        id: result.requestingUser.id,
+        createdAt: result.requestingUser.createdAt,
+        email: {
+          value: result.requestingUser.email,
+          canRead: result.requestingUser.canReadEmail,
+          canEdit: result.requestingUser.canEditEmail,
+        },
+        realFirstName: {
+          value: result.requestingUser.realFirstName,
+          canRead: result.requestingUser.canReadRealFirstName,
+          canEdit: result.requestingUser.canEditRealFirstName,
+        },
+        realLastName: {
+          value: result.requestingUser.realLastName,
+          canRead: result.requestingUser.canReadRealLastName,
+          canEdit: result.requestingUser.canEditRealLastName,
+        },
+        displayFirstName: {
+          value: result.requestingUser.displayFirstName,
+          canRead: result.requestingUser.canReadDisplayFirstName,
+          canEdit: result.requestingUser.canEditDisplayFirstName,
+        },
+        displayLastName: {
+          value: result.requestingUser.displayLastName,
+          canRead: result.requestingUser.canReadDisplayLastName,
+          canEdit: result.requestingUser.canEditDisplayLastName,
+        },
+        phone: {
+          value: result.requestingUser.phone,
+          canRead: result.requestingUser.canReadPhone,
+          canEdit: result.requestingUser.canEditPhone,
+        },
+        timezone: {
+          value: result.requestingUser.timezone,
+          canRead: result.requestingUser.canReadTimezone,
+          canEdit: result.requestingUser.canEditTimezone,
+        },
+        bio: {
+          value: result.requestingUser.bio,
+          canRead: result.requestingUser.canReadBio,
+          canEdit: result.requestingUser.canEditBio,
+        },
+      },
+      mimeType: result.mimeType,
+      name: result.name,
+      parents: result.parents,
+      size: result.size,
+      type: result.type,
+    };
   }
 
   async getDownloadUrl(fileId: string, _session: ISession): Promise<string> {
@@ -133,7 +192,11 @@ export class FileService {
     session: ISession
   ): Promise<File> {
     try {
-      await this.move({id: uploadId, parentId}, session);
+      const file = await this.bucket.getObject(`${uploadId}`);
+      if (!file) {
+        throw new BadRequestException('object not found');
+      }
+      //  await this.bucket.moveObject(`temp/${uploadId}`, `${uploadId}`);
       const acls = {
         canReadFile: true,
         canEditFile: true,
@@ -143,8 +206,9 @@ export class FileService {
         parentId,
         name,
         type: FileNodeType.File,
+        size: file.ContentLength,
+        mimeType: file.ContentType,
       };
-
       await this.propertyUpdater.createNode({
         session,
         input: { ...input },
@@ -175,7 +239,7 @@ export class FileService {
     session: ISession
   ): Promise<FileOrDirectory> {
     // TODO findout options for name usage here
-    const {id, parentId} = input;
+    const { id, parentId } = input;
     const file = await this.bucket.getObject(id);
     if (!file) {
       throw new BadRequestException('object not found');
