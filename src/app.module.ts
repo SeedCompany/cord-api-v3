@@ -39,6 +39,7 @@ const context: ContextFunction<
       autoSchemaFile: 'schema.gql',
       context,
       playground: true, // enabled in all environments
+      introspection: true, // needed for playground
     }),
     AuthModule,
     CeremonyModule,
