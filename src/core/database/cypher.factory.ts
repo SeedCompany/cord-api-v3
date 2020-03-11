@@ -45,10 +45,21 @@ export const CypherFactory: FactoryProvider<Connection> = {
         session.run = function(this: never, origStatement, parameters, conf) {
           const statement = stripIndent(origStatement);
           logger.debug('\n' + statement, parameters);
+
           const result = origRun.call(session, statement, parameters, conf);
-          result.catch(e => {
-            throw jestSkipFileInExceptionSource(e, __filename);
-          });
+
+          const origSubscribe = result.subscribe;
+          result.subscribe = function(this: never, observer) {
+            if (observer.onError) {
+              const onError = observer.onError;
+              observer.onError = e => {
+                const patched = jestSkipFileInExceptionSource(e, __filename);
+                onError(patched);
+              };
+            }
+            origSubscribe.call(result, observer);
+          };
+
           return result;
         };
       }
