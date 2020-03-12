@@ -4,10 +4,20 @@ import { generate } from 'shortid';
 import { DatabaseService, ILogger, Logger, OnIndex } from '../../core';
 import { ISession } from '../auth';
 import {
+  EducationListInput,
+  EducationService,
+  SecuredEducationList,
+} from './education';
+import {
   OrganizationListInput,
   OrganizationService,
   SecuredOrganizationList,
 } from '../organization';
+import {
+  SecuredUnavailabilityList,
+  UnavailabilityListInput,
+  UnavailabilityService,
+} from './unavailability';
 import {
   CreateUser,
   UpdateUser,
@@ -19,7 +29,9 @@ import {
 @Injectable()
 export class UserService {
   constructor(
+    private readonly educations: EducationService,
     private readonly organizations: OrganizationService,
+    private readonly unavailabilities: UnavailabilityService,
     private readonly db: DatabaseService,
     @Logger('user:service') private readonly logger: ILogger
   ) {}
@@ -95,6 +107,29 @@ export class UserService {
     };
   }
 
+  async listEducations(
+    userId: string,
+    input: EducationListInput,
+    session: ISession
+  ): Promise<SecuredEducationList> {
+    const result = await this.educations.list(
+      {
+        ...input,
+        filter: {
+          ...input.filter,
+          userIds: [userId],
+        },
+      },
+      session
+    );
+
+    return {
+      ...result,
+      canRead: true,
+      canCreate: true,
+    };
+  }
+
   async listOrganizations(
     userId: string,
     input: OrganizationListInput,
@@ -116,6 +151,29 @@ export class UserService {
       ...result,
       canRead: true, // TODO
       canCreate: true, // TODO
+    };
+  }
+
+  async listUnavailabilities(
+    userId: string,
+    input: UnavailabilityListInput,
+    session: ISession
+  ): Promise<SecuredUnavailabilityList> {
+    const result = await this.unavailabilities.list(
+      {
+        ...input,
+        filter: {
+          ...input.filter,
+          userIds: [userId],
+        },
+      },
+      session
+    );
+
+    return {
+      ...result,
+      canRead: true,
+      canCreate: true,
     };
   }
 

@@ -1,6 +1,6 @@
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { Field, InputType, ObjectType } from 'type-graphql';
+import { Field, ID, InputType, ObjectType } from 'type-graphql';
 import {
   PaginatedList,
   SecuredList,
@@ -10,11 +10,11 @@ import { Education } from './education.dto';
 
 @InputType()
 export abstract class EducationFilters {
-  @Field({
-    description: 'Only educations matching this name',
+  @Field(() => [ID],{
+    description: 'User IDs ANY of which must belong to the educations',
     nullable: true,
   })
-  readonly userId?: string;
+  readonly userIds?: string[];
 }
 
 const defaultFilters = {};

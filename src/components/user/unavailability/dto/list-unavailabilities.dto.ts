@@ -1,6 +1,6 @@
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { Field, InputType, ObjectType } from 'type-graphql';
+import { Field, ID, InputType, ObjectType } from 'type-graphql';
 import {
   Order,
   PaginatedList,
@@ -11,11 +11,11 @@ import { Unavailability } from './unavailability.dto';
 
 @InputType()
 export abstract class UnavailabilityFilters {
-  @Field({
-    description: 'Only unavailability matching this name',
+  @Field(() => [ID],{
+    description: 'User IDs ANY of which must belong to the unavailabilities',
     nullable: true,
   })
-  readonly userId?: string;
+  readonly userIds?: string[];
 }
 
 const defaultFilters = {};
