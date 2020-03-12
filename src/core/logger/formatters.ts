@@ -71,10 +71,14 @@ export const formatException = () =>
       .map((t: StackFrame) => {
         const subject = t.getFunctionName();
 
-        const file = relative(`${__dirname}/../../..`, t.getFileName());
-        const location = file.startsWith('internal')
-          ? ''
-          : `${file}:${t.getLineNumber()}:${t.getColumnNumber()}`;
+        const absolute: string | null = t.getFileName();
+        const file = absolute
+          ? relative(`${__dirname}/../../..`, absolute)
+          : '';
+        const location =
+          !file || file.startsWith('internal')
+            ? ''
+            : `${file}:${t.getLineNumber()}:${t.getColumnNumber()}`;
 
         return (
           red(`    at`) +
