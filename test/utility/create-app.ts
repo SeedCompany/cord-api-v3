@@ -1,9 +1,11 @@
 import { INestApplication } from '@nestjs/common';
 import { GRAPHQL_MODULE_OPTIONS } from '@nestjs/graphql/dist/graphql.constants';
 import { Test } from '@nestjs/testing';
+import { SES } from 'aws-sdk';
 import { AppModule } from '../../src/app.module';
 import { LogLevel } from '../../src/core/logger';
 import { LevelMatcher } from '../../src/core/logger/level-matcher';
+import { mockSES } from './aws';
 import {
   createGraphqlClient,
   getGraphQLOptions,
@@ -22,6 +24,8 @@ export const createTestApp = async () => {
     .useValue(getGraphQLOptions())
     .overrideProvider(LevelMatcher)
     .useValue(new LevelMatcher({}, LogLevel.ERROR))
+    .overrideProvider(SES)
+    .useValue(mockSES())
     .compile();
 
   const app: TestApp = moduleFixture.createNestApplication();

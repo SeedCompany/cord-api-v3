@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { DatabaseService } from '../../core';
+import { DeprecatedDBService } from '../../core';
 import { AdminOutputDto } from './admin.dto';
 
 @Injectable()
 export class AdminService {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(private readonly db: DeprecatedDBService) {}
 
   async prepareDatabaseConstraintsAndIndexes(): Promise<AdminOutputDto> {
     const response = new AdminOutputDto();

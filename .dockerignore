@@ -1,1 +1,19 @@
+# Versioned but ignore
+docs
+scripts
+tools
+.*
+buildspec.yml
+eslint-local-rules.js
+docker-compose.*
+Dockerfile
+README*
+*example*
+
+# Local
+dist
 node_modules
+coverage
+logging.yml
+*.gql
+*.graphql

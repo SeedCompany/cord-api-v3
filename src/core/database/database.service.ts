@@ -1,6 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ForbiddenError } from 'apollo-server-core';
-import { Connection, contains, node, relation } from 'cypher-query-builder';
+import {
+  Connection,
+  contains,
+  node,
+  Query,
+  relation,
+} from 'cypher-query-builder';
 import { cloneDeep, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import {
@@ -11,14 +17,18 @@ import {
   UnwrapSecured,
 } from '../../common';
 import { ISession } from '../../components/auth';
-import { ILogger, Logger } from '../../core';
+import { ILogger, Logger } from '..';
 
 @Injectable()
-export class PropertyUpdaterService {
+export class DatabaseService {
   constructor(
     private readonly db: Connection,
-    @Logger('PropertyUpdater:service') private readonly logger: ILogger
+    @Logger('database:service') private readonly logger: ILogger
   ) {}
+
+  query(): Query {
+    return this.db.query();
+  }
 
   async updateProperties<TObject extends Resource>({
     session,

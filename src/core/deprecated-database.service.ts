@@ -4,11 +4,11 @@ import { Dictionary } from 'lodash';
 import { Driver } from 'neo4j-driver/types/v1';
 import { Observable } from 'rxjs';
 
-/**
- * Probably can deprecate this and just use Connection instead.
- */
 @Injectable()
-export class DatabaseService {
+/**
+ * @deprecated Use DatabaseService instead.
+ */
+export class DeprecatedDBService {
   constructor(private readonly db: Connection) {}
 
   /**

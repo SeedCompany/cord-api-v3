@@ -1,6 +1,5 @@
 import { Injectable, NotImplementedException } from '@nestjs/common';
-import { Connection } from 'cypher-query-builder';
-import { ILogger, Logger, PropertyUpdaterService } from '../../core';
+import { DatabaseService, ILogger, Logger } from '../../core';
 import { ISession } from '../auth';
 import {
   Ceremony,
@@ -13,8 +12,7 @@ import {
 @Injectable()
 export class CeremonyService {
   constructor(
-    private readonly db: Connection,
-    private readonly propertyUpdater: PropertyUpdaterService,
+    private readonly db: DatabaseService,
     @Logger('ceremony:service') private readonly logger: ILogger
   ) {}
 
