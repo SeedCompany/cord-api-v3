@@ -7,7 +7,7 @@ import {
   Query,
   relation,
 } from 'cypher-query-builder';
-import { upperFirst } from 'lodash';
+import { cloneDeep, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   isSecured,
@@ -335,11 +335,12 @@ export class DatabaseService {
       }
     }
 
+    // Clone the query here, before we apply limit/offsets, so that we can get an accurate aggregate of the total filtered result set
+    const countQuery = cloneDeep(query);
+    countQuery.return('count(n) as total');
+
     query
       .returnDistinct([
-        // return total count
-        'total',
-
         // return the ACL fields
         {
           requestingUser: [
@@ -366,8 +367,9 @@ export class DatabaseService {
       .limit(input.count);
 
     const result = await query.run();
+    const countResult = await countQuery.run();
 
-    const total = result.length ? result[0].total : 0;
+    const total = countResult[0]?.total || 0;
 
     // if skip + count is less than total, there is more
     const hasMore = (input.page - 1) * input.count + input.count < total;
