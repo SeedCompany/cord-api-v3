@@ -39,16 +39,12 @@ export class UnavailabilityService {
         aclEditProp: 'canCreateUnavailability',
       });
     } catch {
-      this.logger.error(
-        `Could not create unavailability for user ${input.userId}`
-      );
+      this.logger.error(`Could not create unavailability`);
       throw new Error('Could not create unavailability');
     }
 
-    this.logger.info(
-      `unavailability for user ${input.userId} created, id ${id}`
-    );
-
+    this.logger.info(`Created user unavailability`, { id, userId: input.userId });
+    
     // connect the Unavailability to the User.
 
     const query = `
