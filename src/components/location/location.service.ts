@@ -45,13 +45,13 @@ export class LocationService {
 
     switch (label) {
       case 'Zone': {
-        return this.readOneZone(id, session);
+        return await this.readOneZone(id, session);
       }
       case 'Region': {
-        return this.readOneRegion(id, session);
+        return await this.readOneRegion(id, session);
       }
       case 'Country': {
-        return this.readOneCountry(id, session);
+        return await this.readOneCountry(id, session);
       }
       default: {
         throw new BadRequestException('Not a location');
@@ -280,11 +280,10 @@ export class LocationService {
         //   active: true,
         //   value: $token
         // })<-[:token {active: true}]-
-        (requestingUser:User {
-          active: true,
-          id: $requestingUserId,
-          owningOrgId: $owningOrgId
-        })<-[:member]-(acl:ACL)-[:toNode]->
+        // (requestingUser:User {
+        //   active: true,
+        //   id: $requestingUserId,
+        //   owningOrgId: $owningOrgId}),
         (region:Region {active: true, id: $id})-[:zone {active: true}]->(zone:Zone {active: true, owningOrgId: $owningOrgId}),
         (region)-[:director {active: true}]->(director:User {active: true})
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl {canReadName: true})-[:toNode]->(region)-[:name {active: true}]->(name:Property {active: true})
@@ -404,9 +403,7 @@ export class LocationService {
           .first();
       }
 
-      this.logger.info(`region`);
-
-      return this.readOneRegion(id, session);
+      return await this.readOneRegion(id, session);
     } catch (e) {
       this.logger.warning(`Could not create region`, {
         exception: e,
@@ -428,15 +425,15 @@ export class LocationService {
       .raw(
         `
         MATCH
-        (token:Token {
-          active: true,
-          value: $token
-        })<-[:token {active: true}]-
-        (requestingUser:User {
-          active: true,
-          id: $requestingUserId,
-          owningOrgId: $owningOrgId
-        }),
+        // (token:Token {
+        //   active: true,
+        //   value: $token
+        // })<-[:token {active: true}]-
+        // (requestingUser:User {
+        //   active: true,
+        //   id: $requestingUserId,
+        //   owningOrgId: $owningOrgId
+        // }),
         (country:Country {active: true, id: $id})
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadName:ACL {canReadName: true})-[:toNode]->(country)-[:name {active: true}]->(name:Property {active: true})
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditName:ACL {canEditName: true})-[:toNode]->(country)-[:name {active: true}]->(name:Property {active: true})
@@ -533,7 +530,7 @@ export class LocationService {
           .first();
       }
 
-      return this.readOneCountry(id, session);
+      return await this.readOneCountry(id, session);
     } catch (e) {
       this.logger.warning(`Could not create country`, {
         exception: e,
@@ -666,7 +663,7 @@ export class LocationService {
       changes: input,
       nodevar: 'region',
     });
-    return this.readOneRegion(input.id, session);
+    return await this.readOneRegion(input.id, session);
   }
 
   async updateCountry(
@@ -717,7 +714,7 @@ export class LocationService {
       nodevar: 'country',
     });
 
-    return this.readOneCountry(input.id, session);
+    return await this.readOneCountry(input.id, session);
   }
 
   async delete(id: string, session: ISession): Promise<void> {

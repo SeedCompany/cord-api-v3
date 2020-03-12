@@ -200,7 +200,6 @@ describe('Country e2e', () => {
       ${fragments.country}
     `);
 
-    console.log('locations ', JSON.stringify(locations, null, 2));
 
     expect(locations.items.length).toBeGreaterThanOrEqual(2);
   });
