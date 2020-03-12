@@ -11,11 +11,11 @@ import { Unavailability } from './unavailability.dto';
 
 @InputType()
 export abstract class UnavailabilityFilters {
-  @Field(() => [ID],{
-    description: 'User IDs ANY of which must belong to the unavailabilities',
+  @Field(() => ID,{
+    description: 'Unavailabilities for UserId',
     nullable: true,
   })
-  readonly userIds?: string[];
+  readonly userId?: string;
 }
 
 const defaultFilters = {};

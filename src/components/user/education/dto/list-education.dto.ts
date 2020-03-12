@@ -10,11 +10,11 @@ import { Education } from './education.dto';
 
 @InputType()
 export abstract class EducationFilters {
-  @Field(() => [ID],{
-    description: 'User IDs ANY of which must belong to the educations',
+  @Field(() => ID,{
+    description: 'Educations for UserId',
     nullable: true,
   })
-  readonly userIds?: string[];
+  readonly userId?: string;
 }
 
 const defaultFilters = {};
