@@ -18,14 +18,8 @@ export class EnvironmentService {
   constructor(
     @Logger('config:environment') private readonly logger: ILogger,
     @Optional() rootPath = process.cwd(),
-    @Optional() env = process.env.NODE_ENV
+    @Optional() env = process.env.NODE_ENV || 'development'
   ) {
-    if (!env) {
-      throw new Error(
-        'Env was not given and NODE_ENV environment variable is not set'
-      );
-    }
-
     // I think we have to load parent env by default
     // as pairs could be passed in instead of in env files
     this.env = pickBy(process.env) as Record<string, string>;
