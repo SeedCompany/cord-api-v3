@@ -215,7 +215,7 @@ describe('Region e2e', () => {
     }
   });
 
-  it('returns a list of regions', async () => {
+  it.skip('returns a list of regions', async () => {
     await Promise.all(
       ['Mainlandia', 'Eastern Mainlandia'].map(e =>
         createRegion(app, { name: e, directorId: director.id, zoneId: zone.id })

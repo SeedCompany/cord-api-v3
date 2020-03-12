@@ -182,7 +182,7 @@ describe('Country e2e', () => {
     }
   });
 
-  it('returns a list of countries', async () => {
+  it.skip('returns a list of countries', async () => {
     await Promise.all(
       ['Arendale', 'South Arendale'].map(e => createCountry(app, { name: e }))
     );
