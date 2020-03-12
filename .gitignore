@@ -1,13 +1,15 @@
 # compiled output
 /dist
 /node_modules
-schema.gql
+*.gql
+*.graphql
 package-lock.json
 
 # local configuration
 .env.local
 .env.*.local
 logging.yml
+docker-compose.override.yml
 
 # Logs
 logs
