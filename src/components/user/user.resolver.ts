@@ -18,7 +18,6 @@ import {
   UpdateUserInput,
   UpdateUserOutput,
   User,
-  UserEmailInput,
   UserListInput,
   UserListOutput,
 } from './dto';
@@ -70,14 +69,8 @@ export class UserResolver {
     description:
       'Check out whether a provided email exists or not in User Table',
   })
-  async checkEmail(
-    @Args({
-      name: 'input',
-      type: () => UserEmailInput,
-    })
-    input: UserEmailInput
-  ): Promise<boolean> {
-    return this.userService.checkEmail(input);
+  async checkEmail(@Args('email') email: string): Promise<boolean> {
+    return this.userService.checkEmail(email);
   }
 
   @ResolveProperty(() => SecuredUnavailabilityList)

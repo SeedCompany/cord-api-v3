@@ -12,7 +12,6 @@ import {
   CreateUser,
   UpdateUser,
   User,
-  UserEmailInput,
   UserListInput,
   UserListOutput,
 } from './dto';
@@ -120,7 +119,7 @@ export class UserService {
     };
   }
 
-  async checkEmail(input: UserEmailInput): Promise<boolean> {
+  async checkEmail(email: string): Promise<boolean> {
     const result = await this.db
       .query()
       .raw(
@@ -133,7 +132,7 @@ export class UserService {
         email.value as email
         `,
         {
-          email: input.email,
+          email: email,
         }
       )
       .first();
