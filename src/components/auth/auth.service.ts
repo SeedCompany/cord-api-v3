@@ -204,7 +204,8 @@ export class AuthService {
       .first();
 
     if (!result) {
-      throw new Error('Could not find email on database');
+      this.logger.warning('Email not found; Skipping reset email', { email });
+      return;
     }
 
     const token = this.encodeJWT();
@@ -217,39 +218,36 @@ export class AuthService {
       `,
         {
           value: email,
-          token: token,
+          token,
         }
       )
       .first();
-    const params = {
-      Destination: { ToAddresses: [email] },
-      Message: {
-        Body: {
-          Html: {
+    await this.ses
+      .sendEmail({
+        Destination: { ToAddresses: [email] },
+        Message: {
+          Subject: {
             Charset: 'UTF-8',
-            Data: `<html><body><p>This is your secret login code:</p>
+            Data: 'Forgot Password - CORD Field',
+          },
+          Body: {
+            Html: {
+              Charset: 'UTF-8',
+              Data: `<html><body><p>This is your secret login code:</p>
                           <a href="${this.config.resetPasswordURL}?token=${token}">Go to Login</a></body></html>`,
-          },
-          Text: {
-            Charset: 'UTF-8',
-            Data: `${this.config.resetPasswordURL}?token=${token}`,
+            },
+            Text: {
+              Charset: 'UTF-8',
+              Data: `${this.config.resetPasswordURL}?token=${token}`,
+            },
           },
         },
-        Subject: {
-          Charset: 'UTF-8',
-          Data: 'Forget Password - CORD Field',
-        },
-      },
-      Source: this.config.emailForm,
-    };
-
-    await this.ses.sendEmail(params).promise();
+        Source: this.config.emailFrom,
+      })
+      .promise();
   }
 
-  async resetPassword(input: ResetPasswordInput): Promise<void> {
-    const { token, password } = input;
-    const checkDate = new Date();
-
+  async resetPassword({ token, password }: ResetPasswordInput): Promise<void> {
     const result = await this.db
       .query()
       .raw(
@@ -262,33 +260,34 @@ export class AuthService {
         }
       )
       .first();
-
     if (!result) {
       throw new Error('Could not find token on database');
-    } else {
-      if (
-        Math.abs(
-          (checkDate.getTime() - Date.parse(result.createdOn)) / (1000 * 3600)
-        ) > 24
-      ) {
-        throw new Error('token has been expired');
-      }
-      await this.db
-        .query()
-        .raw(
-          `
-          MATCH(e:EmailToken{token: $token})
-          DELETE e WITH * OPTIONAL MATCH(:EmailAddress{active: true, value:$email})<-[:email{active:true}]-(user:User{active:true})-[:password{active:true}]->(password:Property{active:true})
-          SET password.value=$password return password
-          `,
-          {
-            token: token,
-            email: result.email,
-            password: password,
-          }
-        )
-        .first();
     }
+    const createdOn: DateTime = result.createdOn;
+
+    if (createdOn.diffNow().as('days') > 1) {
+      throw new Error('token has been expired');
+    }
+
+    await this.db
+      .query()
+      .raw(
+        `
+          MATCH(e:EmailToken {token: $token})
+          DELETE e
+          WITH *
+          OPTIONAL MATCH(:EmailAddress {active: true, value: $email})<-[:email {active: true}]-(user:User {active: true})
+                          -[:password {active: true}]->(password:Property {active: true})
+          SET password.value = $password
+          RETURN password
+        `,
+        {
+          token,
+          email: result.email,
+          password,
+        }
+      )
+      .first();
   }
 
   private encodeJWT() {

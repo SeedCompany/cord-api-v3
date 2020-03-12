@@ -16,9 +16,7 @@ export class ConfigService {
 
   jwtKey = this.env.string('JWT_AUTH_KEY').optional('cord-field');
 
-  emailForm = this.env.string('EMAIL_FORM').optional('noreply@cordfield.com');
-
-  awsRegion = this.env.string('AWS_REGION').optional('us-east-2');
+  emailFrom = this.env.string('EMAIL_FROM').optional('noreply@cordfield.com');
 
   resetPasswordURL = this.env
     .string('RESET_PASSWORD_URL')
