@@ -1,9 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
 import { times } from 'lodash';
 import { DateTime } from 'luxon';
-import { ILogger, Logger, PropertyUpdaterService } from '../../core';
+import { DatabaseService, ILogger, Logger } from '../../core';
 import { ISession } from '../auth';
 import { User } from '../user/dto';
 import {
@@ -24,9 +23,8 @@ import {
 @Injectable()
 export class LocationService {
   constructor(
-    private readonly db: Connection,
     @Logger('LocationService:service') private readonly logger: ILogger,
-    private readonly propertyUpdater: PropertyUpdaterService
+    private readonly db: DatabaseService
   ) {}
 
   async readOne(_id: string, _session: ISession): Promise<Location> {
@@ -154,7 +152,7 @@ export class LocationService {
     }
 
     try {
-      await this.propertyUpdater.deleteNode({
+      await this.db.deleteNode({
         session,
         object,
         aclEditProp: 'canDeleteOwnUser',

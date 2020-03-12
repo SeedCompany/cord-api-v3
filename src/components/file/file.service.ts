@@ -4,10 +4,9 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Connection } from 'cypher-query-builder';
 import { generate } from 'shortid';
 import { NotImplementedError } from '../../common';
-import { PropertyUpdaterService } from '../../core';
+import { DatabaseService } from '../../core';
 import { AuthService, ISession } from '../auth';
 import { UserService } from '../user';
 import {
@@ -30,11 +29,10 @@ import { S3Bucket } from './s3-bucket';
 @Injectable()
 export class FileService {
   constructor(
-    private readonly db: Connection,
     @Inject(FilesBucketToken) private readonly bucket: S3Bucket,
     private readonly userService: UserService,
     private readonly authService: AuthService,
-    private readonly propertyUpdater: PropertyUpdaterService
+    private readonly db: DatabaseService
   ) {}
 
   async getDirectory(id: string, session: ISession): Promise<Directory> {
@@ -144,7 +142,7 @@ export class FileService {
         type: FileNodeType.File,
       };
 
-      await this.propertyUpdater.createNode({
+      await this.db.createNode({
         session,
         input: { ...input },
         acls,

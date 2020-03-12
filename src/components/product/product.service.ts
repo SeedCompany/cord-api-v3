@@ -1,11 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { generate } from 'shortid';
-import {
-  DatabaseService,
-  ILogger,
-  Logger,
-  PropertyUpdaterService,
-} from '../../core';
+import { DatabaseService, ILogger, Logger } from '../../core';
 import { ISession } from '../auth';
 import { CreateProduct, Product, UpdateProduct } from './dto';
 
@@ -13,7 +8,6 @@ import { CreateProduct, Product, UpdateProduct } from './dto';
 export class ProductService {
   constructor(
     private readonly db: DatabaseService,
-    private readonly propertyUpdater: PropertyUpdaterService,
     @Logger('product:service') private readonly logger: ILogger
   ) {}
 
@@ -35,7 +29,7 @@ export class ProductService {
     };
 
     try {
-      await this.propertyUpdater.createNode({
+      await this.db.createNode({
         session,
         input: { id, ...input },
         acls,
@@ -125,7 +119,7 @@ export class ProductService {
   async update(input: UpdateProduct, session: ISession): Promise<Product> {
     const object = await this.readOne(input.id, session);
 
-    return this.propertyUpdater.updateProperties({
+    return this.db.updateProperties({
       session,
       object,
       props: [
@@ -149,7 +143,7 @@ export class ProductService {
     }
 
     try {
-      await this.propertyUpdater.deleteNode({
+      await this.db.deleteNode({
         session,
         object,
         aclEditProp: 'canDeleteOwnUser',

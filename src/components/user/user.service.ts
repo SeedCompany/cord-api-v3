@@ -1,8 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import * as argon2 from 'argon2';
-import { Connection } from 'cypher-query-builder';
 import { generate } from 'shortid';
-import { ILogger, Logger, OnIndex, PropertyUpdaterService } from '../../core';
+import { DatabaseService, ILogger, Logger, OnIndex } from '../../core';
 import { ISession } from '../auth';
 import {
   OrganizationListInput,
@@ -22,8 +21,7 @@ import {
 export class UserService {
   constructor(
     private readonly organizations: OrganizationService,
-    private readonly db: Connection,
-    private readonly propertyUpdater: PropertyUpdaterService,
+    private readonly db: DatabaseService,
     @Logger('user:service') private readonly logger: ILogger
   ) {}
 
@@ -67,7 +65,7 @@ export class UserService {
     { page, count, sort, order, filter }: UserListInput,
     session: ISession
   ): Promise<UserListOutput> {
-    const result = await this.propertyUpdater.list<User>({
+    const result = await this.db.list<User>({
       session,
       nodevar: 'user',
       aclReadProp: 'canReadUsers',
@@ -498,7 +496,7 @@ export class UserService {
   async update(input: UpdateUser, session: ISession): Promise<User> {
     const user = await this.readOne(input.id, session);
 
-    return this.propertyUpdater.updateProperties({
+    return this.db.updateProperties({
       session,
       object: user,
       props: [
@@ -518,7 +516,7 @@ export class UserService {
   async delete(id: string, session: ISession): Promise<void> {
     const user = await this.readOne(id, session);
     try {
-      await this.propertyUpdater.deleteNode({
+      await this.db.deleteNode({
         session,
         object: user,
         aclEditProp: 'canDeleteOwnUser',

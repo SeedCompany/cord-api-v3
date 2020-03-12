@@ -1,7 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Connection } from 'cypher-query-builder';
 import { generate } from 'shortid';
-import { ILogger, Logger, PropertyUpdaterService } from '../../../core';
+import { DatabaseService, ILogger, Logger } from '../../../core';
 import { ISession } from '../../auth';
 import {
   CreateUnavailability,
@@ -14,9 +13,8 @@ import {
 @Injectable()
 export class UnavailabilityService {
   constructor(
-    private readonly db: Connection,
     @Logger('UnavailabilityService:service') private readonly logger: ILogger,
-    private readonly propertyUpdater: PropertyUpdaterService
+    private readonly db: DatabaseService
   ) {}
 
   async create(
@@ -33,7 +31,7 @@ export class UnavailabilityService {
       canEditEnd: true,
     };
     try {
-      await this.propertyUpdater.createNode({
+      await this.db.createNode({
         session,
         input: { id, ...input },
         acls,
@@ -151,7 +149,7 @@ export class UnavailabilityService {
   ): Promise<Unavailability> {
     const unavailability = await this.readOne(input.id, session);
 
-    return this.propertyUpdater.updateProperties({
+    return this.db.updateProperties({
       session,
       object: unavailability,
       props: ['description', 'start', 'end'],
@@ -168,7 +166,7 @@ export class UnavailabilityService {
     if (!ua) {
       throw new NotFoundException('Unavailability not found');
     }
-    await this.propertyUpdater.deleteNode({
+    await this.db.deleteNode({
       session,
       object: ua,
       aclEditProp: 'canDeleteOwnUser',
@@ -179,7 +177,7 @@ export class UnavailabilityService {
     { page, count, sort, order, filter }: UnavailabilityListInput,
     session: ISession
   ): Promise<UnavailabilityListOutput> {
-    const result = await this.propertyUpdater.list<Unavailability>({
+    const result = await this.db.list<Unavailability>({
       session,
       nodevar: 'unavailability',
       aclReadProp: 'canReadUnavailabilityList',

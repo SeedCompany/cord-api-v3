@@ -1,9 +1,8 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import * as argon2 from 'argon2';
-import { Connection } from 'cypher-query-builder';
 import { sign, verify } from 'jsonwebtoken';
 import { DateTime } from 'luxon';
-import { ConfigService, ILogger, Logger } from '../../core';
+import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
 import { LoginInput } from './auth.dto';
 import { ISession } from './session';
 
@@ -14,7 +13,7 @@ interface JwtPayload {
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly db: Connection,
+    private readonly db: DatabaseService,
     private readonly config: ConfigService,
     @Logger('auth:service') private readonly logger: ILogger
   ) {}
