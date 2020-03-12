@@ -1,6 +1,11 @@
 import { Args, Mutation, Resolver } from '@nestjs/graphql';
 import { UserService } from '../user';
-import { CreateSessionOutput, LoginInput, LoginOutput } from './auth.dto';
+import {
+  CreateSessionOutput,
+  LoginInput,
+  LoginOutput,
+  ResetPasswordInput,
+} from './auth.dto';
 import { AuthService } from './auth.service';
 import { ISession, Session } from './session';
 
@@ -45,6 +50,24 @@ export class AuthResolver {
   })
   async logout(@Session() session: ISession): Promise<boolean> {
     await this.authService.logout(session.token);
+    return true;
+  }
+
+  @Mutation(() => Boolean, {
+    description: 'Forgot password; send password reset email',
+  })
+  async forgotPassword(@Args('email') email: string): Promise<boolean> {
+    await this.authService.forgotPassword(email);
+    return true;
+  }
+
+  @Mutation(() => Boolean, {
+    description: 'Reset Password',
+  })
+  async resetPassword(
+    @Args('input') input: ResetPasswordInput
+  ): Promise<boolean> {
+    await this.authService.resetPassword(input);
     return true;
   }
 }

@@ -1,7 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ForbiddenError } from 'apollo-server-core';
-import { Connection, contains, node, relation } from 'cypher-query-builder';
-import { upperFirst } from 'lodash';
+import {
+  Connection,
+  contains,
+  node,
+  Query,
+  relation,
+} from 'cypher-query-builder';
+import { cloneDeep, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   isSecured,
@@ -11,7 +17,7 @@ import {
   UnwrapSecured,
 } from '../../common';
 import { ISession } from '../../components/auth';
-import { ILogger, Logger } from '../../core';
+import { ILogger, Logger } from '..';
 
 interface ReadPropertyResult {
   value: any;
@@ -20,11 +26,15 @@ interface ReadPropertyResult {
 }
 
 @Injectable()
-export class PropertyUpdaterService {
+export class DatabaseService {
   constructor(
     private readonly db: Connection,
-    @Logger('PropertyUpdater:service') private readonly logger: ILogger
+    @Logger('database:service') private readonly logger: ILogger
   ) {}
+
+  query(): Query {
+    return this.db.query();
+  }
 
   async updateProperties<TObject extends Resource>({
     session,
@@ -338,11 +348,12 @@ export class PropertyUpdaterService {
       }
     }
 
+    // Clone the query here, before we apply limit/offsets, so that we can get an accurate aggregate of the total filtered result set
+    const countQuery = cloneDeep(query);
+    countQuery.return('count(n) as total');
+
     query
       .returnDistinct([
-        // return total count
-        'total',
-
         // return the ACL fields
         {
           requestingUser: [
@@ -369,8 +380,9 @@ export class PropertyUpdaterService {
       .limit(input.count);
 
     const result = await query.run();
+    const countResult = await countQuery.run();
 
-    const total = result.length ? result[0].total : 0;
+    const total = countResult[0]?.total || 0;
 
     // if skip + count is less than total, there is more
     const hasMore = (input.page - 1) * input.count + input.count < total;

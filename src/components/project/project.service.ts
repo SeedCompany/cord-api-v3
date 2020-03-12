@@ -2,12 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { Sensitivity } from '../../common';
-import {
-  DatabaseService,
-  ILogger,
-  Logger,
-  PropertyUpdaterService,
-} from '../../core';
+import { DatabaseService, ILogger, Logger } from '../../core';
 import { ISession } from '../auth';
 import {
   CreateProject,
@@ -23,7 +18,6 @@ import {
 export class ProjectService {
   constructor(
     private readonly db: DatabaseService,
-    private readonly propertyUpdater: PropertyUpdaterService,
     @Logger('project:service') private readonly logger: ILogger
   ) {}
 
@@ -177,7 +171,7 @@ export class ProjectService {
     { page, count, sort, order, filter }: ProjectListInput,
     session: ISession
   ): Promise<ProjectListOutput> {
-    const result = await this.propertyUpdater.list<Project>({
+    const result = await this.db.list<Project>({
       session,
       nodevar: 'project',
       aclReadProp: 'canReadProjects',
@@ -256,7 +250,7 @@ export class ProjectService {
     };
 
     try {
-      await this.propertyUpdater.createNode({
+      await this.db.createNode({
         session,
         input: createInput,
         acls,
@@ -304,7 +298,7 @@ export class ProjectService {
 
     // TODO: re-connect the locationId node when locations are hooked up
 
-    const result = await this.propertyUpdater.updateProperties({
+    const result = await this.db.updateProperties({
       session,
       object,
       props: [
@@ -330,7 +324,7 @@ export class ProjectService {
     }
 
     try {
-      await this.propertyUpdater.deleteNode({
+      await this.db.deleteNode({
         session,
         object,
         aclEditProp: 'canDeleteOwnUser',

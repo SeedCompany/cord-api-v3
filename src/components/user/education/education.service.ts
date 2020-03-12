@@ -1,7 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Connection } from 'cypher-query-builder';
 import { generate } from 'shortid';
-import { ILogger, Logger, PropertyUpdaterService } from '../../../core';
+import { DatabaseService, ILogger, Logger } from '../../../core';
 import { ISession } from '../../auth';
 import {
   CreateEducation,
@@ -14,16 +13,15 @@ import {
 @Injectable()
 export class EducationService {
   constructor(
-    private readonly db: Connection,
     @Logger('EducationService:service') private readonly logger: ILogger,
-    private readonly propertyUpdater: PropertyUpdaterService
+    private readonly db: DatabaseService
   ) {}
 
   async list(
     { page, count, sort, order, filter }: EducationListInput,
     session: ISession
   ): Promise<EducationListOutput> {
-    const result = await this.propertyUpdater.list<Education>({
+    const result = await this.db.list<Education>({
       session,
       nodevar: 'education',
       aclReadProp: 'canReadEducationList',
@@ -57,7 +55,7 @@ export class EducationService {
     };
 
     try {
-      await this.propertyUpdater.createNode({
+      await this.db.createNode({
         session,
         input: { id, ...input },
         acls,
@@ -169,7 +167,7 @@ export class EducationService {
   async update(input: UpdateEducation, session: ISession): Promise<Education> {
     const ed = await this.readOne(input.id, session);
 
-    return this.propertyUpdater.updateProperties({
+    return this.db.updateProperties({
       session,
       object: ed,
       props: ['degree', 'major', 'institution'],
@@ -181,7 +179,7 @@ export class EducationService {
   async delete(id: string, session: ISession): Promise<void> {
     const ed = await this.readOne(id, session);
     try {
-      await this.propertyUpdater.deleteNode({
+      await this.db.deleteNode({
         session,
         object: ed,
         aclEditProp: 'canDeleteOwnUser',

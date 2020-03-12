@@ -36,28 +36,24 @@ describe('User e2e', () => {
     await createUser(app, fakeUser);
     const existsEmailRes = await app.graphql.query(
       gql`
-        query checkEmail($input: UserEmailInput!) {
-          checkEmail(input: $input)
+        query checkEmail($email: String!) {
+          checkEmail(email: $email)
         }
       `,
       {
-        input: {
-          email: email,
-        },
+        email: email,
       }
     );
 
     const nonExistentEmail = faker.internet.email();
     const nonExistentEmailRes = await app.graphql.query(
       gql`
-        query checkEmail($input: UserEmailInput!) {
-          checkEmail(input: $input)
+        query checkEmail($email: String!) {
+          checkEmail(email: $email)
         }
       `,
       {
-        input: {
-          email: nonExistentEmail,
-        },
+        email: nonExistentEmail,
       }
     );
     expect(existsEmailRes.checkEmail).toBe(false);

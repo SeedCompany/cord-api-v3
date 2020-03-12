@@ -1,1 +1,19 @@
-.github/workflows/* @CarsonF
+# OPS
+/.github/workflows/ @CarsonF
+Dockerfile @CarsonF
+
+# Tooling
+tsconfig* @CarsonF
+.eslint* @CarsonF
+/eslint-local-rules.js @CarsonF
+/.prettierrc.yml @CarsonF
+/tools/ @CarsonF
+/scripts/ @CarsonF
+
+# API Schema
+*.dto.ts @CarsonF
+*.resolver.ts @CarsonF
+
+# Foundation
+/src/common/ @CarsonF
+/src/core/ @CarsonF

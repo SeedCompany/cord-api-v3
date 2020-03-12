@@ -1,7 +1,7 @@
 import { DiscoveryModule, DiscoveryService } from '@golevelup/nestjs-discovery';
 import { Module, OnModuleInit } from '@nestjs/common';
-import { Connection } from 'cypher-query-builder';
 import { ILogger, Logger } from '../../logger';
+import { DatabaseService } from '../database.service';
 import { DB_INDEX_KEY } from './indexer.constants';
 
 @Module({
@@ -9,7 +9,7 @@ import { DB_INDEX_KEY } from './indexer.constants';
 })
 export class IndexerModule implements OnModuleInit {
   constructor(
-    private readonly db: Connection,
+    private readonly db: DatabaseService,
     private readonly discover: DiscoveryService,
     @Logger('database:indexer') private readonly logger: ILogger
   ) {}
