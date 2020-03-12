@@ -1,5 +1,6 @@
 import { Type } from '@nestjs/common';
 import { DateTime } from 'luxon';
+import { MergeExclusive } from 'type-fest';
 import { Field, InterfaceType, ObjectType } from 'type-graphql';
 import {
   DateTimeField,
@@ -12,6 +13,8 @@ import { SecuredCountry } from '../../location';
 import { ProjectStatus } from './status.enum';
 import { SecuredProjectStep } from './step.enum';
 import { ProjectType } from './type.enum';
+
+export type AnyProject = MergeExclusive<TranslationProject, InternshipProject>;
 
 @InterfaceType({
   resolveType: (val: Project) => {

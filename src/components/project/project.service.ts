@@ -1,16 +1,28 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  NotImplementedException,
+} from '@nestjs/common';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { Sensitivity } from '../../common';
 import { DatabaseService, ILogger, Logger } from '../../core';
 import { ISession } from '../auth';
 import {
+  EngagementListInput,
+  SecuredInternshipEngagementList,
+  SecuredLanguageEngagementList,
+} from '../engagement/dto';
+import {
+  AnyProject,
   CreateProject,
+  InternshipProject,
   Project,
   ProjectListInput,
   ProjectListOutput,
   ProjectStep,
   stepToStatus,
+  TranslationProject,
   UpdateProject,
 } from './dto';
 
@@ -212,6 +224,25 @@ export class ProjectService {
     };
   }
 
+  async listEngagements(
+    project: TranslationProject,
+    input: EngagementListInput,
+    session: ISession
+  ): Promise<SecuredLanguageEngagementList>;
+  async listEngagements(
+    project: InternshipProject,
+    input: EngagementListInput,
+    session: ISession
+  ): Promise<SecuredInternshipEngagementList>;
+  async listEngagements(
+    _project: AnyProject,
+    _input: EngagementListInput,
+    _session: ISession
+  ): Promise<SecuredLanguageEngagementList | SecuredInternshipEngagementList> {
+    // Maybe call EngagementService?
+    throw new NotImplementedException();
+  }
+
   async create(
     { locationId, ...input }: CreateProject,
     session: ISession
@@ -276,7 +307,7 @@ export class ProjectService {
       //     .first();
       // }
 
-      return this.readOne(id, session);
+      return await this.readOne(id, session);
     } catch (e) {
       this.logger.warning(`Could not create project`, {
         exception: e,

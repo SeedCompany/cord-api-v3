@@ -12,7 +12,7 @@ import {
 } from './dto';
 import { ProjectService } from './project.service';
 
-@Resolver('Project')
+@Resolver()
 export class ProjectResolver {
   constructor(private readonly projectService: ProjectService) {}
 
