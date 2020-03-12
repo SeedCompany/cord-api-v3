@@ -6,27 +6,31 @@ Bible translation project management API.
 
 ## Setup
 
-1. Install [Neo4j Desktop](https://neo4j.com/download/) 
-1. Create a new database using the Neo4j Desktop GUI with the username and password shown in the environment variables below  
-1. Click the `plugins` tab on the new database management view and add the APOC plugin  
-1. Start the database   
-1. Set an environment variable: `export NODE_ENV=development`
-1. Setup the AWS Javscript [SDK](https://aws.amazon.com/sdk-for-node-js/). 
-1. Create a `.env.local` file in the root of the project with the following contents:
+### Docker
+
+API can be started directly with:
+
 ```
-NEO4J_USERNAME=neo4j
-NEO4J_URL=bolt://localhost
-NEO4J_PASSWORD=asdf
-JWT_AUTH_KEY=asdf
-FILES_S3_BUCKET=asdf
-PORT=3333
+docker-compose up
 ```
+
+### Local
+
+1. Install [Neo4j Desktop](https://neo4j.com/download/) or `brew cask install neo4j`
+1. Create & start a new database using the Neo4j Desktop GUI
+1. Create a `.env.local` file in the root of the project and specify your username and password used at database creation:
+   ```ini
+   NEO4J_USERNAME=neo4j
+   NEO4J_PASSWORD=asdf
+   ```
+1. Run `yarn` to install dependencies
 
 ## Usage
 
-Install: `yarn`  
 Develop: `yarn start:dev`  
 Test: `yarn test:e2e`  
+
+See scripts in package.json for other commands to run  
 
 ## Database Schema
 
@@ -35,15 +39,10 @@ Test: `yarn test:e2e`
 ## Other Docs
 
 [Nest.js](https://docs.nestjs.com/)  
-Neo4j javascript [driver](https://neo4j.com/developer/javascript/) and [api](https://neo4j.com/docs/api/javascript-driver/current/)  
-[Cypher Query Builder](https://jamesfer.me/cypher-query-builder/)  
-[GraphQL](https://graphql.org/learn/)
-[Cypher](https://neo4j.com/developer/cypher-basics-i/)
-
-
-See [argon2](https://www.npmjs.com/package/argon2) for more info on installing argon2.  
-
+[Cypher Query Builder](https://jamesfer.me/cypher-query-builder/index.html#querying)  
+[Cypher Syntax](https://neo4j.com/developer/cypher-basics-i/)  
+[GraphQL](https://graphql.org/learn/)  
 
 ## License
 
-  CORD is [MIT licensed](LICENSE).
+CORD is [MIT licensed](LICENSE).
