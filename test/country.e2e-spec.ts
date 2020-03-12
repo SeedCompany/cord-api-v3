@@ -200,7 +200,6 @@ describe('Country e2e', () => {
       ${fragments.country}
     `);
 
-
     expect(locations.items.length).toBeGreaterThanOrEqual(2);
   });
 });
