@@ -375,7 +375,7 @@ export class UserService {
   }
 
   async readOne(id: string, session: ISession): Promise<User> {
-    const result = await this.propertyUpdater.readProperties({
+    const result = await this.db.readProperties({
       id,
       session,
       props: [

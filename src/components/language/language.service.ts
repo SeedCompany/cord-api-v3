@@ -65,7 +65,7 @@ export class LanguageService {
       `Query readOne Language: id ${langId} by ${session.userId}`
     );
 
-    const result = await this.propertyUpdater.readProperties({
+    const result = await this.db.readProperties({
       session,
       id: langId,
       props: [
