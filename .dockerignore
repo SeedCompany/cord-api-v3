@@ -1,12 +1,19 @@
-.github
-.idea
-dist
+# Versioned but ignore
 docs
-node_modules
-.dockerignore
-.git
-.gitignore
-.cache
+scripts
+tools
+.*
+buildspec.yml
+eslint-local-rules.js
+docker-compose.*
+Dockerfile
 README*
-create_image.sh
-cord-api-v3
+*example*
+
+# Local
+dist
+node_modules
+coverage
+logging.yml
+*.gql
+*.graphql
