@@ -5,11 +5,12 @@ import { PaginatedList } from './pagination-list';
 import { Readable } from './readable.interface';
 import { AbstractClassType } from './types';
 
-export function SecuredList<T>(
-  ItemClass: ClassType<T> | AbstractClassType<T> | GraphQLScalarType
+export function SecuredList<Type, ListItem = Type>(
+  ItemClass: ClassType<Type> | AbstractClassType<Type> | GraphQLScalarType
 ) {
   @ObjectType({ isAbstract: true, implements: [Readable] })
-  abstract class SecuredListClass extends PaginatedList<T>(ItemClass)
+  abstract class SecuredListClass
+    extends PaginatedList<Type, ListItem>(ItemClass)
     implements Readable {
     @Field({
       description: 'Whether the current user can read the list of items',
