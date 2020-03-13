@@ -12,6 +12,7 @@
     "build": "nest build",
     "docker:build": "scripts/docker-build.sh",
     "docker:run": "scripts/docker-run.sh",
+    "docker:test": "scripts/docker-run.sh yarn test:e2e --runInBand",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
