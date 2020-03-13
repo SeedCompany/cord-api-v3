@@ -92,18 +92,26 @@ describe('Region e2e', () => {
           updateRegion(input: $input) {
             region {
               ...region
+              director {
+                value {
+                  ...user
+                }
+                canEdit
+                canRead
+              }
               zone {
                 value {
                   ...zone
                 }
-                canRead
                 canEdit
+                canRead
               }
             }
           }
         }
         ${fragments.region}
         ${fragments.zone}
+        ${fragments.user}
       `,
       {
         input: {
@@ -215,10 +223,15 @@ describe('Region e2e', () => {
     }
   });
 
-  it.skip('returns a list of regions', async () => {
+  it.only('returns a list of regions', async () => {
+    // create 2 regions with similar names
     await Promise.all(
-      ['Mainlandia', 'Eastern Mainlandia'].map(e =>
-        createRegion(app, { name: e, directorId: director.id, zoneId: zone.id })
+      ['Western Mainlandia', 'Eastern Mainlandia'].map(regionName =>
+        createRegion(app, {
+          name: regionName,
+          directorId: director.id,
+          zoneId: zone.id,
+        })
       )
     );
 
