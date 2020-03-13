@@ -3,7 +3,9 @@ import { DateTime } from 'luxon';
 import { Field, ObjectType } from 'type-graphql';
 import { Resource, SecuredProperty, SecuredString } from '../../../common';
 
-@ObjectType()
+@ObjectType({
+  implements: [Resource],
+})
 export class User extends Resource {
   /* TS wants a public constructor for "ClassType" */
   static classType = (User as any) as Type<User>;

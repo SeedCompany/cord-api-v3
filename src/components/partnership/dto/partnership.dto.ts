@@ -25,7 +25,9 @@ export abstract class SecuredPartnershipTypes extends SecuredPropertyList(
   PartnershipType
 ) {}
 
-@ObjectType()
+@ObjectType({
+  implements: [Resource],
+})
 export class Partnership extends Resource {
   @Field()
   readonly agreementStatus: SecuredPartnershipAgreementStatus;

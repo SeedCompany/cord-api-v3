@@ -92,7 +92,9 @@ export class Directory extends FileNode {
   readonly createdBy: User;
 }
 
-@ObjectType()
+@ObjectType({
+  implements: [Resource],
+})
 export class FileVersion extends Resource {
   @Field({
     description: 'The user who created this file version',
