@@ -1,11 +1,8 @@
 import { DateTime } from 'luxon';
-import { Field, ID, InterfaceType, ObjectType } from 'type-graphql';
+import { Field, ID, InterfaceType } from 'type-graphql';
 import { DateTimeField } from './luxon.graphql';
 
 @InterfaceType()
-@ObjectType({
-  isAbstract: true,
-})
 export abstract class Resource {
   @Field(() => ID)
   readonly id: string;

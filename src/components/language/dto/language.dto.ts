@@ -2,6 +2,7 @@ import { Field, ObjectType } from 'type-graphql';
 import {
   Resource,
   SecuredInt,
+  SecuredProperty,
   SecuredString,
   Sensitivity,
 } from '../../../common';
@@ -34,3 +35,8 @@ export class Language extends Resource {
   @Field(() => Sensitivity)
   readonly sensitivity: Sensitivity;
 }
+
+@ObjectType({
+  description: SecuredProperty.descriptionFor('a language'),
+})
+export class SecuredLanguage extends SecuredProperty(Language) {}

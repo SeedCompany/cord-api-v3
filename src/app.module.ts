@@ -10,17 +10,14 @@ import { AuthModule } from './components/auth';
 import { BudgetResolver } from './components/budget/budget.resolver';
 import { BudgetService } from './components/budget/budget.service';
 import { CeremonyModule } from './components/cermony';
+import { EngagementModule } from './components/engagement';
 import { FileModule } from './components/file';
-import { InternshipEngagementResolver } from './components/internship-engagement/internship-engagement.resolver';
-import { InternshipEngagementService } from './components/internship-engagement/internship-engagement.service';
 import { LanguageModule } from './components/language';
 import { LocationModule } from './components/location';
 import { OrganizationModule } from './components/organization';
 import { PartnershipModule } from './components/partnership';
 import { ProductModule } from './components/product';
 import { ProjectModule } from './components/project';
-import { ProjectEngagementResolver } from './components/project-engagement/project-engagement.resolver';
-import { ProjectEngagementService } from './components/project-engagement/project-engagement.service';
 import { UserModule } from './components/user';
 import { CoreModule, LoggerModule } from './core';
 
@@ -45,6 +42,7 @@ const context: ContextFunction<
     CeremonyModule,
     FileModule,
     LanguageModule,
+    EngagementModule,
     ProductModule,
     ProjectModule,
     LocationModule,
@@ -60,10 +58,6 @@ const context: ContextFunction<
     BudgetService,
     DateTimeScalar,
     DateScalar,
-    InternshipEngagementResolver,
-    InternshipEngagementService,
-    ProjectEngagementResolver,
-    ProjectEngagementService,
   ],
 })
 export class AppModule {}

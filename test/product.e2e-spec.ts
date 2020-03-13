@@ -1,5 +1,5 @@
 import { gql } from 'apollo-server-core';
-import { Product } from '../src/components/product/product';
+import { Product } from '../src/components/product';
 import {
   createSession,
   createTestApp,

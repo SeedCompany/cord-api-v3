@@ -3,12 +3,12 @@ import { GraphQLScalarType } from 'graphql';
 import { ClassType, Field, Int, ObjectType } from 'type-graphql';
 import { AbstractClassType } from './types';
 
-interface ListOptions {
+export interface ListOptions {
   itemsDescription?: string;
 }
 
-export function PaginatedList<T>(
-  ItemClass: ClassType<T> | AbstractClassType<T> | GraphQLScalarType,
+export function PaginatedList<Type, ListItem = Type>(
+  ItemClass: ClassType<Type> | AbstractClassType<Type> | GraphQLScalarType,
   options: ListOptions = {}
 ) {
   @ObjectType({ isAbstract: true })
@@ -18,7 +18,7 @@ export function PaginatedList<T>(
         options.itemsDescription ||
         PaginatedList.itemDescriptionFor(ItemClass.name.toLowerCase()),
     })
-    readonly items: readonly T[];
+    readonly items: readonly ListItem[];
 
     @Field(() => Int, {
       description: 'The total number of items across all pages',

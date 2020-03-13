@@ -1,5 +1,28 @@
-import { Resolver } from '@nestjs/graphql';
+import { Args, Parent, ResolveProperty, Resolver } from '@nestjs/graphql';
+import { ISession, Session } from '../auth';
+import {
+  EngagementListInput,
+  SecuredInternshipEngagementList,
+} from '../engagement/dto';
 import { InternshipProject } from './dto';
+import { ProjectService } from './project.service';
 
 @Resolver(InternshipProject.classType)
-export class InternshipProjectResolver {}
+export class InternshipProjectResolver {
+  constructor(private readonly projects: ProjectService) {}
+
+  @ResolveProperty(() => SecuredInternshipEngagementList)
+  async engagements(
+    @Parent() project: InternshipProject,
+    @Session() session: ISession,
+    @Args({
+      name: 'input',
+      type: () => EngagementListInput,
+      nullable: true,
+      defaultValue: EngagementListInput.defaultVal,
+    })
+    input: EngagementListInput
+  ): Promise<SecuredInternshipEngagementList> {
+    return this.projects.listEngagements(project, input, session);
+  }
+}

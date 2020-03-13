@@ -20,7 +20,9 @@ export abstract class SecuredDegree extends SecuredProperty<string>(
   GraphQLString
 ) {}
 
-@ObjectType()
+@ObjectType({
+  implements: [Resource],
+})
 export class Education extends Resource {
   @Field()
   readonly degree: SecuredDegree;

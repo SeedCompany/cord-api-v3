@@ -1,12 +1,7 @@
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { Field, InputType, ObjectType } from 'type-graphql';
-import {
-  PaginatedList,
-  SecuredList,
-  SecuredProperty,
-  SortablePaginationInput,
-} from '../../../common';
+import { PaginatedList, SortablePaginationInput } from '../../../common';
 import { Ceremony } from './ceremony.dto';
 import { CeremonyType } from './type.enum';
 
@@ -37,13 +32,3 @@ export class CeremonyListInput extends SortablePaginationInput<
 
 @ObjectType()
 export class CeremonyListOutput extends PaginatedList(Ceremony) {}
-
-@ObjectType({
-  description: SecuredList.descriptionFor('ceremonies'),
-})
-export abstract class SecuredCeremonyList extends SecuredList(Ceremony) {}
-
-@ObjectType({
-  description: SecuredProperty.descriptionFor('a ceremony'),
-})
-export abstract class SecuredCeremony extends SecuredProperty(Ceremony) {}

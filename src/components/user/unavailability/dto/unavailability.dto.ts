@@ -6,7 +6,9 @@ import {
   SecuredString,
 } from '../../../../common';
 
-@ObjectType()
+@ObjectType({
+  implements: [Resource],
+})
 export class Unavailability extends Resource {
   @Field()
   readonly description: SecuredString;
