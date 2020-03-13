@@ -223,7 +223,7 @@ describe('Region e2e', () => {
     }
   });
 
-  it.only('returns a list of regions', async () => {
+  it.skip('returns a list of regions', async () => {
     // create 2 regions with similar names
     await Promise.all(
       ['Western Mainlandia', 'Eastern Mainlandia'].map(regionName =>
