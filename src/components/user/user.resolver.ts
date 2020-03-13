@@ -21,10 +21,7 @@ import {
   UserListInput,
   UserListOutput,
 } from './dto';
-import {
-  EducationListInput,
-  SecuredEducationList,
-} from './education';
+import { EducationListInput, SecuredEducationList } from './education';
 import {
   SecuredUnavailabilityList,
   UnavailabilityListInput,
@@ -33,9 +30,7 @@ import { UserService } from './user.service';
 
 @Resolver(User.classType)
 export class UserResolver {
-  constructor(
-    private readonly userService: UserService,
-  ) {}
+  constructor(private readonly userService: UserService) {}
 
   @Query(() => User, {
     description: 'Look up a user by its ID',

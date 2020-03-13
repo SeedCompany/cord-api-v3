@@ -11,7 +11,7 @@ import { Unavailability } from './unavailability.dto';
 
 @InputType()
 export abstract class UnavailabilityFilters {
-  @Field(() => ID,{
+  @Field(() => ID, {
     description: 'Unavailabilities for UserId',
     nullable: true,
   })

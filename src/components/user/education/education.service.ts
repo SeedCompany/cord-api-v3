@@ -64,11 +64,14 @@ export class EducationService {
       });
     } catch (e) {
       console.log(e);
-      this.logger.error(`Could not create education for user`);
+      this.logger.error(`Could not create education for user `, {
+        id,
+        userId: input.userId,
+      });
       throw new Error('Could not create education');
     }
 
-    this.logger.info(`Created user education`);
+    this.logger.info(`Created user education`, { id, userId: input.userId });
 
     // connect the Education to the User.
     const query = `

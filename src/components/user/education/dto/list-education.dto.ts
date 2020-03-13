@@ -10,7 +10,7 @@ import { Education } from './education.dto';
 
 @InputType()
 export abstract class EducationFilters {
-  @Field(() => ID,{
+  @Field(() => ID, {
     description: 'Educations for UserId',
     nullable: true,
   })
