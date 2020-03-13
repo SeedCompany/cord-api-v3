@@ -7,9 +7,7 @@ import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { DatabaseService, ILogger, Logger } from '../../core';
 import { ISession } from '../auth';
-import { UserService } from '../user';
-import { User } from '../user/dto';
-import { RedactedUser } from '../user/dto/user.dto';
+import { RedactedUser, User, UserService } from '../user';
 import {
   Country,
   CreateCountry,
