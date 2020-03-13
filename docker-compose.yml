@@ -4,6 +4,9 @@ services:
   api:
     # Use dev target locally since there's no need to save space and contains everything
     image: cord-api-v3:dev
+    build:
+      context: .
+      target: dev
     # wait for db to be ready before running command
     entrypoint: [wait-for, -q, db:7687, --]
     command: yarn start:prod
