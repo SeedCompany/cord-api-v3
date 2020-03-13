@@ -229,6 +229,10 @@ export class UserService {
     // ensure token doesn't have any users attached to it
     // await this.logout(session.token);
 
+    const id = generate();
+    const pash = await argon2.hash(input.password);
+    const createdAt = DateTime.local().toNeo4JDateTime();
+
     // helper method for defining properties
     const property = (prop: string, value: any) => {
       if (!value) {
@@ -236,21 +240,19 @@ export class UserService {
       }
 
       return [
-        node('user'),
-        relation('out', '', prop, {
-          active: true,
-          createdAt,
-        }),
-        node(prop, 'Property', {
-          active: true,
-          value,
-        }),
+        [
+          node('user'),
+          relation('out', '', prop, {
+            active: true,
+            createdAt,
+          }),
+          node(prop, 'Property', {
+            active: true,
+            value,
+          }),
+        ],
       ];
     };
-
-    const id = generate();
-    const pash = await argon2.hash(input.password);
-    const createdAt = DateTime.local().toNeo4JDateTime();
 
     await this.db
       .query()
@@ -307,14 +309,14 @@ export class UserService {
           }),
           node('token'),
         ],
-        property('password', pash),
-        property('realFirstName', input.realFirstName),
-        property('realLastName', input.realLastName),
-        property('displayFirstName', input.displayFirstName),
-        property('displayLastName', input.displayLastName),
-        property('phone', input.phone),
-        property('timezone', input.timezone),
-        property('bio', input.bio),
+        ...property('password', pash),
+        ...property('realFirstName', input.realFirstName),
+        ...property('realLastName', input.realLastName),
+        ...property('displayFirstName', input.displayFirstName),
+        ...property('displayLastName', input.displayLastName),
+        ...property('phone', input.phone),
+        ...property('timezone', input.timezone),
+        ...property('bio', input.bio),
         [
           node('user'),
           relation('in', '', 'member'),
