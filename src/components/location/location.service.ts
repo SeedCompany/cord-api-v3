@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { DatabaseService, ILogger, Logger } from '../../core';
 import { ISession } from '../auth';
@@ -195,13 +196,13 @@ export class LocationService {
       throw new NotFoundException('Could not find zone');
     }
 
+    if (!result.canReadZone) {
+      throw new Error('User does not have permission to read this zone');
+    }
+
     let director: User = RedactedUser;
     if (result.canReadDirector) {
       director = await this.userService.readOne(result.directorId, session);
-    }
-
-    if (!result.canReadZone) {
-      throw new Error('User does not have permission to read this zone');
     }
 
     return {
@@ -220,7 +221,10 @@ export class LocationService {
     };
   }
 
-  async createZone(input: CreateZone, session: ISession): Promise<Zone> {
+  async createZone(
+    { directorId, ...input }: CreateZone,
+    session: ISession
+  ): Promise<Zone> {
     const id = generate();
     const acls = {
       canReadZone: true,
@@ -252,7 +256,7 @@ export class LocationService {
         .query()
         .raw(query, {
           userId: session.userId,
-          directorId: input.directorId,
+          directorId,
           id,
         })
         .first();
@@ -313,7 +317,7 @@ export class LocationService {
       .first();
 
     if (!result) {
-      this.logger.error(`Could not find region ${id}`);
+      this.logger.error(`Could not find region`);
       throw new NotFoundException('Could not find region');
     }
 
@@ -327,7 +331,15 @@ export class LocationService {
     }
 
     // fill in the zone id
-    const zone = await this.readOneZone(result.zoneId, session);
+    let zone: Zone = {
+      id: '',
+      createdAt: DateTime.fromSeconds(0),
+      name: { value: '', canRead: false, canEdit: false },
+      director: { value: RedactedUser, canRead: false, canEdit: false },
+    };
+    if (result.canReadZone) {
+      zone = await this.readOneZone(result.zoneId, session);
+    }
 
     return {
       id: result.id,
@@ -355,7 +367,7 @@ export class LocationService {
   }
 
   async createRegion(
-    { zoneId, ...input }: CreateRegion,
+    { zoneId, directorId, ...input }: CreateRegion,
     session: ISession
   ): Promise<Region> {
     const id = generate();
@@ -398,7 +410,7 @@ export class LocationService {
           .raw(query, {
             zoneId,
             id,
-            directorId: input.directorId,
+            directorId,
           })
           .first();
       }
@@ -469,7 +481,25 @@ export class LocationService {
       throw new Error('User does not have permission to read this country');
     }
 
-    const region = await this.readOneRegion(result.regionId, session);
+    let region: Region = {
+      id: '',
+      createdAt: DateTime.fromSeconds(0),
+      name: { value: '', canRead: false, canEdit: false },
+      director: { value: RedactedUser, canRead: false, canEdit: false },
+      zone: {
+        canRead: false,
+        canEdit: false,
+        value: {
+          id: '',
+          createdAt: DateTime.fromSeconds(0),
+          name: { value: '', canRead: false, canEdit: false },
+          director: { value: RedactedUser, canRead: false, canEdit: false },
+        },
+      },
+    };
+    if (result.canReadRegion) {
+      region = await this.readOneRegion(result.regionId, session);
+    }
 
     return {
       id: result.id,
@@ -637,8 +667,8 @@ export class LocationService {
             }),
             (newZone:Zone {id: $zoneId, active: true}),
             (region:Region {id: $id, active: true})-[rel:zone {active: true}]->(oldZone:Zone)
-          CREATE (newZone)<-[:zone {active: true, createdAt: datetime()}]-(region)
           DELETE rel
+          CREATE (newZone)<-[:zone {active: true, createdAt: datetime()}]-(region)
           RETURN  region.id as id
         `;
 
@@ -689,7 +719,6 @@ export class LocationService {
             (country:Country {id: $id, active: true})-[rel:region {active: true}]->(oldZone:Region)
           DELETE rel
           CREATE (newRegion)<-[:region {active: true, createdAt: datetime()}]-(country)
-
           RETURN  country.id as id
         `;
 
@@ -734,14 +763,14 @@ export class LocationService {
           id: $requestingUserId,
           canDeleteLocation: true
         }),
-        (object {
+        (place {
           active: true,
           id: $id
         })
         SET
-          object.active = false
+          place.active = false
         RETURN
-          object.id as id
+          place.id as id
         `,
           {
             id,
