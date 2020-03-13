@@ -39,15 +39,17 @@ export class UnavailabilityService {
         aclEditProp: 'canCreateUnavailability',
       });
     } catch {
-      this.logger.error(
-        `Could not create unavailability for user ${input.userId}`
-      );
+      this.logger.error(`Could not create unavailability`, {
+        id,
+        userId: input.userId,
+      });
       throw new Error('Could not create unavailability');
     }
 
-    this.logger.info(
-      `unavailability for user ${input.userId} created, id ${id}`
-    );
+    this.logger.info(`Created user unavailability`, {
+      id,
+      userId: input.userId,
+    });
 
     // connect the Unavailability to the User.
 
@@ -159,9 +161,7 @@ export class UnavailabilityService {
   }
 
   async delete(id: string, session: ISession): Promise<void> {
-    this.logger.info(
-      `mutation delete unavailability: ${id} by ${session.userId}`
-    );
+    this.logger.info(`mutation delete unavailability`);
     const ua = await this.readOne(id, session);
     if (!ua) {
       throw new NotFoundException('Unavailability not found');

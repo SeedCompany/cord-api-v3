@@ -21,27 +21,16 @@ import {
   UserListInput,
   UserListOutput,
 } from './dto';
-import {
-  EducationListInput,
-  EducationListOutput,
-  EducationService,
-  SecuredEducationList,
-} from './education';
+import { EducationListInput, SecuredEducationList } from './education';
 import {
   SecuredUnavailabilityList,
   UnavailabilityListInput,
-  UnavailabilityListOutput,
-  UnavailabilityService,
 } from './unavailability';
 import { UserService } from './user.service';
 
 @Resolver(User.classType)
 export class UserResolver {
-  constructor(
-    private readonly userService: UserService,
-    private readonly educationService: EducationService,
-    private readonly unavailabilityService: UnavailabilityService
-  ) {}
+  constructor(private readonly userService: UserService) {}
 
   @Query(() => User, {
     description: 'Look up a user by its ID',
@@ -83,9 +72,8 @@ export class UserResolver {
       defaultValue: UnavailabilityListInput.defaultVal,
     })
     input: UnavailabilityListInput
-  ): Promise<UnavailabilityListOutput> {
-    input = { ...input, filter: { userId: id } };
-    return this.unavailabilityService.list(input, session);
+  ): Promise<SecuredUnavailabilityList> {
+    return this.userService.listUnavailabilities(id, input, session);
   }
 
   @ResolveProperty(() => SecuredOrganizationList)
@@ -112,9 +100,8 @@ export class UserResolver {
       defaultValue: EducationListInput.defaultVal,
     })
     input: EducationListInput
-  ): Promise<EducationListOutput> {
-    input = { ...input, filter: { userId: id } };
-    return this.educationService.list(input, session);
+  ): Promise<SecuredEducationList> {
+    return this.userService.listEducations(id, input, session);
   }
 
   @Mutation(() => CreateUserOutput, {
