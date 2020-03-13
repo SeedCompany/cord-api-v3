@@ -237,7 +237,6 @@ export class DatabaseService {
       .run()) as ReadPropertyResult[];
 
     if (!result.length) {
-      if (nodevar === 'lang') console.info('QUERY', query, aclReadProp);
       throw new NotFoundException('Could not find requested key');
     }
 
