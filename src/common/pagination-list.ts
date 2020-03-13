@@ -3,7 +3,7 @@ import { GraphQLScalarType } from 'graphql';
 import { ClassType, Field, Int, ObjectType } from 'type-graphql';
 import { AbstractClassType } from './types';
 
-interface ListOptions {
+export interface ListOptions {
   itemsDescription?: string;
 }
 

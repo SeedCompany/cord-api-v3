@@ -1,16 +1,17 @@
 import { stripIndent } from 'common-tags';
 import { GraphQLScalarType } from 'graphql';
 import { ClassType, Field, ObjectType } from 'type-graphql';
-import { PaginatedList } from './pagination-list';
+import { ListOptions, PaginatedList } from './pagination-list';
 import { Readable } from './readable.interface';
 import { AbstractClassType } from './types';
 
 export function SecuredList<Type, ListItem = Type>(
-  ItemClass: ClassType<Type> | AbstractClassType<Type> | GraphQLScalarType
+  ItemClass: ClassType<Type> | AbstractClassType<Type> | GraphQLScalarType,
+  options: ListOptions = {}
 ) {
   @ObjectType({ isAbstract: true, implements: [Readable] })
   abstract class SecuredListClass
-    extends PaginatedList<Type, ListItem>(ItemClass)
+    extends PaginatedList<Type, ListItem>(ItemClass, options)
     implements Readable {
     @Field({
       description: 'Whether the current user can read the list of items',
