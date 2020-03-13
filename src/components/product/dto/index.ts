@@ -7,3 +7,4 @@ export * from './product-type';
 export * from './create-product.dto';
 export * from './product.dto';
 export * from './update-product.dto';
+export * from './list-product.dto';

@@ -2,7 +2,13 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { generate } from 'shortid';
 import { DatabaseService, ILogger, Logger } from '../../core';
 import { ISession } from '../auth';
-import { CreateProduct, Product, UpdateProduct } from './dto';
+import {
+  CreateProduct,
+  Product,
+  ProductListInput,
+  ProductListOutput,
+  UpdateProduct,
+} from './dto';
 
 @Injectable()
 export class ProductService {
@@ -48,71 +54,68 @@ export class ProductService {
   }
 
   async readOne(id: string, session: ISession): Promise<Product> {
-    const result = await this.db
-      .query()
-      .raw(
-        `
-        MATCH
-        (token:Token {
-          active: true,
-          value: $token
-        })
-          <-[:token {active: true}]-
-        (requestingUser:User {
-          active: true,
-          id: $requestingUserId,
-          owningOrgId: $owningOrgId
-        }),
-        (prod:Product {active: true, id: $id})
+    const result = await this.db.readProperties({
+      session,
+      id,
+      nodevar: 'product',
+      props: [
+        'id',
+        'createdAt',
+        'type',
+        'books',
+        'mediums',
+        'purposes',
+        'approach',
+        'methodology',
+      ],
+    });
 
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl1:ACL {canReadType: true})-[:toNode]->(prod)-[:type {active: true}]->(type:Property {active: true})
-
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl2:ACL {canReadBooks: true})-[:toNode]->(prod)-[:books {active: true}]->(books:Property {active: true})
-
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl3:ACL {canReadMediums: true})-[:toNode]->(prod)-[:mediums {active: true}]->(mediums:Property {active: true})
-
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl4:ACL {canReadPurposes: true})-[:toNode]->(prod)-[:purposes {active: true}]->(purposes:Property {active: true})
-
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl5:ACL {canReadApproach: true})-[:toNode]->(prod)-[:approach {active: true}]->(approach:Property {active: true})
-
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl6:ACL {canReadMethodology: true})-[:toNode]->(prod)-[:methodology {active: true}]->(methodology:Property {active: true})
-        RETURN
-          prod.id as id,
-          prod.createdAt as createdAt,
-          type.value as type,
-          books.value as books,
-          mediums.value as mediums,
-          purposes.value as purposes,
-          approach.value as approach,
-          methodology.value as methodology,
-          acl1.canReadType as canReadType,
-          acl2.canReadBooks as canReadBooks,
-          acl3.canReadMediums as canReadMediums,
-          acl4.canReadPurposes as canReadPurposes,
-          acl5.canReadApproach as canReadApproach,
-          acl6.canReadMethodology as canReadMethodology
-        `,
-        {
-          token: session.token,
-          requestingUserId: session.userId,
-          owningOrgId: session.owningOrgId,
-          id,
-        }
-      )
-      .first();
     if (!result) {
       throw new NotFoundException('Could not find product');
     }
 
     return {
       id,
-      createdAt: result.createdAt,
-      type: result.type,
-      books: result.books.split(','),
-      mediums: result.mediums.split(','),
-      purposes: result.purposes.split(','),
-      approach: result.approach,
-      methodology: result.methodology,
+      createdAt: result.createdAt.value,
+      type: result.type.value,
+      books: result.books?.value?.split(',') || [],
+      mediums: result.mediums?.value?.split(',') || [],
+      purposes: result.purposes?.value?.split(',') || [],
+      approach: result.approach.value,
+      methodology: result.methodology.value,
+    };
+  }
+
+  async list(
+    { page, count, sort, order, filter }: ProductListInput,
+    session: ISession
+  ): Promise<ProductListOutput> {
+    const result = await this.db.list<Product>({
+      session,
+      nodevar: 'product',
+      aclReadProp: 'canReadProducts',
+      aclEditProp: 'canCreateProduct',
+      props: [
+        { name: 'type', secure: false },
+        { name: 'books', secure: false, list: true },
+        { name: 'mediums', secure: false, list: true },
+        { name: 'purposes', secure: false, list: true },
+        { name: 'approach', secure: false },
+        { name: 'methodology', secure: false },
+      ],
+      input: {
+        page,
+        count,
+        sort,
+        order,
+        filter,
+      },
+    });
+
+    return {
+      items: result.items,
+      hasMore: result.hasMore,
+      total: result.total,
     };
   }
 

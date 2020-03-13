@@ -5,6 +5,8 @@ import {
   CreateProductInput,
   CreateProductOutput,
   Product,
+  ProductListInput,
+  ProductListOutput,
   UpdateProductInput,
   UpdateProductOutput,
 } from './dto';
@@ -22,6 +24,21 @@ export class ProductResolver {
     @IdArg() id: string
   ): Promise<Product> {
     return await this.productService.readOne(id, session);
+  }
+
+  @Query(() => ProductListOutput, {
+    description: 'Look up products',
+  })
+  async products(
+    @Session() session: ISession,
+    @Args({
+      name: 'input',
+      type: () => ProductListInput,
+      defaultValue: ProductListInput.defaultVal,
+    })
+    input: ProductListInput
+  ): Promise<ProductListOutput> {
+    return this.productService.list(input, session);
   }
 
   @Mutation(() => CreateProductOutput, {
