@@ -1,20 +1,29 @@
 import { gql } from 'apollo-server-core';
 import { isValid } from 'shortid';
-import { CreateProductRaw, Product } from '../../src/components/product';
+import {
+  CreateProduct,
+  Product,
+  ProductApproach,
+  ProductMedium,
+  ProductMethodology,
+  ProductPurpose,
+  ProductType,
+} from '../../src/components/product';
+import { BibleBook } from '../../src/components/product/dto/bible-book';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
 
 export async function createProduct(
   app: TestApp,
-  input: Partial<CreateProductRaw> = {}
+  input: Partial<CreateProduct> = {}
 ) {
-  const product: CreateProductRaw = {
-    type: 'BibleStories',
-    books: ['Genesis'],
-    mediums: ['Print'],
-    purposes: ['ChurchLife'],
-    approach: 'Written',
-    methodology: 'Paratext',
+  const product: CreateProduct = {
+    type: ProductType.BibleStories,
+    books: [BibleBook.Genesis],
+    mediums: [ProductMedium.Print],
+    purposes: [ProductPurpose.ChurchLife],
+    approach: ProductApproach.Written,
+    methodology: ProductMethodology.Paratext,
     ...input,
   };
 

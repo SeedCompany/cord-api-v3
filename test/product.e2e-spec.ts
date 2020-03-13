@@ -1,5 +1,6 @@
 import { gql } from 'apollo-server-core';
-import { Product } from '../src/components/product';
+import { times } from 'lodash';
+import { Product, ProductType } from '../src/components/product';
 import {
   createSession,
   createTestApp,
@@ -107,7 +108,36 @@ describe('Product e2e', () => {
     }
   });
 
-  afterAll(async () => {
-    await app.close();
+  it('List view of products', async () => {
+    // create 10 products
+    const numPartnerships = 10;
+    const type = ProductType.Songs;
+    await Promise.all(
+      times(numPartnerships).map(() =>
+        createProduct(app, {
+          type,
+        })
+      )
+    );
+
+    const { products } = await app.graphql.query(
+      gql`
+        query products($type: ProductType!) {
+          products(input: { filter: { type: $type } }) {
+            items {
+              id
+              type
+            }
+            hasMore
+            total
+          }
+        }
+      `,
+      {
+        type,
+      }
+    );
+
+    expect(products.items.length).toBeGreaterThanOrEqual(numPartnerships);
   });
 });
