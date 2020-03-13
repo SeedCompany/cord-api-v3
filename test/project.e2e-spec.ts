@@ -11,7 +11,7 @@ import {
 } from './utility';
 import { createProject } from './utility/create-project';
 
-describe('Project e2e', () => {
+describe.skip('Project e2e', () => {
   let app: TestApp;
 
   beforeAll(async () => {
