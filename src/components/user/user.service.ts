@@ -167,6 +167,9 @@ export class UserService {
       throw new Error('Password is required when creating a new user');
     }
 
+    // ensure token doesn't have any users attached to it
+    // await this.logout(session.token);
+
     const id = generate();
     const pash = await argon2.hash(input.password);
 
