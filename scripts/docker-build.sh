@@ -10,13 +10,12 @@ set -e
 REPO=cord-api-v3
 IFS=', ' read -ra TAGS <<< "${TAG:-latest}"
 
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 REPOS=( "$REPO" )
 
 # Add ECR repo if it can be identified
-AWS_ACCOUNT=${AWS_ACCOUNT:-$(aws sts get-caller-identity --query "Account" --output text 2> /dev/null || true)}
-AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-$(aws configure get region 2> /dev/null || true)}
-if [ -n "$AWS_ACCOUNT" ] && [ -n "$AWS_DEFAULT_REGION" ]; then
-  ECR_REPO=${AWS_ACCOUNT}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${REPO}
+ECR_REPO=$("$PROJECT_DIR"/scripts/ecr-repo.sh || true)
+if [ -n "$ECR_REPO" ]; then
   REPOS+=( "$ECR_REPO" )
 fi
 
