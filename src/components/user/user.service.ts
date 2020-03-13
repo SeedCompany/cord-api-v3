@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import * as argon2 from 'argon2';
 import { node, relation } from 'cypher-query-builder';
+import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { DatabaseService, ILogger, Logger, OnIndex } from '../../core';
 import { ISession } from '../auth';
@@ -228,8 +229,28 @@ export class UserService {
     // ensure token doesn't have any users attached to it
     // await this.logout(session.token);
 
+    // helper method for defining properties
+    const property = (prop: string, value: any) => {
+      if (!value) {
+        return [];
+      }
+
+      return [
+        node('user'),
+        relation('out', '', prop, {
+          active: true,
+          createdAt,
+        }),
+        node(prop, 'Property', {
+          active: true,
+          value,
+        }),
+      ];
+    };
+
     const id = generate();
     const pash = await argon2.hash(input.password);
+    const createdAt = DateTime.local().toNeo4JDateTime();
 
     await this.db
       .query()
@@ -239,7 +260,7 @@ export class UserService {
           node('user', 'User', {
             id,
             active: true,
-            createdAt: 'datetime()',
+            createdAt,
             createdByUserId: 'system',
             canCreateFileNode: true,
             canCreateOrg: true,
@@ -270,122 +291,30 @@ export class UserService {
           }),
           relation('out', '', 'email', {
             active: true,
-            createdAt: 'datetime()',
+            createdAt,
           }),
           node('email', 'EmailAddress:Property', {
             active: true,
             value: input.email,
-            createdAt: 'datetime()',
+            createdAt,
           }),
         ],
         [
           node('user'),
           relation('out', '', 'token', {
             active: true,
-            createdAt: 'datetime()',
+            createdAt,
           }),
           node('token'),
         ],
-        [
-          node('user'),
-          relation('out', '', 'password', {
-            active: true,
-            createdAt: 'datetime()',
-          }),
-          node('password', 'Property', {
-            active: true,
-            value: pash,
-          }),
-        ],
-        [
-          node('user'),
-          relation('out', '', 'realFirstName', {
-            active: true,
-            createdAt: 'datetime()',
-          }),
-          node('realFirstName', 'Property', {
-            active: true,
-            value: input.realFirstName,
-          }),
-        ],
-        [
-          node('user'),
-          relation('out', '', 'realLastName', {
-            active: true,
-            createdAt: 'datetime()',
-          }),
-          node('realLastName', 'Property', {
-            active: true,
-            value: input.realLastName,
-          }),
-        ],
-        [
-          node('user'),
-          relation('out', '', 'displayFirstName', {
-            active: true,
-            createdAt: 'datetime()',
-          }),
-          node('displayFirstName', 'Property', {
-            active: true,
-            value: input.displayFirstName,
-          }),
-        ],
-        [
-          node('user'),
-          relation('out', '', 'displayLastName', {
-            active: true,
-            createdAt: 'datetime()',
-          }),
-          node('displayLastName', 'Property', {
-            active: true,
-            value: input.displayLastName,
-          }),
-        ],
-        ...(input.phone
-          ? [
-              [
-                node('user'),
-                relation('out', '', 'phone', {
-                  active: true,
-                  createdAt: 'datetime()',
-                }),
-                node('phone', 'Property', {
-                  active: true,
-                  value: input.phone,
-                }),
-              ],
-            ]
-          : []),
-        ...(input.timezone
-          ? [
-              [
-                node('user'),
-                relation('out', '', 'timezone', {
-                  active: true,
-                  createdAt: 'datetime()',
-                }),
-                node('timezone', 'Property', {
-                  active: true,
-                  value: input.timezone,
-                }),
-              ],
-            ]
-          : []),
-        ...(input.bio
-          ? [
-              [
-                node('user'),
-                relation('out', '', 'bio', {
-                  active: true,
-                  createdAt: 'datetime()',
-                }),
-                node('bio', 'Property', {
-                  active: true,
-                  value: input.bio,
-                }),
-              ],
-            ]
-          : []),
+        property('password', pash),
+        property('realFirstName', input.realFirstName),
+        property('realLastName', input.realLastName),
+        property('displayFirstName', input.displayFirstName),
+        property('displayLastName', input.displayLastName),
+        property('phone', input.phone),
+        property('timezone', input.timezone),
+        property('bio', input.bio),
         [
           node('user'),
           relation('in', '', 'member'),
