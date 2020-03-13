@@ -291,6 +291,8 @@ export class UserService {
             canReadRegion: true,
             canCreateCountry: true,
             canReadCountry: true,
+            canCreateCeremony: true,
+            canReadCeremonies: true,
             canCreateProjectMember: true,
             canReadProjectMembers: true,
             canDeleteOwnUser: true,
