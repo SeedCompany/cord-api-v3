@@ -27,7 +27,7 @@ FROM node as dev
 # We copy the package.json and yarn.lock separately so node_modules
 # is cached in a separate docker layer from app code
 ADD package.json yarn.lock ./
-RUN yarn
+RUN yarn install --frozen-lockfile
 
 # Copy application code
 COPY . .
