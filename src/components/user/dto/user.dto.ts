@@ -1,4 +1,5 @@
 import { Type } from '@nestjs/common';
+import { DateTime } from 'luxon';
 import { Field, ObjectType } from 'type-graphql';
 import { Resource, SecuredProperty, SecuredString } from '../../../common';
 
@@ -36,3 +37,22 @@ export class User extends Resource {
   description: SecuredProperty.descriptionFor('a user'),
 })
 export class SecuredUser extends SecuredProperty(User) {}
+
+export const RedactedSecuredString: SecuredString = {
+  value: undefined,
+  canRead: false,
+  canEdit: false,
+};
+
+export const RedactedUser: User = {
+  id: '',
+  createdAt: DateTime.fromSeconds(0),
+  email: RedactedSecuredString,
+  realFirstName: RedactedSecuredString,
+  realLastName: RedactedSecuredString,
+  displayFirstName: RedactedSecuredString,
+  displayLastName: RedactedSecuredString,
+  phone: RedactedSecuredString,
+  timezone: RedactedSecuredString,
+  bio: RedactedSecuredString,
+};

@@ -201,7 +201,14 @@ export class UserService {
             canReadProducts: true,
             canCreateProject: true,
             canReadProjects: true,
+            canCreateZone: true,
+            canReadZone: true,
+            canCreateRegion: true,
+            canReadRegion: true,
+            canCreateCountry: true,
+            canReadCountry: true,
             canDeleteOwnUser: true,
+            canDeleteLocation: true,
             owningOrgId: "Seed Company",
             isAdmin: true
           })
@@ -394,7 +401,7 @@ export class UserService {
     });
 
     if (!result) {
-      throw new NotFoundException('Could not find user');
+      throw new NotFoundException(`Could not find user`);
     }
     let user = result as any;
     user.id = result.id.value;

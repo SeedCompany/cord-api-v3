@@ -113,7 +113,6 @@ describe('Unavailability e2e', () => {
     }
   });
 
-  // LIST UNAVAILABILITIES
   it('List view of unavailabilities', async () => {
     // create 10 unavailabilities
     const num = 10;

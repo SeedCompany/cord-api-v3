@@ -53,7 +53,7 @@ export abstract class UpdateCountry {
   @Field(() => ID, {
     nullable: true,
   })
-  readonly areaId?: string;
+  readonly regionId?: string;
 }
 
 @InputType()
