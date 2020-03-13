@@ -4,20 +4,10 @@ import { generate } from 'shortid';
 import { DatabaseService, ILogger, Logger, OnIndex } from '../../core';
 import { ISession } from '../auth';
 import {
-  EducationListInput,
-  EducationService,
-  SecuredEducationList,
-} from './education';
-import {
   OrganizationListInput,
   OrganizationService,
   SecuredOrganizationList,
 } from '../organization';
-import {
-  SecuredUnavailabilityList,
-  UnavailabilityListInput,
-  UnavailabilityService,
-} from './unavailability';
 import {
   CreateUser,
   UpdateUser,
@@ -25,6 +15,16 @@ import {
   UserListInput,
   UserListOutput,
 } from './dto';
+import {
+  EducationListInput,
+  EducationService,
+  SecuredEducationList,
+} from './education';
+import {
+  SecuredUnavailabilityList,
+  UnavailabilityListInput,
+  UnavailabilityService,
+} from './unavailability';
 
 @Injectable()
 export class UserService {

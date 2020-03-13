@@ -43,8 +43,8 @@ export class UnavailabilityService {
       throw new Error('Could not create unavailability');
     }
 
-    this.logger.info(`Created user unavailability`, { id, userId: input.userId });
-    
+    this.logger.info(`Created user unavailability`);
+
     // connect the Unavailability to the User.
 
     const query = `
@@ -155,9 +155,7 @@ export class UnavailabilityService {
   }
 
   async delete(id: string, session: ISession): Promise<void> {
-    this.logger.info(
-      `mutation delete unavailability: ${id} by ${session.userId}`
-    );
+    this.logger.info(`mutation delete unavailability`);
     const ua = await this.readOne(id, session);
     if (!ua) {
       throw new NotFoundException('Unavailability not found');
