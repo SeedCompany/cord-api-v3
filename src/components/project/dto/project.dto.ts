@@ -1,7 +1,7 @@
 import { Type } from '@nestjs/common';
+import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { MergeExclusive } from 'type-fest';
-import { Field, InterfaceType, ObjectType } from 'type-graphql';
 import {
   DateTimeField,
   Resource,

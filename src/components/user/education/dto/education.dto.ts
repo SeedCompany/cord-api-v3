@@ -1,6 +1,6 @@
 import { Type } from '@nestjs/common';
+import { Field, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { GraphQLString } from 'graphql';
-import { Field, ObjectType, registerEnumType } from 'type-graphql';
 import { Resource, SecuredProperty, SecuredString } from '../../../../common';
 
 export enum Degree {

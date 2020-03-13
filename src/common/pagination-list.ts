@@ -1,6 +1,7 @@
+import { Field, Int, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { GraphQLScalarType } from 'graphql';
-import { ClassType, Field, Int, ObjectType } from 'type-graphql';
+import { Class } from 'type-fest';
 import { AbstractClassType } from './types';
 
 export interface ListOptions {
@@ -8,7 +9,7 @@ export interface ListOptions {
 }
 
 export function PaginatedList<Type, ListItem = Type>(
-  itemClass: ClassType<Type> | AbstractClassType<Type> | GraphQLScalarType,
+  itemClass: Class<Type> | AbstractClassType<Type> | GraphQLScalarType,
   options: ListOptions = {}
 ) {
   @ObjectType({ isAbstract: true })

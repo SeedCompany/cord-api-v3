@@ -1,8 +1,9 @@
+import { Field, Int, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { GraphQLBoolean, GraphQLScalarType, GraphQLString } from 'graphql';
 import { isObject } from 'lodash';
 import { DateTime } from 'luxon';
-import { ClassType, Field, Int, ObjectType } from 'type-graphql';
+import { Class } from 'type-fest';
 import { CalendarDate, DateField, DateTimeField } from '.';
 import { Editable } from './editable.interface';
 import { Readable } from './readable.interface';
@@ -23,7 +24,7 @@ export const unwrapSecured = <T>(value: T | Secured<T>): T | undefined =>
   isSecured(value) ? value.value : value;
 
 export function SecuredProperty<T>(
-  valueClass: ClassType<T> | AbstractClassType<T> | GraphQLScalarType | object
+  valueClass: Class<T> | AbstractClassType<T> | GraphQLScalarType | object
 ) {
   @ObjectType({ isAbstract: true, implements: [Readable, Editable] })
   abstract class SecuredPropertyClass
@@ -46,7 +47,7 @@ SecuredProperty.descriptionFor = (value: string) => stripIndent`
 `;
 
 export function SecuredPropertyList<T>(
-  valueClass: ClassType<T> | AbstractClassType<T> | GraphQLScalarType | object
+  valueClass: Class<T> | AbstractClassType<T> | GraphQLScalarType | object
 ) {
   @ObjectType({ isAbstract: true, implements: [Readable, Editable] })
   abstract class SecuredPropertyListClass

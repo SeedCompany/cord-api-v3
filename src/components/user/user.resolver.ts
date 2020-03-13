@@ -3,7 +3,7 @@ import {
   Mutation,
   Parent,
   Query,
-  ResolveProperty,
+  ResolveField,
   Resolver,
 } from '@nestjs/graphql';
 import { IdArg, ISession, Session } from '../../common';
@@ -61,7 +61,7 @@ export class UserResolver {
     return this.userService.checkEmail(email);
   }
 
-  @ResolveProperty(() => SecuredUnavailabilityList)
+  @ResolveField(() => SecuredUnavailabilityList)
   async unavailabilities(
     @Session() session: ISession,
     @Parent() { id }: User,
@@ -75,7 +75,7 @@ export class UserResolver {
     return this.userService.listUnavailabilities(id, input, session);
   }
 
-  @ResolveProperty(() => SecuredOrganizationList)
+  @ResolveField(() => SecuredOrganizationList)
   async organizations(
     @Session() session: ISession,
     @Parent() { id }: User,
@@ -89,7 +89,7 @@ export class UserResolver {
     return this.userService.listOrganizations(id, input, session);
   }
 
-  @ResolveProperty(() => SecuredEducationList)
+  @ResolveField(() => SecuredEducationList)
   async education(
     @Session() session: ISession,
     @Parent() { id }: User,

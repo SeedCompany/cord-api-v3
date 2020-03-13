@@ -1,4 +1,4 @@
-import { Field, ObjectType, registerEnumType } from 'type-graphql';
+import { Field, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Editable, Readable, Secured, SecuredProperty } from '../../../common';
 
 export enum ProjectStep {

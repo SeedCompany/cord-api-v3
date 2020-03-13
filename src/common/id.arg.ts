@@ -1,6 +1,5 @@
 import { PipeTransform, Type } from '@nestjs/common';
-import { Args, ArgsOptions } from '@nestjs/graphql';
-import { ID } from 'type-graphql';
+import { Args, ArgsOptions, ID } from '@nestjs/graphql';
 
 export const IdArg = (
   opts: Partial<ArgsOptions> = {},

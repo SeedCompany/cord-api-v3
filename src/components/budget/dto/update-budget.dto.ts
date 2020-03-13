@@ -1,6 +1,6 @@
+import { Field, ID, InputType, Int, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { Field, ID, InputType, Int, ObjectType } from 'type-graphql';
 import { Budget, BudgetRecord, BudgetStatus } from '.';
 
 @InputType()

@@ -1,6 +1,6 @@
+import { Field, ID, InputType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { Field, ID, InputType } from 'type-graphql';
 
 @InputType()
 export abstract class GroupState {

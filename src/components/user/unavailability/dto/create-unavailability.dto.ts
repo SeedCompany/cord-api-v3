@@ -1,7 +1,7 @@
+import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { DateTime } from 'luxon';
-import { Field, ID, InputType, ObjectType } from 'type-graphql';
 import { DateTimeField } from '../../../../common';
 import { Unavailability } from './unavailability.dto';
 

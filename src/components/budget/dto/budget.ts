@@ -1,5 +1,5 @@
 import { Type } from '@nestjs/common';
-import { Field, ObjectType, registerEnumType } from 'type-graphql';
+import { Field, ObjectType, registerEnumType } from '@nestjs/graphql';
 import {
   Resource,
   SecuredInt,

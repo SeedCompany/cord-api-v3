@@ -1,6 +1,6 @@
 import { Type } from '@nestjs/common';
+import { Field, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
-import { Field, ObjectType } from 'type-graphql';
 import { Resource, SecuredProperty, SecuredString } from '../../../common';
 
 @ObjectType({

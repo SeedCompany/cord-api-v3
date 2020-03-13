@@ -1,4 +1,4 @@
-import { ObjectType, registerEnumType } from 'type-graphql';
+import { ObjectType, registerEnumType } from '@nestjs/graphql';
 import { SecuredPropertyList } from '../../../../common';
 
 export enum Role {
