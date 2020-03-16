@@ -43,13 +43,13 @@ export const createGraphqlClient = async (
       const result = await query({ query: q, variables });
       resetRequest();
       validateResult(result);
-      return result.data!;
+      return result.data;
     },
     mutate: async (mutation, variables) => {
       const result = await mutate({ mutation, variables });
       resetRequest();
       validateResult(result);
-      return result.data!;
+      return result.data;
     },
     get authToken() {
       return (
@@ -70,12 +70,16 @@ export const createGraphqlClient = async (
   };
 };
 
-const validateResult = (res: GraphQLResponse) => {
+function validateResult(
+  res: GraphQLResponse
+): asserts res is Omit<GraphQLResponse, 'data' | 'errors'> & {
+  data: Record<string, any>;
+} {
   if (res.errors && res.errors.length > 0) {
     throw reportError(res.errors[0]);
   }
   expect(res.data).toBeTruthy();
-};
+}
 
 const reportError = (
   e: GraphQLFormattedError & { originalError?: Error & { response?: any } }
