@@ -1,5 +1,8 @@
 import { registerEnumType } from 'type-graphql';
 
+/**
+ * This is a roll up of methodology, for easier querying
+ */
 export enum ProductApproach {
   Written = 'Written',
   OralTranslation = 'OralTranslation',
@@ -9,4 +12,5 @@ export enum ProductApproach {
 
 registerEnumType(ProductApproach, {
   name: 'ProductApproach',
+  description: 'This is a roll up of methodology, for easier querying',
 });

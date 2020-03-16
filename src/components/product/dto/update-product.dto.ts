@@ -2,7 +2,6 @@ import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { Field, ID, InputType, ObjectType } from 'type-graphql';
 import { BibleBook } from './bible-book';
-import { ProductApproach } from './product-approach';
 import { ProductMedium } from './product-medium';
 import { ProductMethodology } from './product-methodology';
 import { ProductPurpose } from './product-purpose';
@@ -25,9 +24,6 @@ export abstract class UpdateProduct {
 
   @Field(() => [ProductPurpose], { nullable: true })
   readonly purposes: ProductPurpose[];
-
-  @Field(() => ProductApproach, { nullable: true })
-  readonly approach: ProductApproach;
 
   @Field(() => ProductMethodology, { nullable: true })
   readonly methodology: ProductMethodology;

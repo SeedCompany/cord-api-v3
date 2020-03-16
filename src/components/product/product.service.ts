@@ -4,6 +4,7 @@ import { DatabaseService, ILogger, Logger } from '../../core';
 import { ISession } from '../auth';
 import {
   CreateProduct,
+  MethodologyToApproach,
   Product,
   ProductListInput,
   ProductListOutput,
@@ -29,7 +30,6 @@ export class ProductService {
       canReadPurposes: true,
       canEditPurposes: true,
       canReadApproach: true,
-      canEditApproach: true,
       canReadMethodology: true,
       canEditMethodology: true,
     };
@@ -37,7 +37,13 @@ export class ProductService {
     try {
       await this.db.createNode({
         session,
-        input: { id, ...input },
+        input: {
+          id,
+          ...input,
+          ...(input.methodology
+            ? { approach: MethodologyToApproach[input.methodology] }
+            : {}),
+        },
         acls,
         baseNodeLabel: 'Product',
         aclEditProp: 'canCreateProduct',
@@ -133,7 +139,12 @@ export class ProductService {
         'approach',
         'methodology',
       ],
-      changes: input,
+      changes: {
+        ...input,
+        ...(input.methodology
+          ? { approach: MethodologyToApproach[input.methodology] }
+          : {}),
+      },
       nodevar: 'product',
     });
   }
