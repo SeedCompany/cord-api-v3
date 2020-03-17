@@ -231,7 +231,7 @@ export class UserService {
 
     const id = generate();
     const pash = await argon2.hash(input.password);
-    const createdAt = DateTime.local().toNeo4JDateTime();
+    const createdAt = DateTime.local();
 
     // helper method for defining properties
     const property = (prop: string, value: any) => {

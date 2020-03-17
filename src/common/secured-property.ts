@@ -3,7 +3,7 @@ import { GraphQLBoolean, GraphQLScalarType, GraphQLString } from 'graphql';
 import { isObject } from 'lodash';
 import { DateTime } from 'luxon';
 import { ClassType, Field, Int, ObjectType } from 'type-graphql';
-import { DateField, DateTimeField } from '.';
+import { CalendarDate, DateField, DateTimeField } from '.';
 import { Editable } from './editable.interface';
 import { Readable } from './readable.interface';
 import { AbstractClassType } from './types';
@@ -102,9 +102,9 @@ export abstract class SecuredDateTime
 
 @ObjectType({ implements: [Readable, Editable] })
 export abstract class SecuredDate
-  implements Readable, Editable, Secured<DateTime> {
+  implements Readable, Editable, Secured<CalendarDate> {
   @DateField({ nullable: true })
-  readonly value?: DateTime;
+  readonly value?: CalendarDate;
 
   @Field()
   readonly canRead: boolean;

@@ -1,8 +1,7 @@
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { DateTime } from 'luxon';
 import { Field, ID, InputType, ObjectType } from 'type-graphql';
-import { DateField } from '../../../common';
+import { CalendarDate, DateField } from '../../../common';
 import { Ceremony } from './ceremony.dto';
 
 @InputType()
@@ -14,10 +13,10 @@ export abstract class UpdateCeremony {
   readonly planned?: boolean;
 
   @DateField({ nullable: true })
-  readonly estimatedDate?: DateTime;
+  readonly estimatedDate?: CalendarDate;
 
   @DateField({ nullable: true })
-  readonly actualDate?: DateTime;
+  readonly actualDate?: CalendarDate;
 }
 
 @InputType()

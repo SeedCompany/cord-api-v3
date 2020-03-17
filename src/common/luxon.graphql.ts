@@ -6,6 +6,7 @@ import { Kind, ValueNode } from 'graphql';
 import { DateTime, Settings } from 'luxon';
 import { Field } from 'type-graphql';
 import { AdvancedOptions } from 'type-graphql/dist/decorators/types';
+import { CalendarDate } from './calendar-date';
 import './luxon.neo4j'; // ensure our luxon methods are added
 
 Settings.throwOnInvalid = true;
@@ -20,14 +21,11 @@ export const DateTimeField = (options?: AdvancedOptions) =>
 
 export const DateField = (options?: AdvancedOptions) =>
   applyDecorators(
-    Field(() => Date, options),
-    Transform(value => DateTime.fromISO(value).startOf('day'), {
+    Field(() => CalendarDate, options),
+    Transform(value => CalendarDate.fromISO(value), {
       toClassOnly: true,
     }) as PropertyDecorator
   );
-
-// A marker to connect DateField decorator to DateScalar
-class Date extends DateTime {}
 
 @Scalar('DateTime', () => DateTime)
 export class DateTimeScalar
@@ -56,7 +54,7 @@ export class DateTimeScalar
   }
 }
 
-@Scalar('Date', () => Date)
+@Scalar('Date', () => CalendarDate)
 export class DateScalar extends DateTimeScalar {
   description = stripIndent`
     An ISO-8601 date string.
