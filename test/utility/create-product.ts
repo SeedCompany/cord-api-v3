@@ -3,7 +3,6 @@ import { isValid } from 'shortid';
 import {
   CreateProduct,
   Product,
-  ProductApproach,
   ProductMedium,
   ProductMethodology,
   ProductPurpose,
@@ -22,7 +21,6 @@ export async function createProduct(
     books: [BibleBook.Genesis],
     mediums: [ProductMedium.Print],
     purposes: [ProductPurpose.ChurchLife],
-    approach: ProductApproach.Written,
     methodology: ProductMethodology.Paratext,
     ...input,
   };

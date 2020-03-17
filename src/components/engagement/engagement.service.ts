@@ -1,5 +1,6 @@
 import { Injectable, NotImplementedException } from '@nestjs/common';
 import { ISession } from '../auth';
+import { ProductListInput, SecuredProductList } from '../product';
 import {
   CreateInternshipEngagement,
   CreateLanguageEngagement,
@@ -22,6 +23,14 @@ export class EngagementService {
     _input: EngagementListInput,
     _session: ISession
   ): Promise<EngagementListOutput> {
+    throw new NotImplementedException();
+  }
+
+  async listProducts(
+    _engagement: LanguageEngagement,
+    _input: ProductListInput,
+    _session: ISession
+  ): Promise<SecuredProductList> {
     throw new NotImplementedException();
   }
 

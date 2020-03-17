@@ -1,5 +1,8 @@
 import { registerEnumType } from 'type-graphql';
 
+/**
+ * Why is this translation happening?
+ */
 export enum ProductPurpose {
   EvangelismChurchPlanting = 'EvangelismChurchPlanting',
   ChurchLife = 'ChurchLife',

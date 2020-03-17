@@ -50,6 +50,6 @@ export class ProductListInput extends SortablePaginationInput<keyof Product>({
 export class ProductListOutput extends PaginatedList(Product) {}
 
 @ObjectType({
-  description: SecuredList.descriptionFor('product objects'),
+  description: SecuredList.descriptionFor('products'),
 })
 export abstract class SecuredProductList extends SecuredList(Product) {}

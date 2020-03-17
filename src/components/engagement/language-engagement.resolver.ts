@@ -1,20 +1,28 @@
-import { NotImplementedException } from '@nestjs/common';
 import { Args, Parent, ResolveProperty, Resolver } from '@nestjs/graphql';
 import { ISession, Session } from '../auth';
+import { ProductListInput, SecuredProductList } from '../product/dto';
 import { LanguageEngagement } from './dto';
+import { EngagementService } from './engagement.service';
 
 @Resolver(LanguageEngagement.classType)
 export class LanguageEngagementResolver {
-  @ResolveProperty(() => Boolean)
+  constructor(private readonly engagements: EngagementService) {}
+
+  @ResolveProperty(() => SecuredProductList)
   async products(
-    @Parent() _engagement: LanguageEngagement,
-    @Session() _session: ISession,
+    @Parent() engagement: LanguageEngagement,
+    @Session() session: ISession,
     @Args({
       name: 'input',
-      type: () => Boolean,
+      type: () => ProductListInput,
+      nullable: true,
     })
-    _input: unknown
-  ): Promise<unknown> {
-    throw new NotImplementedException();
+    input?: ProductListInput
+  ): Promise<SecuredProductList> {
+    return this.engagements.listProducts(
+      engagement,
+      input || ProductListInput.defaultVal,
+      session
+    );
   }
 }

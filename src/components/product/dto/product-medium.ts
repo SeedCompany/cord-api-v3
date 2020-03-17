@@ -1,5 +1,10 @@
 import { registerEnumType } from 'type-graphql';
 
+/**
+ * How the product is delivered.
+ *
+ * This is independent of how the translation is done.
+ */
 export enum ProductMedium {
   Print = 'Print',
   Web = 'Web',
@@ -13,4 +18,5 @@ export enum ProductMedium {
 
 registerEnumType(ProductMedium, {
   name: 'ProductMedium',
+  description: 'How the product is delivered',
 });
