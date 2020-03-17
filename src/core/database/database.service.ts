@@ -86,7 +86,7 @@ export class DatabaseService {
     const aclEditPropName =
       aclEditProp || `canEdit${upperFirst(key as string)}`;
 
-    const now = DateTime.local().toNeo4JDateTime();
+    const now = DateTime.local();
     const result = await this.db
       .query()
       .match([

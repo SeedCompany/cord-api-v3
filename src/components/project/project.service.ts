@@ -276,7 +276,7 @@ export class ProjectService {
       sensitivity: Sensitivity.High, // TODO: this needs to be calculated based on language engagement
       step: ProjectStep.EarlyConversations,
       status: stepToStatus(ProjectStep.EarlyConversations),
-      modifiedAt: DateTime.local().toNeo4JDateTime(),
+      modifiedAt: DateTime.local(),
       ...input,
     };
 
@@ -321,7 +321,7 @@ export class ProjectService {
 
     const changes = {
       ...input,
-      modifiedAt: DateTime.local().toNeo4JDateTime() as any,
+      modifiedAt: DateTime.local(),
       status: object.step.value
         ? stepToStatus(object.step.value)
         : object.status,
