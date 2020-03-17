@@ -113,7 +113,7 @@ export class PartnershipService {
         canEdit: !!result.canEditMouEnd,
       },
       types: {
-        value: result.types ? result.types.split(',') : [],
+        value: result.types ? result.types : [],
         canRead: !!result.canReadTypes,
         canEdit: !!result.canEditTypes,
       },
@@ -232,7 +232,7 @@ export class PartnershipService {
       changes: {
         ...input,
         // TODO: propertyService.update and propertyService.createNode appear to handle array types differently...
-        types: (input.types ? input.types.join(',') : undefined) as any,
+        types: (input.types ? input.types : undefined) as any,
       },
       nodevar: 'partnership',
     });
