@@ -5,6 +5,7 @@ import Session from 'neo4j-driver/types/v1/session';
 import { ConfigService } from '..';
 import { jestSkipFileInExceptionSource } from '../jest-skip-source-file';
 import { ILogger, LoggerToken, LogLevel } from '../logger';
+import { ParameterTransformer } from './parameter-transformer.service';
 import { MyTransformer } from './transformer';
 import './transaction'; // import our transaction augmentation
 import './query'; // import our query augmentation
@@ -13,6 +14,7 @@ export const CypherFactory: FactoryProvider<Connection> = {
   provide: Connection,
   useFactory: (
     config: ConfigService,
+    parameterTransformer: ParameterTransformer,
     logger: ILogger,
     driverLogger: ILogger
   ) => {
@@ -46,7 +48,10 @@ export const CypherFactory: FactoryProvider<Connection> = {
           const statement = stripIndent(origStatement);
           logger.debug('\n' + statement, parameters);
 
-          const result = origRun.call(session, statement, parameters, conf);
+          const params = parameters
+            ? parameterTransformer.transform(parameters)
+            : undefined;
+          const result = origRun.call(session, statement, params, conf);
 
           const origSubscribe = result.subscribe;
           result.subscribe = function(this: never, observer) {
@@ -78,6 +83,7 @@ export const CypherFactory: FactoryProvider<Connection> = {
   },
   inject: [
     ConfigService,
+    ParameterTransformer,
     LoggerToken('database:query'),
     LoggerToken('database:driver'),
   ],

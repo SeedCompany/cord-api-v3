@@ -4,10 +4,16 @@ import { DeprecatedDBService } from '../deprecated-database.service';
 import { CypherFactory } from './cypher.factory';
 import { DatabaseService } from './database.service';
 import { IndexerModule } from './indexer/indexer.module';
+import { ParameterTransformer } from './parameter-transformer.service';
 
 @Module({
   imports: [IndexerModule],
-  providers: [CypherFactory, DatabaseService, DeprecatedDBService],
+  providers: [
+    CypherFactory,
+    DatabaseService,
+    DeprecatedDBService,
+    ParameterTransformer,
+  ],
   exports: [CypherFactory, DatabaseService, DeprecatedDBService, IndexerModule],
 })
 export class DatabaseModule implements OnApplicationShutdown {
