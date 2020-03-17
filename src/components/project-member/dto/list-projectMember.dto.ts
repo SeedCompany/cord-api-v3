@@ -1,0 +1,51 @@
+import { Type } from 'class-transformer';
+import { ValidateNested } from 'class-validator';
+import { Field, ID, InputType, ObjectType } from 'type-graphql';
+import {
+  PaginatedList,
+  SecuredList,
+  SortablePaginationInput,
+} from '../../../common';
+import { Role } from '../../user/role';
+import { ProjectMember } from './project-member.dto';
+
+@InputType()
+export abstract class ProjectMemberFilters {
+  @Field(() => [Role], {
+    description: 'ProjectMember matching user role',
+    nullable: true,
+  })
+  readonly roles?: Role[];
+
+  @Field(() => ID, {
+    description: 'ProjectMembers for ProjectId',
+    nullable: true,
+  })
+  readonly projectId?: string;
+}
+
+const defaultFilters = {};
+
+@InputType()
+export class ProjectMemberListInput extends SortablePaginationInput<
+  keyof ProjectMember
+>({
+  defaultSort: 'createdAt',
+}) {
+  static defaultVal = new ProjectMemberListInput();
+
+  @Field({ nullable: true })
+  @Type(() => ProjectMemberFilters)
+  @ValidateNested()
+  readonly filter: ProjectMemberFilters = defaultFilters;
+}
+
+@ObjectType()
+export class ProjectMemberListOutput extends PaginatedList(ProjectMember) {}
+
+@ObjectType({
+  description: SecuredList.descriptionFor('project members'),
+})
+export abstract class SecuredProjectMemberList extends SecuredList(
+  ProjectMember
+) {}

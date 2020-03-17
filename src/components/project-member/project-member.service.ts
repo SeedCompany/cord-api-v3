@@ -1,0 +1,211 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { generate } from 'shortid';
+import { DatabaseService, ILogger, Logger } from '../../core';
+import { ISession } from '../auth';
+import { RedactedUser, User, UserService } from '../user';
+import { Role } from '../user/role';
+import {
+  CreateProjectMember,
+  ProjectMember,
+  ProjectMemberListInput,
+  ProjectMemberListOutput,
+  UpdateProjectMember,
+} from './dto';
+
+@Injectable()
+export class ProjectMemberService {
+  constructor(
+    private readonly db: DatabaseService,
+    private readonly userService: UserService,
+    @Logger('project:member:service') private readonly logger: ILogger
+  ) {}
+
+  async readOne(id: string, session: ISession): Promise<ProjectMember> {
+    const result = await this.db
+      .query()
+      .raw(
+        `
+        MATCH
+        (toekn: Token {
+          active: true,
+          value: $token
+        })
+          <-[:token {active: true}]-
+        (requestingUser:User {
+          active: true,
+          id: $requestingUserId,
+          owningOrgId: $owningOrgId
+        }),
+        (projectMember:ProjectMember {active: true, id: $id})
+
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadRoles:ACL {canReadRoles: true})-[:toNode]->(projectMember)-[:roles {active: true}]->(roles: Property {active: true})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditRoles:ACL {canEditRoles: true})-[:toNode]->(projectMember)
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadUser:ACL {canReadUser: true})-[:toNode]->(projectMember)-[:user {active: true}]->(user)
+        
+        RETURN 
+          projectMember.id as id,
+          projectMember.createdAt as createdAt,
+          user.id as userId,
+          roles.value as roles,
+          canReadRoles.canReadRoles as canReadRoles,
+          canEditRoles.canEditRoles as canEditRoles,
+          canReadUser.canReadUser as canReadUser
+        `,
+        {
+          token: session.token,
+          requestingUserId: session.userId,
+          owningOrgId: session.owningOrgId,
+          id,
+        }
+      )
+      .first();
+
+    if (!result) {
+      throw new NotFoundException('Could not find projectMember');
+    }
+
+    let user: User = RedactedUser;
+    if (result.canReadUser) {
+      user = await this.userService.readOne(result.userId, session);
+    }
+
+    return {
+      id: id,
+      createdAt: result.createdAt,
+      modifiedAt: result.modifiedAt,
+      user: {
+        value: {
+          ...user,
+        },
+        canRead: true,
+        canEdit: true,
+      },
+      roles: {
+        value: result.roles ? result.roles.split(',') : [],
+        canEdit: true,
+        canRead: true,
+      },
+    };
+  }
+
+  async create(
+    { userId, projectId, ...input }: CreateProjectMember,
+    session: ISession
+  ): Promise<ProjectMember> {
+    const id = generate();
+    const acls = {
+      canReadRoles: true,
+      canEditRoles: true,
+      canReadUser: true,
+    };
+
+    try {
+      await this.db.createNode({
+        session,
+        input: {
+          id,
+          roles: Role.Admin,
+          ...input,
+        },
+        acls,
+        baseNodeLabel: 'ProjectMember',
+        aclEditProp: 'canCreateProjectMember',
+      });
+      //connect the User to the ProjectMember
+      const query = `
+        MATCH (user:User {id: $userId, active: true}),
+          (project:Project {id: $projectId, active: true}),
+          (projectMember: ProjectMember {id: $id, active: true})
+        CREATE (project)<-[:project {active: true, createdAt: datetime()}]-(projectMember)-[:user {active: true, createAt: datetime()}]->(user)
+        RETURN projectMember.id as id
+      `;
+      await this.db
+        .query()
+        .raw(query, {
+          userId,
+          projectId,
+          id,
+        })
+        .first();
+
+      return await this.readOne(id, session);
+    } catch (e) {
+      this.logger.warning('Failed to create projectMember', {
+        exception: e,
+      });
+
+      throw new Error('Could not create projectMember');
+    }
+  }
+
+  async list(
+    { page, count, sort, order, filter }: ProjectMemberListInput,
+    session: ISession
+  ): Promise<ProjectMemberListOutput> {
+    const result = await this.db.list<ProjectMember>({
+      session,
+      nodevar: 'projectMember',
+      aclReadProp: 'canReadProjectMembers',
+      aclEditProp: 'canCreateProjectMember',
+      props: [
+        { name: 'roles', secure: true, list: true },
+        { name: 'user', secure: true },
+        { name: 'modifiedAt', secure: false },
+      ],
+      input: {
+        page,
+        count,
+        sort,
+        order,
+        filter,
+      },
+    });
+
+    return {
+      items: result.items,
+      hasMore: result.hasMore,
+      total: result.total,
+    };
+  }
+
+  async update(
+    input: UpdateProjectMember,
+    session: ISession
+  ): Promise<ProjectMember> {
+    const object = await this.readOne(input.id, session);
+
+    await this.db.updateProperties({
+      session,
+      object,
+      props: ['roles'],
+      changes: {
+        ...input,
+        roles: (input.roles ? input.roles.join(',') : undefined) as any,
+      },
+      nodevar: 'projectMember',
+    });
+    return this.readOne(input.id, session);
+  }
+
+  async delete(id: string, session: ISession): Promise<void> {
+    const object = await this.readOne(id, session);
+
+    if (!object) {
+      throw new NotFoundException('Could not find projectMember');
+    }
+
+    try {
+      await this.db.deleteNode({
+        session,
+        object,
+        aclEditProp: 'canDeleteOwnUser',
+      });
+    } catch (e) {
+      this.logger.warning('Failed to delete projectMember', {
+        exception: e,
+      });
+
+      throw e;
+    }
+  }
+}

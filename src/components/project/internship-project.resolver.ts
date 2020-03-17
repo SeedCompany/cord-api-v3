@@ -4,6 +4,10 @@ import {
   EngagementListInput,
   SecuredInternshipEngagementList,
 } from '../engagement/dto';
+import {
+  ProjectMemberListInput,
+  SecuredProjectMemberList,
+} from '../project-member';
 import { InternshipProject } from './dto';
 import { ProjectService } from './project.service';
 
@@ -24,5 +28,21 @@ export class InternshipProjectResolver {
     input: EngagementListInput
   ): Promise<SecuredInternshipEngagementList> {
     return this.projects.listEngagements(project, input, session);
+  }
+
+  @ResolveProperty(() => SecuredProjectMemberList, {
+    description: 'projectMembers by project',
+  })
+  async team(
+    @Session() session: ISession,
+    @Parent() { id }: InternshipProject,
+    @Args({
+      name: 'input',
+      type: () => ProjectMemberListInput,
+      defaultValue: ProjectMemberListInput.defaultVal,
+    })
+    input: ProjectMemberListInput
+  ): Promise<SecuredProjectMemberList> {
+    return this.projects.listProjectMembers(id, input, session);
   }
 }
