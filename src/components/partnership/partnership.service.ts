@@ -231,7 +231,6 @@ export class PartnershipService {
       props: ['agreementStatus', 'mouStatus', 'mouStart', 'mouEnd', 'types'],
       changes: {
         ...input,
-        // TODO: propertyService.update and propertyService.createNode appear to handle array types differently...
         types: (input.types ? input.types : undefined) as any,
       },
       nodevar: 'partnership',
