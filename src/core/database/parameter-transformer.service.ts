@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { mapValues } from 'lodash';
 import { DateTime } from 'luxon';
+import { isNeoDate, isNeoDateTime } from './transformer';
 
 /**
  * Transforms parameters going into the database
@@ -21,11 +22,15 @@ export class ParameterTransformer {
       throw new Error('Use Luxon DateTime instead');
     }
 
+    if (isNeoDateTime(value) || isNeoDate(value)) {
+      return value;
+    }
+
     if (value instanceof DateTime) {
       return value.toNeo4JDateTime();
     }
 
-    // TODO Neo4J Date
+    // TODO Luxon to Neo4J Date
 
     if (Array.isArray(value)) {
       return value.map(v => this.transformValue(v));
