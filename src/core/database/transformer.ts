@@ -5,6 +5,7 @@ import {
   Date as NeoDate,
   DateTime as NeoDateTime,
 } from 'neo4j-driver/types/v1';
+import { CalendarDate } from '../../common';
 
 // Convert private to protected, and ignore TS complaints about that
 // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
@@ -37,7 +38,7 @@ export class MyTransformer extends PatchedTransformer {
 
   protected transformDate(date: NeoDate) {
     const plain = this.transformValue({ ...date });
-    return DateTime.fromObject(plain);
+    return CalendarDate.fromObject(plain);
   }
 
   protected transformDateTime(dt: NeoDateTime) {

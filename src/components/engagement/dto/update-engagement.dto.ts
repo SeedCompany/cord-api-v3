@@ -1,8 +1,7 @@
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { DateTime } from 'luxon';
 import { Field, ID, InputType, ObjectType } from 'type-graphql';
-import { DateField } from '../../../common';
+import { CalendarDate, DateField } from '../../../common';
 import { ProductMethodology } from '../../product/dto';
 import { InternshipEngagement, LanguageEngagement } from './engagement.dto';
 import { InternPosition } from './intern-position.enum';
@@ -15,19 +14,19 @@ export abstract class UpdateEngagement {
   readonly id: string;
 
   @DateField({ nullable: true })
-  readonly completeDate?: DateTime;
+  readonly completeDate?: CalendarDate;
 
   @DateField({ nullable: true })
-  readonly disbursementCompleteDate?: DateTime;
+  readonly disbursementCompleteDate?: CalendarDate;
 
   @DateField({ nullable: true })
-  readonly communicationsCompleteDate?: DateTime;
+  readonly communicationsCompleteDate?: CalendarDate;
 
   @DateField({ nullable: true })
-  readonly startDate?: DateTime;
+  readonly startDate?: CalendarDate;
 
   @DateField({ nullable: true })
-  readonly endDate?: DateTime;
+  readonly endDate?: CalendarDate;
 }
 
 @InputType()

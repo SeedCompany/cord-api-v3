@@ -1,5 +1,6 @@
 import { DateTime } from 'luxon';
 import { InputType } from 'type-graphql';
+import { CalendarDate } from './calendar-date';
 import { DateField, DateTimeField } from './luxon.graphql';
 
 @InputType({
@@ -10,13 +11,13 @@ export abstract class DateFilter {
     description: 'After or equal to this day',
     nullable: true,
   })
-  after?: DateTime;
+  after?: CalendarDate;
 
   @DateField({
     description: 'Before or equal to this day',
     nullable: true,
   })
-  before?: DateTime;
+  before?: CalendarDate;
 }
 
 @InputType({

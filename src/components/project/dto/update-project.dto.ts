@@ -1,8 +1,7 @@
 import { Type } from 'class-transformer';
 import { MinLength, ValidateNested } from 'class-validator';
-import { DateTime } from 'luxon';
 import { Field, ID, InputType, ObjectType } from 'type-graphql';
-import { DateField } from '../../../common';
+import { CalendarDate, DateField } from '../../../common';
 import { Project } from './project.dto';
 
 @InputType()
@@ -21,13 +20,13 @@ export abstract class UpdateProject {
   readonly locationId?: string;
 
   @DateField({ nullable: true })
-  readonly mouStart?: DateTime;
+  readonly mouStart?: CalendarDate;
 
   @DateField({ nullable: true })
-  readonly mouEnd?: DateTime;
+  readonly mouEnd?: CalendarDate;
 
   @DateField({ nullable: true })
-  readonly estimatedSubmission?: DateTime;
+  readonly estimatedSubmission?: CalendarDate;
 }
 
 @InputType()

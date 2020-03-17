@@ -1,6 +1,6 @@
 import { gql } from 'apollo-server-core';
-import { DateTime } from 'luxon';
 import { isValid } from 'shortid';
+import { CalendarDate } from '../../src/common';
 import {
   CreatePartnership,
   Partnership,
@@ -21,8 +21,8 @@ export async function createPartnership(
     mouStatus: PartnershipAgreementStatus.AwaitingSignature,
     types: [PartnershipType.Managing],
     organizationId: org.id,
-    mouStart: DateTime.local(),
-    mouEnd: DateTime.local(),
+    mouStart: CalendarDate.local(),
+    mouEnd: CalendarDate.local(),
     ...input,
   };
 
