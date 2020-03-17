@@ -1,4 +1,5 @@
 export * from './context.type';
+export * from './calendar-date';
 export * from './date-filter.input';
 export * from './editable.interface';
 export * from './id.arg';
