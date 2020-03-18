@@ -1,8 +1,8 @@
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { Field, ID, InputType, Int, ObjectType } from 'type-graphql';
-import { SecuredInt } from '../../../common';
-import { Budget, BudgetRecord, SecuredBudgetStatus } from './budget';
+import { BudgetStatus } from '../budget';
+import { Budget, BudgetRecord } from './budget';
 
 @InputType()
 export abstract class UpdateBudget {
@@ -10,7 +10,7 @@ export abstract class UpdateBudget {
   readonly id: string;
 
   @Field()
-  readonly status: SecuredBudgetStatus;
+  readonly status: BudgetStatus;
 }
 
 @InputType()
@@ -33,10 +33,10 @@ export abstract class UpdateBudgetRecord {
   readonly id: string;
 
   @Field(() => Int, { nullable: true })
-  readonly fiscalYear?: SecuredInt;
+  readonly fiscalYear?: number;
 
   @Field(() => Int, { nullable: true })
-  readonly amount?: SecuredInt;
+  readonly amount?: number;
 }
 
 @InputType()
