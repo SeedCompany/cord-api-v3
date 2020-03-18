@@ -10,7 +10,7 @@ export abstract class UpdateBudget {
   readonly id: string;
 
   @Field()
-  readonly status: BudgetStatus;
+  readonly status?: BudgetStatus;
 }
 
 @InputType()

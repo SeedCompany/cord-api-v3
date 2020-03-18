@@ -11,10 +11,10 @@ import {
 @InputType()
 export abstract class BudgetFilters {
   @Field({
-    description: 'Only budgets matching this name',
+    description: 'Only budgets matching this projectId',
     nullable: true,
   })
-  readonly status?: string;
+  readonly projectId?: string;
 }
 
 const defaultFilters = {};

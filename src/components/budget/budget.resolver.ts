@@ -1,54 +1,76 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import {
-  CreateBudgetInputDto,
-  CreateBudgetOutputDto,
-  DeleteBudgetInputDto,
-  DeleteBudgetOutputDto,
-  ReadBudgetInputDto,
-  ReadBudgetOutputDto,
-  UpdateBudgetInputDto,
-  UpdateBudgetOutputDto,
-} from './budget.dto';
+import { IdArg } from '../../common';
+import { ISession, Session } from '../auth';
+import { Budget } from './budget';
 import { BudgetService } from './budget.service';
+import {
+  BudgetListInput,
+  BudgetListOutput,
+  CreateBudgetInput,
+  CreateBudgetOutput,
+  UpdateBudgetInput,
+  UpdateBudgetOutput,
+} from './dto';
 
 @Resolver()
 export class BudgetResolver {
-  constructor(private readonly budgetService: BudgetService) {}
+  constructor(private readonly service: BudgetService) {}
 
-  @Mutation(() => CreateBudgetOutputDto, {
-    description: 'Create a Budget',
+  @Mutation(() => CreateBudgetOutput, {
+    description: 'Create an budget entry',
   })
   async createBudget(
-    @Args('input') { budget: input }: CreateBudgetInputDto
-  ): Promise<CreateBudgetOutputDto> {
-    return await this.budgetService.create(input);
-  }
-  @Query(() => ReadBudgetOutputDto, {
-    description: 'Read one Budget by id',
-  })
-  async readBudget(
-    @Args('input') { budget: input }: ReadBudgetInputDto
-  ): Promise<ReadBudgetOutputDto> {
-    return await this.budgetService.readOne(input);
+    @Session() session: ISession,
+    @Args('input') { budget: input }: CreateBudgetInput
+  ): Promise<CreateBudgetOutput> {
+    const budget = await this.service.create(input, session);
+    return { budget };
   }
 
-  @Mutation(() => UpdateBudgetOutputDto, {
-    description: 'Update an Budget',
+  @Query(() => Budget, {
+    description: 'Look up a budget by its ID',
+  })
+  async budget(
+    @Session() session: ISession,
+    @IdArg() id: string
+  ): Promise<Budget> {
+    return await this.service.readOne(id, session);
+  }
+
+  @Query(() => BudgetListOutput, {
+    description: 'Look up budgets by projectId',
+  })
+  async ceremonies(
+    @Session() session: ISession,
+    @Args({
+      name: 'input',
+      type: () => BudgetListInput,
+      defaultValue: BudgetListInput.defaultVal,
+    })
+    input: BudgetListInput
+  ): Promise<BudgetListOutput> {
+    return this.service.list(input, session);
+  }
+
+  @Mutation(() => UpdateBudgetOutput, {
+    description: 'Update a budget',
   })
   async updateBudget(
-    @Args('input')
-    { budget: input }: UpdateBudgetInputDto
-  ): Promise<UpdateBudgetOutputDto> {
-    return await this.budgetService.update(input);
+    @Session() session: ISession,
+    @Args('input') { budget: input }: UpdateBudgetInput
+  ): Promise<UpdateBudgetOutput> {
+    const budget = await this.service.update(input, session);
+    return { budget };
   }
 
-  @Mutation(() => DeleteBudgetOutputDto, {
-    description: 'Delete an Budget',
+  @Mutation(() => Boolean, {
+    description: 'Delete an budget',
   })
   async deleteBudget(
-    @Args('input')
-    { budget: input }: DeleteBudgetInputDto
-  ): Promise<DeleteBudgetOutputDto> {
-    return await this.budgetService.delete(input);
+    @Session() session: ISession,
+    @IdArg() id: string
+  ): Promise<boolean> {
+    await this.service.delete(id, session);
+    return true;
   }
 }

@@ -1,14 +1,11 @@
 import { Type } from 'class-transformer';
 import { MinLength, ValidateNested } from 'class-validator';
 import { Field, ID, InputType, ObjectType } from 'type-graphql';
-import { Budget, BudgetStatus } from '../budget';
+import { BudgetRecord } from '.';
+import { Budget } from '../budget';
 
 @InputType()
 export abstract class CreateBudget {
-  @Field({ nullable: true })
-  @MinLength(2)
-  readonly status: BudgetStatus;
-
   @Field(() => ID)
   @MinLength(2)
   readonly projectId: string;
@@ -26,4 +23,24 @@ export abstract class CreateBudgetInput {
 export abstract class CreateBudgetOutput {
   @Field()
   readonly budget: Budget;
+}
+@InputType()
+export abstract class CreateBudgetRecord {
+  @Field(() => ID)
+  @MinLength(2)
+  readonly projectId: string;
+}
+
+@InputType()
+export abstract class CreateBudgetRecordInput {
+  @Field()
+  @Type(() => CreateBudgetRecord)
+  @ValidateNested()
+  readonly record: CreateBudgetRecord;
+}
+
+@ObjectType()
+export abstract class CreateBudgetRecordOutput {
+  @Field()
+  readonly record: BudgetRecord;
 }
