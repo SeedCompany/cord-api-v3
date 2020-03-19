@@ -33,29 +33,24 @@ describe('ProjectMember e2e', () => {
 
   it('read one projectMember by id', async () => {
     const projectMember = await createProjectMember(app, { userId: user.id });
-    try {
-      const result = await app.graphql.query(
-        gql`
-          query projectMember($id: ID!) {
-            projectMember(id: $id) {
-              ...projectMember
-            }
+    const result = await app.graphql.query(
+      gql`
+        query projectMember($id: ID!) {
+          projectMember(id: $id) {
+            ...projectMember
           }
-          ${fragments.projectMember}
-        `,
-        {
-          id: projectMember.id,
         }
-      );
+        ${fragments.projectMember}
+      `,
+      {
+        id: projectMember.id,
+      }
+    );
 
-      const actual: ProjectMember = result.projectMember;
-      expect(actual.id).toBe(projectMember.id);
-      expect(isValid(actual.id)).toBe(true);
-      expect(actual.user.value?.id).toBe(user.id);
-    } catch (e) {
-      console.error(e);
-      fail();
-    }
+    const actual: ProjectMember = result.projectMember;
+    expect(actual.id).toBe(projectMember.id);
+    expect(isValid(actual.id)).toBe(true);
+    expect(actual.user.value?.id).toBe(user.id);
   });
 
   it('list view of ProjectMember', async () => {
@@ -111,8 +106,8 @@ describe('ProjectMember e2e', () => {
     const actual: boolean | undefined = result.deleteProjectMember;
     expect(actual).toBeTruthy();
 
-    try {
-      await app.graphql.query(
+    await expect(
+      app.graphql.query(
         gql`
           query projectMember($id: ID!) {
             projectMember(id: $id) {
@@ -124,10 +119,8 @@ describe('ProjectMember e2e', () => {
         {
           id: projectMember.id,
         }
-      );
-    } catch (e) {
-      expect(e.response.statusCode).toBe(404);
-    }
+      )
+    ).rejects.toThrowError();
   });
 
   it('update projectMember', async () => {
@@ -135,10 +128,8 @@ describe('ProjectMember e2e', () => {
 
     const result = await app.graphql.query(
       gql`
-        mutation updateProjectMember($id: ID!) {
-          updateProjectMember(
-            input: { projectMember: { id: $id, roles: Intern } }
-          ) {
+        mutation updateProjectMember($input: UpdateProjectMemberInput!) {
+          updateProjectMember(input: $input) {
             projectMember {
               ...projectMember
             }
@@ -147,13 +138,18 @@ describe('ProjectMember e2e', () => {
         ${fragments.projectMember}
       `,
       {
-        id: projectMember.id,
+        input: {
+          projectMember: {
+            id: projectMember.id,
+            roles: [Role.Intern],
+          },
+        },
       }
     );
 
     expect(result.updateProjectMember.projectMember.id).toBe(projectMember.id);
     expect(result.updateProjectMember.projectMember.roles.value).toEqual(
-      expect.arrayContaining([Role.Intern]) //On Defaul Condition
+      expect.arrayContaining([Role.Intern])
     );
   });
 });
