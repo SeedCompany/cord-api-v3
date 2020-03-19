@@ -31,7 +31,7 @@ export class TranslationProjectResolver {
   }
 
   @ResolveProperty(() => SecuredProjectMemberList, {
-    description: 'projectMembers by project',
+    description: 'The project members',
   })
   async team(
     @Session() session: ISession,

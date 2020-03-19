@@ -12,13 +12,13 @@ import { ProjectMember } from './project-member.dto';
 @InputType()
 export abstract class ProjectMemberFilters {
   @Field(() => [Role], {
-    description: 'ProjectMember matching user role',
+    description: 'Only members with these roles',
     nullable: true,
   })
   readonly roles?: Role[];
 
   @Field(() => ID, {
-    description: 'ProjectMembers for ProjectId',
+    description: 'Only members of this project',
     nullable: true,
   })
   readonly projectId?: string;

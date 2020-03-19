@@ -5,9 +5,7 @@ import { SecuredUser } from '../../user';
 import { Role } from '../../user/role';
 
 @ObjectType({
-  description: SecuredPropertyList.descriptionFor(
-    'a role of projectMember types'
-  ),
+  description: SecuredPropertyList.descriptionFor('roles'),
 })
 export abstract class SecuredRoles extends SecuredPropertyList(Role) {}
 

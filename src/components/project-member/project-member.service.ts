@@ -41,8 +41,8 @@ export class ProjectMemberService {
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadRoles:ACL {canReadRoles: true})-[:toNode]->(projectMember)-[:roles {active: true}]->(roles: Property {active: true})
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditRoles:ACL {canEditRoles: true})-[:toNode]->(projectMember)
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadUser:ACL {canReadUser: true})-[:toNode]->(projectMember)-[:user {active: true}]->(user)
-        
-        RETURN 
+
+        RETURN
           projectMember.id as id,
           projectMember.createdAt as createdAt,
           user.id as userId,
@@ -61,7 +61,7 @@ export class ProjectMemberService {
       .first();
 
     if (!result) {
-      throw new NotFoundException('Could not find projectMember');
+      throw new NotFoundException('Could not find project member');
     }
 
     let user: User = RedactedUser;
@@ -130,11 +130,11 @@ export class ProjectMemberService {
 
       return await this.readOne(id, session);
     } catch (e) {
-      this.logger.warning('Failed to create projectMember', {
+      this.logger.warning('Failed to create project member', {
         exception: e,
       });
 
-      throw new Error('Could not create projectMember');
+      throw new Error('Could not create project member');
     }
   }
 
@@ -191,7 +191,7 @@ export class ProjectMemberService {
     const object = await this.readOne(id, session);
 
     if (!object) {
-      throw new NotFoundException('Could not find projectMember');
+      throw new NotFoundException('Could not find project member');
     }
 
     try {
@@ -201,7 +201,7 @@ export class ProjectMemberService {
         aclEditProp: 'canDeleteOwnUser',
       });
     } catch (e) {
-      this.logger.warning('Failed to delete projectMember', {
+      this.logger.warning('Failed to delete project member', {
         exception: e,
       });
 

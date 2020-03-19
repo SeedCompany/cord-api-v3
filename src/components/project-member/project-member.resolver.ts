@@ -17,7 +17,7 @@ export class ProjectMemberResolver {
   constructor(private readonly service: ProjectMemberService) {}
 
   @Mutation(() => CreateProjectMemberOutput, {
-    description: 'Create a Project member',
+    description: 'Create a project member',
   })
   async createProjectMember(
     @Session() session: ISession,
@@ -28,7 +28,7 @@ export class ProjectMemberResolver {
   }
 
   @Query(() => ProjectMember, {
-    description: 'Look up a projectMember by ID',
+    description: 'Look up a project member by ID',
   })
   async projectMember(
     @Session() session: ISession,
@@ -38,7 +38,7 @@ export class ProjectMemberResolver {
   }
 
   @Query(() => ProjectMemberListOutput, {
-    description: 'Look up projectMembers',
+    description: 'Look up project members',
   })
   async projectMembers(
     @Session() session: ISession,
@@ -53,7 +53,7 @@ export class ProjectMemberResolver {
   }
 
   @Mutation(() => UpdateProjectMemberOutput, {
-    description: 'Update a ProjectMember',
+    description: 'Update a project member',
   })
   async updateProjectMember(
     @Session() session: ISession,
@@ -64,7 +64,7 @@ export class ProjectMemberResolver {
   }
 
   @Mutation(() => Boolean, {
-    description: 'Delete a ProjectMember',
+    description: 'Delete a project member',
   })
   async deleteProjectMember(
     @Session() session: ISession,

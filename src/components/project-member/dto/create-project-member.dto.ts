@@ -7,12 +7,12 @@ import { ProjectMember } from './project-member.dto';
 @InputType()
 export class CreateProjectMember {
   @Field(() => ID, {
-    description: 'A user ID that will explain of this project as member',
+    description: 'A user ID',
   })
   readonly userId: string;
 
   @Field(() => ID, {
-    description: 'A project ID that will explain of this project as member',
+    description: 'A project ID',
   })
   readonly projectId: string;
 
