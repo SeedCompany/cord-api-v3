@@ -4,8 +4,7 @@ import { ContextFunction } from 'apollo-server-core';
 import { Request, Response } from 'express';
 import { GqlContextType } from './common';
 import { DateScalar, DateTimeScalar } from './common/luxon.graphql';
-import { AdminResolver } from './components/admin/admin.resolver';
-import { AdminService } from './components/admin/admin.service';
+import { AdminModule } from './components/admin';
 import { AuthenticationModule } from './components/authentication';
 import { AuthorizationModule } from './components/authorization';
 import { BudgetModule } from './components/budget/budget.module';
@@ -38,6 +37,7 @@ const context: ContextFunction<
       playground: true, // enabled in all environments
       introspection: true, // needed for playground
     }),
+    AdminModule,
     AuthenticationModule,
     AuthorizationModule,
     BudgetModule,
@@ -53,6 +53,6 @@ const context: ContextFunction<
     PartnershipModule,
   ],
   controllers: [],
-  providers: [AdminResolver, AdminService, DateTimeScalar, DateScalar],
+  providers: [DateTimeScalar, DateScalar],
 })
 export class AppModule {}

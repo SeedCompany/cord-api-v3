@@ -4,5 +4,6 @@ import { AuthorizationService } from './authorization.service';
 
 @Module({
   providers: [AuthorizationService, AuthorizationResolver],
+  exports: [AuthorizationService],
 })
 export class AuthorizationModule {}

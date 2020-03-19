@@ -110,7 +110,7 @@ export class UserResolver {
     @Session() session: ISession,
     @Args('input') { user: input }: CreateUserInput
   ): Promise<CreateUserOutput> {
-    const user = await this.userService.create(input, session);
+    const user = await this.userService.createAndLogin(input, session);
     return { user };
   }
 

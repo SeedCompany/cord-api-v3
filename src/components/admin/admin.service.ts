@@ -1,151 +1,142 @@
-import { Injectable } from '@nestjs/common';
-import { DeprecatedDBService } from '../../core';
-import { AdminOutputDto } from './admin.dto';
+import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
+import { node, relation } from 'cypher-query-builder';
+import { ConfigService, DatabaseService } from '../../core';
+import { UserService } from '../user';
+import { RootSecurityGroup } from './root-security-group';
 
 @Injectable()
-export class AdminService {
-  constructor(private readonly db: DeprecatedDBService) {}
+export class AdminService implements OnApplicationBootstrap {
+  constructor(
+    private readonly db: DatabaseService,
+    private readonly config: ConfigService,
+    private readonly userService: UserService
+  ) {}
 
-  async prepareDatabaseConstraintsAndIndexes(): Promise<AdminOutputDto> {
-    const response = new AdminOutputDto();
-
-    const session = this.db.driver.session();
-    const wait = [];
-
-    // ORGANIZATION
-    wait.push(
-      session.run(
-        'CREATE CONSTRAINT ON (org:Organization) ASSERT org.name IS UNIQUE'
-      )
-    );
-    wait.push(
-      session.run(
-        'CREATE CONSTRAINT ON (org:Organization) ASSERT org.id IS UNIQUE'
-      )
-    );
-    wait.push(
-      session.run(
-        'CREATE CONSTRAINT ON (org:Organization) ASSERT exists(org.id)'
-      )
-    );
-    wait.push(
-      session.run(
-        'CREATE CONSTRAINT ON (org:Organization) ASSERT exists(org.name)'
-      )
-    );
-    wait.push(
-      session.run(
-        'CREATE CONSTRAINT ON (org:Organization) ASSERT exists(org.active)'
-      )
-    );
-
-    // LOCATION
-    wait.push(
-      session.run(
-        'CREATE CONSTRAINT ON (loc:Location) ASSERT loc.name IS UNIQUE'
-      )
-    );
-    wait.push(
-      session.run('CREATE CONSTRAINT ON (loc:Location) ASSERT loc.id IS UNIQUE')
-    );
-    wait.push(
-      session.run('CREATE CONSTRAINT ON (loc:Location) ASSERT exists(loc.id)')
-    );
-    wait.push(
-      session.run('CREATE CONSTRAINT ON (loc:Location) ASSERT exists(loc.name)')
-    );
-    wait.push(
-      session.run(
-        'CREATE CONSTRAINT ON (loc:Location) ASSERT exists(loc.active)'
-      )
-    );
-
-    // AREA
-    wait.push(
-      session.run('CREATE CONSTRAINT ON (area:Area) ASSERT area.name IS UNIQUE')
-    );
-    wait.push(
-      session.run('CREATE CONSTRAINT ON (area:Area) ASSERT area.id IS UNIQUE')
-    );
-    wait.push(
-      session.run('CREATE CONSTRAINT ON (area:Area) ASSERT exists(area.id)')
-    );
-    wait.push(
-      session.run('CREATE CONSTRAINT ON (area:Area) ASSERT exists(area.name)')
-    );
-    wait.push(
-      session.run('CREATE CONSTRAINT ON (area:Area) ASSERT exists(area.active)')
-    );
-
-    await Promise.all(wait);
-    session.close();
-
-    response.success = true;
-
-    return response;
-  }
-
-  async loadFakeData(): Promise<AdminOutputDto> {
-    const response = new AdminOutputDto();
-
-    const totalUsers = 50;
-    const totalOrgs = 50;
-
-    // ORGS
-    for (let i = 0; i < totalOrgs; i++) {
-      // this.orgService.create({
-      //   name: 'org_' + generate(),
-      // });
+  async onApplicationBootstrap(): Promise<void> {
+    if (!(await this.rootAdminAclExists())) {
+      await this.createRootAdminAcl();
     }
 
-    // USERS
-    for (let i = 0; i < totalUsers; i++) {
-      // const s = 'user_' + generate();
-      // await this.userService.create(
-      //   {
-      //     displayFirstName: s,
-      //     displayLastName: s,
-      //     email: s,
-      //     realFirstName: s,
-      //     realLastName: s,
-      //   },
-      //   'token - replace me later',
-      // );
+    if (!(await this.doesRootAdminUserAlreadyExist())) {
+      await this.createRootAdminUser();
     }
 
-    response.success = true;
-
-    return response;
+    await this.mergeRootAdminUserToAcl();
   }
 
-  async consistencyCheck(): Promise<AdminOutputDto> {
-    const response = new AdminOutputDto();
-    let totalNodes = 0;
-    const session = this.db.driver.session();
-    const result = await session.run('MATCH (n) RETURN count(n) as count', {});
-    totalNodes = result.records[0].get('count');
-    for (let i = 0; i < totalNodes; i++) {
-      // todo
+  async rootAdminAclExists(): Promise<boolean> {
+    const result = await this.db
+      .query()
+      .match([[node('sg', 'RootSecurityGroup')]])
+      .return('sg')
+      .first();
+
+    if (result) {
+      return true;
+    } else {
+      return false;
     }
-    session.close();
-    response.success = true;
-    return response;
-  }
-  async deleteAllData(): Promise<AdminOutputDto> {
-    const response = new AdminOutputDto();
-    const session = this.db.driver.session();
-    await session.run('MATCH (n) DETACH DELETE n');
-    session.close();
-    response.success = true;
-    return response;
   }
 
-  async removeAllConstraintsAndIndexes(): Promise<AdminOutputDto> {
-    const response = new AdminOutputDto();
-    const session = this.db.driver.session();
-    await session.run('CALL apoc.schema.assert({}, {})');
-    session.close();
-    response.success = true;
-    return response;
+  async doesRootAdminUserAlreadyExist(): Promise<boolean> {
+    const result = await this.db
+      .query()
+      .match([
+        [
+          node('user', 'User'),
+          relation('out', '', 'email', {
+            active: true,
+          }),
+          node('email', 'EmailAddress', {
+            value: this.config.rootAdmin.email,
+          }),
+        ],
+      ])
+      .return('user')
+      .first();
+
+    if (result) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  async createRootAdminAcl(): Promise<boolean> {
+    const result = await this.db
+      .query()
+      .create([
+        [
+          node(
+            'sg',
+            ['RootSecurityGroup', 'SecurityGroup'],
+            new RootSecurityGroup()
+          ),
+        ],
+      ])
+      .first();
+
+    if (result) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  async createRootAdminUser(): Promise<boolean> {
+    const { email, password } = this.config.rootAdmin;
+    const adminUser = await this.userService.create({
+      email: email,
+      password: password,
+      displayFirstName: 'root',
+      displayLastName: 'root',
+      realFirstName: 'root',
+      realLastName: 'root',
+      phone: 'root',
+      timezone: 'root',
+      bio: 'root',
+    });
+
+    if (adminUser) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  async mergeRootAdminUserToAcl(): Promise<boolean> {
+    const makeAdmin = await this.db
+      .query()
+      .match([[node('sg', 'RootSecurityGroup')]])
+      .with('*')
+      .match([
+        [
+          node('newRootAdmin', 'User'),
+          relation('out', '', 'email', {
+            active: true,
+          }),
+          node('emailAddress', 'EmailAddress', {
+            value: this.config.rootAdmin.email,
+          }),
+        ],
+      ])
+      .with('*')
+      .merge([
+        [
+          node('sg'),
+          relation('out', 'adminLink', 'member'),
+          node('newRootAdmin'),
+        ],
+      ])
+      .setValues({ sg: new RootSecurityGroup() })
+      .return('newRootAdmin')
+      .first();
+
+    if (makeAdmin) {
+      return true;
+    } else {
+      console.log('merge failed');
+      return false;
+    }
   }
 }
