@@ -1,5 +1,5 @@
 import { ObjectType, registerEnumType } from 'type-graphql';
-import { SecuredPropertyList } from '../../../common';
+import { SecuredPropertyList } from '../../../../common';
 
 export enum Role {
   Admin = 'adm',

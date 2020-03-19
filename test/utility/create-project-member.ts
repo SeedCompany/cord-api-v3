@@ -4,7 +4,7 @@ import {
   CreateProjectMember,
   ProjectMember,
   Role,
-} from '../../src/components/project-member';
+} from '../../src/components/project';
 import { createProject, createUser, fragments, TestApp } from '../utility';
 
 export async function createProjectMember(

@@ -4,11 +4,11 @@ import {
   EngagementListInput,
   SecuredLanguageEngagementList,
 } from '../engagement/dto';
+import { TranslationProject } from './dto';
 import {
   ProjectMemberListInput,
   SecuredProjectMemberList,
-} from '../project-member';
-import { TranslationProject } from './dto';
+} from './project-member';
 import { ProjectService } from './project.service';
 
 @Resolver(TranslationProject.classType)

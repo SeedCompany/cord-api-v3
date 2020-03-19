@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { generate } from 'shortid';
-import { DatabaseService, ILogger, Logger } from '../../core';
-import { ISession } from '../auth';
-import { RedactedUser, User, UserService } from '../user';
+import { DatabaseService, ILogger, Logger } from '../../../core';
+import { ISession } from '../../auth';
+import { RedactedUser, User, UserService } from '../../user';
 import {
   CreateProjectMember,
   ProjectMember,

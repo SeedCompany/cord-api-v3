@@ -1,7 +1,7 @@
 import { gql } from 'apollo-server-core';
 import { times } from 'lodash';
 import { isValid } from 'shortid';
-import { ProjectMember, Role } from '../src/components/project-member';
+import { ProjectMember, Role } from '../src/components/project';
 import { User } from '../src/components/user';
 import {
   createProject,

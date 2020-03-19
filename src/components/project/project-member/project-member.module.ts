@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { UserModule } from '../user';
+import { UserModule } from '../../user';
 import { ProjectMemberResolver } from './project-member.resolver';
 import { ProjectMemberService } from './project-member.service';
 

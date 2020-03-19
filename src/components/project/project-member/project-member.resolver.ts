@@ -1,6 +1,6 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { IdArg } from '../../common';
-import { ISession, Session } from '../auth';
+import { IdArg } from '../../../common';
+import { ISession, Session } from '../../auth';
 import {
   CreateProjectMemberInput,
   CreateProjectMemberOutput,

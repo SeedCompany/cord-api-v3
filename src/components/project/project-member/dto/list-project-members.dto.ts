@@ -5,7 +5,7 @@ import {
   PaginatedList,
   SecuredList,
   SortablePaginationInput,
-} from '../../../common';
+} from '../../../../common';
 import { ProjectMember } from './project-member.dto';
 import { Role } from './role.dto';
 

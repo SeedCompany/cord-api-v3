@@ -4,11 +4,11 @@ import {
   EngagementListInput,
   SecuredInternshipEngagementList,
 } from '../engagement/dto';
+import { InternshipProject } from './dto';
 import {
   ProjectMemberListInput,
   SecuredProjectMemberList,
-} from '../project-member';
-import { InternshipProject } from './dto';
+} from './project-member';
 import { ProjectService } from './project.service';
 
 @Resolver(InternshipProject.classType)

@@ -14,11 +14,6 @@ import {
   SecuredLanguageEngagementList,
 } from '../engagement/dto';
 import {
-  ProjectMemberListInput,
-  ProjectMemberService,
-  SecuredProjectMemberList,
-} from '../project-member';
-import {
   AnyProject,
   CreateProject,
   InternshipProject,
@@ -30,6 +25,11 @@ import {
   TranslationProject,
   UpdateProject,
 } from './dto';
+import {
+  ProjectMemberListInput,
+  ProjectMemberService,
+  SecuredProjectMemberList,
+} from './project-member';
 
 @Injectable()
 export class ProjectService {
