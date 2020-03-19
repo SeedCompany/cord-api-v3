@@ -44,6 +44,7 @@ export class BudgetService {
   }
 
   async delete(_id: string, _session: ISession): Promise<void> {
+    // cascade delete each budget record in this budget
     throw new NotImplementedException();
   }
 
