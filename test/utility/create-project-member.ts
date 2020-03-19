@@ -3,7 +3,6 @@ import { isValid } from 'shortid';
 import {
   CreateProjectMember,
   ProjectMember,
-  Role,
 } from '../../src/components/project';
 import { createProject, createUser, fragments, TestApp } from '../utility';
 
@@ -39,8 +38,5 @@ export async function createProjectMember(
 
   expect(actual).toBeTruthy();
   expect(isValid(actual.id)).toBe(true);
-  expect(actual.roles.value).toEqual(
-    expect.arrayContaining([Role.Admin]) //On Defaul Condition
-  );
   return actual;
 }

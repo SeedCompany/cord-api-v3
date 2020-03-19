@@ -8,7 +8,6 @@ import {
   ProjectMember,
   ProjectMemberListInput,
   ProjectMemberListOutput,
-  Role,
   UpdateProjectMember,
 } from './dto';
 
@@ -104,7 +103,7 @@ export class ProjectMemberService {
         session,
         input: {
           id,
-          roles: Role.Admin,
+          roles: [],
           ...input,
         },
         acls,

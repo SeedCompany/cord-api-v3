@@ -71,6 +71,7 @@ describe('ProjectMember e2e', () => {
         createProjectMember(app, {
           userId,
           projectId,
+          roles: [Role.Consultant],
         })
       )
     );
@@ -78,7 +79,7 @@ describe('ProjectMember e2e', () => {
     const { projectMembers } = await app.graphql.query(
       gql`
         query {
-          projectMembers(input: { filter: { roles: [Admin] } }) {
+          projectMembers(input: { filter: { roles: [Consultant] } }) {
             items {
               id
             }
