@@ -221,6 +221,20 @@ export const fragments = {
       }
     }
   `,
+  projectMember: gql`
+    fragment projectMember on ProjectMember {
+      id
+      createdAt
+      roles {
+        value
+      }
+      user {
+        value {
+          id
+        }
+      }
+    }
+  `,
   zone: gql`
     fragment zone on Zone {
       id

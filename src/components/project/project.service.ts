@@ -25,11 +25,17 @@ import {
   TranslationProject,
   UpdateProject,
 } from './dto';
+import {
+  ProjectMemberListInput,
+  ProjectMemberService,
+  SecuredProjectMemberList,
+} from './project-member';
 
 @Injectable()
 export class ProjectService {
   constructor(
     private readonly db: DatabaseService,
+    private readonly projectMembers: ProjectMemberService,
     @Logger('project:service') private readonly logger: ILogger
   ) {}
 
@@ -241,6 +247,29 @@ export class ProjectService {
   ): Promise<SecuredLanguageEngagementList | SecuredInternshipEngagementList> {
     // Maybe call EngagementService?
     throw new NotImplementedException();
+  }
+
+  async listProjectMembers(
+    projectId: string,
+    input: ProjectMemberListInput,
+    session: ISession
+  ): Promise<SecuredProjectMemberList> {
+    const result = await this.projectMembers.list(
+      {
+        ...input,
+        filter: {
+          ...input.filter,
+          projectId: projectId,
+        },
+      },
+      session
+    );
+
+    return {
+      ...result,
+      canRead: true, // TODO
+      canCreate: true, // TODO
+    };
   }
 
   async create(

@@ -286,6 +286,8 @@ export class UserService {
             canReadRegion: true,
             canCreateCountry: true,
             canReadCountry: true,
+            canCreateProjectMember: true,
+            canReadProjectMembers: true,
             canDeleteOwnUser: true,
             canDeleteLocation: true,
             owningOrgId: 'Seed Company',
