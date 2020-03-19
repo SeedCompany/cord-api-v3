@@ -1,0 +1,99 @@
+{
+	"id": "919ca3c3-14d9-4cef-8a44-44aaa5380bc6",
+	"values": [
+		{
+			"key": "timeStamp",
+			"value": "1932020104249",
+			"enabled": true
+		},
+		{
+			"key": "token",
+			"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODQzNTQwNzM0ODN9.ajWK_id0i_Hqee7gbdwLt5RAyrFlyrcbO5LX1k1TmS0",
+			"enabled": true
+		},
+		{
+			"key": "timestamp",
+			"value": "03/06/2020",
+			"enabled": true
+		},
+		{
+			"key": "userid",
+			"value": "yAzlj91VY",
+			"enabled": true
+		},
+		{
+			"key": "organizationid",
+			"value": "PSS3vYT84",
+			"enabled": true
+		},
+		{
+			"key": "projectid",
+			"value": "kgXyeRJc",
+			"enabled": true
+		},
+		{
+			"key": "partnershipid",
+			"value": "5dSvB9Sts",
+			"enabled": true
+		},
+		{
+			"key": "password",
+			"value": "test@123",
+			"enabled": true
+		},
+		{
+			"key": "email",
+			"value": "1732020111723invalid@mailinator.com",
+			"enabled": true
+		},
+		{
+			"key": "languageid",
+			"value": "AzFBC5eG",
+			"enabled": true
+		},
+		{
+			"key": "productid",
+			"value": "bHyrrYxU",
+			"enabled": true
+		},
+		{
+			"key": "internshipEngagementid",
+			"value": "6ReFkO-M",
+			"enabled": true
+		},
+		{
+			"key": "educationid",
+			"value": "PtVZb_Rd",
+			"enabled": true
+		},
+		{
+			"key": "budgetid",
+			"value": "GD6CCXqc",
+			"enabled": true
+		},
+		{
+			"key": "requestuploadid",
+			"value": "tmpUiLso",
+			"enabled": true
+		},
+		{
+			"key": "fileid",
+			"value": "770BjkEd",
+			"enabled": true
+		},
+		{
+			"key": "zoneid",
+			"value": "OFdC781S",
+			"enabled": true
+		},
+		{
+			"key": "unavailabilityid",
+			"value": "vR_6TGV-",
+			"enabled": true
+		}
+	],
+	"name": "My Workspace Globals",
+	"_postman_variable_scope": "globals",
+	"_postman_exported_at": "2020-03-19T05:40:27.442Z",
+	"_postman_exported_using": "Postman/7.20.1"
+}
