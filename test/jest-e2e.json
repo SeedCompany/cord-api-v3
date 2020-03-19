@@ -9,6 +9,7 @@
     "^.+\\.(t|j)s$": "ts-jest"
   },
   "setupFiles": [
-    "reflect-metadata"
+    "reflect-metadata",
+    "./src/app.module.ts"
   ]
 }
