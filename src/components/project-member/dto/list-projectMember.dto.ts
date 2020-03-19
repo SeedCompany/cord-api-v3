@@ -6,8 +6,8 @@ import {
   SecuredList,
   SortablePaginationInput,
 } from '../../../common';
-import { Role } from '../../user/role';
 import { ProjectMember } from './project-member.dto';
+import { Role } from './role.dto';
 
 @InputType()
 export abstract class ProjectMemberFilters {

@@ -1,4 +1,5 @@
-import { registerEnumType } from 'type-graphql';
+import { ObjectType, registerEnumType } from 'type-graphql';
+import { SecuredPropertyList } from '../../../common';
 
 export enum Role {
   Admin = 'adm',
@@ -26,3 +27,8 @@ export enum Role {
 }
 
 registerEnumType(Role, { name: 'Role' });
+
+@ObjectType({
+  description: SecuredPropertyList.descriptionFor('roles'),
+})
+export abstract class SecuredRoles extends SecuredPropertyList(Role) {}

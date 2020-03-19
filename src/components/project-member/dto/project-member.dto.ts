@@ -1,13 +1,8 @@
 import { DateTime } from 'luxon';
 import { Field, ObjectType } from 'type-graphql';
-import { DateTimeField, Resource, SecuredPropertyList } from '../../../common';
+import { DateTimeField, Resource } from '../../../common';
 import { SecuredUser } from '../../user';
-import { Role } from '../../user/role';
-
-@ObjectType({
-  description: SecuredPropertyList.descriptionFor('roles'),
-})
-export abstract class SecuredRoles extends SecuredPropertyList(Role) {}
+import { SecuredRoles } from './role.dto';
 
 @ObjectType({
   implements: [Resource],

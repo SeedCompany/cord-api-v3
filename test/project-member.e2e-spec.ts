@@ -1,9 +1,8 @@
 import { gql } from 'apollo-server-core';
 import { times } from 'lodash';
 import { isValid } from 'shortid';
-import { ProjectMember } from '../src/components/project-member';
+import { ProjectMember, Role } from '../src/components/project-member';
 import { User } from '../src/components/user';
-import { Role } from '../src/components/user/role';
 import {
   createProject,
   createProjectMember,
@@ -153,9 +152,7 @@ describe('ProjectMember e2e', () => {
 
     expect(result.updateProjectMember.projectMember.id).toBe(projectMember.id);
     expect(result.updateProjectMember.projectMember.roles.value).toEqual(
-      expect.arrayContaining(
-        Object.keys(Role).filter(item => item === 'Intern')
-      ) //On Defaul Condition
+      expect.arrayContaining([Role.Intern]) //On Defaul Condition
     );
   });
 });

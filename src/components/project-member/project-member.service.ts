@@ -3,12 +3,12 @@ import { generate } from 'shortid';
 import { DatabaseService, ILogger, Logger } from '../../core';
 import { ISession } from '../auth';
 import { RedactedUser, User, UserService } from '../user';
-import { Role } from '../user/role';
 import {
   CreateProjectMember,
   ProjectMember,
   ProjectMemberListInput,
   ProjectMemberListOutput,
+  Role,
   UpdateProjectMember,
 } from './dto';
 
