@@ -7,9 +7,10 @@ import { DateScalar, DateTimeScalar } from './common/luxon.graphql';
 import { AdminResolver } from './components/admin/admin.resolver';
 import { AdminService } from './components/admin/admin.service';
 import { AuthModule } from './components/auth';
+import { BudgetModule } from './components/budget/budget.module';
 import { BudgetResolver } from './components/budget/budget.resolver';
 import { BudgetService } from './components/budget/budget.service';
-import { CeremonyModule } from './components/cermony';
+import { CeremonyModule } from './components/ceremony';
 import { EngagementModule } from './components/engagement';
 import { FileModule } from './components/file';
 import { LanguageModule } from './components/language';
@@ -39,6 +40,7 @@ const context: ContextFunction<
       introspection: true, // needed for playground
     }),
     AuthModule,
+    BudgetModule,
     CeremonyModule,
     FileModule,
     LanguageModule,

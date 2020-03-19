@@ -1,8 +1,8 @@
 import { Injectable, NotImplementedException } from '@nestjs/common';
 import { DatabaseService, ILogger, Logger } from '../../core';
 import { ISession } from '../auth';
-import { Budget } from './budget';
 import {
+  Budget,
   BudgetListInput,
   BudgetListOutput,
   BudgetRecord,

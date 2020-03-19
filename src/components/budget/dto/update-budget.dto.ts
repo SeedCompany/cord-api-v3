@@ -1,8 +1,7 @@
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { Field, ID, InputType, Int, ObjectType } from 'type-graphql';
-import { BudgetStatus } from '../budget';
-import { Budget, BudgetRecord } from './budget';
+import { Budget, BudgetRecord, BudgetStatus } from '.';
 
 @InputType()
 export abstract class UpdateBudget {

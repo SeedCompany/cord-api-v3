@@ -9,7 +9,7 @@ import {
   SecuredDate,
   SecuredDateTime,
 } from '../../../common';
-import { SecuredCeremony } from '../../cermony';
+import { SecuredCeremony } from '../../ceremony';
 import { SecuredLanguage } from '../../language';
 import { SecuredCountry } from '../../location';
 import { SecuredMethodologies } from '../../product';
