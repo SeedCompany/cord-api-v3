@@ -567,7 +567,7 @@ export class DatabaseService {
     aclEditProp,
   }: {
     session: ISession;
-    input: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> };
+    input: { [Key in keyof TObject]?: any };
     acls: Record<string, boolean>;
     baseNodeLabel: string;
     aclEditProp?: string;
@@ -581,7 +581,7 @@ export class DatabaseService {
     });
 
     for (const k in input) {
-      if (k === 'id' || k === 'userId') {
+      if (k === 'id') {
         continue;
       }
 
@@ -589,7 +589,7 @@ export class DatabaseService {
         session,
         key: k,
         value: input[k],
-        id: input.id!,
+        id: input.id,
       });
     }
   }
@@ -603,34 +603,10 @@ export class DatabaseService {
   }: {
     session: ISession;
     baseNodeLabel: string;
-    input: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> };
+    input: { [Key in keyof TObject]?: any };
     acls: Record<string, boolean>;
     aclEditProp?: string;
   }): Promise<void> {
-    const aclString = JSON.stringify(acls).replace(/"/g, '');
-    const query = `
-        MATCH
-          (token:Token {
-            active: true,
-            value: "${session.token}"
-          })
-          <-[:token {active: true}]-
-          (requestingUser:User {
-            active: true,
-            id: "${session.userId}",
-            ${aclEditProp}: true
-          })
-        CREATE
-          (item:${upperFirst(baseNodeLabel)} {
-            active: true,
-            createdAt: datetime(),
-            id: "${input.id}",
-            owningOrgId: "${session.owningOrgId}"
-          })<-[:toNode]-(acl:ACL    
-            ${aclString}
-          )-[:member]->(requestingUser)
-        RETURN item
-      `;
     try {
       await this.db
         .query()
@@ -651,7 +627,7 @@ export class DatabaseService {
         .create([
           node('item', upperFirst(baseNodeLabel), {
             active: true,
-            createdAt: DateTime.local().toNeo4JDateTime(),
+            createdAt: DateTime.local(),
             id: input.id,
             owningOrgId: session.owningOrgId,
           }),
@@ -699,10 +675,7 @@ export class DatabaseService {
     }
   }
 
-  private async createProperty<
-    TObject extends Resource,
-    Key extends keyof TObject
-  >({
+  private async createProperty<TObject extends Resource>({
     session,
     key,
     value,
@@ -710,8 +683,7 @@ export class DatabaseService {
   }: {
     session: ISession;
     key: string;
-    // FIXME: we obviously don't want "any" here. can't get this to not freak out on DateTime type-comparisons
-    value?: UnwrapSecured<TObject[Key]> | any;
+    value?: any;
     id: string;
   }) {
     await this.db
@@ -741,7 +713,7 @@ export class DatabaseService {
         node('item'),
         relation('out', 'rel', `${key}`, {
           active: true,
-          createdAt: DateTime.local().toNeo4JDateTime(),
+          createdAt: DateTime.local(),
           owningOrgId: session.owningOrgId,
         }),
         node(key, 'Property', {
