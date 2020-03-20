@@ -8,8 +8,6 @@ import { AdminResolver } from './components/admin/admin.resolver';
 import { AdminService } from './components/admin/admin.service';
 import { AuthModule } from './components/auth';
 import { BudgetModule } from './components/budget/budget.module';
-import { BudgetResolver } from './components/budget/budget.resolver';
-import { BudgetService } from './components/budget/budget.service';
 import { CeremonyModule } from './components/ceremony';
 import { EngagementModule } from './components/engagement';
 import { FileModule } from './components/file';
@@ -53,13 +51,6 @@ const context: ContextFunction<
     PartnershipModule,
   ],
   controllers: [],
-  providers: [
-    AdminResolver,
-    AdminService,
-    BudgetResolver,
-    BudgetService,
-    DateTimeScalar,
-    DateScalar,
-  ],
+  providers: [AdminResolver, AdminService, DateTimeScalar, DateScalar],
 })
 export class AppModule {}

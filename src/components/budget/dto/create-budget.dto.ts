@@ -27,7 +27,7 @@ export abstract class CreateBudgetOutput {
 export abstract class CreateBudgetRecord {
   @Field(() => ID)
   @MinLength(2)
-  readonly projectId: string;
+  readonly budgetId: string;
 }
 
 @InputType()
