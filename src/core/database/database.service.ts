@@ -671,7 +671,7 @@ export class DatabaseService {
     }
   }
 
-  private async createProperty<TObject extends Resource>({
+  private async createProperty({
     session,
     key,
     value,
