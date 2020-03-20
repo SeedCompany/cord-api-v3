@@ -1,23 +1,19 @@
 import { Module } from '@nestjs/common';
-import { AuthService } from '../auth';
+import { DatabaseService } from '../../core/database/database.service';
 import { OrganizationService } from '../organization';
-import { UserService } from '../user';
-import { EducationService } from '../user/education/education.service';
-import { UnavailabilityService } from '../user/unavailability/unavailability.service';
+import { UserModule } from '../user';
 import { FileResolver } from './file.resolver';
 import { FileService } from './file.service';
 import { FilesBucketFactory } from './files-s3-bucket.factory';
 
 @Module({
+  imports: [UserModule],
   providers: [
-    AuthService,
-    FileResolver,
+    DatabaseService,
     FilesBucketFactory,
+    FileResolver,
     FileService,
-    UserService,
     OrganizationService,
-    EducationService,
-    UnavailabilityService,
   ],
   exports: [FileService],
 })
