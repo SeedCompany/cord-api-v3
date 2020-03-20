@@ -561,7 +561,7 @@ export class DatabaseService {
 
   async createNode<TObject extends Resource>({
     session,
-    input,
+    input: { id, ...propertyValues },
     acls,
     baseNodeLabel,
     aclEditProp,
@@ -575,21 +575,17 @@ export class DatabaseService {
     await this.createBaseNode<TObject>({
       session,
       baseNodeLabel,
-      input,
+      input: { id, ...propertyValues },
       acls,
       aclEditProp,
     });
 
-    for (const k in input) {
-      if (k === 'id') {
-        continue;
-      }
-
+    for (const k in propertyValues) {
       await this.createProperty({
         session,
         key: k,
-        value: input[k],
-        id: input.id,
+        value: propertyValues[k as keyof typeof propertyValues],
+        id,
       });
     }
   }
