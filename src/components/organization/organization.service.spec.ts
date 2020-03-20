@@ -1,44 +1,27 @@
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
+import { CoreModule, LoggerModule } from '../../core';
 import { OrganizationService } from './organization.service';
-import { Organization, } from './dto';
-import { ISession, Session } from '../auth/session';
+import { ISession, Session } from '../auth';
 
 describe('OrganizationService', () => {
-  let organizationService: OrganizationService;
+  let module: TestingModule;
 
   beforeEach(async () => {
-    const moduleRef = await Test.createTestingModule({
-        providers: [OrganizationService],
-      }).compile();
-
-    organizationService = moduleRef.get<OrganizationService>(OrganizationService);
+    module = await Test.createTestingModule({
+      imports: [LoggerModule.forRoot(), CoreModule],
+      providers: [OrganizationService],
+    }).compile();
   });
 
-  //describe('Check the existance of service', () => {
-
-  it('should be defined', () => {
-    expect(organizationService).toBeDefined();
+  afterEach(async () => {
+    await module.close();
   });
 
-//   describe('Find an organization by its ID', () => {
-//     // it('should return an organization', async () => {
-//     //  // ISession {
-//     //   //   token: string;
-//     //   //   issuedAt: DateTime;
-//     //   //   owningOrgId?: string;
-//     //   //   userId?: string;
-//     //   // }
-//     //   let token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODQ2OTY0MjM1ODl9.IzqfPHG9HsAH5hAei-IxmDRcPggtTDZJQjnd2JASM4E';
-//     //   let session : ISession;
-//     //   session.token;
-      
-//     //   //const organization = `{organization : { name: "Seed" }`
-//     //   const orgId = '1234';
-//     //   const result = ['test'];
-//     //   jest.spyOn(organizationService, 'readOne').mockImplementation((orgId, session) => Organization);
-
-//     //   expect(await OrganizationService.readOne(session, orgId)).toBe(result);
-//     // });
-//   });
+  // READ ORG
+  it('create & read organization by id', async () => {
+    const orgId = '1234';
+    
+    const session = {token : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODQ2OTY0MjM1ODl9.IzqfPHG9HsAH5hAei-IxmDRcPggtTDZJQjnd2JASM4E"};
+    module.get(OrganizationService).readOne(orgId, session as ISession);
+  });
 });
-  
