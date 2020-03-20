@@ -20,6 +20,7 @@ import { LevelMatcherProvider } from './level-matcher.provider';
 import { ILogger } from './logger.interface';
 import { NamedLoggerService } from './named-logger.service';
 import { NestLoggerAdapterService } from './nest-logger-adapter.service';
+import { NullLoggerService } from './null-logger.service';
 import { LoggerOptions, WinstonLoggerService } from './winston-logger.service';
 
 @Global()
@@ -39,6 +40,15 @@ import { LoggerOptions, WinstonLoggerService } from './winston-logger.service';
 })
 export class LoggerModule {
   static loggerNames: string[] = new Array<string>();
+
+  static forTest(): DynamicModule {
+    const module = LoggerModule.forRoot();
+    module.providers?.push({
+      provide: ILogger,
+      useClass: NullLoggerService,
+    });
+    return module;
+  }
 
   static forRoot(): DynamicModule {
     // Just CLI for now. We'll handle hooking up to cloudwatch later.
