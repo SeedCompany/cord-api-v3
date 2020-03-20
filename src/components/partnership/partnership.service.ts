@@ -113,7 +113,7 @@ export class PartnershipService {
         canEdit: !!result.canEditMouEnd,
       },
       types: {
-        value: result.types ? result.types : [],
+        value: result.types ?? [],
         canRead: !!result.canReadTypes,
         canEdit: !!result.canEditTypes,
       },
@@ -231,7 +231,7 @@ export class PartnershipService {
       props: ['agreementStatus', 'mouStatus', 'mouStart', 'mouEnd', 'types'],
       changes: {
         ...input,
-        types: (input.types ? input.types : undefined) as any,
+        types: input.types as any,
       },
       nodevar: 'partnership',
     });

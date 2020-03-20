@@ -400,7 +400,7 @@ export class DatabaseService {
         const list = typeof prop === 'object' ? prop.list : false;
 
         if (list) {
-          const value = row[propName] ? row[propName] : [];
+          const value = row[propName] ?? [];
 
           if (secure) {
             item[propName] = {
@@ -667,7 +667,7 @@ export class DatabaseService {
         throw new ForbiddenError(`${aclEditProp} missing or false`);
       }
 
-      this.logger.error(`DatabaseService create error`, {
+      this.logger.error(`createNode error`, {
         exception: e,
       });
 

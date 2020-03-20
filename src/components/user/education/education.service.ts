@@ -87,7 +87,7 @@ export class EducationService {
     await this.db
       .query()
       .raw(query, {
-        userId: session.userId,
+        userId,
         id,
       })
       .first();
