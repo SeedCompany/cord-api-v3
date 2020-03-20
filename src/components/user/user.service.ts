@@ -298,7 +298,7 @@ export class UserService {
   }
 
   async createAndLogin(input: CreateUser, session: ISession): Promise<User> {
-    const user = await this.create(input);
+    const userId = await this.create(input);
     await this.login(
       {
         email: input.email,
@@ -307,10 +307,10 @@ export class UserService {
       session
     );
 
-    return user;
+    return this.readOne(userId, session);
   }
 
-  async create(input: CreateUser): Promise<User> {
+  async create(input: CreateUser): Promise<string> {
     // ensure token doesn't have any users attached to it
     // await this.logout(session.token);
 
@@ -400,14 +400,6 @@ export class UserService {
             createdAt,
           }),
         ],
-        [
-          node('user'),
-          relation('out', '', 'token', {
-            active: true,
-            createdAt,
-          }),
-          node('token'),
-        ],
         ...property('password', pash),
         ...property('realFirstName', input.realFirstName),
         ...property('realLastName', input.realLastName),
@@ -445,13 +437,15 @@ export class UserService {
           node('user'),
         ],
       ])
-      .return('user')
+      .return({
+        user: [{ id: 'id' }],
+      })
       .first();
 
     if (!result) {
       throw Error('failed to create user');
     } else {
-      return result.user;
+      return result.id;
     }
   }
 
