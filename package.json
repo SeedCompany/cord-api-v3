@@ -24,6 +24,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
+    "madge": "madge --extensions ts,tsx --ts-config=tsconfig.json src",
     "type-check": "tsc -p tsconfig.check.json"
   },
   "dependencies": {
@@ -89,6 +90,7 @@
     "husky": "^4.2.3",
     "jest": "^25.1.0",
     "lint-staged": "^10.0.8",
+    "madge": "^3.8.0",
     "prettier": "^1.19.1",
     "supertest": "^4.0.2",
     "ts-jest": "^25.2.1",
