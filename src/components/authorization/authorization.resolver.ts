@@ -19,7 +19,10 @@ export class AuthorizationResolver {
     @Session() session: ISession,
     @Args('input') input: CreatePermissionInput
   ): Promise<CreatePermissionOutput> {
-    return await this.authorizationService.createAuthorization(input.request);
+    return await this.authorizationService.createPermission(
+      session,
+      input.request
+    );
   }
 
   @Mutation(() => CreateSecurityGroupOutput)

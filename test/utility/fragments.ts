@@ -414,4 +414,16 @@ export const fragments = {
       }
     }
   `,
+  securityGroup: gql`
+    fragment securityGroup on SecurityGroup {
+      id
+      success
+    }
+  `,
+  permission: gql`
+    fragment permission on Permission {
+      id
+      success
+    }
+  `,
 };

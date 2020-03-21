@@ -97,6 +97,9 @@ export class AuthenticationService {
             (user:User {
               active: true
             })
+          OPTIONAL MATCH
+            (token)-[r]-()
+          DELETE r
           CREATE
             (user)-[:token {active: true, createdAt: datetime()}]->(token)
           RETURN

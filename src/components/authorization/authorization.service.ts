@@ -19,11 +19,65 @@ export class AuthorizationService {
     @Logger('authorization:service') private readonly logger: ILogger
   ) {}
 
-  async createAuthorization(
+  async createPermission(
+    session: ISession,
     request: CreatePermission
   ): Promise<CreatePermissionOutput> {
-    this.logger.debug('createAuthorization', request);
-    return { success: true };
+    this.logger.debug('createPermission', request);
+    /**
+     * In order to be able to add a permission to a security
+     * group, you need to be
+     * 1. An admin on the base node
+     * 2. An admin on the security group
+     */
+
+    const result = await this.db
+      .query()
+      .match([
+        [
+          node('token', 'Token', {
+            active: true,
+            value: session.token,
+          }),
+          relation('in', '', 'token', {
+            active: true,
+          }),
+          node('user', 'User'),
+          relation('in', '', 'admin', {
+            active: true,
+          }),
+          node('baseNode', 'BaseNode', {
+            id: request.baseNodeId,
+          }),
+        ],
+        [
+          node('sg', 'SecurityGroup', {
+            id: request.sgId,
+          }),
+        ],
+      ])
+      .merge([
+        [
+          node('sg'),
+          relation('out', '', 'permission'),
+          node('permission', 'Permission', {
+            id: generate(),
+            property: request.propertyName,
+            read: request.read,
+            write: request.write,
+          }),
+          relation('out', '', 'baseNode'),
+          node('baseNode'),
+        ],
+      ])
+      .return({ permission: [{ id: 'id' }] })
+      .first();
+
+    if (result === undefined) {
+      return { success: false, id: null };
+    } else {
+      return { success: true, id: result.id };
+    }
   }
 
   async createSecurityGroup(
@@ -49,15 +103,19 @@ export class AuthorizationService {
           }),
         ],
       ])
-      .create([
+      .merge([
         [
-          node('sg', 'SecurityGroup', {
+          node('newSg', 'SecurityGroup', {
             name: request.name,
             id: generate(),
           }),
+          relation('out', '', 'member', {
+            admin: true,
+          }),
+          node('user'),
         ],
       ])
-      .return({ people: [{ id: 'id' }] })
+      .return({ newSg: [{ id: 'id' }] })
       .first();
 
     if (result === undefined) {
