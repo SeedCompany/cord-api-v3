@@ -21,10 +21,11 @@ registerEnumType(BudgetStatus, { name: 'BudgetStatus' });
 })
 export class Budget extends Resource {
   static classType = (Budget as any) as Type<Budget>;
+
   @Field()
   readonly status: BudgetStatus;
 
-  @Field()
+  @Field(() => [BudgetRecord])
   readonly records: SecuredString[];
 }
 

@@ -89,8 +89,7 @@ export class BudgetService {
         session,
         input: { id, ...input },
         acls,
-        baseNodeLabel: 'BudgetRecord',
-        aclEditProp: 'canCreateBudgetRecord',
+        type: BudgetRecord.classType,
       });
 
       this.logger.info(`Created user Budget Record`, {

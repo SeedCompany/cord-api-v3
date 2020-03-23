@@ -11,6 +11,7 @@ export function PaginatedList<Type, ListItem = Type>(
   ItemClass: ClassType<Type> | AbstractClassType<Type> | GraphQLScalarType,
   options: ListOptions = {}
 ) {
+  console.log(ItemClass);
   @ObjectType({ isAbstract: true })
   abstract class PaginatedListClass {
     @Field(() => [ItemClass], {

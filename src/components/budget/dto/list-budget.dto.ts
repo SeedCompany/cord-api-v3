@@ -1,16 +1,16 @@
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { Field, InputType, ObjectType } from 'type-graphql';
-import { Budget, BudgetRecord } from '.';
+import { Field, ID, InputType, ObjectType } from 'type-graphql';
 import {
   PaginatedList,
   SecuredList,
   SortablePaginationInput,
 } from '../../../common';
+import { Budget, BudgetRecord } from './budget';
 
 @InputType()
 export abstract class BudgetFilters {
-  @Field({
+  @Field(() => ID, {
     description: 'Only budgets matching this projectId',
     nullable: true,
   })
@@ -41,7 +41,7 @@ export abstract class SecuredBudgetList extends SecuredList(Budget) {}
 
 @InputType()
 export abstract class BudgetRecordFilters {
-  @Field({
+  @Field(() => ID, {
     description: 'Only budget records matching this fiscalYEar',
     nullable: true,
   })
