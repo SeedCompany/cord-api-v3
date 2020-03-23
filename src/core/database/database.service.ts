@@ -46,6 +46,34 @@ export type DbValue = Many<
   string | number | boolean | DateTime | null | undefined
 >;
 
+export const matchSession = (
+  session: ISession,
+  {
+    withAclEdit,
+    withAclRead,
+    requestingUserConditions = {},
+  }: {
+    withAclEdit?: string;
+    withAclRead?: string;
+    requestingUserConditions?: Record<string, any>;
+  } = {}
+) => [
+  node('token', 'Token', {
+    active: true,
+    value: session.token,
+  }),
+  relation('in', '', 'token', {
+    active: true,
+  }),
+  node('requestingUser', 'User', {
+    active: true,
+    id: session.userId,
+    ...(withAclEdit ? { [withAclEdit]: true } : {}),
+    ...(withAclRead ? { [withAclRead]: true } : {}),
+    ...requestingUserConditions,
+  }),
+];
+
 @Injectable()
 export class DatabaseService {
   constructor(
@@ -110,19 +138,7 @@ export class DatabaseService {
     const now = DateTime.local();
     const result = await this.db
       .query()
-      .match([
-        node('token', 'Token', {
-          active: true,
-          value: session.token,
-        }),
-        relation('in', '', 'token', {
-          active: true,
-        }),
-        node('requestingUser', 'User', {
-          active: true,
-          id: session.userId,
-        }),
-      ])
+      .match([matchSession(session)])
       .with('*')
       .optionalMatch([
         node(nodevar, upperFirst(nodevar), {
@@ -302,19 +318,9 @@ export class DatabaseService {
     const userIdFilter = input.filter.userId ? { id: input.filter.userId } : {};
 
     const query = this.db.query().match([
-      [
-        node('token', 'Token', {
-          active: true,
-          value: session.token,
-        }),
-        relation('in', '', 'token', {
-          active: true,
-        }),
-        node('requestingUser', 'User', {
-          active: true,
-          [aclReadPropName]: true,
-        }),
-      ],
+      matchSession(session, {
+        withAclRead: aclReadPropName,
+      }),
     ]);
 
     if (Object.keys(userIdFilter).length) {
@@ -537,19 +543,7 @@ export class DatabaseService {
 
     const result = await this.db
       .query()
-      .match([
-        node('token', 'Token', {
-          active: true,
-          value: session.token,
-        }),
-        relation('in', '', 'token', {
-          active: true,
-        }),
-        node('requestingUser', 'User', {
-          active: true,
-          id: session.userId,
-        }),
-      ])
+      .match([matchSession(session)])
       .with('*')
       .optionalMatch([
         node(nodevar, upperFirst(nodevar), {
@@ -635,17 +629,8 @@ export class DatabaseService {
       await this.db
         .query()
         .match([
-          node('token', 'Token', {
-            active: true,
-            value: session.token,
-          }),
-          relation('in', '', 'token', {
-            active: true,
-          }),
-          node('requestingUser', 'User', {
-            active: true,
-            id: session.userId,
-            ...(aclEditProp && aclEdit ? { [aclEdit]: true } : {}),
+          matchSession(session, {
+            withAclEdit: aclEdit || undefined,
           }),
         ])
         .create([
@@ -671,17 +656,7 @@ export class DatabaseService {
       // Retrieve the user's record of the aclEditProp, if it exists
       const aclResult = await this.db
         .query()
-        .match([
-          node('token', 'Token', {
-            active: true,
-            value: session.token,
-          }),
-          relation('in', '', 'token'),
-          node('requestingUser', 'User', {
-            active: true,
-            id: session.userId,
-          }),
-        ])
+        .match([matchSession(session)])
         .return({
           requestingUser: [{ [aclEdit]: 'editProp' }],
         })
@@ -714,19 +689,7 @@ export class DatabaseService {
     await this.db
       .query()
       .match([
-        [
-          node('token', 'Token', {
-            active: true,
-            value: session.token,
-          }),
-          relation('in', '', 'token', {
-            active: true,
-          }),
-          node('requestingUser', 'User', {
-            active: true,
-            id: session.userId,
-          }),
-        ],
+        matchSession(session),
         [
           node('item', {
             id,
