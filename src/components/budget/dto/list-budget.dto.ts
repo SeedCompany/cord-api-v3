@@ -1,20 +1,20 @@
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { Field, InputType, ObjectType } from 'type-graphql';
-import { Budget, BudgetRecord } from '.';
+import { Field, ID, InputType, ObjectType } from 'type-graphql';
 import {
   PaginatedList,
   SecuredList,
   SortablePaginationInput,
 } from '../../../common';
+import { Budget, BudgetRecord } from './budget';
 
 @InputType()
 export abstract class BudgetFilters {
-  @Field({
-    description: 'Only budgets matching this name',
+  @Field(() => ID, {
+    description: 'Only budgets matching this projectId',
     nullable: true,
   })
-  readonly status?: string;
+  readonly projectId?: string;
 }
 
 const defaultFilters = {};
@@ -41,11 +41,17 @@ export abstract class SecuredBudgetList extends SecuredList(Budget) {}
 
 @InputType()
 export abstract class BudgetRecordFilters {
-  @Field({
-    description: 'Only budgets matching this name',
+  @Field(() => ID, {
+    description: 'Only budget records matching this fiscalYEar',
     nullable: true,
   })
-  readonly status?: string;
+  readonly fiscalYear?: string;
+
+  @Field({
+    description: 'Only budget records matching this org',
+    nullable: true,
+  })
+  readonly organizationId?: string;
 }
 
 @InputType()
@@ -63,7 +69,9 @@ export class BudgetRecordListInput extends SortablePaginationInput<
 }
 
 @ObjectType()
-export class BudgetRecordListOutput extends PaginatedList(Budget) {}
+export class BudgetRecordListOutput extends PaginatedList(
+  BudgetRecord as any
+) {}
 
 @ObjectType({
   description: SecuredList.descriptionFor('budget records'),
