@@ -382,9 +382,10 @@
 						"method": "POST",
 						"header": [
 							{
-								"key": "token",
+								"key": "",
 								"type": "text",
-								"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODA3NDUwNDM5MTR9.flOU2_Fh6rOt8bGH03mZdNcER2QF_sawH0RKbBRN5qY"
+								"value": "",
+								"disabled": true
 							}
 						],
 						"body": {
@@ -436,9 +437,10 @@
 						"method": "POST",
 						"header": [
 							{
-								"key": "token",
-								"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODA3NDUwNDM5MTR9.flOU2_Fh6rOt8bGH03mZdNcER2QF_sawH0RKbBRN5qY",
-								"type": "text"
+								"key": "",
+								"value": "",
+								"type": "text",
+								"disabled": true
 							}
 						],
 						"body": {
@@ -668,8 +670,8 @@
 						"method": "POST",
 						"header": [
 							{
-								"key": "token",
-								"value": "token_w3Yw9_-x",
+								"key": "",
+								"value": "",
 								"type": "text",
 								"disabled": true
 							}
@@ -723,9 +725,10 @@
 						"method": "POST",
 						"header": [
 							{
-								"key": "token",
-								"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODA3NDUwNDM5MTR9.flOU2_Fh6rOt8bGH03mZdNcER2QF_sawH0RKbBRN5qY",
-								"type": "text"
+								"key": "",
+								"value": "",
+								"type": "text",
+								"disabled": true
 							}
 						],
 						"body": {
@@ -777,9 +780,10 @@
 						"method": "POST",
 						"header": [
 							{
-								"key": "token",
+								"key": "",
 								"type": "text",
-								"value": "token_jPUFciM4"
+								"value": "",
+								"disabled": true
 							}
 						],
 						"body": {
@@ -938,9 +942,10 @@
 						"method": "POST",
 						"header": [
 							{
-								"key": "token",
-								"value": "token_jPUFciM4",
-								"type": "text"
+								"key": "",
+								"value": "",
+								"type": "text",
+								"disabled": true
 							}
 						],
 						"body": {
@@ -1017,12 +1022,12 @@
 			"name": "Authentication",
 			"item": [
 				{
-					"name": "login - invalid details",
+					"name": "Login-valid",
 					"event": [
 						{
 							"listen": "test",
 							"script": {
-								"id": "3b4b2359-765f-47d4-ba6f-fbd0406eacba",
+								"id": "6b66580f-801c-4d44-bd87-f2944bcaccfb",
 								"exec": [
 									"pm.test(\"Status code is 200\", function () {",
 									"    pm.response.to.have.status(200);",
@@ -1044,18 +1049,12 @@
 							]
 						},
 						"method": "POST",
-						"header": [
-							{
-								"key": "token",
-								"value": "token_oUMLIbbU",
-								"type": "text"
-							}
-						],
+						"header": [],
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation login($input:LoginInput!)\r\n    {\r\n    login(input:$input)\r\n      {\r\n        user{\r\n          email\r\n          {\r\n            canRead\r\n            canEdit\r\n            value\r\n          } \r\n       }\r\n        success\r\n      }    \r\n  }",
-								"variables": "{\r\n  \"input\": \r\n  {\r\n   \r\n\t\t\"email\": \"{{timeStamp}}invalid@mailinator.com\",\r\n        \"password\": \"test@123\"\r\n   \r\n\t  }\r\n  }"
+								"query": "mutation login($input:LoginInput!)\r\n{\r\n  login(input:$input)\r\n  {\r\n    success\r\n    user\r\n    {\r\n      id\r\n      createdAt\r\n      email\r\n      {\r\n        value\r\n      }\r\n      realLastName{\r\n        value\r\n      }\r\n      realFirstName\r\n      {\r\n        value\r\n      }\r\n      displayFirstName\r\n      {\r\n        value\r\n      }\r\n      displayLastName\r\n      {\r\n        value\r\n      }\r\n      phone\r\n      {\r\n        value\r\n      }\r\n      timezone\r\n      {\r\n        value\r\n      }\r\n      bio\r\n      {\r\n        value\r\n      }\r\n      \r\n    }\r\n    \r\n  }\r\n}",
+								"variables": "{\r\n  \"input\": \r\n  {\r\n   \r\n\t\t\"email\": \"{{email}}\",\r\n        \"password\": \"{{password}}\"\r\n\t  }\r\n  }"
 							}
 						},
 						"url": {
@@ -1071,21 +1070,15 @@
 					"response": []
 				},
 				{
-					"name": "login - valid",
+					"name": "Login-invalid",
 					"event": [
 						{
 							"listen": "test",
 							"script": {
-								"id": "3b4b2359-765f-47d4-ba6f-fbd0406eacba",
+								"id": "473a8825-8dad-4f1d-940a-57eb2499a981",
 								"exec": [
 									"pm.test(\"Status code is 200\", function () {",
 									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test(\"Saving email to  gloable variable 'email'\", function () {",
-									"    var jsonData = pm.response.json();",
-									"    var email = jsonData.data.createUser.user.email.value;",
-									"    pm.globals.set(\"email\",email);",
 									"});"
 								],
 								"type": "text/javascript"
@@ -1104,18 +1097,12 @@
 							]
 						},
 						"method": "POST",
-						"header": [
-							{
-								"key": "token",
-								"type": "text",
-								"value": "token_oUMLIbbU"
-							}
-						],
+						"header": [],
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation login($input:LoginInput!)\r\n{\r\n  login(input:$input)\r\n  {\r\n    success\r\n    user\r\n    {\r\n      id\r\n      createdAt\r\n      email\r\n      {\r\n        value\r\n      }\r\n      realLastName{\r\n        value\r\n      }\r\n      realFirstName\r\n      {\r\n        value\r\n      }\r\n      displayFirstName\r\n      {\r\n        value\r\n      }\r\n      displayLastName\r\n      {\r\n        value\r\n      }\r\n      phone\r\n      {\r\n        value\r\n      }\r\n      timezone\r\n      {\r\n        value\r\n      }\r\n      bio\r\n      {\r\n        value\r\n      }\r\n      \r\n    }\r\n    \r\n  }\r\n}",
-								"variables": "{\r\n  \"input\": \r\n  {\r\n   \r\n\t\t\"email\": \"{{email}}\",\r\n        \"password\": \"{{password}}\"\r\n\t  }\r\n  }"
+								"query": "mutation login($input:LoginInput!)\r\n    {\r\n    login(input:$input)\r\n      {\r\n        user{\r\n          email\r\n          {\r\n            canRead\r\n            canEdit\r\n            value\r\n          } \r\n       }\r\n        success\r\n      }    \r\n  }",
+								"variables": "{\r\n  \"input\": \r\n  {\r\n   \r\n\t\t\"email\": \"{{timeStamp}}invalid@mailinator.com\",\r\n        \"password\": \"test@123\"\r\n   \r\n\t  }\r\n  }"
 							}
 						},
 						"url": {
@@ -1465,11 +1452,7 @@
 									"    pm.response.to.have.status(200);",
 									"});",
 									"",
-									" pm.test(\"Save language Id\", function () {",
-									"    var jsonData = pm.response.json();",
-									"    var id = jsonData.data.createLanguage.language.id;",
-									"    pm.globals.set(\"languageid\",id);",
-									"});"
+									" "
 								],
 								"type": "text/javascript"
 							}
@@ -1492,7 +1475,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "    mutation updateLanguage($input:UpdateLanguageInput!)\r\n    {\r\n      updateLanguage(input:$input)\r\n    {\r\n      language\r\n      {\r\n        id\r\n        name\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      } \r\n        displayName\r\n        {\r\n          canRead\r\n           canEdit\r\n           value\r\n        }\r\n        beginFiscalYear\r\n        {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        ethnologueName\r\n        {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        ethnologuePopulation\r\n        {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        organizationPopulation\r\n        {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        rodNumber\r\n        {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n      }\r\n    }\r\n    }",
-								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"language\": \r\n    {\r\n      \"id\": \"swcINlEc\",\r\n      \"name\": \"test1Updated{{timeStamp}}\",\r\n      \"displayName\": \"dispaly123{{timeStamp}}\",\r\n      \"beginFiscalYear\": 2012,\r\n      \"ethnologueName\": \"name123\",\r\n      \"ethnologuePopulation\": 450,\r\n      \"organizationPopulation\": 500,\r\n      \"rodNumber\": 5\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"language\": \r\n    {\r\n      \"id\": \"{{languageid}}\",\r\n      \"name\": \"test1Updated{{timeStamp}}\"\r\n     \r\n    }\r\n  }\r\n}"
 							}
 						},
 						"url": {
