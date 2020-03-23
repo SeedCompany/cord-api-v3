@@ -101,14 +101,13 @@ export class ProjectMemberService {
     try {
       await this.db.createNode({
         session,
+        type: ProjectMember.classType,
         input: {
           id,
           roles: [],
           ...input,
         },
         acls,
-        baseNodeLabel: 'ProjectMember',
-        aclEditProp: 'canCreateProjectMember',
       });
       //connect the User to the ProjectMember
       const query = `

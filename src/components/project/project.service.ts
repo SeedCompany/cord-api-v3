@@ -312,10 +312,9 @@ export class ProjectService {
     try {
       await this.db.createNode({
         session,
+        type: Project.classType,
         input: createInput,
         acls,
-        baseNodeLabel: 'Project',
-        aclEditProp: 'canCreateProject',
       });
 
       // TODO: locations are not hooked up yet

@@ -2,6 +2,7 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  Type,
 } from '@nestjs/common';
 import {
   Connection,
@@ -10,7 +11,7 @@ import {
   Query,
   relation,
 } from 'cypher-query-builder';
-import { cloneDeep, upperFirst } from 'lodash';
+import { cloneDeep, Many, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   isSecured,
@@ -27,6 +28,51 @@ interface ReadPropertyResult {
   canEdit: boolean;
   canRead: boolean;
 }
+
+type ResourceInput<T extends Resource> = {
+  // id is required
+  id: string;
+} & {
+  // all other props are optional and their raw unsecured value
+  [Key in keyof T]?: UnwrapSecured<T[Key]>;
+} &
+  // Allow other unknown properties as well
+  Record<string, DbValue>;
+
+export type ACLs = Record<string, boolean>;
+
+/** A value that con be passed into the db */
+export type DbValue = Many<
+  string | number | boolean | DateTime | null | undefined
+>;
+
+export const matchSession = (
+  session: ISession,
+  {
+    withAclEdit,
+    withAclRead,
+    requestingUserConditions = {},
+  }: {
+    withAclEdit?: string;
+    withAclRead?: string;
+    requestingUserConditions?: Record<string, any>;
+  } = {}
+) => [
+  node('token', 'Token', {
+    active: true,
+    value: session.token,
+  }),
+  relation('in', '', 'token', {
+    active: true,
+  }),
+  node('requestingUser', 'User', {
+    active: true,
+    id: session.userId,
+    ...(withAclEdit ? { [withAclEdit]: true } : {}),
+    ...(withAclRead ? { [withAclRead]: true } : {}),
+    ...requestingUserConditions,
+  }),
+];
 
 @Injectable()
 export class DatabaseService {
@@ -92,19 +138,7 @@ export class DatabaseService {
     const now = DateTime.local();
     const result = await this.db
       .query()
-      .match([
-        node('token', 'Token', {
-          active: true,
-          value: session.token,
-        }),
-        relation('in', '', 'token', {
-          active: true,
-        }),
-        node('requestingUser', 'User', {
-          active: true,
-          id: session.userId,
-        }),
-      ])
+      .match([matchSession(session)])
       .with('*')
       .optionalMatch([
         node(nodevar, upperFirst(nodevar), {
@@ -284,19 +318,9 @@ export class DatabaseService {
     const userIdFilter = input.filter.userId ? { id: input.filter.userId } : {};
 
     const query = this.db.query().match([
-      [
-        node('token', 'Token', {
-          active: true,
-          value: session.token,
-        }),
-        relation('in', '', 'token', {
-          active: true,
-        }),
-        node('requestingUser', 'User', {
-          active: true,
-          [aclReadPropName]: true,
-        }),
-      ],
+      matchSession(session, {
+        withAclRead: aclReadPropName,
+      }),
     ]);
 
     if (Object.keys(userIdFilter).length) {
@@ -519,19 +543,7 @@ export class DatabaseService {
 
     const result = await this.db
       .query()
-      .match([
-        node('token', 'Token', {
-          active: true,
-          value: session.token,
-        }),
-        relation('in', '', 'token', {
-          active: true,
-        }),
-        node('requestingUser', 'User', {
-          active: true,
-          id: session.userId,
-        }),
-      ])
+      .match([matchSession(session)])
       .with('*')
       .optionalMatch([
         node(nodevar, upperFirst(nodevar), {
@@ -564,30 +576,33 @@ export class DatabaseService {
 
   async createNode<TObject extends Resource>({
     session,
-    input: { id, ...propertyValues },
+    type,
+    input: { id, ...props },
     acls,
     baseNodeLabel,
     aclEditProp,
   }: {
     session: ISession;
-    input: { [Key in keyof TObject]?: any };
-    acls: Record<string, boolean>;
-    baseNodeLabel: string;
-    aclEditProp?: string;
+    type: Type<TObject>;
+    input: ResourceInput<TObject>;
+    acls: ACLs;
+    baseNodeLabel?: string;
+    aclEditProp?: string | false;
   }): Promise<void> {
     await this.createBaseNode<TObject>({
       session,
-      baseNodeLabel,
-      input: { id, ...propertyValues },
+      type,
+      input: { id, ...props },
       acls,
+      baseNodeLabel,
       aclEditProp,
     });
 
-    for (const k in propertyValues) {
+    for (const [key, value] of Object.entries(props)) {
       await this.createProperty({
         session,
-        key: k,
-        value: propertyValues[k as keyof typeof propertyValues],
+        key,
+        value,
         id,
       });
     }
@@ -595,36 +610,31 @@ export class DatabaseService {
 
   async createBaseNode<TObject extends Resource>({
     session,
-    baseNodeLabel,
+    type,
     input,
     acls,
+    baseNodeLabel,
     aclEditProp,
   }: {
     session: ISession;
-    baseNodeLabel: string;
-    input: { [Key in keyof TObject]?: any };
-    acls: Record<string, boolean>;
-    aclEditProp?: string;
+    type: Type<TObject>;
+    input: ResourceInput<TObject>;
+    acls: ACLs;
+    baseNodeLabel?: string;
+    aclEditProp?: string | false;
   }): Promise<void> {
+    const label = baseNodeLabel ?? type.name;
+    const aclEdit = aclEditProp ?? `canCreate${label}`;
     try {
       await this.db
         .query()
         .match([
-          node('token', 'Token', {
-            active: true,
-            value: session.token,
-          }),
-          relation('in', '', 'token', {
-            active: true,
-          }),
-          node('requestingUser', 'User', {
-            active: true,
-            id: session.userId,
-            ...(aclEditProp ? { [aclEditProp]: true } : {}),
+          matchSession(session, {
+            withAclEdit: aclEdit || undefined,
           }),
         ])
         .create([
-          node('item', upperFirst(baseNodeLabel), {
+          node('item', upperFirst(label), {
             active: true,
             createdAt: DateTime.local(),
             id: input.id,
@@ -639,32 +649,22 @@ export class DatabaseService {
     } catch (e) {
       // If there is no aclEditProp, then this is not an access-related issue
       // and we can move forward with throwing
-      if (!aclEditProp) {
+      if (!aclEdit) {
         throw e;
       }
 
       // Retrieve the user's record of the aclEditProp, if it exists
       const aclResult = await this.db
         .query()
-        .match([
-          node('token', 'Token', {
-            active: true,
-            value: session.token,
-          }),
-          relation('in', '', 'token'),
-          node('requestingUser', 'User', {
-            active: true,
-            id: session.userId,
-          }),
-        ])
+        .match([matchSession(session)])
         .return({
-          requestingUser: [{ [aclEditProp]: 'editProp' }],
+          requestingUser: [{ [aclEdit]: 'editProp' }],
         })
         .first();
 
       // If the user doesn't have permission to perform the create action...
       if (!aclResult || !aclResult.editProp) {
-        throw new ForbiddenException(`${aclEditProp} missing or false`);
+        throw new ForbiddenException(`${aclEdit} missing or false`);
       }
 
       this.logger.error(`createNode error`, {
@@ -683,25 +683,13 @@ export class DatabaseService {
   }: {
     session: ISession;
     key: string;
-    value: any;
+    value: DbValue;
     id: string;
   }) {
     await this.db
       .query()
       .match([
-        [
-          node('token', 'Token', {
-            active: true,
-            value: session.token,
-          }),
-          relation('in', '', 'token', {
-            active: true,
-          }),
-          node('requestingUser', 'User', {
-            active: true,
-            id: session.userId,
-          }),
-        ],
+        matchSession(session),
         [
           node('item', {
             id,

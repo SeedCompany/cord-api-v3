@@ -28,6 +28,9 @@ export type AnyProject = MergeExclusive<TranslationProject, InternshipProject>;
   },
 })
 export class Project extends Resource {
+  /* TS wants a public constructor for "ClassType" */
+  static classType = (Project as any) as Type<Project>;
+
   @Field(() => ProjectType)
   readonly type: ProjectType;
 

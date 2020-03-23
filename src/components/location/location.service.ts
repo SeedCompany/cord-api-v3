@@ -236,10 +236,9 @@ export class LocationService {
     try {
       await this.db.createNode({
         session,
+        type: Zone.classType,
         input: { id, ...input },
         acls,
-        baseNodeLabel: 'Zone',
-        aclEditProp: 'canCreateZone',
       });
 
       // connect director User to zone
@@ -383,10 +382,9 @@ export class LocationService {
     try {
       await this.db.createNode({
         session,
+        type: Region.classType,
         input: { id, ...input },
         acls,
-        baseNodeLabel: 'Region',
-        aclEditProp: 'canCreateRegion',
       });
 
       this.logger.info(`region created`);
@@ -532,10 +530,9 @@ export class LocationService {
     try {
       await this.db.createNode({
         session,
+        type: Country.classType,
         input: { id, ...input },
         acls,
-        baseNodeLabel: 'Country',
-        aclEditProp: 'canCreateCountry',
       });
 
       this.logger.info(`country created`);

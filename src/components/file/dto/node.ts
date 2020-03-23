@@ -96,6 +96,9 @@ export class Directory extends FileNode {
   implements: [Resource],
 })
 export class FileVersion extends Resource {
+  /* TS wants a public constructor for "ClassType" */
+  static classType = (FileVersion as any) as Type<FileVersion>;
+
   @Field({
     description: 'The user who created this file version',
   })

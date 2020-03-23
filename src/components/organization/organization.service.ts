@@ -31,9 +31,9 @@ export class OrganizationService {
     try {
       await this.db.createNode({
         session,
+        type: Organization.classType,
         input: { id, ...input },
         acls,
-        baseNodeLabel: 'Organization',
         aclEditProp: 'canCreateOrg',
       });
     } catch {

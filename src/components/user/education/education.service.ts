@@ -60,10 +60,9 @@ export class EducationService {
     try {
       await this.db.createNode({
         session,
+        type: Education.classType,
         input: { id, ...input },
         acls,
-        baseNodeLabel: 'Education',
-        aclEditProp: 'canCreateEducation',
       });
     } catch (e) {
       console.log(e);

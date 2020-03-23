@@ -1,3 +1,4 @@
+import { Type } from '@nestjs/common';
 import { Field, ObjectType } from 'type-graphql';
 import {
   Resource,
@@ -11,6 +12,9 @@ import {
   implements: [Resource],
 })
 export class Language extends Resource {
+  /* TS wants a public constructor for "ClassType" */
+  static classType = (Language as any) as Type<Language>;
+
   @Field()
   readonly name: SecuredString;
 
