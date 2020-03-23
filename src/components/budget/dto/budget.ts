@@ -1,3 +1,4 @@
+import { Type } from '@nestjs/common';
 import { Field, ObjectType, registerEnumType } from 'type-graphql';
 import {
   Resource,
@@ -16,9 +17,10 @@ export enum BudgetStatus {
 registerEnumType(BudgetStatus, { name: 'BudgetStatus' });
 
 @ObjectType({
-  implements: Resource,
+  implements: [Resource],
 })
 export class Budget extends Resource {
+  static classType = (Budget as any) as Type<Budget>;
   @Field()
   readonly status: BudgetStatus;
 
@@ -27,9 +29,11 @@ export class Budget extends Resource {
 }
 
 @ObjectType({
-  implements: Resource,
+  implements: [Resource],
 })
-export class BudgetRecord {
+export class BudgetRecord extends Resource {
+  static classType = (BudgetRecord as any) as Type<BudgetRecord>;
+
   @Field()
   organizationId: SecuredString;
 

@@ -69,7 +69,9 @@ export class BudgetRecordListInput extends SortablePaginationInput<
 }
 
 @ObjectType()
-export class BudgetRecordListOutput extends PaginatedList(Budget) {}
+export class BudgetRecordListOutput extends PaginatedList(
+  BudgetRecord as any
+) {}
 
 @ObjectType({
   description: SecuredList.descriptionFor('budget records'),

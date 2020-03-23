@@ -20,7 +20,7 @@ export abstract class CreateBudgetInput {
 
 @ObjectType()
 export abstract class CreateBudgetOutput {
-  @Field()
+  @Field(() => Budget)
   readonly budget: Budget;
 }
 @InputType()
@@ -40,6 +40,6 @@ export abstract class CreateBudgetRecordInput {
 
 @ObjectType()
 export abstract class CreateBudgetRecordOutput {
-  @Field()
+  @Field(() => BudgetRecord)
   readonly record: BudgetRecord;
 }
