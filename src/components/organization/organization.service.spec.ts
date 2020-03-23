@@ -19,10 +19,11 @@ describe('OrganizationService', () => {
 
   // READ ORG
   it('read organization by id', async () => {
-    const orgId = 'GQiiEX_jZ';
+    const orgId = "GQiiEX_jZ";
     const session = { 
       token : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODQ2OTY0MjM1ODl9.IzqfPHG9HsAH5hAei-IxmDRcPggtTDZJQjnd2JASM4E", 
-      owningOrgId: "Seed Company"
+      userId: "C3DDouWkM",
+      owningOrgId: "Seed Company",
     };
 
     try {
