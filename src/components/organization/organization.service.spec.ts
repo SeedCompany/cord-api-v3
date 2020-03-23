@@ -21,7 +21,26 @@ describe('OrganizationService', () => {
   it('read organization by id', async () => {
     const orgId = "GQiiEX_jZ";
     const session = { 
-      token : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODQ2OTY0MjM1ODl9.IzqfPHG9HsAH5hAei-IxmDRcPggtTDZJQjnd2JASM4E", 
+      token : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODQ5NTMxOTc0Mzl9.GqoNZAGzPpPhp1hs0Toi5bp8I2UUYHqR0FUrOxxLWFI", 
+      userId: "C3DDouWkM",
+      owningOrgId: "Seed Company",
+    };
+
+    try {
+      //jest.spyOn(OrganizationService, 'readOne').mockImplementation((orgId, session as ISession) => result);
+      const result = await module.get(OrganizationService).readOne(orgId, session as ISession);
+    
+    } catch (e) {
+      console.log(e);
+      throw e;
+    }
+  });
+
+  // READ ORG
+  it('read organization by id', async () => {
+    const orgId = "GQiiEX_jZ";
+    const session = { 
+      token : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODQ5NTMxOTc0Mzl9.GqoNZAGzPpPhp1hs0Toi5bp8I2UUYHqR0FUrOxxLWFI", 
       userId: "C3DDouWkM",
       owningOrgId: "Seed Company",
     };
@@ -40,7 +59,11 @@ describe('OrganizationService', () => {
   it('delete user', async () => {
     const orgId = 'GQiiEX_jZ';
     
-    const session = {token : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODQ2OTY0MjM1ODl9.IzqfPHG9HsAH5hAei-IxmDRcPggtTDZJQjnd2JASM4E"};
-    module.get(OrganizationService).delete(orgId, session as ISession);
+    const session = {
+      token : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODQ5NTMxOTc0Mzl9.GqoNZAGzPpPhp1hs0Toi5bp8I2UUYHqR0FUrOxxLWFI",
+      userId: "C3DDouWkM",
+      owningOrgId: "Seed Company",
+    };
+    const result = await module.get(OrganizationService).delete(orgId, session as ISession);
   });
 });
