@@ -1,5 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { ForbiddenError } from 'apollo-server-core';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import {
   Connection,
   contains,
@@ -590,7 +593,7 @@ export class DatabaseService {
     }
   }
 
-  private async createBaseNode<TObject extends Resource>({
+  async createBaseNode<TObject extends Resource>({
     session,
     baseNodeLabel,
     input,
@@ -634,7 +637,8 @@ export class DatabaseService {
         ])
         .run();
     } catch (e) {
-      // If there is no aclEditProp, then this is not an access-related issue and we can move forward with throwing
+      // If there is no aclEditProp, then this is not an access-related issue
+      // and we can move forward with throwing
       if (!aclEditProp) {
         throw e;
       }
@@ -654,13 +658,13 @@ export class DatabaseService {
           }),
         ])
         .return({
-          requestingUser: [{ aclEditProp: 'editProp' }],
+          requestingUser: [{ [aclEditProp]: 'editProp' }],
         })
         .first();
 
       // If the user doesn't have permission to perform the create action...
       if (!aclResult || !aclResult.editProp) {
-        throw new ForbiddenError(`${aclEditProp} missing or false`);
+        throw new ForbiddenException(`${aclEditProp} missing or false`);
       }
 
       this.logger.error(`createNode error`, {
@@ -671,7 +675,7 @@ export class DatabaseService {
     }
   }
 
-  private async createProperty({
+  async createProperty({
     session,
     key,
     value,
@@ -679,7 +683,7 @@ export class DatabaseService {
   }: {
     session: ISession;
     key: string;
-    value?: any;
+    value: any;
     id: string;
   }) {
     await this.db
@@ -707,7 +711,7 @@ export class DatabaseService {
       ])
       .create([
         node('item'),
-        relation('out', 'rel', `${key}`, {
+        relation('out', 'rel', key, {
           active: true,
           createdAt: DateTime.local(),
           owningOrgId: session.owningOrgId,
