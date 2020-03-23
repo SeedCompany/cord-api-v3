@@ -80,7 +80,7 @@ export class ProjectMemberService {
         canEdit: true,
       },
       roles: {
-        value: result.roles ? result.roles.split(',') : [],
+        value: result.roles || [],
         canEdit: true,
         canRead: true,
       },
@@ -179,7 +179,7 @@ export class ProjectMemberService {
       props: ['roles'],
       changes: {
         ...input,
-        roles: (input.roles ? input.roles.join(',') : undefined) as any,
+        roles: (input.roles ? input.roles : undefined) as any,
       },
       nodevar: 'projectMember',
     });

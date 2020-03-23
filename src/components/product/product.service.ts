@@ -84,9 +84,9 @@ export class ProductService {
       id,
       createdAt: result.createdAt.value,
       type: result.type.value,
-      books: result.books?.value?.split(',') || [],
-      mediums: result.mediums?.value?.split(',') || [],
-      purposes: result.purposes?.value?.split(',') || [],
+      books: result.books?.value || [],
+      mediums: result.mediums?.value || [],
+      purposes: result.purposes?.value || [],
       approach: result.approach.value,
       methodology: result.methodology.value,
     };

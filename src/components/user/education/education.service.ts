@@ -43,7 +43,10 @@ export class EducationService {
     };
   }
 
-  async create(input: CreateEducation, session: ISession): Promise<Education> {
+  async create(
+    { userId, ...input }: CreateEducation,
+    session: ISession
+  ): Promise<Education> {
     const id = generate();
     const acls = {
       canReadDegree: true,
@@ -66,12 +69,12 @@ export class EducationService {
       console.log(e);
       this.logger.error(`Could not create education for user `, {
         id,
-        userId: input.userId,
+        userId,
       });
       throw new Error('Could not create education');
     }
 
-    this.logger.info(`Created user education`, { id, userId: input.userId });
+    this.logger.info(`Created user education`, { id, userId });
 
     // connect the Education to the User.
     const query = `
@@ -84,7 +87,7 @@ export class EducationService {
     await this.db
       .query()
       .raw(query, {
-        userId: session.userId,
+        userId,
         id,
       })
       .first();

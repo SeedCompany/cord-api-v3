@@ -1,5 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { ForbiddenError } from 'apollo-server-core';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import {
   Connection,
   contains,
@@ -400,7 +403,7 @@ export class DatabaseService {
         const list = typeof prop === 'object' ? prop.list : false;
 
         if (list) {
-          const value = row[propName] ? row[propName].split(',') : [];
+          const value = row[propName] ?? [];
 
           if (secure) {
             item[propName] = {
@@ -561,38 +564,33 @@ export class DatabaseService {
 
   async createNode<TObject extends Resource>({
     session,
-    input,
+    input: { id, ...propertyValues },
     acls,
     baseNodeLabel,
     aclEditProp,
   }: {
     session: ISession;
-    input: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> };
+    input: { [Key in keyof TObject]?: any };
     acls: Record<string, boolean>;
     baseNodeLabel: string;
     aclEditProp?: string;
   }): Promise<void> {
-    const aclEditPropName =
-      aclEditProp || `canEdit${upperFirst(baseNodeLabel)}`;
     await this.createBaseNode<TObject>({
       session,
       baseNodeLabel,
-      input,
+      input: { id, ...propertyValues },
       acls,
-      aclEditProp: aclEditPropName,
+      aclEditProp,
     });
-    await Promise.all(
-      Object.keys(input)
-        .filter(key => !(key === 'id' || key === 'userId'))
-        .map(async key => {
-          await this.createProperty({
-            session,
-            key,
-            value: input[key as keyof TObject] as string,
-            id: input.id!,
-          });
-        })
-    );
+
+    for (const k in propertyValues) {
+      await this.createProperty({
+        session,
+        key: k,
+        value: propertyValues[k as keyof typeof propertyValues],
+        id,
+      });
+    }
   }
 
   async createBaseNode<TObject extends Resource>({
@@ -604,65 +602,75 @@ export class DatabaseService {
   }: {
     session: ISession;
     baseNodeLabel: string;
-    input: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> };
+    input: { [Key in keyof TObject]?: any };
     acls: Record<string, boolean>;
     aclEditProp?: string;
   }): Promise<void> {
-    const aclString = JSON.stringify(acls).replace(/"/g, '');
-    const query = `
-        MATCH
-          (token:Token {
-            active: true,
-            value: "${session.token}"
-          })
-          <-[:token {active: true}]-
-          (requestingUser:User {
-            active: true,
-            id: "${session.userId}",
-            ${aclEditProp}: true
-          })
-        CREATE
-          (item:${upperFirst(baseNodeLabel)} {
-            active: true,
-            createdAt: datetime(),
-            id: "${input.id}",
-            owningOrgId: "${session.owningOrgId}"
-          })<-[:toNode]-(acl:ACL    
-            ${aclString}
-          )-[:member]->(requestingUser)
-        RETURN item
-      `;
     try {
       await this.db
         .query()
-        .raw(query, {
-          requestingUserId: session.userId,
-          token: session.token,
-          id: input.id,
-        })
+        .match([
+          node('token', 'Token', {
+            active: true,
+            value: session.token,
+          }),
+          relation('in', '', 'token', {
+            active: true,
+          }),
+          node('requestingUser', 'User', {
+            active: true,
+            id: session.userId,
+            ...(aclEditProp ? { [aclEditProp]: true } : {}),
+          }),
+        ])
+        .create([
+          node('item', upperFirst(baseNodeLabel), {
+            active: true,
+            createdAt: DateTime.local(),
+            id: input.id,
+            owningOrgId: session.owningOrgId,
+          }),
+          relation('in', '', 'toNode'),
+          node('acl', 'ACL', acls),
+          relation('out', '', 'member'),
+          node('requestingUser'),
+        ])
         .run();
     } catch (e) {
-      const ACLQuery = `MATCH
-      (token:Token {
-        active: true,
-        value: "${session.token}"
-      })
-      <-[:token {active: true}]-
-      (requestingUser:User {
-        active: true,
-        id: "${session.userId}"
-      })
-      RETURN requestingUser.${aclEditProp}
-      `;
-
-      const result = ((await this.db
-        .query()
-        .raw(ACLQuery, {})
-        .run()) as unknown) as { requestingUser: boolean } | null;
-      if (!result || !result.requestingUser) {
-        throw new ForbiddenError(`${aclEditProp} missing or false`);
+      // If there is no aclEditProp, then this is not an access-related issue
+      // and we can move forward with throwing
+      if (!aclEditProp) {
+        throw e;
       }
-      this.logger.error(`${e} create Node error`);
+
+      // Retrieve the user's record of the aclEditProp, if it exists
+      const aclResult = await this.db
+        .query()
+        .match([
+          node('token', 'Token', {
+            active: true,
+            value: session.token,
+          }),
+          relation('in', '', 'token'),
+          node('requestingUser', 'User', {
+            active: true,
+            id: session.userId,
+          }),
+        ])
+        .return({
+          requestingUser: [{ [aclEditProp]: 'editProp' }],
+        })
+        .first();
+
+      // If the user doesn't have permission to perform the create action...
+      if (!aclResult || !aclResult.editProp) {
+        throw new ForbiddenException(`${aclEditProp} missing or false`);
+      }
+
+      this.logger.error(`createNode error`, {
+        exception: e,
+      });
+
       throw e;
     }
   }
@@ -675,46 +683,46 @@ export class DatabaseService {
   }: {
     session: ISession;
     key: string;
-    value: string;
+    value: any;
     id: string;
   }) {
-    const query = `
-      MATCH
-        (token:Token {
+    await this.db
+      .query()
+      .match([
+        [
+          node('token', 'Token', {
+            active: true,
+            value: session.token,
+          }),
+          relation('in', '', 'token', {
+            active: true,
+          }),
+          node('requestingUser', 'User', {
+            active: true,
+            id: session.userId,
+          }),
+        ],
+        [
+          node('item', {
+            id,
+            active: true,
+          }),
+        ],
+      ])
+      .create([
+        node('item'),
+        relation('out', 'rel', key, {
           active: true,
-          value: $token
-        })
-        <-[:token {active: true}]-
-        (requestingUser:User {
-          active: true,
-          id: $requestingUserId
-        }),
-        (item {id: $id, active: true})
-      CREATE
-        (item)-[rel :${key} { active: true , createdAt: datetime(), owningOrgId: $owningOrgId}]->
-           (${key}: Property {
-             active: true,
-             value: "${value}",
-             owningOrgId: $owningOrgId
-           })
-      RETURN
-        ${key}.value, rel
-      `;
-
-    try {
-      await this.db
-        .query()
-        .raw(query, {
-          token: session.token,
-          requestingUserId: session.userId,
+          createdAt: DateTime.local(),
           owningOrgId: session.owningOrgId,
-          id,
-          key,
+        }),
+        node(key, 'Property', {
+          active: true,
           value,
-        })
-        .run();
-    } catch (e) {
-      console.log(e);
-    }
+          owningOrgId: session.owningOrgId,
+        }),
+      ])
+      .return([`${key}.value`, 'rel'])
+      .run();
   }
 }

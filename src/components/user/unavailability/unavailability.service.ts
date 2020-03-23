@@ -18,7 +18,7 @@ export class UnavailabilityService {
   ) {}
 
   async create(
-    input: CreateUnavailability,
+    { userId, ...input }: CreateUnavailability,
     session: ISession
   ): Promise<Unavailability> {
     const id = generate();
@@ -41,14 +41,14 @@ export class UnavailabilityService {
     } catch {
       this.logger.error(`Could not create unavailability`, {
         id,
-        userId: input.userId,
+        userId,
       });
       throw new Error('Could not create unavailability');
     }
 
     this.logger.info(`Created user unavailability`, {
       id,
-      userId: input.userId,
+      userId,
     });
 
     // connect the Unavailability to the User.
@@ -62,7 +62,7 @@ export class UnavailabilityService {
     await this.db
       .query()
       .raw(query, {
-        userId: session.userId,
+        userId,
         id,
       })
       .first();
