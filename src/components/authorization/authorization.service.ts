@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotImplementedException } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
@@ -129,5 +129,39 @@ export class AuthorizationService {
         id: result.id,
       };
     }
+  }
+
+  attachUserToSecurityGroup() {
+    throw new NotImplementedException();
+  }
+  listSecurityGroupsUserIsAdminOf() {
+    throw new NotImplementedException();
+  }
+  listSecurityGroupsUserIsAMemberOf() {
+    throw new NotImplementedException();
+  }
+  listPermissionsInASecurityGroup() {
+    throw new NotImplementedException();
+  }
+  removePermissionFromSecurityGroup() {
+    throw new NotImplementedException();
+  }
+  removeMemberFromSecurityGroup() {
+    throw new NotImplementedException();
+  }
+  promoteMemberToAdminOfSecurityGroup() {
+    throw new NotImplementedException();
+  }
+  promoteMemberToAdminOfBaseNode() {
+    throw new NotImplementedException();
+  }
+  listPermissionsInSecurityGroup() {
+    throw new NotImplementedException();
+  }
+  deleteSecurityGroup() {
+    throw new NotImplementedException();
+  }
+  updateNameOfSecurityGroup() {
+    throw new NotImplementedException();
   }
 }
