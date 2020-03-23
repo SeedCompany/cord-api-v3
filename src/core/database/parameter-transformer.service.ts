@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { mapValues } from 'lodash';
-import { DateTime } from 'luxon';
+import { DateTime, Duration } from 'luxon';
+import { v1 as Neo } from 'neo4j-driver';
 import { CalendarDate } from '../../common';
-import { isNeoDate, isNeoDateTime } from './transformer';
+import { isNeoDate, isNeoDateTime, isNeoDuration } from './transformer';
 
 /**
  * Transforms parameters going into the database
@@ -23,7 +24,7 @@ export class ParameterTransformer {
       throw new Error('Use Luxon DateTime instead');
     }
 
-    if (isNeoDateTime(value) || isNeoDate(value)) {
+    if (isNeoDateTime(value) || isNeoDate(value) || isNeoDuration(value)) {
       return value;
     }
 
@@ -33,6 +34,15 @@ export class ParameterTransformer {
 
     if (value instanceof DateTime) {
       return value.toNeo4JDateTime();
+    }
+
+    if (value instanceof Duration) {
+      return new Neo.Duration(
+        value.months,
+        value.days,
+        value.seconds,
+        value.milliseconds * 1e6
+      );
     }
 
     if (Array.isArray(value)) {
