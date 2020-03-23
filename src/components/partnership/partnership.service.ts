@@ -185,6 +185,7 @@ export class PartnershipService {
     try {
       await this.db.createNode({
         session,
+        type: Partnership.classType,
         input: {
           id,
           agreementStatus: PartnershipAgreementStatus.NotAttached,
@@ -192,8 +193,6 @@ export class PartnershipService {
           ...input,
         },
         acls,
-        baseNodeLabel: 'Partnership',
-        aclEditProp: 'canCreatePartnership',
       });
 
       // connect the Organization to the Partnership

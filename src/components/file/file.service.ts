@@ -152,17 +152,17 @@ export class FileService {
         throw new BadRequestException('object not found');
       }
       await this.bucket.moveObject(`temp/${uploadId}`, `${uploadId}`);
-      const inputForFile = {
-        id: fileId,
-        mimeType: file.ContentType,
-        name,
-        parent: parentId,
-        size: file.ContentLength,
-        type: FileNodeType.File,
-      };
       await this.db.createNode({
         session,
-        input: { ...inputForFile },
+        type: File.classType,
+        input: {
+          id: fileId,
+          mimeType: file.ContentType, // TODO Should be stored on file version
+          name,
+          parent: parentId, // TODO Should be a relationship
+          size: file.ContentLength, // TODO Should be stored on file version
+          type: FileNodeType.File,
+        },
         acls: {
           canReadParent: true,
           canEditParent: true,
@@ -171,16 +171,14 @@ export class FileService {
           canReadType: true,
           canEditType: true,
         },
-        baseNodeLabel: 'FileNode',
-        aclEditProp: 'canCreateFileNode',
       });
       const inputForFileVersion = {
         category: FileNodeCategory.Document, // TODO
         id: uploadId,
         mimeType: file.ContentType,
-        modifiedAt: DateTime.local().toNeo4JDateTime(),
+        modifiedAt: DateTime.local(),
         name,
-        parent: parentId,
+        parent: parentId, // TODO Should be a relationship; prop to file id
         size: file.ContentLength,
       };
       const acls = {
@@ -199,10 +197,9 @@ export class FileService {
       };
       await this.db.createNode({
         session,
-        input: { ...inputForFileVersion },
+        type: FileVersion.classType,
+        input: inputForFileVersion,
         acls,
-        baseNodeLabel: 'FileVersion',
-        aclEditProp: 'canCreateFileVersion',
       });
       const qry = `
         MATCH

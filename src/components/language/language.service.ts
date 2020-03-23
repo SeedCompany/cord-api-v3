@@ -44,9 +44,9 @@ export class LanguageService {
     try {
       await this.db.createNode({
         session,
+        type: Language.classType,
         input: { id, ...input },
         acls,
-        baseNodeLabel: 'Language',
         aclEditProp: 'canCreateLang',
       });
 

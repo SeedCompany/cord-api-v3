@@ -33,10 +33,9 @@ export class UnavailabilityService {
     try {
       await this.db.createNode({
         session,
+        type: Unavailability.classType,
         input: { id, ...input },
         acls,
-        baseNodeLabel: 'Unavailability',
-        aclEditProp: 'canCreateUnavailability',
       });
     } catch {
       this.logger.error(`Could not create unavailability`, {

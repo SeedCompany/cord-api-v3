@@ -2,6 +2,7 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  Type,
 } from '@nestjs/common';
 import {
   Connection,
@@ -581,22 +582,25 @@ export class DatabaseService {
 
   async createNode<TObject extends Resource>({
     session,
+    type,
     input: { id, ...props },
     acls,
     baseNodeLabel,
     aclEditProp,
   }: {
     session: ISession;
+    type: Type<TObject>;
     input: ResourceInput<TObject>;
     acls: ACLs;
-    baseNodeLabel: string;
-    aclEditProp?: string;
+    baseNodeLabel?: string;
+    aclEditProp?: string | false;
   }): Promise<void> {
     await this.createBaseNode<TObject>({
       session,
-      baseNodeLabel,
+      type,
       input: { id, ...props },
       acls,
+      baseNodeLabel,
       aclEditProp,
     });
 
@@ -612,17 +616,21 @@ export class DatabaseService {
 
   async createBaseNode<TObject extends Resource>({
     session,
-    baseNodeLabel,
+    type,
     input,
     acls,
+    baseNodeLabel,
     aclEditProp,
   }: {
     session: ISession;
-    baseNodeLabel: string;
+    type: Type<TObject>;
     input: ResourceInput<TObject>;
     acls: ACLs;
-    aclEditProp?: string;
+    baseNodeLabel?: string;
+    aclEditProp?: string | false;
   }): Promise<void> {
+    const label = baseNodeLabel ?? type.name;
+    const aclEdit = aclEditProp ?? `canCreate${label}`;
     try {
       await this.db
         .query()
@@ -637,11 +645,11 @@ export class DatabaseService {
           node('requestingUser', 'User', {
             active: true,
             id: session.userId,
-            ...(aclEditProp ? { [aclEditProp]: true } : {}),
+            ...(aclEditProp && aclEdit ? { [aclEdit]: true } : {}),
           }),
         ])
         .create([
-          node('item', upperFirst(baseNodeLabel), {
+          node('item', upperFirst(label), {
             active: true,
             createdAt: DateTime.local(),
             id: input.id,
@@ -656,7 +664,7 @@ export class DatabaseService {
     } catch (e) {
       // If there is no aclEditProp, then this is not an access-related issue
       // and we can move forward with throwing
-      if (!aclEditProp) {
+      if (!aclEdit) {
         throw e;
       }
 
@@ -675,13 +683,13 @@ export class DatabaseService {
           }),
         ])
         .return({
-          requestingUser: [{ [aclEditProp]: 'editProp' }],
+          requestingUser: [{ [aclEdit]: 'editProp' }],
         })
         .first();
 
       // If the user doesn't have permission to perform the create action...
       if (!aclResult || !aclResult.editProp) {
-        throw new ForbiddenException(`${aclEditProp} missing or false`);
+        throw new ForbiddenException(`${aclEdit} missing or false`);
       }
 
       this.logger.error(`createNode error`, {

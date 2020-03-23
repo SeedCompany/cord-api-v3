@@ -37,6 +37,7 @@ export class ProductService {
     try {
       await this.db.createNode({
         session,
+        type: Product.classType,
         input: {
           id,
           ...input,
@@ -45,8 +46,6 @@ export class ProductService {
             : {}),
         },
         acls,
-        baseNodeLabel: 'Product',
-        aclEditProp: 'canCreateProduct',
       });
     } catch (e) {
       this.logger.warning('Failed to create product', {
