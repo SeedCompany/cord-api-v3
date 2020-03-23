@@ -10,7 +10,7 @@ import {
   Query,
   relation,
 } from 'cypher-query-builder';
-import { cloneDeep, upperFirst } from 'lodash';
+import { cloneDeep, Many, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   isSecured,
@@ -27,6 +27,23 @@ interface ReadPropertyResult {
   canEdit: boolean;
   canRead: boolean;
 }
+
+type ResourceInput<T extends Resource> = {
+  // id is required
+  id: string;
+} & {
+  // all other props are optional and their raw unsecured value
+  [Key in keyof T]?: UnwrapSecured<T[Key]>;
+} &
+  // Allow other unknown properties as well
+  Record<string, DbValue>;
+
+export type ACLs = Record<string, boolean>;
+
+/** A value that con be passed into the db */
+export type DbValue = Many<
+  string | number | boolean | DateTime | null | undefined
+>;
 
 @Injectable()
 export class DatabaseService {
@@ -564,30 +581,30 @@ export class DatabaseService {
 
   async createNode<TObject extends Resource>({
     session,
-    input: { id, ...propertyValues },
+    input: { id, ...props },
     acls,
     baseNodeLabel,
     aclEditProp,
   }: {
     session: ISession;
-    input: { [Key in keyof TObject]?: any };
-    acls: Record<string, boolean>;
+    input: ResourceInput<TObject>;
+    acls: ACLs;
     baseNodeLabel: string;
     aclEditProp?: string;
   }): Promise<void> {
     await this.createBaseNode<TObject>({
       session,
       baseNodeLabel,
-      input: { id, ...propertyValues },
+      input: { id, ...props },
       acls,
       aclEditProp,
     });
 
-    for (const k in propertyValues) {
+    for (const [key, value] of Object.entries(props)) {
       await this.createProperty({
         session,
-        key: k,
-        value: propertyValues[k as keyof typeof propertyValues],
+        key,
+        value,
         id,
       });
     }
@@ -602,8 +619,8 @@ export class DatabaseService {
   }: {
     session: ISession;
     baseNodeLabel: string;
-    input: { [Key in keyof TObject]?: any };
-    acls: Record<string, boolean>;
+    input: ResourceInput<TObject>;
+    acls: ACLs;
     aclEditProp?: string;
   }): Promise<void> {
     try {
@@ -683,7 +700,7 @@ export class DatabaseService {
   }: {
     session: ISession;
     key: string;
-    value: any;
+    value: DbValue;
     id: string;
   }) {
     await this.db
