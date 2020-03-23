@@ -12,7 +12,7 @@ import {
   relation,
 } from 'cypher-query-builder';
 import { cloneDeep, Many, upperFirst } from 'lodash';
-import { DateTime } from 'luxon';
+import { DateTime, Duration } from 'luxon';
 import {
   isSecured,
   Order,
@@ -43,7 +43,7 @@ export type ACLs = Record<string, boolean>;
 
 /** A value that con be passed into the db */
 export type DbValue = Many<
-  string | number | boolean | DateTime | null | undefined
+  string | number | boolean | DateTime | Duration | null | undefined
 >;
 
 export const matchSession = (
