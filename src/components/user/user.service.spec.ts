@@ -1,65 +1,90 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CoreModule, LoggerModule } from '../../core';
 import * as faker from 'faker';
-import { EducationModule, EducationService } from './education';
-import { UnavailabilityModule, UnavailabilityService } from './unavailability';
-import { OrganizationModule, OrganizationService } from '../organization';
+import { AuthModule} from '../auth/auth.module'
+import { AuthService } from '../auth/auth.service'
+import { EducationModule } from './education/education.module'
+import { EducationService } from './education/education.service';
+import { UnavailabilityModule } from './unavailability/unavailability.module';
+import { UnavailabilityService } from './unavailability/unavailability.service';
+import { OrganizationModule } from '../organization/organization.module';
+import { OrganizationService } from '../organization/organization.service';
 import { UserService } from './user.service';
-import { ISession } from '../auth';
 import {
   CreateUser,
   UpdateUser,
   UserListInput,
 } from './dto';
-import { FileService } from '../file';
+import {
+  createSession,
+  createTestApp,
+  TestApp,
+} from '../../../test/utility';
+import { Session, ISession } from '../auth';
+import { DateTime } from 'luxon';
 
 describe('UserService', () => {
   let module: TestingModule;
+  let session : ISession;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
+
     module = await Test.createTestingModule({
-      imports: [LoggerModule.forRoot(), CoreModule, EducationModule],
-      providers: [UserService, EducationService],
+      imports: [LoggerModule.forRoot(), CoreModule, EducationModule, OrganizationModule, UnavailabilityModule, AuthModule],
+      providers: [UserService, EducationService, OrganizationService, UnavailabilityService, AuthService],
     }).compile();
+
+    let app: TestApp;
+    
+
+    app = await createTestApp();
+    const token = await createSession(app);
+    session = {token, owningOrgId: "Seed Company", issuedAt : DateTime.local()}
   });
+ 
+ 
 
-  // beforeEach(async () => {
-  //   module = await Test.createTestingModule({
-  //     imports: [LoggerModule.forRoot(), CoreModule, OrganizationModule, EducationModule, UnavailabilityModule ],
-  //     providers: [UserService, OrganizationService, EducationService, UnavailabilityService],
-  //   }).compile();
-  // });
-
-  afterEach(async () => {
+  afterAll(async () => {
     await module.close();
   });
 
   // CREATE User
-//   it('create a user', async () => {
-//     const input = {name : faker.company.companyName()};
-//     const session = { 
-//       token : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODQ5NTMxOTc0Mzl9.GqoNZAGzPpPhp1hs0Toi5bp8I2UUYHqR0FUrOxxLWFI",
-//       owningOrgId: "Seed Company",
-//     };
+  it('create a user', async () => {
+    //const input = {name : faker.company.companyName()};
+    const input = { 
+      email: "test@test.com",
+      realFirstName: "TestFirst",
+      realLastName: "TestLast",
+      displayFirstName: "Test First",
+      displayLastName: "Test Last",
+      password: "test@123",
+      phone: "6464646464",
+      timezone: "PST",
+      bio: "bio-details"
+    };
+ 
+    // const session = { 
+    //   token,
+    //   owningOrgId: "Seed Company",
+    // };
 
-//     try {
-//       const result = await module.get(UserService).create(input as CreateUser, session as ISession);
-//     } catch (e) {
-//       console.log(e);
-//       throw e;
-//     }
-//   });
+    try {
+      const result = await module.get(UserService).create(input as CreateUser, session);
+    } catch (e) {
+      console.log(e);
+      throw e;
+    }
+  });
 
   // READ User
   it('read user by id', async () => {
-    const input = {name : faker.company.companyName()};
     const session = { 
-      token : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODQ5NTMxOTc0Mzl9.GqoNZAGzPpPhp1hs0Toi5bp8I2UUYHqR0FUrOxxLWFI", 
+      token : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODUwNjIwMjgwNzR9.7c3xRjnrB-Y4TtVXZxYGk5nClebzLZsf_KS-h-XpKI4", 
       owningOrgId: "Seed Company",
     };
     const id = "C3DDouWkM";
-    module.get(UserService).readOne(id, session as ISession);
-
+    const result = await module.get(UserService).readOne(id, session as ISession);
+    console.log(result);
     // try {
     //   const user1 = await module.get(UserService).create(input as CreateUser, session as ISession);
     //   const user2 = await module.get(UserService).readOne(user1.id, session as ISession);
