@@ -11,27 +11,30 @@ import {
   UpdateUser,
   UserListInput,
 } from './dto';
+import { FileService } from '../file';
 
 describe('UserService', () => {
   let module: TestingModule;
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
-      imports: [LoggerModule.forRoot(), OrganizationModule, EducationModule, UnavailabilityModule, CoreModule],
-      providers: [UserService, EducationService, OrganizationService, UnavailabilityService],
+      imports: [LoggerModule.forRoot(), CoreModule, EducationModule],
+      providers: [UserService, EducationService],
     }).compile();
-
-    // const session : ISession = { 
-    //   token : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODQ5NTMxOTc0Mzl9.GqoNZAGzPpPhp1hs0Toi5bp8I2UUYHqR0FUrOxxLWFI",
-    //   owningOrgId: "Seed Company",
-    // };
   });
+
+  // beforeEach(async () => {
+  //   module = await Test.createTestingModule({
+  //     imports: [LoggerModule.forRoot(), CoreModule, OrganizationModule, EducationModule, UnavailabilityModule ],
+  //     providers: [UserService, OrganizationService, EducationService, UnavailabilityService],
+  //   }).compile();
+  // });
 
   afterEach(async () => {
     await module.close();
   });
 
-  // CREATE Language
+  // CREATE User
 //   it('create a user', async () => {
 //     const input = {name : faker.company.companyName()};
 //     const session = { 
@@ -47,27 +50,27 @@ describe('UserService', () => {
 //     }
 //   });
 
-  // READ LANGUAGE
+  // READ User
   it('read user by id', async () => {
     const input = {name : faker.company.companyName()};
     const session = { 
       token : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODQ5NTMxOTc0Mzl9.GqoNZAGzPpPhp1hs0Toi5bp8I2UUYHqR0FUrOxxLWFI", 
       owningOrgId: "Seed Company",
     };
-    const id = '1234';
+    const id = "C3DDouWkM";
     module.get(UserService).readOne(id, session as ISession);
 
     // try {
-    //   const lang1 = await module.get(UserService).create(input as CreateUser, session as ISession);
-    //   const lang2 = await module.get(UserService).readOne(lang1.id, session as ISession);
-    //   expect(lang2.name.value).toEqual(lang1.name.value);
+    //   const user1 = await module.get(UserService).create(input as CreateUser, session as ISession);
+    //   const user2 = await module.get(UserService).readOne(user1.id, session as ISession);
+    //   expect(user2.name.value).toEqual(user1.name.value);
     // } catch (e) {
     //   console.log(e);
     //   throw e;
     // }
   });
 
-  // UPDATE Language
+  // UPDATE User
 //   it('update user', async () => {
 //     const input = {name : faker.company.companyName()};
 //     const session = { 
@@ -76,17 +79,17 @@ describe('UserService', () => {
 //     };
 
 //     try {
-//       const lang1 = await module.get(UserService).create(input as CreateUser, session as ISession);
-//       const inputNew = {id: lang1.id, name : faker.company.companyName()};
-//       const lang2 = await module.get(UserService).update(inputNew as UpdateUser, session as ISession);
-//       expect(lang2.name.value).toBe(inputNew.name);
+//       const user1 = await module.get(UserService).create(input as CreateUser, session as ISession);
+//       const inputNew = {id: user1.id, name : faker.company.companyName()};
+//       const user2 = await module.get(UserService).update(inputNew as UpdateUser, session as ISession);
+//       expect(user2.name.value).toBe(inputNew.name);
 //     } catch (e) {
 //       console.log(e);
 //       throw e;
 //     }
 //   });
 
-  // DELETE Language
+  // DELETE User
 //   it('delete user', async () => {
 //     const input = {name : faker.company.companyName()};
 //     const session = { 
@@ -94,15 +97,15 @@ describe('UserService', () => {
 //       owningOrgId: "Seed Company",
 //     };
 //     try{
-//       const lang1 = await module.get(UserService).create(input as CreateUser, session as ISession);
-//       await module.get(UserService).delete(lang1.id, session as ISession);
+//       const user1 = await module.get(UserService).create(input as CreateUser, session as ISession);
+//       await module.get(UserService).delete(user1.id, session as ISession);
 //     } catch (e) {
 //       console.log(e);
 //       throw e;
 //     }
 //   });
 
-  // LIST LanguageS
+  // LIST UserS
 //   it('list view of users', async () => {
 //     const input = { page : 1, count : 5, sort : "name", order : "DESC"};
 //     const session = { 
