@@ -230,8 +230,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createUser($input:CreateUserInput!){\r\n  createUser(input : $input)\r\n  {\r\n   user{\r\n      id\r\n      realFirstName{\r\n        canRead\r\n      }\r\n      displayLastName{\r\n        canRead\r\n      }\r\n      email{\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      bio{\r\n        canRead\r\n      }\r\n      phone{\r\n        value\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": " {\r\n \t\"input\": \r\n  {\r\n    \"user\" :\r\n    {\r\n\t\t\"email\": \"{{timeStamp}}invalid@mailinator.com\",\r\n        \"realFirstName\":\"Firstname\",\r\n        \"realLastName\":\"Lastname\",\r\n        \"password\":\"{{password}}\",\r\n        \"displayFirstName\": \"Test\",\r\n        \"displayLastName\":\"User\",\r\n        \"phone\":\"12345678\",\r\n        \"timezone\":\"2\",\r\n        \"bio\":\"Bio\"\r\n        \r\n\t  }\r\n  }\r\n}"
+								"query": "mutation createUser($input:CreateUserInput!){\r\n  createUser(input : $input)\r\n  {\r\n   user{\r\n      id\r\n      realFirstName{\r\n        canRead\r\n        canEdit\r\n        value\r\n        \r\n      }\r\n    realLastName\r\n    {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n      displayLastName{\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      email{\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      bio{\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone{\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n    timezone\r\n    {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    }\r\n  }\r\n}",
+								"variables": " {\r\n \t\"input\": \r\n  {\r\n    \"user\" :\r\n    {\r\n\t \"email\": \"{{timeStamp}}invalid@mailinator.com\",\r\n        \"realFirstName\":\"Firstname\",\r\n        \"realLastName\":\"Lastname\",\r\n        \"password\":\"12345\",\r\n        \"displayFirstName\": \"Test\",\r\n        \"displayLastName\":\"User\",\r\n        \"phone\":\"12345678\",\r\n        \"timezone\":\"2\",\r\n        \"bio\":\"Bio\"\r\n        \r\n\r\n        \r\n\t  }\r\n  }\r\n}"
 							}
 						},
 						"url": {
@@ -336,7 +336,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": " query user\r\n {\r\n     user(id:\"{{userid}}\")\r\n  {\r\n    id\r\n    email\r\n\t  {\r\n\t    value\r\n\t  }\r\n  }\r\n }",
+								"query": " query user\r\n {\r\n     user(id:\"{{userid}}\")\r\n  {\r\n    id\r\n    email\r\n\t  {\r\n\t    value\r\n      canRead\r\n      canEdit\r\n\t  }\r\n    realFirstName\r\n    {\r\n      canEdit\r\n      canRead\r\n      value\r\n    }\r\n     realLastName\r\n    {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    displayFirstName\r\n    {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    displayLastName\r\n    {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    phone\r\n    {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    timezone\r\n    {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    bio\r\n    {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    \r\n  }\r\n }",
 								"variables": ""
 							}
 						},
@@ -391,8 +391,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateUser( $input:UpdateUserInput! ){ \r\n    updateUser(input : $input)\r\n      {\r\n       user {\r\n            id\r\n            createdAt\r\n            email {\r\n                value\r\n                canRead\r\n                canEdit\r\n            }\r\n            realFirstName {\r\n                value\r\n                canRead\r\n                canEdit\r\n            }\r\n            realLastName {\r\n                value\r\n                canRead\r\n                canEdit\r\n            }\r\n            displayFirstName {\r\n                value\r\n                canRead\r\n                canEdit\r\n            }\r\n            displayLastName {\r\n                value\r\n                canRead\r\n                canEdit\r\n            }\r\n        }\r\n        }\r\n}",
-								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"user\" :\r\n    {\r\n\t\t\"id\": \"{{userid}}\",\r\n        \"realLastName\": \"Lastname{{timeStamp}}\"\r\n\t  }\r\n  }\r\n}"
+								"query": "mutation updateUser( $input:UpdateUserInput! ){ \r\n    updateUser(input : $input)\r\n      {\r\n       user {\r\n            id\r\n            createdAt\r\n            email {\r\n                value\r\n                canRead\r\n                canEdit\r\n            }\r\n            realFirstName {\r\n                value\r\n                canRead\r\n                canEdit\r\n            }\r\n            realLastName {\r\n                value\r\n                canRead\r\n                canEdit\r\n            }\r\n            displayFirstName {\r\n                value\r\n                canRead\r\n                canEdit\r\n            }\r\n            displayLastName {\r\n                value\r\n                canRead\r\n                canEdit\r\n            }\r\n        phone\r\n        {\r\n          canRead\r\n          canEdit\r\n           value\r\n        }\r\n        timezone\r\n        {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        bio\r\n        {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        }\r\n        }\r\n}",
+								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"user\" :\r\n    {\r\n    \t\"id\":\"{{userid}}\",\r\n      \"realLastName\": \"Lastname{{timeStamp}}\",\r\n      \"realFirstName\": \"Firstname{{timeStamp}}\",\r\n      \"displayFirstName\": \"dispaly{{timeStamp}}\",\r\n      \"displayLastName\": \"first{{timeStamp}}\",\r\n      \"phone\": \"123456\",\r\n      \"timezone\": \"5\",\r\n      \"bio\": \"bio1\"\r\n\t  }\r\n  }\r\n}"
 							}
 						},
 						"url": {
@@ -501,7 +501,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "{\r\n  users\r\n  {\r\n    total\r\n     items {\r\n      id\r\n      createdAt\r\n      email\r\n      {\r\n        value\r\n      }\r\n    }\r\n      \r\n   }\r\n}\r\n\r\n\r\n",
+								"query": "{\r\n  users\r\n  {\r\n    total\r\n     items {\r\n      id\r\n      createdAt\r\n      email\r\n      {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      realFirstName\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      bio\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n    }\r\n      \r\n   }\r\n}\r\n\r\n\r\n",
 								"variables": ""
 							}
 						},
@@ -608,7 +608,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "{\r\n  users\r\n  {\r\n    total\r\n     items {\r\n      id\r\n      createdAt\r\n      email\r\n      {\r\n        value\r\n      }\r\n    }\r\n      \r\n   }\r\n}\r\n\r\n\r\n",
+								"query": "{\r\n  users\r\n  {\r\n    total\r\n     items {\r\n      id\r\n      createdAt\r\n      email\r\n      {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      realFirstName\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      bio\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n    }\r\n      \r\n   }\r\n}\r\n\r\n\r\n",
 								"variables": ""
 							}
 						},
@@ -679,7 +679,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createOrganization($input:CreateOrganizationInput!) {\r\n   createOrganization(input : $input)\r\n   {\r\n    organization\r\n    {\r\n      id\r\n      name\r\n      {\r\n        value\r\n      }\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n  ",
+								"query": "mutation createOrganization($input:CreateOrganizationInput!) {\r\n   createOrganization(input : $input)\r\n   {\r\n    organization\r\n    {\r\n      id\r\n      name\r\n      {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n     \r\n    }\r\n  }\r\n}\r\n  ",
 								"variables": "{\n  \"input\": \n  {\n    \"organization\" :\n    {\n\t\t\t\t \n      \"name\":\"{{timeStamp}} Test Org Name\"      \n    } \n        \n\t  }\n  }\n\n\n\n"
 							}
 						},
@@ -734,7 +734,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation  updateOrganization($input:UpdateOrganizationInput!) \r\n{ \r\n    updateOrganization(input : $input)\r\n  {\r\n    organization {\r\n      id\r\n      name {\r\n          value\r\n          canRead\r\n          canEdit\r\n      }\r\n    }\r\n  }\r\n}",
+								"query": "mutation  updateOrganization($input:UpdateOrganizationInput!) \r\n{ \r\n    updateOrganization(input : $input)\r\n  {\r\n    organization {\r\n      id\r\n      name {\r\n          value\r\n          canRead\r\n          canEdit\r\n      }\r\n      createdAt\r\n    }\r\n  }\r\n}",
 								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"organization\" :\r\n    {\r\n\t\t\t\t \r\n      \"id\":\"{{organizationid}}\",\r\n      \"name\": \"{{timeStamp}} updated org name\"\r\n    } \r\n        \r\n  }\r\n}"
 							}
 						},
@@ -896,7 +896,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "\r\n{\r\n  organization(id:\"{{organizationid}}\")\r\n  {\r\n    name{\r\n      value\r\n    }\r\n  }\r\n}\r\n",
+								"query": "\r\n{\r\n  organization(id:\"{{organizationid}}\")\r\n  {\r\n    name{\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    createdAt\r\n  }\r\n}\r\n",
 								"variables": ""
 							}
 						},
@@ -951,7 +951,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "# Write your query or mutation here\nquery {\n  organizations {\n      hasMore\n      total\n      items{\n          id\n          name {\n              value\n              canRead\n              canEdit\n          }\n       \n      }\n  }\n}",
+								"query": "# Write your query or mutation here\r\nquery {\r\n  organizations {\r\n      hasMore\r\n      total\r\n      items{\r\n          id\r\n          name {\r\n              value\r\n              canRead\r\n              canEdit\r\n          }\r\n        createdAt\r\n       \r\n      }\r\n  }\r\n}",
 								"variables": ""
 							}
 						},
@@ -1053,7 +1053,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation login($input:LoginInput!)\r\n{\r\n  login(input:$input)\r\n  {\r\n    success\r\n    user\r\n    {\r\n      id\r\n      createdAt\r\n      email\r\n      {\r\n        value\r\n      }\r\n      realLastName{\r\n        value\r\n      }\r\n      realFirstName\r\n      {\r\n        value\r\n      }\r\n      displayFirstName\r\n      {\r\n        value\r\n      }\r\n      displayLastName\r\n      {\r\n        value\r\n      }\r\n      phone\r\n      {\r\n        value\r\n      }\r\n      timezone\r\n      {\r\n        value\r\n      }\r\n      bio\r\n      {\r\n        value\r\n      }\r\n      \r\n    }\r\n    \r\n  }\r\n}",
+								"query": "mutation login($input:LoginInput!)\r\n{\r\n  login(input:$input)\r\n  {\r\n    success\r\n    user\r\n    {\r\n      id\r\n      createdAt\r\n      email\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName{\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      bio\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      \r\n    }\r\n    \r\n  }\r\n}",
 								"variables": "{\r\n  \"input\": \r\n  {\r\n   \r\n\t\t\"email\": \"{{email}}\",\r\n        \"password\": \"{{password}}\"\r\n\t  }\r\n  }"
 							}
 						},
@@ -1101,7 +1101,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation login($input:LoginInput!)\r\n    {\r\n    login(input:$input)\r\n      {\r\n        user{\r\n          email\r\n          {\r\n            canRead\r\n            canEdit\r\n            value\r\n          } \r\n       }\r\n        success\r\n      }    \r\n  }",
+								"query": "mutation login($input:LoginInput!)\r\n    {\r\n    login(input:$input)\r\n      {\r\n        user{\r\n          email\r\n          {\r\n            canRead\r\n            canEdit\r\n            value\r\n          } \r\n          realFirstName\r\n          {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          realLastName\r\n          {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          displayFirstName\r\n          {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          displayLastName\r\n          {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          phone\r\n          {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          timezone\r\n          {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n           bio\r\n          {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n       }\r\n        success\r\n      }    \r\n  }",
 								"variables": "{\r\n  \"input\": \r\n  {\r\n   \r\n\t\t\"email\": \"{{timeStamp}}invalid@mailinator.com\",\r\n        \"password\": \"test@123\"\r\n   \r\n\t  }\r\n  }"
 							}
 						},
@@ -1314,7 +1314,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query unavailability($id:ID!)\r\n{\r\n  unavailability(id:$id)\r\n  {\r\n    id\r\n    createdAt\r\n    description\r\n    {\r\n      value\r\n    }\r\n    start\r\n    end\r\n  }\r\n}",
+								"query": "query unavailability($id:ID!)\r\n{\r\n  unavailability(id:$id)\r\n  {\r\n    id\r\n    createdAt\r\n    description\r\n    {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    start\r\n    end\r\n  }\r\n}",
 								"variables": "{\r\n  \"id\": \"{{unavailabilityid}}\"\r\n}"
 							}
 						},
@@ -1423,7 +1423,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation CreateLanguage($input:CreateLanguageInput!)\r\n{\r\n  createLanguage(input:$input)\r\n  {\r\n    language\r\n    {\r\n      id\r\n      createdAt\r\n      name{\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayName\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      beginFiscalYear\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      ethnologueName\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      organizationPopulation\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      rodNumber\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n    }\r\n  }\r\n}",
+								"query": "mutation CreateLanguage($input:CreateLanguageInput!)\r\n{\r\n  createLanguage(input:$input)\r\n  {\r\n    language\r\n    {\r\n      id\r\n      createdAt\r\n      name{\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayName\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      beginFiscalYear\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      ethnologueName\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      organizationPopulation\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      rodNumber\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n    \r\n    }\r\n  }\r\n}",
 								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"language\": \r\n    {\r\n      \"name\": \"test{{timeStamp}}\",\r\n      \"displayName\": \"testdisplay{{timeStamp}}\",\r\n      \"beginFiscalYear\": 2020,\r\n      \"ethnologueName\": \"ethnotest\",\r\n      \"ethnologuePopulation\": 123,\r\n      \"organizationPopulation\": 456,\r\n      \"rodNumber\": 789\r\n    }\r\n  }\r\n}"
 							}
 						},
@@ -1475,7 +1475,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "    mutation updateLanguage($input:UpdateLanguageInput!)\r\n    {\r\n      updateLanguage(input:$input)\r\n    {\r\n      language\r\n      {\r\n        id\r\n        name\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      } \r\n        displayName\r\n        {\r\n          canRead\r\n           canEdit\r\n           value\r\n        }\r\n        beginFiscalYear\r\n        {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        ethnologueName\r\n        {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        ethnologuePopulation\r\n        {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        organizationPopulation\r\n        {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        rodNumber\r\n        {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n      }\r\n    }\r\n    }",
-								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"language\": \r\n    {\r\n      \"id\": \"{{languageid}}\",\r\n      \"name\": \"test1Updated{{timeStamp}}\"\r\n     \r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"language\": \r\n    {\r\n      \"id\": \"{{languageid}}\",\r\n      \"name\": \"test1Updated{{timeStamp}}\",\r\n       \"displayName\": \"display\",\r\n      \"beginFiscalYear\": 2020,\r\n      \"ethnologueName\":  \"ethono\",\r\n      \"ethnologuePopulation\": 1234,\r\n      \"organizationPopulation\": 456,\r\n      \"rodNumber\": 9889    \r\n  \r\n     \r\n    }\r\n  }\r\n}"
 							}
 						},
 						"url": {
@@ -1635,8 +1635,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createPartnership($input:CreatePartnershipInput!)\r\n{\r\n  createPartnership(input:$input)\r\n  {\r\n    partnership\r\n    {\r\n      id\r\n      agreementStatus\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      mouStatus\r\n      {\r\n        value\r\n      }\r\n      mouStart\r\n      {\r\n        value\r\n      }\r\n      mouEnd\r\n      {\r\n        value\r\n      }\r\n      types\r\n      {\r\n        value\r\n      }\r\n    }\r\n  }\r\n}",
-								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"partnership\": \r\n    {\r\n      \"organizationId\": \"bf98Ld7Q\",\r\n      \"agreementStatus\": \"NotAttached\",\r\n      \"mouStatus\": \"Signed\",\r\n      \"types\": \"Funding\"\r\n      \r\n    }\r\n  }\r\n}"
+								"query": "mutation createPartnership($input:CreatePartnershipInput!)\r\n{\r\n  createPartnership(input:$input)\r\n  {\r\n    partnership\r\n    {\r\n      id\r\n      agreementStatus\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      mouStatus\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      mouStart\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      mouEnd\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      types\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n    }\r\n  }\r\n}",
+								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"partnership\": \r\n    {\r\n      \"organizationId\": \"bf98Ld7Q\",\r\n      \"agreementStatus\": \"NotAttached\",\r\n      \"mouStatus\": \"Signed\",\r\n      \"mouStart\": \"2019-04-23T23:15:07.910Z\",\r\n      \"mouEnd\": \" 2019-05-23T23:15:07.910Z\",\r\n      \"types\": \"Funding\"\r\n      \r\n    }\r\n  }\r\n}"
 							}
 						},
 						"url": {
@@ -1684,8 +1684,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updatePartnership($input:UpdatePartnershipInput! )\r\n{\r\n  updatePartnership(input:$input)\r\n  {\r\n    partnership\r\n    {\r\n      id\r\n      agreementStatus\r\n      {\r\n        value\r\n      }\r\n      mouStatus\r\n      {\r\n        value\r\n      }\r\n      mouStart\r\n      {\r\n        value\r\n      }\r\n      mouEnd\r\n      {\r\n        value\r\n      }\r\n      types\r\n      {\r\n        value\r\n      }\r\n    }\r\n  }\r\n}",
-								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"partnership\": \r\n    {\r\n      \"id\": \"{{partnershipid}}\",\r\n      \"agreementStatus\": \"AwaitingSignature\",\r\n      \"types\": \"Funding\"\r\n      \r\n      \r\n    }\r\n  }\r\n}"
+								"query": "mutation updatePartnership($input:UpdatePartnershipInput! )\r\n{\r\n  updatePartnership(input:$input)\r\n  {\r\n    partnership\r\n    {\r\n      id\r\n      agreementStatus\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      mouStatus\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      mouStart\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      mouEnd\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      types\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      organization\r\n      {\r\n        createdAt\r\n        name\r\n        {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n      }\r\n    }\r\n  }\r\n}",
+								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"partnership\": \r\n    {\r\n      \"id\": \"{{partnershipid}}\",\r\n      \"agreementStatus\": \"AwaitingSignature\",\r\n      \"mouStatus\": \"NotAttached\",\r\n      \"mouStart\": \"2019-04-23T23:15:07.910Z\",\r\n      \"mouEnd\": \"2019-05-23T23:15:07.910Z\",\r\n      \r\n      \"types\": \"Funding\"\r\n      \r\n      \r\n    }\r\n  }\r\n}"
 							}
 						},
 						"url": {
@@ -1999,8 +1999,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createProject\r\n($input:CreateProjectInput!)\r\n{\r\n  createProject(input:$input)\r\n  {\r\n    project\r\n    {\r\n    id \r\n    name\r\n      {\r\n        value\r\n      }\r\n    deptId\r\n      {\r\n        value\r\n      }\r\n    status\r\n    mouStart\r\n      {\r\n        value\r\n      }\r\n    mouEnd\r\n      {\r\n        value\r\n      }\r\n    estimatedSubmission\r\n      {\r\n        value\r\n      }\r\n     \r\n    }  \r\n   }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"project\": \r\n    {\r\n      \"name\": \"project\",\r\n      \"type\": \"Translation\"\r\n      \r\n    \r\n    }\r\n  }\r\n}"
+								"query": "mutation createProject\r\n($input:CreateProjectInput!)\r\n{\r\n  createProject(input:$input)\r\n  {\r\n    project\r\n    {\r\n    id \r\n    name\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n    deptId\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n    status\r\n    mouStart\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n    mouEnd\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n    estimatedSubmission\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n     \r\n    }  \r\n   }\r\n}\r\n",
+								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"project\": \r\n    {\r\n      \"name\": \"project\",\r\n      \"type\": \"Translation\",\r\n      \"locationId\": \"\",\r\n      \"mouStart\": \"\",\r\n      \"mouEnd\": \"\",\r\n      \"estimatedSubmission\": \"\"\r\n      \r\n    \r\n    }\r\n  }\r\n}"
 							}
 						},
 						"url": {
@@ -2047,8 +2047,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateProject($input:UpdateProjectInput!)\r\n{\r\n  updateProject(input:$input)\r\n  {\r\n    project\r\n    {\r\n      id\r\n      name\r\n      {\r\n        value\r\n      }\r\n      deptId\r\n      {\r\n        value\r\n      }\r\n      status\r\n      mouStart\r\n      {\r\n        value\r\n      }\r\n      mouEnd\r\n      {\r\n        value\r\n      }\r\n      estimatedSubmission\r\n      {\r\n        value\r\n      }\r\n      \r\n    }\r\n  }\r\n  }",
-								"variables": "\r\n\r\n{\r\n  \"input\": \r\n  {\r\n    \"project\": \r\n    {\r\n      \"id\": \"{{projectid}}\",\r\n      \"name\": \"Project1\"\r\n    }\r\n  }\r\n}"
+								"query": "mutation updateProject($input:UpdateProjectInput!)\r\n{\r\n  updateProject(input:$input)\r\n  {\r\n    project\r\n    {\r\n      id\r\n      name\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      deptId\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status\r\n      mouStart\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      mouEnd\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      estimatedSubmission\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n    \r\n    }\r\n  }\r\n  }",
+								"variables": "\r\n\r\n{\r\n  \"input\": \r\n  {\r\n    \"project\": \r\n    {\r\n      \"id\": \"{{projectid}}\",\r\n      \"name\": \"Project1\",\r\n      \"locationId\": \"\",\r\n      \"mouStart\": \"\",\r\n      \"estimatedSubmission\": \"\"\r\n    }\r\n  }\r\n}"
 							}
 						},
 						"url": {
@@ -2095,8 +2095,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation($input:DeleteProjectInputDto!)\r\n{\r\n  deleteProject(input:$input)\r\n  {\r\n    project\r\n    {\r\n      id\r\n    }\r\n  }\r\n  \r\n}",
-								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"project\":  \r\n    {\r\n      \"id\": \"{{projectid}}\"\r\n    }\r\n  }\r\n}"
+								"query": "mutation($id:ID!)\r\n{\r\n  deleteProject(id:$id)\r\n \r\n}",
+								"variables": "\r\n    {\r\n      \"id\": \"{{projectid}}\"\r\n    }\r\n "
 							}
 						},
 						"url": {
@@ -2199,8 +2199,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query($input:ReadProjectEngagementInputDto!)\r\n{\r\n  readProject(input:$input)\r\n  {\r\n    project\r\n    {\r\n      id\r\n    }\r\n  }\r\n}",
-								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"projectEngagement\": \r\n    {\r\n      \"id\": \"\"\r\n    }\r\n  }\r\n}"
+								"query": "query($input:ReadProjectEngagementInputDto!)\r\n{\r\n  readProjectEngagement(input:$input)\r\n  {\r\n    projectEngagement\r\n    {\r\n      id\r\n      languageName\r\n    \r\n    }\r\n  }\r\n}",
+								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"projectEngagement\": \r\n    {\r\n      \"id\": \"\"\r\n      \r\n      \r\n    }\r\n  }\r\n}"
 							}
 						},
 						"url": {
@@ -3186,7 +3186,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createRegion($input:CreateRegionInput!)\r\n{\r\n  createRegion(input:$input)\r\n  {\r\n    region\r\n    {\r\n      id\r\n      name\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n    }\r\n  }\r\n}",
+								"query": "mutation createRegion($input:CreateRegionInput!)\r\n{\r\n  createRegion(input:$input)\r\n  {\r\n    region\r\n    {\r\n      id\r\n      createdAt\r\n      name\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n    }\r\n  }\r\n}",
 								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"region\": \r\n    {\r\n      \"name\": \"abc\",\r\n      \"zoneId\":\"{{zoneid}}\",\r\n      \"directorId\": \"tmpUiLso\"\r\n      \r\n    }\r\n  }\r\n}"
 							}
 						},
@@ -3595,7 +3595,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query ceremony($id:ID!)\r\n{\r\n  ceremony(id:$id){\r\n    id\r\n    createdAt\r\n    type\r\n    planned\r\n    {\r\n      value\r\n    }\r\n    estimatedDate\r\n    {\r\n      value\r\n    }\r\n    actualDate\r\n    {\r\n      value\r\n    }\r\n  }\r\n}",
+								"query": "query ceremony($id:ID!)\r\n{\r\n  ceremony(id:$id){\r\n    id\r\n    createdAt\r\n    type\r\n    planned\r\n    {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    estimatedDate\r\n    {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    actualDate\r\n    {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n  }\r\n}",
 								"variables": "{\r\n  \"id\": \"\"\r\n}"
 							}
 						},
@@ -3629,7 +3629,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateCeremony($input:UpdateCeremonyInput!)\r\n{\r\n  updateCeremony(input:$input)\r\n  {\r\n    ceremony\r\n    {\r\n      id\r\n      planned\r\n      {\r\n        value\r\n      }\r\n      estimatedDate\r\n      {\r\n        value\r\n      }\r\n      actualDate\r\n      {\r\n        value\r\n      }\r\n    }\r\n  }\r\n}",
+								"query": "mutation updateCeremony($input:UpdateCeremonyInput!)\r\n{\r\n  updateCeremony(input:$input)\r\n  {\r\n    ceremony\r\n    {\r\n      id\r\n      planned\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      estimatedDate\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      actualDate\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n    }\r\n  }\r\n}",
 								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"ceremony\": \r\n    {\r\n      \"id\": \"\",\r\n      \"planned\": true,\r\n      \"estimatedDate\": \"\",\r\n      \"actualDate\": \"\"\r\n    }\r\n  }\r\n}"
 							}
 						},
@@ -3659,11 +3659,6 @@
 							"script": {
 								"id": "82395006-86e0-423b-826c-3947afe0658e",
 								"exec": [
-									"pm.test(\"Saving email to gloable variable 'email'\", function () {",
-									"    var jsonData = pm.response.json();",
-									"    var id = jsonData.data.createUser.user.email;",
-									"    pm.globals.set(\"email\",email);",
-									"});",
 									"",
 									"pm.test(\"Status code is 200\", function () {",
 									"    pm.response.to.have.status(200);",
