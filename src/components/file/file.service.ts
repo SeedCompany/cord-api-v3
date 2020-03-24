@@ -1,10 +1,9 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
-import { NotImplementedError } from '../../common';
+import { ISession, NotImplementedError } from '../../common';
 import { ILogger, Logger } from '../../core';
 import { DatabaseService } from '../../core/database/database.service';
-import { ISession } from '../auth';
 import { UserService } from '../user';
 import {
   CreateFileInput,

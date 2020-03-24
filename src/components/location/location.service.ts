@@ -5,8 +5,8 @@ import {
 } from '@nestjs/common';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
+import { ISession } from '../../common';
 import { DatabaseService, ILogger, Logger } from '../../core';
-import { ISession } from '../auth';
 import { RedactedUser, User, UserService } from '../user';
 import {
   Country,

@@ -1,25 +1,11 @@
 import {
-  applyDecorators,
   Injectable,
   PipeTransform,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Context } from '@nestjs/graphql';
 import { Request } from 'express';
-import { DateTime } from 'luxon';
+import { ISession } from '../../common';
 import { AuthService } from './auth.service';
-
-export const Session = () =>
-  applyDecorators(Context('request', SessionPipe)) as ParameterDecorator;
-
-// Prefixed with `I` so it can be used in conjunction with decorator
-// eslint-disable-next-line @typescript-eslint/interface-name-prefix
-export interface ISession {
-  token: string;
-  issuedAt: DateTime;
-  owningOrgId?: string;
-  userId?: string;
-}
 
 declare module 'express' {
   interface Request {
@@ -28,7 +14,7 @@ declare module 'express' {
 }
 
 @Injectable()
-export class SessionPipe implements PipeTransform {
+export class SessionPipe implements PipeTransform<Request, Promise<ISession>> {
   constructor(private readonly auth: AuthService) {}
 
   async transform(request: Request): Promise<ISession> {
@@ -54,6 +40,6 @@ export class SessionPipe implements PipeTransform {
       return;
     }
     const token = header.replace('Bearer ', '');
-    return this.auth.decodeAndVerifyToken(token);
+    return this.auth.createSession(token);
   }
 }

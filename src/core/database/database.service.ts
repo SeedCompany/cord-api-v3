@@ -14,13 +14,13 @@ import {
 import { cloneDeep, Many, upperFirst } from 'lodash';
 import { DateTime, Duration } from 'luxon';
 import {
+  ISession,
   isSecured,
   Order,
   Resource,
   unwrapSecured,
   UnwrapSecured,
 } from '../../common';
-import { ISession } from '../../components/auth';
 import { ILogger, Logger } from '..';
 
 interface ReadPropertyResult {

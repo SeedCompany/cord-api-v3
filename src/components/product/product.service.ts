@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { generate } from 'shortid';
+import { ISession } from '../../common';
 import { DatabaseService, ILogger, Logger } from '../../core';
-import { ISession } from '../auth';
 import {
   CreateProduct,
   MethodologyToApproach,

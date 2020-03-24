@@ -1,8 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { generate } from 'shortid';
-import { Sensitivity } from '../../common';
+import { ISession, Sensitivity } from '../../common';
 import { DatabaseService, ILogger, Logger } from '../../core';
-import { ISession } from '../auth';
 import {
   CreateLanguage,
   Language,
