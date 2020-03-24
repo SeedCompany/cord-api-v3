@@ -1,5 +1,5 @@
 import { Injectable, NotImplementedException } from '@nestjs/common';
-import { ISession } from '../auth';
+import { ISession } from '../../common';
 import { ProductListInput, SecuredProductList } from '../product';
 import {
   CreateInternshipEngagement,

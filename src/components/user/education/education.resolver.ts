@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Args, Mutation, Query } from '@nestjs/graphql';
-import { IdArg } from '../../../common';
-import { ISession, Session } from '../../auth';
+import { IdArg, ISession, Session } from '../../../common';
 import {
   CreateEducationInput,
   CreateEducationOutput,

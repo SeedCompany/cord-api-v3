@@ -1,6 +1,6 @@
 import { Injectable, NotImplementedException } from '@nestjs/common';
+import { ISession } from '../../common';
 import { DatabaseService, ILogger, Logger } from '../../core';
-import { ISession } from '../auth';
 import {
   Ceremony,
   CeremonyListInput,

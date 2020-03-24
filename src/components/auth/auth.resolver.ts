@@ -1,4 +1,5 @@
 import { Args, Mutation, Resolver } from '@nestjs/graphql';
+import { ISession, Session } from '../../common';
 import { UserService } from '../user';
 import {
   CreateSessionOutput,
@@ -7,7 +8,6 @@ import {
   ResetPasswordInput,
 } from './auth.dto';
 import { AuthService } from './auth.service';
-import { ISession, Session } from './session';
 
 @Resolver()
 export class AuthResolver {
@@ -32,9 +32,7 @@ export class AuthResolver {
     @Args('input') input: LoginInput
   ): Promise<LoginOutput> {
     const userId = await this.authService.login(input, session);
-    const loggedInSession = await this.authService.decodeAndVerifyToken(
-      session.token
-    );
+    const loggedInSession = await this.authService.createSession(session.token);
     if (!userId) {
       return { success: false };
     }

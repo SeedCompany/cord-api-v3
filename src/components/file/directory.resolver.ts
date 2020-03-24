@@ -6,8 +6,7 @@ import {
   ResolveProperty,
   Resolver,
 } from '@nestjs/graphql';
-import { IdArg } from '../../common';
-import { ISession, Session } from '../auth';
+import { IdArg, ISession, Session } from '../../common';
 import { Directory, FileListInput, FileListOutput } from './dto';
 import { FileService } from './file.service';
 

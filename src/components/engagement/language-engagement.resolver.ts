@@ -1,5 +1,5 @@
 import { Args, Parent, ResolveProperty, Resolver } from '@nestjs/graphql';
-import { ISession, Session } from '../auth';
+import { ISession, Session } from '../../common';
 import { ProductListInput, SecuredProductList } from '../product/dto';
 import { LanguageEngagement } from './dto';
 import { EngagementService } from './engagement.service';

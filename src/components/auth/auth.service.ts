@@ -3,9 +3,9 @@ import * as argon2 from 'argon2';
 import { SES } from 'aws-sdk';
 import { sign, verify } from 'jsonwebtoken';
 import { DateTime } from 'luxon';
+import { ISession } from '../../common';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
 import { LoginInput, ResetPasswordInput } from './auth.dto';
-import { ISession } from './session';
 
 interface JwtPayload {
   iat: number;
@@ -144,7 +144,7 @@ export class AuthService {
       .run();
   }
 
-  async decodeAndVerifyToken(token: string): Promise<ISession> {
+  async createSession(token: string): Promise<ISession> {
     this.logger.debug('Decoding token', { token });
 
     const { iat } = this.decodeJWT(token);
