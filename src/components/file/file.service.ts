@@ -222,7 +222,6 @@ export class FileService {
           userId: session.userId,
         })
         .run();
-
       return this.getFile(uploadId, session);
     } catch (e) {
       throw new Error(e);
