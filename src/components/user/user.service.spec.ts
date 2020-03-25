@@ -3,46 +3,44 @@ import { generate } from 'shortid';
 import { ISession } from '../../common';
 import { CoreModule, LoggerModule } from '../../core';
 import { AuthModule, AuthService } from '../auth';
-import { EducationModule, EducationService } from './education'
 import { OrganizationModule, OrganizationService } from '../organization';
+import { EducationModule, EducationService } from './education'
 import { UnavailabilityModule, UnavailabilityService } from './unavailability';
 import { UserService } from './user.service';
 import {
   CreateUser,
   UpdateUser,
   User,
-  UserListInput,
-  UserListOutput,
 } from './dto';
 
 describe('UserService', () => {
   let userService: UserService;
-  let id = generate();
+  const id = generate();
 
-  let createTestUser: Partial<User> = {
+  const createTestUser: Partial<User> = {
     id: generate(),
     email: {
-      value: "test@test.com",
+      value: 'test@test.com',
       canRead: true,
       canEdit: true,
     },
     realFirstName: {
-      value: "FirstName",
+      value: 'FirstName',
       canRead: true,
       canEdit: true,
     },
     realLastName: {
-      value: "LastName",
+      value: 'LastName',
       canRead: true,
       canEdit: true,
     },
     displayFirstName: {
-      value: "DisplayFirst",
+      value: 'DisplayFirst',
       canRead: true,
       canEdit: true,
     },
     displayLastName: {
-      value: "DisplayLast",
+      value: 'DisplayLast',
       canRead: true,
       canEdit: true,
     },
@@ -52,17 +50,17 @@ describe('UserService', () => {
     //   canEdit: true,
     // },
     phone: {
-      value: "919191919191",
+      value: '919191919191',
       canRead: true,
       canEdit: true,
     },
     timezone: {
-      value: "PST",
+      value: 'PST',
       canRead: true,
       canEdit: true,
     },
     bio: {
-      value: "bio-details",
+      value: 'bio-details',
       canRead: true,
       canEdit: true,
     },
