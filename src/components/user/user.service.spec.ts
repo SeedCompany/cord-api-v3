@@ -4,14 +4,10 @@ import { ISession } from '../../common';
 import { CoreModule, LoggerModule } from '../../core';
 import { AuthModule, AuthService } from '../auth';
 import { OrganizationModule, OrganizationService } from '../organization';
-import { EducationModule, EducationService } from './education'
+import { CreateUser, UpdateUser, User } from './dto';
+import { EducationModule, EducationService } from './education';
 import { UnavailabilityModule, UnavailabilityService } from './unavailability';
 import { UserService } from './user.service';
-import {
-  CreateUser,
-  UpdateUser,
-  User,
-} from './dto';
 
 describe('UserService', () => {
   let userService: UserService;
@@ -83,14 +79,14 @@ describe('UserService', () => {
         EducationModule,
         OrganizationModule,
         UnavailabilityModule,
-        AuthModule
+        AuthModule,
       ],
       providers: [
         UserService,
         EducationService,
         OrganizationService,
         UnavailabilityService,
-        AuthService
+        AuthService,
       ],
     }).compile();
 
@@ -165,12 +161,11 @@ describe('UserService', () => {
     jest
       .spyOn(userService, 'delete')
       .mockImplementation(() => Promise.resolve());
-    const user = await userService.delete(
+    await userService.delete(
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
       id,
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
       {} as ISession
     );
   });
-  
 });
