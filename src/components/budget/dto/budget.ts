@@ -25,8 +25,8 @@ export class Budget extends Resource {
   @Field()
   readonly status: BudgetStatus;
 
-  @Field(() => [BudgetRecord])
-  readonly records: SecuredString[];
+  @Field(() => [SecuredString], { nullable: true })
+  readonly records?: SecuredString[];
 }
 
 @ObjectType({

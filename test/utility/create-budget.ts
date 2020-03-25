@@ -12,6 +12,7 @@ export async function createBudget(
     projectId: generate(),
     ...input,
   };
+  console.log('budget ', JSON.stringify(budget, null, 2));
 
   const result = await app.graphql.mutate(
     gql`

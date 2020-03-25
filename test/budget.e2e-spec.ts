@@ -8,13 +8,14 @@ import {
   ProjectType,
 } from '../src/components/project/dto';
 import {
-  createProject,
   createSession,
   createTestApp,
+  createUser,
   fragments,
   TestApp,
 } from './utility';
 import { createBudget } from './utility/create-budget';
+import { createProject } from './utility/create-project';
 
 describe('Budget e2e', () => {
   let app: TestApp;
@@ -23,6 +24,7 @@ describe('Budget e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
+    await createUser(app);
     const projectInput: CreateProject = {
       name: 'Super Secret Project',
       type: ProjectType.Translation,
@@ -36,7 +38,7 @@ describe('Budget e2e', () => {
     await app.close();
   });
 
-  it.only('create a budget', async () => {
+  it('create a budget', async () => {
     const budget = await createBudget(app, { projectId: project.id });
     expect(budget.id).toBeDefined();
   });
@@ -69,7 +71,7 @@ describe('Budget e2e', () => {
     }
   });
 
-  it('update budget', async () => {
+  it.only('update budget', async () => {
     const budgetStatusNew = 'Current';
 
     // create budget first

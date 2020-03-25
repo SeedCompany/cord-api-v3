@@ -272,11 +272,7 @@ export const fragments = {
     fragment budget on Budget {
       id
       createdAt
-      status {
-        value
-        canEdit
-        canRead
-      }
+      status
     }
   `,
   budgetRecord: gql`
