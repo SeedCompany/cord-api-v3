@@ -1,96 +1,178 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
+import { generate } from 'shortid';
+import { ISession } from '../../common';
 import { CoreModule, LoggerModule } from '../../core';
-import * as faker from 'faker';
-import { AuthModule} from '../auth/auth.module'
-import { AuthService } from '../auth/auth.service'
-import { EducationModule } from './education/education.module'
-import { EducationService } from './education/education.service';
-import { UnavailabilityModule } from './unavailability/unavailability.module';
-import { UnavailabilityService } from './unavailability/unavailability.service';
-import { OrganizationModule } from '../organization/organization.module';
-import { OrganizationService } from '../organization/organization.service';
+import { AuthModule, AuthService } from '../auth';
+import { EducationModule, EducationService } from './education'
+import { OrganizationModule, OrganizationService } from '../organization';
+import { UnavailabilityModule, UnavailabilityService } from './unavailability';
 import { UserService } from './user.service';
 import {
   CreateUser,
   UpdateUser,
+  User,
   UserListInput,
+  UserListOutput,
 } from './dto';
-// import {
-//   createSession,
-//   createTestApp,
-//   TestApp,
-// } from '../../../test/utility';
-import { Session, ISession } from '../auth';
-import { DateTime } from 'luxon';
 
 describe('UserService', () => {
-  let module: TestingModule;
-  let session : ISession;
+  let userService: UserService;
+  let id = generate();
+
+  let createTestUser: Partial<User> = {
+    id: generate(),
+    email: {
+      value: "test@test.com",
+      canRead: true,
+      canEdit: true,
+    },
+    realFirstName: {
+      value: "FirstName",
+      canRead: true,
+      canEdit: true,
+    },
+    realLastName: {
+      value: "LastName",
+      canRead: true,
+      canEdit: true,
+    },
+    displayFirstName: {
+      value: "DisplayFirst",
+      canRead: true,
+      canEdit: true,
+    },
+    displayLastName: {
+      value: "DisplayLast",
+      canRead: true,
+      canEdit: true,
+    },
+    // password: {
+    //   value: "test@test.com",
+    //   canRead: true,
+    //   canEdit: true,
+    // },
+    phone: {
+      value: "919191919191",
+      canRead: true,
+      canEdit: true,
+    },
+    timezone: {
+      value: "PST",
+      canRead: true,
+      canEdit: true,
+    },
+    bio: {
+      value: "bio-details",
+      canRead: true,
+      canEdit: true,
+    },
+  };
+
+  // beforeEach(async () => {
+  //   const module = await Test.createTestingModule({
+  //     imports: [LoggerModule.forRoot(), CoreModule, EducationModule, OrganizationModule, UnavailabilityModule, AuthModule],
+  //     providers: [UserService, EducationService, OrganizationService, UnavailabilityService, AuthService],
+  //   }).compile();
+
+  //   userService = module.get<UserService>(UserService);
+  // });
 
   beforeAll(async () => {
-
-    module = await Test.createTestingModule({
-      imports: [LoggerModule.forRoot(), CoreModule, EducationModule, OrganizationModule, UnavailabilityModule, AuthModule],
-      providers: [UserService, EducationService, OrganizationService, UnavailabilityService, AuthService],
+    const module = await Test.createTestingModule({
+      imports: [
+        LoggerModule.forRoot(),
+        CoreModule,
+        EducationModule,
+        OrganizationModule,
+        UnavailabilityModule,
+        AuthModule
+      ],
+      providers: [
+        UserService,
+        EducationService,
+        OrganizationService,
+        UnavailabilityService,
+        AuthService
+      ],
     }).compile();
 
-    // let app: TestApp;
-    // let session : ISession;
-
-    // app = await createTestApp();
-    // const token = await createSession(app);
-    session = {
-      token : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODUxMTU5MjkwNzd9.XRnoSEg3_73AOTy5kfDupzTuGmmDHj2UZNVJJ23OecE", 
-      owningOrgId: "Seed Company",
-      issuedAt : DateTime.local()
-    }
-  });
- 
- 
-
-  afterAll(async () => {
-    await module.close();
+    userService = module.get<UserService>(UserService);
   });
 
-  // CREATE User
-  it('create a user', async () => {
-    //const input = {name : faker.company.companyName()};
-    const input = { 
-      email: "test@test.com",
-      realFirstName: "TestFirst",
-      realLastName: "TestLast",
-      displayFirstName: "Test First",
-      displayLastName: "Test Last",
-      password: "test@123",
-      phone: "6464646464",
-      timezone: "PST",
-      bio: "bio-details"
-    };
-
-    try {
-      const result = await module.get(UserService).create(input as CreateUser, session);
-    } catch (e) {
-      console.log(e);
-      throw e;
-    }
+  it('should be defined', () => {
+    expect(userService).toBeDefined();
   });
 
-  // READ User
-  it('read user by id', async () => {
-    
-    const id = "C3DDouWkM";
-    const result = await module.get(UserService).readOne(id, session as ISession);
-    console.log(result);
-    // try {
-    //   const user1 = await module.get(UserService).create(input as CreateUser, session as ISession);
-    //   const user2 = await module.get(UserService).readOne(user1.id, session as ISession);
-    //   expect(user2.name.value).toEqual(user1.name.value);
-    // } catch (e) {
-    //   console.log(e);
-    //   throw e;
-    // }
+  it('should create a user node', async () => {
+    jest
+      .spyOn(userService, 'create')
+      .mockImplementation(() => Promise.resolve(createTestUser as User));
+    const user = await userService.create(
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      {} as CreateUser,
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      {} as ISession
+    );
+    expect(user.email).toEqual(createTestUser.email);
+    expect(user.realFirstName).toEqual(createTestUser.realFirstName);
+    expect(user.realLastName).toEqual(createTestUser.realLastName);
+    expect(user.displayFirstName).toEqual(createTestUser.displayFirstName);
+    expect(user.displayLastName).toEqual(createTestUser.displayLastName);
+    expect(user.phone).toEqual(createTestUser.phone);
+    expect(user.timezone).toEqual(createTestUser.timezone);
+    expect(user.bio).toEqual(createTestUser.bio);
   });
 
+  it('should read a user', async () => {
+    jest
+      .spyOn(userService, 'readOne')
+      .mockImplementation(() => Promise.resolve(createTestUser as User));
+    const user = await userService.readOne(
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      id,
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      {} as ISession
+    );
+    expect(user.email).toEqual(createTestUser.email);
+    expect(user.realFirstName).toEqual(createTestUser.realFirstName);
+    expect(user.realLastName).toEqual(createTestUser.realLastName);
+    expect(user.displayFirstName).toEqual(createTestUser.displayFirstName);
+    expect(user.displayLastName).toEqual(createTestUser.displayLastName);
+    expect(user.phone).toEqual(createTestUser.phone);
+    expect(user.timezone).toEqual(createTestUser.timezone);
+    expect(user.bio).toEqual(createTestUser.bio);
+  });
+
+  it('should update a user', async () => {
+    jest
+      .spyOn(userService, 'update')
+      .mockImplementation(() => Promise.resolve(createTestUser as User));
+    const user = await userService.update(
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      {} as UpdateUser,
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      {} as ISession
+    );
+    expect(user.email).toEqual(createTestUser.email);
+    expect(user.realFirstName).toEqual(createTestUser.realFirstName);
+    expect(user.realLastName).toEqual(createTestUser.realLastName);
+    expect(user.displayFirstName).toEqual(createTestUser.displayFirstName);
+    expect(user.displayLastName).toEqual(createTestUser.displayLastName);
+    expect(user.phone).toEqual(createTestUser.phone);
+    expect(user.timezone).toEqual(createTestUser.timezone);
+    expect(user.bio).toEqual(createTestUser.bio);
+  });
+
+  it('should delete a user', async () => {
+    jest
+      .spyOn(userService, 'delete')
+      .mockImplementation(() => Promise.resolve());
+    const user = await userService.delete(
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      id,
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      {} as ISession
+    );
+  });
   
-
 });
