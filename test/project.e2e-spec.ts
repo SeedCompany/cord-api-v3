@@ -11,7 +11,7 @@ import {
 } from './utility';
 import { createProject } from './utility/create-project';
 
-describe.skip('Project e2e', () => {
+describe('Project e2e', () => {
   let app: TestApp;
 
   beforeAll(async () => {
@@ -23,7 +23,7 @@ describe.skip('Project e2e', () => {
     await app.close();
   });
 
-  it('create & read project by id', async () => {
+  it.only('create & read project by id', async () => {
     const project = await createProject(app);
 
     const result = await app.graphql.query(

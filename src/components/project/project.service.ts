@@ -309,12 +309,14 @@ export class ProjectService {
     };
 
     try {
-      await this.db.createNode({
+      const result = await this.db.createNode({
         session,
         type: Project.classType,
         input: createInput,
         acls,
       });
+
+      console.log('result ', JSON.stringify(result, null, 2));
 
       // TODO: locations are not hooked up yet
       // if (locationId) {

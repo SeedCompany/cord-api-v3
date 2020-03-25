@@ -268,4 +268,31 @@ export const fragments = {
       }
     }
   `,
+  budget: gql`
+    fragment budget on Budget {
+      id
+      createdAt
+      status {
+        value
+        canEdit
+        canRead
+      }
+    }
+  `,
+  budgetRecord: gql`
+    fragment budgetRecord on BudgetRecord {
+      id
+      createdAt
+      fiscalYear {
+        value
+        canEdit
+        canRead
+      }
+      amount {
+        value
+        canEdit
+        canRead
+      }
+    }
+  `,
 };
