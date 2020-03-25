@@ -15,11 +15,11 @@ import {
   UpdateUser,
   UserListInput,
 } from './dto';
-import {
-  createSession,
-  createTestApp,
-  TestApp,
-} from '../../../test/utility';
+// import {
+//   createSession,
+//   createTestApp,
+//   TestApp,
+// } from '../../../test/utility';
 import { Session, ISession } from '../auth';
 import { DateTime } from 'luxon';
 
@@ -34,12 +34,16 @@ describe('UserService', () => {
       providers: [UserService, EducationService, OrganizationService, UnavailabilityService, AuthService],
     }).compile();
 
-    let app: TestApp;
-    
+    // let app: TestApp;
+    // let session : ISession;
 
-    app = await createTestApp();
-    const token = await createSession(app);
-    session = {token, owningOrgId: "Seed Company", issuedAt : DateTime.local()}
+    // app = await createTestApp();
+    // const token = await createSession(app);
+    session = {
+      token : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODUxMTU5MjkwNzd9.XRnoSEg3_73AOTy5kfDupzTuGmmDHj2UZNVJJ23OecE", 
+      owningOrgId: "Seed Company",
+      issuedAt : DateTime.local()
+    }
   });
  
  
@@ -62,11 +66,6 @@ describe('UserService', () => {
       timezone: "PST",
       bio: "bio-details"
     };
- 
-    // const session = { 
-    //   token,
-    //   owningOrgId: "Seed Company",
-    // };
 
     try {
       const result = await module.get(UserService).create(input as CreateUser, session);
@@ -78,10 +77,7 @@ describe('UserService', () => {
 
   // READ User
   it('read user by id', async () => {
-    const session = { 
-      token : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODUwNjIwMjgwNzR9.7c3xRjnrB-Y4TtVXZxYGk5nClebzLZsf_KS-h-XpKI4", 
-      owningOrgId: "Seed Company",
-    };
+    
     const id = "C3DDouWkM";
     const result = await module.get(UserService).readOne(id, session as ISession);
     console.log(result);
@@ -95,54 +91,6 @@ describe('UserService', () => {
     // }
   });
 
-  // UPDATE User
-//   it('update user', async () => {
-//     const input = {name : faker.company.companyName()};
-//     const session = { 
-//       token : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODQ5NTMxOTc0Mzl9.GqoNZAGzPpPhp1hs0Toi5bp8I2UUYHqR0FUrOxxLWFI", 
-//       owningOrgId: "Seed Company",
-//     };
-
-//     try {
-//       const user1 = await module.get(UserService).create(input as CreateUser, session as ISession);
-//       const inputNew = {id: user1.id, name : faker.company.companyName()};
-//       const user2 = await module.get(UserService).update(inputNew as UpdateUser, session as ISession);
-//       expect(user2.name.value).toBe(inputNew.name);
-//     } catch (e) {
-//       console.log(e);
-//       throw e;
-//     }
-//   });
-
-  // DELETE User
-//   it('delete user', async () => {
-//     const input = {name : faker.company.companyName()};
-//     const session = { 
-//       token : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODQ5NTMxOTc0Mzl9.GqoNZAGzPpPhp1hs0Toi5bp8I2UUYHqR0FUrOxxLWFI",
-//       owningOrgId: "Seed Company",
-//     };
-//     try{
-//       const user1 = await module.get(UserService).create(input as CreateUser, session as ISession);
-//       await module.get(UserService).delete(user1.id, session as ISession);
-//     } catch (e) {
-//       console.log(e);
-//       throw e;
-//     }
-//   });
-
-  // LIST UserS
-//   it('list view of users', async () => {
-//     const input = { page : 1, count : 5, sort : "name", order : "DESC"};
-//     const session = { 
-//       token : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODQ5NTMxOTc0Mzl9.GqoNZAGzPpPhp1hs0Toi5bp8I2UUYHqR0FUrOxxLWFI",
-//       owningOrgId: "Seed Company",
-//     };
-//     try{
-//       module.get(UserService).list(input as UserListInput, session as ISession);
-//     } catch (e) {
-//       console.log(e);
-//       throw e;
-//     }
-//   });
+  
 
 });
