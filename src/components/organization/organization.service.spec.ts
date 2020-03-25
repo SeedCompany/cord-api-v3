@@ -1,15 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { CoreModule, LoggerModule } from '../../core';
-import { OrganizationService } from './organization.service';
-import {
-  CreateOrganization,
-  Organization,
-  UpdateOrganization,
-  OrganizationListInput,
-  OrganizationListOutput
-} from './dto';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
+import { CoreModule, LoggerModule } from '../../core';
+import { CreateOrganization, Organization, UpdateOrganization } from './dto';
+import { OrganizationService } from './organization.service';
 
 describe('OrganizationService', () => {
   let module: TestingModule;
@@ -27,13 +21,8 @@ describe('OrganizationService', () => {
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
-      imports: [
-        LoggerModule.forRoot(),
-        CoreModule
-      ],
-      providers: [
-        OrganizationService
-      ],
+      imports: [LoggerModule.forRoot(), CoreModule],
+      providers: [OrganizationService],
     }).compile();
 
     organizationService = module.get<OrganizationService>(OrganizationService);
@@ -46,7 +35,9 @@ describe('OrganizationService', () => {
   it('should create an organization node', async () => {
     jest
       .spyOn(organizationService, 'create')
-      .mockImplementation(() => Promise.resolve(createTestOrganization as Organization));
+      .mockImplementation(() =>
+        Promise.resolve(createTestOrganization as Organization)
+      );
     const organization = await organizationService.create(
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
       {} as CreateOrganization,
@@ -59,7 +50,9 @@ describe('OrganizationService', () => {
   it('should read an organization', async () => {
     jest
       .spyOn(organizationService, 'readOne')
-      .mockImplementation(() => Promise.resolve(createTestOrganization as Organization));
+      .mockImplementation(() =>
+        Promise.resolve(createTestOrganization as Organization)
+      );
     const organization = await organizationService.readOne(
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
       id,
@@ -85,7 +78,9 @@ describe('OrganizationService', () => {
   it('should update an organization', async () => {
     jest
       .spyOn(organizationService, 'update')
-      .mockImplementation(() => Promise.resolve(createTestOrganization as Organization));
+      .mockImplementation(() =>
+        Promise.resolve(createTestOrganization as Organization)
+      );
     const organization = await organizationService.update(
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
       {} as UpdateOrganization,
@@ -99,7 +94,7 @@ describe('OrganizationService', () => {
     jest
       .spyOn(organizationService, 'delete')
       .mockImplementation(() => Promise.resolve());
-    const organization = await organizationService.delete(
+    await organizationService.delete(
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
       id,
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
