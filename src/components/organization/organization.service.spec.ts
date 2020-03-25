@@ -1,121 +1,109 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CoreModule, LoggerModule } from '../../core';
-import * as faker from 'faker';
 import { OrganizationService } from './organization.service';
-import { ISession } from '../auth';
 import {
   CreateOrganization,
+  Organization,
   UpdateOrganization,
   OrganizationListInput,
+  OrganizationListOutput
 } from './dto';
+import { generate } from 'shortid';
+import { ISession } from '../../common';
 
 describe('OrganizationService', () => {
   let module: TestingModule;
+  let organizationService: OrganizationService;
+  const id = generate();
+
+  const createTestOrganization: Partial<Organization> = {
+    id: generate(),
+    name: {
+      value: 'seed-organization',
+      canRead: true,
+      canEdit: true,
+    },
+  };
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
-      imports: [LoggerModule.forRoot(), CoreModule],
-      providers: [OrganizationService],
+      imports: [
+        LoggerModule.forRoot(),
+        CoreModule
+      ],
+      providers: [
+        OrganizationService
+      ],
     }).compile();
 
-    // const session : ISession = { 
-    //   token : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODQ5NTMxOTc0Mzl9.GqoNZAGzPpPhp1hs0Toi5bp8I2UUYHqR0FUrOxxLWFI", 
-    //   userId: "C3DDouWkM",
-    //   owningOrgId: "Seed Company",
-    // };
+    organizationService = module.get<OrganizationService>(OrganizationService);
   });
 
-  afterEach(async () => {
-    await module.close();
+  it('should be defined', () => {
+    expect(OrganizationService).toBeDefined();
   });
 
-  // CREATE ORG
-  it('create an organization', async () => {
-    const input = {name : faker.company.companyName()};
-    const session = { 
-      token : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODQ5NTMxOTc0Mzl9.GqoNZAGzPpPhp1hs0Toi5bp8I2UUYHqR0FUrOxxLWFI", 
-      userId: "C3DDouWkM",
-      owningOrgId: "Seed Company",
-    };
-
-    try {
-      const result = await module.get(OrganizationService).create(input as CreateOrganization, session as ISession);
-    } catch (e) {
-      console.log(e);
-      throw e;
-    }
+  it('should create an organization node', async () => {
+    jest
+      .spyOn(organizationService, 'create')
+      .mockImplementation(() => Promise.resolve(createTestOrganization as Organization));
+    const organization = await organizationService.create(
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      {} as CreateOrganization,
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      {} as ISession
+    );
+    expect(organization.name).toEqual(createTestOrganization.name);
   });
 
-  // READ ORG
-  it('read organization by id', async () => {
-    const input = {name : faker.company.companyName()};
-    const session = { 
-      token : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODQ5NTMxOTc0Mzl9.GqoNZAGzPpPhp1hs0Toi5bp8I2UUYHqR0FUrOxxLWFI", 
-      userId: "C3DDouWkM",
-      owningOrgId: "Seed Company",
-    };
-
-    try {
-      const org1 = await module.get(OrganizationService).create(input as CreateOrganization, session as ISession);
-      const org2 = await module.get(OrganizationService).readOne(org1.id, session as ISession);
-      expect(org2.name.value).toEqual(org1.name.value);
-    } catch (e) {
-      console.log(e);
-      throw e;
-    }
+  it('should read an organization', async () => {
+    jest
+      .spyOn(organizationService, 'readOne')
+      .mockImplementation(() => Promise.resolve(createTestOrganization as Organization));
+    const organization = await organizationService.readOne(
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      id,
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      {} as ISession
+    );
+    expect(organization.name).toEqual(createTestOrganization.name);
   });
 
-  // UPDATE ORG
-  it('update organization', async () => {
-    const input = {name : faker.company.companyName()};
-    const session = { 
-      token : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODQ5NTMxOTc0Mzl9.GqoNZAGzPpPhp1hs0Toi5bp8I2UUYHqR0FUrOxxLWFI", 
-      userId: "C3DDouWkM",
-      owningOrgId: "Seed Company",
-    };
+  // it('should read organizations', async () => {
+  //   jest
+  //     .spyOn(organizationService, 'list')
+  //     .mockImplementation(() => Promise.resolve(createTestOrganization as Organization));
+  //   const organization = await organizationService.list(
+  //     // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+  //     {} as OrganizationListInput,
+  //     // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+  //     {} as ISession
+  //   );
+  //   expect(organization.total).toEqual(createTestOrganization);
+  // });
 
-    try {
-      const org1 = await module.get(OrganizationService).create(input as CreateOrganization, session as ISession);
-      const inputNew = {id: org1.id, name : faker.company.companyName()};
-      const org2 = await module.get(OrganizationService).update(inputNew as UpdateOrganization, session as ISession);
-      expect(org2.name.value).toBe(inputNew.name);
-    } catch (e) {
-      console.log(e);
-      throw e;
-    }
+  it('should update an organization', async () => {
+    jest
+      .spyOn(organizationService, 'update')
+      .mockImplementation(() => Promise.resolve(createTestOrganization as Organization));
+    const organization = await organizationService.update(
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      {} as UpdateOrganization,
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      {} as ISession
+    );
+    expect(organization.name).toEqual(createTestOrganization.name);
   });
 
-  // DELETE ORG
-  it('delete organization', async () => {
-    const input = {name : faker.company.companyName()};
-    const session = { 
-      token : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODQ5NTMxOTc0Mzl9.GqoNZAGzPpPhp1hs0Toi5bp8I2UUYHqR0FUrOxxLWFI", 
-      userId: "C3DDouWkM",
-      owningOrgId: "Seed Company",
-    };
-    try{
-      const org1 = await module.get(OrganizationService).create(input as CreateOrganization, session as ISession);
-      await module.get(OrganizationService).delete(org1.id, session as ISession);
-    } catch (e) {
-      console.log(e);
-      throw e;
-    }
+  it('should delete an organization', async () => {
+    jest
+      .spyOn(organizationService, 'delete')
+      .mockImplementation(() => Promise.resolve());
+    const organization = await organizationService.delete(
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      id,
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      {} as ISession
+    );
   });
-
-  // LIST ORGS
-  it('list view of organizations', async () => {
-    const input = { page : 1, count : 5, sort : "name", order : "DESC"};
-    const session = { 
-      token : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODQ5NTMxOTc0Mzl9.GqoNZAGzPpPhp1hs0Toi5bp8I2UUYHqR0FUrOxxLWFI", 
-      userId: "C3DDouWkM",
-      owningOrgId: "Seed Company",
-    };
-    try{
-      module.get(OrganizationService).list(input as OrganizationListInput, session as ISession);
-    } catch (e) {
-      console.log(e);
-      throw e;
-    }
-  });
-
 });
