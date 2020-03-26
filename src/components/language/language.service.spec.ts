@@ -139,6 +139,8 @@ describe('LanguageService', () => {
       }
     );
     expect(language.name).toEqual(createTestLanguage.name);
+    expect(language.displayName).toEqual(createTestLanguage.displayName);
+    expect(language.ethnologueName).toEqual(createTestLanguage.ethnologueName);
   });
 
   it('should read language node', async () => {
@@ -151,6 +153,9 @@ describe('LanguageService', () => {
       issuedAt: DateTime.local(),
     });
     expect(language.id).toEqual(createTestLanguage.id);
+    expect(language.name).toEqual(createTestLanguage.name);
+    expect(language.displayName).toEqual(createTestLanguage.displayName);
+    expect(language.ethnologueName).toEqual(createTestLanguage.ethnologueName);
   });
 
   it.skip('should update language node', async () => {
@@ -176,6 +181,9 @@ describe('LanguageService', () => {
       }
     );
     expect(language.name).toEqual(updateTestLanguage.name);
+    expect(language.name).toEqual(updateTestLanguage.name);
+    expect(language.displayName).toEqual(updateTestLanguage.displayName);
+    expect(language.ethnologueName).toEqual(updateTestLanguage.ethnologueName);
   });
 
   it('should delete language node', async () => {
