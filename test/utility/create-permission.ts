@@ -6,9 +6,6 @@ import {
 import { TestApp } from './create-app';
 
 export async function createPermission(app: TestApp, input: CreatePermission) {
-
-  console.log(input);
-  
   const result = await app.graphql.mutate(
     gql`
       mutation createPermission($input: CreatePermissionInput!) {
@@ -30,8 +27,6 @@ export async function createPermission(app: TestApp, input: CreatePermission) {
       },
     }
   );
-
-  console.log(result);
 
   const perm: CreatePermissionOutput = result.createPermission;
 

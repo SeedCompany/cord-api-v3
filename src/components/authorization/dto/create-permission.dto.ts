@@ -1,10 +1,10 @@
-import { Field, InputType, ObjectType } from 'type-graphql';
+import { Field, ID, InputType, ObjectType } from 'type-graphql';
 
 @InputType()
 export class CreatePermission {
-  @Field()
+  @Field(() => ID)
   readonly sgId: string; // the id to the Security group to add the permission to
-  @Field()
+  @Field(() => ID)
   readonly baseNodeId: string; // the id to the base node that has the property that is being given access to
   @Field()
   readonly propertyName: string; // the relationship type the schema uses to point to the property/proerties
@@ -26,6 +26,6 @@ export abstract class CreatePermissionInput {
 export class CreatePermissionOutput {
   @Field()
   success: boolean;
-  @Field(() => String, { nullable: true })
+  @Field(() => ID, { nullable: true })
   id: string | null;
 }

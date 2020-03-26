@@ -13,18 +13,18 @@ export class AdminService implements OnApplicationBootstrap {
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
-    if (!(await this.rootAdminAclExists())) {
-      await this.createRootAdminAcl();
+    if (!(await this.rootAdminSecurityGroupExists())) {
+      await this.createRootAdminSecurityGroup();
     }
 
     if (!(await this.doesRootAdminUserAlreadyExist())) {
       await this.createRootAdminUser();
     }
 
-    await this.mergeRootAdminUserToAcl();
+    await this.mergeRootAdminUserToSecurityGroup();
   }
 
-  async rootAdminAclExists(): Promise<boolean> {
+  async rootAdminSecurityGroupExists(): Promise<boolean> {
     const result = await this.db
       .query()
       .match([[node('sg', 'RootSecurityGroup')]])
@@ -62,7 +62,7 @@ export class AdminService implements OnApplicationBootstrap {
     }
   }
 
-  async createRootAdminAcl(): Promise<boolean> {
+  async createRootAdminSecurityGroup(): Promise<boolean> {
     const result = await this.db
       .query()
       .create([
@@ -104,7 +104,7 @@ export class AdminService implements OnApplicationBootstrap {
     }
   }
 
-  async mergeRootAdminUserToAcl(): Promise<boolean> {
+  async mergeRootAdminUserToSecurityGroup(): Promise<boolean> {
     const makeAdmin = await this.db
       .query()
       .match([[node('sg', 'RootSecurityGroup')]])

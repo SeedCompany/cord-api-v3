@@ -1,9 +1,9 @@
-import { Field, InputType, ObjectType } from 'type-graphql';
+import { Field, ID, InputType, ObjectType } from 'type-graphql';
 
 @InputType()
 export class CreateSecurityGroup {
   @Field()
-  readonly name: string; // the user who is receiving the new permission
+  readonly name: string;
 }
 
 @InputType()
@@ -16,6 +16,6 @@ export abstract class CreateSecurityGroupInput {
 export class CreateSecurityGroupOutput {
   @Field()
   success: boolean;
-  @Field(() => String, { nullable: true })
+  @Field(() => ID, { nullable: true })
   id: string | null;
 }
