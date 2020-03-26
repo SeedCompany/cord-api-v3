@@ -180,7 +180,7 @@ export class BudgetService {
     await this.db.deleteNode({
       session,
       object: budget,
-      aclEditProp: 'canEditBudget',
+      aclEditProp: 'canCreateBudget',
     });
   }
 
