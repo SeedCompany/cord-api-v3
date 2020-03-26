@@ -7,16 +7,16 @@ import { LanguageService } from './language.service';
 
 describe('LanguageService', () => {
   let languageService: LanguageService;
-
+  const id = generate();
   const createTestLanguage: Partial<Language> = {
-    id: generate(),
+    id,
     name: {
-      value: 'test-language',
+      value: 'new-language',
       canRead: true,
       canEdit: true,
     },
     displayName: {
-      value: 'test-displaylanguage',
+      value: 'new-displaylanguage',
       canRead: true,
       canEdit: true,
     },
@@ -26,7 +26,46 @@ describe('LanguageService', () => {
       canEdit: true,
     },
     ethnologueName: {
-      value: 'test-ethnologuename',
+      value: 'new-ethnologuename',
+      canRead: true,
+      canEdit: true,
+    },
+    ethnologuePopulation: {
+      value: 909090,
+      canRead: true,
+      canEdit: true,
+    },
+    organizationPopulation: {
+      value: 9999999,
+      canRead: true,
+      canEdit: true,
+    },
+    rodNumber: {
+      value: 321,
+      canRead: true,
+      canEdit: true,
+    },
+  };
+
+  const updateTestLanguage: Partial<Language> = {
+    id,
+    name: {
+      value: 'updated-language',
+      canRead: true,
+      canEdit: true,
+    },
+    displayName: {
+      value: 'updated-displaylanguage',
+      canRead: true,
+      canEdit: true,
+    },
+    beginFiscalYear: {
+      value: 2020,
+      canRead: true,
+      canEdit: true,
+    },
+    ethnologueName: {
+      value: 'uodated-ethnologuename',
       canRead: true,
       canEdit: true,
     },
@@ -49,12 +88,14 @@ describe('LanguageService', () => {
 
   const mockDbService = {
     createNode: () => createTestLanguage,
+    updateProperties: () => updateTestLanguage,
+    deleteNode: () => ({}),
     query: () => ({
       raw: () => ({
         run: () => ({}),
       }),
     }),
-    readProperties: () => ({}),
+    readProperties: () => createTestLanguage,
   };
 
   beforeEach(async () => {
@@ -82,7 +123,45 @@ describe('LanguageService', () => {
 
     const language = await languageService.create(
       {
-        name: 'test-language',
+        name: 'create-language',
+        displayName: 'create-displaylanguage',
+        beginFiscalYear: 2020,
+        ethnologueName: 'create-ethnologuename',
+        ethnologuePopulation: 999,
+        organizationPopulation: 9999,
+        rodNumber: 321,
+      },
+      {
+        token:
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODUxNjY0MTM3OTF9.xStLc8cYmOVT3ABW1b6GLuSpeoFNxrYE2o2CBmJR8-U',
+        userId: '12345',
+        issuedAt: DateTime.local(),
+      }
+    );
+    expect(language.name).toEqual(createTestLanguage.name);
+  });
+
+  it('should read language node', async () => {
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    languageService.readOne = jest.fn().mockReturnValue(createTestLanguage);
+    const language = await languageService.readOne(id, {
+      token:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODUxNjY0MTM3OTF9.xStLc8cYmOVT3ABW1b6GLuSpeoFNxrYE2o2CBmJR8-U',
+      userId: '12345',
+      issuedAt: DateTime.local(),
+    });
+    console.log(language);
+    expect(language.id).toEqual(createTestLanguage.id);
+  });
+
+  it.skip('should update language node', async () => {
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    languageService.readOne = jest.fn().mockReturnValue(createTestLanguage);
+
+    const language = await languageService.update(
+      {
+        id: '12345',
+        name: 'update-language',
         displayName: 'test-displaylanguage',
         beginFiscalYear: 2020,
         ethnologueName: 'test-ethnologuename',
@@ -93,10 +172,22 @@ describe('LanguageService', () => {
       {
         token:
           'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODUxNjY0MTM3OTF9.xStLc8cYmOVT3ABW1b6GLuSpeoFNxrYE2o2CBmJR8-U',
-        userId: 'abcd',
+        userId: '12345',
         issuedAt: DateTime.local(),
       }
     );
-    expect(language.name).toEqual(createTestLanguage.name);
+    expect(language.name).toEqual(updateTestLanguage.name);
+  });
+
+  it('should delete language node', async () => {
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    languageService.readOne = jest.fn().mockReturnValue(createTestLanguage);
+
+    await languageService.delete(id, {
+      token:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODUxNjY0MTM3OTF9.xStLc8cYmOVT3ABW1b6GLuSpeoFNxrYE2o2CBmJR8-U',
+      userId: '12345',
+      issuedAt: DateTime.local(),
+    });
   });
 });
