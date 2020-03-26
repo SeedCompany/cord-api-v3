@@ -150,7 +150,6 @@ describe('LanguageService', () => {
       userId: '12345',
       issuedAt: DateTime.local(),
     });
-    console.log(language);
     expect(language.id).toEqual(createTestLanguage.id);
   });
 
