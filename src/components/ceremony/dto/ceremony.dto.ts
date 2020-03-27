@@ -1,3 +1,4 @@
+import { Type } from '@nestjs/common';
 import { Field, ObjectType } from 'type-graphql';
 import {
   Resource,
@@ -11,6 +12,8 @@ import { CeremonyType } from './type.enum';
   implements: [Resource],
 })
 export class Ceremony extends Resource {
+  static classType = (Ceremony as any) as Type<Ceremony>;
+
   @Field(() => CeremonyType)
   readonly type: CeremonyType;
 
