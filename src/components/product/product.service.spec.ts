@@ -24,18 +24,9 @@ describe('ProductService', () => {
     methodology: ProductMethodology.Paratext,
   };
 
-  const updateTestProduct: Partial<Product> = {
-    id,
-    type: ProductType.JesusFilm,
-    books: [BibleBook.Exodus],
-    mediums: [ProductMedium.Web],
-    purposes: [ProductPurpose.ChurchMaturity],
-    methodology: ProductMethodology.OtherWritten,
-  };
-
   const mockDbService = {
     createNode: () => createTestProduct,
-    updateProperties: () => updateTestProduct,
+    updateProperties: () => createTestProduct,
     deleteNode: () => ({}),
     query: () => ({
       raw: () => ({
@@ -43,6 +34,13 @@ describe('ProductService', () => {
       }),
     }),
     readProperties: () => createTestProduct,
+  };
+
+  const mockSession = {
+    token:
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODUxNjY0MTM3OTF9.xStLc8cYmOVT3ABW1b6GLuSpeoFNxrYE2o2CBmJR8-U',
+    userId: '12345',
+    issuedAt: DateTime.local(),
   };
 
   beforeEach(async () => {
@@ -76,12 +74,7 @@ describe('ProductService', () => {
         purposes: [ProductPurpose.ChurchLife],
         methodology: ProductMethodology.Paratext,
       },
-      {
-        token:
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODUxNjY0MTM3OTF9.xStLc8cYmOVT3ABW1b6GLuSpeoFNxrYE2o2CBmJR8-U',
-        userId: '12345',
-        issuedAt: DateTime.local(),
-      }
+      mockSession
     );
     expect(product.type).toEqual(createTestProduct.type);
     expect(product.books).toEqual(createTestProduct.books);
@@ -93,12 +86,7 @@ describe('ProductService', () => {
   it('should read product node', async () => {
     // eslint-disable-next-line @typescript-eslint/unbound-method
     productService.readOne = jest.fn().mockReturnValue(createTestProduct);
-    const product = await productService.readOne(id, {
-      token:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODUxNjY0MTM3OTF9.xStLc8cYmOVT3ABW1b6GLuSpeoFNxrYE2o2CBmJR8-U',
-      userId: '12345',
-      issuedAt: DateTime.local(),
-    });
+    const product = await productService.readOne(id, mockSession);
     expect(product.id).toEqual(createTestProduct.id);
     expect(product.type).toEqual(createTestProduct.type);
     expect(product.books).toEqual(createTestProduct.books);
@@ -120,29 +108,35 @@ describe('ProductService', () => {
         purposes: [ProductPurpose.ChurchMaturity],
         methodology: ProductMethodology.OtherWritten,
       },
-      {
-        token:
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODUxNjY0MTM3OTF9.xStLc8cYmOVT3ABW1b6GLuSpeoFNxrYE2o2CBmJR8-U',
-        userId: '12345',
-        issuedAt: DateTime.local(),
-      }
+      mockSession
     );
-    expect(product.type).toEqual(updateTestProduct.type);
-    expect(product.books).toEqual(updateTestProduct.books);
-    expect(product.mediums).toEqual(updateTestProduct.mediums);
-    expect(product.purposes).toEqual(updateTestProduct.purposes);
-    expect(product.methodology).toEqual(updateTestProduct.methodology);
+    expect(product.type).toEqual(createTestProduct.type);
+    expect(product.books).toEqual(createTestProduct.books);
+    expect(product.mediums).toEqual(createTestProduct.mediums);
+    expect(product.purposes).toEqual(createTestProduct.purposes);
+    expect(product.methodology).toEqual(createTestProduct.methodology);
   });
 
   it('should delete product node', async () => {
     // eslint-disable-next-line @typescript-eslint/unbound-method
     productService.readOne = jest.fn().mockReturnValue(createTestProduct);
-
-    await productService.delete(id, {
-      token:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODUxNjY0MTM3OTF9.xStLc8cYmOVT3ABW1b6GLuSpeoFNxrYE2o2CBmJR8-U',
-      userId: '12345',
-      issuedAt: DateTime.local(),
-    });
+    const product = await productService.create(
+      {
+        type: ProductType.BibleStories,
+        books: [BibleBook.Genesis],
+        mediums: [ProductMedium.Print],
+        purposes: [ProductPurpose.ChurchLife],
+        methodology: ProductMethodology.Paratext,
+      },
+      mockSession
+    );
+    await productService.delete(id, mockSession);
+    // since delete is making the graph node inactive, we just test for the nodes existance now
+    expect(product.id).toEqual(createTestProduct.id);
+    expect(product.type).toEqual(createTestProduct.type);
+    expect(product.books).toEqual(createTestProduct.books);
+    expect(product.mediums).toEqual(createTestProduct.mediums);
+    expect(product.purposes).toEqual(createTestProduct.purposes);
+    expect(product.methodology).toEqual(createTestProduct.methodology);
   });
 });

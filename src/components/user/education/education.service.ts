@@ -89,7 +89,7 @@ export class EducationService {
         userId,
         id,
       })
-      .first();
+      .run();
 
     return await this.readOne(id, session);
   }
