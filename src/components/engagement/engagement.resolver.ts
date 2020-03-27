@@ -9,8 +9,6 @@ import {
   EngagementListInput,
   EngagementListOutput,
   IEngagement,
-  InternshipEngagement,
-  LanguageEngagement,
   UpdateInternshipEngagementInput,
   UpdateInternshipEngagementOutput,
   UpdateLanguageEngagementInput,
@@ -48,7 +46,7 @@ export class EngagementResolver {
     return this.service.list(input, session);
   }
 
-  @Mutation(() => LanguageEngagement, {
+  @Mutation(() => CreateLanguageEngagementOutput, {
     description: 'Create a language engagement',
   })
   async createLanguageEngagement(
@@ -62,7 +60,7 @@ export class EngagementResolver {
     return { engagement };
   }
 
-  @Mutation(() => InternshipEngagement, {
+  @Mutation(() => CreateInternshipEngagementOutput, {
     description: 'Create an internship engagement',
   })
   async createInternshipEngagement(
@@ -76,7 +74,7 @@ export class EngagementResolver {
     return { engagement };
   }
 
-  @Mutation(() => LanguageEngagement, {
+  @Mutation(() => UpdateLanguageEngagementOutput, {
     description: 'Update a language engagement',
   })
   async updateLanguageEngagement(
@@ -90,7 +88,7 @@ export class EngagementResolver {
     return { engagement };
   }
 
-  @Mutation(() => InternshipEngagement, {
+  @Mutation(() => UpdateInternshipEngagementOutput, {
     description: 'Update an internship engagement',
   })
   async updateInternshipEngagement(

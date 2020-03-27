@@ -299,6 +299,8 @@ export class UserService {
             canReadCeremonies: true,
             canCreateProjectMember: true,
             canReadProjectMembers: true,
+            canCreateEngagement: true,
+            canReadEngagements: true,
             canDeleteOwnUser: true,
             canDeleteLocation: true,
             owningOrgId: 'Seed Company',
