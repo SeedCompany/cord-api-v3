@@ -120,7 +120,23 @@ describe('ProductService', () => {
   it('should delete product node', async () => {
     // eslint-disable-next-line @typescript-eslint/unbound-method
     productService.readOne = jest.fn().mockReturnValue(createTestProduct);
-
+    const product = await productService.create(
+      {
+        type: ProductType.BibleStories,
+        books: [BibleBook.Genesis],
+        mediums: [ProductMedium.Print],
+        purposes: [ProductPurpose.ChurchLife],
+        methodology: ProductMethodology.Paratext,
+      },
+      mockSession
+    );
     await productService.delete(id, mockSession);
+    // since delete is making the graph node inactive, we just test for the nodes existance now
+    expect(product.id).toEqual(createTestProduct.id);
+    expect(product.type).toEqual(createTestProduct.type);
+    expect(product.books).toEqual(createTestProduct.books);
+    expect(product.mediums).toEqual(createTestProduct.mediums);
+    expect(product.purposes).toEqual(createTestProduct.purposes);
+    expect(product.methodology).toEqual(createTestProduct.methodology);
   });
 });

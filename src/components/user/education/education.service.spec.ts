@@ -66,7 +66,7 @@ describe('EducationService', () => {
     expect(EducationService).toBeDefined();
   });
 
-  it.skip('should create education node', async () => {
+  it('should create education node', async () => {
     // eslint-disable-next-line @typescript-eslint/unbound-method
     educationService.readOne = jest.fn().mockReturnValue(createTestEducation);
     const education = await educationService.create(
@@ -114,7 +114,7 @@ describe('EducationService', () => {
     expect(education.institution).toEqual(createTestEducation.institution);
   });
 
-  it.skip('should delete education node', async () => {
+  it('should delete education node', async () => {
     // eslint-disable-next-line @typescript-eslint/unbound-method
     educationService.readOne = jest.fn().mockReturnValue(createTestEducation);
     const education = await educationService.create(
@@ -127,6 +127,7 @@ describe('EducationService', () => {
       mockSession
     );
     await educationService.delete(id, mockSession);
+    // since delete is making the graph node inactive, we just test for the nodes existance now
     expect(education.id).toEqual(createTestEducation.id);
     expect(education.degree).toEqual(createTestEducation.degree);
     expect(education.major).toEqual(createTestEducation.major);
