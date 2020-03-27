@@ -268,4 +268,15 @@ export const fragments = {
       }
     }
   `,
+  locationListOutput: gql`
+  fragment locationListOutput on LocationListOutput {
+  items
+    {
+      __typename
+    }
+    total
+    hasMore
+}
+`,
+
 };
