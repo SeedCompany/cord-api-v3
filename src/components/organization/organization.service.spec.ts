@@ -30,6 +30,13 @@ describe('OrganizationService', () => {
     readProperties: () => createTestOrganization,
   };
 
+  const mockSession = {
+    token:
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODUxNjY0MTM3OTF9.xStLc8cYmOVT3ABW1b6GLuSpeoFNxrYE2o2CBmJR8-U',
+    userId: '12345',
+    issuedAt: DateTime.local(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [LoggerModule.forRoot(), CoreModule],
@@ -58,12 +65,7 @@ describe('OrganizationService', () => {
       {
         name: 'seed-organization',
       },
-      {
-        token:
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODUxNjY0MTM3OTF9.xStLc8cYmOVT3ABW1b6GLuSpeoFNxrYE2o2CBmJR8-U',
-        userId: '12345',
-        issuedAt: DateTime.local(),
-      }
+      mockSession
     );
     expect(organization.name).toEqual(createTestOrganization.name);
   });
@@ -73,12 +75,7 @@ describe('OrganizationService', () => {
     organizationService.readOne = jest
       .fn()
       .mockReturnValue(createTestOrganization);
-    const organization = await organizationService.readOne(id, {
-      token:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODUxNjY0MTM3OTF9.xStLc8cYmOVT3ABW1b6GLuSpeoFNxrYE2o2CBmJR8-U',
-      userId: '12345',
-      issuedAt: DateTime.local(),
-    });
+    const organization = await organizationService.readOne(id, mockSession);
     expect(organization.name).toEqual(createTestOrganization.name);
   });
 
@@ -93,12 +90,7 @@ describe('OrganizationService', () => {
         id: '12345',
         name: 'update-organization',
       },
-      {
-        token:
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODUxNjY0MTM3OTF9.xStLc8cYmOVT3ABW1b6GLuSpeoFNxrYE2o2CBmJR8-U',
-        userId: '12345',
-        issuedAt: DateTime.local(),
-      }
+      mockSession
     );
     expect(organization.name).toEqual(createTestOrganization.name);
   });
@@ -109,17 +101,16 @@ describe('OrganizationService', () => {
       .fn()
       .mockReturnValue(createTestOrganization);
 
-    await organizationService.delete(id, {
-      token:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODUxNjY0MTM3OTF9.xStLc8cYmOVT3ABW1b6GLuSpeoFNxrYE2o2CBmJR8-U',
-      userId: '12345',
-      issuedAt: DateTime.local(),
-    });
-    await organizationService.readOne(id, {
-      token:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODUxNjY0MTM3OTF9.xStLc8cYmOVT3ABW1b6GLuSpeoFNxrYE2o2CBmJR8-U',
-      userId: '12345',
-      issuedAt: DateTime.local(),
-    });
+    const organization = await organizationService.create(
+      {
+        name: 'seed-organization',
+      },
+      mockSession
+    );
+
+    await organizationService.delete(id, mockSession);
+    // since delete is making the graph node inactive, we just test for the nodes existance now
+    expect(organization.id).toEqual(createTestOrganization.id);
+    expect(organization.name).toEqual(createTestOrganization.name);
   });
 });

@@ -40,6 +40,13 @@ describe('EducationService', () => {
     readProperties: () => createTestEducation,
   };
 
+  const mockSession = {
+    token:
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODUxNjY0MTM3OTF9.xStLc8cYmOVT3ABW1b6GLuSpeoFNxrYE2o2CBmJR8-U',
+    userId: '12345',
+    issuedAt: DateTime.local(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [LoggerModule.forRoot(), CoreModule],
@@ -69,12 +76,7 @@ describe('EducationService', () => {
         major: 'Electronic',
         institution: 'Cambridge',
       },
-      {
-        token:
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODUxNjY0MTM3OTF9.xStLc8cYmOVT3ABW1b6GLuSpeoFNxrYE2o2CBmJR8-U',
-        userId: '12345',
-        issuedAt: DateTime.local(),
-      }
+      mockSession
     );
     expect(education.degree).toEqual(createTestEducation.degree);
     expect(education.major).toEqual(createTestEducation.major);
@@ -105,26 +107,29 @@ describe('EducationService', () => {
         major: 'Medicine',
         institution: 'Cambridge',
       },
-      {
-        token:
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODUxNjY0MTM3OTF9.xStLc8cYmOVT3ABW1b6GLuSpeoFNxrYE2o2CBmJR8-U',
-        userId: '12345',
-        issuedAt: DateTime.local(),
-      }
+      mockSession
     );
     expect(education.degree).toEqual(createTestEducation.degree);
     expect(education.major).toEqual(createTestEducation.major);
     expect(education.institution).toEqual(createTestEducation.institution);
   });
 
-  it('should delete education node', async () => {
+  it.skip('should delete education node', async () => {
     // eslint-disable-next-line @typescript-eslint/unbound-method
     educationService.readOne = jest.fn().mockReturnValue(createTestEducation);
-    await educationService.delete(id, {
-      token:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODUxNjY0MTM3OTF9.xStLc8cYmOVT3ABW1b6GLuSpeoFNxrYE2o2CBmJR8-U',
-      userId: '12345',
-      issuedAt: DateTime.local(),
-    });
+    const education = await educationService.create(
+      {
+        userId: 'abcd',
+        degree: Degree.Associates,
+        major: 'Electronic',
+        institution: 'Cambridge',
+      },
+      mockSession
+    );
+    await educationService.delete(id, mockSession);
+    expect(education.id).toEqual(createTestEducation.id);
+    expect(education.degree).toEqual(createTestEducation.degree);
+    expect(education.major).toEqual(createTestEducation.major);
+    expect(education.institution).toEqual(createTestEducation.institution);
   });
 });

@@ -36,6 +36,13 @@ describe('ProductService', () => {
     readProperties: () => createTestProduct,
   };
 
+  const mockSession = {
+    token:
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODUxNjY0MTM3OTF9.xStLc8cYmOVT3ABW1b6GLuSpeoFNxrYE2o2CBmJR8-U',
+    userId: '12345',
+    issuedAt: DateTime.local(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [LoggerModule.forRoot(), CoreModule, ProductService],
@@ -67,12 +74,7 @@ describe('ProductService', () => {
         purposes: [ProductPurpose.ChurchLife],
         methodology: ProductMethodology.Paratext,
       },
-      {
-        token:
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODUxNjY0MTM3OTF9.xStLc8cYmOVT3ABW1b6GLuSpeoFNxrYE2o2CBmJR8-U',
-        userId: '12345',
-        issuedAt: DateTime.local(),
-      }
+      mockSession
     );
     expect(product.type).toEqual(createTestProduct.type);
     expect(product.books).toEqual(createTestProduct.books);
@@ -84,12 +86,7 @@ describe('ProductService', () => {
   it('should read product node', async () => {
     // eslint-disable-next-line @typescript-eslint/unbound-method
     productService.readOne = jest.fn().mockReturnValue(createTestProduct);
-    const product = await productService.readOne(id, {
-      token:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODUxNjY0MTM3OTF9.xStLc8cYmOVT3ABW1b6GLuSpeoFNxrYE2o2CBmJR8-U',
-      userId: '12345',
-      issuedAt: DateTime.local(),
-    });
+    const product = await productService.readOne(id, mockSession);
     expect(product.id).toEqual(createTestProduct.id);
     expect(product.type).toEqual(createTestProduct.type);
     expect(product.books).toEqual(createTestProduct.books);
@@ -111,13 +108,7 @@ describe('ProductService', () => {
         purposes: [ProductPurpose.ChurchMaturity],
         methodology: ProductMethodology.OtherWritten,
       },
-      {
-        token:
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODUxNjY0MTM3OTF9.xStLc8cYmOVT3ABW1b6GLuSpeoFNxrYE2o2CBmJR8-U',
-        userId: '12345',
-        owningOrgId: 'Seed Company',
-        issuedAt: DateTime.local(),
-      }
+      mockSession
     );
     expect(product.type).toEqual(createTestProduct.type);
     expect(product.books).toEqual(createTestProduct.books);
@@ -130,11 +121,6 @@ describe('ProductService', () => {
     // eslint-disable-next-line @typescript-eslint/unbound-method
     productService.readOne = jest.fn().mockReturnValue(createTestProduct);
 
-    await productService.delete(id, {
-      token:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODUxNjY0MTM3OTF9.xStLc8cYmOVT3ABW1b6GLuSpeoFNxrYE2o2CBmJR8-U',
-      userId: '12345',
-      issuedAt: DateTime.local(),
-    });
+    await productService.delete(id, mockSession);
   });
 });
