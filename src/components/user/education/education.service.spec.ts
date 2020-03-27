@@ -28,25 +28,6 @@ describe('EducationService', () => {
     },
   };
 
-  // const updateTestEducation: Partial<Education> = {
-  //   id,
-  //   degree: {
-  //     value: 'MTECH',
-  //     canRead: true,
-  //     canEdit: true,
-  //   },
-  //   major: {
-  //     value: 'Electronic',
-  //     canRead: true,
-  //     canEdit: true,
-  //   },
-  //   institution: {
-  //     value: 'Cambridge',
-  //     canRead: true,
-  //     canEdit: true,
-  //   },
-  // };
-
   const mockDbService = {
     createNode: () => createTestEducation,
     updateProperties: () => createTestEducation,
@@ -56,7 +37,7 @@ describe('EducationService', () => {
         run: () => ({}),
       }),
     }),
-    readProperties: () => ({}),
+    readProperties: () => createTestEducation,
   };
 
   beforeEach(async () => {
@@ -80,7 +61,7 @@ describe('EducationService', () => {
 
   it('should create education node', async () => {
     // eslint-disable-next-line @typescript-eslint/unbound-method
-    educationService.readOne = jest.fn().mockReturnValue({});
+    educationService.readOne = jest.fn().mockReturnValue(createTestEducation);
     const education = await educationService.create(
       {
         userId: 'abcd',
@@ -95,6 +76,8 @@ describe('EducationService', () => {
         issuedAt: DateTime.local(),
       }
     );
+    expect(education.degree).toEqual(createTestEducation.degree);
+    expect(education.major).toEqual(createTestEducation.major);
     expect(education.institution).toEqual(createTestEducation.institution);
   });
 
@@ -107,6 +90,8 @@ describe('EducationService', () => {
       userId: '12345',
       issuedAt: DateTime.local(),
     });
+    expect(education.degree).toEqual(createTestEducation.degree);
+    expect(education.major).toEqual(createTestEducation.major);
     expect(education.institution).toEqual(createTestEducation.institution);
   });
 
@@ -116,8 +101,8 @@ describe('EducationService', () => {
     const education = await educationService.update(
       {
         id,
-        degree: Degree.Associates,
-        major: 'Electronic',
+        degree: Degree.Doctorate,
+        major: 'Medicine',
         institution: 'Cambridge',
       },
       {
@@ -127,6 +112,8 @@ describe('EducationService', () => {
         issuedAt: DateTime.local(),
       }
     );
+    expect(education.degree).toEqual(createTestEducation.degree);
+    expect(education.major).toEqual(createTestEducation.major);
     expect(education.institution).toEqual(createTestEducation.institution);
   });
 
