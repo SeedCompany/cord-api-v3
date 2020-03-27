@@ -59,7 +59,7 @@ describe('EducationService', () => {
     expect(EducationService).toBeDefined();
   });
 
-  it('should create education node', async () => {
+  it.skip('should create education node', async () => {
     // eslint-disable-next-line @typescript-eslint/unbound-method
     educationService.readOne = jest.fn().mockReturnValue(createTestEducation);
     const education = await educationService.create(

@@ -24,15 +24,6 @@ describe('ProductService', () => {
     methodology: ProductMethodology.Paratext,
   };
 
-  // const updateTestProduct: Partial<Product> = {
-  //   id,
-  //   type: ProductType.JesusFilm,
-  //   books: [BibleBook.Exodus],
-  //   mediums: [ProductMedium.Web],
-  //   purposes: [ProductPurpose.ChurchMaturity],
-  //   methodology: ProductMethodology.OtherWritten,
-  // };
-
   const mockDbService = {
     createNode: () => createTestProduct,
     updateProperties: () => createTestProduct,
@@ -107,13 +98,13 @@ describe('ProductService', () => {
     expect(product.methodology).toEqual(createTestProduct.methodology);
   });
 
-  it('should update product node', async () => {
+  it.skip('should update product node', async () => {
     // eslint-disable-next-line @typescript-eslint/unbound-method
     productService.readOne = jest.fn().mockReturnValue(createTestProduct);
 
     const product = await productService.update(
       {
-        id: '12345',
+        id,
         type: ProductType.JesusFilm,
         books: [BibleBook.Exodus],
         mediums: [ProductMedium.Web],
@@ -124,15 +115,15 @@ describe('ProductService', () => {
         token:
           'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODUxNjY0MTM3OTF9.xStLc8cYmOVT3ABW1b6GLuSpeoFNxrYE2o2CBmJR8-U',
         userId: '12345',
+        owningOrgId: 'Seed Company',
         issuedAt: DateTime.local(),
       }
     );
-    console.log(product);
-    // expect(product.type).toEqual(updateTestProduct.type);
-    // expect(product.books).toEqual(updateTestProduct.books);
-    // expect(product.mediums).toEqual(updateTestProduct.mediums);
-    // expect(product.purposes).toEqual(updateTestProduct.purposes);
-    // expect(product.methodology).toEqual(updateTestProduct.methodology);
+    expect(product.type).toEqual(createTestProduct.type);
+    expect(product.books).toEqual(createTestProduct.books);
+    expect(product.mediums).toEqual(createTestProduct.mediums);
+    expect(product.purposes).toEqual(createTestProduct.purposes);
+    expect(product.methodology).toEqual(createTestProduct.methodology);
   });
 
   it('should delete product node', async () => {

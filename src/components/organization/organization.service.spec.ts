@@ -115,5 +115,11 @@ describe('OrganizationService', () => {
       userId: '12345',
       issuedAt: DateTime.local(),
     });
+    await organizationService.readOne(id, {
+      token:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODUxNjY0MTM3OTF9.xStLc8cYmOVT3ABW1b6GLuSpeoFNxrYE2o2CBmJR8-U',
+      userId: '12345',
+      issuedAt: DateTime.local(),
+    });
   });
 });
