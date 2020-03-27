@@ -2,8 +2,7 @@ import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession, NotImplementedError } from '../../common';
-import { ILogger, Logger } from '../../core';
-import { DatabaseService } from '../../core/database/database.service';
+import { DatabaseService, ILogger, Logger } from '../../core';
 import { UserService } from '../user';
 import {
   CreateFileInput,
@@ -31,7 +30,6 @@ export class FileService {
     @Logger('language:service') private readonly logger: ILogger,
     private readonly userService: UserService
   ) {}
-  // eslint-disable-next-line prettier/prettier
 
   async getDirectory(id: string, session: ISession): Promise<Directory> {
     const node = await this.getFileNode(id, session);
@@ -145,7 +143,7 @@ export class FileService {
     session: ISession
   ): Promise<File> {
     try {
-      const file = await this.bucket.getObject(`${uploadId}`);
+      const file = await this.bucket.getObject(`temp/${uploadId}`);
       const fileId = generate();
       if (!file) {
         throw new BadRequestException('object not found');
@@ -233,27 +231,82 @@ export class FileService {
   }
 
   async rename(
-    _input: RenameFileInput,
-    _session: ISession
+    input: RenameFileInput,
+    session: ISession
   ): Promise<FileOrDirectory> {
-    throw new NotImplementedError();
+    try {
+      const fileNode = await this.getFileNode(input.id, session);
+      await this.db.updateProperties({
+        session,
+        object: fileNode,
+        props: ['name'],
+        changes: input,
+        nodevar: 'fileNode',
+      });
+
+      return this.getFileNode(input.id, session);
+    } catch (e) {
+      this.logger.error('cound not rename fileNode', {
+        id: input.id,
+        name: input.name,
+      });
+      throw e;
+    }
   }
 
   async move(
     input: MoveFileInput,
     session: ISession
   ): Promise<FileOrDirectory> {
-    // TODO findout options for name usage here
-    const { id, parentId } = input;
-    const file = await this.bucket.getObject(id);
-    if (!file) {
-      throw new BadRequestException('object not found');
+    await this.getFileNode(input.id, session);
+
+    try {
+      const query = `
+        MATCH
+          (token:Token {
+            active: true,
+            value: $token
+          })<-[:token {active: true}]-
+          (requestingUser:User {
+            active: true,
+            id: $requestingUserId,
+            owningOrgId: $owningOrgId
+          }),
+          (newParent {id: $parentId, active: true}),
+          (file:File {id: $id, active: true})-[rel:parent {active: true}]->(oldParent {active : true})
+        DELETE rel
+        CREATE (newParent)<-[:parent {active: true, createdAt: datetime()}]-(file)
+        RETURN  newParent.id as id
+      `;
+
+      await this.db
+        .query()
+        .raw(query, {
+          id: input.id,
+          owningOrgId: session.owningOrgId,
+          parentId: input.parentId,
+          requestingUserId: session.userId,
+          token: session.token,
+        })
+        .first();
+      return await this.getFileNode(input.id, session);
+    } catch (e) {
+      console.log(e);
+      throw e;
     }
-    await this.bucket.moveObject(`test/${id}`, `${parentId}/${id}`);
-    return this.getFile(id, session);
   }
 
-  async delete(_id: string, _session: ISession): Promise<void> {
-    throw new NotImplementedError();
+  async delete(id: string, session: ISession): Promise<void> {
+    const fileNode = await this.getFileNode(id, session);
+    try {
+      await this.db.deleteNode({
+        session,
+        object: fileNode,
+        aclEditProp: 'canDeleteOwnUser',
+      });
+    } catch (e) {
+      console.log(e);
+      throw e;
+    }
   }
 }

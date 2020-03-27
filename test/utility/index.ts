@@ -1,5 +1,6 @@
 export * from './create-app';
 export * from './create-education';
+export * from './create-file';
 export * from './create-graphql-client';
 export * from './create-language';
 export * from './create-zone';
