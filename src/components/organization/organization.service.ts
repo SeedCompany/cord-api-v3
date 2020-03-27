@@ -126,6 +126,8 @@ export class OrganizationService {
       console.log(e);
       throw e;
     }
+
+    this.logger.info(`deleted organization with id`, { id });
   }
 
   async list(

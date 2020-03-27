@@ -49,14 +49,14 @@ describe('EducationService', () => {
 
   const mockDbService = {
     createNode: () => createTestEducation,
-    //updateProperties: () => updateTestEducation,
+    updateProperties: () => createTestEducation,
     deleteNode: () => ({}),
     query: () => ({
       raw: () => ({
         run: () => ({}),
       }),
     }),
-    readProperties: () => createTestEducation,
+    readProperties: () => ({}),
   };
 
   beforeEach(async () => {
@@ -80,10 +80,10 @@ describe('EducationService', () => {
 
   it('should create education node', async () => {
     // eslint-disable-next-line @typescript-eslint/unbound-method
-    educationService.readOne = jest.fn().mockReturnValue(createTestEducation);
+    educationService.readOne = jest.fn().mockReturnValue({});
     const education = await educationService.create(
       {
-        userId: '12345',
+        userId: 'abcd',
         degree: Degree.Associates,
         major: 'Electronic',
         institution: 'Cambridge',
@@ -96,5 +96,48 @@ describe('EducationService', () => {
       }
     );
     expect(education.institution).toEqual(createTestEducation.institution);
+  });
+
+  it('should read education node', async () => {
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    educationService.readOne = jest.fn().mockReturnValue(createTestEducation);
+    const education = await educationService.readOne(id, {
+      token:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODUxNjY0MTM3OTF9.xStLc8cYmOVT3ABW1b6GLuSpeoFNxrYE2o2CBmJR8-U',
+      userId: '12345',
+      issuedAt: DateTime.local(),
+    });
+    expect(education.institution).toEqual(createTestEducation.institution);
+  });
+
+  it('should update education node', async () => {
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    educationService.readOne = jest.fn().mockReturnValue(createTestEducation);
+    const education = await educationService.update(
+      {
+        id,
+        degree: Degree.Associates,
+        major: 'Electronic',
+        institution: 'Cambridge',
+      },
+      {
+        token:
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODUxNjY0MTM3OTF9.xStLc8cYmOVT3ABW1b6GLuSpeoFNxrYE2o2CBmJR8-U',
+        userId: '12345',
+        issuedAt: DateTime.local(),
+      }
+    );
+    expect(education.institution).toEqual(createTestEducation.institution);
+  });
+
+  it('should delete education node', async () => {
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    educationService.readOne = jest.fn().mockReturnValue(createTestEducation);
+    await educationService.delete(id, {
+      token:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODUxNjY0MTM3OTF9.xStLc8cYmOVT3ABW1b6GLuSpeoFNxrYE2o2CBmJR8-U',
+      userId: '12345',
+      issuedAt: DateTime.local(),
+    });
   });
 });
