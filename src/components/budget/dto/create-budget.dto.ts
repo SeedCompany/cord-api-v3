@@ -28,6 +28,13 @@ export abstract class CreateBudgetRecord {
   @Field(() => ID)
   @MinLength(2)
   readonly budgetId: string;
+
+  @Field(() => ID)
+  @MinLength(2)
+  readonly organizationId: string;
+
+  @Field()
+  readonly fiscalYear: number;
 }
 
 @InputType()
@@ -35,11 +42,11 @@ export abstract class CreateBudgetRecordInput {
   @Field()
   @Type(() => CreateBudgetRecord)
   @ValidateNested()
-  readonly record: CreateBudgetRecord;
+  readonly budgetRecord: CreateBudgetRecord;
 }
 
 @ObjectType()
 export abstract class CreateBudgetRecordOutput {
   @Field(() => BudgetRecord)
-  readonly record: BudgetRecord;
+  readonly budgetRecord: BudgetRecord;
 }

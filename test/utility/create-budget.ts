@@ -21,7 +21,7 @@ export async function createBudget(
   const result = await app.graphql.mutate(
     gql`
       mutation createBudget($input: CreateBudgetInput!) {
-        createBudgetRecord(input: $input) {
+        createBudget(input: $input) {
           budget {
             ...budget
           }
@@ -52,29 +52,35 @@ export async function createBudgetRecord(
 ) {
   const budgetRecord: CreateBudgetRecord = {
     budgetId: generate(),
+    organizationId: generate(),
+    fiscalYear: 2024,
     ...input,
   };
-
-  const result = await app.graphql.mutate(
-    gql`
-      mutation createBudgetRecord($input: CreateBudgetRecordInput!) {
-        createBudgetRecord(input: $input) {
-          budgetRecord {
-            ...budgetRecord
+  let result;
+  try {
+    result = await app.graphql.mutate(
+      gql`
+        mutation createBudgetRecord($input: CreateBudgetRecordInput!) {
+          createBudgetRecord(input: $input) {
+            budgetRecord {
+              ...budgetRecord
+            }
           }
         }
-      }
-      ${fragments.budgetRecord}
-    `,
-    {
-      input: {
-        budgetRecord: {
-          ...budgetRecord,
+        ${fragments.budgetRecord}
+      `,
+      {
+        input: {
+          budgetRecord: {
+            ...budgetRecord,
+          },
         },
-      },
-    }
-  );
-
+      }
+    );
+  } catch (e) {
+    console.log(e);
+    throw e;
+  }
   const actual: BudgetRecord = result.createBudgetRecord.budgetRecord;
   expect(actual).toBeTruthy();
 

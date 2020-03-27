@@ -279,6 +279,11 @@ export const fragments = {
     fragment budgetRecord on BudgetRecord {
       id
       createdAt
+      organizationId {
+        value
+        canEdit
+        canRead
+      }
       fiscalYear {
         value
         canEdit

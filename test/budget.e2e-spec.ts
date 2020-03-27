@@ -1,13 +1,15 @@
 import { gql } from 'apollo-server-core';
 import { DateTime } from 'luxon';
 import { isValid } from 'shortid';
-import { Budget } from '../src/components/budget/dto/budget';
+import { Budget, BudgetRecord } from '../src/components/budget/dto/budget';
+import { Organization } from '../src/components/organization/dto';
 import {
   CreateProject,
   Project,
   ProjectType,
 } from '../src/components/project/dto';
 import {
+  createOrganization,
   createSession,
   createTestApp,
   createUser,
@@ -17,7 +19,7 @@ import {
 import { createBudget, createBudgetRecord } from './utility/create-budget';
 import { createProject } from './utility/create-project';
 
-describe('Budget e2e', () => {
+describe.skip('Budget e2e', () => {
   let app: TestApp;
   let project: Project;
 
@@ -66,7 +68,6 @@ describe('Budget e2e', () => {
       expect(isValid(actual.id)).toBe(true);
       expect(actual.status).toEqual(budget.status);
     } catch (e) {
-      console.error(e);
       fail();
     }
   });
@@ -103,7 +104,7 @@ describe('Budget e2e', () => {
     expect(updated.status).toBe(budgetStatusNew);
   });
 
-  it.only('delete budget', async () => {
+  it('delete budget', async () => {
     // create budget first
     const budget = await createBudget(app, { projectId: project.id });
 
@@ -121,7 +122,6 @@ describe('Budget e2e', () => {
       const actual: Budget | undefined = result.deleteBudget;
       expect(actual).toBeTruthy();
     } catch (e) {
-      console.log(e);
       fail();
     }
     try {
@@ -148,6 +148,7 @@ describe.only('BudgetRecord e2e', () => {
   let app: TestApp;
   let project: Project;
   let budget: Budget;
+  let org: Organization;
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -160,6 +161,7 @@ describe.only('BudgetRecord e2e', () => {
       mouEnd: DateTime.fromISO('2025-01-01'),
     };
     project = await createProject(app, projectInput);
+    org = await createOrganization(app);
     budget = await createBudget(app, { projectId: project.id });
   });
 
@@ -167,17 +169,25 @@ describe.only('BudgetRecord e2e', () => {
     await app.close();
   });
 
-  it.only('create a budgetRecord', async () => {
-    const budgetRecord = await createBudgetRecord(app, { budgetId: budget.id });
+  it('create a budgetRecord', async () => {
+    const budgetRecord = await createBudgetRecord(app, {
+      budgetId: budget.id,
+      organizationId: org.id,
+      fiscalYear: 2025,
+    });
     expect(budgetRecord.id).toBeDefined();
   });
 
   it('read one budget by id', async () => {
     // create budget first
-    const budgetRecord = await createBudgetRecord(app, { budgetId: budget.id });
+    const br = await createBudgetRecord(app, {
+      budgetId: budget.id,
+      organizationId: org.id,
+      fiscalYear: 2025,
+    });
 
     try {
-      const { budget: actual } = await app.graphql.query(
+      const { budgetRecord: actual } = await app.graphql.query(
         gql`
           query budgetRecord($id: ID!) {
             budgetRecord(id: $id) {
@@ -187,81 +197,88 @@ describe.only('BudgetRecord e2e', () => {
           ${fragments.budgetRecord}
         `,
         {
-          id: budgetRecord.id,
+          id: br.id,
         }
       );
 
-      expect(actual.id).toBe(budgetRecord.id);
+      expect(actual.id).toBe(br.id);
       expect(isValid(actual.id)).toBe(true);
-      expect(actual.fiscalYear).toEqual(budgetRecord.fiscalYear);
+      expect(actual.fiscalYear).toEqual(br.fiscalYear);
     } catch (e) {
-      console.error(e);
       fail();
     }
   });
 
-  it('update budget', async () => {
-    const budgetStatusNew = 'Current';
+  it('update budgetRecord', async () => {
+    const amount = 200;
 
     // create budget first
-    const budget = await createBudget(app, { projectId: project.id });
+    const budgetRecord = await createBudgetRecord(app, {
+      budgetId: budget.id,
+      organizationId: org.id,
+      fiscalYear: 2025,
+    });
 
     const result = await app.graphql.mutate(
       gql`
-        mutation updateBudget($input: UpdateBudgetInput!) {
-          updateBudget(input: $input) {
-            budget {
-              ...budget
+        mutation updateBudgetRecord($input: UpdateBudgetRecordInput!) {
+          updateBudgetRecord(input: $input) {
+            budgetRecord {
+              ...budgetRecord
             }
           }
         }
-        ${fragments.budget}
+        ${fragments.budgetRecord}
       `,
       {
         input: {
-          budget: {
-            id: budget.id,
-            status: budgetStatusNew,
+          budgetRecord: {
+            id: budgetRecord.id,
+            amount,
           },
         },
       }
     );
-    const updated = result.updateBudget.budget;
+    const updated = result.updateBudgetRecord.budgetRecord;
+
     expect(updated).toBeTruthy();
-    expect(updated.id).toBe(budget.id);
-    expect(updated.status).toBe(budgetStatusNew);
+    expect(updated.id).toBe(budgetRecord.id);
+    expect(updated.amount.value).toBe(amount);
   });
 
-  it.only('delete budget', async () => {
+  it.only('delete budget record', async () => {
     // create budget first
-    const budget = await createBudget(app, { projectId: project.id });
+    const budgetRecord = await createBudgetRecord(app, {
+      budgetId: budget.id,
+      organizationId: org.id,
+      fiscalYear: 2025,
+    });
 
     try {
       const result = await app.graphql.mutate(
         gql`
-          mutation deleteBudget($id: ID!) {
-            deleteBudget(id: $id)
+          mutation deleteBudgetRecord($id: ID!) {
+            deleteBudgetRecord(id: $id)
           }
         `,
         {
-          id: budget.id,
+          id: budgetRecord.id,
         }
       );
-      const actual: Budget | undefined = result.deleteBudget;
+      const actual: BudgetRecord | undefined = result.deleteBudgetRecord;
       expect(actual).toBeTruthy();
     } catch (e) {
-      console.log(e);
       fail();
     }
     try {
       await app.graphql.query(
         gql`
-          query budget($id: ID!) {
-            budget(id: $id) {
-              ...budget
+          query budgetRecord($id: ID!) {
+            budgetRecord(id: $id) {
+              ...budgetRecord
             }
           }
-          ${fragments.budget}
+          ${fragments.budgetRecord}
         `,
         {
           id: budget.id,

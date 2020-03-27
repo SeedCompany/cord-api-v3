@@ -150,7 +150,6 @@ export class BudgetService {
 
   async update(input: UpdateBudget, session: ISession): Promise<Budget> {
     const budget = await this.readOne(input.id, session);
-    console.log('input ', JSON.stringify(input, null, 2));
 
     return this.db.updateProperties({
       session,
@@ -185,9 +184,13 @@ export class BudgetService {
   }
 
   async createRecord(
-    { budgetId, ...input }: CreateBudgetRecord,
+    { budgetId, organizationId, ...input }: CreateBudgetRecord,
     session: ISession
   ): Promise<BudgetRecord> {
+    if (!input.fiscalYear || !organizationId) {
+      throw new BadRequestException();
+    }
+
     this.logger.info('Creating BudgetRecord', input);
     // on Init, create a budget will create a budget record for each org and each fiscal year in the project input.projectId
     const id = generate();
@@ -199,10 +202,11 @@ export class BudgetService {
       canReadFiscalYear: true,
       canReadOrganizationId: true,
     };
+
     try {
       await this.db.createNode({
         session,
-        input: { id, ...input },
+        input: { id, ...input, amount: 0 }, // on init the amount is 0
         acls,
         type: BudgetRecord.classType,
       });
@@ -212,7 +216,7 @@ export class BudgetService {
         userId: session.userId,
       });
 
-      //connect to budget
+      // connect to budget
       const query = `
       MATCH
         (budget:Budget {id: $budgetId, active: true}),
@@ -226,7 +230,24 @@ export class BudgetService {
           id,
         })
         .first();
+
+      // connect budget record to org
+      const orgQuery = `
+        MATCH
+        (organization:Organization {id: $organizationId, active: true}),
+        (br:BudgetRecord {id: $id, active: true})
+      CREATE (br)-[:organization {active: true, createdAt: datetime()}]->(organization)
+`;
+      await this.db
+        .query()
+        .raw(orgQuery, {
+          organizationId,
+          id,
+        })
+        .first();
+
       const result = await this.readOneRecord(id, session);
+
       return result;
     } catch {
       this.logger.error(`Could not create Budget Record`, {
@@ -246,7 +267,7 @@ export class BudgetService {
     const result = await this.db.readProperties({
       session,
       id,
-      props: ['id', 'createdAt', 'organizationId', 'fiscalYear', 'amount'],
+      props: ['id', 'createdAt', 'fiscalYear', 'amount'],
       nodevar: 'budgetRecord',
     });
 
@@ -258,13 +279,40 @@ export class BudgetService {
       throw new NotFoundException('Could not find budgetRecord');
     }
 
-    let br = result as any;
-    br.organizationId = result.organizationId.value;
-    br.fiscalYear = result.fiscalYear.value;
-    br.amount = result.amount.value;
-    br = br as BudgetRecord;
+    // get orgId
+    const query = `
+    MATCH
+      (acl:ACL)-[:toNode]->(br: BudgetRecord {id: $id, active: true})
+      -[:organization {active: true}]->(org:Organization {active: true})
+    RETURN
+      org, acl
+    `;
+    const orgResult = await this.db
+      .query()
+      .raw(query, {
+        id,
+      })
+      .first();
+    if (!orgResult) {
+      this.logger.error(`Could not find organization on budgetRecord: `, {
+        id,
+        userId: session.userId,
+      });
+      throw new NotFoundException(
+        'Could not find organization on budgetRecord'
+      );
+    }
 
-    return br;
+    return {
+      ...result,
+      id: result.id.value,
+      createdAt: result.createdAt.value,
+      organizationId: {
+        value: orgResult?.org.properties.id,
+        canRead: orgResult?.acl.properties.canReadOrganizationId,
+        canEdit: orgResult?.acl.properties.canEditOrganizationId,
+      },
+    };
   }
 
   async listRecords(
@@ -294,18 +342,30 @@ export class BudgetService {
   }
 
   async updateRecord(
-    input: UpdateBudgetRecord,
+    { id, ...input }: UpdateBudgetRecord,
     session: ISession
   ): Promise<BudgetRecord> {
-    const br = await this.readOneRecord(input.id, session);
+    this.logger.info('Update budget Record, ', { id, userId: session.userId });
 
-    return this.db.updateProperties({
-      session,
-      object: br,
-      props: ['fiscalYear', 'amount'],
-      changes: input,
-      nodevar: 'budgetRecord',
-    });
+    const br = await this.readOneRecord(id, session);
+
+    try {
+      const result = await this.db.updateProperties({
+        session,
+        object: br,
+        props: ['amount'],
+        changes: { id, ...input },
+        nodevar: 'budgetRecord',
+      });
+      return result;
+    } catch (e) {
+      this.logger.error('Could not update budget Record ', {
+        id,
+        userId: session.userId,
+      });
+    }
+
+    return this.readOneRecord(id, session);
   }
 
   async deleteRecord(id: string, session: ISession): Promise<void> {
