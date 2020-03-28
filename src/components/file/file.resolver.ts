@@ -107,13 +107,13 @@ export class FileResolver {
     return this.service.rename(input, session);
   }
 
-  @Mutation(() => FileOrDirectory, {
+  @Mutation(() => File, {
     description: 'Move a file or directory',
   })
   moveFileNode(
     @Args('input') input: MoveFileInput,
     @Session() session: ISession
-  ): Promise<FileOrDirectory> {
+  ): Promise<File> {
     return this.service.move(input, session);
   }
 }
