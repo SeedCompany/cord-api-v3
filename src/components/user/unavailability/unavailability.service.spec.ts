@@ -94,12 +94,7 @@ describe('UnavailabilityService', () => {
     unavailabilityService.readOne = jest
       .fn()
       .mockReturnValue(createTestUnavailability);
-    const unavailability = await unavailabilityService.readOne(id, {
-      token:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODUxNjY0MTM3OTF9.xStLc8cYmOVT3ABW1b6GLuSpeoFNxrYE2o2CBmJR8-U',
-      userId: '12345',
-      issuedAt: DateTime.local(),
-    });
+    const unavailability = await unavailabilityService.readOne(id, mockSession);
     expect(unavailability.description).toEqual(
       createTestUnavailability.description
     );

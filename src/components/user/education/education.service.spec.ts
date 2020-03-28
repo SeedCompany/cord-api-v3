@@ -86,12 +86,7 @@ describe('EducationService', () => {
   it('should read education node', async () => {
     // eslint-disable-next-line @typescript-eslint/unbound-method
     educationService.readOne = jest.fn().mockReturnValue(createTestEducation);
-    const education = await educationService.readOne(id, {
-      token:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODUxNjY0MTM3OTF9.xStLc8cYmOVT3ABW1b6GLuSpeoFNxrYE2o2CBmJR8-U',
-      userId: '12345',
-      issuedAt: DateTime.local(),
-    });
+    const education = await educationService.readOne(id, mockSession);
     expect(education.degree).toEqual(createTestEducation.degree);
     expect(education.major).toEqual(createTestEducation.major);
     expect(education.institution).toEqual(createTestEducation.institution);
