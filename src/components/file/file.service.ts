@@ -32,11 +32,44 @@ export class FileService {
   ) {}
 
   async getDirectory(id: string, session: ISession): Promise<Directory> {
-    const node = await this.getFileNode(id, session);
-    if (node.type !== FileNodeType.Directory) {
-      throw new BadRequestException('Node is not a directory');
-    }
-    return node;
+    const user = await this.userService.readOne(session.userId!, session);
+    const result = await this.db
+      .query()
+      .raw(
+        `
+      MATCH
+        (token:Token {active: true, value: $token})
+        <-[:token {active: true}]-
+        (requestingUser:User {
+          active: true,
+          id: $requestingUserId
+        }),
+        (dir: Directory {id: $uploadId, active: true})
+      WITH * OPTIONAL MATCH (dir)-[:type {active:true}]->(dirType:Property {active: true})
+      WITH * OPTIONAL MATCH (dir)-[:name {active:true}]->(dirName:Property {active: true})
+      RETURN 
+        dir.createdAt as createdAt,
+        dir.id as id,
+        dirType.value as type,
+        dirName.value as name
+      `,
+        {
+          uploadId: id,
+          requestingUserId: session.userId,
+          token: session.token,
+        }
+      )
+      .first();
+
+    return {
+      createdAt: result!.createdAt,
+      createdBy: { ...user },
+      id: result!.id,
+      type: result!.type,
+      name: result!.name,
+      category: FileNodeCategory.Document, // TODO
+      parents: [], // TODO
+    };
   }
 
   async getFile(id: string, session: ISession): Promise<File> {
@@ -55,15 +88,15 @@ export class FileService {
       .raw(
         `
         MATCH
-        (token:Token {active: true, value: $token})
-        <-[:token {active: true}]-
-        (requestingUser:User {
-          active: true,
-          id: $requestingUserId
-        }),
-        (fv: FileVersion {id: $uploadId, active: true}),
-        (fv)-[:parent {active: true}]->(parent:Property {active: true}),
-        (fv)<-[:version {active: true}]-(file:FileNode)
+          (token:Token {active: true, value: $token})
+          <-[:token {active: true}]-
+          (requestingUser:User {
+            active: true,
+            id: $requestingUserId
+          }),
+          (fv: FileVersion {id: $uploadId, active: true}),
+          (fv)-[:parent {active: true}]->(parent:Property {active: true}),
+          (fv)<-[:version {active: true}]-(file:FileNode)
         WITH * OPTIONAL MATCH (file)-[:type {active: true}]->(type:Property {active: true})
         WITH * OPTIONAL MATCH (file)-[:name {active: true}]->(name:Property {active: true})
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl:ACL {canReadSize: true})-[:toNode]->(fv)-[:size {active: true}]->(size:Property {active: true})
@@ -72,15 +105,15 @@ export class FileService {
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl:ACL {canReadModifiedAt: true})-[:toNode]->(fv)-[:modifiedAt {active: true}]->(modifiedAt:Property {active: true})
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl:ACL {canReadName: true})-[:toNode]->(fv)-[:name {active: true}]->(name:Property {active: true})
         RETURN
-        size.value as size,
-        mimeType.value as mimeType,
-        category.value as category,
-        modifiedAt.value as modifiedAt,
-        parent.value as parent,
-        file.createdAt as createdAt,
-        fv.id as id,
-        type.value as type,
-        name.value as name
+          size.value as size,
+          mimeType.value as mimeType,
+          category.value as category,
+          modifiedAt.value as modifiedAt,
+          parent.value as parent,
+          file.createdAt as createdAt,
+          fv.id as id,
+          type.value as type,
+          name.value as name
         `,
         {
           uploadId: id,
@@ -128,8 +161,25 @@ export class FileService {
     throw new NotImplementedError();
   }
 
-  async createDirectory(_name: string, _session: ISession): Promise<Directory> {
-    throw new NotImplementedError();
+  async createDirectory(name: string, session: ISession): Promise<Directory> {
+    const id = generate();
+    await this.db.createNode({
+      session,
+      type: Directory.classType,
+      input: {
+        id,
+        name,
+        type: FileNodeType.Directory,
+      },
+      acls: {
+        canReadName: true,
+        canEditName: true,
+      },
+      baseNodeLabel: 'Directory',
+      aclEditProp: 'canCreateDirectory',
+    });
+
+    return this.getDirectory(id, session);
   }
 
   async requestUpload(): Promise<RequestUploadOutput> {
@@ -168,6 +218,8 @@ export class FileService {
           canReadType: true,
           canEditType: true,
         },
+        baseNodeLabel: 'FileNode',
+        aclEditProp: 'canCreateFileNode',
       });
       const inputForFileVersion = {
         category: FileNodeCategory.Document, // TODO
