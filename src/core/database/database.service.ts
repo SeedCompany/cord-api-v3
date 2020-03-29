@@ -176,7 +176,7 @@ export class DatabaseService {
         }),
       ])
       .return('newPropNode')
-      .first();
+      .run();
 
     if (!result) {
       throw new NotFoundException('Could not find object');

@@ -23,16 +23,19 @@ describe('ProductService', () => {
     purposes: [ProductPurpose.ChurchLife],
     methodology: ProductMethodology.Paratext,
   };
+  const updateTestProduct: Partial<Product> = {
+    id,
+    type: ProductType.JesusFilm,
+    books: [BibleBook.Exodus],
+    mediums: [ProductMedium.Web],
+    purposes: [ProductPurpose.ChurchMaturity],
+    methodology: ProductMethodology.OtherWritten,
+  };
 
   const mockDbService = {
     createNode: () => createTestProduct,
     updateProperties: () => createTestProduct,
-    deleteNode: () => ({}),
-    query: () => ({
-      raw: () => ({
-        run: () => ({}),
-      }),
-    }),
+    deleteNode: () => createTestProduct,
     readProperties: () => createTestProduct,
   };
 
@@ -41,6 +44,7 @@ describe('ProductService', () => {
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODUxNjY0MTM3OTF9.xStLc8cYmOVT3ABW1b6GLuSpeoFNxrYE2o2CBmJR8-U',
     userId: '12345',
     issuedAt: DateTime.local(),
+    owningOrgId: 'Seed Company',
   };
 
   beforeEach(async () => {
@@ -95,10 +99,9 @@ describe('ProductService', () => {
     expect(product.methodology).toEqual(createTestProduct.methodology);
   });
 
-  it.skip('should update product node', async () => {
+  it('should update product node', async () => {
     // eslint-disable-next-line @typescript-eslint/unbound-method
-    productService.readOne = jest.fn().mockReturnValue(createTestProduct);
-
+    productService.readOne = jest.fn().mockReturnValue(updateTestProduct);
     const product = await productService.update(
       {
         id,
@@ -110,11 +113,8 @@ describe('ProductService', () => {
       },
       mockSession
     );
-    expect(product.type).toEqual(createTestProduct.type);
-    expect(product.books).toEqual(createTestProduct.books);
-    expect(product.mediums).toEqual(createTestProduct.mediums);
-    expect(product.purposes).toEqual(createTestProduct.purposes);
-    expect(product.methodology).toEqual(createTestProduct.methodology);
+    expect(product.type).toEqual(updateTestProduct.type);
+    expect(product.methodology).toEqual(updateTestProduct.methodology);
   });
 
   it('should delete product node', async () => {
