@@ -2,8 +2,7 @@ import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession, NotImplementedError } from '../../common';
-import { ILogger, Logger } from '../../core';
-import { DatabaseService } from '../../core/database/database.service';
+import { DatabaseService, ILogger, Logger } from '../../core';
 import { UserService } from '../user';
 import {
   CreateFileInput,
@@ -31,14 +30,46 @@ export class FileService {
     @Logger('language:service') private readonly logger: ILogger,
     private readonly userService: UserService
   ) {}
-  // eslint-disable-next-line prettier/prettier
 
   async getDirectory(id: string, session: ISession): Promise<Directory> {
-    const node = await this.getFileNode(id, session);
-    if (node.type !== FileNodeType.Directory) {
-      throw new BadRequestException('Node is not a directory');
-    }
-    return node;
+    const user = await this.userService.readOne(session.userId!, session);
+    const result = await this.db
+      .query()
+      .raw(
+        `
+      MATCH
+        (token:Token {active: true, value: $token})
+        <-[:token {active: true}]-
+        (requestingUser:User {
+          active: true,
+          id: $requestingUserId
+        }),
+        (dir: Directory {id: $uploadId, active: true})
+      WITH * OPTIONAL MATCH (dir)-[:type {active:true}]->(dirType:Property {active: true})
+      WITH * OPTIONAL MATCH (dir)-[:name {active:true}]->(dirName:Property {active: true})
+      RETURN 
+        dir.createdAt as createdAt,
+        dir.id as id,
+        dirType.value as type,
+        dirName.value as name
+      `,
+        {
+          uploadId: id,
+          requestingUserId: session.userId,
+          token: session.token,
+        }
+      )
+      .first();
+
+    return {
+      createdAt: result!.createdAt,
+      createdBy: { ...user },
+      id: result!.id,
+      type: result!.type,
+      name: result!.name,
+      category: FileNodeCategory.Document, // TODO
+      parents: [], // TODO
+    };
   }
 
   async getFile(id: string, session: ISession): Promise<File> {
@@ -57,15 +88,15 @@ export class FileService {
       .raw(
         `
         MATCH
-        (token:Token {active: true, value: $token})
-        <-[:token {active: true}]-
-        (requestingUser:User {
-          active: true,
-          id: $requestingUserId
-        }),
-        (fv: FileVersion {id: $uploadId, active: true}),
-        (fv)-[:parent {active: true}]->(parent:Property {active: true}),
-        (fv)<-[:version {active: true}]-(file:FileNode)
+          (token:Token {active: true, value: $token})
+          <-[:token {active: true}]-
+          (requestingUser:User {
+            active: true,
+            id: $requestingUserId
+          }),
+          (fv: FileVersion {id: $uploadId, active: true}),
+          (fv)-[:parent {active: true}]->(parent:Property {active: true}),
+          (fv)<-[:version {active: true}]-(file:FileNode)
         WITH * OPTIONAL MATCH (file)-[:type {active: true}]->(type:Property {active: true})
         WITH * OPTIONAL MATCH (file)-[:name {active: true}]->(name:Property {active: true})
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl:ACL {canReadSize: true})-[:toNode]->(fv)-[:size {active: true}]->(size:Property {active: true})
@@ -74,15 +105,15 @@ export class FileService {
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl:ACL {canReadModifiedAt: true})-[:toNode]->(fv)-[:modifiedAt {active: true}]->(modifiedAt:Property {active: true})
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl:ACL {canReadName: true})-[:toNode]->(fv)-[:name {active: true}]->(name:Property {active: true})
         RETURN
-        size.value as size,
-        mimeType.value as mimeType,
-        category.value as category,
-        modifiedAt.value as modifiedAt,
-        parent.value as parent,
-        file.createdAt as createdAt,
-        fv.id as id,
-        type.value as type,
-        name.value as name
+          size.value as size,
+          mimeType.value as mimeType,
+          category.value as category,
+          modifiedAt.value as modifiedAt,
+          parent.value as parent,
+          file.createdAt as createdAt,
+          fv.id as id,
+          type.value as type,
+          name.value as name
         `,
         {
           uploadId: id,
@@ -130,8 +161,25 @@ export class FileService {
     throw new NotImplementedError();
   }
 
-  async createDirectory(_name: string, _session: ISession): Promise<Directory> {
-    throw new NotImplementedError();
+  async createDirectory(name: string, session: ISession): Promise<Directory> {
+    const id = generate();
+    await this.db.createNode({
+      session,
+      type: Directory.classType,
+      input: {
+        id,
+        name,
+        type: FileNodeType.Directory,
+      },
+      acls: {
+        canReadName: true,
+        canEditName: true,
+      },
+      baseNodeLabel: 'Directory',
+      aclEditProp: 'canCreateDirectory',
+    });
+
+    return this.getDirectory(id, session);
   }
 
   async requestUpload(): Promise<RequestUploadOutput> {
@@ -145,7 +193,7 @@ export class FileService {
     session: ISession
   ): Promise<File> {
     try {
-      const file = await this.bucket.getObject(`${uploadId}`);
+      const file = await this.bucket.getObject(`temp/${uploadId}`);
       const fileId = generate();
       if (!file) {
         throw new BadRequestException('object not found');
@@ -170,6 +218,8 @@ export class FileService {
           canReadType: true,
           canEditType: true,
         },
+        baseNodeLabel: 'FileNode',
+        aclEditProp: 'canCreateFileNode',
       });
       const inputForFileVersion = {
         category: FileNodeCategory.Document, // TODO
@@ -233,27 +283,82 @@ export class FileService {
   }
 
   async rename(
-    _input: RenameFileInput,
-    _session: ISession
+    input: RenameFileInput,
+    session: ISession
   ): Promise<FileOrDirectory> {
-    throw new NotImplementedError();
+    try {
+      const fileNode = await this.getFileNode(input.id, session);
+      await this.db.updateProperties({
+        session,
+        object: fileNode,
+        props: ['name'],
+        changes: input,
+        nodevar: 'fileNode',
+      });
+
+      return this.getFileNode(input.id, session);
+    } catch (e) {
+      this.logger.error('cound not rename fileNode', {
+        id: input.id,
+        name: input.name,
+      });
+      throw e;
+    }
   }
 
   async move(
     input: MoveFileInput,
     session: ISession
   ): Promise<FileOrDirectory> {
-    // TODO findout options for name usage here
-    const { id, parentId } = input;
-    const file = await this.bucket.getObject(id);
-    if (!file) {
-      throw new BadRequestException('object not found');
+    await this.getFileNode(input.id, session);
+
+    try {
+      const query = `
+        MATCH
+          (token:Token {
+            active: true,
+            value: $token
+          })<-[:token {active: true}]-
+          (requestingUser:User {
+            active: true,
+            id: $requestingUserId,
+            owningOrgId: $owningOrgId
+          }),
+          (newParent {id: $parentId, active: true}),
+          (file:File {id: $id, active: true})-[rel:parent {active: true}]->(oldParent {active : true})
+        DELETE rel
+        CREATE (newParent)<-[:parent {active: true, createdAt: datetime()}]-(file)
+        RETURN  newParent.id as id
+      `;
+
+      await this.db
+        .query()
+        .raw(query, {
+          id: input.id,
+          owningOrgId: session.owningOrgId,
+          parentId: input.parentId,
+          requestingUserId: session.userId,
+          token: session.token,
+        })
+        .first();
+      return await this.getFileNode(input.id, session);
+    } catch (e) {
+      console.log(e);
+      throw e;
     }
-    await this.bucket.moveObject(`test/${id}`, `${parentId}/${id}`);
-    return this.getFile(id, session);
   }
 
-  async delete(_id: string, _session: ISession): Promise<void> {
-    throw new NotImplementedError();
+  async delete(id: string, session: ISession): Promise<void> {
+    const fileNode = await this.getFileNode(id, session);
+    try {
+      await this.db.deleteNode({
+        session,
+        object: fileNode,
+        aclEditProp: 'canDeleteOwnUser',
+      });
+    } catch (e) {
+      console.log(e);
+      throw e;
+    }
   }
 }

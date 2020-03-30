@@ -1,17 +1,18 @@
 import { gql } from 'apollo-server-core';
-import { generate } from 'shortid';
+import * as faker from 'faker';
 import { CreateFileInput, File } from '../../src/components/file/dto';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
 
 export async function createFile(
   app: TestApp,
-  _input: Partial<CreateFileInput> = {}
+  input: Partial<CreateFileInput> = {}
 ) {
   const file: CreateFileInput = {
-    uploadId: generate(),
-    parentId: 'test-parent',
-    name: 'test-file',
+    uploadId: input.uploadId!,
+    parentId: input.parentId!,
+    name: faker.company.companyName(),
+    ...input,
   };
 
   const result = await app.graphql.mutate(

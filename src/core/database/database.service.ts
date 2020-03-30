@@ -202,11 +202,13 @@ export class DatabaseService {
     session,
     props,
     nodevar,
+    aclReadNode,
   }: {
     id: string;
     session: ISession;
     props: ReadonlyArray<keyof TObject>;
     nodevar: string;
+    aclReadNode?: string;
   }): Promise<{ [Key in keyof TObject]: ReadPropertyResult }> {
     const result: { [Key in keyof TObject]: ReadPropertyResult } = {} as any;
     for (const prop of props) {
@@ -214,6 +216,7 @@ export class DatabaseService {
         id,
         session,
         aclReadProp: prop as string,
+        aclReadNode,
         nodevar,
       });
     }
@@ -225,15 +228,17 @@ export class DatabaseService {
     session,
     nodevar,
     aclReadProp,
+    aclReadNode,
   }: {
     id: string;
     session: ISession;
     nodevar: string;
     aclReadProp: string;
+    aclReadNode?: string;
   }): Promise<ReadPropertyResult> {
     const aclReadPropName = `canRead${upperFirst(aclReadProp)}`;
     const aclEditPropName = `canEdit${upperFirst(aclReadProp)}`;
-    const aclReadNodeName = `canRead${upperFirst(nodevar)}s`;
+    const aclReadNodeName = aclReadNode || `canRead${upperFirst(nodevar)}s`;
     let content: string,
       type: string = nodevar;
 
