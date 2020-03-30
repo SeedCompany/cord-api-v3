@@ -8,6 +8,7 @@ import { CeremonyType } from './dto/type.enum';
 
 describe('CeremonyService', () => {
   let ceremonyService: CeremonyService;
+  // let dbService: DatabaseService;
   const id = generate();
 
   const createTestCeremony: Partial<Ceremony> = {
@@ -37,9 +38,11 @@ describe('CeremonyService', () => {
     query: () => ({
       raw: () => ({
         run: () => ({}),
+        first: () => ({}),
       }),
     }),
     readProperties: () => createTestCeremony,
+    readProperty: () => ({}),
   };
 
   const mockSession = {
@@ -63,6 +66,7 @@ describe('CeremonyService', () => {
     }).compile();
 
     ceremonyService = module.get<CeremonyService>(CeremonyService);
+    dbService = module.get<DatabaseService>(DatabaseService);
   });
 
   it('should be defined', () => {
@@ -97,18 +101,25 @@ describe('CeremonyService', () => {
     expect(ceremony.actualDate).toEqual(createTestCeremony.actualDate);
   });
 
-  it('should update ceremony node', async () => {
+  it.only('should update ceremony node', async () => {
     // eslint-disable-next-line @typescript-eslint/unbound-method
-    ceremonyService.readOne = jest.fn().mockReturnValue(createTestCeremony);
-    const ceremony = await ceremonyService.update(
-      {
-        id,
-        planned: true,
-        estimatedDate: DateTime.local(),
-        actualDate: DateTime.local(),
-      },
-      mockSession
-    );
+    // ceremonyService.readOne = jest.fn().mockReturnValue(createTestCeremony);
+    // dbService.readProperties = jest.fn().mockRejectedValue(createTestCeremony);
+    let ceremony;
+    try {
+      ceremony = await ceremonyService.update(
+        {
+          id,
+          planned: true,
+          estimatedDate: DateTime.local(),
+          actualDate: DateTime.local(),
+        },
+        mockSession
+      );
+    } catch (e) {
+      console.log('e ', JSON.stringify(e, null, 2));
+      throw e;
+    }
     expect(ceremony.planned).toEqual(createTestCeremony.planned);
   });
 
