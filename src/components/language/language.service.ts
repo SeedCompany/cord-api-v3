@@ -53,8 +53,7 @@ export class LanguageService {
 
       return result;
     } catch (e) {
-      console.log(e);
-      this.logger.error(`Could not create language`);
+      this.logger.error(`Could not create`, { ...input, exception: e });
       throw new Error('Could not create language');
     }
   }
@@ -135,7 +134,7 @@ export class LanguageService {
         aclEditProp: 'canDeleteOwnUser',
       });
     } catch (e) {
-      console.log(e);
+      this.logger.error('Failed to delete', { id, exception: e });
       throw e;
     }
   }

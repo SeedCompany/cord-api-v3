@@ -30,40 +30,35 @@ describe('Zone e2e', () => {
   it('read one zone by id', async () => {
     const zone = await createZone(app, { directorId: director.id });
 
-    try {
-      const { location: actual } = await app.graphql.query(
-        gql`
-          query zone($id: ID!) {
-            location(id: $id) {
-              __typename
-              ... on Zone {
-                ...zone
-                director {
-                  value {
-                    ...user
-                  }
-                  canEdit
-                  canRead
+    const { location: actual } = await app.graphql.query(
+      gql`
+        query zone($id: ID!) {
+          location(id: $id) {
+            __typename
+            ... on Zone {
+              ...zone
+              director {
+                value {
+                  ...user
                 }
+                canEdit
+                canRead
               }
             }
           }
-
-          ${fragments.zone}
-          ${fragments.user}
-        `,
-        {
-          id: zone.id,
         }
-      );
 
-      expect(actual.id).toBe(zone.id);
-      expect(isValid(actual.id)).toBe(true);
-      expect(actual.name).toEqual(zone.name);
-    } catch (e) {
-      console.error(e);
-      fail();
-    }
+        ${fragments.zone}
+        ${fragments.user}
+      `,
+      {
+        id: zone.id,
+      }
+    );
+
+    expect(actual.id).toBe(zone.id);
+    expect(isValid(actual.id)).toBe(true);
+    expect(actual.name).toEqual(zone.name);
   });
 
   it('update zone', async () => {
@@ -134,24 +129,19 @@ describe('Zone e2e', () => {
   it('delete zone', async () => {
     const zone = await createZone(app, { directorId: director.id });
 
-    try {
-      const result = await app.graphql.mutate(
-        gql`
-          mutation deleteLocation($id: ID!) {
-            deleteLocation(id: $id)
-          }
-        `,
-        {
-          id: zone.id,
+    const result = await app.graphql.mutate(
+      gql`
+        mutation deleteLocation($id: ID!) {
+          deleteLocation(id: $id)
         }
-      );
-      const actual: Zone | undefined = result.deleteLocation;
+      `,
+      {
+        id: zone.id,
+      }
+    );
+    const actual: Zone | undefined = result.deleteLocation;
 
-      expect(actual).toBeTruthy();
-    } catch (e) {
-      console.log(e);
-      fail();
-    }
+    expect(actual).toBeTruthy();
   });
 
   it.skip('returns a list of zones', async () => {

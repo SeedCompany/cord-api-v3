@@ -32,30 +32,24 @@ describe('File e2e', () => {
   it.skip('read one file by id', async () => {
     const file = await createFile(app);
 
-    try {
-      const { file: actual } = await app.graphql.query(
-        gql`
-          query file($id: ID!) {
-            file(id: $id) {
-              ...file
-            }
+    const { file: actual } = await app.graphql.query(
+      gql`
+        query file($id: ID!) {
+          file(id: $id) {
+            ...file
           }
-          ${fragments.file}
-        `,
-        {
-          id: file.id,
         }
-      );
+        ${fragments.file}
+      `,
+      {
+        id: file.id,
+      }
+    );
 
-      expect(actual.id).toBe(file.id);
-      expect(isValid(actual.id)).toBeTruthy();
-      //expect(actual.name.value).toEqual(file.name.value);
-      expect(actual.name).toEqual(file.name);
-    } catch (e) {
-      console.log(`file id is ${file.id}`);
-      console.error(e);
-      fail();
-    }
+    expect(actual.id).toBe(file.id);
+    expect(isValid(actual.id)).toBeTruthy();
+    //expect(actual.name.value).toEqual(file.name.value);
+    expect(actual.name).toEqual(file.name);
   });
 
   // UPDATE FILE

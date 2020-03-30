@@ -65,7 +65,6 @@ export class EducationService {
         acls,
       });
     } catch (e) {
-      console.log(e);
       this.logger.error(`Could not create education for user `, {
         id,
         userId,
@@ -190,7 +189,7 @@ export class EducationService {
         aclEditProp: 'canDeleteOwnUser',
       });
     } catch (e) {
-      console.log(e);
+      this.logger.error('Failed to delete', { id, exception: e });
       throw e;
     }
   }

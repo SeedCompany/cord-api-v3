@@ -39,47 +39,42 @@ describe('Region e2e', () => {
   it('read one region by id', async () => {
     const region = await createRegion(app, { directorId: director.id });
 
-    try {
-      const { location: actual } = await app.graphql.query(
-        gql`
-          query region($id: ID!) {
-            location(id: $id) {
-              __typename
-              ... on Region {
-                ...region
-                director {
-                  value {
-                    ...user
-                  }
-                  canEdit
-                  canRead
+    const { location: actual } = await app.graphql.query(
+      gql`
+        query region($id: ID!) {
+          location(id: $id) {
+            __typename
+            ... on Region {
+              ...region
+              director {
+                value {
+                  ...user
                 }
-                zone {
-                  value {
-                    ...zone
-                  }
-                  canEdit
-                  canRead
+                canEdit
+                canRead
+              }
+              zone {
+                value {
+                  ...zone
                 }
+                canEdit
+                canRead
               }
             }
           }
-          ${fragments.region}
-          ${fragments.zone}
-          ${fragments.user}
-        `,
-        {
-          id: region.id,
         }
-      );
+        ${fragments.region}
+        ${fragments.zone}
+        ${fragments.user}
+      `,
+      {
+        id: region.id,
+      }
+    );
 
-      expect(actual.id).toBe(region.id);
-      expect(isValid(actual.id)).toBe(true);
-      expect(actual.name).toEqual(region.name);
-    } catch (e) {
-      console.error(e);
-      fail();
-    }
+    expect(actual.id).toBe(region.id);
+    expect(isValid(actual.id)).toBe(true);
+    expect(actual.name).toEqual(region.name);
   });
 
   it('update region', async () => {
@@ -204,23 +199,18 @@ describe('Region e2e', () => {
   it('delete region', async () => {
     const region = await createRegion(app, { directorId: director.id });
 
-    try {
-      const result = await app.graphql.mutate(
-        gql`
-          mutation deleteLocation($id: ID!) {
-            deleteLocation(id: $id)
-          }
-        `,
-        {
-          id: region.id,
+    const result = await app.graphql.mutate(
+      gql`
+        mutation deleteLocation($id: ID!) {
+          deleteLocation(id: $id)
         }
-      );
-      const actual: Region | undefined = result.deleteLocation;
-      expect(actual).toBeTruthy();
-    } catch (e) {
-      console.log(e);
-      fail();
-    }
+      `,
+      {
+        id: region.id,
+      }
+    );
+    const actual: Region | undefined = result.deleteLocation;
+    expect(actual).toBeTruthy();
   });
 
   it.skip('returns a list of regions', async () => {

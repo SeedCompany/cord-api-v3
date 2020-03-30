@@ -47,7 +47,7 @@ export class FileService {
         (dir: Directory {id: $uploadId, active: true})
       WITH * OPTIONAL MATCH (dir)-[:type {active:true}]->(dirType:Property {active: true})
       WITH * OPTIONAL MATCH (dir)-[:name {active:true}]->(dirName:Property {active: true})
-      RETURN 
+      RETURN
         dir.createdAt as createdAt,
         dir.id as id,
         dirType.value as type,
@@ -205,61 +205,60 @@ export class FileService {
     { parentId, uploadId, name }: CreateFileInput,
     session: ISession
   ): Promise<File> {
-    try {
-      const file = await this.bucket.getObject(`temp/${uploadId}`);
-      const fileId = generate();
-      if (!file) {
-        throw new BadRequestException('object not found');
-      }
-      await this.bucket.moveObject(`temp/${uploadId}`, `${uploadId}`);
-      await this.db.createNode({
-        session,
-        type: File.classType,
-        input: {
-          id: fileId,
-          name,
-          type: FileNodeType.File,
-        },
-        acls: {
-          canReadParent: true,
-          canEditParent: true,
-          canReadName: true,
-          canEditName: true,
-          canReadType: true,
-          canEditType: true,
-        },
-        baseNodeLabel: 'FileNode',
-        aclEditProp: 'canCreateFileNode',
-      });
-      const inputForFileVersion = {
-        category: FileNodeCategory.Document, // TODO
-        id: uploadId,
-        mimeType: file.ContentType,
-        modifiedAt: DateTime.local(),
-        size: file.ContentLength,
-      };
-      const acls = {
-        canReadSize: true,
-        canEditSize: true,
+    const file = await this.bucket.getObject(`temp/${uploadId}`);
+    const fileId = generate();
+    if (!file) {
+      throw new BadRequestException('object not found');
+    }
+    await this.bucket.moveObject(`temp/${uploadId}`, `${uploadId}`);
+    await this.db.createNode({
+      session,
+      type: File.classType,
+      input: {
+        id: fileId,
+        name,
+        type: FileNodeType.File,
+      },
+      acls: {
         canReadParent: true,
         canEditParent: true,
-        canReadMimeType: true,
-        canEditMimeType: true,
-        canReadCategory: true,
-        canEditCategory: true,
         canReadName: true,
         canEditName: true,
-        canReadModifiedAt: true,
-        canEditModifiedAt: true,
-      };
-      await this.db.createNode({
-        session,
-        type: FileVersion.classType,
-        input: inputForFileVersion,
-        acls,
-      });
-      // create version relaitonship btw version and fileNode
-      const qry = `
+        canReadType: true,
+        canEditType: true,
+      },
+      baseNodeLabel: 'FileNode',
+      aclEditProp: 'canCreateFileNode',
+    });
+    const inputForFileVersion = {
+      category: FileNodeCategory.Document, // TODO
+      id: uploadId,
+      mimeType: file.ContentType,
+      modifiedAt: DateTime.local(),
+      size: file.ContentLength,
+    };
+    const acls = {
+      canReadSize: true,
+      canEditSize: true,
+      canReadParent: true,
+      canEditParent: true,
+      canReadMimeType: true,
+      canEditMimeType: true,
+      canReadCategory: true,
+      canEditCategory: true,
+      canReadName: true,
+      canEditName: true,
+      canReadModifiedAt: true,
+      canEditModifiedAt: true,
+    };
+    await this.db.createNode({
+      session,
+      type: FileVersion.classType,
+      input: inputForFileVersion,
+      acls,
+    });
+    // create version relaitonship btw version and fileNode
+    const qry = `
         MATCH
           (file:FileNode {id: "${fileId}"}),
           (fv:FileVersion {id: "${uploadId}"}),
@@ -271,17 +270,17 @@ export class FileService {
         RETURN
           file, fv, user
       `;
-      await this.db
-        .query()
-        .raw(qry, {
-          fileId: fileId,
-          name,
-          parentId,
-          userId: session.userId,
-        })
-        .run();
-      // create a parent relationship btw fileNode and parent(type is directory)
-      const qryOne = `
+    await this.db
+      .query()
+      .raw(qry, {
+        fileId: fileId,
+        name,
+        parentId,
+        userId: session.userId,
+      })
+      .run();
+    // create a parent relationship btw fileNode and parent(type is directory)
+    const qryOne = `
         MATCH
           (file:FileNode {id: "${fileId}", active: true}),
           (parent:Directory { id: "${parentId}", active: true})
@@ -290,15 +289,12 @@ export class FileService {
         RETURN
           file, parent
       `;
-      await this.db
-        .query()
-        .raw(qryOne, { parentId })
-        .first();
+    await this.db
+      .query()
+      .raw(qryOne, { parentId })
+      .first();
 
-      return this.getFile(fileId, session);
-    } catch (e) {
-      throw new Error(e);
-    }
+    return this.getFile(fileId, session);
   }
 
   async updateFile(input: UpdateFileInput, session: ISession): Promise<File> {
@@ -373,10 +369,7 @@ export class FileService {
 
       return this.getFileNode(input.id, session);
     } catch (e) {
-      this.logger.error('cound not rename fileNode', {
-        id: input.id,
-        name: input.name,
-      });
+      this.logger.error('could not rename', input);
       throw e;
     }
   }
@@ -416,7 +409,7 @@ export class FileService {
         .first();
       return await this.getFile(input.id, session);
     } catch (e) {
-      console.log(e);
+      this.logger.error('Failed to move', { ...input, exception: e });
       throw e;
     }
   }
@@ -430,7 +423,7 @@ export class FileService {
         aclEditProp: 'canDeleteOwnUser',
       });
     } catch (e) {
-      console.log(e);
+      this.logger.error('Failed to delete', { id, exception: e });
       throw e;
     }
   }
