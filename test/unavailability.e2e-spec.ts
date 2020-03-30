@@ -35,28 +35,23 @@ describe('Unavailability e2e', () => {
   it('read one unavailability by id', async () => {
     const unavailability = await createUnavailability(app, { userId: user.id });
 
-    try {
-      const { unavailability: actual } = await app.graphql.query(
-        gql`
-          query unavailability($id: ID!) {
-            unavailability(id: $id) {
-              ...unavailability
-            }
+    const { unavailability: actual } = await app.graphql.query(
+      gql`
+        query unavailability($id: ID!) {
+          unavailability(id: $id) {
+            ...unavailability
           }
-          ${fragments.unavailability}
-        `,
-        {
-          id: unavailability.id,
         }
-      );
+        ${fragments.unavailability}
+      `,
+      {
+        id: unavailability.id,
+      }
+    );
 
-      expect(actual.id).toBe(unavailability.id);
-      expect(isValid(actual.id)).toBe(true);
-      expect(actual.description).toEqual(unavailability.description);
-    } catch (e) {
-      console.error(e);
-      fail();
-    }
+    expect(actual.id).toBe(unavailability.id);
+    expect(isValid(actual.id)).toBe(true);
+    expect(actual.description).toEqual(unavailability.description);
   });
 
   // UPDATE UNAVAILABILITY
@@ -94,23 +89,18 @@ describe('Unavailability e2e', () => {
   it('delete unavailability', async () => {
     const unavailability = await createUnavailability(app, { userId: user.id });
 
-    try {
-      const result = await app.graphql.mutate(
-        gql`
-          mutation deleteUnavailability($id: ID!) {
-            deleteUnavailability(id: $id)
-          }
-        `,
-        {
-          id: unavailability.id,
+    const result = await app.graphql.mutate(
+      gql`
+        mutation deleteUnavailability($id: ID!) {
+          deleteUnavailability(id: $id)
         }
-      );
-      const actual: Unavailability | undefined = result.deleteUnavailability;
-      expect(actual).toBeTruthy();
-    } catch (e) {
-      console.log(e);
-      fail();
-    }
+      `,
+      {
+        id: unavailability.id,
+      }
+    );
+    const actual: Unavailability | undefined = result.deleteUnavailability;
+    expect(actual).toBeTruthy();
   });
 
   it('List view of unavailabilities', async () => {

@@ -76,20 +76,11 @@ export class AuthService {
       )
       .first();
 
-    try {
-      if (result1 === undefined) {
-        throw Error('Email or Password are incorrect');
-      }
-      if (await argon2.verify(result1.pash, input.password)) {
-        // password match
-      } else {
-        // password did not match
-        throw Error('Email or Password are incorrect');
-      }
-    } catch (err) {
-      // internal failure
-      console.log(err);
-      throw err;
+    if (result1 === undefined) {
+      throw Error('Email or Password are incorrect');
+    }
+    if (!(await argon2.verify(result1.pash, input.password))) {
+      throw Error('Email or Password are incorrect');
     }
 
     const result2 = await this.db

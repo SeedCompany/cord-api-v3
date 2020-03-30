@@ -32,29 +32,23 @@ describe('Language e2e', () => {
   it('read one language by id', async () => {
     const language = await createLanguage(app);
 
-    try {
-      const { language: actual } = await app.graphql.query(
-        gql`
-          query language($id: ID!) {
-            language(id: $id) {
-              ...language
-            }
+    const { language: actual } = await app.graphql.query(
+      gql`
+        query language($id: ID!) {
+          language(id: $id) {
+            ...language
           }
-          ${fragments.language}
-        `,
-        {
-          id: language.id,
         }
-      );
+        ${fragments.language}
+      `,
+      {
+        id: language.id,
+      }
+    );
 
-      expect(actual.id).toBe(language.id);
-      expect(isValid(actual.id)).toBeTruthy();
-      expect(actual.name.value).toEqual(language.name.value);
-    } catch (e) {
-      console.log(`language id is ${language.id}`);
-      console.error(e);
-      fail();
-    }
+    expect(actual.id).toBe(language.id);
+    expect(isValid(actual.id)).toBeTruthy();
+    expect(actual.name.value).toEqual(language.name.value);
   });
 
   // UPDATE LANGUAGE

@@ -123,7 +123,7 @@ export class OrganizationService {
         aclEditProp: 'canDeleteOwnUser',
       });
     } catch (e) {
-      console.log(e);
+      this.logger.error('Failed to delete', { id, exception: e });
       throw e;
     }
 
@@ -189,18 +189,17 @@ export class OrganizationService {
         }
       }
     } catch (e) {
-      console.error(e);
+      this.logger.error('Checks failed', { exception: e });
     }
 
     return true;
   }
 
   private async pullOrg(id: number): Promise<boolean> {
-    try {
-      const result = await this.db
-        .query()
-        .raw(
-          `
+    const result = await this.db
+      .query()
+      .raw(
+        `
         MATCH
           (org:Organization {
             active: true
@@ -218,30 +217,23 @@ export class OrganizationService {
         LIMIT
           1
         `,
-          {
-            id,
-          }
-        )
-        .first();
+        {
+          id,
+        }
+      )
+      .first();
 
-      const isGood = this.validateOrg({
-        id: result?.id,
-        createdAt: result?.createdAt,
-        name: {
-          value: result?.name,
-          canRead: false,
-          canEdit: false,
-        },
-      });
+    const isGood = this.validateOrg({
+      id: result?.id,
+      createdAt: result?.createdAt,
+      name: {
+        value: result?.name,
+        canRead: false,
+        canEdit: false,
+      },
+    });
 
-      if (!isGood) {
-        return false;
-      }
-    } catch (e) {
-      console.error(e);
-    }
-
-    return true;
+    return isGood;
   }
 
   private validateOrg(org: Organization): boolean {

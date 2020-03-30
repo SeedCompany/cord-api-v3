@@ -38,55 +38,50 @@ describe('Country e2e', () => {
   it('read one country by id', async () => {
     const country = await createCountry(app);
 
-    try {
-      const { location: actual } = await app.graphql.query(
-        gql`
-          query country($id: ID!) {
-            location(id: $id) {
-              __typename
-              ... on Country {
-                ...country
-                region {
-                  value {
-                    ...region
-                    director {
-                      value {
-                        ...user
-                      }
-                      canEdit
-                      canRead
+    const { location: actual } = await app.graphql.query(
+      gql`
+        query country($id: ID!) {
+          location(id: $id) {
+            __typename
+            ... on Country {
+              ...country
+              region {
+                value {
+                  ...region
+                  director {
+                    value {
+                      ...user
                     }
-                    zone {
-                      value {
-                        ...zone
-                      }
-                      canEdit
-                      canRead
-                    }
+                    canEdit
+                    canRead
                   }
-                  canEdit
-                  canRead
+                  zone {
+                    value {
+                      ...zone
+                    }
+                    canEdit
+                    canRead
+                  }
                 }
+                canEdit
+                canRead
               }
             }
           }
-          ${fragments.country}
-          ${fragments.zone}
-          ${fragments.region}
-          ${fragments.user}
-        `,
-        {
-          id: country.id,
         }
-      );
+        ${fragments.country}
+        ${fragments.zone}
+        ${fragments.region}
+        ${fragments.user}
+      `,
+      {
+        id: country.id,
+      }
+    );
 
-      expect(actual.id).toBe(country.id);
-      expect(isValid(actual.id)).toBe(true);
-      expect(actual.name).toEqual(country.name);
-    } catch (e) {
-      console.error(e);
-      fail();
-    }
+    expect(actual.id).toBe(country.id);
+    expect(isValid(actual.id)).toBe(true);
+    expect(actual.name).toEqual(country.name);
   });
 
   it('update region for a country', async () => {
@@ -163,23 +158,18 @@ describe('Country e2e', () => {
   it('delete country', async () => {
     const country = await createCountry(app);
 
-    try {
-      const result = await app.graphql.mutate(
-        gql`
-          mutation deleteLocation($id: ID!) {
-            deleteLocation(id: $id)
-          }
-        `,
-        {
-          id: country.id,
+    const result = await app.graphql.mutate(
+      gql`
+        mutation deleteLocation($id: ID!) {
+          deleteLocation(id: $id)
         }
-      );
-      const actual: Country | undefined = result.deleteLocation;
-      expect(actual).toBeTruthy();
-    } catch (e) {
-      console.log(e);
-      fail();
-    }
+      `,
+      {
+        id: country.id,
+      }
+    );
+    const actual: Country | undefined = result.deleteLocation;
+    expect(actual).toBeTruthy();
   });
 
   it.skip('returns a list of countries', async () => {

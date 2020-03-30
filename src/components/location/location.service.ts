@@ -261,8 +261,7 @@ export class LocationService {
       const result = await this.readOneZone(id, session);
       return result;
     } catch (e) {
-      console.log(e);
-      this.logger.error(`Could not create zone`);
+      this.logger.error(`Could not create`, { ...input, exception: e });
       throw new Error('Could not create zone');
     }
   }
