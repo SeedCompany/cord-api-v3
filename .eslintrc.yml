@@ -146,6 +146,7 @@ rules:
       ignoreCase: true # a,Z instead of Z,a
 
   ## More of our rules
+  no-console: error
   prettier/prettier: warn
 
 overrides:
