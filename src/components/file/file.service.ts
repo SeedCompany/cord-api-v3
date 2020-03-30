@@ -94,24 +94,21 @@ export class FileService {
             active: true,
             id: $requestingUserId
           }),
-          (fv: FileVersion {id: $uploadId, active: true}),
-          (fv)-[:parent {active: true}]->(parent:Property {active: true}),
-          (fv)<-[:version {active: true}]-(file:FileNode)
+          (file: FileNode {id: $uploadId, active: true}),
+          (file)-[:version {active: true}]->(fv:FileVersion {active: true})
         WITH * OPTIONAL MATCH (file)-[:type {active: true}]->(type:Property {active: true})
         WITH * OPTIONAL MATCH (file)-[:name {active: true}]->(name:Property {active: true})
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl:ACL {canReadSize: true})-[:toNode]->(fv)-[:size {active: true}]->(size:Property {active: true})
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl:ACL {canReadMimeType: true})-[:toNode]->(fv)-[:mimeType {active: true}]->(mimeType:Property {active: true})
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl:ACL {canReadCategory: true})-[:toNode]->(fv)-[:category {active: true}]->(category:Property {active: true})
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl:ACL {canReadModifiedAt: true})-[:toNode]->(fv)-[:modifiedAt {active: true}]->(modifiedAt:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl:ACL {canReadName: true})-[:toNode]->(fv)-[:name {active: true}]->(name:Property {active: true})
         RETURN
           size.value as size,
           mimeType.value as mimeType,
           category.value as category,
           modifiedAt.value as modifiedAt,
-          parent.value as parent,
           file.createdAt as createdAt,
-          fv.id as id,
+          file.id as id,
           type.value as type,
           name.value as name
         `,
@@ -122,7 +119,6 @@ export class FileService {
         }
       )
       .first();
-
     return {
       category: FileNodeCategory.Document, //TODO category should be derived based on the mimeType
       createdAt: result!.createdAt,
@@ -178,6 +174,23 @@ export class FileService {
       baseNodeLabel: 'Directory',
       aclEditProp: 'canCreateDirectory',
     });
+    // create createdby relationship
+    const qry = `
+      MATCH
+        (dirNode:Directory {id: "${id}", active: true}),
+        (user:User {id: "${session.userId}", active: true})
+      CREATE
+        (dirNode)-[:createdBy {active: true, createdAt: datetime()}]->(user)
+      RETURN
+        dirNode,user
+    `;
+    await this.db
+      .query()
+      .raw(qry, {
+        id,
+        userId: session.userId,
+      })
+      .run();
 
     return this.getDirectory(id, session);
   }
@@ -204,10 +217,7 @@ export class FileService {
         type: File.classType,
         input: {
           id: fileId,
-          mimeType: file.ContentType, // TODO Should be stored on file version
           name,
-          parent: parentId, // TODO Should be a relationship
-          size: file.ContentLength, // TODO Should be stored on file version
           type: FileNodeType.File,
         },
         acls: {
@@ -226,8 +236,6 @@ export class FileService {
         id: uploadId,
         mimeType: file.ContentType,
         modifiedAt: DateTime.local(),
-        name,
-        parent: parentId, // TODO Should be a relationship; prop to file id
         size: file.ContentLength,
       };
       const acls = {
@@ -250,10 +258,10 @@ export class FileService {
         input: inputForFileVersion,
         acls,
       });
+      // create version relaitonship btw version and fileNode
       const qry = `
         MATCH
-          (file:FileNode {id: "${fileId}"})
-        WITH * OPTIONAL MATCH (file)-[:parent {active: true}]->(prop:Property {active: true, value: "${parentId}"}),
+          (file:FileNode {id: "${fileId}"}),
           (fv:FileVersion {id: "${uploadId}"}),
           (user:User { id: "${session.userId}", active: true})
         CREATE
@@ -272,14 +280,81 @@ export class FileService {
           userId: session.userId,
         })
         .run();
-      return this.getFile(uploadId, session);
+      // create a parent relationship btw fileNode and parent(type is directory)
+      const qryOne = `
+        MATCH
+          (file:FileNode {id: "${fileId}", active: true}),
+          (parent:Directory { id: "${parentId}", active: true})
+        CREATE
+          (file)-[:parent {active: true}]->(parent)
+        RETURN
+          file, parent
+      `;
+      await this.db
+        .query()
+        .raw(qryOne, { parentId })
+        .first();
+
+      return this.getFile(fileId, session);
     } catch (e) {
       throw new Error(e);
     }
   }
 
-  async updateFile(_input: UpdateFileInput, _session: ISession): Promise<File> {
-    throw new NotImplementedError();
+  async updateFile(input: UpdateFileInput, session: ISession): Promise<File> {
+    const file = await this.bucket.getObject(`temp/${input.uploadId}`);
+    if (!file) {
+      throw new BadRequestException('object not found');
+    }
+    await this.bucket.moveObject(`temp/${input.uploadId}`, `${input.uploadId}`);
+    const inputForFileVersion = {
+      category: FileNodeCategory.Document, // TODO
+      id: input.uploadId,
+      mimeType: file.ContentType,
+      modifiedAt: DateTime.local(),
+      size: file.ContentLength,
+    };
+    const acls = {
+      canReadSize: true,
+      canEditSize: true,
+      canReadParent: true,
+      canEditParent: true,
+      canReadMimeType: true,
+      canEditMimeType: true,
+      canReadCategory: true,
+      canEditCategory: true,
+      canReadName: true,
+      canEditName: true,
+      canReadModifiedAt: true,
+      canEditModifiedAt: true,
+    };
+    await this.db.createNode({
+      session,
+      type: FileVersion.classType,
+      input: inputForFileVersion,
+      acls,
+    });
+
+    const qry = `
+      MATCH
+        (file: FileNode {id: "${input.parentId}", active: true}),
+        (newFv:FileVersion {id: "${input.uploadId}", active: true}),
+        (user:User { id: "${session.userId}", active: true})
+      CREATE
+        (newFv)<-[:version {active: true, createdAt: datetime()}]-(file),
+        (newFv)-[:modifiedBy {active: true, modifiedAt: datetime()}]->(user)
+      RETURN
+        file, newFv, user
+    `;
+    await this.db
+      .query()
+      .raw(qry, {
+        fileId: input.parentId,
+        userId: session.userId,
+      })
+      .first();
+
+    return this.getFile(input.parentId, session);
   }
 
   async rename(
@@ -306,12 +381,10 @@ export class FileService {
     }
   }
 
-  async move(
-    input: MoveFileInput,
-    session: ISession
-  ): Promise<FileOrDirectory> {
-    await this.getFileNode(input.id, session);
-
+  async move(input: MoveFileInput, session: ISession): Promise<File> {
+    if (input.name) {
+      await this.rename({ id: input.id, name: input.name }, session);
+    }
     try {
       const query = `
         MATCH
@@ -325,10 +398,10 @@ export class FileService {
             owningOrgId: $owningOrgId
           }),
           (newParent {id: $parentId, active: true}),
-          (file:File {id: $id, active: true})-[rel:parent {active: true}]->(oldParent {active : true})
+          (file:FileNode {id: $id, active: true})-[rel:parent {active: true}]->(oldParent {active : true})
         DELETE rel
         CREATE (newParent)<-[:parent {active: true, createdAt: datetime()}]-(file)
-        RETURN  newParent.id as id
+        RETURN  newParent
       `;
 
       await this.db
@@ -341,7 +414,7 @@ export class FileService {
           token: session.token,
         })
         .first();
-      return await this.getFileNode(input.id, session);
+      return await this.getFile(input.id, session);
     } catch (e) {
       console.log(e);
       throw e;

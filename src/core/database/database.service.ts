@@ -630,8 +630,9 @@ export class DatabaseService {
   }): Promise<void> {
     const label = baseNodeLabel ?? type.name;
     const aclEdit = aclEditProp ?? `canCreate${label}`;
+    console.log('aclEDit is', aclEdit);
     try {
-      await this.db
+      const baseNode = await this.db
         .query()
         .match([
           matchSession(session, {
@@ -651,6 +652,7 @@ export class DatabaseService {
           node('requestingUser'),
         ])
         .run();
+      console.log('base node is---->', baseNode);
     } catch (e) {
       // If there is no aclEditProp, then this is not an access-related issue
       // and we can move forward with throwing
