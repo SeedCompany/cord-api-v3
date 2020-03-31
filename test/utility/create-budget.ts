@@ -56,31 +56,26 @@ export async function createBudgetRecord(
     fiscalYear: 2024,
     ...input,
   };
-  let result;
-  try {
-    result = await app.graphql.mutate(
-      gql`
-        mutation createBudgetRecord($input: CreateBudgetRecordInput!) {
-          createBudgetRecord(input: $input) {
-            budgetRecord {
-              ...budgetRecord
-            }
+  const result = await app.graphql.mutate(
+    gql`
+      mutation createBudgetRecord($input: CreateBudgetRecordInput!) {
+        createBudgetRecord(input: $input) {
+          budgetRecord {
+            ...budgetRecord
           }
         }
-        ${fragments.budgetRecord}
-      `,
-      {
-        input: {
-          budgetRecord: {
-            ...budgetRecord,
-          },
-        },
       }
-    );
-  } catch (e) {
-    console.log(e);
-    throw e;
-  }
+      ${fragments.budgetRecord}
+    `,
+    {
+      input: {
+        budgetRecord: {
+          ...budgetRecord,
+        },
+      },
+    }
+  );
+
   const actual: BudgetRecord = result.createBudgetRecord.budgetRecord;
   expect(actual).toBeTruthy();
 
