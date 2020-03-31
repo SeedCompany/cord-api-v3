@@ -369,7 +369,7 @@ export class BudgetService {
   }
 
   async deleteRecord(id: string, session: ISession): Promise<void> {
-    const br = await this.readOne(id, session);
+    const br = await this.readOneRecord(id, session);
     if (!br) {
       throw new NotFoundException('Budget Record not found');
     }

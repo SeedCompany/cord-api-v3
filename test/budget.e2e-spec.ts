@@ -19,7 +19,7 @@ import {
 import { createBudget, createBudgetRecord } from './utility/create-budget';
 import { createProject } from './utility/create-project';
 
-describe.skip('Budget e2e', () => {
+describe('Budget e2e', () => {
   let app: TestApp;
   let project: Project;
 
@@ -144,7 +144,7 @@ describe.skip('Budget e2e', () => {
   });
 });
 
-describe.only('BudgetRecord e2e', () => {
+describe('BudgetRecord e2e', () => {
   let app: TestApp;
   let project: Project;
   let budget: Budget;
@@ -246,7 +246,7 @@ describe.only('BudgetRecord e2e', () => {
     expect(updated.amount.value).toBe(amount);
   });
 
-  it.only('delete budget record', async () => {
+  it('delete budget record', async () => {
     // create budget first
     const budgetRecord = await createBudgetRecord(app, {
       budgetId: budget.id,
@@ -281,7 +281,7 @@ describe.only('BudgetRecord e2e', () => {
           ${fragments.budgetRecord}
         `,
         {
-          id: budget.id,
+          id: budgetRecord.id,
         }
       );
     } catch (e) {
