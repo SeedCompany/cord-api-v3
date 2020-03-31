@@ -1,11 +1,12 @@
 import {
+  BadRequestException,
   Injectable,
   NotFoundException,
-  NotImplementedException,
 } from '@nestjs/common';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
 import { DatabaseService, ILogger, Logger } from '../../core';
+import { ProjectService } from '../project/project.service';
 import {
   Budget,
   BudgetListInput,
@@ -13,6 +14,7 @@ import {
   BudgetRecord,
   BudgetRecordListInput,
   BudgetRecordListOutput,
+  BudgetStatus,
   CreateBudget,
   CreateBudgetRecord,
   UpdateBudget,
@@ -23,56 +25,172 @@ import {
 export class BudgetService {
   constructor(
     private readonly db: DatabaseService,
-
+    private readonly projectService: ProjectService,
     @Logger('budget:service') private readonly logger: ILogger
   ) {}
 
-  async create(input: CreateBudget, _session: ISession): Promise<Budget> {
+  async create(
+    { projectId, ...input }: CreateBudget,
+    session: ISession
+  ): Promise<Budget> {
     this.logger.info('Creating Budget', input);
-    throw new NotImplementedException();
-    // on Init, create a budget will create a budget record for each org and each fiscal year in the project input.projectId
+    if (!projectId) {
+      throw new BadRequestException();
+    }
+
+    const id = generate();
+    const status: BudgetStatus = BudgetStatus.Pending;
+    const acls = {
+      canEditStatus: true,
+      canEditRecords: true,
+      canReadStatus: true,
+      canReadRecords: true,
+    };
+
+    try {
+      await this.db.createNode({
+        session,
+        input: { id, status, ...input },
+        acls,
+        type: Budget.classType,
+      });
+
+      this.logger.info(`Created Budget`, {
+        id,
+        userId: session.userId,
+      });
+
+      //connect budget to project
+      const query = `
+      MATCH
+        (project:Project {id: $projectId, active: true}),
+        (budget:Budget {id: $id, active: true})
+      CREATE (project)-[:budget {active: true, createdAt: datetime()}]->(budget)
+    `;
+      await this.db
+        .query()
+        .raw(query, {
+          projectId,
+          id,
+        })
+        .first();
+
+      // on Init, create a budget will create a budget record for each org and each fiscal year in the project input.projectId
+      const _project = await this.projectService.readOne(projectId, session);
+
+      const result = await this.readOne(id, session);
+
+      return result;
+    } catch {
+      this.logger.error(`Could not create Budget`, {
+        id,
+        userId: session.userId,
+      });
+      throw new Error('Could not create Budget ');
+    }
   }
 
-  async readOne(_langId: string, _session: ISession): Promise<Budget> {
-    throw new NotImplementedException();
+  async readOne(id: string, session: ISession): Promise<Budget> {
+    this.logger.info(`Query readOne Budget: `, {
+      id,
+      userId: session.userId,
+    });
+
+    const result = await this.db.readProperties({
+      session,
+      id,
+      props: ['id', 'createdAt', 'status'],
+      nodevar: 'budget',
+    });
+
+    if (!result) {
+      this.logger.error(`Could not find budget:  `, {
+        id,
+        userId: session.userId,
+      });
+      throw new NotFoundException('Could not find budget');
+    }
+
+    let budget = result as any;
+
+    budget.status = result.status.value;
+    budget.id = result.id.value;
+    budget.createdAt = result.createdAt.value;
+
+    //TODO get list of RecordIds, make array and return.
+    budget = budget as Budget;
+    return budget;
   }
 
   async list(
-    _input: BudgetListInput,
-    _session: ISession
+    { page, count, sort, order, filter }: BudgetListInput,
+    session: ISession
   ): Promise<BudgetListOutput> {
-    throw new NotImplementedException();
+    const result = await this.db.list<Budget>({
+      session,
+      nodevar: 'budget',
+      aclReadProp: 'canReadBudgetList',
+      aclEditProp: 'canCreateBudget',
+      props: ['status'],
+      input: {
+        page,
+        count,
+        sort,
+        order,
+        filter,
+      },
+    });
+
+    return {
+      items: result.items,
+      hasMore: result.hasMore,
+      total: result.total,
+    };
   }
 
-  async update(_input: UpdateBudget, _session: ISession): Promise<Budget> {
-    throw new NotImplementedException();
+  async update(input: UpdateBudget, session: ISession): Promise<Budget> {
+    const budget = await this.readOne(input.id, session);
+
+    return this.db.updateProperties({
+      session,
+      object: budget,
+      props: ['status'],
+      changes: input,
+      nodevar: 'budget',
+    });
   }
 
   async delete(id: string, session: ISession): Promise<void> {
     const budget = await this.readOne(id, session);
 
     // cascade delete each budget record in this budget
-    await Promise.all(
-      budget.records.map(async br => {
-        if (br.value) {
-          await this.deleteRecord(br.value, session);
-        }
-      })
-    );
+    if (budget.records) {
+      await Promise.all(
+        budget.records.map(async br => {
+          if (br.value) {
+            await this.deleteRecord(br.value, session);
+          }
+        })
+      );
+    }
     if (!budget) {
       throw new NotFoundException('Budget not found');
     }
     await this.db.deleteNode({
       session,
       object: budget,
-      aclEditProp: 'canEditBudget',
+      aclEditProp: 'canCreateBudget',
     });
   }
 
   async createRecord(
-    { budgetId, ...input }: CreateBudgetRecord,
+    { budgetId, organizationId, ...input }: CreateBudgetRecord,
     session: ISession
   ): Promise<BudgetRecord> {
+    if (!input.fiscalYear || !organizationId) {
+      throw new BadRequestException();
+    }
+
     this.logger.info('Creating BudgetRecord', input);
     // on Init, create a budget will create a budget record for each org and each fiscal year in the project input.projectId
     const id = generate();
@@ -84,20 +202,21 @@ export class BudgetService {
       canReadFiscalYear: true,
       canReadOrganizationId: true,
     };
+
     try {
       await this.db.createNode({
         session,
-        input: { id, ...input },
+        input: { id, ...input, amount: 0 }, // on init the amount is 0
         acls,
         type: BudgetRecord.classType,
       });
 
-      this.logger.info(`Created user Budget Record`, {
+      this.logger.info(`Created Budget Record`, {
         id,
         userId: session.userId,
       });
 
-      //connect to budget
+      // connect to budget
       const query = `
       MATCH
         (budget:Budget {id: $budgetId, active: true}),
@@ -111,10 +230,27 @@ export class BudgetService {
           id,
         })
         .first();
+
+      // connect budget record to org
+      const orgQuery = `
+        MATCH
+        (organization:Organization {id: $organizationId, active: true}),
+        (br:BudgetRecord {id: $id, active: true})
+      CREATE (br)-[:organization {active: true, createdAt: datetime()}]->(organization)
+`;
+      await this.db
+        .query()
+        .raw(orgQuery, {
+          organizationId,
+          id,
+        })
+        .first();
+
       const result = await this.readOneRecord(id, session);
+
       return result;
     } catch {
-      this.logger.error(`Could not create BudgetRecord`, {
+      this.logger.error(`Could not create Budget Record`, {
         id,
         userId: session.userId,
       });
@@ -131,7 +267,7 @@ export class BudgetService {
     const result = await this.db.readProperties({
       session,
       id,
-      props: ['id', 'createdAt', 'organizationId', 'fiscalYear', 'amount'],
+      props: ['id', 'createdAt', 'fiscalYear', 'amount'],
       nodevar: 'budgetRecord',
     });
 
@@ -140,41 +276,107 @@ export class BudgetService {
         id,
         userId: session.userId,
       });
-      throw new NotFoundException('Could not find language');
+      throw new NotFoundException('Could not find budgetRecord');
     }
 
-    let br = result as any;
-    br.organizationId = result.organizationId.value;
-    br.fiscalYear = result.fiscalYear.value;
-    br.amount = result.amount.value;
-    br = br as BudgetRecord;
+    // get orgId
+    const query = `
+    MATCH
+      (acl:ACL)-[:toNode]->(br: BudgetRecord {id: $id, active: true})
+      -[:organization {active: true}]->(org:Organization {active: true})
+    RETURN
+      org, acl
+    `;
+    const orgResult = await this.db
+      .query()
+      .raw(query, {
+        id,
+      })
+      .first();
+    if (!orgResult) {
+      this.logger.error(`Could not find organization on budgetRecord: `, {
+        id,
+        userId: session.userId,
+      });
+      throw new NotFoundException(
+        'Could not find organization on budgetRecord'
+      );
+    }
 
-    return br;
+    return {
+      ...result,
+      id: result.id.value,
+      createdAt: result.createdAt.value,
+      organizationId: {
+        value: orgResult?.org.properties.id,
+        canRead: orgResult?.acl.properties.canReadOrganizationId,
+        canEdit: orgResult?.acl.properties.canEditOrganizationId,
+      },
+    };
   }
 
   async listRecords(
-    _input: BudgetRecordListInput,
-    _session: ISession
+    { page, count, sort, order, filter }: BudgetRecordListInput,
+    session: ISession
   ): Promise<BudgetRecordListOutput> {
-    throw new NotImplementedException();
+    const result = await this.db.list<BudgetRecord>({
+      session,
+      nodevar: 'budgetRecord',
+      aclReadProp: 'canReadBudgetRecordList',
+      aclEditProp: 'canCreateBudgetRecord',
+      props: ['fiscalYear', 'amount'],
+      input: {
+        page,
+        count,
+        sort,
+        order,
+        filter,
+      },
+    });
+
+    return {
+      items: result.items,
+      hasMore: result.hasMore,
+      total: result.total,
+    };
   }
 
   async updateRecord(
-    _input: UpdateBudgetRecord,
-    _session: ISession
+    { id, ...input }: UpdateBudgetRecord,
+    session: ISession
   ): Promise<BudgetRecord> {
-    throw new NotImplementedException();
+    this.logger.info('Update budget Record, ', { id, userId: session.userId });
+
+    const br = await this.readOneRecord(id, session);
+
+    try {
+      const result = await this.db.updateProperties({
+        session,
+        object: br,
+        props: ['amount'],
+        changes: { id, ...input },
+        nodevar: 'budgetRecord',
+      });
+      return result;
+    } catch (e) {
+      this.logger.error('Could not update budget Record ', {
+        id,
+        userId: session.userId,
+      });
+      throw e;
+    }
   }
 
   async deleteRecord(id: string, session: ISession): Promise<void> {
-    const br = await this.readOne(id, session);
+    const br = await this.readOneRecord(id, session);
     if (!br) {
       throw new NotFoundException('Budget Record not found');
     }
+
     await this.db.deleteNode({
       session,
       object: br,
-      aclEditProp: 'canEditBudget',
+      aclEditProp: 'canCreateBudget',
     });
   }
 }
