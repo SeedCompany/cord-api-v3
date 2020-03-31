@@ -64,7 +64,7 @@ export class UnavailabilityService {
         userId,
         id,
       })
-      .first();
+      .run();
 
     return await this.readOne(id, session);
   }
