@@ -363,9 +363,8 @@ export class BudgetService {
         id,
         userId: session.userId,
       });
+      throw e;
     }
-
-    return this.readOneRecord(id, session);
   }
 
   async deleteRecord(id: string, session: ISession): Promise<void> {

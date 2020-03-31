@@ -49,27 +49,23 @@ describe('Budget e2e', () => {
     // create budget first
     const budget = await createBudget(app, { projectId: project.id });
 
-    try {
-      const { budget: actual } = await app.graphql.query(
-        gql`
-          query budget($id: ID!) {
-            budget(id: $id) {
-              ...budget
-            }
+    const { budget: actual } = await app.graphql.query(
+      gql`
+        query budget($id: ID!) {
+          budget(id: $id) {
+            ...budget
           }
-          ${fragments.budget}
-        `,
-        {
-          id: budget.id,
         }
-      );
+        ${fragments.budget}
+      `,
+      {
+        id: budget.id,
+      }
+    );
 
-      expect(actual.id).toBe(budget.id);
-      expect(isValid(actual.id)).toBe(true);
-      expect(actual.status).toEqual(budget.status);
-    } catch (e) {
-      fail();
-    }
+    expect(actual.id).toBe(budget.id);
+    expect(isValid(actual.id)).toBe(true);
+    expect(actual.status).toEqual(budget.status);
   });
 
   it('update budget', async () => {
@@ -108,24 +104,21 @@ describe('Budget e2e', () => {
     // create budget first
     const budget = await createBudget(app, { projectId: project.id });
 
-    try {
-      const result = await app.graphql.mutate(
-        gql`
-          mutation deleteBudget($id: ID!) {
-            deleteBudget(id: $id)
-          }
-        `,
-        {
-          id: budget.id,
+    const result = await app.graphql.mutate(
+      gql`
+        mutation deleteBudget($id: ID!) {
+          deleteBudget(id: $id)
         }
-      );
-      const actual: Budget | undefined = result.deleteBudget;
-      expect(actual).toBeTruthy();
-    } catch (e) {
-      fail();
-    }
-    try {
-      await app.graphql.query(
+      `,
+      {
+        id: budget.id,
+      }
+    );
+    const actual: Budget | undefined = result.deleteBudget;
+    expect(actual).toBeTruthy();
+
+    await expect(
+      app.graphql.query(
         gql`
           query budget($id: ID!) {
             budget(id: $id) {
@@ -137,10 +130,8 @@ describe('Budget e2e', () => {
         {
           id: budget.id,
         }
-      );
-    } catch (e) {
-      expect(e.status).toBe(404);
-    }
+      )
+    ).rejects.toThrowError();
   });
 });
 
@@ -165,8 +156,9 @@ describe('BudgetRecord e2e', () => {
     budget = await createBudget(app, { projectId: project.id });
   });
 
-  afterAll(async () => {
+  afterAll(async done => {
     await app.close();
+    done();
   });
 
   it('create a budgetRecord', async () => {
@@ -186,27 +178,23 @@ describe('BudgetRecord e2e', () => {
       fiscalYear: 2025,
     });
 
-    try {
-      const { budgetRecord: actual } = await app.graphql.query(
-        gql`
-          query budgetRecord($id: ID!) {
-            budgetRecord(id: $id) {
-              ...budgetRecord
-            }
+    const { budgetRecord: actual } = await app.graphql.query(
+      gql`
+        query budgetRecord($id: ID!) {
+          budgetRecord(id: $id) {
+            ...budgetRecord
           }
-          ${fragments.budgetRecord}
-        `,
-        {
-          id: br.id,
         }
-      );
+        ${fragments.budgetRecord}
+      `,
+      {
+        id: br.id,
+      }
+    );
 
-      expect(actual.id).toBe(br.id);
-      expect(isValid(actual.id)).toBe(true);
-      expect(actual.fiscalYear).toEqual(br.fiscalYear);
-    } catch (e) {
-      fail();
-    }
+    expect(actual.id).toBe(br.id);
+    expect(isValid(actual.id)).toBe(true);
+    expect(actual.fiscalYear).toEqual(br.fiscalYear);
   });
 
   it('update budgetRecord', async () => {
@@ -254,24 +242,21 @@ describe('BudgetRecord e2e', () => {
       fiscalYear: 2025,
     });
 
-    try {
-      const result = await app.graphql.mutate(
-        gql`
-          mutation deleteBudgetRecord($id: ID!) {
-            deleteBudgetRecord(id: $id)
-          }
-        `,
-        {
-          id: budgetRecord.id,
+    const result = await app.graphql.mutate(
+      gql`
+        mutation deleteBudgetRecord($id: ID!) {
+          deleteBudgetRecord(id: $id)
         }
-      );
-      const actual: BudgetRecord | undefined = result.deleteBudgetRecord;
-      expect(actual).toBeTruthy();
-    } catch (e) {
-      fail();
-    }
-    try {
-      await app.graphql.query(
+      `,
+      {
+        id: budgetRecord.id,
+      }
+    );
+    const actual: BudgetRecord | undefined = result.deleteBudgetRecord;
+    expect(actual).toBeTruthy();
+
+    await expect(
+      app.graphql.query(
         gql`
           query budgetRecord($id: ID!) {
             budgetRecord(id: $id) {
@@ -283,9 +268,7 @@ describe('BudgetRecord e2e', () => {
         {
           id: budgetRecord.id,
         }
-      );
-    } catch (e) {
-      expect(e.status).toBe(404);
-    }
+      )
+    ).rejects.toThrowError();
   });
 });
