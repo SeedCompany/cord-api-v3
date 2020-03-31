@@ -100,18 +100,6 @@
     "type-fest": "^0.12.0",
     "typescript": "^3.8.3"
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged",
-      "post-commit": "git update-index --again"
-    }
-  },
-  "lint-staged": {
-    "{src,tools}/**/*.{ts,tsx}": [
-      "eslint --ext .ts,.tsx --fix --max-warnings 0",
-      "git add"
-    ]
-  },
   "jest": {
     "moduleFileExtensions": [
       "js",
