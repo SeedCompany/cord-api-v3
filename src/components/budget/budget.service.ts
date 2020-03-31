@@ -372,10 +372,11 @@ export class BudgetService {
     if (!br) {
       throw new NotFoundException('Budget Record not found');
     }
+
     await this.db.deleteNode({
       session,
       object: br,
-      aclEditProp: 'canEditBudget',
+      aclEditProp: 'canCreateBudget',
     });
   }
 }

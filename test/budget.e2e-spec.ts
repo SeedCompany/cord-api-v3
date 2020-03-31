@@ -22,6 +22,8 @@ import { createProject } from './utility/create-project';
 describe('Budget e2e', () => {
   let app: TestApp;
   let project: Project;
+  let budget: Budget;
+  let org: Organization;
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -34,6 +36,8 @@ describe('Budget e2e', () => {
       mouEnd: DateTime.fromISO('2025-01-01'),
     };
     project = await createProject(app, projectInput);
+    org = await createOrganization(app);
+    budget = await createBudget(app, { projectId: project.id });
   });
 
   afterAll(async () => {
@@ -132,33 +136,6 @@ describe('Budget e2e', () => {
         }
       )
     ).rejects.toThrowError();
-  });
-});
-
-describe('BudgetRecord e2e', () => {
-  let app: TestApp;
-  let project: Project;
-  let budget: Budget;
-  let org: Organization;
-
-  beforeAll(async () => {
-    app = await createTestApp();
-    await createSession(app);
-    await createUser(app);
-    const projectInput: CreateProject = {
-      name: 'Super Secret Project',
-      type: ProjectType.Translation,
-      mouStart: DateTime.fromISO('2020-02-01'),
-      mouEnd: DateTime.fromISO('2025-01-01'),
-    };
-    project = await createProject(app, projectInput);
-    org = await createOrganization(app);
-    budget = await createBudget(app, { projectId: project.id });
-  });
-
-  afterAll(async done => {
-    await app.close();
-    done();
   });
 
   it('create a budgetRecord', async () => {
