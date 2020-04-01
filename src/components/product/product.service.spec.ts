@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
+import { ISession } from '../../common';
 import { CoreModule, DatabaseService, LoggerModule } from '../../core';
 import {
   BibleBook,
@@ -9,6 +10,7 @@ import {
   ProductMethodology,
   ProductPurpose,
   ProductType,
+  UpdateProduct,
 } from './dto';
 import { ProductService } from './product.service';
 
@@ -101,17 +103,13 @@ describe('ProductService', () => {
 
   it('should update product node', async () => {
     // eslint-disable-next-line @typescript-eslint/unbound-method
-    productService.readOne = jest.fn().mockReturnValue(updateTestProduct);
+    jest
+      .spyOn(productService, 'readOne')
+      .mockImplementation(() => Promise.resolve(updateTestProduct as Product));
     const product = await productService.update(
-      {
-        id,
-        type: ProductType.JesusFilm,
-        books: [BibleBook.Exodus],
-        mediums: [ProductMedium.Web],
-        purposes: [ProductPurpose.ChurchMaturity],
-        methodology: ProductMethodology.OtherWritten,
-      },
-      mockSession
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      {} as UpdateProduct,
+      mockSession as ISession
     );
     expect(product.type).toEqual(updateTestProduct.type);
     expect(product.methodology).toEqual(updateTestProduct.methodology);
