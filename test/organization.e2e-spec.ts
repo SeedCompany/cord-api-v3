@@ -3,6 +3,7 @@ import * as faker from 'faker';
 import { times } from 'lodash';
 import { generate, isValid } from 'shortid';
 import { Organization } from '../src/components/organization';
+import { DatabaseService } from '../src/core';
 import {
   createOrganization,
   createSession,
@@ -25,6 +26,27 @@ describe('Organization e2e', () => {
     await app.close();
   });
 
+  it('should have unique name', async () => {
+    const deleteQry = 'MATCH (n:OrgName) delete n';
+    const qry = 'CREATE (org:OrgName { value: "seedCompany", active: true})';
+    const db = app.get(DatabaseService);
+    const runQry = async (db: DatabaseService, query: string) => {
+      await db
+        .query()
+        .raw(query)
+        .run();
+    };
+    await runQry(db, deleteQry);
+    await runQry(db, qry);
+    try {
+      await runQry(db, qry);
+    } catch (error) {
+      expect(error.code).toBe(
+        'Neo.ClientError.Schema.ConstraintValidationFailed'
+      );
+    }
+    await runQry(db, deleteQry);
+  });
   // READ ORG
   it('create & read organization by id', async () => {
     const org = await createOrganization(app);
