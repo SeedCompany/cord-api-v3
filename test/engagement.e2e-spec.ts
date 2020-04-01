@@ -1,5 +1,8 @@
 import { createSession, createTestApp, createUser, TestApp } from './utility';
-import { createLanguageEngagement } from './utility/create-language-engagement';
+import {
+  createInternshipEngagement,
+  createLanguageEngagement,
+} from './utility/create-engagement';
 
 describe('Engagement e2e', () => {
   let app: TestApp;
@@ -17,5 +20,10 @@ describe('Engagement e2e', () => {
   it('create a language engagement', async () => {
     const lanaugeEngagement = await createLanguageEngagement(app);
     expect(lanaugeEngagement.id).toBeDefined();
+  });
+
+  it('create a internship engagement', async () => {
+    const internEngagement = await createInternshipEngagement(app);
+    expect(internEngagement.id).toBeDefined();
   });
 });
