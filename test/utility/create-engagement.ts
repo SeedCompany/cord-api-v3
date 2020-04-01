@@ -30,6 +30,7 @@ export async function createLanguageEngagement(
     startDate: DateTime.local(),
     endDate: DateTime.local(),
     completeDate: DateTime.local(),
+    ...input,
   };
 
   const result = await app.graphql.mutate(
@@ -76,6 +77,7 @@ export async function createInternshipEngagement(
     startDate: DateTime.local(),
     endDate: DateTime.local(),
     completeDate: DateTime.local(),
+    ...input,
   };
 
   const result = await app.graphql.mutate(
