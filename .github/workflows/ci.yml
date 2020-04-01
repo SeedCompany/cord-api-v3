@@ -6,7 +6,33 @@ on:
       - master
 
 jobs:
-  build:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12.x
+
+      - name: Yarn cache
+        uses: actions/cache@v1
+        id: yarn-cache
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}-${{ hashFiles('.yarnrc.yml') }}
+
+      - name: Install dependencies
+        run: yarn install
+        if: steps.yarn-cache.outputs.cache-hit != 'true'
+
+      - name: Check TypeScript
+        run: yarn type-check
+
+      - name: Lint
+        run: yarn eslint --ext .ts,.tsx --max-warnings 0 .
+
+  test:
     runs-on: ubuntu-latest
 
     services:
@@ -25,27 +51,16 @@ jobs:
         with:
           node-version: 12.x
 
-      - name: Get yarn cache directory
-        id: yarn_cache_dir
-        run: |
-          echo "::set-output name=dir::$(yarn config get cacheFolder)"
       - name: Yarn cache
         uses: actions/cache@v1
         id: yarn-cache
         with:
-          path: ${{ steps.yarn_cache_dir.outputs['dir'] }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
+          path: node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}-${{ hashFiles('.yarnrc.yml') }}
 
       - name: Install dependencies
         run: yarn install
-
-      - name: Check TypeScript
-        run: yarn type-check
-
-      - name: Lint
-        run: yarn eslint --ext .ts,.tsx --max-warnings 0 .
+        if: steps.yarn-cache.outputs.cache-hit != 'true'
 
       - name: Tests
         run: yarn test:e2e --runInBand
