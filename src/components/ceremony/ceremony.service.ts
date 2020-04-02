@@ -18,7 +18,6 @@ export class CeremonyService {
   ) {}
 
   async readOne(id: string, session: ISession): Promise<Ceremony> {
-    //console.log('here i am');
     const result = await this.db.readProperties({
       session,
       id,
@@ -113,7 +112,6 @@ export class CeremonyService {
   async update(input: UpdateCeremony, session: ISession): Promise<Ceremony> {
     const object = await this.readOne(input.id, session);
 
-    //console.log('here in update');
     return this.db.updateProperties({
       session,
       object,
