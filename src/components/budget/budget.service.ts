@@ -111,21 +111,55 @@ export class BudgetService {
       throw new NotFoundException('Could not find budget');
     }
 
-    let budget = result as any;
-
-    budget.status = result.status.value;
-    budget.id = result.id.value;
-    budget.createdAt = result.createdAt.value;
-
-    //TODO get list of RecordIds, make array and return.
-    budget = budget as Budget;
-    return budget;
+    return {
+      id: result.id.value,
+      createdAt: result.createdAt.value,
+      status: result.status.value,
+    };
   }
 
   async list(
     { page, count, sort, order, filter }: BudgetListInput,
     session: ISession
   ): Promise<BudgetListOutput> {
+    const { projectId, ...rest } = filter;
+    this.logger.info('Listing budgets on projectId ', {
+      projectId,
+      userId: session.userId,
+    });
+
+    const query = `
+      MATCH
+        (token:Token {active: true, value: $token})
+        <-[:token {active: true}]-
+        (requestingUser:User {
+          active: true,
+          id: $requestingUserId
+        }),
+        (project:Project {id: $projectId, active: true, owningOrgId: $owningOrgId})
+        -[:budget]->(budget:Budget {active:true})-[:status]->(status:Property)
+      WITH COUNT(budget) as total, project, budget
+          MATCH (budget {active: true})-[:status {active:true }]->(status:Property {active: true})
+          RETURN total, budget.id as budgetId, status.value as status
+          ORDER BY ${sort} ${order}
+          SKIP $skip LIMIT $count
+      `;
+    const projBudgets = await this.db
+      .query()
+      .raw(query, {
+        token: session.token,
+        requestingUserId: session.userId,
+        owningOrgId: session.owningOrgId,
+        projectId,
+        skip: (page - 1) * count,
+        count,
+      })
+      .run();
+
+    const items = await Promise.all(
+      projBudgets.map(async budget => this.readOne(budget.budgetId, session))
+    );
+
     const result = await this.db.list<Budget>({
       session,
       nodevar: 'budget',
@@ -137,12 +171,12 @@ export class BudgetService {
         count,
         sort,
         order,
-        filter,
+        filter: rest,
       },
     });
 
     return {
-      items: result.items,
+      items: items,
       hasMore: result.hasMore,
       total: result.total,
     };

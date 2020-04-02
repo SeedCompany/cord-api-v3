@@ -46,7 +46,7 @@ export class BudgetResolver {
   @Query(() => BudgetListOutput, {
     description: 'Look up budgets by projectId',
   })
-  async ceremonies(
+  async budgets(
     @Session() session: ISession,
     @Args({
       name: 'input',

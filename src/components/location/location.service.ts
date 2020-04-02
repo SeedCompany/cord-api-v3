@@ -92,7 +92,7 @@ export class LocationService {
     return {
       items,
       total: items.length,
-      hasMore: false, // later
+      hasMore: false, // TODO
     };
   }
 

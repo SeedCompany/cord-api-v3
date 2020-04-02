@@ -1,4 +1,5 @@
 import { gql } from 'apollo-server-core';
+import { times } from 'lodash';
 import { DateTime } from 'luxon';
 import { isValid } from 'shortid';
 import { Budget, BudgetRecord } from '../src/components/budget/dto/budget';
@@ -247,5 +248,57 @@ describe('Budget e2e', () => {
         }
       )
     ).rejects.toThrowError();
+  });
+
+  it.only('lists budgetRecords for a budget', async () => {
+    // create 4 budget records first
+    const numRecords = 4;
+    await Promise.all(
+      times(numRecords).map(() =>
+        createBudgetRecord(app, {
+          budgetId: budget.id,
+          organizationId: org.id,
+          fiscalYear: 2025,
+        })
+      )
+    );
+    const { budgetRecords } = await app.graphql.query(gql`
+      query {
+        budgetRecords (input: { filter: { budgetId : "${budget.id}" }}) {
+          items {
+            ...budgetRecord
+          }
+          hasMore
+          total
+        }
+      }
+      ${fragments.budgetRecord}
+    `);
+
+    expect(budgetRecords.items.length).toBeGreaterThanOrEqual(numRecords);
+  });
+
+  it('lists budget for a projectId', async () => {
+    // create budget first
+    // create 4 budget first
+    const numBudget = 4;
+    await Promise.all(
+      times(numBudget).map(() => createBudget(app, { projectId: project.id }))
+    );
+
+    const { budgets } = await app.graphql.query(gql`
+      query {
+        budgets (input: { filter: { projectId : "${project.id}" }}) {
+          items {
+            ...budget
+          }
+          hasMore
+          total
+        }
+      }
+      ${fragments.budget}
+    `);
+
+    expect(budgets.items.length).toBeGreaterThanOrEqual(numBudget);
   });
 });
