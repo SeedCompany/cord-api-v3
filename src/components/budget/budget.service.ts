@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { generate } from 'shortid';
-import { ISession } from '../../common';
+import { ISession, Order } from '../../common';
 import { DatabaseService, ILogger, Logger } from '../../core';
 import { ProjectService } from '../project/project.service';
 import {
@@ -111,10 +111,29 @@ export class BudgetService {
       throw new NotFoundException('Could not find budget');
     }
 
+    // get budgetRecordIds
+    const brs = await this.listRecords(
+      {
+        sort: 'fiscalYear',
+        order: Order.ASC,
+        page: 1,
+        count: 25,
+        filter: { budgetId: id },
+      },
+      session
+    );
+
+    let records;
+    if (brs.items) {
+      records = brs.items.map((row: any) => {
+        return { value: row.id, canRead: true, canEdit: true };
+      });
+    }
     return {
       id: result.id.value,
       createdAt: result.createdAt.value,
       status: result.status.value,
+      records,
     };
   }
 

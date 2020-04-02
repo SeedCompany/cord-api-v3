@@ -73,6 +73,39 @@ describe('Budget e2e', () => {
     expect(actual.status).toEqual(budget.status);
   });
 
+  it('read one budget by id, has records as a list of recordIds', async () => {
+    // create budget first
+    const budget = await createBudget(app, { projectId: project.id });
+    const numRecords = 4;
+    await Promise.all(
+      times(numRecords).map(() =>
+        createBudgetRecord(app, {
+          budgetId: budget.id,
+          organizationId: org.id,
+          fiscalYear: 2025,
+        })
+      )
+    );
+
+    const { budget: actual } = await app.graphql.query(
+      gql`
+        query budget($id: ID!) {
+          budget(id: $id) {
+            ...budget
+          }
+        }
+        ${fragments.budget}
+      `,
+      {
+        id: budget.id,
+      }
+    );
+
+    expect(actual.id).toBe(budget.id);
+    expect(isValid(actual.id)).toBe(true);
+    expect(actual.records.length).toEqual(numRecords);
+  });
+
   it('update budget', async () => {
     const budgetStatusNew = 'Current';
 
@@ -278,7 +311,7 @@ describe('Budget e2e', () => {
     expect(budgetRecords.items.length).toBeGreaterThanOrEqual(numRecords);
   });
 
-  it.only('lists budget for a projectId', async () => {
+  it('lists budget for a projectId', async () => {
     // create budget first
     // create 4 budget first
     const numBudget = 4;
