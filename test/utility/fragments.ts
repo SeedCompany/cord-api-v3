@@ -273,6 +273,11 @@ export const fragments = {
       id
       createdAt
       status
+      records {
+        value
+        canEdit
+        canRead
+      }
     }
   `,
   budgetRecord: gql`

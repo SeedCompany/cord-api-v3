@@ -42,16 +42,10 @@ export abstract class SecuredBudgetList extends SecuredList(Budget) {}
 @InputType()
 export abstract class BudgetRecordFilters {
   @Field(() => ID, {
-    description: 'Only budget records matching this fiscalYEar',
+    description: 'Only budget records matching this budgetId',
     nullable: true,
   })
-  readonly fiscalYear?: string;
-
-  @Field({
-    description: 'Only budget records matching this org',
-    nullable: true,
-  })
-  readonly organizationId?: string;
+  readonly budgetId?: string;
 }
 
 @InputType()
