@@ -122,7 +122,7 @@ export class BudgetService {
     { page, count, sort, order, filter }: BudgetListInput,
     session: ISession
   ): Promise<BudgetListOutput> {
-    const { projectId, ...rest } = filter;
+    const { projectId } = filter;
     this.logger.info('Listing budgets on projectId ', {
       projectId,
       userId: session.userId,
@@ -137,7 +137,7 @@ export class BudgetService {
           id: $requestingUserId
         }),
         (project:Project {id: $projectId, active: true, owningOrgId: $owningOrgId})
-        -[:budget]->(budget:Budget {active:true})-[:status]->(status:Property)
+        -[:budget]->(budget:Budget {active:true})
       WITH COUNT(budget) as total, project, budget
           MATCH (budget {active: true})-[:status {active:true }]->(status:Property {active: true})
           RETURN total, budget.id as budgetId, status.value as status
@@ -160,25 +160,10 @@ export class BudgetService {
       projBudgets.map(async budget => this.readOne(budget.budgetId, session))
     );
 
-    const result = await this.db.list<Budget>({
-      session,
-      nodevar: 'budget',
-      aclReadProp: 'canReadBudgetList',
-      aclEditProp: 'canCreateBudget',
-      props: ['status'],
-      input: {
-        page,
-        count,
-        sort,
-        order,
-        filter: rest,
-      },
-    });
-
     return {
       items: items,
-      hasMore: result.hasMore,
-      total: result.total,
+      hasMore: false, // TODO
+      total: items.length,
     };
   }
 
@@ -353,25 +338,50 @@ export class BudgetService {
     { page, count, sort, order, filter }: BudgetRecordListInput,
     session: ISession
   ): Promise<BudgetRecordListOutput> {
-    const result = await this.db.list<BudgetRecord>({
-      session,
-      nodevar: 'budgetRecord',
-      aclReadProp: 'canReadBudgetRecordList',
-      aclEditProp: 'canCreateBudgetRecord',
-      props: ['fiscalYear', 'amount'],
-      input: {
-        page,
-        count,
-        sort,
-        order,
-        filter,
-      },
+    const { budgetId } = filter;
+    this.logger.info('Listing budget records on budgetId ', {
+      budgetId,
+      userId: session.userId,
     });
 
+    const query = `
+      MATCH
+        (token:Token {active: true, value: $token})
+        <-[:token {active: true}]-
+        (requestingUser:User {
+          active: true,
+          id: $requestingUserId
+        }),
+        (budget:Budget {id: $budgetId, active: true, owningOrgId: $owningOrgId})
+        -[:record]->(budgetRecord:BudgetRecord {active:true})
+      WITH COUNT(budgetRecord) as total, budgetRecord
+          MATCH (budgetRecord {active: true})-[:amount {active:true }]->(amount:Property {active: true}),
+          (budgetRecord)-[:organization { active: true }]->(org:Organization {active:true}),
+          (budgetRecord)-[:fiscalYear {active: true}]->(fiscalYear {active: true})
+          RETURN total, budgetRecord.id as budgetRecordId, fiscalYear.value as fiscalYear, org.id as orgId
+          ORDER BY ${sort} ${order}
+          SKIP $skip LIMIT $count
+      `;
+    const brs = await this.db
+      .query()
+      .raw(query, {
+        token: session.token,
+        requestingUserId: session.userId,
+        owningOrgId: session.owningOrgId,
+        budgetId,
+        skip: (page - 1) * count,
+        count,
+      })
+      .run();
+
+    const items = await Promise.all(
+      brs.map(async br => this.readOneRecord(br.budgetRecordId, session))
+    );
+
     return {
-      items: result.items,
-      hasMore: result.hasMore,
-      total: result.total,
+      items: items,
+      hasMore: false, // TODO
+      total: items.length,
     };
   }
 

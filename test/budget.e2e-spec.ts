@@ -250,7 +250,7 @@ describe('Budget e2e', () => {
     ).rejects.toThrowError();
   });
 
-  it.only('lists budgetRecords for a budget', async () => {
+  it('lists budgetRecords for a budget', async () => {
     // create 4 budget records first
     const numRecords = 4;
     await Promise.all(
@@ -278,7 +278,7 @@ describe('Budget e2e', () => {
     expect(budgetRecords.items.length).toBeGreaterThanOrEqual(numRecords);
   });
 
-  it('lists budget for a projectId', async () => {
+  it.only('lists budget for a projectId', async () => {
     // create budget first
     // create 4 budget first
     const numBudget = 4;
