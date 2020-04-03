@@ -1,7 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenError } from 'apollo-server-core';
 import { generate } from 'shortid';
 import { ISession, Sensitivity } from '../../common';
-import { DatabaseService, ILogger, Logger } from '../../core';
+import { DatabaseService, ILogger, Logger, OnIndex } from '../../core';
 import {
   CreateLanguage,
   Language,
@@ -16,6 +17,52 @@ export class LanguageService {
     private readonly db: DatabaseService,
     @Logger('language:service') private readonly logger: ILogger
   ) {}
+
+  @OnIndex()
+  async createIndexes() {
+    const constraints = [
+      // LANGUAGE NODE
+      'CREATE CONSTRAINT ON (n:Language) ASSERT EXISTS(n.id)',
+      'CREATE CONSTRAINT ON (n:Language) ASSERT n.id IS UNIQUE',
+      'CREATE CONSTRAINT ON (n:Language) ASSERT EXISTS(n.active)',
+      'CREATE CONSTRAINT ON (n:Language) ASSERT EXISTS(n.createdAt)',
+      'CREATE CONSTRAINT ON (n:Language) ASSERT EXISTS(n.owningOrgId)',
+
+      // NAME REL
+      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.active)',
+      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
+
+      // NAME NODE
+      'CREATE CONSTRAINT ON (n:LanguageName) ASSERT EXISTS(n.value)',
+      'CREATE CONSTRAINT ON (n:LanguageName) ASSERT n.value IS UNIQUE',
+
+      // DISPLAYNAME REL
+      'CREATE CONSTRAINT ON ()-[r:displayName]-() ASSERT EXISTS(r.active)',
+      'CREATE CONSTRAINT ON ()-[r:displayName]-() ASSERT EXISTS(r.createdAt)',
+
+      // DISPLAYNAME NODE
+      'CREATE CONSTRAINT ON (n:LanguageDisplayName) ASSERT EXISTS(n.value)',
+      'CREATE CONSTRAINT ON (n:LanguageDisplayName) ASSERT n.value IS UNIQUE',
+
+      // RODNUMBER REL
+      'CREATE CONSTRAINT ON ()-[r:rodNumber]-() ASSERT EXISTS(r.active)',
+      'CREATE CONSTRAINT ON ()-[r:rodNumber]-() ASSERT EXISTS(r.createdAt)',
+
+      // RODNUMBER NODE
+      'CREATE CONSTRAINT ON (n:LanguageRodNumber) ASSERT EXISTS(n.value)',
+      'CREATE CONSTRAINT ON (n:LanguageRodNumber) ASSERT n.value IS UNIQUE',
+
+      // PROPERTY NODE
+      //'CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.value)',
+      //'CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.active)',
+    ];
+    for (const query of constraints) {
+      await this.db
+        .query()
+        .raw(query)
+        .run();
+    }
+  }
 
   async create(input: CreateLanguage, session: ISession): Promise<Language> {
     this.logger.info(
@@ -49,12 +96,27 @@ export class LanguageService {
         aclEditProp: 'canCreateLang',
       });
 
+      //set Property Labels
+      const query = `
+        MATCH
+          (lang:Language {id: $id, active: true})-[:name]->(nameProp:Property),
+          (lang {id: $id, active: true})-[:displayName]->(displayProp:Property),
+          (lang {id: $id, active: true})-[:rodNumber]->(rodNumberProp:Property)
+        SET nameProp :LanguageName, displayProp :LanguageDisplayName, rodNumberProp :LanguageRodNumber
+      `;
+      await this.db
+        .query()
+        .raw(query, {
+          id,
+        })
+        .run();
+
       const result = await this.readOne(id, session);
 
       return result;
     } catch (e) {
       this.logger.error(`Could not create`, { ...input, exception: e });
-      throw new Error('Could not create language');
+      throw new ForbiddenError('Could not create language');
     }
   }
 

@@ -1,6 +1,6 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
-import { isValid } from 'shortid';
+import { generate, isValid } from 'shortid';
 import { CreateLanguage, Language } from '../../src/components/language';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
@@ -10,13 +10,13 @@ export async function createLanguage(
   input: Partial<CreateLanguage> = {}
 ) {
   const language: CreateLanguage = {
-    name: faker.address.country(),
-    displayName: 'lang',
-    beginFiscalYear: 2019,
-    ethnologueName: 'ethno1',
-    ethnologuePopulation: 20000,
-    organizationPopulation: 500000,
-    rodNumber: input.rodNumber || 12,
+    name: faker.address.country() + generate(),
+    displayName: faker.company.companyName(),
+    beginFiscalYear: faker.random.number(4),
+    ethnologueName: faker.finance.accountName(),
+    ethnologuePopulation: faker.random.number(5),
+    organizationPopulation: faker.random.number(10),
+    rodNumber: faker.random.number(100000),
     ...input,
   };
 
