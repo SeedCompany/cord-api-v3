@@ -24,6 +24,12 @@ describe('Language e2e', () => {
     await app.close();
   });
 
+  it('should have unique name', async () => {
+    const name = faker.company.companyName();
+    await createLanguage(app, { name });
+    await expect(createLanguage(app, { name })).rejects.toThrowError();
+  });
+
   it('create a language', async () => {
     const language = await createLanguage(app);
     expect(language.id).toBeDefined();
@@ -124,7 +130,9 @@ describe('Language e2e', () => {
     // create a bunch of languages
     const numLanguages = 10;
     await Promise.all(
-      times(numLanguages).map(() => createLanguage(app, { name: 'Italian' }))
+      times(numLanguages).map(() =>
+        createLanguage(app, { name: faker.address.country() })
+      )
     );
     // test reading new lang
     const { languages } = await app.graphql.query(gql`

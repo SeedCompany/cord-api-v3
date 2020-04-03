@@ -97,10 +97,11 @@ export class LanguageService {
 
       //set Property Labels
       const query = `
-        MATCH (lang:Language {id: $id})-[:name]->(nameProp:Property),
-        (lang)-[:displayName]->(displayNameProp:Property),
-        (lang)-[:rodNumber]->(rodNumberProp:Property)
-        SET nameProp: LanguageName, displayNameProp: LanguageDisplayName, rodNumberProp: LanguageRodNumber
+        MATCH
+          (lang:Language {id: $id, active: true})-[:name]->(nameProp:Property),
+          (lang {id: $id, active: true})-[:displayName]->(displayProp:Property),
+          (lang {id: $id, active: true})-[:rodNumber]->(rodNumberProp:Property)
+        SET nameProp :LanguageName, displayProp :LanguageDisplayName, rodNumberProp :LanguageRodNumber
       `;
       await this.db
         .query()
