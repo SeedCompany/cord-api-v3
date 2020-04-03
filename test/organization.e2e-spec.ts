@@ -25,15 +25,10 @@ describe('Organization e2e', () => {
     await app.close();
   });
 
-  it.only('should have unique name', async () => {
-    try {
-      await createOrganization(app, { name: 'SeedCompany' });
-      await createOrganization(app, { name: 'SeedCompany' });
-    } catch (error) {
-      expect(error.code).toBe(
-        'Neo.ClientError.Schema.ConstraintValidationFailed'
-      );
-    }
+  it('should have unique name', async () => {
+    const name = faker.company.companyName();
+    await createOrganization(app, { name });
+    await expect(createOrganization(app, { name })).rejects.toThrowError();
   });
   // READ ORG
   it('create & read organization by id', async () => {
