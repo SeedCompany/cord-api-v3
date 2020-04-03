@@ -33,6 +33,7 @@ const mockDbService = {
   query: () => ({
     raw: () => ({
       run: () => ({}),
+      first: () => ({}),
     }),
   }),
   readProperties: () => ({}),
@@ -72,7 +73,7 @@ describe('file service', () => {
     expect(fileService).toBeDefined();
   });
 
-  it.skip('should create file node', async () => {
+  it('should create file node', async () => {
     // eslint-disable-next-line @typescript-eslint/unbound-method
     bucket.getObject = jest.fn().mockReturnValue({ data: createTestFile });
     // eslint-disable-next-line @typescript-eslint/unbound-method
@@ -96,7 +97,7 @@ describe('file service', () => {
     expect(file.name).toEqual(createTestFile.name);
   });
 
-  it.skip('should delete file node', async () => {
+  it('should delete file node', async () => {
     const mockSession = {
       token:
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODUxNjY0MTM3OTF9.xStLc8cYmOVT3ABW1b6GLuSpeoFNxrYE2o2CBmJR8-U',
@@ -122,7 +123,7 @@ describe('file service', () => {
     expect(file.id).toEqual(createTestFile.id);
   });
 
-  it.skip('should rename file node', async () => {
+  it('should rename file node', async () => {
     const mockSession = {
       token:
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODUxNjY0MTM3OTF9.xStLc8cYmOVT3ABW1b6GLuSpeoFNxrYE2o2CBmJR8-U',

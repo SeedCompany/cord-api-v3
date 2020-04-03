@@ -726,9 +726,7 @@ export class DatabaseService {
         .return([`${key}.value`, 'rel'])
         .run();
     } catch (e) {
-      this.logger.error(`createProperty error`, {
-        exception: e,
-      });
+      this.logger.error(`createProperty error`);
     }
   }
 }
