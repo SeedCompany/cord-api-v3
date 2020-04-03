@@ -586,6 +586,7 @@ export class DatabaseService {
     acls,
     baseNodeLabel,
     aclEditProp,
+    propNodeLabels = [],
   }: {
     session: ISession;
     type: Type<TObject>;
@@ -593,6 +594,7 @@ export class DatabaseService {
     acls: ACLs;
     baseNodeLabel?: string;
     aclEditProp?: string | false;
+    propNodeLabels?: string[];
   }): Promise<void> {
     await this.createBaseNode<TObject>({
       session,
@@ -609,6 +611,7 @@ export class DatabaseService {
         key,
         value,
         id,
+        propNodeLabels,
       });
     }
   }
@@ -686,37 +689,46 @@ export class DatabaseService {
     key,
     value,
     id,
+    propNodeLabels,
   }: {
     session: ISession;
     key: string;
     value: DbValue;
     id: string;
+    propNodeLabels: string[];
   }) {
-    await this.db
-      .query()
-      .match([
-        matchSession(session),
-        [
-          node('item', {
-            id,
+    const labels = propNodeLabels ? propNodeLabels : [];
+    try {
+      await this.db
+        .query()
+        .match([
+          matchSession(session),
+          [
+            node('item', {
+              id,
+              active: true,
+            }),
+          ],
+        ])
+        .create([
+          node('item'),
+          relation('out', 'rel', key, {
             active: true,
+            createdAt: DateTime.local(),
+            owningOrgId: session.owningOrgId,
           }),
-        ],
-      ])
-      .create([
-        node('item'),
-        relation('out', 'rel', key, {
-          active: true,
-          createdAt: DateTime.local(),
-          owningOrgId: session.owningOrgId,
-        }),
-        node(key, 'Property', {
-          active: true,
-          value,
-          owningOrgId: session.owningOrgId,
-        }),
-      ])
-      .return([`${key}.value`, 'rel'])
-      .run();
+          node(key, ['Property', ...labels], {
+            active: true,
+            value,
+            owningOrgId: session.owningOrgId,
+          }),
+        ])
+        .return([`${key}.value`, 'rel'])
+        .run();
+    } catch (e) {
+      this.logger.error(`createProperty error`, {
+        exception: e,
+      });
+    }
   }
 }

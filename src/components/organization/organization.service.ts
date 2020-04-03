@@ -58,12 +58,13 @@ export class OrganizationService {
         input: { id, ...input },
         acls,
         aclEditProp: 'canCreateOrg',
+        propNodeLabels: ['OrgName'],
       });
-    } catch {
+    } catch (err) {
       this.logger.error(
         `Could not create organization for user ${session.userId}`
       );
-      throw new Error('Could not create unavailability');
+      throw new Error(err);
     }
 
     this.logger.info(`organization created, id ${id}`);
