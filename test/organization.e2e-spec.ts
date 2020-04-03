@@ -25,6 +25,11 @@ describe('Organization e2e', () => {
     await app.close();
   });
 
+  it('should have unique name', async () => {
+    const name = faker.company.companyName();
+    await createOrganization(app, { name });
+    await expect(createOrganization(app, { name })).rejects.toThrowError();
+  });
   // READ ORG
   it('create & read organization by id', async () => {
     const org = await createOrganization(app);

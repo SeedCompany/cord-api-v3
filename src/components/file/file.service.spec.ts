@@ -33,6 +33,7 @@ const mockDbService = {
   query: () => ({
     raw: () => ({
       run: () => ({}),
+      first: () => ({}),
     }),
   }),
   readProperties: () => ({}),

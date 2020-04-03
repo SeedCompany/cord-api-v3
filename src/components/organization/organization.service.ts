@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
-import { DatabaseService, ILogger, Logger } from '../../core';
+import { DatabaseService, ILogger, Logger, OnIndex } from '../../core';
 import {
   CreateOrganization,
   Organization,
@@ -16,6 +16,29 @@ export class OrganizationService {
     @Logger('org:service') private readonly logger: ILogger,
     private readonly db: DatabaseService
   ) {}
+
+  @OnIndex()
+  async createIndexes() {
+    const constraints = [
+      'CREATE CONSTRAINT ON (n:Organization) ASSERT EXISTS(n.id)',
+      'CREATE CONSTRAINT ON (n:Organization) ASSERT n.id IS UNIQUE',
+      'CREATE CONSTRAINT ON (n:Organization) ASSERT EXISTS(n.active)',
+      'CREATE CONSTRAINT ON (n:Organization) ASSERT EXISTS(n.createdAt)',
+      'CREATE CONSTRAINT ON (n:Organization) ASSERT EXISTS(n.owningOrgId)',
+
+      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.active)',
+      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
+
+      'CREATE CONSTRAINT ON (n:OrgName) ASSERT EXISTS(n.value)',
+      'CREATE CONSTRAINT ON (n:OrgName) ASSERT n.value IS UNIQUE',
+    ];
+    for (const query of constraints) {
+      await this.db
+        .query()
+        .raw(query)
+        .run();
+    }
+  }
 
   async create(
     input: CreateOrganization,
@@ -36,11 +59,23 @@ export class OrganizationService {
         acls,
         aclEditProp: 'canCreateOrg',
       });
-    } catch {
+
+      const qry = `
+        MATCH
+          (org:Organization {id: "${id}", active: true})-[:name]->(orgName:Property)
+        SET orgName :OrgName
+      `;
+      await this.db
+        .query()
+        .raw(qry, {
+          id,
+        })
+        .run();
+    } catch (err) {
       this.logger.error(
         `Could not create organization for user ${session.userId}`
       );
-      throw new Error('Could not create unavailability');
+      throw err;
     }
 
     this.logger.info(`organization created, id ${id}`);
