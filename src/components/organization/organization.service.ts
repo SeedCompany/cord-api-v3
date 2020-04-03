@@ -58,13 +58,24 @@ export class OrganizationService {
         input: { id, ...input },
         acls,
         aclEditProp: 'canCreateOrg',
-        propNodeLabels: ['OrgName'],
       });
+
+      const qry = `
+        MATCH
+          (org:Organization {id: "${id}", active: true})-[:name]->(orgName:Property)
+        SET orgName :OrgName
+      `;
+      await this.db
+        .query()
+        .raw(qry, {
+          id,
+        })
+        .run();
     } catch (err) {
       this.logger.error(
         `Could not create organization for user ${session.userId}`
       );
-      throw new Error(err);
+      throw err;
     }
 
     this.logger.info(`organization created, id ${id}`);
