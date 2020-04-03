@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenError } from 'apollo-server-core';
 import { generate } from 'shortid';
 import { ISession, Sensitivity } from '../../common';
 import { DatabaseService, ILogger, Logger, OnIndex } from '../../core';
@@ -115,7 +116,7 @@ export class LanguageService {
       return result;
     } catch (e) {
       this.logger.error(`Could not create`, { ...input, exception: e });
-      throw new Error('Could not create language');
+      throw new ForbiddenError('Could not create language');
     }
   }
 

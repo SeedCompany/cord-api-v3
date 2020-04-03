@@ -1,7 +1,7 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
-import { isValid } from 'shortid';
+import { generate, isValid } from 'shortid';
 import {
   createLanguage,
   createSession,
@@ -24,15 +24,15 @@ describe('Language e2e', () => {
     await app.close();
   });
 
+  it('create a language', async () => {
+    const language = await createLanguage(app);
+    expect(language.id).toBeDefined();
+  });
+
   it('should have unique name', async () => {
     const name = faker.company.companyName();
     await createLanguage(app, { name });
     await expect(createLanguage(app, { name })).rejects.toThrowError();
-  });
-
-  it('create a language', async () => {
-    const language = await createLanguage(app);
-    expect(language.id).toBeDefined();
   });
 
   it('read one language by id', async () => {
@@ -131,7 +131,7 @@ describe('Language e2e', () => {
     const numLanguages = 10;
     await Promise.all(
       times(numLanguages).map(() =>
-        createLanguage(app, { name: faker.address.country() })
+        createLanguage(app, { name: faker.address.country() + generate() })
       )
     );
     // test reading new lang
