@@ -4,6 +4,7 @@ import { DateTime } from 'luxon';
 import { isValid } from 'shortid';
 import { Budget, BudgetRecord } from '../src/components/budget/dto/budget';
 import { Organization } from '../src/components/organization/dto';
+import * as faker from 'faker';
 import {
   CreateProject,
   Project,
@@ -333,5 +334,16 @@ describe('Budget e2e', () => {
     `);
 
     expect(budgets.items.length).toBeGreaterThanOrEqual(numBudget);
+  });
+
+  it('inits a budget with a budget record for each financial partner per fiscal year', async () => {
+    // create 2 orgs
+    await Promise.all(
+      times(2).map(() =>
+        createOrganization(app, { name: faker.company.companyName() + ' Inc' })
+      )
+    );
+    // create a project with 2 years, and 2 orgs
+    // create a new budget for that project
   });
 });
