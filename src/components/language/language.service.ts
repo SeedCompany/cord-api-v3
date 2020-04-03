@@ -52,8 +52,8 @@ export class LanguageService {
       'CREATE CONSTRAINT ON (n:LanguageRodNumber) ASSERT n.value IS UNIQUE',
 
       // PROPERTY NODE
-      'CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.active)',
+      //'CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.value)',
+      //'CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.active)',
     ];
     for (const query of constraints) {
       await this.db
@@ -94,6 +94,20 @@ export class LanguageService {
         acls,
         aclEditProp: 'canCreateLang',
       });
+
+      //set Property Labels
+      const query = `
+        MATCH (lang:Language {id: $id})-[:name]->(nameProp:Property),
+        (lang)-[:displayName]->(displayNameProp:Property),
+        (lang)-[:rodNumber]->(rodNumberProp:Property)
+        SET nameProp: LanguageName, displayNameProp: LanguageDisplayName, rodNumberProp: LanguageRodNumber
+      `;
+      await this.db
+        .query()
+        .raw(query, {
+          id,
+        })
+        .run();
 
       const result = await this.readOne(id, session);
 
