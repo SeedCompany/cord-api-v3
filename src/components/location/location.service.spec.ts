@@ -1,5 +1,5 @@
 import { Test } from '@nestjs/testing';
-import { DateTime, Zone } from 'luxon';
+import { DateTime } from 'luxon';
 import { Order } from '../../common';
 import { CoreModule, DatabaseService, LoggerModule } from '../../core';
 import { AuthModule } from '../auth/auth.module';
@@ -183,5 +183,4 @@ describe('LocationService', () => {
     expect(country.name).toEqual(createTestCountry);
   });
   */
- 
 });
