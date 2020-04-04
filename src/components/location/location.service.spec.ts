@@ -1,36 +1,44 @@
 import { Test } from '@nestjs/testing';
-import { DateTime } from 'luxon';
+import { country } from 'aws-sdk/clients/importexport';
+import { DateTime, Zone } from 'luxon';
+import { generate } from 'shortid';
+import { createZone } from '../../../test/utility';
 import { Order } from '../../common';
 import { CoreModule, DatabaseService, LoggerModule } from '../../core';
 import { AuthModule } from '../auth/auth.module';
 import { AuthService } from '../auth/auth.service';
 import { OrganizationService } from '../organization';
-import { EducationService, UnavailabilityService, UserService } from '../user';
-import { LocationListInput } from './dto';
+import {
+  EducationService,
+  UnavailabilityService,
+  UserModule,
+  UserService,
+} from '../user';
+import { LocationListOutput, Region } from './dto';
 import { LocationModule } from './location.module';
 import { LocationService } from './location.service';
+//import { Region } from 'aws-sdk/clients/cloudformation';
 
 describe('LocationService', () => {
   let locationService: LocationService;
 
-  /*const listInput: Partial<LocationListInput> = {
-
-    count : 25,
-    page: 1,
-    sort: "name",
-    filter : 
-      { 
-          name:"name",
-          userIds: ["9gf-Ogtbw"],
-          types: ['country']
-      },
-      order : Order.ASC
-    
-  };*/
+  const mockSession = {
+    token:
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODUxNjY0MTM3OTF9.xStLc8cYmOVT3ABW1b6GLuSpeoFNxrYE2o2CBmJR8-U',
+    userId: '12345',
+    issuedAt: DateTime.local(),
+    owningOrgId: '',
+  };
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({
-      imports: [LoggerModule.forRoot(), CoreModule, AuthModule, LocationModule],
+      imports: [
+        LoggerModule.forRoot(),
+        CoreModule,
+        AuthModule,
+        LocationModule,
+        UserModule,
+      ],
       providers: [
         LocationService,
         AuthService,
@@ -49,9 +57,114 @@ describe('LocationService', () => {
     expect(locationService).toBeDefined();
   });
 
+  const createTestZone: Partial<Zone> = {
+    name: 'seed-organization',
+    type: 'type',
+  };
+
+  it('should create zone node', async () => {
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    locationService.readOne = jest.fn().mockReturnValue(createTestZone);
+    const zone = await locationService.createZone(
+      {
+        name: 'seed-organization',
+        directorId: generate(),
+      },
+      mockSession
+    );
+    expect(zone.name).toEqual(createTestZone.name);
+  });
+
+  it('should update zone node', async () => {
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    locationService.readOne = jest.fn().mockReturnValue(createZone);
+    const zone = await locationService.updateZone(
+      {
+        id: '',
+        name: 'seed-organization',
+        directorId: 'tmpUiLso',
+      },
+      mockSession
+    );
+    expect(zone.name).toEqual(createZone);
+  });
+
+  const createTestRegion: Partial<Region> = {};
+
+  it('should create region node', async () => {
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    locationService.readOne = jest.fn().mockReturnValue(createTestRegion);
+    const region = await locationService.createRegion(
+      {
+        name: 'seed-organization',
+        zoneId: '8O5BB3pv-',
+        directorId: 'tmpUiLso',
+      },
+      mockSession
+    );
+    expect(region.name).toEqual(createTestRegion);
+  });
+
+  it('should update region node', async () => {
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    locationService.readOne = jest.fn().mockReturnValue(createTestRegion);
+    const region = await locationService.updateRegion(
+      {
+        id: '8O5BB3pv',
+        name: 'seed-organization',
+        zoneId: '8O5BB3pv-',
+        directorId: 'tmpUiLso',
+      },
+      mockSession
+    );
+    expect(region.name).toEqual(createTestRegion);
+  });
+
+  /*it('should read region node', async () => {
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    locationService.readOne = jest
+      .fn()
+      .mockReturnValue(createTestRegion);
+    const region = await locationService.readOne(id, mockSession);
+    expect(region.name).toEqual(createTestRegion.name);
+  });*/
+
+  const createTestCountry: Partial<country> = 'country';
+  it('should create country node', async () => {
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    locationService.readOne = jest.fn().mockReturnValue(createTestCountry);
+    const country = await locationService.createCountry(
+      {
+        name: 'seed-organization',
+        regionId: 'tmpUiLso',
+      },
+      mockSession
+    );
+    expect(country.name).toEqual(createTestCountry);
+  });
+
+  it('should update country node', async () => {
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    locationService.readOne = jest.fn().mockReturnValue(createTestCountry);
+    const country = await locationService.updateCountry(
+      {
+        id: 'tmpUiLso',
+        name: 'seed-organization',
+      },
+      mockSession
+    );
+    expect(country.name).toEqual(createTestCountry);
+  });
+
+  const listOutput: Partial<LocationListOutput> = {
+    hasMore: false,
+    items: [],
+    total: 0,
+  };
+
   it('should list location', async () => {
     // eslint-disable-next-line @typescript-eslint/unbound-method
-    locationService.readOne = jest.fn().mockReturnValue(LocationListInput);
+    locationService.readOne = jest.fn().mockReturnValue(listOutput);
 
     const listInput = await locationService.list(
       {
@@ -73,8 +186,8 @@ describe('LocationService', () => {
       }
     );
 
-    expect(listInput.total).toEqual(0);
-    expect(listInput.hasMore).toEqual(false);
-    expect(listInput.items.length).toEqual(0);
+    expect(listInput.total).toEqual(listOutput.total);
+    expect(listInput.hasMore).toEqual(listOutput.hasMore);
+    expect(listInput.items.length).toEqual(listOutput.items?.length);
   });
 });

@@ -1,9 +1,25 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
-import { CalendarDate } from '../../common';
+import { CalendarDate, Order, Sensitivity } from '../../common';
 import { CoreModule, DatabaseService, LoggerModule } from '../../core';
-import { Project, ProjectType } from './dto';
+import { AuthModule, AuthService } from '../auth';
+import { OrganizationModule, OrganizationService } from '../organization';
+import {
+  EducationModule,
+  EducationService,
+  UnavailabilityModule,
+  UnavailabilityService,
+  UserModule,
+  UserService,
+} from '../user';
+import {
+  Project,
+  ProjectListOutput,
+  ProjectStatus,
+  ProjectStep,
+  ProjectType,
+} from './dto';
 import { ProjectMemberService } from './project-member/project-member.service';
 import { ProjectService } from './project.service';
 
@@ -38,6 +54,42 @@ describe('ProjectService', () => {
       canRead: true,
       canEdit: true,
     },
+    status: ProjectStatus.Active,
+    step: {
+      value: ProjectStep.Active,
+      canRead: true,
+      canEdit: true,
+    },
+  };
+
+  const updatedTestProject: Partial<Project> = {
+    id,
+    name: {
+      value: 'Project1',
+      canRead: true,
+      canEdit: true,
+    },
+    deptId: {
+      value: '12345',
+      canRead: true,
+      canEdit: true,
+    },
+    mouStart: {
+      value: date,
+      canRead: true,
+      canEdit: true,
+    },
+    mouEnd: {
+      value: date,
+      canRead: true,
+      canEdit: true,
+    },
+    estimatedSubmission: {
+      value: date,
+      canRead: true,
+      canEdit: true,
+    },
+    status: ProjectStatus.Active,
   };
 
   const mockDbService = {
@@ -49,6 +101,15 @@ describe('ProjectService', () => {
       }),
     }),
     readProperties: () => createTestProject,
+    updateProperties: () => ({}),
+  };
+
+  const mockSession = {
+    token:
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODUxNjY0MTM3OTF9.xStLc8cYmOVT3ABW1b6GLuSpeoFNxrYE2o2CBmJR8-U',
+    userId: '12345',
+    issuedAt: DateTime.local(),
+    owningOrgId: '',
   };
 
   beforeEach(async () => {
@@ -56,8 +117,11 @@ describe('ProjectService', () => {
       imports: [
         LoggerModule.forRoot(),
         CoreModule,
-        ProjectService,
-        ProjectMemberService,
+        UserModule,
+        EducationModule,
+        OrganizationModule,
+        UnavailabilityModule,
+        AuthModule,
       ],
       providers: [
         ProjectService,
@@ -65,6 +129,12 @@ describe('ProjectService', () => {
           provide: DatabaseService,
           useValue: mockDbService,
         },
+        ProjectMemberService,
+        UserService,
+        EducationService,
+        OrganizationService,
+        UnavailabilityService,
+        AuthService,
       ],
     }).compile();
 
@@ -89,12 +159,7 @@ describe('ProjectService', () => {
         mouEnd: CalendarDate.fromSeconds(1),
         estimatedSubmission: CalendarDate.fromSeconds(1),
       },
-      {
-        token:
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODUxNjY0MTM3OTF9.xStLc8cYmOVT3ABW1b6GLuSpeoFNxrYE2o2CBmJR8-U',
-        userId: '12345',
-        issuedAt: DateTime.local(),
-      }
+      mockSession
     );
     expect(project.name).toEqual(createTestProject.name);
     expect(project.type).toEqual(createTestProject.type);
@@ -104,4 +169,327 @@ describe('ProjectService', () => {
       createTestProject.estimatedSubmission
     );
   });
+
+  it('should update project node', async () => {
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    /*projectService.create = jest.fn().mockReturnValue(createTestProject);
+    projectService.readOne = jest.fn().mockReturnValue(createTestProject);
+    
+    const project1 = await projectService.create(
+      {
+        name: 'project',
+        type: ProjectType.Translation,
+        locationId:
+          'X9uvqqN59EEcyGIw1xHPAOx7dXmYF4GXm20.aGPHWl13lMpmlvvsRADHNQ.Xepq3xRTSQDmV8NR0qDalA',
+        mouStart: CalendarDate.fromSeconds(1),
+        mouEnd: CalendarDate.fromSeconds(1),
+        estimatedSubmission: CalendarDate.fromSeconds(1),
+      },
+      mockSession
+    );
+    */
+
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    projectService.update = jest.fn().mockReturnValue(updatedTestProject);
+
+    const updatedProject = await projectService.update(
+      {
+        id,
+        name: 'project-new',
+        locationId:
+          'X9uvqqN59EEcyGIw1xHPAOx7dXmYF4GXm20.aGPHWl13lMpmlvvsRADHNQ.Xepq3xRTSQDmV8NR0qDalA',
+        mouStart: CalendarDate.fromSeconds(1),
+        mouEnd: CalendarDate.fromSeconds(1),
+        estimatedSubmission: CalendarDate.fromSeconds(1),
+      },
+      {
+        token:
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODUxNjY0MTM3OTF9.xStLc8cYmOVT3ABW1b6GLuSpeoFNxrYE2o2CBmJR8-U',
+        userId: '12345',
+        issuedAt: DateTime.local(),
+      }
+    );
+    expect(updatedProject.id).toEqual(createTestProject.id);
+    expect(updatedProject.name).toEqual(updatedTestProject.name);
+    expect(updatedProject.mouStart).toEqual(updatedTestProject.mouStart);
+    expect(updatedProject.mouEnd).toEqual(updatedTestProject.mouEnd);
+    expect(updatedProject.estimatedSubmission).toEqual(
+      updatedTestProject.estimatedSubmission
+    );
+  });
+
+  it('should delete product node', async () => {
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    projectService.readOne = jest.fn().mockReturnValue(createTestProject);
+    const project = await projectService.create(
+      {
+        name: 'project',
+        type: ProjectType.Translation,
+        locationId:
+          'X9uvqqN59EEcyGIw1xHPAOx7dXmYF4GXm20.aGPHWl13lMpmlvvsRADHNQ.Xepq3xRTSQDmV8NR0qDalA',
+        mouStart: CalendarDate.fromSeconds(1),
+        mouEnd: CalendarDate.fromSeconds(1),
+        estimatedSubmission: CalendarDate.fromSeconds(1),
+      },
+      mockSession
+    );
+    await projectService.delete(id, mockSession);
+    // since delete is making the graph node inactive, we just test for the nodes existance now
+    expect(project.id).toEqual(createTestProject.id);
+    expect(project.name).toEqual(createTestProject.name);
+    expect(project.type).toEqual(createTestProject.type);
+    expect(project.status).toEqual(createTestProject.status);
+    expect(project.mouStart).toEqual(createTestProject.mouStart);
+    expect(project.mouEnd).toEqual(createTestProject.mouEnd);
+    expect(project.estimatedSubmission).toEqual(
+      createTestProject.estimatedSubmission
+    );
+  });
+
+  const projectTestListOutput: Partial<ProjectListOutput> = {
+    hasMore: false,
+    items: [],
+    total: 0,
+  };
+
+  it.only('should list project', async () => {
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    projectService.list = jest.fn().mockReturnValue(projectTestListOutput);
+
+    const listInput = await projectService.list(
+      {
+        count: 25,
+        page: 1,
+        sort: 'name',
+        filter: {
+          name: 'name',
+          userIds: ['9gf-Ogtbw'],
+          type: ProjectType.Internship,
+          sensitivity: [Sensitivity.High],
+          status: [ProjectStatus.Active],
+          locationIds: [
+            'X9uvqqN59EEcyGIw1xHPAOx7dXmYF4GXm20.aGPHWl13lMpmlvvsRADHNQ.Xepq3xRTSQDmV8NR0qDalA',
+          ],
+        },
+        order: Order.ASC,
+      },
+      mockSession
+    );
+
+    expect(listInput.total).toEqual(projectTestListOutput.total);
+    expect(listInput.hasMore).toEqual(projectTestListOutput.hasMore);
+    expect(listInput.items.length).toEqual(projectTestListOutput.items?.length);
+  });
+
+  /*
+  const securedLanguageEngagementTestList: Partial<SecuredLanguageEngagementList> = {
+    hasMore : false,
+    items  : [],
+    total : 0
+  };
+
+
+  const translationTestProject: TranslationProject = {
+    id,
+    name: {
+      value: 'Project1',
+      canRead: true,
+      canEdit: true,
+    },
+    deptId: {
+      value: '12345',
+      canRead: true,
+      canEdit: true,
+    },
+    mouStart: {
+      value: date,
+      canRead: true,
+      canEdit: true,
+    },
+    mouEnd: {
+      value: date,
+      canRead: true,
+      canEdit: true,
+    },
+    estimatedSubmission: {
+      value: date,
+      canRead: true,
+      canEdit: true,
+    },
+    status : ProjectStatus.Active,
+    sensitivity : Sensitivity.High,
+    step : 
+    {
+      value : ProjectStep.Active,
+      canRead : true,
+      canEdit : true
+    },
+    type : ProjectType.Translation,
+    location : new SecuredCountry,
+    createdAt : CalendarDate.fromSeconds(1),
+    modifiedAt : CalendarDate.fromSeconds(1)
+
+  };
+
+  const internshipTestProject: InternshipProject = {
+    id,
+    name: {
+      value: 'Project1',
+      canRead: true,
+      canEdit: true,
+    },
+    deptId: {
+      value: '12345',
+      canRead: true,
+      canEdit: true,
+    },
+    mouStart: {
+      value: date,
+      canRead: true,
+      canEdit: true,
+    },
+    mouEnd: {
+      value: date,
+      canRead: true,
+      canEdit: true,
+    },
+    estimatedSubmission: {
+      value: date,
+      canRead: true,
+      canEdit: true,
+    },
+    status : ProjectStatus.Active,
+    sensitivity : Sensitivity.High,
+    step : 
+    {
+      value : ProjectStep.Active,
+      canRead : true,
+      canEdit : true
+    },
+    type : ProjectType.Internship,
+    location : new SecuredCountry,
+    createdAt : CalendarDate.fromSeconds(1),
+    modifiedAt : CalendarDate.fromSeconds(1)
+  };
+/*
+  
+ /* 
+  it.only('should list engagement', async () => {
+
+    projectService.create = jest.fn().mockReturnValue(createTestProject);
+    projectService.readOne = jest.fn().mockReturnValue(createTestProject);
+    
+    const project1 = await projectService.create(
+      {
+        name: 'project',
+        type: ProjectType.Translation,
+        locationId:
+          'X9uvqqN59EEcyGIw1xHPAOx7dXmYF4GXm20.aGPHWl13lMpmlvvsRADHNQ.Xepq3xRTSQDmV8NR0qDalA',
+        mouStart: CalendarDate.fromSeconds(1),
+        mouEnd: CalendarDate.fromSeconds(1),
+        estimatedSubmission: CalendarDate.fromSeconds(1),
+      },
+      mockSession
+    );
+
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    projectService.listEngagements = jest.fn().mockReturnValue(EngagementListOutput);
+
+    const EngagementListInput= await projectService.listEngagements(
+      
+
+      {
+        id : translationTestProject.id,
+        name: {
+          value: 'Project1',
+          canRead: true,
+          canEdit: true,
+        },
+        deptId: {
+          value: '12345',
+          canRead: true,
+          canEdit: true,
+        },
+        mouStart: {
+          value: date,
+          canRead: true,
+          canEdit: true,
+        },
+        mouEnd: {
+          value: date,
+          canRead: true,
+          canEdit: true,
+        },
+        estimatedSubmission: {
+          value: date,
+          canRead: true,
+          canEdit: true,
+        },
+        status : ProjectStatus.Active,
+        sensitivity : Sensitivity.High,
+        step : 
+        {
+          value : ProjectStep.Active,
+          canRead : true,
+          canEdit : true
+        },
+        type : ProjectType.Internship,
+        location : new SecuredCountry,
+        createdAt : CalendarDate.fromSeconds(1),
+        modifiedAt : CalendarDate.fromSeconds(1)
+      }
+        
+ 
+      ,
+      {
+        count: 25,
+        page: 1,
+        sort: 'name',
+        filter: {
+          name: 'name',
+          userIds: ['9gf-Ogtbw'],
+          type: ProjectType.Internship,
+          sensitivity: [Sensitivity.High],
+          status:[ProjectStatus.Active],
+          locationIds:['X9uvqqN59EEcyGIw1xHPAOx7dXmYF4GXm20.aGPHWl13lMpmlvvsRADHNQ.Xepq3xRTSQDmV8NR0qDalA'],
+          
+        },
+        order: Order.ASC,
+      },
+      mockSession
+    );
+
+    expect(EngagementListInput.total).toEqual(EngagementListOutput.total);
+    expect(EngagementListInput.hasMore).toEqual(EngagementListOutput.false);
+    expect(EngagementListInput.items.length).toEqual(EngagementListOutput.items?.length);
+  });
+
+  it.only('should list engagement', async () => {
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    projectService.readOne = jest.fn().mockReturnValue(EngagementListInput);
+
+    const member= await projectService.listProjectMembers(
+      
+      {
+        count: 25,
+        page: 1,
+        sort: 'name',
+        filter: {
+          name: 'name',
+          userIds: ['9gf-Ogtbw'],
+          type: ProjectType.Internship,
+          sensitivity: [Sensitivity.High],
+          status:[ProjectStatus.Active],
+          locationIds:['X9uvqqN59EEcyGIw1xHPAOx7dXmYF4GXm20.aGPHWl13lMpmlvvsRADHNQ.Xepq3xRTSQDmV8NR0qDalA'],
+          
+        },
+        order: Order.ASC,
+      },
+      mockSession
+    );
+
+    expect(member.total).toEqual(0);
+    expect(member.hasMore).toEqual(false);
+    expect(member.items.length).toEqual(0);
+  }); */
 });
