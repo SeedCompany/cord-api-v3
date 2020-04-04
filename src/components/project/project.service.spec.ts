@@ -20,7 +20,7 @@ import {
   ProjectStep,
   ProjectType,
 } from './dto';
-import { SecuredProjectMemberList, Role } from './project-member/dto';
+import { Role, SecuredProjectMemberList } from './project-member/dto';
 import { ProjectMemberService } from './project-member/project-member.service';
 import { ProjectService } from './project.service';
 
@@ -142,13 +142,9 @@ describe('ProjectService', () => {
     projectService = module.get<ProjectService>(ProjectService);
   });
 
-
-
   it('should be defined', () => {
     expect(ProjectService).toBeDefined();
   });
-
-
 
   it('should create project node', async () => {
     // eslint-disable-next-line @typescript-eslint/unbound-method
@@ -175,10 +171,7 @@ describe('ProjectService', () => {
     );
   });
 
-
-
   it('should update project node', async () => {
-  
     // eslint-disable-next-line @typescript-eslint/unbound-method
     projectService.update = jest.fn().mockReturnValue(updatedTestProject);
 
@@ -208,8 +201,6 @@ describe('ProjectService', () => {
     );
   });
 
-
-
   it('should delete product node', async () => {
     // eslint-disable-next-line @typescript-eslint/unbound-method
     projectService.readOne = jest.fn().mockReturnValue(createTestProject);
@@ -237,8 +228,6 @@ describe('ProjectService', () => {
       createTestProject.estimatedSubmission
     );
   });
-
-
 
   const projectTestListOutput: Partial<ProjectListOutput> = {
     hasMore: false,
@@ -275,42 +264,41 @@ describe('ProjectService', () => {
     expect(listInput.items.length).toEqual(projectTestListOutput.items?.length);
   });
 
-
   const securedProjectTestMemberList: Partial<SecuredProjectMemberList> = {
-    canCreate : true,
-    canRead : true,
-    hasMore : true,
-    items : [],
-    total : 0
+    canCreate: true,
+    canRead: true,
+    hasMore: true,
+    items: [],
+    total: 0,
   };
 
   it('should list project members', async () => {
     // eslint-disable-next-line @typescript-eslint/unbound-method
-    projectService.listProjectMembers = jest.fn().mockReturnValue(securedProjectTestMemberList);
+    projectService.listProjectMembers = jest
+      .fn()
+      .mockReturnValue(securedProjectTestMemberList);
 
-    const member= await projectService.listProjectMembers(
-      
+    const member = await projectService.listProjectMembers(
       id,
       {
-        count : 25,
-        order : Order.ASC,
-        page : 1,
-        filter : 
-        {
-          projectId : id,
-          roles : [Role.BibleTranslationLiaison]
+        count: 25,
+        order: Order.ASC,
+        page: 1,
+        filter: {
+          projectId: id,
+          roles: [Role.BibleTranslationLiaison],
         },
-        sort : "createdAt"
+        sort: 'createdAt',
       },
       mockSession
     );
 
     expect(member.total).toEqual(securedProjectTestMemberList.total);
     expect(member.hasMore).toEqual(securedProjectTestMemberList.hasMore);
-    expect(member.items.length).toEqual(securedProjectTestMemberList.items?.length);
+    expect(member.items.length).toEqual(
+      securedProjectTestMemberList.items?.length
+    );
     expect(member.canCreate).toEqual(securedProjectTestMemberList.canCreate);
     expect(member.canRead).toEqual(securedProjectTestMemberList.canRead);
   });
-
-}
-)
+});
