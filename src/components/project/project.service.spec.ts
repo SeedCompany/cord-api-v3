@@ -19,11 +19,10 @@ import {
   ProjectStatus,
   ProjectStep,
   ProjectType,
-  TranslationProject,
 } from './dto';
+import { SecuredProjectMemberList, Role } from './project-member/dto';
 import { ProjectMemberService } from './project-member/project-member.service';
 import { ProjectService } from './project.service';
-import { SecuredProjectMemberList, Role } from './project-member/dto';
 
 describe('ProjectService', () => {
   let projectService: ProjectService;
