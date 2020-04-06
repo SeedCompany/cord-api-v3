@@ -9,11 +9,11 @@ import {
 import { CalendarDate } from '../../common';
 
 // Convert private to protected, and ignore TS complaints about that
-// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 class PatchedTransformer extends Transformer {
   protected transformValue(value: unknown): any {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     return super.transformValue(value);
   }
