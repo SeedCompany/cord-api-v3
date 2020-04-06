@@ -6,7 +6,7 @@ import {
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession, Sensitivity } from '../../common';
-import { DatabaseService, ILogger, Logger } from '../../core';
+import { DatabaseService, ILogger, Logger, OnIndex } from '../../core';
 import {
   EngagementListInput,
   SecuredInternshipEngagementList,
@@ -37,6 +37,29 @@ export class ProjectService {
     private readonly projectMembers: ProjectMemberService,
     @Logger('project:service') private readonly logger: ILogger
   ) {}
+
+  @OnIndex()
+  async createIndexes() {
+    const constraints = [
+      'CREATE CONSTRAINT ON (n:Project) ASSERT EXISTS(n.id)',
+      'CREATE CONSTRAINT ON (n:Project) ASSERT n.id IS UNIQUE',
+      'CREATE CONSTRAINT ON (n:Project) ASSERT EXISTS(n.active)',
+      'CREATE CONSTRAINT ON (n:Project) ASSERT EXISTS(n.createdAt)',
+      'CREATE CONSTRAINT ON (n:Project) ASSERT EXISTS(n.owningOrgId)',
+
+      'CREATE CONSTRAINT ON ()-[r:step]-() ASSERT EXISTS(r.active)',
+      'CREATE CONSTRAINT ON ()-[r:step]-() ASSERT EXISTS(r.createdAt)',
+
+      'CREATE CONSTRAINT ON (n:ProjectName) ASSERT EXISTS(n.value)',
+      'CREATE CONSTRAINT ON (n:ProjectName) ASSERT n.value IS UNIQUE',
+    ];
+    for (const query of constraints) {
+      await this.db
+        .query()
+        .raw(query)
+        .run();
+    }
+  }
 
   async readOne(id: string, session: ISession): Promise<Project> {
     const result = await this.db
