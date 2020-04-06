@@ -1,6 +1,6 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
-import { isValid } from 'shortid';
+import { generate, isValid } from 'shortid';
 import { CreateUser, User } from '../../src/components/user';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
@@ -13,12 +13,12 @@ export async function createUser(
     email: `${faker.internet.email()} ${Date.now()}`,
     realFirstName: faker.name.firstName(),
     realLastName: faker.name.lastName(),
-    displayFirstName: faker.name.firstName(),
-    displayLastName: faker.name.lastName(),
+    displayFirstName: faker.name.firstName() + generate(),
+    displayLastName: faker.name.lastName() + generate(),
     password: faker.internet.password(),
     phone: faker.phone.phoneNumber(),
-    timezone: 'timezone detail',
-    bio: 'bio detail',
+    timezone: 'timezone detail' + generate(),
+    bio: 'bio detail' + generate(),
     ...input,
   };
 

@@ -36,6 +36,13 @@ describe('Region e2e', () => {
     expect(region.id).toBeDefined();
   });
 
+  it('should have unique name', async () => {
+    await createRegion(app, { directorId: director.id });
+    await expect(
+      createRegion(app, { directorId: director.id })
+    ).rejects.toThrowError();
+  });
+
   it('read one region by id', async () => {
     const region = await createRegion(app, { directorId: director.id });
 

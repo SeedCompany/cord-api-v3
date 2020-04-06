@@ -27,6 +27,13 @@ describe('Zone e2e', () => {
     expect(zone.id).toBeDefined();
   });
 
+  it('should have unique name', async () => {
+    await createZone(app, { directorId: director.id });
+    await expect(
+      createZone(app, { directorId: director.id })
+    ).rejects.toThrowError();
+  });
+
   it('read one zone by id', async () => {
     const zone = await createZone(app, { directorId: director.id });
 

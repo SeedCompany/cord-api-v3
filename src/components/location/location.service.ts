@@ -6,7 +6,7 @@ import {
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
-import { DatabaseService, ILogger, Logger } from '../../core';
+import { DatabaseService, ILogger, Logger, OnIndex } from '../../core';
 import { RedactedUser, User, UserService } from '../user';
 import {
   Country,
@@ -30,6 +30,62 @@ export class LocationService {
     private readonly db: DatabaseService,
     private readonly userService: UserService
   ) {}
+
+  @OnIndex()
+  async createIndexes() {
+    const constraints = [
+      // ZONE NODE
+      'CREATE CONSTRAINT ON (n:Zone) ASSERT EXISTS(n.id)',
+      'CREATE CONSTRAINT ON (n:Zone) ASSERT n.id IS UNIQUE',
+      'CREATE CONSTRAINT ON (n:Zone) ASSERT EXISTS(n.active)',
+      'CREATE CONSTRAINT ON (n:Zone) ASSERT EXISTS(n.createdAt)',
+      'CREATE CONSTRAINT ON (n:Zone) ASSERT EXISTS(n.owningOrgId)',
+
+      // ZONE NAME REL
+      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.active)',
+      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
+
+      // ZONE NAME NODE
+      'CREATE CONSTRAINT ON (n:ZoneName) ASSERT EXISTS(n.value)',
+      'CREATE CONSTRAINT ON (n:ZoneName) ASSERT n.value IS UNIQUE',
+
+      // REGION NODE
+      'CREATE CONSTRAINT ON (n:Region) ASSERT EXISTS(n.id)',
+      'CREATE CONSTRAINT ON (n:Region) ASSERT n.id IS UNIQUE',
+      'CREATE CONSTRAINT ON (n:Region) ASSERT EXISTS(n.active)',
+      'CREATE CONSTRAINT ON (n:Region) ASSERT EXISTS(n.createdAt)',
+      'CREATE CONSTRAINT ON (n:Region) ASSERT EXISTS(n.owningOrgId)',
+
+      // REGION NAME REL
+      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.active)',
+      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
+
+      // REGION NAME NODE
+      'CREATE CONSTRAINT ON (n:RegionName) ASSERT EXISTS(n.value)',
+      'CREATE CONSTRAINT ON (n:RegionName) ASSERT n.value IS UNIQUE',
+
+      // COUNTRY NODE
+      'CREATE CONSTRAINT ON (n:Country) ASSERT EXISTS(n.id)',
+      'CREATE CONSTRAINT ON (n:Country) ASSERT n.id IS UNIQUE',
+      'CREATE CONSTRAINT ON (n:Country) ASSERT EXISTS(n.active)',
+      'CREATE CONSTRAINT ON (n:Country) ASSERT EXISTS(n.createdAt)',
+      'CREATE CONSTRAINT ON (n:Country) ASSERT EXISTS(n.owningOrgId)',
+
+      // COUNTRY NAME REL
+      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.active)',
+      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
+
+      // COUNTRY NAME NODE
+      'CREATE CONSTRAINT ON (n:CountryName) ASSERT EXISTS(n.value)',
+      'CREATE CONSTRAINT ON (n:CountryName) ASSERT n.value IS UNIQUE',
+    ];
+    for (const query of constraints) {
+      await this.db
+        .query()
+        .raw(query)
+        .run();
+    }
+  }
 
   async readOne(id: string, session: ISession): Promise<Location> {
     const query = `
@@ -241,6 +297,19 @@ export class LocationService {
         acls,
       });
 
+      //set Property Label
+      const queryLabel = `
+        MATCH
+          (zone:Zone {id: $id, active: true})-[:name]->(nameProp:Property)
+        SET nameProp :ZoneName
+      `;
+      await this.db
+        .query()
+        .raw(queryLabel, {
+          id,
+        })
+        .run();
+
       // connect director User to zone
       const query = `
       MATCH (director:User {id: $directorId, active: true}),
@@ -379,6 +448,19 @@ export class LocationService {
       });
 
       this.logger.info(`region created`);
+
+      //set Property Label
+      const queryLabel = `
+        MATCH
+          (region:Region {id: $id, active: true})-[:name]->(nameProp:Property)
+        SET nameProp :RegionName
+      `;
+      await this.db
+        .query()
+        .raw(queryLabel, {
+          id,
+        })
+        .run();
 
       // connect the Zone to Region
       // and region to director
@@ -527,6 +609,19 @@ export class LocationService {
       });
 
       this.logger.info(`country created`);
+
+      //set Property Label
+      const queryLabel = `
+        MATCH
+          (country:Country {id: $id, active: true})-[:name]->(nameProp:Property)
+        SET nameProp :CountryName
+      `;
+      await this.db
+        .query()
+        .raw(queryLabel, {
+          id,
+        })
+        .run();
 
       // connect the Region to Country
       if (regionId) {
