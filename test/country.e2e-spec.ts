@@ -35,6 +35,11 @@ describe('Country e2e', () => {
     expect(country.id).toBeDefined();
   });
 
+  it('should have unique name', async () => {
+    await createCountry(app);
+    await expect(createCountry(app)).rejects.toThrowError();
+  });
+
   it('read one country by id', async () => {
     const country = await createCountry(app);
 

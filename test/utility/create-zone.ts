@@ -1,6 +1,5 @@
 import { gql } from 'apollo-server-core';
-import * as faker from 'faker';
-import { isValid } from 'shortid';
+import { generate, isValid } from 'shortid';
 import { createUser } from '.';
 import { CreateZone, Zone } from '../../src/components/location';
 import { TestApp } from './create-app';
@@ -11,7 +10,7 @@ export async function createZone(
   input: Partial<CreateZone> = {}
 ) {
   const zone: CreateZone = {
-    name: faker.random.word() + ' Zone',
+    name: 'Zone' + generate(),
     directorId: input.directorId ?? (await createUser(app)).id,
     ...input,
   };
