@@ -12,12 +12,12 @@ declare module 'luxon' {
 }
 
 // eslint-disable-next-line @typescript-eslint/unbound-method
-DateTime.prototype.toNeo4JDate = function(this: DateTime) {
+DateTime.prototype.toNeo4JDate = function (this: DateTime) {
   return new NeoDate(this.year, this.month, this.day);
 };
 
 // eslint-disable-next-line @typescript-eslint/unbound-method
-DateTime.prototype.toNeo4JDateTime = function(this: DateTime) {
+DateTime.prototype.toNeo4JDateTime = function (this: DateTime) {
   return new NeoDateTime(
     this.year,
     this.month,
@@ -31,7 +31,7 @@ DateTime.prototype.toNeo4JDateTime = function(this: DateTime) {
   );
 };
 
-(DateTime.prototype as any)[inspect.custom] = function(
+(DateTime.prototype as any)[inspect.custom] = function (
   this: DateTime,
   depth: number,
   _options: InspectOptions
