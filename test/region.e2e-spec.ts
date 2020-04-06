@@ -37,9 +37,10 @@ describe('Region e2e', () => {
   });
 
   it('should have unique name', async () => {
-    await createRegion(app, { directorId: director.id });
+    const name = faker.address.country() + ' Region';
+    await createRegion(app, { directorId: director.id, name });
     await expect(
-      createRegion(app, { directorId: director.id })
+      createRegion(app, { directorId: director.id, name })
     ).rejects.toThrowError();
   });
 
