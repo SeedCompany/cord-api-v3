@@ -46,8 +46,8 @@ export class LocationService {
       'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
 
       // ZONE NAME NODE
-      'CREATE CONSTRAINT ON (n:ZoneName) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:ZoneName) ASSERT n.value IS UNIQUE',
+      'CREATE CONSTRAINT ON (n:LocationName) ASSERT EXISTS(n.value)',
+      'CREATE CONSTRAINT ON (n:LocationName) ASSERT n.value IS UNIQUE',
 
       // REGION NODE
       'CREATE CONSTRAINT ON (n:Region) ASSERT EXISTS(n.id)',
@@ -61,8 +61,8 @@ export class LocationService {
       'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
 
       // REGION NAME NODE
-      'CREATE CONSTRAINT ON (n:RegionName) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:RegionName) ASSERT n.value IS UNIQUE',
+      'CREATE CONSTRAINT ON (n:LocationName) ASSERT EXISTS(n.value)',
+      'CREATE CONSTRAINT ON (n:LocationName) ASSERT n.value IS UNIQUE',
 
       // COUNTRY NODE
       'CREATE CONSTRAINT ON (n:Country) ASSERT EXISTS(n.id)',
@@ -76,8 +76,8 @@ export class LocationService {
       'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
 
       // COUNTRY NAME NODE
-      'CREATE CONSTRAINT ON (n:CountryName) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:CountryName) ASSERT n.value IS UNIQUE',
+      'CREATE CONSTRAINT ON (n:LocationName) ASSERT EXISTS(n.value)',
+      'CREATE CONSTRAINT ON (n:LocationName) ASSERT n.value IS UNIQUE',
     ];
     for (const query of constraints) {
       await this.db
@@ -301,7 +301,7 @@ export class LocationService {
       const queryLabel = `
         MATCH
           (zone:Zone {id: $id, active: true})-[:name]->(nameProp:Property)
-        SET nameProp :ZoneName
+        SET nameProp :LocationName
       `;
       await this.db
         .query()
@@ -453,7 +453,7 @@ export class LocationService {
       const queryLabel = `
         MATCH
           (region:Region {id: $id, active: true})-[:name]->(nameProp:Property)
-        SET nameProp :RegionName
+        SET nameProp :LocationName
       `;
       await this.db
         .query()
@@ -614,7 +614,7 @@ export class LocationService {
       const queryLabel = `
         MATCH
           (country:Country {id: $id, active: true})-[:name]->(nameProp:Property)
-        SET nameProp :CountryName
+        SET nameProp :LocationName
       `;
       await this.db
         .query()
