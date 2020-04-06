@@ -235,6 +235,119 @@ export const fragments = {
       }
     }
   `,
+  languageEngagement: gql`
+    fragment languageEngagement on LanguageEngagement {
+      id
+      createdAt
+      language {
+        value {
+          id
+        }
+      }
+      firstScripture {
+        value
+      }
+      lukePartnership {
+        value
+      }
+      sentPrintingDate {
+        value
+      }
+      # status, // WIP
+      ceremony {
+        value {
+          id
+        }
+      }
+      completeDate {
+        value
+      }
+      disbursementCompleteDate {
+        value
+      }
+      communicationsCompleteDate {
+        value
+      }
+      startDate {
+        value
+      }
+      endDate {
+        value
+      }
+      initialEndDate {
+        value
+      }
+      lastSuspendedAt {
+        value
+      }
+      lastReactivatedAt {
+        value
+      }
+      statusModifiedAt {
+        value
+      }
+    }
+  `,
+  internshipEngagement: gql`
+    fragment internshipEngagement on InternshipEngagement {
+      id
+      createdAt
+      countryOfOrigin {
+        value {
+          id
+        }
+      }
+      intern {
+        value {
+          id
+        }
+      }
+      mentor {
+        value {
+          id
+        }
+      }
+      position {
+        value
+      }
+      methodologies {
+        value
+      }
+      # status, // WIP
+      ceremony {
+        value {
+          id
+        }
+      }
+      completeDate {
+        value
+      }
+      disbursementCompleteDate {
+        value
+      }
+      communicationsCompleteDate {
+        value
+      }
+      startDate {
+        value
+      }
+      endDate {
+        value
+      }
+      initialEndDate {
+        value
+      }
+      lastSuspendedAt {
+        value
+      }
+      lastReactivatedAt {
+        value
+      }
+      statusModifiedAt {
+        value
+      }
+    }
+  `,
   zone: gql`
     fragment zone on Zone {
       id

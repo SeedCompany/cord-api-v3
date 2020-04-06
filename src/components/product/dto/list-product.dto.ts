@@ -30,6 +30,8 @@ export abstract class ProductFilters {
     nullable: true,
   })
   readonly methodology?: ProductMethodology;
+
+  readonly engagementId?: string; // TODO
 }
 
 const defaultFilters = {};
