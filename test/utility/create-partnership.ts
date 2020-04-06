@@ -16,14 +16,12 @@ export async function createPartnership(
   app: TestApp,
   input: Partial<CreatePartnership> = {}
 ) {
-  const org = await createOrganization(app);
-  const project = await createProject(app);
   const partnership: CreatePartnership = {
-    projectId: project.id,
+    projectId: input.projectId || (await createProject(app)).id,
     agreementStatus: PartnershipAgreementStatus.AwaitingSignature,
     mouStatus: PartnershipAgreementStatus.AwaitingSignature,
     types: [PartnershipType.Managing],
-    organizationId: org.id,
+    organizationId: input.organizationId || (await createOrganization(app)).id,
     mouStart: CalendarDate.local(),
     mouEnd: CalendarDate.local(),
     ...input,

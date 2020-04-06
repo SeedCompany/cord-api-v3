@@ -133,27 +133,70 @@ export class PartnershipService {
     { page, count, sort, order, filter }: PartnershipListInput,
     session: ISession
   ): Promise<PartnershipListOutput> {
-    const result = await this.db.list<Partnership>({
-      session,
-      nodevar: 'partnership',
-      aclReadProp: 'canReadPartnerships',
-      aclEditProp: 'canCreatePartnership',
-      props: [
-        { name: 'agreementStatus', secure: true },
-        { name: 'mouStatus', secure: true },
-        { name: 'mouStart', secure: true },
-        { name: 'mouEnd', secure: true },
-        { name: 'organization', secure: false },
-        { name: 'types', secure: true, list: true },
-      ],
-      input: {
-        page,
-        count,
-        sort,
-        order,
-        filter,
-      },
-    });
+    const { projectId } = filter;
+    let result: {
+      items: Partnership[];
+      hasMore: boolean;
+      total: number;
+    } = { items: [], hasMore: false, total: 0 };
+
+    if (projectId) {
+      const query = `
+      MATCH
+        (token:Token {active: true, value: $token})
+        <-[:token {active: true}]-
+        (requestingUser:User {
+          active: true,
+          id: $requestingUserId
+        }),
+        (project:Project {id: $projectId, active: true, owningOrgId: $owningOrgId})
+        -[:partnership]->(partnership:Partnership {active:true})
+      WITH COUNT(partnership) as total, project, partnership
+          MATCH (partnership {active: true})-[:agreementStatus {active:true }]->(agreementStatus:Property {active: true})
+          RETURN total, partnership.id as id, agreementStatus.value as agreementStatus, partnership.createdAt as createdAt
+          ORDER BY ${sort} ${order}
+          SKIP $skip LIMIT $count
+      `;
+      const projBudgets = await this.db
+        .query()
+        .raw(query, {
+          token: session.token,
+          requestingUserId: session.userId,
+          owningOrgId: session.owningOrgId,
+          projectId,
+          skip: (page - 1) * count,
+          count,
+        })
+        .run();
+
+      result.items = await Promise.all(
+        projBudgets.map(async (partnership) =>
+          this.readOne(partnership.id, session)
+        )
+      );
+    } else {
+      result = await this.db.list<Partnership>({
+        session,
+        nodevar: 'partnership',
+        aclReadProp: 'canReadPartnerships',
+        aclEditProp: 'canCreatePartnership',
+        props: [
+          { name: 'agreementStatus', secure: true },
+          { name: 'mouStatus', secure: true },
+          { name: 'mouStart', secure: true },
+          { name: 'mouEnd', secure: true },
+          { name: 'organization', secure: false },
+          { name: 'types', secure: true, list: true },
+        ],
+        input: {
+          page,
+          count,
+          sort,
+          order,
+          filter,
+        },
+      });
+    }
 
     return {
       items: result.items,

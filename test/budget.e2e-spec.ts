@@ -1,10 +1,10 @@
 import { gql } from 'apollo-server-core';
+import * as faker from 'faker';
 import { times } from 'lodash';
 import { DateTime } from 'luxon';
 import { isValid } from 'shortid';
 import { Budget, BudgetRecord } from '../src/components/budget/dto/budget';
 import { Organization } from '../src/components/organization/dto';
-import * as faker from 'faker';
 import {
   CreateProject,
   Project,
@@ -19,6 +19,7 @@ import {
   TestApp,
 } from './utility';
 import { createBudget, createBudgetRecord } from './utility/create-budget';
+import { createPartnership } from './utility/create-partnership';
 import { createProject } from './utility/create-project';
 
 describe('Budget e2e', () => {
@@ -337,13 +338,52 @@ describe('Budget e2e', () => {
   });
 
   it('inits a budget with a budget record for each financial partner per fiscal year', async () => {
-    // create 2 orgs
-    await Promise.all(
-      times(2).map(() =>
-        createOrganization(app, { name: faker.company.companyName() + ' Inc' })
+    // create array of 4 orgs
+    const organizations: Organization[] = await Promise.all(
+      times(4).map(() =>
+        createOrganization(app, {
+          name: faker.company.companyName() + ' Inc',
+        })
       )
     );
-    // create a project with 2 years, and 2 orgs
+
+    // create a project with 4 years
+    const mouStart = DateTime.fromISO('2021');
+    const mouEnd = DateTime.fromISO('2024');
+    const project = await createProject(app, {
+      name: faker.company.companyName() + ' project',
+      mouStart,
+      mouEnd,
+    });
+
+    await Promise.all(
+      organizations.map((org) =>
+        createPartnership(app, {
+          projectId: project.id,
+          organizationId: org.id,
+          mouStart,
+          mouEnd,
+        })
+      )
+    );
+
     // create a new budget for that project
+    const budget = await createBudget(app, { projectId: project.id });
+
+    // get a list of all budget records on this budget
+    const { budgetRecords } = await app.graphql.query(gql`
+      query {
+        budgetRecords (input: { filter: { budgetId : "${budget.id}" }}) {
+          items {
+            ...budgetRecord
+          }
+          hasMore
+          total
+        }
+      }
+      ${fragments.budgetRecord}
+    `);
+
+    expect(budgetRecords.items.length).toBe(16);
   });
 });
