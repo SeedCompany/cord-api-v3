@@ -57,7 +57,7 @@ export const CypherFactory: FactoryProvider<Connection> = {
           result.subscribe = function (this: never, observer) {
             if (observer.onError) {
               const onError = observer.onError;
-              observer.onError = e => {
+              observer.onError = (e) => {
                 const patched = jestSkipFileInExceptionSource(e, __filename);
                 onError(patched);
               };

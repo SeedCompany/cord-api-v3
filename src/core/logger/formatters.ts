@@ -13,7 +13,7 @@ export const metadata = () =>
   });
 
 export const maskSecrets = () =>
-  format(info => {
+  format((info) => {
     info.metadata = mapValues(info.metadata, (val: string, key) =>
       /(password|token|key)/i.exec(key)
         ? `${'*'.repeat(Math.min(val.slice(0, -3).length, 20)) + val.slice(-3)}`
@@ -22,14 +22,14 @@ export const maskSecrets = () =>
     return info;
   })();
 
-export const timestamp = format(info => {
+export const timestamp = format((info) => {
   info.timestamp = DateTime.local().toLocaleString(
     DateTime.DATETIME_SHORT_WITH_SECONDS
   );
   return info;
 });
 
-export const pid = format(info => {
+export const pid = format((info) => {
   info.pid = process.pid;
   return info;
 });
@@ -38,7 +38,7 @@ export const colorize = () =>
   colorsEnabled ? format.colorize({ message: true }) : format(identity)();
 
 export const exceptionInfo = () =>
-  format(info => {
+  format((info) => {
     if (!info.exception) {
       return info;
     }
@@ -61,7 +61,7 @@ export const exceptionInfo = () =>
   })();
 
 export const formatException = () =>
-  format(info => {
+  format((info) => {
     if (!info.exception) {
       return info;
     }
@@ -96,7 +96,7 @@ export const formatException = () =>
   })();
 
 export const printForCli = () =>
-  format.printf(info => {
+  format.printf((info) => {
     if (info[MESSAGE]) {
       return info[MESSAGE];
     }

@@ -136,7 +136,7 @@ export class LocationService {
       .run();
 
     const items = await Promise.all(
-      result.map(row => this.readOne(row.id, session))
+      result.map((row) => this.readOne(row.id, session))
     );
 
     return {

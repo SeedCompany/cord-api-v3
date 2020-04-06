@@ -399,7 +399,7 @@ export class DatabaseService {
         },
 
         // return the rest of the requested properties
-        ...props.map(prop => {
+        ...props.map((prop) => {
           const propName = (typeof prop === 'object'
             ? prop.name
             : prop) as string;
@@ -418,7 +418,7 @@ export class DatabaseService {
     // if skip + count is less than total, there is more
     const hasMore = (input.page - 1) * input.count + input.count < total;
 
-    const items = result.map<TObject>(row => {
+    const items = result.map<TObject>((row) => {
       const item: any = {
         id: row.id,
         createdAt: row.createdAt,

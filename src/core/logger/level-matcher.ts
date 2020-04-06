@@ -90,8 +90,8 @@ export class LevelMatcher {
     }
     for (const { include, exclude, level } of this.matchers) {
       const matched =
-        include.some(regex => regex.exec(name)) &&
-        !exclude.some(regex => regex.exec(name));
+        include.some((regex) => regex.exec(name)) &&
+        !exclude.some((regex) => regex.exec(name));
       if (matched) {
         this.cached[name] = level;
         return level;
