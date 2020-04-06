@@ -23,12 +23,12 @@ export const unwrapSecured = <T>(value: T | Secured<T>): T | undefined =>
   isSecured(value) ? value.value : value;
 
 export function SecuredProperty<T>(
-  ValueClass: ClassType<T> | AbstractClassType<T> | GraphQLScalarType | object
+  valueClass: ClassType<T> | AbstractClassType<T> | GraphQLScalarType | object
 ) {
   @ObjectType({ isAbstract: true, implements: [Readable, Editable] })
   abstract class SecuredPropertyClass
     implements Readable, Editable, Secured<T> {
-    @Field(() => ValueClass, { nullable: true })
+    @Field(() => valueClass, { nullable: true })
     readonly value?: T;
     @Field()
     readonly canRead: boolean;
@@ -46,12 +46,12 @@ SecuredProperty.descriptionFor = (value: string) => stripIndent`
 `;
 
 export function SecuredPropertyList<T>(
-  ValueClass: ClassType<T> | AbstractClassType<T> | GraphQLScalarType | object
+  valueClass: ClassType<T> | AbstractClassType<T> | GraphQLScalarType | object
 ) {
   @ObjectType({ isAbstract: true, implements: [Readable, Editable] })
   abstract class SecuredPropertyListClass
     implements Readable, Editable, Secured<T[]> {
-    @Field(() => [ValueClass])
+    @Field(() => [valueClass])
     readonly value: T[];
     @Field()
     readonly canRead: boolean;

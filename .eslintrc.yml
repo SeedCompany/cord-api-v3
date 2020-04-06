@@ -5,3 +5,24 @@ extends:
   - plugin:@seedcompany/nestjs
 rules:
   no-console: error
+  '@typescript-eslint/naming-convention':
+    - warn
+    - selector: typeLike
+      format: [PascalCase]
+    - selector: interface
+      format: [PascalCase]
+      custom: # Forbid I prefixed type names
+        regex: ^I[A-Z].+$
+        match: false
+    - selector: memberLike
+      format: [camelCase]
+      leadingUnderscore: forbid
+    - selector: property
+      format: [camelCase, PascalCase]
+      leadingUnderscore: forbid
+    - selector: enumMember
+      format: [PascalCase, UPPER_CASE]
+      leadingUnderscore: forbid
+    - selector: parameter
+      format: [camelCase]
+      leadingUnderscore: allow
