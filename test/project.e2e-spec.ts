@@ -1,7 +1,12 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
-import { Project, ProjectType } from '../src/components/project';
+import {
+  Project,
+  ProjectStatus,
+  ProjectStep,
+  ProjectType,
+} from '../src/components/project';
 import {
   createSession,
   createTestApp,
@@ -23,7 +28,23 @@ describe('Project e2e', () => {
     await app.close();
   });
 
-  it.only('create & read project by id', async () => {
+  it('should have unique name', async () => {
+    const name = faker.random.word() + ' testProject';
+    await createProject(app, { name });
+    await expect(createProject(app, { name })).rejects.toThrowError();
+  });
+
+  it('should have project step', async () => {
+    const project = await createProject(app);
+    expect(project.step.value).toBe(ProjectStep.EarlyConversations);
+  });
+
+  it('should have project status', async () => {
+    const project = await createProject(app);
+    expect(project.status).toBe(ProjectStatus.InDevelopment);
+  });
+
+  it('create & read project by id', async () => {
     const project = await createProject(app);
 
     const result = await app.graphql.query(

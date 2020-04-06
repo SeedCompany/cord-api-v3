@@ -49,6 +49,13 @@ export class ProjectService {
 
       'CREATE CONSTRAINT ON ()-[r:step]-() ASSERT EXISTS(r.active)',
       'CREATE CONSTRAINT ON ()-[r:step]-() ASSERT EXISTS(r.createdAt)',
+      'CREATE CONSTRAINT ON (n:ProjectStep) ASSERT EXISTS(n.active)',
+      'CREATE CONSTRAINT ON (n:ProjectStep) ASSERT EXISTS(n.value)',
+
+      'CREATE CONSTRAINT ON ()-[r:status]-() ASSERT EXISTS(r.active)',
+      'CREATE CONSTRAINT ON ()-[r:status]-() ASSERT EXISTS(r.createdAt)',
+      'CREATE CONSTRAINT ON (n:ProjectStatus) ASSERT EXISTS(n.active)',
+      'CREATE CONSTRAINT ON (n:ProjectStatus) ASSERT EXISTS(n.value)',
 
       'CREATE CONSTRAINT ON (n:ProjectName) ASSERT EXISTS(n.value)',
       'CREATE CONSTRAINT ON (n:ProjectName) ASSERT n.value IS UNIQUE',
@@ -310,6 +317,8 @@ export class ProjectService {
       canEditName: true,
       canReadDeptId: true,
       canEditDeptId: true,
+      canReadStep: true,
+      canEditStep: true,
       canReadStatus: true,
       canEditStatus: true,
       canReadLocation: true,
@@ -338,6 +347,19 @@ export class ProjectService {
         input: createInput,
         acls,
       });
+      const qry = `
+        MATCH
+          (project:Project {id: "${id}", active: true})-[:name]->(proName:Property),
+          (project:Project)-[:step]->(proStep:Property {active: true}),
+          (project:Project)-[:status]->(proStatus:Property {active: true})
+        SET proName :ProjectName, proStep :ProjectStep, proStatus :ProjectStatus
+      `;
+      await this.db
+        .query()
+        .raw(qry, {
+          id,
+        })
+        .run();
 
       // TODO: locations are not hooked up yet
       // if (locationId) {
@@ -362,7 +384,7 @@ export class ProjectService {
       this.logger.warning(`Could not create project`, {
         exception: e,
       });
-      throw new Error('Could not create project');
+      throw new Error(e);
     }
   }
 
