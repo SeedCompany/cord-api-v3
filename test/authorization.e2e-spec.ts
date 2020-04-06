@@ -2,13 +2,13 @@ import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import {
   createOrganization,
-  createProject,
   createSession,
   createTestApp,
   createUser,
   TestApp,
 } from './utility';
 import { createPermission } from './utility/create-permission';
+import { createProduct } from './utility/create-product';
 import { createSecurityGroup } from './utility/create-security-group';
 import { login } from './utility/login';
 
@@ -91,7 +91,7 @@ describe('Authorization e2e', () => {
     });
 
     const sg = await createSecurityGroup(app);
-    const project = await createProject(app);
+    const project = await createProduct(app);
     const permId = await createPermission(app, {
       sgId: sg.id!,
       baseNodeId: project.id,

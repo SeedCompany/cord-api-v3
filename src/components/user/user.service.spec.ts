@@ -2,7 +2,7 @@ import { Test } from '@nestjs/testing';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
 import { CoreModule, LoggerModule } from '../../core';
-import { AuthModule, AuthService } from '../auth';
+import { AuthenticationModule, AuthenticationService } from '../authentication';
 import { OrganizationModule, OrganizationService } from '../organization';
 import { CreateUser, UpdateUser, User } from './dto';
 import { EducationModule, EducationService } from './education';
@@ -79,14 +79,14 @@ describe('UserService', () => {
         EducationModule,
         OrganizationModule,
         UnavailabilityModule,
-        AuthModule,
+        AuthenticationModule,
       ],
       providers: [
         UserService,
         EducationService,
         OrganizationService,
         UnavailabilityService,
-        AuthService,
+        AuthenticationService,
       ],
     }).compile();
 
@@ -99,9 +99,9 @@ describe('UserService', () => {
 
   it('should create a user node', async () => {
     jest
-      .spyOn(userService, 'create')
+      .spyOn(userService, 'createAndLogin')
       .mockImplementation(() => Promise.resolve(createTestUser as User));
-    const user = await userService.create(
+    const user = await userService.createAndLogin(
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
       {} as CreateUser,
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions

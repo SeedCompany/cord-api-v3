@@ -27,15 +27,11 @@ export class AdminService implements OnApplicationBootstrap {
   async rootAdminSecurityGroupExists(): Promise<boolean> {
     const result = await this.db
       .query()
-      .match([[node('sg', 'RootSecurityGroup')]])
+      .match(node('sg', 'RootSecurityGroup'))
       .return('sg')
       .first();
 
-    if (result) {
-      return true;
-    } else {
-      return false;
-    }
+    return !!result;
   }
 
   async doesRootAdminUserAlreadyExist(): Promise<boolean> {
@@ -62,28 +58,21 @@ export class AdminService implements OnApplicationBootstrap {
     }
   }
 
-  async createRootAdminSecurityGroup(): Promise<boolean> {
+  async createRootAdminSecurityGroup(): Promise<void> {
     const result = await this.db
       .query()
       .create([
-        [
-          node(
-            'sg',
-            ['RootSecurityGroup', 'SecurityGroup'],
-            new RootSecurityGroup()
-          ),
-        ],
+        [node('sg', ['RootSecurityGroup', 'SecurityGroup'], RootSecurityGroup)],
       ])
+      .return('sg')
       .first();
 
-    if (result) {
-      return true;
-    } else {
-      return false;
+    if (!result) {
+      throw new Error('Could not create root admin security group.');
     }
   }
 
-  async createRootAdminUser(): Promise<boolean> {
+  async createRootAdminUser(): Promise<void> {
     const { email, password } = this.config.rootAdmin;
     const adminUser = await this.userService.create({
       email: email,
@@ -97,14 +86,12 @@ export class AdminService implements OnApplicationBootstrap {
       bio: 'root',
     });
 
-    if (adminUser) {
-      return true;
-    } else {
-      return false;
+    if (!adminUser) {
+      throw new Error('Could not create root admin user');
     }
   }
 
-  async mergeRootAdminUserToSecurityGroup(): Promise<boolean> {
+  async mergeRootAdminUserToSecurityGroup(): Promise<void> {
     const makeAdmin = await this.db
       .query()
       .match([[node('sg', 'RootSecurityGroup')]])
@@ -128,15 +115,12 @@ export class AdminService implements OnApplicationBootstrap {
           node('newRootAdmin'),
         ],
       ])
-      .setValues({ sg: new RootSecurityGroup() })
+      .setValues({ sg: RootSecurityGroup })
       .return('newRootAdmin')
       .first();
 
-    if (makeAdmin) {
-      return true;
-    } else {
-      console.log('merge failed');
-      return false;
+    if (!makeAdmin) {
+      throw new Error('Could not merge root admin user to security group');
     }
   }
 }

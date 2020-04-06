@@ -241,7 +241,7 @@ export class UserService {
       }
     } catch (err) {
       // internal failure
-      console.log(err);
+      this.logger.error('Login failed', { exception: err });
       throw err;
     }
 

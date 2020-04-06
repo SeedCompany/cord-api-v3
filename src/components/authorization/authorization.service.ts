@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
-import { DatabaseService, ILogger, Logger } from '../../core';
+import { DatabaseService, ILogger, Logger, matchSession } from '../../core';
 import { AttachUserToSecurityGroup } from './dto/attach-user-to-security-group.dto';
 import {
   CreatePermission,
@@ -60,7 +60,7 @@ export class AuthorizationService {
       .run()) as SecurityGroup[];
 
     // ensure only SGs come through and not root SGs
-    return { items: result.filter(item => item.id && item.name) };
+    return { items: result.filter((item) => item.id && item.name) };
   }
 
   async listSecurityGroupsUserIsAdminOf(
@@ -87,7 +87,7 @@ export class AuthorizationService {
       .run()) as SecurityGroup[];
 
     // ensure only SGs come through and not root SGs
-    return { items: result.filter(item => item.id && item.name) };
+    return { items: result.filter((item) => item.id && item.name) };
   }
 
   async listPermissionsInSecurityGroup(
@@ -528,29 +528,16 @@ export class AuthorizationService {
         .query()
         .match([
           [
-            node('token', 'Token', {
-              active: true,
-              value: session.token,
+            ...matchSession(session),
+            relation('in', '', 'member', {
+              admin: true,
             }),
-            relation('in', '', 'token', {
-              active: true,
-            }),
-            node('requestingUser', 'User', {
-              active: true,
-              id: session.userId,
-            }),
-            relation('in', '', 'member'),
-            node('accessSg', 'SecurityGroup', {
-              canCreateSecurityGroup: true,
-            }),
-          ],
-          [
-            node('sgToDelete', 'SecurityGroup', {
+            node('sg', 'SecurityGroup', {
               id,
             }),
           ],
         ])
-        .detachDelete('sgToDelete')
+        .detachDelete('sg')
         .run();
     } catch (e) {
       this.logger.warning('Failed to delete security group', {
