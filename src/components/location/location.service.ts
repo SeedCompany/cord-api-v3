@@ -94,13 +94,13 @@ export class LocationService {
     this.logger.info('Looking for ', { label, id, userId: session.userId });
     switch (label) {
       case 'Zone': {
-        return await this.readOneZone(id, session);
+        return this.readOneZone(id, session);
       }
       case 'Region': {
-        return await this.readOneRegion(id, session);
+        return this.readOneRegion(id, session);
       }
       case 'Country': {
-        return await this.readOneCountry(id, session);
+        return this.readOneCountry(id, session);
       }
       default: {
         throw new BadRequestException('Not a location');
@@ -688,7 +688,7 @@ export class LocationService {
       nodevar: 'zone',
     });
 
-    return await this.readOneZone(input.id, session);
+    return this.readOneZone(input.id, session);
   }
 
   async updateRegion(input: UpdateRegion, session: ISession): Promise<Region> {
@@ -768,7 +768,7 @@ export class LocationService {
       changes: input,
       nodevar: 'region',
     });
-    return await this.readOneRegion(input.id, session);
+    return this.readOneRegion(input.id, session);
   }
 
   async updateCountry(
@@ -818,7 +818,7 @@ export class LocationService {
       nodevar: 'country',
     });
 
-    return await this.readOneCountry(input.id, session);
+    return this.readOneCountry(input.id, session);
   }
 
   async delete(id: string, session: ISession): Promise<void> {

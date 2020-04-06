@@ -33,7 +33,7 @@ export class PartnershipResolver {
     @Session() session: ISession,
     @IdArg() id: string
   ): Promise<Partnership> {
-    return await this.service.readOne(id, session);
+    return this.service.readOne(id, session);
   }
 
   @Query(() => PartnershipListOutput, {

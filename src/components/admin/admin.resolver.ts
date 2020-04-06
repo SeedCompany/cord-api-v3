@@ -10,34 +10,34 @@ export class AdminResolver {
     description: 'Creates constraints and indexes in database',
   })
   async prepareDatabaseConstraintsAndIndexes(): Promise<AdminOutputDto> {
-    return await this.adminService.prepareDatabaseConstraintsAndIndexes();
+    return this.adminService.prepareDatabaseConstraintsAndIndexes();
   }
 
   @Mutation(() => AdminOutputDto, {
     description: 'Load fake data for testing',
   })
   async loadFakeData(): Promise<AdminOutputDto> {
-    return await this.adminService.loadFakeData();
+    return this.adminService.loadFakeData();
   }
 
   @Mutation(() => AdminOutputDto, {
     description: 'test all nodes and relationships for rule violations',
   })
   async consistencyCheck(): Promise<AdminOutputDto> {
-    return await this.adminService.consistencyCheck();
+    return this.adminService.consistencyCheck();
   }
 
   @Mutation(() => AdminOutputDto, {
     description: 'test all nodes and relationships for rule violations',
   })
   async deleteAllData(): Promise<AdminOutputDto> {
-    return await this.adminService.deleteAllData();
+    return this.adminService.deleteAllData();
   }
 
   @Mutation(() => AdminOutputDto, {
     description: 'test all nodes and relationships for rule violations',
   })
   async removeAllConstraintsAndIndexes(): Promise<AdminOutputDto> {
-    return await this.adminService.removeAllConstraintsAndIndexes();
+    return this.adminService.removeAllConstraintsAndIndexes();
   }
 }

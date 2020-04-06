@@ -66,7 +66,7 @@ export class UnavailabilityService {
       })
       .run();
 
-    return await this.readOne(id, session);
+    return this.readOne(id, session);
   }
 
   async readOne(id: string, session: ISession): Promise<Unavailability> {
