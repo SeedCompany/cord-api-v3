@@ -14,7 +14,7 @@ export async function createProject(
   input: Partial<CreateProject> = {}
 ) {
   const project: CreateProject = {
-    name: faker.random.word() + ' Project',
+    name: faker.random.uuid(),
     type: ProjectType.Translation,
     ...input,
   };
