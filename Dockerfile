@@ -7,6 +7,8 @@ WORKDIR /opt/cord-api
 ADD https://raw.githubusercontent.com/eficode/wait-for/96511d65c6578d4866591283fdec6e2fba7e6770/wait-for /usr/local/bin/wait-for
 RUN chmod +x /usr/local/bin/wait-for
 
+RUN apk add --no-cache jq
+
 ENV NODE_ENV=development \
     NEO4J_URL= \
     NEO4J_USERNAME= \
@@ -24,10 +26,10 @@ CMD ["yarn", "start:prod"]
 # This stage can run everything
 FROM node as dev
 
-# We copy the package.json and yarn.lock separately so node_modules
-# is cached in a separate docker layer from app code
-ADD package.json yarn.lock ./
-RUN yarn install --frozen-lockfile
+# Install dependencies (in separate docker layer from app code)
+COPY .yarn .yarn
+COPY package.json yarn.lock .yarnrc.yml ./
+RUN yarn install --immutable
 
 # Copy application code
 COPY . .
@@ -41,7 +43,9 @@ FROM dev as builder
 
 # Remove non-production code
 RUN rm -rf nest-cli.json tsconfig* test
-RUN yarn install --production
+# list and remove dev dependencies
+# yarn v2 doesn't have an install only production deps command
+RUN jq -r '.devDependencies | keys | .[]' package.json | xargs yarn remove
 
 
 # Production stage which is clean from our base node stage

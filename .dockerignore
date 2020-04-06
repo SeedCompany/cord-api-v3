@@ -10,9 +10,14 @@ Dockerfile
 README*
 *example*
 
+# Yarn / NPM
+!.yarnrc.yml
+!.yarn/releases
+!.yarn/plugins
+node_modules
+
 # Local
 dist
-node_modules
 coverage
 logging.yml
 *.gql
