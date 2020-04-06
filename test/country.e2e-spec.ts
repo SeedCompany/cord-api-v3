@@ -36,8 +36,9 @@ describe('Country e2e', () => {
   });
 
   it('should have unique name', async () => {
-    await createCountry(app);
-    await expect(createCountry(app)).rejects.toThrowError();
+    const name = faker.address.country();
+    await createCountry(app, { name });
+    await expect(createCountry(app, { name })).rejects.toThrowError();
   });
 
   it('read one country by id', async () => {
