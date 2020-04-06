@@ -14,7 +14,7 @@ Settings.throwOnInvalid = true;
 export const DateTimeField = (options?: AdvancedOptions) =>
   applyDecorators(
     Field(() => DateTime, options),
-    Transform(value => DateTime.fromISO(value), {
+    Transform((value) => DateTime.fromISO(value), {
       toClassOnly: true,
     }) as PropertyDecorator
   );
@@ -22,7 +22,7 @@ export const DateTimeField = (options?: AdvancedOptions) =>
 export const DateField = (options?: AdvancedOptions) =>
   applyDecorators(
     Field(() => CalendarDate, options),
-    Transform(value => CalendarDate.fromISO(value), {
+    Transform((value) => CalendarDate.fromISO(value), {
       toClassOnly: true,
     }) as PropertyDecorator
   );

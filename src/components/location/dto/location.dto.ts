@@ -77,7 +77,7 @@ export class SecuredCountry extends SecuredProperty(Country) {}
 export const Location = createUnionType({
   name: 'Location',
   types: () => [Country.classType, Region.classType, Zone.classType],
-  resolveType: value => {
+  resolveType: (value) => {
     if ('region' in value) {
       return Country.classType;
     }

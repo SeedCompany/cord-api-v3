@@ -155,7 +155,7 @@ describe('Zone e2e', () => {
   it.skip('returns a list of zones', async () => {
     // create 2 zones
     await Promise.all(
-      ['Asia1', 'Asia2'].map(e =>
+      ['Asia1', 'Asia2'].map((e) =>
         createZone(app, { name: e, directorId: director.id })
       )
     );

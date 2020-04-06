@@ -46,11 +46,11 @@ export class ParameterTransformer {
     }
 
     if (Array.isArray(value)) {
-      return value.map(v => this.transformValue(v));
+      return value.map((v) => this.transformValue(v));
     }
 
     if (typeof value === 'object') {
-      return mapValues(value, v => this.transformValue(v));
+      return mapValues(value, (v) => this.transformValue(v));
     }
 
     throw new Error(`Could not determine how to transform value: ${value}`);

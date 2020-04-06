@@ -243,7 +243,7 @@ export class ProjectService {
     });
 
     return {
-      items: result.items.map(item => ({
+      items: result.items.map((item) => ({
         ...item,
         location: {
           value: undefined,
