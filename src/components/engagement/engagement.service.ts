@@ -40,10 +40,7 @@ export class EngagementService {
     MATCH (place {id: $id, active: true}) RETURN labels(place) as labels
     `;
 
-    const results = await this.db
-      .query()
-      .raw(qr, { id })
-      .first();
+    const results = await this.db.query().raw(qr, { id }).first();
     const label: string = results?.labels?.[0] ?? '';
 
     let query = `

@@ -3639,7 +3639,7 @@ __metadata:
     luxon: ^1.21.3
     madge: ^3.8.0
     neo4j-driver: 1.7.6
-    prettier: ^1.19.1
+    prettier: ^2.0.4
     reflect-metadata: ^0.1.13
     rimraf: ^3.0.0
     rxjs: ^6.5.3
@@ -9288,12 +9288,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier@npm:^1.19.1":
-  version: 1.19.1
-  resolution: "prettier@npm:1.19.1"
+"prettier@npm:^2.0.4":
+  version: 2.0.4
+  resolution: "prettier@npm:2.0.4"
   bin:
-    prettier: ./bin-prettier.js
-  checksum: 2/e5fcdfe5e159ef5c5480245353cf8fb5bbd1b8afff266f31f281641825238f8a645e58472f77cd75a09ccc45d44c335466e8d901ec138c2bda05e1bd6ea1077c
+    prettier: bin-prettier.js
+  checksum: 2/a43343ac00250ce239439a723e5b0860a46e4703542b925c962d8c3dfceab1f69a326ba4c8de2f24ad39c4daef07831439b0b237cda9c63e4981164075e7dc5a
   languageName: node
   linkType: hard
 

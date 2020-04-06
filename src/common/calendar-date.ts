@@ -151,7 +151,9 @@ export class CalendarDate extends DateTime {
   }
 }
 
-(CalendarDate.prototype as any)[inspect.custom] = function(this: CalendarDate) {
+(CalendarDate.prototype as any)[inspect.custom] = function (
+  this: CalendarDate
+) {
   const str = this.toLocaleString(DateTime.DATE_SHORT);
   return `[Date] ${str}`;
 };

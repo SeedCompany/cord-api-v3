@@ -289,10 +289,7 @@ export class FileService {
         RETURN
           file, parent
       `;
-    await this.db
-      .query()
-      .raw(qryOne, { parentId })
-      .first();
+    await this.db.query().raw(qryOne, { parentId }).first();
 
     return this.getFile(fileId, session);
   }

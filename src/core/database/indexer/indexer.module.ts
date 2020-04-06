@@ -36,10 +36,7 @@ export class IndexerModule implements OnModuleInit {
           : [maybeStatements]
         : [];
       for (const statement of statements) {
-        await this.db
-          .query()
-          .raw(statement)
-          .run();
+        await this.db.query().raw(statement).run();
       }
     }
 

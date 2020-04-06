@@ -61,10 +61,7 @@ export class ProjectService {
       'CREATE CONSTRAINT ON (n:ProjectName) ASSERT n.value IS UNIQUE',
     ];
     for (const query of constraints) {
-      await this.db
-        .query()
-        .raw(query)
-        .run();
+      await this.db.query().raw(query).run();
     }
   }
 

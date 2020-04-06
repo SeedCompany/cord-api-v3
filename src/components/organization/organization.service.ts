@@ -33,10 +33,7 @@ export class OrganizationService {
       'CREATE CONSTRAINT ON (n:OrgName) ASSERT n.value IS UNIQUE',
     ];
     for (const query of constraints) {
-      await this.db
-        .query()
-        .raw(query)
-        .run();
+      await this.db.query().raw(query).run();
     }
   }
 
