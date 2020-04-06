@@ -67,10 +67,7 @@ export class UserService {
       'CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.active)',
     ];
     for (const query of constraints) {
-      await this.db
-        .query()
-        .raw(query)
-        .run();
+      await this.db.query().raw(query).run();
     }
   }
 

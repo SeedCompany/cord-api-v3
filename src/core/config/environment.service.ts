@@ -26,7 +26,7 @@ export class EnvironmentService {
 
     const files = [`.env.${env}.local`, `.env.${env}`, `.env.local`, `.env`]
       .filter(isString)
-      .map(file => join(rootPath, file));
+      .map((file) => join(rootPath, file));
 
     for (const file of files) {
       if (!fs.existsSync(file)) {
@@ -57,15 +57,15 @@ export class EnvironmentService {
   }
 
   string(key: string) {
-    return this.wrap(key, raw => raw);
+    return this.wrap(key, (raw) => raw);
   }
 
   boolean(key: string) {
-    return this.wrap(key, raw => raw.toLowerCase() === 'true');
+    return this.wrap(key, (raw) => raw.toLowerCase() === 'true');
   }
 
   number(key: string) {
-    return this.wrap(key, raw => {
+    return this.wrap(key, (raw) => {
       const val = raw.toLowerCase();
       if (val === 'infinity') {
         return Infinity;

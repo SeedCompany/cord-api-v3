@@ -20,7 +20,7 @@ export class IndexerModule implements OnModuleInit {
     );
     this.logger.info('Discovered indexers', { count: discovered.length });
 
-    const indexers = discovered.map(h => h.discoveredMethod);
+    const indexers = discovered.map((h) => h.discoveredMethod);
     for (const { handler, methodName, parentClass } of indexers) {
       this.logger.debug('Running indexer', {
         class: parentClass.name,
@@ -36,10 +36,7 @@ export class IndexerModule implements OnModuleInit {
           : [maybeStatements]
         : [];
       for (const statement of statements) {
-        await this.db
-          .query()
-          .raw(statement)
-          .run();
+        await this.db.query().raw(statement).run();
       }
     }
 

@@ -80,10 +80,7 @@ export class LocationService {
       'CREATE CONSTRAINT ON (n:LocationName) ASSERT n.value IS UNIQUE',
     ];
     for (const query of constraints) {
-      await this.db
-        .query()
-        .raw(query)
-        .run();
+      await this.db.query().raw(query).run();
     }
   }
 
@@ -92,10 +89,7 @@ export class LocationService {
     MATCH (place {id: $id, active: true}) RETURN labels(place) as labels
     `;
 
-    const results = await this.db
-      .query()
-      .raw(query, { id })
-      .first();
+    const results = await this.db.query().raw(query, { id }).first();
     const label: string = results?.labels?.[0] ?? '';
     this.logger.info('Looking for ', { label, id, userId: session.userId });
     switch (label) {
@@ -142,7 +136,7 @@ export class LocationService {
       .run();
 
     const items = await Promise.all(
-      result.map(row => this.readOne(row.id, session))
+      result.map((row) => this.readOne(row.id, session))
     );
 
     return {

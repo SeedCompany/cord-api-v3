@@ -112,7 +112,7 @@ export const FileOrDirectory = createUnionType({
   name: 'FileOrDirectory',
   description: '',
   types: () => [File.classType, Directory.classType],
-  resolveType: value =>
+  resolveType: (value) =>
     value.type === FileNodeType.Directory
       ? Directory.classType
       : File.classType,

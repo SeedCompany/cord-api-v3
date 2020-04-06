@@ -180,7 +180,7 @@ describe('Country e2e', () => {
 
   it.skip('returns a list of countries', async () => {
     await Promise.all(
-      ['Arendale', 'South Arendale'].map(e => createCountry(app, { name: e }))
+      ['Arendale', 'South Arendale'].map((e) => createCountry(app, { name: e }))
     );
 
     const { locations } = await app.graphql.query(gql`

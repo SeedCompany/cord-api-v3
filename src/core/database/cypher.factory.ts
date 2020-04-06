@@ -40,11 +40,11 @@ export const CypherFactory: FactoryProvider<Connection> = {
     // wrap session.run calls to add logging
     /* eslint-disable @typescript-eslint/unbound-method */
     const origSession = conn.session;
-    conn.session = function(this: never) {
+    conn.session = function (this: never) {
       const session: Session | null = origSession.call(conn);
       if (session) {
         const origRun = session.run;
-        session.run = function(this: never, origStatement, parameters, conf) {
+        session.run = function (this: never, origStatement, parameters, conf) {
           const statement = stripIndent(origStatement.slice(0, -1)) + ';';
           logger.debug('\n' + statement, parameters);
 
@@ -54,10 +54,10 @@ export const CypherFactory: FactoryProvider<Connection> = {
           const result = origRun.call(session, statement, params, conf);
 
           const origSubscribe = result.subscribe;
-          result.subscribe = function(this: never, observer) {
+          result.subscribe = function (this: never, observer) {
             if (observer.onError) {
               const onError = observer.onError;
-              observer.onError = e => {
+              observer.onError = (e) => {
                 const patched = jestSkipFileInExceptionSource(e, __filename);
                 onError(patched);
               };

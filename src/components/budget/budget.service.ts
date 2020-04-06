@@ -176,7 +176,7 @@ export class BudgetService {
       .run();
 
     const items = await Promise.all(
-      projBudgets.map(async budget => this.readOne(budget.budgetId, session))
+      projBudgets.map(async (budget) => this.readOne(budget.budgetId, session))
     );
 
     return {
@@ -204,7 +204,7 @@ export class BudgetService {
     // cascade delete each budget record in this budget
     if (budget.records) {
       await Promise.all(
-        budget.records.map(async br => {
+        budget.records.map(async (br) => {
           if (br.value) {
             await this.deleteRecord(br.value, session);
           }
@@ -394,7 +394,7 @@ export class BudgetService {
       .run();
 
     const items = await Promise.all(
-      brs.map(async br => this.readOneRecord(br.budgetRecordId, session))
+      brs.map(async (br) => this.readOneRecord(br.budgetRecordId, session))
     );
 
     return {

@@ -37,7 +37,7 @@ export const noUnusedVars: RuleModule<string, any[]> = {
         return;
       }
 
-      descriptor.fix = fixer => {
+      descriptor.fix = (fixer) => {
         if (isImportDeclaration(node)) {
           return fixer.remove(node);
         }

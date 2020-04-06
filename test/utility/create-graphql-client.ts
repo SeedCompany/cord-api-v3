@@ -104,7 +104,7 @@ const reportError = (
     msg += `\nPath: ${e.path}`;
   }
   const location = (e.locations || [])
-    .map(l => `  - line ${l.line}, column ${l.column}`)
+    .map((l) => `  - line ${l.line}, column ${l.column}`)
     .join('\n');
   if (location) {
     msg += `\nLocations:\n${location}`;
