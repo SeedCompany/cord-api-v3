@@ -41,7 +41,7 @@ export class LocationService {
       .raw(query, { id })
       .first();
     const label: string = results?.labels?.[0] ?? '';
-
+    this.logger.info('Looking for ', { label, id, userId: session.userId });
     switch (label) {
       case 'Zone': {
         return await this.readOneZone(id, session);
@@ -144,7 +144,7 @@ export class LocationService {
   // }
 
   async readOneZone(id: string, session: ISession): Promise<Zone> {
-    this.logger.info(`Query readOne Zone`);
+    this.logger.info(`Query readOne Zone`, { id, userId: session.userId });
 
     // canReadZoneName: true,
     // canEditZoneName: true,
@@ -267,7 +267,7 @@ export class LocationService {
   }
 
   async readOneRegion(id: string, session: ISession): Promise<Region> {
-    this.logger.info(`Query readOne Region`);
+    this.logger.info(`Query readOne Region`, { id, userId: session.userId });
     if (!id) {
       throw new Error('No region id to search for');
     }
@@ -276,14 +276,6 @@ export class LocationService {
       .raw(
         `
         MATCH
-        // (token:Token {
-        //   active: true,
-        //   value: $token
-        // })<-[:token {active: true}]-
-        // (requestingUser:User {
-        //   active: true,
-        //   id: $requestingUserId,
-        //   owningOrgId: $owningOrgId}),
         (region:Region {active: true, id: $id})-[:zone {active: true}]->(zone:Zone {active: true, owningOrgId: $owningOrgId}),
         (region)-[:director {active: true}]->(director:User {active: true})
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl {canReadName: true})-[:toNode]->(region)-[:name {active: true}]->(name:Property {active: true})
@@ -420,7 +412,7 @@ export class LocationService {
   }
 
   async readOneCountry(id: string, session: ISession): Promise<Country> {
-    this.logger.info(`Query readOne Country`);
+    this.logger.info(`Query readOne Country`, { id, userId: session.userId });
 
     // canReadCountryName: true,
     // canEditCountryName: true,
