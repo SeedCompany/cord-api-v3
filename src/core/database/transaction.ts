@@ -11,7 +11,7 @@ declare module 'cypher-query-builder/dist/typings/connection' {
     /**
      * Returns a new transaction.
      */
-    transaction(): Transaction;
+    transaction: () => Transaction;
 
     /**
      * This will create a transaction and call the given function with it.
@@ -19,7 +19,7 @@ declare module 'cypher-query-builder/dist/typings/connection' {
      * Afterwards it will commit the transaction.
      * On any error the transaction will be rolled back.
      */
-    withTransaction<R>(inTx: (tx: Transaction) => Promise<R>): Promise<R>;
+    withTransaction: <R>(inTx: (tx: Transaction) => Promise<R>) => Promise<R>;
   }
 }
 
@@ -137,7 +137,7 @@ export class Transaction implements QueryConnection {
    * This observable will immediately emit an error.
    */
   stream<R = any>(_query: Query): Observable<Dictionary<R>> {
-    return new Observable((subscriber: { error(e: Error): void }) => {
+    return new Observable((subscriber: { error: (e: Error) => void }) => {
       subscriber.error(new Error('Transactions cannot be streamed.'));
     });
   }

@@ -18,7 +18,7 @@ declare module 'cypher-query-builder/dist/typings/query' {
      *   .first();
      * ```
      */
-    call(fn: (query: this) => this | void): this;
+    call: (fn: (query: this) => this | void) => this;
   }
 }
 
