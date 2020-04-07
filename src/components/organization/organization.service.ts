@@ -77,7 +77,7 @@ export class OrganizationService {
 
     this.logger.info(`organization created, id ${id}`);
 
-    return await this.readOne(id, session);
+    return this.readOne(id, session);
   }
 
   async readOne(orgId: string, session: ISession): Promise<Organization> {

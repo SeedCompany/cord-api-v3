@@ -6,12 +6,12 @@ import { Readable } from './readable.interface';
 import { AbstractClassType } from './types';
 
 export function SecuredList<Type, ListItem = Type>(
-  ItemClass: ClassType<Type> | AbstractClassType<Type> | GraphQLScalarType,
+  itemClass: ClassType<Type> | AbstractClassType<Type> | GraphQLScalarType,
   options: ListOptions = {}
 ) {
   @ObjectType({ isAbstract: true, implements: [Readable] })
   abstract class SecuredListClass
-    extends PaginatedList<Type, ListItem>(ItemClass, options)
+    extends PaginatedList<Type, ListItem>(itemClass, options)
     implements Readable {
     @Field({
       description: 'Whether the current user can read the list of items',
@@ -19,7 +19,7 @@ export function SecuredList<Type, ListItem = Type>(
     readonly canRead: boolean;
 
     @Field({
-      description: `Whether the current user can create an ${ItemClass.name.toLowerCase()} in this list`,
+      description: `Whether the current user can create an ${itemClass.name.toLowerCase()} in this list`,
     })
     readonly canCreate: boolean;
   }

@@ -40,7 +40,7 @@ export class BudgetResolver {
     @Session() session: ISession,
     @IdArg() id: string
   ): Promise<Budget> {
-    return await this.service.readOne(id, session);
+    return this.service.readOne(id, session);
   }
 
   @Query(() => BudgetListOutput, {
@@ -98,7 +98,7 @@ export class BudgetResolver {
     @Session() session: ISession,
     @IdArg() id: string
   ): Promise<BudgetRecord> {
-    return await this.service.readOneRecord(id, session);
+    return this.service.readOneRecord(id, session);
   }
 
   @Query(() => BudgetRecordListOutput, {

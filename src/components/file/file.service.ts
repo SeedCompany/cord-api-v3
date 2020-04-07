@@ -364,7 +364,7 @@ export class FileService {
         nodevar: 'fileNode',
       });
 
-      return this.getFileNode(input.id, session);
+      return await this.getFileNode(input.id, session);
     } catch (e) {
       this.logger.error('could not rename', input);
       throw e;

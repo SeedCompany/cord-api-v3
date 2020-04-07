@@ -6,8 +6,8 @@ const { Date: NeoDate, DateTime: NeoDateTime } = Neo.types;
 
 declare module 'luxon' {
   interface DateTime {
-    toNeo4JDate(this: DateTime): Neo.Date<number>;
-    toNeo4JDateTime(this: DateTime): Neo.DateTime<number>;
+    toNeo4JDate: (this: DateTime) => Neo.Date<number>;
+    toNeo4JDateTime: (this: DateTime) => Neo.DateTime<number>;
   }
 }
 

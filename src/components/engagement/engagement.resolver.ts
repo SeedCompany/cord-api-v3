@@ -27,7 +27,7 @@ export class EngagementResolver {
     @IdArg() id: string,
     @Session() session: ISession
   ): Promise<Engagement> {
-    return await this.service.readOne(id, session);
+    return this.service.readOne(id, session);
   }
 
   @Query(() => EngagementListOutput, {

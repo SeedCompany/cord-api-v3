@@ -11,7 +11,7 @@ import { DateTime } from 'luxon';
 export const Session = () => Context('request', LazySessionPipe);
 
 // Prefixed with `I` so it can be used in conjunction with decorator
-// eslint-disable-next-line @typescript-eslint/interface-name-prefix
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export interface ISession {
   token: string;
   issuedAt: DateTime;

@@ -22,7 +22,7 @@ export class ProductResolver {
     @Session() session: ISession,
     @IdArg() id: string
   ): Promise<Product> {
-    return await this.productService.readOne(id, session);
+    return this.productService.readOne(id, session);
   }
 
   @Query(() => ProductListOutput, {

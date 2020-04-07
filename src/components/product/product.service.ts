@@ -55,7 +55,7 @@ export class ProductService {
       throw new Error('Could not create product');
     }
 
-    return await this.readOne(id, session);
+    return this.readOne(id, session);
   }
 
   async readOne(id: string, session: ISession): Promise<Product> {

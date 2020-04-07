@@ -37,7 +37,7 @@ export class CalendarDate extends DateTime {
   protected constructor() {
     // DateTime constructor isn't defined, because it's private
     // but it does require an object
-    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     super({});
   }

@@ -22,7 +22,7 @@ export class LanguageResolver {
     @Session() session: ISession,
     @IdArg() id: string
   ): Promise<Language> {
-    return await this.langService.readOne(id, session);
+    return this.langService.readOne(id, session);
   }
 
   @Query(() => LanguageListOutput, {
