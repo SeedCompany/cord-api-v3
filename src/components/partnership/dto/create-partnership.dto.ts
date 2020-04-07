@@ -11,6 +11,9 @@ export class CreatePartnership {
   @Field(() => ID)
   readonly organizationId: string;
 
+  @Field(() => ID)
+  readonly projectId: string;
+
   @Field(() => PartnershipAgreementStatus, { nullable: true })
   readonly agreementStatus?: PartnershipAgreementStatus;
 

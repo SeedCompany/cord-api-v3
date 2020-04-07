@@ -9,6 +9,7 @@ import {
 } from '../../src/components/partnership';
 import { TestApp } from './create-app';
 import { createOrganization } from './create-organization';
+import { createProject } from './create-project';
 import { fragments } from './fragments';
 
 export async function createPartnership(
@@ -16,7 +17,9 @@ export async function createPartnership(
   input: Partial<CreatePartnership> = {}
 ) {
   const org = await createOrganization(app);
+  const project = await createProject(app);
   const partnership: CreatePartnership = {
+    projectId: project.id,
     agreementStatus: PartnershipAgreementStatus.AwaitingSignature,
     mouStatus: PartnershipAgreementStatus.AwaitingSignature,
     types: [PartnershipType.Managing],
