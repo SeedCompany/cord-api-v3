@@ -163,7 +163,7 @@ export class PartnershipService {
   }
 
   async create(
-    { organizationId, ...input }: CreatePartnership,
+    { organizationId, projectId, ...input }: CreatePartnership,
     session: ISession
   ): Promise<Partnership> {
     const id = generate();
@@ -196,10 +196,13 @@ export class PartnershipService {
       });
 
       // connect the Organization to the Partnership
+      // and connect Partnership to Project
       const query = `
         MATCH (organization:Organization {id: $organizationId, active: true}),
-          (partnership:Partnership {id: $id, active: true})
-        CREATE (partnership)-[:organization {active: true, createdAt: datetime()}]->(organization)
+          (partnership:Partnership {id: $id, active: true}),
+          (project:Project {id: $projectId, active: true})
+        CREATE (project)-[:partnership {active: true, createdAt: datetime()}]->(partnership)
+                  -[:organization {active: true, createdAt: datetime()}]->(organization)
         RETURN partnership.id as id
       `;
 
@@ -208,9 +211,9 @@ export class PartnershipService {
         .raw(query, {
           organizationId,
           id,
+          projectId,
         })
         .first();
-
       return await this.readOne(id, session);
     } catch (e) {
       this.logger.warning('Failed to create partnership', {

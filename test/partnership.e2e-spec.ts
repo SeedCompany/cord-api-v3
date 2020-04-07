@@ -5,7 +5,9 @@ import {
   PartnershipAgreementStatus,
   PartnershipType,
 } from '../src/components/partnership';
+import { Project } from '../src/components/project/dto';
 import {
+  createProject,
   createSession,
   createTestApp,
   createUser,
@@ -16,11 +18,13 @@ import { createPartnership } from './utility/create-partnership';
 
 describe('Partnership e2e', () => {
   let app: TestApp;
+  let project: Project;
 
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
     await createUser(app);
+    project = await createProject(app);
   });
   afterAll(async () => {
     await app.close();
@@ -40,10 +44,12 @@ describe('Partnership e2e', () => {
       `,
       {
         id: partnership.id,
+        projectId: project.id,
       }
     );
 
     const actual: Partnership = result.partnership;
+
     expect(actual.id).toBe(partnership.id);
     expect(actual.agreementStatus.value).toBe(
       partnership.agreementStatus.value

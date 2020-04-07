@@ -16,6 +16,7 @@ import { PartnershipModule } from './partnership.module';
 import { PartnershipService } from './partnership.service';
 
 const organizationId = 'ASDF23FQ';
+const projectId = generate();
 const id = generate();
 const createTestPartnership: Partial<Partnership> = {
   id,
@@ -104,12 +105,13 @@ describe('partnership service', () => {
 
     const partnership = await partnershipService.create(
       {
-        organizationId: organizationId,
+        organizationId,
         agreementStatus: PartnershipAgreementStatus.NotAttached,
         mouStatus: PartnershipAgreementStatus.NotAttached,
         types: [PartnershipType.Technical],
         mouStart: DateTime.local(),
         mouEnd: DateTime.local(),
+        projectId,
       },
       mockSession as ISession
     );
