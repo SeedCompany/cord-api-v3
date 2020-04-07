@@ -44,6 +44,7 @@ describe('Partnership e2e', () => {
     );
 
     const actual: Partnership = result.partnership;
+
     expect(actual.id).toBe(partnership.id);
     expect(actual.agreementStatus.value).toBe(
       partnership.agreementStatus.value

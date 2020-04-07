@@ -200,7 +200,7 @@ export class PartnershipService {
       const query = `
         MATCH (organization:Organization {id: $organizationId, active: true}),
           (partnership:Partnership {id: $id, active: true}),
-          (project: Project {projectId: $projectId, active: true})
+          (project:Project {id: $projectId, active: true})
         CREATE (project)-[:partnership {active: true, createdAt: datetime()}]->(partnership)
                   -[:organization {active: true, createdAt: datetime()}]->(organization)
         RETURN partnership.id as id
@@ -214,7 +214,6 @@ export class PartnershipService {
           projectId,
         })
         .first();
-
       return await this.readOne(id, session);
     } catch (e) {
       this.logger.warning('Failed to create partnership', {
