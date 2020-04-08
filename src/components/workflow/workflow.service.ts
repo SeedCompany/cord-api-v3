@@ -642,7 +642,7 @@ export class WorkflowService {
   // addPossibleStateToState
   async addPossibleState(session: ISession, input: PossibleState): Promise<void>{
     try{
-      await this.db
+      const result = await this.db
         .query()
         .match([
           [
@@ -668,9 +668,14 @@ export class WorkflowService {
           }),
           node('toState')
         ])
-        .run();
+        .first();
+      
+      if ( !result ) {
+        throw new NotFoundException('could not make correct query result');
+      }
+
     } catch (e) {
-      this.logger.warning('could not add possible state to state', {
+      this.logger.warning('failed to add possible state to state', {
         exception: e
       });
       throw e;
