@@ -3,7 +3,7 @@ import { Injectable, NotImplementedException, NotFoundException } from '@nestjs/
 import { generate } from 'shortid';
 import { node, relation } from 'cypher-query-builder';
 import { ISession } from '../../common';
-import { CreateWorkflow, Workflow, AddState, State, UpdateState, StateListOutput, GroupState, ChangeState, PossibleState, FieldState, CommentState } from './dto';
+import { CreateWorkflow, Workflow, AddState, State, UpdateState, StateListOutput, GroupState, ChangeState, PossibleState, RequiredField, CommentState, RequiredFieldListOutput, FiledObject } from './dto';
 import { Logger, ILogger, DatabaseService, matchSession } from '../../core';
 
 @Injectable()
@@ -468,7 +468,7 @@ export class WorkflowService {
             })
           ]
         ])
-        .create([
+        .merge([
           [
             node('state'),
             relation('out', '', 'securityGroup', {
@@ -557,7 +557,7 @@ export class WorkflowService {
             })
           ]
         ])
-        .create([
+        .merge([
           [
             node('state'),
             relation('out', '', 'notification', {
@@ -661,7 +661,7 @@ export class WorkflowService {
             })
           ]
         ])
-        .create([
+        .merge([
           node('fromState'),
           relation('out', '', 'nextPossibleState', {
             active: true
@@ -715,12 +715,68 @@ export class WorkflowService {
   // there will be more than one required field relationship between a state node and a base node.
   // this is so each required field can be queried without inspecting the property name in app code.
   // addRequiredFieldToState
-  async addField(_session: ISession, _input: FieldState): Promise<void>{
+  async addField(session: ISession, input: RequiredField): Promise<void>{
     try{
+      const field = await this.db
+        .query()
+        .match([
+          [
+            node('token', 'Token', {
+              active: true,
+              value: session.token
+            }),
+            relation('in', '', 'token', {
+              active: true
+            }),
+            node('user'),
+            relation('in', '', 'admin', {
+              active: true
+            }),
+            node('baseNode'),
+            relation('out', '', `${input.propertyName}`),
+            node('property')
+          ]
+        ])
+        .return({
+          property: 'property'
+        })
+        .first();
+
+      if ( !field ) {
+        throw new NotFoundException('could not find such field existing.');
+      }
+
       await this.db
         .query()
-        .match([])
-        .run();
+        .match([
+          [
+            node('token', 'Token', {
+              active: true,
+              value: session.token
+            }),
+            relation('in', '', 'token', {
+              active: true
+            }),
+            node('user'),
+            relation('in', '', 'admin', {
+              active: true
+            }),
+            node('baseNode')
+          ],
+          [
+            node('state', 'State', {
+              id: input.stateId
+            })
+          ]
+        ])
+        .merge([
+          node('baseNode'),
+          relation('in', '', 'requiredProperty', {
+            value: input.propertyName
+          }),
+          node('state')
+        ])
+        .first();
 
     } catch (e) {
       this.logger.warning('could not add field to state', {
@@ -731,12 +787,36 @@ export class WorkflowService {
   }
 
   // listAllRequiredFieldsInAState
-  async listFields(_session: ISession, _stateId: string): Promise<void>{
+  async listFields(session: ISession, stateId: string): Promise<RequiredFieldListOutput>{
     try{
-      await this.db
+      const result = (await this.db
         .query()
-        .match([])
-        .run();
+        .match([
+          node('token', 'Token', {
+            active: true,
+            value: session.token
+          }),
+          relation('in', '', 'token', {
+            active: true
+          }),
+          node('user'),
+          relation('in', '', 'admin', {
+            active: true
+          }),
+          node('baseNode'),
+          relation('in', 'rel', 'requiredProperty'),
+          node('state', 'State', {
+            id: stateId
+          })
+        ])
+        .return({
+          'rel.value': 'value'          
+        })
+        .run()) as FiledObject[];
+
+      return {
+        items: result.filter(item => item.value)
+      }
 
     } catch (e) {
       this.logger.warning('could not list fields', {
@@ -747,11 +827,33 @@ export class WorkflowService {
   }
 
   // removeRequiredFieldFromState
-  async removeField(_session: ISession, _input: FieldState): Promise<void>{
+  async removeField(session: ISession, input: RequiredField): Promise<void>{
     try{
       await this.db
         .query()
-        .match([])
+        .match([
+          [
+            node('token', 'Token', {
+              active: true,
+              value: session.token
+            }),
+            relation('in', '', 'token', {
+              active: true
+            }),
+            node('user'),
+            relation('in', '', 'admin', {
+              active: true
+            }),
+            node('baseNode'),
+            relation('in', 'rel', 'requiredProperty', {
+              value: input.propertyName
+            }),
+            node('state', 'State', {
+              id: input.stateId
+            })
+          ]
+        ])
+        .detachDelete('rel')
         .run();
 
     } catch (e) {

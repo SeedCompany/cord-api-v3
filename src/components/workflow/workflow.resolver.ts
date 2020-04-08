@@ -7,9 +7,10 @@ import {
   CommentStateOutput,
   CreateWorkflowInput,
   CreateWorkflowOutput,
-  FieldStateInput,
   GroupStateInput,
   PossibleStateInput,
+  RequiredFieldInput,
+  RequiredFieldListOutput,
   StateListOutput,
   UpdateStateInput,
 } from './dto';
@@ -176,21 +177,21 @@ export class WorkflowResolver {
   })
   async addField(
     @Session() session: ISession,
-    @Args('input') { state: input }: FieldStateInput
+    @Args('input') { field: input }: RequiredFieldInput
   ): Promise<boolean> {
     await this.service.addField(session, input);
     return true;
   }
 
-  @Mutation(() => Boolean, {
+  @Query(() => RequiredFieldListOutput, {
     description: 'List required fields in state',
   })
-  async listFields(
+  async fields(
     @Session() session: ISession,
     @IdArg() stateId: string
-  ): Promise<boolean> {
-    await this.service.listFields(session, stateId);
-    return true;
+  ): Promise<RequiredFieldListOutput> {
+    const fields = await this.service.listFields(session, stateId);
+    return fields;
   }
 
   @Mutation(() => Boolean, {
@@ -198,7 +199,7 @@ export class WorkflowResolver {
   })
   async removeField(
     @Session() session: ISession,
-    @Args('input') { state: input }: FieldStateInput
+    @Args('input') { field: input }: RequiredFieldInput
   ): Promise<boolean> {
     await this.service.removeField(session, input);
     return true;

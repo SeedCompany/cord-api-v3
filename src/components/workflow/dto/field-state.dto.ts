@@ -3,7 +3,7 @@ import { ValidateNested } from 'class-validator';
 import { Field, ID, InputType } from 'type-graphql';
 
 @InputType()
-export abstract class FieldState {
+export abstract class RequiredField {
   @Field(() => ID)
   readonly stateId: string;
 
@@ -12,9 +12,9 @@ export abstract class FieldState {
 }
 
 @InputType()
-export abstract class FieldStateInput {
+export abstract class RequiredFieldInput {
   @Field()
-  @Type(() => FieldState)
+  @Type(() => RequiredField)
   @ValidateNested()
-  readonly state: FieldState;
+  readonly field: RequiredField;
 }

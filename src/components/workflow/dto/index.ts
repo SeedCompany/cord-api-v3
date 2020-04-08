@@ -6,6 +6,7 @@ export * from './state-security.dto';
 export * from './change-state.dto';
 export * from './possible-state.dto';
 export * from './field-state.dto';
+export * from './list-field.dto';
 export * from './workflow.dto';
 export * from './workflow.dto';
 export * from './state.dto';
