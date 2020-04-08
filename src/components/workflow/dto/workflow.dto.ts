@@ -1,11 +1,13 @@
 import { Type } from '@nestjs/common';
-import { ObjectType } from 'type-graphql';
-import { Resource } from '../../../common';
+import { Field, ID, ObjectType } from 'type-graphql';
 
-@ObjectType({
-  implements: [Resource],
-})
-export class Workflow extends Resource {
+@ObjectType()
+export class Workflow {
   /* TS wants a public constructor for "ClassType" */
   static classType = (Workflow as any) as Type<Workflow>;
+  @Field(() => ID)
+  readonly id: string;
+
+  @Field()
+  readonly stateIdentifier: string;
 }

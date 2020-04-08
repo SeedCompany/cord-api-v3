@@ -1,6 +1,8 @@
-import { ObjectType } from 'type-graphql';
-import { PaginatedList } from '../../../common';
+import { Field, ObjectType } from 'type-graphql';
 import { State } from './state.dto';
 
 @ObjectType()
-export class StateListOutput extends PaginatedList(State) {}
+export class StateListOutput {
+  @Field(() => [State])
+  readonly items: State[];
+}

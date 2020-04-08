@@ -149,15 +149,15 @@ export class WorkflowResolver {
     return { commentState };
   }
 
-  @Mutation(() => AddStateOutput, {
+  @Mutation(() => Boolean, {
     description: 'Add possible state to a state',
   })
   async addPossibleState(
     @Session() session: ISession,
     @Args('input') { state: input }: PossibleStateInput
-  ): Promise<AddStateOutput> {
-    const state = await this.service.addPossibleState(session, input);
-    return { state };
+  ): Promise<boolean> {
+    await this.service.addPossibleState(session, input);
+    return true;
   }
 
   @Mutation(() => Boolean, {

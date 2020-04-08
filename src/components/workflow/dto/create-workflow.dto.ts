@@ -10,6 +10,9 @@ export abstract class CreateWorkflow {
 
   @Field()
   readonly startingStateName: string;
+
+  @Field()
+  readonly stateIdentifier: string;
 }
 
 @InputType()
