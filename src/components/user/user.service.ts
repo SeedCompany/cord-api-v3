@@ -200,6 +200,16 @@ export class UserService {
     return true;
   }
 
+  async isEmailUnique(id: string, session: ISession): Promise<boolean> {
+    const isUnique = await this.db.isPropertyUnique({
+      id,
+      session,
+      baseNodeLabel: 'User',
+      propName: 'email',
+    });
+    return isUnique;
+  }
+
   // stolen from authentication service, need to DRY it
   async login(input: LoginInput, session: ISession): Promise<string> {
     const result1 = await this.db

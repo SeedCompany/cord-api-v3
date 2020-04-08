@@ -61,6 +61,17 @@ export class UserResolver {
     return this.userService.checkEmail(email);
   }
 
+  @Query(() => Boolean, {
+    description:
+      'Check the consistency of these relationships for every node that has singleton',
+  })
+  async isEmailUnique(
+    @Session() session: ISession,
+    @IdArg() id: string
+  ): Promise<boolean> {
+    return this.userService.isEmailUnique(id, session);
+  }
+
   @ResolveProperty(() => SecuredUnavailabilityList)
   async unavailabilities(
     @Session() session: ISession,
