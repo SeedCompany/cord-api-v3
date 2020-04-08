@@ -38,7 +38,7 @@ export class AuthorizationResolver {
     @Session() session: ISession,
     @Args('input') input: ListSecurityGroupInput
   ): Promise<ListSecurityGroupOutput> {
-    return await this.authorizationService.listSecurityGroupsUserIsMemberOf(
+    return this.authorizationService.listSecurityGroupsUserIsMemberOf(
       input,
       session
     );
@@ -51,7 +51,7 @@ export class AuthorizationResolver {
     @Session() session: ISession,
     @Args('input') input: ListSecurityGroupInput
   ): Promise<ListSecurityGroupOutput> {
-    return await this.authorizationService.listSecurityGroupsUserIsAdminOf(
+    return this.authorizationService.listSecurityGroupsUserIsAdminOf(
       input,
       session
     );
@@ -64,7 +64,7 @@ export class AuthorizationResolver {
     @Session() session: ISession,
     @Args('input') input: ListPermissionInput
   ): Promise<ListPermissionOutput> {
-    return await this.authorizationService.listPermissionsInSecurityGroup(
+    return this.authorizationService.listPermissionsInSecurityGroup(
       input,
       session
     );
@@ -78,10 +78,7 @@ export class AuthorizationResolver {
     @Session() session: ISession,
     @Args('input') input: CreatePermissionInput
   ): Promise<CreatePermissionOutput> {
-    return await this.authorizationService.createPermission(
-      input.request,
-      session
-    );
+    return this.authorizationService.createPermission(input.request, session);
   }
 
   @Mutation(() => CreateSecurityGroupOutput, {
@@ -91,7 +88,7 @@ export class AuthorizationResolver {
     @Session() session: ISession,
     @Args('input') input: CreateSecurityGroupInput
   ): Promise<CreateSecurityGroupOutput> {
-    return await this.authorizationService.createSecurityGroup(
+    return this.authorizationService.createSecurityGroup(
       input.request,
       session
     );
@@ -104,7 +101,7 @@ export class AuthorizationResolver {
     @Session() session: ISession,
     @Args('input') input: AttachUserToSecurityGroupInput
   ): Promise<boolean> {
-    return await this.authorizationService.attachUserToSecurityGroup(
+    return this.authorizationService.attachUserToSecurityGroup(
       input.request,
       session
     );
@@ -117,7 +114,7 @@ export class AuthorizationResolver {
     @Session() session: ISession,
     @Args('input') input: RemovePermissionFromSecurityGroupInput
   ): Promise<boolean> {
-    return await this.authorizationService.removePermissionFromSecurityGroup(
+    return this.authorizationService.removePermissionFromSecurityGroup(
       input.request,
       session
     );
@@ -130,7 +127,7 @@ export class AuthorizationResolver {
     @Session() session: ISession,
     @Args('input') input: RemoveUserFromSecurityGroupInput
   ): Promise<boolean> {
-    return await this.authorizationService.removeUserFromSecurityGroup(
+    return this.authorizationService.removeUserFromSecurityGroup(
       input.request,
       session
     );
@@ -143,7 +140,7 @@ export class AuthorizationResolver {
     @Session() session: ISession,
     @Args('input') input: PromoteUserToAdminOfSecurityGroupInput
   ): Promise<boolean> {
-    return await this.authorizationService.promoteUserToAdminOfSecurityGroup(
+    return this.authorizationService.promoteUserToAdminOfSecurityGroup(
       input.request,
       session
     );
@@ -156,7 +153,7 @@ export class AuthorizationResolver {
     @Session() session: ISession,
     @Args('input') input: PromoteUserToAdminOfBaseNodeInput
   ): Promise<boolean> {
-    return await this.authorizationService.promoteUserToAdminOfBaseNode(
+    return this.authorizationService.promoteUserToAdminOfBaseNode(
       input.request,
       session
     );
@@ -180,7 +177,7 @@ export class AuthorizationResolver {
     @Session() session: ISession,
     @Args('input') input: UpdateSecurityGroupNameInput
   ): Promise<UpdateSecurityGroupNameOutput> {
-    return await this.authorizationService.updateSecurityGroupName(
+    return this.authorizationService.updateSecurityGroupName(
       input.request,
       session
     );

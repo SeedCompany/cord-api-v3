@@ -17,7 +17,9 @@ describe('Authorization e2e', () => {
 
   beforeAll(async () => {
     process.env = Object.assign(process.env, {
+      // eslint-disable-next-line @typescript-eslint/naming-convention
       ROOT_ADMIN_EMAIL: 'asdf@asdf.asdf',
+      // eslint-disable-next-line @typescript-eslint/naming-convention
       ROOT_ADMIN_PASSWORD: 'asdf',
     });
     app = await createTestApp();
