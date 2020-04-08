@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { CoreModule, DatabaseService, LoggerModule } from '../../core';
-import { AuthModule, AuthService } from '../auth';
+import { AuthenticationModule, AuthenticationService } from '../authentication';
 import { ProjectModule, ProjectService } from '../project';
 import { BudgetService } from './budget.service';
 import { Budget, BudgetStatus } from './dto';
@@ -44,9 +44,14 @@ describe('BudgetService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [LoggerModule.forRoot(), CoreModule, AuthModule, ProjectModule],
+      imports: [
+        LoggerModule.forRoot(),
+        CoreModule,
+        AuthenticationModule,
+        ProjectModule,
+      ],
       providers: [
-        AuthService,
+        AuthenticationService,
         ProjectService,
         BudgetService,
         {
