@@ -59,8 +59,8 @@ export class WorkflowService {
       value: result.value
     }
   }
-  // only 1 workflow per base node, only 1 base node per workflow. WF doesn't need a name, just id
-  // when the workflow node is created, the :CurrentState node is created.
+
+  // multiple workflows will be able to be created per one base node.
   async createWorkflow(session: ISession, input: CreateWorkflow) : Promise<Workflow> {
     try {
       const workflowId = generate();
@@ -457,10 +457,19 @@ export class WorkflowService {
             node('requestingUser', 'User', {
               id: session.userId
             }),
-            relation('in', '', 'member'),
+            relation('in', '', 'member', {
+              admin: true
+            }),
             node('sg', 'SecurityGroup', {
               id: input.securityGroupId
             }),
+          ],
+          [
+            node('requestingUser'),
+            relation('in', '', 'admin', {
+              active: true
+            }),
+            node('baseNode', 'BaseNode')
           ],
           [
             node('state', 'State', {
@@ -504,10 +513,19 @@ export class WorkflowService {
             node('requestingUser', 'User', {
               id: session.userId
             }),
-            relation('in', '', 'member'),
+            relation('in', '', 'member', {
+              admin: true
+            }),
             node('sg', 'SecurityGroup', {
               id: input.securityGroupId
             })
+          ],
+          [
+            node('requestingUser'),
+            relation('in', '', 'admin', {
+              active: true
+            }),
+            node('baseNode', 'BaseNode')
           ],
           [
             node('state', 'State', {
@@ -550,6 +568,13 @@ export class WorkflowService {
             node('sg', 'SecurityGroup', {
               id: input.securityGroupId
             }),
+          ],
+          [
+            node('requestingUser'),
+            relation('in', '', 'admin', {
+              active: true
+            }),
+            node('baseNode', 'BaseNode')
           ],
           [
             node('state', 'State', {
@@ -600,6 +625,13 @@ export class WorkflowService {
             })
           ],
           [
+            node('requestingUser'),
+            relation('in', '', 'admin', {
+              active: true
+            }),
+            node('baseNode', 'BaseNode')
+          ],
+          [
             node('state', 'State', {
               id: input.stateId
             }),
@@ -625,7 +657,7 @@ export class WorkflowService {
       await this.db
         .query()
         .match([
-
+          
         ])
         .run();
     } catch (e) {
@@ -647,8 +679,17 @@ export class WorkflowService {
         .match([
           [
             ...matchSession(session),
-            relation('in', '', 'member'),
+            relation('in', '', 'member', {
+              admin: true
+            }),
             node('sg', 'SecurityGroup')
+          ],
+          [
+            node('requestingUser'),
+            relation('in', '', 'admin', {
+              active: true
+            }),
+            node('baseNode', 'BaseNode')
           ],
           [
             node('fromState', 'State', {
@@ -690,7 +731,9 @@ export class WorkflowService {
         .match([
           [
             ...matchSession(session),
-            relation('in', '', 'member'),
+            relation('in', '', 'member', {
+              admin: true
+            }),
             node('sg', 'SecurityGroup'),
             relation('in', '', 'securityGroup', {
               active: true
@@ -704,6 +747,13 @@ export class WorkflowService {
             node('toState', 'State', {
               id: input.toStateId
             })
+          ],
+          [
+            node('requestingUser'),
+            relation('in', '', 'admin', {
+              active: true
+            }),
+            node('baseNode', 'BaseNode')
           ],
         ])
         .detachDelete('rel')
@@ -720,7 +770,7 @@ export class WorkflowService {
   // there will be more than one required field relationship between a state node and a base node.
   // this is so each required field can be queried without inspecting the property name in app code.
   // addRequiredFieldToState
-  async addField(session: ISession, input: RequiredField): Promise<void>{
+  async addRequiredField(session: ISession, input: RequiredField): Promise<void>{
     try{
       const field = await this.db
         .query()
@@ -792,27 +842,33 @@ export class WorkflowService {
   }
 
   // listAllRequiredFieldsInAState
-  async listFields(session: ISession, stateId: string): Promise<RequiredFieldListOutput>{
+  async listRequiredFields(session: ISession, stateId: string): Promise<RequiredFieldListOutput>{
     try{
       const result = (await this.db
         .query()
         .match([
-          node('token', 'Token', {
-            active: true,
-            value: session.token
-          }),
-          relation('in', '', 'token', {
-            active: true
-          }),
-          node('user'),
-          relation('in', '', 'admin', {
-            active: true
-          }),
-          node('baseNode'),
-          relation('in', 'rel', 'requiredProperty'),
-          node('state', 'State', {
-            id: stateId
-          })
+          [
+            ...matchSession(session),
+            relation('in', '', 'member'),
+            node('sg', 'SecurityGroup'),
+            relation('in', '', 'securityGroup', {
+              active: true
+            }),
+            node('state', 'State', {
+              id: stateId
+            }),
+            relation('out', 'rel', 'requiredProperty'),
+            node('baseNode', 'BaseNode')
+          ],
+          [
+            node('sg'),
+            relation('out', '', 'permission', {
+              read: true
+            }),
+            node('permission', 'Permission'),
+            relation('out', '', 'baseNode'),
+            node('baseNode')
+          ]
         ])
         .return({
           'rel.value': 'value'          
@@ -832,7 +888,7 @@ export class WorkflowService {
   }
 
   // removeRequiredFieldFromState
-  async removeField(session: ISession, input: RequiredField): Promise<void>{
+  async removeRequiredField(session: ISession, input: RequiredField): Promise<void>{
     try{
       await this.db
         .query()

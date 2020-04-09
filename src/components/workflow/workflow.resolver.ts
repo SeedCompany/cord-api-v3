@@ -175,33 +175,33 @@ export class WorkflowResolver {
   @Mutation(() => Boolean, {
     description: 'Add a required field to a state',
   })
-  async addField(
+  async addRequiredField(
     @Session() session: ISession,
     @Args('input') { field: input }: RequiredFieldInput
   ): Promise<boolean> {
-    await this.service.addField(session, input);
+    await this.service.addRequiredField(session, input);
     return true;
   }
 
   @Query(() => RequiredFieldListOutput, {
     description: 'List required fields in state',
   })
-  async fields(
+  async listRequiredFields(
     @Session() session: ISession,
     @IdArg() stateId: string
   ): Promise<RequiredFieldListOutput> {
-    const fields = await this.service.listFields(session, stateId);
+    const fields = await this.service.listRequiredFields(session, stateId);
     return fields;
   }
 
   @Mutation(() => Boolean, {
     description: 'Remove a required field from state',
   })
-  async removeField(
+  async removeRequiredField(
     @Session() session: ISession,
     @Args('input') { field: input }: RequiredFieldInput
   ): Promise<boolean> {
-    await this.service.removeField(session, input);
+    await this.service.removeRequiredField(session, input);
     return true;
   }
 }
