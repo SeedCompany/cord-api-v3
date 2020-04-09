@@ -6,7 +6,7 @@ import { CreateUser } from '../src/components/user';
 import { createSession, createTestApp, createUser, TestApp } from './utility';
 import { MockedSES } from './utility/aws';
 
-describe('User e2e', () => {
+describe('Authentication e2e', () => {
   let app: TestApp;
   let db: Connection;
   let ses: MockedSES;

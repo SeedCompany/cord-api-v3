@@ -5,6 +5,7 @@ import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
 import { DatabaseService, ILogger, Logger, OnIndex } from '../../core';
+import { LoginInput } from '../authentication/authentication.dto';
 import {
   OrganizationListInput,
   OrganizationService,
@@ -199,6 +200,84 @@ export class UserService {
     return true;
   }
 
+  // stolen from authentication service, need to DRY it
+  async login(input: LoginInput, session: ISession): Promise<string> {
+    const result1 = await this.db
+      .query()
+      .raw(
+        `
+      MATCH
+        (token:Token {
+          active: true,
+          value: $token
+        })
+      MATCH
+        (:EmailAddress {active: true, value: $email})
+        <-[:email {active: true}]-
+        (user:User {
+          active: true
+        })
+        -[:password {active: true}]->
+        (password:Property {active: true})
+      RETURN
+        password.value as pash
+      `,
+        {
+          token: session.token,
+          email: input.email,
+        }
+      )
+      .first();
+
+    try {
+      if (result1 === undefined) {
+        throw Error('Email or Password are incorrect');
+      }
+      if (await argon2.verify(result1.pash, input.password)) {
+        // password match
+      } else {
+        // password did not match
+        throw Error('Email or Password are incorrect');
+      }
+    } catch (err) {
+      // internal failure
+      this.logger.error('Login failed', { exception: err });
+      throw err;
+    }
+
+    const result2 = await this.db
+      .query()
+      .raw(
+        `
+          MATCH
+            (token:Token {
+              active: true,
+              value: $token
+            }),
+            (:EmailAddress {active: true, value: $email})
+            <-[:email {active: true}]-
+            (user:User {
+              active: true
+            })
+          CREATE
+            (user)-[:token {active: true, createdAt: datetime()}]->(token)
+          RETURN
+            user.id as id
+        `,
+        {
+          token: session.token,
+          email: input.email,
+        }
+      )
+      .first();
+
+    if (result2 === undefined) {
+      throw Error('Login failed. Please contact your administrator.');
+    }
+
+    return result2.id;
+  }
+
   async logout(token: string): Promise<void> {
     await this.db
       .query()
@@ -218,11 +297,20 @@ export class UserService {
       .run();
   }
 
-  async create(input: CreateUser, session: ISession): Promise<User> {
-    if (!input.password) {
-      throw new Error('Password is required when creating a new user');
-    }
+  async createAndLogin(input: CreateUser, session: ISession): Promise<User> {
+    const userId = await this.create(input);
+    await this.login(
+      {
+        email: input.email,
+        password: input.password,
+      },
+      session
+    );
 
+    return this.readOne(userId, session);
+  }
+
+  async create(input: CreateUser): Promise<string> {
     // ensure token doesn't have any users attached to it
     // await this.logout(session.token);
 
@@ -251,9 +339,8 @@ export class UserService {
       ];
     };
 
-    await this.db
+    const result = await this.db
       .query()
-      .matchNode('token', 'Token', { active: true, value: session.token })
       .create([
         [
           node('user', 'User', {
@@ -313,14 +400,6 @@ export class UserService {
             createdAt,
           }),
         ],
-        [
-          node('user'),
-          relation('out', '', 'token', {
-            active: true,
-            createdAt,
-          }),
-          node('token'),
-        ],
         ...property('password', pash),
         ...property('realFirstName', input.realFirstName),
         ...property('realLastName', input.realLastName),
@@ -361,9 +440,13 @@ export class UserService {
       .return({
         user: [{ id: 'id' }],
       })
-      .run();
+      .first();
 
-    return this.readOne(id, session);
+    if (!result) {
+      throw Error('failed to create user');
+    } else {
+      return result.id;
+    }
   }
 
   async readOne(id: string, session: ISession): Promise<User> {

@@ -1,0 +1,301 @@
+import { gql } from 'apollo-server-core';
+import * as faker from 'faker';
+import {
+  createOrganization,
+  createSession,
+  createTestApp,
+  createUser,
+  TestApp,
+} from './utility';
+import { createPermission } from './utility/create-permission';
+import { createProduct } from './utility/create-product';
+import { createSecurityGroup } from './utility/create-security-group';
+import { login } from './utility/login';
+
+describe('Authorization e2e', () => {
+  let app: TestApp;
+
+  beforeAll(async () => {
+    process.env = Object.assign(process.env, {
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      ROOT_ADMIN_EMAIL: 'asdf@asdf.asdf',
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      ROOT_ADMIN_PASSWORD: 'asdf',
+    });
+    app = await createTestApp();
+    await createSession(app);
+    await createUser(app);
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  it('create security group', async () => {
+    await login(app, {
+      email: process.env.ROOT_ADMIN_EMAIL,
+      password: process.env.ROOT_ADMIN_PASSWORD,
+    });
+
+    const sg = await createSecurityGroup(app);
+
+    expect(sg.success).toBe(true);
+  });
+
+  it('create permission', async () => {
+    await login(app, {
+      email: process.env.ROOT_ADMIN_EMAIL,
+      password: process.env.ROOT_ADMIN_PASSWORD,
+    });
+
+    const sg = await createSecurityGroup(app);
+    const org = await createOrganization(app);
+    const perm = await createPermission(app, {
+      sgId: sg.id!,
+      baseNodeId: org.id,
+      propertyName: 'name',
+      read: true,
+      write: true,
+    });
+
+    expect(perm).toBeTruthy();
+  });
+
+  it('attach user to security group', async () => {
+    await login(app, {
+      email: process.env.ROOT_ADMIN_EMAIL,
+      password: process.env.ROOT_ADMIN_PASSWORD,
+    });
+
+    const newUser = await createUser(app);
+    const sg = await createSecurityGroup(app);
+    const result = await app.graphql.mutate(
+      gql`
+        mutation attachUserToSecurityGroup($sgId: ID!, $userId: ID!) {
+          attachUserToSecurityGroup(
+            input: { request: { sgId: $sgId, userId: $userId } }
+          )
+        }
+      `,
+      {
+        sgId: sg.id,
+        userId: newUser.id,
+      }
+    );
+
+    expect(result.attachUserToSecurityGroup).toBe(true);
+  });
+
+  it('remove permission from security group', async () => {
+    await login(app, {
+      email: process.env.ROOT_ADMIN_EMAIL,
+      password: process.env.ROOT_ADMIN_PASSWORD,
+    });
+
+    const sg = await createSecurityGroup(app);
+    const project = await createProduct(app);
+    const permId = await createPermission(app, {
+      sgId: sg.id!,
+      baseNodeId: project.id,
+      propertyName: 'name',
+      read: true,
+      write: true,
+    });
+
+    const result = await app.graphql.mutate(
+      gql`
+        mutation removePermissionFromSecurityGroup(
+          $id: ID!
+          $sgId: ID!
+          $baseNodeId: ID!
+        ) {
+          removePermissionFromSecurityGroup(
+            input: {
+              request: { id: $id, sgId: $sgId, baseNodeId: $baseNodeId }
+            }
+          )
+        }
+      `,
+      {
+        id: permId,
+        sgId: sg.id,
+        baseNodeId: project.id,
+      }
+    );
+
+    expect(result.removePermissionFromSecurityGroup).toBe(true);
+  });
+
+  it('remove user from security group', async () => {
+    await login(app, {
+      email: process.env.ROOT_ADMIN_EMAIL,
+      password: process.env.ROOT_ADMIN_PASSWORD,
+    });
+
+    const newUser = await createUser(app);
+    const sg = await createSecurityGroup(app);
+
+    // attach the user to the SG first
+    await app.graphql.mutate(
+      gql`
+        mutation attachUserToSecurityGroup($sgId: ID!, $userId: ID!) {
+          attachUserToSecurityGroup(
+            input: { request: { sgId: $sgId, userId: $userId } }
+          )
+        }
+      `,
+      {
+        sgId: sg.id,
+        userId: newUser.id,
+      }
+    );
+
+    const result = await app.graphql.mutate(
+      gql`
+        mutation removeUserFromSecurityGroup($sgId: ID!, $userId: ID!) {
+          removeUserFromSecurityGroup(
+            input: { request: { sgId: $sgId, userId: $userId } }
+          )
+        }
+      `,
+      {
+        sgId: sg.id,
+        userId: newUser.id,
+      }
+    );
+
+    expect(result.removeUserFromSecurityGroup).toBe(true);
+
+    await expect(
+      app.graphql.mutate(
+        gql`
+          mutation removeUserFromSecurityGroup($sgId: ID!, $userId: ID!) {
+            removeUserFromSecurityGroup(
+              input: { request: { sgId: $sgId, userId: $userId } }
+            )
+          }
+        `,
+        {
+          sgId: sg.id,
+          userId: newUser.id,
+        }
+      )
+    ).rejects.toThrow();
+  });
+
+  it('promote user to admin of security group', async () => {
+    await login(app, {
+      email: process.env.ROOT_ADMIN_EMAIL,
+      password: process.env.ROOT_ADMIN_PASSWORD,
+    });
+
+    const newUser = await createUser(app);
+    const sg = await createSecurityGroup(app);
+
+    // attach the user to the SG first
+    await app.graphql.mutate(
+      gql`
+        mutation attachUserToSecurityGroup($sgId: ID!, $userId: ID!) {
+          attachUserToSecurityGroup(
+            input: { request: { sgId: $sgId, userId: $userId } }
+          )
+        }
+      `,
+      {
+        sgId: sg.id,
+        userId: newUser.id,
+      }
+    );
+
+    const result = await app.graphql.mutate(
+      gql`
+        mutation promoteUserToAdminOfSecurityGroup($sgId: ID!, $userId: ID!) {
+          promoteUserToAdminOfSecurityGroup(
+            input: { request: { sgId: $sgId, userId: $userId } }
+          )
+        }
+      `,
+      {
+        sgId: sg.id,
+        userId: newUser.id,
+      }
+    );
+
+    expect(result.promoteUserToAdminOfSecurityGroup).toBe(true);
+  });
+
+  it('promote user to admin of base node', async () => {
+    await login(app, {
+      email: process.env.ROOT_ADMIN_EMAIL,
+      password: process.env.ROOT_ADMIN_PASSWORD,
+    });
+
+    const newUser = await createUser(app);
+    const org = await createOrganization(app);
+
+    const result = await app.graphql.mutate(
+      gql`
+        mutation promoteUserToAdminOfBaseNode($baseNodeId: ID!, $userId: ID!) {
+          promoteUserToAdminOfBaseNode(
+            input: { request: { baseNodeId: $baseNodeId, userId: $userId } }
+          )
+        }
+      `,
+      {
+        baseNodeId: org.id,
+        userId: newUser.id,
+      }
+    );
+
+    expect(result.promoteUserToAdminOfBaseNode).toBe(true);
+  });
+
+  it('delete security group', async () => {
+    const sg = await createSecurityGroup(app);
+    expect(sg.id).toBeTruthy();
+
+    const result = await app.graphql.mutate(
+      gql`
+        mutation deleteSecurityGroup($id: ID!) {
+          deleteSecurityGroup(id: $id)
+        }
+      `,
+      {
+        id: sg.id,
+      }
+    );
+
+    expect(result.deleteSecurityGroup).toBe(true);
+  });
+
+  it('update security group name', async () => {
+    await login(app, {
+      email: process.env.ROOT_ADMIN_EMAIL,
+      password: process.env.ROOT_ADMIN_PASSWORD,
+    });
+
+    const sg = await createSecurityGroup(app);
+
+    const newName = faker.random.word();
+
+    const result = await app.graphql.mutate(
+      gql`
+        mutation updateSecurityGroupName($id: ID!, $name: String!) {
+          updateSecurityGroupName(
+            input: { request: { id: $id, name: $name } }
+          ) {
+            id
+            name
+          }
+        }
+      `,
+      {
+        id: sg.id,
+        name: newName,
+      }
+    );
+
+    expect(result.updateSecurityGroupName.id).toBe(sg.id);
+    expect(result.updateSecurityGroupName.name).toBe(newName);
+  });
+});

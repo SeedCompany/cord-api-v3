@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { GetObjectOutput } from 'aws-sdk/clients/s3';
 import { CoreModule, LoggerModule } from '../../core';
-import { AuthModule } from '../auth/auth.module';
+import { AuthenticationModule } from '../authentication/authentication.module';
 import { OrganizationModule } from '../organization';
 import { UnavailabilityModule, UserModule } from '../user';
 import { FileModule } from './file.module';
@@ -36,7 +36,7 @@ describe('S3 Bucket', () => {
         CoreModule,
         OrganizationModule,
         UnavailabilityModule,
-        AuthModule,
+        AuthenticationModule,
       ],
       providers: [FilesBucketFactory],
     }).compile();

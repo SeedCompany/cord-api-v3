@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { CoreModule, DatabaseService, LoggerModule } from '../../core';
-import { AuthModule } from '../auth';
+import { AuthenticationModule } from '../authentication';
 import { OrganizationModule } from '../organization';
 import { UnavailabilityModule, UserModule, UserService } from '../user';
 import { File, FileNodeCategory, FileNodeType } from './dto';
@@ -52,7 +52,7 @@ describe('file service', () => {
         CoreModule,
         OrganizationModule,
         UnavailabilityModule,
-        AuthModule,
+        AuthenticationModule,
       ],
       providers: [
         FileService,

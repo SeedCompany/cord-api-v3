@@ -640,16 +640,28 @@ export class DatabaseService {
           }),
         ])
         .create([
-          node('item', upperFirst(label), {
-            active: true,
-            createdAt: DateTime.local(),
-            id: input.id,
-            owningOrgId: session.owningOrgId,
-          }),
-          relation('in', '', 'toNode'),
-          node('acl', 'ACL', acls),
-          relation('out', '', 'member'),
-          node('requestingUser'),
+          [
+            node('item', [upperFirst(label), 'BaseNode'], {
+              active: true,
+              createdAt: DateTime.local(),
+              id: input.id,
+              owningOrgId: session.owningOrgId,
+            }),
+            relation('in', '', 'toNode'),
+            node('acl', 'ACL', acls),
+            relation('out', '', 'member'),
+            node('requestingUser'),
+          ],
+          [
+            node('item'),
+            relation('out', '', 'admin', {
+              active: true,
+              createdAt: DateTime.local(),
+              hidden: false,
+              owner: true,
+            }),
+            node('requestingUser'),
+          ],
         ])
         .run();
     } catch (e) {

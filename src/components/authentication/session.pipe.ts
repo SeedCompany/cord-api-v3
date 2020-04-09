@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { Request } from 'express';
 import { ISession } from '../../common';
-import { AuthService } from './auth.service';
+import { AuthenticationService } from './authentication.service';
 
 declare module 'express' {
   interface Request {
@@ -15,7 +15,7 @@ declare module 'express' {
 
 @Injectable()
 export class SessionPipe implements PipeTransform<Request, Promise<ISession>> {
-  constructor(private readonly auth: AuthService) {}
+  constructor(private readonly auth: AuthenticationService) {}
 
   async transform(request: Request): Promise<ISession> {
     if (request?.session) {

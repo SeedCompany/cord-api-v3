@@ -34,8 +34,8 @@ export abstract class CreateUser {
   @Field({ nullable: true })
   readonly bio?: string;
 
-  @Field({ nullable: true })
-  readonly password?: string;
+  @Field()
+  readonly password: string;
 }
 
 @InputType()

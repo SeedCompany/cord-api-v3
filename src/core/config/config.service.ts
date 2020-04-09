@@ -40,6 +40,13 @@ export class ConfigService {
     };
   }
 
+  @Lazy() get rootAdmin() {
+    return {
+      email: this.env.string('ROOT_ADMIN_EMAIL').optional('devops@tsco.org'),
+      password: this.env.string('ROOT_ADMIN_PASSWORD').optional('admin'),
+    };
+  }
+
   /**
    * Default configuration for logging.
    * These can be overridden with logging.yml file at project root

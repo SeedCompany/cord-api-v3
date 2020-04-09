@@ -32,7 +32,6 @@ export async function createLanguageEngagement(
     completeDate: DateTime.local(),
     ...input,
   };
-
   const result = await app.graphql.mutate(
     gql`
       mutation createLanguageEngagement(

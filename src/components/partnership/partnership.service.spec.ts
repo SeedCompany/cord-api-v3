@@ -3,7 +3,7 @@ import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
 import { CoreModule, DatabaseService, LoggerModule } from '../../core';
-import { AuthModule } from '../auth';
+import { AuthenticationModule } from '../authentication';
 import { OrganizationModule } from '../organization';
 import { UserModule, UserService } from '../user';
 import {
@@ -78,7 +78,7 @@ describe('partnership service', () => {
         CoreModule,
         PartnershipModule,
         OrganizationModule,
-        AuthModule,
+        AuthenticationModule,
       ],
       providers: [
         UserService,

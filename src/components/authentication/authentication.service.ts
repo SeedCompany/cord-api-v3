@@ -5,14 +5,14 @@ import { sign, verify } from 'jsonwebtoken';
 import { DateTime } from 'luxon';
 import { ISession } from '../../common';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
-import { LoginInput, ResetPasswordInput } from './auth.dto';
+import { LoginInput, ResetPasswordInput } from './authentication.dto';
 
 interface JwtPayload {
   iat: number;
 }
 
 @Injectable()
-export class AuthService {
+export class AuthenticationService {
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
@@ -97,6 +97,9 @@ export class AuthService {
             (user:User {
               active: true
             })
+          OPTIONAL MATCH
+            (token)-[r]-()
+          DELETE r
           CREATE
             (user)-[:token {active: true, createdAt: datetime()}]->(token)
           RETURN
