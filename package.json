@@ -53,11 +53,13 @@
     "lodash": "^4.17.15",
     "luxon": "^1.21.3",
     "neo4j-driver": "1.7.6",
+    "open": "^7.0.3",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.0",
     "rxjs": "^6.5.3",
     "shortid": "^2.2.15",
     "source-map-support": "^0.5.16",
+    "tempy": "^0.5.0",
     "type-graphql": "^0.17.6",
     "winston": "^3.2.1"
   },

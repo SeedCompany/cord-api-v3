@@ -17,10 +17,12 @@ export class ConfigService {
   jwtKey = this.env.string('JWT_AUTH_KEY').optional('cord-field');
 
   @Lazy() get email() {
+    const send = this.env.boolean('EMAIL_SEND').optional(false);
     return {
       from: this.env.string('EMAIL_FROM').optional('noreply@cordfield.com'),
       replyTo: this.env.string('EMAIL_REPLY_TO').optional() || undefined, // falsy -> undefined
-      send: this.env.boolean('EMAIL_SEND').optional(false),
+      send,
+      open: this.env.boolean('EMAIL_OPEN').optional(!send),
     };
   }
 
