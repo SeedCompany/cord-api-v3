@@ -2,8 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { SES } from 'aws-sdk';
 import { SendEmailRequest } from 'aws-sdk/clients/ses';
 import { promises as fs } from 'fs';
+import { render } from 'mjml-react';
 import * as open from 'open';
+import { ReactElement } from 'react';
 import { file as tempFile } from 'tempy';
+import { assert } from 'ts-essentials';
 import { ConfigService, ILogger, Logger } from '..';
 import { Many, many, maybeMany, sleep } from '../../common';
 
@@ -15,27 +18,48 @@ export class EmailService {
     @Logger('email') private readonly logger: ILogger
   ) {}
 
-  async send(to: Many<string>, subject: string, html: string, text: string) {
-    const { from, replyTo, send, open } = this.config.email;
-
+  async send<P>(
+    to: Many<string>,
+    template: (props: P) => ReactElement,
+    props: P,
+    text: string
+  ): Promise<void> {
     const logProps = {
+      type: template.name,
       to: many(to),
-      subject,
+      props,
     };
     this.logger.debug('Sending email', logProps);
+
+    const { send, open } = this.config.email;
+
+    const docEl = template(props);
+    const subject = this.getTitleFromMjml(docEl);
+    const { html } = render(docEl);
+
+    if (send) {
+      await this.sesSend(to, subject, html, text);
+      this.logger.info('Sent email', logProps);
+      return;
+    }
+
+    this.logger.debug('Would have sent email if enabled', {
+      to,
+      text,
+    });
 
     if (open) {
       await this.openEmail(html);
     }
+  }
 
-    if (!send) {
-      this.logger.debug('Would have sent email if enabled', {
-        ...logProps,
-        text,
-      });
-      return;
-    }
-
+  private async sesSend(
+    to: Many<string>,
+    subject: string,
+    html: string,
+    text: string
+  ) {
+    const { from, replyTo } = this.config.email;
     const utf8 = (data: string) => ({ Data: data, Charset: 'UTF-8' });
     const req: SendEmailRequest = {
       Source: from,
@@ -50,11 +74,18 @@ export class EmailService {
     };
     try {
       await this.ses.sendEmail(req).promise();
-      this.logger.info('Sent email', logProps);
     } catch (e) {
       this.logger.error('Failed to send email', { exception: e });
       throw e; // TODO What are the cases where an error is thrown and should we swallow?
     }
+  }
+
+  private getTitleFromMjml(mjml: ReactElement) {
+    const head = findChildOfType(mjml, 'MjmlHead');
+    const titleEl = findChildOfType(head, 'MjmlTitle');
+    const title = titleEl.props.children;
+    assert(title && typeof title === 'string', 'Title must be given');
+    return title;
   }
 
   private async openEmail(html: string) {
@@ -66,3 +97,12 @@ export class EmailService {
     await fs.unlink(temp);
   }
 }
+
+const findChildOfType = (el: ReactElement, type: string) => {
+  const child = many(el.props.children).find(isType(type));
+  assert(child, `Could not find child of type: ${type}`);
+  return child;
+};
+
+const isType = (type: string) => (el?: ReactElement): el is ReactElement =>
+  !!el && typeof el.type !== 'string' && el.type.name === type;

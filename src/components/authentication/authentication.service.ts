@@ -7,6 +7,7 @@ import {
   ConfigService,
   DatabaseService,
   EmailService,
+  ForgotPassword,
   ILogger,
   Logger,
 } from '../../core';
@@ -223,9 +224,10 @@ export class AuthenticationService {
       .first();
     await this.email.send(
       email,
-      'Forgot Password - CORD Field',
-      `<html><body><p>This is your secret login code:</p>
-        <a href="${this.config.resetPasswordURL}?token=${token}">Go to Login</a></body></html>`,
+      ForgotPassword,
+      {
+        url: `${this.config.resetPasswordURL}?token=${token}`,
+      },
       `${this.config.resetPasswordURL}?token=${token}`
     );
   }

@@ -5,6 +5,7 @@
     "moduleResolution": "node",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
+    "jsx": "react",
     "target": "es2019",
     "sourceMap": true,
     "outDir": "./dist",
