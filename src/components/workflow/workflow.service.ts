@@ -653,6 +653,7 @@ export class WorkflowService {
   // changeCurrentStateInWorkflow
   async changeCurrentState(session: ISession, input: ChangeState): Promise<void>{
     try{
+      // get current state and workflow
       const currentStateAndWorkflow = await this.db
         .query()
         .match([
@@ -662,11 +663,9 @@ export class WorkflowService {
               admin: true
             }),
             node('sg', 'SecurityGroup'),
-            relation('out', '', 'permission', {
-              read: true
-            }),
+            relation('out', '', 'permission'),
             node('permission', 'Permission', {
-              canRead: true
+              read: true
             }),
             relation('out', '', 'baseNode'),
             node('baseNode', 'BaseNode'),
@@ -695,6 +694,7 @@ export class WorkflowService {
         throw new NotFoundException('could not find current state and workflow');
       }
 
+      // validate the new state is a legal nextPossibleState on the current state
       const possibleState = await this.db
         .query()
         .match([
@@ -719,7 +719,9 @@ export class WorkflowService {
           ]
         ])
         .return({
-          state: 'state'
+          state: [
+            { value: 'value' }
+          ]
         })
         .first();
 
@@ -736,12 +738,9 @@ export class WorkflowService {
               admin: true
             }),
             node('sg', 'SecurityGroup'),
-            relation('out', '', 'permission', {
-              write: true
-            }),
+            relation('out', '', 'permission'),
             node('permission', 'Permission', {
-              canWrite: true,
-              property: currentStateAndWorkflow.stateIdentifier
+              write: true,
             }),
             relation('out', '', 'baseNode'),
             node('baseNode', 'BaseNode'),
@@ -759,9 +758,11 @@ export class WorkflowService {
         .merge([
           [
             node('baseNode'),
-            relation('out', '', `${currentStateAndWorkflow.stateIdentifier}`),
-            node('state', 'State', {
-              id: input.newStateId
+            relation('out', '', `${currentStateAndWorkflow.stateIdentifier}`, {
+              active: true
+            }),
+            node('newCurrentState', 'CurrentState', {
+              value: possibleState.value
             })
           ]
         ])
@@ -772,7 +773,6 @@ export class WorkflowService {
       });
       throw e;
     }
-    throw new NotImplementedException();
   }
 
   // creates a relationship from one state to another
@@ -968,10 +968,10 @@ export class WorkflowService {
           ],
           [
             node('sg'),
-            relation('out', '', 'permission', {
+            relation('out', '', 'permission'),
+            node('permission', 'Permission', {
               read: true
             }),
-            node('permission', 'Permission'),
             relation('out', '', 'baseNode'),
             node('baseNode')
           ]
