@@ -2,8 +2,7 @@ import { Test } from '@nestjs/testing';
 import { DateTime } from 'luxon';
 import { Order } from '../../common';
 import { CoreModule, DatabaseService, LoggerModule } from '../../core';
-import { AuthModule } from '../auth/auth.module';
-import { AuthService } from '../auth/auth.service';
+import { AuthenticationModule, AuthenticationService } from '../authentication';
 import { OrganizationService } from '../organization';
 import {
   EducationService,
@@ -31,13 +30,13 @@ describe('LocationService', () => {
       imports: [
         LoggerModule.forRoot(),
         CoreModule,
-        AuthModule,
+        AuthenticationModule,
         LocationModule,
         UserModule,
       ],
       providers: [
         LocationService,
-        AuthService,
+        AuthenticationService,
         UserService,
         OrganizationService,
         UnavailabilityService,
