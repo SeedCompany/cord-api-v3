@@ -8,7 +8,7 @@ import {
   SecuredDateTime,
 } from '../../common';
 import { CoreModule, LoggerModule } from '../../core';
-import { AuthModule, AuthService } from '../auth';
+import { AuthenticationModule, AuthenticationService } from '../authentication';
 import { CeremonyService, SecuredCeremony } from '../ceremony';
 import { LanguageService, SecuredLanguage } from '../language';
 import { LocationService, SecuredCountry } from '../location';
@@ -170,7 +170,7 @@ describe('EngamgemetService', () => {
         EducationModule,
         OrganizationModule,
         UnavailabilityModule,
-        AuthModule,
+        AuthenticationModule,
       ],
       providers: [
         EngagementService,
@@ -181,7 +181,7 @@ describe('EngamgemetService', () => {
         EducationService,
         OrganizationService,
         UnavailabilityService,
-        AuthService,
+        AuthenticationService,
       ],
     }).compile();
 

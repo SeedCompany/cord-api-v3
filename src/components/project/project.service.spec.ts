@@ -3,7 +3,7 @@ import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { CalendarDate, Order, Sensitivity } from '../../common';
 import { CoreModule, DatabaseService, LoggerModule } from '../../core';
-import { AuthModule, AuthService } from '../auth';
+import { AuthenticationModule, AuthenticationService } from '../authentication';
 import { OrganizationModule, OrganizationService } from '../organization';
 import {
   EducationModule,
@@ -122,7 +122,7 @@ describe('ProjectService', () => {
         EducationModule,
         OrganizationModule,
         UnavailabilityModule,
-        AuthModule,
+        AuthenticationModule,
       ],
       providers: [
         ProjectService,
@@ -135,7 +135,7 @@ describe('ProjectService', () => {
         EducationService,
         OrganizationService,
         UnavailabilityService,
-        AuthService,
+        AuthenticationService,
       ],
     }).compile();
 
