@@ -22,18 +22,16 @@ export class WorkflowService {
           value: session.token
         }),
         relation('in', '', 'token', {
-          active: true
+          active: true,
         }),
-        node('user'),
-        relation('in', '', 'admin', {
-          active: true
+        node('requestingUser', 'User', {
+          id: session.userId
         }),
-        node('baseNode'),
-        relation('out', '', 'workflow', {
-          active: true
+        relation('in', '', 'member', {
+          admin: true
         }),
-        node('workflow'),
-        relation('out', '', 'possibleState', {
+        node('sg'),
+        relation('in', '', 'securityGroup', {
           active: true
         }),
         node('state', 'State', {
@@ -653,12 +651,31 @@ export class WorkflowService {
   // changeCurrentStateInWorkflow
   async changeCurrentState(session: ISession, input: ChangeState): Promise<CommentState>{
     try{
-
+      const state = await this.readOneState(session, input.newStateId) as State;
       await this.db
         .query()
         .match([
-          
+          [
+            ...matchSession(session),
+            relation('in', '', 'member', {
+              admin: true
+            }),
+            node('sg', 'SecurityGroup'),
+            relation('out', '', 'permission', {
+              write: true
+            }),
+            node('permission', 'Permission'),
+            relation('out', '', 'baseNode'),
+            node('baseNode', 'BaseNode'),
+            relation('out', '', 'currentState'),
+            node('currentState')
+          ]
         ])
+        .set({
+          values: {
+            'currentState.value': state.value
+          }
+        })
         .run();
     } catch (e) {
       this.logger.warning('could not change current state', {
