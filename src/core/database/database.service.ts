@@ -743,51 +743,29 @@ export class DatabaseService {
     propName: string;
     baseNodeLabel: string;
   }): Promise<boolean> {
-    // const query = this.db.query().match([
-    //   matchSession(session),
-    //   [
-    //     node('n', baseNodeLabel, {
-    //       id,
-    //       active: true,
-    //     }),
-    //     relation('out', 'r', propName, {
-    //       active: true,
-    //     }),
-    //     node(propName, ':Property', {
-    //       active: true,
-    //     }),
-    //   ],
-    // ]);
-    // query.with('count(r) as total');
-    // const countResult = await query.run();
-    // const total = countResult[0]?.total || 0;
-    // //const flag = total == 1 ? true : false;
-    // this.logger.info(JSON.stringify(query));
-    // this.logger.info(total);
-    // return total == 1 ? true : false;
-
-    //match(n:User {id: ''})-[p:email {active: true}]->(email:Property {active: true}) return count(p)
     const result = await this.db
       .query()
-      .raw(
-        `
-        MATCH
-        (user:User {
-          id: $id,
-          active: true,
-        })-[r:email {active: true}]->(email: Property {active: true})
-        RETURN
-        count(r) as total
-        `,
-        {
-          id,
-        }
-      )
+      .match([
+        matchSession(session),
+        [
+          node('n', baseNodeLabel, {
+            id,
+            active: true,
+          }),
+          relation('out', 'r', propName as string, {
+            active: true,
+          }),
+          node(propName as string, 'Property', {
+            active: true,
+          }),
+        ],
+      ])
+      .return('count(r) as total')
       .run();
 
-    if ((result[0]?.total || 0) == 1) {
-      return true;
-    }
-    return false;
+    const totalNumber = result[0]?.total || 0;
+    const isUnique = totalNumber == 1 ? true : false;
+
+    return isUnique;
   }
 }
