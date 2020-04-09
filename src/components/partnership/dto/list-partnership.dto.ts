@@ -1,6 +1,6 @@
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { Field, InputType, ObjectType } from 'type-graphql';
+import { Field, ID, InputType, ObjectType } from 'type-graphql';
 import {
   PaginatedList,
   SecuredList,
@@ -16,6 +16,12 @@ export abstract class PartnershipFilters {
     nullable: true,
   })
   readonly agreementStatus?: PartnershipAgreementStatus;
+
+  @Field(() => ID, {
+    description: 'Find all partnerships in a project',
+    nullable: true,
+  })
+  readonly projectId?: string;
 }
 
 const defaultFilters = {};

@@ -190,4 +190,38 @@ describe('Partnership e2e', () => {
 
     expect(partnerships.items.length).toBeGreaterThanOrEqual(numPartnerships);
   });
+  it('List view of partnerships by projectId', async () => {
+    // create 10 partnerships
+    const numPartnerships = 10;
+
+    await Promise.all(
+      times(numPartnerships).map(() =>
+        createPartnership(app, {
+          projectId: project.id,
+        })
+      )
+    );
+
+    const { partnerships } = await app.graphql.query(
+      gql`
+        query partnerships($projectId: ID!) {
+          partnerships(input: { filter: { projectId: $projectId } }) {
+            items {
+              id
+              agreementStatus {
+                value
+              }
+            }
+            hasMore
+            total
+          }
+        }
+      `,
+      {
+        projectId: project.id,
+      }
+    );
+
+    expect(partnerships.items.length).toBeGreaterThanOrEqual(numPartnerships);
+  });
 });

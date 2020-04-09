@@ -6,6 +6,7 @@ import {
 import { generate } from 'shortid';
 import { ISession, Order } from '../../common';
 import { DatabaseService, ILogger, Logger } from '../../core';
+import { PartnershipService } from '../partnership/partnership.service';
 import { ProjectService } from '../project/project.service';
 import {
   Budget,
@@ -25,6 +26,7 @@ import {
 export class BudgetService {
   constructor(
     private readonly db: DatabaseService,
+    private readonly partnershipService: PartnershipService,
     private readonly projectService: ProjectService,
     @Logger('budget:service') private readonly logger: ILogger
   ) {}
@@ -76,8 +78,14 @@ export class BudgetService {
         .first();
 
       // on Init, create a budget will create a budget record for each org and each fiscal year in the project input.projectId
-      const _project = await this.projectService.readOne(projectId, session);
-
+      // const project = await this.projectService.readOne(projectId, session);
+      // const partnerships: Partnership[] = this.partnershipService.list(
+      //   { filter: { projectId: project.id } },
+      //   session
+      // );
+      // const fiscalYearStart = mouStart.month >= 10 ? mouStart.year + 1 : mouStart.year;
+      // const fiscalYearEnd = mouEnd.month >= 10 ? mouEnd.year + 1 : mouEnd.year;
+      // await Promise.all(lodash.range(fiscalYearStart, fiscalYearEnd + 1).map(fiscalYear =>
       const result = await this.readOne(id, session);
 
       return result;
