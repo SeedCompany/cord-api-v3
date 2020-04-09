@@ -16,7 +16,13 @@ export class ConfigService {
 
   jwtKey = this.env.string('JWT_AUTH_KEY').optional('cord-field');
 
-  emailFrom = this.env.string('EMAIL_FROM').optional('noreply@cordfield.com');
+  @Lazy() get email() {
+    return {
+      from: this.env.string('EMAIL_FROM').optional('noreply@cordfield.com'),
+      replyTo: this.env.string('EMAIL_REPLY_TO').optional() || undefined, // falsy -> undefined
+      send: this.env.boolean('EMAIL_SEND').optional(false),
+    };
+  }
 
   resetPasswordURL = this.env
     .string('RESET_PASSWORD_URL')

@@ -1,10 +1,15 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import * as argon2 from 'argon2';
-import { SES } from 'aws-sdk';
 import { sign, verify } from 'jsonwebtoken';
 import { DateTime } from 'luxon';
 import { ISession } from '../../common';
-import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
+import {
+  ConfigService,
+  DatabaseService,
+  EmailService,
+  ILogger,
+  Logger,
+} from '../../core';
 import { LoginInput, ResetPasswordInput } from './authentication.dto';
 
 interface JwtPayload {
@@ -16,7 +21,7 @@ export class AuthenticationService {
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
-    private readonly ses: SES,
+    private readonly email: EmailService,
     @Logger('auth:service') private readonly logger: ILogger
   ) {}
 
@@ -216,29 +221,13 @@ export class AuthenticationService {
         }
       )
       .first();
-    await this.ses
-      .sendEmail({
-        Destination: { ToAddresses: [email] },
-        Message: {
-          Subject: {
-            Charset: 'UTF-8',
-            Data: 'Forgot Password - CORD Field',
-          },
-          Body: {
-            Html: {
-              Charset: 'UTF-8',
-              Data: `<html><body><p>This is your secret login code:</p>
-                          <a href="${this.config.resetPasswordURL}?token=${token}">Go to Login</a></body></html>`,
-            },
-            Text: {
-              Charset: 'UTF-8',
-              Data: `${this.config.resetPasswordURL}?token=${token}`,
-            },
-          },
-        },
-        Source: this.config.emailFrom,
-      })
-      .promise();
+    await this.email.send(
+      email,
+      'Forgot Password - CORD Field',
+      `<html><body><p>This is your secret login code:</p>
+        <a href="${this.config.resetPasswordURL}?token=${token}">Go to Login</a></body></html>`,
+      `${this.config.resetPasswordURL}?token=${token}`
+    );
   }
 
   async resetPassword({ token, password }: ResetPasswordInput): Promise<void> {
