@@ -2,6 +2,7 @@ import { Provider } from '@nestjs/common';
 import { promises as fs } from 'fs';
 import { load } from 'js-yaml';
 import { ConfigService } from '..';
+import { pickBy } from 'lodash';
 import { LevelMatcher } from './level-matcher';
 
 export const LevelMatcherProvider: Provider<Promise<LevelMatcher>> = {
@@ -16,7 +17,7 @@ export const LevelMatcherProvider: Provider<Promise<LevelMatcher>> = {
     }
     const defaults = ConfigService.logging;
     const overrides: Partial<typeof defaults> = rawYaml
-      ? load(rawYaml, { filename: path })
+      ? pickBy(load(rawYaml, { filename: path }))
       : {};
 
     // TODO Handle DEBUG key
