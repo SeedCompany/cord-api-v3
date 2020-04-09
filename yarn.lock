@@ -3834,6 +3834,7 @@ __metadata:
     faker: ^4.1.0
     graphql: ^14.5.8
     graphql-tools: ^4.0.6
+    html-to-text: ^5.1.1
     husky: ^4.2.3
     jest: ^25.1.0
     js-yaml: ^3.13.1
@@ -6381,7 +6382,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"he@npm:1.2.x":
+"he@npm:1.2.x, he@npm:^1.2.0":
   version: 1.2.0
   resolution: "he@npm:1.2.0"
   bin:
@@ -6441,7 +6442,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"htmlparser2@npm:^3.9.1, htmlparser2@npm:^3.9.2":
+"html-to-text@npm:^5.1.1":
+  version: 5.1.1
+  resolution: "html-to-text@npm:5.1.1"
+  dependencies:
+    he: ^1.2.0
+    htmlparser2: ^3.10.1
+    lodash: ^4.17.11
+    minimist: ^1.2.0
+  bin:
+    html-to-text: ./bin/cli.js
+  checksum: 2/dd281bdfb16455b62fd1dac2a244fc657232101475e4707abae61377dd346bc22b3a118bc40c29215568f7534df67af5b9f858b51ed8d0a76d61d1f1e5b14d85
+  languageName: node
+  linkType: hard
+
+"htmlparser2@npm:^3.10.1, htmlparser2@npm:^3.9.1, htmlparser2@npm:^3.9.2":
   version: 3.10.1
   resolution: "htmlparser2@npm:3.10.1"
   dependencies:
@@ -8340,7 +8355,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lodash@npm:4.17.15, lodash@npm:^4.17.10, lodash@npm:^4.17.13, lodash@npm:^4.17.14, lodash@npm:^4.17.15":
+"lodash@npm:4.17.15, lodash@npm:^4.17.10, lodash@npm:^4.17.11, lodash@npm:^4.17.13, lodash@npm:^4.17.14, lodash@npm:^4.17.15":
   version: 4.17.15
   resolution: "lodash@npm:4.17.15"
   checksum: 2/aec3fbb7570aa67bda500b8299b1b1821d60646bede87f76a74dfcc7666ab3445267d734ec71424d70809d52ad67a1356fab5ab694a3faa1908d68e9d48f00f5

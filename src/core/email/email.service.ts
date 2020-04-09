@@ -2,13 +2,16 @@ import { Injectable } from '@nestjs/common';
 import { SES } from 'aws-sdk';
 import { SendEmailRequest } from 'aws-sdk/clients/ses';
 import { promises as fs } from 'fs';
+import { fromString as htmlToText } from 'html-to-text';
+import * as textFormatters from 'html-to-text/lib/formatter';
 import { render } from 'mjml-react';
 import * as open from 'open';
-import { ReactElement } from 'react';
+import { createElement, ReactElement } from 'react';
 import { file as tempFile } from 'tempy';
 import { assert } from 'ts-essentials';
 import { ConfigService, ILogger, Logger } from '..';
 import { Many, many, maybeMany, sleep } from '../../common';
+import { RenderForText } from './templates/text-rendering';
 
 @Injectable()
 export class EmailService {
@@ -21,8 +24,7 @@ export class EmailService {
   async send<P>(
     to: Many<string>,
     template: (props: P) => ReactElement,
-    props: P,
-    text: string
+    props: P
   ): Promise<void> {
     const logProps = {
       type: template.name,
@@ -35,7 +37,9 @@ export class EmailService {
 
     const docEl = template(props);
     const subject = this.getTitleFromMjml(docEl);
-    const { html } = render(docEl);
+
+    const html = this.renderHtml(docEl);
+    const text = this.renderText(docEl);
 
     if (send) {
       await this.sesSend(to, subject, html, text);
@@ -86,6 +90,37 @@ export class EmailService {
     const title = titleEl.props.children;
     assert(title && typeof title === 'string', 'Title must be given');
     return title;
+  }
+
+  private renderHtml(templateEl: ReactElement) {
+    const { html } = render(templateEl);
+    return html;
+  }
+
+  private renderText(templateEl: ReactElement) {
+    const { html: htmlForText } = render(
+      createElement(RenderForText, null, templateEl)
+    );
+
+    const text = htmlToText(htmlForText, {
+      ignoreImage: true,
+      hideLinkHrefIfSameAsText: true,
+      tables: true, // Filter manually below
+      format: {
+        // mjml uses `role="presentation"` for non-table tables, skip those.
+        // actual tables get rendered as normal.
+        table: (el, walk, options) => {
+          return el.attribs.role === 'presentation'
+            ? walk(el.children || [], options)
+            : textFormatters.table(el, walk, options);
+        },
+        text: (el, options) => {
+          return `${textFormatters.text(el, options)}\n`;
+        },
+      },
+    });
+
+    return text;
   }
 
   private async openEmail(html: string) {

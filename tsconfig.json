@@ -10,6 +10,10 @@
     "sourceMap": true,
     "outDir": "./dist",
     "incremental": true,
+    "typeRoots": [
+      "node_modules/@types",
+      "./typings"
+    ],
     "strictPropertyInitialization": false,
     "skipLibCheck": true,
     "noImplicitAny": true,
