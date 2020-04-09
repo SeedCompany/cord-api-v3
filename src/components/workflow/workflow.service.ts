@@ -3,7 +3,7 @@ import { Injectable, NotImplementedException, NotFoundException } from '@nestjs/
 import { generate } from 'shortid';
 import { node, relation } from 'cypher-query-builder';
 import { ISession } from '../../common';
-import { CreateWorkflow, Workflow, AddState, State, UpdateState, StateListOutput, GroupState, ChangeState, PossibleState, RequiredField, CommentState, RequiredFieldListOutput, FiledObject } from './dto';
+import { CreateWorkflow, Workflow, AddState, State, UpdateState, StateListOutput, GroupState, ChangeState, PossibleState, RequiredField, RequiredFieldListOutput, FiledObject } from './dto';
 import { Logger, ILogger, DatabaseService, matchSession } from '../../core';
 
 @Injectable()
@@ -111,7 +111,9 @@ export class WorkflowService {
         .merge([
           [
             node('baseNode'),
-            relation('out', '', `${input.stateIdentifier}`),
+            relation('out', '', `${input.stateIdentifier}`, {
+              active: true
+            }),
             node('currentState', 'CurrentState', {
               value: input.startingStateName
             })
@@ -649,9 +651,82 @@ export class WorkflowService {
   }
 
   // changeCurrentStateInWorkflow
-  async changeCurrentState(session: ISession, input: ChangeState): Promise<CommentState>{
+  async changeCurrentState(session: ISession, input: ChangeState): Promise<void>{
     try{
-      const state = await this.readOneState(session, input.newStateId) as State;
+      const currentStateAndWorkflow = await this.db
+        .query()
+        .match([
+          [
+            ...matchSession(session),
+            relation('in', '', 'member', {
+              admin: true
+            }),
+            node('sg', 'SecurityGroup'),
+            relation('out', '', 'permission', {
+              read: true
+            }),
+            node('permission', 'Permission', {
+              canRead: true
+            }),
+            relation('out', '', 'baseNode'),
+            node('baseNode', 'BaseNode'),
+            relation('out', '', 'currentState'),
+            node('currentState')
+          ],
+          [
+            node('baseNode'),
+            relation('out', '', 'workflow', {
+              active: true
+            }),
+            node('workflow')
+          ]
+        ])
+        .return({
+          currentState: [
+            { value: 'value' },
+          ],
+          workflow: [
+            { stateIdentifier: 'stateIdentifier' }
+          ]
+        })
+        .first();
+
+      if( !currentStateAndWorkflow ) {
+        throw new NotFoundException('could not find current state and workflow');
+      }
+
+      const possibleState = await this.db
+        .query()
+        .match([
+          [
+            ...matchSession(session),
+            relation('in', '', 'member', {
+              admin: true
+            }),
+            node('sg', 'SecurityGroup'),
+            relation('in', '', 'securityGroup', {
+              active: true
+            }),
+            node('state', 'State', {
+              value: currentStateAndWorkflow.value
+            }),
+            relation('out', '', 'nextPossibleState', {
+              active: true
+            }),
+            node('state', 'State', {
+              id: input.newStateId
+            })
+          ]
+        ])
+        .return({
+          state: 'state'
+        })
+        .first();
+
+      if( !possibleState ) {
+        throw new NotFoundException('new state provided is not a nextpossiblstate of current state');
+      }
+
       await this.db
         .query()
         .match([
@@ -664,18 +739,32 @@ export class WorkflowService {
             relation('out', '', 'permission', {
               write: true
             }),
-            node('permission', 'Permission'),
+            node('permission', 'Permission', {
+              canWrite: true,
+              property: currentStateAndWorkflow.stateIdentifier
+            }),
             relation('out', '', 'baseNode'),
             node('baseNode', 'BaseNode'),
-            relation('out', '', 'currentState'),
-            node('currentState')
+            relation('out', 'oldRel', 'currentState'),
+            node('currentState', 'CurrentState', {
+              value: currentStateAndWorkflow.value
+            })
           ]
         ])
         .set({
           values: {
-            'currentState.value': state.value
+            'oldRel.active': false
           }
         })
+        .merge([
+          [
+            node('baseNode'),
+            relation('out', '', `${currentStateAndWorkflow.stateIdentifier}`),
+            node('state', 'State', {
+              id: input.newStateId
+            })
+          ]
+        ])
         .run();
     } catch (e) {
       this.logger.warning('could not change current state', {

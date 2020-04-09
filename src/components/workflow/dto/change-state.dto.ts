@@ -19,19 +19,3 @@ export abstract class ChangeStateInput {
   @ValidateNested()
   readonly commentState: ChangeState;
 }
-
-@ObjectType({
-  implements: [Resource],
-})
-export class CommentState extends Resource {
-  @Field()
-  readonly comment: string;
-}
-
-@ObjectType()
-export abstract class CommentStateOutput {
-  @Field()
-  @Type(() => CommentState)
-  @ValidateNested()
-  readonly commentState: CommentState;
-}

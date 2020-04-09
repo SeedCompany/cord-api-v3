@@ -4,7 +4,6 @@ import {
   AddStateInput,
   AddStateOutput,
   ChangeStateInput,
-  CommentStateOutput,
   CreateWorkflowInput,
   CreateWorkflowOutput,
   GroupStateInput,
@@ -139,15 +138,15 @@ export class WorkflowResolver {
     return true;
   }
 
-  @Mutation(() => CommentStateOutput, {
+  @Mutation(() => Boolean, {
     description: 'Change current statee in workflow',
   })
   async changeCurrentState(
     @Session() session: ISession,
     @Args('input') { commentState: input }: ChangeStateInput
-  ): Promise<CommentStateOutput> {
-    const commentState = await this.service.changeCurrentState(session, input);
-    return { commentState };
+  ): Promise<boolean> {
+    await this.service.changeCurrentState(session, input);
+    return true;
   }
 
   @Mutation(() => Boolean, {
