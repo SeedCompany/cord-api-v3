@@ -8,7 +8,7 @@ export abstract class UpdateBudget {
   @Field(() => ID)
   readonly id: string;
 
-  @Field()
+  @Field(() => BudgetStatus)
   readonly status?: BudgetStatus;
 }
 
