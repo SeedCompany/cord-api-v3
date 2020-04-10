@@ -8,7 +8,7 @@ export abstract class UpdateEducation {
   @Field(() => ID)
   readonly id: string;
 
-  @Field({ nullable: true })
+  @Field(() => Degree, { nullable: true })
   readonly degree?: Degree;
 
   @Field({ nullable: true })

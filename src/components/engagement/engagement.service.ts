@@ -37,11 +37,15 @@ export class EngagementService {
   ) {}
   async readOne(id: string, session: ISession): Promise<Engagement> {
     const qr = `
-    MATCH (place {id: $id, active: true}) RETURN labels(place) as labels
+    MATCH (engagement {id: $id, active: true}) RETURN labels(engagement) as labels
     `;
 
     const results = await this.db.query().raw(qr, { id }).first();
-    const label: string = results?.labels?.[0] ?? '';
+    const label: string = results?.labels?.includes('LanguageEngagement')
+      ? 'LanguageEngagement'
+      : results?.labels?.includes('InternshipEngagement')
+      ? 'InternshipEngagement'
+      : '';
 
     let query = `
       MATCH
@@ -62,7 +66,7 @@ export class EngagementService {
 
       WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadProject:ACL {canReadProject: true})-[:toNode]->(languageEngagement)<-[:engagement {active: true}]-(project)
       WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditProject:ACL {canEditProject: true})-[:toNode]->(languageEngagement)
-      
+
       WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadCeremony {canReadCeremony: true})-[:toNode]->(languageEngagement)-[:ceremony {active: true}]->(ceremony)
       WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditCeremony {canEditCeremony: true})-[:toNode]->(languageEngagement)
 
@@ -86,7 +90,7 @@ export class EngagementService {
 
       WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadCommunicationsCompleteDate:ACL {canReadCommunicationsCompleteDate: true})-[:toNode]->(languageEngagement)-[:communicationsCompleteDate {active: true}]->(communicationsCompleteDate:Property {active: true})
       WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditCommunicationsCompleteDate:ACL {canEditCommunicationsCompleteDate: true})-[:toNode]->(languageEngagement)
-      
+
       WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadStartDate:ACL {canReadStartDate: true})-[:toNode]->(languageEngagement)-[:startDate {active: true}]->(startDate:Property {active: true})
       WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditStartDate:ACL {canEditStartDate: true})-[:toNode]->(languageEngagement)
 
@@ -100,7 +104,7 @@ export class EngagementService {
       WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadLastReactivatedAt:ACL {canReadLastReactivatedAt: true})-[:toNode]->(languageEngagement)-[:lastReactivatedAt {active: true}]->(lastReactivatedAt:Property {active: true})
 
       WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadStatusModifiedAt:ACL {canReadStatusModifiedAt: true})-[:toNode]->(languageEngagement)-[:statusModifiedAt {active: true}]->(statusModifiedAt:Property {active: true})
-      
+
       WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadModifiedAt:ACL {canReadModifiedAt: true})-[:toNode]->(languageEngagement)-[:modifiedAt {active: true}]->(modifiedAt:Property {active: true})
 
       RETURN
@@ -121,7 +125,7 @@ export class EngagementService {
         initialEndDate.value as initialEndDate,
         lastSuspendedAt.value as lastSuspendedAt,
         lastReactivatedAt.value as lastReactivatedAt,
-        statusModifiedAt.value as statusModifiedAt,          
+        statusModifiedAt.value as statusModifiedAt,
         modifiedAt.value as modifiedAt,
         canReadLanguage.canReadLanguage as canReadLanguage,
         canEditLanguage.canEditLanguage as canEditLanguage,
@@ -134,7 +138,7 @@ export class EngagementService {
         canReadSentPrintingDate.canReadSentPrintingDate as canReadSentPrintingDate,
         canEditSentPrintingDate.canEditSentPrintingDate as canEditSentPrintingDate,
         canReadStatus.canReadStatus as canReadStatus,
-        canEditStatus.canEditStatus as canEditStatus,        
+        canEditStatus.canEditStatus as canEditStatus,
         canReadCompleteDate.canReadCompleteDate as canReadCompleteDate,
         canEditCompleteDate.canEditCompleteDate as canEditCompleteDate,
         CanReadDisbursementCompleteDate.CanReadDisbursementCompleteDate as CanReadDisbursementCompleteDate,
@@ -187,7 +191,7 @@ export class EngagementService {
 
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadMethodologies:ACL {canReadMethodologies: true})-[:toNode]->(internshipEngagement)-[:methodologies {active: true}]->(methodologies:Property {active: true})
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditMethodologies:ACL {canEditMethodologies: true})-[:toNode]->(internshipEngagement)
-        
+
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadStatus:ACL {canReadStatus: true})-[:toNode]->(internshipEngagement)-[:status {active: true}]->(status:Property {active: true})
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditStatus:ACL {canEditStatus: true})-[:toNode]->(internshipEngagement)
 
@@ -199,7 +203,7 @@ export class EngagementService {
 
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadCommunicationsCompleteDate:ACL {canReadCommunicationsCompleteDate: true})-[:toNode]->(internshipEngagement)-[:communicationsCompleteDate {active: true}]->(communicationsCompleteDate:Property {active: true})
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditCommunicationsCompleteDate:ACL {canEditCommunicationsCompleteDate: true})-[:toNode]->(internshipEngagement)
-        
+
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadStartDate:ACL {canReadStartDate: true})-[:toNode]->(internshipEngagement)-[:startDate {active: true}]->(startDate:Property {active: true})
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditStartDate:ACL {canEditStartDate: true})-[:toNode]->(internshipEngagement)
 
@@ -213,7 +217,7 @@ export class EngagementService {
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadLastReactivatedAt:ACL {canReadLastReactivatedAt: true})-[:toNode]->(internshipEngagement)-[:lastReactivatedAt {active: true}]->(lastReactivatedAt:Property {active: true})
 
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadStatusModifiedAt:ACL {canReadStatusModifiedAt: true})-[:toNode]->(internshipEngagement)-[:statusModifiedAt {active: true}]->(statusModifiedAt:Property {active: true})
-        
+
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadModifiedAt:ACL {canReadModifiedAt: true})-[:toNode]->(internshipEngagement)-[:modifiedAt {active: true}]->(modifiedAt:Property {active: true})
 
         RETURN
@@ -235,7 +239,7 @@ export class EngagementService {
           initialEndDate.value as initialEndDate,
           lastSuspendedAt.value as lastSuspendedAt,
           lastReactivatedAt.value as lastReactivatedAt,
-          statusModifiedAt.value as statusModifiedAt,          
+          statusModifiedAt.value as statusModifiedAt,
           modifiedAt.value as modifiedAt,
           canReadProject.canReadProject as canReadProject,
           canEditProject.canEditProject as canEditProject,
@@ -252,7 +256,7 @@ export class EngagementService {
           canReadMethodologies.canReadMethodologies as canReadMethodologies,
           canEditMethodologies.canEditMethodologies as canEditMethodologies,
           canReadStatus.canReadStatus as canReadStatus,
-          canEditStatus.canEditStatus as canEditStatus,        
+          canEditStatus.canEditStatus as canEditStatus,
           canReadCompleteDate.canReadCompleteDate as canReadCompleteDate,
           canEditCompleteDate.canEditCompleteDate as canEditCompleteDate,
           CanReadDisbursementCompleteDate.CanReadDisbursementCompleteDate as CanReadDisbursementCompleteDate,
@@ -270,6 +274,7 @@ export class EngagementService {
           canReadModifiedAt.canReadModifiedAt as canReadModifiedAt
       `;
     }
+
     const result = await this.db
       .query()
       .raw(query, {
@@ -282,7 +287,7 @@ export class EngagementService {
 
     if (!result) {
       throw new NotFoundException(
-        'Could not find langage engagement or internship engagement'
+        'Could not find language engagement or internship engagement'
       );
     }
 
@@ -491,6 +496,12 @@ export class EngagementService {
     { languageId, projectId, ...input }: CreateLanguageEngagement,
     session: ISession
   ): Promise<LanguageEngagement> {
+    this.logger.info('Mutation create language engagement ', {
+      input,
+      projectId,
+      languageId,
+      userId: session.userId,
+    });
     try {
       // Initial LanguageEngagement
       const id = generate();
@@ -587,6 +598,13 @@ export class EngagementService {
     }: CreateInternshipEngagement,
     session: ISession
   ): Promise<InternshipEngagement> {
+    this.logger.info('Mutation create internship engagement ', {
+      input,
+      projectId,
+      mentorId,
+      countryOfOriginId,
+      userId: session.userId,
+    });
     const id = generate();
     const acls = {
       canReadIntern: true,
@@ -632,6 +650,7 @@ export class EngagementService {
         acls,
         aclEditProp: 'canCreateEngagement',
       });
+
       const countryCond = `${
         typeof countryOfOriginId !== 'undefined'
           ? ',(countryOfOrigin:Country {id: $countryOfOriginId, active: true})'
@@ -653,7 +672,7 @@ export class EngagementService {
           : ''
       }`;
       const query = `
-        MATCH 
+        MATCH
           (project:Project {id: $projectId, active: true})
           ,(internshipEngagement:InternshipEngagement {id: $id, active: true})
           ,(ceremony:Ceremony {id: $ceremonyId, active:true})

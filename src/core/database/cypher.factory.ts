@@ -46,7 +46,10 @@ export const CypherFactory: FactoryProvider<Connection> = {
         const origRun = session.run;
         session.run = function (this: never, origStatement, parameters, conf) {
           const statement = stripIndent(origStatement.slice(0, -1)) + ';';
-          logger.debug('\n' + statement, parameters);
+          logger.debug('Executing query', {
+            statement,
+            ...parameters,
+          });
 
           const params = parameters
             ? parameterTransformer.transform(parameters)

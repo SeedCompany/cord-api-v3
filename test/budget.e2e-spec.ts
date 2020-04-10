@@ -33,7 +33,10 @@ describe('Budget e2e', () => {
     await createSession(app);
     await createUser(app);
     const projectInput: CreateProject = {
-      name: 'Super Secret Project',
+      name:
+        'Super Secret Project ' +
+        faker.hacker.adjective() +
+        faker.hacker.noun(),
       type: ProjectType.Translation,
       mouStart: DateTime.fromISO('2020-02-01'),
       mouEnd: DateTime.fromISO('2025-01-01'),

@@ -1,5 +1,6 @@
 import { DiscoveryModule, DiscoveryService } from '@golevelup/nestjs-discovery';
 import { Module, OnModuleInit } from '@nestjs/common';
+import { ConfigService } from '../..';
 import { ILogger, Logger } from '../../logger';
 import { DatabaseService } from '../database.service';
 import { DB_INDEX_KEY } from './indexer.constants';
@@ -11,10 +12,15 @@ export class IndexerModule implements OnModuleInit {
   constructor(
     private readonly db: DatabaseService,
     private readonly discover: DiscoveryService,
+    private readonly config: ConfigService,
     @Logger('database:indexer') private readonly logger: ILogger
   ) {}
 
   async onModuleInit() {
+    if (!this.config.dbIndexesCreate) {
+      return;
+    }
+
     const discovered = await this.discover.providerMethodsWithMetaAtKey(
       DB_INDEX_KEY
     );

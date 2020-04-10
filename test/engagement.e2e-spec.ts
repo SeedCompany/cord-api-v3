@@ -44,11 +44,12 @@ describe('Engagement e2e', () => {
   });
 
   it('create a language engagement', async () => {
-    const lanaugeEngagement = await createLanguageEngagement(app, {
+    const languageEngagement = await createLanguageEngagement(app, {
       languageId: language.id,
       projectId: project.id,
     });
-    expect(lanaugeEngagement.id).toBeDefined();
+
+    expect(languageEngagement.id).toBeDefined();
   });
 
   it('create a internship engagement', async () => {
