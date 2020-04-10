@@ -90,8 +90,18 @@ export class LocationService {
     `;
 
     const results = await this.db.query().raw(query, { id }).first();
-    const label: string = results?.labels?.[0] ?? '';
-    this.logger.info('Looking for ', { label, id, userId: session.userId });
+    const label = results?.labels?.includes('Country')
+      ? 'Country'
+      : results?.labels?.includes('Region')
+      ? 'Region'
+      : results?.labels?.includes('Zone')
+      ? 'Zone'
+      : '';
+    this.logger.info('Looking for ', {
+      label,
+      id,
+      userId: session.userId,
+    });
     switch (label) {
       case 'Zone': {
         return this.readOneZone(id, session);
