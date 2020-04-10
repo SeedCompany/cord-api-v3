@@ -34,6 +34,8 @@ export class ConfigService {
     };
   }
 
+  dbIndexesCreate = this.env.boolean('DB_CREATE_INDEXES').optional(true);
+
   @Lazy() get files() {
     return {
       bucket: this.env.string('FILES_S3_BUCKET').optional('cord-field'),

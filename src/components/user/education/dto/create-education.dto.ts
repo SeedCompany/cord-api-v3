@@ -8,7 +8,7 @@ export class CreateEducation {
   @Field(() => ID)
   readonly userId: string;
 
-  @Field()
+  @Field(() => Degree)
   readonly degree: Degree;
 
   @Field()

@@ -8,10 +8,10 @@ import {
 } from '../../../common';
 
 export enum BudgetStatus {
-  Pending = 'pending',
-  Current = 'current',
-  Superceded = 'superceded',
-  Rejected = 'rejected',
+  Pending = 'Pending',
+  Current = 'Current',
+  Superceded = 'Superceded',
+  Rejected = 'Rejected',
 }
 
 registerEnumType(BudgetStatus, { name: 'BudgetStatus' });

@@ -4,12 +4,12 @@ import { Field, ObjectType, registerEnumType } from 'type-graphql';
 import { Resource, SecuredProperty, SecuredString } from '../../../../common';
 
 export enum Degree {
-  Primary = 'primary',
-  Secondary = 'secondary',
-  Associates = 'associates',
-  Bachelors = 'bachelors',
-  Masters = 'masters',
-  Doctorate = 'doctorate',
+  Primary = 'Primary',
+  Secondary = 'Secondary',
+  Associates = 'Associates',
+  Bachelors = 'Bachelors',
+  Masters = 'Masters',
+  Doctorate = 'Doctorate',
 }
 
 registerEnumType(Degree, { name: 'Degree' });
