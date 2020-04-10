@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { first, intersection } from 'lodash';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
 import { DatabaseService, ILogger, Logger } from '../../core';
@@ -41,11 +42,12 @@ export class EngagementService {
     `;
 
     const results = await this.db.query().raw(qr, { id }).first();
-    const label: string = results?.labels?.includes('LanguageEngagement')
-      ? 'LanguageEngagement'
-      : results?.labels?.includes('InternshipEngagement')
-      ? 'InternshipEngagement'
-      : '';
+    const label = first(
+      intersection(results?.labels, [
+        'LanguageEngagement',
+        'InternshipEngagement',
+      ])
+    );
 
     let query = `
       MATCH
