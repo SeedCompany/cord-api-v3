@@ -13,51 +13,6 @@ export class WorkflowService {
     @Logger('workflow.service') private readonly logger: ILogger
   ) {}
 
-  async readOneState(session: ISession, stateId: string): Promise<State> {
-    const result = await this.db
-      .query()
-      .match([
-        node('token', 'Token', {
-          active: true,
-          value: session.token
-        }),
-        relation('in', '', 'token', {
-          active: true,
-        }),
-        node('requestingUser', 'User', {
-          id: session.userId
-        }),
-        relation('in', '', 'member', {
-          admin: true
-        }),
-        node('sg'),
-        relation('in', '', 'securityGroup', {
-          active: true
-        }),
-        node('state', 'State', {
-          id: stateId
-        })
-      ])
-      .return([
-        {
-          state: [
-            {id: 'id'},
-            {value: 'value'}
-          ]
-        }
-      ])
-      .first();
-
-    if( !result ) {
-      throw new NotFoundException('could not find a state');
-    }
-
-    return {
-      id: result.id,
-      value: result.value
-    }
-  }
-
   // multiple workflows will be able to be created per one base node.
   async createWorkflow(session: ISession, input: CreateWorkflow) : Promise<Workflow> {
     try {
@@ -114,7 +69,8 @@ export class WorkflowService {
             relation('out', '', `${input.stateIdentifier}`, {
               active: true
             }),
-            node('currentState', 'CurrentState', {
+            node('currentState', 'CurrentState:Property', {
+              active: true,
               value: input.startingStateName
             })
           ],
@@ -745,7 +701,8 @@ export class WorkflowService {
             relation('out', '', 'baseNode'),
             node('baseNode', 'BaseNode'),
             relation('out', 'oldRel', 'currentState'),
-            node('currentState', 'CurrentState', {
+            node('currentState', 'CurrentState:Property', {
+              active: true,
               value: currentStateAndWorkflow.value
             })
           ]
