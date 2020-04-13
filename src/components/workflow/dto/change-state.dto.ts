@@ -3,18 +3,21 @@ import { ValidateNested } from 'class-validator';
 import { Field, ID, InputType } from 'type-graphql';
 
 @InputType()
-export abstract class ChangeState {
+export abstract class ChangeCurrentState {
   @Field(() => ID)
   readonly newStateId: string;
+
+  @Field(() => ID)
+  readonly workflowId: string;
 
   @Field()
   readonly commnet: string;
 }
 
 @InputType()
-export abstract class ChangeStateInput {
+export abstract class ChangeCurrentStateInput {
   @Field()
-  @Type(() => ChangeState)
+  @Type(() => ChangeCurrentState)
   @ValidateNested()
-  readonly commentState: ChangeState;
+  readonly state: ChangeCurrentState;
 }

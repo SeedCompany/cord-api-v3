@@ -7,6 +7,9 @@ export abstract class UpdateState {
   @Field(() => ID)
   readonly stateId: string;
 
+  @Field(() => ID)
+  readonly workflowId: string;
+
   @Field()
   readonly stateName?: string;
 }

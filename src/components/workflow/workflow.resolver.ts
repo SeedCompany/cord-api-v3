@@ -3,7 +3,7 @@ import { IdArg, ISession, Session } from '../../common';
 import {
   AddStateInput,
   AddStateOutput,
-  ChangeStateInput,
+  ChangeCurrentStateInput,
   CreateWorkflowInput,
   CreateWorkflowOutput,
   GroupStateInput,
@@ -87,11 +87,11 @@ export class WorkflowResolver {
   @Query(() => StateListOutput, {
     description: 'Look up all next possible states on workflow',
   })
-  async nestStates(
+  async nextStates(
     @Session() session: ISession,
     @IdArg() stateId: string
   ): Promise<StateListOutput> {
-    return this.service.listStates(session, stateId);
+    return this.service.listNextStates(session, stateId);
   }
 
   @Mutation(() => Boolean, {
@@ -143,7 +143,7 @@ export class WorkflowResolver {
   })
   async changeCurrentState(
     @Session() session: ISession,
-    @Args('input') { commentState: input }: ChangeStateInput
+    @Args('input') { state: input }: ChangeCurrentStateInput
   ): Promise<boolean> {
     await this.service.changeCurrentState(session, input);
     return true;

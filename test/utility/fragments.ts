@@ -426,4 +426,16 @@ export const fragments = {
       success
     }
   `,
+  workflow: gql`
+    fragment workflow on Workflow {
+      id
+      stateIdentifier
+    }
+  `,
+  state: gql`
+    fragment state on State {
+      id
+      value
+    }
+  `,
 };
