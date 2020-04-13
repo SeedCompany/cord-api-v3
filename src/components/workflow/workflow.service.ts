@@ -79,6 +79,10 @@ export class WorkflowService {
           workflow: [
             { id: 'id' },
             { stateIdentifier: 'stateIdentifier' },
+          ],
+          state: [
+            { id: 'startingStateId' },
+            { value: 'startingStateValue' }
           ]
         })
         .first();
@@ -89,7 +93,11 @@ export class WorkflowService {
 
     return {
       id: result.id,
-      stateIdentifier: result.stateIdentifier
+      stateIdentifier: result.stateIdentifier,
+      startingState: {
+        id: result.startingStateId,
+        value: result.startingStateValue
+      }
     }
 
     } catch (e) {
@@ -214,13 +222,12 @@ export class WorkflowService {
         .match([
           [
             ...matchSession(session),
-            relation('in', '', 'member', {
-              admin: true
-            }),
+            relation('in', '', 'member'),
             node('sg', 'SecurityGroup'),
             relation('out', '', 'permission'),
             node('permission', 'Permission', {
-              read: true
+              read: true,
+              write: true
             }),
             relation('out', '', 'baseNode'),
             node('baseNode', 'BaseNode'),
@@ -250,13 +257,12 @@ export class WorkflowService {
         .match([
           [
             ...matchSession(session),
-            relation('in', '', 'member', {
-              admin: true
-            }),
+            relation('in', '', 'member'),
             node('sg', 'SecurityGroup'),
             relation('out', '', 'permission'),
             node('permission', 'Permission', {
-              read: true
+              read: true,
+              write: true
             }),
             relation('out', '', 'baseNode'),
             node('baseNode', 'BaseNode'),
@@ -269,8 +275,10 @@ export class WorkflowService {
           ],
           [
             node('baseNode'),
-            relation('out', '', `${workflow.stateIdentifier}`),
-            node('currentState', 'CurrentState:Property')
+            relation('out', '', `${workflow.stateIdentifier}`, {
+              active: true
+            }),
+            node('currentState', 'CurrentState')
           ]
         ])
         .with(['currentState', { 'currentState.value': 'currentStateValue' }])
@@ -427,13 +435,25 @@ export class WorkflowService {
   };
 
   // this will be used to get the next possible states of any state, including the current state  // listNextPossibleStates
-  async listNextStates(_session: ISession, stateId: string): Promise<StateListOutput>{
+  async listNextStates(session: ISession, stateId: string): Promise<StateListOutput>{
     try {
       // WIP, not sure how to check session in this function
       const result = (await this.db
         .query()
         .match([
           [
+            ...matchSession(session),
+            relation('in', '', 'admin', {
+              active: true
+            }),
+            node('baseNode'),
+            relation('out', '', 'workflow', {
+              active: true
+            }),
+            node('workflow'),
+            relation('out', '', 'possibleState', {
+              active: true,
+            }),
             node('state', 'State', {
               id: stateId
             }),
@@ -653,9 +673,7 @@ export class WorkflowService {
         .match([
           [
             ...matchSession(session),
-            relation('in', '', 'member', {
-              admin: true
-            }),
+            relation('in', '', 'member'),
             node('sg', 'SecurityGroup'),
             relation('out', '', 'permission'),
             node('permission', 'Permission', {
@@ -689,9 +707,7 @@ export class WorkflowService {
         .match([
           [
             ...matchSession(session),
-            relation('in', '', 'member', {
-              admin: true
-            }),
+            relation('in', '', 'member'),
             node('sg', 'SecurityGroup'),
             relation('out', '', 'permission'),
             node('permission', 'Permission', {
@@ -743,17 +759,16 @@ export class WorkflowService {
         .match([
           [
             ...matchSession(session),
-            relation('in', '', 'member', {
-              admin: true
-            }),
+            relation('in', '', 'member'),
             node('sg', 'SecurityGroup'),
             relation('out', '', 'permission'),
             node('permission', 'Permission', {
               write: true,
+              read: true
             }),
             relation('out', '', 'baseNode'),
             node('baseNode', 'BaseNode'),
-            relation('out', 'oldRel', 'currentState'),
+            relation('out', 'oldRel', `${workflow.stateIdentifier}`),
             node('currentState', 'CurrentState:Property', {
               active: true,
               value: possibleState.value
@@ -771,7 +786,8 @@ export class WorkflowService {
             relation('out', '', `${workflow.stateIdentifier}`, {
               active: true
             }),
-            node('newCurrentState', 'CurrentState', {
+            node('newCurrentState', 'CurrentState:Property', {
+              active: true,
               value: possibleState.newValue
             })
           ]
@@ -795,11 +811,15 @@ export class WorkflowService {
         .match([
           [
             ...matchSession(session),
-            relation('in', '', 'member', {
-              admin: true
+            relation('in', '', 'admin', {
+              active: true
             }),
-            node('sg', 'SecurityGroup'),
-            relation('in', '', 'securityGroup', {
+            node('baseNode', 'BaseNode'),
+            relation('out', '', 'workflow', {
+              active: true
+            }),
+            node('workflow', 'Workflow'),
+            relation('out', '', 'possibleState', {
               active: true
             }),
             node('fromState', 'State', {
@@ -807,6 +827,10 @@ export class WorkflowService {
             })
           ],
           [
+            node('workflow'),
+            relation('out', '', 'possibleState', {
+              active: true
+            }),
             node('toState', 'State', {
               id: input.toStateId
             })
@@ -846,11 +870,15 @@ export class WorkflowService {
         .match([
           [
             ...matchSession(session),
-            relation('in', '', 'member', {
-              admin: true
+            relation('in', '', 'admin', {
+              active: true
             }),
-            node('sg', 'SecurityGroup'),
-            relation('in', '', 'securityGroup', {
+            node('baseNode', 'BaseNode'),
+            relation('out', '', 'workflow', {
+              active: true
+            }),
+            node('workflow'),
+            relation('out', '', 'possibleState', {
               active: true
             }),
             node('fromState', 'State', {
@@ -862,14 +890,7 @@ export class WorkflowService {
             node('toState', 'State', {
               id: input.toStateId
             })
-          ],
-          [
-            node('requestingUser'),
-            relation('in', '', 'admin', {
-              active: true
-            }),
-            node('baseNode', 'BaseNode')
-          ],
+          ]
         ])
         .detachDelete('rel')
         .run();

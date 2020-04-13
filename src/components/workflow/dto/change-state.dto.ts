@@ -9,9 +9,9 @@ export abstract class ChangeCurrentState {
 
   @Field(() => ID)
   readonly workflowId: string;
-
-  @Field()
-  readonly commnet: string;
+  // WIP below
+  // @Field()
+  // readonly commnet: string;
 }
 
 @InputType()

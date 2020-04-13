@@ -97,10 +97,83 @@ describe('Authorization e2e', () => {
   });
 
   it('update a state', async () => {
-    //
+    const workflow = await createWorkflow(app, { baseNodeId: org.id });
+    const toState = await addState(app, { workflowId: workflow.id });
+
+    await login(app, {
+      email: process.env.ROOT_ADMIN_EMAIL,
+      password: process.env.ROOT_ADMIN_PASSWORD,
+    });
+
+    await app.graphql.mutate(
+      gql`
+        mutation attachSecurityGroup($input: GroupStateInput!) {
+          attachSecurityGroup(input: $input)
+        }
+      `,
+      {
+        input: {
+          groupState: {
+            stateId: workflow.startingState.id,
+            securityGroupId: sg.id,
+          },
+        },
+      }
+    );
+
+    await login(app, {
+      email,
+      password,
+    });
+
+    await app.graphql.mutate(
+      gql`
+        mutation addPossibleState($input: PossibleStateInput!) {
+          addPossibleState(input: $input)
+        }
+      `,
+      {
+        input: {
+          state: {
+            fromStateId: workflow.startingState.id,
+            toStateId: toState.id,
+          },
+        },
+      }
+    );
+
+    const updateStateName = faker.name.title();
+    const result = await app.graphql.mutate(
+      gql`
+        mutation updateState($input: UpdateStateInput!) {
+          updateState(input: $input) {
+            state {
+              id
+              value
+            }
+          }
+        }
+      `,
+      {
+        input: {
+          state: {
+            stateId: toState.id,
+            workflowId: workflow.id,
+            stateName: updateStateName,
+          },
+        },
+      }
+    );
+
+    expect(result.updateState.state.id).toBeTruthy();
+    expect(result.updateState.state.value).toBe(updateStateName);
   });
 
   it('delete an State from Workflow', async () => {
+    await login(app, {
+      email: email,
+      password: password,
+    });
     const workflow = await createWorkflow(app, { baseNodeId: org.id });
     const state = await addState(app, { workflowId: workflow.id });
     const result = await app.graphql.mutate(
@@ -149,7 +222,68 @@ describe('Authorization e2e', () => {
   });
 
   it('look up all next possible states on workflow', async () => {
-    //
+    const workflow = await createWorkflow(app, { baseNodeId: org.id });
+    const toState = await addState(app, { workflowId: workflow.id });
+
+    await login(app, {
+      email: process.env.ROOT_ADMIN_EMAIL,
+      password: process.env.ROOT_ADMIN_PASSWORD,
+    });
+
+    await app.graphql.mutate(
+      gql`
+        mutation attachSecurityGroup($input: GroupStateInput!) {
+          attachSecurityGroup(input: $input)
+        }
+      `,
+      {
+        input: {
+          groupState: {
+            stateId: workflow.startingState.id,
+            securityGroupId: sg.id,
+          },
+        },
+      }
+    );
+
+    await login(app, {
+      email,
+      password,
+    });
+
+    await app.graphql.mutate(
+      gql`
+        mutation addPossibleState($input: PossibleStateInput!) {
+          addPossibleState(input: $input)
+        }
+      `,
+      {
+        input: {
+          state: {
+            fromStateId: workflow.startingState.id,
+            toStateId: toState.id,
+          },
+        },
+      }
+    );
+
+    const result = await app.graphql.query(
+      gql`
+        query nextStates($id: ID!) {
+          nextStates(id: $id) {
+            items {
+              id
+              value
+            }
+          }
+        }
+      `,
+      {
+        id: workflow.startingState.id,
+      }
+    );
+
+    expect(result.nextStates.items.length).toBeGreaterThan(1);
   });
 
   it('attach securitygroup to state', async () => {
@@ -159,7 +293,6 @@ describe('Authorization e2e', () => {
     });
 
     const workflow = await createWorkflow(app, { baseNodeId: org.id });
-    const state = await addState(app, { workflowId: workflow.id });
 
     await login(app, {
       email: process.env.ROOT_ADMIN_EMAIL,
@@ -175,7 +308,7 @@ describe('Authorization e2e', () => {
       {
         input: {
           groupState: {
-            stateId: state.id,
+            stateId: workflow.startingState.id,
             securityGroupId: sg.id,
           },
         },
@@ -193,7 +326,6 @@ describe('Authorization e2e', () => {
     });
 
     const workflow = await createWorkflow(app, { baseNodeId: org.id });
-    const state = await addState(app, { workflowId: workflow.id });
 
     await login(app, {
       email: process.env.ROOT_ADMIN_EMAIL,
@@ -209,7 +341,7 @@ describe('Authorization e2e', () => {
       {
         input: {
           groupState: {
-            stateId: state.id,
+            stateId: workflow.startingState.id,
             securityGroupId: sg.id,
           },
         },
@@ -225,7 +357,7 @@ describe('Authorization e2e', () => {
       {
         input: {
           groupState: {
-            stateId: state.id,
+            stateId: workflow.startingState.id,
             securityGroupId: sg.id,
           },
         },
@@ -243,7 +375,6 @@ describe('Authorization e2e', () => {
     });
 
     const workflow = await createWorkflow(app, { baseNodeId: org.id });
-    const state = await addState(app, { workflowId: workflow.id });
 
     const result = await app.graphql.mutate(
       gql`
@@ -254,7 +385,7 @@ describe('Authorization e2e', () => {
       {
         input: {
           groupState: {
-            stateId: state.id,
+            stateId: workflow.startingState.id,
             securityGroupId: sg.id,
           },
         },
@@ -272,7 +403,6 @@ describe('Authorization e2e', () => {
     });
 
     const workflow = await createWorkflow(app, { baseNodeId: org.id });
-    const state = await addState(app, { workflowId: workflow.id });
 
     await app.graphql.mutate(
       gql`
@@ -283,7 +413,7 @@ describe('Authorization e2e', () => {
       {
         input: {
           groupState: {
-            stateId: state.id,
+            stateId: workflow.startingState.id,
             securityGroupId: sg.id,
           },
         },
@@ -299,7 +429,7 @@ describe('Authorization e2e', () => {
       {
         input: {
           groupState: {
-            stateId: state.id,
+            stateId: workflow.startingState.id,
             securityGroupId: sg.id,
           },
         },
@@ -311,17 +441,8 @@ describe('Authorization e2e', () => {
   });
 
   it('change current statee in workflow', async () => {
-    //
-  });
-
-  it('add possible state to a state', async () => {
-    await login(app, {
-      email: email,
-      password: password,
-    });
-
+    await login(app, { email, password });
     const workflow = await createWorkflow(app, { baseNodeId: org.id });
-    const state = await addState(app, { workflowId: workflow.id });
     const toState = await addState(app, { workflowId: workflow.id });
 
     await login(app, {
@@ -338,12 +459,85 @@ describe('Authorization e2e', () => {
       {
         input: {
           groupState: {
-            stateId: state.id,
+            stateId: workflow.startingState.id,
             securityGroupId: sg.id,
           },
         },
       }
     );
+
+    await login(app, { email, password });
+
+    await app.graphql.mutate(
+      gql`
+        mutation addPossibleState($input: PossibleStateInput!) {
+          addPossibleState(input: $input)
+        }
+      `,
+      {
+        input: {
+          state: {
+            fromStateId: workflow.startingState.id,
+            toStateId: toState.id,
+          },
+        },
+      }
+    );
+
+    const result = await app.graphql.mutate(
+      gql`
+        mutation changeCurrentState($input: ChangeCurrentStateInput!) {
+          changeCurrentState(input: $input)
+        }
+      `,
+      {
+        input: {
+          state: {
+            newStateId: toState.id,
+            workflowId: workflow.id,
+          },
+        },
+      }
+    );
+
+    const actual: boolean | undefined = result.changeCurrentState;
+    expect(actual).toBeTruthy();
+  });
+
+  it('add possible state to a state', async () => {
+    await login(app, {
+      email: email,
+      password: password,
+    });
+
+    const workflow = await createWorkflow(app, { baseNodeId: org.id });
+    const toState = await addState(app, { workflowId: workflow.id });
+
+    await login(app, {
+      email: process.env.ROOT_ADMIN_EMAIL,
+      password: process.env.ROOT_ADMIN_PASSWORD,
+    });
+
+    await app.graphql.mutate(
+      gql`
+        mutation attachSecurityGroup($input: GroupStateInput!) {
+          attachSecurityGroup(input: $input)
+        }
+      `,
+      {
+        input: {
+          groupState: {
+            stateId: workflow.startingState.id,
+            securityGroupId: sg.id,
+          },
+        },
+      }
+    );
+
+    await login(app, {
+      email,
+      password,
+    });
 
     const result = await app.graphql.mutate(
       gql`
@@ -354,7 +548,7 @@ describe('Authorization e2e', () => {
       {
         input: {
           state: {
-            fromStateId: state.id,
+            fromStateId: workflow.startingState.id,
             toStateId: toState.id,
           },
         },
@@ -367,12 +561,11 @@ describe('Authorization e2e', () => {
 
   it('remove possible state to a state', async () => {
     await login(app, {
-      email: email,
-      password: password,
+      email,
+      password,
     });
 
     const workflow = await createWorkflow(app, { baseNodeId: org.id });
-    const state = await addState(app, { workflowId: workflow.id });
     const toState = await addState(app, { workflowId: workflow.id });
 
     await login(app, {
@@ -389,12 +582,17 @@ describe('Authorization e2e', () => {
       {
         input: {
           groupState: {
-            stateId: state.id,
+            stateId: workflow.startingState.id,
             securityGroupId: sg.id,
           },
         },
       }
     );
+
+    await login(app, {
+      email,
+      password,
+    });
 
     await app.graphql.mutate(
       gql`
@@ -405,7 +603,7 @@ describe('Authorization e2e', () => {
       {
         input: {
           state: {
-            fromStateId: state.id,
+            fromStateId: workflow.startingState.id,
             toStateId: toState.id,
           },
         },
@@ -421,7 +619,7 @@ describe('Authorization e2e', () => {
       {
         input: {
           state: {
-            fromStateId: state.id,
+            fromStateId: workflow.startingState.id,
             toStateId: toState.id,
           },
         },
@@ -439,7 +637,6 @@ describe('Authorization e2e', () => {
     });
 
     const workflow = await createWorkflow(app, { baseNodeId: org.id });
-    const state = await addState(app, { workflowId: workflow.id });
 
     const result = await app.graphql.mutate(
       gql`
@@ -450,7 +647,7 @@ describe('Authorization e2e', () => {
       {
         input: {
           field: {
-            stateId: state.id,
+            stateId: workflow.startingState.id,
             propertyName: 'name',
           },
         },
@@ -468,7 +665,6 @@ describe('Authorization e2e', () => {
     });
 
     const workflow = await createWorkflow(app, { baseNodeId: org.id });
-    const state = await addState(app, { workflowId: workflow.id });
 
     await app.graphql.mutate(
       gql`
@@ -479,7 +675,7 @@ describe('Authorization e2e', () => {
       {
         input: {
           field: {
-            stateId: state.id,
+            stateId: workflow.startingState.id,
             propertyName: 'name',
           },
         },
@@ -495,7 +691,7 @@ describe('Authorization e2e', () => {
       {
         input: {
           field: {
-            stateId: state.id,
+            stateId: workflow.startingState.id,
             propertyName: 'name',
           },
         },
@@ -513,7 +709,6 @@ describe('Authorization e2e', () => {
     });
 
     const workflow = await createWorkflow(app, { baseNodeId: org.id });
-    const state = await addState(app, { workflowId: workflow.id });
 
     await app.graphql.mutate(
       gql`
@@ -524,7 +719,7 @@ describe('Authorization e2e', () => {
       {
         input: {
           field: {
-            stateId: state.id,
+            stateId: workflow.startingState.id,
             propertyName: 'name',
           },
         },
@@ -542,7 +737,7 @@ describe('Authorization e2e', () => {
         }
       `,
       {
-        id: state.id,
+        id: workflow.startingState.id,
       }
     );
 

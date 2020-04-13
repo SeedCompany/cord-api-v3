@@ -430,6 +430,10 @@ export const fragments = {
     fragment workflow on Workflow {
       id
       stateIdentifier
+      startingState {
+        id
+        value
+      }
     }
   `,
   state: gql`

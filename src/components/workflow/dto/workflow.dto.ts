@@ -1,5 +1,7 @@
 import { Type } from '@nestjs/common';
+import { ValidateNested } from 'class-validator';
 import { Field, ID, ObjectType } from 'type-graphql';
+import { State } from './state.dto';
 
 @ObjectType()
 export class Workflow {
@@ -10,4 +12,8 @@ export class Workflow {
 
   @Field()
   readonly stateIdentifier: string;
+
+  @Field(() => State)
+  @ValidateNested()
+  readonly startingState: State;
 }

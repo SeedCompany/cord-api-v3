@@ -38,6 +38,8 @@ export async function createWorkflow(
   expect(actual).toBeTruthy();
   expect(isValid(actual.id)).toBe(true);
   expect(actual.stateIdentifier).toBe(workflow.stateIdentifier);
+  expect(actual.startingState.id).toBeTruthy();
+  expect(actual.startingState.value).toBe(workflow.startingStateName);
 
   return actual;
 }
