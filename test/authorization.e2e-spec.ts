@@ -42,6 +42,29 @@ describe('Authorization e2e', () => {
     expect(sg.success).toBe(true);
   });
 
+  it('add property to security group', async () => {
+    await login(app, {
+      email: process.env.ROOT_ADMIN_EMAIL,
+      password: process.env.ROOT_ADMIN_PASSWORD,
+    });
+
+    const sg = await createSecurityGroup(app);
+    const result = await app.graphql.mutate(
+      gql`
+        mutation addPropertyToSecurityGroup($sgId: ID!, $propName: String!) {
+          addPropertyToSecurityGroup(
+            input: { request: { sgId: $sgId, property: $propName } }
+          )
+        }
+      `,
+      {
+        sgId: sg.id,
+        propName: 'canCreateFileNode',
+      }
+    );
+    expect(result.addPropertyToSecurityGroup).toBeTruthy();
+  });
+
   it('create permission', async () => {
     await login(app, {
       email: process.env.ROOT_ADMIN_EMAIL,

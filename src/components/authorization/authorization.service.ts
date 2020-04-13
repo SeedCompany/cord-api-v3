@@ -3,6 +3,7 @@ import { node, relation } from 'cypher-query-builder';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
 import { DatabaseService, ILogger, Logger, matchSession } from '../../core';
+import { AddPropertyToSecurityGroup } from './dto/add-property-to-security-group.dto';
 import { AttachUserToSecurityGroup } from './dto/attach-user-to-security-group.dto';
 import {
   CreatePermission,
@@ -228,6 +229,56 @@ export class AuthorizationService {
         id: result.id,
       };
     }
+  }
+
+  async addPropertyToSecurityGroup(
+    request: AddPropertyToSecurityGroup,
+    session: ISession
+  ): Promise<boolean> {
+    this.logger.debug('addPropertiesToSecurityGroup', request);
+
+    const result = await this.db
+      .query()
+      .match([
+        [
+          node('sg', 'SecurityGroup', {
+            canAddSgProperties: true,
+          }),
+          relation('out', '', 'member'),
+          node('requestingUser', 'User'),
+          relation('out', '', 'token', {
+            active: true,
+          }),
+          node('token', 'Token', {
+            active: true,
+            value: session.token,
+          }),
+        ],
+        [
+          node('newSg', 'SecurityGroup', {
+            id: request.sgId,
+          }),
+          relation('out', '', 'member', {
+            admin: true,
+          }),
+          node('requestingUser', 'User'),
+        ],
+      ])
+      .setValues({
+        newSg: { [request.property]: true, id: request.sgId },
+      })
+      .return('newSg')
+      .first();
+
+    if (
+      !result ||
+      result.newSg.properties.id !== request.sgId ||
+      !result.newSg.properties[request.property]
+    ) {
+      return false;
+    }
+
+    return true;
   }
 
   async attachUserToSecurityGroup(

@@ -3,4 +3,5 @@ export const RootSecurityGroup = {
   canListUsers: true,
   canCreateUser: true,
   canCreateSecurityGroup: true,
+  canAddSgProperties: true,
 };
