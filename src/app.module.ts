@@ -18,6 +18,7 @@ import { PartnershipModule } from './components/partnership';
 import { ProductModule } from './components/product';
 import { ProjectModule } from './components/project';
 import { UserModule } from './components/user';
+import { WorkflowModule } from './components/workflow/workflow.module';
 import { CoreModule, LoggerModule } from './core';
 
 const context: ContextFunction<
@@ -51,6 +52,7 @@ const context: ContextFunction<
     OrganizationModule,
     UserModule,
     PartnershipModule,
+    WorkflowModule,
   ],
   controllers: [],
   providers: [DateTimeScalar, DateScalar],
