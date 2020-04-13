@@ -752,19 +752,15 @@ export class DatabaseService {
             id,
             active: true,
           }),
-          relation('out', 'r', propName as string, {
-            active: true,
-          }),
-          node(propName as string, 'Property', {
-            active: true,
-          }),
+          relation('out', 'r', propName, { active: true }),
+          node(propName, 'Property', { active: true }),
         ],
       ])
       .return('count(r) as total')
-      .run();
+      .first();
 
-    const totalNumber = result[0]?.total || 0;
-    const isUnique = totalNumber == 1 ? true : false;
+    const totalNumber = result?.total || 0;
+    const isUnique = totalNumber <= 1;
 
     return isUnique;
   }

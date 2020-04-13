@@ -1,7 +1,7 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
-import { isValid, generate } from 'shortid';
+import { isValid } from 'shortid';
 import { CreateUser, UpdateUser, User } from '../src/components/user';
 import {
   createSession,
@@ -44,20 +44,7 @@ describe('User e2e', () => {
         id: user.id,
       }
     );
-
-    // const id = generate();
-    // const nonuniqueEmail = await app.graphql.query(
-    //   gql`
-    //     query isEmailUnique($id: ID!) {
-    //       isEmailUnique(id: $id)
-    //     }
-    //   `,
-    //   {
-    //     id: user.id,
-    //   }
-    // );
     expect(uniqueEmail.isEmailUnique).toBe(true);
-    //expect(nonuniqueEmail.checkEmail).toBe(false);
   });
 
   it('check email existance', async () => {
