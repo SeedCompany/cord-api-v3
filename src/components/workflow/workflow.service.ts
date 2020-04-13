@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { Injectable, NotImplementedException, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { generate } from 'shortid';
 import { node, relation } from 'cypher-query-builder';
 import { ISession } from '../../common';
@@ -248,8 +248,7 @@ export class WorkflowService {
 
       if( !workflow ) {
         throw new NotFoundException('could not find workflow');
-      }
-      
+      }      
 
       // validate the new state is a legal nextPossibleState on the current state
       const possibleState = await this.db
