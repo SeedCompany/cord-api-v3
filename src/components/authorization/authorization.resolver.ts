@@ -1,6 +1,7 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { IdArg, ISession, Session } from '../../common';
 import { AuthorizationService } from './authorization.service';
+import { AddPropertyToSecurityGroupInput } from './dto/add-property-to-security-group.dto';
 import { AttachUserToSecurityGroupInput } from './dto/attach-user-to-security-group.dto';
 import {
   CreatePermissionInput,
@@ -102,6 +103,19 @@ export class AuthorizationResolver {
     @Args('input') input: AttachUserToSecurityGroupInput
   ): Promise<boolean> {
     return this.authorizationService.attachUserToSecurityGroup(
+      input.request,
+      session
+    );
+  }
+
+  @Mutation(() => Boolean, {
+    description: 'Add a property to a security group',
+  })
+  async addPropertyToSecurityGroup(
+    @Session() session: ISession,
+    @Args('input') input: AddPropertyToSecurityGroupInput
+  ): Promise<boolean> {
+    return this.authorizationService.addPropertyToSecurityGroup(
       input.request,
       session
     );
