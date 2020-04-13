@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { first, intersection } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
@@ -88,10 +89,17 @@ export class LocationService {
     const query = `
     MATCH (place {id: $id, active: true}) RETURN labels(place) as labels
     `;
-
     const results = await this.db.query().raw(query, { id }).first();
-    const label: string = results?.labels?.[0] ?? '';
-    this.logger.info('Looking for ', { label, id, userId: session.userId });
+    // MATCH one of these labels.
+    const label = first(
+      intersection(results?.labels, ['Country', 'Region', 'Zone'])
+    );
+
+    this.logger.info('Looking for ', {
+      label,
+      id,
+      userId: session.userId,
+    });
     switch (label) {
       case 'Zone': {
         return this.readOneZone(id, session);

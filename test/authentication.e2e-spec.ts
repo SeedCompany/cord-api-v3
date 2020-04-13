@@ -1,28 +1,23 @@
 import { gql } from 'apollo-server-core';
-import { SES } from 'aws-sdk';
 import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
 import { CreateUser } from '../src/components/user';
+import { EmailService } from '../src/core/email';
 import { createSession, createTestApp, createUser, TestApp } from './utility';
-import { MockedSES } from './utility/aws';
 
 describe('Authentication e2e', () => {
   let app: TestApp;
   let db: Connection;
-  let ses: MockedSES;
 
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
     db = app.get(Connection);
-    ses = app.get(SES);
   });
 
-  beforeEach(() => {
-    ses.sendEmail.mockClear();
-  });
+  it('Check Email Existence and Reset Password', async () => {
+    const sendEmail = spyOn(app.get(EmailService), 'send');
 
-  it('Check Email Existance and Reset Passsword', async () => {
     const email = faker.internet.email();
     const fakeUser: CreateUser = {
       email: email,
@@ -82,7 +77,7 @@ describe('Authentication e2e', () => {
 
     expect(checkRes.forgotPassword).toBe(true);
     expect(resetRes.resetPassword).toBe(true);
-    expect(ses.sendEmail).toHaveBeenCalledTimes(1);
+    expect(sendEmail).toHaveBeenCalledTimes(1);
   });
 
   afterAll(async () => {

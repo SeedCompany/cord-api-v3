@@ -1,11 +1,10 @@
-import { pp } from '@patarapolw/prettyprint';
+import { ppRaw as prettyPrint } from '@patarapolw/prettyprint';
 import { enabled as colorsEnabled, red, yellow } from 'colors/safe';
 import { identity, mapValues } from 'lodash';
 import { DateTime } from 'luxon';
 import { relative } from 'path';
 import { parse as parseTrace, StackFrame } from 'stack-trace';
 import { MESSAGE } from 'triple-beam';
-import { InspectOptions } from 'util';
 import { format } from 'winston';
 
 export const metadata = () =>
@@ -117,23 +116,3 @@ export const printForCli = () =>
         : '';
     return msg;
   });
-
-/**
- * pp stupidly outputs to console instead of returning a string.
- * Hack around that.
- */
-const prettyPrint = (obj: any, options: InspectOptions) => {
-  /* eslint-disable no-console */
-  const orig = console.log;
-  let out = '';
-  console.log = (msg: string) => {
-    out = msg;
-  };
-  try {
-    pp(obj, options);
-  } finally {
-    console.log = orig;
-  }
-  return out;
-  /* eslint-enable no-console */
-};

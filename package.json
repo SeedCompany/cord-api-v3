@@ -33,7 +33,7 @@
     "@nestjs/core": "^6.7.2",
     "@nestjs/graphql": "^6.5.3",
     "@nestjs/platform-express": "^6.7.2",
-    "@patarapolw/prettyprint": "^1.0.2",
+    "@patarapolw/prettyprint": "^1.0.3",
     "apollo-server-core": "^2.9.16",
     "apollo-server-express": "^2.9.15",
     "argon2": "^0.26.1",
@@ -47,17 +47,25 @@
     "faker": "^4.1.0",
     "graphql": "^14.5.8",
     "graphql-tools": "^4.0.6",
+    "html-to-text": "^5.1.1",
     "js-yaml": "^3.13.1",
     "jsonwebtoken": "^8.5.1",
     "lazy-get-decorator": "^2.2.0",
     "lodash": "^4.17.15",
     "luxon": "^1.21.3",
+    "mjml": "^4.6.2",
+    "mjml-react": "^1.0.57",
     "neo4j-driver": "1.7.6",
+    "open": "^7.0.3",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.0",
     "rxjs": "^6.5.3",
     "shortid": "^2.2.15",
     "source-map-support": "^0.5.16",
+    "tempy": "^0.5.0",
+    "ts-essentials": "^6.0.4",
     "type-graphql": "^0.17.6",
     "winston": "^3.2.1"
   },
@@ -75,7 +83,9 @@
     "@types/jsonwebtoken": "^8.3.8",
     "@types/lodash": "^4.14.149",
     "@types/luxon": "^1.21.0",
+    "@types/mjml-react": "^1.0.3",
     "@types/node": "^13.9.1",
+    "@types/react-dom": "^16.9.6",
     "@types/shortid": "^0.0.29",
     "@types/stack-trace": "^0.0.29",
     "@types/supertest": "^2.0.8",
@@ -96,17 +106,8 @@
     "typescript": "^3.8.3"
   },
   "jest": {
-    "moduleFileExtensions": [
-      "js",
-      "json",
-      "ts"
-    ],
-    "rootDir": "src",
-    "testRegex": ".spec.ts$",
-    "transform": {
-      "^.+\\.(t|j)s$": "ts-jest"
-    },
-    "coverageDirectory": "../coverage",
+    "preset": "ts-jest",
+    "roots": ["<rootDir>/src"],
     "testEnvironment": "node"
   }
 }

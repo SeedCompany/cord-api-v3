@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession, Order } from '../../common';
 import { DatabaseService, ILogger, Logger } from '../../core';
@@ -21,6 +22,8 @@ import {
   UpdateBudget,
   UpdateBudgetRecord,
 } from './dto';
+
+import _ = require('lodash');
 
 @Injectable()
 export class BudgetService {
@@ -78,14 +81,38 @@ export class BudgetService {
         .first();
 
       // on Init, create a budget will create a budget record for each org and each fiscal year in the project input.projectId
-      // const project = await this.projectService.readOne(projectId, session);
-      // const partnerships: Partnership[] = this.partnershipService.list(
-      //   { filter: { projectId: project.id } },
-      //   session
-      // );
-      // const fiscalYearStart = mouStart.month >= 10 ? mouStart.year + 1 : mouStart.year;
-      // const fiscalYearEnd = mouEnd.month >= 10 ? mouEnd.year + 1 : mouEnd.year;
-      // await Promise.all(lodash.range(fiscalYearStart, fiscalYearEnd + 1).map(fiscalYear =>
+      const project = await this.projectService.readOne(projectId, session);
+      const orgIds = (
+        await this.partnershipService.list(
+          {
+            sort: 'createdAt',
+            order: Order.ASC,
+            count: 25,
+            page: 1,
+            filter: { projectId: project.id },
+          },
+          session
+        )
+      ).items.map((row) => row.organization.id);
+
+      const mouStart = DateTime.fromISO(
+        project.mouStart.value?.toString() || ''
+      );
+      const mouEnd = DateTime.fromISO(project.mouEnd.value?.toString() || '');
+
+      const fiscalYearStart =
+        mouStart.month >= 10 ? mouStart.year + 1 : mouStart.year;
+      const fiscalYearEnd = mouEnd.month >= 10 ? mouEnd.year + 1 : mouEnd.year;
+      await Promise.all(
+        _.range(fiscalYearStart, fiscalYearEnd + 1).map((fiscalYear) => {
+          orgIds.map((organizationId) =>
+            this.createRecord(
+              { budgetId: id, organizationId, fiscalYear },
+              session
+            )
+          );
+        })
+      );
       const result = await this.readOne(id, session);
 
       return result;
