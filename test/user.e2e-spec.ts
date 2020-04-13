@@ -19,34 +19,6 @@ describe('User e2e', () => {
     await createSession(app);
   });
 
-  it('check email is unique', async () => {
-    const email = faker.internet.email();
-    const fakeUser: CreateUser = {
-      email: email,
-      realFirstName: faker.name.firstName(),
-      realLastName: faker.name.lastName(),
-      displayFirstName: faker.name.firstName(),
-      displayLastName: faker.name.lastName(),
-      password: faker.internet.password(),
-      phone: faker.phone.phoneNumber(),
-      timezone: 'timezone detail',
-      bio: 'bio detail',
-    };
-    // create user first
-    const user = await createUser(app, fakeUser);
-    const uniqueEmail = await app.graphql.query(
-      gql`
-        query isEmailUnique($id: ID!) {
-          isEmailUnique(id: $id)
-        }
-      `,
-      {
-        id: user.id,
-      }
-    );
-    expect(uniqueEmail.isEmailUnique).toBe(true);
-  });
-
   it('check email existance', async () => {
     const email = faker.internet.email();
     const fakeUser: CreateUser = {
