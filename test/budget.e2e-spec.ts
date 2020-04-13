@@ -340,7 +340,7 @@ describe('Budget e2e', () => {
     expect(budgets.items.length).toBeGreaterThanOrEqual(numBudget);
   });
 
-  it.skip('inits a budget with a budget record for each financial partner per fiscal year', async () => {
+  it('inits a budget with a budget record for each financial partner per fiscal year', async () => {
     // create array of 4 orgs
     const organizations: Organization[] = await Promise.all(
       times(4).map(() =>
