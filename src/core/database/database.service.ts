@@ -776,18 +776,19 @@ export class DatabaseService {
     props: string[];
     baseNodeLabel: string;
   }): Promise<boolean> {
-    props
-      .map(async (prop) =>
-        this.hasProperty({
-          id,
-          session,
-          propName: prop,
-          baseNodeLabel,
-        })
-      )
-      .includes(false);
+    const arr = props.map(async (prop) =>
+      this.hasProperty({
+        id,
+        session,
+        propName: prop,
+        baseNodeLabel,
+      })
+    );
 
-    return result;
+    if (arr.includes(false)) {
+      return false;
+    }
+    return true;
   }
 
   async hasProperty({
