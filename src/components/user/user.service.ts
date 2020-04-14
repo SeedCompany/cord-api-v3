@@ -210,6 +210,43 @@ export class UserService {
     return isUnique;
   }
 
+  async hasAllProperties(id: string, session: ISession): Promise<boolean> {
+    const hasProperty = await this.db.hasProperties({
+      id,
+      session,
+      props: [
+        'email',
+        'realFirstName',
+        'realLastName',
+        'displayFirstName',
+        'displayLastName',
+        'phone',
+        'timezone',
+        'bio',
+        'createdAt',
+        'id',
+      ],
+      baseNodeLabel: 'User',
+    });
+
+    return hasProperty;
+  }
+
+  // async hasAllProperties(
+  //   input: UpdateUser,
+  //   session: ISession
+  // ): Promise<boolean> {
+  //   const object = await this.readOne(input.id, session);
+  //   const hasProperty = await this.db.hasProperties({
+  //     session,
+  //     object,
+  //     props: ['email', 'createdAt', 'id'],
+  //     nodevar: 'user',
+  //   });
+
+  //   return hasProperty;
+  // }
+
   // stolen from authentication service, need to DRY it
   async login(input: LoginInput, session: ISession): Promise<string> {
     const result1 = await this.db
