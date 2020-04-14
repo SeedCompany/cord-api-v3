@@ -223,8 +223,6 @@ export class UserService {
         'phone',
         'timezone',
         'bio',
-        'createdAt',
-        'id',
       ],
       baseNodeLabel: 'User',
     });

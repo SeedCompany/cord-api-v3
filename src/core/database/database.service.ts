@@ -773,21 +773,20 @@ export class DatabaseService {
   }: {
     id: string;
     session: ISession;
-    props: ReadonlyArray<keyof TObject>;
+    props: string[];
     baseNodeLabel: string;
   }): Promise<boolean> {
-    let result = true;
-    for (const prop of props) {
-      if (result === false) {
-        break;
-      }
-      result = await this.hasProperty({
-        id,
-        session,
-        propName: prop as string,
-        baseNodeLabel,
-      });
-    }
+    props
+      .map(async (prop) =>
+        this.hasProperty({
+          id,
+          session,
+          propName: prop,
+          baseNodeLabel,
+        })
+      )
+      .includes(false);
+
     return result;
   }
 
