@@ -321,9 +321,9 @@ export class UserService {
 
     return this.readOne(userId, session);
   }
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   async create(
     input: CreateUser,
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
     session: ISession = {} as ISession
   ): Promise<string> {
     // ensure token doesn't have any users attached to it
