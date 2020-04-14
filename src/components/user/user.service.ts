@@ -29,6 +29,8 @@ import {
   UnavailabilityService,
 } from './unavailability';
 
+import _ = require('lodash');
+
 @Injectable()
 export class UserService {
   constructor(
@@ -308,7 +310,7 @@ export class UserService {
   }
 
   async createAndLogin(input: CreateUser, session: ISession): Promise<User> {
-    const userId = await this.create(input);
+    const userId = await this.create(input, session);
     await this.login(
       {
         email: input.email,
@@ -319,10 +321,15 @@ export class UserService {
 
     return this.readOne(userId, session);
   }
-
-  async create(input: CreateUser): Promise<string> {
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+  async create(
+    input: CreateUser,
+    session: ISession = {} as ISession
+  ): Promise<string> {
     // ensure token doesn't have any users attached to it
-    // await this.logout(session.token);
+    if (!_.isEmpty(session)) {
+      await this.logout(session.token);
+    }
 
     const id = generate();
     const pash = await argon2.hash(input.password);
