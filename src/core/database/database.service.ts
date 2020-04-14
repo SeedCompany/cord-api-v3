@@ -811,11 +811,11 @@ export class DatabaseService {
             id,
             active: true,
           }),
-          relation('out', 'r', propName, { active: true }),
+          relation('out', 'rel', propName, { active: true }),
           node(propName, 'Property', { active: true }),
         ],
       ])
-      .return('count(r) as total')
+      .return('count(rel) as total')
       .first();
 
     const totalNumber = result?.total || 0;
