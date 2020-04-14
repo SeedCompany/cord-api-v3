@@ -17,6 +17,7 @@ import {
   OnIndex,
 } from '../../core';
 import { LoginInput } from '../authentication/authentication.dto';
+import { AuthorizationService } from '../authorization';
 import {
   OrganizationListInput,
   OrganizationService,
@@ -45,6 +46,7 @@ import _ = require('lodash');
 @Injectable()
 export class UserService {
   constructor(
+    private readonly auth: AuthorizationService,
     private readonly educations: EducationService,
     private readonly organizations: OrganizationService,
     private readonly unavailabilities: UnavailabilityService,
@@ -321,6 +323,41 @@ export class UserService {
       },
       session
     );
+
+    const { id: sgId } = await this.auth.createSecurityGroup(
+      { name: `${input.realFirstName} ${input.realLastName} users` },
+      session
+    );
+
+    // Create Permissions for each
+    const permissions = [
+      'realFirstName',
+      'realLastName',
+      'displayFirstName',
+      'displayLastName',
+      'password',
+      'email',
+      'education',
+      'phone',
+      'timezone',
+      'Bio',
+    ];
+    if (sgId) {
+      await Promise.all(
+        permissions.map(async (propertyName) =>
+          this.auth.createPermission(
+            {
+              sgId,
+              baseNodeId: userId,
+              propertyName,
+              read: true,
+              write: true,
+            },
+            session
+          )
+        )
+      );
+    }
 
     return this.readOne(userId, session);
   }
