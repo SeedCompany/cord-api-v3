@@ -764,4 +764,62 @@ export class DatabaseService {
 
     return isUnique;
   }
+
+  async hasProperties<TObject extends Resource>({
+    id,
+    session,
+    props,
+    baseNodeLabel,
+  }: {
+    id: string;
+    session: ISession;
+    props: ReadonlyArray<keyof TObject>;
+    baseNodeLabel: string;
+  }): Promise<boolean> {
+    let result = true;
+    for (const prop of props) {
+      if (result === false) {
+        break;
+      }
+      result = await this.hasProperty({
+        id,
+        session,
+        propName: prop as string,
+        baseNodeLabel,
+      });
+    }
+    return result;
+  }
+
+  async hasProperty({
+    id,
+    session,
+    propName,
+    baseNodeLabel,
+  }: {
+    id: string;
+    session: ISession;
+    propName: string;
+    baseNodeLabel: string;
+  }): Promise<boolean> {
+    const result = await this.db
+      .query()
+      .match([
+        matchSession(session),
+        [
+          node('n', baseNodeLabel, {
+            id,
+            active: true,
+          }),
+          relation('out', 'r', propName, { active: true }),
+          node(propName, 'Property', { active: true }),
+        ],
+      ])
+      .return('count(r) as total')
+      .first();
+
+    const totalNumber = result?.total || 0;
+    const hasPropertyNode = totalNumber > 0;
+    return hasPropertyNode;
+  }
 }
