@@ -486,29 +486,31 @@ export class ProjectService {
       .return('project.id as id')
       .run();
 
-    const hasConsistentSingleton = await Promise.all(
-      projects.map(async (project) => {
-        return this.db.isRelationshipUnique({
-          session,
-          id: project.id,
-          relName: 'location',
-          srcNodeLabel: 'Project',
-        });
-      })
-    );
-
-    const hasConsistentProperties = await Promise.all(
-      projects.map(async (project) => {
-        return this.db.hasProperties({
-          session,
-          id: project.id,
-          props: ['type', 'status', 'name', 'step'],
-          nodevar: 'Project',
-        });
-      })
-    );
-    return [...hasConsistentSingleton, ...hasConsistentProperties].every(
-      (n) => n
+    return (
+      (
+        await Promise.all(
+          projects.map(async (project) => {
+            return this.db.isRelationshipUnique({
+              session,
+              id: project.id,
+              relName: 'location',
+              srcNodeLabel: 'Project',
+            });
+          })
+        )
+      ).every((n) => n) &&
+      (
+        await Promise.all(
+          projects.map(async (project) => {
+            return this.db.hasProperties({
+              session,
+              id: project.id,
+              props: ['type', 'status', 'name', 'step'],
+              nodevar: 'Project',
+            });
+          })
+        )
+      ).every((n) => n)
     );
   }
 }

@@ -188,14 +188,11 @@ export class AuthorizationService {
     request: CreateSecurityGroup,
     session: ISession
   ): Promise<CreateSecurityGroupOutput> {
-    this.logger.debug('createSecurityGroup', request);
     const result = await this.db
       .query()
       .match([
         [
-          node('sg', 'SecurityGroup', {
-            canCreateSecurityGroup: true,
-          }),
+          node('sg', 'SecurityGroup', {}),
           relation('out', '', 'member'),
           node('user', 'User'),
           relation('out', '', 'token', {

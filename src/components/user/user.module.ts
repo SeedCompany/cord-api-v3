@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { AuthenticationModule } from '../authentication';
 import { AuthorizationModule } from '../authorization';
 import { OrganizationModule } from '../organization';
 import { EducationModule } from './education';
@@ -8,6 +9,7 @@ import { UserService } from './user.service';
 
 @Module({
   imports: [
+    AuthenticationModule,
     AuthorizationModule,
     EducationModule,
     OrganizationModule,
