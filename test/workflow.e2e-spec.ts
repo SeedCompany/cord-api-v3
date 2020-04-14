@@ -69,6 +69,7 @@ describe('Authorization e2e', () => {
   });
 
   it('create a workflow', async () => {
+    await login(app, { email, password });
     const workflow = await createWorkflow(app, { baseNodeId: org.id });
     expect(workflow).toBeTruthy();
   });
