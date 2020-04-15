@@ -732,39 +732,6 @@ export class DatabaseService {
       .run();
   }
 
-  async isPropertyUnique({
-    session,
-    id,
-    propName,
-    baseNodeLabel,
-  }: {
-    session: ISession;
-    id: string;
-    propName: string;
-    baseNodeLabel: string;
-  }): Promise<boolean> {
-    const result = await this.db
-      .query()
-      .match([
-        matchSession(session),
-        [
-          node('n', baseNodeLabel, {
-            id,
-            active: true,
-          }),
-          relation('out', 'r', propName, { active: true }),
-          node(propName, 'Property', { active: true }),
-        ],
-      ])
-      .return('count(r) as total')
-      .first();
-
-    const totalNumber = result?.total || 0;
-    const isUnique = totalNumber <= 1;
-
-    return isUnique;
-  }
-
   async hasProperties<TObject extends Resource>({
     session,
     object,
@@ -822,5 +789,38 @@ export class DatabaseService {
     const totalNumber = result?.total || 0;
     const hasPropertyNode = totalNumber > 0;
     return hasPropertyNode;
+  }
+
+  async isRelationshipUnique({
+    session,
+    id,
+    relName,
+    baseNodeLabel,
+  }: {
+    session: ISession;
+    id: string;
+    relName: string;
+    baseNodeLabel: string;
+  }): Promise<boolean> {
+    const result = await this.db
+      .query()
+      .match([
+        matchSession(session),
+        [
+          node('n', baseNodeLabel, {
+            id,
+            active: true,
+          }),
+          relation('out', 'r', relName, { active: true }),
+          node('', '', { active: true }),
+        ],
+      ])
+      .return('count(r) as total')
+      .first();
+
+    const totalNumber = result?.total || 0;
+    const isUnique = totalNumber <= 1;
+
+    return isUnique;
   }
 }

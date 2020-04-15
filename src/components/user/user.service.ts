@@ -514,11 +514,11 @@ export class UserService {
   }
 
   async isEmailUnique(id: string, session: ISession): Promise<boolean> {
-    const isUnique = await this.db.isPropertyUnique({
+    const isUnique = await this.db.isRelationshipUnique({
       id,
       session,
       baseNodeLabel: 'User',
-      propName: 'email',
+      relName: 'email',
     });
 
     return isUnique;
