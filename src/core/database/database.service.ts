@@ -766,53 +766,54 @@ export class DatabaseService {
   }
 
   async hasProperties<TObject extends Resource>({
-    id,
     session,
+    object,
     props,
-    baseNodeLabel,
+    nodevar,
   }: {
-    id: string;
     session: ISession;
-    props: string[];
-    baseNodeLabel: string;
+    object: TObject;
+    props: ReadonlyArray<keyof TObject>;
+    nodevar: string;
   }): Promise<boolean> {
-    const arr = props.map(async (prop) =>
-      this.hasProperty({
-        id,
+    const resultingArr = [];
+    for (const prop of props) {
+      const hasProp = await this.hasProperty({
+        object,
         session,
-        propName: prop,
-        baseNodeLabel,
-      })
-    );
-
-    if (arr.includes(false)) {
+        key: prop,
+        nodevar,
+      });
+      resultingArr.push(hasProp);
+    }
+    if (resultingArr.includes(false)) {
       return false;
     }
     return true;
   }
 
-  async hasProperty({
-    id,
+  async hasProperty<TObject extends Resource, Key extends keyof TObject>({
     session,
-    propName,
-    baseNodeLabel,
+    object,
+    key,
+    nodevar,
   }: {
-    id: string;
     session: ISession;
-    propName: string;
-    baseNodeLabel: string;
+    object: TObject;
+    key: Key;
+    nodevar: string;
   }): Promise<boolean> {
     const result = await this.db
       .query()
       .match([
         matchSession(session),
         [
-          node('n', baseNodeLabel, {
-            id,
+          node(nodevar, upperFirst(nodevar), {
+            id: object.id,
             active: true,
           }),
-          relation('out', 'rel', propName, { active: true }),
-          node(propName, 'Property', { active: true }),
+          relation('out', 'rel', key as string, { active: true }),
+          node(key as string, 'Property', { active: true }),
         ],
       ])
       .return('count(rel) as total')

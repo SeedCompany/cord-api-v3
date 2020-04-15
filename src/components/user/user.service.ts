@@ -200,51 +200,6 @@ export class UserService {
     return true;
   }
 
-  async isEmailUnique(id: string, session: ISession): Promise<boolean> {
-    const isUnique = await this.db.isPropertyUnique({
-      id,
-      session,
-      baseNodeLabel: 'User',
-      propName: 'email',
-    });
-    return isUnique;
-  }
-
-  async hasAllProperties(id: string, session: ISession): Promise<boolean> {
-    const hasProperty = await this.db.hasProperties({
-      id,
-      session,
-      props: [
-        'email',
-        'realFirstName',
-        'realLastName',
-        'displayFirstName',
-        'displayLastName',
-        'phone',
-        'timezone',
-        'bio',
-      ],
-      baseNodeLabel: 'User',
-    });
-
-    return hasProperty;
-  }
-
-  // async hasAllProperties(
-  //   input: UpdateUser,
-  //   session: ISession
-  // ): Promise<boolean> {
-  //   const object = await this.readOne(input.id, session);
-  //   const hasProperty = await this.db.hasProperties({
-  //     session,
-  //     object,
-  //     props: ['email', 'createdAt', 'id'],
-  //     nodevar: 'user',
-  //   });
-
-  //   return hasProperty;
-  // }
-
   // stolen from authentication service, need to DRY it
   async login(input: LoginInput, session: ISession): Promise<string> {
     const result1 = await this.db
@@ -556,5 +511,39 @@ export class UserService {
       this.logger.error('Could not delete user', { exception: e });
       throw e;
     }
+  }
+
+  async isEmailUnique(id: string, session: ISession): Promise<boolean> {
+    const isUnique = await this.db.isPropertyUnique({
+      id,
+      session,
+      baseNodeLabel: 'User',
+      propName: 'email',
+    });
+
+    return isUnique;
+  }
+
+  async checkAllProperties(
+    input: UpdateUser,
+    session: ISession
+  ): Promise<boolean> {
+    const user = await this.readOne(input.id, session);
+
+    const hasProperty = this.db.hasProperties({
+      session,
+      object: user,
+      props: [
+        'realFirstName',
+        'realLastName',
+        'displayFirstName',
+        'displayLastName',
+        'phone',
+        'timezone',
+      ],
+      nodevar: 'user',
+    });
+
+    return hasProperty;
   }
 }
