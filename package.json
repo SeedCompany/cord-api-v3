@@ -107,7 +107,9 @@
   },
   "jest": {
     "preset": "ts-jest",
-    "roots": ["<rootDir>/src"],
+    "roots": [
+      "<rootDir>/src"
+    ],
     "testEnvironment": "node"
   }
 }
