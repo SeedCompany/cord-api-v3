@@ -795,19 +795,20 @@ export class DatabaseService {
     session,
     id,
     relName,
-    baseNodeLabel,
+    srcNodeLabel,
   }: {
     session: ISession;
     id: string;
     relName: string;
-    baseNodeLabel: string;
+    srcNodeLabel: string;
+    desNodeLabel: string;
   }): Promise<boolean> {
     const result = await this.db
       .query()
       .match([
         matchSession(session),
         [
-          node('n', baseNodeLabel, {
+          node('n', srcNodeLabel, {
             id,
             active: true,
           }),

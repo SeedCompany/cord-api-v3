@@ -394,6 +394,7 @@ export class UserService {
             canReadEngagements: true,
             canDeleteOwnUser: true,
             canDeleteLocation: true,
+            canCreateLocation: true,
             owningOrgId: 'Seed Company',
             isAdmin: true,
           }),
