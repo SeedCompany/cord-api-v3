@@ -823,4 +823,37 @@ export class DatabaseService {
     const hasPropertyNode = totalNumber > 0;
     return hasPropertyNode;
   }
+
+  async isRelationshipUnique({
+    session,
+    id,
+    relName,
+    baseNodeLabel,
+  }: {
+    session: ISession;
+    id: string;
+    relName: string;
+    baseNodeLabel: string;
+  }): Promise<boolean> {
+    const result = await this.db
+      .query()
+      .match([
+        matchSession(session),
+        [
+          node('n', baseNodeLabel, {
+            id,
+            active: true,
+          }),
+          relation('out', 'r', relName, { active: true }),
+          node('', '', { active: true }),
+        ],
+      ])
+      .return('count(r) as total')
+      .first();
+
+    const totalNumber = result?.total || 0;
+    const isUnique = totalNumber <= 1;
+
+    return isUnique;
+  }
 }
