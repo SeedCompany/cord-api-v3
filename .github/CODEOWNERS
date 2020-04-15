@@ -17,3 +17,5 @@ tsconfig* @CarsonF
 # Foundation
 /src/common/ @CarsonF
 /src/core/ @CarsonF
+
+/src/core/database/database.service.ts @ghost
