@@ -12,6 +12,7 @@ import {
   SecuredOrganizationList,
 } from '../organization';
 import {
+  ConsistencyCheckerUser,
   CreateUser,
   UpdateUser,
   User,
@@ -531,8 +532,8 @@ export class UserService {
     return isUnique;
   }
 
-  async checkAllProperties(
-    input: UpdateUser,
+  async validateProperties(
+    input: ConsistencyCheckerUser,
     session: ISession
   ): Promise<boolean> {
     const user = await this.readOne(input.id, session);
@@ -541,6 +542,7 @@ export class UserService {
       session,
       object: user,
       props: [
+        'email',
         'realFirstName',
         'realLastName',
         'displayFirstName',

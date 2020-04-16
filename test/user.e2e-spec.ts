@@ -212,6 +212,39 @@ describe('User e2e', () => {
     expect(users.items.length).toBeGreaterThan(9);
   });
 
+  it('validate all properties for user baseNode', async () => {
+    const fakeUser: CreateUser = {
+      email: faker.internet.email(),
+      realFirstName: faker.name.firstName(),
+      realLastName: faker.name.lastName(),
+      displayFirstName: faker.name.firstName(),
+      displayLastName: faker.name.lastName(),
+      password: faker.internet.password(),
+      phone: faker.phone.phoneNumber(),
+      timezone: 'timezone detail',
+      bio: 'bio detail',
+    };
+    // create user first
+    const user = await createUser(app, fakeUser);
+    // get the user from the ID
+    const result = await app.graphql.query(
+      gql`
+        query consistencyCheckerPropertyExist($id: ID!) {
+          consistencyCheckerPropertyExist(id: $id) {
+            ...user
+          }
+        }
+        ${fragments.user}
+      `,
+      {
+        id: user.id,
+      }
+    );
+    const actual: User = result.user;
+
+    expect(actual).toBeTruthy();
+  });
+
   afterAll(async () => {
     await app.close();
   });
