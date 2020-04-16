@@ -85,12 +85,11 @@ describe('Authorization e2e', () => {
   });
 
   it('attach user to security group', async () => {
+    const newUser = await createUser(app);
     await login(app, {
       email: process.env.ROOT_ADMIN_EMAIL,
       password: process.env.ROOT_ADMIN_PASSWORD,
     });
-
-    const newUser = await createUser(app);
     const sg = await createSecurityGroup(app);
     const result = await app.graphql.mutate(
       gql`
@@ -150,12 +149,11 @@ describe('Authorization e2e', () => {
   });
 
   it('remove user from security group', async () => {
+    const newUser = await createUser(app);
     await login(app, {
       email: process.env.ROOT_ADMIN_EMAIL,
       password: process.env.ROOT_ADMIN_PASSWORD,
     });
-
-    const newUser = await createUser(app);
     const sg = await createSecurityGroup(app);
 
     // attach the user to the SG first
@@ -207,12 +205,11 @@ describe('Authorization e2e', () => {
   });
 
   it('promote user to admin of security group', async () => {
+    const newUser = await createUser(app);
     await login(app, {
       email: process.env.ROOT_ADMIN_EMAIL,
       password: process.env.ROOT_ADMIN_PASSWORD,
     });
-
-    const newUser = await createUser(app);
     const sg = await createSecurityGroup(app);
 
     // attach the user to the SG first
@@ -274,6 +271,10 @@ describe('Authorization e2e', () => {
   });
 
   it('delete security group', async () => {
+    await login(app, {
+      email: process.env.ROOT_ADMIN_EMAIL,
+      password: process.env.ROOT_ADMIN_PASSWORD,
+    });
     const sg = await createSecurityGroup(app);
     expect(sg.id).toBeTruthy();
 
