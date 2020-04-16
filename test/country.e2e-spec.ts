@@ -1,7 +1,7 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { isValid } from 'shortid';
-import { Country, Zone } from '../src/components/location';
+import { Country, Region, Zone } from '../src/components/location';
 import { User } from '../src/components/user';
 import {
   createSession,
@@ -18,12 +18,17 @@ describe('Country e2e', () => {
   let app: TestApp;
   let director: User;
   let zone: Zone;
+  let region: Region;
 
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
     director = await createUser(app);
-    zone = await createZone(app);
+    zone = await createZone(app, { directorId: director.id });
+    region = await createRegion(app, {
+      directorId: director.id,
+      zoneId: zone.id,
+    });
   });
 
   afterAll(async () => {
@@ -31,18 +36,20 @@ describe('Country e2e', () => {
   });
 
   it('create a country', async () => {
-    const country = await createCountry(app);
+    const country = await createCountry(app, { regionId: region.id });
     expect(country.id).toBeDefined();
   });
 
   it('should have unique name', async () => {
     const name = faker.address.country();
-    await createCountry(app, { name });
-    await expect(createCountry(app, { name })).rejects.toThrowError();
+    await createCountry(app, { name, regionId: region.id });
+    await expect(
+      createCountry(app, { name, regionId: region.id })
+    ).rejects.toThrowError();
   });
 
   it('read one country by id', async () => {
-    const country = await createCountry(app);
+    const country = await createCountry(app, { regionId: region.id });
 
     const { location: actual } = await app.graphql.query(
       gql`
@@ -91,7 +98,7 @@ describe('Country e2e', () => {
   });
 
   it('update region for a country', async () => {
-    const country = await createCountry(app);
+    const country = await createCountry(app, { regionId: region.id });
     const newRegion = await createRegion(app, {
       directorId: director.id,
       zoneId: zone.id,
@@ -131,7 +138,7 @@ describe('Country e2e', () => {
   });
 
   it('update name for a country', async () => {
-    const country = await createCountry(app);
+    const country = await createCountry(app, { regionId: region.id });
     const newName = faker.company.companyName();
 
     const result = await app.graphql.mutate(
@@ -160,9 +167,8 @@ describe('Country e2e', () => {
     expect(updated.name.value).toBe(newName);
   });
 
-  // delete country
   it('delete country', async () => {
-    const country = await createCountry(app);
+    const country = await createCountry(app, { regionId: region.id });
 
     const result = await app.graphql.mutate(
       gql`

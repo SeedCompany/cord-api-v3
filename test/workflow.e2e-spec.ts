@@ -41,6 +41,11 @@ describe('Authorization e2e', () => {
     sg = await createSecurityGroup(app);
 
     user = await createUser(app, { password: password, email: email });
+
+    await login(app, {
+      email: process.env.ROOT_ADMIN_EMAIL,
+      password: process.env.ROOT_ADMIN_PASSWORD,
+    });
     await app.graphql.mutate(
       gql`
         mutation attachUserToSecurityGroup($sgId: ID!, $userId: ID!) {
@@ -54,6 +59,7 @@ describe('Authorization e2e', () => {
         userId: user.id,
       }
     );
+    await login(app, { email, password });
     org = await createOrganization(app);
     await createPermission(app, {
       sgId: sg.id!,
@@ -219,7 +225,7 @@ describe('Authorization e2e', () => {
       }
     );
 
-    expect(states.items.length).toBeGreaterThan(stateNum);
+    expect(states.items.length).toBeGreaterThanOrEqual(stateNum);
   });
 
   it('look up all next possible states on workflow', async () => {
@@ -284,7 +290,7 @@ describe('Authorization e2e', () => {
       }
     );
 
-    expect(result.nextStates.items.length).toBeGreaterThan(1);
+    expect(result.nextStates.items.length).toBeGreaterThanOrEqual(1);
   });
 
   it('attach securitygroup to state', async () => {
@@ -743,6 +749,6 @@ describe('Authorization e2e', () => {
     );
 
     // when baseNode is organization having only one field named 'name'.
-    expect(result.listRequiredFields.items.length).toBeGreaterThan(1);
+    expect(result.listRequiredFields.items.length).toBeGreaterThanOrEqual(1);
   });
 });

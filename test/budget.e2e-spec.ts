@@ -387,6 +387,6 @@ describe('Budget e2e', () => {
       ${fragments.budgetRecord}
     `);
 
-    expect(budgetRecords.items.length).toBeGreaterThan(4);
+    expect(budgetRecords.items.length).toBeGreaterThanOrEqual(4);
   });
 });
