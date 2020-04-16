@@ -1,4 +1,5 @@
 import { gql } from 'apollo-server-core';
+import * as faker from 'faker';
 import { times } from 'lodash';
 import { isValid } from 'shortid';
 import { ProjectMember, Role } from '../src/components/project';
@@ -10,23 +11,26 @@ import {
   createTestApp,
   createUser,
   fragments,
+  login,
   TestApp,
 } from './utility';
 
 describe('ProjectMember e2e', () => {
   let app: TestApp;
   let user: User;
+  const password: string = faker.internet.password();
 
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    user = await createUser(app);
+    user = await createUser(app, { password });
   });
   afterAll(async () => {
     await app.close();
   });
 
   it('create projectMember', async () => {
+    await login(app, { email: user.email.value, password });
     const projectMember = await createProjectMember(app, { userId: user.id });
     expect(projectMember.id).toBeDefined();
   });
@@ -90,6 +94,7 @@ describe('ProjectMember e2e', () => {
   });
 
   it('delete projectMember', async () => {
+    await login(app, { email: user.email.value, password });
     const projectMember = await createProjectMember(app, { userId: user.id });
 
     const result = await app.graphql.mutate(
