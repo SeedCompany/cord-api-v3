@@ -807,21 +807,15 @@ export class DatabaseService {
       .match([
         matchSession(session),
         [
-          // node('n', baseNodeLabel, {
-          //   id,
-          //   active: true,
-          // }),
-          // relation('out', 'r', relName, { active: true }),
-          // node('', '', { active: true }),
           node('n', baseNodeLabel, {
             id,
             active: true,
           }),
-          relation('out', 're', relName, { active: true }),
+          relation('out', 'rel', relName, { active: true }),
           node(relName, 'Property', { active: true }),
         ],
       ])
-      .return('count(re) as total')
+      .return('count(rel) as total')
       .first();
 
     const totalNumber = result?.total || 0;
