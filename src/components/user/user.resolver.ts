@@ -12,7 +12,6 @@ import {
   SecuredOrganizationList,
 } from '../organization';
 import {
-  ConsistencyCheckerUserInput,
   CreateUserInput,
   CreateUserOutput,
   UpdateUserInput,
@@ -138,19 +137,29 @@ export class UserResolver {
     description:
       'Check the consistency of these relationships for every node that has unique',
   })
-  async consistencyCheckerPropertyUnique(
+  async checkerRelationshipUnique(
     @Session() session: ISession,
     @IdArg() id: string
   ): Promise<boolean> {
-    return this.userService.isEmailUnique(id, session);
+    return this.userService.checkRelationshipUnique(id, session);
   }
+
+  // @Query(() => Boolean, {
+  //   description: 'Validate all property nodes are exist in user baseNode',
+  // })
+  // async checkerPropertyExist(
+  //   @Session() session: ISession,
+  //   @Args('input') { user: input }: ConsistencyCheckerUserInput
+  // ): Promise<boolean> {
+  //   return this.userService.validateProperties(input, session);
+  // }
 
   @Query(() => Boolean, {
     description: 'Validate all property nodes are exist in user baseNode',
   })
-  async consistencyCheckerPropertyExist(
+  async checkerPropertyExist(
     @Session() session: ISession,
-    @Args('input') { user: input }: ConsistencyCheckerUserInput
+    @Args('input') { user: input }: UpdateUserInput
   ): Promise<boolean> {
     return this.userService.validateProperties(input, session);
   }

@@ -213,8 +213,69 @@ describe('User e2e', () => {
   });
 
   it('validate all properties for user baseNode', async () => {
+    const user = await createUser(app);
+    const fakeUser: UpdateUser = {
+      id: user.id,
+      realFirstName: faker.name.firstName(),
+      realLastName: faker.name.lastName(),
+      displayFirstName: faker.name.firstName(),
+      displayLastName: faker.name.lastName(),
+      phone: faker.phone.phoneNumber(),
+      timezone: 'new timezone detail',
+      bio: 'new bio detail',
+    };
+
+    const uniqueEmailProperty = await app.graphql.query(
+      gql`
+        query checkerPropertyExist($input: UpdateUserInput!) {
+          checkerPropertyExist(input: $input)
+        }
+      `,
+      {
+        input: {
+          user: {
+            ...fakeUser,
+          },
+        },
+      }
+    );
+    expect(uniqueEmailProperty.checkerPropertyExist).toBe(true);
+  });
+
+  // it('TRIAL to check work - propery exist user', async () => {
+  //   const user = await createUser(app);
+  //   const fakeUser: UpdateUser = {
+  //     id: user.id,
+  //     realFirstName: faker.name.firstName(),
+  //     realLastName: faker.name.lastName(),
+  //     displayFirstName: faker.name.firstName(),
+  //     displayLastName: faker.name.lastName(),
+  //     phone: faker.phone.phoneNumber(),
+  //     timezone: 'new timezone detail',
+  //     bio: 'new bio detail',
+  //   };
+
+  //   const uniqueEmailProperty = await app.graphql.query(
+  //     gql`
+  //       query checkerPropertyExist($input: UpdateUserInput!) {
+  //         checkerPropertyExist(input: $input)
+  //       }
+  //     `,
+  //     {
+  //       input: {
+  //         user: {
+  //           ...fakeUser,
+  //         },
+  //       },
+  //     }
+  //   );
+  //   expect(uniqueEmailProperty.checkerPropertyExist).toBe(true);
+  // });
+
+  it('check email property is unique', async () => {
+    const email = faker.internet.email();
     const fakeUser: CreateUser = {
-      email: faker.internet.email(),
+      email: email,
       realFirstName: faker.name.firstName(),
       realLastName: faker.name.lastName(),
       displayFirstName: faker.name.firstName(),
@@ -224,25 +285,21 @@ describe('User e2e', () => {
       timezone: 'timezone detail',
       bio: 'bio detail',
     };
+
     // create user first
     const user = await createUser(app, fakeUser);
-    // get the user from the ID
-    const result = await app.graphql.query(
+    const uniqueEmailProperty = await app.graphql.query(
       gql`
-        query consistencyCheckerPropertyExist($id: ID!) {
-          consistencyCheckerPropertyExist(id: $id) {
-            ...user
-          }
+        query checkerRelationshipUnique($id: ID!) {
+          checkerRelationshipUnique(id: $id)
         }
-        ${fragments.user}
       `,
       {
         id: user.id,
       }
     );
-    const actual: User = result.user;
 
-    expect(actual).toBeTruthy();
+    expect(uniqueEmailProperty.checkerRelationshipUnique).toBe(true);
   });
 
   afterAll(async () => {

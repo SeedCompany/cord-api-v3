@@ -12,7 +12,6 @@ import {
   SecuredOrganizationList,
 } from '../organization';
 import {
-  ConsistencyCheckerUser,
   CreateUser,
   UpdateUser,
   User,
@@ -521,7 +520,10 @@ export class UserService {
     }
   }
 
-  async isEmailUnique(id: string, session: ISession): Promise<boolean> {
+  async checkRelationshipUnique(
+    id: string,
+    session: ISession
+  ): Promise<boolean> {
     const isUnique = await this.db.isRelationshipUnique({
       id,
       session,
@@ -533,7 +535,7 @@ export class UserService {
   }
 
   async validateProperties(
-    input: ConsistencyCheckerUser,
+    input: UpdateUser, //ConsistencyCheckerUser,
     session: ISession
   ): Promise<boolean> {
     const user = await this.readOne(input.id, session);
