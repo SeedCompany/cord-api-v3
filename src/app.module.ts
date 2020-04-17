@@ -24,8 +24,9 @@ import { CoreModule, LoggerModule } from './core';
 const context: ContextFunction<
   { req: Request; res: Response },
   GqlContextType
-> = ({ req }) => ({
+> = ({ req, res }) => ({
   request: req,
+  response: res,
 });
 
 @Module({

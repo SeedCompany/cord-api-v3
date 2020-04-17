@@ -5,11 +5,13 @@ import { User } from '../user';
 @ObjectType()
 export abstract class CreateSessionOutput {
   @Field({
+    nullable: true,
     description: stripIndent`
       Use this token in future requests in the Authorization header.
-      Authorization: Bearer {token}`,
+      Authorization: Bearer {token}.
+      This token is only returned when the \`browser\` argument is not set to \`true\`.`,
   })
-  token: string;
+  token?: string;
 }
 
 @InputType()

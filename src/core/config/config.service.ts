@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
 import { LazyGetter as Lazy } from 'lazy-get-decorator';
 import { Config as Neo4JDriverConfig } from 'neo4j-driver/types/v1';
 import { LogLevel } from '../logger';
@@ -54,6 +55,39 @@ export class ConfigService {
     return {
       email: this.env.string('ROOT_ADMIN_EMAIL').optional('devops@tsco.org'),
       password: this.env.string('ROOT_ADMIN_PASSWORD').optional('admin'),
+    };
+  }
+
+  @Lazy() get cors(): CorsOptions {
+    // regex is matched against origin which includes protocol and port (no path)
+    // `cf\.com$` matches both root cf.com and all subdomains
+    // `\/\/cf\.com$` matches only root cf.com
+    const rawOrigin = this.env.string('CORS_ORIGIN').optional('*');
+    const origin = rawOrigin === '*' ? rawOrigin : new RegExp(rawOrigin);
+    return {
+      origin,
+      credentials: true,
+    };
+  }
+
+  @Lazy() get session(): {
+    cookieName: string;
+    cookieDomain: string | undefined;
+  } {
+    const cookieName = this.env
+      .string('SESSION_COOKIE_NAME')
+      .optional('cordsession');
+
+    let cookieDomain = this.env.string('SESSION_COOKIE_DOMAIN').optional();
+
+    // prepend a leading "." to the domain if one doesn't exist, to ensure cookies are cross-domain-enabled
+    if (cookieDomain && !cookieDomain.startsWith('.')) {
+      cookieDomain = '.' + cookieDomain;
+    }
+
+    return {
+      cookieName,
+      cookieDomain,
     };
   }
 
