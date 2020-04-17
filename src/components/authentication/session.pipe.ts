@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { Request } from 'express';
 import { ISession } from '../../common';
+import { ConfigService } from '../../core';
 import { AuthenticationService } from './authentication.service';
 
 declare module 'express' {
@@ -15,7 +16,10 @@ declare module 'express' {
 
 @Injectable()
 export class SessionPipe implements PipeTransform<Request, Promise<ISession>> {
-  constructor(private readonly auth: AuthenticationService) {}
+  constructor(
+    private readonly auth: AuthenticationService,
+    private readonly config: ConfigService
+  ) {}
 
   async transform(request: Request): Promise<ISession> {
     if (request?.session) {
@@ -32,14 +36,31 @@ export class SessionPipe implements PipeTransform<Request, Promise<ISession>> {
   }
 
   async createSessionFromRequest(req: Request): Promise<ISession | undefined> {
-    const header = req?.headers?.authorization;
-    if (!header) {
+    const token =
+      this.getTokenFromAuthHeader(req) ||
+      this.getTokenFromCookie(req, this.config.sessionCookieName);
+
+    if (!token) {
       return;
+    }
+
+    return this.auth.createSession(token);
+  }
+
+  getTokenFromAuthHeader(req: Request): string | null {
+    const header = req?.headers?.authorization;
+
+    if (!header) {
+      return null;
     }
     if (!header.startsWith('Bearer ')) {
-      return;
+      return null;
     }
-    const token = header.replace('Bearer ', '');
-    return this.auth.createSession(token);
+
+    return header.replace('Bearer ', '');
+  }
+
+  getTokenFromCookie(req: Request, sessionCookieName: string): string | null {
+    return req.cookies[sessionCookieName] || null;
   }
 }

@@ -1,5 +1,8 @@
-import { Args, Mutation, Resolver } from '@nestjs/graphql';
+import { Args, Context, Mutation, Resolver } from '@nestjs/graphql';
+import { Response } from 'express';
+import { DateTime } from 'luxon';
 import { ISession, Session } from '../../common';
+import { ConfigService } from '../../core';
 import { UserService } from '../user';
 import {
   CreateSessionOutput,
@@ -13,14 +16,31 @@ import { AuthenticationService } from './authentication.service';
 export class AuthenticationResolver {
   constructor(
     private readonly authService: AuthenticationService,
-    private readonly userService: UserService
+    private readonly userService: UserService,
+    private readonly config: ConfigService
   ) {}
 
   @Mutation(() => CreateSessionOutput, {
     description: 'Create a session',
   })
-  async createSession(): Promise<CreateSessionOutput> {
+  async createSession(
+    @Args('browser') browser: boolean,
+    @Context('response') res: Response
+  ): Promise<CreateSessionOutput> {
     const token = await this.authService.createToken();
+
+    if (browser) {
+      // http cookies must have an expiration in order to persist, so we're setting it to 10 years in the future
+      const expires = DateTime.local().plus({ years: 10 }).toJSDate();
+
+      res.cookie(this.config.sessionCookieName, token, {
+        expires,
+        httpOnly: true,
+        path: '/',
+        domain: this.config.sessionCookieDomain,
+      });
+    }
+
     return { token };
   }
 
