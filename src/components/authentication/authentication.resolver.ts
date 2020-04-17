@@ -24,8 +24,15 @@ export class AuthenticationResolver {
     description: 'Create a session',
   })
   async createSession(
-    @Args('browser') browser: boolean,
-    @Context('response') res: Response
+    @Context('response') res: Response,
+    @Args({
+      name: 'browser',
+      description:
+        'Set to true to enable http cookie sessions for use in a browser-based environment.',
+      type: () => Boolean,
+      defaultValue: false,
+    })
+    browser?: boolean
   ): Promise<CreateSessionOutput> {
     const token = await this.authService.createToken();
 
@@ -33,12 +40,14 @@ export class AuthenticationResolver {
       // http cookies must have an expiration in order to persist, so we're setting it to 10 years in the future
       const expires = DateTime.local().plus({ years: 10 }).toJSDate();
 
-      res.cookie(this.config.sessionCookieName, token, {
+      res.cookie(this.config.session.cookieName, token, {
         expires,
         httpOnly: true,
         path: '/',
-        domain: this.config.sessionCookieDomain,
+        domain: this.config.session.cookieDomain,
       });
+
+      return {};
     }
 
     return { token };

@@ -38,7 +38,7 @@ export class SessionPipe implements PipeTransform<Request, Promise<ISession>> {
   async createSessionFromRequest(req: Request): Promise<ISession | undefined> {
     const token =
       this.getTokenFromAuthHeader(req) ||
-      this.getTokenFromCookie(req, this.config.sessionCookieName);
+      this.getTokenFromCookie(req, this.config.session.cookieName);
 
     if (!token) {
       return;

@@ -70,12 +70,25 @@ export class ConfigService {
     };
   }
 
-  @Lazy() get sessionCookieName(): string {
-    return this.env.string('SESSION_COOKIE_NAME').optional('cordsession');
-  }
+  @Lazy() get session(): {
+    cookieName: string;
+    cookieDomain: string | undefined;
+  } {
+    const cookieName = this.env
+      .string('SESSION_COOKIE_NAME')
+      .optional('cordsession');
 
-  @Lazy() get sessionCookieDomain(): string | undefined {
-    return this.env.string('SESSION_COOKIE_DOMAIN').optional(undefined);
+    let cookieDomain = this.env.string('SESSION_COOKIE_DOMAIN').optional();
+
+    // prepend a leading "." to the domain if one doesn't exist, to ensure cookies are cross-domain-enabled
+    if (cookieDomain && !cookieDomain.startsWith('.')) {
+      cookieDomain = '.' + cookieDomain;
+    }
+
+    return {
+      cookieName,
+      cookieDomain,
+    };
   }
 
   /**
