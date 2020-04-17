@@ -136,7 +136,7 @@ export class UserResolver {
 
   @Query(() => Boolean, {
     description:
-      'Consistency checker of these relationships for every node that has unique',
+      'Consistency checker of all relationships for every node that has unique',
   })
   async checkerRelationshipUnique(
     @Session() session: ISession,

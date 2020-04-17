@@ -217,7 +217,7 @@ describe('User e2e', () => {
     expect(users.items.length).toBeGreaterThan(9);
   });
 
-  it('Consistency checker of these relationships for every node that has unique', async () => {
+  it('Consistency checker of all relationships for every node that has unique', async () => {
     const email = faker.internet.email();
     const fakeUser: CreateUser = {
       email: email,

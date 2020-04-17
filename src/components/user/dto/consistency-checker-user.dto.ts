@@ -7,8 +7,6 @@ export abstract class ConsistencyCheckerUser {
   @Field(() => ID)
   readonly id: string;
 
-  // TODO Allow email to be changed? Implications?
-
   @Field({ nullable: true })
   @MinLength(2)
   readonly realFirstName?: string;
