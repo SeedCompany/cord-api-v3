@@ -812,7 +812,7 @@ export class DatabaseService {
             active: true,
           }),
           relation('out', 'rel', relName, { active: true }),
-          node(relName, 'Property', { active: true }),
+          node(relName, { active: true }),
         ],
       ])
       .return('count(rel) as total')
@@ -848,4 +848,38 @@ export class DatabaseService {
 
     return true;
   }
+
+  // async isNodeUnique({
+  //   session,
+  //   id,
+  //   relName,
+  //   baseNodeLabel,
+  // }: {
+  //   session: ISession;
+  //   id: string;
+  //   relName: string;
+  //   baseNodeLabel: string;
+  // }): Promise<boolean> {
+  //   //MATCH (a:User)-[r]-(b:BaseNode) RETURN b
+  //   const result = await this.db
+  //     .query()
+  //     .match([
+  //       matchSession(session),
+  //       [
+  //         node('n', baseNodeLabel, {
+  //           id,
+  //           active: true,
+  //         }),
+  //         relation('out', 'rel', relName, { active: true }),
+  //         node(relName, 'BaseNode', { active: true }),
+  //       ],
+  //     ])
+  //     .return('count(rel) as total')
+  //     .first();
+
+  //   const totalNumber = result?.total || 0;
+  //   const isUnique = totalNumber <= 1;
+
+  //   return isUnique;
+  // }
 }

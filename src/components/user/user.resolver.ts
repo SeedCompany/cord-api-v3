@@ -133,20 +133,8 @@ export class UserResolver {
     return true;
   }
 
-  // TODO: Remove after completed the test cases
-  // @Query(() => Boolean, {
-  //   description:
-  //     'Consistency checker of all relationships for every node that has unique',
-  // })
-  // async checkerRelationshipUnique(
-  //   @Session() session: ISession,
-  //   @IdArg() id: string
-  // ): Promise<boolean> {
-  //   return this.userService.checkRelationshipUnique(id, session);
-  // }
-
   @Query(() => Boolean, {
-    description: 'Consistency user schema check',
+    description: 'Consistency check for user schema',
   })
   async consistencyUserCheck(@Session() session: ISession): Promise<boolean> {
     return this.userService.consistencyUserCheck(session);

@@ -520,24 +520,8 @@ export class UserService {
     }
   }
 
-  // TODO: Remove after completed the test cases
-  // async checkRelationshipUnique(
-  //   id: string,
-  //   session: ISession
-  // ): Promise<boolean> {
-  //   const isUnique = await this.db.isRelationshipUnique({
-  //     id,
-  //     session,
-  //     baseNodeLabel: 'User',
-  //     relName: 'email',
-  //   });
-
-  //   return isUnique;
-  // }
-
   async consistencyUserCheck(session: ISession): Promise<boolean> {
     //const users = await this.db.getAllNodes({ session, baseNodeLabel: 'User' });
-    // TODO: to be moved in generic function
     const query = `
       MATCH
         (token:Token {
@@ -565,67 +549,35 @@ export class UserService {
       })
       .run();
 
-    // TODO: to be moved in generic function
-    const queryOther = `
-      MATCH
-        (token:Token {
-          active: true,
-          value: $token
-        })
-          <-[:token {active: true}]-
-        (requestingUser:User {
-          active: true,
-          id: $requestingUserId,
-          owningOrgId: $owningOrgId
-        }),
-        (user: User {owningOrgId: $owningOrgId, active: true})-[r]-(connectedNode:BaseNode)
-        RETURN
-        connectedNode
-      `;
-
-    const connectedNode = await this.db
-      .query()
-      .raw(queryOther, {
-        userId: session.userId,
-        requestingUserId: session.userId,
-        owningOrgId: session.owningOrgId,
-        token: session.token,
-      })
-      .run();
-    this.logger.debug('connectedNode', { connectedNode });
-
-    // try {
-    //   users.map(async (prop) => {
-    //     this.logger.info('user', prop.user.properties.id);
-    //     await this.db.isRelationshipUnique({
-    //       id: 'OwzjSHJja', //user.id
-    //       session,
-    //       baseNodeLabel: 'User',
-    //       relName: 'email',
-    //     });
-    //   });
-    // } catch (e) {
-    //   this.logger.debug('error =>', e);
-    // }
-
     const messageDetails = [];
     const result = [];
-    for (const prop of users) {
-      this.logger.info('prop-user', prop.user.properties);
+    for (const user of users) {
+      const isNodeUnique = await this.db.isRelationshipUnique({
+        id: user.user.properties.id,
+        session,
+        baseNodeLabel: 'User',
+        relName: 'org',
+      });
+
+      let consistencyMessage = `relationshipUnique : ${isNodeUnique}`;
+      messageDetails.push(consistencyMessage);
+      result.push(isNodeUnique);
+
+      //this.logger.info('prop-user', user.user.properties.id);
       const isUnique = await this.db.isRelationshipUnique({
-        id: '97Y3sBSlL', //prop.user.properties
+        id: user.user.properties.id,
         session,
         baseNodeLabel: 'User',
         relName: 'email',
       });
 
-      let consistencyMessage = `relationshipUnique : ${isUnique}`;
+      consistencyMessage = `relationshipUnique : ${isUnique}`;
       messageDetails.push(consistencyMessage);
       result.push(isUnique);
-      //const user = await this.readOne('OwzjSHJja', session);
+
       const hasProperty = await this.db.hasProperties({
         session,
-        id: '97Y3sBSlL', //prop.user.properties
+        id: user.user.properties.id, //prop.user.properties
         props: [
           'email',
           'realFirstName',
