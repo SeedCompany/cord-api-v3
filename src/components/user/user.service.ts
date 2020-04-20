@@ -520,41 +520,131 @@ export class UserService {
     }
   }
 
-  async checkRelationshipUnique(
-    id: string,
-    session: ISession
-  ): Promise<boolean> {
-    const isUnique = await this.db.isRelationshipUnique({
-      id,
-      session,
-      baseNodeLabel: 'User',
-      relName: 'email',
-    });
+  // TODO: Remove after completed the test cases
+  // async checkRelationshipUnique(
+  //   id: string,
+  //   session: ISession
+  // ): Promise<boolean> {
+  //   const isUnique = await this.db.isRelationshipUnique({
+  //     id,
+  //     session,
+  //     baseNodeLabel: 'User',
+  //     relName: 'email',
+  //   });
 
-    return isUnique;
-  }
+  //   return isUnique;
+  // }
 
-  async validateProperties(
-    input: UpdateUser, //ConsistencyCheckerUser,
-    session: ISession
-  ): Promise<boolean> {
-    const user = await this.readOne(input.id, session);
+  async consistencyUserCheck(session: ISession): Promise<boolean> {
+    //const users = await this.db.getAllNodes({ session, baseNodeLabel: 'User' });
+    // TODO: to be moved in generic function
+    const query = `
+      MATCH
+        (token:Token {
+          active: true,
+          value: $token
+        })
+          <-[:token {active: true}]-
+        (requestingUser:User {
+          active: true,
+          id: $requestingUserId,
+          owningOrgId: $owningOrgId
+        }),
+        (user: User {owningOrgId: $owningOrgId, active: true})
+        RETURN
+          user
+      `;
 
-    const hasProperty = this.db.hasProperties({
-      session,
-      object: user,
-      props: [
-        'email',
-        'realFirstName',
-        'realLastName',
-        'displayFirstName',
-        'displayLastName',
-        'phone',
-        'timezone',
-      ],
-      nodevar: 'user',
-    });
+    const users = await this.db
+      .query()
+      .raw(query, {
+        userId: session.userId,
+        requestingUserId: session.userId,
+        owningOrgId: session.owningOrgId,
+        token: session.token,
+      })
+      .run();
 
-    return hasProperty;
+    // TODO: to be moved in generic function
+    const queryOther = `
+      MATCH
+        (token:Token {
+          active: true,
+          value: $token
+        })
+          <-[:token {active: true}]-
+        (requestingUser:User {
+          active: true,
+          id: $requestingUserId,
+          owningOrgId: $owningOrgId
+        }),
+        (user: User {owningOrgId: $owningOrgId, active: true})-[r]-(connectedNode:BaseNode)
+        RETURN
+        connectedNode
+      `;
+
+    const connectedNode = await this.db
+      .query()
+      .raw(queryOther, {
+        userId: session.userId,
+        requestingUserId: session.userId,
+        owningOrgId: session.owningOrgId,
+        token: session.token,
+      })
+      .run();
+    this.logger.debug('connectedNode', { connectedNode });
+
+    // try {
+    //   users.map(async (prop) => {
+    //     this.logger.info('user', prop.user.properties.id);
+    //     await this.db.isRelationshipUnique({
+    //       id: 'OwzjSHJja', //user.id
+    //       session,
+    //       baseNodeLabel: 'User',
+    //       relName: 'email',
+    //     });
+    //   });
+    // } catch (e) {
+    //   this.logger.debug('error =>', e);
+    // }
+
+    const messageDetails = [];
+    const result = [];
+    for (const prop of users) {
+      this.logger.info('prop-user', prop.user.properties);
+      const isUnique = await this.db.isRelationshipUnique({
+        id: '97Y3sBSlL', //prop.user.properties
+        session,
+        baseNodeLabel: 'User',
+        relName: 'email',
+      });
+
+      let consistencyMessage = `relationshipUnique : ${isUnique}`;
+      messageDetails.push(consistencyMessage);
+      result.push(isUnique);
+      //const user = await this.readOne('OwzjSHJja', session);
+      const hasProperty = await this.db.hasProperties({
+        session,
+        id: '97Y3sBSlL', //prop.user.properties
+        props: [
+          'email',
+          'realFirstName',
+          'realLastName',
+          'displayFirstName',
+          'displayLastName',
+          'phone',
+          'timezone',
+        ],
+        nodevar: 'user',
+      });
+      consistencyMessage = `propertiesExist : ${hasProperty}`;
+      messageDetails.push(consistencyMessage);
+      result.push(hasProperty);
+    }
+
+    if (result.includes(false)) {
+      return false;
+    }
+    return true;
   }
 }
