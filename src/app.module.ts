@@ -1,8 +1,4 @@
 import { Module } from '@nestjs/common';
-import { GraphQLModule } from '@nestjs/graphql';
-import { ContextFunction } from 'apollo-server-core';
-import { Request, Response } from 'express';
-import { GqlContextType } from './common';
 import { DateScalar, DateTimeScalar } from './common/luxon.graphql';
 import { AdminModule } from './components/admin';
 import { AuthenticationModule } from './components/authentication';
@@ -21,24 +17,10 @@ import { UserModule } from './components/user';
 import { WorkflowModule } from './components/workflow/workflow.module';
 import { CoreModule, LoggerModule } from './core';
 
-const context: ContextFunction<
-  { req: Request; res: Response },
-  GqlContextType
-> = ({ req, res }) => ({
-  request: req,
-  response: res,
-});
-
 @Module({
   imports: [
     LoggerModule.forRoot(),
     CoreModule,
-    GraphQLModule.forRoot({
-      autoSchemaFile: 'schema.gql',
-      context,
-      playground: true, // enabled in all environments
-      introspection: true, // needed for playground
-    }),
     AdminModule,
     AuthenticationModule,
     AuthorizationModule,
