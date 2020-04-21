@@ -25,7 +25,7 @@ const context: ContextFunction<
     EmailModule,
     GraphQLModule.forRootAsync({
       useFactory: (config: ConfigService) => ({
-        autoSchemaFile: 'schema.gql',
+        autoSchemaFile: 'schema.graphql',
         context,
         cors: config.cors,
         playground: true, // enabled in all environments
