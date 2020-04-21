@@ -1,29 +1,32 @@
-import { Args, Context, Mutation, Resolver } from '@nestjs/graphql';
-import { Response } from 'express';
+import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Request, Response } from 'express';
 import { DateTime } from 'luxon';
 import { ISession, Session } from '../../common';
 import { ConfigService } from '../../core';
 import { UserService } from '../user';
 import {
-  CreateSessionOutput,
   LoginInput,
   LoginOutput,
   ResetPasswordInput,
+  SessionOutput,
 } from './authentication.dto';
 import { AuthenticationService } from './authentication.service';
+import { SessionPipe } from './session.pipe';
 
 @Resolver()
 export class AuthenticationResolver {
   constructor(
     private readonly authService: AuthenticationService,
     private readonly userService: UserService,
-    private readonly config: ConfigService
+    private readonly config: ConfigService,
+    private readonly sessionPipe: SessionPipe
   ) {}
 
-  @Mutation(() => CreateSessionOutput, {
-    description: 'Create a session',
+  @Query(() => SessionOutput, {
+    description: 'Create or retrieve an existing session',
   })
-  async createSession(
+  async session(
+    @Context('request') req: Request,
     @Context('response') res: Response,
     @Args({
       name: 'browser',
@@ -33,8 +36,14 @@ export class AuthenticationResolver {
       defaultValue: false,
     })
     browser?: boolean
-  ): Promise<CreateSessionOutput> {
-    const token = await this.authService.createToken();
+  ): Promise<SessionOutput> {
+    const existingToken =
+      this.sessionPipe.getTokenFromAuthHeader(req) ||
+      this.sessionPipe.getTokenFromCookie(req);
+
+    const token = existingToken || (await this.authService.createToken());
+    const session = await this.authService.createSession(token);
+    const userFromSession = await this.authService.userFromSession(session);
 
     if (browser) {
       // http cookies must have an expiration in order to persist, so we're setting it to 10 years in the future
@@ -47,10 +56,10 @@ export class AuthenticationResolver {
         domain: this.config.session.cookieDomain,
       });
 
-      return {};
+      return { user: userFromSession };
     }
 
-    return { token };
+    return { token, user: userFromSession };
   }
 
   @Mutation(() => LoginOutput, {

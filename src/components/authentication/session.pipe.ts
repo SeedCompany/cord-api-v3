@@ -60,6 +60,6 @@ export class SessionPipe implements PipeTransform<Request, Promise<ISession>> {
   }
 
   getTokenFromCookie(req: Request): string | null {
-    return req.cookies[this.config.session.cookieName] || null;
+    return req?.cookies?.[this.config.session.cookieName] || null;
   }
 }

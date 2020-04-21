@@ -3,7 +3,7 @@ import { Field, InputType, ObjectType } from 'type-graphql';
 import { User } from '../user';
 
 @ObjectType()
-export abstract class CreateSessionOutput {
+export abstract class SessionOutput {
   @Field({
     nullable: true,
     description: stripIndent`
@@ -12,6 +12,13 @@ export abstract class CreateSessionOutput {
       This token is only returned when the \`browser\` argument is not set to \`true\`.`,
   })
   token?: string;
+
+  @Field(() => User, {
+    nullable: true,
+    description:
+      'Only returned if there is a logged-in user tied to the current session.',
+  })
+  user: User | null;
 }
 
 @InputType()
