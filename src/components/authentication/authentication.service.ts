@@ -1,5 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import * as argon2 from 'argon2';
+import { node, relation } from 'cypher-query-builder';
 import { sign, verify } from 'jsonwebtoken';
 import { DateTime } from 'luxon';
 import { ISession } from '../../common';
@@ -11,6 +12,7 @@ import {
   ILogger,
   Logger,
 } from '../../core';
+import { User, UserService } from '../user';
 import { LoginInput, ResetPasswordInput } from './authentication.dto';
 
 interface JwtPayload {
@@ -23,6 +25,7 @@ export class AuthenticationService {
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
     private readonly email: EmailService,
+    private readonly userService: UserService,
     @Logger('auth:service') private readonly logger: ILogger
   ) {}
 
@@ -52,6 +55,29 @@ export class AuthenticationService {
     }
 
     return result.token;
+  }
+
+  async userFromSession(session: ISession): Promise<User | null> {
+    const userRes = await this.db
+      .query()
+      .match([
+        node('token', 'Token', {
+          active: true,
+          value: session.token,
+        }),
+        relation('in', '', 'token', {
+          active: true,
+        }),
+        node('user', 'User'),
+      ])
+      .return({ user: [{ id: 'id' }] })
+      .first();
+
+    if (!userRes) {
+      return null;
+    }
+
+    return this.userService.readOne(userRes.id, session);
   }
 
   async login(input: LoginInput, session: ISession): Promise<string> {
