@@ -732,23 +732,23 @@ export class DatabaseService {
       .run();
   }
 
-  async hasProperties<TObject extends Resource>({
+  async hasProperties({
     session,
-    object,
+    id,
     props,
     nodevar,
   }: {
+    id: string;
     session: ISession;
-    object: TObject;
-    props: ReadonlyArray<keyof TObject>;
+    props: string[];
     nodevar: string;
   }): Promise<boolean> {
     const resultingArr = [];
     for (const prop of props) {
       const hasProp = await this.hasProperty({
-        object,
         session,
-        key: prop,
+        id,
+        prop,
         nodevar,
       });
       resultingArr.push(hasProp);
@@ -759,15 +759,15 @@ export class DatabaseService {
     return true;
   }
 
-  async hasProperty<TObject extends Resource, Key extends keyof TObject>({
+  async hasProperty({
+    id,
     session,
-    object,
-    key,
+    prop,
     nodevar,
   }: {
+    id: string;
     session: ISession;
-    object: TObject;
-    key: Key;
+    prop: string;
     nodevar: string;
   }): Promise<boolean> {
     const result = await this.db
@@ -776,11 +776,11 @@ export class DatabaseService {
         matchSession(session),
         [
           node(nodevar, upperFirst(nodevar), {
-            id: object.id,
+            id,
             active: true,
           }),
-          relation('out', 'rel', key as string, { active: true }),
-          node(key as string, 'Property', { active: true }),
+          relation('out', 'rel', prop, { active: true }),
+          node(prop, 'Property', { active: true }),
         ],
       ])
       .return('count(rel) as total')
@@ -811,16 +811,75 @@ export class DatabaseService {
             id,
             active: true,
           }),
-          relation('out', 'r', relName, { active: true }),
-          node('', '', { active: true }),
+          relation('out', 'rel', relName, { active: true }),
+          node(relName, { active: true }),
         ],
       ])
-      .return('count(r) as total')
+      .return('count(rel) as total')
       .first();
 
     const totalNumber = result?.total || 0;
     const isUnique = totalNumber <= 1;
 
     return isUnique;
+  }
+
+  async isUniqueProperties({
+    session,
+    id,
+    props,
+    nodevar,
+  }: {
+    id: string;
+    session: ISession;
+    props: string[];
+    nodevar: string;
+  }): Promise<boolean> {
+    const resultingArr = [];
+    for (const prop of props) {
+      const isUnique = await this.isUniqueProperty({
+        session,
+        id,
+        prop,
+        nodevar,
+      });
+      resultingArr.push(isUnique);
+    }
+    if (resultingArr.includes(false)) {
+      return false;
+    }
+    return true;
+  }
+
+  async isUniqueProperty({
+    id,
+    session,
+    prop,
+    nodevar,
+  }: {
+    id: string;
+    session: ISession;
+    prop: string;
+    nodevar: string;
+  }): Promise<boolean> {
+    const result = await this.db
+      .query()
+      .match([
+        matchSession(session),
+        [
+          node(nodevar, upperFirst(nodevar), {
+            id,
+            active: true,
+          }),
+          relation('out', 'rel', prop, { active: true }),
+          node(prop, 'Property', { active: true }),
+        ],
+      ])
+      .return('count(rel) as total')
+      .first();
+
+    const totalNumber = result?.total || 0;
+    const isUniqueProperty = totalNumber <= 1;
+    return isUniqueProperty;
   }
 }

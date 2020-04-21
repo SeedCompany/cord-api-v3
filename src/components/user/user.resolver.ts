@@ -132,4 +132,11 @@ export class UserResolver {
     await this.userService.delete(id, session);
     return true;
   }
+
+  @Query(() => Boolean, {
+    description: 'Check Consistency across User Nodes',
+  })
+  async consistencyUserCheck(@Session() session: ISession): Promise<boolean> {
+    return this.userService.consistencyUserCheck(session);
+  }
 }

@@ -212,6 +212,23 @@ describe('User e2e', () => {
     expect(users.items.length).toBeGreaterThan(9);
   });
 
+  it('Check consistency across user nodes', async () => {
+    // create users
+    await Promise.all(
+      times(10).map(() => createUser(app, { email: faker.internet.email() }))
+    );
+
+    const checkUserSchema = await app.graphql.query(
+      gql`
+        query consistencyUserCheck {
+          consistencyUserCheck
+        }
+      `
+    );
+
+    expect(checkUserSchema.consistencyUserCheck).toBe(true);
+  });
+
   afterAll(async () => {
     await app.close();
   });
