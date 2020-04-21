@@ -824,62 +824,62 @@ export class DatabaseService {
     return isUnique;
   }
 
-  //TODO: to be refactored
-  async getAllNodes({
+  async isUniqueProperties({
     session,
-    baseNodeLabel,
+    id,
+    props,
+    nodevar,
   }: {
+    id: string;
     session: ISession;
-    baseNodeLabel: string;
+    props: string[];
+    nodevar: string;
   }): Promise<boolean> {
-    await this.db
+    const resultingArr = [];
+    for (const prop of props) {
+      const isUnique = await this.isUniqueProperty({
+        session,
+        id,
+        prop,
+        nodevar,
+      });
+      resultingArr.push(isUnique);
+    }
+    if (resultingArr.includes(false)) {
+      return false;
+    }
+    return true;
+  }
+
+  async isUniqueProperty({
+    id,
+    session,
+    prop,
+    nodevar,
+  }: {
+    id: string;
+    session: ISession;
+    prop: string;
+    nodevar: string;
+  }): Promise<boolean> {
+    const result = await this.db
       .query()
       .match([
         matchSession(session),
         [
-          node('u', baseNodeLabel, {
+          node(nodevar, upperFirst(nodevar), {
+            id,
             active: true,
           }),
+          relation('out', 'rel', prop, { active: true }),
+          node(prop, 'Property', { active: true }),
         ],
       ])
-      .return('User as result')
-      .run();
-    //this.logger.debug('user', { user });
+      .return('count(rel) as total')
+      .first();
 
-    return true;
+    const totalNumber = result?.total || 0;
+    const isUniqueProperty = totalNumber <= 1;
+    return isUniqueProperty;
   }
-
-  // async isNodeUnique({
-  //   session,
-  //   id,
-  //   relName,
-  //   baseNodeLabel,
-  // }: {
-  //   session: ISession;
-  //   id: string;
-  //   relName: string;
-  //   baseNodeLabel: string;
-  // }): Promise<boolean> {
-  //   //MATCH (a:User)-[r]-(b:BaseNode) RETURN b
-  //   const result = await this.db
-  //     .query()
-  //     .match([
-  //       matchSession(session),
-  //       [
-  //         node('n', baseNodeLabel, {
-  //           id,
-  //           active: true,
-  //         }),
-  //         relation('out', 'rel', relName, { active: true }),
-  //         node(relName, 'BaseNode', { active: true }),
-  //       ],
-  //     ])
-  //     .return('count(rel) as total')
-  //     .first();
-
-  //   const totalNumber = result?.total || 0;
-  //   const isUnique = totalNumber <= 1;
-
-  //   return isUnique;
-  // }
 }

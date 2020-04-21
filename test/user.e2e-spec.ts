@@ -212,7 +212,7 @@ describe('User e2e', () => {
     expect(users.items.length).toBeGreaterThan(9);
   });
 
-  it('Consistency check for user schema', async () => {
+  it('Check consistency across user nodes', async () => {
     // create users
     await Promise.all(
       times(10).map(() => createUser(app, { email: faker.internet.email() }))
@@ -226,7 +226,7 @@ describe('User e2e', () => {
       `
     );
 
-    expect(checkUserSchema.consistencyUserCheck).toBe(true);
+    expect(checkUserSchema.consistencyUserCheck).toBe(false);
   });
 
   afterAll(async () => {

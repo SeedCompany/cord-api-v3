@@ -534,9 +534,25 @@ export class UserService {
           id: $requestingUserId,
           owningOrgId: $owningOrgId
         }),
-        (user: User {owningOrgId: $owningOrgId, active: true})
+          (user:User {active: true, owningOrgId: $owningOrgId}),
+          (user)-[:email {active: true}]->(email:EmailAddress {active: true}),
+          (user)-[:realFirstName {active: true}]->(realFirstName:Property {active: true}),
+          (user)-[:realLastName {active: true}]->(realLastName:Property {active: true}),
+          (user)-[:displayFirstName {active: true}]->(displayFirstName:Property {active: true}),
+          (user)-[:displayLastName {active: true}]->(displayLastName:Property {active: true}),
+          (user)-[:phone {active: true}]->(phone:Property {active: true}),
+          (user)-[:timezone {active: true}]->(timezone:Property {active: true}),
+          (user)-[:bio {active: true}]->(bio:Property {active: true})
         RETURN
-          user
+          user.id as id,
+          email.value as email,
+          realFirstName.value as realFirstName,
+          realLastName.value as realLastName,
+          displayFirstName.value as displayFirstName,
+          displayLastName.value as displayLastName,
+          phone.value as phone,
+          timezone.value as timezone,
+          bio.value as bio
       `;
 
     const users = await this.db
@@ -552,32 +568,33 @@ export class UserService {
     const messageDetails = [];
     const result = [];
     for (const user of users) {
-      const isNodeUnique = await this.db.isRelationshipUnique({
-        id: user.user.properties.id,
-        session,
-        baseNodeLabel: 'User',
-        relName: 'org',
-      });
+      const query1 = `
+        MATCH (u:User {id: $userId})
+        CALL apoc.path.subgraphAll(u, {
+            relationshipFilter: "admin",
+            minLevel: 1,
+            maxLevel: 3
+        })
+        YIELD nodes, relationships
+        RETURN nodes, relationships
+      `;
+      const otherNode = await this.db
+        .query()
+        .raw(query1, {
+          userId: user.id,
+        })
+        .run();
 
-      let consistencyMessage = `relationshipUnique : ${isNodeUnique}`;
+      //this.logger.info('prop-user', otherNode[0].nodes.length);
+      const isBaseUnique = otherNode[0].nodes.length > 0 ? true : false;
+
+      let consistencyMessage = `relationshipUnique of userid ${user.userId} : ${isBaseUnique}`;
       messageDetails.push(consistencyMessage);
-      result.push(isNodeUnique);
+      result.push(isBaseUnique);
 
-      //this.logger.info('prop-user', user.user.properties.id);
-      const isUnique = await this.db.isRelationshipUnique({
-        id: user.user.properties.id,
+      const isUnique = await this.db.isUniqueProperties({
         session,
-        baseNodeLabel: 'User',
-        relName: 'email',
-      });
-
-      consistencyMessage = `relationshipUnique : ${isUnique}`;
-      messageDetails.push(consistencyMessage);
-      result.push(isUnique);
-
-      const hasProperty = await this.db.hasProperties({
-        session,
-        id: user.user.properties.id, //prop.user.properties
+        id: user.id,
         props: [
           'email',
           'realFirstName',
@@ -589,7 +606,25 @@ export class UserService {
         ],
         nodevar: 'user',
       });
-      consistencyMessage = `propertiesExist : ${hasProperty}`;
+      consistencyMessage = `relationshipUnique of userid ${user.userId} : ${isUnique}`;
+      messageDetails.push(consistencyMessage);
+      result.push(isUnique);
+
+      const hasProperty = await this.db.hasProperties({
+        session,
+        id: user.id,
+        props: [
+          'email',
+          'realFirstName',
+          'realLastName',
+          'displayFirstName',
+          'displayLastName',
+          'phone',
+          'timezone',
+        ],
+        nodevar: 'user',
+      });
+      consistencyMessage = `propertiesExist of userid ${user.userId} : ${hasProperty}`;
       messageDetails.push(consistencyMessage);
       result.push(hasProperty);
     }

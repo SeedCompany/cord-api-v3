@@ -134,7 +134,7 @@ export class UserResolver {
   }
 
   @Query(() => Boolean, {
-    description: 'Consistency check for user schema',
+    description: 'Check Consistency across User Nodes',
   })
   async consistencyUserCheck(@Session() session: ISession): Promise<boolean> {
     return this.userService.consistencyUserCheck(session);
