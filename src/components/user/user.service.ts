@@ -568,29 +568,23 @@ export class UserService {
     const messageDetails = [];
     const result = [];
     for (const user of users) {
-      const query1 = `
-        MATCH (u:User {id: $userId})
-        CALL apoc.path.subgraphAll(u, {
-            relationshipFilter: "admin",
-            minLevel: 1,
-            maxLevel: 3
-        })
-        YIELD nodes, relationships
-        RETURN nodes, relationships
-      `;
-      const otherNodes = await this.db
-        .query()
-        .raw(query1, {
-          userId: user.id,
-        })
-        .run();
-
-      //this.logger.info('prop-user', otherNodes[0].nodes.length);
-      const isNodeRelUnique = otherNodes[0].nodes.length > 0 ? true : false;
-
-      let consistencyMessage = `relationshipUnique of userid ${user.userId} : ${isNodeRelUnique}`;
+      const hasProperty = await this.db.hasProperties({
+        session,
+        id: user.id,
+        props: [
+          'email',
+          'realFirstName',
+          'realLastName',
+          'displayFirstName',
+          'displayLastName',
+          'phone',
+          'timezone',
+        ],
+        nodevar: 'user',
+      });
+      let consistencyMessage = `propertiesExist of userid ${user.id} : ${hasProperty}`;
       messageDetails.push(consistencyMessage);
-      result.push(isNodeRelUnique);
+      result.push(hasProperty);
 
       const isUnique = await this.db.isUniqueProperties({
         session,
@@ -606,29 +600,11 @@ export class UserService {
         ],
         nodevar: 'user',
       });
-      consistencyMessage = `relationshipUnique of userid ${user.userId} : ${isUnique}`;
+      consistencyMessage = `relationshipUnique of userid ${user.id} : ${isUnique}`;
       messageDetails.push(consistencyMessage);
       result.push(isUnique);
-
-      const hasProperty = await this.db.hasProperties({
-        session,
-        id: user.id,
-        props: [
-          'email',
-          'realFirstName',
-          'realLastName',
-          'displayFirstName',
-          'displayLastName',
-          'phone',
-          'timezone',
-        ],
-        nodevar: 'user',
-      });
-      consistencyMessage = `propertiesExist of userid ${user.userId} : ${hasProperty}`;
-      messageDetails.push(consistencyMessage);
-      result.push(hasProperty);
     }
-
+    this.logger.info('Consistency check', { messageDetails });
     if (result.includes(false)) {
       return false;
     }

@@ -226,7 +226,7 @@ describe('User e2e', () => {
       `
     );
 
-    expect(checkUserSchema.consistencyUserCheck).toBe(false);
+    expect(checkUserSchema.consistencyUserCheck).toBe(true);
   });
 
   afterAll(async () => {
