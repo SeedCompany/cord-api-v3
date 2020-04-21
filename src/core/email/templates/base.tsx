@@ -8,12 +8,29 @@ import {
   Column,
   Divider,
   Font,
+  Head,
   Image,
+  Mjml,
   Raw,
   Section,
   Text,
+  Title,
 } from './mjml';
 import { InText } from './text-rendering';
+
+export const EmailTemplate: FC<{ title: string }> = ({ title, children }) => (
+  <Mjml lang="en">
+    <Head>
+      <Title>{`${title} - CORD Field`}</Title>
+      <Theme />
+    </Head>
+    <Body>
+      <Branding />
+
+      {children}
+    </Body>
+  </Mjml>
+);
 
 export const Theme = () => (
   <>
