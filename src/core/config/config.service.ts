@@ -63,7 +63,9 @@ export class ConfigService {
     // `cf\.com$` matches both root cf.com and all subdomains
     // `\/\/cf\.com$` matches only root cf.com
     const rawOrigin = this.env.string('CORS_ORIGIN').optional('*');
-    const origin = rawOrigin === '*' ? rawOrigin : new RegExp(rawOrigin);
+    // Always use regex instead of literal `*` so the current origin is returned
+    // instead of `*`. fetch credentials="include" requires specific origin.
+    const origin = rawOrigin === '*' ? /.*/ : new RegExp(rawOrigin);
     return {
       origin,
       credentials: true,
