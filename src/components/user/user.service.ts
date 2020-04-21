@@ -578,19 +578,19 @@ export class UserService {
         YIELD nodes, relationships
         RETURN nodes, relationships
       `;
-      const otherNode = await this.db
+      const otherNodes = await this.db
         .query()
         .raw(query1, {
           userId: user.id,
         })
         .run();
 
-      //this.logger.info('prop-user', otherNode[0].nodes.length);
-      const isBaseUnique = otherNode[0].nodes.length > 0 ? true : false;
+      //this.logger.info('prop-user', otherNodes[0].nodes.length);
+      const isNodeRelUnique = otherNodes[0].nodes.length > 0 ? true : false;
 
-      let consistencyMessage = `relationshipUnique of userid ${user.userId} : ${isBaseUnique}`;
+      let consistencyMessage = `relationshipUnique of userid ${user.userId} : ${isNodeRelUnique}`;
       messageDetails.push(consistencyMessage);
-      result.push(isBaseUnique);
+      result.push(isNodeRelUnique);
 
       const isUnique = await this.db.isUniqueProperties({
         session,
