@@ -129,4 +129,23 @@ describe('Organization e2e', () => {
 
     expect(organizations.items.length).toBeGreaterThan(9);
   });
+
+  it('Check consistency across organization nodes', async () => {
+    // create organizations
+    await Promise.all(
+      times(10).map(() =>
+        createOrganization(app, { name: generate() + ' Inc' })
+      )
+    );
+
+    const checkOrgSchema = await app.graphql.query(
+      gql`
+        query consistencyOrganizationCheck {
+          consistencyOrganizationCheck
+        }
+      `
+    );
+
+    expect(checkOrgSchema.consistencyOrganizationCheck).toBe(true);
+  });
 });

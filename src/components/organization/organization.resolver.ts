@@ -79,4 +79,13 @@ export class OrganizationResolver {
   async checkOrganizations(@Session() session: ISession): Promise<boolean> {
     return this.orgs.checkAllOrgs(session);
   }
+
+  @Query(() => Boolean, {
+    description: 'Check Consistency in Organization Nodes',
+  })
+  async consistencyOrganizationCheck(
+    @Session() session: ISession
+  ): Promise<boolean> {
+    return this.orgs.consistencyChecker(session);
+  }
 }
