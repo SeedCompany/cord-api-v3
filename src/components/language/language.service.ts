@@ -1,8 +1,15 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ForbiddenError } from 'apollo-server-core';
+import { node } from 'cypher-query-builder';
 import { generate } from 'shortid';
 import { ISession, Sensitivity } from '../../common';
-import { DatabaseService, ILogger, Logger, OnIndex } from '../../core';
+import {
+  DatabaseService,
+  ILogger,
+  Logger,
+  matchSession,
+  OnIndex,
+} from '../../core';
 import {
   CreateLanguage,
   Language,
@@ -88,7 +95,7 @@ export class LanguageService {
       await this.db.createNode({
         session,
         type: Language.classType,
-        input: { id, ...input },
+        input: { id, ...input, sensitivity: Sensitivity.Low }, // setting all language sensitivity to low by default for now
         acls,
         aclEditProp: 'canCreateLang',
       });
@@ -230,5 +237,42 @@ export class LanguageService {
       hasMore: result.hasMore,
       total: result.total,
     };
+  }
+
+  async checkLanguageConsistency(session: ISession): Promise<boolean> {
+    const languages = await this.db
+      .query()
+      .match([
+        matchSession(session),
+        [
+          node('lang', 'Language', {
+            active: true,
+          }),
+        ],
+      ])
+      .return('lang.id as id')
+      .run();
+
+    return (
+      await Promise.all(
+        languages.map(async (lang) => {
+          return this.db.hasProperties({
+            session,
+            id: lang.id,
+            props: [
+              'name',
+              'displayName',
+              'beginFiscalYear',
+              'ethnologueName',
+              'ethnologuePopulation',
+              'organizationPopulation',
+              'rodNumber',
+              'sensitivity',
+            ],
+            nodevar: 'Language',
+          });
+        })
+      )
+    ).every((n) => n);
   }
 }
