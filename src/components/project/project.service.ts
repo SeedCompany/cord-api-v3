@@ -3,15 +3,23 @@ import {
   NotFoundException,
   NotImplementedException,
 } from '@nestjs/common';
+import { node } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession, Sensitivity } from '../../common';
-import { DatabaseService, ILogger, Logger, OnIndex } from '../../core';
+import {
+  DatabaseService,
+  ILogger,
+  Logger,
+  matchSession,
+  OnIndex,
+} from '../../core';
 import {
   EngagementListInput,
   SecuredInternshipEngagementList,
   SecuredLanguageEngagementList,
 } from '../engagement/dto';
+import { LocationService } from '../location';
 import {
   AnyProject,
   CreateProject,
@@ -35,6 +43,7 @@ export class ProjectService {
   constructor(
     private readonly db: DatabaseService,
     private readonly projectMembers: ProjectMemberService,
+    private readonly locationService: LocationService,
     @Logger('project:service') private readonly logger: ILogger
   ) {}
 
@@ -101,8 +110,9 @@ export class ProjectService {
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadStatus:ACL {canReadStatus: true})-[:toNode]->(project)-[:status {active: true}]->(status:Property {active: true})
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditStatus:ACL {canEditStatus: true})-[:toNode]->(project)
 
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadLocation:ACL {canReadLocation: true})-[:toNode]->(project)-[:location {active: true}]->(location:Property {active: true})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadLocation:ACL {canReadLocation: true})-[:toNode]->(project)-[:location {active: true}]->(country:Country {active: true})
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditLocation:ACL {canEditLocation: true})-[:toNode]->(project)
+        WITH * OPTIONAL MATCH (country)-[:region]->(region:Region {active:true})-[:zone]->(zone:Zone {active: true})
 
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadMouStart:ACL {canReadMouStart: true})-[:toNode]->(project)-[:mouStart {active: true}]->(mouStart:Property {active: true})
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditMouStart:ACL {canEditMouStart: true})-[:toNode]->(project)
@@ -125,7 +135,9 @@ export class ProjectService {
           deptId.value as deptId,
           step.value as step,
           status.value as status,
-          location.value as location,
+          country,
+          region,
+          zone,
           mouStart.value as mouStart,
           mouEnd.value as mouEnd,
           estimatedSubmission.value as estimatedSubmission,
@@ -166,6 +178,28 @@ export class ProjectService {
       throw new NotFoundException('Could not find project');
     }
 
+    const location = result.country
+      ? this.locationService
+          .readOneCountry(result.country.properties.id, session)
+          .then((country) => {
+            return {
+              value: {
+                id: country.id,
+                name: { ...country.name },
+                region: { ...country.region },
+                createdAt: country.createdAt,
+              },
+            };
+          })
+          .catch(() => {
+            return {
+              value: undefined,
+            };
+          })
+      : {
+          value: undefined,
+        };
+
     return {
       id,
       createdAt: result.createdAt,
@@ -189,7 +223,7 @@ export class ProjectService {
       },
       status: result.status,
       location: {
-        value: undefined, // TODO: location not implemented yet
+        ...location,
         canRead: !!result.canReadLocation,
         canEdit: !!result.canEditLocation,
       },
@@ -350,6 +384,7 @@ export class ProjectService {
           (project:Project)-[:step]->(proStep:Property {active: true}),
           (project:Project)-[:status]->(proStatus:Property {active: true})
         SET proName :ProjectName, proStep :ProjectStep, proStatus :ProjectStatus
+        RETURN project.id
       `;
       await this.db
         .query()
@@ -358,23 +393,22 @@ export class ProjectService {
         })
         .run();
 
-      // TODO: locations are not hooked up yet
-      // if (locationId) {
-      //   const query = `
-      //     MATCH (location:Location {id: $locationId, active: true}),
-      //       (project:Project {id: $id, active: true})
-      //     CREATE (project)-[:location { active: true, createdAt: datetime()}]->(location)
-      //     RETURN project.id as id
-      //   `;
+      if (locationId) {
+        const query = `
+            MATCH (country:Country {id: $locationId, active: true}),
+              (project:Project {id: $id, active: true})
+            CREATE (project)-[:location { active: true, createdAt: datetime()}]->(country)
+            RETURN project.id as id
+          `;
 
-      //   await this.db
-      //     .query()
-      //     .raw(query, {
-      //       locationId,
-      //       id,
-      //     })
-      //     .first();
-      // }
+        await this.db
+          .query()
+          .raw(query, {
+            locationId,
+            id,
+          })
+          .first();
+      }
 
       return await this.readOne(id, session);
     } catch (e) {
@@ -435,5 +469,46 @@ export class ProjectService {
       });
       throw e;
     }
+  }
+
+  async consistencyChecker(session: ISession): Promise<boolean> {
+    const projects = await this.db
+      .query()
+      .match([
+        matchSession(session),
+        [
+          node('project', 'Project', {
+            active: true,
+          }),
+        ],
+      ])
+      .return('project.id as id')
+      .run();
+
+    const hasConsistentSingleton = await Promise.all(
+      projects.map(async (project) => {
+        return this.db.isRelationshipUnique({
+          session,
+          id: project.id,
+          relName: 'location',
+          srcNodeLabel: 'Project',
+          desNodeLabel: 'Country',
+        });
+      })
+    );
+
+    const hasConsistentProperties = await Promise.all(
+      projects.map(async (project) => {
+        return this.db.hasProperties({
+          session,
+          id: project.id,
+          props: ['type', 'status', 'name', 'step'],
+          nodevar: 'Project',
+        });
+      })
+    );
+    return [...hasConsistentSingleton, ...hasConsistentProperties].every(
+      (n) => n
+    );
   }
 }

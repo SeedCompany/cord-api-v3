@@ -449,7 +449,7 @@ export class LocationService {
         acls,
       });
 
-      this.logger.info(`region created`);
+      this.logger.info(`Region created`, { input, userId: session.userId });
 
       //set Property Label
       const queryLabel = `

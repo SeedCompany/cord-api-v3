@@ -1,20 +1,27 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
+import { DateTime } from 'luxon';
+import { generate } from 'shortid';
+import { CalendarDate } from '../src/common';
 import {
   Project,
   ProjectStatus,
   ProjectStep,
   ProjectType,
 } from '../src/components/project';
+import { DatabaseService } from '../src/core';
 import {
   createSession,
   createTestApp,
   createUser,
+  createZone,
   fragments,
   TestApp,
 } from './utility';
+import { createCountry } from './utility/create-country';
 import { createProject } from './utility/create-project';
+import { createRegion } from './utility/create-region';
 
 describe('Project e2e', () => {
   let app: TestApp;
@@ -168,5 +175,68 @@ describe('Project e2e', () => {
     );
 
     expect(projects.items.length).toBeGreaterThanOrEqual(numProjects);
+  });
+
+  it('returns false when consistency check shows multiple location nodes connected', async () => {
+    const zone = await createZone(app);
+    const region = await createRegion(app, {
+      name: 'asia' + generate(),
+      zoneId: zone.id,
+      directorId: zone.director.value?.id,
+    });
+    const country = await createCountry(app, {
+      name: 'India' + generate(),
+      regionId: region.id,
+    });
+    const country2 = await createCountry(app, {
+      name: 'India 2' + generate(),
+      regionId: region.id,
+    });
+    const project = await createProject(app, {
+      locationId: country.id,
+      mouStart: DateTime.local(),
+      mouEnd: DateTime.local(),
+      estimatedSubmission: CalendarDate.fromSeconds(1),
+    });
+
+    const result = await app.graphql.mutate(
+      gql`
+        mutation {
+          checkProjectConsistency
+        }
+      `
+    );
+    expect(result.checkProjectConsistency).toBeTruthy();
+    const dbService = app.get(DatabaseService);
+    // attach additionnal location relation btw project and country
+    await dbService
+      .query()
+      .raw(
+        `
+        MATCH (p:Project {id: "${project.id}"}), (c:Country {id: "${country2.id}"})
+        CREATE (p)-[:location {active: true}]->(c)
+        `
+      )
+      .run();
+    const testResult = await app.graphql.mutate(
+      gql`
+        mutation {
+          checkProjectConsistency
+        }
+      `
+    );
+    expect(testResult.checkProjectConsistency).toBeFalsy();
+
+    // delete project so next test will pass
+    await app.graphql.mutate(
+      gql`
+        mutation deleteProject($id: ID!) {
+          deleteProject(id: $id)
+        }
+      `,
+      {
+        id: project.id,
+      }
+    );
   });
 });

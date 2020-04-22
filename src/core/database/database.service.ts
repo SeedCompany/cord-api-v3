@@ -753,10 +753,7 @@ export class DatabaseService {
       });
       resultingArr.push(hasProp);
     }
-    if (resultingArr.includes(false)) {
-      return false;
-    }
-    return true;
+    return resultingArr.every((n) => n);
   }
 
   async hasProperty({
@@ -795,24 +792,25 @@ export class DatabaseService {
     session,
     id,
     relName,
-    baseNodeLabel,
+    srcNodeLabel,
   }: {
     session: ISession;
     id: string;
     relName: string;
-    baseNodeLabel: string;
+    srcNodeLabel: string;
+    desNodeLabel: string;
   }): Promise<boolean> {
     const result = await this.db
       .query()
       .match([
         matchSession(session),
         [
-          node('n', baseNodeLabel, {
+          node('n', srcNodeLabel, {
             id,
             active: true,
           }),
           relation('out', 'rel', relName, { active: true }),
-          node(relName, { active: true }),
+          node('', { active: true }),
         ],
       ])
       .return('count(rel) as total')

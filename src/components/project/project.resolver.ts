@@ -73,4 +73,13 @@ export class ProjectResolver {
     await this.projectService.delete(id, session);
     return true;
   }
+
+  @Mutation(() => Boolean, {
+    description: 'Check Consistency in Project Nodes',
+  })
+  async checkProjectConsistency(
+    @Session() session: ISession
+  ): Promise<boolean> {
+    return this.projectService.consistencyChecker(session);
+  }
 }
