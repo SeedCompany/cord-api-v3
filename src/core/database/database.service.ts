@@ -753,10 +753,7 @@ export class DatabaseService {
       });
       resultingArr.push(hasProp);
     }
-    if (resultingArr.includes(false)) {
-      return false;
-    }
-    return true;
+    return resultingArr.every((n) => n);
   }
 
   async hasProperty({
@@ -813,7 +810,7 @@ export class DatabaseService {
             active: true,
           }),
           relation('out', 'rel', relName, { active: true }),
-          node(relName, { active: true }),
+          node('', { active: true }),
         ],
       ])
       .return('count(rel) as total')

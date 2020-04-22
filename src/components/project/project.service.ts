@@ -178,18 +178,27 @@ export class ProjectService {
       throw new NotFoundException('Could not find project');
     }
 
-    const country = await this.locationService.readOneCountry(
-      result.country.properties.id,
-      session
-    );
-    const location = {
-      value: {
-        id: country.id,
-        name: { ...country.name },
-        region: { ...country.region },
-        createdAt: country.createdAt,
-      },
-    };
+    const location = result.country
+      ? this.locationService
+          .readOneCountry(result.country.properties.id, session)
+          .then((country) => {
+            return {
+              value: {
+                id: country.id,
+                name: { ...country.name },
+                region: { ...country.region },
+                createdAt: country.createdAt,
+              },
+            };
+          })
+          .catch(() => {
+            return {
+              value: undefined,
+            };
+          })
+      : {
+          value: undefined,
+        };
 
     return {
       id,
@@ -375,6 +384,7 @@ export class ProjectService {
           (project:Project)-[:step]->(proStep:Property {active: true}),
           (project:Project)-[:status]->(proStatus:Property {active: true})
         SET proName :ProjectName, proStep :ProjectStep, proStatus :ProjectStatus
+        RETURN project.id
       `;
       await this.db
         .query()
@@ -475,41 +485,30 @@ export class ProjectService {
       .return('project.id as id')
       .run();
 
-    const hasConsistentSingleton = (
-      await Promise.all(
-        projects.map(async (project) => {
-          return this.db.isRelationshipUnique({
-            session,
-            id: project.id,
-            relName: 'location',
-            srcNodeLabel: 'Project',
-            desNodeLabel: 'Country',
-          });
-        })
-      )
-    ).includes(false);
+    const hasConsistentSingleton = await Promise.all(
+      projects.map(async (project) => {
+        return this.db.isRelationshipUnique({
+          session,
+          id: project.id,
+          relName: 'location',
+          srcNodeLabel: 'Project',
+          desNodeLabel: 'Country',
+        });
+      })
+    );
 
-    const hasConsistentProperties = (
-      await Promise.all(
-        projects.map(async (project) => {
-          return this.db.hasProperties({
-            session,
-            id: project.id,
-            props: [
-              'type',
-              'mouEnd',
-              'mouStart',
-              'status',
-              'name',
-              'step',
-              'estimatedSubmission',
-            ],
-            nodevar: 'Project',
-          });
-        })
-      )
-    ).includes(false);
-
-    return !hasConsistentSingleton && !hasConsistentProperties;
+    const hasConsistentProperties = await Promise.all(
+      projects.map(async (project) => {
+        return this.db.hasProperties({
+          session,
+          id: project.id,
+          props: ['type', 'status', 'name', 'step'],
+          nodevar: 'Project',
+        });
+      })
+    );
+    return [...hasConsistentSingleton, ...hasConsistentProperties].every(
+      (n) => n
+    );
   }
 }

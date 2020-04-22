@@ -2,6 +2,7 @@ import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
 import { DateTime } from 'luxon';
+import { generate } from 'shortid';
 import { CalendarDate } from '../src/common';
 import {
   Project,
@@ -176,15 +177,19 @@ describe('Project e2e', () => {
     expect(projects.items.length).toBeGreaterThanOrEqual(numProjects);
   });
 
-  it.only('check consistency in project nodes', async () => {
+  it('returns false when consistency check shows multiple location nodes connected', async () => {
     const zone = await createZone(app);
     const region = await createRegion(app, {
-      name: 'asia',
+      name: 'asia' + generate(),
       zoneId: zone.id,
       directorId: zone.director.value?.id,
     });
     const country = await createCountry(app, {
-      name: 'India',
+      name: 'India' + generate(),
+      regionId: region.id,
+    });
+    const country2 = await createCountry(app, {
+      name: 'India 2' + generate(),
       regionId: region.id,
     });
     const project = await createProject(app, {
@@ -193,6 +198,7 @@ describe('Project e2e', () => {
       mouEnd: DateTime.local(),
       estimatedSubmission: CalendarDate.fromSeconds(1),
     });
+
     const result = await app.graphql.mutate(
       gql`
         mutation {
@@ -207,7 +213,7 @@ describe('Project e2e', () => {
       .query()
       .raw(
         `
-        MATCH (p:Project {id: "${project.id}"}), (c:Country {id: "${country.id}"})
+        MATCH (p:Project {id: "${project.id}"}), (c:Country {id: "${country2.id}"})
         CREATE (p)-[:location {active: true}]->(c)
         `
       )
@@ -220,5 +226,17 @@ describe('Project e2e', () => {
       `
     );
     expect(testResult.checkProjectConsistency).toBeFalsy();
+
+    // delete project so next test will pass
+    await app.graphql.mutate(
+      gql`
+        mutation deleteProject($id: ID!) {
+          deleteProject(id: $id)
+        }
+      `,
+      {
+        id: project.id,
+      }
+    );
   });
 });
