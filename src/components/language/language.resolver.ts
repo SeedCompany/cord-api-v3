@@ -72,4 +72,13 @@ export class LanguageResolver {
     await this.langService.delete(id, session);
     return true;
   }
+
+  @Query(() => Boolean, {
+    description: 'Check language node consistency',
+  })
+  async checkLanguageConsistency(
+    @Session() session: ISession
+  ): Promise<boolean> {
+    return this.langService.checkLanguageConsistency(session);
+  }
 }
