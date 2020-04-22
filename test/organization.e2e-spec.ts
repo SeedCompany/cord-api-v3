@@ -146,6 +146,6 @@ describe('Organization e2e', () => {
       `
     );
 
-    expect(checkOrgSchema.consistencyUserCheck).toBe(true);
+    expect(checkOrgSchema.consistencyOrganizationCheck).toBe(true);
   });
 });

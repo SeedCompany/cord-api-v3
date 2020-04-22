@@ -309,43 +309,6 @@ export class OrganizationService {
       .return('organization.id as id')
       .run();
 
-    //Working
-    // const hasConsistentProperties = await Promise.all(
-    //   organizations.map(async (organization) => {
-    //     return this.db.hasProperties({
-    //       session,
-    //       id: organization.id,
-    //       props: ['name'],
-    //       nodevar: 'organization',
-    //     });
-    //   })
-    // );
-
-    // const hasConsistentUnique = await Promise.all(
-    //   organizations.map(async (organization) => {
-    //     return this.db.isRelationshipUnique({
-    //       session,
-    //       id: organization.id,
-    //       relName: 'location',
-    //       srcNodeLabel: 'Project',
-    //       desNodeLabel: 'Country',
-    //     });
-    //   })
-    // );
-
-    //Working
-    // const hasConsistentUnique = await Promise.all(
-    //   organizations.map(async (organization) => {
-    //     return this.db.isUniqueProperties({
-    //       session,
-    //       id: organization.id,
-    //       props: ['name'],
-    //       nodevar: 'organization',
-    //     });
-    //   })
-    // );
-    // return [...hasConsistentProperties, ...hasConsistentUnique].every((n) => n);
-
     return (
       (
         await Promise.all(

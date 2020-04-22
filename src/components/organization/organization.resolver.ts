@@ -80,7 +80,7 @@ export class OrganizationResolver {
     return this.orgs.checkAllOrgs(session);
   }
 
-  @Mutation(() => Boolean, {
+  @Query(() => Boolean, {
     description: 'Check Consistency in Organization Nodes',
   })
   async consistencyOrganizationCheck(
