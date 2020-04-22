@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { GqlModuleOptions, GqlOptionsFactory } from '@nestjs/graphql';
 import { ContextFunction } from 'apollo-server-core';
 import { Request, Response } from 'express';
+import { GraphQLError, GraphQLFormattedError } from 'graphql';
 import { GqlContextType } from '../common';
 import { ConfigService } from './config/config.service';
 
@@ -16,7 +17,13 @@ export class GraphQLConfig implements GqlOptionsFactory {
       cors: this.config.cors,
       playground: true, // enabled in all environments
       introspection: true, // needed for playground
+      formatError: this.formatError,
+      debug: this.debug,
     };
+  }
+
+  get debug() {
+    return true; // TODO
   }
 
   context: ContextFunction<{ req: Request; res: Response }, GqlContextType> = ({
@@ -26,4 +33,19 @@ export class GraphQLConfig implements GqlOptionsFactory {
     request: req,
     response: res,
   });
+
+  formatError = (error: GraphQLError): GraphQLFormattedError => {
+    const extensions = { ...error.extensions };
+
+    if (!this.debug) {
+      delete extensions.exception;
+    }
+
+    return {
+      message: error.message,
+      extensions,
+      locations: error.locations,
+      path: error.path,
+    };
+  };
 }
