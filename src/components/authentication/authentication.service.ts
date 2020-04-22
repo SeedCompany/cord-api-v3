@@ -275,6 +275,8 @@ export class AuthenticationService {
       throw new Error('token has been expired');
     }
 
+    const pash = await argon2.hash(password);
+
     await this.db
       .query()
       .raw(
@@ -290,7 +292,7 @@ export class AuthenticationService {
         {
           token,
           email: result.email,
-          password,
+          password: pash,
         }
       )
       .first();
