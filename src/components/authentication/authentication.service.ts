@@ -1,4 +1,9 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException as ServerException,
+  UnauthorizedException as UnauthenticatedException,
+} from '@nestjs/common';
 import * as argon2 from 'argon2';
 import { node, relation } from 'cypher-query-builder';
 import { sign, verify } from 'jsonwebtoken';
@@ -26,7 +31,7 @@ export class AuthenticationService {
     private readonly config: ConfigService,
     private readonly email: EmailService,
     private readonly userService: UserService,
-    @Logger('auth:service') private readonly logger: ILogger
+    @Logger('authentication:service') private readonly logger: ILogger
   ) {}
 
   async createToken(): Promise<string> {
@@ -51,7 +56,7 @@ export class AuthenticationService {
       )
       .first();
     if (!result) {
-      throw new Error('Could not save session token to database');
+      throw new ServerException('Failed to start session');
     }
 
     return result.token;
@@ -108,11 +113,8 @@ export class AuthenticationService {
       )
       .first();
 
-    if (result1 === undefined) {
-      throw Error('Email or Password are incorrect');
-    }
-    if (!(await argon2.verify(result1.pash, input.password))) {
-      throw Error('Email or Password are incorrect');
+    if (!result1 || !(await argon2.verify(result1.pash, input.password))) {
+      throw new UnauthenticatedException('Invalid credentials');
     }
 
     const result2 = await this.db
@@ -145,7 +147,7 @@ export class AuthenticationService {
       .first();
 
     if (result2 === undefined) {
-      throw Error('Login failed. Please contact your administrator.');
+      throw new ServerException('Login failed');
     }
 
     return result2.id;
@@ -198,7 +200,10 @@ export class AuthenticationService {
 
     if (!result) {
       this.logger.warning('Failed to find active token in database', { token });
-      throw new UnauthorizedException();
+      throw new UnauthenticatedException(
+        'Session has not been established',
+        'NoSession'
+      );
     }
 
     const session = {
@@ -267,12 +272,12 @@ export class AuthenticationService {
       )
       .first();
     if (!result) {
-      throw new Error('Could not find token on database');
+      throw new BadRequestException('Token is invalid', 'TokenInvalid');
     }
     const createdOn: DateTime = result.createdOn;
 
     if (createdOn.diffNow().as('days') > 1) {
-      throw new Error('token has been expired');
+      throw new BadRequestException('Token has expired', 'TokenExpired');
     }
 
     const pash = await argon2.hash(password);
@@ -308,7 +313,7 @@ export class AuthenticationService {
 
   private decodeJWT(token?: string) {
     if (!token) {
-      throw new UnauthorizedException();
+      throw new UnauthenticatedException();
     }
 
     try {
@@ -317,7 +322,7 @@ export class AuthenticationService {
       this.logger.warning('Failed to validate JWT', {
         exception: e,
       });
-      throw new UnauthorizedException();
+      throw new UnauthenticatedException();
     }
   }
 }
