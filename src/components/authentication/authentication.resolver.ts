@@ -1,8 +1,9 @@
+import { UnauthorizedException as UnauthenticatedException } from '@nestjs/common';
 import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { Request, Response } from 'express';
 import { DateTime } from 'luxon';
 import { ISession, Session } from '../../common';
-import { ConfigService } from '../../core';
+import { ConfigService, ILogger, Logger } from '../../core';
 import { UserService } from '../user';
 import {
   LoginInput,
@@ -19,7 +20,8 @@ export class AuthenticationResolver {
     private readonly authService: AuthenticationService,
     private readonly userService: UserService,
     private readonly config: ConfigService,
-    private readonly sessionPipe: SessionPipe
+    private readonly sessionPipe: SessionPipe,
+    @Logger('authentication:resolver') private readonly logger: ILogger
   ) {}
 
   @Query(() => SessionOutput, {
@@ -41,8 +43,22 @@ export class AuthenticationResolver {
       this.sessionPipe.getTokenFromAuthHeader(req) ||
       this.sessionPipe.getTokenFromCookie(req);
 
-    const token = existingToken || (await this.authService.createToken());
-    const session = await this.authService.createSession(token);
+    let token = existingToken || (await this.authService.createToken());
+    let session;
+    try {
+      session = await this.authService.createSession(token);
+    } catch (e) {
+      if (!(e instanceof UnauthenticatedException)) {
+        throw e;
+      }
+      this.logger.error(
+        'Failed to use existing session token, creating new one.',
+        { exception: e }
+      );
+      token = await this.authService.createToken();
+      session = await this.authService.createSession(token);
+    }
+
     const userFromSession = await this.authService.userFromSession(session);
 
     if (browser) {
