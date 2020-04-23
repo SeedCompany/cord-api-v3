@@ -1,3 +1,4 @@
+import { IsEmail } from 'class-validator';
 import { stripIndent } from 'common-tags';
 import { Field, InputType, ObjectType } from 'type-graphql';
 import { User } from '../user';
@@ -24,6 +25,7 @@ export abstract class SessionOutput {
 @InputType()
 export abstract class LoginInput {
   @Field()
+  @IsEmail()
   email: string;
 
   @Field()
@@ -32,14 +34,10 @@ export abstract class LoginInput {
 
 @ObjectType()
 export class LoginOutput {
-  @Field()
-  success: boolean;
-
   @Field({
-    nullable: true,
-    description: 'Only returned if login was successful',
+    description: 'The logged-in user',
   })
-  user?: User;
+  user: User;
 
   // TODO Global Permissions
 }

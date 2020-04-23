@@ -146,7 +146,7 @@ export class AuthenticationService {
       )
       .first();
 
-    if (result2 === undefined) {
+    if (!result2 || !result2.id) {
       throw new ServerException('Login failed');
     }
 
