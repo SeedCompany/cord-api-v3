@@ -11,6 +11,7 @@ import {
   createSession,
   createTestApp,
   createUser,
+  expectNotFound,
   fragments,
   TestApp,
 } from './utility';
@@ -135,8 +136,8 @@ describe('Partnership e2e', () => {
 
     const actual: boolean | undefined = result.deletePartnership;
     expect(actual).toBeTruthy();
-    try {
-      await app.graphql.query(
+    await expectNotFound(
+      app.graphql.query(
         gql`
           query partnership($id: ID!) {
             partnership(id: $id) {
@@ -148,10 +149,8 @@ describe('Partnership e2e', () => {
         {
           id: partnership.id,
         }
-      );
-    } catch (e) {
-      expect(e.response.statusCode).toBe(404);
-    }
+      )
+    );
   });
 
   it('List view of partnerships', async () => {

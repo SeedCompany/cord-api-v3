@@ -3,23 +3,16 @@ import { LoginInput } from '../../src/components/authentication/authentication.d
 import { TestApp } from './create-app';
 
 export async function login(app: TestApp, input: Partial<LoginInput> = {}) {
-  const result = await app.graphql.mutate(
+  return app.graphql.mutate(
     gql`
       mutation login($input: LoginInput!) {
         login(input: $input) {
-          success
+          user {
+            id
+          }
         }
       }
     `,
-    {
-      input: {
-        email: input.email,
-        password: input.password,
-      },
-    }
+    { input }
   );
-
-  expect(result.login.success).toBeTruthy();
-
-  return result.login.success;
 }

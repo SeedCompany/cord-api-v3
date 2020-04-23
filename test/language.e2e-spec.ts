@@ -7,6 +7,7 @@ import {
   createSession,
   createTestApp,
   createUser,
+  expectNotFound,
   TestApp,
 } from './utility';
 import { fragments } from './utility/fragments';
@@ -104,8 +105,8 @@ describe('Language e2e', () => {
     );
 
     expect(result.deleteLanguage).toBeTruthy();
-    try {
-      await app.graphql.query(
+    await expectNotFound(
+      app.graphql.query(
         gql`
           query language($id: ID!) {
             language(id: $id) {
@@ -117,12 +118,8 @@ describe('Language e2e', () => {
         {
           id: language.id,
         }
-      );
-    } catch (e) {
-      // we expect this to throw. the language should have been deleted, therefor a subsequent read should fail
-      expect(e.response.statusCode).toBe(404);
-    }
-    // expect(actual.id).toBe(language.id);
+      )
+    );
   });
 
   // LIST Languages

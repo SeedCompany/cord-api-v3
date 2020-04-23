@@ -7,6 +7,7 @@ import {
   createSession,
   createTestApp,
   createUser,
+  expectNotFound,
   fragments,
   TestApp,
 } from './utility';
@@ -99,8 +100,8 @@ describe('File e2e', () => {
     );
 
     expect(result.deleteFile).toBeTruthy();
-    try {
-      await app.graphql.query(
+    await expectNotFound(
+      app.graphql.query(
         gql`
           query file($id: ID!) {
             file(id: $id) {
@@ -112,12 +113,8 @@ describe('File e2e', () => {
         {
           id: file.id,
         }
-      );
-    } catch (e) {
-      // we expect this to throw. the file should have been deleted, therefor a subsequent read should fail
-      expect(e.response.statusCode).toBe(404);
-    }
-    // expect(actual.id).toBe(file.id);
+      )
+    );
   });
 
   // LIST Files

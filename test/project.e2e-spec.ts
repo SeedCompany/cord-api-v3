@@ -16,6 +16,7 @@ import {
   createTestApp,
   createUser,
   createZone,
+  expectNotFound,
   fragments,
   TestApp,
 } from './utility';
@@ -125,8 +126,8 @@ describe('Project e2e', () => {
 
     const actual: boolean | undefined = result.deleteProject;
     expect(actual).toBeTruthy();
-    try {
-      await app.graphql.query(
+    await expectNotFound(
+      app.graphql.query(
         gql`
           query project($id: ID!) {
             project(id: $id) {
@@ -138,10 +139,8 @@ describe('Project e2e', () => {
         {
           id: project.id,
         }
-      );
-    } catch (e) {
-      expect(e.response.statusCode).toBe(404);
-    }
+      )
+    );
   });
 
   it('List view of projects', async () => {

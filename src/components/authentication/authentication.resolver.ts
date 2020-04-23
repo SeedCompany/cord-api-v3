@@ -71,14 +71,8 @@ export class AuthenticationResolver {
   ): Promise<LoginOutput> {
     const userId = await this.authService.login(input, session);
     const loggedInSession = await this.authService.createSession(session.token);
-    if (!userId) {
-      return { success: false };
-    }
     const user = await this.userService.readOne(userId, loggedInSession);
-    return {
-      success: true,
-      user,
-    };
+    return { user };
   }
 
   @Mutation(() => Boolean, {

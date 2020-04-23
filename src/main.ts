@@ -1,4 +1,4 @@
-import { Logger, ValidationPipe } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import * as cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
@@ -13,12 +13,6 @@ async function bootstrap() {
   app.use(cookieParser());
 
   app.setGlobalPrefix(config.globalPrefix);
-  app.useGlobalPipes(
-    new ValidationPipe({
-      transform: true,
-      skipMissingProperties: true,
-    })
-  );
 
   app.enableShutdownHooks();
   await app.listen(config.port, () => {

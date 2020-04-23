@@ -323,10 +323,11 @@ export class BudgetService {
       const result = await this.readOneRecord(id, session);
 
       return result;
-    } catch {
+    } catch (exception) {
       this.logger.error(`Could not create Budget Record`, {
         id,
         userId: session.userId,
+        exception,
       });
       throw new Error('Could not create Budget Record');
     }
