@@ -214,7 +214,7 @@ describe('User e2e', () => {
 
   it('Check consistency across user nodes', async () => {
     // create a user
-    const user = await createUser(app);
+    const user = await createUser(app, { email: faker.internet.email() });
     // test it has proper schema
     const result = await app.graphql.query(gql`
       query {
