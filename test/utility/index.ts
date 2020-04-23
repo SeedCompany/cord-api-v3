@@ -16,4 +16,5 @@ export * from './create-state';
 export * from './create-security-group';
 export * from './create-permission';
 export * from './login';
+export * from './expect-not-found';
 export * from './fragments';

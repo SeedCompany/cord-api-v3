@@ -13,6 +13,7 @@ import {
   createTestApp,
   createUser,
   createZone,
+  expectNotFound,
   fragments,
   login,
   TestApp,
@@ -267,8 +268,8 @@ describe('Engagement e2e', () => {
 
     const actual: boolean | undefined = result.deleteEngagement;
     expect(actual).toBeTruthy();
-    try {
-      await app.graphql.query(
+    await expectNotFound(
+      app.graphql.query(
         gql`
           query engagement($id: ID!) {
             engagement(id: $id) {
@@ -280,9 +281,7 @@ describe('Engagement e2e', () => {
         {
           id: languageEngagement.id,
         }
-      );
-    } catch (e) {
-      expect(e.response.statusCode).toBe(404);
-    }
+      )
+    );
   });
 });

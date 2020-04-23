@@ -5,6 +5,7 @@ import {
   createSession,
   createTestApp,
   createUser,
+  expectNotFound,
   fragments,
   TestApp,
 } from './utility';
@@ -89,8 +90,8 @@ describe('Product e2e', () => {
 
     const actual: boolean | undefined = result.deleteProduct;
     expect(actual).toBeTruthy();
-    try {
-      await app.graphql.query(
+    await expectNotFound(
+      app.graphql.query(
         gql`
           query product($id: ID!) {
             product(id: $id) {
@@ -102,10 +103,8 @@ describe('Product e2e', () => {
         {
           id: product.id,
         }
-      );
-    } catch (e) {
-      expect(e.response.statusCode).toBe(404);
-    }
+      )
+    );
   });
 
   it('List view of products', async () => {
