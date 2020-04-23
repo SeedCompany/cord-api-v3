@@ -74,7 +74,7 @@ export class ProjectResolver {
     return true;
   }
 
-  @Mutation(() => Boolean, {
+  @Query(() => Boolean, {
     description: 'Check Consistency in Project Nodes',
   })
   async checkProjectConsistency(

@@ -131,21 +131,25 @@ describe('Organization e2e', () => {
   });
 
   it('Check consistency across organization nodes', async () => {
-    // create organizations
-    await Promise.all(
-      times(10).map(() =>
-        createOrganization(app, { name: generate() + ' Inc' })
-      )
-    );
-
-    const checkOrgSchema = await app.graphql.query(
+    // create an organization
+    const organization = await createOrganization(app);
+    // test it has proper schema
+    const result = await app.graphql.query(gql`
+      query {
+        checkOrganizationConsistency
+      }
+    `);
+    expect(result.checkOrganizationConsistency).toBeTruthy();
+    // delete organization node so next test will pass
+    await app.graphql.mutate(
       gql`
-        query consistencyOrganizationCheck {
-          consistencyOrganizationCheck
+        mutation deleteOrganization($id: ID!) {
+          deleteOrganization(id: $id)
         }
-      `
+      `,
+      {
+        id: organization.id,
+      }
     );
-
-    expect(checkOrgSchema.consistencyOrganizationCheck).toBe(true);
   });
 });

@@ -199,9 +199,9 @@ describe('Project e2e', () => {
       estimatedSubmission: CalendarDate.fromSeconds(1),
     });
 
-    const result = await app.graphql.mutate(
+    const result = await app.graphql.query(
       gql`
-        mutation {
+        query {
           checkProjectConsistency
         }
       `
@@ -218,9 +218,9 @@ describe('Project e2e', () => {
         `
       )
       .run();
-    const testResult = await app.graphql.mutate(
+    const testResult = await app.graphql.query(
       gql`
-        mutation {
+        query {
           checkProjectConsistency
         }
       `

@@ -389,4 +389,28 @@ describe('Budget e2e', () => {
 
     expect(budgetRecords.items.length).toBeGreaterThanOrEqual(4);
   });
+
+  it('Check consistency across budget nodes', async () => {
+    // create a new budget for that project
+    const budget = await createBudget(app, { projectId: project.id });
+    // test it has proper schema
+    const result = await app.graphql.query(gql`
+      query {
+        checkBudgetConsistency
+      }
+    `);
+    expect(result.checkBudgetConsistency).toBeTruthy();
+
+    // delete budget node so next test will pass
+    await app.graphql.mutate(
+      gql`
+        mutation deleteBudget($id: ID!) {
+          deleteBudget(id: $id)
+        }
+      `,
+      {
+        id: budget.id,
+      }
+    );
+  });
 });

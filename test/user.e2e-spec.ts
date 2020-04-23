@@ -213,20 +213,26 @@ describe('User e2e', () => {
   });
 
   it('Check consistency across user nodes', async () => {
-    // create users
-    await Promise.all(
-      times(10).map(() => createUser(app, { email: faker.internet.email() }))
-    );
-
-    const checkUserSchema = await app.graphql.query(
+    // create a user
+    const user = await createUser(app);
+    // test it has proper schema
+    const result = await app.graphql.query(gql`
+      query {
+        checkUserConsistency
+      }
+    `);
+    expect(result.checkUserConsistency).toBeTruthy();
+    // delete user node so next test will pass
+    await app.graphql.mutate(
       gql`
-        query consistencyUserCheck {
-          consistencyUserCheck
+        mutation deleteUser($id: ID!) {
+          deleteUser(id: $id)
         }
-      `
+      `,
+      {
+        id: user.id,
+      }
     );
-
-    expect(checkUserSchema.consistencyUserCheck).toBe(true);
   });
 
   afterAll(async () => {

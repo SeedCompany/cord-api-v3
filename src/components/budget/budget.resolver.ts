@@ -137,4 +137,11 @@ export class BudgetResolver {
     await this.service.deleteRecord(id, session);
     return true;
   }
+
+  @Query(() => Boolean, {
+    description: 'Check Consistency in Budget Nodes',
+  })
+  async checkBudgetConsistency(@Session() session: ISession): Promise<boolean> {
+    return this.service.checkBudgetConsistency(session);
+  }
 }
