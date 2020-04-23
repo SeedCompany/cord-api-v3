@@ -1,5 +1,12 @@
-import { ArgumentsHost, Catch, HttpException } from '@nestjs/common';
+import {
+  ArgumentsHost,
+  Catch,
+  HttpException,
+  ValidationError,
+} from '@nestjs/common';
 import { GqlArgumentsHost, GqlExceptionFilter } from '@nestjs/graphql';
+import { isEmpty } from 'lodash';
+import { ValidationException } from './validation.pipe';
 
 @Catch()
 export class ExceptionFilter implements GqlExceptionFilter {
@@ -14,6 +21,9 @@ export class ExceptionFilter implements GqlExceptionFilter {
   }
 
   catchGql(ex: unknown, host: GqlArgumentsHost) {
+    if (ex instanceof ValidationException) {
+      return this.validationException(ex, host);
+    }
     if (ex instanceof HttpException) {
       return this.httpException(ex, host);
     }
@@ -43,5 +53,38 @@ export class ExceptionFilter implements GqlExceptionFilter {
         ? `Error: ${message}\n` + ex.stack.replace(/.+\n/, '')
         : undefined,
     };
+  }
+
+  private validationException(
+    ex: ValidationException,
+    _host: GqlArgumentsHost
+  ) {
+    return {
+      message: 'Input validation failed',
+      extensions: {
+        code: 'Validation',
+        status: 400,
+        errors: this.flattenValidationErrors(ex.errors),
+      },
+      stack: ex.stack,
+    };
+  }
+
+  private flattenValidationErrors(
+    e: ValidationError[],
+    out: Record<string, any> = {},
+    prefixes: string[] = []
+  ) {
+    return e.reduce((obj, error) => {
+      const { target: _, value: __, property, children, constraints } = error;
+      const path = [...prefixes, property];
+      if (!isEmpty(constraints)) {
+        obj[path.join('.')] = constraints;
+      }
+      if (!isEmpty(children)) {
+        this.flattenValidationErrors(children, obj, path);
+      }
+      return obj;
+    }, out);
   }
 }
