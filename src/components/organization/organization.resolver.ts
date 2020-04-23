@@ -83,9 +83,9 @@ export class OrganizationResolver {
   @Query(() => Boolean, {
     description: 'Check Consistency in Organization Nodes',
   })
-  async consistencyOrganizationCheck(
+  async checkOrganizationConsistency(
     @Session() session: ISession
   ): Promise<boolean> {
-    return this.orgs.consistencyChecker(session);
+    return this.orgs.checkOrganizationConsistency(session);
   }
 }

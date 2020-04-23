@@ -843,10 +843,7 @@ export class DatabaseService {
       });
       resultingArr.push(isUnique);
     }
-    if (resultingArr.includes(false)) {
-      return false;
-    }
-    return true;
+    return resultingArr.every((n) => n);
   }
 
   async isUniqueProperty({

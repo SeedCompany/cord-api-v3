@@ -295,7 +295,7 @@ export class OrganizationService {
     return true;
   }
 
-  async consistencyChecker(session: ISession): Promise<boolean> {
+  async checkOrganizationConsistency(session: ISession): Promise<boolean> {
     const organizations = await this.db
       .query()
       .match([

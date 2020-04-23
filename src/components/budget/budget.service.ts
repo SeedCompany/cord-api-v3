@@ -3,10 +3,11 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { node } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession, Order } from '../../common';
-import { DatabaseService, ILogger, Logger } from '../../core';
+import { DatabaseService, ILogger, Logger, matchSession } from '../../core';
 import { PartnershipService } from '../partnership/partnership.service';
 import { ProjectService } from '../project/project.service';
 import {
@@ -476,5 +477,47 @@ export class BudgetService {
       object: br,
       aclEditProp: 'canCreateBudget',
     });
+  }
+
+  async checkBudgetConsistency(session: ISession): Promise<boolean> {
+    const budgets = await this.db
+      .query()
+      .match([
+        matchSession(session),
+        [
+          node('budget', 'Budget', {
+            active: true,
+          }),
+        ],
+      ])
+      .return('budget.id as id')
+      .run();
+
+    return (
+      (
+        await Promise.all(
+          budgets.map(async (budget) => {
+            return this.db.hasProperties({
+              session,
+              id: budget.id,
+              props: ['status'],
+              nodevar: 'budget',
+            });
+          })
+        )
+      ).every((n) => n) &&
+      (
+        await Promise.all(
+          budgets.map(async (budget) => {
+            return this.db.isUniqueProperties({
+              session,
+              id: budget.id,
+              props: ['status'],
+              nodevar: 'budget',
+            });
+          })
+        )
+      ).every((n) => n)
+    );
   }
 }

@@ -4,7 +4,13 @@ import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
-import { DatabaseService, ILogger, Logger, OnIndex } from '../../core';
+import {
+  DatabaseService,
+  ILogger,
+  Logger,
+  matchSession,
+  OnIndex,
+} from '../../core';
 import { LoginInput } from '../authentication/authentication.dto';
 import {
   OrganizationListInput,
@@ -521,94 +527,63 @@ export class UserService {
     }
   }
 
-  async consistencyUserCheck(session: ISession): Promise<boolean> {
-    //const users = await this.db.getAllNodes({ session, baseNodeLabel: 'User' });
-    const query = `
-      MATCH
-        (token:Token {
-          active: true,
-          value: $token
-        })
-          <-[:token {active: true}]-
-        (requestingUser:User {
-          active: true,
-          id: $requestingUserId,
-          owningOrgId: $owningOrgId
-        }),
-          (user:User {active: true, owningOrgId: $owningOrgId}),
-          (user)-[:email {active: true}]->(email:EmailAddress {active: true}),
-          (user)-[:realFirstName {active: true}]->(realFirstName:Property {active: true}),
-          (user)-[:realLastName {active: true}]->(realLastName:Property {active: true}),
-          (user)-[:displayFirstName {active: true}]->(displayFirstName:Property {active: true}),
-          (user)-[:displayLastName {active: true}]->(displayLastName:Property {active: true}),
-          (user)-[:phone {active: true}]->(phone:Property {active: true}),
-          (user)-[:timezone {active: true}]->(timezone:Property {active: true}),
-          (user)-[:bio {active: true}]->(bio:Property {active: true})
-        RETURN
-          user.id as id,
-          email.value as email,
-          realFirstName.value as realFirstName,
-          realLastName.value as realLastName,
-          displayFirstName.value as displayFirstName,
-          displayLastName.value as displayLastName,
-          phone.value as phone,
-          timezone.value as timezone,
-          bio.value as bio
-      `;
-
+  async checkUserConsistency(session: ISession): Promise<boolean> {
     const users = await this.db
       .query()
-      .raw(query, {
-        userId: session.userId,
-        requestingUserId: session.userId,
-        owningOrgId: session.owningOrgId,
-        token: session.token,
-      })
+      .match([
+        matchSession(session),
+        [
+          node('user', 'User', {
+            active: true,
+          }),
+        ],
+      ])
+      .return('user.id as id')
       .run();
 
-    const messageDetails = [];
-    const result = [];
-    for (const user of users) {
-      const hasProperty = await this.db.hasProperties({
-        session,
-        id: user.id,
-        props: [
-          'email',
-          'realFirstName',
-          'realLastName',
-          'displayFirstName',
-          'displayLastName',
-          'phone',
-          'timezone',
-        ],
-        nodevar: 'user',
-      });
-      let consistencyMessage = `propertiesExist of userid ${user.id} : ${hasProperty}`;
-      messageDetails.push(consistencyMessage);
-      result.push(hasProperty);
-
-      const isUnique = await this.db.isUniqueProperties({
-        session,
-        id: user.id,
-        props: [
-          'email',
-          'realFirstName',
-          'realLastName',
-          'displayFirstName',
-          'displayLastName',
-          'phone',
-          'timezone',
-        ],
-        nodevar: 'user',
-      });
-      consistencyMessage = `relationshipUnique of userid ${user.id} : ${isUnique}`;
-      messageDetails.push(consistencyMessage);
-      result.push(isUnique);
-    }
-    this.logger.info('Consistency check', { messageDetails });
-    if (result.includes(false)) {
-      return false;
-    }
-    return true;
+    return (
+      (
+        await Promise.all(
+          users.map(async (user) => {
+            return this.db.hasProperties({
+              session,
+              id: user.id,
+              props: [
+                'email',
+                'realFirstName',
+                'realLastName',
+                'displayFirstName',
+                'displayLastName',
+                'phone',
+                'timezone',
+                'bio',
+              ],
+              nodevar: 'user',
+            });
+          })
+        )
+      ).every((n) => n) &&
+      (
+        await Promise.all(
+          users.map(async (user) => {
+            return this.db.isUniqueProperties({
+              session,
+              id: user.id,
+              props: [
+                'email',
+                'realFirstName',
+                'realLastName',
+                'displayFirstName',
+                'displayLastName',
+                'phone',
+                'timezone',
+                'bio',
+              ],
+              nodevar: 'user',
+            });
+          })
+        )
+      ).every((n) => n)
+    );
   }
 }
