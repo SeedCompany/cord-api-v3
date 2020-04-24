@@ -223,4 +223,27 @@ describe('Partnership e2e', () => {
 
     expect(partnerships.items.length).toBeGreaterThanOrEqual(numPartnerships);
   });
+
+  it('Check consistency across partnership nodes', async () => {
+    // create a partnership
+    const partnership = await createPartnership(app);
+    // test it has proper schema
+    const result = await app.graphql.query(gql`
+      query {
+        checkPartnershipConsistency
+      }
+    `);
+    expect(result.checkPartnershipConsistency).toBeTruthy();
+    // delete partnership node so next test will pass
+    await app.graphql.mutate(
+      gql`
+        mutation deletePartnership($id: ID!) {
+          deletePartnership(id: $id)
+        }
+      `,
+      {
+        id: partnership.id,
+      }
+    );
+  });
 });

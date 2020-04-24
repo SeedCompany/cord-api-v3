@@ -3,9 +3,10 @@ import {
   NotFoundException,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
+import { node } from 'cypher-query-builder';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
-import { DatabaseService, ILogger, Logger } from '../../core';
+import { DatabaseService, ILogger, Logger, matchSession } from '../../core';
 import {
   CreatePartnership,
   Partnership,
@@ -308,5 +309,58 @@ export class PartnershipService {
 
       throw new ServerException('Failed to delete partnership');
     }
+  }
+  async checkPartnershipConsistency(session: ISession): Promise<boolean> {
+    const partnerships = await this.db
+      .query()
+      .match([
+        matchSession(session),
+        [
+          node('partnership', 'Partnership', {
+            active: true,
+          }),
+        ],
+      ])
+      .return('partnership.id as id')
+      .run();
+
+    return (
+      (
+        await Promise.all(
+          partnerships.map(async (partnership) => {
+            return this.db.hasProperties({
+              session,
+              id: partnership.id,
+              props: [
+                'agreementStatus',
+                'mouStatus',
+                'mouStart',
+                'mouEnd',
+                'types',
+              ],
+              nodevar: 'partnership',
+            });
+          })
+        )
+      ).every((n) => n) &&
+      (
+        await Promise.all(
+          partnerships.map(async (partnership) => {
+            return this.db.isUniqueProperties({
+              session,
+              id: partnership.id,
+              props: [
+                'agreementStatus',
+                'mouStatus',
+                'mouStart',
+                'mouEnd',
+                'types',
+              ],
+              nodevar: 'partnership',
+            });
+          })
+        )
+      ).every((n) => n)
+    );
   }
 }
