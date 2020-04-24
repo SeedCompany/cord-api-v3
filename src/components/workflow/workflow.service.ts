@@ -1,9 +1,27 @@
 /* eslint-disable */
-import { Injectable, InternalServerErrorException as ServerException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException as ServerException,
+  NotFoundException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { generate } from 'shortid';
 import { node, relation } from 'cypher-query-builder';
 import { ISession } from '../../common';
-import { CreateWorkflow, Workflow, AddState, State, UpdateState, StateListOutput, GroupState, ChangeCurrentState, PossibleState, RequiredField, RequiredFieldListOutput, FieldObject } from './dto';
+import {
+  CreateWorkflow,
+  Workflow,
+  AddState,
+  State,
+  UpdateState,
+  StateListOutput,
+  GroupState,
+  ChangeCurrentState,
+  PossibleState,
+  RequiredField,
+  RequiredFieldListOutput,
+  FieldObject,
+} from './dto';
 import { Logger, ILogger, DatabaseService, matchSession } from '../../core';
 
 @Injectable()
@@ -14,7 +32,10 @@ export class WorkflowService {
   ) {}
 
   // multiple workflows will be able to be created per one base node.
-  async createWorkflow(session: ISession, input: CreateWorkflow) : Promise<Workflow> {
+  async createWorkflow(
+    session: ISession,
+    input: CreateWorkflow
+  ): Promise<Workflow> {
     try {
       const workflowId = generate();
 
@@ -24,17 +45,17 @@ export class WorkflowService {
           [
             node('token', 'Token', {
               active: true,
-              value: session.token
+              value: session.token,
             }),
             relation('in', '', 'token', {
-              active: true
+              active: true,
             }),
             node('user', 'User'),
             relation('in', '', 'admin', {
-              active: true
+              active: true,
             }),
             node('baseNode', 'BaseNode', {
-              id: input.baseNodeId
+              id: input.baseNodeId,
             }),
           ],
         ])
@@ -42,12 +63,12 @@ export class WorkflowService {
           [
             node('baseNode'),
             relation('out', '', 'workflow', {
-              active: true
+              active: true,
             }),
             node('workflow', 'Workflow', {
               id: workflowId,
               stateIdentifier: input.stateIdentifier,
-            })
+            }),
           ],
         ])
         .merge([
@@ -55,61 +76,54 @@ export class WorkflowService {
             node('workflow'),
             relation('out', '', 'possibleState', {
               active: true,
-              startingState: true
+              startingState: true,
             }),
             node('state', 'State', {
               id: generate(),
-              value: input.startingStateName
-            })
+              value: input.startingStateName,
+            }),
           ],
         ])
         .merge([
           [
             node('baseNode'),
             relation('out', '', `${input.stateIdentifier}`, {
-              active: true
+              active: true,
             }),
             node('currentState', 'CurrentState:Property', {
               active: true,
-              value: input.startingStateName
-            })
+              value: input.startingStateName,
+            }),
           ],
         ])
         .return({
-          workflow: [
-            { id: 'id' },
-            { stateIdentifier: 'stateIdentifier' },
-          ],
-          state: [
-            { id: 'startingStateId' },
-            { value: 'startingStateValue' }
-          ]
+          workflow: [{ id: 'id' }, { stateIdentifier: 'stateIdentifier' }],
+          state: [{ id: 'startingStateId' }, { value: 'startingStateValue' }],
         })
         .first();
 
-    if( !result ) {
-      throw new NotFoundException('could not create a workflow');
-    }
-
-    return {
-      id: result.id,
-      stateIdentifier: result.stateIdentifier,
-      startingState: {
-        id: result.startingStateId,
-        value: result.startingStateValue
+      if (!result) {
+        throw new NotFoundException('could not create a workflow');
       }
-    }
 
+      return {
+        id: result.id,
+        stateIdentifier: result.stateIdentifier,
+        startingState: {
+          id: result.startingStateId,
+          value: result.startingStateValue,
+        },
+      };
     } catch (e) {
       this.logger.warning('Failed to create workflow', {
-        exception: e
-      })
+        exception: e,
+      });
 
-      throw new Error('Could not create workflow');
+      throw new InternalServerErrorException('Could not create workflow');
     }
-  };
+  }
 
-  async deleteWorkflow(session: ISession, workflowId: string) : Promise<void> {
+  async deleteWorkflow(session: ISession, workflowId: string): Promise<void> {
     try {
       await this.db
         .query()
@@ -117,27 +131,26 @@ export class WorkflowService {
           [
             node('token', 'Token', {
               active: true,
-              value: session.token
+              value: session.token,
             }),
             relation('in', '', 'token', {
-              active: true
+              active: true,
             }),
             node('user', 'User'),
             relation('in', '', 'admin', {
-              active: true
+              active: true,
             }),
             node('baseNode'),
             relation('out', '', 'workflow', {
-              active: true
+              active: true,
             }),
             node('workflow', 'Workflow', {
-              id: workflowId
-            })
+              id: workflowId,
+            }),
           ],
         ])
         .detachDelete('workflow')
-        .run()
-
+        .run();
     } catch (e) {
       this.logger.warning('Failed to delete workflow', {
         exception: e,
@@ -145,7 +158,7 @@ export class WorkflowService {
 
       throw new ServerException('Failed to delete workflow');
     }
-  };
+  }
 
   // the stateName is stored in the (:State)'s 'value' property (consistent with (:Property)s on (:BaseNode)s )  // addStateToWorkflow
   async addState(session: ISession, input: AddState): Promise<State> {
@@ -157,61 +170,57 @@ export class WorkflowService {
           [
             node('token', 'Token', {
               active: true,
-              value: session.token
+              value: session.token,
             }),
             relation('in', '', 'token', {
-              active: true
+              active: true,
             }),
             node('user'),
             relation('in', '', 'admin', {
-              active: true
+              active: true,
             }),
             node('baseNode'),
             relation('out', '', 'workflow', {
-              active: true
+              active: true,
             }),
             node('workflow', 'Workflow', {
-              id: input.workflowId
-            })
-          ]
+              id: input.workflowId,
+            }),
+          ],
         ])
         .merge([
           [
             node('workflow'),
             relation('out', '', 'possibleState', {
               active: true,
-              startingState: false
+              startingState: false,
             }),
             node('state', 'State', {
               id: stateId,
-              value: input.stateName
-            })
-          ]
+              value: input.stateName,
+            }),
+          ],
         ])
         .return({
-          state: [
-            { id: 'id' },
-            { value: 'value' }
-          ]
+          state: [{ id: 'id' }, { value: 'value' }],
         })
         .first();
 
-      if( !result ) {
+      if (!result) {
         throw new NotFoundException('could not create a state');
       }
 
       return {
         id: result.id,
-        value: result.value
+        value: result.value,
       };
-
     } catch (e) {
       this.logger.warning('could not add new state to a workflow', {
-        exception: e
+        exception: e,
       });
       throw new ServerException('could not add new state to a workflow');
     }
-  };
+  }
 
   // updateStateName
   async updateState(session: ISession, input: UpdateState): Promise<State> {
@@ -227,28 +236,26 @@ export class WorkflowService {
             relation('out', '', 'permission'),
             node('permission', 'Permission', {
               read: true,
-              write: true
+              write: true,
             }),
             relation('out', '', 'baseNode'),
             node('baseNode', 'BaseNode'),
             relation('out', '', 'workflow', {
-              active: true
+              active: true,
             }),
             node('workflow', 'Workflow', {
-              id: input.workflowId
-            })
+              id: input.workflowId,
+            }),
           ],
         ])
         .return({
-          workflow: [
-            { stateIdentifier: 'stateIdentifier' }
-          ]
+          workflow: [{ stateIdentifier: 'stateIdentifier' }],
         })
         .first();
 
-      if( !workflow ) {
+      if (!workflow) {
         throw new NotFoundException('could not find workflow');
-      }      
+      }
 
       // validate the new state is a legal nextPossibleState on the current state
       const possibleState = await this.db
@@ -261,44 +268,46 @@ export class WorkflowService {
             relation('out', '', 'permission'),
             node('permission', 'Permission', {
               read: true,
-              write: true
+              write: true,
             }),
             relation('out', '', 'baseNode'),
             node('baseNode', 'BaseNode'),
             relation('out', '', 'workflow', {
-              active: true
+              active: true,
             }),
             node('workflow', 'Workflow', {
-              id: input.workflowId
-            })
+              id: input.workflowId,
+            }),
           ],
           [
             node('baseNode'),
             relation('out', '', `${workflow.stateIdentifier}`, {
-              active: true
+              active: true,
             }),
-            node('currentState', 'CurrentState')
-          ]
+            node('currentState', 'CurrentState'),
+          ],
         ])
         .with(['currentState', { 'currentState.value': 'currentStateValue' }])
         .match([
           [
             node('state', 'State {value: currentStateValue}'),
             relation('out', '', 'nextPossibleState', {
-              active: true
+              active: true,
             }),
             node('newState', 'State', {
-              id: input.stateId
-            })
-          ]
+              id: input.stateId,
+            }),
+          ],
         ])
         .return({
-          state: 'state'
+          state: 'state',
         })
         .first();
 
-      if( !possibleState ) {
-        throw new NotFoundException('new state provided is not a nextpossiblstate of current state');
+      if (!possibleState) {
+        throw new NotFoundException(
+          'new state provided is not a nextpossiblstate of current state'
+        );
       }
 
       const result = await this.db
@@ -306,9 +315,9 @@ export class WorkflowService {
         .match([
           [
             node('state', 'State', {
-              id: input.stateId
-            })
-          ]
+              id: input.stateId,
+            }),
+          ],
         ])
         .set({
           values: {
@@ -316,12 +325,9 @@ export class WorkflowService {
           },
         })
         .return({
-          state: [
-            { id: 'id' },
-            { value: 'value' }
-          ]
+          state: [{ id: 'id' }, { value: 'value' }],
         })
-        .first()
+        .first();
 
       if (!result) {
         throw new NotFoundException('Could not update state');
@@ -329,19 +335,18 @@ export class WorkflowService {
 
       return {
         id: result.id,
-        value: result.value
+        value: result.value,
       };
-
     } catch (e) {
       this.logger.warning('could not update state', {
-        exception: e
+        exception: e,
       });
       throw new ServerException('could not update state');
     }
-  };
+  }
 
   // deleteStateFromWorkflow
-  async deleteState(session: ISession, stateId: string) : Promise<void> {
+  async deleteState(session: ISession, stateId: string): Promise<void> {
     try {
       await this.db
         .query()
@@ -349,31 +354,30 @@ export class WorkflowService {
           [
             node('token', 'Token', {
               active: true,
-              value: session.token
+              value: session.token,
             }),
             relation('in', '', 'token', {
-              active: true
+              active: true,
             }),
             node('user'),
             relation('in', '', 'admin', {
-              active: true
+              active: true,
             }),
             node('baseNode'),
             relation('out', '', 'workflow', {
-              active: true
+              active: true,
             }),
             node('workflow'),
             relation('out', '', 'possibleState', {
               active: true,
             }),
             node('state', 'State', {
-              id: stateId
-            })
-          ]
+              id: stateId,
+            }),
+          ],
         ])
         .detachDelete('state')
         .first();
-
     } catch (e) {
       this.logger.warning('Failed to delete state', {
         exception: e,
@@ -381,10 +385,13 @@ export class WorkflowService {
 
       throw new ServerException('Failed to delete state');
     }
-  };
+  }
 
   // we don't need to have a list workflow function when we have a list state function that takes the baseNodeId // listAllStatesOnWorkflow
-  async listStates(session: ISession, baseNodeId: string): Promise<StateListOutput>{
+  async listStates(
+    session: ISession,
+    baseNodeId: string
+  ): Promise<StateListOutput> {
     try {
       const result = (await this.db
         .query()
@@ -392,38 +399,34 @@ export class WorkflowService {
           [
             node('token', 'Token', {
               active: true,
-              value: session.token
+              value: session.token,
             }),
             relation('in', '', 'token', {
-              active: true
+              active: true,
             }),
             node('user'),
             relation('in', '', 'admin', {
-              active: true
+              active: true,
             }),
             node('baseNode', 'BaseNode', {
-              id: baseNodeId
+              id: baseNodeId,
             }),
             relation('out', '', 'workflow', {
-              active: true
+              active: true,
             }),
             node('workflow'),
             relation('out', '', 'possibleState', {
               active: true,
             }),
-            node('state')
-          ]
+            node('state'),
+          ],
         ])
         .return({
-          state:[
-            { id: 'id' },
-            { value: 'value' }
-          ]
+          state: [{ id: 'id' }, { value: 'value' }],
         })
         .run()) as State[];
 
-      return { items: result.filter(item => item.id && item.value) };
-
+      return { items: result.filter((item) => item.id && item.value) };
     } catch (e) {
       this.logger.warning('Failed to delete state', {
         exception: e,
@@ -431,10 +434,13 @@ export class WorkflowService {
 
       throw new ServerException('Failed to delete state');
     }
-  };
+  }
 
   // this will be used to get the next possible states of any state, including the current state  // listNextPossibleStates
-  async listNextStates(session: ISession, stateId: string): Promise<StateListOutput>{
+  async listNextStates(
+    session: ISession,
+    stateId: string
+  ): Promise<StateListOutput> {
     try {
       // WIP, not sure how to check session in this function
       const result = (await this.db
@@ -443,35 +449,31 @@ export class WorkflowService {
           [
             ...matchSession(session),
             relation('in', '', 'admin', {
-              active: true
+              active: true,
             }),
             node('baseNode'),
             relation('out', '', 'workflow', {
-              active: true
+              active: true,
             }),
             node('workflow'),
             relation('out', '', 'possibleState', {
               active: true,
             }),
             node('state', 'State', {
-              id: stateId
+              id: stateId,
             }),
             relation('out', '', 'nextPossibleState', {
-              active: true
+              active: true,
             }),
-            node('nextState')
-          ]
+            node('nextState'),
+          ],
         ])
         .return({
-          nextState:[
-            { id: 'id' },
-            { value: 'value' }
-          ]
+          nextState: [{ id: 'id' }, { value: 'value' }],
         })
         .run()) as State[];
 
-      return { items: result.filter(item => item.id && item.value) };
-
+      return { items: result.filter((item) => item.id && item.value) };
     } catch (e) {
       this.logger.warning('Failed to delete state', {
         exception: e,
@@ -479,95 +481,99 @@ export class WorkflowService {
 
       throw new ServerException('Failed to delete state');
     }
-  };
+  }
 
   // attachSecurityGroupToState
-  async attachSecurityGroup(session: ISession, input: GroupState): Promise<void>{
-    try{
+  async attachSecurityGroup(
+    session: ISession,
+    input: GroupState
+  ): Promise<void> {
+    try {
       await this.db
         .query()
         .match([
           [
             node('token', 'Token', {
               active: true,
-              value: session.token
+              value: session.token,
             }),
             relation('in', '', 'token', {
               active: true,
             }),
             node('requestingUser', 'User', {
-              id: session.userId
+              id: session.userId,
             }),
             relation('in', '', 'member', {
-              admin: true
+              admin: true,
             }),
             node('sg', 'SecurityGroup', {
-              id: input.securityGroupId
+              id: input.securityGroupId,
             }),
           ],
           [
             node('state', 'State', {
-              id: input.stateId
-            })
-          ]
+              id: input.stateId,
+            }),
+          ],
         ])
         .merge([
           [
             node('state'),
             relation('out', '', 'securityGroup', {
-              active: true
+              active: true,
             }),
-            node('sg')
-          ]
+            node('sg'),
+          ],
         ])
         .first();
-
     } catch (e) {
       this.logger.warning('could not attach security group to state', {
-        exception: e
+        exception: e,
       });
       throw new ServerException('could not attach security group to state');
     }
-  };
+  }
 
   // removeSecurityGroupFromState
-  async removeSecurityGroup(session: ISession, input: GroupState): Promise<void>{
-    try{
+  async removeSecurityGroup(
+    session: ISession,
+    input: GroupState
+  ): Promise<void> {
+    try {
       await this.db
         .query()
         .match([
           [
             node('token', 'Token', {
               active: true,
-              value: session.token
+              value: session.token,
             }),
             relation('in', '', 'token', {
               active: true,
             }),
             node('requestingUser', 'User', {
-              id: session.userId
+              id: session.userId,
             }),
             relation('in', '', 'member', {
-              admin: true
+              admin: true,
             }),
             node('sg', 'SecurityGroup', {
-              id: input.securityGroupId
-            })
+              id: input.securityGroupId,
+            }),
           ],
           [
             node('state', 'State', {
-              id: input.stateId
+              id: input.stateId,
             }),
             relation('out', 'rel', 'securityGroup'),
-            node('sg')
-          ]
+            node('sg'),
+          ],
         ])
         .detachDelete('rel')
         .first();
-
     } catch (e) {
       this.logger.warning('could not remove security group from state', {
-        exception: e
+        exception: e,
       });
       throw new ServerException('could not remove security group from state');
     }
@@ -575,97 +581,104 @@ export class WorkflowService {
 
   // we are using security groups as notification groups for now
   // attachNotificationGroupToState
-  async attachNotificationGroup(session: ISession, input: GroupState): Promise<void>{
-    try{
+  async attachNotificationGroup(
+    session: ISession,
+    input: GroupState
+  ): Promise<void> {
+    try {
       await this.db
         .query()
         .match([
           [
             node('token', 'Token', {
               active: true,
-              value: session.token
+              value: session.token,
             }),
             relation('in', '', 'token', {
               active: true,
             }),
             node('requestingUser', 'User', {
-              id: session.userId
+              id: session.userId,
             }),
             relation('in', '', 'member'),
             node('sg', 'SecurityGroup', {
-              id: input.securityGroupId
+              id: input.securityGroupId,
             }),
           ],
           [
             node('state', 'State', {
-              id: input.stateId
-            })
-          ]
+              id: input.stateId,
+            }),
+          ],
         ])
         .merge([
           [
             node('state'),
             relation('out', '', 'notification', {
               active: true,
-              onEnter: true
+              onEnter: true,
             }),
-            node('sg')
-          ]
+            node('sg'),
+          ],
         ])
         .first();
-
     } catch (e) {
       this.logger.warning('could not attach security group to state', {
-        exception: e
+        exception: e,
       });
       throw new ServerException('could not attach security group to state');
     }
   }
 
   // removeNotificationGroupFromState
-  async removeNotificationGroup(session: ISession, input: GroupState): Promise<void>{
-    try{
+  async removeNotificationGroup(
+    session: ISession,
+    input: GroupState
+  ): Promise<void> {
+    try {
       await this.db
         .query()
         .match([
           [
             node('token', 'Token', {
               active: true,
-              value: session.token
+              value: session.token,
             }),
             relation('in', '', 'token', {
               active: true,
             }),
             node('requestingUser', 'User', {
-              id: session.userId
+              id: session.userId,
             }),
             relation('in', '', 'member'),
             node('sg', 'SecurityGroup', {
-              id: input.securityGroupId
-            })
+              id: input.securityGroupId,
+            }),
           ],
           [
             node('state', 'State', {
-              id: input.stateId
+              id: input.stateId,
             }),
             relation('out', 'rel', 'notification'),
-            node('sg')
-          ]
+            node('sg'),
+          ],
         ])
         .detachDelete('rel')
         .first();
-
     } catch (e) {
       this.logger.warning('could not remove security group from state', {
-        exception: e
+        exception: e,
       });
       throw new ServerException('could not remove security group from state');
     }
   }
 
   // changeCurrentStateInWorkflow
-  async changeCurrentState(session: ISession, input: ChangeCurrentState): Promise<void>{
-    try{
+  async changeCurrentState(
+    session: ISession,
+    input: ChangeCurrentState
+  ): Promise<void> {
+    try {
       // get current state and workflow
       const workflow = await this.db
         .query()
@@ -676,29 +689,26 @@ export class WorkflowService {
             node('sg', 'SecurityGroup'),
             relation('out', '', 'permission'),
             node('permission', 'Permission', {
-              read: true
+              read: true,
             }),
             relation('out', '', 'baseNode'),
             node('baseNode', 'BaseNode'),
             relation('out', '', 'workflow', {
-              active: true
+              active: true,
             }),
             node('workflow', 'Workflow', {
-              id: input.workflowId
-            })
+              id: input.workflowId,
+            }),
           ],
         ])
         .return({
-          workflow: [
-            { stateIdentifier: 'stateIdentifier' }
-          ]
+          workflow: [{ stateIdentifier: 'stateIdentifier' }],
         })
         .first();
 
-      if( !workflow ) {
+      if (!workflow) {
         throw new NotFoundException('could not find workflow');
       }
-      
 
       // validate the new state is a legal nextPossibleState on the current state
       const possibleState = await this.db
@@ -710,47 +720,45 @@ export class WorkflowService {
             node('sg', 'SecurityGroup'),
             relation('out', '', 'permission'),
             node('permission', 'Permission', {
-              read: true
+              read: true,
             }),
             relation('out', '', 'baseNode'),
             node('baseNode', 'BaseNode'),
             relation('out', '', 'workflow', {
-              active: true
+              active: true,
             }),
             node('workflow', 'Workflow', {
-              id: input.workflowId
-            })
+              id: input.workflowId,
+            }),
           ],
           [
             node('baseNode'),
             relation('out', '', `${workflow.stateIdentifier}`),
-            node('currentState', 'CurrentState:Property')
-          ]
+            node('currentState', 'CurrentState:Property'),
+          ],
         ])
         .with(['currentState', { 'currentState.value': 'currentStateValue' }])
         .match([
           [
             node('state', 'State {value: currentStateValue}'),
             relation('out', '', 'nextPossibleState', {
-              active: true
+              active: true,
             }),
             node('newState', 'State', {
-              id: input.newStateId
-            })
-          ]
+              id: input.newStateId,
+            }),
+          ],
         ])
         .return({
-          state: [
-            { value: 'value' }
-          ],
-          newState: [
-            { value: 'newValue' }
-          ]
+          state: [{ value: 'value' }],
+          newState: [{ value: 'newValue' }],
         })
         .first();
 
-      if( !possibleState ) {
-        throw new NotFoundException('new state provided is not a nextpossiblstate of current state');
+      if (!possibleState) {
+        throw new NotFoundException(
+          'new state provided is not a nextpossiblstate of current state'
+        );
       }
 
       await this.db
@@ -763,38 +771,38 @@ export class WorkflowService {
             relation('out', '', 'permission'),
             node('permission', 'Permission', {
               write: true,
-              read: true
+              read: true,
             }),
             relation('out', '', 'baseNode'),
             node('baseNode', 'BaseNode'),
             relation('out', 'oldRel', `${workflow.stateIdentifier}`),
             node('currentState', 'CurrentState:Property', {
               active: true,
-              value: possibleState.value
-            })
-          ]
+              value: possibleState.value,
+            }),
+          ],
         ])
         .set({
           values: {
-            'oldRel.active': false
-          }
+            'oldRel.active': false,
+          },
         })
         .merge([
           [
             node('baseNode'),
             relation('out', '', `${workflow.stateIdentifier}`, {
-              active: true
+              active: true,
             }),
             node('newCurrentState', 'CurrentState:Property', {
               active: true,
-              value: possibleState.newValue
-            })
-          ]
+              value: possibleState.newValue,
+            }),
+          ],
         ])
         .run();
     } catch (e) {
       this.logger.warning('could not change current state', {
-        exception: e
+        exception: e,
       });
       throw new ServerException('could not change current state');
     }
@@ -803,100 +811,102 @@ export class WorkflowService {
   // creates a relationship from one state to another
   // later we can create an abstracted function that creates and attaches a state to another state
   // addPossibleStateToState
-  async addPossibleState(session: ISession, input: PossibleState): Promise<void>{
-    try{
+  async addPossibleState(
+    session: ISession,
+    input: PossibleState
+  ): Promise<void> {
+    try {
       const result = await this.db
         .query()
         .match([
           [
             ...matchSession(session),
             relation('in', '', 'admin', {
-              active: true
+              active: true,
             }),
             node('baseNode', 'BaseNode'),
             relation('out', '', 'workflow', {
-              active: true
+              active: true,
             }),
             node('workflow', 'Workflow'),
             relation('out', '', 'possibleState', {
-              active: true
+              active: true,
             }),
             node('fromState', 'State', {
-              id: input.fromStateId
-            })
+              id: input.fromStateId,
+            }),
           ],
           [
             node('workflow'),
             relation('out', '', 'possibleState', {
-              active: true
+              active: true,
             }),
             node('toState', 'State', {
-              id: input.toStateId
-            })
-          ]
+              id: input.toStateId,
+            }),
+          ],
         ])
         .merge([
           node('fromState'),
           relation('out', '', 'nextPossibleState', {
-            active: true
+            active: true,
           }),
-          node('toState')
+          node('toState'),
         ])
         .return({
-          toState: [
-            { id: 'id' }
-          ]
+          toState: [{ id: 'id' }],
         })
         .first();
-      
-      if ( !result ) {
+
+      if (!result) {
         throw new NotFoundException('could not make correct query result');
       }
-
     } catch (e) {
       this.logger.warning('failed to add possible state to state', {
-        exception: e
+        exception: e,
       });
       throw new ServerException('failed to add possible state to state');
     }
   }
 
   // removePossibleStateFromState
-  async removePossibleState(session: ISession, input: PossibleState): Promise<void>{
-    try{
+  async removePossibleState(
+    session: ISession,
+    input: PossibleState
+  ): Promise<void> {
+    try {
       await this.db
         .query()
         .match([
           [
             ...matchSession(session),
             relation('in', '', 'admin', {
-              active: true
+              active: true,
             }),
             node('baseNode', 'BaseNode'),
             relation('out', '', 'workflow', {
-              active: true
+              active: true,
             }),
             node('workflow'),
             relation('out', '', 'possibleState', {
-              active: true
+              active: true,
             }),
             node('fromState', 'State', {
-              id: input.fromStateId
+              id: input.fromStateId,
             }),
             relation('out', 'rel', 'nextPossibleState', {
-              active: true
+              active: true,
             }),
             node('toState', 'State', {
-              id: input.toStateId
-            })
-          ]
+              id: input.toStateId,
+            }),
+          ],
         ])
         .detachDelete('rel')
         .run();
-
     } catch (e) {
       this.logger.warning('failed to remove possible state from state', {
-        exception: e
+        exception: e,
       });
       throw new ServerException('failed to remove possible state from state');
     }
@@ -905,34 +915,37 @@ export class WorkflowService {
   // there will be more than one required field relationship between a state node and a base node.
   // this is so each required field can be queried without inspecting the property name in app code.
   // addRequiredFieldToState
-  async addRequiredField(session: ISession, input: RequiredField): Promise<void>{
-    try{
+  async addRequiredField(
+    session: ISession,
+    input: RequiredField
+  ): Promise<void> {
+    try {
       const field = await this.db
         .query()
         .match([
           [
             node('token', 'Token', {
               active: true,
-              value: session.token
+              value: session.token,
             }),
             relation('in', '', 'token', {
-              active: true
+              active: true,
             }),
             node('user'),
             relation('in', '', 'admin', {
-              active: true
+              active: true,
             }),
             node('baseNode'),
             relation('out', '', `${input.propertyName}`),
-            node('property')
-          ]
+            node('property'),
+          ],
         ])
         .return({
-          property: 'property'
+          property: 'property',
         })
         .first();
 
-      if ( !field ) {
+      if (!field) {
         throw new NotFoundException('could not find such field existing.');
       }
 
@@ -942,43 +955,45 @@ export class WorkflowService {
           [
             node('token', 'Token', {
               active: true,
-              value: session.token
+              value: session.token,
             }),
             relation('in', '', 'token', {
-              active: true
+              active: true,
             }),
             node('user'),
             relation('in', '', 'admin', {
-              active: true
+              active: true,
             }),
-            node('baseNode')
+            node('baseNode'),
           ],
           [
             node('state', 'State', {
-              id: input.stateId
-            })
-          ]
+              id: input.stateId,
+            }),
+          ],
         ])
         .merge([
           node('baseNode'),
           relation('in', '', 'requiredProperty', {
-            value: input.propertyName
+            value: input.propertyName,
           }),
-          node('state')
+          node('state'),
         ])
         .first();
-
     } catch (e) {
       this.logger.warning('could not add field to state', {
-        exception: e
+        exception: e,
       });
       throw new ServerException('could not add field to state');
     }
   }
 
   // listAllRequiredFieldsInAState
-  async listRequiredFields(session: ISession, stateId: string): Promise<RequiredFieldListOutput>{
-    try{
+  async listRequiredFields(
+    session: ISession,
+    stateId: string
+  ): Promise<RequiredFieldListOutput> {
+    try {
       const result = (await this.db
         .query()
         .match([
@@ -988,69 +1003,70 @@ export class WorkflowService {
             node('sg', 'SecurityGroup'),
             relation('out', '', 'permission'),
             node('permission', 'Permission', {
-              read: true
+              read: true,
             }),
             relation('out', '', 'baseNode'),
-            node('baseNode', 'BaseNode')            
+            node('baseNode', 'BaseNode'),
           ],
           [
             node('baseNode'),
             relation('in', 'rel', 'requiredProperty'),
             node('state', 'State', {
-              id: stateId
-            })
-          ]
+              id: stateId,
+            }),
+          ],
         ])
         .return({
-          'rel.value': 'value'          
+          'rel.value': 'value',
         })
         .run()) as FieldObject[];
 
       return {
-        items: result.filter(item => item.value)
-      }
-
+        items: result.filter((item) => item.value),
+      };
     } catch (e) {
       this.logger.warning('could not list fields', {
-        exception: e
+        exception: e,
       });
       throw new ServerException('could not list fields');
     }
   }
 
   // removeRequiredFieldFromState
-  async removeRequiredField(session: ISession, input: RequiredField): Promise<void>{
-    try{
+  async removeRequiredField(
+    session: ISession,
+    input: RequiredField
+  ): Promise<void> {
+    try {
       await this.db
         .query()
         .match([
           [
             node('token', 'Token', {
               active: true,
-              value: session.token
+              value: session.token,
             }),
             relation('in', '', 'token', {
-              active: true
+              active: true,
             }),
             node('user'),
             relation('in', '', 'admin', {
-              active: true
+              active: true,
             }),
             node('baseNode'),
             relation('in', 'rel', 'requiredProperty', {
-              value: input.propertyName
+              value: input.propertyName,
             }),
             node('state', 'State', {
-              id: input.stateId
-            })
-          ]
+              id: input.stateId,
+            }),
+          ],
         ])
         .detachDelete('rel')
         .run();
-
     } catch (e) {
       this.logger.warning('could not remove field from state', {
-        exception: e
+        exception: e,
       });
       throw new ServerException('could not remove field from state');
     }

@@ -1,4 +1,4 @@
-import { Injectable, Optional } from '@nestjs/common';
+import { BadRequestException, Injectable, Optional } from '@nestjs/common';
 import { parse as parseEnv } from 'dotenv';
 import * as dotEnvExpand from 'dotenv-expand';
 import * as fs from 'fs';
@@ -75,7 +75,7 @@ export class EnvironmentService {
       }
       const parsed = parseFloat(val);
       if (isNaN(parsed)) {
-        throw new Error(
+        throw new BadRequestException(
           `Environment "${key}" has value "${val}" which cannot be parsed to a number`
         );
       }
@@ -100,7 +100,7 @@ class ConfigValue<T> {
 
   required() {
     if (!this.exists) {
-      throw new Error(`Environment does not have "${this.key}"`);
+      throw new BadRequestException(`Environment does not have "${this.key}"`);
     }
     return this.parse(this.rawValue);
   }

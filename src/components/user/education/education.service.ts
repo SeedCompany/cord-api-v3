@@ -1,5 +1,6 @@
 import {
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
@@ -73,7 +74,7 @@ export class EducationService {
         id,
         userId,
       });
-      throw new Error('Could not create education');
+      throw new InternalServerErrorException('Could not create education');
     }
 
     this.logger.info(`Created user education`, { id, userId });

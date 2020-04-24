@@ -1,5 +1,6 @@
 import {
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
@@ -136,7 +137,7 @@ export class ProjectMemberService {
         exception: e,
       });
 
-      throw new Error('Could not create project member');
+      throw new InternalServerErrorException('Could not create project member');
     }
   }
 
