@@ -332,14 +332,13 @@ export class PartnershipService {
               session,
               id: partnership.id,
               props: [
-                'organizationId',
-                'projectId',
                 'agreementStatus',
                 'mouStatus',
                 'mouStart',
                 'mouEnd',
+                'types',
               ],
-              nodevar: 'user',
+              nodevar: 'partnership',
             });
           })
         )
@@ -351,14 +350,13 @@ export class PartnershipService {
               session,
               id: partnership.id,
               props: [
-                'organizationId',
-                'projectId',
                 'agreementStatus',
                 'mouStatus',
                 'mouStart',
                 'mouEnd',
+                'types',
               ],
-              nodevar: 'user',
+              nodevar: 'partnership',
             });
           })
         )
