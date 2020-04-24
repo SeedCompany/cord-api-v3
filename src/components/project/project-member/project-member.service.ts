@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+  InternalServerErrorException as ServerException,
+} from '@nestjs/common';
 import { generate } from 'shortid';
 import { ISession } from '../../../common';
 import { DatabaseService, ILogger, Logger } from '../../../core';
@@ -132,7 +137,7 @@ export class ProjectMemberService {
         exception: e,
       });
 
-      throw new Error('Could not create project member');
+      throw new InternalServerErrorException('Could not create project member');
     }
   }
 
@@ -203,7 +208,7 @@ export class ProjectMemberService {
         exception: e,
       });
 
-      throw e;
+      throw new ServerException('Failed to delete project member');
     }
   }
 }

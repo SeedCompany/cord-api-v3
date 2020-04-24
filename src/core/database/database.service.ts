@@ -2,6 +2,7 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  InternalServerErrorException as ServerException,
   Type,
 } from '@nestjs/common';
 import {
@@ -668,7 +669,7 @@ export class DatabaseService {
       // If there is no aclEditProp, then this is not an access-related issue
       // and we can move forward with throwing
       if (!aclEdit) {
-        throw e;
+        throw new ServerException('Could not found aclEdit');
       }
 
       // Retrieve the user's record of the aclEditProp, if it exists
@@ -682,14 +683,14 @@ export class DatabaseService {
 
       // If the user doesn't have permission to perform the create action...
       if (!aclResult || !aclResult.editProp) {
-        throw new ForbiddenException(`${aclEdit} missing or false`);
+        throw new ForbiddenException(`Cannot create ${type}`);
       }
 
       this.logger.error(`createNode error`, {
         exception: e,
       });
 
-      throw e;
+      throw new ServerException('createNode error');
     }
   }
 

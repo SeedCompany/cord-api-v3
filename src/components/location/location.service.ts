@@ -1,7 +1,9 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
+  InternalServerErrorException as ServerException,
 } from '@nestjs/common';
 import { first, intersection } from 'lodash';
 import { DateTime } from 'luxon';
@@ -253,7 +255,9 @@ export class LocationService {
     }
 
     if (!result.canReadZone) {
-      throw new Error('User does not have permission to read this zone');
+      throw new ForbiddenException(
+        'User does not have permission to read this zone'
+      );
     }
 
     let director: User = RedactedUser;
@@ -333,14 +337,14 @@ export class LocationService {
       return result;
     } catch (e) {
       this.logger.error(`Could not create`, { ...input, exception: e });
-      throw new Error('Could not create zone');
+      throw new ServerException('Could not create zone');
     }
   }
 
   async readOneRegion(id: string, session: ISession): Promise<Region> {
     this.logger.info(`Query readOne Region`, { id, userId: session.userId });
     if (!id) {
-      throw new Error('No region id to search for');
+      throw new BadRequestException('No region id to search for');
     }
     const result = await this.db
       .query()
@@ -381,7 +385,9 @@ export class LocationService {
     }
 
     if (!result.canReadRegion) {
-      throw new Error('User does not have permission to read this region');
+      throw new ForbiddenException(
+        'User does not have permission to read this region'
+      );
     }
     // fill in the director info if you can read it
     let director: User = RedactedUser;
@@ -491,7 +497,7 @@ export class LocationService {
       this.logger.warning(`Could not create region`, {
         exception: e,
       });
-      throw new Error('Could not create region');
+      throw new ServerException('Could not create region');
     }
   }
 
@@ -549,7 +555,9 @@ export class LocationService {
     }
 
     if (!result.canReadCountry) {
-      throw new Error('User does not have permission to read this country');
+      throw new ForbiddenException(
+        'User does not have permission to read this country'
+      );
     }
 
     let region: Region = {
@@ -648,7 +656,7 @@ export class LocationService {
       this.logger.warning(`Could not create country`, {
         exception: e,
       });
-      throw new Error('Could not create country');
+      throw new ServerException('Could not create country');
     }
   }
 
@@ -869,7 +877,7 @@ export class LocationService {
       // }
     } catch (e) {
       this.logger.error('Could not delete location', { exception: e });
-      throw e;
+      throw new ServerException('Could not delete location');
     }
   }
 }

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { generate } from 'shortid';
 import { ISession } from '../../../common';
 import { DatabaseService, ILogger, Logger } from '../../../core';
@@ -42,7 +46,7 @@ export class UnavailabilityService {
         id,
         userId,
       });
-      throw new Error('Could not create unavailability');
+      throw new InternalServerErrorException('Could not create unavailability');
     }
 
     this.logger.info(`Created user unavailability`, {

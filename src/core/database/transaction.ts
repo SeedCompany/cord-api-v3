@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/unbound-method */
+
 import { stripIndent } from 'common-tags';
 import { Connection, Query, Transformer } from 'cypher-query-builder';
 import { Dictionary } from 'lodash';

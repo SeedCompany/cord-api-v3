@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  NotImplementedException,
+  InternalServerErrorException as ServerException,
+} from '@nestjs/common';
 import { ForbiddenError } from 'apollo-server-core';
 import { node } from 'cypher-query-builder';
 import { generate } from 'shortid';
@@ -162,7 +167,7 @@ export class LanguageService {
   }
 
   async update(input: UpdateLanguage, session: ISession): Promise<Language> {
-    throw new Error('Not implemented');
+    throw new NotImplementedException('Not implemented');
     this.logger.info(
       `mutation update language ${input.id} by ${session.userId}`
     );
@@ -201,7 +206,7 @@ export class LanguageService {
       });
     } catch (e) {
       this.logger.error('Failed to delete', { id, exception: e });
-      throw e;
+      throw new ServerException('Failed to delete');
     }
   }
 

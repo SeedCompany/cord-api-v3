@@ -1,4 +1,8 @@
-import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
+import {
+  Injectable,
+  OnApplicationBootstrap,
+  InternalServerErrorException as ServerException,
+} from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { ConfigService, DatabaseService } from '../../core';
 import { UserService } from '../user';
@@ -68,7 +72,7 @@ export class AdminService implements OnApplicationBootstrap {
       .first();
 
     if (!result) {
-      throw new Error('Could not create root admin security group.');
+      throw new ServerException('Could not create root admin security group.');
     }
   }
 
@@ -87,7 +91,7 @@ export class AdminService implements OnApplicationBootstrap {
     });
 
     if (!adminUser) {
-      throw new Error('Could not create root admin user');
+      throw new ServerException('Could not create root admin user');
     }
   }
 
@@ -120,7 +124,9 @@ export class AdminService implements OnApplicationBootstrap {
       .first();
 
     if (!makeAdmin) {
-      throw new Error('Could not merge root admin user to security group');
+      throw new ServerException(
+        'Could not merge root admin user to security group'
+      );
     }
   }
 }

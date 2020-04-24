@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+  InternalServerErrorException as ServerException,
+} from '@nestjs/common';
 import { generate } from 'shortid';
 import { ISession } from '../../../common';
 import { DatabaseService, ILogger, Logger } from '../../../core';
@@ -69,7 +74,7 @@ export class EducationService {
         id,
         userId,
       });
-      throw new Error('Could not create education');
+      throw new InternalServerErrorException('Could not create education');
     }
 
     this.logger.info(`Created user education`, { id, userId });
@@ -190,7 +195,7 @@ export class EducationService {
       });
     } catch (e) {
       this.logger.error('Failed to delete', { id, exception: e });
-      throw e;
+      throw new ServerException('Failed to delete');
     }
   }
 }
