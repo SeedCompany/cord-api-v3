@@ -52,7 +52,7 @@ export class ProductService {
         exception: e,
       });
 
-      throw new Error('Could not create product');
+      throw e;
     }
 
     return this.readOne(id, session);

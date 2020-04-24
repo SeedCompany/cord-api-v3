@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
@@ -645,12 +649,14 @@ export class AuthorizationService {
       result.sgName !== request.name
     ) {
       if (!result?.admin) {
-        throw new Error(
+        throw new InternalServerErrorException(
           'You do not have permission to update this security group'
         );
       }
 
-      throw new Error('Security group name could not be updated');
+      throw new InternalServerErrorException(
+        'Security group name could not be updated'
+      );
     }
 
     return {

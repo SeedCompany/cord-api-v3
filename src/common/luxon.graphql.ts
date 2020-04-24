@@ -1,4 +1,4 @@
-import { applyDecorators } from '@nestjs/common';
+import { applyDecorators, BadRequestException } from '@nestjs/common';
 import { CustomScalar, Scalar } from '@nestjs/graphql';
 import { Transform } from 'class-transformer';
 import { stripIndent } from 'common-tags';
@@ -41,7 +41,7 @@ export class DateTimeScalar
       return value.toISO();
     }
     if (!value) {
-      throw new Error('No DateTime to serialize');
+      throw new BadRequestException('No DateTime to serialize');
     }
     return value;
   }

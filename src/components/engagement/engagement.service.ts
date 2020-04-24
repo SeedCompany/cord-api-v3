@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { first, intersection } from 'lodash';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
@@ -586,7 +590,9 @@ export class EngagementService {
       this.logger.error('Failed to create language engagement', {
         exception: e,
       });
-      throw new Error(`Could not create LanguageEngagement`);
+      throw new InternalServerErrorException(
+        `Could not create LanguageEngagement`
+      );
     }
   }
 
@@ -704,7 +710,9 @@ export class EngagementService {
       return (await this.readOne(id, session)) as InternshipEngagement;
     } catch (e) {
       this.logger.error(e);
-      throw new Error(`Could not create InternshipEngagement`);
+      throw new InternalServerErrorException(
+        `Could not create InternshipEngagement`
+      );
     }
   }
 
@@ -735,7 +743,9 @@ export class EngagementService {
       return (await this.readOne(input.id, session)) as LanguageEngagement;
     } catch (e) {
       this.logger.error(e);
-      throw new Error('Could not update LanguageEngagement');
+      throw new InternalServerErrorException(
+        'Could not update LanguageEngagement'
+      );
     }
   }
 
@@ -828,7 +838,7 @@ export class EngagementService {
       return (await this.readOne(input.id, session)) as InternshipEngagement;
     } catch (e) {
       this.logger.error(e);
-      throw new Error('Could not update LanguageEngagement');
+      throw e;
     }
   }
 

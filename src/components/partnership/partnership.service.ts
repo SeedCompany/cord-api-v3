@@ -263,7 +263,7 @@ export class PartnershipService {
         exception: e,
       });
 
-      throw new Error('Could not create partnership');
+      throw e;
     }
   }
 
