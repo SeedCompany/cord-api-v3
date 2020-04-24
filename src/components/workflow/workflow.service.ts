@@ -4,6 +4,7 @@ import {
   InternalServerErrorException as ServerException,
   NotFoundException,
   InternalServerErrorException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { generate } from 'shortid';
 import { node, relation } from 'cypher-query-builder';
@@ -103,7 +104,7 @@ export class WorkflowService {
         .first();
 
       if (!result) {
-        throw new NotFoundException('could not create a workflow');
+        throw new UnauthorizedException('could not create a workflow');
       }
 
       return {
@@ -905,10 +906,10 @@ export class WorkflowService {
         .detachDelete('rel')
         .run();
     } catch (e) {
-      this.logger.warning('failed to remove possible state from state', {
+      this.logger.warning('failed to remove possible state', {
         exception: e,
       });
-      throw new ServerException('failed to remove possible state from state');
+      throw new ServerException('failed to remove possible state');
     }
   }
 

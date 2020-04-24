@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/unbound-method */
-import { BadGatewayException, BadRequestException } from '@nestjs/common';
+
 import { stripIndent } from 'common-tags';
 import { Connection, Query, Transformer } from 'cypher-query-builder';
 import { Dictionary } from 'lodash';
@@ -105,9 +105,7 @@ export class Transaction implements QueryConnection {
     }
     const session = this.connection.session();
     if (!session) {
-      throw new BadGatewayException(
-        'Could not open session: connection is not open.'
-      );
+      throw new Error('Could not open session: connection is not open.');
     }
     this.session = session;
     this.wrapped = this.session.beginTransaction();
@@ -121,9 +119,7 @@ export class Transaction implements QueryConnection {
    */
   async run<R = any>(query: Query): Promise<Array<Dictionary<R>>> {
     if (query.getClauses().length === 0) {
-      throw new BadRequestException(
-        'Cannot run query: no clauses attached to the query.'
-      );
+      throw new Error('Cannot run query: no clauses attached to the query.');
     }
 
     this.begin();

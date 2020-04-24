@@ -1,9 +1,9 @@
 import {
+  ForbiddenException,
   Injectable,
   NotFoundException,
   InternalServerErrorException as ServerException,
   Type,
-  ForbiddenException as UnauthorizedException,
 } from '@nestjs/common';
 import {
   Connection,
@@ -683,7 +683,7 @@ export class DatabaseService {
 
       // If the user doesn't have permission to perform the create action...
       if (!aclResult || !aclResult.editProp) {
-        throw new UnauthorizedException(`${aclEdit} missing or false`);
+        throw new ForbiddenException(`Cannot create ${type}`);
       }
 
       this.logger.error(`createNode error`, {

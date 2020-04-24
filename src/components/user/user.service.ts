@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   InternalServerErrorException as ServerException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import * as argon2 from 'argon2';
 import { node, relation } from 'cypher-query-builder';
@@ -243,13 +244,13 @@ export class UserService {
 
     try {
       if (result1 === undefined) {
-        throw new NotFoundException('Email or Password are incorrect');
+        throw new UnauthorizedException('Email or Password are incorrect');
       }
       if (await argon2.verify(result1.pash, input.password)) {
         // password match
       } else {
         // password did not match
-        throw new NotFoundException('Email or Password are incorrect');
+        throw new UnauthorizedException('Email or Password are incorrect');
       }
     } catch (err) {
       // internal failure

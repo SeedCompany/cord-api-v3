@@ -1,9 +1,9 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
   InternalServerErrorException as ServerException,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { first, intersection } from 'lodash';
 import { DateTime } from 'luxon';
@@ -255,7 +255,7 @@ export class LocationService {
     }
 
     if (!result.canReadZone) {
-      throw new UnauthorizedException(
+      throw new ForbiddenException(
         'User does not have permission to read this zone'
       );
     }
@@ -385,7 +385,7 @@ export class LocationService {
     }
 
     if (!result.canReadRegion) {
-      throw new UnauthorizedException(
+      throw new ForbiddenException(
         'User does not have permission to read this region'
       );
     }
@@ -555,7 +555,7 @@ export class LocationService {
     }
 
     if (!result.canReadCountry) {
-      throw new UnauthorizedException(
+      throw new ForbiddenException(
         'User does not have permission to read this country'
       );
     }

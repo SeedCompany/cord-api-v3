@@ -1,8 +1,8 @@
 import {
+  ForbiddenException,
   Injectable,
   NotFoundException,
   InternalServerErrorException as ServerException,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { node } from 'cypher-query-builder';
 import { generate } from 'shortid';
@@ -128,7 +128,7 @@ export class OrganizationService {
     }
 
     if (!result.canCreateOrg) {
-      throw new UnauthorizedException(
+      throw new ForbiddenException(
         'User does not have permission to create an organization'
       );
     }
