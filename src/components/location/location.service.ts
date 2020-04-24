@@ -1,8 +1,8 @@
 import {
   BadRequestException,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
+  InternalServerErrorException as ServerException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { first, intersection } from 'lodash';
@@ -337,7 +337,7 @@ export class LocationService {
       return result;
     } catch (e) {
       this.logger.error(`Could not create`, { ...input, exception: e });
-      throw new InternalServerErrorException('Could not create zone');
+      throw new ServerException('Could not create zone');
     }
   }
 
@@ -497,7 +497,7 @@ export class LocationService {
       this.logger.warning(`Could not create region`, {
         exception: e,
       });
-      throw e;
+      throw new ServerException('Could not create region');
     }
   }
 
@@ -656,7 +656,7 @@ export class LocationService {
       this.logger.warning(`Could not create country`, {
         exception: e,
       });
-      throw e;
+      throw new ServerException('Could not create country');
     }
   }
 
@@ -877,7 +877,7 @@ export class LocationService {
       // }
     } catch (e) {
       this.logger.error('Could not delete location', { exception: e });
-      throw e;
+      throw new ServerException('Could not delete location');
     }
   }
 }

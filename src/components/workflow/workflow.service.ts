@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException as ServerException, NotFoundException } from '@nestjs/common';
 import { generate } from 'shortid';
 import { node, relation } from 'cypher-query-builder';
 import { ISession } from '../../common';
@@ -143,7 +143,7 @@ export class WorkflowService {
         exception: e,
       });
 
-      throw e;
+      throw new ServerException('Failed to delete workflow');
     }
   };
 
@@ -209,7 +209,7 @@ export class WorkflowService {
       this.logger.warning('could not add new state to a workflow', {
         exception: e
       });
-      throw e;
+      throw new ServerException('could not add new state to a workflow');
     }
   };
 
@@ -336,7 +336,7 @@ export class WorkflowService {
       this.logger.warning('could not update state', {
         exception: e
       });
-      throw e;
+      throw new ServerException('could not update state');
     }
   };
 
@@ -379,7 +379,7 @@ export class WorkflowService {
         exception: e,
       });
 
-      throw e;
+      throw new ServerException('Failed to delete state');
     }
   };
 
@@ -429,7 +429,7 @@ export class WorkflowService {
         exception: e,
       });
 
-      throw e;
+      throw new ServerException('Failed to delete state');
     }
   };
 
@@ -477,7 +477,7 @@ export class WorkflowService {
         exception: e,
       });
 
-      throw e;
+      throw new ServerException('Failed to delete state');
     }
   };
 
@@ -526,7 +526,7 @@ export class WorkflowService {
       this.logger.warning('could not attach security group to state', {
         exception: e
       });
-      throw e;
+      throw new ServerException('could not attach security group to state');
     }
   };
 
@@ -569,7 +569,7 @@ export class WorkflowService {
       this.logger.warning('could not remove security group from state', {
         exception: e
       });
-      throw e;
+      throw new ServerException('could not remove security group from state');
     }
   }
 
@@ -618,7 +618,7 @@ export class WorkflowService {
       this.logger.warning('could not attach security group to state', {
         exception: e
       });
-      throw e;
+      throw new ServerException('could not attach security group to state');
     }
   }
 
@@ -659,7 +659,7 @@ export class WorkflowService {
       this.logger.warning('could not remove security group from state', {
         exception: e
       });
-      throw e;
+      throw new ServerException('could not remove security group from state');
     }
   }
 
@@ -796,7 +796,7 @@ export class WorkflowService {
       this.logger.warning('could not change current state', {
         exception: e
       });
-      throw e;
+      throw new ServerException('could not change current state');
     }
   }
 
@@ -857,7 +857,7 @@ export class WorkflowService {
       this.logger.warning('failed to add possible state to state', {
         exception: e
       });
-      throw e;
+      throw new ServerException('failed to add possible state to state');
     }
   }
 
@@ -898,7 +898,7 @@ export class WorkflowService {
       this.logger.warning('failed to remove possible state from state', {
         exception: e
       });
-      throw e;
+      throw new ServerException('failed to remove possible state from state');
     }
   }
 
@@ -972,7 +972,7 @@ export class WorkflowService {
       this.logger.warning('could not add field to state', {
         exception: e
       });
-      throw e;
+      throw new ServerException('could not add field to state');
     }
   }
 
@@ -1014,7 +1014,7 @@ export class WorkflowService {
       this.logger.warning('could not list fields', {
         exception: e
       });
-      throw e;
+      throw new ServerException('could not list fields');
     }
   }
 
@@ -1052,7 +1052,7 @@ export class WorkflowService {
       this.logger.warning('could not remove field from state', {
         exception: e
       });
-      throw e;
+      throw new ServerException('could not remove field from state');
     }
   }
 }

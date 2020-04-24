@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  InternalServerErrorException as ServerException,
+} from '@nestjs/common';
 import * as argon2 from 'argon2';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
@@ -239,18 +243,18 @@ export class UserService {
 
     try {
       if (result1 === undefined) {
-        throw Error('Email or Password are incorrect');
+        throw new NotFoundException('Email or Password are incorrect');
       }
       if (await argon2.verify(result1.pash, input.password)) {
         // password match
       } else {
         // password did not match
-        throw Error('Email or Password are incorrect');
+        throw new NotFoundException('Email or Password are incorrect');
       }
     } catch (err) {
       // internal failure
       this.logger.error('Login failed', { exception: err });
-      throw err;
+      throw new ServerException('Login failed');
     }
 
     const result2 = await this.db
@@ -280,7 +284,9 @@ export class UserService {
       .first();
 
     if (result2 === undefined) {
-      throw Error('Login failed. Please contact your administrator.');
+      throw new ServerException(
+        'Login failed. Please contact your administrator.'
+      );
     }
 
     return result2.id;
@@ -457,7 +463,7 @@ export class UserService {
       .first();
 
     if (!result) {
-      throw Error('failed to create user');
+      throw new ServerException('failed to create user');
     } else {
       return result.id;
     }
@@ -523,7 +529,7 @@ export class UserService {
       });
     } catch (e) {
       this.logger.error('Could not delete user', { exception: e });
-      throw e;
+      throw new ServerException('Could not delete user');
     }
   }
 

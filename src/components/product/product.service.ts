@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  InternalServerErrorException as ServerException,
+} from '@nestjs/common';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
 import { DatabaseService, ILogger, Logger } from '../../core';
@@ -52,7 +56,7 @@ export class ProductService {
         exception: e,
       });
 
-      throw e;
+      throw new ServerException('Failed to create product');
     }
 
     return this.readOne(id, session);
@@ -165,7 +169,7 @@ export class ProductService {
       this.logger.warning('Failed to delete product', {
         exception: e,
       });
-      throw e;
+      throw new ServerException('Failed to delete product');
     }
   }
 }

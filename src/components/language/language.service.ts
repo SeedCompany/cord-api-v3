@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   NotImplementedException,
+  InternalServerErrorException as ServerException,
 } from '@nestjs/common';
 import { ForbiddenError } from 'apollo-server-core';
 import { node } from 'cypher-query-builder';
@@ -205,7 +206,7 @@ export class LanguageService {
       });
     } catch (e) {
       this.logger.error('Failed to delete', { id, exception: e });
-      throw e;
+      throw new ServerException('Failed to delete');
     }
   }
 

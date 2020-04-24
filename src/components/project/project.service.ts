@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   NotImplementedException,
+  InternalServerErrorException as ServerException,
 } from '@nestjs/common';
 import { node } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
@@ -415,7 +416,7 @@ export class ProjectService {
       this.logger.warning(`Could not create project`, {
         exception: e,
       });
-      throw new Error(e);
+      throw new ServerException('Could not create project');
     }
   }
 
@@ -467,7 +468,7 @@ export class ProjectService {
       this.logger.warning('Failed to delete project', {
         exception: e,
       });
-      throw e;
+      throw new ServerException('Failed to delete project');
     }
   }
 

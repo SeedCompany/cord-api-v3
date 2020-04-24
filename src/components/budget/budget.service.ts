@@ -1,8 +1,8 @@
 import {
   BadRequestException,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
+  InternalServerErrorException as ServerException,
 } from '@nestjs/common';
 import { node } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
@@ -123,7 +123,7 @@ export class BudgetService {
         id,
         userId: session.userId,
       });
-      throw new InternalServerErrorException('Could not create Budget ');
+      throw new ServerException('Could not create Budget ');
     }
   }
 
@@ -330,7 +330,7 @@ export class BudgetService {
         userId: session.userId,
         exception,
       });
-      throw new InternalServerErrorException('Could not create Budget Record');
+      throw new ServerException('Could not create Budget Record');
     }
   }
 

@@ -1,7 +1,7 @@
 import {
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
+  InternalServerErrorException as ServerException,
 } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { generate } from 'shortid';
@@ -598,7 +598,7 @@ export class AuthorizationService {
       this.logger.warning('Failed to delete security group', {
         exception: e,
       });
-      throw e;
+      throw new ServerException('Failed to delete security group');
     }
   }
 
@@ -649,14 +649,12 @@ export class AuthorizationService {
       result.sgName !== request.name
     ) {
       if (!result?.admin) {
-        throw new InternalServerErrorException(
+        throw new ServerException(
           'You do not have permission to update this security group'
         );
       }
 
-      throw new InternalServerErrorException(
-        'Security group name could not be updated'
-      );
+      throw new ServerException('Security group name could not be updated');
     }
 
     return {

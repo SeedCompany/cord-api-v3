@@ -1,6 +1,7 @@
 import {
   Injectable,
   NotFoundException,
+  InternalServerErrorException as ServerException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { node } from 'cypher-query-builder';
@@ -83,7 +84,7 @@ export class OrganizationService {
       this.logger.error(
         `Could not create organization for user ${session.userId}`
       );
-      throw err;
+      throw new ServerException('Could not create organization');
     }
 
     this.logger.info(`organization created, id ${id}`);
@@ -167,7 +168,7 @@ export class OrganizationService {
       });
     } catch (e) {
       this.logger.error('Failed to delete', { id, exception: e });
-      throw e;
+      throw new ServerException('Failed to delete');
     }
 
     this.logger.info(`deleted organization with id`, { id });

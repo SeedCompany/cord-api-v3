@@ -1,7 +1,7 @@
 import {
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
+  InternalServerErrorException as ServerException,
 } from '@nestjs/common';
 import { first, intersection } from 'lodash';
 import { generate } from 'shortid';
@@ -590,9 +590,7 @@ export class EngagementService {
       this.logger.error('Failed to create language engagement', {
         exception: e,
       });
-      throw new InternalServerErrorException(
-        `Could not create LanguageEngagement`
-      );
+      throw new ServerException(`Could not create LanguageEngagement`);
     }
   }
 
@@ -710,9 +708,7 @@ export class EngagementService {
       return (await this.readOne(id, session)) as InternshipEngagement;
     } catch (e) {
       this.logger.error(e);
-      throw new InternalServerErrorException(
-        `Could not create InternshipEngagement`
-      );
+      throw new ServerException(`Could not create InternshipEngagement`);
     }
   }
 
@@ -743,9 +739,7 @@ export class EngagementService {
       return (await this.readOne(input.id, session)) as LanguageEngagement;
     } catch (e) {
       this.logger.error(e);
-      throw new InternalServerErrorException(
-        'Could not update LanguageEngagement'
-      );
+      throw new ServerException('Could not update LanguageEngagement');
     }
   }
 
@@ -837,8 +831,10 @@ export class EngagementService {
 
       return (await this.readOne(input.id, session)) as InternshipEngagement;
     } catch (e) {
-      this.logger.error(e);
-      throw e;
+      this.logger.warning('Failed to update InternshipEngagement', {
+        exception: e,
+      });
+      throw new ServerException('Could not find update InternshipEngagement');
     }
   }
 
@@ -860,7 +856,7 @@ export class EngagementService {
         exception: e,
       });
 
-      throw e;
+      throw new ServerException('Failed to delete partnership');
     }
   }
 }

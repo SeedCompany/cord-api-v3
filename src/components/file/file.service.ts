@@ -1,4 +1,9 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  InternalServerErrorException as ServerException,
+} from '@nestjs/common';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession, NotImplementedError } from '../../common';
@@ -367,7 +372,7 @@ export class FileService {
       return await this.getFileNode(input.id, session);
     } catch (e) {
       this.logger.error('could not rename', input);
-      throw e;
+      throw new ServerException('could not rename');
     }
   }
 
@@ -407,7 +412,7 @@ export class FileService {
       return await this.getFile(input.id, session);
     } catch (e) {
       this.logger.error('Failed to move', { ...input, exception: e });
-      throw e;
+      throw new ServerException('Failed to move');
     }
   }
 
@@ -421,7 +426,7 @@ export class FileService {
       });
     } catch (e) {
       this.logger.error('Failed to delete', { id, exception: e });
-      throw e;
+      throw new ServerException('Failed to delete');
     }
   }
 }
