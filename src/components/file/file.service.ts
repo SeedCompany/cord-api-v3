@@ -4,10 +4,12 @@ import {
   Injectable,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
+import { node } from 'cypher-query-builder';
+import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession, NotImplementedError } from '../../common';
-import { DatabaseService, ILogger, Logger } from '../../core';
+import { DatabaseService, ILogger, Logger, matchSession } from '../../core';
 import { UserService } from '../user';
 import {
   CreateFileInput,
@@ -428,5 +430,95 @@ export class FileService {
       this.logger.error('Failed to delete', { id, exception: e });
       throw new ServerException('Failed to delete');
     }
+  }
+
+  async checkFileConsistency(
+    baseNode: string,
+    session: ISession
+  ): Promise<boolean> {
+    // file service creates three base nodes – File, Directory, and FileVersion
+    // this function should check consistencty of all three nodes
+    const bnode =
+      baseNode === 'FileVersion' ? 'FileVersion' : upperFirst(baseNode);
+    const fileNodes = await this.db
+      .query()
+      .match([
+        matchSession(session),
+        [
+          node('fileNode', bnode, {
+            active: true,
+          }),
+        ],
+      ])
+      .return('fileNode.id as id')
+      .run();
+
+    const requiredProperties =
+      baseNode === 'FileVersion'
+        ? ['category', 'size', 'mimetype']
+        : baseNode === 'File' || baseNode === 'Directory'
+        ? ['name']
+        : [];
+    // for File and Directory
+    if (baseNode === 'File' || baseNode === 'Directory') {
+      return (
+        (
+          await Promise.all(
+            fileNodes.map(async (fn) =>
+              this.db.isRelationshipUnique({
+                session,
+                id: fn.id,
+                relName: 'createdBy',
+                srcNodeLabel: `${upperFirst(baseNode)}`,
+                desNodeLabel: 'User',
+              })
+            )
+          )
+        ).every((n) => n) &&
+        (
+          await Promise.all(
+            fileNodes.map(async (fn) =>
+              this.db.hasProperties({
+                session,
+                id: fn.id,
+                props: requiredProperties,
+                nodevar: `${upperFirst(baseNode)}`,
+              })
+            )
+          )
+        ).every((n) => n)
+      );
+    }
+    // for FileVersions
+    else if (baseNode === 'FileVersion') {
+      return (
+        (
+          await Promise.all(
+            fileNodes.map(async (fn) =>
+              this.db.isRelationshipUnique({
+                session,
+                id: fn.id,
+                relName: 'modifiedBy',
+                srcNodeLabel: 'FileVersion',
+                desNodeLabel: 'User',
+              })
+            )
+          )
+        ).every((n) => n) &&
+        (
+          await Promise.all(
+            fileNodes.map(async (fn) =>
+              this.db.hasProperties({
+                session,
+                id: fn.id,
+                props: requiredProperties,
+                nodevar: 'FileVersion',
+              })
+            )
+          )
+        ).every((n) => n)
+      );
+    }
+    return false;
   }
 }
