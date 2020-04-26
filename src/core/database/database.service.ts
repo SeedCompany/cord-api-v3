@@ -799,7 +799,6 @@ export class DatabaseService {
     id: string;
     relName: string;
     srcNodeLabel: string;
-    desNodeLabel: string;
   }): Promise<boolean> {
     const result = await this.db
       .query()

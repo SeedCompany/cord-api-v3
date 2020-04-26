@@ -437,7 +437,7 @@ export class FileService {
     session: ISession
   ): Promise<boolean> {
     // file service creates three base nodes – File, Directory, and FileVersion
-    // this function should check consistencty of all three nodes
+    // this function checks consistencty of all three nodes
     const bnode =
       baseNode === 'FileVersion' ? 'FileVersion' : upperFirst(baseNode);
     const fileNodes = await this.db
@@ -459,19 +459,22 @@ export class FileService {
         : baseNode === 'File' || baseNode === 'Directory'
         ? ['name']
         : [];
-    // for File and Directory
+    // for File or Directory
     if (baseNode === 'File' || baseNode === 'Directory') {
       return (
         (
           await Promise.all(
             fileNodes.map(async (fn) =>
-              this.db.isRelationshipUnique({
-                session,
-                id: fn.id,
-                relName: 'createdBy',
-                srcNodeLabel: `${upperFirst(baseNode)}`,
-                desNodeLabel: 'User',
-              })
+              ['createdBy', 'parent']
+                .map((rel) =>
+                  this.db.isRelationshipUnique({
+                    session,
+                    id: fn.id,
+                    relName: rel,
+                    srcNodeLabel: `${upperFirst(baseNode)}`,
+                  })
+                )
+                .every((n) => n)
             )
           )
         ).every((n) => n) &&
@@ -498,9 +501,8 @@ export class FileService {
               this.db.isRelationshipUnique({
                 session,
                 id: fn.id,
-                relName: 'modifiedBy',
+                relName: 'createdBy',
                 srcNodeLabel: 'FileVersion',
-                desNodeLabel: 'User',
               })
             )
           )
