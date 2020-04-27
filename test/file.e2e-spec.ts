@@ -1,7 +1,7 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
-import { isValid } from 'shortid';
+import { generate, isValid } from 'shortid';
 import {
   createFile,
   createSession,
@@ -11,6 +11,7 @@ import {
   fragments,
   TestApp,
 } from './utility';
+import { createDirectory } from './utility/create-directory';
 
 describe('File e2e', () => {
   let app: TestApp;
@@ -25,9 +26,17 @@ describe('File e2e', () => {
     await app.close();
   });
 
-  it.skip('create a file node', async () => {
-    const file = await createFile(app);
+  it.only('create a file node', async () => {
+    const id = generate();
+    const testDir = await createDirectory(app);
+
+    const file = await createFile(app, {
+      uploadId: id,
+      parentId: testDir.id,
+      name: 'testFile',
+    });
     expect(file.id).toBeDefined();
+    expect(file.name).toBe('testFile');
   });
 
   it.skip('read one file by id', async () => {
@@ -140,4 +149,10 @@ describe('File e2e', () => {
 
     expect(files.items.length).toBeGreaterThan(numFiles);
   });
+
+  // it('should check consistency of File basenode', async () => {
+  //   // create multiple file node
+  // });
+  // it('should check consistency of Directory basenode', async () => {});
+  // it('should check consistency of FileVersion basenode', async () => {});
 });

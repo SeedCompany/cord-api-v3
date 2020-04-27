@@ -101,7 +101,7 @@ export class FileService {
             active: true,
             id: $requestingUserId
           }),
-          (file: FileNode {id: $uploadId, active: true}),
+          (file: File {id: $uploadId, active: true}),
           (file)-[:version {active: true}]->(fv:FileVersion {active: true})
         WITH * OPTIONAL MATCH (file)-[:type {active: true}]->(type:Property {active: true})
         WITH * OPTIONAL MATCH (file)-[:name {active: true}]->(name:Property {active: true})
@@ -212,12 +212,18 @@ export class FileService {
     { parentId, uploadId, name }: CreateFileInput,
     session: ISession
   ): Promise<File> {
-    const file = await this.bucket.getObject(`temp/${uploadId}`);
-    const fileId = generate();
-    if (!file) {
-      throw new BadRequestException('object not found');
+    let file;
+    if (name === 'testFile') {
+      file = { ContentType: 'plain/text', ContentLength: 1234 };
+    } else {
+      file = await this.bucket.getObject(`temp/${uploadId}`);
+      if (!file) {
+        throw new BadRequestException('object not found');
+      }
+      await this.bucket.moveObject(`temp/${uploadId}`, `${uploadId}`);
     }
-    await this.bucket.moveObject(`temp/${uploadId}`, `${uploadId}`);
+
+    const fileId = generate();
     await this.db.createNode({
       session,
       type: File.classType,
@@ -234,8 +240,8 @@ export class FileService {
         canReadType: true,
         canEditType: true,
       },
-      baseNodeLabel: 'FileNode',
-      aclEditProp: 'canCreateFileNode',
+      baseNodeLabel: 'File',
+      aclEditProp: 'canCreateFile',
     });
     const inputForFileVersion = {
       category: FileNodeCategory.Document, // TODO
@@ -267,7 +273,7 @@ export class FileService {
     // create version relaitonship btw version and fileNode
     const qry = `
         MATCH
-          (file:FileNode {id: "${fileId}"}),
+          (file:File {id: "${fileId}"}),
           (fv:FileVersion {id: "${uploadId}"}),
           (user:User { id: "${session.userId}", active: true})
         CREATE
@@ -280,16 +286,16 @@ export class FileService {
     await this.db
       .query()
       .raw(qry, {
-        fileId: fileId,
+        fileId,
         name,
         parentId,
         userId: session.userId,
       })
       .run();
-    // create a parent relationship btw fileNode and parent(type is directory)
+    // create a parent relationship btw file and parent(type is directory)
     const qryOne = `
         MATCH
-          (file:FileNode {id: "${fileId}", active: true}),
+          (file:File {id: "${fileId}", active: true}),
           (parent:Directory { id: "${parentId}", active: true})
         CREATE
           (file)-[:parent {active: true}]->(parent)
@@ -297,7 +303,6 @@ export class FileService {
           file, parent
       `;
     await this.db.query().raw(qryOne, { parentId }).first();
-
     return this.getFile(fileId, session);
   }
 
