@@ -276,6 +276,19 @@ export class FileService {
       input: inputForFileVersion,
       acls,
     });
+    // Add FileNodeCategory label for Prop node btw version and category
+    await this.db
+      .query()
+      .raw(
+        `
+        MATCH 
+          (fv:FileVersion {id: "${uploadId}"}),
+          (fv)-[rel:category {active: true}]->(cat:Property {active: true})
+        SET cat :FileNodeCategory
+      `
+      )
+      .run();
+
     // create version relaitonship btw version and fileNode
     const qry = `
         MATCH
@@ -497,7 +510,7 @@ export class FileService {
 
     const requiredProperties =
       baseNode === 'FileVersion'
-        ? ['category', 'size', 'mimetype']
+        ? ['size', 'mimeType']
         : baseNode === 'File' || baseNode === 'Directory'
         ? ['name']
         : [];
@@ -540,12 +553,16 @@ export class FileService {
         (
           await Promise.all(
             fileNodes.map(async (fn) =>
-              this.db.isRelationshipUnique({
-                session,
-                id: fn.id,
-                relName: 'createdBy',
-                srcNodeLabel: 'FileVersion',
-              })
+              ['createdBy', 'category']
+                .map((rel) =>
+                  this.db.isRelationshipUnique({
+                    session,
+                    id: fn.id,
+                    relName: rel,
+                    srcNodeLabel: 'FileVersion',
+                  })
+                )
+                .every((n) => n)
             )
           )
         ).every((n) => n) &&

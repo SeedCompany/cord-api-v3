@@ -4,6 +4,7 @@ import { DateTime } from 'luxon';
 import {
   createUnionType,
   Field,
+  InputType,
   Int,
   InterfaceType,
   ObjectType,
@@ -118,3 +119,11 @@ export const FileOrDirectory = createUnionType({
       : File.classType,
 });
 export type FileOrDirectory = File | Directory;
+
+@InputType()
+export abstract class BaseNodeConsistencyInput {
+  @Field({
+    description: 'The BaseNode type',
+  })
+  readonly baseNode: string;
+}
