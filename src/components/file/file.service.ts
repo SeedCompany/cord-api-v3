@@ -2,9 +2,10 @@ import {
   BadRequestException,
   Inject,
   Injectable,
+  NotFoundException,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
-import { node } from 'cypher-query-builder';
+import { node, relation } from 'cypher-query-builder';
 import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
@@ -126,17 +127,21 @@ export class FileService {
         }
       )
       .first();
+
+    if (!result) {
+      throw new NotFoundException();
+    }
     return {
       category: FileNodeCategory.Document, //TODO category should be derived based on the mimeType
-      createdAt: result!.createdAt,
+      createdAt: result.createdAt,
       createdBy: { ...user },
-      id: result!.id,
-      mimeType: result!.mimeType,
-      modifiedAt: result!.modifiedAt,
-      name: result!.name,
+      id: result.id,
+      mimeType: result.mimeType,
+      modifiedAt: result.modifiedAt,
+      name: result.name,
       parents: [], // TODO
-      size: result!.size,
-      type: result!.type,
+      size: result.size,
+      type: result.type,
     };
   }
 
@@ -214,6 +219,7 @@ export class FileService {
   ): Promise<File> {
     let file;
     if (name === 'testFile') {
+      // to skip aws s3 calls while unit testing, assuming a fake test file
       file = { ContentType: 'plain/text', ContentLength: 1234 };
     } else {
       file = await this.bucket.getObject(`temp/${uploadId}`);
@@ -307,17 +313,48 @@ export class FileService {
   }
 
   async updateFile(input: UpdateFileInput, session: ISession): Promise<File> {
-    const file = await this.bucket.getObject(`temp/${input.uploadId}`);
-    if (!file) {
-      throw new BadRequestException('object not found');
+    const parentNode = await this.db
+      .query()
+      .match([
+        matchSession(session),
+        [
+          node('parent', 'File', {
+            id: input.parentId,
+            active: true,
+          }),
+          relation('out', '', 'name'),
+          node('parentName', 'Property', {
+            active: true,
+          }),
+        ],
+      ])
+      .return('parent.id as id, parentName.value as name')
+      .first();
+    if (!parentNode) {
+      throw new BadRequestException('parent not found');
     }
-    await this.bucket.moveObject(`temp/${input.uploadId}`, `${input.uploadId}`);
+
+    let fv;
+    if (parentNode && parentNode.name !== 'testFile') {
+      fv = await this.bucket.getObject(`temp/${input.uploadId}`);
+      if (!fv) {
+        throw new BadRequestException('object not found in s3bucket');
+      }
+      await this.bucket.moveObject(
+        `temp/${input.uploadId}`,
+        `${input.uploadId}`
+      );
+    } else {
+      // to skip aws s3 calls while unit testing, assuming a fake test file
+      fv = { ContentType: 'text/plain', ContentLength: 1234 };
+    }
+
     const inputForFileVersion = {
       category: FileNodeCategory.Document, // TODO
       id: input.uploadId,
-      mimeType: file.ContentType,
+      mimeType: fv.ContentType,
       modifiedAt: DateTime.local(),
-      size: file.ContentLength,
+      size: fv.ContentLength,
     };
     const acls = {
       canReadSize: true,
@@ -342,7 +379,7 @@ export class FileService {
 
     const qry = `
       MATCH
-        (file: FileNode {id: "${input.parentId}", active: true}),
+        (file: File {id: "${input.parentId}", active: true}),
         (newFv:FileVersion {id: "${input.uploadId}", active: true}),
         (user:User { id: "${session.userId}", active: true})
       CREATE

@@ -1,5 +1,4 @@
 import { gql } from 'apollo-server-core';
-import * as faker from 'faker';
 import { times } from 'lodash';
 import { generate, isValid } from 'shortid';
 import {
@@ -26,7 +25,7 @@ describe('File e2e', () => {
     await app.close();
   });
 
-  it.only('create a file node', async () => {
+  it('create a file node', async () => {
     const id = generate();
     const testDir = await createDirectory(app);
 
@@ -39,17 +38,23 @@ describe('File e2e', () => {
     expect(file.name).toBe('testFile');
   });
 
-  it.skip('read one file by id', async () => {
-    const file = await createFile(app);
+  it('read one file by id', async () => {
+    const id = generate();
+    const testDir = await createDirectory(app);
+    const file = await createFile(app, {
+      uploadId: id,
+      parentId: testDir.id,
+      name: 'testFile',
+    });
 
     const { file: actual } = await app.graphql.query(
       gql`
         query file($id: ID!) {
           file(id: $id) {
-            ...file
+            id
+            name
           }
         }
-        ${fragments.file}
       `,
       {
         id: file.id,
@@ -63,44 +68,51 @@ describe('File e2e', () => {
   });
 
   // UPDATE FILE
-  it.skip('update file', async () => {
-    const file = await createFile(app);
-    const newName = faker.company.companyName();
-
+  it('update file', async () => {
+    // updating a file is adding a new version to file
+    const id = generate();
+    const testDir = await createDirectory(app);
+    const file = await createFile(app, {
+      uploadId: id,
+      parentId: testDir.id,
+      name: 'testFile',
+    });
+    const fvId = generate();
     const result = await app.graphql.mutate(
       gql`
         mutation updateFile($input: UpdateFileInput!) {
           updateFile(input: $input) {
-            file {
-              ...file
-            }
+            id
+            name
           }
         }
-        ${fragments.file}
       `,
       {
         input: {
-          file: {
-            id: file.id,
-            name: newName,
-          },
+          uploadId: fvId,
+          parentId: file.id,
         },
       }
     );
-    const updated = result.updateFile.file;
-    expect(updated).toBeTruthy();
+    const updated = result.updateFile;
     expect(updated.id).toBe(file.id);
-    expect(updated.name.value).toBe(newName);
+    expect(updated.name).toBe('testFile');
   });
 
   // DELETE FILE
-  it.skip('delete file', async () => {
-    const file = await createFile(app);
+  it('delete file', async () => {
+    const id = generate();
+    const testDir = await createDirectory(app);
+    const file = await createFile(app, {
+      uploadId: id,
+      parentId: testDir.id,
+      name: 'testFile',
+    });
 
     const result = await app.graphql.mutate(
       gql`
-        mutation deleteFile($id: ID!) {
-          deleteFile(id: $id)
+        mutation deleteFileNode($id: ID!) {
+          deleteFileNode(id: $id)
         }
       `,
       {
@@ -108,16 +120,15 @@ describe('File e2e', () => {
       }
     );
 
-    expect(result.deleteFile).toBeTruthy();
+    expect(result.deleteFileNode).toBeTruthy();
     await expectNotFound(
       app.graphql.query(
         gql`
           query file($id: ID!) {
             file(id: $id) {
-              ...file
+              id
             }
           }
-          ${fragments.file}
         `,
         {
           id: file.id,
@@ -149,10 +160,4 @@ describe('File e2e', () => {
 
     expect(files.items.length).toBeGreaterThan(numFiles);
   });
-
-  // it('should check consistency of File basenode', async () => {
-  //   // create multiple file node
-  // });
-  // it('should check consistency of Directory basenode', async () => {});
-  // it('should check consistency of FileVersion basenode', async () => {});
 });
