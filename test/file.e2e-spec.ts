@@ -1,7 +1,7 @@
 import { gql } from 'apollo-server-core';
-import * as faker from 'faker';
 import { times } from 'lodash';
-import { isValid } from 'shortid';
+import { generate, isValid } from 'shortid';
+import { DatabaseService } from '../src/core';
 import {
   createFile,
   createSession,
@@ -11,6 +11,7 @@ import {
   fragments,
   TestApp,
 } from './utility';
+import { createDirectory } from './utility/create-directory';
 
 describe('File e2e', () => {
   let app: TestApp;
@@ -25,22 +26,50 @@ describe('File e2e', () => {
     await app.close();
   });
 
-  it.skip('create a file node', async () => {
-    const file = await createFile(app);
-    expect(file.id).toBeDefined();
+  beforeEach(async () => {
+    const db = app.get(DatabaseService);
+    // remove bad data to ensure consistency check
+    await db
+      .query()
+      .raw(
+        `
+        MATCH (f: File), (d: Directory), (fv: FileVersion) 
+          detach delete f, fv, d
+        `
+      )
+      .run();
   });
 
-  it.skip('read one file by id', async () => {
-    const file = await createFile(app);
+  it('create a file node', async () => {
+    const id = generate();
+    const testDir = await createDirectory(app);
+
+    const file = await createFile(app, {
+      uploadId: id,
+      parentId: testDir.id,
+      name: 'testFile',
+    });
+    expect(file.id).toBeDefined();
+    expect(file.name).toBe('testFile');
+  });
+
+  it('read one file by id', async () => {
+    const id = generate();
+    const testDir = await createDirectory(app);
+    const file = await createFile(app, {
+      uploadId: id,
+      parentId: testDir.id,
+      name: 'testFile',
+    });
 
     const { file: actual } = await app.graphql.query(
       gql`
         query file($id: ID!) {
           file(id: $id) {
-            ...file
+            id
+            name
           }
         }
-        ${fragments.file}
       `,
       {
         id: file.id,
@@ -54,44 +83,51 @@ describe('File e2e', () => {
   });
 
   // UPDATE FILE
-  it.skip('update file', async () => {
-    const file = await createFile(app);
-    const newName = faker.company.companyName();
-
+  it('update file', async () => {
+    // updating a file is adding a new version to file
+    const id = generate();
+    const testDir = await createDirectory(app);
+    const file = await createFile(app, {
+      uploadId: id,
+      parentId: testDir.id,
+      name: 'testFile',
+    });
+    const fvId = generate();
     const result = await app.graphql.mutate(
       gql`
         mutation updateFile($input: UpdateFileInput!) {
           updateFile(input: $input) {
-            file {
-              ...file
-            }
+            id
+            name
           }
         }
-        ${fragments.file}
       `,
       {
         input: {
-          file: {
-            id: file.id,
-            name: newName,
-          },
+          uploadId: fvId,
+          parentId: file.id,
         },
       }
     );
-    const updated = result.updateFile.file;
-    expect(updated).toBeTruthy();
+    const updated = result.updateFile;
     expect(updated.id).toBe(file.id);
-    expect(updated.name.value).toBe(newName);
+    expect(updated.name).toBe('testFile');
   });
 
   // DELETE FILE
-  it.skip('delete file', async () => {
-    const file = await createFile(app);
+  it('delete file', async () => {
+    const id = generate();
+    const testDir = await createDirectory(app);
+    const file = await createFile(app, {
+      uploadId: id,
+      parentId: testDir.id,
+      name: 'testFile',
+    });
 
     const result = await app.graphql.mutate(
       gql`
-        mutation deleteFile($id: ID!) {
-          deleteFile(id: $id)
+        mutation deleteFileNode($id: ID!) {
+          deleteFileNode(id: $id)
         }
       `,
       {
@@ -99,16 +135,15 @@ describe('File e2e', () => {
       }
     );
 
-    expect(result.deleteFile).toBeTruthy();
+    expect(result.deleteFileNode).toBeTruthy();
     await expectNotFound(
       app.graphql.query(
         gql`
           query file($id: ID!) {
             file(id: $id) {
-              ...file
+              id
             }
           }
-          ${fragments.file}
         `,
         {
           id: file.id,
@@ -139,5 +174,152 @@ describe('File e2e', () => {
     `);
 
     expect(files.items.length).toBeGreaterThan(numFiles);
+  });
+
+  it('should check consistency in FILE basenodes', async () => {
+    const db = app.get(DatabaseService);
+    const id = generate();
+    const testDir = await createDirectory(app);
+
+    const file = await createFile(app, {
+      uploadId: id,
+      parentId: testDir.id,
+      name: 'testFile',
+    });
+    const testResult = await app.graphql.query(
+      gql`
+        query checkFileConsistency($input: BaseNodeConsistencyInput!) {
+          checkFileConsistency(input: $input)
+        }
+      `,
+      {
+        input: { baseNode: 'File' },
+      }
+    );
+    expect(testResult.checkFileConsistency).toBeTruthy();
+
+    // check for inconsistency
+    await db
+      .query()
+      .raw(
+        `
+        MATCH
+          (file: File {active: true, id: "${file.id}"}),
+          (file)-[rel:name {active: true}]->(nm: Property {active: true})
+        SET rel.active = false
+        RETURN
+          file, rel
+        `
+      )
+      .run();
+    const result = await app.graphql.query(
+      gql`
+        query checkFileConsistency($input: BaseNodeConsistencyInput!) {
+          checkFileConsistency(input: $input)
+        }
+      `,
+      {
+        input: { baseNode: 'File' },
+      }
+    );
+    expect(result.checkFileConsistency).toBeFalsy();
+  });
+
+  it('should check for consistency in Directory basenodes', async () => {
+    const db = app.get(DatabaseService);
+    const id = generate();
+    const testDir = await createDirectory(app);
+
+    await createFile(app, {
+      uploadId: id,
+      parentId: testDir.id,
+      name: 'testFile',
+    });
+    const testResult = await app.graphql.query(
+      gql`
+        query checkFileConsistency($input: BaseNodeConsistencyInput!) {
+          checkFileConsistency(input: $input)
+        }
+      `,
+      {
+        input: { baseNode: 'Directory' },
+      }
+    );
+    expect(testResult.checkFileConsistency).toBeTruthy();
+    // check for inconsistency
+    await db
+      .query()
+      .raw(
+        `
+          MATCH
+            (dir: Directory {active: true, id: "${testDir.id}"}),
+            (dir)-[rel:name {active: true}]->(nm: Property {active: true})
+          SET rel.active = false
+          RETURN
+          dir, rel
+          `
+      )
+      .run();
+    const result = await app.graphql.query(
+      gql`
+        query checkFileConsistency($input: BaseNodeConsistencyInput!) {
+          checkFileConsistency(input: $input)
+        }
+      `,
+      {
+        input: { baseNode: 'Directory' },
+      }
+    );
+    expect(result.checkFileConsistency).toBeFalsy();
+  });
+
+  it('should check consistency in FileVersion basenodes', async () => {
+    const db = app.get(DatabaseService);
+    const id = generate();
+    const testDir = await createDirectory(app);
+
+    const file = await createFile(app, {
+      uploadId: id,
+      parentId: testDir.id,
+      name: 'testFile',
+    });
+    const testResult = await app.graphql.query(
+      gql`
+        query checkFileConsistency($input: BaseNodeConsistencyInput!) {
+          checkFileConsistency(input: $input)
+        }
+      `,
+      {
+        input: { baseNode: 'FileVersion' },
+      }
+    );
+    expect(testResult.checkFileConsistency).toBeTruthy();
+
+    await db
+      .query()
+      .raw(
+        `
+        MATCH
+          (file: File {active: true, id: "${file.id}"}),
+          (file)-[rel: version {active: true}]->(fv: FileVersion {active: true}),
+          (fv)-[relation: mimeType {active: true}]->(mt: Property {active: true})
+        SET
+          mt.active = false
+        RETURN
+          fv, mt, relation
+        `
+      )
+      .run();
+    const result = await app.graphql.query(
+      gql`
+        query checkFileConsistency($input: BaseNodeConsistencyInput!) {
+          checkFileConsistency(input: $input)
+        }
+      `,
+      {
+        input: { baseNode: 'FileVersion' },
+      }
+    );
+    expect(result.checkFileConsistency).toBeFalsy();
   });
 });

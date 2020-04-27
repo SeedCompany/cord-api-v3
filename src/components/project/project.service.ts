@@ -493,7 +493,6 @@ export class ProjectService {
           id: project.id,
           relName: 'location',
           srcNodeLabel: 'Project',
-          desNodeLabel: 'Country',
         });
       })
     );

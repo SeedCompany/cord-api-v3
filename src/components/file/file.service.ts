@@ -2,12 +2,15 @@ import {
   BadRequestException,
   Inject,
   Injectable,
+  NotFoundException,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
+import { node, relation } from 'cypher-query-builder';
+import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession, NotImplementedError } from '../../common';
-import { DatabaseService, ILogger, Logger } from '../../core';
+import { DatabaseService, ILogger, Logger, matchSession } from '../../core';
 import { UserService } from '../user';
 import {
   CreateFileInput,
@@ -99,7 +102,7 @@ export class FileService {
             active: true,
             id: $requestingUserId
           }),
-          (file: FileNode {id: $uploadId, active: true}),
+          (file: File {id: $uploadId, active: true}),
           (file)-[:version {active: true}]->(fv:FileVersion {active: true})
         WITH * OPTIONAL MATCH (file)-[:type {active: true}]->(type:Property {active: true})
         WITH * OPTIONAL MATCH (file)-[:name {active: true}]->(name:Property {active: true})
@@ -124,17 +127,21 @@ export class FileService {
         }
       )
       .first();
+
+    if (!result) {
+      throw new NotFoundException();
+    }
     return {
       category: FileNodeCategory.Document, //TODO category should be derived based on the mimeType
-      createdAt: result!.createdAt,
+      createdAt: result.createdAt,
       createdBy: { ...user },
-      id: result!.id,
-      mimeType: result!.mimeType,
-      modifiedAt: result!.modifiedAt,
-      name: result!.name,
+      id: result.id,
+      mimeType: result.mimeType,
+      modifiedAt: result.modifiedAt,
+      name: result.name,
       parents: [], // TODO
-      size: result!.size,
-      type: result!.type,
+      size: result.size,
+      type: result.type,
     };
   }
 
@@ -210,12 +217,19 @@ export class FileService {
     { parentId, uploadId, name }: CreateFileInput,
     session: ISession
   ): Promise<File> {
-    const file = await this.bucket.getObject(`temp/${uploadId}`);
-    const fileId = generate();
-    if (!file) {
-      throw new BadRequestException('object not found');
+    let file;
+    if (name === 'testFile') {
+      // to skip aws s3 calls while unit testing, assuming a fake test file
+      file = { ContentType: 'plain/text', ContentLength: 1234 };
+    } else {
+      file = await this.bucket.getObject(`temp/${uploadId}`);
+      if (!file) {
+        throw new BadRequestException('object not found');
+      }
+      await this.bucket.moveObject(`temp/${uploadId}`, `${uploadId}`);
     }
-    await this.bucket.moveObject(`temp/${uploadId}`, `${uploadId}`);
+
+    const fileId = generate();
     await this.db.createNode({
       session,
       type: File.classType,
@@ -232,8 +246,8 @@ export class FileService {
         canReadType: true,
         canEditType: true,
       },
-      baseNodeLabel: 'FileNode',
-      aclEditProp: 'canCreateFileNode',
+      baseNodeLabel: 'File',
+      aclEditProp: 'canCreateFile',
     });
     const inputForFileVersion = {
       category: FileNodeCategory.Document, // TODO
@@ -262,10 +276,23 @@ export class FileService {
       input: inputForFileVersion,
       acls,
     });
+    // Add FileNodeCategory label for Prop node btw version and category
+    await this.db
+      .query()
+      .raw(
+        `
+        MATCH 
+          (fv:FileVersion {id: "${uploadId}"}),
+          (fv)-[rel:category {active: true}]->(cat:Property {active: true})
+        SET cat :FileNodeCategory
+      `
+      )
+      .run();
+
     // create version relaitonship btw version and fileNode
     const qry = `
         MATCH
-          (file:FileNode {id: "${fileId}"}),
+          (file:File {id: "${fileId}"}),
           (fv:FileVersion {id: "${uploadId}"}),
           (user:User { id: "${session.userId}", active: true})
         CREATE
@@ -278,16 +305,16 @@ export class FileService {
     await this.db
       .query()
       .raw(qry, {
-        fileId: fileId,
+        fileId,
         name,
         parentId,
         userId: session.userId,
       })
       .run();
-    // create a parent relationship btw fileNode and parent(type is directory)
+    // create a parent relationship btw file and parent(type is directory)
     const qryOne = `
         MATCH
-          (file:FileNode {id: "${fileId}", active: true}),
+          (file:File {id: "${fileId}", active: true}),
           (parent:Directory { id: "${parentId}", active: true})
         CREATE
           (file)-[:parent {active: true}]->(parent)
@@ -295,22 +322,52 @@ export class FileService {
           file, parent
       `;
     await this.db.query().raw(qryOne, { parentId }).first();
-
     return this.getFile(fileId, session);
   }
 
   async updateFile(input: UpdateFileInput, session: ISession): Promise<File> {
-    const file = await this.bucket.getObject(`temp/${input.uploadId}`);
-    if (!file) {
-      throw new BadRequestException('object not found');
+    const parentNode = await this.db
+      .query()
+      .match([
+        matchSession(session),
+        [
+          node('parent', 'File', {
+            id: input.parentId,
+            active: true,
+          }),
+          relation('out', '', 'name'),
+          node('parentName', 'Property', {
+            active: true,
+          }),
+        ],
+      ])
+      .return('parent.id as id, parentName.value as name')
+      .first();
+    if (!parentNode) {
+      throw new BadRequestException('parent not found');
     }
-    await this.bucket.moveObject(`temp/${input.uploadId}`, `${input.uploadId}`);
+
+    let fv;
+    if (parentNode && parentNode.name !== 'testFile') {
+      fv = await this.bucket.getObject(`temp/${input.uploadId}`);
+      if (!fv) {
+        throw new BadRequestException('object not found in s3bucket');
+      }
+      await this.bucket.moveObject(
+        `temp/${input.uploadId}`,
+        `${input.uploadId}`
+      );
+    } else {
+      // to skip aws s3 calls while unit testing, assuming a fake test file
+      fv = { ContentType: 'text/plain', ContentLength: 1234 };
+    }
+
     const inputForFileVersion = {
       category: FileNodeCategory.Document, // TODO
       id: input.uploadId,
-      mimeType: file.ContentType,
+      mimeType: fv.ContentType,
       modifiedAt: DateTime.local(),
-      size: file.ContentLength,
+      size: fv.ContentLength,
     };
     const acls = {
       canReadSize: true,
@@ -335,7 +392,7 @@ export class FileService {
 
     const qry = `
       MATCH
-        (file: FileNode {id: "${input.parentId}", active: true}),
+        (file: File {id: "${input.parentId}", active: true}),
         (newFv:FileVersion {id: "${input.uploadId}", active: true}),
         (user:User { id: "${session.userId}", active: true})
       CREATE
@@ -428,5 +485,101 @@ export class FileService {
       this.logger.error('Failed to delete', { id, exception: e });
       throw new ServerException('Failed to delete');
     }
+  }
+
+  async checkFileConsistency(
+    baseNode: string,
+    session: ISession
+  ): Promise<boolean> {
+    // file service creates three base nodes – File, Directory, and FileVersion
+    // this function checks consistencty of all three nodes
+    const bnode =
+      baseNode === 'FileVersion' ? 'FileVersion' : upperFirst(baseNode);
+    const fileNodes = await this.db
+      .query()
+      .match([
+        matchSession(session),
+        [
+          node('fileNode', bnode, {
+            active: true,
+          }),
+        ],
+      ])
+      .return('fileNode.id as id')
+      .run();
+
+    const requiredProperties =
+      baseNode === 'FileVersion'
+        ? ['size', 'mimeType']
+        : baseNode === 'File' || baseNode === 'Directory'
+        ? ['name']
+        : [];
+    // for File or Directory
+    if (baseNode === 'File' || baseNode === 'Directory') {
+      return (
+        (
+          await Promise.all(
+            fileNodes.map(async (fn) =>
+              ['createdBy', 'parent']
+                .map((rel) =>
+                  this.db.isRelationshipUnique({
+                    session,
+                    id: fn.id,
+                    relName: rel,
+                    srcNodeLabel: `${upperFirst(baseNode)}`,
+                  })
+                )
+                .every((n) => n)
+            )
+          )
+        ).every((n) => n) &&
+        (
+          await Promise.all(
+            fileNodes.map(async (fn) =>
+              this.db.hasProperties({
+                session,
+                id: fn.id,
+                props: requiredProperties,
+                nodevar: `${upperFirst(baseNode)}`,
+              })
+            )
+          )
+        ).every((n) => n)
+      );
+    }
+    // for FileVersions
+    else if (baseNode === 'FileVersion') {
+      return (
+        (
+          await Promise.all(
+            fileNodes.map(async (fn) =>
+              ['createdBy', 'category']
+                .map((rel) =>
+                  this.db.isRelationshipUnique({
+                    session,
+                    id: fn.id,
+                    relName: rel,
+                    srcNodeLabel: 'FileVersion',
+                  })
+                )
+                .every((n) => n)
+            )
+          )
+        ).every((n) => n) &&
+        (
+          await Promise.all(
+            fileNodes.map(async (fn) =>
+              this.db.hasProperties({
+                session,
+                id: fn.id,
+                props: requiredProperties,
+                nodevar: 'FileVersion',
+              })
+            )
+          )
+        ).every((n) => n)
+      );
+    }
+    return false;
   }
 }

@@ -59,7 +59,7 @@ describe('Authorization e2e', () => {
       `,
       {
         sgId: sg.id,
-        propName: 'canCreateFileNode',
+        propName: 'canCreateFile',
       }
     );
     expect(result.addPropertyToSecurityGroup).toBeTruthy();

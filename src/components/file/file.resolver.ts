@@ -8,6 +8,7 @@ import {
 } from '@nestjs/graphql';
 import { IdArg, ISession, Session } from '../../common';
 import {
+  BaseNodeConsistencyInput,
   CreateFileInput,
   File,
   FileOrDirectory,
@@ -115,5 +116,15 @@ export class FileResolver {
     @Session() session: ISession
   ): Promise<File> {
     return this.service.move(input, session);
+  }
+
+  @Query(() => Boolean, {
+    description: 'Check Consistency in File Nodes',
+  })
+  async checkFileConsistency(
+    @Args('input') input: BaseNodeConsistencyInput,
+    @Session() session: ISession
+  ): Promise<boolean> {
+    return this.service.checkFileConsistency(input.baseNode, session);
   }
 }

@@ -2,7 +2,6 @@ import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { CreateFileInput, File } from '../../src/components/file/dto';
 import { TestApp } from './create-app';
-import { fragments } from './fragments';
 
 export async function createFile(
   app: TestApp,
@@ -19,23 +18,17 @@ export async function createFile(
     gql`
       mutation createFile($input: CreateFileInput!) {
         createFile(input: $input) {
-          file {
-            ...file
-          }
+          id
+          name
         }
       }
-      ${fragments.file}
     `,
     {
-      input: {
-        file,
-      },
+      input: file,
     }
   );
 
-  const actual: File = result.createFile.file;
-  expect(actual).toBeTruthy();
-
+  const actual: File = result.createFile;
   expect(actual.name.valueOf()).toBe(file.name);
 
   return actual;
