@@ -12,6 +12,7 @@ import {
   SecuredOrganizationList,
 } from '../organization';
 import {
+  CheckEmailArgs,
   CreateUserInput,
   CreateUserOutput,
   UpdateUserInput,
@@ -54,10 +55,9 @@ export class UserResolver {
   }
 
   @Query(() => Boolean, {
-    description:
-      'Check out whether a provided email exists or not in User Table',
+    description: 'Checks whether a provided email already exists',
   })
-  async checkEmail(@Args('email') email: string): Promise<boolean> {
+  async checkEmail(@Args() { email }: CheckEmailArgs): Promise<boolean> {
     return this.userService.checkEmail(email);
   }
 

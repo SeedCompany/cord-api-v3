@@ -1,8 +1,8 @@
-import { Field, InputType } from 'type-graphql';
+import { ArgsType, Field } from 'type-graphql';
 import { IsEmail } from '../../../common';
 
-@InputType()
-export abstract class UserEmailInput {
+@ArgsType()
+export abstract class CheckEmailArgs {
   @Field()
   @IsEmail()
   readonly email: string;
