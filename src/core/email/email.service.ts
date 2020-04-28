@@ -11,6 +11,7 @@ import { file as tempFile } from 'tempy';
 import { assert } from 'ts-essentials';
 import { ConfigService, ILogger, Logger } from '..';
 import { Many, many, maybeMany, sleep } from '../../common';
+import { MjmlContext, RenderContext } from './templates/mjml';
 import { RenderForText } from './templates/text-rendering';
 
 @Injectable()
@@ -36,10 +37,11 @@ export class EmailService {
     const { send, open } = this.config.email;
 
     const docEl = template(props);
-    const subject = this.getTitleFromMjml(docEl);
-
-    const html = this.renderHtml(docEl);
+    const { html, context } = this.renderHtml(docEl);
     const text = this.renderText(docEl);
+
+    assert(context.title, 'Title must be given');
+    const subject = context.title;
 
     if (send) {
       await this.sesSend(to, subject, html, text);
@@ -84,17 +86,13 @@ export class EmailService {
     }
   }
 
-  private getTitleFromMjml(mjml: ReactElement) {
-    const head = findChildOfType(mjml, 'MjmlHead');
-    const titleEl = findChildOfType(head, 'MjmlTitle');
-    const title = titleEl.props.children;
-    assert(title && typeof title === 'string', 'Title must be given');
-    return title;
-  }
-
   private renderHtml(templateEl: ReactElement) {
-    const { html } = render(templateEl);
-    return html;
+    const context: MjmlContext = {};
+
+    const { html } = render(
+      createElement(RenderContext.Provider, { value: context }, templateEl)
+    );
+    return { html, context };
   }
 
   private renderText(templateEl: ReactElement) {
@@ -134,12 +132,3 @@ export class EmailService {
       .catch();
   }
 }
-
-const findChildOfType = (el: ReactElement, type: string) => {
-  const child = many(el.props.children).find(isType(type));
-  assert(child, `Could not find child of type: ${type}`);
-  return child;
-};
-
-const isType = (type: string) => (el?: ReactElement): el is ReactElement =>
-  !!el && typeof el.type !== 'string' && el.type.name === type;
