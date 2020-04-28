@@ -1,6 +1,6 @@
 import { IsEmail } from 'class-validator';
 import { stripIndent } from 'common-tags';
-import { Field, InputType, ObjectType } from 'type-graphql';
+import { ArgsType, Field, InputType, ObjectType } from 'type-graphql';
 import { User } from '../user';
 
 @ObjectType()
@@ -49,4 +49,11 @@ export abstract class ResetPasswordInput {
 
   @Field()
   readonly password: string;
+}
+
+@ArgsType()
+export abstract class ForgotPasswordArgs {
+  @Field()
+  @IsEmail()
+  readonly email: string;
 }

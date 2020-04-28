@@ -6,6 +6,7 @@ import { ISession, Session } from '../../common';
 import { ConfigService, ILogger, Logger } from '../../core';
 import { UserService } from '../user';
 import {
+  ForgotPasswordArgs,
   LoginInput,
   LoginOutput,
   ResetPasswordInput,
@@ -102,7 +103,9 @@ export class AuthenticationResolver {
   @Mutation(() => Boolean, {
     description: 'Forgot password; send password reset email',
   })
-  async forgotPassword(@Args('email') email: string): Promise<boolean> {
+  async forgotPassword(
+    @Args() { email }: ForgotPasswordArgs
+  ): Promise<boolean> {
     await this.authService.forgotPassword(email);
     return true;
   }
