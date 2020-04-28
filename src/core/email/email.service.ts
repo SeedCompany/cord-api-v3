@@ -128,8 +128,10 @@ export class EmailService {
     await fs.writeFile(temp, html);
     await open(`file://${temp}`);
     // try to wait for chrome to open before deleting temp file
-    await sleep(1_000);
-    await fs.unlink(temp);
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    sleep(10_000)
+      .then(() => fs.unlink(temp))
+      .catch();
   }
 }
 
