@@ -254,7 +254,7 @@ export class AuthenticationService {
       )
       .first();
     await this.email.send(email, ForgotPassword, {
-      url: `${this.config.resetPasswordURL}?token=${token}`,
+      url: this.config.resetPasswordUrl(token),
     });
   }
 

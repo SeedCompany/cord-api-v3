@@ -1,3 +1,7 @@
+import { MjmlTitle } from 'mjml-react';
+import * as React from 'react';
+import { createContext, useContext } from 'react';
+
 // Re-export all mjml components without the stupid prefix
 export {
   MjmlAll as All,
@@ -30,7 +34,18 @@ export {
   MjmlStyle as Style,
   MjmlTable as Table,
   MjmlText as Text,
-  MjmlTitle as Title,
   MjmlWrapper as Wrapper,
   Mjml,
 } from 'mjml-react';
+
+export interface MjmlContext {
+  title?: string;
+}
+
+export const RenderContext = createContext<MjmlContext>({});
+
+export const Title = ({ children }: { children: string }) => {
+  const context = useContext(RenderContext);
+  context.title = children;
+  return <MjmlTitle>{children}</MjmlTitle>;
+};
