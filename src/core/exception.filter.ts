@@ -17,7 +17,8 @@ export class ExceptionFilter implements GqlExceptionFilter {
     } catch (e) {
       throw exception;
     }
-    throw Object.assign(new Error(), ex);
+    const e: Error = Object.assign(new Error(), ex);
+    throw e;
   }
 
   catchGql(ex: unknown, host: GqlArgumentsHost) {
@@ -28,7 +29,21 @@ export class ExceptionFilter implements GqlExceptionFilter {
       return this.httpException(ex, host);
     }
 
-    return ex;
+    // Fallback to generic Error
+    if (ex instanceof Error) {
+      return {
+        message: ex.message,
+        extensions: {
+          code: 'InternalServerError',
+          status: 500,
+        },
+        stack: ex.stack,
+      };
+    }
+    // This shouldn't ever be hit...
+    throw new Error(
+      `Only Errors should be thrown, but ${typeof ex} thrown instead.`
+    );
   }
 
   private httpException(ex: HttpException, _host: GqlArgumentsHost) {
