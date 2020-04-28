@@ -1,6 +1,7 @@
 import { Type } from 'class-transformer';
-import { IsEmail, MinLength, ValidateNested } from 'class-validator';
+import { MinLength, ValidateNested } from 'class-validator';
 import { Field, InputType, ObjectType } from 'type-graphql';
+import { IsEmail } from '../../../common';
 import { User } from './user.dto';
 
 @InputType()
