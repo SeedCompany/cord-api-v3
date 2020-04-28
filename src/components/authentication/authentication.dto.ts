@@ -1,6 +1,6 @@
-import { IsEmail } from 'class-validator';
 import { stripIndent } from 'common-tags';
 import { ArgsType, Field, InputType, ObjectType } from 'type-graphql';
+import { IsEmail } from '../../common';
 import { User } from '../user';
 
 @ObjectType()
