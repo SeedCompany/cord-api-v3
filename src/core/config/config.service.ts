@@ -27,9 +27,12 @@ export class ConfigService {
     };
   }
 
-  resetPasswordURL = this.env
-    .string('RESET_PASSWORD_URL')
-    .optional('https://cordfield.com/login/reset-password/');
+  frontendUrl = this.env
+    .string('FRONTEND_URL')
+    .optional('http://localhost:3001');
+
+  resetPasswordUrl = (token: string) =>
+    `${this.frontendUrl}/reset-password/${token}`;
 
   @Lazy() get neo4j() {
     const driverConfig: Neo4JDriverConfig = {
