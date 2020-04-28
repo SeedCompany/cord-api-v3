@@ -264,4 +264,30 @@ describe('Region e2e', () => {
 
     expect(locations.items.length).toBeGreaterThanOrEqual(2);
   });
+
+  it('Check consistency across region nodes', async () => {
+    // create a region
+    const region = await createRegion(app, {
+      directorId: director.id,
+      zoneId: zone.id,
+    });
+    // test it has proper schema
+    const result = await app.graphql.query(gql`
+      query {
+        checkRegionConsistency
+      }
+    `);
+    expect(result.checkRegionConsistency).toBeTruthy();
+    // delete region node so next test will pass
+    await app.graphql.mutate(
+      gql`
+        mutation deleteLocation($id: ID!) {
+          deleteLocation(id: $id)
+        }
+      `,
+      {
+        id: region.id,
+      }
+    );
+  });
 });

@@ -204,4 +204,27 @@ describe('Country e2e', () => {
 
     expect(locations.items.length).toBeGreaterThanOrEqual(2);
   });
+
+  it('Check consistency across country nodes', async () => {
+    // create a country
+    const country = await createCountry(app, { regionId: region.id });
+    // test it has proper schema
+    const result = await app.graphql.query(gql`
+      query {
+        checkCountryConsistency
+      }
+    `);
+    expect(result.checkCountryConsistency).toBeTruthy();
+    // delete country node so next test will pass
+    await app.graphql.mutate(
+      gql`
+        mutation deleteLocation($id: ID!) {
+          deleteLocation(id: $id)
+        }
+      `,
+      {
+        id: country.id,
+      }
+    );
+  });
 });

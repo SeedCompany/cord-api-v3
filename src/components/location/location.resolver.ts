@@ -124,4 +124,27 @@ export class LocationResolver {
     await this.locationService.delete(id, session);
     return true;
   }
+
+  @Query(() => Boolean, {
+    description: 'Check zone node consistency',
+  })
+  async checkZoneConsistency(@Session() session: ISession): Promise<boolean> {
+    return this.locationService.checkZoneConsistency(session);
+  }
+
+  @Query(() => Boolean, {
+    description: 'Check region node consistency',
+  })
+  async checkRegionConsistency(@Session() session: ISession): Promise<boolean> {
+    return this.locationService.checkRegionConsistency(session);
+  }
+
+  @Query(() => Boolean, {
+    description: 'Check country node consistency',
+  })
+  async checkCountryConsistency(
+    @Session() session: ISession
+  ): Promise<boolean> {
+    return this.locationService.checkCountryConsistency(session);
+  }
 }
