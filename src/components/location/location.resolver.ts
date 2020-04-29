@@ -126,25 +126,12 @@ export class LocationResolver {
   }
 
   @Query(() => Boolean, {
-    description: 'Check zone node consistency',
+    description: 'Check location consistency',
   })
-  async checkZoneConsistency(@Session() session: ISession): Promise<boolean> {
-    return this.locationService.checkZoneConsistency(session);
-  }
-
-  @Query(() => Boolean, {
-    description: 'Check region node consistency',
-  })
-  async checkRegionConsistency(@Session() session: ISession): Promise<boolean> {
-    return this.locationService.checkRegionConsistency(session);
-  }
-
-  @Query(() => Boolean, {
-    description: 'Check country node consistency',
-  })
-  async checkCountryConsistency(
+  async checkLocationConsistency(
+    @Args('nodeLabel') nodeLabel: string,
     @Session() session: ISession
   ): Promise<boolean> {
-    return this.locationService.checkCountryConsistency(session);
+    return this.locationService.checkLocationConsistency(nodeLabel, session);
   }
 }

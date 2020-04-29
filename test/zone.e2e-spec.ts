@@ -184,27 +184,4 @@ describe('Zone e2e', () => {
 
     expect(locations.items.length).toBeGreaterThanOrEqual(2);
   });
-
-  it('Check consistency across zone nodes', async () => {
-    // create a zone
-    const zone = await createZone(app, { directorId: director.id });
-    // test it has proper schema
-    const result = await app.graphql.query(gql`
-      query {
-        checkZoneConsistency
-      }
-    `);
-    expect(result.checkZoneConsistency).toBeTruthy();
-    // delete zone node so next test will pass
-    await app.graphql.mutate(
-      gql`
-        mutation deleteLocation($id: ID!) {
-          deleteLocation(id: $id)
-        }
-      `,
-      {
-        id: zone.id,
-      }
-    );
-  });
 });

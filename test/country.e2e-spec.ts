@@ -209,12 +209,17 @@ describe('Country e2e', () => {
     // create a country
     const country = await createCountry(app, { regionId: region.id });
     // test it has proper schema
-    const result = await app.graphql.query(gql`
-      query {
-        checkCountryConsistency
+    const result = await app.graphql.query(
+      gql`
+        query checkLocationConsistency($nodeLabel: String!) {
+          checkLocationConsistency(nodeLabel: $nodeLabel)
+        }
+      `,
+      {
+        nodeLabel: 'Country',
       }
-    `);
-    expect(result.checkCountryConsistency).toBeTruthy();
+    );
+    expect(result.checkLocationConsistency).toBeTruthy();
     // delete country node so next test will pass
     await app.graphql.mutate(
       gql`

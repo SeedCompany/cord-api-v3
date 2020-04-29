@@ -1013,4 +1013,24 @@ export class LocationService {
       ).every((n) => n)
     );
   }
+
+  async checkLocationConsistency(
+    label: string,
+    session: ISession
+  ): Promise<boolean> {
+    switch (label) {
+      case 'Zone': {
+        return this.checkZoneConsistency(session);
+      }
+      case 'Region': {
+        return this.checkRegionConsistency(session);
+      }
+      case 'Country': {
+        return this.checkCountryConsistency(session);
+      }
+      default: {
+        throw new BadRequestException('Not a location');
+      }
+    }
+  }
 }
