@@ -888,149 +888,57 @@ export class LocationService {
     }
   }
 
-  async checkZoneConsistency(session: ISession): Promise<boolean> {
-    const zones = await this.db
-      .query()
-      .match([
-        matchSession(session),
-        [
-          node('zone', 'Zone', {
-            active: true,
-          }),
-        ],
-      ])
-      .return('zone.id as id')
-      .run();
-
-    return (
-      (
-        await Promise.all(
-          zones.map(async (zone) => {
-            return this.db.isRelationshipUnique({
-              session,
-              id: zone.id,
-              relName: 'director',
-              srcNodeLabel: 'Zone',
-            });
-          })
-        )
-      ).every((n) => n) &&
-      (
-        await Promise.all(
-          zones.map(async (zone) => {
-            return this.db.hasProperties({
-              session,
-              id: zone.id,
-              props: ['name'],
-              nodevar: 'zone',
-            });
-          })
-        )
-      ).every((n) => n)
-    );
-  }
-
-  async checkRegionConsistency(session: ISession): Promise<boolean> {
-    const regions = await this.db
-      .query()
-      .match([
-        matchSession(session),
-        [
-          node('region', 'Region', {
-            active: true,
-          }),
-        ],
-      ])
-      .return('region.id as id')
-      .run();
-
-    return (
-      (
-        await Promise.all(
-          regions.map(async (region) => {
-            return this.db.isRelationshipUnique({
-              session,
-              id: region.id,
-              relName: 'zone',
-              srcNodeLabel: 'Region',
-            });
-          })
-        )
-      ).every((n) => n) &&
-      (
-        await Promise.all(
-          regions.map(async (region) => {
-            return this.db.hasProperties({
-              session,
-              id: region.id,
-              props: ['name'],
-              nodevar: 'region',
-            });
-          })
-        )
-      ).every((n) => n)
-    );
-  }
-
-  async checkCountryConsistency(session: ISession): Promise<boolean> {
-    const countries = await this.db
-      .query()
-      .match([
-        matchSession(session),
-        [
-          node('country', 'Country', {
-            active: true,
-          }),
-        ],
-      ])
-      .return('country.id as id')
-      .run();
-
-    return (
-      (
-        await Promise.all(
-          countries.map(async (country) => {
-            return this.db.isRelationshipUnique({
-              session,
-              id: country.id,
-              relName: 'region',
-              srcNodeLabel: 'Country',
-            });
-          })
-        )
-      ).every((n) => n) &&
-      (
-        await Promise.all(
-          countries.map(async (country) => {
-            return this.db.hasProperties({
-              session,
-              id: country.id,
-              props: ['name'],
-              nodevar: 'country',
-            });
-          })
-        )
-      ).every((n) => n)
-    );
-  }
-
   async checkLocationConsistency(
-    label: string,
+    nodeLabel: string,
     session: ISession
   ): Promise<boolean> {
-    switch (label) {
-      case 'Zone': {
-        return this.checkZoneConsistency(session);
-      }
-      case 'Region': {
-        return this.checkRegionConsistency(session);
-      }
-      case 'Country': {
-        return this.checkCountryConsistency(session);
-      }
-      default: {
-        throw new BadRequestException('Not a location');
-      }
-    }
+    const locations = await this.db
+      .query()
+      .match([
+        matchSession(session),
+        [
+          node('location', nodeLabel, {
+            active: true,
+          }),
+        ],
+      ])
+      .return('location.id as id')
+      .run();
+
+    //this.logger.info('location', { locations });
+    const relNode = nodeLabel.includes('Country')
+      ? 'region'
+      : nodeLabel.includes('Country')
+      ? 'zone'
+      : nodeLabel.includes('Country')
+      ? 'director'
+      : '';
+
+    return (
+      (
+        await Promise.all(
+          locations.map(async (loc) => {
+            return this.db.isRelationshipUnique({
+              session,
+              id: loc.id,
+              relName: relNode,
+              srcNodeLabel: nodeLabel,
+            });
+          })
+        )
+      ).every((n) => n) &&
+      (
+        await Promise.all(
+          locations.map(async (loc) => {
+            return this.db.hasProperties({
+              session,
+              id: loc.id,
+              props: ['name'],
+              nodevar: nodeLabel,
+            });
+          })
+        )
+      ).every((n) => n)
+    );
   }
 }
