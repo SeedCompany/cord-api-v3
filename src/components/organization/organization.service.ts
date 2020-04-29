@@ -54,6 +54,24 @@ export class OrganizationService {
     input: CreateOrganization,
     session: ISession
   ): Promise<Organization> {
+    const checkOrg = await this.db
+      .query()
+      .raw(
+        `
+        MATCH(org:OrgName {value: $name}) return org
+        `,
+        {
+          name: input.name,
+        }
+      )
+      .first();
+
+    if (checkOrg) {
+      throw new BadRequestException(
+        'Organization with that name already exists.',
+        'Duplicate'
+      );
+    }
     const id = generate();
     const acls = {
       canReadOrg: true,
@@ -62,25 +80,6 @@ export class OrganizationService {
       canReadName: true,
     };
     try {
-      const checkOrg = await this.db
-        .query()
-        .raw(
-          `
-          MATCH(org:OrgName {value: $name}) return org
-          `,
-          {
-            name: input.name,
-          }
-        )
-        .first();
-
-      if (checkOrg) {
-        throw new BadRequestException(
-          'Organization with that name already exists.',
-          'Duplicate'
-        );
-      }
-
       await this.db.createNode({
         session,
         type: Organization.classType,
