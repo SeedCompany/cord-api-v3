@@ -61,6 +61,23 @@ export class OrganizationService {
       canReadName: true,
     };
     try {
+      const checkOrg = await this.db
+        .query()
+        .raw(
+          `
+          MATCH(org:OrgName {value: $name}) return org
+          `, {
+            name: input.name
+          }
+        )
+        .first()
+
+      if ( checkOrg ) {
+        throw new NotFoundException(
+          'Organization name should be unique globally.'
+        );
+      }
+
       await this.db.createNode({
         session,
         type: Organization.classType,
