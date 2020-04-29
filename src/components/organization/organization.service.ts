@@ -66,13 +66,14 @@ export class OrganizationService {
         .raw(
           `
           MATCH(org:OrgName {value: $name}) return org
-          `, {
-            name: input.name
+          `,
+          {
+            name: input.name,
           }
         )
-        .first()
+        .first();
 
-      if ( checkOrg ) {
+      if (checkOrg) {
         throw new NotFoundException(
           'Organization name should be unique globally.'
         );
