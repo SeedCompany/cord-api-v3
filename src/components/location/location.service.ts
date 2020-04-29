@@ -1015,21 +1015,11 @@ export class LocationService {
   }
 
   async checkLocationConsistency(session: ISession): Promise<boolean> {
-    const locations: string[] = ['Country', 'Region', 'Zone'];
-    // return (
-    //   (
-    //   await Promise.all(
-    //     locations.map(async (location) => {
-    //       return this.checkCountryConsistency(session)
-    //     })
-    //   ).every((n) => n);
-    // );
-
-    // return (
-    //   this.checkCountryConsistency(session) &&
-    //   this.checkRegionConsistency(session) &&
-    //   this.checkZoneConsistency(session)
-    // );
+    return (
+      (await this.checkCountryConsistency(session)) &&
+      (await this.checkRegionConsistency(session)) &&
+      (await this.checkZoneConsistency(session))
+    );
 
     return true;
   }
