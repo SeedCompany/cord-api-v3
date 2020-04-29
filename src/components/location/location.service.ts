@@ -5,11 +5,18 @@ import {
   NotFoundException,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
+import { node } from 'cypher-query-builder';
 import { first, intersection } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
-import { DatabaseService, ILogger, Logger, OnIndex } from '../../core';
+import {
+  DatabaseService,
+  ILogger,
+  Logger,
+  matchSession,
+  OnIndex,
+} from '../../core';
 import { RedactedUser, User, UserService } from '../user';
 import {
   Country,
@@ -879,5 +886,141 @@ export class LocationService {
       this.logger.error('Could not delete location', { exception: e });
       throw new ServerException('Could not delete location');
     }
+  }
+
+  async checkZoneConsistency(session: ISession): Promise<boolean> {
+    const zones = await this.db
+      .query()
+      .match([
+        matchSession(session),
+        [
+          node('zone', 'Zone', {
+            active: true,
+          }),
+        ],
+      ])
+      .return('zone.id as id')
+      .run();
+
+    return (
+      (
+        await Promise.all(
+          zones.map(async (zone) => {
+            return this.db.isRelationshipUnique({
+              session,
+              id: zone.id,
+              relName: 'director',
+              srcNodeLabel: 'Zone',
+            });
+          })
+        )
+      ).every((n) => n) &&
+      (
+        await Promise.all(
+          zones.map(async (zone) => {
+            return this.db.hasProperties({
+              session,
+              id: zone.id,
+              props: ['name'],
+              nodevar: 'zone',
+            });
+          })
+        )
+      ).every((n) => n)
+    );
+  }
+
+  async checkRegionConsistency(session: ISession): Promise<boolean> {
+    const regions = await this.db
+      .query()
+      .match([
+        matchSession(session),
+        [
+          node('region', 'Region', {
+            active: true,
+          }),
+        ],
+      ])
+      .return('region.id as id')
+      .run();
+
+    return (
+      (
+        await Promise.all(
+          regions.map(async (region) => {
+            return this.db.isRelationshipUnique({
+              session,
+              id: region.id,
+              relName: 'zone',
+              srcNodeLabel: 'Region',
+            });
+          })
+        )
+      ).every((n) => n) &&
+      (
+        await Promise.all(
+          regions.map(async (region) => {
+            return this.db.hasProperties({
+              session,
+              id: region.id,
+              props: ['name'],
+              nodevar: 'region',
+            });
+          })
+        )
+      ).every((n) => n)
+    );
+  }
+
+  async checkCountryConsistency(session: ISession): Promise<boolean> {
+    const countries = await this.db
+      .query()
+      .match([
+        matchSession(session),
+        [
+          node('country', 'Country', {
+            active: true,
+          }),
+        ],
+      ])
+      .return('country.id as id')
+      .run();
+
+    return (
+      (
+        await Promise.all(
+          countries.map(async (country) => {
+            return this.db.isRelationshipUnique({
+              session,
+              id: country.id,
+              relName: 'region',
+              srcNodeLabel: 'Country',
+            });
+          })
+        )
+      ).every((n) => n) &&
+      (
+        await Promise.all(
+          countries.map(async (country) => {
+            return this.db.hasProperties({
+              session,
+              id: country.id,
+              props: ['name'],
+              nodevar: 'country',
+            });
+          })
+        )
+      ).every((n) => n)
+    );
+  }
+
+  async checkLocationConsistency(session: ISession): Promise<boolean> {
+    return (
+      (await this.checkCountryConsistency(session)) &&
+      (await this.checkRegionConsistency(session)) &&
+      (await this.checkZoneConsistency(session))
+    );
+
+    return true;
   }
 }

@@ -124,4 +124,13 @@ export class LocationResolver {
     await this.locationService.delete(id, session);
     return true;
   }
+
+  @Query(() => Boolean, {
+    description: 'Check location consistency',
+  })
+  async checkLocationConsistency(
+    @Session() session: ISession
+  ): Promise<boolean> {
+    return this.locationService.checkLocationConsistency(session);
+  }
 }
