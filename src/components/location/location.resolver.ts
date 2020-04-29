@@ -129,9 +129,8 @@ export class LocationResolver {
     description: 'Check location consistency',
   })
   async checkLocationConsistency(
-    @Args('nodeLabel') nodeLabel: string,
     @Session() session: ISession
   ): Promise<boolean> {
-    return this.locationService.checkLocationConsistency(nodeLabel, session);
+    return this.locationService.checkLocationConsistency(session);
   }
 }
