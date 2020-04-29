@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -74,8 +75,9 @@ export class OrganizationService {
         .first();
 
       if (checkOrg) {
-        throw new NotFoundException(
-          'Organization name should be unique globally.'
+        throw new BadRequestException(
+          'Organization with that name already exists.',
+          'Duplicate'
         );
       }
 
