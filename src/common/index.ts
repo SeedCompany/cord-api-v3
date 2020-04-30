@@ -7,7 +7,6 @@ export * from './firstLettersOfWords';
 export * from './fiscal-year';
 export * from './id.arg';
 export { DateField, DateTimeField } from './luxon.graphql';
-export * from './not-implemented.error';
 export * from './order.enum';
 export * from './pagination.input';
 export * from './pagination-list';
