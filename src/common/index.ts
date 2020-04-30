@@ -2,6 +2,7 @@ export * from './context.type';
 export * from './calendar-date';
 export * from './date-filter.input';
 export * from './editable.interface';
+export * from './exceptions';
 export * from './firstLettersOfWords';
 export * from './fiscal-year';
 export * from './id.arg';

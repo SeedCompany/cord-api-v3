@@ -1,12 +1,6 @@
-import {
-  ArgumentsHost,
-  Catch,
-  HttpException,
-  ValidationError,
-} from '@nestjs/common';
+import { ArgumentsHost, Catch, HttpException } from '@nestjs/common';
 import { GqlArgumentsHost, GqlExceptionFilter } from '@nestjs/graphql';
-import { isEmpty } from 'lodash';
-import { ValidationException } from './validation.pipe';
+import { Exception, simpleSwitch } from '../common';
 
 @Catch()
 export class ExceptionFilter implements GqlExceptionFilter {
@@ -36,11 +30,15 @@ export class ExceptionFilter implements GqlExceptionFilter {
   }
 
   private gatherExtraInfo(ex: Error): Record<string, any> {
-    if (ex instanceof ValidationException) {
-      return this.validationException(ex);
-    }
     if (ex instanceof HttpException) {
       return this.httpException(ex);
+    }
+    if (ex instanceof Exception) {
+      const { name, message, stack, previous, ...rest } = ex;
+      return {
+        code: name.replace(/(Exception|Error)$/, ''),
+        ...rest,
+      };
     }
 
     // Fallback to generic Error
@@ -57,41 +55,21 @@ export class ExceptionFilter implements GqlExceptionFilter {
         ? { message: res }
         : (res as { message: string; error?: string });
 
-    const code = error
+    let code = error
       ? error.replace(/\s/g, '')
       : ex.constructor.name.replace(/(Exception|Error)$/, '');
+    code =
+      simpleSwitch(code, {
+        InternalServerError: 'Server',
+        BadRequest: 'Input',
+        Forbidden: 'Unauthorized',
+        Unauthorized: 'Unauthenticated',
+      }) ?? code;
 
     return {
       code,
       status: ex.getStatus(),
       ...data,
     };
-  }
-
-  private validationException(ex: ValidationException) {
-    return {
-      message: 'Input validation failed',
-      code: 'Validation',
-      status: 400,
-      errors: this.flattenValidationErrors(ex.errors),
-    };
-  }
-
-  private flattenValidationErrors(
-    e: ValidationError[],
-    out: Record<string, any> = {},
-    prefixes: string[] = []
-  ) {
-    return e.reduce((obj, error) => {
-      const { target: _, value: __, property, children, constraints } = error;
-      const path = [...prefixes, property];
-      if (!isEmpty(constraints)) {
-        obj[path.join('.')] = constraints;
-      }
-      if (!isEmpty(children)) {
-        this.flattenValidationErrors(children, obj, path);
-      }
-      return obj;
-    }, out);
   }
 }
