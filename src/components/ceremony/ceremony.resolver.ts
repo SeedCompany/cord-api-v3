@@ -54,4 +54,13 @@ export class CeremonyResolver {
 
   // Ceremonies are deleted automatically via engagements
   // async deleteCeremony() {}
+
+  @Query(() => Boolean, {
+    description: 'Check Consistency in Ceremony Nodes',
+  })
+  async checkCeremonyConsistency(
+    @Session() session: ISession
+  ): Promise<boolean> {
+    return this.service.checkCeremonyConsistency(session);
+  }
 }

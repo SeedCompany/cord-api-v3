@@ -1,7 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { node } from 'cypher-query-builder';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
-import { DatabaseService, ILogger, Logger } from '../../core';
+import { DatabaseService, ILogger, Logger, matchSession } from '../../core';
 import {
   Ceremony,
   CeremonyListInput,
@@ -140,5 +141,33 @@ export class CeremonyService {
       });
       throw e;
     }
+  }
+
+  async checkCeremonyConsistency(session: ISession): Promise<boolean> {
+    const ceremonies = await this.db
+      .query()
+      .match([
+        matchSession(session),
+        [
+          node('ceremony', 'Ceremony', {
+            active: true,
+          }),
+        ],
+      ])
+      .return('ceremony.id as id')
+      .run();
+
+    return (
+      await Promise.all(
+        ceremonies.map(async (ceremony) => {
+          return this.db.hasProperties({
+            session,
+            id: ceremony.id,
+            props: ['type'],
+            nodevar: 'ceremony',
+          });
+        })
+      )
+    ).every((n) => n);
   }
 }
