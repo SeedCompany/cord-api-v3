@@ -74,7 +74,6 @@ describe('LocationService', () => {
         UserService,
         OrganizationService,
         UnavailabilityService,
-        DatabaseService,
         EducationService,
         LocationService,
         {
@@ -86,10 +85,6 @@ describe('LocationService', () => {
 
     locationService = module.get<LocationService>(LocationService);
   });
-
-  // it('should be defined', () => {
-  //   expect(locationService).toBeDefined();
-  // });
 
   it('should create country node', async () => {
     // eslint-disable-next-line @typescript-eslint/unbound-method
