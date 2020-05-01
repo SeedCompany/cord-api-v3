@@ -284,4 +284,24 @@ describe('Engagement e2e', () => {
       )
     );
   });
+
+  it('should have consistency in ceremony basenode', async () => {
+    // testing with LanguageEngagements since internengagemetns are not ready yet.
+    project = await createProject(app);
+    language = await createLanguage(app);
+    const languageEngagement = await createLanguageEngagement(app, {
+      languageId: language.id,
+      projectId: project.id,
+    });
+
+    expect(languageEngagement.id).toBeDefined();
+    const testResult = await app.graphql.query(
+      gql`
+        query checkCeremonyConsistency {
+          checkCeremonyConsistency
+        }
+      `
+    );
+    expect(testResult.checkCeremonyConsistency).toBeTruthy();
+  });
 });

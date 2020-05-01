@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { first, intersection } from 'lodash';
 import { generate } from 'shortid';
-import { ISession } from '../../common';
+import { CalendarDate, ISession } from '../../common';
 import { DatabaseService, ILogger, Logger } from '../../core';
 import { CeremonyService } from '../ceremony';
 import { CeremonyType } from '../ceremony/dto/type.enum';
@@ -546,7 +546,12 @@ export class EngagementService {
       };
 
       const ceremony = await this.ceremonyService.create(
-        { type: CeremonyType.Dedication },
+        {
+          type: CeremonyType.Dedication,
+          planned: true, // yet to know how to derive this value
+          estimatedDate: CalendarDate.local(), // yet to know how to derive this value
+          actualDate: CalendarDate.local(), // yet to know how to derive this value
+        },
         session
       );
 
