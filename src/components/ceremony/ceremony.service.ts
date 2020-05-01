@@ -163,7 +163,7 @@ export class CeremonyService {
           return this.db.hasProperties({
             session,
             id: ceremony.id,
-            props: ['planned', 'actualDate', 'estimatedDate'],
+            props: ['type'],
             nodevar: 'ceremony',
           });
         })
