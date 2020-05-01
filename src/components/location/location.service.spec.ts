@@ -111,7 +111,7 @@ describe('LocationService', () => {
       {
         zoneId,
         name: 'seed-location',
-        directorId: directorId,
+        directorId,
       },
       mockSession
     );
@@ -204,12 +204,6 @@ describe('LocationService', () => {
     expect(zone.name).toEqual(createTestLocation.name);
   });
 
-  const listOutput: Partial<LocationListOutput> = {
-    hasMore: false,
-    items: [],
-    total: 0,
-  };
-
   it('should delete country node', async () => {
     // eslint-disable-next-line @typescript-eslint/unbound-method
     locationService.readOneCountry = jest
@@ -235,9 +229,9 @@ describe('LocationService', () => {
       .mockReturnValue(createTestLocation);
     const region = await locationService.createRegion(
       {
-        zoneId: zoneId,
+        zoneId,
         name: 'seed-location',
-        directorId: directorId,
+        directorId,
       },
       mockSession
     );
@@ -253,7 +247,7 @@ describe('LocationService', () => {
     const zone = await locationService.createZone(
       {
         name: 'seed-location',
-        directorId: '12345',
+        directorId,
       },
       mockSession
     );
@@ -262,6 +256,12 @@ describe('LocationService', () => {
     expect(zone.id).toEqual(createTestLocation.id);
     expect(zone.name).toEqual(createTestLocation.name);
   });
+
+  const listOutput: Partial<LocationListOutput> = {
+    hasMore: false,
+    items: [],
+    total: 0,
+  };
 
   it('should list location', async () => {
     // eslint-disable-next-line @typescript-eslint/unbound-method
