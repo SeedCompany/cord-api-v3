@@ -3,6 +3,7 @@ import {
   NotFoundException,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
+import { node } from 'cypher-query-builder';
 import { first, intersection } from 'lodash';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
@@ -858,5 +859,69 @@ export class EngagementService {
 
       throw new ServerException('Failed to delete partnership');
     }
+  }
+
+  async checkEngagementConsistenct(
+    baseNode: string,
+    session: ISession
+  ): Promise<boolean> {
+    // engagement has InternshipEngagemnet and LanguageEngagement
+    // Internship
+    //   -- singletons are countryOfOrigin, mentor, methodology, EngagementStatus, position,
+    // Internship& Language ownProperties – completeDate, disbursementCompleteDate, communicationsCompleteDate
+    // startDate, endDate, initialEndDate, lastSuspendedAt, lastReactivatedAt, statusModifiedAt, modifiedAt
+    if (baseNode !== 'InternshipEngagement') {
+      return this.isInternshipConsistent(baseNode, session);
+    }
+    return false;
+  }
+
+  async isInternshipConsistent(
+    baseNode: string,
+    session: ISession
+  ): Promise<boolean> {
+    if (baseNode !== 'InternshipEngagement') {
+      return Promise.resolve(false);
+    }
+    const nodes = await this.db
+      .query()
+      .match([
+        node('eng', 'InternshipEngagement', {
+          active: true,
+        }),
+      ])
+      .return('eng.id as id')
+      .run();
+    const requiredProperties = [''];
+    return (
+      (
+        await Promise.all(
+          nodes.map(async (ie) =>
+            []
+              .map((rel) =>
+                this.db.isRelationshipUnique({
+                  session,
+                  id: ie.id,
+                  relName: rel,
+                  srcNodeLabel: 'InternshipEngagement',
+                })
+              )
+              .every((n) => n)
+          )
+        )
+      ).every((n) => n) &&
+      (
+        await Promise.all(
+          nodes.map(async (ie) =>
+            this.db.hasProperties({
+              session,
+              id: ie.id,
+              props: requiredProperties,
+              nodevar: 'InternshipEngagement',
+            })
+          )
+        )
+      ).every((n) => n)
+    );
   }
 }
