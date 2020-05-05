@@ -870,28 +870,67 @@ export class EngagementService {
     //   -- singletons are countryOfOrigin, mentor, methodology, EngagementStatus, position,
     // Internship& Language ownProperties – completeDate, disbursementCompleteDate, communicationsCompleteDate
     // startDate, endDate, initialEndDate, lastSuspendedAt, lastReactivatedAt, statusModifiedAt, modifiedAt
-    if (baseNode !== 'InternshipEngagement') {
-      return this.isInternshipConsistent(baseNode, session);
-    }
-    return false;
-  }
-
-  async isInternshipConsistent(
-    baseNode: string,
-    session: ISession
-  ): Promise<boolean> {
-    if (baseNode !== 'InternshipEngagement') {
-      return Promise.resolve(false);
-    }
     const nodes = await this.db
       .query()
       .match([
-        node('eng', 'InternshipEngagement', {
+        node('eng', baseNode, {
           active: true,
         }),
       ])
       .return('eng.id as id')
       .run();
+    if (baseNode === 'InternshipEngagement') {
+      return this.isInternshipEngagementConsistent(nodes, baseNode, session);
+    }
+    if (baseNode === 'LanguageEngagement') {
+      return this.isLanguageEngagementConsistent(nodes, baseNode, session);
+    }
+    return false;
+  }
+
+  async isLanguageEngagementConsistent(
+    nodes: Record<string, any>,
+    baseNode: string,
+    session: ISession
+  ): Promise<boolean> {
+    const requiredProperties = [''];
+    return (
+      (
+        await Promise.all(
+          nodes.map(async (ie) =>
+            []
+              .map((rel) =>
+                this.db.isRelationshipUnique({
+                  session,
+                  id: ie.id,
+                  relName: rel,
+                  srcNodeLabel: 'LanguageEngagement',
+                })
+              )
+              .every((n) => n)
+          )
+        )
+      ).every((n) => n) &&
+      (
+        await Promise.all(
+          nodes.map(async (ie) =>
+            this.db.hasProperties({
+              session,
+              id: ie.id,
+              props: requiredProperties,
+              nodevar: 'LanguageEngagement',
+            })
+          )
+        )
+      ).every((n) => n)
+    );
+  }
+
+  async isInternshipEngagementConsistent(
+    nodes: Record<string, any>,
+    baseNode: string,
+    session: ISession
+  ): Promise<boolean> {
     const requiredProperties = [''];
     return (
       (
