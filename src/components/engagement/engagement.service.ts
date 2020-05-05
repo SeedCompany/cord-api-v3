@@ -861,15 +861,10 @@ export class EngagementService {
     }
   }
 
-  async checkEngagementConsistenct(
+  async checkEngagementConsistency(
     baseNode: string,
     session: ISession
   ): Promise<boolean> {
-    // engagement has InternshipEngagemnet and LanguageEngagement
-    // Internship
-    //   -- singletons are countryOfOrigin, mentor, methodology, EngagementStatus, position,
-    // Internship& Language ownProperties – completeDate, disbursementCompleteDate, communicationsCompleteDate
-    // startDate, endDate, initialEndDate, lastSuspendedAt, lastReactivatedAt, statusModifiedAt, modifiedAt
     const nodes = await this.db
       .query()
       .match([
@@ -893,12 +888,12 @@ export class EngagementService {
     baseNode: string,
     session: ISession
   ): Promise<boolean> {
-    const requiredProperties = [''];
+    const requiredProperties = ['startDate', 'initialEndDate']; // add more after discussing
     return (
       (
         await Promise.all(
-          nodes.map(async (ie) =>
-            []
+          nodes.map(async (ie: { id: any }) =>
+            ['language', 'status'] // singletons
               .map((rel) =>
                 this.db.isRelationshipUnique({
                   session,
@@ -913,7 +908,7 @@ export class EngagementService {
       ).every((n) => n) &&
       (
         await Promise.all(
-          nodes.map(async (ie) =>
+          nodes.map(async (ie: { id: any }) =>
             this.db.hasProperties({
               session,
               id: ie.id,
@@ -931,12 +926,12 @@ export class EngagementService {
     baseNode: string,
     session: ISession
   ): Promise<boolean> {
-    const requiredProperties = [''];
+    const requiredProperties = ['startDate', 'initialEndDate'];
     return (
       (
         await Promise.all(
-          nodes.map(async (ie) =>
-            []
+          nodes.map(async (ie: { id: any }) =>
+            ['methodology', 'countryOfOrigin', 'mentor', 'status']
               .map((rel) =>
                 this.db.isRelationshipUnique({
                   session,
@@ -951,7 +946,7 @@ export class EngagementService {
       ).every((n) => n) &&
       (
         await Promise.all(
-          nodes.map(async (ie) =>
+          nodes.map(async (ie: { id: any }) =>
             this.db.hasProperties({
               session,
               id: ie.id,
