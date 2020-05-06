@@ -178,30 +178,30 @@ describe('Project e2e', () => {
 
   it.skip('returns false when consistency check shows multiple location nodes connected', async () => {
     const zone = await createZone(app);
-    console.log('trace b');
+
     const region = await createRegion(app, {
       name: 'asia' + generate(),
       zoneId: zone.id,
       directorId: zone.director.value?.id,
     });
-    console.log('trace 0');
+
     const country = await createCountry(app, {
       name: 'India' + generate(),
       regionId: region.id,
     });
-    console.log('trace 1');
+
     const country2 = await createCountry(app, {
       name: 'India 2' + generate(),
       regionId: region.id,
     });
-    console.log('trace 2');
+
     const project = await createProject(app, {
       locationId: country.id,
       mouStart: DateTime.local(),
       mouEnd: DateTime.local(),
       estimatedSubmission: CalendarDate.fromSeconds(1),
     });
-    console.log('trace 3');
+
     const result = await app.graphql.query(
       gql`
         query {

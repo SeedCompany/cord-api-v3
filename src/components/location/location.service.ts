@@ -310,28 +310,16 @@ export class LocationService {
         acls,
       });
 
-      //set Property Label
-      const queryLabel = `
-        MATCH
-          (zone:Zone {id: $id, active: true})-[:name]->(nameProp:Property)
-        SET nameProp :LocationName
-      `;
-      await this.db
-        .query()
-        .raw(queryLabel, {
-          id,
-        })
-        .run();
-
-      // connect director User to zone
+      // set Property Label and connect director User to zone
       const query = `
       MATCH (director:User {id: $directorId, active: true}),
-        (zone:Zone {id: $id, active: true})
+        (zone:Zone {id: $id, active: true})-[:name]->(nameProp:Property)
+      SET nameProp :LocationName
       CREATE (director)<-[:director {active: true, createdAt: datetime()}]-(zone)
       RETURN  zone.id as id
       `;
 
-      await this.db
+      const _addDirector = await this.db
         .query()
         .raw(query, {
           userId: session.userId,
@@ -339,10 +327,14 @@ export class LocationService {
           id,
         })
         .first();
+      // console.log('addDirector ', JSON.stringify(addDirector, null, 2));
 
       const result = await this.readOneZone(id, session);
       return result;
     } catch (e) {
+      // console.log('input ', JSON.stringify(input, null, 2));
+      // console.log('directorId ', directorId);
+      // console.log('session ', JSON.stringify(session, null, 2));
       this.logger.error(`Could not create`, { ...input, exception: e });
       throw new ServerException('Could not create zone');
     }
