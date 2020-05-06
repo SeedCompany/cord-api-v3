@@ -86,3 +86,11 @@ export abstract class CreateInternshipEngagementOutput {
   @Field()
   readonly engagement: InternshipEngagement;
 }
+
+@InputType()
+export abstract class EngagementConsistencyInput {
+  @Field({
+    description: 'engagement type',
+  })
+  readonly baseNode: string;
+}
