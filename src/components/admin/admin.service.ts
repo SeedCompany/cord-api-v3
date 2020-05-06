@@ -2,7 +2,9 @@ import {
   Injectable,
   OnApplicationBootstrap,
   InternalServerErrorException as ServerException,
+  UnauthorizedException,
 } from '@nestjs/common';
+import * as argon2 from 'argon2';
 import { node, relation } from 'cypher-query-builder';
 import { ConfigService, DatabaseService } from '../../core';
 import { UserService } from '../user';
@@ -78,20 +80,43 @@ export class AdminService implements OnApplicationBootstrap {
 
   async createRootAdminUser(): Promise<void> {
     const { email, password } = this.config.rootAdmin;
-    const adminUser = await this.userService.create({
-      email: email,
-      password: password,
-      displayFirstName: 'root',
-      displayLastName: 'root',
-      realFirstName: 'root',
-      realLastName: 'root',
-      phone: 'root',
-      timezone: 'root',
-      bio: 'root',
-    });
 
-    if (!adminUser) {
-      throw new ServerException('Could not create root admin user');
+    // see if root already exists
+    const findRoot = await this.db
+      .query()
+      .match([
+        node('email', 'EmailAddress', { active: true, value: email }),
+        relation('in', '', 'email', { active: true }),
+        node('root', 'User', { active: true }),
+        relation('out', '', 'password', { active: true }),
+        node('pw', 'Propety'),
+      ])
+      .return('pw.value as pash')
+      .first();
+
+    if (findRoot === undefined) {
+      // not found, create
+      const adminUser = await this.userService.create({
+        email: email,
+        password: password,
+        displayFirstName: 'root',
+        displayLastName: 'root',
+        realFirstName: 'root',
+        realLastName: 'root',
+        phone: 'root',
+        timezone: 'root',
+        bio: 'root',
+      });
+
+      if (!adminUser) {
+        throw new ServerException('Could not create root admin user');
+      }
+    } else if (await argon2.verify(findRoot.pash, password)) {
+      // password match - do nothing
+    } else {
+      // password did not match
+
+      throw new UnauthorizedException('Root Email or Password are incorrect');
     }
   }
 
