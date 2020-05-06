@@ -888,12 +888,12 @@ export class EngagementService {
     baseNode: string,
     session: ISession
   ): Promise<boolean> {
-    const requiredProperties = ['startDate', 'initialEndDate']; // add more after discussing
+    const requiredProperties: never[] = []; // add more after discussing
     return (
       (
         await Promise.all(
           nodes.map(async (ie: { id: any }) =>
-            ['language', 'status'] // singletons
+            ['language'] // singletons
               .map((rel) =>
                 this.db.isRelationshipUnique({
                   session,

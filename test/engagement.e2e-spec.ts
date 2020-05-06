@@ -304,4 +304,43 @@ describe('Engagement e2e', () => {
     );
     expect(testResult.checkCeremonyConsistency).toBeTruthy();
   });
+
+  it('should have consistency in language engagement nodes', async () => {
+    language = await createLanguage(app);
+    await createLanguageEngagement(app, {
+      languageId: language.id,
+      projectId: project.id,
+    });
+    const result = await app.graphql.query(
+      gql`
+        query checkEngagementConsistency($input: EngagementConsistencyInput!) {
+          checkEngagementConsistency(input: $input)
+        }
+      `,
+      {
+        input: { baseNode: 'LanguageEngagement' },
+      }
+    );
+    expect(result.checkEngagementConsistency).toBeTruthy();
+  });
+
+  it.skip('should have consistency in internship engagement nodes', async () => {
+    await createInternshipEngagement(app, {
+      projectId: project.id,
+      countryOfOriginId: country.id,
+      internId: intern.id,
+      mentorId: mentor.id,
+    });
+    const result = await app.graphql.query(
+      gql`
+        query checkEngagementConsistency($input: EngagementConsistencyInput!) {
+          checkEngagementConsistency(input: $input)
+        }
+      `,
+      {
+        input: { baseNode: 'InternshipEngagement' },
+      }
+    );
+    expect(result.checkEngagementConsistency).toBeTruthy();
+  });
 });

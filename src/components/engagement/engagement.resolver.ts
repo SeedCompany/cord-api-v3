@@ -117,7 +117,7 @@ export class EngagementResolver {
   @Query(() => Boolean, {
     description: 'Check Consistency in Engagement Nodes',
   })
-  async checkFileConsistency(
+  async checkEngagementConsistency(
     @Args('input') input: EngagementConsistencyInput,
     @Session() session: ISession
   ): Promise<boolean> {
