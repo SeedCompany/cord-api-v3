@@ -18,6 +18,7 @@ import {
 } from './utility';
 
 describe('Authorization e2e', () => {
+  jest.setTimeout(300000);
   let app: TestApp;
   let org: Organization;
   let sg: CreateSecurityGroupOutput;

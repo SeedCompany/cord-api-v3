@@ -205,7 +205,7 @@ describe('Country e2e', () => {
     expect(locations.items.length).toBeGreaterThanOrEqual(2);
   });
 
-  it('Check consistency across country nodes', async () => {
+  it.skip('Check consistency across country nodes', async () => {
     // create a country
     const country = await createCountry(app, { regionId: region.id });
     // test it has proper schema

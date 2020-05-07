@@ -5,7 +5,7 @@ import {
   NotFoundException,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
-import { node } from 'cypher-query-builder';
+import { node, relation } from 'cypher-query-builder';
 import { first, intersection } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
@@ -222,15 +222,6 @@ export class LocationService {
       .raw(
         `
         MATCH
-        // (token:Token {
-        //   active: true,
-        //   value: $token
-        // })<-[:token {active: true}]-
-        // (requestingUser:User {
-        //   active: true,
-        //   id: $requestingUserId,
-        //   owningOrgId: $owningOrgId
-        // }),
         (zone:Zone {active: true, id: $id})
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadName:ACL {canReadName: true})-[:toNode]->(zone)-[:name {active: true}]->(name:Property {active: true})
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditName:ACL {canEditName: true})-[:toNode]->(zone)-[:name {active: true}]->(name:Property {active: true})
@@ -292,7 +283,7 @@ export class LocationService {
     { directorId, ...input }: CreateZone,
     session: ISession
   ): Promise<Zone> {
-    const id = generate();
+    let id = generate();
     const acls = {
       canReadZone: true,
       canEditZone: true,
@@ -310,40 +301,66 @@ export class LocationService {
         acls,
       });
 
-      //set Property Label
-      const queryLabel = `
-        MATCH
-          (zone:Zone {id: $id, active: true})-[:name]->(nameProp:Property)
-        SET nameProp :LocationName
-      `;
-      await this.db
+      // set Property Label
+      const addProp = this.db
         .query()
-        .raw(queryLabel, {
-          id,
-        })
-        .run();
+        .match([
+          node('zone', 'Zone', { id, active: true }),
+          relation('out', '', 'name', { active: true }),
+          node('nameProp', 'Property', { active: true }),
+        ])
+        .setLabels({ nameProp: 'LocationName' })
+        .return({ zone: [{ id: 'zoneId' }] });
+      await addProp.first();
 
       // connect director User to zone
-      const query = `
+      if (directorId) {
+        const query = `
       MATCH (director:User {id: $directorId, active: true}),
-        (zone:Zone {id: $id, active: true})
+        (zone:Zone {id: $id, active: true})-[:name]->(nameProp:Property)
+      SET nameProp :LocationName
       CREATE (director)<-[:director {active: true, createdAt: datetime()}]-(zone)
       RETURN  zone.id as id
       `;
-
-      await this.db
+        const addDirector = await this.db
+          .query()
+          .raw(query, {
+            userId: session.userId,
+            directorId,
+            id,
+          })
+          .first();
+        if (!addDirector) {
+          throw new Error('already exists, try finding it');
+        }
+      }
+    } catch {
+      // creating this node may fail because the node exists.  Looking up the node by name
+      const lookup = this.db
         .query()
-        .raw(query, {
-          userId: session.userId,
-          directorId,
-          id,
-        })
-        .first();
+        .match([
+          node('zone', 'Zone', { active: true }),
+          relation('out', 'name', 'name', { active: true }),
+          node('zoneName', 'Property', { active: true, value: input.name }),
+        ])
+        .return({
+          zone: [{ id: 'zoneId' }],
+        });
+      const zone = await lookup.first();
+      if (zone) {
+        id = zone.zoneId;
+      } else {
+        throw new ServerException(
+          'Cannot create Zone, cannot find matching name'
+        );
+      }
+    }
 
+    try {
       const result = await this.readOneZone(id, session);
+
       return result;
     } catch (e) {
-      this.logger.error(`Could not create`, { ...input, exception: e });
       throw new ServerException('Could not create zone');
     }
   }
@@ -464,28 +481,17 @@ export class LocationService {
 
       this.logger.info(`Region created`, { input, userId: session.userId });
 
-      //set Property Label
-      const queryLabel = `
-        MATCH
-          (region:Region {id: $id, active: true})-[:name]->(nameProp:Property)
-        SET nameProp :LocationName
-      `;
-      await this.db
-        .query()
-        .raw(queryLabel, {
-          id,
-        })
-        .run();
-
+      // set Property Label
       // connect the Zone to Region
       // and region to director
 
       if (zoneId) {
         const query = `
           MATCH (zone:Zone {id: $zoneId, active: true}),
-            (region:Region {id: $id, active: true}),
+            (region:Region {id: $id, active: true})-[:name]->(nameProp:Property),
             (director:User {id: $directorId, active: true})
           CREATE (director)<-[:director { active: true, createdAt: datetime() }]-(region)-[:zone { active: true, createdAt: datetime() }]->(zone)
+          SET nameProp :LocationName
           RETURN region.id as id
         `;
 
@@ -498,14 +504,13 @@ export class LocationService {
           })
           .first();
       }
-
-      return await this.readOneRegion(id, session);
     } catch (e) {
       this.logger.warning(`Could not create region`, {
         exception: e,
       });
       throw new ServerException('Could not create region');
     }
+    return this.readOneRegion(id, session);
   }
 
   async readOneCountry(id: string, session: ISession): Promise<Country> {

@@ -178,19 +178,23 @@ describe('Project e2e', () => {
 
   it.skip('returns false when consistency check shows multiple location nodes connected', async () => {
     const zone = await createZone(app);
+
     const region = await createRegion(app, {
       name: 'asia' + generate(),
       zoneId: zone.id,
       directorId: zone.director.value?.id,
     });
+
     const country = await createCountry(app, {
       name: 'India' + generate(),
       regionId: region.id,
     });
+
     const country2 = await createCountry(app, {
       name: 'India 2' + generate(),
       regionId: region.id,
     });
+
     const project = await createProject(app, {
       locationId: country.id,
       mouStart: DateTime.local(),

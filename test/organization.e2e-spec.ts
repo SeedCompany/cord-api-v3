@@ -31,7 +31,7 @@ describe('Organization e2e', () => {
     await expect(createOrganization(app, { name })).rejects.toThrowError();
   });
   // READ ORG
-  it('create & read organization by id', async () => {
+  it.only('create & read organization by id', async () => {
     const org = await createOrganization(app);
 
     const { organization: actual } = await app.graphql.query(

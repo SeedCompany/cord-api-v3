@@ -12,7 +12,7 @@ import {
   Query,
   relation,
 } from 'cypher-query-builder';
-import { cloneDeep, Many, upperFirst } from 'lodash';
+import { cloneDeep, Dictionary, Many, upperFirst } from 'lodash';
 import { DateTime, Duration } from 'luxon';
 import {
   ISession,
@@ -23,6 +23,8 @@ import {
   UnwrapSecured,
 } from '../../common';
 import { ILogger, Logger } from '..';
+
+import _ = require('lodash');
 
 interface ReadPropertyResult {
   value: any;
@@ -224,6 +226,206 @@ export class DatabaseService {
     return result;
   }
 
+  async hasSgReadProperty<TObject extends Resource>({
+    id,
+    session,
+    property,
+    nodevar,
+  }: {
+    id: string;
+    session: ISession;
+    property: string;
+    nodevar: string;
+  }): Promise<boolean> {
+    let type: string = upperFirst(nodevar);
+
+    if (nodevar === 'Lang') {
+      type = 'Language';
+    }
+    const query = this.db.query();
+    if (session.userId) {
+      query.match([matchSession(session, {})]);
+    }
+
+    query.match([
+      [
+        // node('requestingUser'),
+        // relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission'),
+        node('perm', 'Permission', {
+          property,
+          read: true,
+          active: true,
+        }),
+        relation('out', '', 'baseNode'),
+        node('n', type, { active: true, id }),
+        relation('out', '', property, { active: true }),
+        node([property], 'Property', { active: true }),
+      ],
+    ]);
+
+    query.return(['sg', 'perm', 'n', property]);
+
+    let result;
+    try {
+      result = await query.run();
+    } catch (e) {
+      this.logger.error(e);
+    }
+
+    return !!result;
+  }
+
+  async hasACLReadProperty<TObject extends Resource>({
+    session,
+    nodevar,
+    aclReadProp,
+    aclReadNode,
+  }: {
+    session: ISession;
+    nodevar: string;
+    aclReadProp: string;
+    aclReadNode?: string;
+  }): Promise<boolean> {
+    const aclReadPropName = `canRead${upperFirst(aclReadProp)}`;
+    const aclEditPropName = `canEdit${upperFirst(aclReadProp)}`;
+
+    const aclReadNodeName = aclReadNode || `canRead${upperFirst(nodevar)}s`;
+
+    const query = this.db.query().match([matchSession(session, {})]);
+    query.match([
+      node('requestingUser', 'User', { [aclReadNodeName]: true }),
+      relation('in', '', 'member'),
+      node('acl', 'ACL', { active: true, [aclReadPropName]: true }),
+      relation('out', '', 'toNode', { active: true }),
+      node(nodevar),
+      relation('out', 'rel', aclReadProp, { active: true }),
+      node(aclReadProp, 'Property', { active: true }),
+    ]);
+    query.return(`${aclReadProp}.value as value, acl.${aclReadPropName} as canRead, acl.${aclEditPropName} as canEdit
+    `);
+    let result;
+    try {
+      result = await query.first();
+    } catch (e) {
+      this.logger.error(e);
+    }
+
+    return !!result;
+  }
+
+  async sgReadProperties<TObject extends Resource>({
+    id,
+    session,
+    props,
+    nodevar,
+  }: {
+    id: string;
+    session: ISession;
+    props: string[];
+    nodevar: string;
+  }): Promise<any | undefined> {
+    // this.logger.info('sgReadProperties', { id, session, props, nodevar });
+    let type: string = upperFirst(nodevar);
+
+    if (nodevar === 'Lang') {
+      type = 'Language';
+    }
+    const query = this.db.query();
+    if (session.userId) {
+      query.match([matchSession(session, {})]);
+      query.match([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+      ]);
+    }
+    const permNodes: string[] = [];
+    _.pull(props, 'id', 'createdAt');
+    props.map((property: string) => {
+      const permName = 'perm' + property;
+
+      permNodes.push(permName);
+
+      query.match([
+        [
+          node('sg', 'SecurityGroup', { active: true }),
+          relation('out', '', 'permission'),
+          node(permName, 'Permission', {
+            property,
+            read: true,
+            active: true,
+          }),
+          relation('out', '', 'baseNode'),
+          node('n', type, { active: true, id }),
+          relation('out', '', property, { active: true }),
+          node(property, 'Property', { active: true }),
+        ],
+      ]);
+    });
+    query.return(['sg', 'n', ...props, ...permNodes]);
+
+    let result: { sg: any; perm: any; p: any; n: any } | any | undefined;
+    try {
+      result = await query.first();
+    } catch (e) {
+      this.logger.error(e);
+    }
+
+    if (!result) {
+      return undefined;
+    }
+
+    const returnVal: Dictionary<any> = {};
+    returnVal.id = { value: id, canRead: true, canEdit: true };
+    returnVal.createdAt = {
+      value: result.n.properties.createdat,
+      canRead: true,
+      canEdit: true,
+    };
+    props.map((property) => {
+      returnVal[property] = {
+        value: result[property].properties.value,
+        canRead: result['perm' + property].properties.read,
+        canEdit: result['perm' + property].properties.edit,
+      };
+    });
+
+    return returnVal;
+  }
+  async sgUpdateProperties<TObject extends Resource>({
+    session,
+    object,
+    props,
+    changes,
+    nodevar,
+  }: {
+    session: ISession;
+    object: TObject;
+    props: ReadonlyArray<keyof TObject>;
+    changes: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> };
+    nodevar: string;
+  }) {
+    let updated = object;
+    for (const prop of props) {
+      if (
+        changes[prop] == null ||
+        unwrapSecured(object[prop]) === changes[prop]
+      ) {
+        continue;
+      }
+      updated = await this.updateProperty({
+        object: updated,
+        session,
+        key: prop,
+        value: changes[prop],
+        nodevar,
+      });
+    }
+    return updated;
+  }
+
   async readProperty<TObject extends Resource>({
     id,
     session,
@@ -239,6 +441,7 @@ export class DatabaseService {
   }): Promise<ReadPropertyResult> {
     const aclReadPropName = `canRead${upperFirst(aclReadProp)}`;
     const aclEditPropName = `canEdit${upperFirst(aclReadProp)}`;
+
     const aclReadNodeName = aclReadNode || `canRead${upperFirst(nodevar)}s`;
     let content: string,
       type: string = nodevar;
@@ -277,14 +480,91 @@ export class DatabaseService {
         owningOrgId: session.owningOrgId,
         id,
       })
-      .run()) as ReadPropertyResult[];
+      .first()) as ReadPropertyResult;
 
-    if (!result.length) {
-      throw new NotFoundException('Could not find requested key');
+    if (!result) {
+      return { value: null, canRead: false, canEdit: false };
     }
 
-    const property = result[0];
-    return property;
+    return result;
+  }
+
+  async sgUpdateProperty<TObject extends Resource, Key extends keyof TObject>({
+    session,
+    object,
+    key,
+    value,
+    nodevar,
+  }: {
+    session: ISession;
+    object: TObject;
+    key: Key;
+    value?: UnwrapSecured<TObject[Key]>;
+    aclEditProp?: string;
+    nodevar: string;
+  }): Promise<TObject> {
+    const now = DateTime.local();
+    const result = await this.db
+      .query()
+      .match([matchSession(session)])
+      .with('*')
+      .optionalMatch([
+        node(nodevar, upperFirst(nodevar), {
+          active: true,
+          id: object.id,
+          owningOrgId: session.owningOrgId,
+        }),
+      ])
+      .with('*')
+      .match([
+        node('requestingUser'),
+        relation('in', '', 'member'),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission'),
+        node('', 'Permission', { property: key as string, active: true }),
+        relation('out', '', 'baseNode', { active: true }),
+        node(nodevar),
+        relation('out', 'oldToProp', key as string, { active: true }),
+        node('oldPropVar', 'Property', { active: true }),
+      ])
+      .setValues({
+        'oldToProp.active': false,
+        'oldPropVar.active': false,
+      })
+      .create([
+        node(nodevar),
+        relation('out', 'toProp', key as string, {
+          active: true,
+          createdAt: now,
+          owningOrgId: session.owningOrgId,
+        }),
+        node('newPropNode', 'Property', {
+          active: true,
+          createdAt: now,
+          value,
+          owningOrgId: session.owningOrgId,
+        }),
+      ])
+      .return('newPropNode')
+      .first();
+
+    if (!result) {
+      throw new NotFoundException('Could not find object');
+    }
+
+    return {
+      ...object,
+      ...(isSecured(object[key])
+        ? // replace value in secured object keeping can* properties
+          {
+            [key]: {
+              ...object[key],
+              value,
+            },
+          }
+        : // replace value directly
+          { [key]: value }),
+    };
   }
 
   async list<TObject extends Resource>({
@@ -438,8 +718,8 @@ export class DatabaseService {
           if (secure) {
             item[propName] = {
               value,
-              canRead: Boolean(row[aclReadPropName]),
-              canEdit: Boolean(row[aclEditPropName]),
+              canRead: Boolean(row[aclReadPropName]) || false,
+              canEdit: Boolean(row[aclEditPropName]) || false,
             };
           } else {
             item[propName] = value;
@@ -448,8 +728,8 @@ export class DatabaseService {
           if (secure) {
             item[propName] = {
               value: row[propName],
-              canRead: Boolean(row[aclReadPropName]),
-              canEdit: Boolean(row[aclEditPropName]),
+              canRead: Boolean(row[aclReadPropName]) || false,
+              canEdit: Boolean(row[aclEditPropName]) || false,
             };
           } else {
             item[propName] = row[propName];
@@ -507,7 +787,6 @@ export class DatabaseService {
         }
       )
       .run();
-    // this.logger.info(``);
   }
 
   async deleteProperties<TObject extends Resource>({

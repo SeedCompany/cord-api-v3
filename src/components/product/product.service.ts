@@ -79,7 +79,7 @@ export class ProductService {
       ],
     });
 
-    if (!result) {
+    if (!result || !result.id.value) {
       throw new NotFoundException('Could not find product');
     }
 

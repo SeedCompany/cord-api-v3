@@ -8,6 +8,7 @@ import {
   createTestApp,
   createUser,
   fragments,
+  login,
   TestApp,
 } from './utility';
 
@@ -15,49 +16,14 @@ describe('User e2e', () => {
   let app: TestApp;
 
   beforeAll(async () => {
+    process.env = Object.assign(process.env, {
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      ROOT_ADMIN_EMAIL: 'asdf@asdf.asdf',
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      ROOT_ADMIN_PASSWORD: 'asdf',
+    });
     app = await createTestApp();
     await createSession(app);
-  });
-
-  it('check email existance', async () => {
-    const email = faker.internet.email();
-    const fakeUser: CreateUser = {
-      email: email,
-      realFirstName: faker.name.firstName(),
-      realLastName: faker.name.lastName(),
-      displayFirstName: faker.name.firstName(),
-      displayLastName: faker.name.lastName(),
-      password: faker.internet.password(),
-      phone: faker.phone.phoneNumber(),
-      timezone: 'timezone detail',
-      bio: 'bio detail',
-    };
-    // create user first
-    await createUser(app, fakeUser);
-    const existsEmailRes = await app.graphql.query(
-      gql`
-        query checkEmail($email: String!) {
-          checkEmail(email: $email)
-        }
-      `,
-      {
-        email: email,
-      }
-    );
-
-    const nonExistentEmail = faker.internet.email();
-    const nonExistentEmailRes = await app.graphql.query(
-      gql`
-        query checkEmail($email: String!) {
-          checkEmail(email: $email)
-        }
-      `,
-      {
-        email: nonExistentEmail,
-      }
-    );
-    expect(existsEmailRes.checkEmail).toBe(false);
-    expect(nonExistentEmailRes.checkEmail).toBe(true);
   });
 
   it('read one user by id', async () => {
@@ -72,8 +38,10 @@ describe('User e2e', () => {
       timezone: 'timezone detail',
       bio: 'bio detail',
     };
-    // create user first
+
     const user = await createUser(app, fakeUser);
+    await login(app, { email: fakeUser.email, password: fakeUser.password });
+
     const result = await app.graphql.query(
       gql`
         query user($id: ID!) {
@@ -89,6 +57,8 @@ describe('User e2e', () => {
     );
 
     const actual: User = result.user;
+    // console.log('actual ', JSON.stringify(actual, null, 2));
+
     expect(actual).toBeTruthy();
 
     expect(isValid(actual.id)).toBe(true);
@@ -104,9 +74,23 @@ describe('User e2e', () => {
     return true;
   });
 
-  it('update user', async () => {
+  it.only('update user', async () => {
     // create user first
-    const user = await createUser(app);
+    const newUser: CreateUser = {
+      email: faker.internet.email(),
+      realFirstName: faker.name.firstName(),
+      realLastName: faker.name.lastName(),
+      displayFirstName: faker.name.firstName(),
+      displayLastName: faker.name.lastName(),
+      password: faker.internet.password(),
+      phone: faker.phone.phoneNumber(),
+      timezone: 'timezone detail',
+      bio: 'bio detail',
+    };
+    await createSession(app);
+    const user = await createUser(app, newUser);
+    await login(app, { email: newUser.email, password: newUser.password });
+
     const fakeUser: UpdateUser = {
       id: user.id,
       realFirstName: faker.name.firstName(),
