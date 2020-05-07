@@ -4,9 +4,10 @@ import {
   NotFoundException,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
+import { node } from 'cypher-query-builder';
 import { generate } from 'shortid';
 import { ISession } from '../../../common';
-import { DatabaseService, ILogger, Logger } from '../../../core';
+import { DatabaseService, ILogger, Logger, matchSession } from '../../../core';
 import {
   CreateEducation,
   Education,
@@ -197,5 +198,47 @@ export class EducationService {
       this.logger.error('Failed to delete', { id, exception: e });
       throw new ServerException('Failed to delete');
     }
+  }
+
+  async checkEducationConsistency(session: ISession): Promise<boolean> {
+    const educations = await this.db
+      .query()
+      .match([
+        matchSession(session),
+        [
+          node('education', 'Education', {
+            active: true,
+          }),
+        ],
+      ])
+      .return('education.id as id')
+      .run();
+
+    return (
+      (
+        await Promise.all(
+          educations.map(async (education) => {
+            return this.db.hasProperties({
+              session,
+              id: education.id,
+              props: ['degree', 'major', 'institution'],
+              nodevar: 'education',
+            });
+          })
+        )
+      ).every((n) => n) &&
+      (
+        await Promise.all(
+          educations.map(async (education) => {
+            return this.db.isUniqueProperties({
+              session,
+              id: education.id,
+              props: ['degree', 'major', 'institution'],
+              nodevar: 'education',
+            });
+          })
+        )
+      ).every((n) => n)
+    );
   }
 }
