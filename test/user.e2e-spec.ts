@@ -196,7 +196,7 @@ describe('User e2e', () => {
     expect(users.items.length).toBeGreaterThan(9);
   });
 
-  it('Check consistency across user nodes', async () => {
+  it.skip('Check consistency across user nodes', async () => {
     // create a user
     const user = await createUser(app, { email: faker.internet.email() });
     // test it has proper schema
