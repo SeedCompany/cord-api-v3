@@ -627,11 +627,9 @@ export class LocationService {
       // connect the Zone to Region
 
       if (zoneId) {
-        // console.log('id :>> ', id);
-        // console.log('zoneId :>> ', zoneId);
         const query = `
           MATCH (zone:Zone {id: $zoneId, active: true}),
-            (region:Region {id: $id, active: true}),
+            (region:Region {id: $id, active: true})
           CREATE (zone)<-[:zone { active: true, createdAt: datetime() }]-(region)
           RETURN region.id as id
         `;

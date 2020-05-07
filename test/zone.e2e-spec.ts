@@ -38,6 +38,7 @@ describe('Zone e2e', () => {
   });
 
   it.skip('should have unique name', async () => {
+    //old test.  now attempting to create a zone with a name that is taken will return the existing zone
     const name = faker.address.country() + ' Zone';
     await createZone(app, { directorId: director.id, name });
     await expect(
