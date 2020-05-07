@@ -510,7 +510,7 @@ export class LocationService {
       .return({
         region: [{ id: 'id', createdAt: 'createdAt' }],
         regionName: [{ value: 'name' }],
-        requestingUser: [{ canReadZone: 'canReadRegion' }],
+        requestingUser: [{ canReadRegion: 'canReadRegion' }],
         canReadName: [{ read: 'canReadName', edit: 'canEditName' }],
         canReadZone: [{ read: 'canReadZone', edit: 'canEditZone' }],
         canReadDirector: [{ read: 'canReadDirector', edit: 'canEditDirector' }],
@@ -690,53 +690,61 @@ export class LocationService {
 
   async readOneCountry(id: string, session: ISession): Promise<Country> {
     this.logger.info(`Query readOne Country`, { id, userId: session.userId });
-
-    // canReadCountryName: true,
-    // canEditCountryName: true,
-    // canReadCountryDirector: true,
-    // canEditCountryDirector: true,
-
-    const result = await this.db
+    if (!id) {
+      throw new BadRequestException('No country id to search for');
+    }
+    const readCountry = this.db
       .query()
-      .raw(
-        `
-        MATCH
-        // (token:Token {
-        //   active: true,
-        //   value: $token
-        // })<-[:token {active: true}]-
-        // (requestingUser:User {
-        //   active: true,
-        //   id: $requestingUserId,
-        //   owningOrgId: $owningOrgId
-        // }),
-        (country:Country {active: true, id: $id})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadName:ACL {canReadName: true})-[:toNode]->(country)-[:name {active: true}]->(name:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditName:ACL {canEditName: true})-[:toNode]->(country)-[:name {active: true}]->(name:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadRegion:ACL {canReadRegion: true})-[:toNode]->(country)-[:region {active: true}]->(region:Region {active: true})-[:name {active: true}]->(regionName:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditRegion:ACL {canEditRegion: true})-[:toNode]->(country)-[:region {active: true}]->(region:Region {active: true})-[:name {active: true}]->(regionName:Property {active: true})
-        RETURN
-          country.id as id,
-          country.createdAt as createdAt,
-          name.value as name,
-          canReadName.canReadName as canReadName,
-          canEditName.canEditName as canEditName,
-          canReadRegion.canReadRegion as canReadRegion,
-          canEditRegion.canEditRegion as canEditRegion,
-          requestingUser.canReadCountry as canReadCountry,
-          regionName.value as regionName,
-          region.id as regionId
-        `,
-        {
-          id,
-          owningOrgId: session.owningOrgId,
-          requestingUserId: session.userId,
-          token: session.token,
-        }
-      )
-      .first();
+      .match(matchSession(session))
+      .match([node('country', 'Country', { active: true, id })])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node('canReadName', 'Permission', {
+          property: 'name',
+          active: true,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('country'),
+      ])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node('canReadRegion', 'Permission', {
+          property: 'region',
+          active: true,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('country'),
+      ])
+      .optionalMatch([
+        node('country'),
+        relation('out', '', 'name', { active: true }),
+        node('countryName', 'Property', { active: true }),
+      ])
+      .optionalMatch([
+        node('country'),
+        relation('out', '', 'region', { active: true }),
+        node('region', 'Region', { active: true }),
+      ])
+      .return({
+        country: [{ id: 'id', createdAt: 'createdAt' }],
+        countryName: [{ value: 'name' }],
+        requestingUser: [{ canReadCountry: 'canReadCountry' }],
+        canReadName: [{ read: 'canReadName', edit: 'canEditName' }],
+        canReadRegion: [{ read: 'canReadRegion', edit: 'canEditRegion' }],
+        region: [{ id: 'regionId' }],
+      });
 
-    if (!result) {
+    const result = await readCountry.first();
+
+    if (!result || !result.id) {
       this.logger.error(`Could not find country`);
       throw new NotFoundException('Could not find country');
     }
@@ -789,36 +797,50 @@ export class LocationService {
     { regionId, ...input }: CreateCountry,
     session: ISession
   ): Promise<Country> {
-    const id = generate();
-    const acls = {
-      canReadName: true,
-      canEditName: true,
-      canReadRegion: true,
-      canEditRegion: true,
-    };
+    let id = generate();
+    const createdAt = DateTime.local();
 
     try {
-      await this.db.createNode({
-        session,
-        type: Country.classType,
-        input: { id, ...input },
-        acls,
-      });
+      const createCountry = this.db
+        .query()
+        .match(matchSession(session, { withAclEdit: 'canCreateCountry' }))
+        .create([
+          [
+            node('newCountry', 'Country', {
+              active: true,
+              createdAt,
+              id,
+              owningOrgId: session.owningOrgId,
+            }),
+          ],
+          ...this.property('name', input.name, 'newCountry'),
+          [
+            node('adminSG', 'SecurityGroup', {
+              active: true,
+              createdAt,
+              name: input.name + ' admin',
+            }),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('requestingUser'),
+          ],
+          [
+            node('readerSG', 'SecurityGroup', {
+              active: true,
+              createdAt,
+              name: input.name + ' users',
+            }),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('requestingUser'),
+          ],
+          ...this.permission('name', 'adminSG', 'newCountry', true, true),
+          ...this.permission('name', 'readerSG', 'newCountry', true, false),
+          ...this.permission('region', 'adminSG', 'newCountry', true, true),
+          ...this.permission('region', 'readerSG', 'newCountry', true, false),
+        ])
+        .return('newCountry.id as id');
+      await createCountry.first();
 
       this.logger.info(`country created`);
-
-      //set Property Label
-      const queryLabel = `
-        MATCH
-          (country:Country {id: $id, active: true})-[:name]->(nameProp:Property)
-        SET nameProp :LocationName
-      `;
-      await this.db
-        .query()
-        .raw(queryLabel, {
-          id,
-        })
-        .run();
 
       // connect the Region to Country
       if (regionId) {
@@ -837,12 +859,29 @@ export class LocationService {
           })
           .first();
       }
-
+    } catch (e) {
+      // creating this region may have failed because the name already exists.  Looking up the Region
+      const lookup = this.db
+        .query()
+        .match([
+          node('country', 'Country', { active: true }),
+          relation('out', 'name', 'name', { active: true }),
+          node('countryName', 'Property', { active: true, value: input.name }),
+        ])
+        .return({ country: [{ id: 'countryId' }] });
+      const country = await lookup.first();
+      if (country) {
+        id = country.countryId;
+      } else {
+        this.logger.warning(`Could not create country`, {
+          exception: e,
+        });
+        throw new ServerException('Could not create country');
+      }
+    }
+    try {
       return await this.readOneCountry(id, session);
     } catch (e) {
-      this.logger.warning(`Could not create country`, {
-        exception: e,
-      });
       throw new ServerException('Could not create country');
     }
   }
