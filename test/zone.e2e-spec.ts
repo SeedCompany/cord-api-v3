@@ -36,7 +36,7 @@ describe('Zone e2e', () => {
     expect(zone.id).toBeDefined();
   });
 
-  it('should have unique name', async () => {
+  it.skip('should have unique name', async () => {
     const name = faker.address.country() + ' Zone';
     await createZone(app, { directorId: director.id, name });
     await expect(

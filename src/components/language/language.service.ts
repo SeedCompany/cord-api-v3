@@ -152,7 +152,7 @@ export class LanguageService {
       nodevar: 'lang',
     });
 
-    if (!result) {
+    if (!result || !result.id.value) {
       this.logger.error(`Could not find language: ${langId} `);
       throw new NotFoundException('Could not find language');
     }
