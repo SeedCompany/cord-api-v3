@@ -42,7 +42,8 @@ describe('Region e2e', () => {
     expect(region.id).toBeDefined();
   });
 
-  it('should have unique name', async () => {
+  it.skip('should have unique name', async () => {
+    // Old test.  Attempt to create a region with a name that is taken will return the existing region
     const name = faker.address.country() + ' Region';
     await createRegion(app, { directorId: director.id, name, zoneId: zone.id });
     await expect(

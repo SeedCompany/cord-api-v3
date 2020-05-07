@@ -26,6 +26,7 @@ describe('Zone e2e', () => {
     director = await createUser(app, { password });
     newDirector = await createUser(app, { password });
   });
+
   afterAll(async () => {
     await app.close();
   });
@@ -37,6 +38,7 @@ describe('Zone e2e', () => {
   });
 
   it.skip('should have unique name', async () => {
+    //old test.  now attempting to create a zone with a name that is taken will return the existing zone
     const name = faker.address.country() + ' Zone';
     await createZone(app, { directorId: director.id, name });
     await expect(
@@ -108,7 +110,7 @@ describe('Zone e2e', () => {
     expect(updated.name.value).toBe(newName);
   });
 
-  // This function in locatino service should be updated because one session couldn't be connected to several users at a time.
+  // This function in location service should be updated because one session couldn't be connected to several users at a time.
   it.skip("update zone's director", async () => {
     const zone = await createZone(app, { directorId: director.id });
 

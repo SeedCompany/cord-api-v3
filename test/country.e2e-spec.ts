@@ -40,7 +40,8 @@ describe('Country e2e', () => {
     expect(country.id).toBeDefined();
   });
 
-  it('should have unique name', async () => {
+  it.skip('should have unique name', async () => {
+    //this is an old test.  now if a country name is taken the create return the existing country
     const name = faker.address.country();
     await createCountry(app, { name, regionId: region.id });
     await expect(
