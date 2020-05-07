@@ -33,7 +33,7 @@ describe('Region e2e', () => {
     await app.close();
   });
 
-  it('create a region', async () => {
+  it.only('create a region', async () => {
     await login(app, { email: director.email.value, password });
     const region = await createRegion(app, {
       directorId: director.id,

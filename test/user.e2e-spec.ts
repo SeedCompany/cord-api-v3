@@ -74,7 +74,7 @@ describe('User e2e', () => {
     return true;
   });
 
-  it.only('update user', async () => {
+  it('update user', async () => {
     // create user first
     const newUser: CreateUser = {
       email: faker.internet.email(),
