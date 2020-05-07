@@ -6,6 +6,7 @@ import {
   CreateLanguageEngagementInput,
   CreateLanguageEngagementOutput,
   Engagement,
+  EngagementConsistencyInput,
   EngagementListInput,
   EngagementListOutput,
   IEngagement,
@@ -111,5 +112,15 @@ export class EngagementResolver {
   ): Promise<boolean> {
     await this.service.delete(id, session);
     return true;
+  }
+
+  @Query(() => Boolean, {
+    description: 'Check Consistency in Engagement Nodes',
+  })
+  async checkEngagementConsistency(
+    @Args('input') input: EngagementConsistencyInput,
+    @Session() session: ISession
+  ): Promise<boolean> {
+    return this.service.checkEngagementConsistency(input.baseNode, session);
   }
 }

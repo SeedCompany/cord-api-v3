@@ -3,6 +3,7 @@ import {
   NotFoundException,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
+import { node } from 'cypher-query-builder';
 import { first, intersection } from 'lodash';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
@@ -858,5 +859,103 @@ export class EngagementService {
 
       throw new ServerException('Failed to delete partnership');
     }
+  }
+
+  async checkEngagementConsistency(
+    baseNode: string,
+    session: ISession
+  ): Promise<boolean> {
+    const nodes = await this.db
+      .query()
+      .match([
+        node('eng', baseNode, {
+          active: true,
+        }),
+      ])
+      .return('eng.id as id')
+      .run();
+    if (baseNode === 'InternshipEngagement') {
+      return this.isInternshipEngagementConsistent(nodes, baseNode, session);
+    }
+    if (baseNode === 'LanguageEngagement') {
+      return this.isLanguageEngagementConsistent(nodes, baseNode, session);
+    }
+    return false;
+  }
+
+  async isLanguageEngagementConsistent(
+    nodes: Record<string, any>,
+    baseNode: string,
+    session: ISession
+  ): Promise<boolean> {
+    const requiredProperties: never[] = []; // add more after discussing
+    return (
+      (
+        await Promise.all(
+          nodes.map(async (ie: { id: any }) =>
+            ['language'] // singletons
+              .map((rel) =>
+                this.db.isRelationshipUnique({
+                  session,
+                  id: ie.id,
+                  relName: rel,
+                  srcNodeLabel: 'LanguageEngagement',
+                })
+              )
+              .every((n) => n)
+          )
+        )
+      ).every((n) => n) &&
+      (
+        await Promise.all(
+          nodes.map(async (ie: { id: any }) =>
+            this.db.hasProperties({
+              session,
+              id: ie.id,
+              props: requiredProperties,
+              nodevar: 'LanguageEngagement',
+            })
+          )
+        )
+      ).every((n) => n)
+    );
+  }
+
+  async isInternshipEngagementConsistent(
+    nodes: Record<string, any>,
+    baseNode: string,
+    session: ISession
+  ): Promise<boolean> {
+    const requiredProperties = ['startDate', 'initialEndDate'];
+    return (
+      (
+        await Promise.all(
+          nodes.map(async (ie: { id: any }) =>
+            ['methodology', 'countryOfOrigin', 'mentor', 'status']
+              .map((rel) =>
+                this.db.isRelationshipUnique({
+                  session,
+                  id: ie.id,
+                  relName: rel,
+                  srcNodeLabel: 'InternshipEngagement',
+                })
+              )
+              .every((n) => n)
+          )
+        )
+      ).every((n) => n) &&
+      (
+        await Promise.all(
+          nodes.map(async (ie: { id: any }) =>
+            this.db.hasProperties({
+              session,
+              id: ie.id,
+              props: requiredProperties,
+              nodevar: 'InternshipEngagement',
+            })
+          )
+        )
+      ).every((n) => n)
+    );
   }
 }
