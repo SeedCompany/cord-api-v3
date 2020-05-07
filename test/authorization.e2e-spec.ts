@@ -14,6 +14,7 @@ import { login } from './utility/login';
 
 describe('Authorization e2e', () => {
   let app: TestApp;
+  jest.setTimeout(200000);
 
   beforeAll(async () => {
     process.env = Object.assign(process.env, {
