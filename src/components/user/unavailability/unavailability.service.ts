@@ -3,9 +3,10 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import { node } from 'cypher-query-builder';
 import { generate } from 'shortid';
 import { ISession } from '../../../common';
-import { DatabaseService, ILogger, Logger } from '../../../core';
+import { DatabaseService, ILogger, Logger, matchSession } from '../../../core';
 import {
   CreateUnavailability,
   Unavailability,
@@ -200,5 +201,46 @@ export class UnavailabilityService {
       hasMore: result.hasMore,
       total: result.total,
     };
+  }
+  async checkUnavailabilityConsistency(session: ISession): Promise<boolean> {
+    const unavailabilities = await this.db
+      .query()
+      .match([
+        matchSession(session),
+        [
+          node('unavailability', 'Unavailability', {
+            active: true,
+          }),
+        ],
+      ])
+      .return('unavailability.id as id')
+      .run();
+
+    return (
+      (
+        await Promise.all(
+          unavailabilities.map(async (unavailability) => {
+            return this.db.hasProperties({
+              session,
+              id: unavailability.id,
+              props: ['description', 'start', 'end'],
+              nodevar: 'unavailability',
+            });
+          })
+        )
+      ).every((n) => n) &&
+      (
+        await Promise.all(
+          unavailabilities.map(async (unavailability) => {
+            return this.db.isUniqueProperties({
+              session,
+              id: unavailability.id,
+              props: ['description', 'start', 'end'],
+              nodevar: 'unavailability',
+            });
+          })
+        )
+      ).every((n) => n)
+    );
   }
 }
