@@ -72,4 +72,13 @@ export class UnavailabilityResolver {
     await this.service.delete(id, session);
     return true;
   }
+
+  @Query(() => Boolean, {
+    description: 'Check Consistency across Unavailability Nodes',
+  })
+  async checkUnavailabilityConsistency(
+    @Session() session: ISession
+  ): Promise<boolean> {
+    return this.service.checkUnavailabilityConsistency(session);
+  }
 }
