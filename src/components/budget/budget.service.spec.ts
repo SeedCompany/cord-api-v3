@@ -45,7 +45,7 @@ describe('BudgetService', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
-        LoggerModule.forRoot(),
+        LoggerModule.forTest(),
         CoreModule,
         AuthenticationModule,
         ProjectModule,

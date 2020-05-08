@@ -31,7 +31,7 @@ describe('S3 Bucket', () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
         FileModule,
-        LoggerModule.forRoot(),
+        LoggerModule.forTest(),
         UserModule,
         CoreModule,
         OrganizationModule,
