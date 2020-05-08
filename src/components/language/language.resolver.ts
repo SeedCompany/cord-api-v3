@@ -1,5 +1,12 @@
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { IdArg, ISession, Session } from '../../common';
+import {
+  Args,
+  Mutation,
+  Parent,
+  Query,
+  ResolveField,
+  Resolver,
+} from '@nestjs/graphql';
+import { firstLettersOfWords, IdArg, ISession, Session } from '../../common';
 import {
   CreateLanguageInput,
   CreateLanguageOutput,
@@ -11,7 +18,7 @@ import {
 } from './dto';
 import { LanguageService } from './language.service';
 
-@Resolver()
+@Resolver(Language.classType)
 export class LanguageResolver {
   constructor(private readonly langService: LanguageService) {}
 
@@ -23,6 +30,13 @@ export class LanguageResolver {
     @IdArg() id: string
   ): Promise<Language> {
     return this.langService.readOne(id, session);
+  }
+
+  @ResolveField(() => String, { nullable: true })
+  avatarLetters(@Parent() language: Language): string | undefined {
+    return language.name.canRead && language.name.value
+      ? firstLettersOfWords(language.name.value)
+      : undefined;
   }
 
   @Query(() => LanguageListOutput, {

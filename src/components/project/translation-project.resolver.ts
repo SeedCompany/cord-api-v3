@@ -1,5 +1,5 @@
 import { Args, Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { ISession, Session } from '../../common';
+import { firstLettersOfWords, ISession, Session } from '../../common';
 import {
   EngagementListInput,
   SecuredLanguageEngagementList,
@@ -14,6 +14,13 @@ import { ProjectService } from './project.service';
 @Resolver(TranslationProject.classType)
 export class TranslationProjectResolver {
   constructor(private readonly projects: ProjectService) {}
+
+  @ResolveField(() => String, { nullable: true })
+  avatarLetters(@Parent() project: TranslationProject): string | undefined {
+    return project.name.canRead && project.name.value
+      ? firstLettersOfWords(project.name.value)
+      : undefined;
+  }
 
   @ResolveField(() => SecuredLanguageEngagementList)
   async engagements(
