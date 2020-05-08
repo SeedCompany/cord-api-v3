@@ -125,6 +125,8 @@ export class AuthorizationService {
     request: CreatePermission,
     session: ISession
   ): Promise<CreatePermissionOutput> {
+    // this function is currently deprecated.  It is part of an old idea where there were admins on basenodes
+    // permissions are created at the time of creation of a baseNode now.
     this.logger.debug('createPermission', request);
 
     const id = generate();
