@@ -55,11 +55,14 @@ describe('Language e2e', () => {
 
     expect(actual.id).toBe(language.id);
     expect(isValid(actual.id)).toBeTruthy();
+    expect(actual.ethnologuePopulation.value).toEqual(
+      language.ethnologuePopulation.value
+    );
     expect(actual.name.value).toEqual(language.name.value);
   });
 
   // UPDATE LANGUAGE
-  it.skip('update language', async () => {
+  it('update language', async () => {
     const language = await createLanguage(app);
     const newName = faker.company.companyName();
 

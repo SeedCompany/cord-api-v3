@@ -80,6 +80,11 @@ export const fragments = {
         canEdit
         canRead
       }
+      ethnologuePopulation {
+        value
+        canEdit
+        canRead
+      }
       organizationPopulation {
         value
         canEdit
@@ -90,6 +95,7 @@ export const fragments = {
         canEdit
         canRead
       }
+      sensitivity
     }
   `,
   unavailability: gql`

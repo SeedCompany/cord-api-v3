@@ -21,22 +21,22 @@ export class Language extends Resource {
   @Field()
   readonly displayName: SecuredString;
 
-  @Field()
-  readonly beginFiscalYear: SecuredInt;
+  @Field({ nullable: true })
+  readonly beginFiscalYear?: SecuredInt;
 
-  @Field()
+  @Field({ nullable: true })
   readonly ethnologueName: SecuredString;
 
-  @Field()
+  @Field({ nullable: true })
   readonly ethnologuePopulation: SecuredInt;
 
-  @Field()
+  @Field({ nullable: true })
   readonly organizationPopulation: SecuredInt;
 
-  @Field()
+  @Field({ nullable: true })
   readonly rodNumber: SecuredInt;
 
-  @Field(() => Sensitivity)
+  @Field(() => Sensitivity, { nullable: true })
   readonly sensitivity: Sensitivity;
 }
 
