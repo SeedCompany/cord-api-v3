@@ -5,7 +5,8 @@ import {
   NotFoundException,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
-import { node } from 'cypher-query-builder';
+import { node, relation } from 'cypher-query-builder';
+import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
 import {
@@ -50,6 +51,59 @@ export class OrganizationService {
     }
   }
 
+  // helper method for defining properties
+  property = (prop: string, value: any, baseNode: string) => {
+    if (!value) {
+      return [];
+    }
+    const createdAt = DateTime.local();
+    const propLabel = prop === 'name' ? 'Property:OrgName' : 'Property';
+    return [
+      [
+        node(baseNode),
+        relation('out', '', prop, {
+          active: true,
+          createdAt,
+        }),
+        node(prop, propLabel, {
+          active: true,
+          value,
+        }),
+      ],
+    ];
+  };
+
+  // helper method for defining properties
+  permission = (
+    property: string,
+    sg: string,
+    baseNode: string,
+    read: boolean,
+    edit: boolean
+  ) => {
+    const createdAt = DateTime.local();
+    return [
+      [
+        node(sg),
+        relation('out', '', 'permission', {
+          active: true,
+          createdAt,
+        }),
+        node('', 'Permission', {
+          property,
+          active: true,
+          read,
+          edit,
+        }),
+        relation('out', '', 'baseNode', {
+          active: true,
+          createdAt,
+        }),
+        node(baseNode),
+      ],
+    ];
+  };
+
   async create(
     input: CreateOrganization,
     session: ISession
@@ -73,32 +127,48 @@ export class OrganizationService {
       );
     }
     const id = generate();
-    const acls = {
-      canReadOrg: true,
-      canEditOrg: true,
-      canEditName: true,
-      canReadName: true,
-    };
+    const createdAt = DateTime.local();
     try {
-      await this.db.createNode({
-        session,
-        type: Organization.classType,
-        input: { id, ...input },
-        acls,
-        aclEditProp: 'canCreateOrg',
-      });
-
-      const qry = `
-        MATCH
-          (org:Organization {id: "${id}", active: true})-[:name]->(orgName:Property)
-        SET orgName :OrgName
-      `;
       await this.db
         .query()
-        .raw(qry, {
-          id,
-        })
-        .run();
+        .match(matchSession(session, { withAclEdit: 'canCreateOrg' }))
+        .create([
+          [
+            node('newOrg', 'Organization:BaseNode', {
+              active: true,
+              createdAt,
+              id,
+              owningOrgId: session.owningOrgId,
+            }),
+          ],
+          ...this.property('name', input.name, 'newOrg'),
+          [
+            node('adminSG', 'SecurityGroup', {
+              active: true,
+              createdAt,
+              name: input.name + ' admin',
+            }),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('requestingUser'),
+          ],
+          ...this.permission('name', 'adminSG', 'newOrg', true, true),
+          [
+            node('readerSG', 'SecurityGroup', {
+              active: true,
+              createdAt,
+              name: input.name + ' users',
+            }),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('requestingUser'),
+          ],
+          ...this.permission('name', 'readerSG', 'newOrg', true, false),
+        ])
+        .return('newOrg.id as id')
+        .first();
+
+      // if (!result) {
+      //   throw new ServerException('failed to create organization');
+      // }
     } catch (err) {
       this.logger.error(
         `Could not create organization for user ${session.userId}`
@@ -112,33 +182,35 @@ export class OrganizationService {
   }
 
   async readOne(orgId: string, session: ISession): Promise<Organization> {
-    const query = `
-    MATCH
-      (token:Token {active: true, value: $token})
-      <-[:token {active: true}]-
-      (user:User {
-        canReadOrgs: true
-      }),
-      (org:Organization {
-        active: true,
-        id: $id,
-        owningOrgId: $owningOrgId
-      })
-      -[:name {active: true}]->
-      (name:Property {active: true})
-    RETURN
-      org.id as id,
-      org.createdAt as createdAt,
-      name.value as name,
-      user.canCreateOrg as canCreateOrg,
-      user.canReadOrgs as canReadOrgs
-    `;
     const result = await this.db
       .query()
-      .raw(query, {
-        id: orgId,
-        token: session.token,
-        owningOrgId: session.owningOrgId,
+      .match(matchSession(session, { withAclEdit: 'canReadOrgs' }))
+      .match([node('org', 'Organization', { active: true, id: orgId })])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node('canReadName', 'Permission', {
+          property: 'name',
+          active: true,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('org'),
+      ])
+      .optionalMatch([
+        node('org'),
+        relation('out', '', 'name', { active: true }),
+        node('orgName', 'Property', { active: true }),
+      ])
+      .return({
+        org: [{ id: 'id', createdAt: 'createdAt' }],
+        orgName: [{ value: 'name' }],
+        requestingUser: [
+          { canReadOrgs: 'canReadOrgs', canCreateOrg: 'canCreateOrg' },
+        ],
+        canReadName: [{ read: 'canReadName', edit: 'canEditName' }],
       })
       .first();
 
@@ -156,8 +228,8 @@ export class OrganizationService {
       id: result.id,
       name: {
         value: result.name,
-        canRead: result.canReadOrgs,
-        canEdit: result.canCreateOrg,
+        canRead: result.canReadName,
+        canEdit: result.canEditName,
       },
       createdAt: result.createdAt,
     };

@@ -1136,7 +1136,7 @@ export class DatabaseService {
     prop: string;
     nodevar: string;
   }): Promise<boolean> {
-    const result = await this.db
+    const query = this.db
       .query()
       .match([
         matchSession(session),
@@ -1149,10 +1149,13 @@ export class DatabaseService {
           node(prop, 'Property', { active: true }),
         ],
       ])
-      .return('count(rel) as total')
-      .first();
+      .return('count(rel) as total');
+    //.first();
 
+    console.log(query.buildQueryObject());
+    const result = await query.first();
     const totalNumber = result?.total || 0;
+    console.log(`${prop} ${id}`, totalNumber);
     const isUniqueProperty = totalNumber <= 1;
     return isUniqueProperty;
   }
