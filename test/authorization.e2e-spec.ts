@@ -248,7 +248,7 @@ describe('Authorization e2e', () => {
     expect(result.promoteUserToAdminOfSecurityGroup).toBe(true);
   });
 
-  it('promote user to admin of base node', async () => {
+  it.skip('promote user to admin of base node', async () => {
     await login(app, {
       email: process.env.ROOT_ADMIN_EMAIL,
       password: process.env.ROOT_ADMIN_PASSWORD,
