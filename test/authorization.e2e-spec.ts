@@ -66,7 +66,8 @@ describe('Authorization e2e', () => {
     expect(result.addPropertyToSecurityGroup).toBeTruthy();
   });
 
-  it('create permission', async () => {
+  it.skip('create permission', async () => {
+    // create permission is a deprecated function  see note in authorization service
     await login(app, {
       email: process.env.ROOT_ADMIN_EMAIL,
       password: process.env.ROOT_ADMIN_PASSWORD,
@@ -74,6 +75,7 @@ describe('Authorization e2e', () => {
 
     const sg = await createSecurityGroup(app);
     const org = await createOrganization(app);
+
     const perm = await createPermission(app, {
       sgId: sg.id!,
       baseNodeId: org.id,
@@ -205,7 +207,8 @@ describe('Authorization e2e', () => {
     ).rejects.toThrow();
   });
 
-  it('promote user to admin of security group', async () => {
+  it.skip('promote user to admin of security group', async () => {
+    // there are no admins in security groups anymore.  there are admin security groups.
     const newUser = await createUser(app);
     await login(app, {
       email: process.env.ROOT_ADMIN_EMAIL,
@@ -245,7 +248,7 @@ describe('Authorization e2e', () => {
     expect(result.promoteUserToAdminOfSecurityGroup).toBe(true);
   });
 
-  it('promote user to admin of base node', async () => {
+  it.skip('promote user to admin of base node', async () => {
     await login(app, {
       email: process.env.ROOT_ADMIN_EMAIL,
       password: process.env.ROOT_ADMIN_PASSWORD,

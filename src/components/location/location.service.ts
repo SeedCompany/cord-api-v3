@@ -922,7 +922,7 @@ export class LocationService {
         .first();
     }
 
-    await this.db.updateProperties({
+    await this.db.sgUpdateProperties({
       session,
       object: zone,
       props: ['name'],
@@ -1003,7 +1003,7 @@ export class LocationService {
         .first();
     }
 
-    await this.db.updateProperties({
+    await this.db.sgUpdateProperties({
       session,
       object: region,
       props: ['name'],
@@ -1052,7 +1052,7 @@ export class LocationService {
         .first();
     }
 
-    await this.db.updateProperties({
+    await this.db.sgUpdateProperties({
       session,
       object: country,
       props: ['name'],

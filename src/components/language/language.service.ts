@@ -558,7 +558,7 @@ export class LanguageService {
     );
     const language = await this.readOne(input.id, session);
 
-    return this.db.updateProperties({
+    return this.db.sgUpdateProperties({
       session,
       object: language,
       props: [

@@ -139,7 +139,7 @@ export class DatabaseService {
       aclEditProp || `canEdit${upperFirst(key as string)}`;
 
     const now = DateTime.local();
-    const result = await this.db
+    const update = this.db
       .query()
       .match([matchSession(session)])
       .with('*')
@@ -178,8 +178,9 @@ export class DatabaseService {
           owningOrgId: session.owningOrgId,
         }),
       ])
-      .return('newPropNode')
-      .first();
+      .return('newPropNode');
+
+    const result = await update.first();
 
     if (!result) {
       throw new NotFoundException('Could not find object');
@@ -415,7 +416,7 @@ export class DatabaseService {
       ) {
         continue;
       }
-      updated = await this.updateProperty({
+      updated = await this.sgUpdateProperty({
         object: updated,
         session,
         key: prop,
@@ -503,8 +504,8 @@ export class DatabaseService {
     aclEditProp?: string;
     nodevar: string;
   }): Promise<TObject> {
-    const now = DateTime.local();
-    const result = await this.db
+    const createdAt = DateTime.local();
+    const update = this.db
       .query()
       .match([matchSession(session)])
       .with('*')
@@ -521,7 +522,11 @@ export class DatabaseService {
         relation('in', '', 'member'),
         node('sg', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission'),
-        node('', 'Permission', { property: key as string, active: true }),
+        node('', 'Permission', {
+          property: key as string,
+          active: true,
+          edit: true,
+        }),
         relation('out', '', 'baseNode', { active: true }),
         node(nodevar),
         relation('out', 'oldToProp', key as string, { active: true }),
@@ -535,18 +540,23 @@ export class DatabaseService {
         node(nodevar),
         relation('out', 'toProp', key as string, {
           active: true,
-          createdAt: now,
+          createdAt,
           owningOrgId: session.owningOrgId,
         }),
         node('newPropNode', 'Property', {
           active: true,
-          createdAt: now,
+          createdAt,
           value,
           owningOrgId: session.owningOrgId,
         }),
       ])
-      .return('newPropNode')
-      .first();
+      .return('newPropNode');
+    let result;
+    try {
+      result = await update.first();
+    } catch (e) {
+      this.logger.error('Neo4jError ', e);
+    }
 
     if (!result) {
       throw new NotFoundException('Could not find object');
@@ -1136,7 +1146,7 @@ export class DatabaseService {
     prop: string;
     nodevar: string;
   }): Promise<boolean> {
-    const result = await this.db
+    const query = this.db
       .query()
       .match([
         matchSession(session),
@@ -1149,10 +1159,12 @@ export class DatabaseService {
           node(prop, 'Property', { active: true }),
         ],
       ])
-      .return('count(rel) as total')
-      .first();
+      .return('count(rel) as total');
+    //.first();
 
+    const result = await query.first();
     const totalNumber = result?.total || 0;
+
     const isUniqueProperty = totalNumber <= 1;
     return isUniqueProperty;
   }
