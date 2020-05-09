@@ -19,7 +19,7 @@ import {
 @Injectable()
 export class EducationService {
   constructor(
-    @Logger('EducationService:service') private readonly logger: ILogger,
+    @Logger('education:service') private readonly logger: ILogger,
     private readonly db: DatabaseService
   ) {}
 

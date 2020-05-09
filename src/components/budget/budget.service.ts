@@ -370,12 +370,12 @@ export class BudgetService {
       })
       .first();
     if (!orgResult) {
-      this.logger.error(`Could not find organization on budgetRecord: `, {
+      this.logger.warning(`Could not find organization on budget record: `, {
         id,
         userId: session.userId,
       });
       throw new NotFoundException(
-        'Could not find organization on budgetRecord'
+        'Could not find organization on budget record'
       );
     }
 

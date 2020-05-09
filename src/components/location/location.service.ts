@@ -36,7 +36,7 @@ import {
 @Injectable()
 export class LocationService {
   constructor(
-    @Logger('LocationService:service') private readonly logger: ILogger,
+    @Logger('location:service') private readonly logger: ILogger,
     private readonly db: DatabaseService,
     private readonly userService: UserService
   ) {}
@@ -646,7 +646,7 @@ export class LocationService {
 
       if (directorId) {
         const query = `
-          MATCH 
+          MATCH
             (region:Region {id: $id, active: true}),
             (director:User {id: $directorId, active: true})
           CREATE (director)<-[:director { active: true, createdAt: datetime() }]-(region)
