@@ -1,5 +1,12 @@
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { IdArg, ISession, Session } from '../../common';
+import {
+  Args,
+  Mutation,
+  Parent,
+  Query,
+  ResolveField,
+  Resolver,
+} from '@nestjs/graphql';
+import { firstLettersOfWords, IdArg, ISession, Session } from '../../common';
 import {
   CreateOrganizationInput,
   CreateOrganizationOutput,
@@ -11,7 +18,7 @@ import {
 } from './dto';
 import { OrganizationService } from './organization.service';
 
-@Resolver(Organization.name)
+@Resolver(Organization.classType)
 export class OrganizationResolver {
   constructor(private readonly orgs: OrganizationService) {}
 
@@ -34,6 +41,13 @@ export class OrganizationResolver {
     @IdArg() id: string
   ): Promise<Organization> {
     return this.orgs.readOne(id, session);
+  }
+
+  @ResolveField(() => String, { nullable: true })
+  avatarLetters(@Parent() org: Organization): string | undefined {
+    return org.name.canRead && org.name.value
+      ? firstLettersOfWords(org.name.value)
+      : undefined;
   }
 
   @Query(() => OrganizationListOutput, {
