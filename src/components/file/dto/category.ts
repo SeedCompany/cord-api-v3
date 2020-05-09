@@ -1,5 +1,5 @@
+import { registerEnumType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { registerEnumType } from 'type-graphql';
 
 export enum FileNodeCategory {
   Audio = 'audio',

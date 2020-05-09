@@ -1,5 +1,5 @@
+import { InputType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
-import { InputType } from 'type-graphql';
 import { CalendarDate } from './calendar-date';
 import { DateField, DateTimeField } from './luxon.graphql';
 

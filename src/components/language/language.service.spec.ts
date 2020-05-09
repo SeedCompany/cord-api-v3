@@ -100,7 +100,7 @@ describe('LanguageService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [LoggerModule.forRoot(), CoreModule, LanguageService],
+      imports: [LoggerModule.forTest(), CoreModule, LanguageService],
       providers: [
         LanguageService,
         {

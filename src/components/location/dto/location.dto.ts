@@ -4,7 +4,7 @@ import {
   Field,
   InterfaceType,
   ObjectType,
-} from 'type-graphql';
+} from '@nestjs/graphql';
 import { Resource, SecuredProperty, SecuredString } from '../../../common';
 import { SecuredUser } from '../../user/dto';
 

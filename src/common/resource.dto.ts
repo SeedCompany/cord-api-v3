@@ -1,5 +1,5 @@
+import { Field, ID, InterfaceType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
-import { Field, ID, InterfaceType } from 'type-graphql';
 import { DateTimeField } from './luxon.graphql';
 
 @InterfaceType()

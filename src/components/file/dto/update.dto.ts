@@ -1,5 +1,5 @@
+import { Field, ID, InputType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { Field, ID, InputType } from 'type-graphql';
 
 @InputType()
 export abstract class RenameFileInput {

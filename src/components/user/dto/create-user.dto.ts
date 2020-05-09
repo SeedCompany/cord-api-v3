@@ -1,6 +1,6 @@
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { MinLength, ValidateNested } from 'class-validator';
-import { Field, InputType, ObjectType } from 'type-graphql';
 import { IsEmail } from '../../../common';
 import { User } from './user.dto';
 

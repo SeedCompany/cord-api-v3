@@ -1,6 +1,6 @@
+import { Field, InputType, Int } from '@nestjs/graphql';
 import { Max, Min } from 'class-validator';
 import { stripIndent } from 'common-tags';
-import { Field, InputType, Int } from 'type-graphql';
 import { Order } from './order.enum';
 
 @InputType({

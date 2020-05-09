@@ -47,7 +47,7 @@ describe('file service', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
-        LoggerModule.forRoot(),
+        LoggerModule.forTest(),
         UserModule,
         CoreModule,
         OrganizationModule,

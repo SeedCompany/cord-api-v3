@@ -1,4 +1,4 @@
-import { Field, InterfaceType } from 'type-graphql';
+import { Field, InterfaceType } from '@nestjs/graphql';
 
 @InterfaceType({
   description: 'Entities that are readable',

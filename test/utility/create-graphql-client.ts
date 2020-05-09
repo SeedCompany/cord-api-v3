@@ -124,7 +124,6 @@ export const getGraphQLOptions = (): GqlModuleOptions => ({
 });
 
 const getServer = async (app: INestApplicationContext) => {
-  await app.init();
   const module = app.get(GraphQLModule);
   return (module as any).apolloServer as ApolloServerBase;
 };

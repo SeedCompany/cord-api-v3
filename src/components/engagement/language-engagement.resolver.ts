@@ -1,4 +1,4 @@
-import { Args, Parent, ResolveProperty, Resolver } from '@nestjs/graphql';
+import { Args, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { ISession, Session } from '../../common';
 import { ProductListInput, SecuredProductList } from '../product/dto';
 import { LanguageEngagement } from './dto';
@@ -8,7 +8,7 @@ import { EngagementService } from './engagement.service';
 export class LanguageEngagementResolver {
   constructor(private readonly engagements: EngagementService) {}
 
-  @ResolveProperty(() => SecuredProductList)
+  @ResolveField(() => SecuredProductList)
   async products(
     @Parent() engagement: LanguageEngagement,
     @Session() session: ISession,

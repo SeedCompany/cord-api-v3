@@ -20,7 +20,7 @@ describe('AuthorizationService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [LoggerModule.forRoot(), CoreModule, AuthenticationModule],
+      imports: [LoggerModule.forTest(), CoreModule, AuthenticationModule],
       providers: [
         AuthorizationService,
         {

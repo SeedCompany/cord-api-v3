@@ -10,10 +10,11 @@ import { ValidationException } from './validation.pipe';
 
 @Catch()
 export class ExceptionFilter implements GqlExceptionFilter {
-  catch(exception: unknown, restHost: ArgumentsHost): any {
+  catch(exception: Error, restHost: ArgumentsHost): any {
+    const _host = GqlArgumentsHost.create(restHost); // when needed
     let ex;
     try {
-      ex = this.catchGql(exception, GqlArgumentsHost.create(restHost));
+      ex = this.catchGql(exception);
     } catch (e) {
       throw exception;
     }
@@ -21,67 +22,58 @@ export class ExceptionFilter implements GqlExceptionFilter {
     throw e;
   }
 
-  catchGql(ex: unknown, host: GqlArgumentsHost) {
-    if (ex instanceof ValidationException) {
-      return this.validationException(ex, host);
-    }
-    if (ex instanceof HttpException) {
-      return this.httpException(ex, host);
-    }
-
-    // Fallback to generic Error
-    if (ex instanceof Error) {
-      return {
-        message: ex.message,
-        extensions: {
-          code: 'InternalServerError',
-          status: 500,
-        },
-        stack: ex.stack,
-      };
-    }
-    // This shouldn't ever be hit...
-    throw new Error(
-      `Only Errors should be thrown, but ${typeof ex} thrown instead.`
-    );
-  }
-
-  private httpException(ex: HttpException, _host: GqlArgumentsHost) {
-    const res = ex.getResponse();
-    const data =
-      typeof res === 'string'
-        ? { message: res, statusCode: ex.getResponse(), error: 'Unknown' }
-        : (res as {
-            statusCode: number;
-            error: string;
-            message?: string;
-          });
-
-    const message = data.message ?? data.error;
+  catchGql(ex: Error) {
+    const {
+      message = ex.message,
+      stack = ex.stack,
+      ...extensions
+    } = this.gatherExtraInfo(ex);
     return {
       message,
-      extensions: {
-        code: data.error.replace(/\s/g, ''),
-        status: data.statusCode,
-      },
-      stack: ex.stack
-        ? `Error: ${message}\n` + ex.stack.replace(/.+\n/, '')
-        : undefined,
+      stack,
+      extensions,
     };
   }
 
-  private validationException(
-    ex: ValidationException,
-    _host: GqlArgumentsHost
-  ) {
+  private gatherExtraInfo(ex: Error): Record<string, any> {
+    if (ex instanceof ValidationException) {
+      return this.validationException(ex);
+    }
+    if (ex instanceof HttpException) {
+      return this.httpException(ex);
+    }
+
+    // Fallback to generic Error
+    return {
+      code: 'InternalServerError',
+      status: 500,
+    };
+  }
+
+  private httpException(ex: HttpException) {
+    const res = ex.getResponse();
+    const { message, error = undefined, ...data } =
+      typeof res === 'string'
+        ? { message: res }
+        : (res as { message: string; error?: string });
+
+    const code = error
+      ? error.replace(/\s/g, '')
+      : ex.constructor.name.replace(/(Exception|Error)$/, '');
+
+    return {
+      code,
+      status: ex.getStatus(),
+      ...data,
+    };
+  }
+
+  private validationException(ex: ValidationException) {
     return {
       message: 'Input validation failed',
-      extensions: {
-        code: 'Validation',
-        status: 400,
-        errors: this.flattenValidationErrors(ex.errors),
-      },
-      stack: ex.stack,
+      code: 'Validation',
+      status: 400,
+      errors: this.flattenValidationErrors(ex.errors),
     };
   }
 

@@ -164,7 +164,7 @@ describe('EngamgemetService', () => {
   beforeAll(async () => {
     const module = await Test.createTestingModule({
       imports: [
-        LoggerModule.forRoot(),
+        LoggerModule.forTest(),
         CoreModule,
         UserModule,
         EducationModule,

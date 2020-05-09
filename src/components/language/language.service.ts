@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   NotFoundException,
   InternalServerErrorException as ServerException,
@@ -132,9 +133,7 @@ export class LanguageService {
     ];
   };
   async create(input: CreateLanguage, session: ISession): Promise<Language> {
-    this.logger.info(
-      `Mutation create Language: ${input.name} by ${session.userId}`
-    );
+    this.logger.info(`Create language`, { input, userId: session.userId });
 
     const id = generate();
     const createdAt = DateTime.local();
@@ -267,12 +266,13 @@ export class LanguageService {
 
       const lang = await lookup.first();
       if (lang) {
-        this.logger.error('Language name already exists', {
+        this.logger.warning('Language name already exists', {
           input,
           userId: session.userId,
         });
-        throw new ForbiddenError('Could not create language. Name taken');
+        throw new BadRequestException('Language name already exists');
       }
+      // TODO permission error or no?
       this.logger.error(`Could not create`, { ...input, exception: e });
       throw new ForbiddenError('Could not create language');
     }
@@ -282,9 +282,10 @@ export class LanguageService {
   }
 
   async readOne(langId: string, session: ISession): Promise<Language> {
-    this.logger.info(
-      `Query readOne Language: id ${langId} by ${session.userId}`
-    );
+    this.logger.info(`Read language`, {
+      id: langId,
+      userId: session.userId,
+    });
 
     // const result = await this.db.readProperties({
     //   session,
@@ -504,7 +505,7 @@ export class LanguageService {
 
     const result = await readLanguage.first();
     if (!result || !result.id) {
-      this.logger.error(`Could not find language: ${langId} `);
+      this.logger.warning(`Could not find language`, { id: langId });
       throw new NotFoundException('Could not find language');
     }
 
@@ -553,9 +554,7 @@ export class LanguageService {
   }
 
   async update(input: UpdateLanguage, session: ISession): Promise<Language> {
-    this.logger.info(
-      `mutation update language ${input.id} by ${session.userId}`
-    );
+    this.logger.info(`Update language`, { input, userId: session.userId });
     const language = await this.readOne(input.id, session);
 
     return this.db.sgUpdateProperties({

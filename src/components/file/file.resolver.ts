@@ -3,7 +3,7 @@ import {
   Mutation,
   Parent,
   Query,
-  ResolveProperty,
+  ResolveField,
   Resolver,
 } from '@nestjs/graphql';
 import { IdArg, ISession, Session } from '../../common';
@@ -37,7 +37,7 @@ export class FileResolver {
     return this.service.getFileNode(id, session);
   }
 
-  @ResolveProperty(() => [FileVersion], {
+  @ResolveField(() => [FileVersion], {
     description: 'Return the file versions of this file',
   })
   async versions(
@@ -47,7 +47,7 @@ export class FileResolver {
     return this.service.getVersions(node.id, session);
   }
 
-  @ResolveProperty(() => String, {
+  @ResolveField(() => String, {
     description: 'A direct url to download the file',
   })
   downloadUrl(

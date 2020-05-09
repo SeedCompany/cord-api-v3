@@ -116,7 +116,7 @@ describe('ProjectService', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
-        LoggerModule.forRoot(),
+        LoggerModule.forTest(),
         CoreModule,
         UserModule,
         EducationModule,

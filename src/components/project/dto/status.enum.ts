@@ -1,4 +1,4 @@
-import { createUnionType, registerEnumType } from 'type-graphql';
+import { createUnionType, registerEnumType } from '@nestjs/graphql';
 import { ProjectStep } from './step.enum';
 
 export enum ProjectStatus {

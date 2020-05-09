@@ -3,7 +3,7 @@ import {
   Mutation,
   Parent,
   Query,
-  ResolveProperty,
+  ResolveField,
   Resolver,
 } from '@nestjs/graphql';
 import { IdArg, ISession, Session } from '../../common';
@@ -19,7 +19,7 @@ export class DirectoryResolver {
     return this.service.getDirectory(id, session);
   }
 
-  @ResolveProperty(() => FileListOutput, {
+  @ResolveField(() => FileListOutput, {
     description: 'Return the file nodes of this directory',
   })
   async children(

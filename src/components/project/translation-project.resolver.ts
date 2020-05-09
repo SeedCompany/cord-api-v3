@@ -1,4 +1,4 @@
-import { Args, Parent, ResolveProperty, Resolver } from '@nestjs/graphql';
+import { Args, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { ISession, Session } from '../../common';
 import {
   EngagementListInput,
@@ -15,7 +15,7 @@ import { ProjectService } from './project.service';
 export class TranslationProjectResolver {
   constructor(private readonly projects: ProjectService) {}
 
-  @ResolveProperty(() => SecuredLanguageEngagementList)
+  @ResolveField(() => SecuredLanguageEngagementList)
   async engagements(
     @Parent() project: TranslationProject,
     @Session() session: ISession,
@@ -30,7 +30,7 @@ export class TranslationProjectResolver {
     return this.projects.listEngagements(project, input, session);
   }
 
-  @ResolveProperty(() => SecuredProjectMemberList, {
+  @ResolveField(() => SecuredProjectMemberList, {
     description: 'The project members',
   })
   async team(

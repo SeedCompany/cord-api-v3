@@ -1,4 +1,4 @@
-import { registerEnumType } from 'type-graphql';
+import { registerEnumType } from '@nestjs/graphql';
 
 export enum CeremonyType {
   // Language Engagements can have dedications

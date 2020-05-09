@@ -37,7 +37,7 @@ export const createTestApp = async () => {
   const appConfig: ApplicationConfig = moduleFixture.applicationConfig;
   remove(appConfig.getGlobalPipes(), (p) => p instanceof ValidationPipe);
 
-  const app: TestApp = moduleFixture.createNestApplication();
+  const app = moduleFixture.createNestApplication<TestApp>();
   await app.init();
   app.graphql = await createGraphqlClient(app);
 

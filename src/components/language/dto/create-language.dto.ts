@@ -1,3 +1,4 @@
+import { Field, InputType, Int, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import {
   IsPositive,
@@ -7,7 +8,6 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { DateTime } from 'luxon';
-import { Field, InputType, Int, ObjectType } from 'type-graphql';
 import { Language } from './language.dto';
 
 @InputType()

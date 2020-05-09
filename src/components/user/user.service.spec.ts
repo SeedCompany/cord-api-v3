@@ -64,7 +64,7 @@ describe('UserService', () => {
 
   // beforeEach(async () => {
   //   const module = await Test.createTestingModule({
-  //     imports: [LoggerModule.forRoot(), CoreModule, EducationModule, OrganizationModule, UnavailabilityModule, AuthModule],
+  //     imports: [LoggerModule.forTest(), CoreModule, EducationModule, OrganizationModule, UnavailabilityModule, AuthModule],
   //     providers: [UserService, EducationService, OrganizationService, UnavailabilityService, AuthService],
   //   }).compile();
 
@@ -74,7 +74,7 @@ describe('UserService', () => {
   beforeAll(async () => {
     const module = await Test.createTestingModule({
       imports: [
-        LoggerModule.forRoot(),
+        LoggerModule.forTest(),
         CoreModule,
         EducationModule,
         OrganizationModule,

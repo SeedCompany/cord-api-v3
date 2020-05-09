@@ -18,7 +18,7 @@ import {
 @Injectable()
 export class UnavailabilityService {
   constructor(
-    @Logger('UnavailabilityService:service') private readonly logger: ILogger,
+    @Logger('unavailability:service') private readonly logger: ILogger,
     private readonly db: DatabaseService
   ) {}
 

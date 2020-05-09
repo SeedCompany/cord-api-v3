@@ -1,4 +1,4 @@
-import { Field, ID, InputType, ObjectType } from 'type-graphql';
+import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
 
 @InputType()
 export class CreateSecurityGroup {

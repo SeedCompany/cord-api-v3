@@ -49,7 +49,7 @@ describe('EducationService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [LoggerModule.forRoot(), CoreModule],
+      imports: [LoggerModule.forTest(), CoreModule],
       providers: [
         EducationService,
         {

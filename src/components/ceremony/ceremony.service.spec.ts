@@ -55,7 +55,7 @@ describe('CeremonyService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [LoggerModule.forRoot(), CoreModule, CeremonyService],
+      imports: [LoggerModule.forTest(), CoreModule, CeremonyService],
       providers: [
         CeremonyService,
         {

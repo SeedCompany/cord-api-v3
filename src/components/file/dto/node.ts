@@ -1,6 +1,4 @@
 import { Type } from '@nestjs/common';
-import { stripIndent } from 'common-tags';
-import { DateTime } from 'luxon';
 import {
   createUnionType,
   Field,
@@ -8,7 +6,9 @@ import {
   Int,
   InterfaceType,
   ObjectType,
-} from 'type-graphql';
+} from '@nestjs/graphql';
+import { stripIndent } from 'common-tags';
+import { DateTime } from 'luxon';
 import { DateTimeField, Resource } from '../../../common';
 import { User } from '../../user/dto';
 import { FileNodeCategory } from './category';

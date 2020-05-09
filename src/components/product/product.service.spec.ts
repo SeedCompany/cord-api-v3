@@ -51,7 +51,7 @@ describe('ProductService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [LoggerModule.forRoot(), CoreModule, ProductService],
+      imports: [LoggerModule.forTest(), CoreModule, ProductService],
       providers: [
         ProductService,
         {

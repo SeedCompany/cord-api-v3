@@ -63,7 +63,7 @@ describe('LocationService', () => {
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
-        LoggerModule.forRoot(),
+        LoggerModule.forTest(),
         CoreModule,
         AuthenticationModule,
         LocationModule,

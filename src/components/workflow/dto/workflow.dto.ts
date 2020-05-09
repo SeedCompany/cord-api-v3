@@ -1,6 +1,6 @@
 import { Type } from '@nestjs/common';
+import { Field, ID, ObjectType } from '@nestjs/graphql';
 import { ValidateNested } from 'class-validator';
-import { Field, ID, ObjectType } from 'type-graphql';
 import { State } from './state.dto';
 
 @ObjectType()

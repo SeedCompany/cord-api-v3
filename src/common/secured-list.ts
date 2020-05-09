@@ -1,12 +1,13 @@
+import { Field, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { GraphQLScalarType } from 'graphql';
-import { ClassType, Field, ObjectType } from 'type-graphql';
+import { Class } from 'type-fest';
 import { ListOptions, PaginatedList } from './pagination-list';
 import { Readable } from './readable.interface';
 import { AbstractClassType } from './types';
 
 export function SecuredList<Type, ListItem = Type>(
-  itemClass: ClassType<Type> | AbstractClassType<Type> | GraphQLScalarType,
+  itemClass: Class<Type> | AbstractClassType<Type> | GraphQLScalarType,
   options: ListOptions = {}
 ) {
   @ObjectType({ isAbstract: true, implements: [Readable] })
