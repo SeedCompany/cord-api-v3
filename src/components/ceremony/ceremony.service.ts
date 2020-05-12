@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { node } from 'cypher-query-builder';
+import { node, relation } from 'cypher-query-builder';
+import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
 import { DatabaseService, ILogger, Logger, matchSession } from '../../core';
@@ -79,26 +80,99 @@ export class CeremonyService {
     };
   }
 
+  // helper method for defining properties
+  property = (prop: string, value: any, baseNode: string) => {
+    if (!value) {
+      return [];
+    }
+    const createdAt = DateTime.local();
+    // const propLabel = prop === 'name' ? 'Property:OrgName' : 'Property';
+    return [
+      [
+        node(baseNode),
+        relation('out', '', prop, {
+          active: true,
+          createdAt,
+        }),
+        node(prop, 'Property', {
+          active: true,
+          value,
+        }),
+      ],
+    ];
+  };
+
+  // helper method for defining properties
+  permission = (
+    property: string,
+    sg: string,
+    baseNode: string,
+    read: boolean,
+    edit: boolean
+  ) => {
+    const createdAt = DateTime.local();
+    return [
+      [
+        node(sg),
+        relation('out', '', 'permission', {
+          active: true,
+          createdAt,
+        }),
+        node('', 'Permission', {
+          property,
+          active: true,
+          read,
+          edit,
+        }),
+        relation('out', '', 'baseNode', {
+          active: true,
+          createdAt,
+        }),
+        node(baseNode),
+      ],
+    ];
+  };
   async create(input: CreateCeremony, session: ISession): Promise<Ceremony> {
     const id = generate();
-    const acls = {
-      canReadType: true,
-      canEditType: true,
-      canReadPlanned: true,
-      canEditPlanned: true,
-      canReadEstimatedDate: true,
-      canEditEstimatedDate: true,
-      canReadActualDate: true,
-      canEditActualDate: true,
-    };
+    const createdAt = DateTime.local();
 
     try {
-      await this.db.createNode({
-        session,
-        type: Ceremony.classType,
-        input: { id, ...input },
-        acls,
-      });
+      await this.db
+        .query()
+        .match(matchSession(session, { withAclEdit: 'canCreateCeremony' }))
+        .create([
+          [
+            node('ceremony', 'Ceremony:BaseNode', {
+              active: true,
+              createdAt,
+              id,
+              owningOrgId: session.owningOrgId,
+            }),
+          ],
+          ...this.property('type', input.type, 'ceremony'),
+          [
+            node('adminSG', 'SecurityGroup', {
+              active: true,
+              createdAt,
+              name: input.type + ' admin',
+            }),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('requestingUser'),
+          ],
+          ...this.permission('type', 'adminSG', 'ceremony', true, true),
+          [
+            node('readerSG', 'SecurityGroup', {
+              active: true,
+              createdAt,
+              name: input.type + ' users',
+            }),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('requestingUser'),
+          ],
+          ...this.permission('type', 'readerSG', 'ceremony', true, false),
+        ])
+        .return('ceremony.id as id')
+        .first();
 
       return await this.readOne(id, session);
     } catch (e) {
