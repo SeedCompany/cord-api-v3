@@ -4,7 +4,7 @@ import {
   NotFoundException,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
-import { node } from 'cypher-query-builder';
+import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession, Order } from '../../common';
@@ -36,6 +36,59 @@ export class BudgetService {
     @Logger('budget:service') private readonly logger: ILogger
   ) {}
 
+  // helper method for defining properties
+  property = (prop: string, value: any, baseNode: string) => {
+    if (!value) {
+      return [];
+    }
+    const createdAt = DateTime.local();
+    //const propLabel = 'Property';
+    return [
+      [
+        node(baseNode),
+        relation('out', '', prop, {
+          active: true,
+          createdAt,
+        }),
+        node(prop, 'Property', {
+          active: true,
+          value,
+        }),
+      ],
+    ];
+  };
+
+  // helper method for defining properties
+  permission = (
+    property: string,
+    sg: string,
+    baseNode: string,
+    read: boolean,
+    edit: boolean
+  ) => {
+    const createdAt = DateTime.local();
+    return [
+      [
+        node(sg),
+        relation('out', '', 'permission', {
+          active: true,
+          createdAt,
+        }),
+        node('', 'Permission', {
+          property,
+          active: true,
+          read,
+          edit,
+        }),
+        relation('out', '', 'baseNode', {
+          active: true,
+          createdAt,
+        }),
+        node(baseNode),
+      ],
+    ];
+  };
+
   async create(
     { projectId, ...input }: CreateBudget,
     session: ISession
@@ -46,21 +99,47 @@ export class BudgetService {
     }
 
     const id = generate();
+    const createdAt = DateTime.local();
     const status: BudgetStatus = BudgetStatus.Pending;
-    const acls = {
-      canEditStatus: true,
-      canEditRecords: true,
-      canReadStatus: true,
-      canReadRecords: true,
-    };
 
     try {
-      await this.db.createNode({
-        session,
-        input: { id, status, ...input },
-        acls,
-        type: Budget.classType,
-      });
+      const createBudget = this.db
+        .query()
+        .match(matchSession(session, { withAclEdit: 'canCreateBudget' }))
+        .create([
+          [
+            node('budget', 'Budget:BaseNode', {
+              active: true,
+              createdAt,
+              id,
+              owningOrgId: session.owningOrgId,
+            }),
+          ],
+          ...this.property('status', status, 'budget'),
+          [
+            node('adminSG', 'SecurityGroup', {
+              active: true,
+              createdAt,
+              name: projectId + ' admin',
+            }),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('requestingUser'),
+          ],
+          ...this.permission('status', 'adminSG', 'budget', true, true),
+          [
+            node('readerSG', 'SecurityGroup', {
+              active: true,
+              createdAt,
+              name: projectId + ' users',
+            }),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('requestingUser'),
+          ],
+          ...this.permission('status', 'readerSG', 'budget', true, false),
+        ])
+        .return('budget.id as id');
+
+      await createBudget.first();
 
       this.logger.info(`Created Budget`, {
         id,
@@ -115,9 +194,9 @@ export class BudgetService {
           );
         })
       );
-      const result = await this.readOne(id, session);
+      const budget = await this.readOne(id, session);
 
-      return result;
+      return budget;
     } catch {
       this.logger.error(`Could not create Budget`, {
         id,
@@ -133,12 +212,43 @@ export class BudgetService {
       userId: session.userId,
     });
 
-    const result = await this.db.readProperties({
-      session,
-      id,
-      props: ['id', 'createdAt', 'status'],
-      nodevar: 'budget',
-    });
+    const readBudget = this.db
+      .query()
+      .match(matchSession(session, { withAclRead: 'canReadBudgets' }))
+      .match([node('budget', 'Budget', { active: true, id })])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node('canReadStatus', 'Permission', {
+          property: 'status',
+          active: true,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('budget'),
+        relation('out', '', 'status', { active: true }),
+        node('status', 'Property', { active: true }),
+      ])
+      .return({
+        budget: [{ id: 'id', createdAt: 'createdAt' }],
+        status: [{ value: 'status' }],
+        requestingUser: [
+          {
+            canReadBudgets: 'canReadBudgets',
+            canCreateBudget: 'canCreateBudget',
+          },
+        ],
+        canReadStatus: [{ read: 'canReadStatus', edit: 'canEditStatus' }],
+      });
+
+    let result;
+    try {
+      result = await readBudget.first();
+    } catch (e) {
+      this.logger.error('e :>> ', e);
+    }
 
     if (!result) {
       this.logger.error(`Could not find budget:  `, {
@@ -166,12 +276,14 @@ export class BudgetService {
         return { value: row.id, canRead: true, canEdit: true };
       });
     }
-    return {
-      id: result.id.value,
-      createdAt: result.createdAt.value,
-      status: result.status.value,
+    const budget = {
+      id: result.id,
+      createdAt: result.createdAt,
+      status: result.canReadStatus ? result.status : undefined,
       records,
     };
+
+    return budget;
   }
 
   async list(
@@ -226,7 +338,7 @@ export class BudgetService {
   async update(input: UpdateBudget, session: ISession): Promise<Budget> {
     const budget = await this.readOne(input.id, session);
 
-    return this.db.updateProperties({
+    return this.db.sgUpdateProperties({
       session,
       object: budget,
       props: ['status'],
@@ -269,22 +381,81 @@ export class BudgetService {
     this.logger.info('Creating BudgetRecord', input);
     // on Init, create a budget will create a budget record for each org and each fiscal year in the project input.projectId
     const id = generate();
-    const acls = {
-      canEditAmount: true,
-      canEditFiscalYear: true,
-      canEditOrganizationId: true,
-      canReadAmount: true,
-      canReadFiscalYear: true,
-      canReadOrganizationId: true,
-    };
+    const createdAt = DateTime.local();
 
     try {
-      await this.db.createNode({
-        session,
-        input: { id, ...input, amount: 0 }, // on init the amount is 0
-        acls,
-        type: BudgetRecord.classType,
-      });
+      // await this.db.createNode({
+      //   session,
+      //   input: { id, ...input, amount: 0 }, // on init the amount is 0
+      //   acls,
+      //   type: BudgetRecord.classType,
+      // });
+      const createBudgetRecord = this.db
+        .query()
+        .match(matchSession(session, { withAclEdit: 'canCreateBudget' }))
+        .create([
+          [
+            node('budgetRecord', 'BudgetRecord:BaseNode', {
+              active: true,
+              createdAt,
+              id,
+              owningOrgId: session.owningOrgId,
+            }),
+          ],
+          ...this.property('fiscalYear', input.fiscalYear, 'budgetRecord'),
+          ...this.property('amount', '0', 'budgetRecord'),
+          [
+            node('adminSG', 'SecurityGroup', {
+              active: true,
+              createdAt,
+              name: input.fiscalYear.toString() + ' admin',
+            }),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('requestingUser'),
+          ],
+          [
+            node('readerSG', 'SecurityGroup', {
+              active: true,
+              createdAt,
+              name: input.fiscalYear.toString() + ' users',
+            }),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('requestingUser'),
+          ],
+          ...this.permission(
+            'fiscalYear',
+            'adminSG',
+            'budgetRecord',
+            true,
+            true
+          ),
+          ...this.permission(
+            'fiscalYear',
+            'readerSG',
+            'budgetRecord',
+            true,
+            false
+          ),
+          ...this.permission('amount', 'adminSG', 'budgetRecord', true, true),
+          ...this.permission('amount', 'readerSG', 'budgetRecord', true, false),
+          ...this.permission(
+            'organization',
+            'adminSG',
+            'budgetRecord',
+            true,
+            true
+          ),
+          ...this.permission(
+            'organization',
+            'readerSG',
+            'budgetRecord',
+            true,
+            false
+          ),
+        ])
+        .return('budgetRecord.id as id');
+
+      await createBudgetRecord.first();
 
       this.logger.info(`Created Budget Record`, {
         id,
@@ -340,12 +511,80 @@ export class BudgetService {
       userId: session.userId,
     });
 
-    const result = await this.db.readProperties({
-      session,
-      id,
-      props: ['id', 'createdAt', 'fiscalYear', 'amount'],
-      nodevar: 'budgetRecord',
-    });
+    const readBudgetRecord = this.db
+      .query()
+      .match(matchSession(session, { withAclRead: 'canReadBudgets' }))
+      .match([node('budgetRecord', 'BudgetRecord', { active: true, id })])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node('canReadAmount', 'Permission', {
+          property: 'amount',
+          active: true,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('budgetRecord'),
+        relation('out', '', 'amount', { active: true }),
+        node('amount', 'Property', { active: true }),
+      ])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node('canReadFiscalYear', 'Permission', {
+          property: 'fiscalYear',
+          active: true,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('budgetRecord'),
+        relation('out', '', 'fiscalYear', { active: true }),
+        node('fiscalYear', 'Property', { active: true }),
+      ])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node('canReadOrganization', 'Permission', {
+          property: 'organization',
+          active: true,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('budgetRecord'),
+        relation('out', '', 'organization', { active: true }),
+        node('organization', 'Organization', { active: true }),
+      ])
+      .return({
+        budgetRecord: [{ id: 'id', createdAt: 'createdAt' }],
+        amount: [{ value: 'amount' }],
+        canReadAmount: [
+          { read: 'canReadAmountRead', edit: 'canReadAmountEdit' },
+        ],
+        fiscalYear: [{ value: 'fiscalYear' }],
+        canReadFiscalYear: [
+          { read: 'canReadFiscalYearRead', edit: 'canReadFiscalYearEdit' },
+        ],
+        organization: [{ id: 'organizationId' }],
+        canReadOrganization: [
+          {
+            read: 'canReadOrganizationRead',
+            edit: 'canReadOrganizationEdit',
+          },
+        ],
+      });
+
+    let result;
+    try {
+      result = await readBudgetRecord.first();
+    } catch (e) {
+      this.logger.error('e :>> ', e);
+    }
 
     if (!result) {
       this.logger.error(`Could not find budgetRecord:  `, {
@@ -355,38 +594,23 @@ export class BudgetService {
       throw new NotFoundException('Could not find budgetRecord');
     }
 
-    // get orgId
-    const query = `
-    MATCH
-      (acl:ACL)-[:toNode]->(br: BudgetRecord {id: $id, active: true})
-      -[:organization {active: true}]->(org:Organization {active: true})
-    RETURN
-      org, acl
-    `;
-    const orgResult = await this.db
-      .query()
-      .raw(query, {
-        id,
-      })
-      .first();
-    if (!orgResult) {
-      this.logger.warning(`Could not find organization on budget record: `, {
-        id,
-        userId: session.userId,
-      });
-      throw new NotFoundException(
-        'Could not find organization on budget record'
-      );
-    }
-
     return {
-      ...result,
-      id: result.id.value,
-      createdAt: result.createdAt.value,
+      id: result.id,
+      createdAt: result.createdAt,
       organizationId: {
-        value: orgResult?.org.properties.id,
-        canRead: orgResult?.acl.properties.canReadOrganizationId,
-        canEdit: orgResult?.acl.properties.canEditOrganizationId,
+        value: result.organizationId,
+        canRead: result.canReadOrganizationRead,
+        canEdit: result.canReadOrganizationEdit,
+      },
+      fiscalYear: {
+        value: result.fiscalYear,
+        canRead: result.canReadFiscalYearRead,
+        canEdit: result.canReadFiscalYearEdit,
+      },
+      amount: {
+        value: result.amount,
+        canRead: result.canReadAmountRead,
+        canEdit: result.canReadAmountEdit,
       },
     };
   }
@@ -451,7 +675,7 @@ export class BudgetService {
     const br = await this.readOneRecord(id, session);
 
     try {
-      const result = await this.db.updateProperties({
+      const result = await this.db.sgUpdateProperties({
         session,
         object: br,
         props: ['amount'],

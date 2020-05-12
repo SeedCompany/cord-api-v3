@@ -300,8 +300,6 @@ export class UserService {
           createdByUserId: 'system',
           canCreateBudget: true,
           canReadBudgets: true,
-          canCreateBudgetRecord: true,
-          canReadBudgetRecords: true,
           canCreateFile: true,
           canReadFiles: true,
           canCreateFileVersion: true,
