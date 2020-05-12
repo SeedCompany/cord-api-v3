@@ -103,7 +103,7 @@ export class BudgetService {
     const status: BudgetStatus = BudgetStatus.Pending;
 
     try {
-      await this.db
+      const createBudget = this.db
         .query()
         .match(matchSession(session, { withAclEdit: 'canCreateBudget' }))
         .create([
@@ -137,8 +137,9 @@ export class BudgetService {
           ],
           ...this.permission('status', 'readerSG', 'budget', true, false),
         ])
-        .return('budget.id as id')
-        .first();
+        .return('budget.id as id');
+
+      await createBudget.first();
 
       this.logger.info(`Created Budget`, {
         id,
@@ -160,7 +161,6 @@ export class BudgetService {
         })
         .first();
 
-      //TODO : Refactor - Project Service
       // on Init, create a budget will create a budget record for each org and each fiscal year in the project input.projectId
       const project = await this.projectService.readOne(projectId, session);
       const orgIds = (
@@ -194,9 +194,9 @@ export class BudgetService {
           );
         })
       );
-      const result = await this.readOne(id, session);
+      const budget = await this.readOne(id, session);
 
-      return result;
+      return budget;
     } catch {
       this.logger.error(`Could not create Budget`, {
         id,
@@ -212,12 +212,6 @@ export class BudgetService {
       userId: session.userId,
     });
 
-    // const result = await this.db.readProperties({
-    //   session,
-    //   id,
-    //   props: ['id', 'createdAt', 'status'],
-    //   nodevar: 'budget',
-    // });
     const readBudget = this.db
       .query()
       .match(matchSession(session, { withAclRead: 'canReadBudgets' }))
@@ -239,17 +233,22 @@ export class BudgetService {
       ])
       .return({
         budget: [{ id: 'id', createdAt: 'createdAt' }],
-        budgetSatus: [{ value: 'status' }],
+        status: [{ value: 'status' }],
         requestingUser: [
           {
             canReadBudgets: 'canReadBudgets',
             canCreateBudget: 'canCreateBudget',
           },
         ],
-        canReadSatus: [{ read: 'canReadStatus', edit: 'canEditStatus' }],
+        canReadStatus: [{ read: 'canReadStatus', edit: 'canEditStatus' }],
       });
 
-    const result = await readBudget.first();
+    let result;
+    try {
+      result = await readBudget.first();
+    } catch (e) {
+      this.logger.error('e :>> ', e);
+    }
 
     if (!result) {
       this.logger.error(`Could not find budget:  `, {
@@ -277,12 +276,14 @@ export class BudgetService {
         return { value: row.id, canRead: true, canEdit: true };
       });
     }
-    return {
-      id: result.id.value,
-      createdAt: result.createdAt.value,
-      status: result.status.value,
+    const budget = {
+      id: result.id,
+      createdAt: result.createdAt,
+      status: result.canReadStatus ? result.status : undefined,
       records,
     };
+
+    return budget;
   }
 
   async list(
@@ -391,7 +392,7 @@ export class BudgetService {
       // });
       const createBudgetRecord = this.db
         .query()
-        .match(matchSession(session, { withAclEdit: 'canCreateBudgetRecord' }))
+        .match(matchSession(session, { withAclEdit: 'canCreateBudget' }))
         .create([
           [
             node('budgetRecord', 'BudgetRecord:BaseNode', {
@@ -402,6 +403,7 @@ export class BudgetService {
             }),
           ],
           ...this.property('fiscalYear', input.fiscalYear, 'budgetRecord'),
+          ...this.property('amount', '0', 'budgetRecord'),
           [
             node('adminSG', 'SecurityGroup', {
               active: true,
@@ -434,8 +436,25 @@ export class BudgetService {
             true,
             false
           ),
+          ...this.permission('amount', 'adminSG', 'budgetRecord', true, true),
+          ...this.permission('amount', 'readerSG', 'budgetRecord', true, false),
+          ...this.permission(
+            'organization',
+            'adminSG',
+            'budgetRecord',
+            true,
+            true
+          ),
+          ...this.permission(
+            'organization',
+            'readerSG',
+            'budgetRecord',
+            true,
+            false
+          ),
         ])
         .return('budgetRecord.id as id');
+
       await createBudgetRecord.first();
 
       this.logger.info(`Created Budget Record`, {
@@ -492,15 +511,9 @@ export class BudgetService {
       userId: session.userId,
     });
 
-    // const result = await this.db.readProperties({
-    //   session,
-    //   id,
-    //   props: ['id', 'createdAt', 'fiscalYear', 'amount'],
-    //   nodevar: 'budgetRecord',
-    // });
     const readBudgetRecord = this.db
       .query()
-      .match(matchSession(session, { withAclRead: 'canReadBudgetRecords' }))
+      .match(matchSession(session, { withAclRead: 'canReadBudgets' }))
       .match([node('budgetRecord', 'BudgetRecord', { active: true, id })])
       .optionalMatch([
         node('requestingUser'),
@@ -537,15 +550,15 @@ export class BudgetService {
         relation('in', '', 'member', { active: true }),
         node('sg', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
-        node('canReadOrganizationId', 'Permission', {
-          property: 'organizationId',
+        node('canReadOrganization', 'Permission', {
+          property: 'organization',
           active: true,
           read: true,
         }),
         relation('out', '', 'baseNode', { active: true }),
         node('budgetRecord'),
-        relation('out', '', 'organizationId', { active: true }),
-        node('organizationId', 'Property', { active: true }),
+        relation('out', '', 'organization', { active: true }),
+        node('organization', 'Organization', { active: true }),
       ])
       .return({
         budgetRecord: [{ id: 'id', createdAt: 'createdAt' }],
@@ -557,16 +570,22 @@ export class BudgetService {
         canReadFiscalYear: [
           { read: 'canReadFiscalYearRead', edit: 'canReadFiscalYearEdit' },
         ],
-        organizationId: [{ value: 'organizationId' }],
-        canReadOrganizationId: [
+        organization: [{ id: 'organizationId' }],
+        canReadOrganization: [
           {
-            read: 'canReadOrganizationIdRead',
-            edit: 'canReadOrganizationIdEdit',
+            read: 'canReadOrganizationRead',
+            edit: 'canReadOrganizationEdit',
           },
         ],
       });
 
-    const result = await readBudgetRecord.first();
+    let result;
+    try {
+      result = await readBudgetRecord.first();
+    } catch (e) {
+      this.logger.error('e :>> ', e);
+    }
+
     if (!result) {
       this.logger.error(`Could not find budgetRecord:  `, {
         id,
@@ -575,38 +594,23 @@ export class BudgetService {
       throw new NotFoundException('Could not find budgetRecord');
     }
 
-    // get orgId
-    const query = `
-    MATCH
-      (acl:ACL)-[:toNode]->(br: BudgetRecord {id: $id, active: true})
-      -[:organization {active: true}]->(org:Organization {active: true})
-    RETURN
-      org, acl
-    `;
-    const orgResult = await this.db
-      .query()
-      .raw(query, {
-        id,
-      })
-      .first();
-    if (!orgResult) {
-      this.logger.warning(`Could not find organization on budget record: `, {
-        id,
-        userId: session.userId,
-      });
-      throw new NotFoundException(
-        'Could not find organization on budget record'
-      );
-    }
-
     return {
-      ...result,
-      id: result.id.value,
-      createdAt: result.createdAt.value,
+      id: result.id,
+      createdAt: result.createdAt,
       organizationId: {
-        value: orgResult?.org.properties.id,
-        canRead: orgResult?.acl.properties.canReadOrganizationId,
-        canEdit: orgResult?.acl.properties.canEditOrganizationId,
+        value: result.organizationId,
+        canRead: result.canReadOrganizationRead,
+        canEdit: result.canReadOrganizationEdit,
+      },
+      fiscalYear: {
+        value: result.fiscalYear,
+        canRead: result.canReadFiscalYearRead,
+        canEdit: result.canReadFiscalYearEdit,
+      },
+      amount: {
+        value: result.amount,
+        canRead: result.canReadAmountRead,
+        canEdit: result.canReadAmountEdit,
       },
     };
   }
