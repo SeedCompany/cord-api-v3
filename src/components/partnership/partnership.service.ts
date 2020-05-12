@@ -4,6 +4,7 @@ import {
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
+import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
@@ -32,7 +33,7 @@ export class PartnershipService {
     const propLabel = 'Property';
     return [
       [
-        node(),
+        node('newPartnership'),
         relation('out', '', prop, {
           active: true,
           createdAt,
@@ -46,11 +47,11 @@ export class PartnershipService {
   };
 
   // helper method for defining properties
-  permission = (property: string, sg: string, read: boolean, edit: boolean) => {
+  permission = (property: string) => {
     const createdAt = DateTime.local();
     return [
       [
-        node(sg),
+        node('adminSG'),
         relation('out', '', 'permission', {
           active: true,
           createdAt,
@@ -58,98 +59,159 @@ export class PartnershipService {
         node('', 'Permission', {
           property,
           active: true,
-          read,
-          edit,
+          read: true,
+          edit: true,
         }),
         relation('out', '', 'baseNode', {
           active: true,
           createdAt,
         }),
-        node(),
+        node('newPartnership'),
+      ],
+      [
+        node('readerSG'),
+        relation('out', '', 'permission', {
+          active: true,
+          createdAt,
+        }),
+        node('', 'Permission', {
+          property,
+          active: true,
+          read: true,
+          edit: false,
+        }),
+        relation('out', '', 'baseNode', {
+          active: true,
+          createdAt,
+        }),
+        node('newPartnership'),
       ],
     ];
   };
 
+  propMatch = (property: string) => {
+    const perm = 'canRead' + upperFirst(property);
+    return [
+      [
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node(perm, 'Permission', {
+          property,
+          active: true,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('partnership'),
+        relation('out', '', property, { active: true }),
+        node(property, 'Property', { active: true }),
+      ],
+    ];
+  };
+
+  async create(
+    { organizationId, projectId, ...input }: CreatePartnership,
+    session: ISession
+  ): Promise<Partnership> {
+    const id = generate();
+    const createdAt = DateTime.local();
+
+    try {
+      const createPartnership = this.db
+        .query()
+        .match(matchSession(session, { withAclEdit: 'canCreatePartnership' }))
+        .create([
+          [
+            node('newPartnership', 'Partnership', {
+              active: true,
+              createdAt,
+              id,
+              owningOrgId: session.owningOrgId,
+            }),
+          ],
+          ...this.property('agreementStatus', input.agreementStatus),
+          ...this.property('mouStatus', input.mouStatus),
+          ...this.property('mouStart', input.mouStart),
+          ...this.property('mouEnd', input.mouEnd),
+          ...this.property('types', input.types),
+          [
+            node('adminSG', 'SecurityGroup', {
+              active: true,
+              createdAt,
+              name: `${input.mouStart} ${input.mouEnd} admin`,
+            }),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('requestingUser'),
+          ],
+          [
+            node('readerSG', 'SecurityGroup', {
+              active: true,
+              createdAt,
+              name: `${input.mouStart} ${input.mouEnd} users`,
+            }),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('requestingUser'),
+          ],
+          ...this.permission('agreementStatus'),
+          ...this.permission('mouStatus'),
+          ...this.permission('mouStart'),
+          ...this.permission('mouEnd'),
+          ...this.permission('types'),
+          ...this.permission('organization'),
+        ])
+        .return('newPartnership.id as id');
+      console.log(
+        'createPartnership :>> ',
+        createPartnership.buildQueryObject()
+      );
+      let result;
+      try {
+        result = await createPartnership.first();
+      } catch (e) {
+        console.log('e :>> ', e);
+      }
+      console.log('result ', JSON.stringify(result, null, 2));
+
+      // connect the Organization to the Partnership
+      // and connect Partnership to Project
+      const query = `
+        MATCH (organization:Organization {id: $organizationId, active: true}),
+          (partnership:Partnership {id: $id, active: true}),
+          (project:Project {id: $projectId, active: true})
+        CREATE (project)-[:partnership {active: true, createdAt: datetime()}]->(partnership)
+                  -[:organization {active: true, createdAt: datetime()}]->(organization)
+        RETURN partnership.id as id
+      `;
+
+      await this.db
+        .query()
+        .raw(query, {
+          organizationId,
+          id,
+          projectId,
+        })
+        .first();
+      return await this.readOne(id, session);
+    } catch (e) {
+      this.logger.warning('Failed to create partnership', {
+        exception: e,
+      });
+
+      throw new ServerException('Failed to create partnership');
+    }
+  }
+
   async readOne(id: string, session: ISession): Promise<Partnership> {
-    // const acls = {
-    //   canReadAgreementStatus: true,
-    //   canEditAgreementStatus: true,
-    //   canReadMouStatus: true,
-    //   canEditMouStatus: true,
-    //   canReadMouStart: true,
-    //   canEditMouStart: true,
-    //   canReadMouEnd: true,
-    //   canEditMouEnd: true,
-    //   canReadTypes: true,
-    //   canEditTypes: true,
-    //   canReadOrganization: true,
-    //   canEditOrganization: true,
-    // };
     const readPartnership = this.db
       .query()
       .match(matchSession(session, { withAclRead: 'canReadPartnerships' }))
       .match([node('partnership', 'Partnership', { active: true, id })])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canReadAgreementStatus', 'Permission', {
-          property: 'agreementStatus',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('partnership'),
-        relation('out', '', 'agreementStatus', { active: true }),
-        node('agreementStatus', 'Property', { active: true }),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canReadMouStatus', 'Permission', {
-          property: 'mouStatus',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('partnership'),
-        relation('out', '', 'mouStatus', { active: true }),
-        node('mouStatus', 'Property', { active: true }),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canReadMouStart', 'Permission', {
-          property: 'mouStart',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('partnership'),
-        relation('out', '', 'mouStart', { active: true }),
-        node('mouStart', 'Property', { active: true }),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canReadMouEnd', 'Permission', {
-          property: 'mouEnd',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('partnership'),
-
-        relation('out', '', 'mouEnd', { active: true }),
-        node('mouEnd', 'Property', { active: true }),
-      ])
+      .optionalMatch([...this.propMatch('agreementStatus')])
+      .optionalMatch([...this.propMatch('mouStatus')])
+      .optionalMatch([...this.propMatch('mouStart')])
+      .optionalMatch([...this.propMatch('mouEnd')])
+      .optionalMatch([...this.propMatch('types')])
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
@@ -163,23 +225,11 @@ export class PartnershipService {
         relation('out', '', 'baseNode', { active: true }),
         node('partnership'),
         relation('out', '', 'organization', { active: true }),
-        node('organization', 'Property', { active: true }),
+        node('organization', 'Organization', { active: true }),
+        relation('out', '', 'name', { active: true }),
+        node('organizationName', 'Property', { active: true }),
       ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canReadTypes', 'Permission', {
-          property: 'types',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('partnership'),
-        relation('out', '', 'types', { active: true }),
-        node('types', 'Property', { active: true }),
-      ])
+
       .return({
         partnership: [{ id: 'id', createdAt: 'createdAt' }],
         agreementStatus: [{ value: 'agreementStatus' }],
@@ -207,7 +257,10 @@ export class PartnershipService {
             edit: 'canReadMouEndEdit',
           },
         ],
-        Organization: [{ value: 'Organization' }],
+        organization: [
+          { id: 'organizationId', createdAt: 'organizationCreatedAt' },
+        ],
+        organizationName: [{ value: 'organizationName' }],
         canReadOrganization: [
           {
             read: 'canReadOrganizationRead',
@@ -222,8 +275,14 @@ export class PartnershipService {
           },
         ],
       });
-
-    const result = await readPartnership.first();
+    console.log('readPartnership. :>> ', readPartnership.buildQueryObject());
+    let result;
+    try {
+      result = await readPartnership.first();
+    } catch (e) {
+      console.log('e :>> ', e);
+    }
+    console.log('result ', JSON.stringify(result, null, 2));
 
     if (!result) {
       throw new NotFoundException('Could not find partnership');
@@ -258,15 +317,54 @@ export class PartnershipService {
         canEdit: !!result.canEditTypes,
       },
       organization: {
-        id: result.organization.properties.id,
-        createdAt: result.organization.properties.createdAt,
+        id: result.organizationId,
+        createdAt: result.organizationCreatedAt,
         name: {
-          value: result.organization.properties.name,
-          canRead: true,
-          canEdit: true,
+          value: result.organizationName,
+          canRead: !!result.canReadOrganizationRead,
+          canEdit: !!result.canReadOrganizationEdit,
         },
       },
     };
+  }
+
+  async update(input: UpdatePartnership, session: ISession) {
+    const object = await this.readOne(input.id, session);
+
+    await this.db.sgUpdateProperties({
+      session,
+      object,
+      props: ['agreementStatus', 'mouStatus', 'mouStart', 'mouEnd', 'types'],
+      changes: {
+        ...input,
+        types: input.types as any,
+      },
+      nodevar: 'partnership',
+    });
+
+    return this.readOne(input.id, session);
+  }
+
+  async delete(id: string, session: ISession): Promise<void> {
+    const object = await this.readOne(id, session);
+
+    if (!object) {
+      throw new NotFoundException('Could not find partnership');
+    }
+
+    try {
+      await this.db.deleteNode({
+        session,
+        object,
+        aclEditProp: 'canDeleteOwnUser',
+      });
+    } catch (e) {
+      this.logger.warning('Failed to delete partnership', {
+        exception: e,
+      });
+
+      throw new ServerException('Failed to delete partnership');
+    }
   }
 
   async list(
@@ -343,134 +441,6 @@ export class PartnershipService {
       hasMore: result.hasMore,
       total: result.total,
     };
-  }
-
-  async create(
-    { organizationId, projectId, ...input }: CreatePartnership,
-    session: ISession
-  ): Promise<Partnership> {
-    const id = generate();
-    const createdAt = DateTime.local();
-
-    try {
-      const createPartnership = this.db
-        .query()
-        .match(matchSession(session, { withAclEdit: 'canCreatePartnership' }))
-        .create([
-          [
-            node('partnership', 'Partnership', {
-              active: true,
-              createdAt,
-              id,
-              owningOrgId: session.owningOrgId,
-            }),
-          ],
-          ...this.property('agreementStatus', input.agreementStatus),
-          ...this.property('mouStatus', input.mouStatus),
-          ...this.property('mouStart', input.mouStart),
-          ...this.property('mouEnd', input.mouEnd),
-          ...this.property('types', input.types),
-          //...this.property('organizationId', input.organizationId),
-          //...this.property('projectId', input.projectId),
-          [
-            node('adminSG', 'SecurityGroup', {
-              active: true,
-              createdAt,
-              name: `${input.mouStart} ${input.mouEnd} admin`,
-            }),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('requestingUser'),
-          ],
-          [
-            node('readerSG', 'SecurityGroup', {
-              active: true,
-              createdAt,
-              name: `${input.mouStart} ${input.mouEnd} users`,
-            }),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('requestingUser'),
-          ],
-          ...this.permission('agreementStatus', 'adminSG', true, true),
-          ...this.permission('agreementStatus', 'readerSG', true, false),
-          ...this.permission('mouStatus', 'adminSG', true, true),
-          ...this.permission('mouStatus', 'readerSG', true, false),
-          ...this.permission('mouStart', 'adminSG', true, true),
-          ...this.permission('mouStart', 'readerSG', true, false),
-          ...this.permission('mouEnd', 'adminSG', true, true),
-          ...this.permission('mouEnd', 'readerSG', true, false),
-          ...this.permission('types', 'adminSG', true, true),
-          ...this.permission('types', 'readerSG', true, false),
-        ])
-        .return('partnership.id as id');
-
-      await createPartnership.first();
-
-      // connect the Organization to the Partnership
-      // and connect Partnership to Project
-      const query = `
-        MATCH (organization:Organization {id: $organizationId, active: true}),
-          (partnership:Partnership {id: $id, active: true}),
-          (project:Project {id: $projectId, active: true})
-        CREATE (project)-[:partnership {active: true, createdAt: datetime()}]->(partnership)
-                  -[:organization {active: true, createdAt: datetime()}]->(organization)
-        RETURN partnership.id as id
-      `;
-
-      await this.db
-        .query()
-        .raw(query, {
-          organizationId,
-          id,
-          projectId,
-        })
-        .first();
-      return await this.readOne(id, session);
-    } catch (e) {
-      this.logger.warning('Failed to create partnership', {
-        exception: e,
-      });
-
-      throw new ServerException('Failed to create partnership');
-    }
-  }
-
-  async update(input: UpdatePartnership, session: ISession) {
-    const object = await this.readOne(input.id, session);
-
-    await this.db.sgUpdateProperties({
-      session,
-      object,
-      props: ['agreementStatus', 'mouStatus', 'mouStart', 'mouEnd', 'types'],
-      changes: {
-        ...input,
-        types: input.types as any,
-      },
-      nodevar: 'partnership',
-    });
-
-    return this.readOne(input.id, session);
-  }
-
-  async delete(id: string, session: ISession): Promise<void> {
-    const object = await this.readOne(id, session);
-
-    if (!object) {
-      throw new NotFoundException('Could not find partnership');
-    }
-
-    try {
-      await this.db.deleteNode({
-        session,
-        object,
-        aclEditProp: 'canDeleteOwnUser',
-      });
-    } catch (e) {
-      this.logger.warning('Failed to delete partnership', {
-        exception: e,
-      });
-
-      throw new ServerException('Failed to delete partnership');
-    }
   }
   async checkPartnershipConsistency(session: ISession): Promise<boolean> {
     const partnerships = await this.db
