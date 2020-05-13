@@ -517,7 +517,7 @@ export class DatabaseService {
         }),
       ])
       .with('*')
-      .match([
+      .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member'),
         node('sg', 'SecurityGroup', { active: true }),

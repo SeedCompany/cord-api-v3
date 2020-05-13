@@ -50,7 +50,7 @@ export class CeremonyService {
         relation('in', '', 'member', { active: true }),
         node('sg', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
-        node('canReadPlanned', 'Permission', {
+        node('permPlanned', 'Permission', {
           property: 'planned',
           active: true,
           read: true,
@@ -63,7 +63,7 @@ export class CeremonyService {
         relation('in', '', 'member', { active: true }),
         node('sg', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
-        node('canReadEstimatedDate', 'Permission', {
+        node('permEstimatedDate', 'Permission', {
           property: 'estimatedDate',
           active: true,
           read: true,
@@ -76,7 +76,7 @@ export class CeremonyService {
         relation('in', '', 'member', { active: true }),
         node('sg', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
-        node('canReadActualDate', 'Permission', {
+        node('permActualDate', 'Permission', {
           property: 'actualDate',
           active: true,
           read: true,
@@ -107,8 +107,15 @@ export class CeremonyService {
       .return({
         ceremony: [{ id: 'id', createdAt: 'createdAt' }],
         type: [{ value: 'type' }],
+        permPlanned: [{ read: 'canReadPlanned', edit: 'canEditPlanned' }],
         planned: [{ value: 'planned' }],
+        permEstimatedDate: [
+          { read: 'canReadEstimatedDate', edit: 'canEditEstimatedDate' },
+        ],
         estimatedDate: [{ value: 'estimatedDate' }],
+        permActualDate: [
+          { read: 'canReadActualDate', edit: 'canEditActualDate' },
+        ],
         actualDate: [{ value: 'actualDate' }],
       })
       .first();
@@ -121,9 +128,21 @@ export class CeremonyService {
       id,
       createdAt: readCeremony.createdAt,
       type: readCeremony.type,
-      planned: readCeremony.planned,
-      estimatedDate: readCeremony.estimatedDate,
-      actualDate: readCeremony.actualDate,
+      planned: {
+        value: !!readCeremony.planned,
+        canRead: !!readCeremony.canReadPlanned,
+        canEdit: !!readCeremony.canEditPlanned,
+      },
+      estimatedDate: {
+        value: readCeremony.estimatedDate,
+        canRead: !!readCeremony.canReadEstimatedDate,
+        canEdit: !!readCeremony.canEditEstimatedDate,
+      },
+      actualDate: {
+        value: readCeremony.actualDate,
+        canRead: !!readCeremony.canReadActualDate,
+        canEdit: !!readCeremony.canEditActualDate,
+      },
     };
   }
 

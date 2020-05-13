@@ -354,7 +354,8 @@ describe('Engagement e2e', () => {
     expect(languageEngagement.ceremony.value?.id).toBeDefined();
   });
 
-  it.only('should update ceremony', async () => {
+  // should also prove permissions after fixing sgUpdateProperty method
+  it('should update ceremony', async () => {
     project = await createProject(app);
     language = await createLanguage(app);
     const languageEngagement = await createLanguageEngagement(app, {
@@ -362,11 +363,7 @@ describe('Engagement e2e', () => {
       projectId: project.id,
     });
     expect(languageEngagement.ceremony.value?.id).toBeDefined();
-    // eslint-disable-next-line no-console
-    console.log(
-      'ceremony id is ------>',
-      languageEngagement.ceremony.value?.id
-    );
+    const date = '2020-05-13';
     await app.graphql.mutate(
       gql`
         mutation updateCeremony($input: UpdateCeremonyInput!) {
@@ -382,6 +379,7 @@ describe('Engagement e2e', () => {
           ceremony: {
             id: languageEngagement.ceremony.value?.id,
             planned: true,
+            estimatedDate: date,
           },
         },
       }
@@ -389,13 +387,22 @@ describe('Engagement e2e', () => {
     const result = await app.graphql.query(
       gql`
         query ceremony($id: ID!) {
-          ceremony(id: $id)
+          ceremony(id: $id) {
+            id
+            planned {
+              value
+            }
+            estimatedDate {
+              value
+            }
+          }
         }
       `,
       {
         id: languageEngagement.ceremony.value?.id,
       }
     );
-    console.log('result is ----->', result);
+    expect(result.ceremony.planned.value).toBeTruthy();
+    expect(result.ceremony.estimatedDate.value).toBe(date);
   });
 });
