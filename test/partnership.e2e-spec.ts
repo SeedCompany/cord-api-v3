@@ -31,7 +31,7 @@ describe('Partnership e2e', () => {
     await app.close();
   });
 
-  it.only('create & read partnership by id', async () => {
+  it('create & read partnership by id', async () => {
     const partnership = await createPartnership(app);
 
     const result = await app.graphql.query(

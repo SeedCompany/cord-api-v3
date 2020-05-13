@@ -161,17 +161,12 @@ export class PartnershipService {
           ...this.permission('organization'),
         ])
         .return('newPartnership.id as id');
-      console.log(
-        'createPartnership :>> ',
-        createPartnership.buildQueryObject()
-      );
-      let result;
+
       try {
-        result = await createPartnership.first();
+        await createPartnership.first();
       } catch (e) {
-        console.log('e :>> ', e);
+        this.logger.error('e :>> ', e);
       }
-      console.log('result ', JSON.stringify(result, null, 2));
 
       // connect the Organization to the Partnership
       // and connect Partnership to Project
@@ -275,14 +270,13 @@ export class PartnershipService {
           },
         ],
       });
-    console.log('readPartnership. :>> ', readPartnership.buildQueryObject());
+
     let result;
     try {
       result = await readPartnership.first();
     } catch (e) {
-      console.log('e :>> ', e);
+      this.logger.error('e :>> ', e);
     }
-    console.log('result ', JSON.stringify(result, null, 2));
 
     if (!result) {
       throw new NotFoundException('Could not find partnership');
