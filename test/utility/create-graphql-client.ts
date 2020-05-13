@@ -119,7 +119,7 @@ const reportError = (
 export const getGraphQLOptions = (): GqlModuleOptions => ({
   path: '/graphql',
   fieldResolverEnhancers: [],
-  autoSchemaFile: 'schema.gql',
+  autoSchemaFile: 'schema.graphql',
   context: {},
 });
 
