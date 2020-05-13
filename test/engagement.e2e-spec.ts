@@ -354,7 +354,6 @@ describe('Engagement e2e', () => {
     expect(languageEngagement.ceremony.value?.id).toBeDefined();
   });
 
-  // should also prove permissions after fixing sgUpdateProperty method
   it('should update ceremony', async () => {
     project = await createProject(app);
     language = await createLanguage(app);
@@ -394,6 +393,8 @@ describe('Engagement e2e', () => {
             }
             estimatedDate {
               value
+              canRead
+              canEdit
             }
           }
         }
