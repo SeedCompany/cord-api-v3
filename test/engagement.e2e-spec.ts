@@ -343,4 +343,67 @@ describe('Engagement e2e', () => {
     );
     expect(result.checkEngagementConsistency).toBeTruthy();
   });
+
+  it('should create ceremony upon engagement creation', async () => {
+    project = await createProject(app);
+    language = await createLanguage(app);
+    const languageEngagement = await createLanguageEngagement(app, {
+      languageId: language.id,
+      projectId: project.id,
+    });
+    expect(languageEngagement.ceremony.value?.id).toBeDefined();
+  });
+
+  it('should update ceremony', async () => {
+    project = await createProject(app);
+    language = await createLanguage(app);
+    const languageEngagement = await createLanguageEngagement(app, {
+      languageId: language.id,
+      projectId: project.id,
+    });
+    expect(languageEngagement.ceremony.value?.id).toBeDefined();
+    const date = '2020-05-13';
+    await app.graphql.mutate(
+      gql`
+        mutation updateCeremony($input: UpdateCeremonyInput!) {
+          updateCeremony(input: $input) {
+            ceremony {
+              id
+            }
+          }
+        }
+      `,
+      {
+        input: {
+          ceremony: {
+            id: languageEngagement.ceremony.value?.id,
+            planned: true,
+            estimatedDate: date,
+          },
+        },
+      }
+    );
+    const result = await app.graphql.query(
+      gql`
+        query ceremony($id: ID!) {
+          ceremony(id: $id) {
+            id
+            planned {
+              value
+            }
+            estimatedDate {
+              value
+              canRead
+              canEdit
+            }
+          }
+        }
+      `,
+      {
+        id: languageEngagement.ceremony.value?.id,
+      }
+    );
+    expect(result.ceremony.planned.value).toBeTruthy();
+    expect(result.ceremony.estimatedDate.value).toBe(date);
+  });
 });
