@@ -2,12 +2,8 @@ import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
 import { isValid } from 'shortid';
-import {
-  CreateUser,
-  UpdateUser,
-  User,
-  UserStatus,
-} from '../src/components/user';
+import { RegisterInput } from '../src/components/authentication/dto';
+import { UpdateUser, User, UserStatus } from '../src/components/user';
 import {
   createEducation,
   createOrganization,
@@ -39,7 +35,7 @@ describe('User e2e', () => {
   });
 
   it('read one user by id', async () => {
-    const fakeUser: CreateUser = {
+    const fakeUser: RegisterInput = {
       email: faker.internet.email(),
       realFirstName: faker.name.firstName(),
       realLastName: faker.name.lastName(),
@@ -88,7 +84,7 @@ describe('User e2e', () => {
 
   it('update user', async () => {
     // create user first
-    const newUser: CreateUser = {
+    const newUser: RegisterInput = {
       email: faker.internet.email(),
       realFirstName: faker.name.firstName(),
       realLastName: faker.name.lastName(),
@@ -486,7 +482,7 @@ describe('User e2e', () => {
   });
 
   it('read user avatar', async () => {
-    const fakeUser: CreateUser = {
+    const fakeUser: RegisterInput = {
       email: faker.internet.email(),
       realFirstName: faker.name.firstName(),
       realLastName: faker.name.lastName(),
@@ -516,7 +512,7 @@ describe('User e2e', () => {
     );
     const actual = result.user;
     expect(actual.avatarLetters).toBe(
-      fakeUser.realFirstName[0] + fakeUser.realLastName[0]
+      `${fakeUser.realFirstName[0]}${fakeUser.realLastName[0]}`
     );
     expect(actual).toBeTruthy();
     return true;

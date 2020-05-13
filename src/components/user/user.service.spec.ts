@@ -1,10 +1,11 @@
 import { Test } from '@nestjs/testing';
+import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
 import { CoreModule, LoggerModule } from '../../core';
 import { AuthenticationModule, AuthenticationService } from '../authentication';
 import { OrganizationModule, OrganizationService } from '../organization';
-import { CreateUser, UpdateUser, User } from './dto';
+import { CreatePerson, UpdateUser, User, UserStatus } from './dto';
 import { EducationModule, EducationService } from './education';
 import { UnavailabilityModule, UnavailabilityService } from './unavailability';
 import { UserService } from './user.service';
@@ -13,8 +14,9 @@ describe('UserService', () => {
   let userService: UserService;
   const id = generate();
 
-  const createTestUser: Partial<User> = {
+  const createTestUser: User = {
     id: generate(),
+    createdAt: DateTime.local(),
     email: {
       value: 'test@test.com',
       canRead: true,
@@ -40,11 +42,6 @@ describe('UserService', () => {
       canRead: true,
       canEdit: true,
     },
-    // password: {
-    //   value: "test@test.com",
-    //   canRead: true,
-    //   canEdit: true,
-    // },
     phone: {
       value: '919191919191',
       canRead: true,
@@ -57,6 +54,11 @@ describe('UserService', () => {
     },
     bio: {
       value: 'bio-details',
+      canRead: true,
+      canEdit: true,
+    },
+    status: {
+      value: UserStatus.Active,
       canRead: true,
       canEdit: true,
     },
@@ -97,30 +99,23 @@ describe('UserService', () => {
     expect(userService).toBeDefined();
   });
 
-  it('should create a user node', async () => {
+  it('should create a user', async () => {
     jest
-      .spyOn(userService, 'createAndLogin')
-      .mockImplementation(() => Promise.resolve(createTestUser as User));
-    const user = await userService.createAndLogin(
+      .spyOn(userService, 'create')
+      .mockImplementation(async () => createTestUser.id);
+    const userId = await userService.create(
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-      {} as CreateUser,
+      {} as CreatePerson,
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
       {} as ISession
     );
-    expect(user.email).toEqual(createTestUser.email);
-    expect(user.realFirstName).toEqual(createTestUser.realFirstName);
-    expect(user.realLastName).toEqual(createTestUser.realLastName);
-    expect(user.displayFirstName).toEqual(createTestUser.displayFirstName);
-    expect(user.displayLastName).toEqual(createTestUser.displayLastName);
-    expect(user.phone).toEqual(createTestUser.phone);
-    expect(user.timezone).toEqual(createTestUser.timezone);
-    expect(user.bio).toEqual(createTestUser.bio);
+    expect(userId).toEqual(createTestUser.id);
   });
 
   it('should read a user', async () => {
     jest
       .spyOn(userService, 'readOne')
-      .mockImplementation(() => Promise.resolve(createTestUser as User));
+      .mockImplementation(() => Promise.resolve(createTestUser));
     const user = await userService.readOne(
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
       id,
@@ -140,7 +135,7 @@ describe('UserService', () => {
   it('should update a user', async () => {
     jest
       .spyOn(userService, 'update')
-      .mockImplementation(() => Promise.resolve(createTestUser as User));
+      .mockImplementation(() => Promise.resolve(createTestUser));
     const user = await userService.update(
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
       {} as UpdateUser,

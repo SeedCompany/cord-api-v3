@@ -19,6 +19,7 @@ import {
 } from '../../core';
 import { User, UserService } from '../user';
 import { LoginInput, ResetPasswordInput } from './authentication.dto';
+import { RegisterInput } from './dto';
 
 interface JwtPayload {
   iat: number;
@@ -83,6 +84,20 @@ export class AuthenticationService {
     }
 
     return this.userService.readOne(userRes.id, session);
+  }
+
+  async register(input: RegisterInput, session?: ISession): Promise<string> {
+    // ensure no other tokens are associated with this user
+    if (session) {
+      await this.logout(session.token);
+    }
+
+    const userId = await this.userService.create(input, session);
+
+    const _passwordHash = await argon2.hash(input.password);
+    // TODO write hash to DB
+
+    return userId;
   }
 
   async login(input: LoginInput, session: ISession): Promise<string> {
