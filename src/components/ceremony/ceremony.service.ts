@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
@@ -20,32 +24,106 @@ export class CeremonyService {
   ) {}
 
   async readOne(id: string, session: ISession): Promise<Ceremony> {
-    const result = await this.db.readProperties({
-      session,
-      id,
-      nodevar: 'ceremony',
-      aclReadNode: 'canReadCeremonies',
-      props: [
-        'id',
-        'createdAt',
-        'type',
-        'planned',
-        'estimatedDate',
-        'actualDate',
-      ],
-    });
+    this.logger.info(`Query readOne Ceremony`, { id, userId: session.userId });
+    if (!id) {
+      throw new BadRequestException('No ceremony id to search for');
+    }
+    const readCeremony = await this.db
+      .query()
+      .match(matchSession(session))
+      .match([node('ceremony', 'Ceremony', { active: true, id })])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node('canReadType', 'Permission', {
+          property: 'type',
+          active: true,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('ceremony'),
+      ])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node('canReadPlanned', 'Permission', {
+          property: 'planned',
+          active: true,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('ceremony'),
+      ])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node('canReadEstimatedDate', 'Permission', {
+          property: 'estimatedDate',
+          active: true,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('ceremony'),
+      ])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node('canReadActualDate', 'Permission', {
+          property: 'actualDate',
+          active: true,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('ceremony'),
+      ])
+      .optionalMatch([
+        node('ceremony'),
+        relation('out', '', 'type', { active: true }),
+        node('type', 'Property', { active: true }),
+      ])
+      .optionalMatch([
+        node('ceremony'),
+        relation('out', '', 'planned', { active: true }),
+        node('planned', 'Property', { active: true }),
+      ])
+      .optionalMatch([
+        node('ceremony'),
+        relation('out', '', 'estimatedDate', { active: true }),
+        node('estimatedDate', 'Property', { active: true }),
+      ])
+      .optionalMatch([
+        node('ceremony'),
+        relation('out', '', 'actualDate', { active: true }),
+        node('actualDate', 'Property', { active: true }),
+      ])
+      .return({
+        ceremony: [{ id: 'id', createdAt: 'createdAt' }],
+        type: [{ value: 'type' }],
+        planned: [{ value: 'planned' }],
+        estimatedDate: [{ value: 'estimatedDate' }],
+        actualDate: [{ value: 'actualDate' }],
+      })
+      .first();
 
-    if (!result) {
+    if (!readCeremony) {
       throw new NotFoundException('Could not find ceremony');
     }
 
     return {
       id,
-      createdAt: result.createdAt.value,
-      type: result.type.value,
-      planned: result.planned,
-      estimatedDate: result.estimatedDate,
-      actualDate: result.actualDate,
+      createdAt: readCeremony.createdAt,
+      type: readCeremony.type,
+      planned: readCeremony.planned,
+      estimatedDate: readCeremony.estimatedDate,
+      actualDate: readCeremony.actualDate,
     };
   }
 
@@ -86,7 +164,6 @@ export class CeremonyService {
       return [];
     }
     const createdAt = DateTime.local();
-    // const propLabel = prop === 'name' ? 'Property:OrgName' : 'Property';
     return [
       [
         node(baseNode),
@@ -187,10 +264,10 @@ export class CeremonyService {
   async update(input: UpdateCeremony, session: ISession): Promise<Ceremony> {
     const object = await this.readOne(input.id, session);
 
-    return this.db.updateProperties({
+    return this.db.sgUpdateProperties({
       session,
       object,
-      props: ['type', 'planned', 'estimatedDate', 'actualDate'],
+      props: ['planned', 'estimatedDate', 'actualDate'],
       changes: input,
       nodevar: 'ceremony',
     });
