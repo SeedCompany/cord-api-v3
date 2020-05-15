@@ -48,7 +48,7 @@ export class IEngagement extends Resource {
   readonly status: EngagementStatus; // TODO Workflow
 
   @Field()
-  readonly ceremony: SecuredCeremony;
+  readonly ceremony: SecuredCeremony | {};
 
   @Field({
     description: 'Translation / Growth Plan complete date',
