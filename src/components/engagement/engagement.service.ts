@@ -4,7 +4,7 @@ import {
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { first, intersection } from 'lodash';
+import { first, intersection, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
@@ -54,116 +54,10 @@ export class EngagementService {
         'InternshipEngagement',
       ])
     );
+    // eslint-disable-next-line no-console
+    console.log('----->', await this.readLanguageEngagement(id, session));
 
-    let query = `
-      MATCH
-        (token:Token {
-          active: true,
-          value: $token
-        })
-          <-[:token {active: true}]-
-        (requestingUser:User {
-          active: true,
-          id: $requestingUserId,
-          owningOrgId: $owningOrgId
-        }),
-        (languageEngagement:LanguageEngagement {active: true, id: $id})
-
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadLanguage:ACL {canReadLanguage: true})-[:toNode]->(languageEngagement)-[:language {active: true}]->(language)
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditLanguage:ACL {canEditLanguage: true})-[:toNode]->(languageEngagement)
-
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadProject:ACL {canReadProject: true})-[:toNode]->(languageEngagement)<-[:engagement {active: true}]-(project)
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditProject:ACL {canEditProject: true})-[:toNode]->(languageEngagement)
-
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadCeremony {canReadCeremony: true})-[:toNode]->(languageEngagement)-[:ceremony {active: true}]->(ceremony)
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditCeremony {canEditCeremony: true})-[:toNode]->(languageEngagement)
-
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadFirstScripture:ACL {canReadFirstScripture: true})-[:toNode]->(languageEngagement)-[:firstScripture {active: true}]->(firstScripture:Property {active: true})
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditFirstScripture:ACL {canEditFirstScripture: true})-[:toNode]->(languageEngagement)
-
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadLukePartnership:ACL {canReadLukePartnership: true})-[:toNode]->(languageEngagement)-[:lukePartnership {active: true}]->(lukePartnership:Property {active: true})
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditLukePartnership:ACL {canEditLukePartnership: true})-[:toNode]->(languageEngagement)
-
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadSentPrintingDate:ACL {canReadSentPrintingDate: true})-[:toNode]->(languageEngagement)-[:sentPrintingDate {active: true}]->(sentPrintingDate:Property {active: true})
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditSentPrintingDate:ACL {canEditSentPrintingDate: true})-[:toNode]->(languageEngagement)
-
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadStatus:ACL {canReadStatus: true})-[:toNode]->(languageEngagement)-[:status {active: true}]->(status:Property {active: true})
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditStatus:ACL {canEditStatus: true})-[:toNode]->(languageEngagement)
-
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadCompleteDate:ACL {canReadCompleteDate: true})-[:toNode]->(languageEngagement)-[:completeDate {active: true}]->(completeDate:Property {active: true})
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditCompleteDate:ACL {canEditCompleteDate: true})-[:toNode]->(languageEngagement)
-
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(CanReadDisbursementCompleteDate:ACL {CanReadDisbursementCompleteDate: true})-[:toNode]->(languageEngagement)-[:disbursementCompleteDate {active: true}]->(disbursementCompleteDate:Property {active: true})
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(CanEditDisbursementCompleteDate:ACL {CanEditDisbursementCompleteDate: true})-[:toNode]->(languageEngagement)
-
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadCommunicationsCompleteDate:ACL {canReadCommunicationsCompleteDate: true})-[:toNode]->(languageEngagement)-[:communicationsCompleteDate {active: true}]->(communicationsCompleteDate:Property {active: true})
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditCommunicationsCompleteDate:ACL {canEditCommunicationsCompleteDate: true})-[:toNode]->(languageEngagement)
-
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadStartDate:ACL {canReadStartDate: true})-[:toNode]->(languageEngagement)-[:startDate {active: true}]->(startDate:Property {active: true})
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditStartDate:ACL {canEditStartDate: true})-[:toNode]->(languageEngagement)
-
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadEndDate:ACL {canReadEndDate: true})-[:toNode]->(languageEngagement)-[:endDate {active: true}]->(endDate:Property {active: true})
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditEndDate:ACL {canEditEndDate: true})-[:toNode]->(languageEngagement)
-
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadInitialEndDate:ACL {canReadInitialEndDate: true})-[:toNode]->(languageEngagement)-[:initialEndDate {active: true}]->(initialEndDate:Property {active: true})
-
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadLastSuspendedAt:ACL {canReadLastSuspendedAt: true})-[:toNode]->(languageEngagement)-[:lastSuspendedAt {active: true}]->(lastSuspendedAt:Property {active: true})
-
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadLastReactivatedAt:ACL {canReadLastReactivatedAt: true})-[:toNode]->(languageEngagement)-[:lastReactivatedAt {active: true}]->(lastReactivatedAt:Property {active: true})
-
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadStatusModifiedAt:ACL {canReadStatusModifiedAt: true})-[:toNode]->(languageEngagement)-[:statusModifiedAt {active: true}]->(statusModifiedAt:Property {active: true})
-
-      WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadModifiedAt:ACL {canReadModifiedAt: true})-[:toNode]->(languageEngagement)-[:modifiedAt {active: true}]->(modifiedAt:Property {active: true})
-
-      RETURN
-        languageEngagement.id as id,
-        languageEngagement.createdAt as createdAt,
-        language.id as languageId,
-        project as project,
-        ceremony.id as ceremonyId,
-        firstScripture.value as firstScripture,
-        lukePartnership.value as lukePartnership,
-        sentPrintingDate.value as sentPrintingDate,
-        status.value as status,
-        completeDate.value as completeDate,
-        disbursementCompleteDate.value as disbursementCompleteDate,
-        communicationsCompleteDate.value as communicationsCompleteDate,
-        startDate.value as startDate,
-        endDate.value as endDate,
-        initialEndDate.value as initialEndDate,
-        lastSuspendedAt.value as lastSuspendedAt,
-        lastReactivatedAt.value as lastReactivatedAt,
-        statusModifiedAt.value as statusModifiedAt,
-        modifiedAt.value as modifiedAt,
-        canReadLanguage.canReadLanguage as canReadLanguage,
-        canEditLanguage.canEditLanguage as canEditLanguage,
-        canReadCeremony.canReadCeremony as canReadCeremony,
-        canEditCeremony.canEditCeremony as canEditCeremony,
-        canReadFirstScripture.canReadFirstScripture as canReadFirstScripture,
-        canEditFirstScripture.canEditFirstScripture as canEditFirstScripture,
-        canReadLukePartnership.canReadLukePartnership as canReadLukePartnership,
-        canEditLukePartnership.canEditLukePartnership as canEditLukePartnership,
-        canReadSentPrintingDate.canReadSentPrintingDate as canReadSentPrintingDate,
-        canEditSentPrintingDate.canEditSentPrintingDate as canEditSentPrintingDate,
-        canReadStatus.canReadStatus as canReadStatus,
-        canEditStatus.canEditStatus as canEditStatus,
-        canReadCompleteDate.canReadCompleteDate as canReadCompleteDate,
-        canEditCompleteDate.canEditCompleteDate as canEditCompleteDate,
-        CanReadDisbursementCompleteDate.CanReadDisbursementCompleteDate as CanReadDisbursementCompleteDate,
-        CanEditDisbursementCompleteDate.CanEditDisbursementCompleteDate as CanEditDisbursementCompleteDate,
-        canReadCommunicationsCompleteDate.canReadCommunicationsCompleteDate as canReadCommunicationsCompleteDate,
-        canEditCommunicationsCompleteDate.canEditCommunicationsCompleteDate as canEditCommunicationsCompleteDate,
-        canReadStartDate.canReadStartDate as canReadStartDate,
-        canEditStartDate.canEditStartDate as canEditStartDate,
-        canReadEndDate.canReadEndDate as canReadEndDate,
-        canEditEndDate.canEditEndDate as canEditEndDate,
-        canReadInitialEndDate.canReadInitialEndDate as canReadInitialEndDate,
-        canReadLastSuspendedAt.canReadLastSuspendedAt as canReadLastSuspendedAt,
-        canReadLastReactivatedAt.canReadLastReactivatedAt as canReadLastReactivatedAt,
-        canReadStatusModifiedAt.canReadStatusModifiedAt as canReadStatusModifiedAt,
-        canReadModifiedAt.canReadModifiedAt as canReadModifiedAt
-    `;
-
+    let query = '';
     if (label === 'InternshipEngagement') {
       query = `
         MATCH
@@ -282,7 +176,6 @@ export class EngagementService {
           canReadModifiedAt.canReadModifiedAt as canReadModifiedAt
       `;
     }
-
     const result = await this.db
       .query()
       .raw(query, {
@@ -437,6 +330,167 @@ export class EngagementService {
     };
   }
 
+  async readLanguageEngagement(id: string, session: ISession): Promise<any> {
+    try {
+      const result = await this.db
+        .query()
+        .match(matchSession(session, { withAclRead: 'canReadEngagements' }))
+        .match([
+          node('languageEngagement', 'LanguageEngagement', {
+            active: true,
+            id,
+          }),
+        ])
+        .optionalMatch([...this.propMatch('firstScripture')])
+        .optionalMatch([...this.propMatch('lukePartnership')])
+        .optionalMatch([...this.propMatch('sentPrintingDate')])
+        .optionalMatch([...this.propMatch('completeDate')])
+        .optionalMatch([...this.propMatch('startDate')])
+        .optionalMatch([...this.propMatch('endDate')])
+        .optionalMatch([...this.propMatch('disbursementCompleteDate')])
+        .optionalMatch([...this.propMatch('communicationsCompleteDate')])
+        .optionalMatch([...this.propMatch('initialEndDate')])
+        .optionalMatch([...this.propMatch('lastSuspendedAt')])
+        .optionalMatch([...this.propMatch('lastReactivatedAt')])
+        .optionalMatch([...this.propMatch('statusModifiedAt')])
+        .optionalMatch([...this.propMatch('modifiedAt')])
+        .optionalMatch([
+          node('requestingUser'),
+          relation('in', '', 'member', { active: true }),
+          node('sg', 'SecurityGroup', { active: true }),
+          relation('out', '', 'permission', { active: true }),
+          node('permCeremony', 'Permission', {
+            property: 'ceremony',
+            active: true,
+            read: true,
+          }),
+          relation('out', '', 'baseNode', { active: true }),
+          node('languageEngagement'),
+          relation('out', '', 'ceremony', { active: true }),
+          node('newCeremony', 'Ceremony', { active: true }),
+          relation('out', '', 'type', { active: true }),
+          node('ceremonyType', 'Property', { active: true }),
+        ])
+        .optionalMatch([
+          node('requestingUser'),
+          relation('in', '', 'member', { active: true }),
+          node('sg', 'SecurityGroup', { active: true }),
+          relation('out', '', 'permission', { active: true }),
+          node('permLanguage', 'Permission', {
+            property: 'language',
+            active: true,
+            read: true,
+          }),
+          relation('out', '', 'baseNode', { active: true }),
+          node('languageEngagement'),
+          relation('out', '', 'language', { active: true }),
+          node('newLanguage', 'Language', { active: true }),
+        ])
+        .optionalMatch([
+          node('requestingUser'),
+          relation('in', '', 'member', { active: true }),
+          node('sg', 'SecurityGroup', { active: true }),
+          relation('out', '', 'permission', { active: true }),
+          node('permStatus', 'Permission', {
+            property: 'status',
+            active: true,
+            read: true,
+          }),
+          relation('out', '', 'baseNode', { active: true }),
+          node('languageEngagement'),
+          relation('out', '', 'status', { active: true }),
+          node('engStatus', 'EngagementStatus', { active: true }),
+        ])
+        .optionalMatch([
+          node('languageEngagement'),
+          relation('in', '', 'engagement'),
+          node('project', 'Project', { active: true }),
+        ])
+        .return({
+          languageEngagement: [{ id: 'id', createdAt: 'createdAt' }],
+          newLanguage: [{ id: 'languageId' }],
+          newCeremony: [{ id: 'ceremonyId' }],
+          project: ['project'],
+          firstScripture: [{ value: 'firstScripture' }],
+          lukePartnership: [{ value: 'lukePartnership' }],
+          sentPrintingDate: [{ value: 'sentPrintingDate' }],
+          engStatus: [{ value: 'status' }],
+          completeDate: [{ value: 'completeDate' }],
+          disbursementCompleteDate: [{ value: 'disbursementCompleteDate' }],
+          communicationsCompleteDate: [{ value: 'communicationsCompleteDate' }],
+          startDate: [{ value: 'startDate' }],
+          endDate: [{ value: 'endDate' }],
+          initialEndDate: [{ value: 'initialEndDate' }],
+          lastSuspendedAt: [{ value: 'lastSuspendedAt' }],
+          lastReactivatedAt: [{ value: 'lastReactivatedAt' }],
+          statusModifiedAt: [{ value: 'statusModifiedAt' }],
+          modifiedAt: [{ value: 'modifiedAt' }],
+          permLanguage: [{ read: 'canReadLanguage', edit: 'canEditLanguage' }],
+          permCeremony: [{ read: 'canReadCeremony', edit: 'canEditCeremony' }],
+          canReadFirstScripture: [
+            { read: 'canReadFirstScripture', edit: 'canEditFirstScripture' },
+          ],
+          canReadLukePartnership: [
+            { read: 'canReadLukePartnership', edit: 'canEditLukePartnership' },
+          ],
+          canReadSentPrintingDate: [
+            {
+              read: 'canReadSentPrintingDate',
+              edit: 'canEditSentPrintingDate',
+            },
+          ],
+          permStatus: [{ read: 'canReadStatus', edit: 'canEditStatus' }],
+          canReadCompleteDate: [
+            { read: 'canReadCompleteDate', edit: 'canEditCompleteDate' },
+          ],
+          canReadDisbursementCompleteDate: [
+            {
+              read: 'canReadDisbursementCompleteDate',
+              edit: 'canEditDisbursementCompleteDate',
+            },
+          ],
+          canReadCommunicationsCompleteDate: [
+            {
+              read: 'canReadCommunicationsCompleteDate',
+              edit: 'canEditCommunicationsCompleteDate',
+            },
+          ],
+          canReadStartDate: [
+            { read: 'canReadStartDate', edit: 'canEditStartDate' },
+          ],
+          canReadEndDate: [{ read: 'canReadEndDate', edit: 'canEditEndDate' }],
+          canReadInitialEndDate: [
+            { read: 'canReadInitialEndDate', edit: 'canEditInitialEndDate' },
+          ],
+          canReadLastSuspendedAt: [
+            { read: 'canReadLastSuspendedAt', edit: 'canEditLastSuspendedAt' },
+          ],
+          canReadLastReactivatedAt: [
+            {
+              read: 'canReadLastReactivatedAt',
+              edit: 'canEditLastReactivatedAt',
+            },
+          ],
+          canReadStatusModifiedAt: [
+            {
+              read: 'canReadStatusModifiedAt',
+              edit: 'canEditStatusModifiedAt',
+            },
+          ],
+          canReadModifiedAt: [
+            { read: 'canReadModifiedAt', edit: 'canEditModifiedAt' },
+          ],
+        })
+        .first();
+
+      // eslint-disable-next-line no-console
+      console.log('---sucess is -->', result);
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.log('error is---->', error);
+    }
+  }
+
   async list(
     { page, count, sort, order, filter }: EngagementListInput,
     session: ISession
@@ -500,6 +554,27 @@ export class EngagementService {
     };
   }
 
+  propMatch = (property: string) => {
+    const perm = 'canRead' + upperFirst(property);
+    return [
+      [
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node(perm, 'Permission', {
+          property,
+          active: true,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('languageEngagement'),
+        relation('out', '', property, { active: true }),
+        node(property, 'Property', { active: true }),
+      ],
+    ];
+  };
+
   // helper method for defining properties
   property = (prop: string, value: any, baseNode: string) => {
     if (!value) {
@@ -524,17 +599,11 @@ export class EngagementService {
   };
 
   // helper method for defining properties
-  permission = (
-    property: string,
-    sg: string,
-    baseNode: string,
-    read: boolean,
-    edit: boolean
-  ) => {
+  permission = (property: string, baseNode: string) => {
     const createdAt = DateTime.local();
     return [
       [
-        node(sg),
+        node('adminSG'),
         relation('out', '', 'permission', {
           active: true,
           createdAt,
@@ -542,8 +611,26 @@ export class EngagementService {
         node('', 'Permission', {
           property,
           active: true,
-          read,
-          edit,
+          read: true,
+          edit: true,
+        }),
+        relation('out', '', 'baseNode', {
+          active: true,
+          createdAt,
+        }),
+        node(baseNode),
+      ],
+      [
+        node('readerSG'),
+        relation('out', '', 'permission', {
+          active: true,
+          createdAt,
+        }),
+        node('', 'Permission', {
+          property,
+          active: true,
+          read: true,
+          edit: false,
         }),
         relation('out', '', 'baseNode', {
           active: true,
@@ -577,7 +664,7 @@ export class EngagementService {
         .match(matchSession(session, { withAclEdit: 'canCreateEngagement' }))
         .create([
           [
-            node('langEng', 'LanguageEngagement:BaseNode', {
+            node('languageEngagement', 'LanguageEngagement:BaseNode', {
               active: true,
               createdAt,
               id,
@@ -588,84 +675,35 @@ export class EngagementService {
             node('adminSG', 'SecurityGroup', {
               active: true,
               createdAt,
-              name: 'langEngagement admin',
+              name: 'languageEngagement admin',
             }),
             relation('out', '', 'member', { active: true, createdAt }),
             node('requestingUser'),
           ],
-          ...this.permission(
-            'firstScripture',
-            'adminSG',
-            'langEng',
-            true,
-            true
-          ),
-          ...this.permission(
-            'lukePartnership',
-            'adminSG',
-            'langEng',
-            true,
-            true
-          ),
-          ...this.permission('completeDate', 'adminSG', 'langEng', true, true),
-          ...this.permission(
-            'disbursementCompleteDate',
-            'adminSG',
-            'langEng',
-            true,
-            true
-          ),
-          ...this.permission(
-            'communicationsCompleteDate',
-            'adminSG',
-            'langEng',
-            true,
-            true
-          ),
-          ...this.permission('startDate', 'adminSG', 'langEng', true, true),
-          ...this.permission('endDate', 'adminSG', 'langEng', true, true),
           [
             node('readerSG', 'SecurityGroup', {
               active: true,
               createdAt,
-              name: 'langEngagement users',
+              name: 'languageEngagement users',
             }),
             relation('out', '', 'member', { active: true, createdAt }),
             node('requestingUser'),
           ],
-          ...this.permission(
-            'firstScripture',
-            'readerSG',
-            'langEng',
-            true,
-            false
-          ),
-          ...this.permission(
-            'lukePartnership',
-            'readerSG',
-            'langEng',
-            true,
-            false
-          ),
-          ...this.permission('completeDate', 'readerSG', 'langEng', true, true),
-          ...this.permission(
-            'disbursementCompleteDate',
-            'readerSG',
-            'langEng',
-            true,
-            false
-          ),
+          ...this.permission('firstScripture', 'languageEngagement'),
+          ...this.permission('lukePartnership', 'languageEngagement'),
+          ...this.permission('completeDate', 'languageEngagement'),
+          ...this.permission('disbursementCompleteDate', 'languageEngagement'),
           ...this.permission(
             'communicationsCompleteDate',
-            'readerSG',
-            'langEng',
-            true,
-            false
+            'languageEngagement'
           ),
-          ...this.permission('startDate', 'readerSG', 'langEng', true, false),
-          ...this.permission('endDate', 'readerSG', 'langEng', true, false),
+          ...this.permission('startDate', 'languageEngagement'),
+          ...this.permission('endDate', 'languageEngagement'),
+          ...this.permission('ceremony', 'languageEngagement'),
+          ...this.permission('language', 'languageEngagement'),
+          ...this.permission('status', 'languageEngagement'),
         ])
-        .return('langEng.id as id')
+        .return('languageEngagement.id as id')
         .first();
 
       // connect Language and Project to LanguageEngagement.
