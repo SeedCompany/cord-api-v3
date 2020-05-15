@@ -3,11 +3,12 @@ import {
   NotFoundException,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
-import { node } from 'cypher-query-builder';
+import { node, relation } from 'cypher-query-builder';
 import { first, intersection } from 'lodash';
+import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
-import { DatabaseService, ILogger, Logger } from '../../core';
+import { DatabaseService, ILogger, Logger, matchSession } from '../../core';
 import { CeremonyService } from '../ceremony';
 import { CeremonyType } from '../ceremony/dto/type.enum';
 import { LanguageService } from '../language';
@@ -499,6 +500,60 @@ export class EngagementService {
     };
   }
 
+  // helper method for defining properties
+  property = (prop: string, value: any, baseNode: string) => {
+    if (!value) {
+      return [];
+    }
+    const createdAt = DateTime.local();
+    const propLabel =
+      prop === 'status' ? 'Property:EngagementStatus' : 'Property';
+    return [
+      [
+        node(baseNode),
+        relation('out', '', prop, {
+          active: true,
+          createdAt,
+        }),
+        node(prop, propLabel, {
+          active: true,
+          value,
+        }),
+      ],
+    ];
+  };
+
+  // helper method for defining properties
+  permission = (
+    property: string,
+    sg: string,
+    baseNode: string,
+    read: boolean,
+    edit: boolean
+  ) => {
+    const createdAt = DateTime.local();
+    return [
+      [
+        node(sg),
+        relation('out', '', 'permission', {
+          active: true,
+          createdAt,
+        }),
+        node('', 'Permission', {
+          property,
+          active: true,
+          read,
+          edit,
+        }),
+        relation('out', '', 'baseNode', {
+          active: true,
+          createdAt,
+        }),
+        node(baseNode),
+      ],
+    ];
+  };
+
   async createLanguageEngagement(
     { languageId, projectId, ...input }: CreateLanguageEngagement,
     session: ISession
@@ -512,55 +567,106 @@ export class EngagementService {
     try {
       // Initial LanguageEngagement
       const id = generate();
-      const acls = {
-        canReadLanguage: true,
-        canEditLanguage: true,
-        canReadProject: true,
-        canEditProject: true,
-        canReadProduct: true,
-        canEditProduct: true,
-        canReadFirstScripture: true,
-        canEditFirstScripture: true,
-        canReadLukePartnership: true,
-        canEditLukePartnership: true,
-        canReadSentPrintingDate: true,
-        canEditSentPrintingDate: true,
-        canReadStatus: true,
-        canEditStatus: true,
-        canReadCeremony: true,
-        canEditCeremony: true,
-        canReadCompleteDate: true,
-        canEditCompleteDate: true,
-        canReadDisbursementCompleteDate: true,
-        canEditDisbursementCompleteDate: true,
-        canReadCommunicationsCompleteDate: true,
-        canEditCommunicationsCompleteDate: true,
-        canReadStartDate: true,
-        canEditStartDate: true,
-        canReadEndDate: true,
-        canEditEndDate: true,
-        canReadInitialEndDate: true,
-        canReadLastSuspendedAt: true,
-        canReadLastReactivatedAt: true,
-        canReadStatusModifiedAt: true,
-        canReadModifiedAt: true,
-      };
-
+      const createdAt = DateTime.local();
       const ceremony = await this.ceremonyService.create(
         { type: CeremonyType.Dedication },
         session
       );
-
-      await this.db.createNode({
-        type: LanguageEngagement.classType,
-        session,
-        input: {
-          id,
-          ...input,
-        },
-        acls,
-        aclEditProp: 'canCreateEngagement',
-      });
+      await this.db
+        .query()
+        .match(matchSession(session, { withAclEdit: 'canCreateEngagement' }))
+        .create([
+          [
+            node('langEng', 'LanguageEngagement:BaseNode', {
+              active: true,
+              createdAt,
+              id,
+              owningOrgId: session.owningOrgId,
+            }),
+          ],
+          [
+            node('adminSG', 'SecurityGroup', {
+              active: true,
+              createdAt,
+              name: 'langEngagement admin',
+            }),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('requestingUser'),
+          ],
+          ...this.permission(
+            'firstScripture',
+            'adminSG',
+            'langEng',
+            true,
+            true
+          ),
+          ...this.permission(
+            'lukePartnership',
+            'adminSG',
+            'langEng',
+            true,
+            true
+          ),
+          ...this.permission('completeDate', 'adminSG', 'langEng', true, true),
+          ...this.permission(
+            'disbursementCompleteDate',
+            'adminSG',
+            'langEng',
+            true,
+            true
+          ),
+          ...this.permission(
+            'communicationsCompleteDate',
+            'adminSG',
+            'langEng',
+            true,
+            true
+          ),
+          ...this.permission('startDate', 'adminSG', 'langEng', true, true),
+          ...this.permission('endDate', 'adminSG', 'langEng', true, true),
+          [
+            node('readerSG', 'SecurityGroup', {
+              active: true,
+              createdAt,
+              name: 'langEngagement users',
+            }),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('requestingUser'),
+          ],
+          ...this.permission(
+            'firstScripture',
+            'readerSG',
+            'langEng',
+            true,
+            false
+          ),
+          ...this.permission(
+            'lukePartnership',
+            'readerSG',
+            'langEng',
+            true,
+            false
+          ),
+          ...this.permission('completeDate', 'readerSG', 'langEng', true, true),
+          ...this.permission(
+            'disbursementCompleteDate',
+            'readerSG',
+            'langEng',
+            true,
+            false
+          ),
+          ...this.permission(
+            'communicationsCompleteDate',
+            'readerSG',
+            'langEng',
+            true,
+            false
+          ),
+          ...this.permission('startDate', 'readerSG', 'langEng', true, false),
+          ...this.permission('endDate', 'readerSG', 'langEng', true, false),
+        ])
+        .return('langEng.id as id')
+        .first();
 
       // connect Language and Project to LanguageEngagement.
       const query = `
@@ -581,7 +687,7 @@ export class EngagementService {
           languageId: languageId,
           projectId: projectId,
           ceremonyId: ceremony.id,
-          id: id,
+          id,
         })
         .first();
 

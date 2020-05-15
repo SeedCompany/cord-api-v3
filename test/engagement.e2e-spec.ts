@@ -55,7 +55,7 @@ describe.skip('Engagement e2e', () => {
     await app.close();
   });
 
-  it('create a language engagement', async () => {
+  it.only('create a language engagement', async () => {
     const languageEngagement = await createLanguageEngagement(app, {
       languageId: language.id,
       projectId: project.id,
