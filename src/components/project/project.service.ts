@@ -3,7 +3,8 @@ import {
   NotFoundException,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
-import { node } from 'cypher-query-builder';
+import { node, relation } from 'cypher-query-builder';
+import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession, Sensitivity } from '../../common';
@@ -74,105 +75,198 @@ export class ProjectService {
     }
   }
 
-  async readOne(id: string, session: ISession): Promise<Project> {
-    const result = await this.db
-      .query()
-      .raw(
-        `
-        MATCH
-        (token:Token {
+  // helper method for defining properties
+  property = (prop: string, value: any) => {
+    if (!value) {
+      return [];
+    }
+    const createdAt = DateTime.local();
+    return [
+      [
+        node('newProject'),
+        relation('out', '', prop, {
           active: true,
-          value: $token
-        })
-          <-[:token {active: true}]-
-        (requestingUser:User {
-          active: true,
-          id: $requestingUserId,
-          owningOrgId: $owningOrgId
+          createdAt,
         }),
-        (project:Project {active: true, id: $id})
+        node(prop, 'Property', {
+          active: true,
+          value,
+        }),
+      ],
+    ];
+  };
 
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadType:ACL {canReadType: true})-[:toNode]->(project)-[:type {active: true}]->(type:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditType:ACL {canEditType: true})-[:toNode]->(project)
+  // helper method for defining properties
+  permission = (property: string) => {
+    const createdAt = DateTime.local();
+    return [
+      [
+        node('adminSG'),
+        relation('out', '', 'permission', {
+          active: true,
+          createdAt,
+        }),
+        node('', 'Permission', {
+          property,
+          active: true,
+          read: true,
+          edit: true,
+        }),
+        relation('out', '', 'baseNode', {
+          active: true,
+          createdAt,
+        }),
+        node('newProject'),
+      ],
+      [
+        node('readerSG'),
+        relation('out', '', 'permission', {
+          active: true,
+          createdAt,
+        }),
+        node('', 'Permission', {
+          property,
+          active: true,
+          read: true,
+          edit: false,
+        }),
+        relation('out', '', 'baseNode', {
+          active: true,
+          createdAt,
+        }),
+        node('newProject'),
+      ],
+    ];
+  };
 
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadSensitivity:ACL {canReadSensitivity: true})-[:toNode]->(project)-[:sensitivity {active: true}]->(sensitivity:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditSensitivity:ACL {canEditSensitivity: true})-[:toNode]->(project)
+  propMatch = (property: string) => {
+    const perm = 'canRead' + upperFirst(property);
+    return [
+      [
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node(perm, 'Permission', {
+          property,
+          active: true,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('project'),
+        relation('out', '', property, { active: true }),
+        node(property, 'Property', { active: true }),
+      ],
+    ];
+  };
 
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadName:ACL {canReadName: true})-[:toNode]->(project)-[:name {active: true}]->(name:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditName:ACL {canEditName: true})-[:toNode]->(project)
+  async readOne(id: string, session: ISession): Promise<Project> {
+    const readProject = this.db
+      .query()
+      .match(matchSession(session, { withAclRead: 'canReadProjects' }))
+      .match([node('project', 'Project', { active: true, id })])
+      .optionalMatch([...this.propMatch('type')])
+      .optionalMatch([...this.propMatch('sensitivity')])
+      .optionalMatch([...this.propMatch('name')])
+      .optionalMatch([...this.propMatch('step')])
+      .optionalMatch([...this.propMatch('status')])
+      .optionalMatch([...this.propMatch('mouStart')])
+      .optionalMatch([...this.propMatch('mouEnd')])
+      .optionalMatch([...this.propMatch('estimatedSubmission')])
+      .optionalMatch([...this.propMatch('modifiedAt')])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node('canReadLocation', 'Permission', {
+          property: 'location',
+          active: true,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('project'),
+        relation('out', '', 'location', { active: true }),
+        node('country', 'Country', { active: true }),
+      ])
 
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadDeptId:ACL {canReadDeptId: true})-[:toNode]->(project)-[:deptId {active: true}]->(deptId:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditDeptId:ACL {canEditDeptId: true})-[:toNode]->(project)
+      .return({
+        project: [{ id: 'id', createdAt: 'createdAt' }],
+        type: [{ value: 'type' }],
+        canReadType: [
+          {
+            read: 'canReadTypeRead',
+            edit: 'canReadTypeEdit',
+          },
+        ],
+        sensitivity: [{ value: 'sensitivity' }],
+        canReadSensitivity: [
+          { read: 'canReadSensitivityRead', edit: 'canReadSensitivitysEdit' },
+        ],
+        name: [{ value: 'name' }],
+        canReadName: [
+          {
+            read: 'canReadNameRead',
+            edit: 'canReadNameEdit',
+          },
+        ],
+        step: [{ value: 'step' }],
+        canReadStep: [
+          {
+            read: 'canReadStepRead',
+            edit: 'canReadStepEdit',
+          },
+        ],
+        status: [{ value: 'status' }],
+        canReadStatus: [
+          {
+            read: 'canReadStatusRead',
+            edit: 'canReadStatusEdit',
+          },
+        ],
+        mouStart: [{ value: 'mouStart' }],
+        canReadMouStart: [
+          {
+            read: 'canReadMouStartRead',
+            edit: 'canReadMouStartEdit',
+          },
+        ],
+        mouEnd: [{ value: 'mouEnd' }],
+        canReadMouEnd: [
+          {
+            read: 'canReadMouEndRead',
+            edit: 'canReadMouEndEdit',
+          },
+        ],
+        estimatedSubmission: [{ value: 'estimatedSubmission' }],
+        canReadEstimatedSubmission: [
+          {
+            read: 'canReadEstimatedSubmissionRead',
+            edit: 'canReadEstimatedSubmissionEdit',
+          },
+        ],
+        modifiedAt: [{ value: 'modifiedAt' }],
+        canReadModifiedAt: [
+          {
+            read: 'canReadModifiedAtRead',
+            edit: 'canReadModifiedAtEdit',
+          },
+        ],
+        country: [{ id: 'contryId' }],
+        canReadLocation: [
+          {
+            read: 'canReadLocationRead',
+            edit: 'canReadLocationEdit',
+          },
+        ],
+      });
 
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadStep:ACL {canReadStep: true})-[:toNode]->(project)-[:step {active: true}]->(step:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditStep:ACL {canEditStep: true})-[:toNode]->(project)
-
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadStatus:ACL {canReadStatus: true})-[:toNode]->(project)-[:status {active: true}]->(status:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditStatus:ACL {canEditStatus: true})-[:toNode]->(project)
-
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadLocation:ACL {canReadLocation: true})-[:toNode]->(project)-[:location {active: true}]->(country:Country {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditLocation:ACL {canEditLocation: true})-[:toNode]->(project)
-        WITH * OPTIONAL MATCH (country)-[:region]->(region:Region {active:true})-[:zone]->(zone:Zone {active: true})
-
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadMouStart:ACL {canReadMouStart: true})-[:toNode]->(project)-[:mouStart {active: true}]->(mouStart:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditMouStart:ACL {canEditMouStart: true})-[:toNode]->(project)
-
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadMouEnd:ACL {canReadMouEnd: true})-[:toNode]->(project)-[:mouEnd {active: true}]->(mouEnd:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditMouEnd:ACL {canEditMouEnd: true})-[:toNode]->(project)
-
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadEstimatedSubmission:ACL {canReadEstimatedSubmission: true})-[:toNode]->(project)-[:estimatedSubmission {active: true}]->(estimatedSubmission:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditEstimatedSubmission:ACL {canEditEstimatedSubmission: true})-[:toNode]->(project)
-
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadModifiedAt:ACL {canReadModifiedAt: true})-[:toNode]->(project)-[:modifiedAt {active: true}]->(modifiedAt:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditModifiedAt:ACL {canEditModifiedAt: true})-[:toNode]->(project)
-
-        RETURN
-          project.id as id,
-          project.createdAt as createdAt,
-          type.value as type,
-          sensitivity.value as sensitivity,
-          name.value as name,
-          deptId.value as deptId,
-          step.value as step,
-          status.value as status,
-          country,
-          region,
-          zone,
-          mouStart.value as mouStart,
-          mouEnd.value as mouEnd,
-          estimatedSubmission.value as estimatedSubmission,
-          modifiedAt.value as modifiedAt,
-          canReadType.canReadType as canReadType,
-          canEditType.canEditType as canEditType,
-          canReadSensitivity.canReadSensitivity as canReadSensitivity,
-          canEditSensitivity.canEditSensitivity as canEditSensitivity,
-          canReadName.canReadName as canReadName,
-          canEditName.canEditName as canEditName,
-          canReadDeptId.canReadDeptId as canReadDeptId,
-          canEditDeptId.canEditDeptId as canEditDeptId,
-          canReadStep.canReadStep as canReadStep,
-          canEditStep.canEditStep as canEditStep,
-          canReadStatus.canReadStatus as canReadStatus,
-          canEditStatus.canEditStatus as canEditStatus,
-          canReadLocation.canReadLocation as canReadLocation,
-          canEditLocation.canEditLocation as canEditLocation,
-          canReadMouStart.canReadMouStart as canReadMouStart,
-          canEditMouStart.canEditMouStart as canEditMouStart,
-          canReadMouEnd.canReadMouEnd as canReadMouEnd,
-          canEditMouEnd.canEditMouEnd as canEditMouEnd,
-          canReadEstimatedSubmission.canReadEstimatedSubmission as canReadEstimatedSubmission,
-          canEditEstimatedSubmission.canEditEstimatedSubmission as canEditEstimatedSubmission,
-          canReadModifiedAt.canReadModifiedAt as canReadModifiedAt,
-          canEditModifiedAt.canEditModifiedAt as canEditModifiedAt
-      `,
-        {
-          token: session.token,
-          requestingUserId: session.userId,
-          owningOrgId: session.owningOrgId,
-          id,
-        }
-      )
-      .first();
+    let result;
+    try {
+      result = await readProject.first();
+    } catch (e) {
+      this.logger.error('e :>> ', e);
+    }
 
     if (!result) {
       throw new NotFoundException('Could not find project');
@@ -341,30 +435,7 @@ export class ProjectService {
     session: ISession
   ): Promise<Project> {
     const id = generate();
-    const acls = {
-      canReadModifiedAt: true,
-      canEditModifiedAt: true,
-      canReadType: true,
-      canEditType: true,
-      canReadSensitivity: true,
-      canEditSensitivity: true,
-      canReadName: true,
-      canEditName: true,
-      canReadDeptId: true,
-      canEditDeptId: true,
-      canReadStep: true,
-      canEditStep: true,
-      canReadStatus: true,
-      canEditStatus: true,
-      canReadLocation: true,
-      canEditLocation: true,
-      canReadMouStart: true,
-      canEditMouStart: true,
-      canReadMouEnd: true,
-      canEditMouEnd: true,
-      canReadEstimatedSubmission: true,
-      canEditEstimatedSubmission: true,
-    };
+    const createdAt = DateTime.local();
 
     const createInput = {
       id,
@@ -376,12 +447,66 @@ export class ProjectService {
     };
 
     try {
-      await this.db.createNode({
-        session,
-        type: Project.classType,
-        input: createInput,
-        acls,
-      });
+      const createProject = this.db
+        .query()
+        .match(matchSession(session, { withAclEdit: 'canCreateProject' }))
+        .create([
+          [
+            node('newProject', 'Project:BaseNode', {
+              active: true,
+              createdAt,
+              id,
+              owningOrgId: session.owningOrgId,
+            }),
+          ],
+          ...this.property('type', createInput.type),
+          ...this.property('sensitivity', createInput.sensitivity),
+          ...this.property('name', createInput.name),
+          ...this.property('step', createInput.step),
+          ...this.property('status', createInput.status),
+          ...this.property('mouStart', createInput.mouStart),
+          ...this.property('mouEnd', createInput.mouEnd),
+          ...this.property(
+            'estimatedSubmission',
+            createInput.estimatedSubmission
+          ),
+          ...this.property('modifiedAt', createInput.modifiedAt),
+          [
+            node('adminSG', 'SecurityGroup', {
+              active: true,
+              createdAt,
+              name: `${input.name} ${input.type} admin`,
+            }),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('requestingUser'),
+          ],
+          [
+            node('readerSG', 'SecurityGroup', {
+              active: true,
+              createdAt,
+              name: `${input.name} ${input.type} users`,
+            }),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('requestingUser'),
+          ],
+          ...this.permission('type'),
+          ...this.permission('sensitivity'),
+          ...this.permission('name'),
+          ...this.permission('step'),
+          ...this.permission('status'),
+          ...this.permission('mouStart'),
+          ...this.permission('mouEnd'),
+          ...this.permission('estimatedSubmission'),
+          ...this.permission('modifiedAt'),
+        ])
+        .return('newProject.id as id');
+
+      try {
+        await createProject.first();
+      } catch (e) {
+        this.logger.error('e :>> ', e);
+      }
+
       const qry = `
         MATCH
           (project:Project {id: "${id}", active: true})-[:name]->(proName:Property),
@@ -436,7 +561,7 @@ export class ProjectService {
 
     // TODO: re-connect the locationId node when locations are hooked up
 
-    const result = await this.db.updateProperties({
+    const result = await this.db.sgUpdateProperties({
       session,
       object,
       props: [
