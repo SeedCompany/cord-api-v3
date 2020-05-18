@@ -4,7 +4,9 @@ import {
   NotFoundException,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
-import { node } from 'cypher-query-builder';
+import { node, relation } from 'cypher-query-builder';
+import { upperFirst } from 'lodash';
+import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../../common';
 import { DatabaseService, ILogger, Logger, matchSession } from '../../../core';
@@ -22,6 +24,91 @@ export class EducationService {
     @Logger('education:service') private readonly logger: ILogger,
     private readonly db: DatabaseService
   ) {}
+
+  // helper method for defining properties
+  property = (prop: string, value: any) => {
+    if (!value) {
+      return [];
+    }
+    const createdAt = DateTime.local();
+    return [
+      [
+        node('newEducation'),
+        relation('out', '', prop, {
+          active: true,
+          createdAt,
+        }),
+        node(prop, 'Property', {
+          active: true,
+          value,
+        }),
+      ],
+    ];
+  };
+
+  // helper method for defining properties
+  permission = (property: string) => {
+    const createdAt = DateTime.local();
+    return [
+      [
+        node('adminSG'),
+        relation('out', '', 'permission', {
+          active: true,
+          createdAt,
+        }),
+        node('', 'Permission', {
+          property,
+          active: true,
+          read: true,
+          edit: true,
+        }),
+        relation('out', '', 'baseNode', {
+          active: true,
+          createdAt,
+        }),
+        node('newEducation'),
+      ],
+      [
+        node('readerSG'),
+        relation('out', '', 'permission', {
+          active: true,
+          createdAt,
+        }),
+        node('', 'Permission', {
+          property,
+          active: true,
+          read: true,
+          edit: false,
+        }),
+        relation('out', '', 'baseNode', {
+          active: true,
+          createdAt,
+        }),
+        node('newEducation'),
+      ],
+    ];
+  };
+
+  propMatch = (property: string) => {
+    const perm = 'canRead' + upperFirst(property);
+    return [
+      [
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node(perm, 'Permission', {
+          property,
+          active: true,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('education'),
+        relation('out', '', property, { active: true }),
+        node(property, 'Property', { active: true }),
+      ],
+    ];
+  };
 
   async list(
     { page, count, sort, order, filter }: EducationListInput,
@@ -54,22 +141,71 @@ export class EducationService {
     session: ISession
   ): Promise<Education> {
     const id = generate();
-    const acls = {
-      canReadDegree: true,
-      canEditDegree: true,
-      canReadMajor: true,
-      canEditMajor: true,
-      canReadInstitution: true,
-      canEditInstitution: true,
-    };
-
+    const createdAt = DateTime.local();
     try {
-      await this.db.createNode({
-        session,
-        type: Education.classType,
-        input: { id, ...input },
-        acls,
-      });
+      const createEducation = this.db
+        .query()
+        .match(matchSession(session, { withAclEdit: 'canCreateEducation' }))
+        .create([
+          [
+            node('newEducation', 'Education:BaseNode', {
+              active: true,
+              createdAt,
+              id,
+              owningOrgId: session.owningOrgId,
+            }),
+          ],
+          ...this.property('degree', input.degree),
+          ...this.property('major', input.major),
+          ...this.property('institution', input.institution),
+          [
+            node('adminSG', 'SecurityGroup', {
+              active: true,
+              createdAt,
+              name: `${input.degree} ${input.institution} admin`,
+            }),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('requestingUser'),
+          ],
+          [
+            node('readerSG', 'SecurityGroup', {
+              active: true,
+              createdAt,
+              name: `${input.degree} ${input.institution} users`,
+            }),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('requestingUser'),
+          ],
+          ...this.permission('degree'),
+          ...this.permission('major'),
+          ...this.permission('institution'),
+        ])
+        .return('newEducation.id as id');
+
+      try {
+        await createEducation.first();
+      } catch (e) {
+        this.logger.error('e :>> ', e);
+      }
+      this.logger.info(`Created user education`, { id, userId });
+
+      // connect the Education to the User.
+      const query = `
+      MATCH (user: User {id: $userId, active: true}),
+        (education:Education {id: $id, active: true})
+      CREATE (user)-[:education {active: true, createdAt: datetime()}]->(education)
+      RETURN  education.id as id
+      `;
+
+      await this.db
+        .query()
+        .raw(query, {
+          userId,
+          id,
+        })
+        .run();
+
+      return await this.readOne(id, session);
     } catch (e) {
       this.logger.error(`Could not create education for user `, {
         id,
@@ -77,72 +213,42 @@ export class EducationService {
       });
       throw new InternalServerErrorException('Could not create education');
     }
-
-    this.logger.info(`Created user education`, { id, userId });
-
-    // connect the Education to the User.
-    const query = `
-      MATCH (user: User {id: $userId, active: true}),
-        (education:Education {id: $id, active: true})
-      CREATE (user)-[:education {active: true, createdAt: datetime()}]->(education)
-      RETURN  education.id as id
-      `;
-
-    await this.db
-      .query()
-      .raw(query, {
-        userId,
-        id,
-      })
-      .run();
-
-    return this.readOne(id, session);
   }
 
   async readOne(id: string, session: ISession): Promise<Education> {
-    const result = await this.db
+    const readEducation = this.db
       .query()
-      .raw(
-        `
-        MATCH
-        (token:Token {
-          active: true,
-          value: $token
-        })
-          <-[:token {active: true}]-
-        (requestingUser:User {
-          active: true,
-          id: $requestingUserId,
-          owningOrgId: $owningOrgId
-        }),
-        (education:Education {active: true, id: $id})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl1:ACL {canReadDegree: true})-[:toNode]->(education)-[:degree {active: true}]->(degree:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl2:ACL {canEditDegree: true})-[:toNode]->(education)
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl3:ACL {canReadMajor: true})-[:toNode]->(education)-[:major {active: true}]->(major:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl4:ACL {canEditMajor: true})-[:toNode]->(education)
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl5:ACL {canReadInstitution: true})-[:toNode]->(education)-[:institution {active: true}]->(institution:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl6:ACL {canEditInstitution: true})-[:toNode]->(education)
-        RETURN
-          education.id as id,
-          education.createdAt as createdAt,
-          degree.value as degree,
-          acl1.canReadDegree as canReadDegree,
-          acl2.canEditDegree as canEditDegree,
-          major.value as major,
-          acl3.canReadMajor as canReadMajor,
-          acl4.canEditMajor as canEditMajor,
-          institution.value as institution,
-          acl5.canReadInstitution as canReadInstitution,
-          acl6.canEditInstitution as canEditInstitution
-        `,
-        {
-          token: session.token,
-          requestingUserId: session.userId,
-          owningOrgId: session.owningOrgId,
-          id,
-        }
-      )
-      .first();
+      .match(matchSession(session, { withAclRead: 'canReadEducationList' }))
+      .match([node('education', 'Education', { active: true, id })])
+      .optionalMatch([...this.propMatch('degree')])
+      .optionalMatch([...this.propMatch('major')])
+      .optionalMatch([...this.propMatch('institution')])
+      .return({
+        education: [{ id: 'id', createdAt: 'createdAt' }],
+        degree: [{ value: 'degree' }],
+        canReadDegree: [
+          {
+            read: 'canReadDegree',
+            edit: 'canEditDegree',
+          },
+        ],
+        major: [{ value: 'major' }],
+        canReadMajor: [{ read: 'canReadMajor', edit: 'canEditMajor' }],
+        institution: [{ value: 'institution' }],
+        canReadInstitution: [
+          {
+            read: 'canReadInstitution',
+            edit: 'canEditInstitution',
+          },
+        ],
+      });
+
+    let result;
+    try {
+      result = await readEducation.first();
+    } catch (e) {
+      this.logger.error('e :>> ', e);
+    }
     if (!result) {
       throw new NotFoundException('Could not find education');
     }
@@ -177,7 +283,7 @@ export class EducationService {
   async update(input: UpdateEducation, session: ISession): Promise<Education> {
     const ed = await this.readOne(input.id, session);
 
-    return this.db.updateProperties({
+    return this.db.sgUpdateProperties({
       session,
       object: ed,
       props: ['degree', 'major', 'institution'],
