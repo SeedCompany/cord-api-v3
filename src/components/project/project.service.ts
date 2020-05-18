@@ -187,9 +187,7 @@ export class ProjectService {
         relation('out', '', 'baseNode', { active: true }),
         node('project'),
         relation('out', '', 'location', { active: true }),
-        node('location', 'location', { active: true }),
-        relation('out', '', 'name', { active: true }),
-        node('locationName', 'Property', { active: true }),
+        node('country', 'Country', { active: true }),
       ])
 
       .return({
@@ -254,8 +252,7 @@ export class ProjectService {
             edit: 'canReadModifiedAtEdit',
           },
         ],
-        location: [{ id: 'locationId', createdAt: 'locationCreatedAt' }],
-        locationName: [{ value: 'locationName' }],
+        country: [{ id: 'contryId' }],
         canReadLocation: [
           {
             read: 'canReadLocationRead',
