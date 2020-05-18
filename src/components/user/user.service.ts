@@ -228,6 +228,7 @@ export class UserService {
 
     return this.readOne(userId, session);
   }
+
   async create(
     input: CreateUser,
     // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
@@ -447,7 +448,6 @@ export class UserService {
 
   async readOne(id: string, session: ISession): Promise<User> {
     this.logger.info('query read User ', { id, session });
-
     const property = (property: string, sg: any) => {
       const perm = property + 'Perm';
       return [
@@ -526,46 +526,45 @@ export class UserService {
         createdAt: result.createdAt,
         email: {
           value: result.email,
-          canRead: !!result.emailPermRead,
-          canEdit: !!result.emailPermEdit,
+          canRead: !!result.emailRead,
+          canEdit: !!result.emailEdit,
         },
         realFirstName: {
           value: result.realFirstName,
-          canRead: !!result.realFirstNamePermRead,
-          canEdit: !!result.realFirstNamePermEdit,
+          canRead: !!result.realFirstNameRead,
+          canEdit: !!result.realFirstNameEdit,
         },
         realLastName: {
           value: result.realLastName,
-          canRead: !!result.realLastNamePermRead,
-          canEdit: !!result.realLastNamePermEdit,
+          canRead: !!result.realLastNameRead,
+          canEdit: !!result.realLastNameEdit,
         },
         displayFirstName: {
           value: result.displayFirstName,
-          canRead: !!result.displayFirstNamePermRead,
-          canEdit: !!result.displayFirstNamePermEdit,
+          canRead: !!result.displayFirstNameRead,
+          canEdit: !!result.displayFirstNameEdit,
         },
         displayLastName: {
           value: result.displayLastName,
-          canRead: !!result.displayLastNamePermRead,
-          canEdit: !!result.displayLastNamePermEdit,
+          canRead: !!result.displayLastNameRead,
+          canEdit: !!result.displayLastNameEdit,
         },
         phone: {
           value: result.phone,
-          canRead: !!result.phonePermRead,
-          canEdit: !!result.phonePermEdit,
+          canRead: !!result.phoneRead,
+          canEdit: !!result.phoneEdit,
         },
         timezone: {
           value: result.timezone,
-          canRead: !!result.timezonePermRead,
-          canEdit: !!result.timezonePermEdit,
+          canRead: !!result.timezoneRead,
+          canEdit: !!result.timezoneEdit,
         },
         bio: {
           value: result.bio,
-          canRead: !!result.bioPermRead,
-          canEdit: !!result.bioPermEdit,
+          canRead: !!result.bioRead,
+          canEdit: !!result.bioEdit,
         },
       };
-
       return user;
     } else {
       // maybe we don't have permission, let's just get the pubic info
