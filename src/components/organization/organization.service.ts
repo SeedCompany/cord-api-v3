@@ -52,7 +52,7 @@ export class OrganizationService {
   }
 
   // helper method for defining properties
-  property = (prop: string, value: any, baseNode: string) => {
+  property = (prop: string, value: any) => {
     if (!value) {
       return [];
     }
@@ -60,7 +60,7 @@ export class OrganizationService {
     const propLabel = prop === 'name' ? 'Property:OrgName' : 'Property';
     return [
       [
-        node(baseNode),
+        node('newOrg'),
         relation('out', '', prop, {
           active: true,
           createdAt,
@@ -74,18 +74,11 @@ export class OrganizationService {
   };
 
   // helper method for defining properties
-  permission = (
-    property: string,
-    sg: string,
-    baseNode: string,
-    read: boolean,
-    edit: boolean,
-    admin: boolean
-  ) => {
+  permission = (property: string) => {
     const createdAt = DateTime.local();
     return [
       [
-        node(sg),
+        node('adminSG'),
         relation('out', '', 'permission', {
           active: true,
           createdAt,
@@ -93,14 +86,34 @@ export class OrganizationService {
         node('', 'Permission', {
           property,
           active: true,
-          read,
-          edit,
+          read: true,
+          edit: true,
+          admin: true,
         }),
         relation('out', '', 'baseNode', {
           active: true,
           createdAt,
         }),
-        node(baseNode),
+        node('newOrg'),
+      ],
+      [
+        node('readerSG'),
+        relation('out', '', 'permission', {
+          active: true,
+          createdAt,
+        }),
+        node('', 'Permission', {
+          property,
+          active: true,
+          read: true,
+          edit: false,
+          admin: false,
+        }),
+        relation('out', '', 'baseNode', {
+          active: true,
+          createdAt,
+        }),
+        node('newOrg'),
       ],
     ];
   };
@@ -142,7 +155,7 @@ export class OrganizationService {
               owningOrgId: session.owningOrgId,
             }),
           ],
-          ...this.property('name', input.name, 'newOrg'),
+          ...this.property('name', input.name),
           [
             node('adminSG', 'SecurityGroup', {
               active: true,
@@ -152,7 +165,6 @@ export class OrganizationService {
             relation('out', '', 'member', { active: true, createdAt }),
             node('requestingUser'),
           ],
-          ...this.permission('name', 'adminSG', 'newOrg', true, true, true),
           [
             node('readerSG', 'SecurityGroup', {
               active: true,
@@ -162,7 +174,7 @@ export class OrganizationService {
             relation('out', '', 'member', { active: true, createdAt }),
             node('requestingUser'),
           ],
-          ...this.permission('name', 'readerSG', 'newOrg', true, false, false),
+          ...this.permission('name'),
         ])
         .return('newOrg.id as id')
         .first();
@@ -198,9 +210,6 @@ export class OrganizationService {
           read: true,
         }),
         relation('out', '', 'baseNode', { active: true }),
-        node('org'),
-      ])
-      .optionalMatch([
         node('org'),
         relation('out', '', 'name', { active: true }),
         node('orgName', 'Property', { active: true }),

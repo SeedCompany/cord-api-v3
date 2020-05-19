@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
+import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
@@ -23,6 +24,93 @@ export class CeremonyService {
     @Logger('ceremony:service') private readonly logger: ILogger
   ) {}
 
+  // helper method for defining properties
+  property = (prop: string, value: any) => {
+    if (!value) {
+      return [];
+    }
+    const createdAt = DateTime.local();
+    return [
+      [
+        node('newCeremony'),
+        relation('out', '', prop, {
+          active: true,
+          createdAt,
+        }),
+        node(prop, 'Property', {
+          active: true,
+          value,
+        }),
+      ],
+    ];
+  };
+
+  // helper method for defining properties
+  permission = (property: string) => {
+    const createdAt = DateTime.local();
+    return [
+      [
+        node('adminSG'),
+        relation('out', '', 'permission', {
+          active: true,
+          createdAt,
+        }),
+        node('', 'Permission', {
+          property,
+          active: true,
+          read: true,
+          edit: true,
+          admin: true,
+        }),
+        relation('out', '', 'baseNode', {
+          active: true,
+          createdAt,
+        }),
+        node('newCeremony'),
+      ],
+      [
+        node('readerSG'),
+        relation('out', '', 'permission', {
+          active: true,
+          createdAt,
+        }),
+        node('', 'Permission', {
+          property,
+          active: true,
+          read: true,
+          edit: false,
+          admin: false,
+        }),
+        relation('out', '', 'baseNode', {
+          active: true,
+          createdAt,
+        }),
+        node('newCeremony'),
+      ],
+    ];
+  };
+
+  propMatch = (property: string) => {
+    const perm = 'canRead' + upperFirst(property);
+    return [
+      [
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node(perm, 'Permission', {
+          property,
+          active: true,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('ceremony'),
+        relation('out', '', property, { active: true }),
+        node(property, 'Property', { active: true }),
+      ],
+    ];
+  };
+
   async readOne(id: string, session: ISession): Promise<Ceremony> {
     this.logger.info(`Query readOne Ceremony`, { id, userId: session.userId });
     if (!id) {
@@ -32,91 +120,24 @@ export class CeremonyService {
       .query()
       .match(matchSession(session))
       .match([node('ceremony', 'Ceremony', { active: true, id })])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canReadType', 'Permission', {
-          property: 'type',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('ceremony'),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('permPlanned', 'Permission', {
-          property: 'planned',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('ceremony'),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('permEstimatedDate', 'Permission', {
-          property: 'estimatedDate',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('ceremony'),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('permActualDate', 'Permission', {
-          property: 'actualDate',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('ceremony'),
-      ])
-      .optionalMatch([
-        node('ceremony'),
-        relation('out', '', 'type', { active: true }),
-        node('type', 'Property', { active: true }),
-      ])
-      .optionalMatch([
-        node('ceremony'),
-        relation('out', '', 'planned', { active: true }),
-        node('planned', 'Property', { active: true }),
-      ])
-      .optionalMatch([
-        node('ceremony'),
-        relation('out', '', 'estimatedDate', { active: true }),
-        node('estimatedDate', 'Property', { active: true }),
-      ])
-      .optionalMatch([
-        node('ceremony'),
-        relation('out', '', 'actualDate', { active: true }),
-        node('actualDate', 'Property', { active: true }),
-      ])
+      .optionalMatch([...this.propMatch('type')])
+      .optionalMatch([...this.propMatch('planned')])
+      .optionalMatch([...this.propMatch('estimatedDate')])
+      .optionalMatch([...this.propMatch('actualDate')])
       .return({
         ceremony: [{ id: 'id', createdAt: 'createdAt' }],
         type: [{ value: 'type' }],
-        permPlanned: [{ read: 'canReadPlanned', edit: 'canEditPlanned' }],
+        canReadType: [{ read: 'canReadType', edit: 'canEditType' }],
         planned: [{ value: 'planned' }],
-        permEstimatedDate: [
+        canReadPlanned: [{ read: 'canReadPlanned', edit: 'canEditPlanned' }],
+        estimatedDate: [{ value: 'estimatedDate' }],
+        canReadEstimatedDate: [
           { read: 'canReadEstimatedDate', edit: 'canEditEstimatedDate' },
         ],
-        estimatedDate: [{ value: 'estimatedDate' }],
-        permActualDate: [
+        actualDate: [{ value: 'actualDate' }],
+        canReadActualDate: [
           { read: 'canReadActualDate', edit: 'canEditActualDate' },
         ],
-        actualDate: [{ value: 'actualDate' }],
       })
       .first();
 
@@ -177,58 +198,6 @@ export class CeremonyService {
     };
   }
 
-  // helper method for defining properties
-  property = (prop: string, value: any, baseNode: string) => {
-    if (!value) {
-      return [];
-    }
-    const createdAt = DateTime.local();
-    return [
-      [
-        node(baseNode),
-        relation('out', '', prop, {
-          active: true,
-          createdAt,
-        }),
-        node(prop, 'Property', {
-          active: true,
-          value,
-        }),
-      ],
-    ];
-  };
-
-  // helper method for defining properties
-  permission = (
-    property: string,
-    sg: string,
-    baseNode: string,
-    read: boolean,
-    edit: boolean,
-    admin: boolean
-  ) => {
-    const createdAt = DateTime.local();
-    return [
-      [
-        node(sg),
-        relation('out', '', 'permission', {
-          active: true,
-          createdAt,
-        }),
-        node('', 'Permission', {
-          property,
-          active: true,
-          read,
-          edit,
-        }),
-        relation('out', '', 'baseNode', {
-          active: true,
-          createdAt,
-        }),
-        node(baseNode),
-      ],
-    ];
-  };
   async create(input: CreateCeremony, session: ISession): Promise<Ceremony> {
     const id = generate();
     const createdAt = DateTime.local();
@@ -239,14 +208,17 @@ export class CeremonyService {
         .match(matchSession(session, { withAclEdit: 'canCreateCeremony' }))
         .create([
           [
-            node('ceremony', 'Ceremony:BaseNode', {
+            node('newCeremony', 'Ceremony:BaseNode', {
               active: true,
               createdAt,
               id,
               owningOrgId: session.owningOrgId,
             }),
           ],
-          ...this.property('type', input.type, 'ceremony'),
+          ...this.property('type', input.type),
+          ...this.permission('planned'),
+          ...this.permission('estimatedDate'),
+          ...this.permission('actualDate'),
           [
             node('adminSG', 'SecurityGroup', {
               active: true,
@@ -256,31 +228,6 @@ export class CeremonyService {
             relation('out', '', 'member', { active: true, createdAt }),
             node('requestingUser'),
           ],
-          ...this.permission('type', 'adminSG', 'ceremony', true, true, true),
-          ...this.permission(
-            'planned',
-            'adminSG',
-            'ceremony',
-            true,
-            true,
-            true
-          ),
-          ...this.permission(
-            'estimatedDate',
-            'adminSG',
-            'ceremony',
-            true,
-            true,
-            true
-          ),
-          ...this.permission(
-            'actualDate',
-            'adminSG',
-            'ceremony',
-            true,
-            true,
-            true
-          ),
           [
             node('readerSG', 'SecurityGroup', {
               active: true,
@@ -290,40 +237,12 @@ export class CeremonyService {
             relation('out', '', 'member', { active: true, createdAt }),
             node('requestingUser'),
           ],
-          ...this.permission(
-            'type',
-            'readerSG',
-            'ceremony',
-            true,
-            false,
-            false
-          ),
-          ...this.permission(
-            'planned',
-            'readerSG',
-            'ceremony',
-            true,
-            false,
-            false
-          ),
-          ...this.permission(
-            'estimatedDate',
-            'readerSG',
-            'ceremony',
-            true,
-            false,
-            false
-          ),
-          ...this.permission(
-            'actualDate',
-            'readerSG',
-            'ceremony',
-            true,
-            false,
-            false
-          ),
+          ...this.permission('type'),
+          ...this.permission('planned'),
+          ...this.permission('estimatedDate'),
+          ...this.permission('actualDate'),
         ])
-        .return('ceremony.id as id')
+        .return('newCeremony.id as id')
         .first();
 
       return await this.readOne(id, session);
