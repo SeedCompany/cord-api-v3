@@ -121,7 +121,8 @@ export class LocationService {
     sg: string,
     baseNode: string,
     read: boolean,
-    edit: boolean
+    edit: boolean,
+    admin: boolean
   ) => {
     const createdAt = DateTime.local();
     return [
@@ -386,10 +387,24 @@ export class LocationService {
             relation('out', '', 'member', { active: true, createdAt }),
             node('requestingUser'),
           ],
-          ...this.permission('name', 'adminSG', 'newZone', true, true),
-          ...this.permission('name', 'readerSG', 'newZone', true, false),
-          ...this.permission('director', 'adminSG', 'newZone', true, true),
-          ...this.permission('director', 'readerSG', 'newZone', true, false),
+          ...this.permission('name', 'adminSG', 'newZone', true, true, true),
+          ...this.permission('name', 'readerSG', 'newZone', true, false, false),
+          ...this.permission(
+            'director',
+            'adminSG',
+            'newZone',
+            true,
+            true,
+            true
+          ),
+          ...this.permission(
+            'director',
+            'readerSG',
+            'newZone',
+            true,
+            false,
+            false
+          ),
         ])
         .return('newZone.id as id');
 
@@ -611,12 +626,40 @@ export class LocationService {
             relation('out', '', 'member', { active: true, createdAt }),
             node('requestingUser'),
           ],
-          ...this.permission('name', 'adminSG', 'newRegion', true, true),
-          ...this.permission('name', 'readerSG', 'newRegion', true, false),
-          ...this.permission('director', 'adminSG', 'newRegion', true, true),
-          ...this.permission('director', 'readerSG', 'newRegion', true, false),
-          ...this.permission('zone', 'adminSG', 'newRegion', true, true),
-          ...this.permission('zone', 'readerSG', 'newRegion', true, false),
+          ...this.permission('name', 'adminSG', 'newRegion', true, true, true),
+          ...this.permission(
+            'name',
+            'readerSG',
+            'newRegion',
+            true,
+            false,
+            false
+          ),
+          ...this.permission(
+            'director',
+            'adminSG',
+            'newRegion',
+            true,
+            true,
+            true
+          ),
+          ...this.permission(
+            'director',
+            'readerSG',
+            'newRegion',
+            true,
+            false,
+            false
+          ),
+          ...this.permission('zone', 'adminSG', 'newRegion', true, true, true),
+          ...this.permission(
+            'zone',
+            'readerSG',
+            'newRegion',
+            true,
+            false,
+            false
+          ),
         ])
         .return('newRegion.id as id');
 
@@ -832,10 +875,31 @@ export class LocationService {
             relation('out', '', 'member', { active: true, createdAt }),
             node('requestingUser'),
           ],
-          ...this.permission('name', 'adminSG', 'newCountry', true, true),
-          ...this.permission('name', 'readerSG', 'newCountry', true, false),
-          ...this.permission('region', 'adminSG', 'newCountry', true, true),
-          ...this.permission('region', 'readerSG', 'newCountry', true, false),
+          ...this.permission('name', 'adminSG', 'newCountry', true, true, true),
+          ...this.permission(
+            'name',
+            'readerSG',
+            'newCountry',
+            true,
+            false,
+            false
+          ),
+          ...this.permission(
+            'region',
+            'adminSG',
+            'newCountry',
+            true,
+            true,
+            true
+          ),
+          ...this.permission(
+            'region',
+            'readerSG',
+            'newCountry',
+            true,
+            false,
+            false
+          ),
         ])
         .return('newCountry.id as id');
       await createCountry.first();

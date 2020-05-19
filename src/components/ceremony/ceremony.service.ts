@@ -204,7 +204,8 @@ export class CeremonyService {
     sg: string,
     baseNode: string,
     read: boolean,
-    edit: boolean
+    edit: boolean,
+    admin: boolean
   ) => {
     const createdAt = DateTime.local();
     return [
@@ -255,16 +256,31 @@ export class CeremonyService {
             relation('out', '', 'member', { active: true, createdAt }),
             node('requestingUser'),
           ],
-          ...this.permission('type', 'adminSG', 'ceremony', true, true),
-          ...this.permission('planned', 'adminSG', 'ceremony', true, true),
+          ...this.permission('type', 'adminSG', 'ceremony', true, true, true),
+          ...this.permission(
+            'planned',
+            'adminSG',
+            'ceremony',
+            true,
+            true,
+            true
+          ),
           ...this.permission(
             'estimatedDate',
             'adminSG',
             'ceremony',
             true,
+            true,
             true
           ),
-          ...this.permission('actualDate', 'adminSG', 'ceremony', true, true),
+          ...this.permission(
+            'actualDate',
+            'adminSG',
+            'ceremony',
+            true,
+            true,
+            true
+          ),
           [
             node('readerSG', 'SecurityGroup', {
               active: true,
@@ -274,16 +290,38 @@ export class CeremonyService {
             relation('out', '', 'member', { active: true, createdAt }),
             node('requestingUser'),
           ],
-          ...this.permission('type', 'readerSG', 'ceremony', true, false),
-          ...this.permission('planned', 'readerSG', 'ceremony', true, false),
+          ...this.permission(
+            'type',
+            'readerSG',
+            'ceremony',
+            true,
+            false,
+            false
+          ),
+          ...this.permission(
+            'planned',
+            'readerSG',
+            'ceremony',
+            true,
+            false,
+            false
+          ),
           ...this.permission(
             'estimatedDate',
             'readerSG',
             'ceremony',
             true,
+            false,
             false
           ),
-          ...this.permission('actualDate', 'readerSG', 'ceremony', true, false),
+          ...this.permission(
+            'actualDate',
+            'readerSG',
+            'ceremony',
+            true,
+            false,
+            false
+          ),
         ])
         .return('ceremony.id as id')
         .first();

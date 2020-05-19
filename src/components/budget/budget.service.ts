@@ -42,7 +42,6 @@ export class BudgetService {
       return [];
     }
     const createdAt = DateTime.local();
-    //const propLabel = 'Property';
     return [
       [
         node(baseNode),
@@ -64,7 +63,8 @@ export class BudgetService {
     sg: string,
     baseNode: string,
     read: boolean,
-    edit: boolean
+    edit: boolean,
+    admin: boolean
   ) => {
     const createdAt = DateTime.local();
     return [
@@ -125,7 +125,7 @@ export class BudgetService {
             relation('out', '', 'member', { active: true, createdAt }),
             node('requestingUser'),
           ],
-          ...this.permission('status', 'adminSG', 'budget', true, true),
+          ...this.permission('status', 'adminSG', 'budget', true, true, true),
           [
             node('readerSG', 'SecurityGroup', {
               active: true,
@@ -135,7 +135,14 @@ export class BudgetService {
             relation('out', '', 'member', { active: true, createdAt }),
             node('requestingUser'),
           ],
-          ...this.permission('status', 'readerSG', 'budget', true, false),
+          ...this.permission(
+            'status',
+            'readerSG',
+            'budget',
+            true,
+            false,
+            false
+          ),
         ])
         .return('budget.id as id');
 
@@ -384,12 +391,6 @@ export class BudgetService {
     const createdAt = DateTime.local();
 
     try {
-      // await this.db.createNode({
-      //   session,
-      //   input: { id, ...input, amount: 0 }, // on init the amount is 0
-      //   acls,
-      //   type: BudgetRecord.classType,
-      // });
       const createBudgetRecord = this.db
         .query()
         .match(matchSession(session, { withAclEdit: 'canCreateBudget' }))
@@ -427,6 +428,7 @@ export class BudgetService {
             'adminSG',
             'budgetRecord',
             true,
+            true,
             true
           ),
           ...this.permission(
@@ -434,14 +436,30 @@ export class BudgetService {
             'readerSG',
             'budgetRecord',
             true,
+            false,
             false
           ),
-          ...this.permission('amount', 'adminSG', 'budgetRecord', true, true),
-          ...this.permission('amount', 'readerSG', 'budgetRecord', true, false),
+          ...this.permission(
+            'amount',
+            'adminSG',
+            'budgetRecord',
+            true,
+            true,
+            true
+          ),
+          ...this.permission(
+            'amount',
+            'readerSG',
+            'budgetRecord',
+            true,
+            false,
+            false
+          ),
           ...this.permission(
             'organization',
             'adminSG',
             'budgetRecord',
+            true,
             true,
             true
           ),
@@ -450,6 +468,7 @@ export class BudgetService {
             'readerSG',
             'budgetRecord',
             true,
+            false,
             false
           ),
         ])

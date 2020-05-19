@@ -108,7 +108,8 @@ export class LanguageService {
     sg: string,
     baseNode: string,
     read: boolean,
-    edit: boolean
+    edit: boolean,
+    admin: boolean
   ) => {
     const createdAt = DateTime.local();
     return [
@@ -185,14 +186,29 @@ export class LanguageService {
             relation('out', '', 'member', { active: true, createdAt }),
             node('requestingUser'),
           ],
-          ...this.permission('name', 'adminSG', 'newLang', true, true),
-          ...this.permission('name', 'readerSG', 'newLang', true, false),
-          ...this.permission('displayName', 'adminSG', 'newLang', true, true),
-          ...this.permission('displayName', 'readerSG', 'newLang', true, false),
+          ...this.permission('name', 'adminSG', 'newLang', true, true, true),
+          ...this.permission('name', 'readerSG', 'newLang', true, false, false),
+          ...this.permission(
+            'displayName',
+            'adminSG',
+            'newLang',
+            true,
+            true,
+            true
+          ),
+          ...this.permission(
+            'displayName',
+            'readerSG',
+            'newLang',
+            true,
+            false,
+            false
+          ),
           ...this.permission(
             'beginFiscalYear',
             'adminSG',
             'newLang',
+            true,
             true,
             true
           ),
@@ -201,6 +217,7 @@ export class LanguageService {
             'readerSG',
             'newLang',
             true,
+            false,
             false
           ),
           ...this.permission(
@@ -208,6 +225,7 @@ export class LanguageService {
             'adminSG',
             'newLang',
             true,
+            true,
             true
           ),
           ...this.permission(
@@ -215,12 +233,14 @@ export class LanguageService {
             'readerSG',
             'newLang',
             true,
+            false,
             false
           ),
           ...this.permission(
             'ethnologuePopulation',
             'adminSG',
             'newLang',
+            true,
             true,
             true
           ),
@@ -229,12 +249,14 @@ export class LanguageService {
             'readerSG',
             'newLang',
             true,
+            false,
             false
           ),
           ...this.permission(
             'organizationPopulation',
             'adminSG',
             'newLang',
+            true,
             true,
             true
           ),
@@ -243,13 +265,42 @@ export class LanguageService {
             'readerSG',
             'newLang',
             true,
+            false,
             false
           ),
-          ...this.permission('rodNumber', 'adminSG', 'newLang', true, true),
-          ...this.permission('rodNumber', 'readerSG', 'newLang', true, false),
+          ...this.permission(
+            'rodNumber',
+            'adminSG',
+            'newLang',
+            true,
+            true,
+            true
+          ),
+          ...this.permission(
+            'rodNumber',
+            'readerSG',
+            'newLang',
+            true,
+            false,
+            false
+          ),
 
-          ...this.permission('sensitivity', 'adminSG', 'newLang', true, true),
-          ...this.permission('sensitivity', 'readerSG', 'newLang', true, false),
+          ...this.permission(
+            'sensitivity',
+            'adminSG',
+            'newLang',
+            true,
+            true,
+            true
+          ),
+          ...this.permission(
+            'sensitivity',
+            'readerSG',
+            'newLang',
+            true,
+            false,
+            false
+          ),
         ])
         .return('newLang.id as id');
       await createLanguage.first();
@@ -287,23 +338,6 @@ export class LanguageService {
       userId: session.userId,
     });
 
-    // const result = await this.db.readProperties({
-    //   session,
-    //   id: langId,
-    //   props: [
-    //     'id',
-    //     'createdAt',
-    //     'name',
-    //     'displayName',
-    //     'beginFiscalYear',
-    //     'ethnologueName',
-    //     'ethnologuePopulation',
-    //     'organizationPopulation',
-    //     'sensitivity',
-    //     'rodNumber',
-    //   ],
-    //   nodevar: 'lang',
-    // });
     const readLanguage = this.db
       .query()
       .match(matchSession(session, { withAclRead: 'canReadLanguages' }))

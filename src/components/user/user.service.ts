@@ -268,7 +268,8 @@ export class UserService {
       property: string,
       sg: string,
       read: boolean,
-      edit: boolean
+      edit: boolean,
+      admin: boolean
     ) => {
       return [
         [
@@ -282,6 +283,7 @@ export class UserService {
             active: true,
             read,
             edit,
+            admin,
           }),
           relation('out', '', 'baseNode', {
             active: true,
@@ -368,16 +370,16 @@ export class UserService {
           name: `${input.realFirstName} ${input.realLastName} admin`,
         }),
       ],
-      ...permission('password', 'adminSG', true, true),
-      ...permission('realFirstName', 'adminSG', true, true),
-      ...permission('realLastName', 'adminSG', true, true),
-      ...permission('displayFirstName', 'adminSG', true, true),
-      ...permission('displayLastName', 'adminSG', true, true),
-      ...permission('email', 'adminSG', true, true),
-      ...permission('education', 'adminSG', true, true),
-      ...permission('phone', 'adminSG', true, true),
-      ...permission('timezone', 'adminSG', true, true),
-      ...permission('bio', 'adminSG', true, true),
+      ...permission('password', 'adminSG', true, true, true),
+      ...permission('realFirstName', 'adminSG', true, true, true),
+      ...permission('realLastName', 'adminSG', true, true, true),
+      ...permission('displayFirstName', 'adminSG', true, true, true),
+      ...permission('displayLastName', 'adminSG', true, true, true),
+      ...permission('email', 'adminSG', true, true, true),
+      ...permission('education', 'adminSG', true, true, true),
+      ...permission('phone', 'adminSG', true, true, true),
+      ...permission('timezone', 'adminSG', true, true, true),
+      ...permission('bio', 'adminSG', true, true, true),
       [
         node('user'),
         relation('in', '', 'member', { active: true, createdAt }),
@@ -388,16 +390,16 @@ export class UserService {
           name: `${input.realFirstName} ${input.realLastName} users`,
         }),
       ],
-      ...permission('password', 'readerSG', true, false),
-      ...permission('realFirstName', 'readerSG', true, false),
-      ...permission('realLastName', 'readerSG', true, false),
-      ...permission('displayFirstName', 'readerSG', true, false),
-      ...permission('displayLastName', 'readerSG', true, false),
-      ...permission('email', 'readerSG', true, false),
-      ...permission('education', 'readerSG', true, false),
-      ...permission('phone', 'readerSG', true, false),
-      ...permission('timezone', 'readerSG', true, false),
-      ...permission('bio', 'readerSG', true, false),
+      ...permission('password', 'readerSG', true, false, false),
+      ...permission('realFirstName', 'readerSG', true, false, false),
+      ...permission('realLastName', 'readerSG', true, false, false),
+      ...permission('displayFirstName', 'readerSG', true, false, false),
+      ...permission('displayLastName', 'readerSG', true, false, false),
+      ...permission('email', 'readerSG', true, false, false),
+      ...permission('education', 'readerSG', true, false, false),
+      ...permission('phone', 'readerSG', true, false, false),
+      ...permission('timezone', 'readerSG', true, false, false),
+      ...permission('bio', 'readerSG', true, false, false),
     ]);
 
     query.return({

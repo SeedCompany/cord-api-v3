@@ -79,7 +79,8 @@ export class OrganizationService {
     sg: string,
     baseNode: string,
     read: boolean,
-    edit: boolean
+    edit: boolean,
+    admin: boolean
   ) => {
     const createdAt = DateTime.local();
     return [
@@ -151,7 +152,7 @@ export class OrganizationService {
             relation('out', '', 'member', { active: true, createdAt }),
             node('requestingUser'),
           ],
-          ...this.permission('name', 'adminSG', 'newOrg', true, true),
+          ...this.permission('name', 'adminSG', 'newOrg', true, true, true),
           [
             node('readerSG', 'SecurityGroup', {
               active: true,
@@ -161,7 +162,7 @@ export class OrganizationService {
             relation('out', '', 'member', { active: true, createdAt }),
             node('requestingUser'),
           ],
-          ...this.permission('name', 'readerSG', 'newOrg', true, false),
+          ...this.permission('name', 'readerSG', 'newOrg', true, false, false),
         ])
         .return('newOrg.id as id')
         .first();
