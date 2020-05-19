@@ -115,18 +115,12 @@ export class LocationService {
     ];
   };
 
-  // helper method for defining properties
-  permission = (
-    property: string,
-    sg: string,
-    baseNode: string,
-    read: boolean,
-    edit: boolean
-  ) => {
+  // helper method for defining permissions
+  permission = (property: string, baseNode: string) => {
     const createdAt = DateTime.local();
     return [
       [
-        node(sg),
+        node('adminSG'),
         relation('out', '', 'permission', {
           active: true,
           createdAt,
@@ -134,8 +128,28 @@ export class LocationService {
         node('', 'Permission', {
           property,
           active: true,
-          read,
-          edit,
+          read: true,
+          edit: true,
+          admin: true,
+        }),
+        relation('out', '', 'baseNode', {
+          active: true,
+          createdAt,
+        }),
+        node(baseNode),
+      ],
+      [
+        node('readerSG'),
+        relation('out', '', 'permission', {
+          active: true,
+          createdAt,
+        }),
+        node('', 'Permission', {
+          property,
+          active: true,
+          read: true,
+          edit: false,
+          admin: false,
         }),
         relation('out', '', 'baseNode', {
           active: true,
@@ -281,6 +295,8 @@ export class LocationService {
         }),
         relation('out', '', 'baseNode', { active: true }),
         node('zone'),
+        relation('out', '', 'name', { active: true }),
+        node('zoneName', 'Property', { active: true }),
       ])
       .optionalMatch([
         node('requestingUser'),
@@ -293,14 +309,6 @@ export class LocationService {
           read: true,
         }),
         relation('out', '', 'baseNode', { active: true }),
-        node('zone'),
-      ])
-      .optionalMatch([
-        node('zone'),
-        relation('out', '', 'name', { active: true }),
-        node('zoneName', 'Property', { active: true }),
-      ])
-      .optionalMatch([
         node('zone'),
         relation('out', '', 'director', { active: true }),
         node('director', 'User', { active: true }),
@@ -386,10 +394,8 @@ export class LocationService {
             relation('out', '', 'member', { active: true, createdAt }),
             node('requestingUser'),
           ],
-          ...this.permission('name', 'adminSG', 'newZone', true, true),
-          ...this.permission('name', 'readerSG', 'newZone', true, false),
-          ...this.permission('director', 'adminSG', 'newZone', true, true),
-          ...this.permission('director', 'readerSG', 'newZone', true, false),
+          ...this.permission('name', 'newZone'),
+          ...this.permission('director', 'newZone'),
         ])
         .return('newZone.id as id');
 
@@ -465,6 +471,8 @@ export class LocationService {
         }),
         relation('out', '', 'baseNode', { active: true }),
         node('region'),
+        relation('out', '', 'name', { active: true }),
+        node('regionName', 'Property', { active: true }),
       ])
       .optionalMatch([
         node('requestingUser'),
@@ -478,6 +486,8 @@ export class LocationService {
         }),
         relation('out', '', 'baseNode', { active: true }),
         node('region'),
+        relation('out', '', 'director', { active: true }),
+        node('director', 'User', { active: true }),
       ])
       .optionalMatch([
         node('requestingUser'),
@@ -490,19 +500,6 @@ export class LocationService {
           read: true,
         }),
         relation('out', '', 'baseNode', { active: true }),
-        node('region'),
-      ])
-      .optionalMatch([
-        node('region'),
-        relation('out', '', 'name', { active: true }),
-        node('regionName', 'Property', { active: true }),
-      ])
-      .optionalMatch([
-        node('region'),
-        relation('out', '', 'director', { active: true }),
-        node('director', 'User', { active: true }),
-      ])
-      .optionalMatch([
         node('region'),
         relation('out', '', 'zone', { active: true }),
         node('zone', 'Zone', { active: true }),
@@ -611,12 +608,9 @@ export class LocationService {
             relation('out', '', 'member', { active: true, createdAt }),
             node('requestingUser'),
           ],
-          ...this.permission('name', 'adminSG', 'newRegion', true, true),
-          ...this.permission('name', 'readerSG', 'newRegion', true, false),
-          ...this.permission('director', 'adminSG', 'newRegion', true, true),
-          ...this.permission('director', 'readerSG', 'newRegion', true, false),
-          ...this.permission('zone', 'adminSG', 'newRegion', true, true),
-          ...this.permission('zone', 'readerSG', 'newRegion', true, false),
+          ...this.permission('name', 'newRegion'),
+          ...this.permission('director', 'newRegion'),
+          ...this.permission('zone', 'newRegion'),
         ])
         .return('newRegion.id as id');
 
@@ -709,6 +703,8 @@ export class LocationService {
         }),
         relation('out', '', 'baseNode', { active: true }),
         node('country'),
+        relation('out', '', 'name', { active: true }),
+        node('countryName', 'Property', { active: true }),
       ])
       .optionalMatch([
         node('requestingUser'),
@@ -721,14 +717,6 @@ export class LocationService {
           read: true,
         }),
         relation('out', '', 'baseNode', { active: true }),
-        node('country'),
-      ])
-      .optionalMatch([
-        node('country'),
-        relation('out', '', 'name', { active: true }),
-        node('countryName', 'Property', { active: true }),
-      ])
-      .optionalMatch([
         node('country'),
         relation('out', '', 'region', { active: true }),
         node('region', 'Region', { active: true }),
@@ -832,10 +820,8 @@ export class LocationService {
             relation('out', '', 'member', { active: true, createdAt }),
             node('requestingUser'),
           ],
-          ...this.permission('name', 'adminSG', 'newCountry', true, true),
-          ...this.permission('name', 'readerSG', 'newCountry', true, false),
-          ...this.permission('region', 'adminSG', 'newCountry', true, true),
-          ...this.permission('region', 'readerSG', 'newCountry', true, false),
+          ...this.permission('name', 'newCountry'),
+          ...this.permission('region', 'newCountry'),
         ])
         .return('newCountry.id as id');
       await createCountry.first();

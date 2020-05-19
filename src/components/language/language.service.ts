@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { ForbiddenError } from 'apollo-server-core';
 import { node, relation } from 'cypher-query-builder';
+import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession, Sensitivity } from '../../common';
@@ -74,7 +75,7 @@ export class LanguageService {
     }
   }
   // helper method for defining properties
-  property = (prop: string, value: any, baseNode: string) => {
+  property = (prop: string, value: any) => {
     if (!value) {
       return [];
     }
@@ -89,7 +90,7 @@ export class LanguageService {
         : 'Property';
     return [
       [
-        node(baseNode),
+        node('newLang'),
         relation('out', '', prop, {
           active: true,
           createdAt,
@@ -103,17 +104,11 @@ export class LanguageService {
   };
 
   // helper method for defining properties
-  permission = (
-    property: string,
-    sg: string,
-    baseNode: string,
-    read: boolean,
-    edit: boolean
-  ) => {
+  permission = (property: string) => {
     const createdAt = DateTime.local();
     return [
       [
-        node(sg),
+        node('adminSG'),
         relation('out', '', 'permission', {
           active: true,
           createdAt,
@@ -121,17 +116,59 @@ export class LanguageService {
         node('', 'Permission', {
           property,
           active: true,
-          read,
-          edit,
+          read: true,
+          edit: true,
+          admin: true,
         }),
         relation('out', '', 'baseNode', {
           active: true,
           createdAt,
         }),
-        node(baseNode),
+        node('newLang'),
+      ],
+      [
+        node('readerSG'),
+        relation('out', '', 'permission', {
+          active: true,
+          createdAt,
+        }),
+        node('', 'Permission', {
+          property,
+          active: true,
+          read: true,
+          edit: false,
+          admin: false,
+        }),
+        relation('out', '', 'baseNode', {
+          active: true,
+          createdAt,
+        }),
+        node('newLang'),
       ],
     ];
   };
+
+  propMatch = (property: string) => {
+    const perm = 'canRead' + upperFirst(property);
+    return [
+      [
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node(perm, 'Permission', {
+          property,
+          active: true,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('lang'),
+        relation('out', '', property, { active: true }),
+        node(property, 'Property', { active: true }),
+      ],
+    ];
+  };
+
   async create(input: CreateLanguage, session: ISession): Promise<Language> {
     this.logger.info(`Create language`, { input, userId: session.userId });
 
@@ -151,22 +188,17 @@ export class LanguageService {
               owningOrgId: session.owningOrgId,
             }),
           ],
-          ...this.property('name', input.name, 'newLang'),
-          ...this.property('displayName', input.displayName, 'newLang'),
-          ...this.property('beginFiscalYear', input.beginFiscalYear, 'newLang'),
-          ...this.property(
-            'ethnologuePopulation',
-            input.ethnologuePopulation,
-            'newLang'
-          ),
-          ...this.property('ethnologueName', input.ethnologueName, 'newLang'),
+          ...this.property('name', input.name),
+          ...this.property('displayName', input.displayName),
+          ...this.property('beginFiscalYear', input.beginFiscalYear),
+          ...this.property('ethnologuePopulation', input.ethnologuePopulation),
+          ...this.property('ethnologueName', input.ethnologueName),
           ...this.property(
             'organizationPopulation',
-            input.organizationPopulation,
-            'newLang'
+            input.organizationPopulation
           ),
-          ...this.property('rodNumber', input.rodNumber, 'newLang'),
-          ...this.property('sensitivity', Sensitivity.Low, 'newLang'),
+          ...this.property('rodNumber', input.rodNumber),
+          ...this.property('sensitivity', Sensitivity.Low),
           [
             node('adminSG', 'SecurityGroup', {
               active: true,
@@ -185,71 +217,14 @@ export class LanguageService {
             relation('out', '', 'member', { active: true, createdAt }),
             node('requestingUser'),
           ],
-          ...this.permission('name', 'adminSG', 'newLang', true, true),
-          ...this.permission('name', 'readerSG', 'newLang', true, false),
-          ...this.permission('displayName', 'adminSG', 'newLang', true, true),
-          ...this.permission('displayName', 'readerSG', 'newLang', true, false),
-          ...this.permission(
-            'beginFiscalYear',
-            'adminSG',
-            'newLang',
-            true,
-            true
-          ),
-          ...this.permission(
-            'beginFiscalYear',
-            'readerSG',
-            'newLang',
-            true,
-            false
-          ),
-          ...this.permission(
-            'ethnologueName',
-            'adminSG',
-            'newLang',
-            true,
-            true
-          ),
-          ...this.permission(
-            'ethnologueName',
-            'readerSG',
-            'newLang',
-            true,
-            false
-          ),
-          ...this.permission(
-            'ethnologuePopulation',
-            'adminSG',
-            'newLang',
-            true,
-            true
-          ),
-          ...this.permission(
-            'ethnologuePopulation',
-            'readerSG',
-            'newLang',
-            true,
-            false
-          ),
-          ...this.permission(
-            'organizationPopulation',
-            'adminSG',
-            'newLang',
-            true,
-            true
-          ),
-          ...this.permission(
-            'organizationPopulation',
-            'readerSG',
-            'newLang',
-            true,
-            false
-          ),
-          ...this.permission('rodNumber', 'adminSG', 'newLang', true, true),
-          ...this.permission('rodNumber', 'readerSG', 'newLang', true, false),
-
-          ...this.permission('sensitivity', 'adminSG', 'newLang', true, true),
-          ...this.permission('sensitivity', 'readerSG', 'newLang', true, false),
+          ...this.permission('name'),
+          ...this.permission('displayName'),
+          ...this.permission('beginFiscalYear'),
+          ...this.permission('ethnologueName'),
+          ...this.permission('ethnologuePopulation'),
+          ...this.permission('organizationPopulation'),
+          ...this.permission('rodNumber'),
+          ...this.permission('sensitivity'),
         ])
         .return('newLang.id as id');
       await createLanguage.first();
@@ -287,176 +262,18 @@ export class LanguageService {
       userId: session.userId,
     });
 
-    // const result = await this.db.readProperties({
-    //   session,
-    //   id: langId,
-    //   props: [
-    //     'id',
-    //     'createdAt',
-    //     'name',
-    //     'displayName',
-    //     'beginFiscalYear',
-    //     'ethnologueName',
-    //     'ethnologuePopulation',
-    //     'organizationPopulation',
-    //     'sensitivity',
-    //     'rodNumber',
-    //   ],
-    //   nodevar: 'lang',
-    // });
     const readLanguage = this.db
       .query()
       .match(matchSession(session, { withAclRead: 'canReadLanguages' }))
       .match([node('lang', 'Language', { active: true, id: langId })])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canReadName', 'Permission', {
-          property: 'name',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('lang'),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canReadDisplayName', 'Permission', {
-          property: 'displayName',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('lang'),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canReadBeginFiscalYear', 'Permission', {
-          property: 'beginFiscalYear',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('lang'),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canReadEthnologueName', 'Permission', {
-          property: 'ethnologueName',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('lang'),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canReadEthnologuePopulation', 'Permission', {
-          property: 'ethnologuePopulation',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('lang'),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canReadOrganizationPopulation', 'Permission', {
-          property: 'organizationPopulation',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('lang'),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canReadRodNumber', 'Permission', {
-          property: 'rodNumber',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('lang'),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canReadSensitivity', 'Permission', {
-          property: 'sensitivity',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('lang'),
-      ])
-      .optionalMatch([
-        node('lang'),
-        relation('out', '', 'name', { active: true }),
-        node('name', 'Property', { active: true }),
-      ])
-      .optionalMatch([
-        node('lang'),
-        relation('out', '', 'displayName', { active: true }),
-        node('displayName', 'Property', { active: true }),
-      ])
-      .optionalMatch([
-        node('lang'),
-        relation('out', '', 'beginFiscalYear', { active: true }),
-        node('beginFiscalYear', 'Property', { active: true }),
-      ])
-      .optionalMatch([
-        node('lang'),
-        relation('out', '', 'ethnologueName', { active: true }),
-        node('ethnologueName', 'Property', { active: true }),
-      ])
-      .optionalMatch([
-        node('lang'),
-        relation('out', '', 'ethnologuePopulation', { active: true }),
-        node('ethnologuePopulation', 'Property', { active: true }),
-      ])
-      .optionalMatch([
-        node('lang'),
-        relation('out', '', 'ethnologuePopulation', { active: true }),
-        node('ethnologuePopulation', 'Property', { active: true }),
-      ])
-      .optionalMatch([
-        node('lang'),
-        relation('out', '', 'organizationPopulation', { active: true }),
-        node('organizationPopulation', 'Property', { active: true }),
-      ])
-      .optionalMatch([
-        node('lang'),
-        relation('out', '', 'rodNumber', { active: true }),
-        node('rodNumber', 'Property', { active: true }),
-      ])
-      .optionalMatch([
-        node('lang'),
-        relation('out', '', 'sensitivity', { active: true }),
-        node('sensitivity', 'Property', { active: true }),
-      ])
+      .optionalMatch([...this.propMatch('name')])
+      .optionalMatch([...this.propMatch('displayName')])
+      .optionalMatch([...this.propMatch('beginFiscalYear')])
+      .optionalMatch([...this.propMatch('ethnologueName')])
+      .optionalMatch([...this.propMatch('ethnologuePopulation')])
+      .optionalMatch([...this.propMatch('organizationPopulation')])
+      .optionalMatch([...this.propMatch('rodNumber')])
+      .optionalMatch([...this.propMatch('sensitivity')])
       .return({
         lang: [{ id: 'id', createdAt: 'createdAt' }],
         name: [{ value: 'name' }],
@@ -514,38 +331,38 @@ export class LanguageService {
       createdAt: result.createdAt,
       name: {
         value: result.name,
-        canRead: result.canReadNameRead,
-        canEdit: result.canReadNameEdit,
+        canRead: !!result.canReadNameRead,
+        canEdit: !!result.canReadNameEdit,
       },
       displayName: {
         value: result.displayName,
-        canRead: result.canReadDisplayNameRead,
-        canEdit: result.canReadDisplayNameEdit,
+        canRead: !!result.canReadDisplayNameRead,
+        canEdit: !!result.canReadDisplayNameEdit,
       },
       beginFiscalYear: {
         value: result.beginFiscalYear,
-        canRead: result.canReadBeginFiscalYearRead,
-        canEdit: result.canReadBeginFiscalYearEdit,
+        canRead: !!result.canReadBeginFiscalYearRead,
+        canEdit: !!result.canReadBeginFiscalYearEdit,
       },
       ethnologueName: {
         value: result.ethnologueName,
-        canRead: result.canReadEthnologueNameRead,
-        canEdit: result.canReadEthnologueNameEdit,
+        canRead: !!result.canReadEthnologueNameRead,
+        canEdit: !!result.canReadEthnologueNameEdit,
       },
       ethnologuePopulation: {
         value: result.ethnologuePopulation,
-        canRead: result.canReadEthnologuePopulationRead,
-        canEdit: result.canReadEthnologuePopulationEdit,
+        canRead: !!result.canReadEthnologuePopulationRead,
+        canEdit: !!result.canReadEthnologuePopulationEdit,
       },
       organizationPopulation: {
         value: result.organizationPopulation,
-        canRead: result.canReadOrganizationPopulationRead,
-        canEdit: result.canReadOrganizationPopulationEdit,
+        canRead: !!result.canReadOrganizationPopulationRead,
+        canEdit: !!result.canReadOrganizationPopulationEdit,
       },
       rodNumber: {
         value: result.rodNumber,
-        canRead: result.canReadRodNumberRead,
-        canEdit: result.canReadRodNumberEdit,
+        canRead: !!result.canReadRodNumberRead,
+        canEdit: !!result.canReadRodNumberEdit,
       },
       sensitivity: result.sensitivity,
     };

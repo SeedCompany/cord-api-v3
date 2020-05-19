@@ -263,16 +263,13 @@ export class UserService {
         ],
       ];
     };
+
     // helper method for defining properties
-    const permission = (
-      property: string,
-      sg: string,
-      read: boolean,
-      edit: boolean
-    ) => {
+    const permission = (property: string) => {
+      const createdAt = DateTime.local();
       return [
         [
-          node(sg),
+          node('adminSG'),
           relation('out', '', 'permission', {
             active: true,
             createdAt,
@@ -280,8 +277,28 @@ export class UserService {
           node('', 'Permission', {
             property,
             active: true,
-            read,
-            edit,
+            read: true,
+            edit: true,
+            admin: true,
+          }),
+          relation('out', '', 'baseNode', {
+            active: true,
+            createdAt,
+          }),
+          node('user'),
+        ],
+        [
+          node('readerSG'),
+          relation('out', '', 'permission', {
+            active: true,
+            createdAt,
+          }),
+          node('', 'Permission', {
+            property,
+            active: true,
+            read: true,
+            edit: false,
+            admin: false,
           }),
           relation('out', '', 'baseNode', {
             active: true,
@@ -368,16 +385,6 @@ export class UserService {
           name: `${input.realFirstName} ${input.realLastName} admin`,
         }),
       ],
-      ...permission('password', 'adminSG', true, true),
-      ...permission('realFirstName', 'adminSG', true, true),
-      ...permission('realLastName', 'adminSG', true, true),
-      ...permission('displayFirstName', 'adminSG', true, true),
-      ...permission('displayLastName', 'adminSG', true, true),
-      ...permission('email', 'adminSG', true, true),
-      ...permission('education', 'adminSG', true, true),
-      ...permission('phone', 'adminSG', true, true),
-      ...permission('timezone', 'adminSG', true, true),
-      ...permission('bio', 'adminSG', true, true),
       [
         node('user'),
         relation('in', '', 'member', { active: true, createdAt }),
@@ -388,16 +395,16 @@ export class UserService {
           name: `${input.realFirstName} ${input.realLastName} users`,
         }),
       ],
-      ...permission('password', 'readerSG', true, false),
-      ...permission('realFirstName', 'readerSG', true, false),
-      ...permission('realLastName', 'readerSG', true, false),
-      ...permission('displayFirstName', 'readerSG', true, false),
-      ...permission('displayLastName', 'readerSG', true, false),
-      ...permission('email', 'readerSG', true, false),
-      ...permission('education', 'readerSG', true, false),
-      ...permission('phone', 'readerSG', true, false),
-      ...permission('timezone', 'readerSG', true, false),
-      ...permission('bio', 'readerSG', true, false),
+      ...permission('password'),
+      ...permission('realFirstName'),
+      ...permission('realLastName'),
+      ...permission('displayFirstName'),
+      ...permission('displayLastName'),
+      ...permission('email'),
+      ...permission('education'),
+      ...permission('phone'),
+      ...permission('timezone'),
+      ...permission('bio'),
     ]);
 
     query.return({

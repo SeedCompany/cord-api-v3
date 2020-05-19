@@ -5,6 +5,7 @@ import {
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
+import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession, Order } from '../../common';
@@ -42,7 +43,6 @@ export class BudgetService {
       return [];
     }
     const createdAt = DateTime.local();
-    //const propLabel = 'Property';
     return [
       [
         node(baseNode),
@@ -58,18 +58,12 @@ export class BudgetService {
     ];
   };
 
-  // helper method for defining properties
-  permission = (
-    property: string,
-    sg: string,
-    baseNode: string,
-    read: boolean,
-    edit: boolean
-  ) => {
+  // helper method for defining permissions
+  permission = (property: string, baseNode: string) => {
     const createdAt = DateTime.local();
     return [
       [
-        node(sg),
+        node('adminSG'),
         relation('out', '', 'permission', {
           active: true,
           createdAt,
@@ -77,14 +71,55 @@ export class BudgetService {
         node('', 'Permission', {
           property,
           active: true,
-          read,
-          edit,
+          read: true,
+          edit: true,
+          admin: true,
         }),
         relation('out', '', 'baseNode', {
           active: true,
           createdAt,
         }),
         node(baseNode),
+      ],
+      [
+        node('readerSG'),
+        relation('out', '', 'permission', {
+          active: true,
+          createdAt,
+        }),
+        node('', 'Permission', {
+          property,
+          active: true,
+          read: true,
+          edit: false,
+          admin: false,
+        }),
+        relation('out', '', 'baseNode', {
+          active: true,
+          createdAt,
+        }),
+        node(baseNode),
+      ],
+    ];
+  };
+
+  propMatch = (property: string, baseNode: string) => {
+    const perm = 'canRead' + upperFirst(property);
+    return [
+      [
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node(perm, 'Permission', {
+          property,
+          active: true,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node(baseNode),
+        relation('out', '', property, { active: true }),
+        node(property, 'Property', { active: true }),
       ],
     ];
   };
@@ -125,7 +160,6 @@ export class BudgetService {
             relation('out', '', 'member', { active: true, createdAt }),
             node('requestingUser'),
           ],
-          ...this.permission('status', 'adminSG', 'budget', true, true),
           [
             node('readerSG', 'SecurityGroup', {
               active: true,
@@ -135,7 +169,7 @@ export class BudgetService {
             relation('out', '', 'member', { active: true, createdAt }),
             node('requestingUser'),
           ],
-          ...this.permission('status', 'readerSG', 'budget', true, false),
+          ...this.permission('status', 'budget'),
         ])
         .return('budget.id as id');
 
@@ -216,21 +250,7 @@ export class BudgetService {
       .query()
       .match(matchSession(session, { withAclRead: 'canReadBudgets' }))
       .match([node('budget', 'Budget', { active: true, id })])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canReadStatus', 'Permission', {
-          property: 'status',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('budget'),
-        relation('out', '', 'status', { active: true }),
-        node('status', 'Property', { active: true }),
-      ])
+      .optionalMatch([...this.propMatch('status', 'budget')])
       .return({
         budget: [{ id: 'id', createdAt: 'createdAt' }],
         status: [{ value: 'status' }],
@@ -384,12 +404,6 @@ export class BudgetService {
     const createdAt = DateTime.local();
 
     try {
-      // await this.db.createNode({
-      //   session,
-      //   input: { id, ...input, amount: 0 }, // on init the amount is 0
-      //   acls,
-      //   type: BudgetRecord.classType,
-      // });
       const createBudgetRecord = this.db
         .query()
         .match(matchSession(session, { withAclEdit: 'canCreateBudget' }))
@@ -422,36 +436,9 @@ export class BudgetService {
             relation('out', '', 'member', { active: true, createdAt }),
             node('requestingUser'),
           ],
-          ...this.permission(
-            'fiscalYear',
-            'adminSG',
-            'budgetRecord',
-            true,
-            true
-          ),
-          ...this.permission(
-            'fiscalYear',
-            'readerSG',
-            'budgetRecord',
-            true,
-            false
-          ),
-          ...this.permission('amount', 'adminSG', 'budgetRecord', true, true),
-          ...this.permission('amount', 'readerSG', 'budgetRecord', true, false),
-          ...this.permission(
-            'organization',
-            'adminSG',
-            'budgetRecord',
-            true,
-            true
-          ),
-          ...this.permission(
-            'organization',
-            'readerSG',
-            'budgetRecord',
-            true,
-            false
-          ),
+          ...this.permission('fiscalYear', 'budgetRecord'),
+          ...this.permission('amount', 'budgetRecord'),
+          ...this.permission('organization', 'budgetRecord'),
         ])
         .return('budgetRecord.id as id');
 
@@ -515,36 +502,8 @@ export class BudgetService {
       .query()
       .match(matchSession(session, { withAclRead: 'canReadBudgets' }))
       .match([node('budgetRecord', 'BudgetRecord', { active: true, id })])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canReadAmount', 'Permission', {
-          property: 'amount',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('budgetRecord'),
-        relation('out', '', 'amount', { active: true }),
-        node('amount', 'Property', { active: true }),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canReadFiscalYear', 'Permission', {
-          property: 'fiscalYear',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('budgetRecord'),
-        relation('out', '', 'fiscalYear', { active: true }),
-        node('fiscalYear', 'Property', { active: true }),
-      ])
+      .optionalMatch([...this.propMatch('amount', 'budgetRecord')])
+      .optionalMatch([...this.propMatch('fiscalYear', 'budgetRecord')])
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),

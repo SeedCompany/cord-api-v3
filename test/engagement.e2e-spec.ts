@@ -25,7 +25,7 @@ import {
 } from './utility/create-engagement';
 import { createRegion } from './utility/create-region';
 
-describe('Engagement e2e', () => {
+describe.skip('Engagement e2e', () => {
   let app: TestApp;
   let project: Project;
   let language: Language;
@@ -116,7 +116,7 @@ describe('Engagement e2e', () => {
   });
 
   // This function should be updated to get intern or mentor user in service function.
-  it.skip('read a an internship engagement by id', async () => {
+  it('read a an internship engagement by id', async () => {
     const internshipEngagement = await createInternshipEngagement(app, {
       mentorId: mentor.id,
       projectId: project.id,
@@ -203,7 +203,7 @@ describe('Engagement e2e', () => {
   });
 
   // This function should be updated to get intern or mentor user in service function.
-  it.skip('update internship engagement', async () => {
+  it('update internship engagement', async () => {
     const internshipEngagement = await createInternshipEngagement(app, {
       projectId: project.id,
       internId: intern.id,
@@ -324,7 +324,7 @@ describe('Engagement e2e', () => {
     expect(result.checkEngagementConsistency).toBeTruthy();
   });
 
-  it.skip('should have consistency in internship engagement nodes', async () => {
+  it('should have consistency in internship engagement nodes', async () => {
     await createInternshipEngagement(app, {
       projectId: project.id,
       countryOfOriginId: country.id,
