@@ -351,8 +351,7 @@ describe.skip('Engagement e2e', () => {
       languageId: language.id,
       projectId: project.id,
     });
-    console.log('lang eng is -------->', languageEngagement);
-    // expect(languageEngagement.ceremony.value?.id).toBeDefined();
+    expect(languageEngagement.ceremony.value?.id).toBeDefined();
   });
 
   it.skip('should update ceremony', async () => {
