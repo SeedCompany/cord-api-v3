@@ -690,6 +690,7 @@ export class EngagementService {
           active: true,
           read: true,
           edit: true,
+          admin: true,
         }),
         relation('out', '', 'baseNode', {
           active: true,
@@ -708,6 +709,7 @@ export class EngagementService {
           active: true,
           read: true,
           edit: false,
+          admin: false,
         }),
         relation('out', '', 'baseNode', {
           active: true,
