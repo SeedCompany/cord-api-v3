@@ -25,7 +25,7 @@ import {
 } from './utility/create-engagement';
 import { createRegion } from './utility/create-region';
 
-describe.skip('Engagement e2e', () => {
+describe('Engagement e2e', () => {
   let app: TestApp;
   let project: Project;
   let language: Language;

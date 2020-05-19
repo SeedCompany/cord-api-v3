@@ -848,72 +848,98 @@ export class EngagementService {
       userId: session.userId,
     });
     const id = generate();
-    const acls = {
-      canReadIntern: true,
-      canEditIntern: true,
-      canReadMentor: true,
-      canEditMentor: true,
-      canReadCountryOfOrigin: true,
-      canEditCountryOfOrigin: true,
-      canReadPosition: true,
-      canEditPosition: true,
-      canReadMethodologies: true,
-      canEditMethodologies: true,
-      canReadProject: true,
-      canEditProject: true,
-      canReadCeremony: true,
-      canEditCeremony: true,
-      canReadCompleteDate: true,
-      canEditCompleteDate: true,
-      canReadDisbursementCompleteDate: true,
-      canEditDisbursementCompleteDate: true,
-      canReadCommunicationsCompleteDate: true,
-      canEditCommunicationsCompleteDate: true,
-      canReadStartDate: true,
-      canEditStartDate: true,
-      canReadEndDate: true,
-      canEditEndDate: true,
-      canReadInitialEndDate: true,
-      canReadLastSuspendedAt: true,
-      canReadLastReactivatedAt: true,
-      canReadStatusModifiedAt: true,
-      canReadModifiedAt: true,
-    };
+    const createdAt = DateTime.local();
 
+    const ceremony = await this.ceremonyService.create(
+      { type: CeremonyType.Certification },
+      session
+    );
+    const createIE = this.db
+      .query()
+      .match(matchSession(session, { withAclEdit: 'canCreateEngagement' }))
+      .create([
+        [
+          node('internEngagement', 'InternshipEngagement:BaseNode', {
+            active: true,
+            createdAt,
+            id,
+            owningOrgId: session.owningOrgId,
+          }),
+        ],
+        ...this.relateProperties(
+          {
+            completeDate: input.completeDate || undefined,
+            disbursementCompleteDate:
+              input.disbursementCompleteDate || undefined,
+            communicationsCompleteDate:
+              input.communicationsCompleteDate || undefined,
+            startDate: input.startDate || undefined,
+            endDate: input.endDate || undefined,
+            methodologies: input.methodologies || [],
+            position: input.position || undefined,
+          },
+          'internEngagement'
+        ),
+        [
+          node('adminSG', 'SecurityGroup', {
+            active: true,
+            createdAt,
+            name: 'internEngagement admin',
+          }),
+          relation('out', '', 'member', { active: true, createdAt }),
+          node('requestingUser'),
+        ],
+        [
+          node('readerSG', 'SecurityGroup', {
+            active: true,
+            createdAt,
+            name: 'internEngagement users',
+          }),
+          relation('out', '', 'member', { active: true, createdAt }),
+          node('requestingUser'),
+        ],
+        ...this.permission('completeDate', 'internEngagement'),
+        ...this.permission('communicationsCompleteDate', 'internEngagement'),
+        ...this.permission('disbursementCompleteDate', 'internEngagement'),
+        ...this.permission('endDate', 'internEngagement'),
+        ...this.permission('methodologies', 'internEngagement'),
+        ...this.permission('position', 'internEngagement'),
+        ...this.permission('endDate', 'internEngagement'),
+        ...this.permission('startDate', 'internEngagement'),
+        ...this.permission('language', 'internEngagement'),
+        ...this.permission('status', 'internEngagement'),
+        ...this.permission('countryOfOrigin', 'internEngagement'),
+        ...this.permission('ceremony', 'internEngagement'),
+      ])
+      .return('internEngagement');
     try {
-      const ceremony = await this.ceremonyService.create(
-        { type: CeremonyType.Certification },
-        session
-      );
-      await this.db.createNode({
-        type: InternshipEngagement.classType,
-        session: session,
-        input: { id, ...input },
-        acls,
-        aclEditProp: 'canCreateEngagement',
-      });
+      await createIE.first();
+    } catch (e) {
+      this.logger.error('could not create Internship Engagement ', e);
+      throw new ServerException('Could not create Internship Engagement');
+    }
 
-      const countryCond = `${
-        typeof countryOfOriginId !== 'undefined'
-          ? ',(countryOfOrigin:Country {id: $countryOfOriginId, active: true})'
-          : ''
-      }`;
-      const mentorCond = `${
-        typeof mentorId !== 'undefined'
-          ? ',(mentorUser:User {id: $mentorId, active: true})'
-          : ''
-      }`;
-      const countryRel = `${
-        typeof countryOfOriginId !== 'undefined'
-          ? ',(internshipEngagement)-[:countryOfOrigin {active: true, createdAt: datetime()}]->(countryOfOrigin)'
-          : ''
-      }`;
-      const mentorRel = `${
-        typeof mentorId !== 'undefined'
-          ? ',(internshipEngagement)-[:mentor {active: true, createdAt: datetime()}]->(mentorUser)'
-          : ''
-      }`;
-      const query = `
+    const countryCond = `${
+      typeof countryOfOriginId !== 'undefined'
+        ? ',(countryOfOrigin:Country {id: $countryOfOriginId, active: true})'
+        : ''
+    }`;
+    const mentorCond = `${
+      typeof mentorId !== 'undefined'
+        ? ',(mentorUser:User {id: $mentorId, active: true})'
+        : ''
+    }`;
+    const countryRel = `${
+      typeof countryOfOriginId !== 'undefined'
+        ? ',(internshipEngagement)-[:countryOfOrigin {active: true, createdAt: datetime()}]->(countryOfOrigin)'
+        : ''
+    }`;
+    const mentorRel = `${
+      typeof mentorId !== 'undefined'
+        ? ',(internshipEngagement)-[:mentor {active: true, createdAt: datetime()}]->(mentorUser)'
+        : ''
+    }`;
+    const query = `
         MATCH
           (project:Project {id: $projectId, active: true})
           ,(internshipEngagement:InternshipEngagement {id: $id, active: true})
@@ -929,6 +955,7 @@ export class EngagementService {
           internshipEngagement.id as id
       `;
 
+    try {
       await this.db
         .query()
         .raw(query, {
