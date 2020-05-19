@@ -54,12 +54,11 @@ export class EngagementService {
         'InternshipEngagement',
       ])
     );
-    // eslint-disable-next-line no-console
-    console.log('----->', await this.readLanguageEngagement(id, session));
 
-    let query = '';
-    if (label === 'InternshipEngagement') {
-      query = `
+    if (label === 'LanguageEngagement') {
+      return this.readLanguageEngagement(id, session);
+    }
+    const query = `
         MATCH
           (token:Token {
             active: true,
@@ -175,7 +174,6 @@ export class EngagementService {
           canReadStatusModifiedAt.canReadStatusModifiedAt as canReadStatusModifiedAt,
           canReadModifiedAt.canReadModifiedAt as canReadModifiedAt
       `;
-    }
     const result = await this.db
       .query()
       .raw(query, {
@@ -187,17 +185,11 @@ export class EngagementService {
       .first();
 
     if (!result) {
-      throw new NotFoundException(
-        'Could not find language engagement or internship engagement'
-      );
+      throw new NotFoundException('Could not find internship engagement');
     }
 
     const ceremony = result.ceremonyId
       ? await this.ceremonyService.readOne(result.ceremonyId, session)
-      : undefined;
-
-    const language = result.languageId
-      ? await this.languageService.readOne(result.languageId, session)
       : undefined;
 
     const internUser = result.internUserId
@@ -214,29 +206,6 @@ export class EngagementService {
           session
         )
       : undefined;
-
-    const LanguageEngagement = {
-      language: {
-        value: language,
-        canRead: !!result.canReadLanguage,
-        canEdit: !!result.canEditLanguage,
-      },
-      firstScripture: {
-        value: result.firstScripture,
-        canRead: !!result.canReadFirstScripture,
-        canEdit: !!result.canEditFirstScripture,
-      },
-      lukePartnership: {
-        value: result.lukePartnership,
-        canRead: !!result.canReadLukePartnership,
-        canEdit: !!result.canEditLukePartnership,
-      },
-      sentPrintingDate: {
-        value: result.sentPrintingDate,
-        canRead: !!result.canReadSentPrintingDate,
-        canEdit: !!result.canEditSentPrintingDate,
-      },
-    };
 
     const internshipEngagement = {
       position: {
@@ -269,14 +238,10 @@ export class EngagementService {
     return {
       id,
       createdAt: result.createdAt,
-      ...(label === 'LanguageEngagement'
-        ? LanguageEngagement
-        : internshipEngagement),
+      ...internshipEngagement,
       status: result.status,
       ceremony: {
-        value: {
-          ...ceremony,
-        },
+        value: ceremony,
         canRead: !!result.canReadCeremony,
         canEdit: !!result.canEditCeremony,
       },
@@ -329,7 +294,10 @@ export class EngagementService {
     };
   }
 
-  async readLanguageEngagement(id: string, session: ISession): Promise<any> {
+  async readLanguageEngagement(
+    id: string,
+    session: ISession
+  ): Promise<Engagement> {
     this.logger.info('readLangaugeEnagement', { id, userId: session.userId });
     const leQuery = this.db
       .query()
@@ -526,9 +494,7 @@ export class EngagementService {
       ...languageEngagement,
       status: result.status,
       ceremony: {
-        value: {
-          ...ceremony,
-        },
+        value: ceremony,
         canRead: !!result.canReadCeremony,
         canEdit: !!result.canEditCeremony,
       },
@@ -665,6 +631,27 @@ export class EngagementService {
     ];
   };
 
+  // relate properties to baseNode
+  relateProperties(props: Record<string, any>, baseNode: string) {
+    const arrQry = [];
+    const createdAt = DateTime.local();
+    for (const key in props) {
+      const propLabel =
+        key === 'status' ? 'Property:EngagementStatus' : 'Property';
+      arrQry.push([
+        node(baseNode),
+        relation('out', '', key, {
+          active: true,
+          createdAt,
+        }),
+        node(key, propLabel, {
+          active: true,
+          value: props[key],
+        }),
+      ]);
+    }
+    return arrQry;
+  }
   // helper method for defining properties
   property = (prop: string, value: any, baseNode: string) => {
     if (!value) {
@@ -761,34 +748,17 @@ export class EngagementService {
             owningOrgId: session.owningOrgId,
           }),
         ],
-        ...this.property(
-          'completeDate',
-          input.completeDate || undefined,
-          'languageEngagement'
-        ),
-        ...this.property(
-          'disbursementCompleteDate',
-          input.disbursementCompleteDate || undefined,
-          'languageEngagement'
-        ),
-        ...this.property(
-          'communicationsCompleteDate',
-          input.communicationsCompleteDate || undefined,
-          'languageEngagement'
-        ),
-        ...this.property(
-          'startDate',
-          input.startDate || undefined,
-          'languageEngagement'
-        ),
-        ...this.property(
-          'lukePartnership',
-          input.lukePartnership || undefined,
-          'languageEngagement'
-        ),
-        ...this.property(
-          'firstScripture',
-          input.firstScripture || undefined,
+        ...this.relateProperties(
+          {
+            completeDate: input.completeDate || undefined,
+            disbursementCompleteDate:
+              input.disbursementCompleteDate || undefined,
+            communicationsCompleteDate:
+              input.communicationsCompleteDate || undefined,
+            startDate: input.startDate || undefined,
+            lukePartnership: input.lukePartnership || undefined,
+            firstScripture: input.firstScripture || undefined,
+          },
           'languageEngagement'
         ),
         [
