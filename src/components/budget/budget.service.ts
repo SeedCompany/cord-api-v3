@@ -5,13 +5,13 @@ import {
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { upperFirst } from 'lodash';
+import { range, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession, Order } from '../../common';
 import { DatabaseService, ILogger, Logger, matchSession } from '../../core';
-import { PartnershipService } from '../partnership/partnership.service';
-import { ProjectService } from '../project/project.service';
+import { PartnershipService } from '../partnership';
+import { ProjectService } from '../project';
 import {
   Budget,
   BudgetListInput,
@@ -25,8 +25,6 @@ import {
   UpdateBudget,
   UpdateBudgetRecord,
 } from './dto';
-
-import _ = require('lodash');
 
 @Injectable()
 export class BudgetService {
@@ -219,7 +217,7 @@ export class BudgetService {
         mouStart.month >= 10 ? mouStart.year + 1 : mouStart.year;
       const fiscalYearEnd = mouEnd.month >= 10 ? mouEnd.year + 1 : mouEnd.year;
       await Promise.all(
-        _.range(fiscalYearStart, fiscalYearEnd + 1).map((fiscalYear) => {
+        range(fiscalYearStart, fiscalYearEnd + 1).map((fiscalYear) => {
           orgIds.map((organizationId) =>
             this.createRecord(
               { budgetId: id, organizationId, fiscalYear },
@@ -278,8 +276,7 @@ export class BudgetService {
       throw new NotFoundException('Could not find budget');
     }
 
-    // get budgetRecordIds
-    const brs = await this.listRecords(
+    const records = await this.listRecords(
       {
         sort: 'fiscalYear',
         order: Order.ASC,
@@ -290,20 +287,12 @@ export class BudgetService {
       session
     );
 
-    let records;
-    if (brs.items) {
-      records = brs.items.map((row: any) => {
-        return { value: row.id, canRead: true, canEdit: true };
-      });
-    }
-    const budget = {
+    return {
       id: result.id,
       createdAt: result.createdAt,
       status: result.canReadStatus ? result.status : undefined,
-      records,
+      records: records.items,
     };
-
-    return budget;
   }
 
   async list(
@@ -371,18 +360,9 @@ export class BudgetService {
     const budget = await this.readOne(id, session);
 
     // cascade delete each budget record in this budget
-    if (budget.records) {
-      await Promise.all(
-        budget.records.map(async (br) => {
-          if (br.value) {
-            await this.deleteRecord(br.value, session);
-          }
-        })
-      );
-    }
-    if (!budget) {
-      throw new NotFoundException('Budget not found');
-    }
+    await Promise.all(
+      budget.records.map((br) => this.deleteRecord(br.id, session))
+    );
     await this.db.deleteNode({
       session,
       object: budget,
@@ -615,11 +595,11 @@ export class BudgetService {
       .run();
 
     const items = await Promise.all(
-      brs.map(async (br) => this.readOneRecord(br.budgetRecordId, session))
+      brs.map((br) => this.readOneRecord(br.budgetRecordId, session))
     );
 
     return {
-      items: items,
+      items,
       hasMore: false, // TODO
       total: items.length,
     };
@@ -653,10 +633,6 @@ export class BudgetService {
 
   async deleteRecord(id: string, session: ISession): Promise<void> {
     const br = await this.readOneRecord(id, session);
-    if (!br) {
-      throw new NotFoundException('Budget Record not found');
-    }
-
     await this.db.deleteNode({
       session,
       object: br,

@@ -5,33 +5,15 @@ import {
   Budget,
   BudgetListInput,
   BudgetListOutput,
-  BudgetRecord,
-  BudgetRecordListInput,
-  BudgetRecordListOutput,
   CreateBudgetInput,
   CreateBudgetOutput,
-  CreateBudgetRecordInput,
-  CreateBudgetRecordOutput,
   UpdateBudgetInput,
   UpdateBudgetOutput,
-  UpdateBudgetRecordInput,
-  UpdateBudgetRecordOutput,
 } from './dto';
 
-@Resolver()
+@Resolver(Budget.classType)
 export class BudgetResolver {
   constructor(private readonly service: BudgetService) {}
-
-  @Mutation(() => CreateBudgetOutput, {
-    description: 'Create an budget entry',
-  })
-  async createBudget(
-    @Session() session: ISession,
-    @Args('input') { budget: input }: CreateBudgetInput
-  ): Promise<CreateBudgetOutput> {
-    const budget = await this.service.create(input, session);
-    return { budget };
-  }
 
   @Query(() => Budget, {
     description: 'Look up a budget by its ID',
@@ -58,6 +40,17 @@ export class BudgetResolver {
     return this.service.list(input, session);
   }
 
+  @Mutation(() => CreateBudgetOutput, {
+    description: 'Create an budget entry',
+  })
+  async createBudget(
+    @Session() session: ISession,
+    @Args('input') { budget: input }: CreateBudgetInput
+  ): Promise<CreateBudgetOutput> {
+    const budget = await this.service.create(input, session);
+    return { budget };
+  }
+
   @Mutation(() => UpdateBudgetOutput, {
     description: 'Update a budget',
   })
@@ -77,64 +70,6 @@ export class BudgetResolver {
     @IdArg() id: string
   ): Promise<boolean> {
     await this.service.delete(id, session);
-    return true;
-  }
-
-  @Mutation(() => CreateBudgetRecordOutput, {
-    description: 'Create an budget Record entry',
-  })
-  async createBudgetRecord(
-    @Session() session: ISession,
-    @Args('input') { budgetRecord: input }: CreateBudgetRecordInput
-  ): Promise<CreateBudgetRecordOutput> {
-    const budgetRecord = await this.service.createRecord(input, session);
-    return { budgetRecord };
-  }
-
-  @Query(() => BudgetRecord, {
-    description: 'Look up a budget Record by its ID',
-  })
-  async budgetRecord(
-    @Session() session: ISession,
-    @IdArg() id: string
-  ): Promise<BudgetRecord> {
-    return this.service.readOneRecord(id, session);
-  }
-
-  @Query(() => BudgetRecordListOutput, {
-    description: 'Look up budget Records by budgetId',
-  })
-  async budgetRecords(
-    @Session() session: ISession,
-    @Args({
-      name: 'input',
-      type: () => BudgetRecordListInput,
-      defaultValue: BudgetRecordListInput.defaultVal,
-    })
-    input: BudgetRecordListInput
-  ): Promise<BudgetRecordListOutput> {
-    return this.service.listRecords(input, session);
-  }
-
-  @Mutation(() => UpdateBudgetRecordOutput, {
-    description: 'Update a budgetRecord',
-  })
-  async updateBudgetRecord(
-    @Session() session: ISession,
-    @Args('input') { budgetRecord: input }: UpdateBudgetRecordInput
-  ): Promise<UpdateBudgetRecordOutput> {
-    const budgetRecord = await this.service.updateRecord(input, session);
-    return { budgetRecord };
-  }
-
-  @Mutation(() => Boolean, {
-    description: 'Delete an budget',
-  })
-  async deleteBudgetRecord(
-    @Session() session: ISession,
-    @IdArg() id: string
-  ): Promise<boolean> {
-    await this.service.deleteRecord(id, session);
     return true;
   }
 

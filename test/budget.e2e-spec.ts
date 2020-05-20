@@ -3,7 +3,7 @@ import * as faker from 'faker';
 import { times } from 'lodash';
 import { DateTime } from 'luxon';
 import { isValid } from 'shortid';
-import { Budget, BudgetRecord } from '../src/components/budget/dto/budget';
+import { Budget, BudgetRecord } from '../src/components/budget';
 import { Organization } from '../src/components/organization/dto';
 import {
   CreateProject,

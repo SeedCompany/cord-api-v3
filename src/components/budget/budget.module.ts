@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
 import { LocationModule } from '../location';
 import { OrganizationModule } from '../organization';
-import { PartnershipModule } from '../partnership/partnership.module';
-import { ProjectModule } from '../project/project.module';
+import { PartnershipModule } from '../partnership';
+import { ProjectModule } from '../project';
 import { EducationModule, UnavailabilityModule, UserModule } from '../user';
+import { BudgetRecordResolver } from './budget-record.resolver';
 import { BudgetResolver } from './budget.resolver';
 import { BudgetService } from './budget.service';
 
@@ -17,7 +18,7 @@ import { BudgetService } from './budget.service';
     UnavailabilityModule,
     UserModule,
   ],
-  providers: [BudgetResolver, BudgetService],
+  providers: [BudgetResolver, BudgetRecordResolver, BudgetService],
   exports: [BudgetService],
 })
 export class BudgetModule {}

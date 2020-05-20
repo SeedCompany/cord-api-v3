@@ -6,7 +6,8 @@ import {
   SecuredList,
   SortablePaginationInput,
 } from '../../../common';
-import { Budget, BudgetRecord } from './budget';
+import { BudgetRecord } from './budget-record.dto';
+import { Budget } from './budget.dto';
 
 @InputType()
 export abstract class BudgetFilters {
@@ -63,9 +64,7 @@ export class BudgetRecordListInput extends SortablePaginationInput<
 }
 
 @ObjectType()
-export class BudgetRecordListOutput extends PaginatedList(
-  BudgetRecord as any
-) {}
+export class BudgetRecordListOutput extends PaginatedList(BudgetRecord) {}
 
 @ObjectType({
   description: SecuredList.descriptionFor('budget records'),
