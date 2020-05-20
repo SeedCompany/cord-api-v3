@@ -8,10 +8,9 @@ import { node, relation } from 'cypher-query-builder';
 import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
-import { fiscalYears, ISession, Order } from '../../common';
+import { ISession, Order } from '../../common';
 import { DatabaseService, ILogger, Logger, matchSession } from '../../core';
 import { PartnershipService } from '../partnership';
-import { ProjectService } from '../project';
 import {
   Budget,
   BudgetListInput,
@@ -31,7 +30,6 @@ export class BudgetService {
   constructor(
     private readonly db: DatabaseService,
     private readonly partnershipService: PartnershipService,
-    private readonly projectService: ProjectService,
     @Logger('budget:service') private readonly logger: ILogger
   ) {}
 
@@ -123,17 +121,14 @@ export class BudgetService {
   };
 
   async create(
-    { projectId, ...input }: CreateBudget,
+    { projectId }: CreateBudget,
     session: ISession
   ): Promise<Budget> {
-    this.logger.info('Creating Budget', input);
-    if (!projectId) {
-      throw new BadRequestException();
-    }
+    this.logger.info('Creating budget', { projectId });
 
     const id = generate();
     const createdAt = DateTime.local();
-    const status: BudgetStatus = BudgetStatus.Pending;
+    const status = BudgetStatus.Pending;
 
     try {
       const createBudget = this.db
@@ -177,58 +172,16 @@ export class BudgetService {
         id,
         userId: session.userId,
       });
-
-      //connect budget to project
-      const query = `
-      MATCH
-        (project:Project {id: $projectId, active: true}),
-        (budget:Budget {id: $id, active: true})
-      CREATE (project)-[:budget {active: true, createdAt: datetime()}]->(budget)
-    `;
-      await this.db
-        .query()
-        .raw(query, {
-          projectId,
-          id,
-        })
-        .first();
-
-      // on Init, create a budget will create a budget record for each org and each fiscal year in the project input.projectId
-      const project = await this.projectService.readOne(projectId, session);
-      const orgIds = (
-        await this.partnershipService.list(
-          {
-            sort: 'createdAt',
-            order: Order.ASC,
-            count: 25,
-            page: 1,
-            filter: { projectId: project.id },
-          },
-          session
-        )
-      ).items.map((row) => row.organization.id);
-
-      const years = fiscalYears(project.mouStart.value, project.mouEnd.value);
-      await Promise.all(
-        years.map((fiscalYear) => {
-          orgIds.map((organizationId) =>
-            this.createRecord(
-              { budgetId: id, organizationId, fiscalYear },
-              session
-            )
-          );
-        })
-      );
-      const budget = await this.readOne(id, session);
-
-      return budget;
-    } catch {
-      this.logger.error(`Could not create Budget`, {
+    } catch (e) {
+      this.logger.error(`Could not create budget`, {
         id,
         userId: session.userId,
+        exception: e,
       });
-      throw new ServerException('Could not create Budget ');
+      throw new ServerException('Could not create budget');
     }
+
+    return this.readOne(id, session);
   }
 
   async readOne(id: string, session: ISession): Promise<Budget> {
@@ -289,9 +242,13 @@ export class BudgetService {
   }
 
   async list(
-    { page, count, sort, order, filter }: BudgetListInput,
+    input: Partial<BudgetListInput>,
     session: ISession
   ): Promise<BudgetListOutput> {
+    const { page, count, sort, order, filter } = {
+      ...BudgetListInput.defaultVal,
+      ...input,
+    };
     const { projectId } = filter;
     this.logger.info('Listing budgets on projectId ', {
       projectId,

@@ -5,10 +5,10 @@ import {
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { upperFirst } from 'lodash';
+import { flatMap, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
-import { ISession, Sensitivity } from '../../common';
+import { fiscalYears, ISession, Sensitivity } from '../../common';
 import {
   DatabaseService,
   ILogger,
@@ -16,14 +16,10 @@ import {
   matchSession,
   OnIndex,
 } from '../../core';
-import {
-  BudgetListInput,
-  BudgetService,
-  BudgetStatus,
-  SecuredBudget,
-} from '../budget';
-import { EngagementListInput, SecuredEngagementList } from '../engagement/dto';
+import { Budget, BudgetService, BudgetStatus, SecuredBudget } from '../budget';
+import { EngagementListInput, SecuredEngagementList } from '../engagement';
 import { LocationService } from '../location';
+import { PartnershipService, PartnershipType } from '../partnership';
 import {
   CreateProject,
   Project,
@@ -46,6 +42,7 @@ export class ProjectService {
     private readonly projectMembers: ProjectMemberService,
     private readonly locationService: LocationService,
     private readonly budgets: BudgetService,
+    private readonly partnerships: PartnershipService,
     @Logger('project:service') private readonly logger: ILogger
   ) {}
 
@@ -393,7 +390,6 @@ export class ProjectService {
   ): Promise<SecuredBudget> {
     const budgets = await this.budgets.list(
       {
-        ...BudgetListInput.defaultVal,
         filter: {
           projectId: project.id,
         },
@@ -552,7 +548,11 @@ export class ProjectService {
           .first();
       }
 
-      return await this.readOne(id, session);
+      const project = await this.readOne(id, session);
+
+      await this.createBudget(project, session);
+
+      return project;
     } catch (e) {
       this.logger.warning(`Could not create project`, {
         exception: e,
@@ -611,6 +611,69 @@ export class ProjectService {
       });
       throw new ServerException('Failed to delete project');
     }
+  }
+
+  async createBudget(
+    project: Pick<Project, 'id' | 'mouStart' | 'mouEnd'>,
+    session: ISession
+  ): Promise<Budget> {
+    const budget = await this.budgets.create(
+      { projectId: project.id },
+      session
+    );
+
+    // connect budget to project
+    await this.db
+      .query()
+      .matchNode('project', 'Project', { id: project.id, active: true })
+      .matchNode('budget', 'Budget', { id: budget.id, active: true })
+      .create([
+        node('project'),
+        relation('out', '', 'budget', {
+          active: true,
+          createdAt: DateTime.local(),
+        }),
+        node('budget'),
+      ])
+      .run();
+
+    const records = await this.attachBudgetRecords(budget, project, session);
+
+    return {
+      ...budget,
+      records,
+    };
+  }
+
+  private async attachBudgetRecords(
+    budget: Budget,
+    project: Pick<Project, 'id' | 'mouStart' | 'mouEnd'>,
+    session: ISession
+  ) {
+    const partners = await this.partnerships.list(
+      {
+        filter: { projectId: project.id },
+      },
+      session
+    );
+    const fundingOrgIds = partners.items
+      .filter((p) => p.types.value.includes(PartnershipType.Funding))
+      .map((p) => p.organization.id);
+
+    const fiscalRange = fiscalYears(
+      project.mouStart.value,
+      project.mouEnd.value
+    );
+    const inputRecords = flatMap(fiscalRange, (fiscalYear) =>
+      fundingOrgIds.map((organizationId) => ({
+        budgetId: budget.id,
+        organizationId,
+        fiscalYear,
+      }))
+    );
+    return Promise.all(
+      inputRecords.map((record) => this.budgets.createRecord(record, session))
+    );
   }
 
   async consistencyChecker(session: ISession): Promise<boolean> {

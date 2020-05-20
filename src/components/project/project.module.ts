@@ -2,7 +2,8 @@ import { Module } from '@nestjs/common';
 import { BudgetModule } from '../budget';
 import { LocationModule } from '../location';
 import { OrganizationService } from '../organization';
-import { EducationModule, UnavailabilityModule, UserModule } from '../user';
+import { PartnershipModule } from '../partnership';
+import { UserModule } from '../user';
 import {
   InternshipProjectResolver,
   TranslationProjectResolver,
@@ -13,11 +14,10 @@ import { ProjectService } from './project.service';
 
 @Module({
   imports: [
-    BudgetModule,
     ProjectMemberModule,
-    EducationModule,
+    BudgetModule,
+    PartnershipModule,
     UserModule,
-    UnavailabilityModule,
     LocationModule,
   ],
   providers: [

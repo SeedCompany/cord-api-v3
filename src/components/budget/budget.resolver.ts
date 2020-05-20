@@ -5,8 +5,6 @@ import {
   Budget,
   BudgetListInput,
   BudgetListOutput,
-  CreateBudgetInput,
-  CreateBudgetOutput,
   UpdateBudgetInput,
   UpdateBudgetOutput,
 } from './dto';
@@ -38,17 +36,6 @@ export class BudgetResolver {
     input: BudgetListInput
   ): Promise<BudgetListOutput> {
     return this.service.list(input, session);
-  }
-
-  @Mutation(() => CreateBudgetOutput, {
-    description: 'Create an budget entry',
-  })
-  async createBudget(
-    @Session() session: ISession,
-    @Args('input') { budget: input }: CreateBudgetInput
-  ): Promise<CreateBudgetOutput> {
-    const budget = await this.service.create(input, session);
-    return { budget };
   }
 
   @Mutation(() => UpdateBudgetOutput, {
