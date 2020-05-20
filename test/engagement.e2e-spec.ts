@@ -200,7 +200,9 @@ describe('Engagement e2e', () => {
     expect(updated.lukePartnership.value).toBe(updateLukePartnership);
   });
 
-  // This function should be updated to get intern or mentor user in service function.
+  // TODO implement update of properties with multiple labels for basenodes
+  // right now, updating is making the old prop false and new prop active
+  // but not handling prop's with multiple labels
   it.skip('update internship engagement', async () => {
     const internshipEngagement = await createInternshipEngagement(app, {
       projectId: project.id,
@@ -247,7 +249,7 @@ describe('Engagement e2e', () => {
     );
   });
 
-  it.skip('delete engagement', async () => {
+  it('delete engagement', async () => {
     const languageEngagement = await createLanguageEngagement(app, {
       projectId: project.id,
       languageId: language.id,

@@ -416,34 +416,6 @@ export class EngagementService {
     ];
   };
 
-  // relate properties to baseNode
-  relateProperties(props: Record<string, any>, baseNode: string) {
-    const arrQry = [];
-    const createdAt = DateTime.local();
-    let propLabel = '';
-    for (const key in props) {
-      if (key === 'position') {
-        propLabel = 'Property:InternPosition';
-      } else if (key === 'methodologies') {
-        propLabel = 'Property:ProductMethodology';
-      } else if (key === 'status') {
-        propLabel = 'Property:EngagementStatus';
-      }
-      arrQry.push([
-        node(baseNode),
-        relation('out', '', key, {
-          active: true,
-          createdAt,
-        }),
-        node(key, propLabel, {
-          active: true,
-          value: props[key],
-        }),
-      ]);
-    }
-
-    return arrQry;
-  }
   // helper method for defining properties
   property = (prop: string, value: any, baseNode: string) => {
     if (!value) {
@@ -894,6 +866,21 @@ export class EngagementService {
         relation('in', '', 'member', { active: true }),
         node('sg', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
+        node('permPosition', 'Permission', {
+          property: 'position',
+          active: true,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('internshipEngagement'),
+        relation('out', '', 'status', { active: true }),
+        node('internPosition', 'InternPosition', { active: true }),
+      ])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
         node('permCountryOfOrigin', 'Permission', {
           property: 'countryOfOrigin',
           active: true,
@@ -973,6 +960,8 @@ export class EngagementService {
         statusModifiedAt: [{ value: 'statusModifiedAt' }],
         modifiedAt: [{ value: 'modifiedAt' }],
         methodologies: [{ value: 'methodologies' }],
+        internPosition: [{ value: 'position' }],
+        permPosition: [{ read: 'canReadPosition', edit: 'canEditPosition' }],
         permStatus: [{ read: 'canReadStatus', edit: 'canEditStatus' }],
         canReadCompleteDate: [
           { read: 'canReadCompleteDate', edit: 'canEditCompleteDate' },
@@ -1174,69 +1163,66 @@ export class EngagementService {
   ): Promise<InternshipEngagement> {
     try {
       if (mentorId) {
-        const query = `
-          MATCh
-            (token:Token {
-              active: true,
-              value: $token
-            })
-              <-[:token {active: true}]-
-            (requestingUser:User {
-              active: true,
-              id: $requestingUserId,
-              owningOrgId: $owningOrgId
-            }),
-            (newMentorUser:User {active: true, id: $mentorId}),
-            (internshipEngagement:InternshipEngagement {active: true, id: $id})-[rel:mentor {active: true}]->(oldMentorUser:User)
-          DELETE rel
-          CREATE (internshipEngagement)-[:mentor {active: true, createdAt: datetime()}]->(newMentorUser)
-          RETURN internshipEngagement.id as id
-        `;
         await this.db
           .query()
-          .raw(query, {
-            id: input.id,
-            owningOrgId: session.owningOrgId,
-            requestingUserId: session.userId,
-            token: session.token,
-            mentorId: mentorId,
-          })
+          .match(matchSession(session))
+          .match([
+            node('newMentorUser', 'User', { active: true, id: mentorId }),
+          ])
+          .match([
+            node('internshipEngagement', 'InternshipEngagement', {
+              active: true,
+              id: input.id,
+            }),
+            relation('out', 'rel', 'mentor', { active: true }),
+            node('oldMentorUser', 'User'),
+          ])
+          .delete('rel')
+          .create([
+            node('internshipEngagement'),
+            relation('out', '', 'mentor', {
+              active: true,
+              createdAt: DateTime.local(),
+            }),
+            node('newMentorUser'),
+          ])
+          .return('internshipEngagement.id as id')
           .first();
       }
 
       if (countryOfOriginId) {
-        const query = `
-          MATCh
-            (token:Token {
-              active: true,
-              value: $token
-            })
-              <-[:token {active: true}]-
-            (requestingUser:User {
-              active: true,
-              id: $requestingUserId,
-              owningOrgId: $owningOrgId
-            }),
-            (newCountry:Country {active: true, id: $countryOfOriginId}),
-            (internshipEngagement:InternshipEngagement {active: true, id: $id})-[rel:countryOfOrigin {active: true}]->(oldCountry:Country)
-          DELETE rel
-          CREATE (internshipEngagement)-[:countryOfOrigin {active: true, createdAt: datetime()}]->(newCountry)
-          RETURN internshipEngagement.id as id
-        `;
         await this.db
           .query()
-          .raw(query, {
-            id: input.id,
-            owningOrgId: session.owningOrgId,
-            requestingUserId: session.userId,
-            token: session.token,
-            countryOfOriginId: countryOfOriginId,
-          })
+          .match(matchSession(session, { withAclEdit: 'canEditEngagement' }))
+          .match([
+            node('newCountry', 'Country', {
+              active: true,
+              id: countryOfOriginId,
+            }),
+          ])
+          .match([
+            node('internshipEngagement', 'InternshipEngagement', {
+              active: true,
+              id: input.id,
+            }),
+            relation('out', 'rel', 'countryOfOrigin', { active: true }),
+            node('oldCountry', 'Country'),
+          ])
+          .delete('rel')
+          .create([
+            node('internshipEngagement'),
+            relation('out', '', 'countryOfOrigin', {
+              active: true,
+              createdAt: DateTime.local(),
+            }),
+            node('newCountry'),
+          ])
+          .return('internshipEngagement.id as id')
           .first();
       }
 
       const object = await this.readOne(input.id, session);
-      await this.db.updateProperties({
+      await this.db.sgUpdateProperties({
         session,
         object,
         props: [
@@ -1253,8 +1239,8 @@ export class EngagementService {
         },
         nodevar: 'InternshipEngagement',
       });
-
-      return (await this.readOne(input.id, session)) as InternshipEngagement;
+      const result = await this.readInternshipEngagement(input.id, session);
+      return result as InternshipEngagement;
     } catch (e) {
       this.logger.warning('Failed to update InternshipEngagement', {
         exception: e,
