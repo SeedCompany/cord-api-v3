@@ -1,10 +1,10 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
-import { ForbiddenError } from 'apollo-server-core';
 import { node, relation } from 'cypher-query-builder';
 import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
@@ -249,7 +249,7 @@ export class LanguageService {
       }
       // TODO permission error or no?
       this.logger.error(`Could not create`, { ...input, exception: e });
-      throw new ForbiddenError('Could not create language');
+      throw new ForbiddenException('Could not create language');
     }
     const result = await this.readOne(id, session);
 

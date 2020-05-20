@@ -1,10 +1,10 @@
 import {
+  ForbiddenException,
   Injectable,
   NotFoundException,
   InternalServerErrorException as ServerException,
   UnauthorizedException as UnauthenticatedException,
 } from '@nestjs/common';
-import { ForbiddenError } from 'apollo-server-core';
 import * as argon2 from 'argon2';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
@@ -582,7 +582,7 @@ export class UserService {
 
       const noPerm = await query.first();
       if (noPerm) {
-        throw new ForbiddenError('Not allowed');
+        throw new ForbiddenException('Not allowed');
       }
 
       throw new NotFoundException(`Could not find user`);
