@@ -285,7 +285,7 @@ describe('Engagement e2e', () => {
     );
   });
 
-  it.skip('should have consistency in ceremony basenode', async () => {
+  it('should have consistency in ceremony basenode', async () => {
     // testing with LanguageEngagements since internengagemetns are not ready yet.
     project = await createProject(app);
     language = await createLanguage(app);
@@ -305,7 +305,7 @@ describe('Engagement e2e', () => {
     expect(testResult.checkCeremonyConsistency).toBeTruthy();
   });
 
-  it.skip('should have consistency in language engagement nodes', async () => {
+  it('should have consistency in language engagement nodes', async () => {
     language = await createLanguage(app);
     await createLanguageEngagement(app, {
       languageId: language.id,
@@ -344,7 +344,7 @@ describe('Engagement e2e', () => {
     expect(result.checkEngagementConsistency).toBeTruthy();
   });
 
-  it.skip('should create ceremony upon engagement creation', async () => {
+  it('should create ceremony upon engagement creation', async () => {
     project = await createProject(app);
     language = await createLanguage(app);
     const languageEngagement = await createLanguageEngagement(app, {
@@ -354,7 +354,7 @@ describe('Engagement e2e', () => {
     expect(languageEngagement.ceremony.value?.id).toBeDefined();
   });
 
-  it.skip('should update ceremony', async () => {
+  it('should update ceremony', async () => {
     project = await createProject(app);
     language = await createLanguage(app);
     const languageEngagement = await createLanguageEngagement(app, {
