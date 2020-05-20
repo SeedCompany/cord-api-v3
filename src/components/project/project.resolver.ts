@@ -3,6 +3,7 @@ import { IdArg, ISession, Session } from '../../common';
 import {
   CreateProjectInput,
   CreateProjectOutput,
+  IProject,
   Project,
   ProjectListInput,
   ProjectListOutput,
@@ -15,7 +16,7 @@ import { ProjectService } from './project.service';
 export class ProjectResolver {
   constructor(private readonly projectService: ProjectService) {}
 
-  @Query(() => Project, {
+  @Query(() => IProject, {
     description: 'Look up a project by its ID',
   })
   async project(

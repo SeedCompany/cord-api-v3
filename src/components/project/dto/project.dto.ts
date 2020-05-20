@@ -9,15 +9,17 @@ import {
   SecuredString,
   Sensitivity,
 } from '../../../common';
+import { SecuredEngagementList } from '../../engagement';
 import { SecuredCountry } from '../../location';
+import { SecuredProjectMemberList } from '../project-member';
 import { ProjectStatus } from './status.enum';
 import { SecuredProjectStep } from './step.enum';
 import { ProjectType } from './type.enum';
 
-export type AnyProject = MergeExclusive<TranslationProject, InternshipProject>;
+export type Project = MergeExclusive<TranslationProject, InternshipProject>;
 
-@InterfaceType({
-  resolveType: (val: Project) => {
+@InterfaceType('Project', {
+  resolveType: (val: IProject) => {
     if (val.type === ProjectType.Translation) {
       return TranslationProject.classType;
     }
@@ -27,9 +29,9 @@ export type AnyProject = MergeExclusive<TranslationProject, InternshipProject>;
     throw new Error('Could not resolve project type');
   },
 })
-export class Project extends Resource {
+export class IProject extends Resource {
   /* TS wants a public constructor for "ClassType" */
-  static classType = (Project as any) as Type<Project>;
+  static classType = (IProject as any) as Type<IProject>;
 
   @Field(() => ProjectType)
   readonly type: ProjectType;
@@ -66,12 +68,26 @@ export class Project extends Resource {
 
   @DateTimeField()
   readonly modifiedAt: DateTime;
+
+  // Lazily attached in resolver
+  @Field(() => String, { nullable: true })
+  readonly avatarLetters?: never;
+
+  // Lazily attached in resolver
+  @Field(() => SecuredProjectMemberList, {
+    description: 'The project members',
+  })
+  team?: never;
+
+  // Lazily attached in resolver
+  @Field(() => SecuredEngagementList)
+  engagements?: never;
 }
 
 @ObjectType({
-  implements: [Project, Resource],
+  implements: [IProject, Resource],
 })
-export class TranslationProject extends Project {
+export class TranslationProject extends IProject {
   /* TS wants a public constructor for "ClassType" */
   static classType = (TranslationProject as any) as Type<TranslationProject>;
 
@@ -79,9 +95,9 @@ export class TranslationProject extends Project {
 }
 
 @ObjectType({
-  implements: [Project, Resource],
+  implements: [IProject, Resource],
 })
-export class InternshipProject extends Project {
+export class InternshipProject extends IProject {
   /* TS wants a public constructor for "ClassType" */
   static classType = (InternshipProject as any) as Type<InternshipProject>;
 

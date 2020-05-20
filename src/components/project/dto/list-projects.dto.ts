@@ -8,7 +8,7 @@ import {
   Sensitivity,
   SortablePaginationInput,
 } from '../../../common';
-import { Project } from './project.dto';
+import { IProject, Project } from './project.dto';
 import { ProjectStatus } from './status.enum';
 import { ProjectStep } from './step.enum';
 import { ProjectType } from './type.enum';
@@ -73,7 +73,7 @@ export abstract class ProjectFilters {
 const defaultFilters = {};
 
 @InputType()
-export class ProjectListInput extends SortablePaginationInput<keyof Project>({
+export class ProjectListInput extends SortablePaginationInput<keyof IProject>({
   defaultSort: 'name',
 }) {
   static defaultVal = new ProjectListInput();
@@ -85,9 +85,19 @@ export class ProjectListInput extends SortablePaginationInput<keyof Project>({
 }
 
 @ObjectType()
-export class ProjectListOutput extends PaginatedList(Project) {}
+export class ProjectListOutput extends PaginatedList<IProject, Project>(
+  IProject,
+  {
+    itemsDescription: PaginatedList.itemDescriptionFor('projects'),
+  }
+) {}
 
 @ObjectType({
   description: SecuredList.descriptionFor('projects'),
 })
-export abstract class SecuredProjectList extends SecuredList(Project) {}
+export abstract class SecuredProjectList extends SecuredList<IProject, Project>(
+  IProject,
+  {
+    itemsDescription: PaginatedList.itemDescriptionFor('projects'),
+  }
+) {}
