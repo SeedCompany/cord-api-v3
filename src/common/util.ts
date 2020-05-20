@@ -8,3 +8,16 @@ export const maybeMany = <T>(
 
 export const sleep = (milliseconds: number) =>
   new Promise((resolve) => setTimeout(resolve, milliseconds));
+
+export const mapSequential = async <T extends any, R>(
+  items: T[],
+  mapper: (item: T, index: number) => Promise<R>
+): Promise<R[]> => {
+  const resolved: R[] = [];
+  let i = 0;
+  for (const item of items) {
+    resolved.push(await mapper(item, i));
+    ++i;
+  }
+  return resolved;
+};

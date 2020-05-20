@@ -1,7 +1,8 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
-import { generate, isValid } from 'shortid';
+import { isValid } from 'shortid';
+import { mapSequential } from '../src/common';
 import {
   createLanguage,
   createSession,
@@ -130,11 +131,7 @@ describe('Language e2e', () => {
   it('List view of languages', async () => {
     // create a bunch of languages
     const numLanguages = 10;
-    await Promise.all(
-      times(numLanguages).map(() =>
-        createLanguage(app, { name: faker.address.country() + generate() })
-      )
-    );
+    await mapSequential(times(numLanguages), () => createLanguage(app));
     // test reading new lang
     const { languages } = await app.graphql.query(gql`
       query {
