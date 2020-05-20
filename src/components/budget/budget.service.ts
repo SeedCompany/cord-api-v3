@@ -5,10 +5,10 @@ import {
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { range, upperFirst } from 'lodash';
+import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
-import { ISession, Order } from '../../common';
+import { fiscalYears, ISession, Order } from '../../common';
 import { DatabaseService, ILogger, Logger, matchSession } from '../../core';
 import { PartnershipService } from '../partnership';
 import { ProjectService } from '../project';
@@ -208,16 +208,9 @@ export class BudgetService {
         )
       ).items.map((row) => row.organization.id);
 
-      const mouStart = DateTime.fromISO(
-        project.mouStart.value?.toString() || ''
-      );
-      const mouEnd = DateTime.fromISO(project.mouEnd.value?.toString() || '');
-
-      const fiscalYearStart =
-        mouStart.month >= 10 ? mouStart.year + 1 : mouStart.year;
-      const fiscalYearEnd = mouEnd.month >= 10 ? mouEnd.year + 1 : mouEnd.year;
+      const years = fiscalYears(project.mouStart.value, project.mouEnd.value);
       await Promise.all(
-        range(fiscalYearStart, fiscalYearEnd + 1).map((fiscalYear) => {
+        years.map((fiscalYear) => {
           orgIds.map((organizationId) =>
             this.createRecord(
               { budgetId: id, organizationId, fiscalYear },
