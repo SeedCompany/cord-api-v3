@@ -8,3 +8,8 @@ export const maybeMany = <T>(
 
 export const sleep = (milliseconds: number) =>
   new Promise((resolve) => setTimeout(resolve, milliseconds));
+
+export const simpleSwitch = <T>(
+  key: string,
+  options: Record<string, T>
+): T | undefined => options[key];
