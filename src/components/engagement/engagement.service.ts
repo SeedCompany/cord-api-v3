@@ -58,240 +58,7 @@ export class EngagementService {
     if (label === 'LanguageEngagement') {
       return this.readLanguageEngagement(id, session);
     }
-    const query = `
-        MATCH
-          (token:Token {
-            active: true,
-            value: $token
-          })
-            <-[:token {active: true}]-
-          (requestingUser:User {
-            active: true,
-            id: $requestingUserId,
-            owningOrgId: $owningOrgId
-          }),
-          (internshipEngagement:InternshipEngagement {active: true, id: $id})
-
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadProject:ACL {canReadProject: true})-[:toNode]->(internshipEngagement)<-[:engagement {active: true}]-(project)
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditProject:ACL {canEditProject: true})-[:toNode]->(internshipEngagement)
-
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadCeremony {canReadCeremony: true})-[:toNode]->(internshipEngagement)-[:ceremony {active: true}]->(ceremony)
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditCeremony {canEditCeremony: true})-[:toNode]->(internshipEngagement)
-
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadIntern:ACL {canReadIntern: true})-[:toNode]->(internshipEngagement)-[:intern {active: true}]->(internUser)
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditIntern:ACL {canEditIntern: true})-[:toNode]->(internshipEngagement)
-
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadMentor:ACL {canReadMentor: true})-[:toNode]->(internshipEngagement)-[:mentor {active: true}]->(mentorUser)
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditMentor:ACL {canEditMentor: true})-[:toNode]->(internshipEngagement)
-
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadCountryOfOrigin:ACL {canReadCountryOfOrigin: true})-[:toNode]->(internshipEngagement)-[:countryOfOrigin {active: true}]->(countryOfOrigin)
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditCountryOfOrigin:ACL {canEditCountryOfOrigin: true})-[:toNode]->(internshipEngagement)
-
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadPosition:ACL {canReadPosition: true})-[:toNode]->(internshipEngagement)-[:position {active: true}]->(position:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditPosition:ACL {canEditPosition: true})-[:toNode]->(internshipEngagement)
-
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadMethodologies:ACL {canReadMethodologies: true})-[:toNode]->(internshipEngagement)-[:methodologies {active: true}]->(methodologies:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditMethodologies:ACL {canEditMethodologies: true})-[:toNode]->(internshipEngagement)
-
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadStatus:ACL {canReadStatus: true})-[:toNode]->(internshipEngagement)-[:status {active: true}]->(status:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditStatus:ACL {canEditStatus: true})-[:toNode]->(internshipEngagement)
-
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadCompleteDate:ACL {canReadCompleteDate: true})-[:toNode]->(internshipEngagement)-[:completeDate {active: true}]->(completeDate:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditCompleteDate:ACL {canEditCompleteDate: true})-[:toNode]->(internshipEngagement)
-
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(CanReadDisbursementCompleteDate:ACL {CanReadDisbursementCompleteDate: true})-[:toNode]->(internshipEngagement)-[:disbursementCompleteDate {active: true}]->(disbursementCompleteDate:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(CanEditDisbursementCompleteDate:ACL {CanEditDisbursementCompleteDate: true})-[:toNode]->(internshipEngagement)
-
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadCommunicationsCompleteDate:ACL {canReadCommunicationsCompleteDate: true})-[:toNode]->(internshipEngagement)-[:communicationsCompleteDate {active: true}]->(communicationsCompleteDate:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditCommunicationsCompleteDate:ACL {canEditCommunicationsCompleteDate: true})-[:toNode]->(internshipEngagement)
-
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadStartDate:ACL {canReadStartDate: true})-[:toNode]->(internshipEngagement)-[:startDate {active: true}]->(startDate:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditStartDate:ACL {canEditStartDate: true})-[:toNode]->(internshipEngagement)
-
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadEndDate:ACL {canReadEndDate: true})-[:toNode]->(internshipEngagement)-[:endDate {active: true}]->(endDate:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditEndDate:ACL {canEditEndDate: true})-[:toNode]->(internshipEngagement)
-
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadInitialEndDate:ACL {canReadInitialEndDate: true})-[:toNode]->(internshipEngagement)-[:initialEndDate {active: true}]->(initialEndDate:Property {active: true})
-
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadLastSuspendedAt:ACL {canReadLastSuspendedAt: true})-[:toNode]->(internshipEngagement)-[:lastSuspendedAt {active: true}]->(lastSuspendedAt:Property {active: true})
-
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadLastReactivatedAt:ACL {canReadLastReactivatedAt: true})-[:toNode]->(internshipEngagement)-[:lastReactivatedAt {active: true}]->(lastReactivatedAt:Property {active: true})
-
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadStatusModifiedAt:ACL {canReadStatusModifiedAt: true})-[:toNode]->(internshipEngagement)-[:statusModifiedAt {active: true}]->(statusModifiedAt:Property {active: true})
-
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadModifiedAt:ACL {canReadModifiedAt: true})-[:toNode]->(internshipEngagement)-[:modifiedAt {active: true}]->(modifiedAt:Property {active: true})
-
-        RETURN
-          internshipEngagement.id as id,
-          internshipEngagement.createdAt as createdAt,
-          project as project,
-          ceremony.id as ceremonyId,
-          internUser.id as internUserId,
-          mentorUser.id as mentorUserId,
-          countryOfOrigin.id as countryOfOriginId,
-          position.value as position,
-          methodologies.value as methodologies,
-          status.value as status,
-          completeDate.value as completeDate,
-          disbursementCompleteDate.value as disbursementCompleteDate,
-          communicationsCompleteDate.value as communicationsCompleteDate,
-          startDate.value as startDate,
-          endDate.value as endDate,
-          initialEndDate.value as initialEndDate,
-          lastSuspendedAt.value as lastSuspendedAt,
-          lastReactivatedAt.value as lastReactivatedAt,
-          statusModifiedAt.value as statusModifiedAt,
-          modifiedAt.value as modifiedAt,
-          canReadProject.canReadProject as canReadProject,
-          canEditProject.canEditProject as canEditProject,
-          canReadCeremony.canReadCeremony as canReadCeremony,
-          canEditCeremony.canEditCeremony as canEditCeremony,
-          canReadIntern.canReadIntern as canReadIntern,
-          canEditIntern.canEditIntern as canEditIntern,
-          canReadMentor.canReadMentor as canReadMentor,
-          canEditMentor.canEditMentor as canEditMentor,
-          canReadCountryOfOrigin.canReadCountryOfOrigin as canReadCountryOfOrigin,
-          canEditCountryOfOrigin.canEditCountryOfOrigin as canEditCountryOfOrigin,
-          canReadPosition.canReadPosition as canReadPosition,
-          canEditPosition.canEditPosition as canEditPosition,
-          canReadMethodologies.canReadMethodologies as canReadMethodologies,
-          canEditMethodologies.canEditMethodologies as canEditMethodologies,
-          canReadStatus.canReadStatus as canReadStatus,
-          canEditStatus.canEditStatus as canEditStatus,
-          canReadCompleteDate.canReadCompleteDate as canReadCompleteDate,
-          canEditCompleteDate.canEditCompleteDate as canEditCompleteDate,
-          CanReadDisbursementCompleteDate.CanReadDisbursementCompleteDate as CanReadDisbursementCompleteDate,
-          CanEditDisbursementCompleteDate.CanEditDisbursementCompleteDate as CanEditDisbursementCompleteDate,
-          canReadCommunicationsCompleteDate.canReadCommunicationsCompleteDate as canReadCommunicationsCompleteDate,
-          canEditCommunicationsCompleteDate.canEditCommunicationsCompleteDate as canEditCommunicationsCompleteDate,
-          canReadStartDate.canReadStartDate as canReadStartDate,
-          canEditStartDate.canEditStartDate as canEditStartDate,
-          canReadEndDate.canReadEndDate as canReadEndDate,
-          canEditEndDate.canEditEndDate as canEditEndDate,
-          canReadInitialEndDate.canReadInitialEndDate as canReadInitialEndDate,
-          canReadLastSuspendedAt.canReadLastSuspendedAt as canReadLastSuspendedAt,
-          canReadLastReactivatedAt.canReadLastReactivatedAt as canReadLastReactivatedAt,
-          canReadStatusModifiedAt.canReadStatusModifiedAt as canReadStatusModifiedAt,
-          canReadModifiedAt.canReadModifiedAt as canReadModifiedAt
-      `;
-    const result = await this.db
-      .query()
-      .raw(query, {
-        token: session.token,
-        requestingUserId: session.userId,
-        owningOrgId: session.owningOrgId,
-        id,
-      })
-      .first();
-
-    if (!result) {
-      throw new NotFoundException('Could not find internship engagement');
-    }
-
-    const ceremony = result.ceremonyId
-      ? await this.ceremonyService.readOne(result.ceremonyId, session)
-      : undefined;
-
-    const internUser = result.internUserId
-      ? await this.userService.readOne(result.internUserId, session)
-      : undefined;
-
-    const mentorUser = result.mentorUserId
-      ? await this.userService.readOne(result.mentorUserId, session)
-      : undefined;
-
-    const countryOfOrigin = result.countryOfOriginId
-      ? await this.locationService.readOneCountry(
-          result.countryOfOriginId,
-          session
-        )
-      : undefined;
-
-    const internshipEngagement = {
-      position: {
-        value: result.position,
-        canRead: !!result.canReadPosition,
-        canEdit: !!result.canEditPosition,
-      },
-      methodologies: {
-        value: result.methodologies,
-        canRead: !!result.canReadMethodologies,
-        canEdit: !!result.canEditMethodologies,
-      },
-      intern: {
-        value: internUser,
-        canRead: !!result.canReadIntern,
-        canEdit: !!result.canEditIntern,
-      },
-      mentor: {
-        value: mentorUser,
-        canRead: !!result.canReadMentor,
-        canEdit: !!result.canEditMentor,
-      },
-      countryOfOrigin: {
-        value: countryOfOrigin,
-        canRead: !!result.canReadCountryOfOrigin,
-        canEdit: !!result.canEditCountryOfOrigin,
-      },
-    };
-
-    return {
-      id,
-      createdAt: result.createdAt,
-      ...internshipEngagement,
-      status: result.status,
-      ceremony: {
-        value: ceremony,
-        canRead: !!result.canReadCeremony,
-        canEdit: !!result.canEditCeremony,
-      },
-      completeDate: {
-        value: result.completeDate,
-        canRead: !!result.canReadCompleteDate,
-        canEdit: !!result.canEditCompleteDate,
-      },
-      disbursementCompleteDate: {
-        value: result.disbursementCompleteDate,
-        canRead: !!result.CanReadDisbursementCompleteDate,
-        canEdit: !!result.CanEditDisbursementCompleteDate,
-      },
-      communicationsCompleteDate: {
-        value: result.communicationsCompleteDate,
-        canRead: !!result.canReadCommunicationsCompleteDate,
-        canEdit: !!result.canEditCommunicationsCompleteDate,
-      },
-      modifiedAt: result.modifiedAt,
-      startDate: {
-        value: result.startDate,
-        canRead: !!result.canReadStartDate,
-        canEdit: !!result.canEditStartDate,
-      },
-      endDate: {
-        value: result.endDate,
-        canRead: !!result.canReadEndDate,
-        canEdit: !!result.canEditEndDate,
-      },
-      initialEndDate: {
-        value: result.initialEndDate,
-        canRead: !!result.canReadInitialEndDate,
-        canEdit: !!result.canEditInitialEndDate,
-      },
-      lastSuspendedAt: {
-        value: result.lastSuspendedAt,
-        canRead: !!result.canReadLastSuspendedAt,
-        canEdit: !!result.canEditLastSuspendedAt,
-      },
-      lastReactivatedAt: {
-        value: result.lastReactivatedAt,
-        canRead: !!result.canReadLastReactivatedAt,
-        canEdit: !!result.canEditLastReactivatedAt,
-      },
-      statusModifiedAt: {
-        value: result.statusModifiedAt,
-        canRead: !!result.canReadStatusModifiedAt,
-        canEdit: !!result.canEditStatusModifiedAt,
-      },
-    };
+    return this.readInternshipEngagement(id, session);
   }
 
   async readLanguageEngagement(
@@ -308,19 +75,37 @@ export class EngagementService {
           id,
         }),
       ])
-      .optionalMatch([...this.propMatch('firstScripture')])
-      .optionalMatch([...this.propMatch('lukePartnership')])
-      .optionalMatch([...this.propMatch('sentPrintingDate')])
-      .optionalMatch([...this.propMatch('completeDate')])
-      .optionalMatch([...this.propMatch('startDate')])
-      .optionalMatch([...this.propMatch('endDate')])
-      .optionalMatch([...this.propMatch('disbursementCompleteDate')])
-      .optionalMatch([...this.propMatch('communicationsCompleteDate')])
-      .optionalMatch([...this.propMatch('initialEndDate')])
-      .optionalMatch([...this.propMatch('lastSuspendedAt')])
-      .optionalMatch([...this.propMatch('lastReactivatedAt')])
-      .optionalMatch([...this.propMatch('statusModifiedAt')])
-      .optionalMatch([...this.propMatch('modifiedAt')])
+      .optionalMatch([
+        ...this.propMatch('firstScripture', 'languageEngagement'),
+      ])
+      .optionalMatch([
+        ...this.propMatch('lukePartnership', 'languageEngagement'),
+      ])
+      .optionalMatch([
+        ...this.propMatch('sentPrintingDate', 'languageEngagement'),
+      ])
+      .optionalMatch([...this.propMatch('completeDate', 'languageEngagement')])
+      .optionalMatch([...this.propMatch('startDate', 'languageEngagement')])
+      .optionalMatch([...this.propMatch('endDate', 'languageEngagement')])
+      .optionalMatch([
+        ...this.propMatch('disbursementCompleteDate', 'languageEngagement'),
+      ])
+      .optionalMatch([
+        ...this.propMatch('communicationsCompleteDate', 'languageEngagement'),
+      ])
+      .optionalMatch([
+        ...this.propMatch('initialEndDate', 'languageEngagement'),
+      ])
+      .optionalMatch([
+        ...this.propMatch('lastSuspendedAt', 'languageEngagement'),
+      ])
+      .optionalMatch([
+        ...this.propMatch('lastReactivatedAt', 'languageEngagement'),
+      ])
+      .optionalMatch([
+        ...this.propMatch('statusModifiedAt', 'languageEngagement'),
+      ])
+      .optionalMatch([...this.propMatch('modifiedAt', 'languageEngagement')])
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
@@ -610,7 +395,7 @@ export class EngagementService {
     };
   }
 
-  propMatch = (property: string) => {
+  propMatch = (property: string, baseNode: string) => {
     const perm = 'canRead' + upperFirst(property);
     return [
       [
@@ -624,7 +409,7 @@ export class EngagementService {
           read: true,
         }),
         relation('out', '', 'baseNode', { active: true }),
-        node('languageEngagement'),
+        node(baseNode),
         relation('out', '', property, { active: true }),
         node(property, 'Property', { active: true }),
       ],
@@ -635,9 +420,15 @@ export class EngagementService {
   relateProperties(props: Record<string, any>, baseNode: string) {
     const arrQry = [];
     const createdAt = DateTime.local();
+    let propLabel = '';
     for (const key in props) {
-      const propLabel =
-        key === 'status' ? 'Property:EngagementStatus' : 'Property';
+      if (key === 'position') {
+        propLabel = 'Property:InternPosition';
+      } else if (key === 'methodologies') {
+        propLabel = 'Property:ProductMethodology';
+      } else if (key === 'status') {
+        propLabel = 'Property:EngagementStatus';
+      }
       arrQry.push([
         node(baseNode),
         relation('out', '', key, {
@@ -650,6 +441,7 @@ export class EngagementService {
         }),
       ]);
     }
+
     return arrQry;
   }
   // helper method for defining properties
@@ -658,8 +450,14 @@ export class EngagementService {
       return [];
     }
     const createdAt = DateTime.local();
-    const propLabel =
-      prop === 'status' ? 'Property:EngagementStatus' : 'Property';
+    let propLabel = 'Property';
+    if (prop === 'position') {
+      propLabel = 'Property:InternPosition';
+    } else if (prop === 'methodologies') {
+      propLabel = 'Property:ProductMethodology';
+    } else if (prop === 'status') {
+      propLabel = 'Property:EngagementStatus';
+    }
     return [
       [
         node(baseNode),
@@ -750,17 +548,34 @@ export class EngagementService {
             owningOrgId: session.owningOrgId,
           }),
         ],
-        ...this.relateProperties(
-          {
-            completeDate: input.completeDate || undefined,
-            disbursementCompleteDate:
-              input.disbursementCompleteDate || undefined,
-            communicationsCompleteDate:
-              input.communicationsCompleteDate || undefined,
-            startDate: input.startDate || undefined,
-            lukePartnership: input.lukePartnership || undefined,
-            firstScripture: input.firstScripture || undefined,
-          },
+        ...this.property(
+          'completeDate',
+          input.completeDate || undefined,
+          'languageEngagement'
+        ),
+        ...this.property(
+          'disbursementCompleteDate',
+          input.disbursementCompleteDate || undefined,
+          'languageEngagement'
+        ),
+        ...this.property(
+          'communicationsCompleteDate',
+          input.communicationsCompleteDate || undefined,
+          'languageEngagement'
+        ),
+        ...this.property(
+          'startDate',
+          input.startDate || undefined,
+          'languageEngagement'
+        ),
+        ...this.property(
+          'lukePartnership',
+          input.lukePartnership || undefined,
+          'languageEngagement'
+        ),
+        ...this.property(
+          'firstScripture',
+          input.firstScripture || undefined,
           'languageEngagement'
         ),
         [
@@ -849,36 +664,57 @@ export class EngagementService {
     });
     const id = generate();
     const createdAt = DateTime.local();
-
     const ceremony = await this.ceremonyService.create(
       { type: CeremonyType.Certification },
       session
     );
+
     const createIE = this.db
       .query()
       .match(matchSession(session, { withAclEdit: 'canCreateEngagement' }))
       .create([
         [
-          node('internEngagement', 'InternshipEngagement:BaseNode', {
+          node('internshipEngagement', 'InternshipEngagement:BaseNode', {
             active: true,
             createdAt,
             id,
             owningOrgId: session.owningOrgId,
           }),
         ],
-        ...this.relateProperties(
-          {
-            completeDate: input.completeDate || undefined,
-            disbursementCompleteDate:
-              input.disbursementCompleteDate || undefined,
-            communicationsCompleteDate:
-              input.communicationsCompleteDate || undefined,
-            startDate: input.startDate || undefined,
-            endDate: input.endDate || undefined,
-            methodologies: input.methodologies || [],
-            position: input.position || undefined,
-          },
-          'internEngagement'
+        ...this.property(
+          'completeDate',
+          input.completeDate || undefined,
+          'internshipEngagement'
+        ),
+        ...this.property(
+          'disbursementCompleteDate',
+          input.disbursementCompleteDate || undefined,
+          'internshipEngagement'
+        ),
+        ...this.property(
+          'communicationsCompleteDate',
+          input.communicationsCompleteDate || undefined,
+          'internshipEngagement'
+        ),
+        ...this.property(
+          'startDate',
+          input.startDate || undefined,
+          'internshipEngagement'
+        ),
+        ...this.property(
+          'endDate',
+          input.endDate || undefined,
+          'internshipEngagement'
+        ),
+        ...this.property(
+          'methodologies',
+          input.methodologies || [],
+          'internshipEngagement'
+        ),
+        ...this.property(
+          'position',
+          input.position || undefined,
+          'internshipEngagement'
         ),
         [
           node('adminSG', 'SecurityGroup', {
@@ -898,31 +734,36 @@ export class EngagementService {
           relation('out', '', 'member', { active: true, createdAt }),
           node('requestingUser'),
         ],
-        ...this.permission('completeDate', 'internEngagement'),
-        ...this.permission('communicationsCompleteDate', 'internEngagement'),
-        ...this.permission('disbursementCompleteDate', 'internEngagement'),
-        ...this.permission('endDate', 'internEngagement'),
-        ...this.permission('methodologies', 'internEngagement'),
-        ...this.permission('position', 'internEngagement'),
-        ...this.permission('endDate', 'internEngagement'),
-        ...this.permission('startDate', 'internEngagement'),
-        ...this.permission('language', 'internEngagement'),
-        ...this.permission('status', 'internEngagement'),
-        ...this.permission('countryOfOrigin', 'internEngagement'),
-        ...this.permission('ceremony', 'internEngagement'),
+        ...this.permission('completeDate', 'internshipEngagement'),
+        ...this.permission(
+          'communicationsCompleteDate',
+          'internshipEngagement'
+        ),
+        ...this.permission('disbursementCompleteDate', 'internshipEngagement'),
+        ...this.permission('endDate', 'internshipEngagement'),
+        ...this.permission('methodologies', 'internshipEngagement'),
+        ...this.permission('position', 'internshipEngagement'),
+        ...this.permission('endDate', 'internshipEngagement'),
+        ...this.permission('startDate', 'internshipEngagement'),
+        ...this.permission('language', 'internshipEngagement'),
+        ...this.permission('status', 'internshipEngagement'),
+        ...this.permission('countryOfOrigin', 'internshipEngagement'),
+        ...this.permission('ceremony', 'internshipEngagement'),
+        ...this.permission('intern', 'internshipEngagement'),
+        ...this.permission('mentor', 'internshipEngagement'),
       ])
-      .return('internEngagement');
+      .return('internshipEngagement');
+
     try {
       await createIE.first();
     } catch (e) {
       this.logger.error('could not create Internship Engagement ', e);
       throw new ServerException('Could not create Internship Engagement');
     }
-
     const countryCond = `${
       typeof countryOfOriginId !== 'undefined'
         ? ',(countryOfOrigin:Country {id: $countryOfOriginId, active: true})'
-        : ''
+        : ','
     }`;
     const mentorCond = `${
       typeof mentorId !== 'undefined'
@@ -968,11 +809,332 @@ export class EngagementService {
         })
         .first();
 
-      return (await this.readOne(id, session)) as InternshipEngagement;
+      return (await this.readInternshipEngagement(
+        id,
+        session
+      )) as InternshipEngagement;
     } catch (e) {
       this.logger.error(e);
       throw new ServerException(`Could not create InternshipEngagement`);
     }
+  }
+
+  async readInternshipEngagement(
+    id: string,
+    session: ISession
+  ): Promise<Engagement> {
+    this.logger.info('readInternshipEnagement', { id, userId: session.userId });
+    const ieQuery = this.db
+      .query()
+      .match(matchSession(session, { withAclRead: 'canReadEngagements' }))
+      .match([
+        node('internshipEngagement', 'InternshipEngagement', {
+          active: true,
+          id,
+        }),
+      ])
+      .optionalMatch([
+        ...this.propMatch('completeDate', 'internshipEngagement'),
+      ])
+      .optionalMatch([...this.propMatch('startDate', 'internshipEngagement')])
+      .optionalMatch([...this.propMatch('endDate', 'internshipEngagement')])
+      .optionalMatch([
+        ...this.propMatch('disbursementCompleteDate', 'internshipEngagement'),
+      ])
+      .optionalMatch([
+        ...this.propMatch('communicationsCompleteDate', 'internshipEngagement'),
+      ])
+      .optionalMatch([
+        ...this.propMatch('initialEndDate', 'internshipEngagement'),
+      ])
+      .optionalMatch([
+        ...this.propMatch('lastSuspendedAt', 'internshipEngagement'),
+      ])
+      .optionalMatch([
+        ...this.propMatch('lastReactivatedAt', 'internshipEngagement'),
+      ])
+      .optionalMatch([
+        ...this.propMatch('statusModifiedAt', 'internshipEngagement'),
+      ])
+      .optionalMatch([...this.propMatch('modifiedAt', 'internshipEngagement')])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node('permCeremony', 'Permission', {
+          property: 'ceremony',
+          active: true,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('internshipEngagement'),
+        relation('out', '', 'ceremony', { active: true }),
+        node('newCeremony', 'Ceremony', { active: true }),
+        relation('out', '', 'type', { active: true }),
+        node('ceremonyType', 'Property', { active: true }),
+      ])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node('permStatus', 'Permission', {
+          property: 'status',
+          active: true,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('internshipEngagement'),
+        relation('out', '', 'status', { active: true }),
+        node('engStatus', 'EngagementStatus', { active: true }),
+      ])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node('permCountryOfOrigin', 'Permission', {
+          property: 'countryOfOrigin',
+          active: true,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('internshipEngagement'),
+        relation('out', '', 'countryOfOrigin', { active: true }),
+        node('country', 'Country', { active: true }),
+      ])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node('permMethodologies', 'Permission', {
+          property: 'methodologies',
+          active: true,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('internshipEngagement'),
+        relation('out', '', 'methodologies', { active: true }),
+        node('methodologies', 'ProductMethodology', { active: true }),
+      ])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node('permMentor', 'Permission', {
+          property: 'mentor',
+          active: true,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('internshipEngagement'),
+        relation('out', '', 'mentor', { active: true }),
+        node('mentor', 'User', { active: true }),
+      ])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node('permIntern', 'Permission', {
+          property: 'intern',
+          active: true,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('internshipEngagement'),
+        relation('out', '', 'intern', { active: true }),
+        node('intern', 'User', { active: true }),
+      ])
+      .optionalMatch([
+        node('internshipEngagement'),
+        relation('in', '', 'engagement'),
+        node('project', 'Project', { active: true }),
+      ])
+      .return({
+        internshipEngagement: [{ id: 'id', createdAt: 'createdAt' }],
+        intern: [{ id: 'internUserId' }],
+        mentor: [{ id: 'mentorUserId' }],
+        country: [{ id: 'countryOfOriginId' }],
+        newCeremony: [{ id: 'ceremonyId' }],
+        project: ['project'],
+        engStatus: [{ value: 'status' }],
+        completeDate: [{ value: 'completeDate' }],
+        disbursementCompleteDate: [{ value: 'disbursementCompleteDate' }],
+        communicationsCompleteDate: [{ value: 'communicationsCompleteDate' }],
+        startDate: [{ value: 'startDate' }],
+        endDate: [{ value: 'endDate' }],
+        initialEndDate: [{ value: 'initialEndDate' }],
+        lastSuspendedAt: [{ value: 'lastSuspendedAt' }],
+        lastReactivatedAt: [{ value: 'lastReactivatedAt' }],
+        statusModifiedAt: [{ value: 'statusModifiedAt' }],
+        modifiedAt: [{ value: 'modifiedAt' }],
+        methodologies: [{ value: 'methodologies' }],
+        permStatus: [{ read: 'canReadStatus', edit: 'canEditStatus' }],
+        canReadCompleteDate: [
+          { read: 'canReadCompleteDate', edit: 'canEditCompleteDate' },
+        ],
+        permMethodologies: [
+          {
+            read: 'canReadMethodologies',
+            edit: 'canEditMethodologies',
+          },
+        ],
+        canReadDisbursementCompleteDate: [
+          {
+            read: 'canReadDisbursementCompleteDate',
+            edit: 'canEditDisbursementCompleteDate',
+          },
+        ],
+        canReadCommunicationsCompleteDate: [
+          {
+            read: 'canReadCommunicationsCompleteDate',
+            edit: 'canEditCommunicationsCompleteDate',
+          },
+        ],
+        canReadStartDate: [
+          { read: 'canReadStartDate', edit: 'canEditStartDate' },
+        ],
+        canReadEndDate: [{ read: 'canReadEndDate', edit: 'canEditEndDate' }],
+        canReadInitialEndDate: [
+          { read: 'canReadInitialEndDate', edit: 'canEditInitialEndDate' },
+        ],
+        canReadLastSuspendedAt: [
+          { read: 'canReadLastSuspendedAt', edit: 'canEditLastSuspendedAt' },
+        ],
+        canReadLastReactivatedAt: [
+          {
+            read: 'canReadLastReactivatedAt',
+            edit: 'canEditLastReactivatedAt',
+          },
+        ],
+        canReadStatusModifiedAt: [
+          {
+            read: 'canReadStatusModifiedAt',
+            edit: 'canEditStatusModifiedAt',
+          },
+        ],
+        canReadModifiedAt: [
+          { read: 'canReadModifiedAt', edit: 'canEditModifiedAt' },
+        ],
+      });
+    let result;
+    try {
+      result = await ieQuery.first();
+    } catch (error) {
+      this.logger.error('could not read Internship Enagement', error);
+    }
+    if (!result || !result.id) {
+      throw new NotFoundException('could not find internship Engagement');
+    }
+
+    const ceremony = result.ceremonyId
+      ? await this.ceremonyService.readOne(result.ceremonyId, session)
+      : undefined;
+
+    const internUser = result.internUserId
+      ? await this.userService.readOne(result.internUserId, session)
+      : undefined;
+
+    const mentorUser = result.mentorUserId
+      ? await this.userService.readOne(result.mentorUserId, session)
+      : undefined;
+
+    const countryOfOrigin = result.countryOfOriginId
+      ? await this.locationService.readOneCountry(
+          result.countryOfOriginId,
+          session
+        )
+      : undefined;
+
+    const internshipEngagement = {
+      position: {
+        value: result.position,
+        canRead: !!result.canReadPosition,
+        canEdit: !!result.canEditPosition,
+      },
+      methodologies: {
+        value: result.methodologies,
+        canRead: !!result.canReadMethodologies,
+        canEdit: !!result.canEditMethodologies,
+      },
+      intern: {
+        value: internUser,
+        canRead: !!result.canReadIntern,
+        canEdit: !!result.canEditIntern,
+      },
+      mentor: {
+        value: mentorUser,
+        canRead: !!result.canReadMentor,
+        canEdit: !!result.canEditMentor,
+      },
+      countryOfOrigin: {
+        value: countryOfOrigin,
+        canRead: !!result.canReadCountryOfOrigin,
+        canEdit: !!result.canEditCountryOfOrigin,
+      },
+    };
+
+    return {
+      id,
+      createdAt: result.createdAt,
+      ...internshipEngagement,
+      status: result.status,
+      ceremony: {
+        value: ceremony,
+        canRead: !!result.canReadCeremony,
+        canEdit: !!result.canEditCeremony,
+      },
+      completeDate: {
+        value: result.completeDate,
+        canRead: !!result.canReadCompleteDate,
+        canEdit: !!result.canEditCompleteDate,
+      },
+      disbursementCompleteDate: {
+        value: result.disbursementCompleteDate,
+        canRead: !!result.CanReadDisbursementCompleteDate,
+        canEdit: !!result.CanEditDisbursementCompleteDate,
+      },
+      communicationsCompleteDate: {
+        value: result.communicationsCompleteDate,
+        canRead: !!result.canReadCommunicationsCompleteDate,
+        canEdit: !!result.canEditCommunicationsCompleteDate,
+      },
+      modifiedAt: result.modifiedAt,
+      startDate: {
+        value: result.startDate,
+        canRead: !!result.canReadStartDate,
+        canEdit: !!result.canEditStartDate,
+      },
+      endDate: {
+        value: result.endDate,
+        canRead: !!result.canReadEndDate,
+        canEdit: !!result.canEditEndDate,
+      },
+      initialEndDate: {
+        value: result.initialEndDate,
+        canRead: !!result.canReadInitialEndDate,
+        canEdit: !!result.canEditInitialEndDate,
+      },
+      lastSuspendedAt: {
+        value: result.lastSuspendedAt,
+        canRead: !!result.canReadLastSuspendedAt,
+        canEdit: !!result.canEditLastSuspendedAt,
+      },
+      lastReactivatedAt: {
+        value: result.lastReactivatedAt,
+        canRead: !!result.canReadLastReactivatedAt,
+        canEdit: !!result.canEditLastReactivatedAt,
+      },
+      statusModifiedAt: {
+        value: result.statusModifiedAt,
+        canRead: !!result.canReadStatusModifiedAt,
+        canEdit: !!result.canEditStatusModifiedAt,
+      },
+    };
   }
 
   async updateLanguageEngagement(

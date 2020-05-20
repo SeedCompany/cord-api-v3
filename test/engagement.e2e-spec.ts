@@ -64,8 +64,7 @@ describe('Engagement e2e', () => {
     expect(languageEngagement.id).toBeDefined();
   });
 
-  // This function should be updated to get intern or mentor user in service function.
-  it.skip('create a internship engagement', async () => {
+  it('create a internship engagement', async () => {
     const internEngagement = await createInternshipEngagement(app, {
       projectId: project.id,
       countryOfOriginId: country.id,
@@ -115,8 +114,7 @@ describe('Engagement e2e', () => {
     expect(actual.endDate).toMatchObject(languageEngagement.endDate);
   });
 
-  // This function should be updated to get intern or mentor user in service function.
-  it('read a an internship engagement by id', async () => {
+  it('read an internship engagement by id', async () => {
     const internshipEngagement = await createInternshipEngagement(app, {
       mentorId: mentor.id,
       projectId: project.id,
@@ -203,7 +201,7 @@ describe('Engagement e2e', () => {
   });
 
   // This function should be updated to get intern or mentor user in service function.
-  it('update internship engagement', async () => {
+  it.skip('update internship engagement', async () => {
     const internshipEngagement = await createInternshipEngagement(app, {
       projectId: project.id,
       internId: intern.id,
@@ -324,7 +322,7 @@ describe('Engagement e2e', () => {
     expect(result.checkEngagementConsistency).toBeTruthy();
   });
 
-  it('should have consistency in internship engagement nodes', async () => {
+  it.skip('should have consistency in internship engagement nodes', async () => {
     await createInternshipEngagement(app, {
       projectId: project.id,
       countryOfOriginId: country.id,
