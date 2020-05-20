@@ -43,6 +43,7 @@ import {
 } from './unavailability';
 
 import _ = require('lodash');
+import { QueryService } from '../../core/query/query.service';
 
 @Injectable()
 export class UserService {
@@ -52,40 +53,91 @@ export class UserService {
     private readonly organizations: OrganizationService,
     private readonly unavailabilities: UnavailabilityService,
     private readonly db: DatabaseService,
+    private readonly db2: QueryService,
     @Logger('user:service') private readonly logger: ILogger
   ) {}
 
   @OnIndex()
   async createIndexes() {
+    await this.db2.createPropertyExistenceConstraintOnNodeAndRun('User', 'id');
+    await this.db2.createPropertyExistenceConstraintOnNodeAndRun(
+      'BaseNode',
+      'active'
+    );
+    await this.db2.createPropertyExistenceConstraintOnNodeAndRun(
+      'BaseNode',
+      'createdAt'
+    );
+    // await this.db2.createPropertyExistenceConstraintOnNodeAndRun(
+    //   'User',
+    //   'owningOrgId'
+    // );
+    await this.db2.createPropertyExistenceConstraintOnNodeAndRun(
+      'EmailAddress',
+      'value'
+    );
+    await this.db2.createPropertyExistenceConstraintOnRelationshipAndRun(
+      'email',
+      'active'
+    );
+    await this.db2.createPropertyExistenceConstraintOnRelationshipAndRun(
+      'email',
+      'createdAt'
+    );
+    await this.db2.createPropertyExistenceConstraintOnRelationshipAndRun(
+      'password',
+      'active'
+    );
+    await this.db2.createPropertyExistenceConstraintOnRelationshipAndRun(
+      'password',
+      'createdAt'
+    );
+    await this.db2.createPropertyExistenceConstraintOnNodeAndRun(
+      'Property',
+      'active'
+    );
+    await this.db2.createPropertyExistenceConstraintOnNodeAndRun(
+      'Property',
+      'value'
+    );
+    await this.db2.createPropertyUniquenessConstraintOnNodeAndRun(
+      'BaseNode',
+      'id'
+    );
+    await this.db2.createPropertyUniquenessConstraintOnNodeAndRun(
+      'EmailAddress',
+      'value'
+    );
+
     // language=Cypher (for webstorm)
-    const constraints = [
-      // USER NODE
-      'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.id)',
-      'CREATE CONSTRAINT ON (n:User) ASSERT n.id IS UNIQUE',
-      'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.active)',
-      'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.createdAt)',
-      'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.owningOrgId)',
-      'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.owningOrgId)',
+    // const constraints = [
+    //   // USER NODE
+    //   'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.id)',
+    //   'CREATE CONSTRAINT ON (n:User) ASSERT n.id IS UNIQUE',
+    //   'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.active)',
+    //   'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.createdAt)',
+    //   'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.owningOrgId)',
+    //   'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.owningOrgId)',
 
-      // EMAIL REL
-      'CREATE CONSTRAINT ON ()-[r:email]-() ASSERT EXISTS(r.active)',
-      'CREATE CONSTRAINT ON ()-[r:email]-() ASSERT EXISTS(r.createdAt)',
+    //   // EMAIL REL
+    //   'CREATE CONSTRAINT ON ()-[r:email]-() ASSERT EXISTS(r.active)',
+    //   'CREATE CONSTRAINT ON ()-[r:email]-() ASSERT EXISTS(r.createdAt)',
 
-      // EMAIL NODE
-      'CREATE CONSTRAINT ON (n:EmailAddress) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:EmailAddress) ASSERT n.value IS UNIQUE',
+    //   // EMAIL NODE
+    //   'CREATE CONSTRAINT ON (n:EmailAddress) ASSERT EXISTS(n.value)',
+    //   'CREATE CONSTRAINT ON (n:EmailAddress) ASSERT n.value IS UNIQUE',
 
-      // PASSWORD REL
-      'CREATE CONSTRAINT ON ()-[r:password]-() ASSERT EXISTS(r.active)',
-      'CREATE CONSTRAINT ON ()-[r:password]-() ASSERT EXISTS(r.createdAt)',
+    //   // PASSWORD REL
+    //   'CREATE CONSTRAINT ON ()-[r:password]-() ASSERT EXISTS(r.active)',
+    //   'CREATE CONSTRAINT ON ()-[r:password]-() ASSERT EXISTS(r.createdAt)',
 
-      // PROPERTY NODE
-      'CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.active)',
-    ];
-    for (const query of constraints) {
-      await this.db.query().raw(query).run();
-    }
+    //   // PROPERTY NODE
+    //   'CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.value)',
+    //   'CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.active)',
+    // ];
+    // for (const query of constraints) {
+    //   await this.db.query().raw(query).run();
+    // }
   }
 
   async list(

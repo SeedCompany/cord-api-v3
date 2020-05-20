@@ -6,6 +6,7 @@ import { EducationModule } from './education';
 import { UnavailabilityModule } from './unavailability';
 import { UserResolver } from './user.resolver';
 import { UserService } from './user.service';
+import { QueryModule } from '../../core/query/query.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { UserService } from './user.service';
     EducationModule,
     OrganizationModule,
     UnavailabilityModule,
+    QueryModule,
   ],
   providers: [UserResolver, UserService],
   exports: [UserService, EducationModule, UnavailabilityModule],

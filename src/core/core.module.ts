@@ -8,6 +8,7 @@ import { EmailModule } from './email';
 import { ExceptionFilter } from './exception.filter';
 import { GraphQLConfig } from './graphql.config';
 import { ValidationPipe } from './validation.pipe';
+import { QueryModule } from './query/query.module';
 
 @Global()
 @Module({
@@ -16,6 +17,7 @@ import { ValidationPipe } from './validation.pipe';
     DatabaseModule,
     EmailModule,
     GraphQLModule.forRootAsync({ useClass: GraphQLConfig }),
+    QueryModule,
   ],
   providers: [
     AwsS3Factory,
