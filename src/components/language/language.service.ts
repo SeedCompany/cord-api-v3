@@ -9,13 +9,14 @@ import { node, relation } from 'cypher-query-builder';
 import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
-import { ISession, Sensitivity } from '../../common';
+import { ISession, Sensitivity, simpleSwitch } from '../../common';
 import {
   DatabaseService,
   ILogger,
   Logger,
   matchSession,
   OnIndex,
+  UniquenessError,
 } from '../../core';
 import {
   CreateLanguage,
@@ -81,13 +82,11 @@ export class LanguageService {
     }
     const createdAt = DateTime.local();
     const propLabel =
-      prop === 'name'
-        ? 'LanguageName:Property'
-        : prop === 'displayName'
-        ? 'LanguageDisplayName:Property'
-        : prop === 'rodNumber'
-        ? 'LanguageRodNumber:Property'
-        : 'Property';
+      simpleSwitch(prop, {
+        name: ['LanguageName'],
+        displayName: ['LanguageDisplayName'],
+        rodNumber: ['LanguageRodNumber'],
+      }) ?? [];
     return [
       [
         node('newLang'),
@@ -95,7 +94,7 @@ export class LanguageService {
           active: true,
           createdAt,
         }),
-        node(prop, propLabel, {
+        node(prop, [...propLabel, 'Property'], {
           active: true,
           value,
         }),
@@ -229,23 +228,17 @@ export class LanguageService {
         .return('newLang.id as id');
       await createLanguage.first();
     } catch (e) {
-      // if fail to create, see if already exists
-      const lookup = this.db
-        .query()
-        .match([
-          node('lang', 'Language', { active: true }),
-          relation('out', 'name', 'name', { active: true }),
-          node('langName', 'LanguageName', { active: true, value: input.name }),
-        ])
-        .return({ lang: [{ id: 'langId' }] });
-
-      const lang = await lookup.first();
-      if (lang) {
-        this.logger.warning('Language name already exists', {
-          input,
-          userId: session.userId,
-        });
-        throw new BadRequestException('Language name already exists');
+      if (e instanceof UniquenessError) {
+        const prop =
+          simpleSwitch(e.label, {
+            LanguageName: 'name',
+            LanguageDisplayName: 'displayName',
+            LanguageRodNumber: 'rodNumber',
+          }) ?? e.label;
+        throw new BadRequestException(
+          `Language with ${prop}="${e.value}" already exists`,
+          'Duplicate'
+        );
       }
       // TODO permission error or no?
       this.logger.error(`Could not create`, { ...input, exception: e });
