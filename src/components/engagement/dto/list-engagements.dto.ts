@@ -6,12 +6,7 @@ import {
   SecuredList,
   SortablePaginationInput,
 } from '../../../common';
-import {
-  Engagement,
-  IEngagement,
-  InternshipEngagement,
-  LanguageEngagement,
-} from './engagement.dto';
+import { Engagement, IEngagement } from './engagement.dto';
 
 @InputType()
 export abstract class EngagementFilters {
@@ -53,23 +48,11 @@ export class EngagementListOutput extends PaginatedList<
 }) {}
 
 @ObjectType({
-  description: SecuredList.descriptionFor('language engagements'),
+  description: SecuredList.descriptionFor('engagements'),
 })
-export abstract class SecuredLanguageEngagementList extends SecuredList(
-  LanguageEngagement,
-  {
-    itemsDescription: PaginatedList.itemDescriptionFor('language engagements'),
-  }
-) {}
-
-@ObjectType({
-  description: SecuredList.descriptionFor('internship engagements'),
-})
-export abstract class SecuredInternshipEngagementList extends SecuredList(
-  InternshipEngagement,
-  {
-    itemsDescription: PaginatedList.itemDescriptionFor(
-      'internship engagements'
-    ),
-  }
-) {}
+export abstract class SecuredEngagementList extends SecuredList<
+  IEngagement,
+  Engagement
+>(IEngagement, {
+  itemsDescription: PaginatedList.itemDescriptionFor('engagements'),
+}) {}

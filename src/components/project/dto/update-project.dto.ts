@@ -2,7 +2,7 @@ import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { MinLength, ValidateNested } from 'class-validator';
 import { CalendarDate, DateField } from '../../../common';
-import { Project } from './project.dto';
+import { IProject, Project } from './project.dto';
 
 @InputType()
 export abstract class UpdateProject {
@@ -39,6 +39,6 @@ export abstract class UpdateProjectInput {
 
 @ObjectType()
 export abstract class UpdateProjectOutput {
-  @Field()
+  @Field(() => IProject)
   readonly project: Project;
 }

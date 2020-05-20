@@ -1,6 +1,7 @@
 import {
   Injectable,
   NotFoundException,
+  NotImplementedException,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
@@ -15,22 +16,15 @@ import {
   matchSession,
   OnIndex,
 } from '../../core';
-import {
-  EngagementListInput,
-  SecuredInternshipEngagementList,
-  SecuredLanguageEngagementList,
-} from '../engagement/dto';
+import { EngagementListInput, SecuredEngagementList } from '../engagement/dto';
 import { LocationService } from '../location';
 import {
-  AnyProject,
   CreateProject,
-  InternshipProject,
   Project,
   ProjectListInput,
   ProjectListOutput,
   ProjectStep,
   stepToStatus,
-  TranslationProject,
   UpdateProject,
 } from './dto';
 import {
@@ -387,26 +381,12 @@ export class ProjectService {
   }
 
   async listEngagements(
-    project: TranslationProject,
-    input: EngagementListInput,
-    session: ISession
-  ): Promise<SecuredLanguageEngagementList>;
-  async listEngagements(
-    project: InternshipProject,
-    input: EngagementListInput,
-    session: ISession
-  ): Promise<SecuredInternshipEngagementList>;
-  async listEngagements(
-    _project: AnyProject,
+    _project: Project,
     _input: EngagementListInput,
     _session: ISession
-  ): Promise<SecuredLanguageEngagementList | SecuredInternshipEngagementList> {
+  ): Promise<SecuredEngagementList> {
     // Maybe call EngagementService?
-    // For test of projectList
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-    return {
-      total: 5,
-    } as SecuredLanguageEngagementList | SecuredInternshipEngagementList;
+    throw new NotImplementedException();
   }
 
   async listProjectMembers(
