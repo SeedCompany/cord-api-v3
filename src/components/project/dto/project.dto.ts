@@ -9,6 +9,7 @@ import {
   SecuredString,
   Sensitivity,
 } from '../../../common';
+import { SecuredBudget } from '../../budget';
 import { SecuredEngagementList } from '../../engagement';
 import { SecuredCountry } from '../../location';
 import { SecuredProjectMemberList } from '../project-member';
@@ -82,6 +83,10 @@ export class IProject extends Resource {
   // Lazily attached in resolver
   @Field(() => SecuredEngagementList)
   engagements?: never;
+
+  // Lazily attached in resolver
+  @Field(() => SecuredBudget)
+  budget?: never;
 }
 
 @ObjectType({

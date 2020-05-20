@@ -1,6 +1,6 @@
 import { Type } from '@nestjs/common';
 import { Field, ObjectType } from '@nestjs/graphql';
-import { Resource } from '../../../common';
+import { Resource, SecuredProperty } from '../../../common';
 import { BudgetRecord } from './budget-record.dto';
 import { BudgetStatus } from './budget-status.enum';
 
@@ -16,3 +16,8 @@ export class Budget extends Resource {
   @Field(() => [BudgetRecord])
   readonly records: readonly BudgetRecord[];
 }
+
+@ObjectType({
+  description: SecuredProperty.descriptionFor('a budget'),
+})
+export class SecuredBudget extends SecuredProperty(Budget) {}

@@ -16,6 +16,12 @@ import {
   matchSession,
   OnIndex,
 } from '../../core';
+import {
+  BudgetListInput,
+  BudgetService,
+  BudgetStatus,
+  SecuredBudget,
+} from '../budget';
 import { EngagementListInput, SecuredEngagementList } from '../engagement/dto';
 import { LocationService } from '../location';
 import {
@@ -39,6 +45,7 @@ export class ProjectService {
     private readonly db: DatabaseService,
     private readonly projectMembers: ProjectMemberService,
     private readonly locationService: LocationService,
+    private readonly budgets: BudgetService,
     @Logger('project:service') private readonly logger: ILogger
   ) {}
 
@@ -377,6 +384,30 @@ export class ProjectService {
       })),
       hasMore: result.hasMore,
       total: result.total,
+    };
+  }
+
+  async currentBudget(
+    project: Project,
+    session: ISession
+  ): Promise<SecuredBudget> {
+    const budgets = await this.budgets.list(
+      {
+        ...BudgetListInput.defaultVal,
+        filter: {
+          projectId: project.id,
+        },
+      },
+      session
+    );
+    const current = budgets.items.find(
+      (b) => b.status === BudgetStatus.Current
+    );
+
+    return {
+      value: current,
+      canEdit: true,
+      canRead: true,
     };
   }
 
