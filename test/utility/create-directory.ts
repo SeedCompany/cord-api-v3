@@ -1,8 +1,11 @@
 import { gql } from 'apollo-server-core';
+import * as faker from 'faker';
+import { startCase } from 'lodash';
 import { Directory } from '../../src/components/file';
 import { TestApp } from './create-app';
 
-export async function createDirectory(app: TestApp) {
+export async function createDirectory(app: TestApp, name?: string) {
+  name = name ?? startCase(faker.lorem.words());
   const result = await app.graphql.mutate(
     gql`
       mutation createDirectory($name: String!) {
@@ -13,14 +16,14 @@ export async function createDirectory(app: TestApp) {
       }
     `,
     {
-      name: 'testdir',
+      name,
     }
   );
 
   const actual: Directory = result.createDirectory;
   expect(actual).toBeTruthy();
 
-  expect(actual.name.valueOf()).toBe('testdir');
+  expect(actual.name).toBe(name);
 
   return actual;
 }

@@ -8,6 +8,7 @@ import {
   createTestApp,
   createUser,
   expectNotFound,
+  randomLanguageName,
   TestApp,
 } from './utility';
 import { fragments } from './utility/fragments';
@@ -64,7 +65,7 @@ describe('Language e2e', () => {
   // UPDATE LANGUAGE
   it('update language', async () => {
     const language = await createLanguage(app);
-    const newName = faker.company.companyName();
+    const newName = randomLanguageName();
 
     const result = await app.graphql.mutate(
       gql`

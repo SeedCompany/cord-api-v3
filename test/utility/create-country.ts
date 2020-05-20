@@ -1,5 +1,6 @@
 import { gql } from 'apollo-server-core';
-import { generate, isValid } from 'shortid';
+import * as faker from 'faker';
+import { isValid } from 'shortid';
 import { Country, CreateCountry } from '../../src/components/location';
 import { TestApp } from './create-app';
 import { createRegion } from './create-region';
@@ -10,7 +11,7 @@ export async function createCountry(
   input: Partial<CreateCountry> = {}
 ) {
   const country: CreateCountry = {
-    name: 'Country' + generate(),
+    name: faker.address.country(),
     regionId: input.regionId ?? (await createRegion(app)).id,
     ...input,
   };

@@ -1,6 +1,5 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
-import { upperFirst } from 'lodash';
 import { isValid } from 'shortid';
 import {
   CreateEducation,
@@ -17,7 +16,7 @@ export async function createEducation(
   const education: CreateEducation = {
     userId: input.userId!,
     degree: Degree.Associates,
-    major: upperFirst(faker.hacker.adjective()) + ' Degree',
+    major: faker.name.jobArea() + ' Degree',
     institution: faker.company.companyName(),
     ...input,
   };

@@ -5,20 +5,30 @@ import { CreateUser, User } from '../../src/components/user';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
 
+const timezones = [
+  'America/New_York',
+  'America/Chicago',
+  'America/Denver',
+  'America/Boise',
+  'America/Phoenix',
+  'America/Los_Angeles',
+  'America/Anchorage',
+];
+
 export async function createUser(
   app: TestApp,
   input: Partial<CreateUser> = {}
 ) {
   const user: CreateUser = {
-    email: `${faker.internet.email()} ${Date.now()}`,
+    email: faker.internet.email().replace('@', `.${generate()}@`),
     realFirstName: faker.name.firstName(),
     realLastName: faker.name.lastName(),
-    displayFirstName: faker.name.firstName() + generate(),
-    displayLastName: faker.name.lastName() + generate(),
+    displayFirstName: faker.name.firstName(),
+    displayLastName: faker.name.lastName(),
     password: faker.internet.password(),
     phone: faker.phone.phoneNumber(),
-    timezone: 'timezone detail' + generate(),
-    bio: 'bio detail' + generate(),
+    timezone: faker.random.arrayElement(timezones),
+    bio: faker.lorem.text(),
     ...input,
   };
 

@@ -13,11 +13,20 @@ export async function createUnavailability(
   app: TestApp,
   input: Partial<CreateUnavailability> = {}
 ) {
+  const start = DateTime.fromJSDate(
+    faker.date.between(
+      DateTime.local().minus({ year: 1 }).toJSDate(),
+      DateTime.local().plus({ year: 1 }).toJSDate()
+    )
+  );
+  const end = DateTime.fromJSDate(
+    faker.date.between(start.toJSDate(), start.plus({ month: 3 }).toJSDate())
+  );
   const unavailability: CreateUnavailability = {
     userId: input.userId!,
-    description: faker.address.country(),
-    start: DateTime.utc(),
-    end: DateTime.utc().plus({ years: 1 }),
+    description: faker.lorem.sentence(),
+    start,
+    end,
     ...input,
   };
 

@@ -1,6 +1,8 @@
 import { gql } from 'apollo-server-core';
+import * as faker from 'faker';
 import { DateTime } from 'luxon';
 import { isValid } from 'shortid';
+import { CalendarDate } from '../../src/common';
 import {
   CreateInternshipEngagement,
   CreateLanguageEngagement,
@@ -23,13 +25,10 @@ export async function createLanguageEngagement(
   const languageEngagement: CreateLanguageEngagement = {
     languageId: input.languageId ?? (await createLanguage(app)).id,
     projectId: input.projectId ?? (await createProject(app)).id,
-    firstScripture: true,
-    lukePartnership: true,
-    disbursementCompleteDate: DateTime.local(),
-    communicationsCompleteDate: DateTime.local(),
-    startDate: DateTime.local(),
-    endDate: DateTime.local(),
-    completeDate: DateTime.local(),
+    firstScripture: faker.random.boolean(),
+    lukePartnership: faker.random.boolean(),
+    startDate: CalendarDate.fromJSDate(faker.date.past(1)),
+    endDate: CalendarDate.fromJSDate(faker.date.future(3)),
     ...input,
   };
   const result = await app.graphql.mutate(

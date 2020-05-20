@@ -10,7 +10,7 @@ export async function createFile(
   const file: CreateFileInput = {
     uploadId: input.uploadId!,
     parentId: input.parentId!,
-    name: faker.company.companyName(),
+    name: faker.system.fileName(),
     ...input,
   };
 
@@ -29,7 +29,7 @@ export async function createFile(
   );
 
   const actual: File = result.createFile;
-  expect(actual.name.valueOf()).toBe(file.name);
+  expect(actual.name).toBe(file.name);
 
   return actual;
 }

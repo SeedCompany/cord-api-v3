@@ -1,4 +1,5 @@
 import { gql } from 'apollo-server-core';
+import * as faker from 'faker';
 import { isValid } from 'shortid';
 import { CalendarDate } from '../../src/common';
 import {
@@ -22,8 +23,8 @@ export async function createPartnership(
     mouStatus: PartnershipAgreementStatus.AwaitingSignature,
     types: [PartnershipType.Managing],
     organizationId: input.organizationId || (await createOrganization(app)).id,
-    mouStart: CalendarDate.local(),
-    mouEnd: CalendarDate.local(),
+    mouStart: CalendarDate.fromJSDate(faker.date.past(1)),
+    mouEnd: CalendarDate.fromJSDate(faker.date.future(5)),
     ...input,
   };
 

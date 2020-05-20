@@ -11,7 +11,11 @@ export async function createOrganization(
   app: TestApp,
   input: Partial<CreateOrganization> = {}
 ) {
-  const name = input.name || faker.hacker.noun() + faker.company.companyName();
+  const name =
+    input.name ||
+    faker.fake(
+      '{{name.lastName}} {{commerce.department}} {{company.companySuffix}}'
+    );
 
   const result = await app.graphql.mutate(
     gql`
