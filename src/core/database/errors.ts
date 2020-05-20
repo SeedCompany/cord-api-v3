@@ -1,4 +1,11 @@
 import { v1 as Neo } from 'neo4j-driver';
+import { LogEntry, LogLevel } from '../logger';
+
+declare module 'neo4j-driver/types/v1' {
+  interface Neo4jError {
+    logProps?: LogEntry;
+  }
+}
 
 export class ConstraintError extends Neo.Neo4jError {
   readonly code = 'Neo.ClientError.Schema.ConstraintValidationFailed' as const;
@@ -36,6 +43,13 @@ export class UniquenessError extends ConstraintError {
     ex.stack = e.stack;
     return ex;
   }
+
+  logProps = {
+    level: LogLevel.WARNING,
+    message: 'Duplicate property',
+    label: this.label,
+    value: this.value,
+  };
 }
 
 export const isNeo4jError = (e: unknown): e is Neo.Neo4jError =>

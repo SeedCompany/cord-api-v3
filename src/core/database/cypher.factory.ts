@@ -5,7 +5,7 @@ import Session from 'neo4j-driver/types/v1/session';
 import { ConfigService } from '..';
 import { jestSkipFileInExceptionSource } from '../jest-skip-source-file';
 import { ILogger, LoggerToken, LogLevel } from '../logger';
-import { createBetterError } from './errors';
+import { createBetterError, isNeo4jError } from './errors';
 import { ParameterTransformer } from './parameter-transformer.service';
 import { MyTransformer } from './transformer';
 import './transaction'; // import our transaction augmentation
@@ -64,6 +64,9 @@ export const CypherFactory: FactoryProvider<Connection> = {
               observer.onError = (e) => {
                 const patched = jestSkipFileInExceptionSource(e, __filename);
                 const mapped = createBetterError(patched);
+                if (isNeo4jError(mapped) && mapped.logProps) {
+                  logger.log(mapped.logProps);
+                }
                 onError(mapped);
               };
             }
