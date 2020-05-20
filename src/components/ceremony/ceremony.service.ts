@@ -216,9 +216,6 @@ export class CeremonyService {
             }),
           ],
           ...this.property('type', input.type),
-          ...this.permission('planned'),
-          ...this.permission('estimatedDate'),
-          ...this.permission('actualDate'),
           [
             node('adminSG', 'SecurityGroup', {
               active: true,

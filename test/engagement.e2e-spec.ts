@@ -25,7 +25,7 @@ import {
 } from './utility/create-engagement';
 import { createRegion } from './utility/create-region';
 
-describe.skip('Engagement e2e', () => {
+describe('Engagement e2e', () => {
   let app: TestApp;
   let project: Project;
   let language: Language;
@@ -64,8 +64,7 @@ describe.skip('Engagement e2e', () => {
     expect(languageEngagement.id).toBeDefined();
   });
 
-  // This function should be updated to get intern or mentor user in service function.
-  it.skip('create a internship engagement', async () => {
+  it('create a internship engagement', async () => {
     const internEngagement = await createInternshipEngagement(app, {
       projectId: project.id,
       countryOfOriginId: country.id,
@@ -115,8 +114,7 @@ describe.skip('Engagement e2e', () => {
     expect(actual.endDate).toMatchObject(languageEngagement.endDate);
   });
 
-  // This function should be updated to get intern or mentor user in service function.
-  it('read a an internship engagement by id', async () => {
+  it('read an internship engagement by id', async () => {
     const internshipEngagement = await createInternshipEngagement(app, {
       mentorId: mentor.id,
       projectId: project.id,
@@ -202,8 +200,10 @@ describe.skip('Engagement e2e', () => {
     expect(updated.lukePartnership.value).toBe(updateLukePartnership);
   });
 
-  // This function should be updated to get intern or mentor user in service function.
-  it('update internship engagement', async () => {
+  // TODO implement update of properties with multiple labels for basenodes
+  // right now, updating is making the old prop false and new prop active
+  // but not handling prop's with multiple labels
+  it.skip('update internship engagement', async () => {
     const internshipEngagement = await createInternshipEngagement(app, {
       projectId: project.id,
       internId: intern.id,
@@ -324,7 +324,7 @@ describe.skip('Engagement e2e', () => {
     expect(result.checkEngagementConsistency).toBeTruthy();
   });
 
-  it('should have consistency in internship engagement nodes', async () => {
+  it.skip('should have consistency in internship engagement nodes', async () => {
     await createInternshipEngagement(app, {
       projectId: project.id,
       countryOfOriginId: country.id,
