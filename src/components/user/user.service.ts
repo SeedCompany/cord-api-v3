@@ -108,36 +108,6 @@ export class UserService {
       'EmailAddress',
       'value'
     );
-
-    // language=Cypher (for webstorm)
-    // const constraints = [
-    //   // USER NODE
-    //   'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.id)',
-    //   'CREATE CONSTRAINT ON (n:User) ASSERT n.id IS UNIQUE',
-    //   'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.active)',
-    //   'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.createdAt)',
-    //   'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.owningOrgId)',
-    //   'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.owningOrgId)',
-
-    //   // EMAIL REL
-    //   'CREATE CONSTRAINT ON ()-[r:email]-() ASSERT EXISTS(r.active)',
-    //   'CREATE CONSTRAINT ON ()-[r:email]-() ASSERT EXISTS(r.createdAt)',
-
-    //   // EMAIL NODE
-    //   'CREATE CONSTRAINT ON (n:EmailAddress) ASSERT EXISTS(n.value)',
-    //   'CREATE CONSTRAINT ON (n:EmailAddress) ASSERT n.value IS UNIQUE',
-
-    //   // PASSWORD REL
-    //   'CREATE CONSTRAINT ON ()-[r:password]-() ASSERT EXISTS(r.active)',
-    //   'CREATE CONSTRAINT ON ()-[r:password]-() ASSERT EXISTS(r.createdAt)',
-
-    //   // PROPERTY NODE
-    //   'CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.value)',
-    //   'CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.active)',
-    // ];
-    // for (const query of constraints) {
-    //   await this.db.query().raw(query).run();
-    // }
   }
 
   async list(
@@ -296,7 +266,7 @@ export class UserService {
     const pash = await argon2.hash(input.password);
     const createdAt = DateTime.local();
 
-    const result2 = await this.db2.createBaseNode(
+    const result = await this.db2.createBaseNode(
       {
         label: 'User',
         id,
@@ -363,7 +333,7 @@ export class UserService {
       true
     );
 
-    return result2;
+    return result;
   }
 
   async readOne(id: string, session: ISession): Promise<User> {
