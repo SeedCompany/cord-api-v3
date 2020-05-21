@@ -3,12 +3,10 @@ import * as faker from 'faker';
 import { times } from 'lodash';
 import { DateTime } from 'luxon';
 import { isValid } from 'shortid';
+import { CalendarDate, fiscalYears, SecuredDate } from '../src/common';
 import { Budget } from '../src/components/budget';
-import {
-  CreateProject,
-  Project,
-  ProjectType,
-} from '../src/components/project/dto';
+import { PartnershipType } from '../src/components/partnership';
+import { Project, ProjectType } from '../src/components/project';
 import {
   createSession,
   createTestApp,
@@ -17,6 +15,7 @@ import {
   TestApp,
 } from './utility';
 import { createBudget } from './utility/create-budget';
+import { createPartnership } from './utility/create-partnership';
 import { createProject } from './utility/create-project';
 
 describe('Budget e2e', () => {
@@ -27,7 +26,7 @@ describe('Budget e2e', () => {
     app = await createTestApp();
     await createSession(app);
     await createUser(app);
-    const projectInput: CreateProject = {
+    project = await createProject(app, {
       name:
         'Super Secret Project ' +
         faker.hacker.adjective() +
@@ -35,8 +34,11 @@ describe('Budget e2e', () => {
       type: ProjectType.Translation,
       mouStart: DateTime.fromISO('2020-02-01'),
       mouEnd: DateTime.fromISO('2025-01-01'),
-    };
-    project = await createProject(app, projectInput);
+    });
+    await createPartnership(app, {
+      projectId: project.id,
+      types: [PartnershipType.Funding],
+    });
   });
 
   afterAll(async () => {
@@ -46,6 +48,10 @@ describe('Budget e2e', () => {
   it('create a budget', async () => {
     const budget = await createBudget(app, { projectId: project.id });
     expect(budget.id).toBeDefined();
+    const cd = (sd: SecuredDate) =>
+      sd.value ? CalendarDate.fromISO(`${sd.value}`) : undefined;
+    const fiscal = fiscalYears(cd(project.mouStart), cd(project.mouEnd));
+    expect(budget.records.length).toBe(fiscal.length);
   });
 
   it('read one budget by id', async () => {
