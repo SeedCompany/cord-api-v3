@@ -292,221 +292,82 @@ export class UserService {
     }
 
     const id = generate();
+    this.logger.info('id:' + id);
     const pash = await argon2.hash(input.password);
     const createdAt = DateTime.local();
 
-    // helper method for defining properties
-    const property = (prop: string, value: any) => {
-      if (!value) {
-        return [];
-      }
-
-      return [
-        [
-          node('user'),
-          relation('out', '', prop, {
-            active: true,
-            createdAt,
-          }),
-          node(prop, 'Property', {
-            active: true,
-            value,
-          }),
+    const result2 = await this.db2.createBaseNode(
+      {
+        label: 'User',
+        id,
+        createdAt: createdAt.toString(),
+        props: [
+          {
+            key: 'email',
+            value: input.email,
+            label: 'EmailAddress',
+            addToAdminSg: true,
+            addToReaderSg: true,
+          },
+          {
+            key: 'realFirstName',
+            value: input.realFirstName,
+            addToAdminSg: true,
+            addToReaderSg: false,
+          },
+          {
+            key: 'realLastName',
+            value: input.realLastName,
+            addToAdminSg: true,
+            addToReaderSg: false,
+          },
+          {
+            key: 'displayFirstName',
+            value: input.displayFirstName,
+            addToAdminSg: true,
+            addToReaderSg: true,
+          },
+          {
+            key: 'displayLastName',
+            value: input.displayLastName,
+            addToAdminSg: true,
+            addToReaderSg: true,
+          },
+          {
+            key: 'phone',
+            value: input.phone,
+            addToAdminSg: true,
+            addToReaderSg: false,
+          },
+          {
+            key: 'timezone',
+            value: input.timezone,
+            addToAdminSg: true,
+            addToReaderSg: false,
+          },
+          {
+            key: 'bio',
+            value: input.bio,
+            addToAdminSg: true,
+            addToReaderSg: true,
+          },
+          {
+            key: 'password',
+            value: pash,
+            addToAdminSg: true,
+            addToReaderSg: false,
+          },
         ],
-      ];
-    };
+      },
+      id, // the user being created is the 'requesting user'
+      true
+    );
 
-    // helper method for defining properties
-    const permission = (property: string) => {
-      const createdAt = DateTime.local();
-      return [
-        [
-          node('adminSG'),
-          relation('out', '', 'permission', {
-            active: true,
-            createdAt,
-          }),
-          node('', 'Permission', {
-            property,
-            active: true,
-            read: true,
-            edit: true,
-            admin: true,
-          }),
-          relation('out', '', 'baseNode', {
-            active: true,
-            createdAt,
-          }),
-          node('user'),
-        ],
-        [
-          node('readerSG'),
-          relation('out', '', 'permission', {
-            active: true,
-            createdAt,
-          }),
-          node('', 'Permission', {
-            property,
-            active: true,
-            read: true,
-            edit: false,
-            admin: false,
-          }),
-          relation('out', '', 'baseNode', {
-            active: true,
-            createdAt,
-          }),
-          node('user'),
-        ],
-      ];
-    };
-
-    const query = this.db.query().create([
-      [
-        node('user', 'User', {
-          id,
-          active: true,
-          createdAt,
-          createdByUserId: 'system',
-          canCreateBudget: true,
-          canReadBudgets: true,
-          canCreateFile: true,
-          canReadFiles: true,
-          canCreateFileVersion: true,
-          canReadFileVersions: true,
-          canCreateDirectory: true,
-          canReadDirectorys: true,
-          canCreateOrg: true,
-          canReadOrgs: true,
-          canReadUsers: true,
-          canCreateLanguage: true,
-          canReadLanguages: true,
-          canCreateEducation: true,
-          canReadEducationList: true,
-          canCreateUnavailability: true,
-          canReadUnavailabilityList: true,
-          canCreatePartnership: true,
-          canReadPartnerships: true,
-          canCreateProduct: true,
-          canReadProducts: true,
-          canCreateProject: true,
-          canReadProjects: true,
-          canCreateZone: true,
-          canReadZone: true,
-          canCreateRegion: true,
-          canReadRegion: true,
-          canCreateCountry: true,
-          canReadCountry: true,
-          canCreateCeremony: true,
-          canReadCeremonies: true,
-          canCreateProjectMember: true,
-          canReadProjectMembers: true,
-          canCreateEngagement: true,
-          canReadEngagements: true,
-          canDeleteOwnUser: true,
-          canDeleteLocation: true,
-          canCreateLocation: true,
-          owningOrgId: 'Seed Company',
-          isAdmin: true,
-        }),
-        relation('out', '', 'email', {
-          active: true,
-          createdAt,
-        }),
-        node('email', 'EmailAddress:Property', {
-          active: true,
-          value: input.email,
-          createdAt,
-        }),
-      ],
-      ...property('password', pash),
-      ...property('realFirstName', input.realFirstName),
-      ...property('realLastName', input.realLastName),
-      ...property('displayFirstName', input.displayFirstName),
-      ...property('displayLastName', input.displayLastName),
-      ...property('phone', input.phone),
-      ...property('timezone', input.timezone),
-      ...property('bio', input.bio),
-      [
-        node('user'),
-        relation('in', '', 'member', { active: true, createdAt }),
-        node('adminSG', 'SecurityGroup', {
-          id: generate(),
-          createdAt,
-          active: true,
-          name: `${input.realFirstName} ${input.realLastName} admin`,
-        }),
-      ],
-      [
-        node('user'),
-        relation('in', '', 'member', { active: true, createdAt }),
-        node('readerSG', 'SecurityGroup', {
-          id: generate(),
-          createdAt,
-          active: true,
-          name: `${input.realFirstName} ${input.realLastName} users`,
-        }),
-      ],
-      ...permission('password'),
-      ...permission('realFirstName'),
-      ...permission('realLastName'),
-      ...permission('displayFirstName'),
-      ...permission('displayLastName'),
-      ...permission('email'),
-      ...permission('education'),
-      ...permission('phone'),
-      ...permission('timezone'),
-      ...permission('bio'),
-    ]);
-
-    query.return({
-      user: [{ id: 'id' }],
-      readerSG: [{ id: 'readerSGid' }],
-      adminSG: [{ id: 'adminSGid' }],
-    });
-    const result = await query.first();
-
-    if (!result) {
-      throw new ServerException('failed to create user');
-    } else {
-      if (session.userId) {
-        const assignSG = this.db
-          .query()
-          .match([node('requestingUser', 'User', { id: session.userId })]);
-        assignSG
-          .create([
-            [
-              node('adminSG'),
-              relation('out', '', 'member', {
-                active: true,
-                admin: true,
-                createdAt,
-              }),
-              node('requestingUser'),
-            ],
-            [
-              node('readerSG'),
-              relation('out', '', 'member', {
-                active: true,
-                admin: true,
-                createdAt,
-              }),
-              node('requestingUser'),
-            ],
-          ])
-          .return({
-            requestingUser: [{ id: 'id' }],
-            readerSG: [{ id: 'readerSGid' }],
-            adminSG: [{ id: 'adminSGid' }],
-          });
-        await assignSG.first();
-      }
-      return result.id;
-    }
+    return result2;
   }
 
   async readOne(id: string, session: ISession): Promise<User> {
-    this.logger.info('query read User ', { id, session });
+    // this.logger.info('query read User ', { id, session });
     const property = (property: string, sg: any) => {
       const perm = property + 'Perm';
       return [

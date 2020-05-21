@@ -35,6 +35,7 @@ export class AuthenticationService {
   ) {}
 
   async createToken(): Promise<string> {
+    this.logger.info('asdf');
     const token = this.encodeJWT();
 
     const result = await this.db

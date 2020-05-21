@@ -72,7 +72,6 @@ export class AuthenticationResolver {
         path: '/',
         domain: this.config.session.cookieDomain,
       });
-
       return { user: userFromSession };
     }
 
