@@ -629,20 +629,6 @@ export class FileService {
     //   modifiedAt: DateTime.local(),
     //   size: fv.ContentLength,
     // };
-    // const acls = {
-    //   canReadSize: true,
-    //   canEditSize: true,
-    //   canReadParent: true,
-    //   canEditParent: true,
-    //   canReadMimeType: true,
-    //   canEditMimeType: true,
-    //   canReadCategory: true,
-    //   canEditCategory: true,
-    //   canReadName: true,
-    //   canEditName: true,
-    //   canReadModifiedAt: true,
-    //   canEditModifiedAt: true,
-    // };
     // await this.db.createNode({
     //   session,
     //   type: FileVersion.classType,
@@ -677,7 +663,7 @@ export class FileService {
           node('adminSG', 'SecurityGroup', {
             active: true,
             createdAt,
-            name: `File admin`,
+            name: `FileVersion admin`,
           }),
           relation('out', '', 'member', { active: true, createdAt }),
           node('requestingUser'),
@@ -686,7 +672,7 @@ export class FileService {
           node('readerSG', 'SecurityGroup', {
             active: true,
             createdAt,
-            name: `File  users`,
+            name: `FileVersion  users`,
           }),
           relation('out', '', 'member', { active: true, createdAt }),
           node('requestingUser'),
