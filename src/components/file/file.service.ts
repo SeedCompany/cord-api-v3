@@ -127,34 +127,6 @@ export class FileService {
   };
 
   async getDirectory(id: string, session: ISession): Promise<Directory> {
-    // const result = await this.db
-    //   .query()
-    //   .raw(
-    //     `
-    //   MATCH
-    //     (token:Token {active: true, value: $token})
-    //     <-[:token {active: true}]-
-    //     (requestingUser:User {
-    //       active: true,
-    //       id: $requestingUserId
-    //     }),
-    //     (dir: Directory {id: $uploadId, active: true})
-    //   WITH * OPTIONAL MATCH (dir)-[:type {active:true}]->(dirType:Property {active: true})
-    //   WITH * OPTIONAL MATCH (dir)-[:name {active:true}]->(dirName:Property {active: true})
-    //   RETURN
-    //     dir.createdAt as createdAt,
-    //     dir.id as id,
-    //     dirType.value as type,
-    //     dirName.value as name
-    //   `,
-    //     {
-    //       uploadId: id,
-    //       requestingUserId: session.userId,
-    //       token: session.token,
-    //     }
-    //   )
-    //   .first();
-
     const readDirectory = this.db
       .query()
       .match(matchSession(session, { withAclRead: 'canReadDirectorys' }))
@@ -199,87 +171,38 @@ export class FileService {
 
   async getFileNode(id: string, session: ISession): Promise<FileOrDirectory> {
     this.logger.info(`Query readOne FileNode: id ${id} by ${session.userId}`);
-    const user = await this.userService.readOne(session.userId!, session);
-    // const result = await this.db
-    //   .query()
-    //   .raw(
-    //     `
-    //     MATCH
-    //       (token:Token {active: true, value: $token})
-    //       <-[:token {active: true}]-
-    //       (requestingUser:User {
-    //         active: true,
-    //         id: $requestingUserId
-    //       }),
-    //       (file: File {id: $uploadId, active: true}),
-    //       (file)-[:version {active: true}]->(fv:FileVersion {active: true})
-    //     WITH * OPTIONAL MATCH (file)-[:type {active: true}]->(type:Property {active: true})
-    //     WITH * OPTIONAL MATCH (file)-[:name {active: true}]->(name:Property {active: true})
-    //     WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl:ACL {canReadSize: true})-[:toNode]->(fv)-[:size {active: true}]->(size:Property {active: true})
-    //     WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl:ACL {canReadMimeType: true})-[:toNode]->(fv)-[:mimeType {active: true}]->(mimeType:Property {active: true})
-    //     WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl:ACL {canReadCategory: true})-[:toNode]->(fv)-[:category {active: true}]->(category:Property {active: true})
-    //     WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl:ACL {canReadModifiedAt: true})-[:toNode]->(fv)-[:modifiedAt {active: true}]->(modifiedAt:Property {active: true})
-    //     RETURN
-    //       size.value as size,
-    //       mimeType.value as mimeType,
-    //       category.value as category,
-    //       modifiedAt.value as modifiedAt,
-    //       file.createdAt as createdAt,
-    //       file.id as id,
-    //       type.value as type,
-    //       name.value as name
-    //     `,
-    //     {
-    //       uploadId: id,
-    //       requestingUserId: session.userId,
-    //       token: session.token,
-    //     }
-    //   )
-    //   .first();
 
     const readFileNode = this.db
       .query()
       .match(matchSession(session, { withAclRead: 'canReadFiles' }))
-      .match([node('file', 'File', { active: true, id })])
+      .match([
+        node('file', 'File', { active: true, id }),
+        relation('out', '', 'version', { active: true }),
+        node('fVersion', 'FileVersion', { active: true }),
+      ])
       .optionalMatch([...this.propMatch('name', 'file')])
       .optionalMatch([...this.propMatch('type', 'file')])
+      .optionalMatch([...this.propMatch('size', 'fVersion')])
+      .optionalMatch([...this.propMatch('mimeType', 'fVersion')])
+      .optionalMatch([...this.propMatch('category', 'fVersion')])
+      .optionalMatch([...this.propMatch('modifiedAt', 'fVersion')])
       .return({
         file: [{ id: 'id', createdAt: 'createdAt' }],
         name: [{ value: 'name' }],
         canReadName: [{ read: 'canReadName', edit: 'canEditName' }],
         type: [{ value: 'type' }],
         canReadType: [{ read: 'canReadType', edit: 'canEditType' }],
+        size: [{ value: 'size' }],
+        canReadSize: [{ read: 'canReadSize', edit: 'canEditSize' }],
+        mimeType: [{ value: 'mimeType' }],
+        canReadMimeType: [{ read: 'canReadMimeType', edit: 'canEditMimeType' }],
+        category: [{ value: 'category' }],
+        canReadCategory: [{ read: 'canReadCategory', edit: 'canEditCategory' }],
+        modifiedAt: [{ value: 'modifiedAt' }],
+        canReadModifiedAt: [
+          { read: 'canReadModifiedAt', edit: 'canEditModifiedAt' },
+        ],
       });
-
-    // const readFileNode = this.db
-    //   .query()
-    //   .match(matchSession(session, { withAclRead: 'canReadFiles' }))
-    //   .match([node('file', 'File', { active: true, id })])
-    //   .optionalMatch([...this.propMatch('name', 'file')])
-    //   .optionalMatch([...this.propMatch('type', 'file')])
-    //   .match([node('fVersion', 'FileVersion', { active: true, id })])
-    //   .optionalMatch([...this.propMatch('size', 'fVersion')])
-    //   .optionalMatch([...this.propMatch('mimeType', 'fVersion')])
-    //   .optionalMatch([...this.propMatch('category', 'fVersion')])
-    //   .optionalMatch([...this.propMatch('modifiedAt', 'fVersion')])
-    //   .return({
-    //     file: [{ id: 'id', createdAt: 'createdAt' }],
-    //     name: [{ value: 'name' }],
-    //     canReadName: [{ read: 'canReadName', edit: 'canEditName' }],
-    //     type: [{ value: 'type' }],
-    //     canReadType: [{ read: 'canReadType', edit: 'canEditType' }],
-    //     fVersion: [{ id: 'id', createdAt: 'createdAt' }],
-    //     size: [{ value: 'size' }],
-    //     canReadSize: [{ read: 'canReadSize', edit: 'canEditSize' }],
-    //     mimeType: [{ value: 'mimeType' }],
-    //     canReadMimeType: [{ read: 'canReadMimeType', edit: 'canEditMimeType' }],
-    //     category: [{ value: 'category' }],
-    //     canReadCategory: [{ read: 'canReadCategory', edit: 'canEditCategory' }],
-    //     modifiedAt: [{ value: 'modifiedAt' }],
-    //     canReadModifiedAt: [
-    //       { read: 'canReadModifiedAt', edit: 'canEditModifiedAt' },
-    //     ],
-    //   });
 
     const result = await readFileNode.first();
 
@@ -287,6 +210,8 @@ export class FileService {
       this.logger.warning(`Could not find fileNode`, { id });
       throw new NotFoundException('Could not find fileNode');
     }
+
+    const user = await this.userService.readOne(session.userId!, session);
 
     return {
       category: FileNodeCategory.Document, //TODO category should be derived based on the mimeType
@@ -629,12 +554,6 @@ export class FileService {
     //   modifiedAt: DateTime.local(),
     //   size: fv.ContentLength,
     // };
-    // await this.db.createNode({
-    //   session,
-    //   type: FileVersion.classType,
-    //   input: inputForFileVersion,
-    //   acls,
-    // });
 
     const modifiedAt = DateTime.local();
     const createdAt = DateTime.local();
