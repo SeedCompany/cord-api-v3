@@ -1,11 +1,6 @@
 import { gql } from 'apollo-server-core';
 import { generate, isValid } from 'shortid';
-import {
-  Budget,
-  BudgetRecord,
-  CreateBudget,
-  CreateBudgetRecord,
-} from '../../src/components/budget/dto';
+import { Budget, CreateBudget } from '../../src/components/budget/dto';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
 
@@ -39,44 +34,6 @@ export async function createBudget(
   );
 
   const actual: Budget = result.createBudget.budget;
-  expect(actual).toBeTruthy();
-
-  expect(isValid(actual.id)).toBe(true);
-
-  return actual;
-}
-
-export async function createBudgetRecord(
-  app: TestApp,
-  input: Partial<CreateBudgetRecord> = {}
-) {
-  const budgetRecord: CreateBudgetRecord = {
-    budgetId: generate(),
-    organizationId: generate(),
-    fiscalYear: 2024,
-    ...input,
-  };
-  const result = await app.graphql.mutate(
-    gql`
-      mutation createBudgetRecord($input: CreateBudgetRecordInput!) {
-        createBudgetRecord(input: $input) {
-          budgetRecord {
-            ...budgetRecord
-          }
-        }
-      }
-      ${fragments.budgetRecord}
-    `,
-    {
-      input: {
-        budgetRecord: {
-          ...budgetRecord,
-        },
-      },
-    }
-  );
-
-  const actual: BudgetRecord = result.createBudgetRecord.budgetRecord;
   expect(actual).toBeTruthy();
 
   expect(isValid(actual.id)).toBe(true);
