@@ -3,24 +3,25 @@ import * as faker from 'faker';
 import { times } from 'lodash';
 import { DateTime } from 'luxon';
 import { isValid } from 'shortid';
-import { CalendarDate, fiscalYears, SecuredDate } from '../src/common';
+import { CalendarDate, fiscalYears, Secured } from '../src/common';
 import { Budget } from '../src/components/budget';
 import { PartnershipType } from '../src/components/partnership';
 import { Project, ProjectType } from '../src/components/project';
 import {
+  createBudget,
+  createProject,
   createSession,
   createTestApp,
   createUser,
   fragments,
+  Raw,
   TestApp,
 } from './utility';
-import { createBudget } from './utility/create-budget';
 import { createPartnership } from './utility/create-partnership';
-import { createProject } from './utility/create-project';
 
 describe('Budget e2e', () => {
   let app: TestApp;
-  let project: Project;
+  let project: Raw<Project>;
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -48,8 +49,8 @@ describe('Budget e2e', () => {
   it('create a budget', async () => {
     const budget = await createBudget(app, { projectId: project.id });
     expect(budget.id).toBeDefined();
-    const cd = (sd: SecuredDate) =>
-      sd.value ? CalendarDate.fromISO(`${sd.value}`) : undefined;
+    const cd = (sd: Secured<string>) =>
+      sd.value ? CalendarDate.fromISO(sd.value) : undefined;
     const fiscal = fiscalYears(cd(project.mouStart), cd(project.mouEnd));
     expect(budget.records.length).toBe(fiscal.length);
   });

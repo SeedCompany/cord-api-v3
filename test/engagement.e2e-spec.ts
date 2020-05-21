@@ -16,6 +16,7 @@ import {
   expectNotFound,
   fragments,
   login,
+  Raw,
   TestApp,
 } from './utility';
 import { createCountry } from './utility/create-country';
@@ -27,7 +28,7 @@ import { createRegion } from './utility/create-region';
 
 describe('Engagement e2e', () => {
   let app: TestApp;
-  let project: Project;
+  let project: Raw<Project>;
   let language: Language;
   let zone: Zone;
   let region: Region;

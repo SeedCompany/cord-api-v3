@@ -19,3 +19,4 @@ export * from './login';
 export * from './logout';
 export * from './expect-not-found';
 export * as fragments from './fragments';
+export * from './raw.type';
