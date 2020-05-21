@@ -1,4 +1,13 @@
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import {
+  Args,
+  Int,
+  Mutation,
+  Parent,
+  Query,
+  ResolveField,
+  Resolver,
+} from '@nestjs/graphql';
+import { sumBy } from 'lodash';
 import { IdArg, ISession, Session } from '../../common';
 import { BudgetService } from './budget.service';
 import {
@@ -36,6 +45,11 @@ export class BudgetResolver {
     input: BudgetListInput
   ): Promise<BudgetListOutput> {
     return this.service.list(input, session);
+  }
+
+  @ResolveField(() => Int)
+  async total(@Parent() budget: Budget): Promise<number> {
+    return sumBy(budget.records, (record) => record.amount.value ?? 0);
   }
 
   @Mutation(() => UpdateBudgetOutput, {
