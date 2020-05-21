@@ -401,25 +401,14 @@ export const country = gql`
   }
 `;
 
-export const budget = gql`
-  fragment budget on Budget {
-    id
-    createdAt
-    status
-    records {
-      value
-      canEdit
-      canRead
-    }
-  }
-`;
-
 export const budgetRecord = gql`
   fragment budgetRecord on BudgetRecord {
     id
     createdAt
-    organizationId {
-      value
+    organization {
+      value {
+        ...org
+      }
       canEdit
       canRead
     }
@@ -434,6 +423,19 @@ export const budgetRecord = gql`
       canRead
     }
   }
+  ${org}
+`;
+
+export const budget = gql`
+  fragment budget on Budget {
+    id
+    createdAt
+    status
+    records {
+      ...budgetRecord
+    }
+  }
+  ${budgetRecord}
 `;
 
 export const securityGroup = gql`
