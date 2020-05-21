@@ -326,6 +326,8 @@ export class UserService {
           canReadDirectorys: true,
           canCreateOrg: true,
           canReadOrgs: true,
+          canCreateFilm: true,
+          canReadFilms: true,
           canReadUsers: true,
           canCreateLanguage: true,
           canReadLanguages: true,

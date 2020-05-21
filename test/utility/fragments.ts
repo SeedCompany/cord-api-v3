@@ -452,6 +452,27 @@ export const permission = gql`
   }
 `;
 
+export const film = gql`
+  fragment film on Film {
+    id
+    name {
+      value
+      canRead
+      canEdit
+    }
+    ranges {
+      value {
+        id
+        start
+        end
+      }
+      canRead
+      canEdit
+    }
+    createdAt
+  }
+`;
+
 export const workflow = gql`
   fragment workflow on Workflow {
     id

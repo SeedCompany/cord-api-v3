@@ -395,6 +395,7 @@ export class DatabaseService {
 
     return returnVal;
   }
+
   async sgUpdateProperties<TObject extends Resource>({
     session,
     object,
