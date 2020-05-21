@@ -39,42 +39,151 @@ export class FileService {
     private readonly userService: UserService
   ) {}
 
-  async getDirectory(id: string, session: ISession): Promise<Directory> {
-    const user = await this.userService.readOne(session.userId!, session);
-    const result = await this.db
-      .query()
-      .raw(
-        `
-      MATCH
-        (token:Token {active: true, value: $token})
-        <-[:token {active: true}]-
-        (requestingUser:User {
+  // helper method for defining properties
+  property = (prop: string, value: any, baseNode: string) => {
+    if (!value) {
+      return [];
+    }
+    const createdAt = DateTime.local();
+    return [
+      [
+        node(baseNode),
+        relation('out', '', prop, {
           active: true,
-          id: $requestingUserId
+          createdAt,
         }),
-        (dir: Directory {id: $uploadId, active: true})
-      WITH * OPTIONAL MATCH (dir)-[:type {active:true}]->(dirType:Property {active: true})
-      WITH * OPTIONAL MATCH (dir)-[:name {active:true}]->(dirName:Property {active: true})
-      RETURN
-        dir.createdAt as createdAt,
-        dir.id as id,
-        dirType.value as type,
-        dirName.value as name
-      `,
-        {
-          uploadId: id,
-          requestingUserId: session.userId,
-          token: session.token,
-        }
-      )
-      .first();
+        node(prop, 'Property', {
+          active: true,
+          value,
+        }),
+      ],
+    ];
+  };
+
+  // helper method for defining permissions
+  permission = (property: string, baseNode: string) => {
+    const createdAt = DateTime.local();
+    return [
+      [
+        node('adminSG'),
+        relation('out', '', 'permission', {
+          active: true,
+          createdAt,
+        }),
+        node('', 'Permission', {
+          property,
+          active: true,
+          read: true,
+          edit: true,
+          admin: true,
+        }),
+        relation('out', '', 'baseNode', {
+          active: true,
+          createdAt,
+        }),
+        node(baseNode),
+      ],
+      [
+        node('readerSG'),
+        relation('out', '', 'permission', {
+          active: true,
+          createdAt,
+        }),
+        node('', 'Permission', {
+          property,
+          active: true,
+          read: true,
+          edit: false,
+          admin: false,
+        }),
+        relation('out', '', 'baseNode', {
+          active: true,
+          createdAt,
+        }),
+        node(baseNode),
+      ],
+    ];
+  };
+
+  propMatch = (property: string, baseNode: string) => {
+    const perm = 'canRead' + upperFirst(property);
+    return [
+      [
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node(perm, 'Permission', {
+          property,
+          active: true,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node(baseNode),
+        relation('out', '', property, { active: true }),
+        node(property, 'Property', { active: true }),
+      ],
+    ];
+  };
+
+  async getDirectory(id: string, session: ISession): Promise<Directory> {
+    // const result = await this.db
+    //   .query()
+    //   .raw(
+    //     `
+    //   MATCH
+    //     (token:Token {active: true, value: $token})
+    //     <-[:token {active: true}]-
+    //     (requestingUser:User {
+    //       active: true,
+    //       id: $requestingUserId
+    //     }),
+    //     (dir: Directory {id: $uploadId, active: true})
+    //   WITH * OPTIONAL MATCH (dir)-[:type {active:true}]->(dirType:Property {active: true})
+    //   WITH * OPTIONAL MATCH (dir)-[:name {active:true}]->(dirName:Property {active: true})
+    //   RETURN
+    //     dir.createdAt as createdAt,
+    //     dir.id as id,
+    //     dirType.value as type,
+    //     dirName.value as name
+    //   `,
+    //     {
+    //       uploadId: id,
+    //       requestingUserId: session.userId,
+    //       token: session.token,
+    //     }
+    //   )
+    //   .first();
+
+    const readDirectory = this.db
+      .query()
+      .match(matchSession(session, { withAclRead: 'canReadDirectorys' }))
+      .match([node('dir', 'Directory', { active: true, id })])
+      .optionalMatch([...this.propMatch('name', 'dir')])
+      .optionalMatch([...this.propMatch('type', 'dir')])
+      .return({
+        dir: [{ id: 'id', createdAt: 'createdAt' }],
+        name: [{ value: 'name' }],
+        canReadName: [{ read: 'canReadName', edit: 'canEditName' }],
+        type: [{ value: 'type' }],
+        canReadType: [{ read: 'canReadType', edit: 'canEditType' }],
+      });
+
+    const result = await readDirectory.first();
+
+    if (!result || !result.id) {
+      this.logger.warning(`Could not find directory`, { id });
+      throw new NotFoundException('Could not find directory');
+    }
+
+    const user = await this.userService.readOne(session.userId!, session);
 
     return {
-      createdAt: result!.createdAt,
+      createdAt: result.createdAt,
       createdBy: { ...user },
-      id: result!.id,
-      type: result!.type,
-      name: result!.name,
+      id: result.id,
+      type: result.type,
+      name: result.name,
       category: FileNodeCategory.Document, // TODO
       parents: [], // TODO
     };
@@ -91,46 +200,64 @@ export class FileService {
   async getFileNode(id: string, session: ISession): Promise<FileOrDirectory> {
     this.logger.info(`Query readOne FileNode: id ${id} by ${session.userId}`);
     const user = await this.userService.readOne(session.userId!, session);
-    const result = await this.db
-      .query()
-      .raw(
-        `
-        MATCH
-          (token:Token {active: true, value: $token})
-          <-[:token {active: true}]-
-          (requestingUser:User {
-            active: true,
-            id: $requestingUserId
-          }),
-          (file: File {id: $uploadId, active: true}),
-          (file)-[:version {active: true}]->(fv:FileVersion {active: true})
-        WITH * OPTIONAL MATCH (file)-[:type {active: true}]->(type:Property {active: true})
-        WITH * OPTIONAL MATCH (file)-[:name {active: true}]->(name:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl:ACL {canReadSize: true})-[:toNode]->(fv)-[:size {active: true}]->(size:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl:ACL {canReadMimeType: true})-[:toNode]->(fv)-[:mimeType {active: true}]->(mimeType:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl:ACL {canReadCategory: true})-[:toNode]->(fv)-[:category {active: true}]->(category:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl:ACL {canReadModifiedAt: true})-[:toNode]->(fv)-[:modifiedAt {active: true}]->(modifiedAt:Property {active: true})
-        RETURN
-          size.value as size,
-          mimeType.value as mimeType,
-          category.value as category,
-          modifiedAt.value as modifiedAt,
-          file.createdAt as createdAt,
-          file.id as id,
-          type.value as type,
-          name.value as name
-        `,
-        {
-          uploadId: id,
-          requestingUserId: session.userId,
-          token: session.token,
-        }
-      )
-      .first();
+    // const result = await this.db
+    //   .query()
+    //   .raw(
+    //     `
+    //     MATCH
+    //       (token:Token {active: true, value: $token})
+    //       <-[:token {active: true}]-
+    //       (requestingUser:User {
+    //         active: true,
+    //         id: $requestingUserId
+    //       }),
+    //       (file: File {id: $uploadId, active: true}),
+    //       (file)-[:version {active: true}]->(fv:FileVersion {active: true})
+    //     WITH * OPTIONAL MATCH (file)-[:type {active: true}]->(type:Property {active: true})
+    //     WITH * OPTIONAL MATCH (file)-[:name {active: true}]->(name:Property {active: true})
+    //     WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl:ACL {canReadSize: true})-[:toNode]->(fv)-[:size {active: true}]->(size:Property {active: true})
+    //     WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl:ACL {canReadMimeType: true})-[:toNode]->(fv)-[:mimeType {active: true}]->(mimeType:Property {active: true})
+    //     WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl:ACL {canReadCategory: true})-[:toNode]->(fv)-[:category {active: true}]->(category:Property {active: true})
+    //     WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl:ACL {canReadModifiedAt: true})-[:toNode]->(fv)-[:modifiedAt {active: true}]->(modifiedAt:Property {active: true})
+    //     RETURN
+    //       size.value as size,
+    //       mimeType.value as mimeType,
+    //       category.value as category,
+    //       modifiedAt.value as modifiedAt,
+    //       file.createdAt as createdAt,
+    //       file.id as id,
+    //       type.value as type,
+    //       name.value as name
+    //     `,
+    //     {
+    //       uploadId: id,
+    //       requestingUserId: session.userId,
+    //       token: session.token,
+    //     }
+    //   )
+    //   .first();
 
-    if (!result) {
-      throw new NotFoundException();
+    const readFileNode = this.db
+      .query()
+      .match(matchSession(session, { withAclRead: 'canReadFiles' }))
+      .match([node('file', 'File', { active: true, id })])
+      .optionalMatch([...this.propMatch('name', 'file')])
+      .optionalMatch([...this.propMatch('type', 'file')])
+      .return({
+        file: [{ id: 'id', createdAt: 'createdAt' }],
+        name: [{ value: 'name' }],
+        canReadName: [{ read: 'canReadName', edit: 'canEditName' }],
+        type: [{ value: 'type' }],
+        canReadType: [{ read: 'canReadType', edit: 'canEditType' }],
+      });
+
+    const result = await readFileNode.first();
+
+    if (!result || !result.id) {
+      this.logger.warning(`Could not find fileNode`, { id });
+      throw new NotFoundException('Could not find fileNode');
     }
+
     return {
       category: FileNodeCategory.Document, //TODO category should be derived based on the mimeType
       createdAt: result.createdAt,
@@ -171,23 +298,65 @@ export class FileService {
 
   async createDirectory(name: string, session: ISession): Promise<Directory> {
     const id = generate();
-    await this.db.createNode({
-      session,
-      type: Directory.classType,
-      input: {
-        id,
-        name,
-        type: FileNodeType.Directory,
-      },
-      acls: {
-        canReadName: true,
-        canEditName: true,
-      },
-      baseNodeLabel: 'Directory',
-      aclEditProp: 'canCreateDirectory',
-    });
-    // create createdby relationship
-    const qry = `
+    const createdAt = DateTime.local();
+    // await this.db.createNode({
+    //   session,
+    //   type: Directory.classType,
+    //   input: {
+    //     id,
+    //     name,
+    //     type: FileNodeType.Directory,
+    //   },
+    //   acls: {
+    //     canReadName: true,
+    //     canEditName: true,
+    //   },
+    //   baseNodeLabel: 'Directory',
+    //   aclEditProp: 'canCreateDirectory',
+    // });
+
+    try {
+      const createDirectory = this.db
+        .query()
+        .match(matchSession(session, { withAclEdit: 'canCreateDirectory' }))
+        .create([
+          [
+            node('newDirectory', 'Directory:BaseNode', {
+              active: true,
+              createdAt,
+              id,
+              owningOrgId: session.owningOrgId,
+            }),
+          ],
+          ...this.property('name', name, 'newDirectory'),
+          ...this.property('type', FileNodeType.Directory, 'newDirectory'),
+          [
+            node('adminSG', 'SecurityGroup', {
+              active: true,
+              createdAt,
+              name: name + ' admin',
+            }),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('requestingUser'),
+          ],
+          [
+            node('readerSG', 'SecurityGroup', {
+              active: true,
+              createdAt,
+              name: name + ' users',
+            }),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('requestingUser'),
+          ],
+          ...this.permission('name', 'newDirectory'),
+          ...this.permission('type', 'newDirectory'),
+        ])
+        .return('newDirectory.id as id');
+
+      await createDirectory.first();
+
+      // create createdby relationship
+      const qry = `
       MATCH
         (dirNode:Directory {id: "${id}", active: true}),
         (user:User {id: "${session.userId}", active: true})
@@ -196,15 +365,22 @@ export class FileService {
       RETURN
         dirNode,user
     `;
-    await this.db
-      .query()
-      .raw(qry, {
+      await this.db
+        .query()
+        .raw(qry, {
+          id,
+          userId: session.userId,
+        })
+        .run();
+
+      return await this.getDirectory(id, session);
+    } catch {
+      this.logger.error(`Could not create Directory`, {
         id,
         userId: session.userId,
-      })
-      .run();
-
-    return this.getDirectory(id, session);
+      });
+      throw new ServerException('Could not create Directory ');
+    }
   }
 
   async requestUpload(): Promise<RequestUploadOutput> {
@@ -230,52 +406,162 @@ export class FileService {
     }
 
     const fileId = generate();
-    await this.db.createNode({
-      session,
-      type: File.classType,
-      input: {
+    const createdAt = DateTime.local();
+    // await this.db.createNode({
+    //   session,
+    //   type: File.classType,
+    //   input: {
+    //     id: fileId,
+    //     name,
+    //     type: FileNodeType.File,
+    //   },
+
+    //   acls: {
+    //     canReadParent: true,
+    //     canEditParent: true,
+    //     canReadName: true,
+    //     canEditName: true,
+    //     canReadType: true,
+    //     canEditType: true,
+    //   },
+    //   baseNodeLabel: 'File',
+    //   aclEditProp: 'canCreateFile',
+    // });
+
+    try {
+      const createFile = this.db
+        .query()
+        .match(matchSession(session, { withAclEdit: 'canCreateFile' }))
+        .create([
+          [
+            node('newFile', 'File:BaseNode', {
+              active: true,
+              createdAt,
+              id: fileId,
+              owningOrgId: session.owningOrgId,
+            }),
+          ],
+          ...this.property('name', name, 'newFile'),
+          ...this.property('type', FileNodeType.File, 'newFile'),
+          [
+            node('adminSG', 'SecurityGroup', {
+              active: true,
+              createdAt,
+              name: name + ' admin',
+            }),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('requestingUser'),
+          ],
+          [
+            node('readerSG', 'SecurityGroup', {
+              active: true,
+              createdAt,
+              name: name + ' users',
+            }),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('requestingUser'),
+          ],
+          ...this.permission('name', 'newFile'),
+          ...this.permission('type', 'newFile'),
+        ])
+        .return('newFile.id as id');
+
+      await createFile.first();
+    } catch {
+      this.logger.error(`Could not create File`, {
         id: fileId,
-        name,
-        type: FileNodeType.File,
-      },
-      acls: {
-        canReadParent: true,
-        canEditParent: true,
-        canReadName: true,
-        canEditName: true,
-        canReadType: true,
-        canEditType: true,
-      },
-      baseNodeLabel: 'File',
-      aclEditProp: 'canCreateFile',
-    });
-    const inputForFileVersion = {
-      category: FileNodeCategory.Document, // TODO
-      id: uploadId,
-      mimeType: file.ContentType,
-      modifiedAt: DateTime.local(),
-      size: file.ContentLength,
-    };
-    const acls = {
-      canReadSize: true,
-      canEditSize: true,
-      canReadParent: true,
-      canEditParent: true,
-      canReadMimeType: true,
-      canEditMimeType: true,
-      canReadCategory: true,
-      canEditCategory: true,
-      canReadName: true,
-      canEditName: true,
-      canReadModifiedAt: true,
-      canEditModifiedAt: true,
-    };
-    await this.db.createNode({
-      session,
-      type: FileVersion.classType,
-      input: inputForFileVersion,
-      acls,
-    });
+        userId: session.userId,
+      });
+      throw new ServerException('Could not create File ');
+    }
+
+    // const acls = {
+    //   canReadSize: true,
+    //   canEditSize: true,
+    //   canReadParent: true,
+    //   canEditParent: true,
+    //   canReadMimeType: true,
+    //   canEditMimeType: true,
+    //   canReadCategory: true,
+    //   canEditCategory: true,
+    //   canReadName: true,
+    //   canEditName: true,
+    //   canReadModifiedAt: true,
+    //   canEditModifiedAt: true,
+    // };
+
+    // const inputForFileVersion = {
+    //   category: FileNodeCategory.Document, // TODO
+    //   id: uploadId,
+    //   mimeType: file.ContentType,
+    //   modifiedAt: DateTime.local(),
+    //   size: file.ContentLength,
+    // };
+
+    // await this.db.createNode({
+    //   session,
+    //   type: FileVersion.classType,
+    //   input: inputForFileVersion,
+    //   acls,
+    // });
+
+    try {
+      const modifiedAt = DateTime.local();
+
+      const createFileVersion = this.db
+        .query()
+        .match(matchSession(session, { withAclEdit: 'canCreateFileVersion' }))
+        .create([
+          [
+            node('newFileVersion', 'FileVersion:BaseNode', {
+              active: true,
+              createdAt,
+              id: uploadId,
+              owningOrgId: session.owningOrgId,
+            }),
+          ],
+          ...this.property(
+            'category',
+            FileNodeCategory.Document,
+            'newFileVersion'
+          ),
+          ...this.property('mimeType', file.ContentType, 'newFileVersion'),
+          ...this.property('size', file.ContentLength, 'newFileVersion'),
+          ...this.property('modifiedAt', modifiedAt, 'newFileVersion'),
+          [
+            node('adminSG', 'SecurityGroup', {
+              active: true,
+              createdAt,
+              name: name + ' admin',
+            }),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('requestingUser'),
+          ],
+          [
+            node('readerSG', 'SecurityGroup', {
+              active: true,
+              createdAt,
+              name: name + ' users',
+            }),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('requestingUser'),
+          ],
+          ...this.permission('category', 'newFileVersion'),
+          ...this.permission('mimeType', 'newFileVersion'),
+          ...this.permission('size', 'newFileVersion'),
+          ...this.permission('modifiedAt', 'newFileVersion'),
+        ])
+        .return('newFileVersion.id as id');
+
+      await createFileVersion.first();
+    } catch {
+      this.logger.error(`Could not create FileVersion`, {
+        id: uploadId,
+        userId: session.userId,
+      });
+      throw new ServerException('Could not create FileVersion ');
+    }
+
     // Add FileNodeCategory label for Prop node btw version and category
     await this.db
       .query()
@@ -311,6 +597,7 @@ export class FileService {
         userId: session.userId,
       })
       .run();
+
     // create a parent relationship btw file and parent(type is directory)
     const qryOne = `
         MATCH
@@ -418,7 +705,7 @@ export class FileService {
   ): Promise<FileOrDirectory> {
     try {
       const fileNode = await this.getFileNode(input.id, session);
-      await this.db.updateProperties({
+      await this.db.sgUpdateProperties({
         session,
         object: fileNode,
         props: ['name'],
