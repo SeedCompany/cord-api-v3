@@ -18,4 +18,4 @@ export * from './create-permission';
 export * from './login';
 export * from './logout';
 export * from './expect-not-found';
-export * from './fragments';
+export * as fragments from './fragments';
