@@ -251,6 +251,36 @@ export class FileService {
         canReadType: [{ read: 'canReadType', edit: 'canEditType' }],
       });
 
+    // const readFileNode = this.db
+    //   .query()
+    //   .match(matchSession(session, { withAclRead: 'canReadFiles' }))
+    //   .match([node('file', 'File', { active: true, id })])
+    //   .optionalMatch([...this.propMatch('name', 'file')])
+    //   .optionalMatch([...this.propMatch('type', 'file')])
+    //   .match([node('fVersion', 'FileVersion', { active: true, id })])
+    //   .optionalMatch([...this.propMatch('size', 'fVersion')])
+    //   .optionalMatch([...this.propMatch('mimeType', 'fVersion')])
+    //   .optionalMatch([...this.propMatch('category', 'fVersion')])
+    //   .optionalMatch([...this.propMatch('modifiedAt', 'fVersion')])
+    //   .return({
+    //     file: [{ id: 'id', createdAt: 'createdAt' }],
+    //     name: [{ value: 'name' }],
+    //     canReadName: [{ read: 'canReadName', edit: 'canEditName' }],
+    //     type: [{ value: 'type' }],
+    //     canReadType: [{ read: 'canReadType', edit: 'canEditType' }],
+    //     fVersion: [{ id: 'id', createdAt: 'createdAt' }],
+    //     size: [{ value: 'size' }],
+    //     canReadSize: [{ read: 'canReadSize', edit: 'canEditSize' }],
+    //     mimeType: [{ value: 'mimeType' }],
+    //     canReadMimeType: [{ read: 'canReadMimeType', edit: 'canEditMimeType' }],
+    //     category: [{ value: 'category' }],
+    //     canReadCategory: [{ read: 'canReadCategory', edit: 'canEditCategory' }],
+    //     modifiedAt: [{ value: 'modifiedAt' }],
+    //     canReadModifiedAt: [
+    //       { read: 'canReadModifiedAt', edit: 'canEditModifiedAt' },
+    //     ],
+    //   });
+
     const result = await readFileNode.first();
 
     if (!result || !result.id) {
@@ -299,21 +329,6 @@ export class FileService {
   async createDirectory(name: string, session: ISession): Promise<Directory> {
     const id = generate();
     const createdAt = DateTime.local();
-    // await this.db.createNode({
-    //   session,
-    //   type: Directory.classType,
-    //   input: {
-    //     id,
-    //     name,
-    //     type: FileNodeType.Directory,
-    //   },
-    //   acls: {
-    //     canReadName: true,
-    //     canEditName: true,
-    //   },
-    //   baseNodeLabel: 'Directory',
-    //   aclEditProp: 'canCreateDirectory',
-    // });
 
     try {
       const createDirectory = this.db
@@ -407,26 +422,6 @@ export class FileService {
 
     const fileId = generate();
     const createdAt = DateTime.local();
-    // await this.db.createNode({
-    //   session,
-    //   type: File.classType,
-    //   input: {
-    //     id: fileId,
-    //     name,
-    //     type: FileNodeType.File,
-    //   },
-
-    //   acls: {
-    //     canReadParent: true,
-    //     canEditParent: true,
-    //     canReadName: true,
-    //     canEditName: true,
-    //     canReadType: true,
-    //     canEditType: true,
-    //   },
-    //   baseNodeLabel: 'File',
-    //   aclEditProp: 'canCreateFile',
-    // });
 
     try {
       const createFile = this.db
@@ -475,21 +470,6 @@ export class FileService {
       throw new ServerException('Could not create File ');
     }
 
-    // const acls = {
-    //   canReadSize: true,
-    //   canEditSize: true,
-    //   canReadParent: true,
-    //   canEditParent: true,
-    //   canReadMimeType: true,
-    //   canEditMimeType: true,
-    //   canReadCategory: true,
-    //   canEditCategory: true,
-    //   canReadName: true,
-    //   canEditName: true,
-    //   canReadModifiedAt: true,
-    //   canEditModifiedAt: true,
-    // };
-
     // const inputForFileVersion = {
     //   category: FileNodeCategory.Document, // TODO
     //   id: uploadId,
@@ -497,13 +477,6 @@ export class FileService {
     //   modifiedAt: DateTime.local(),
     //   size: file.ContentLength,
     // };
-
-    // await this.db.createNode({
-    //   session,
-    //   type: FileVersion.classType,
-    //   input: inputForFileVersion,
-    //   acls,
-    // });
 
     try {
       const modifiedAt = DateTime.local();
@@ -649,33 +622,83 @@ export class FileService {
       fv = { ContentType: 'text/plain', ContentLength: 1234 };
     }
 
-    const inputForFileVersion = {
-      category: FileNodeCategory.Document, // TODO
-      id: input.uploadId,
-      mimeType: fv.ContentType,
-      modifiedAt: DateTime.local(),
-      size: fv.ContentLength,
-    };
-    const acls = {
-      canReadSize: true,
-      canEditSize: true,
-      canReadParent: true,
-      canEditParent: true,
-      canReadMimeType: true,
-      canEditMimeType: true,
-      canReadCategory: true,
-      canEditCategory: true,
-      canReadName: true,
-      canEditName: true,
-      canReadModifiedAt: true,
-      canEditModifiedAt: true,
-    };
-    await this.db.createNode({
-      session,
-      type: FileVersion.classType,
-      input: inputForFileVersion,
-      acls,
-    });
+    // const inputForFileVersion = {
+    //   category: FileNodeCategory.Document, // TODO
+    //   id: input.uploadId,
+    //   mimeType: fv.ContentType,
+    //   modifiedAt: DateTime.local(),
+    //   size: fv.ContentLength,
+    // };
+    // const acls = {
+    //   canReadSize: true,
+    //   canEditSize: true,
+    //   canReadParent: true,
+    //   canEditParent: true,
+    //   canReadMimeType: true,
+    //   canEditMimeType: true,
+    //   canReadCategory: true,
+    //   canEditCategory: true,
+    //   canReadName: true,
+    //   canEditName: true,
+    //   canReadModifiedAt: true,
+    //   canEditModifiedAt: true,
+    // };
+    // await this.db.createNode({
+    //   session,
+    //   type: FileVersion.classType,
+    //   input: inputForFileVersion,
+    //   acls,
+    // });
+
+    const modifiedAt = DateTime.local();
+    const createdAt = DateTime.local();
+
+    const createFileVersion = this.db
+      .query()
+      .match(matchSession(session, { withAclEdit: 'canCreateFileVersion' }))
+      .create([
+        [
+          node('newFileVersion', 'FileVersion:BaseNode', {
+            active: true,
+            createdAt,
+            id: input.uploadId,
+            owningOrgId: session.owningOrgId,
+          }),
+        ],
+        ...this.property(
+          'category',
+          FileNodeCategory.Document,
+          'newFileVersion'
+        ),
+        ...this.property('mimeType', fv.ContentType, 'newFileVersion'),
+        ...this.property('size', fv.ContentLength, 'newFileVersion'),
+        ...this.property('modifiedAt', modifiedAt, 'newFileVersion'),
+        [
+          node('adminSG', 'SecurityGroup', {
+            active: true,
+            createdAt,
+            name: `File admin`,
+          }),
+          relation('out', '', 'member', { active: true, createdAt }),
+          node('requestingUser'),
+        ],
+        [
+          node('readerSG', 'SecurityGroup', {
+            active: true,
+            createdAt,
+            name: `File  users`,
+          }),
+          relation('out', '', 'member', { active: true, createdAt }),
+          node('requestingUser'),
+        ],
+        ...this.permission('category', 'newFileVersion'),
+        ...this.permission('mimeType', 'newFileVersion'),
+        ...this.permission('size', 'newFileVersion'),
+        ...this.permission('modifiedAt', 'newFileVersion'),
+      ])
+      .return('newFileVersion.id as id');
+
+    await createFileVersion.first();
 
     const qry = `
       MATCH
