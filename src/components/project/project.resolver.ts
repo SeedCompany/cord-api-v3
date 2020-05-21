@@ -1,5 +1,6 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { IdArg, ISession, Session } from '../../common';
+import { CreateBudgetInput, CreateBudgetOutput } from '../budget';
 import {
   CreateProjectInput,
   CreateProjectOutput,
@@ -73,6 +74,18 @@ export class ProjectResolver {
   ): Promise<boolean> {
     await this.projectService.delete(id, session);
     return true;
+  }
+
+  @Mutation(() => CreateBudgetOutput, {
+    description: 'Create an budget entry',
+  })
+  async createBudget(
+    @Session() session: ISession,
+    @Args('input') { budget: input }: CreateBudgetInput
+  ): Promise<CreateBudgetOutput> {
+    const project = await this.projectService.readOne(input.projectId, session);
+    const budget = await this.projectService.createBudget(project, session);
+    return { budget };
   }
 
   @Query(() => Boolean, {

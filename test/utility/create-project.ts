@@ -8,6 +8,7 @@ import {
 } from '../../src/components/project';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
+import { Raw } from './raw.type';
 
 export async function createProject(
   app: TestApp,
@@ -37,7 +38,7 @@ export async function createProject(
     }
   );
 
-  const actual: Project = result.createProject.project;
+  const actual: Raw<Project> = result.createProject.project;
   expect(actual).toBeTruthy();
 
   expect(isValid(actual.id)).toBe(true);

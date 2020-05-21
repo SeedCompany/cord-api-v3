@@ -13,13 +13,14 @@ import {
   createUser,
   expectNotFound,
   fragments,
+  Raw,
   TestApp,
 } from './utility';
 import { createPartnership } from './utility/create-partnership';
 
 describe('Partnership e2e', () => {
   let app: TestApp;
-  let project: Project;
+  let project: Raw<Project>;
 
   beforeAll(async () => {
     app = await createTestApp();

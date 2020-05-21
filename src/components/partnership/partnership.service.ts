@@ -364,9 +364,14 @@ export class PartnershipService {
   }
 
   async list(
-    { page, count, sort, order, filter }: PartnershipListInput,
+    input: Partial<PartnershipListInput>,
     session: ISession
   ): Promise<PartnershipListOutput> {
+    const { page, count, sort, order, filter } = {
+      ...PartnershipListInput.defaultVal,
+      ...input,
+    };
+
     const { projectId } = filter;
     let result: {
       items: Partnership[];

@@ -1,6 +1,7 @@
 import { Args, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { Class } from 'type-fest';
 import { firstLettersOfWords, ISession, Session } from '../../common';
+import { SecuredBudget } from '../budget';
 import { EngagementListInput, SecuredEngagementList } from '../engagement';
 import { InternshipProject, Project, TranslationProject } from './dto';
 import {
@@ -27,6 +28,16 @@ function ConcreteProjectResolver<T>(concreteClass: Class<T>) {
       return project.name.canRead && project.name.value
         ? firstLettersOfWords(project.name.value)
         : undefined;
+    }
+
+    @ResolveField(() => SecuredBudget, {
+      description: `The project's current budget`,
+    })
+    async budget(
+      @Parent() project: Project,
+      @Session() session: ISession
+    ): Promise<SecuredBudget> {
+      return this.projectService.currentBudget(project, session);
     }
 
     @ResolveField(() => SecuredEngagementList)

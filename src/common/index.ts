@@ -3,6 +3,7 @@ export * from './calendar-date';
 export * from './date-filter.input';
 export * from './editable.interface';
 export * from './firstLettersOfWords';
+export * from './fiscal-year';
 export * from './id.arg';
 export { DateField, DateTimeField } from './luxon.graphql';
 export * from './not-implemented.error';

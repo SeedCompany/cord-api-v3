@@ -31,11 +31,8 @@ export abstract class UpdateBudgetRecord {
   @Field(() => ID)
   readonly id: string;
 
-  @Field(() => Int, { nullable: true })
-  readonly fiscalYear?: number;
-
-  @Field(() => Int, { nullable: true })
-  readonly amount?: number;
+  @Field(() => Int)
+  readonly amount: number;
 }
 
 @InputType()
