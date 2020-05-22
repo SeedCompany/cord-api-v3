@@ -40,25 +40,64 @@ export class AuthenticationResolver {
     })
     browser?: boolean
   ): Promise<SessionOutput> {
+    let token;
+    let session;
+    let user;
     const existingToken =
-      this.sessionPipe.getTokenFromAuthHeader(req) ||
+      // this.sessionPipe.getTokenFromAuthHeader(req) ||
       this.sessionPipe.getTokenFromCookie(req);
 
-    let token = existingToken || (await this.authService.createToken());
-    let session;
-    try {
-      session = await this.authService.createSession(token);
-    } catch (e) {
-      if (!(e instanceof UnauthenticatedException)) {
-        throw e;
+    if (existingToken) {
+      const isValid = await this.authService.validateToken(existingToken);
+
+      if (isValid) {
+        this.logger.info('valid token', { existingToken });
+        token = existingToken;
+
+        session = await this.authService.createSession(token);
+        console.log('1');
+        if (session.userId) {
+          console.log('2');
+          user = await this.authService.userFromSession(session);
+          console.log('token', token);
+          console.log('session', session);
+          console.log('user', user);
+        } else {
+          console.log('3');
+          console.log('token', token);
+          console.log('session', session);
+          console.log('user', user);
+          user = null;
+        }
+      } else {
+        this.logger.info('invalid token');
+        token = await this.authService.createToken();
+        session = await this.authService.createSession(token);
+        user = null;
       }
-      this.logger.error(
-        'Failed to use existing session token, creating new one.',
-        { exception: e }
-      );
+    } else {
+      this.logger.info('token no existy');
       token = await this.authService.createToken();
       session = await this.authService.createSession(token);
+      user = null;
     }
+
+    // let token = existingToken || (await this.authService.createToken());
+    // let session;
+    // try {
+    //   session = await this.authService.createSession(token);
+    // } catch (e) {
+    //   if (!(e instanceof UnauthenticatedException)) {
+    //     this.logger.error('session creation error');
+    //     throw e;
+    //   }
+    //   this.logger.error(
+    //     'Failed to use existing session token, creating new one.',
+    //     { exception: e }
+    //   );
+    //   token = await this.authService.createToken();
+    //   session = await this.authService.createSession(token);
+    // }
 
     const userFromSession = await this.authService.userFromSession(session);
 
@@ -72,7 +111,7 @@ export class AuthenticationResolver {
         path: '/',
         domain: this.config.session.cookieDomain,
       });
-      return { user: userFromSession };
+      return { token, user: userFromSession };
     }
 
     return { token, user: userFromSession };

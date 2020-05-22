@@ -19,6 +19,7 @@ import {
 } from '../../core';
 import { User, UserService } from '../user';
 import { LoginInput, ResetPasswordInput } from './authentication.dto';
+import { QueryService } from '../../core/query/query.service';
 
 interface JwtPayload {
   iat: number;
@@ -28,6 +29,7 @@ interface JwtPayload {
 export class AuthenticationService {
   constructor(
     private readonly db: DatabaseService,
+    private readonly db2: QueryService,
     private readonly config: ConfigService,
     private readonly email: EmailService,
     private readonly userService: UserService,
@@ -35,32 +37,26 @@ export class AuthenticationService {
   ) {}
 
   async createToken(): Promise<string> {
-    this.logger.info('asdf');
     const token = this.encodeJWT();
+    const createdAt = DateTime.local();
+    const result = await this.db2.createToken(token, createdAt);
 
-    const result = await this.db
-      .query()
-      .raw(
-        `
-      CREATE
-        (token:Token {
-          active: true,
-          createdAt: datetime(),
-          value: $token
-        })
-      RETURN
-        token.value as token
-      `,
-        {
-          token,
-        }
-      )
-      .first();
     if (!result) {
       throw new ServerException('Failed to start session');
     }
 
     return result.token;
+  }
+
+  async validateToken(token: string): Promise<boolean> {
+    this.decodeJWT(token); // it will throw if invalid
+
+    const doesExist = await this.db2.confirmPropertyValueExists(
+      ['Token'],
+      token
+    );
+
+    return doesExist;
   }
 
   async userFromSession(session: ISession): Promise<User | null> {
@@ -174,30 +170,8 @@ export class AuthenticationService {
   }
 
   async createSession(token: string): Promise<ISession> {
-    this.logger.debug('Decoding token', { token });
-
     const { iat } = this.decodeJWT(token);
-
-    // check token in db to verify the user id and owning org id.
-    const result = await this.db
-      .query()
-      .raw(
-        `
-          MATCH
-            (token:Token {
-              active: true,
-              value: $token
-            })
-          OPTIONAL MATCH
-            (token)<-[:token {active: true}]-(user:User {active: true})
-          RETURN
-            token, user.owningOrgId AS owningOrgId, user.id AS userId
-        `,
-        {
-          token,
-        }
-      )
-      .first();
+    const result = await this.db2.createSession(token);
 
     if (!result) {
       this.logger.warning('Failed to find active token in database', { token });
@@ -213,7 +187,6 @@ export class AuthenticationService {
       owningOrgId: result.owningOrgId,
       userId: result.userId,
     };
-    this.logger.debug('Created session', session);
     return session;
   }
 

@@ -7,6 +7,7 @@ import { Connection, node, relation } from 'cypher-query-builder';
 import { BaseNode } from './model';
 import { ILogger, Logger } from '../logger';
 import { generate } from 'shortid';
+import { DateTime } from 'luxon';
 
 @Injectable()
 export class QueryService {
@@ -17,6 +18,8 @@ export class QueryService {
       password: 'asdf',
     });
   }
+
+  // Constraints
 
   async createPropertyExistenceConstraintOnNodeAndRun(
     label: string,
@@ -50,12 +53,16 @@ export class QueryService {
       .run();
   }
 
+  // Base Node
+
   async createBaseNode(
     baseNode: BaseNode,
     requestingUserId: string | undefined,
     createReaderSg = true
   ) {
     const query = this.db.query();
+
+    const returnObj: any = {};
 
     let reqUser = '';
 
@@ -66,6 +73,7 @@ export class QueryService {
       query.match(
         node(reqUser, 'User', {
           id: requestingUserId,
+          active: true,
         })
       );
     }
@@ -84,11 +92,7 @@ export class QueryService {
     createQuery.push(createBaseNode);
 
     // properties
-    const addProperty = (
-      identifier: string,
-      value: any,
-      label: string = ''
-    ) => {
+    const addProperty = (identifier: string, value: any, labels: string[]) => {
       if (!value) {
         return [];
       }
@@ -99,25 +103,12 @@ export class QueryService {
           active: true,
           createdAt: baseNode.createdAt,
         }),
+        node(identifier + '_var', labels, {
+          active: true,
+          value,
+          createdAt: baseNode.createdAt,
+        }),
       ];
-
-      if (label === '') {
-        arr.push(
-          node(identifier, 'Property', {
-            active: true,
-            value,
-            createdAt: baseNode.createdAt,
-          })
-        );
-      } else {
-        arr.push(
-          node(identifier, ['Property', label], {
-            active: true,
-            value,
-            createdAt: baseNode.createdAt,
-          })
-        );
-      }
 
       return arr;
     };
@@ -169,7 +160,7 @@ export class QueryService {
           active: true,
           createdAt: baseNode.createdAt,
         }),
-        node('', 'Permission', {
+        node(property + sgCypherVar + '_permission', 'Permission', {
           property,
           active: true,
           read,
@@ -191,7 +182,7 @@ export class QueryService {
           addProperty(
             baseNode.props[i].key,
             baseNode.props[i].value,
-            baseNode.props[i].label
+            baseNode.props[i].labels
           )
         );
       }
@@ -206,18 +197,196 @@ export class QueryService {
           addPermission(baseNode.props[i].key, 'readerSG', true, false, false)
         );
       }
+
+      returnObj[baseNode.props[i].key + '_var'] = [
+        {
+          value: baseNode.props[i].key,
+        },
+      ];
+
+      returnObj[baseNode.props[i].key + 'adminSG' + '_permission'] = [
+        {
+          read: baseNode.props[i].key + 'Read',
+          edit: baseNode.props[i].key + 'Edit',
+          admin: baseNode.props[i].key + 'Admin',
+        },
+      ];
     }
 
     // run query
     const result = await query
       .create(createQuery)
-      .return({ baseNode: [{ id: 'id' }] })
+      .return({
+        baseNode: [{ id: 'id' }],
+      })
       .first();
+
+    console.log(result);
 
     if (!result) {
       throw new ServerException('failed to create user');
     }
 
-    return baseNode.id;
+    return result.id;
+  }
+
+  async readBaseNode(
+    baseNode: Partial<BaseNode>,
+    requestingUserId: string | undefined
+  ) {
+    const query = this.db.query();
+
+    const matchArr: any = [];
+
+    const returnObj: any = {};
+
+    if (requestingUserId) {
+    } else {
+    }
+
+    matchArr.push([
+      node('reqUser', 'User', {
+        id: requestingUserId,
+      }),
+    ]);
+    matchArr.push([
+      node('baseNode', 'BaseNode', {
+        id: baseNode.id,
+      }),
+    ]);
+
+    if (!baseNode.props) {
+      throw Error('baseNode.props needed');
+    }
+
+    for (let i = 0; i < baseNode.props.length; i++) {
+      const propName = baseNode.props[i].key;
+      matchArr.push([
+        node('reqUser'),
+        relation('in', '', 'member', {
+          active: true,
+        }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', {
+          active: true,
+        }),
+        node(propName + '_permission', 'Permission', {
+          property: propName,
+          read: true,
+          active: true,
+        }),
+        relation('out', '', 'baseNode'),
+        node('baseNode'),
+        relation('out', '', propName),
+        node(propName + '_var', 'Property', {
+          active: true,
+        }),
+      ]);
+
+      returnObj[propName + '_var'] = [
+        {
+          value: propName,
+        },
+      ];
+
+      returnObj[propName + '_permission'] = [
+        {
+          read: propName + 'Read',
+          edit: propName + 'Edit',
+          admin: propName + 'Admin',
+        },
+      ];
+    }
+
+    const ready = query.match(matchArr).return(returnObj); //
+
+    const cypher = ready;
+    console.log(cypher.interpolate());
+
+    const result = await cypher.first();
+
+    console.log('db readBaseNode result: ', result);
+
+    return result;
+  }
+
+  // Property Values
+
+  async confirmPropertyValueExists(labels: string[], expectedValue: any) {
+    const result = await this.db
+      .query()
+      .match([
+        node('prop', labels, {
+          active: true,
+          value: expectedValue,
+        }),
+      ])
+      .return({ prop: [{ value: 'value' }] })
+      .first();
+
+    if (result) {
+      if (result.value === expectedValue) {
+        return true;
+      } else {
+        return false;
+      }
+    } else {
+      return false;
+    }
+  }
+
+  // Authentication
+
+  async createToken(token: string, createdAt: DateTime) {
+    const result = await this.db
+      .query()
+      .create([
+        node('token', ['Token', 'Property'], {
+          active: true,
+          createdAt,
+          value: token,
+        }),
+      ])
+      .return({
+        token: [{ value: 'token' }],
+      })
+      .first();
+
+    if (!result) {
+      throw Error('failed to create token');
+    }
+
+    return result.token;
+  }
+
+  async createSession(token: string) {
+    const result = await this.db
+      .query()
+      .match([
+        node('token', 'Token', {
+          active: true,
+          value: token,
+        }),
+      ])
+      .optionalMatch([
+        node('token'),
+        relation('in', '', 'token', {
+          active: true,
+        }),
+        node('user', 'User', {
+          active: true,
+        }),
+      ])
+      .return({
+        token: [{ value: 'token' }],
+        user: [{ owningOrgId: 'owningOrgId' }, { id: 'userId' }],
+      })
+      .first();
+
+    return result;
+  }
+
+  async login(token: string, email: string, password: string) {
+    const result1 = await this.db.query().match([]).first();
   }
 }

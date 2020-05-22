@@ -4,6 +4,7 @@ import { UserModule } from '../user';
 import { AuthenticationResolver } from './authentication.resolver';
 import { AuthenticationService } from './authentication.service';
 import { SessionPipe } from './session.pipe';
+import { QueryModule } from '../../core/query/query.module';
 
 const ProvideSessionPipe: Provider = {
   provide: SESSION_PIPE_TOKEN,
@@ -12,7 +13,7 @@ const ProvideSessionPipe: Provider = {
 
 @Global()
 @Module({
-  imports: [forwardRef(() => UserModule)],
+  imports: [forwardRef(() => UserModule), QueryModule],
   providers: [
     AuthenticationResolver,
     AuthenticationService,

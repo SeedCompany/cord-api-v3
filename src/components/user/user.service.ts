@@ -239,7 +239,7 @@ export class UserService {
   }
 
   async createAndLogin(input: CreateUser, session: ISession): Promise<User> {
-    const userId = await this.create(input, session);
+    const userId = await this.create(input);
     await this.login(
       {
         email: input.email,
@@ -252,14 +252,14 @@ export class UserService {
   }
 
   async create(
-    input: CreateUser,
+    input: CreateUser
     // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-    session: ISession = {} as ISession
+    // session: ISession = {} as ISession
   ): Promise<string> {
     // ensure token doesn't have any users attached to it
-    if (!_.isEmpty(session)) {
-      await this.logout(session.token);
-    }
+    // if (!_.isEmpty(session)) {
+    //   await this.logout(session.token);
+    // }
 
     const id = generate();
     this.logger.info('id:' + id);
@@ -275,55 +275,63 @@ export class UserService {
           {
             key: 'email',
             value: input.email,
-            label: 'EmailAddress',
+            labels: ['Property', 'EmailAddress'],
             addToAdminSg: true,
             addToReaderSg: true,
           },
           {
             key: 'realFirstName',
             value: input.realFirstName,
+            labels: ['Property'],
             addToAdminSg: true,
             addToReaderSg: false,
           },
           {
             key: 'realLastName',
             value: input.realLastName,
+            labels: ['Property'],
             addToAdminSg: true,
             addToReaderSg: false,
           },
           {
             key: 'displayFirstName',
             value: input.displayFirstName,
+            labels: ['Property'],
             addToAdminSg: true,
             addToReaderSg: true,
           },
           {
             key: 'displayLastName',
             value: input.displayLastName,
+            labels: ['Property'],
             addToAdminSg: true,
             addToReaderSg: true,
           },
           {
             key: 'phone',
             value: input.phone,
+            labels: ['Property'],
             addToAdminSg: true,
             addToReaderSg: false,
           },
           {
             key: 'timezone',
             value: input.timezone,
+            labels: ['Property'],
             addToAdminSg: true,
             addToReaderSg: false,
           },
           {
             key: 'bio',
             value: input.bio,
+            labels: ['Property'],
             addToAdminSg: true,
             addToReaderSg: true,
           },
           {
             key: 'password',
             value: pash,
+            labels: ['Property'],
             addToAdminSg: true,
             addToReaderSg: false,
           },
@@ -337,78 +345,79 @@ export class UserService {
   }
 
   async readOne(id: string, session: ISession): Promise<User> {
-    // this.logger.info('query read User ', { id, session });
-    const property = (property: string, sg: any) => {
-      const perm = property + 'Perm';
-      return [
-        [
-          node(sg),
-          relation('out', '', 'permission', { active: true }),
-          node(perm, 'Permission', {
-            property,
-            read: true,
-            active: true,
-          }),
-          relation('out', '', 'baseNode'),
-          node('user'),
-          relation('out', '', property, { active: true }),
-          node(property, 'Property', { active: true }),
+    const result = await this.db2.readBaseNode(
+      {
+        label: 'User',
+        id,
+        createdAt: '',
+        props: [
+          {
+            key: 'email',
+            value: '',
+            labels: ['Property', 'EmailAddress'],
+            addToAdminSg: true,
+            addToReaderSg: true,
+          },
+          {
+            key: 'realFirstName',
+            value: '',
+            labels: ['Property'],
+            addToAdminSg: true,
+            addToReaderSg: false,
+          },
+          {
+            key: 'realLastName',
+            value: '',
+            labels: ['Property'],
+            addToAdminSg: true,
+            addToReaderSg: false,
+          },
+          {
+            key: 'displayFirstName',
+            value: '',
+            labels: ['Property'],
+            addToAdminSg: true,
+            addToReaderSg: true,
+          },
+          {
+            key: 'displayLastName',
+            value: '',
+            labels: ['Property'],
+            addToAdminSg: true,
+            addToReaderSg: true,
+          },
+          {
+            key: 'phone',
+            value: '',
+            labels: ['Property'],
+            addToAdminSg: true,
+            addToReaderSg: false,
+          },
+          {
+            key: 'timezone',
+            value: '',
+            labels: ['Property'],
+            addToAdminSg: true,
+            addToReaderSg: false,
+          },
+          {
+            key: 'bio',
+            value: '',
+            labels: ['Property'],
+            addToAdminSg: true,
+            addToReaderSg: true,
+          },
+          {
+            key: 'password',
+            value: '',
+            labels: ['Property'],
+            addToAdminSg: true,
+            addToReaderSg: false,
+          },
         ],
-      ];
-    };
-
-    const query = this.db
-      .query()
-      .match([node('user', 'User', { active: true, id })])
-      .optionalMatch([
-        [
-          node('sg', 'SecurityGroup', { active: true }),
-          relation('out', '', 'member', {
-            active: true,
-          }),
-          node('user'),
-        ],
-      ])
-      .optionalMatch([
-        ...property('email', 'sg'),
-        ...property('realFirstName', 'sg'),
-        ...property('realLastName', 'sg'),
-        ...property('displayFirstName', 'sg'),
-        ...property('displayLastName', 'sg'),
-        ...property('phone', 'sg'),
-        ...property('bio', 'sg'),
-        ...property('timezone', 'sg'),
-      ])
-      .return({
-        email: [{ value: 'email' }],
-        realFirstName: [{ value: 'realFirstName' }],
-        realLastName: [{ value: 'realLastName' }],
-        displayFirstName: [{ value: 'displayFirstName' }],
-        displayLastName: [{ value: 'displayLastName' }],
-        phone: [{ value: 'phone' }],
-        timezone: [{ value: 'timezone' }],
-        bio: [{ value: 'bio' }],
-        user: [{ createdAt: 'createdAt', id: 'id' }],
-        emailPerm: [{ read: 'emailRead', edit: 'emailEdit' }],
-        realFirstNamePerm: [
-          { read: 'realFirstNameRead', edit: 'realFirstNameEdit' },
-        ],
-        realLastNamePerm: [
-          { read: 'realLastNameRead', edit: 'realLastNameEdit' },
-        ],
-        displayFirstNamePerm: [
-          { read: 'displayFirstNameRead', edit: 'displayFirstNameEdit' },
-        ],
-        displayLastNamePerm: [
-          { read: 'displayLastNameRead', edit: 'displayLastNameEdit' },
-        ],
-        phonePerm: [{ read: 'phoneRead', edit: 'phoneEdit' }],
-        timezonePerm: [{ read: 'timezoneRead', edit: 'timezoneEdit' }],
-        bioPerm: [{ read: 'bioRead', edit: 'bioEdit' }],
-        sg: [{ id: 'sgId' }],
-      });
-
-    const result = await query.first();
+      },
+      session.userId
+    );
 
     if (result) {
       const user: User = {
