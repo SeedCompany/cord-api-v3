@@ -18,6 +18,7 @@ import {
 } from '../../core';
 import { Budget, BudgetService, BudgetStatus, SecuredBudget } from '../budget';
 import { EngagementListInput, SecuredEngagementList } from '../engagement';
+import { Directory, FileService } from '../file';
 import { LocationService } from '../location';
 import {
   PartnershipListInput,
@@ -48,6 +49,7 @@ export class ProjectService {
     private readonly locationService: LocationService,
     private readonly budgets: BudgetService,
     private readonly partnerships: PartnershipService,
+    private readonly fileService: FileService,
     @Logger('project:service') private readonly logger: ILogger
   ) {}
 
@@ -467,6 +469,34 @@ export class ProjectService {
     };
   }
 
+  async getRootDirectory(
+    projectId: string,
+    session: ISession
+  ): Promise<Directory> {
+    try {
+      const directory = (await this.db
+        .query()
+        .match(matchSession(session, { withAclRead: 'canReadProjects' }))
+        .match([
+          [
+            node('project', 'Project', { active: true, id: projectId }),
+            relation('out', 'rootDirectory', { active: true }),
+            node('directory', 'BaseNode:Directory'),
+          ],
+        ])
+        .return({
+          directory: [{ id: 'id' }],
+        })
+        .first()) as Directory;
+
+      return await this.fileService.getDirectory(directory.id, session);
+    } catch (e) {
+      throw new NotFoundException(
+        'Could not find root directory associated to this project'
+      );
+    }
+  }
+
   async create(
     { locationId, ...input }: CreateProject,
     session: ISession
@@ -482,6 +512,11 @@ export class ProjectService {
       modifiedAt: DateTime.local(),
       ...input,
     };
+
+    const rootDir = await this.fileService.createDirectory(
+      'rootDirectory',
+      session
+    );
 
     try {
       const createProject = this.db
@@ -543,6 +578,20 @@ export class ProjectService {
       } catch (e) {
         this.logger.error('e :>> ', e);
       }
+
+      //connect to root directory
+      await this.db
+        .query()
+        .raw(
+          `
+          MATCH
+            (project:Project {id: "${id}", active: true}),
+            (dir:Directory {id: "${rootDir.id}", active: true})
+          CREATE
+            (project)-[:rootDirectory {active: true, createdAt: datetime()}]->(dir)
+        `
+        )
+        .run();
 
       const qry = `
         MATCH

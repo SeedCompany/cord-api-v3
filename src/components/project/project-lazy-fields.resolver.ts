@@ -3,6 +3,7 @@ import { Class } from 'type-fest';
 import { firstLettersOfWords, ISession, Session } from '../../common';
 import { SecuredBudget } from '../budget';
 import { EngagementListInput, SecuredEngagementList } from '../engagement';
+import { Directory } from '../file';
 import { PartnershipListInput, SecuredPartnershipList } from '../partnership';
 import { InternshipProject, Project, TranslationProject } from './dto';
 import {
@@ -84,6 +85,16 @@ function ConcreteProjectResolver<T>(concreteClass: Class<T>) {
       input: PartnershipListInput
     ): Promise<SecuredPartnershipList> {
       return this.projectService.listPartnerships(id, input, session);
+    }
+
+    @ResolveField(() => Directory, {
+      description: 'The root filesystem directory of this project',
+    })
+    async rootDirectory(
+      @Session() session: ISession,
+      @Parent() { id }: Project
+    ): Promise<Directory> {
+      return this.projectService.getRootDirectory(id, session);
     }
   }
   return ProjectResolver;

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { BudgetModule } from '../budget';
+import { FileModule } from '../file';
 import { LocationModule } from '../location';
 import { OrganizationService } from '../organization';
 import { PartnershipModule } from '../partnership';
@@ -19,6 +20,7 @@ import { ProjectService } from './project.service';
     PartnershipModule,
     UserModule,
     LocationModule,
+    FileModule,
   ],
   providers: [
     ProjectResolver,
