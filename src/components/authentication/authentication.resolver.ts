@@ -72,23 +72,6 @@ export class AuthenticationResolver {
       user = null;
     }
 
-    // let token = existingToken || (await this.authService.createToken());
-    // let session;
-    // try {
-    //   session = await this.authService.createSession(token);
-    // } catch (e) {
-    //   if (!(e instanceof UnauthenticatedException)) {
-    //     this.logger.error('session creation error');
-    //     throw e;
-    //   }
-    //   this.logger.error(
-    //     'Failed to use existing session token, creating new one.',
-    //     { exception: e }
-    //   );
-    //   token = await this.authService.createToken();
-    //   session = await this.authService.createSession(token);
-    // }
-
     const userFromSession = await this.authService.userFromSession(session);
 
     if (browser) {

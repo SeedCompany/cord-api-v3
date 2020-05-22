@@ -253,43 +253,60 @@ export class QueryService {
 
     returnObj['baseNode'] = [{ id: 'id' }, { createdAt: 'createdAt' }];
 
+    /*
+    we'll use an array to hold the 3 different permission types. 
+    in the property for loop we'll loop through the 3 permission types
+    to find definitively if the user has that permission through any SG.
+    It is possible that the user has a large amount of SGs and that only one
+    may give an admin = true, so we must ensure that each permission is 
+    searched for by itself.
+    */
+    const perms = ['Read', 'Edit', 'Admin'];
+
     for (let i = 0; i < baseNode.props.length; i++) {
       const propName = baseNode.props[i].key;
-      query.optionalMatch([
-        node('reqUser'),
-        relation('in', '', 'member', {
-          active: true,
-        }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', {
-          active: true,
-        }),
-        node(propName + '_permission', 'Permission', {
-          property: propName,
-          read: true,
-          active: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('baseNode'),
-        relation('out', '', propName),
-        node(propName + '_var', 'Property', {
-          active: true,
-        }),
-      ]);
 
-      returnObj[propName + '_var'] = [
-        {
-          value: propName,
-        },
-      ];
+      for (let j = 0; j < perms.length; j++) {
+        query.optionalMatch([
+          node('reqUser'),
+          relation('in', '', 'member', {
+            active: true,
+          }),
+          node('sg', 'SecurityGroup', { active: true }),
+          relation('out', '', 'permission', {
+            active: true,
+          }),
+          node(
+            propName + '_permission_' + perms[j].toLowerCase(),
+            'Permission',
+            {
+              property: propName,
+              read: true,
+              active: true,
+            }
+          ),
+          relation('out', '', 'baseNode'),
+          node('baseNode'),
+          relation('out', '', propName),
+          node(propName + '_var', baseNode.props[i].labels, {
+            active: true,
+          }),
+        ]);
 
-      returnObj[propName + '_permission'] = [
-        {
-          read: propName + 'Read',
-          edit: propName + 'Edit',
-          admin: propName + 'Admin',
-        },
-      ];
+        if (j === 0) {
+          returnObj[propName + '_var'] = [
+            {
+              value: propName,
+            },
+          ];
+        }
+
+        returnObj[propName + '_permission_' + perms[j].toLowerCase()] = [
+          {
+            [perms[j].toLowerCase()]: propName + perms[j],
+          },
+        ];
+      }
     }
 
     const ready = query.return(returnObj); //
@@ -300,6 +317,8 @@ export class QueryService {
 
     return result;
   }
+
+  async updateBaseNode(baseNode: BaseNode, requestingUser: string) {}
 
   // Property Values
 

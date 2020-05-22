@@ -466,32 +466,11 @@ export class UserService {
       };
       return user;
     } else {
-      // maybe we don't have permission, let's just get the pubic info
-      const query = this.db
-        .query()
-        .match([node('user', 'User', { active: true, id })]);
-      query.return(['user']);
-
-      const noPerm = await query.first();
-      if (noPerm) {
-        throw new ForbiddenError('Not allowed');
-      }
+      // todo get public data
+      throw new ForbiddenError('Not allowed');
 
       throw new NotFoundException(`Could not find user`);
     }
-
-    return {
-      id,
-      createdAt: CalendarDate.fromISO('1000-10-10'),
-      email: { value: '', canEdit: false, canRead: false },
-      realFirstName: { value: '', canEdit: false, canRead: false },
-      realLastName: { value: '', canEdit: false, canRead: false },
-      displayFirstName: { value: '', canEdit: false, canRead: false },
-      displayLastName: { value: '', canEdit: false, canRead: false },
-      phone: { value: '', canEdit: false, canRead: false },
-      timezone: { value: '', canEdit: false, canRead: false },
-      bio: { value: '', canEdit: false, canRead: false },
-    };
   }
 
   async update(input: UpdateUser, session: ISession): Promise<User> {
