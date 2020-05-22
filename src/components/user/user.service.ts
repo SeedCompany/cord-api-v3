@@ -262,7 +262,7 @@ export class UserService {
     // }
 
     const id = generate();
-    this.logger.info('id:' + id);
+
     const pash = await argon2.hash(input.password);
     const createdAt = DateTime.local();
 
@@ -474,24 +474,91 @@ export class UserService {
   }
 
   async update(input: UpdateUser, session: ISession): Promise<User> {
-    this.logger.info('mutation update User', { input, session });
-    const user = await this.readOne(input.id, session);
+    if (!session.userId) {
+      throw new UnauthenticatedException();
+    }
+    const createdAt = DateTime.local();
+    await this.db2.updateBaseNode(
+      {
+        label: 'User',
+        id: input.id,
+        createdAt: createdAt.toString(),
+        props: [
+          {
+            key: 'realFirstName',
+            value: input.realFirstName,
+            labels: ['Property'],
+            addToAdminSg: true,
+            addToReaderSg: false,
+          },
+          {
+            key: 'realLastName',
+            value: input.realLastName,
+            labels: ['Property'],
+            addToAdminSg: true,
+            addToReaderSg: false,
+          },
+          {
+            key: 'displayFirstName',
+            value: input.displayFirstName,
+            labels: ['Property'],
+            addToAdminSg: true,
+            addToReaderSg: true,
+          },
+          {
+            key: 'displayLastName',
+            value: input.displayLastName,
+            labels: ['Property'],
+            addToAdminSg: true,
+            addToReaderSg: true,
+          },
+          {
+            key: 'phone',
+            value: input.phone,
+            labels: ['Property'],
+            addToAdminSg: true,
+            addToReaderSg: false,
+          },
+          {
+            key: 'timezone',
+            value: input.timezone,
+            labels: ['Property'],
+            addToAdminSg: true,
+            addToReaderSg: false,
+          },
+          {
+            key: 'bio',
+            value: input.bio,
+            labels: ['Property'],
+            addToAdminSg: true,
+            addToReaderSg: true,
+          },
+        ],
+      },
+      session.userId
+    );
 
-    return this.db.sgUpdateProperties({
-      session,
-      object: user,
-      props: [
-        'realFirstName',
-        'realLastName',
-        'displayFirstName',
-        'displayLastName',
-        'phone',
-        'timezone',
-        'bio',
-      ],
-      changes: input,
-      nodevar: 'user',
-    });
+    const updatedUser = await this.readOne(input.id, session);
+    return updatedUser;
+
+    //   this.logger.info('mutation update User', { input, session });
+    //   const user = await this.readOne(input.id, session);
+
+    //   return this.db.sgUpdateProperties({
+    //     session,
+    //     object: user,
+    //     props: [
+    //       'realFirstName',
+    //       'realLastName',
+    //       'displayFirstName',
+    //       'displayLastName',
+    //       'phone',
+    //       'timezone',
+    //       'bio',
+    //     ],
+    //     changes: input,
+    //     nodevar: 'user',
+    //   });
   }
 
   async delete(id: string, session: ISession): Promise<void> {

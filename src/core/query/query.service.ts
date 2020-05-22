@@ -256,8 +256,8 @@ export class QueryService {
     /*
     we'll use an array to hold the 3 different permission types. 
     in the property for loop we'll loop through the 3 permission types
-    to find definitively if the user has that permission through any SG.
-    It is possible that the user has a large amount of SGs and that only one
+    to find, definitively, if the user has that permission through ANY security group.
+    It is possible that the user has a large amount of security group and that only one
     may give an admin = true, so we must ensure that each permission is 
     searched for by itself.
     */
@@ -309,16 +309,44 @@ export class QueryService {
       }
     }
 
-    const ready = query.return(returnObj); //
-
-    const cypher = ready;
-
-    const result = await cypher.first();
-
-    return result;
+    return await query.return(returnObj).first();
   }
 
-  async updateBaseNode(baseNode: BaseNode, requestingUser: string) {}
+  async updateBaseNode(baseNode: BaseNode, requestingUser: string) {
+    const query = this.db.query();
+
+    for (let i = 0; i < baseNode.props.length; i++) {
+      const propName = baseNode.props[i].key;
+
+      query.optionalMatch([
+        node('reqUser'),
+        relation('in', '', 'member', {
+          active: true,
+        }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', {
+          active: true,
+        }),
+        node(propName + '_permission', 'Permission', {
+          property: propName,
+          read: true,
+          active: true,
+        }),
+        relation('out', '', 'baseNode'),
+        node('baseNode'),
+        relation('out', '', propName),
+        node(propName + '_var', baseNode.props[i].labels, {
+          active: true,
+        }),
+      ]);
+
+      if (baseNode.props[i].isOneActive) {
+        query.set([]).create([]);
+      } else {
+        query.set([]).create([]);
+      }
+    }
+  }
 
   // Property Values
 
