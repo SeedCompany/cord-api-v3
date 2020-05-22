@@ -24,3 +24,12 @@ export abstract class RangeInput {
   @Field()
   readonly rangeEnd: number;
 }
+
+@InputType()
+export abstract class UpdateRange {
+  @Field()
+  readonly rangeStart: number;
+
+  @Field()
+  readonly rangeEnd: number;
+}

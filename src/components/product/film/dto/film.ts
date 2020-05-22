@@ -1,7 +1,7 @@
 import { Type } from '@nestjs/common';
 import { Field, ObjectType } from '@nestjs/graphql';
 import { Resource, SecuredString } from '../../../../common';
-import { Range } from './range';
+import { Range } from '../../range/dto';
 
 @ObjectType({
   implements: Resource,

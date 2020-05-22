@@ -17,7 +17,13 @@ import {
   matchSession,
   OnIndex,
 } from '../../../core';
-import { CreateFilm, Film, FilmListInput, FilmListOutput } from './dto';
+import {
+  CreateFilm,
+  Film,
+  FilmListInput,
+  FilmListOutput,
+  UpdateFilm,
+} from './dto';
 
 @Injectable()
 export class FilmService {
@@ -35,11 +41,20 @@ export class FilmService {
       'CREATE CONSTRAINT ON (n:Film) ASSERT EXISTS(n.createdAt)',
       'CREATE CONSTRAINT ON (n:Film) ASSERT EXISTS(n.owningOrgId)',
 
+      'CREATE CONSTRAINT ON (n:RangeStart) ASSERT EXISTS(n.value)',
+      'CREATE CONSTRAINT ON (n:RangeEnd) ASSERT EXISTS(n.value)',
+
       'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.active)',
       'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
 
       'CREATE CONSTRAINT ON ()-[r:range]-() ASSERT EXISTS(r.active)',
       'CREATE CONSTRAINT ON ()-[r:range]-() ASSERT EXISTS(r.createdAt)',
+
+      'CREATE CONSTRAINT ON ()-[r:rangeStart]-() ASSERT EXISTS(r.active)',
+      'CREATE CONSTRAINT ON ()-[r:rangeStart]-() ASSERT EXISTS(r.createdAt)',
+
+      'CREATE CONSTRAINT ON ()-[r:rangeEnd]-() ASSERT EXISTS(r.active)',
+      'CREATE CONSTRAINT ON ()-[r:rangeEnd]-() ASSERT EXISTS(r.createdAt)',
 
       'CREATE CONSTRAINT ON (n:FilmName) ASSERT EXISTS(n.value)',
       'CREATE CONSTRAINT ON (n:FilmName) ASSERT n.value IS UNIQUE',
@@ -78,18 +93,12 @@ export class FilmService {
     ];
   };
 
-  // helper method for defining properties
-  permission = (
-    property: string,
-    sg: string,
-    baseNode: string,
-    read: boolean,
-    edit: boolean
-  ) => {
+  // helper method for defining permissions
+  permission = (property: string, baseNode: string) => {
     const createdAt = DateTime.local();
     return [
       [
-        node(sg),
+        node('adminSG'),
         relation('out', '', 'permission', {
           active: true,
           createdAt,
@@ -97,8 +106,28 @@ export class FilmService {
         node('', 'Permission', {
           property,
           active: true,
-          read,
-          edit,
+          read: true,
+          edit: true,
+          admin: true,
+        }),
+        relation('out', '', 'baseNode', {
+          active: true,
+          createdAt,
+        }),
+        node(baseNode),
+      ],
+      [
+        node('readerSG'),
+        relation('out', '', 'permission', {
+          active: true,
+          createdAt,
+        }),
+        node('', 'Permission', {
+          property,
+          active: true,
+          read: true,
+          edit: false,
+          admin: false,
         }),
         relation('out', '', 'baseNode', {
           active: true,
@@ -166,7 +195,7 @@ export class FilmService {
             }),
           ],
           ...this.property('name', input.name, 'newFilm'),
-          ...this.property('range', input.range ? true : undefined, 'newFilm'),
+          ...this.property('range', input.range ? id : undefined, 'newFilm'),
           ...this.property('rangeStart', input.range?.rangeStart, 'range'),
           ...this.property('rangeEnd', input.range?.rangeEnd, 'range'),
           [
@@ -178,10 +207,6 @@ export class FilmService {
             relation('out', '', 'member', { active: true, createdAt }),
             node('requestingUser'),
           ],
-          ...this.permission('name', 'adminSG', 'newFilm', true, true),
-          ...this.permission('range', 'adminSG', 'newFilm', true, true),
-          ...this.permission('rangeStart', 'adminSG', 'range', true, true),
-          ...this.permission('rangeEnd', 'adminSG', 'range', true, true),
           [
             node('readerSG', 'SecurityGroup', {
               active: true,
@@ -191,10 +216,10 @@ export class FilmService {
             relation('out', '', 'member', { active: true, createdAt }),
             node('requestingUser'),
           ],
-          ...this.permission('name', 'readerSG', 'newFilm', true, false),
-          ...this.permission('range', 'readerSG', 'newFilm', true, false),
-          ...this.permission('rangeStart', 'readerSG', 'range', true, false),
-          ...this.permission('rangeEnd', 'readerSG', 'range', true, false),
+          ...this.permission('name', 'newFilm'),
+          ...this.permission('range', 'newFilm'),
+          ...this.permission('rangeStart', 'range'),
+          ...this.permission('rangeEnd', 'range'),
         ])
         .return('newFilm.id as id')
         .first();
@@ -267,16 +292,17 @@ export class FilmService {
     };
   }
 
-  // async update(input: UpdateFilm, session: ISession): Promise<Film> {
-  //   const film = await this.readOne(input.id, session);
-  //   return this.db.sgUpdateProperties({
-  //     session,
-  //     object: film,
-  //     props: ['name'],
-  //     changes: input,
-  //     nodevar: 'film',
-  //   });
-  // }
+  async update(input: UpdateFilm, session: ISession): Promise<Film> {
+    const { range, ...name } = input;
+    const film = await this.readOne(input.id, session);
+    return this.db.sgUpdateProperties({
+      session,
+      object: film,
+      props: ['name'],
+      changes: name,
+      nodevar: 'film',
+    });
+  }
 
   async delete(id: string, session: ISession): Promise<void> {
     const film = await this.readOne(id, session);

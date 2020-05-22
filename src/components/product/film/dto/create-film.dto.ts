@@ -1,8 +1,8 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { MinLength, ValidateNested } from 'class-validator';
+import { RangeInput } from '../../range/dto';
 import { Film } from './film';
-import { RangeInput } from './range';
 
 @InputType()
 export abstract class CreateFilm {

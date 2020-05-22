@@ -1,17 +1,23 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { IdArg, ISession, Session } from '../../../common';
+import { RangeService } from '../range';
 import {
   CreateFilmInput,
   CreateFilmOutput,
   Film,
   FilmListInput,
   FilmListOutput,
+  UpdateFilmInput,
+  UpdateFilmOutput,
 } from './dto';
 import { FilmService } from './film.service';
 
 @Resolver(Film.classType)
 export class FilmResolver {
-  constructor(private readonly filmService: FilmService) {}
+  constructor(
+    private readonly filmService: FilmService,
+    private readonly rangeService: RangeService
+  ) {}
 
   @Mutation(() => CreateFilmOutput, {
     description: 'Create an film',
@@ -46,16 +52,19 @@ export class FilmResolver {
     return this.filmService.list(input, session);
   }
 
-  // @Mutation(() => UpdateFilmOutput, {
-  //   description: 'Update an film',
-  // })
-  // async updateFilm(
-  //   @Session() session: ISession,
-  //   @Args('input') { film: input }: UpdateFilmInput
-  // ): Promise<UpdateFilmOutput> {
-  //   const film = await this.filmService.update(input, session);
-  //   return { film };
-  // }
+  @Mutation(() => UpdateFilmOutput, {
+    description: 'Update an film',
+  })
+  async updateFilm(
+    @Session() session: ISession,
+    @Args('input') { film: input }: UpdateFilmInput
+  ): Promise<UpdateFilmOutput> {
+    const film = await this.filmService.update(input, session);
+    if (input.range) {
+      await this.rangeService.update(input.range, session, input.id);
+    }
+    return { film };
+  }
 
   @Mutation(() => Boolean, {
     description: 'Delete an film',

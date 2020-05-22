@@ -54,38 +54,42 @@ describe('Film e2e', () => {
     expect(actual.name.value).toBe(fm.name.value);
   });
 
-  // // UPDATE FILM
-  // it('update film', async () => {
-  //   const fm = await createFilm(app);
+  // UPDATE FILM
+  it.skip('update film', async () => {
+    const fm = await createFilm(app);
 
-  //   const newName = faker.company.companyName();
+    const newName = faker.company.companyName();
 
-  //   const result = await app.graphql.mutate(
-  //     gql`
-  //       mutation updateFilm($input: UpdateFilmInput!) {
-  //         updateFilm(input: $input) {
-  //           film {
-  //             ...film
-  //           }
-  //         }
-  //       }
-  //       ${fragments.film}
-  //     `,
-  //     {
-  //       input: {
-  //         film: {
-  //           id: fm.id,
-  //           name: newName,
-  //         },
-  //       },
-  //     }
-  //   );
+    const result = await app.graphql.mutate(
+      gql`
+        mutation updateFilm($input: UpdateFilmInput!) {
+          updateFilm(input: $input) {
+            film {
+              ...film
+            }
+          }
+        }
+        ${fragments.film}
+      `,
+      {
+        input: {
+          film: {
+            id: fm.id,
+            name: newName,
+            range: {
+              rangeStart: 23,
+              rangeEnd: 45,
+            },
+          },
+        },
+      }
+    );
 
-  //   const updated = result.updateFilm.film;
-  //   expect(updated).toBeTruthy();
-  //   expect(updated.id).toBe(fm.id);
-  //   expect(updated.name.value).toBe(newName);
-  // });
+    const updated = result.updateFilm.film;
+    expect(updated).toBeTruthy();
+    // expect(updated.id).toBe(fm.id);
+    expect(updated.name.value).toBe(newName);
+  });
 
   // DELETE FILM
   it('delete film', async () => {
