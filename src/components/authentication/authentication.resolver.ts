@@ -51,33 +51,23 @@ export class AuthenticationResolver {
       const isValid = await this.authService.validateToken(existingToken);
 
       if (isValid) {
-        this.logger.info('valid token', { existingToken });
         token = existingToken;
 
         session = await this.authService.createSession(token);
-        console.log('1');
+
         if (session.userId) {
-          console.log('2');
           user = await this.authService.userFromSession(session);
-          console.log('token', token);
-          console.log('session', session);
-          console.log('user', user);
         } else {
-          console.log('3');
-          console.log('token', token);
-          console.log('session', session);
-          console.log('user', user);
           user = null;
         }
       } else {
-        this.logger.info('invalid token');
         token = await this.authService.createToken();
         session = await this.authService.createSession(token);
         user = null;
       }
     } else {
-      this.logger.info('token no existy');
       token = await this.authService.createToken();
+
       session = await this.authService.createSession(token);
       user = null;
     }

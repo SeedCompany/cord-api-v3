@@ -39,13 +39,13 @@ export class AuthenticationService {
   async createToken(): Promise<string> {
     const token = this.encodeJWT();
     const createdAt = DateTime.local();
-    const result = await this.db2.createToken(token, createdAt);
+    const writtenToken = await this.db2.createToken(token, createdAt);
 
-    if (!result) {
+    if (!writtenToken) {
       throw new ServerException('Failed to start session');
     }
 
-    return result.token;
+    return writtenToken;
   }
 
   async validateToken(token: string): Promise<boolean> {

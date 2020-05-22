@@ -221,8 +221,6 @@ export class QueryService {
       })
       .first();
 
-    console.log(result);
-
     if (!result) {
       throw new ServerException('failed to create user');
     }
@@ -236,20 +234,14 @@ export class QueryService {
   ) {
     const query = this.db.query();
 
-    const matchArr: any = [];
-
     const returnObj: any = {};
 
-    if (requestingUserId) {
-    } else {
-    }
-
-    matchArr.push([
+    query.match([
       node('reqUser', 'User', {
         id: requestingUserId,
       }),
     ]);
-    matchArr.push([
+    query.optionalMatch([
       node('baseNode', 'BaseNode', {
         id: baseNode.id,
       }),
@@ -259,9 +251,11 @@ export class QueryService {
       throw Error('baseNode.props needed');
     }
 
+    returnObj['baseNode'] = [{ id: 'id' }, { createdAt: 'createdAt' }];
+
     for (let i = 0; i < baseNode.props.length; i++) {
       const propName = baseNode.props[i].key;
-      matchArr.push([
+      query.optionalMatch([
         node('reqUser'),
         relation('in', '', 'member', {
           active: true,
@@ -298,14 +292,11 @@ export class QueryService {
       ];
     }
 
-    const ready = query.match(matchArr).return(returnObj); //
+    const ready = query.return(returnObj); //
 
     const cypher = ready;
-    console.log(cypher.interpolate());
 
     const result = await cypher.first();
-
-    console.log('db readBaseNode result: ', result);
 
     return result;
   }
@@ -316,7 +307,7 @@ export class QueryService {
     const result = await this.db
       .query()
       .match([
-        node('prop', labels, {
+        node('prop', 'Property', {
           active: true,
           value: expectedValue,
         }),
@@ -343,7 +334,7 @@ export class QueryService {
       .create([
         node('token', ['Token', 'Property'], {
           active: true,
-          createdAt,
+          createdAt: createdAt.toNeo4JDateTime(),
           value: token,
         }),
       ])

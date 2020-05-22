@@ -89,7 +89,7 @@ export class AdminService implements OnApplicationBootstrap {
         relation('in', '', 'email', { active: true }),
         node('root', 'User', { active: true }),
         relation('out', '', 'password', { active: true }),
-        node('pw', 'Propety'),
+        node('pw', 'Property'),
       ])
       .return('pw.value as pash')
       .first();
