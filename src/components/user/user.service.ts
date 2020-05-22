@@ -6,10 +6,10 @@ import {
 } from '@nestjs/common';
 import { ForbiddenError } from 'apollo-server-core';
 import * as argon2 from 'argon2';
-import { node, relation } from 'cypher-query-builder';
+import { node } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
-import { CalendarDate, ISession } from '../../common';
+import { ISession } from '../../common';
 import {
   DatabaseService,
   ILogger,
@@ -17,6 +17,7 @@ import {
   matchSession,
   OnIndex,
 } from '../../core';
+import { QueryService } from '../../core/query/query.service';
 import { LoginInput } from '../authentication/authentication.dto';
 import { AuthorizationService } from '../authorization';
 import {
@@ -43,7 +44,6 @@ import {
 } from './unavailability';
 
 import _ = require('lodash');
-import { QueryService } from '../../core/query/query.service';
 
 @Injectable()
 export class UserService {
@@ -240,6 +240,7 @@ export class UserService {
 
   async createAndLogin(input: CreateUser, session: ISession): Promise<User> {
     const userId = await this.create(input);
+    session.userId = userId;
     await this.login(
       {
         email: input.email,
@@ -484,55 +485,63 @@ export class UserService {
         id: input.id,
         createdAt: createdAt.toString(),
         props: [
-          {
-            key: 'realFirstName',
-            value: input.realFirstName,
-            labels: ['Property'],
-            addToAdminSg: true,
-            addToReaderSg: false,
-          },
+          // {
+          //   key: 'realFirstName',
+          //   value: input.realFirstName,
+          //   oldValue: 'asdf',
+          //   labels: ['Property'],
+          //   isPropertyArray: false,
+          //   addToAdminSg: true,
+          //   addToReaderSg: false,
+          // },
           {
             key: 'realLastName',
             value: input.realLastName,
             labels: ['Property'],
+            isPropertyArray: false,
             addToAdminSg: true,
             addToReaderSg: false,
           },
-          {
-            key: 'displayFirstName',
-            value: input.displayFirstName,
-            labels: ['Property'],
-            addToAdminSg: true,
-            addToReaderSg: true,
-          },
-          {
-            key: 'displayLastName',
-            value: input.displayLastName,
-            labels: ['Property'],
-            addToAdminSg: true,
-            addToReaderSg: true,
-          },
-          {
-            key: 'phone',
-            value: input.phone,
-            labels: ['Property'],
-            addToAdminSg: true,
-            addToReaderSg: false,
-          },
-          {
-            key: 'timezone',
-            value: input.timezone,
-            labels: ['Property'],
-            addToAdminSg: true,
-            addToReaderSg: false,
-          },
-          {
-            key: 'bio',
-            value: input.bio,
-            labels: ['Property'],
-            addToAdminSg: true,
-            addToReaderSg: true,
-          },
+          // {
+          //   key: 'displayFirstName',
+          //   value: input.displayFirstName,
+          //   labels: ['Property'],
+          //   isOneActive: true,
+          //   addToAdminSg: true,
+          //   addToReaderSg: true,
+          // },
+          // {
+          //   key: 'displayLastName',
+          //   value: input.displayLastName,
+          //   labels: ['Property'],
+          //   isOneActive: true,
+          //   addToAdminSg: true,
+          //   addToReaderSg: true,
+          // },
+          // {
+          //   key: 'phone',
+          //   value: input.phone,
+          //   labels: ['Property'],
+          //   isOneActive: true,
+          //   addToAdminSg: true,
+          //   addToReaderSg: false,
+          // },
+          // {
+          //   key: 'timezone',
+          //   value: input.timezone,
+          //   labels: ['Property'],
+          //   isOneActive: true,
+          //   addToAdminSg: true,
+          //   addToReaderSg: false,
+          // },
+          // {
+          //   key: 'bio',
+          //   value: input.bio,
+          //   labels: ['Property'],
+          //   isOneActive: true,
+          //   addToAdminSg: true,
+          //   addToReaderSg: true,
+          // },
         ],
       },
       session.userId

@@ -1,7 +1,8 @@
 export interface Property {
   key: string;
   value: any;
-  isOneActive?: boolean;
+  isPropertyArray?: boolean;
+  oldValue?: any;
   labels: string[];
   addToAdminSg?: boolean;
   addToReaderSg?: boolean;

@@ -62,7 +62,7 @@ export class QueryService {
   ) {
     const query = this.db.query();
 
-    const returnObj: any = {};
+    // const returnObj: any = {};
 
     let reqUser = '';
 
@@ -198,19 +198,19 @@ export class QueryService {
         );
       }
 
-      returnObj[baseNode.props[i].key + '_var'] = [
-        {
-          value: baseNode.props[i].key,
-        },
-      ];
+      // returnObj[baseNode.props[i].key + '_var'] = [
+      //   {
+      //     value: baseNode.props[i].key,
+      //   },
+      // ];
 
-      returnObj[baseNode.props[i].key + 'adminSG' + '_permission'] = [
-        {
-          read: baseNode.props[i].key + 'Read',
-          edit: baseNode.props[i].key + 'Edit',
-          admin: baseNode.props[i].key + 'Admin',
-        },
-      ];
+      // returnObj[baseNode.props[i].key + 'adminSG' + '_permission'] = [
+      //   {
+      //     read: baseNode.props[i].key + 'Read',
+      //     edit: baseNode.props[i].key + 'Edit',
+      //     admin: baseNode.props[i].key + 'Admin',
+      //   },
+      // ];
     }
 
     // run query
@@ -234,26 +234,28 @@ export class QueryService {
   ) {
     const query = this.db.query();
 
-    const returnObj: any = {};
+    let returnString = '';
 
-    query.match([
-      node('reqUser', 'User', {
-        id: requestingUserId,
-      }),
-    ]);
-    query.optionalMatch([
-      node('baseNode', 'BaseNode', {
-        id: baseNode.id,
-      }),
-    ]);
+    // const returnObj: any = {};
 
-    if (!baseNode.props) {
-      throw Error('baseNode.props needed');
-    }
+    if (requestingUserId) {
+      query.match([
+        node('reqUser', 'User', {
+          id: requestingUserId,
+        }),
+      ]);
 
-    returnObj['baseNode'] = [{ id: 'id' }, { createdAt: 'createdAt' }];
+      query.match([
+        node('baseNode', 'BaseNode', {
+          id: baseNode.id,
+        }),
+      ]);
 
-    /*
+      if (!baseNode.props) {
+        throw Error('baseNode.props needed');
+      }
+
+      /*
     we'll use an array to hold the 3 different permission types. 
     in the property for loop we'll loop through the 3 permission types
     to find, definitively, if the user has that permission through ANY security group.
@@ -261,91 +263,278 @@ export class QueryService {
     may give an admin = true, so we must ensure that each permission is 
     searched for by itself.
     */
-    const perms = ['Read', 'Edit', 'Admin'];
+      const perms = ['Read', 'Edit', 'Admin'];
 
-    for (let i = 0; i < baseNode.props.length; i++) {
-      const propName = baseNode.props[i].key;
+      for (let i = 0; i < baseNode.props.length; i++) {
+        const propName = baseNode.props[i].key;
 
-      for (let j = 0; j < perms.length; j++) {
-        query.optionalMatch([
-          node('reqUser'),
-          relation('in', '', 'member', {
-            active: true,
-          }),
-          node('sg', 'SecurityGroup', { active: true }),
-          relation('out', '', 'permission', {
-            active: true,
-          }),
-          node(
-            propName + '_permission_' + perms[j].toLowerCase(),
-            'Permission',
-            {
-              property: propName,
-              read: true,
+        for (let j = 0; j < perms.length; j++) {
+          query.optionalMatch([
+            node('reqUser'),
+            relation('in', '', 'member', {
               active: true,
-            }
-          ),
-          relation('out', '', 'baseNode'),
-          node('baseNode'),
-          relation('out', '', propName),
-          node(propName + '_var', baseNode.props[i].labels, {
-            active: true,
-          }),
-        ]);
+            }),
+            node('sg', 'SecurityGroup', { active: true }),
+            relation('out', '', 'permission', {
+              active: true,
+            }),
+            node(
+              propName + '_permission_' + perms[j].toLowerCase(),
+              'Permission',
+              {
+                property: propName,
+                [perms[j].toLowerCase()]: true,
+                active: true,
+              }
+            ),
+            relation('out', '', 'baseNode', { active: true }),
+            node('baseNode'),
+            relation('out', '', propName, {
+              active: true,
+            }),
+            node(propName + '_var', baseNode.props[i].labels, {
+              active: true,
+            }),
+          ]);
 
-        if (j === 0) {
-          returnObj[propName + '_var'] = [
-            {
-              value: propName,
-            },
-          ];
+          if (j === 0) {
+            // not sure yet how to wrap return clauses in functions using query builder
+            returnString += `collect(${propName}_var.value)[0] as ${propName}, `;
+            // returnObj[propName + '_var'] = [
+            //   {
+            //     value: propName,
+            //   },
+            // ];
+          }
+
+          returnString += `collect(${propName}_permission_${perms[
+            j
+          ].toLowerCase()}.${perms[j].toLowerCase()})[0] as ${propName}${
+            perms[j]
+          },`;
+
+          // if (i + 1 < baseNode.props.length && j <= 1) {
+          //   returnString += ',';
+          // }
+
+          // returnObj[propName + '_permission_' + perms[j].toLowerCase()] = [
+          //   {
+          //     [perms[j].toLowerCase()]: propName + perms[j],
+          //   },
+          // ];
         }
-
-        returnObj[propName + '_permission_' + perms[j].toLowerCase()] = [
-          {
-            [perms[j].toLowerCase()]: propName + perms[j],
-          },
-        ];
       }
-    }
 
-    return await query.return(returnObj).first();
+      returnString += `baseNode.id as id, baseNode.createdAt as createdAt`;
+      // returnObj['baseNode'] = [{ id: 'id' }, { createdAt: 'createdAt' }];
+
+      const cypher = query.return(returnString);
+      console.log(cypher.interpolate());
+      return await query.first();
+    } else {
+      // todo: retrieve public or org viewable data
+      console.log('todo: public/org data');
+      return;
+    }
   }
 
-  async updateBaseNode(baseNode: BaseNode, requestingUser: string) {
+  async updateBaseNode(baseNode: BaseNode, requestingUserId: string) {
+    // if prop is array and includes old value, set old value to false and create new prop
+
+    // if prop is array and is missing old value, create new prop
+
+    // if prop isn't array, optional match on old value and set to inactive, create new prop
+
     const query = this.db.query();
+
+    //   .match([
+    //     node('reqUser', 'User', {
+    //       active: true,
+    //       id: requestingUserId,
+    //     }),
+    //   ])
+    //   .match([
+    //     node('baseNode', 'BaseNode', {
+    //       active: true,
+    //       id: baseNode.id,
+    //     }),
+    //   ]);
 
     for (let i = 0; i < baseNode.props.length; i++) {
       const propName = baseNode.props[i].key;
 
-      query.optionalMatch([
-        node('reqUser'),
+      // the property may or may not exist, first get to the base node with edit permission
+      query.match([
+        node('reqUser', 'User', {
+          active: true,
+          id: requestingUserId,
+        }),
         relation('in', '', 'member', {
           active: true,
         }),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', {
           active: true,
         }),
-        node(propName + '_permission', 'Permission', {
+        node('', 'Permission', {
           property: propName,
-          read: true,
+          edit: true,
           active: true,
         }),
-        relation('out', '', 'baseNode'),
-        node('baseNode'),
-        relation('out', '', propName),
-        node(propName + '_var', baseNode.props[i].labels, {
+        relation('out', propName + '_rel', 'baseNode', {
           active: true,
+        }),
+        node('baseNode', 'BaseNode', {
+          active: true,
+          id: baseNode.id,
         }),
       ]);
 
-      if (baseNode.props[i].isOneActive) {
-        query.set([]).create([]);
-      } else {
-        query.set([]).create([]);
+      if (baseNode.props[i].isPropertyArray === true) {
+        if (baseNode.props[i].oldValue) {
+          // we are replacing an old value, not creating a new one
+          query
+            .with('*')
+            .optionalMatch([
+              node('baseNode'),
+              relation('out', propName + '_rel', propName, {
+                active: true,
+              }),
+              node(propName, baseNode.props[i].labels, {
+                active: true,
+                value: baseNode.props[i].oldValue,
+              }),
+            ])
+            .setValues({
+              [propName + '_rel']: { active: false },
+              [propName]: { active: false },
+            });
+        }
+      } else if (baseNode.props[i].isPropertyArray === false) {
+        // property is a singleton, it doesn't matter if it exists or not
+        query
+          .with('*')
+          .optionalMatch([
+            node('baseNode'),
+            relation('out', propName + '_rel', propName, {
+              active: true,
+            }),
+            node(propName, baseNode.props[i].labels, {
+              active: true,
+            }),
+          ])
+          .setValues({
+            [propName + '_rel']: { active: false },
+            [propName]: { active: false },
+          });
       }
+
+      // create new property
+      query.with('*');
+      query.create([
+        node('baseNode'),
+        relation('out', '', propName, {
+          active: true,
+        }),
+        node(propName + '_new', baseNode.props[i].labels, {
+          active: true,
+          value: baseNode.props[i].value,
+          createdAt: baseNode.createdAt,
+        }),
+      ]);
     }
+
+    // if (baseNode.props[i].isPropertyArray === true) {
+    //   // set current value to active = false
+    //   query
+    //     .match([
+    //       node('reqUser', 'User', {
+    //         id: requestingUserId,
+    //       }),
+    //       relation('in', '', 'member', {
+    //         active: true,
+    //       }),
+    //       node('', 'SecurityGroup', { active: true }),
+    //       relation('out', '', 'permission', {
+    //         active: true,
+    //       }),
+    //       node('', 'Permission', {
+    //         property: propName,
+    //         edit: true,
+    //         active: true,
+    //       }),
+    //       relation('out', propName + '_rel', 'baseNode', {
+    //         active: true,
+    //       }),
+    //       node('baseNode', 'BaseNode', {
+    //         active: true,
+    //         id: baseNode.id,
+    //       }),
+    //     ])
+    // } else if (baseNode.props[i].isPropertyArray === false) {
+    //   // find old value and set to active = false
+    //   query
+    //     .match([
+    //       node('reqUser', 'User', {
+    //         id: requestingUserId,
+    //       }),
+    //       relation('in', '', 'member', {
+    //         active: true,
+    //       }),
+    //       node('', 'SecurityGroup', { active: true }),
+    //       relation('out', '', 'permission', {
+    //         active: true,
+    //       }),
+    //       node('', 'Permission', {
+    //         property: propName,
+    //         edit: true,
+    //         active: true,
+    //       }),
+    //       relation('out', propName + '_rel', 'baseNode', {
+    //         active: true,
+    //       }),
+    //       node('baseNode', 'BaseNode', {
+    //         active: true,
+    //         id: baseNode.id,
+    //       }),
+    //       relation('out', '', propName, {
+    //         active: true,
+    //       }),
+    //       node(propName, baseNode.props[i].labels, {
+    //         active: true,
+    //         value: baseNode.props[i].oldValue, // <---- here's the different line
+    //       }),
+    //     ])
+    //     .setValues({
+    //       [propName + '_rel']: { active: false },
+    //     });
+    // }
+    // query.create([
+    //   node('baseNode'),
+    //   relation('out', '', propName, {
+    //     active: true,
+    //   }),
+    //   node(propName + '_new', baseNode.props[i].labels, {
+    //     active: true,
+    //     value: baseNode.props[i].value,
+    //     createdAt: baseNode.createdAt,
+    //   }),
+    // ]);
+
+    query.return({
+      baseNode: [{ id: 'id' }],
+    });
+
+    const cypher = query;
+    console.log(cypher.interpolate());
+
+    // const result = await query.first();
+
+    // if (!result) {
+    //   throw new ServerException('failed to update base node');
+    // }
+
+    // return result.id;
   }
 
   // Property Values
