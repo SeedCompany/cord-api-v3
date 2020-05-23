@@ -680,7 +680,7 @@ export class EngagementService {
         ),
         ...this.property(
           'methodologies',
-          input.methodologies || [],
+          input.methodologies || undefined,
           'internshipEngagement'
         ),
         ...this.property(
@@ -873,7 +873,7 @@ export class EngagementService {
         }),
         relation('out', '', 'baseNode', { active: true }),
         node('internshipEngagement'),
-        relation('out', '', 'status', { active: true }),
+        relation('out', '', 'position', { active: true }),
         node('internPosition', 'InternPosition', { active: true }),
       ])
       .optionalMatch([
@@ -904,7 +904,9 @@ export class EngagementService {
         relation('out', '', 'baseNode', { active: true }),
         node('internshipEngagement'),
         relation('out', '', 'methodologies', { active: true }),
-        node('methodologies', 'ProductMethodology', { active: true }),
+        node('methodologies', ['Property'], {
+          active: true,
+        }),
       ])
       .optionalMatch([
         node('requestingUser'),
@@ -947,7 +949,7 @@ export class EngagementService {
         mentor: [{ id: 'mentorUserId' }],
         country: [{ id: 'countryOfOriginId' }],
         newCeremony: [{ id: 'ceremonyId' }],
-        project: ['project'],
+        project: [{ id: 'projectId' }],
         engStatus: [{ value: 'status' }],
         completeDate: [{ value: 'completeDate' }],
         disbursementCompleteDate: [{ value: 'disbursementCompleteDate' }],
@@ -1193,7 +1195,6 @@ export class EngagementService {
       if (countryOfOriginId) {
         await this.db
           .query()
-          .match(matchSession(session, { withAclEdit: 'canEditEngagement' }))
           .match([
             node('newCountry', 'Country', {
               active: true,
@@ -1220,8 +1221,7 @@ export class EngagementService {
           .return('internshipEngagement.id as id')
           .first();
       }
-
-      const object = await this.readOne(input.id, session);
+      const object = await this.readInternshipEngagement(input.id, session);
       await this.db.sgUpdateProperties({
         session,
         object,
@@ -1238,6 +1238,19 @@ export class EngagementService {
           ...input,
         },
         nodevar: 'InternshipEngagement',
+      });
+      // update property node labels
+      Object.keys(input).map(async (ele) => {
+        if (ele === 'position') {
+          await this.db.addLabelsToPropNodes(input.id, 'position', [
+            'InternPosition',
+          ]);
+        }
+        if (ele === 'methodologies') {
+          await this.db.addLabelsToPropNodes(input.id, 'methodologies', [
+            'ProductMethodology',
+          ]);
+        }
       });
       const result = await this.readInternshipEngagement(input.id, session);
       return result as InternshipEngagement;
@@ -1336,12 +1349,13 @@ export class EngagementService {
     baseNode: string,
     session: ISession
   ): Promise<boolean> {
-    const requiredProperties = ['startDate', 'initialEndDate'];
+    // right now all properties are optional
+    const requiredProperties: never[] = [];
     return (
       (
         await Promise.all(
           nodes.map(async (ie: { id: any }) =>
-            ['methodology', 'countryOfOrigin', 'mentor', 'status']
+            ['intern'] // optional – mentor, status, ceremony, countryOfOrigin
               .map((rel) =>
                 this.db.isRelationshipUnique({
                   session,
