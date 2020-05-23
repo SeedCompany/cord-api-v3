@@ -485,15 +485,14 @@ export class UserService {
         id: input.id,
         createdAt: createdAt.toString(),
         props: [
-          // {
-          //   key: 'realFirstName',
-          //   value: input.realFirstName,
-          //   oldValue: 'asdf',
-          //   labels: ['Property'],
-          //   isPropertyArray: false,
-          //   addToAdminSg: true,
-          //   addToReaderSg: false,
-          // },
+          {
+            key: 'realFirstName',
+            value: input.realFirstName,
+            labels: ['Property'],
+            isPropertyArray: false,
+            addToAdminSg: true,
+            addToReaderSg: false,
+          },
           {
             key: 'realLastName',
             value: input.realLastName,
@@ -502,46 +501,46 @@ export class UserService {
             addToAdminSg: true,
             addToReaderSg: false,
           },
-          // {
-          //   key: 'displayFirstName',
-          //   value: input.displayFirstName,
-          //   labels: ['Property'],
-          //   isOneActive: true,
-          //   addToAdminSg: true,
-          //   addToReaderSg: true,
-          // },
-          // {
-          //   key: 'displayLastName',
-          //   value: input.displayLastName,
-          //   labels: ['Property'],
-          //   isOneActive: true,
-          //   addToAdminSg: true,
-          //   addToReaderSg: true,
-          // },
-          // {
-          //   key: 'phone',
-          //   value: input.phone,
-          //   labels: ['Property'],
-          //   isOneActive: true,
-          //   addToAdminSg: true,
-          //   addToReaderSg: false,
-          // },
-          // {
-          //   key: 'timezone',
-          //   value: input.timezone,
-          //   labels: ['Property'],
-          //   isOneActive: true,
-          //   addToAdminSg: true,
-          //   addToReaderSg: false,
-          // },
-          // {
-          //   key: 'bio',
-          //   value: input.bio,
-          //   labels: ['Property'],
-          //   isOneActive: true,
-          //   addToAdminSg: true,
-          //   addToReaderSg: true,
-          // },
+          {
+            key: 'displayFirstName',
+            value: input.displayFirstName,
+            labels: ['Property'],
+            isPropertyArray: false,
+            addToAdminSg: true,
+            addToReaderSg: true,
+          },
+          {
+            key: 'displayLastName',
+            value: input.displayLastName,
+            labels: ['Property'],
+            isPropertyArray: false,
+            addToAdminSg: true,
+            addToReaderSg: true,
+          },
+          {
+            key: 'phone',
+            value: input.phone,
+            labels: ['Property'],
+            isPropertyArray: false,
+            addToAdminSg: true,
+            addToReaderSg: false,
+          },
+          {
+            key: 'timezone',
+            value: input.timezone,
+            labels: ['Property'],
+            isPropertyArray: false,
+            addToAdminSg: true,
+            addToReaderSg: false,
+          },
+          {
+            key: 'bio',
+            value: input.bio,
+            labels: ['Property'],
+            isPropertyArray: false,
+            addToAdminSg: true,
+            addToReaderSg: true,
+          },
         ],
       },
       session.userId
@@ -549,25 +548,6 @@ export class UserService {
 
     const updatedUser = await this.readOne(input.id, session);
     return updatedUser;
-
-    //   this.logger.info('mutation update User', { input, session });
-    //   const user = await this.readOne(input.id, session);
-
-    //   return this.db.sgUpdateProperties({
-    //     session,
-    //     object: user,
-    //     props: [
-    //       'realFirstName',
-    //       'realLastName',
-    //       'displayFirstName',
-    //       'displayLastName',
-    //       'phone',
-    //       'timezone',
-    //       'bio',
-    //     ],
-    //     changes: input,
-    //     nodevar: 'user',
-    //   });
   }
 
   async delete(id: string, session: ISession): Promise<void> {

@@ -329,7 +329,7 @@ export class QueryService {
       // returnObj['baseNode'] = [{ id: 'id' }, { createdAt: 'createdAt' }];
 
       const cypher = query.return(returnString);
-      console.log(cypher.interpolate());
+      // console.log(cypher.interpolate());
       return await query.first();
     } else {
       // todo: retrieve public or org viewable data
@@ -340,35 +340,36 @@ export class QueryService {
 
   async updateBaseNode(baseNode: BaseNode, requestingUserId: string) {
     // if prop is array and includes old value, set old value to false and create new prop
-
     // if prop is array and is missing old value, create new prop
-
     // if prop isn't array, optional match on old value and set to inactive, create new prop
 
-    const query = this.db.query();
+    const query = this.db
+      .query()
 
-    //   .match([
-    //     node('reqUser', 'User', {
-    //       active: true,
-    //       id: requestingUserId,
-    //     }),
-    //   ])
-    //   .match([
-    //     node('baseNode', 'BaseNode', {
-    //       active: true,
-    //       id: baseNode.id,
-    //     }),
-    //   ]);
-
-    for (let i = 0; i < baseNode.props.length; i++) {
-      const propName = baseNode.props[i].key;
-
-      // the property may or may not exist, first get to the base node with edit permission
-      query.match([
+      .match([
         node('reqUser', 'User', {
           active: true,
           id: requestingUserId,
         }),
+      ])
+      .match([
+        node('baseNode', 'BaseNode', {
+          active: true,
+          id: baseNode.id,
+        }),
+      ]);
+
+    for (let i = 0; i < baseNode.props.length; i++) {
+      const propName = baseNode.props[i].key;
+
+      if (!baseNode.props[i].value) {
+        continue;
+      }
+
+      query.with('*');
+      // the property may or may not exist, first get to the base node with edit permission
+      query.match([
+        node('reqUser'),
         relation('in', '', 'member', {
           active: true,
         }),
@@ -381,20 +382,17 @@ export class QueryService {
           edit: true,
           active: true,
         }),
-        relation('out', propName + '_rel', 'baseNode', {
+        relation('out', '', 'baseNode', {
           active: true,
         }),
-        node('baseNode', 'BaseNode', {
-          active: true,
-          id: baseNode.id,
-        }),
+        node('baseNode'),
       ]);
 
       if (baseNode.props[i].isPropertyArray === true) {
         if (baseNode.props[i].oldValue) {
           // we are replacing an old value, not creating a new one
           query
-            .with('*')
+
             .optionalMatch([
               node('baseNode'),
               relation('out', propName + '_rel', propName, {
@@ -405,15 +403,18 @@ export class QueryService {
                 value: baseNode.props[i].oldValue,
               }),
             ])
-            .setValues({
-              [propName + '_rel']: { active: false },
-              [propName]: { active: false },
-            });
+            .setValues(
+              {
+                [propName + '_rel']: { active: false },
+                [propName]: { active: false },
+              },
+              true
+            );
         }
       } else if (baseNode.props[i].isPropertyArray === false) {
         // property is a singleton, it doesn't matter if it exists or not
         query
-          .with('*')
+
           .optionalMatch([
             node('baseNode'),
             relation('out', propName + '_rel', propName, {
@@ -423,18 +424,21 @@ export class QueryService {
               active: true,
             }),
           ])
-          .setValues({
-            [propName + '_rel']: { active: false },
-            [propName]: { active: false },
-          });
+          .setValues(
+            {
+              [propName + '_rel']: { active: false },
+              [propName]: { active: false },
+            },
+            true
+          );
       }
 
       // create new property
-      query.with('*');
       query.create([
         node('baseNode'),
         relation('out', '', propName, {
           active: true,
+          createdAt: baseNode.createdAt,
         }),
         node(propName + '_new', baseNode.props[i].labels, {
           active: true,
@@ -444,97 +448,17 @@ export class QueryService {
       ]);
     }
 
-    // if (baseNode.props[i].isPropertyArray === true) {
-    //   // set current value to active = false
-    //   query
-    //     .match([
-    //       node('reqUser', 'User', {
-    //         id: requestingUserId,
-    //       }),
-    //       relation('in', '', 'member', {
-    //         active: true,
-    //       }),
-    //       node('', 'SecurityGroup', { active: true }),
-    //       relation('out', '', 'permission', {
-    //         active: true,
-    //       }),
-    //       node('', 'Permission', {
-    //         property: propName,
-    //         edit: true,
-    //         active: true,
-    //       }),
-    //       relation('out', propName + '_rel', 'baseNode', {
-    //         active: true,
-    //       }),
-    //       node('baseNode', 'BaseNode', {
-    //         active: true,
-    //         id: baseNode.id,
-    //       }),
-    //     ])
-    // } else if (baseNode.props[i].isPropertyArray === false) {
-    //   // find old value and set to active = false
-    //   query
-    //     .match([
-    //       node('reqUser', 'User', {
-    //         id: requestingUserId,
-    //       }),
-    //       relation('in', '', 'member', {
-    //         active: true,
-    //       }),
-    //       node('', 'SecurityGroup', { active: true }),
-    //       relation('out', '', 'permission', {
-    //         active: true,
-    //       }),
-    //       node('', 'Permission', {
-    //         property: propName,
-    //         edit: true,
-    //         active: true,
-    //       }),
-    //       relation('out', propName + '_rel', 'baseNode', {
-    //         active: true,
-    //       }),
-    //       node('baseNode', 'BaseNode', {
-    //         active: true,
-    //         id: baseNode.id,
-    //       }),
-    //       relation('out', '', propName, {
-    //         active: true,
-    //       }),
-    //       node(propName, baseNode.props[i].labels, {
-    //         active: true,
-    //         value: baseNode.props[i].oldValue, // <---- here's the different line
-    //       }),
-    //     ])
-    //     .setValues({
-    //       [propName + '_rel']: { active: false },
-    //     });
-    // }
-    // query.create([
-    //   node('baseNode'),
-    //   relation('out', '', propName, {
-    //     active: true,
-    //   }),
-    //   node(propName + '_new', baseNode.props[i].labels, {
-    //     active: true,
-    //     value: baseNode.props[i].value,
-    //     createdAt: baseNode.createdAt,
-    //   }),
-    // ]);
-
     query.return({
       baseNode: [{ id: 'id' }],
     });
 
-    const cypher = query;
-    console.log(cypher.interpolate());
+    const result = await query.first();
 
-    // const result = await query.first();
+    if (!result) {
+      throw new ServerException('failed to update base node');
+    }
 
-    // if (!result) {
-    //   throw new ServerException('failed to update base node');
-    // }
-
-    // return result.id;
+    return result.id;
   }
 
   // Property Values
