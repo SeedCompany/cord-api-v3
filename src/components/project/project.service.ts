@@ -19,7 +19,12 @@ import {
 import { Budget, BudgetService, BudgetStatus, SecuredBudget } from '../budget';
 import { EngagementListInput, SecuredEngagementList } from '../engagement';
 import { LocationService } from '../location';
-import { PartnershipService, PartnershipType } from '../partnership';
+import {
+  PartnershipListInput,
+  PartnershipService,
+  PartnershipType,
+  SecuredPartnershipList,
+} from '../partnership';
 import {
   CreateProject,
   Project,
@@ -436,6 +441,29 @@ export class ProjectService {
       ...result,
       canRead: true, // TODO
       canCreate: true, // TODO
+    };
+  }
+
+  async listPartnerships(
+    projectId: string,
+    input: PartnershipListInput,
+    session: ISession
+  ): Promise<SecuredPartnershipList> {
+    const result = await this.partnerships.list(
+      {
+        ...input,
+        filter: {
+          ...input.filter,
+          projectId: projectId,
+        },
+      },
+      session
+    );
+
+    return {
+      ...result,
+      canCreate: true,
+      canRead: true,
     };
   }
 

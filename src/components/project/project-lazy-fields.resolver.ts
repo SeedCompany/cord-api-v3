@@ -3,6 +3,7 @@ import { Class } from 'type-fest';
 import { firstLettersOfWords, ISession, Session } from '../../common';
 import { SecuredBudget } from '../budget';
 import { EngagementListInput, SecuredEngagementList } from '../engagement';
+import { PartnershipListInput, SecuredPartnershipList } from '../partnership';
 import { InternshipProject, Project, TranslationProject } from './dto';
 import {
   ProjectMemberListInput,
@@ -69,6 +70,20 @@ function ConcreteProjectResolver<T>(concreteClass: Class<T>) {
       input: ProjectMemberListInput
     ): Promise<SecuredProjectMemberList> {
       return this.projectService.listProjectMembers(id, input, session);
+    }
+
+    @ResolveField(() => SecuredPartnershipList)
+    async partnerships(
+      @Session() session: ISession,
+      @Parent() { id }: Project,
+      @Args({
+        name: 'input',
+        type: () => PartnershipListInput,
+        defaultValue: PartnershipListInput.defaultVal,
+      })
+      input: PartnershipListInput
+    ): Promise<SecuredPartnershipList> {
+      return this.projectService.listPartnerships(id, input, session);
     }
   }
   return ProjectResolver;

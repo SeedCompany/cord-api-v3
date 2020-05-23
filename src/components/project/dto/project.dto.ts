@@ -12,6 +12,7 @@ import {
 import { SecuredBudget } from '../../budget';
 import { SecuredEngagementList } from '../../engagement';
 import { SecuredCountry } from '../../location';
+import { SecuredPartnershipList } from '../../partnership';
 import { SecuredProjectMemberList } from '../project-member';
 import { ProjectStatus } from './status.enum';
 import { SecuredProjectStep } from './step.enum';
@@ -87,6 +88,10 @@ export class IProject extends Resource {
   // Lazily attached in resolver
   @Field(() => SecuredBudget)
   budget?: never;
+
+  // Lazily attached in resolver
+  @Field(() => SecuredPartnershipList)
+  partnerships?: never;
 }
 
 @ObjectType({
