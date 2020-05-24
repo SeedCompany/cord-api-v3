@@ -279,6 +279,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@babel/runtime-corejs2@npm:^7.5.5":
+  version: 7.9.6
+  resolution: "@babel/runtime-corejs2@npm:7.9.6"
+  dependencies:
+    core-js: ^2.6.5
+    regenerator-runtime: ^0.13.4
+  checksum: 2/cf6af52bd8cc3f283e9bd8166905be11b607ab5d660221657e672b43cee341ebeeb9a1b347d2444d803605172165c583c3a3793045f1260d483d5c66f318f85b
+  languageName: node
+  linkType: hard
+
 "@babel/runtime-corejs3@npm:^7.8.3":
   version: 7.9.2
   resolution: "@babel/runtime-corejs3@npm:7.9.2"
@@ -2236,6 +2246,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"apollo-errors@npm:^1.9.0":
+  version: 1.9.0
+  resolution: "apollo-errors@npm:1.9.0"
+  dependencies:
+    assert: ^1.4.1
+    extendable-error: ^0.1.5
+  checksum: 2/819e3fb14abebc441929c446d592a63a0c5a2a61ceaa49a8720ce3f1c849737924f208d733c30253baed83bb6fca48c2b0f5a2986e75111521670d944678d546
+  languageName: node
+  linkType: hard
+
 "apollo-graphql@npm:^0.4.0":
   version: 0.4.1
   resolution: "apollo-graphql@npm:0.4.1"
@@ -2716,7 +2736,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"assert@npm:^1.1.1":
+"assert@npm:^1.1.1, assert@npm:^1.4.1":
   version: 1.5.0
   resolution: "assert@npm:1.5.0"
   dependencies:
@@ -4094,6 +4114,7 @@ __metadata:
     mjml: ^4.6.2
     mjml-react: ^1.0.57
     neo4j-driver: 1.7.6
+    neo4j-graphql-js: ^2.14.2
     open: ^7.0.3
     prettier: ^2.0.4
     react: ^16.13.1
@@ -4123,7 +4144,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"core-js@npm:^2.4.0":
+"core-js@npm:^2.4.0, core-js@npm:^2.6.5":
   version: 2.6.11
   resolution: "core-js@npm:2.6.11"
   checksum: 2/39ad00b46deaecf344470ef940949b58c4b15e71608a98e8ac7429cd16e485b829f9720d44a44b5f4dee966ff04a18baf5283feb8aaba2cb59ce2c25fa72b88c
@@ -5698,6 +5719,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"extendable-error@npm:^0.1.5":
+  version: 0.1.5
+  resolution: "extendable-error@npm:0.1.5"
+  checksum: 2/bea4e8dbee8810c96762c764cd385bec80f4f1ab72a3c0e91e0e94e8d6149e5e034af8549d11e89a6f93f2e3c2c0d8b0c1c025ed16c1ef23fd7a5ea2d6b91fdf
+  languageName: node
+  linkType: hard
+
 "external-editor@npm:^3.0.3":
   version: 3.1.0
   resolution: "external-editor@npm:3.1.0"
@@ -6427,6 +6455,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"graphql-auth-directives@npm:^2.2.0":
+  version: 2.2.0
+  resolution: "graphql-auth-directives@npm:2.2.0"
+  dependencies:
+    apollo-errors: ^1.9.0
+    graphql-tools: ^4.0.4
+    jsonwebtoken: ^8.3.0
+  peerDependencies:
+    graphql: ~14.x
+  checksum: 2/043da18918ca17405be1c7c6d673c78275a6b9b7343a4fd45e804177264276d63a5d158bdd78ff7dbfde00f1ea3dacda356d88049a65db267c4b3787255093b0
+  languageName: node
+  linkType: hard
+
 "graphql-extensions@npm:^0.11.0":
   version: 0.11.0
   resolution: "graphql-extensions@npm:0.11.0"
@@ -6504,7 +6545,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphql-tools@npm:^4.0.0, graphql-tools@npm:^4.0.6":
+"graphql-tools@npm:^4.0.0, graphql-tools@npm:^4.0.4, graphql-tools@npm:^4.0.6":
   version: 4.0.7
   resolution: "graphql-tools@npm:4.0.7"
   dependencies:
@@ -6533,7 +6574,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphql@npm:*, graphql@npm:^14.5.3, graphql@npm:^14.5.8":
+"graphql@npm:*, graphql@npm:^14.2.1, graphql@npm:^14.5.3, graphql@npm:^14.5.8":
   version: 14.6.0
   resolution: "graphql@npm:14.6.0"
   dependencies:
@@ -8193,7 +8234,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jsonwebtoken@npm:^8.5.1":
+"jsonwebtoken@npm:^8.3.0, jsonwebtoken@npm:^8.5.1":
   version: 8.5.1
   resolution: "jsonwebtoken@npm:8.5.1"
   dependencies:
@@ -9919,6 +9960,34 @@ __metadata:
     text-encoding-utf-8: ^1.0.2
     uri-js: ^4.2.2
   checksum: 2/2e46fa3536ae57c689a28ae0119afbf1c801716668e03b6156f9ca775889a4db4422292127241bacef48313194d0c2bfa84de670a77fabb2694a6370d40c5d72
+  languageName: node
+  linkType: hard
+
+"neo4j-driver@npm:^4.0.1":
+  version: 4.0.2
+  resolution: "neo4j-driver@npm:4.0.2"
+  dependencies:
+    "@babel/runtime": ^7.5.5
+    rxjs: ^6.5.2
+    text-encoding-utf-8: ^1.0.2
+    uri-js: ^4.2.2
+  checksum: 2/85b84ea04396ffe9991c6ab0fd3e7a07ba55b2095be21d40dde73fe4ec00d7b0514d35fc5405dbada78bc88d517d37629068af3a2edac324153dbce6638725f9
+  languageName: node
+  linkType: hard
+
+"neo4j-graphql-js@npm:^2.14.2":
+  version: 2.14.2
+  resolution: "neo4j-graphql-js@npm:2.14.2"
+  dependencies:
+    "@babel/runtime": ^7.5.5
+    "@babel/runtime-corejs2": ^7.5.5
+    apollo-server-errors: ^2.4.1
+    debug: ^4.1.1
+    graphql: ^14.2.1
+    graphql-auth-directives: ^2.2.0
+    lodash: ^4.17.15
+    neo4j-driver: ^4.0.1
+  checksum: 2/61029dbb8fe108a1c6126cc1b0993d23df6b60c7b352fab7593a89fbbaa336253483c4c480d34234aced666339cbb0450a8b0a1546c7dc22d62bc57ecfff77cb
   languageName: node
   linkType: hard
 

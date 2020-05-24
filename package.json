@@ -57,6 +57,7 @@
     "mjml": "^4.6.2",
     "mjml-react": "^1.0.57",
     "neo4j-driver": "1.7.6",
+    "neo4j-graphql-js": "^2.14.2",
     "open": "^7.0.3",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",

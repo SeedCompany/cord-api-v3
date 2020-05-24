@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { Global, Module } from '@nestjs/common';
 import { APP_FILTER, APP_PIPE } from '@nestjs/core';
 import { GraphQLModule } from '@nestjs/graphql';
@@ -9,6 +10,25 @@ import { ExceptionFilter } from './exception.filter';
 import { GraphQLConfig } from './graphql.config';
 import { ValidationPipe } from './validation.pipe';
 import { QueryModule } from './query/query.module';
+import neo4j from 'neo4j-driver';
+
+const neo4jGraphQL = require('neo4j-graphql-js');
+
+const fs = require('fs');
+const path = require('path');
+
+const typeDefs = fs
+  .readFileSync(
+    '/Users/michael_marshall/Documents/dev/cord-api-v3/src/core/query/schema.graphql'
+  )
+  .toString('utf-8');
+
+const schema = neo4jGraphQL.makeAugmentedSchema({ typeDefs });
+
+const driver = neo4j.driver(
+  'bolt://localhost:7687',
+  neo4j.auth.basic('neo4j', 'asdf')
+);
 
 @Global()
 @Module({
@@ -17,6 +37,16 @@ import { QueryModule } from './query/query.module';
     DatabaseModule,
     EmailModule,
     GraphQLModule.forRootAsync({ useClass: GraphQLConfig }),
+    GraphQLModule.forRootAsync({
+      useFactory: async () => {
+        return {
+          context: { driver },
+          schema,
+          path: '/admin',
+          // todo: limit to localhost in prod
+        };
+      },
+    }),
     QueryModule,
   ],
   providers: [
