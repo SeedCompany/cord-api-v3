@@ -19,15 +19,13 @@ export class AdminService implements OnApplicationBootstrap {
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
-    if (!(await this.rootAdminSecurityGroupExists())) {
-      await this.createRootAdminSecurityGroup();
-    }
-
-    if (!(await this.doesRootAdminUserAlreadyExist())) {
-      await this.createRootAdminUser();
-    }
-
-    await this.mergeRootAdminUserToSecurityGroup();
+    // if (!(await this.rootAdminSecurityGroupExists())) {
+    //   await this.createRootAdminSecurityGroup();
+    // }
+    // if (!(await this.doesRootAdminUserAlreadyExist())) {
+    //   await this.createRootAdminUser();
+    // }
+    // await this.mergeRootAdminUserToSecurityGroup();
   }
 
   async rootAdminSecurityGroupExists(): Promise<boolean> {

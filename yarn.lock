@@ -4115,6 +4115,7 @@ __metadata:
     mjml-react: ^1.0.57
     neo4j-driver: 1.7.6
     neo4j-graphql-js: ^2.14.2
+    node-fetch: ^2.6.0
     open: ^7.0.3
     prettier: ^2.0.4
     react: ^16.13.1

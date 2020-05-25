@@ -8,7 +8,8 @@ import { BaseNode } from './model';
 import { ILogger, Logger } from '../logger';
 import { generate } from 'shortid';
 import { DateTime } from 'luxon';
-
+const fetch = require('node-fetch');
+import { gql } from 'apollo-server-core';
 @Injectable()
 export class QueryService {
   private readonly db: Connection;
@@ -18,6 +19,202 @@ export class QueryService {
       password: 'asdf',
     });
   }
+
+  // GraphQL Functions
+
+  async sendGraphql(query: {}, variables?: {}) {
+    const result = await fetch('http://127.0.0.1:3000/admin', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({
+        query,
+        variables,
+      }),
+    });
+
+    return await result.json();
+  }
+
+  async gqlCreateBaseNode(
+    baseNode: BaseNode,
+    sgAdminId: string,
+    sgReaderId: string,
+    requestingUserId: string
+  ) {
+    let propQuery = '';
+    let q = 0;
+
+    for (let i = 0; i < baseNode.props.length; i++) {
+      const prop = baseNode.props[i];
+      const dhId = generate();
+      const dataId = generate();
+
+      let propValue = '';
+      if (typeof prop.value === 'boolean') {
+        propValue = `valueBool: ${prop.value}`;
+      } else if (typeof prop.value === 'number') {
+        propValue = `valueNumber: ${prop.value}`;
+      } else if (typeof prop.value === 'string') {
+        propValue = `valueString: ${prop.value}`;
+      } else {
+        throw Error('property type not recognized');
+      }
+
+      let adminPerm = '';
+      if (prop.addToAdminSg) {
+        const adminPermId = generate();
+        adminPerm += `
+          # create admin permission
+          q${q++}: CreatePermission(
+            id: "${adminPermId}"
+            createdAt:{formatted:"${baseNode.createdAt}"}
+            active:true
+            grantedPropertyName:"${prop.key}"
+            read:true
+            edit:true
+            admin:true
+          ){
+            id
+          }
+
+          # attach perm to reader sg
+          q${q++}: sg2: AddSecurityGroupPermissions(from:{id:"${sgAdminId}"}, to:{id:"${adminPermId}"}){
+            from{id}
+          }
+
+          # attach perm to data holder
+          q${q++}: AddPermissionGrant(from:{id:"${adminPermId}"}, to:{id:"${dhId}"}){
+            from{id}
+          }
+        `;
+      }
+
+      let readerPerm = '';
+      if (prop.addToReaderSg) {
+        const readerPermId = generate();
+        readerPerm += `
+          # create reader permission
+          q${q++}: CreatePermission(
+            id: "${readerPermId}"
+            createdAt:{formatted:"${baseNode.createdAt}"}
+            active:true
+            grantedPropertyName:"${prop.key}"
+            read:true
+            edit:false
+            admin:false
+          ){
+            id
+          }
+
+          # attach perm to reader sg
+          q${q++}: sg2: AddSecurityGroupPermissions(from:{id:"${sgReaderId}"}, to:{id:"${readerPermId}"}){
+            from{id}
+          }
+                      
+          # attach perm to data holder
+          q${q++}: AddPermissionGrant(from:{id:"${readerPermId}"}, to:{id:"${dhId}"}){
+            from{id}
+          }
+        `;
+      }
+
+      propQuery += `
+        # create data holder
+        q${q++}: CreateDataHolder(
+          id: "${dhId}"
+          createdAt: { formatted: "${baseNode.createdAt}" }
+          active: true
+          identifier: "${prop.key}"
+          isSingleton: ${prop.isSingleton}
+        ) {
+          id
+        }
+      
+        # create data
+        q${q++}: CreateData(
+          id: "${dataId}"
+          createdAt: { formatted: "${baseNode.createdAt}" }
+          active: true
+          ${propValue}
+        ) {
+          id
+        }
+        
+        # attach data to data holder
+        q${q++}: AddDataHolderData(from:{id:"${dhId}"}, to:{id:"${dataId}"}){
+          from{id}
+        }
+
+        ${adminPerm}
+
+        ${readerPerm}
+
+      `;
+    }
+
+    let query = `
+      mutation{
+        q${q++}: CreateBaseNode(
+          id: "${baseNode.id}"
+          createdAt: { formatted: "${baseNode.createdAt}"}
+          active: true
+        ){
+          id
+        }
+
+        q${q++}: CreateSecurityGroup(
+          id: "${sgAdminId}"
+          createdAt: { formatted: "${baseNode.createdAt}" }
+          active: true
+          name: "SG Admin for ${baseNode.id}"
+        ) {
+          id
+          
+        }
+
+        q${q++}:  AddSecurityGroupMembers(
+          from: { id: "${sgAdminId}" }
+          to: { id: "${baseNode.id}" }
+        ) {
+          from {
+            id
+          }
+        }
+      
+        q${q++}:  CreateSecurityGroup(
+          id: "${sgReaderId}"
+          createdAt: { formatted: "${baseNode.createdAt}" }
+          active: true
+          name: "SG Reader for ${baseNode.id}"
+        ) {
+          id
+          
+        }
+
+        q${q++}:  AddSecurityGroupMembers(
+          from: { id: "${sgReaderId}" }
+          to: { id: "${baseNode.id}" }
+        ) {
+          from {
+            id
+          }
+        }
+
+        ${propQuery}
+
+      }
+    `;
+    const result = await this.sendGraphql(query);
+
+    console.log(JSON.stringify(result));
+
+    return baseNode.id;
+  }
+
+  //////////////////////////////////////////////////////////////////
 
   // Constraints
 
@@ -60,6 +257,18 @@ export class QueryService {
     requestingUserId: string | undefined,
     createReaderSg = true
   ) {
+    const sgAdminId = generate();
+    const sgReaderId = generate();
+
+    const gqlResult = await this.gqlCreateBaseNode(
+      baseNode,
+      sgAdminId,
+      sgReaderId,
+      baseNode.id
+    );
+
+    console.log(gqlResult);
+
     const query = this.db.query();
 
     // const returnObj: any = {};
@@ -388,7 +597,7 @@ export class QueryService {
         node('baseNode'),
       ]);
 
-      if (baseNode.props[i].isPropertyArray === true) {
+      if (baseNode.props[i].isSingleton === true) {
         if (baseNode.props[i].oldValue) {
           // we are replacing an old value, not creating a new one
           query
@@ -411,7 +620,7 @@ export class QueryService {
               true
             );
         }
-      } else if (baseNode.props[i].isPropertyArray === false) {
+      } else if (baseNode.props[i].isSingleton === false) {
         // property is a singleton, it doesn't matter if it exists or not
         query
 

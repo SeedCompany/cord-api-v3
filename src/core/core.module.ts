@@ -23,7 +23,10 @@ const typeDefs = fs
   )
   .toString('utf-8');
 
-const schema = neo4jGraphQL.makeAugmentedSchema({ typeDefs });
+const schema = neo4jGraphQL.makeAugmentedSchema({
+  typeDefs,
+  config: { debug: false },
+});
 
 const driver = neo4j.driver(
   'bolt://localhost:7687',

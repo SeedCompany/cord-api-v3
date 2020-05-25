@@ -1,7 +1,7 @@
 export interface Property {
   key: string;
   value: any;
-  isPropertyArray?: boolean;
+  isSingleton?: boolean;
   oldValue?: any;
   labels: string[];
   addToAdminSg?: boolean;
