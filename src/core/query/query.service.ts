@@ -49,16 +49,21 @@ export class QueryService {
 
     for (let i = 0; i < baseNode.props.length; i++) {
       const prop = baseNode.props[i];
+
       const dhId = generate();
       const dataId = generate();
 
       let propValue = '';
+      let valueType = '';
       if (typeof prop.value === 'boolean') {
         propValue = `valueBool: ${prop.value}`;
+        valueType = 'BOOLEAN';
       } else if (typeof prop.value === 'number') {
         propValue = `valueNumber: ${prop.value}`;
+        valueType = 'NUMBER';
       } else if (typeof prop.value === 'string') {
-        propValue = `valueString: ${prop.value}`;
+        propValue = `valueString: "${prop.value}"`;
+        valueType = 'STRING';
       } else {
         throw Error('property type not recognized');
       }
@@ -81,7 +86,7 @@ export class QueryService {
           }
 
           # attach perm to reader sg
-          q${q++}: sg2: AddSecurityGroupPermissions(from:{id:"${sgAdminId}"}, to:{id:"${adminPermId}"}){
+          q${q++}: AddSecurityGroupPermissions(from:{id:"${sgAdminId}"}, to:{id:"${adminPermId}"}){
             from{id}
           }
 
@@ -110,7 +115,7 @@ export class QueryService {
           }
 
           # attach perm to reader sg
-          q${q++}: sg2: AddSecurityGroupPermissions(from:{id:"${sgReaderId}"}, to:{id:"${readerPermId}"}){
+          q${q++}: AddSecurityGroupPermissions(from:{id:"${sgReaderId}"}, to:{id:"${readerPermId}"}){
             from{id}
           }
                       
@@ -132,12 +137,19 @@ export class QueryService {
         ) {
           id
         }
+
+        q${q++}: AddBaseNodeDataHolders(from:{id:"${
+        baseNode.id
+      }"}, to:{id:"${dhId}"}){
+          from{id}
+        }
       
         # create data
         q${q++}: CreateData(
           id: "${dataId}"
           createdAt: { formatted: "${baseNode.createdAt}" }
           active: true
+          valueType: ${valueType}
           ${propValue}
         ) {
           id
@@ -177,7 +189,7 @@ export class QueryService {
 
         q${q++}:  AddSecurityGroupMembers(
           from: { id: "${sgAdminId}" }
-          to: { id: "${baseNode.id}" }
+          to: { id: "${requestingUserId}" }
         ) {
           from {
             id
@@ -196,7 +208,7 @@ export class QueryService {
 
         q${q++}:  AddSecurityGroupMembers(
           from: { id: "${sgReaderId}" }
-          to: { id: "${baseNode.id}" }
+          to: { id: "${requestingUserId}" }
         ) {
           from {
             id
@@ -207,9 +219,11 @@ export class QueryService {
 
       }
     `;
+
+    // console.log(query);
     const result = await this.sendGraphql(query);
 
-    console.log(JSON.stringify(result));
+    // console.log(JSON.stringify(result));
 
     return baseNode.id;
   }

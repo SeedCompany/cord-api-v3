@@ -276,6 +276,7 @@ export class UserService {
           {
             key: 'email',
             value: input.email,
+            isSingleton: true,
             labels: ['Property', 'EmailAddress'],
             addToAdminSg: true,
             addToReaderSg: true,
@@ -283,6 +284,7 @@ export class UserService {
           {
             key: 'realFirstName',
             value: input.realFirstName,
+            isSingleton: true,
             labels: ['Property'],
             addToAdminSg: true,
             addToReaderSg: false,
@@ -290,6 +292,7 @@ export class UserService {
           {
             key: 'realLastName',
             value: input.realLastName,
+            isSingleton: true,
             labels: ['Property'],
             addToAdminSg: true,
             addToReaderSg: false,
@@ -297,6 +300,7 @@ export class UserService {
           {
             key: 'displayFirstName',
             value: input.displayFirstName,
+            isSingleton: true,
             labels: ['Property'],
             addToAdminSg: true,
             addToReaderSg: true,
@@ -304,6 +308,7 @@ export class UserService {
           {
             key: 'displayLastName',
             value: input.displayLastName,
+            isSingleton: true,
             labels: ['Property'],
             addToAdminSg: true,
             addToReaderSg: true,
@@ -311,6 +316,7 @@ export class UserService {
           {
             key: 'phone',
             value: input.phone,
+            isSingleton: true,
             labels: ['Property'],
             addToAdminSg: true,
             addToReaderSg: false,
@@ -318,6 +324,7 @@ export class UserService {
           {
             key: 'timezone',
             value: input.timezone,
+            isSingleton: true,
             labels: ['Property'],
             addToAdminSg: true,
             addToReaderSg: false,
@@ -325,6 +332,7 @@ export class UserService {
           {
             key: 'bio',
             value: input.bio,
+            isSingleton: true,
             labels: ['Property'],
             addToAdminSg: true,
             addToReaderSg: true,
@@ -332,6 +340,7 @@ export class UserService {
           {
             key: 'password',
             value: pash,
+            isSingleton: true,
             labels: ['Property'],
             addToAdminSg: true,
             addToReaderSg: false,
@@ -355,6 +364,7 @@ export class UserService {
           {
             key: 'email',
             value: '',
+            isSingleton: true,
             labels: ['Property', 'EmailAddress'],
             addToAdminSg: true,
             addToReaderSg: true,
@@ -362,6 +372,7 @@ export class UserService {
           {
             key: 'realFirstName',
             value: '',
+            isSingleton: true,
             labels: ['Property'],
             addToAdminSg: true,
             addToReaderSg: false,
@@ -369,6 +380,7 @@ export class UserService {
           {
             key: 'realLastName',
             value: '',
+            isSingleton: true,
             labels: ['Property'],
             addToAdminSg: true,
             addToReaderSg: false,
@@ -376,6 +388,7 @@ export class UserService {
           {
             key: 'displayFirstName',
             value: '',
+            isSingleton: true,
             labels: ['Property'],
             addToAdminSg: true,
             addToReaderSg: true,
@@ -383,6 +396,7 @@ export class UserService {
           {
             key: 'displayLastName',
             value: '',
+            isSingleton: true,
             labels: ['Property'],
             addToAdminSg: true,
             addToReaderSg: true,
@@ -390,6 +404,7 @@ export class UserService {
           {
             key: 'phone',
             value: '',
+            isSingleton: true,
             labels: ['Property'],
             addToAdminSg: true,
             addToReaderSg: false,
@@ -397,6 +412,7 @@ export class UserService {
           {
             key: 'timezone',
             value: '',
+            isSingleton: true,
             labels: ['Property'],
             addToAdminSg: true,
             addToReaderSg: false,
@@ -404,6 +420,7 @@ export class UserService {
           {
             key: 'bio',
             value: '',
+            isSingleton: true,
             labels: ['Property'],
             addToAdminSg: true,
             addToReaderSg: true,
@@ -411,6 +428,7 @@ export class UserService {
           {
             key: 'password',
             value: '',
+            isSingleton: true,
             labels: ['Property'],
             addToAdminSg: true,
             addToReaderSg: false,
