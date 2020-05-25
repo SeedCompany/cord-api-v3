@@ -56,17 +56,18 @@ export class QueryService {
       let propValue = '';
       let valueType = '';
       if (typeof prop.value === 'boolean') {
-        propValue = `valueBool: ${prop.value}`;
         valueType = 'BOOLEAN';
       } else if (typeof prop.value === 'number') {
-        propValue = `valueNumber: ${prop.value}`;
         valueType = 'NUMBER';
       } else if (typeof prop.value === 'string') {
-        propValue = `valueString: "${prop.value}"`;
         valueType = 'STRING';
+      } else if (prop.baseNode !== undefined) {
+        valueType = 'BASENODE';
       } else {
-        throw Error('property type not recognized');
+        // throw Error('property type not recognized');
       }
+
+      propValue = `value: ${JSON.stringify(prop.value)}`;
 
       let adminPerm = '';
       if (prop.addToAdminSg) {
@@ -126,6 +127,24 @@ export class QueryService {
         `;
       }
 
+      let dataQuery = '';
+      if (prop.baseNode === undefined) {
+        dataQuery = `
+        # create data
+        q${q++}: CreateData(
+          id: "${dataId}"
+          createdAt: { formatted: "${baseNode.createdAt}" }
+          active: true
+          ${propValue}
+        ) {
+          id
+        }
+        
+        # attach data to data holder
+        q${q++}: addDataOrBaseNodeToDataHolder(fromId:"${dhId}", toId:"${dataId}")
+        `;
+      }
+
       propQuery += `
         # create data holder
         q${q++}: CreateDataHolder(
@@ -133,6 +152,7 @@ export class QueryService {
           createdAt: { formatted: "${baseNode.createdAt}" }
           active: true
           identifier: "${prop.key}"
+          valueType: ${valueType}
           isSingleton: ${prop.isSingleton}
         ) {
           id
@@ -144,21 +164,7 @@ export class QueryService {
           from{id}
         }
       
-        # create data
-        q${q++}: CreateData(
-          id: "${dataId}"
-          createdAt: { formatted: "${baseNode.createdAt}" }
-          active: true
-          valueType: ${valueType}
-          ${propValue}
-        ) {
-          id
-        }
-        
-        # attach data to data holder
-        q${q++}: AddDataHolderData(from:{id:"${dhId}"}, to:{id:"${dataId}"}){
-          from{id}
-        }
+        ${dataQuery}
 
         ${adminPerm}
 
@@ -176,6 +182,9 @@ export class QueryService {
         ){
           id
         }
+
+        # add label to base node
+        addLabel(baseNodeId:"${baseNode.id}", label:"${baseNode.label}")
 
         q${q++}: CreateSecurityGroup(
           id: "${sgAdminId}"
@@ -227,6 +236,11 @@ export class QueryService {
 
     return baseNode.id;
   }
+
+  async gqlReadBaseNode(
+    baseNode: Partial<BaseNode>,
+    requestingUserId: string | undefined
+  ) {}
 
   //////////////////////////////////////////////////////////////////
 

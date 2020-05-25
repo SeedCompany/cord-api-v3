@@ -1,3 +1,5 @@
+import { BaseNode } from '../../../common/base-node';
+
 export interface Property {
   key: string;
   value: any;
@@ -6,4 +8,5 @@ export interface Property {
   labels: string[];
   addToAdminSg?: boolean;
   addToReaderSg?: boolean;
+  baseNode?: BaseNode;
 }
