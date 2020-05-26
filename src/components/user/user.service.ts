@@ -355,6 +355,8 @@ export class UserService {
   }
 
   async readOne(id: string, session: ISession): Promise<User> {
+    console.log('userid: ' + session.userId);
+
     const result = await this.db2.readBaseNode(
       {
         label: 'User',

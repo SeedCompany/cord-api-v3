@@ -53,7 +53,6 @@ export class QueryService {
       const dhId = generate();
       const dataId = generate();
 
-      let propValue = '';
       let valueType = '';
       if (typeof prop.value === 'boolean') {
         valueType = 'BOOLEAN';
@@ -66,8 +65,6 @@ export class QueryService {
       } else {
         // throw Error('property type not recognized');
       }
-
-      propValue = `value: ${JSON.stringify(prop.value)}`;
 
       let adminPerm = '';
       if (prop.addToAdminSg) {
@@ -135,7 +132,7 @@ export class QueryService {
           id: "${dataId}"
           createdAt: { formatted: "${baseNode.createdAt}" }
           active: true
-          ${propValue}
+          value: "${prop.value}"
         ) {
           id
         }
@@ -240,7 +237,54 @@ export class QueryService {
   async gqlReadBaseNode(
     baseNode: Partial<BaseNode>,
     requestingUserId: string | undefined
-  ) {}
+  ) {
+    if (requestingUserId === undefined) {
+      console.log('no requesting user id');
+      return;
+    }
+
+    let propsQuery = '';
+    let q = 0;
+
+    if (!baseNode.props) {
+      return;
+    }
+
+    for (let i = 0; i < baseNode.props.length; i++) {
+      const prop = baseNode.props[i];
+
+      if (prop.key === undefined) {
+        continue;
+      }
+
+      propsQuery += `
+        q${q++}: secureReadDataByBaseNodeId(
+          baseNodeId: "${baseNode.id}"
+          requestingUserId: "${requestingUserId}"
+          identifier: "${prop.key}"
+        ){
+          value
+        }
+      `;
+    }
+
+    let query = `
+      mutation{
+        ${propsQuery}
+      }
+    `;
+
+    console.log(query);
+    const result = await this.sendGraphql(query);
+
+    console.log(JSON.stringify(result));
+
+    for (let i = 0; i < q; i++) {
+      console.log(result.data['q' + i]);
+    }
+
+    return baseNode.id;
+  }
 
   //////////////////////////////////////////////////////////////////
 
@@ -469,6 +513,8 @@ export class QueryService {
     baseNode: Partial<BaseNode>,
     requestingUserId: string | undefined
   ) {
+    const result2 = await this.gqlReadBaseNode(baseNode, requestingUserId);
+
     const query = this.db.query();
 
     let returnString = '';
