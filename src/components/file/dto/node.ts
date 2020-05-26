@@ -18,13 +18,17 @@ import { FileNodeType } from './type';
  * This should be used for TypeScript types as we'll always be passing around
  * concrete nodes.
  */
-export type FileNode = MergeExclusive<File, Directory>;
+export type FileNode = MergeExclusive<
+  MergeExclusive<File, Directory>,
+  FileVersion
+>;
 
 @InterfaceType('FileNode', {
   resolveType: (val: FileNode) =>
     simpleSwitch(val.type, {
       [FileNodeType.Directory]: Directory.classType,
       [FileNodeType.File]: File.classType,
+      [FileNodeType.FileVersion]: FileVersion.classType,
     }),
 })
 @ObjectType({
@@ -49,7 +53,7 @@ export abstract class IFileNode extends Resource {
   })
   readonly name: string;
 
-  @Field(() => [Directory], {
+  @Field(() => [IFileNode], {
     description: stripIndent`
       A list of the parents all the way up the tree.
       This can be used to populate a path-like UI,
@@ -66,19 +70,13 @@ export abstract class IFileNode extends Resource {
 }
 
 @ObjectType({
+  isAbstract: true,
   implements: [IFileNode],
 })
-export class File extends IFileNode {
-  /* TS wants a public constructor for "ClassType" */
-  static classType = (File as any) as Type<File>;
-
-  readonly type: FileNodeType.File;
-
-  readonly modifiedById: string;
-
-  @DateTimeField()
-  readonly modifiedAt: DateTime;
-
+/**
+ * Both file and file version have these properties
+ */
+abstract class BaseFile extends IFileNode {
   @Field()
   readonly mimeType: string;
 
@@ -89,27 +87,36 @@ export class File extends IFileNode {
 @ObjectType({
   implements: [IFileNode],
 })
+export class FileVersion extends BaseFile {
+  /* TS wants a public constructor for "ClassType" */
+  static classType = (FileVersion as any) as Type<FileVersion>;
+
+  readonly type: FileNodeType.FileVersion;
+}
+
+@ObjectType({
+  implements: [IFileNode],
+})
+export class File extends BaseFile {
+  /* TS wants a public constructor for "ClassType" */
+  static classType = (File as any) as Type<File>;
+
+  readonly type: FileNodeType.File;
+
+  readonly modifiedById: string;
+
+  @DateTimeField()
+  readonly modifiedAt: DateTime;
+}
+
+@ObjectType({
+  implements: [IFileNode],
+})
 export class Directory extends IFileNode {
   /* TS wants a public constructor for "ClassType" */
   static classType = (Directory as any) as Type<Directory>;
 
   readonly type: FileNodeType.Directory;
-}
-
-@ObjectType({
-  implements: [Resource],
-})
-export class FileVersion extends Resource {
-  /* TS wants a public constructor for "ClassType" */
-  static classType = (FileVersion as any) as Type<FileVersion>;
-
-  @Field({
-    description: 'The user who created this file version',
-  })
-  readonly createdBy: User;
-
-  @Field(() => Int)
-  readonly size: number;
 }
 
 @InputType()

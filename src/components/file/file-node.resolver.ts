@@ -1,7 +1,7 @@
 import { Field, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { Class } from 'type-fest';
-import { ISession, Session } from '../../common';
+import { ISession, Session, simpleSwitch } from '../../common';
 import { User, UserService } from '../user';
 import { Directory, FileNode, FileNodeType } from './dto';
 import { FileService } from './file.service';
@@ -18,10 +18,12 @@ export function FileNodeResolver<T>(
     ) {}
 
     @ResolveField(() => User, {
-      description:
-        type === FileNodeType.Directory
-          ? 'The user who created this directory'
-          : 'The user who uploaded the first version of this file',
+      description: simpleSwitch(type, {
+        [FileNodeType.Directory]: 'The user who created this directory',
+        [FileNodeType.File]:
+          'The user who uploaded the first version of this file',
+        [FileNodeType.FileVersion]: 'The user who created this file version',
+      }),
     })
     async createdBy(
       @Parent() node: FileNode,
@@ -40,7 +42,7 @@ export function FileNodeResolver<T>(
     async parents(
       @Parent() node: FileNode,
       @Session() session: ISession
-    ): Promise<readonly Directory[]> {
+    ): Promise<readonly FileNode[]> {
       return this.service.getParents(node.id, session);
     }
   }

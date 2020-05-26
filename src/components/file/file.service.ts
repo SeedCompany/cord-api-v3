@@ -140,14 +140,23 @@ export class FileService {
         category: FileNodeCategory.Directory,
       };
     }
-    return {
+    const commonFile = {
       ...common,
-      type: FileNodeType.File,
       category: FileNodeCategory.Document, //TODO category should be derived based on the mimeType
       mimeType: result.mimeType,
+      size: result.size,
+    };
+    if (type === FileNodeType.FileVersion) {
+      return {
+        ...commonFile,
+        type: FileNodeType.FileVersion,
+      };
+    }
+    return {
+      ...commonFile,
+      type: FileNodeType.File,
       modifiedAt: result.modifiedAt,
       modifiedById: session.userId!, // TODO
-      size: result.size,
     };
   }
 
@@ -164,7 +173,7 @@ export class FileService {
   async getParents(
     _nodeId: string,
     _session: ISession
-  ): Promise<readonly Directory[]> {
+  ): Promise<readonly FileNode[]> {
     throw new NotImplementedError();
   }
 
