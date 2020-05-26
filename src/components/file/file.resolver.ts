@@ -11,6 +11,7 @@ import {
   BaseNodeConsistencyInput,
   CreateFileInput,
   File,
+  FileNodeType,
   FileOrDirectory,
   FileVersion,
   MoveFileInput,
@@ -18,12 +19,13 @@ import {
   RequestUploadOutput,
   UpdateFileInput,
 } from './dto';
-import { FileService } from './file.service';
+import { FileNodeResolver } from './file-node.resolver';
 
 @Resolver(File.classType)
-export class FileResolver {
-  constructor(private readonly service: FileService) {}
-
+export class FileResolver extends FileNodeResolver(
+  FileNodeType.File,
+  File.classType
+) {
   @Query(() => File)
   async file(@IdArg() id: string, @Session() session: ISession): Promise<File> {
     return this.service.getFile(id, session);
