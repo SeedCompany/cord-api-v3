@@ -11,6 +11,7 @@ import {
 } from '../../../common';
 import { SecuredBudget } from '../../budget';
 import { SecuredEngagementList } from '../../engagement';
+import { Directory } from '../../file';
 import { SecuredCountry } from '../../location';
 import { SecuredPartnershipList } from '../../partnership';
 import { SecuredProjectMemberList } from '../project-member';
@@ -92,6 +93,10 @@ export class IProject extends Resource {
   // Lazily attached in resolver
   @Field(() => SecuredPartnershipList)
   partnerships?: never;
+
+  // Lazily attached in resolver
+  @Field(() => Directory)
+  rootDirectory?: never;
 }
 
 @ObjectType({

@@ -18,6 +18,7 @@ import {
 } from '../../core';
 import { Budget, BudgetService, BudgetStatus, SecuredBudget } from '../budget';
 import { EngagementListInput, SecuredEngagementList } from '../engagement';
+import { Directory, FileService } from '../file';
 import { LocationService } from '../location';
 import {
   PartnershipListInput,
@@ -48,6 +49,7 @@ export class ProjectService {
     private readonly locationService: LocationService,
     private readonly budgets: BudgetService,
     private readonly partnerships: PartnershipService,
+    private readonly fileService: FileService,
     @Logger('project:service') private readonly logger: ILogger
   ) {}
 
@@ -467,6 +469,32 @@ export class ProjectService {
     };
   }
 
+  async getRootDirectory(
+    projectId: string,
+    session: ISession
+  ): Promise<Directory> {
+    const rootRef = await this.db
+      .query()
+      .match(matchSession(session, { withAclRead: 'canReadProjects' }))
+      .match([
+        [
+          node('project', 'Project', { active: true, id: projectId }),
+          relation('out', 'rootDirectory', { active: true }),
+          node('directory', 'BaseNode:Directory'),
+        ],
+      ])
+      .return({
+        directory: [{ id: 'id' }],
+      })
+      .first();
+    if (!rootRef?.id) {
+      throw new NotFoundException(
+        'Could not find root directory associated to this project'
+      );
+    }
+    return this.fileService.getDirectory(rootRef.id, session);
+  }
+
   async create(
     { locationId, ...input }: CreateProject,
     session: ISession
@@ -543,6 +571,27 @@ export class ProjectService {
       } catch (e) {
         this.logger.error('e :>> ', e);
       }
+
+      // Create root directory
+      const rootDir = await this.fileService.createDirectory(
+        `${id} root directory`,
+        session
+      );
+      await this.db
+        .query()
+        .match([
+          [node('project', 'Project', { id, active: true })],
+          [node('dir', 'Directory', { id: rootDir.id, active: true })],
+        ])
+        .create([
+          node('project'),
+          relation('out', '', 'rootDirectory', {
+            active: true,
+            createdAt: DateTime.local(),
+          }),
+          node('dir'),
+        ])
+        .run();
 
       const qry = `
         MATCH
