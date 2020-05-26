@@ -473,28 +473,26 @@ export class ProjectService {
     projectId: string,
     session: ISession
   ): Promise<Directory> {
-    try {
-      const directory = (await this.db
-        .query()
-        .match(matchSession(session, { withAclRead: 'canReadProjects' }))
-        .match([
-          [
-            node('project', 'Project', { active: true, id: projectId }),
-            relation('out', 'rootDirectory', { active: true }),
-            node('directory', 'BaseNode:Directory'),
-          ],
-        ])
-        .return({
-          directory: [{ id: 'id' }],
-        })
-        .first()) as Directory;
-
-      return await this.fileService.getDirectory(directory.id, session);
-    } catch (e) {
+    const rootRef = await this.db
+      .query()
+      .match(matchSession(session, { withAclRead: 'canReadProjects' }))
+      .match([
+        [
+          node('project', 'Project', { active: true, id: projectId }),
+          relation('out', 'rootDirectory', { active: true }),
+          node('directory', 'BaseNode:Directory'),
+        ],
+      ])
+      .return({
+        directory: [{ id: 'id' }],
+      })
+      .first();
+    if (!rootRef?.id) {
       throw new NotFoundException(
         'Could not find root directory associated to this project'
       );
     }
+    return this.fileService.getDirectory(rootRef.id, session);
   }
 
   async create(
