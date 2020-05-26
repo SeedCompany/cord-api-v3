@@ -69,7 +69,7 @@ export class FileService {
       )
       .first();
 
-    if(!result) {
+    if (!result) {
       throw new NotFoundException('Could not find directory');
     }
 
@@ -80,8 +80,40 @@ export class FileService {
       type: result.type,
       name: result.name,
       category: FileNodeCategory.Document, // TODO
-      parents: [], // TODO
+      parents: await this.getParents(result.id, session), // TODO
     };
+  }
+
+  async getParents(id: string, session: ISession): Promise<Directory[]> {
+    const result = (await this.db
+      .query()
+      .raw(
+        `
+      MATCH
+        (token:Token {active: true, value: $token})
+        <-[:token {active: true}]-
+        (requestingUser:User {
+          active: true,
+          id: $requestingUserId
+        }),
+        (dir: Directory {id: $id, active: true})-[:parent* {active: true}]-(parentDir:Directory)
+      WITH * OPTIONAL MATCH (parentDir)-[:type {active:true}]->(parentDirType:Property {active: true})
+      WITH * OPTIONAL MATCH (parentDir)-[:name {active:true}]->(parentDirName:Property {active: true})
+      RETURN
+        parentDir.id as id,
+        parentDir.createdAt as createdAt,
+        parentDirType.value as type,
+        parentDirName.value as name
+      `,
+        {
+          id,
+          requestingUserId: session.userId,
+          token: session.token,
+        }
+      )
+      .run()) as Directory[];
+
+    return result;
   }
 
   async getFile(id: string, session: ISession): Promise<File> {
