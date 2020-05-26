@@ -9,7 +9,7 @@ import {
 import { stripIndent } from 'common-tags';
 import { DateTime } from 'luxon';
 import { MergeExclusive } from 'type-fest';
-import { DateTimeField, Resource } from '../../../common';
+import { DateTimeField, Resource, simpleSwitch } from '../../../common';
 import { User } from '../../user/dto';
 import { FileNodeCategory } from './category';
 import { FileNodeType } from './type';
@@ -20,7 +20,13 @@ import { FileNodeType } from './type';
  */
 export type FileNode = MergeExclusive<File, Directory>;
 
-@InterfaceType('FileNode')
+@InterfaceType('FileNode', {
+  resolveType: (val: FileNode) =>
+    simpleSwitch(val.type, {
+      [FileNodeType.Directory]: Directory.classType,
+      [FileNodeType.File]: File.classType,
+    }),
+})
 @ObjectType({
   isAbstract: true,
   implements: [Resource],
