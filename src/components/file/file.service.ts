@@ -122,20 +122,32 @@ export class FileService {
         }
       )
       .first();
-
     if (!result) {
       throw new NotFoundException();
     }
-    return {
-      category: FileNodeCategory.Document, //TODO category should be derived based on the mimeType
+
+    const type = result.type as FileNodeType;
+    const common = {
+      id: result.id,
+      name: result.name,
       createdAt: result.createdAt,
       createdById: session.userId!, // TODO
-      id: result.id,
+    };
+    if (type === FileNodeType.Directory) {
+      return {
+        ...common,
+        type: FileNodeType.Directory,
+        category: FileNodeCategory.Directory,
+      };
+    }
+    return {
+      ...common,
+      type: FileNodeType.File,
+      category: FileNodeCategory.Document, //TODO category should be derived based on the mimeType
       mimeType: result.mimeType,
       modifiedAt: result.modifiedAt,
-      name: result.name,
+      modifiedById: session.userId!, // TODO
       size: result.size,
-      type: result.type,
     };
   }
 
