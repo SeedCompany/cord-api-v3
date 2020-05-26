@@ -22,7 +22,6 @@ const createTestFile: Partial<File> = {
   name: 'test-file',
   size: 12345,
   mimeType: 'text/plain',
-  parents: [],
 };
 const updatedFileNode: Partial<File> = {
   name: 'newTestFile',

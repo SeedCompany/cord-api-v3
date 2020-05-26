@@ -1,8 +1,9 @@
-import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import { Field, Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import { stripIndent } from 'common-tags';
 import { Class } from 'type-fest';
 import { ISession, Session } from '../../common';
 import { User, UserService } from '../user';
-import { FileNode, FileNodeType } from './dto';
+import { Directory, FileNode, FileNodeType } from './dto';
 import { FileService } from './file.service';
 
 export function FileNodeResolver<T>(
@@ -27,6 +28,20 @@ export function FileNodeResolver<T>(
       @Session() session: ISession
     ): Promise<User> {
       return this.users.readOne(node.createdById, session);
+    }
+
+    @Field(() => [Directory], {
+      description: stripIndent`
+        A list of the parents all the way up the tree.
+        This can be used to populate a path-like UI,
+        without having to fetch each parent serially.
+      `,
+    })
+    async parents(
+      @Parent() node: FileNode,
+      @Session() session: ISession
+    ): Promise<readonly Directory[]> {
+      return this.service.getParents(node.id, session);
     }
   }
   return FileNodeResolver;

@@ -56,7 +56,7 @@ export abstract class IFileNode extends Resource {
       without having to fetch each parent serially.
     `,
   })
-  readonly parents: readonly Directory[];
+  readonly parents?: never;
 
   readonly createdById: string;
   @Field(() => User, {

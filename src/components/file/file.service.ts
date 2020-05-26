@@ -73,7 +73,6 @@ export class FileService {
       type: result!.type,
       name: result!.name,
       category: FileNodeCategory.Document, // TODO
-      parents: [], // TODO
     };
   }
 
@@ -135,7 +134,6 @@ export class FileService {
       mimeType: result.mimeType,
       modifiedAt: result.modifiedAt,
       name: result.name,
-      parents: [], // TODO
       size: result.size,
       type: result.type,
     };
@@ -149,6 +147,13 @@ export class FileService {
     }
 
     return this.bucket.getSignedUrlForPutObject(fileId);
+  }
+
+  async getParents(
+    _nodeId: string,
+    _session: ISession
+  ): Promise<readonly Directory[]> {
+    throw new NotImplementedError();
   }
 
   async listChildren(
