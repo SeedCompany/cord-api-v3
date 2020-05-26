@@ -11,9 +11,10 @@ import {
   BaseNodeConsistencyInput,
   CreateFileInput,
   File,
+  FileNode,
   FileNodeType,
-  FileOrDirectory,
   FileVersion,
+  IFileNode,
   MoveFileInput,
   RenameFileInput,
   RequestUploadOutput,
@@ -31,11 +32,11 @@ export class FileResolver extends FileNodeResolver(
     return this.service.getFile(id, session);
   }
 
-  @Query(() => FileOrDirectory)
+  @Query(() => IFileNode)
   async fileNode(
     @IdArg() id: string,
     @Session() session: ISession
-  ): Promise<FileOrDirectory> {
+  ): Promise<FileNode> {
     return this.service.getFileNode(id, session);
   }
 
@@ -100,13 +101,13 @@ export class FileResolver extends FileNodeResolver(
     return this.service.updateFile(input, session);
   }
 
-  @Mutation(() => FileOrDirectory, {
+  @Mutation(() => IFileNode, {
     description: 'Rename a file or directory',
   })
   renameFileNode(
     @Args('input') input: RenameFileInput,
     @Session() session: ISession
-  ): Promise<FileOrDirectory> {
+  ): Promise<FileNode> {
     return this.service.rename(input, session);
   }
 

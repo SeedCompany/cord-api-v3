@@ -1,6 +1,5 @@
 import { Type } from '@nestjs/common';
 import {
-  createUnionType,
   Field,
   InputType,
   Int,
@@ -9,17 +8,27 @@ import {
 } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { DateTime } from 'luxon';
+import { MergeExclusive } from 'type-fest';
 import { DateTimeField, Resource } from '../../../common';
 import { User } from '../../user/dto';
 import { FileNodeCategory } from './category';
 import { FileNodeType } from './type';
 
-@InterfaceType()
+/**
+ * This should be used for TypeScript types as we'll always be passing around
+ * concrete nodes.
+ */
+export type FileNode = MergeExclusive<File, Directory>;
+
+@InterfaceType('FileNode')
 @ObjectType({
   isAbstract: true,
   implements: [Resource],
 })
-abstract class FileNode extends Resource {
+/**
+ * This should be used for GraphQL but never for TypeScript types.
+ */
+export abstract class IFileNode extends Resource {
   @Field(() => FileNodeType)
   readonly type: FileNodeType;
 
@@ -50,9 +59,9 @@ abstract class FileNode extends Resource {
 }
 
 @ObjectType({
-  implements: [FileNode],
+  implements: [IFileNode],
 })
-export class File extends FileNode {
+export class File extends IFileNode {
   /* TS wants a public constructor for "ClassType" */
   static classType = (File as any) as Type<File>;
 
@@ -79,9 +88,9 @@ export class File extends FileNode {
 }
 
 @ObjectType({
-  implements: [FileNode],
+  implements: [IFileNode],
 })
-export class Directory extends FileNode {
+export class Directory extends IFileNode {
   /* TS wants a public constructor for "ClassType" */
   static classType = (Directory as any) as Type<Directory>;
 
@@ -108,17 +117,6 @@ export class FileVersion extends Resource {
   @Field(() => Int)
   readonly size: number;
 }
-
-export const FileOrDirectory = createUnionType({
-  name: 'FileOrDirectory',
-  description: '',
-  types: () => [File.classType, Directory.classType],
-  resolveType: (value) =>
-    value.type === FileNodeType.Directory
-      ? Directory.classType
-      : File.classType,
-});
-export type FileOrDirectory = File | Directory;
 
 @InputType()
 export abstract class BaseNodeConsistencyInput {

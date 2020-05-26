@@ -18,9 +18,9 @@ import {
   File,
   FileListInput,
   FileListOutput,
+  FileNode,
   FileNodeCategory,
   FileNodeType,
-  FileOrDirectory,
   FileVersion,
   MoveFileInput,
   RenameFileInput,
@@ -88,7 +88,7 @@ export class FileService {
     return node;
   }
 
-  async getFileNode(id: string, session: ISession): Promise<FileOrDirectory> {
+  async getFileNode(id: string, session: ISession): Promise<FileNode> {
     this.logger.info(`Query readOne FileNode: id ${id} by ${session.userId}`);
     const user = await this.userService.readOne(session.userId!, session);
     const result = await this.db
@@ -281,7 +281,7 @@ export class FileService {
       .query()
       .raw(
         `
-        MATCH 
+        MATCH
           (fv:FileVersion {id: "${uploadId}"}),
           (fv)-[rel:category {active: true}]->(cat:Property {active: true})
         SET cat :FileNodeCategory
@@ -412,10 +412,7 @@ export class FileService {
     return this.getFile(input.parentId, session);
   }
 
-  async rename(
-    input: RenameFileInput,
-    session: ISession
-  ): Promise<FileOrDirectory> {
+  async rename(input: RenameFileInput, session: ISession): Promise<FileNode> {
     try {
       const fileNode = await this.getFileNode(input.id, session);
       await this.db.updateProperties({
