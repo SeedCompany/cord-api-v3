@@ -15,7 +15,10 @@ export class DirectoryResolver {
   constructor(private readonly service: FileService) {}
 
   @Query(() => Directory)
-  async directory(@IdArg() id: string, session: ISession): Promise<Directory> {
+  async directory(
+    @IdArg() id: string,
+    @Session() session: ISession
+  ): Promise<Directory> {
     return this.service.getDirectory(id, session);
   }
 

@@ -69,12 +69,16 @@ export class FileService {
       )
       .first();
 
+    if(!result) {
+      throw new NotFoundException('Could not find directory');
+    }
+
     return {
-      createdAt: result!.createdAt,
+      createdAt: result.createdAt,
       createdBy: { ...user },
-      id: result!.id,
-      type: result!.type,
-      name: result!.name,
+      id: result.id,
+      type: result.type,
+      name: result.name,
       category: FileNodeCategory.Document, // TODO
       parents: [], // TODO
     };
