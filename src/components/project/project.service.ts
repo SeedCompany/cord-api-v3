@@ -511,11 +511,6 @@ export class ProjectService {
       ...input,
     };
 
-    const rootDir = await this.fileService.createDirectory(
-      'rootDirectory',
-      session
-    );
-
     try {
       const createProject = this.db
         .query()
@@ -577,18 +572,25 @@ export class ProjectService {
         this.logger.error('e :>> ', e);
       }
 
-      //connect to root directory
+      // Create root directory
+      const rootDir = await this.fileService.createDirectory(
+        `${id} root directory`,
+        session
+      );
       await this.db
         .query()
-        .raw(
-          `
-          MATCH
-            (project:Project {id: "${id}", active: true}),
-            (dir:Directory {id: "${rootDir.id}", active: true})
-          CREATE
-            (project)-[:rootDirectory {active: true, createdAt: datetime()}]->(dir)
-        `
-        )
+        .match([
+          [node('project', 'Project', { id, active: true })],
+          [node('dir', 'Directory', { id: rootDir.id, active: true })],
+        ])
+        .create([
+          node('project'),
+          relation('out', '', 'rootDirectory', {
+            active: true,
+            createdAt: DateTime.local(),
+          }),
+          node('dir'),
+        ])
         .run();
 
       const qry = `
