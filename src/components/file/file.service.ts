@@ -11,7 +11,6 @@ import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession, NotImplementedError } from '../../common';
 import { DatabaseService, ILogger, Logger, matchSession } from '../../core';
-import { UserService } from '../user';
 import {
   CreateFileInput,
   Directory,
@@ -35,12 +34,10 @@ export class FileService {
   constructor(
     @Inject(FilesBucketToken) private readonly bucket: S3Bucket,
     private readonly db: DatabaseService,
-    @Logger('language:service') private readonly logger: ILogger,
-    private readonly userService: UserService
+    @Logger('file:service') private readonly logger: ILogger
   ) {}
 
   async getDirectory(id: string, session: ISession): Promise<Directory> {
-    const user = await this.userService.readOne(session.userId!, session);
     const result = await this.db
       .query()
       .raw(
@@ -71,7 +68,7 @@ export class FileService {
 
     return {
       createdAt: result!.createdAt,
-      createdBy: { ...user },
+      createdById: session.userId!, // TODO
       id: result!.id,
       type: result!.type,
       name: result!.name,
@@ -90,7 +87,6 @@ export class FileService {
 
   async getFileNode(id: string, session: ISession): Promise<FileNode> {
     this.logger.info(`Query readOne FileNode: id ${id} by ${session.userId}`);
-    const user = await this.userService.readOne(session.userId!, session);
     const result = await this.db
       .query()
       .raw(
@@ -134,7 +130,7 @@ export class FileService {
     return {
       category: FileNodeCategory.Document, //TODO category should be derived based on the mimeType
       createdAt: result.createdAt,
-      createdBy: { ...user },
+      createdById: session.userId!, // TODO
       id: result.id,
       mimeType: result.mimeType,
       modifiedAt: result.modifiedAt,

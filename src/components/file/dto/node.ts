@@ -58,10 +58,11 @@ export abstract class IFileNode extends Resource {
   })
   readonly parents: readonly Directory[];
 
-  @Field({
+  readonly createdById: string;
+  @Field(() => User, {
     description: 'The user who created this node',
   })
-  readonly createdBy: User;
+  readonly createdBy?: never;
 }
 
 @ObjectType({
@@ -72,11 +73,6 @@ export class File extends IFileNode {
   static classType = (File as any) as Type<File>;
 
   type: FileNodeType.File;
-
-  @Field({
-    description: 'The user who uploaded the first version of this file',
-  })
-  readonly createdBy: User;
 
   @Field({
     description: 'The user who uploaded the most recent version of this file',
@@ -101,11 +97,6 @@ export class Directory extends IFileNode {
   static classType = (Directory as any) as Type<Directory>;
 
   readonly type: FileNodeType.Directory;
-
-  @Field({
-    description: 'The user who created this directory',
-  })
-  readonly createdBy: User;
 }
 
 @ObjectType({
