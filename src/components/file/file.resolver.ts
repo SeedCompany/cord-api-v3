@@ -7,6 +7,7 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { IdArg, ISession, Session } from '../../common';
+import { User } from '../user';
 import {
   BaseNodeConsistencyInput,
   CreateFileInput,
@@ -38,6 +39,16 @@ export class FileResolver extends FileNodeResolver(
     @Session() session: ISession
   ): Promise<FileNode> {
     return this.service.getFileNode(id, session);
+  }
+
+  @ResolveField(() => User, {
+    description: 'The user who uploaded the most recent version of this file',
+  })
+  async modifiedBy(
+    @Parent() node: File,
+    @Session() session: ISession
+  ): Promise<User> {
+    return this.users.readOne(node.modifiedById, session);
   }
 
   @ResolveField(() => [FileVersion], {

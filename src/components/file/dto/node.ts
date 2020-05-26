@@ -72,12 +72,9 @@ export class File extends IFileNode {
   /* TS wants a public constructor for "ClassType" */
   static classType = (File as any) as Type<File>;
 
-  type: FileNodeType.File;
+  readonly type: FileNodeType.File;
 
-  @Field({
-    description: 'The user who uploaded the most recent version of this file',
-  })
-  readonly modifiedBy: User;
+  readonly modifiedById: string;
 
   @DateTimeField()
   readonly modifiedAt: DateTime;
