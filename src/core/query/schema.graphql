@@ -1,0 +1,178 @@
+# CYPHER HELP
+#
+# To find the signature of a procedure so you know what to YIELD:
+#
+# call dbms.procedures() YIELD name, signature
+# where name = "apoc.create.addLabels"
+# return signature
+
+# ABSTRACTIONS ##########################################################################################
+
+interface AbstractNode {
+  id: ID!
+  createdAt: DateTime!
+  active: Boolean!
+}
+
+type BaseNode {
+  id: ID!
+  createdAt: DateTime!
+  active: Boolean!
+  dataHolders: [DataHolder!]! @relation(name: "DATAHOLDERS", direction: "OUT")
+  holderCount: Int
+    @cypher(
+      statement: """
+      MATCH (this)-[:DATAHOLDERS]-(h:DataHolder {active: true}) RETURN count(h)
+      """
+    )
+}
+
+enum ValueTypeEnum {
+  BOOLEAN
+  NUMBER
+  STRING
+  BASENODE
+}
+
+union DataTarget = Data | BaseNode
+
+type DataHolder implements AbstractNode {
+  id: ID!
+  createdAt: DateTime!
+  active: Boolean!
+  identifier: String!
+  isSingleton: Boolean!
+  valueType: ValueTypeEnum!
+  baseNode: BaseNode! @relation(name: "DATAHOLDERS", direction: "IN")
+  data: [DataTarget] @relation(name: "DATA", direction: "OUT")
+  activePropertyCount: Int
+    @cypher(
+      statement: """
+      MATCH (this)-[:DATA]-(d:Data {active:true}) RETURN count(d)
+      """
+    )
+  totalPropertyCount: Int
+    @cypher(
+      statement: """
+      MATCH (this)-[:DATA]-(d:Data) RETURN count(d)
+      """
+    )
+}
+
+type Data implements AbstractNode {
+  id: ID!
+  createdAt: DateTime!
+  active: Boolean!
+  value: String!
+  dataHolder: DataHolder! @relation(name: "DATA", direction: "IN")
+  canRead(requestingUserId: ID): Boolean
+    @cypher(
+      statement: """
+      MATCH (reqUser:User {active: true, id: $requestingUserId})<-[:MEMBERS]-(sg:SecurityGroup{active: true})
+      -[:PERMISSIONS]->(perm:Permission{active:true, read: true})-[:GRANT]->(this) RETURN perm.read = true LIMIT 1
+      """
+    )
+}
+
+extend type Mutation {
+  addDataOrBaseNodeToDataHolder(fromId: String!, toId: String!): ID
+    @cypher(
+      statement: """
+      MATCH (f {id: $fromId}), (t {id: $toId})
+      MERGE (f)-[:DATA]->(t)
+      RETURN f.id as id
+      """
+    )
+}
+
+# SECURITY ################################################################################################
+
+type SecurityGroup implements AbstractNode {
+  id: ID!
+  createdAt: DateTime!
+  active: Boolean!
+  name: String!
+  permissions: [Permission] @relation(name: "PERMISSIONS", direction: "OUT")
+  powers: [Power] @relation(name: "POWERS", direction: "OUT")
+  members: [BaseNode] @relation(name: "MEMBERS", direction: "OUT")
+  permissionsCount: Int
+    @cypher(
+      statement: """
+      MATCH (this)-[:PERMISSONS]-(p:Permission {active: true}) RETURN count(p)
+      """
+    )
+  powersCount: Int
+    @cypher(
+      statement: """
+      MATCH (this)-[:POWERS]-(p:Power {active: true}) RETURN count(p)
+      """
+    )
+}
+
+type Permission implements AbstractNode {
+  id: ID!
+  createdAt: DateTime!
+  active: Boolean!
+  grantedPropertyName: String!
+  read: Boolean
+  edit: Boolean
+  admin: Boolean
+  grant: DataHolder @relation(name: "GRANT", direction: "OUT")
+  securityGroup: SecurityGroup @relation(name: "PERMISSIONS", direction: "IN")
+}
+
+enum Powers {
+  CAN_CREATE_SECURITY_GROUP
+  CAN_CREATE_PROJECT
+}
+
+type Power implements AbstractNode {
+  id: ID!
+  createdAt: DateTime!
+  active: Boolean!
+  value: Powers!
+  securityGroup: SecurityGroup @relation(name: "POWERS", direction: "IN")
+}
+
+# GENERIC FUNCTIONS ######################################################################################
+
+extend type Mutation {
+  secureUpdateData(
+    dataHolderId: String
+    requestingUserId: String
+    newValue: String
+  ): Data
+    @cypher(
+      statement: """
+      MATCH (n) Return n limit 1
+      """
+    )
+}
+
+extend type Mutation {
+  secureReadDataByBaseNodeId(
+    baseNodeId: String!
+    requestingUserId: String!
+    identifier: String!
+  ): Data
+    @cypher(
+      statement: """
+      MATCH (bn:BaseNode {id:$baseNodeId})
+      OPTIONAL MATCH
+      (user:User {id: $requestingUserId})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:PERMISSIONS]->(:Permission{active:true, read:true})-[:GRANT]->(:DataHolder {active: true, identifier: $identifier})-[:DATA]->(data:Data {active: true})
+      RETURN data
+      """
+    )
+}
+
+extend type Mutation {
+  addLabel(baseNodeId: String, label: String): String
+    @cypher(
+      statement: """
+      MATCH (n {id:$baseNodeId})
+      CALL apoc.create.addLabels([n], [$label])
+      YIELD node
+      RETURN node.id
+      """
+    )
+}
