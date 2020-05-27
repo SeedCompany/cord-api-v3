@@ -8,8 +8,8 @@ import {
 } from '@nestjs/common';
 import { AWSError } from 'aws-sdk';
 import { HeadObjectOutput } from 'aws-sdk/clients/s3';
-import { node, relation } from 'cypher-query-builder';
-import { upperFirst } from 'lodash';
+import { node, Query, relation } from 'cypher-query-builder';
+import { camelCase, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession, NotImplementedError } from '../../common';
@@ -95,41 +95,53 @@ export class FileService {
   async getFileNode(id: string, session: ISession): Promise<FileNode> {
     this.logger.info(`getNode`, { id, userId: session.userId });
 
+    const isActive = { active: true };
+    const matchNodeProp = (q: Query, prop: string, variable = prop) =>
+      q
+        .with('*')
+        .optionalMatch([
+          node('file'),
+          relation('out', '', prop, isActive),
+          node(variable, 'Property', isActive),
+        ]);
+    const matchLatestVersionProp = (q: Query, prop: string, variable = prop) =>
+      q
+        .with('*')
+        .optionalMatch([
+          node('requestingUser'),
+          relation('in', '', 'member'),
+          node('acl', 'ACL', { [camelCase(`canRead-${prop}`)]: true }),
+          relation('out', '', 'toNode'),
+          node('fv'),
+          relation('out', '', prop, isActive),
+          node(variable, 'Property', isActive),
+        ]);
     const result = await this.db
       .query()
-      .raw(
-        `
-        MATCH
-          (token:Token {active: true, value: $token})
-          <-[:token {active: true}]-
-          (requestingUser:User {
-            active: true,
-            id: $requestingUserId
-          }),
-          (file: File {id: $uploadId, active: true}),
-          (file)-[:version {active: true}]->(fv:FileVersion {active: true})
-        WITH * OPTIONAL MATCH (file)-[:type {active: true}]->(type:Property {active: true})
-        WITH * OPTIONAL MATCH (file)-[:name {active: true}]->(name:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl:ACL {canReadSize: true})-[:toNode]->(fv)-[:size {active: true}]->(size:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl:ACL {canReadMimeType: true})-[:toNode]->(fv)-[:mimeType {active: true}]->(mimeType:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl:ACL {canReadCategory: true})-[:toNode]->(fv)-[:category {active: true}]->(category:Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl:ACL {canReadModifiedAt: true})-[:toNode]->(fv)-[:modifiedAt {active: true}]->(modifiedAt:Property {active: true})
-        RETURN
-          size.value as size,
-          mimeType.value as mimeType,
-          category.value as category,
-          modifiedAt.value as modifiedAt,
-          file.createdAt as createdAt,
-          file.id as id,
-          type.value as type,
-          name.value as name
-        `,
-        {
-          uploadId: id,
-          requestingUserId: session.userId,
-          token: session.token,
-        }
-      )
+      .match([
+        matchSession(session),
+        [node('file', 'File', { id, ...isActive })],
+        [
+          node('file'),
+          relation('out', '', 'version', isActive),
+          node('fv', 'FileVersion', isActive),
+        ],
+      ])
+      .call(matchNodeProp, 'type')
+      .call(matchNodeProp, 'name')
+      .call(matchLatestVersionProp, 'size')
+      .call(matchLatestVersionProp, 'mimeType')
+      .call(matchLatestVersionProp, 'category')
+      .call(matchLatestVersionProp, 'createdAt', 'modifiedAt')
+      .return({
+        file: [{ id: 'id', createdAt: 'createdAt' }],
+        type: [{ value: 'type' }],
+        name: [{ value: 'name' }],
+        size: [{ value: 'size' }],
+        mimeType: [{ value: 'mimeType' }],
+        category: [{ value: 'category' }],
+        modifiedAt: [{ value: 'modifiedAt' }],
+      })
       .first();
     if (!result) {
       throw new NotFoundException();
