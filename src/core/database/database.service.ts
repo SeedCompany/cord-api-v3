@@ -17,6 +17,7 @@ import { DateTime, Duration } from 'luxon';
 import {
   ISession,
   isSecured,
+  many,
   Order,
   Resource,
   unwrapSecured,
@@ -881,7 +882,7 @@ export class DatabaseService {
     type: Type<TObject>;
     input: ResourceInput<TObject>;
     acls: ACLs;
-    baseNodeLabel?: string;
+    baseNodeLabel?: Many<string>;
     aclEditProp?: string | false;
   }): Promise<void> {
     await this.createBaseNode<TObject>({
@@ -915,11 +916,13 @@ export class DatabaseService {
     type: Type<TObject>;
     input: ResourceInput<TObject>;
     acls: ACLs;
-    baseNodeLabel?: string;
+    baseNodeLabel?: Many<string>;
     aclEditProp?: string | false;
   }): Promise<void> {
-    const label = baseNodeLabel ?? type.name;
-    const aclEdit = aclEditProp ?? `canCreate${label}`;
+    const labels = (baseNodeLabel ? many(baseNodeLabel) : [type.name]).map(
+      upperFirst
+    );
+    const aclEdit = aclEditProp ?? `canCreate${labels[0]}`;
 
     try {
       await this.db
@@ -931,7 +934,7 @@ export class DatabaseService {
         ])
         .create([
           [
-            node('item', [upperFirst(label), 'BaseNode'], {
+            node('item', [...labels, 'BaseNode'], {
               active: true,
               createdAt: DateTime.local(),
               id: input.id,
