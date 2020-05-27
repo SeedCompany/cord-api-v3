@@ -18,14 +18,18 @@ declare module 'cypher-query-builder/dist/typings/query' {
      *   .first();
      * ```
      */
-    call: (fn: (query: this) => this | void) => this;
+    call: <A extends any[]>(
+      fn: (query: this, ...args: A) => this | void,
+      ...args: A
+    ) => this;
   }
 }
 
 // eslint-disable-next-line @typescript-eslint/unbound-method
-Query.prototype.call = function call(
+Query.prototype.call = function call<A extends any[]>(
   this: Query,
-  fn: (q: Query) => Query | void
+  fn: (q: Query, ...args: A) => Query | void,
+  ...args: A
 ): Query {
-  return fn(this) || this;
+  return fn(this, ...args) || this;
 };
