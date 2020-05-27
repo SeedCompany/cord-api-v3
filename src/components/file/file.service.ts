@@ -192,7 +192,11 @@ export class FileService {
     throw new NotImplementedError();
   }
 
-  async createDirectory(name: string, session: ISession): Promise<Directory> {
+  async createDirectory(
+    parentId: string | undefined,
+    name: string,
+    session: ISession
+  ): Promise<Directory> {
     const id = generate();
     await this.db.createNode({
       session,
@@ -226,6 +230,10 @@ export class FileService {
         node('user'),
       ])
       .run();
+
+    if (parentId) {
+      await this.attachParent(id, parentId);
+    }
 
     return this.getDirectory(id, session);
   }
@@ -397,19 +405,7 @@ export class FileService {
     });
 
     if (parentId) {
-      // create relationship: file -> parent (dir)
-      await this.db
-        .query()
-        .match([
-          [node('file', 'File', { id: fileId, active: true })],
-          [node('parent', 'Directory', { id: parentId, active: true })],
-        ])
-        .create([
-          node('file'),
-          relation('out', '', 'parent', { active: true }),
-          node('parent'),
-        ])
-        .run();
+      await this.attachParent(fileId, parentId);
     }
 
     // create relationship: file -> createdBy
@@ -430,6 +426,21 @@ export class FileService {
       .run();
 
     return fileId;
+  }
+
+  private async attachParent(id: string, parentId: string) {
+    await this.db
+      .query()
+      .match([
+        [node('node', 'FileNode', { id, active: true })],
+        [node('parent', 'FileNode', { id: parentId, active: true })],
+      ])
+      .create([
+        node('node'),
+        relation('out', '', 'parent', { active: true }),
+        node('parent'),
+      ])
+      .run();
   }
 
   async createDefinedFile(

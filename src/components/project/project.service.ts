@@ -574,6 +574,7 @@ export class ProjectService {
 
       // Create root directory
       const rootDir = await this.fileService.createDirectory(
+        undefined,
         `${id} root directory`,
         session
       );

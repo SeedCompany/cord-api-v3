@@ -42,3 +42,16 @@ export abstract class CreateDefinedFileVersionInput {
   })
   readonly name?: string;
 }
+
+@InputType()
+export abstract class CreateDirectoryInput {
+  @Field(() => ID, {
+    description: 'The ID for the parent directory',
+  })
+  readonly parentId: string;
+
+  @Field({
+    description: 'The directory name',
+  })
+  readonly name: string;
+}
