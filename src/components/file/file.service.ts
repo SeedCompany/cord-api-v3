@@ -198,11 +198,48 @@ export class FileService {
     throw new NotImplementedError();
   }
 
-  async getVersions(
-    _fileId: string,
-    _session: ISession
-  ): Promise<FileVersion[]> {
-    throw new NotImplementedError();
+  async getVersions(fileId: string, session: ISession): Promise<FileVersion[]> {
+    const result = await this.db
+      .query()
+      .match([
+        [
+          ...matchSession(session),
+          relation('in', 'admin', { active: true }),
+          node('file', 'File', { id: fileId }),
+        ],
+        [
+          node('file'),
+          relation('out', 'version', { active: true }),
+          node('fileVersion', 'BaseNode:FileVersion'),
+        ],
+      ])
+      .optionalMatch([
+        [
+          node('fileVersion'),
+          relation('out', '', 'size', { active: true }),
+          node('sizeProp', 'Property', { active: true }),
+        ],
+        [
+          node('fileVersion'),
+          relation('out', '', 'createdBy', { active: true }),
+          node('createdByProp', 'User', { active: true }),
+        ],
+      ])
+      .return({
+        fileVersion: [{ id: 'id', createdAt: 'createdAt' }],
+        sizeProp: [{ value: 'size' }],
+        createdByProp: [{ id: 'userId' }],
+      })
+      .first();
+
+    if (!result) {
+      throw new NotFoundException();
+    }
+
+    const user = await this.userService.readOne(result.userId, session);
+    result.createdBy = user;
+
+    return [result] as FileVersion[];
   }
 
   async createDirectory(name: string, session: ISession): Promise<Directory> {
