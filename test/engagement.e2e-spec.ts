@@ -201,17 +201,16 @@ describe('Engagement e2e', () => {
     expect(updated.lukePartnership.value).toBe(updateLukePartnership);
   });
 
-  // TODO implement update of properties with multiple labels for basenodes
-  // right now, updating is making the old prop false and new prop active
-  // but not handling prop's with multiple labels
-  it.skip('update internship engagement', async () => {
+  it('update internship engagement', async () => {
     const internshipEngagement = await createInternshipEngagement(app, {
       projectId: project.id,
       internId: intern.id,
     });
-
     const updatePosition = InternPosition.LanguageProgramManager;
-    const updateMethodologies = [ProductMethodology.Paratext];
+    const updateMethodologies = [
+      ProductMethodology.Paratext,
+      ProductMethodology.BibleStories,
+    ];
 
     const result = await app.graphql.mutate(
       gql`
@@ -287,7 +286,6 @@ describe('Engagement e2e', () => {
   });
 
   it('should have consistency in ceremony basenode', async () => {
-    // testing with LanguageEngagements since internengagemetns are not ready yet.
     project = await createProject(app);
     language = await createLanguage(app);
     const languageEngagement = await createLanguageEngagement(app, {
@@ -325,7 +323,7 @@ describe('Engagement e2e', () => {
     expect(result.checkEngagementConsistency).toBeTruthy();
   });
 
-  it.skip('should have consistency in internship engagement nodes', async () => {
+  it('should have consistency in internship engagement nodes', async () => {
     await createInternshipEngagement(app, {
       projectId: project.id,
       countryOfOriginId: country.id,

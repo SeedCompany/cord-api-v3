@@ -1168,4 +1168,26 @@ export class DatabaseService {
     const isUniqueProperty = totalNumber <= 1;
     return isUniqueProperty;
   }
+
+  async addLabelsToPropNodes(
+    baseNodeId: string,
+    property: string,
+    lables: string[]
+  ): Promise<void> {
+    await this.db
+      .query()
+      .match([node('baseNode', { active: true, id: baseNodeId })])
+      .match([
+        node('baseNode'),
+        relation('out', 'rel', property, { active: true }),
+        node('prop', 'Property', { active: true }),
+      ])
+      .set({
+        labels: {
+          prop: lables,
+        },
+      })
+      .return('baseNode')
+      .run();
+  }
 }
