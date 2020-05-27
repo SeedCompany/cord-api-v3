@@ -9,8 +9,6 @@ export async function createFilm(
   input: Partial<CreateFilm> = {}
 ) {
   const name = input.name || faker.hacker.noun() + faker.company.companyName();
-  const rangeStart = input.range?.rangeStart || faker.random.number();
-  const rangeEnd = input.range?.rangeEnd || faker.random.number();
 
   const result = await app.graphql.mutate(
     gql`
@@ -28,10 +26,12 @@ export async function createFilm(
         film: {
           ...input,
           name,
-          range: {
-            rangeStart: rangeStart,
-            rangeEnd: rangeEnd,
-          },
+          ranges: [
+            {
+              start: faker.random.number(),
+              end: faker.random.number(),
+            },
+          ],
         },
       },
     }

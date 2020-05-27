@@ -1,6 +1,5 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { IdArg, ISession, Session } from '../../../common';
-import { RangeService } from '../range';
 import {
   CreateFilmInput,
   CreateFilmOutput,
@@ -14,10 +13,7 @@ import { FilmService } from './film.service';
 
 @Resolver(Film.classType)
 export class FilmResolver {
-  constructor(
-    private readonly filmService: FilmService,
-    private readonly rangeService: RangeService
-  ) {}
+  constructor(private readonly filmService: FilmService) {}
 
   @Mutation(() => CreateFilmOutput, {
     description: 'Create an film',
@@ -60,9 +56,9 @@ export class FilmResolver {
     @Args('input') { film: input }: UpdateFilmInput
   ): Promise<UpdateFilmOutput> {
     const film = await this.filmService.update(input, session);
-    if (input.range) {
-      await this.rangeService.update(input.range, session, input.id);
-    }
+    // if (input.range) {
+    //   await this.rangeService.update(input.range, session, input.id);
+    // }
     return { film };
   }
 

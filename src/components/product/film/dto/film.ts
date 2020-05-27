@@ -13,6 +13,6 @@ export class Film extends Resource {
   @Field()
   readonly name: SecuredString;
 
-  @Field(() => Range, { nullable: true })
-  readonly range: Range;
+  @Field(() => [Range], { nullable: true })
+  readonly range: Range[];
 }

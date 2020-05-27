@@ -17,6 +17,7 @@ import {
   matchSession,
   OnIndex,
 } from '../../../core';
+import { RangeService } from '../range/range.service';
 import {
   CreateFilm,
   Film,
@@ -29,7 +30,8 @@ import {
 export class FilmService {
   constructor(
     @Logger('film:service') private readonly logger: ILogger,
-    private readonly db: DatabaseService
+    private readonly db: DatabaseService,
+    private readonly rangeService: RangeService
   ) {}
 
   @OnIndex()
@@ -41,20 +43,8 @@ export class FilmService {
       'CREATE CONSTRAINT ON (n:Film) ASSERT EXISTS(n.createdAt)',
       'CREATE CONSTRAINT ON (n:Film) ASSERT EXISTS(n.owningOrgId)',
 
-      'CREATE CONSTRAINT ON (n:RangeStart) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:RangeEnd) ASSERT EXISTS(n.value)',
-
       'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.active)',
       'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
-
-      'CREATE CONSTRAINT ON ()-[r:range]-() ASSERT EXISTS(r.active)',
-      'CREATE CONSTRAINT ON ()-[r:range]-() ASSERT EXISTS(r.createdAt)',
-
-      'CREATE CONSTRAINT ON ()-[r:rangeStart]-() ASSERT EXISTS(r.active)',
-      'CREATE CONSTRAINT ON ()-[r:rangeStart]-() ASSERT EXISTS(r.createdAt)',
-
-      'CREATE CONSTRAINT ON ()-[r:rangeEnd]-() ASSERT EXISTS(r.active)',
-      'CREATE CONSTRAINT ON ()-[r:rangeEnd]-() ASSERT EXISTS(r.createdAt)',
 
       'CREATE CONSTRAINT ON (n:FilmName) ASSERT EXISTS(n.value)',
       'CREATE CONSTRAINT ON (n:FilmName) ASSERT n.value IS UNIQUE',
@@ -195,9 +185,6 @@ export class FilmService {
             }),
           ],
           ...this.property('name', input.name, 'newFilm'),
-          ...this.property('range', input.range ? id : undefined, 'newFilm'),
-          ...this.property('rangeStart', input.range?.rangeStart, 'range'),
-          ...this.property('rangeEnd', input.range?.rangeEnd, 'range'),
           [
             node('adminSG', 'SecurityGroup', {
               active: true,
@@ -217,9 +204,6 @@ export class FilmService {
             node('requestingUser'),
           ],
           ...this.permission('name', 'newFilm'),
-          ...this.permission('range', 'newFilm'),
-          ...this.permission('rangeStart', 'range'),
-          ...this.permission('rangeEnd', 'range'),
         ])
         .return('newFilm.id as id')
         .first();
@@ -228,8 +212,12 @@ export class FilmService {
       throw new ServerException('Could not create film');
     }
 
+    if (input.ranges) {
+      for (const range of input.ranges) {
+        await this.rangeService.create(range, 'film', id, session);
+      }
+    }
     this.logger.info(`film created, id ${id}`);
-
     return this.readOne(id, session);
   }
 
@@ -240,8 +228,6 @@ export class FilmService {
       .match([node('film', 'Film', { active: true, id: filmId })])
       .optionalMatch([...this.propMatch('name', 'film')])
       .optionalMatch([...this.propMatch('range', 'film')])
-      .optionalMatch([...this.propMatch('rangeStart', 'range')])
-      .optionalMatch([...this.propMatch('rangeEnd', 'range')])
       .return({
         film: [{ id: 'id', createdAt: 'createdAt' }],
         name: [{ value: 'name' }],
@@ -249,12 +235,8 @@ export class FilmService {
           { canReadFilms: 'canReadFilms', canCreateFilm: 'canCreateFilm' },
         ],
         canReadName: [{ read: 'canReadName', edit: 'canEditName' }],
-        rangeStart: [{ value: 'rangeStart' }],
-        canReadRangeStart: [
-          { read: 'canReadRangeStart', edit: 'canEditRangeStart' },
-        ],
-        rangeEnd: [{ value: 'rangeEnd' }],
-        canReadRangeEnd: [{ read: 'canReadRangeEnd', edit: 'canEditRangeEnd' }],
+        range: [{ value: 'range' }],
+        canReadRange: [{ read: 'canReadRange', edit: 'canEditRange' }],
       })
       .first();
 
@@ -274,20 +256,7 @@ export class FilmService {
         canRead: !!result.canReadName,
         canEdit: !!result.canEditName,
       },
-      range: {
-        id: result.id,
-        rangeStart: {
-          value: result.rangeStart,
-          canRead: !!result.canReadRangeStart,
-          canEdit: !!result.canEditRangeStart,
-        },
-        rangeEnd: {
-          value: result.rangeEnd,
-          canRead: !!result.canReadRangeEnd,
-          canEdit: !!result.canEditRangeEnd,
-        },
-        createdAt: result.createdAt,
-      },
+      range: [],
       createdAt: result.createdAt,
     };
   }
@@ -329,7 +298,7 @@ export class FilmService {
       nodevar: 'film',
       aclReadProp: 'canReadFilms',
       aclEditProp: 'canCreateFilm',
-      props: ['name', 'range'],
+      props: ['name'],
       input: {
         page,
         count,

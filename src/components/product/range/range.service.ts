@@ -2,9 +2,12 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  InternalServerErrorException as ServerException,
 } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { upperFirst } from 'lodash';
+import { DateTime } from 'luxon';
+import { generate } from 'shortid';
 import { ISession } from '../../../common';
 import {
   DatabaseService,
@@ -13,7 +16,7 @@ import {
   matchSession,
   OnIndex,
 } from '../../../core';
-import { Range, UpdateRange } from './dto/range';
+import { CreateRange, Range } from './dto';
 
 @Injectable()
 export class RangeService {
@@ -25,15 +28,6 @@ export class RangeService {
   @OnIndex()
   async createIndexes() {
     const constraints = [
-      'CREATE CONSTRAINT ON (n:RangeStart) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:RangeEnd) ASSERT EXISTS(n.value)',
-
-      'CREATE CONSTRAINT ON ()-[r:rangeStart]-() ASSERT EXISTS(r.active)',
-      'CREATE CONSTRAINT ON ()-[r:rangeStart]-() ASSERT EXISTS(r.createdAt)',
-
-      'CREATE CONSTRAINT ON ()-[r:rangeEnd]-() ASSERT EXISTS(r.active)',
-      'CREATE CONSTRAINT ON ()-[r:rangeEnd]-() ASSERT EXISTS(r.createdAt)',
-
       'CREATE CONSTRAINT ON ()-[r:range]-() ASSERT EXISTS(r.active)',
       'CREATE CONSTRAINT ON ()-[r:range]-() ASSERT EXISTS(r.createdAt)',
     ];
@@ -41,6 +35,75 @@ export class RangeService {
       await this.db.query().raw(query).run();
     }
   }
+
+  // helper method for defining properties
+  property = (prop: string, range: any, baseNode: string, id: string) => {
+    if (!range) {
+      return [];
+    }
+    const createdAt = DateTime.local();
+    return [
+      [
+        node(baseNode),
+        relation('out', '', prop, {
+          active: true,
+          createdAt,
+        }),
+        node(prop, 'Range:Property', {
+          active: true,
+          id: id,
+          start: range.start,
+          end: range.end,
+          value: '',
+        }),
+      ],
+    ];
+  };
+
+  // helper method for defining permissions
+  permission = (property: string, baseNode: string) => {
+    const createdAt = DateTime.local();
+    return [
+      [
+        node('adminSG'),
+        relation('out', '', 'permission', {
+          active: true,
+          createdAt,
+        }),
+        node('', 'Permission', {
+          property,
+          active: true,
+          read: true,
+          edit: true,
+          admin: true,
+        }),
+        relation('out', '', 'baseNode', {
+          active: true,
+          createdAt,
+        }),
+        node(baseNode),
+      ],
+      [
+        node('readerSG'),
+        relation('out', '', 'permission', {
+          active: true,
+          createdAt,
+        }),
+        node('', 'Permission', {
+          property,
+          active: true,
+          read: true,
+          edit: false,
+          admin: false,
+        }),
+        relation('out', '', 'baseNode', {
+          active: true,
+          createdAt,
+        }),
+        node(baseNode),
+      ],
+    ];
+  };
 
   // helper method for match properties
   propMatch = (property: string, baseNode: string) => {
@@ -64,69 +127,83 @@ export class RangeService {
     ];
   };
 
-  async readOne(filmId: string, session: ISession): Promise<Range> {
+  async create(
+    input: CreateRange,
+    type: string,
+    typeId: string,
+    session: ISession
+  ): Promise<Range> {
+    const perm = `canCreate${upperFirst(type)}`;
+    const baseNode = upperFirst(type);
+    const id = generate();
+    try {
+      await this.db
+        .query()
+        .match(matchSession(session, { withAclEdit: perm }))
+        .match([node('node', baseNode, { active: true, id: typeId })])
+        .create([
+          ...this.property('range', input, 'node', id),
+          ...this.permission('range', 'node'),
+        ])
+        .return('range.id as id')
+        .first();
+    } catch (err) {
+      this.logger.error(`Could not create film for user ${session.userId}`);
+      throw new ServerException('Could not create film');
+    }
+    this.logger.info(`range created, id ${id}`);
+    return this.readOne(typeId, type, id, session);
+  }
+
+  async readOne(
+    id: string,
+    type: string,
+    rangeId: string,
+    session: ISession
+  ): Promise<Range> {
+    const perm = `canRead${upperFirst(type)}s`;
+    const baseNode = upperFirst(type);
     const result = await this.db
       .query()
-      .match(matchSession(session, { withAclEdit: 'canReadFilms' }))
-      .match([node('film', 'Film', { active: true, id: filmId })])
-      .optionalMatch([...this.propMatch('name', 'film')])
-      .optionalMatch([...this.propMatch('range', 'film')])
-      .optionalMatch([...this.propMatch('rangeStart', 'range')])
-      .optionalMatch([...this.propMatch('rangeEnd', 'range')])
+      .match(matchSession(session, { withAclEdit: perm }))
+      .match([node('node', baseNode, { active: true, id: id })])
+      .optionalMatch([...this.propMatch('name', 'node')])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node('canReadRange', 'Permission', {
+          property: 'range',
+          active: true,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('node'),
+        relation('out', '', 'range', { active: true }),
+        node('range', 'Property', { active: true }),
+      ])
       .return({
-        film: [{ id: 'id', createdAt: 'createdAt' }],
-        name: [{ value: 'name' }],
-        range: [{ value: 'range' }],
         requestingUser: [
           { canReadFilms: 'canReadFilms', canCreateFilm: 'canCreateFilm' },
         ],
-        canReadName: [{ read: 'canReadName', edit: 'canEditName' }],
-        rangeStart: [{ value: 'rangeStart' }],
-        canReadRangeStart: [
-          { read: 'canReadRangeStart', edit: 'canEditRangeStart' },
-        ],
-        rangeEnd: [{ value: 'rangeEnd' }],
-        canReadRangeEnd: [{ read: 'canReadRangeEnd', edit: 'canEditRangeEnd' }],
+        range: [{ start: 'start', end: 'end', id: 'id' }],
+        canReadRange: [{ read: 'canReadRange', edit: 'canEditRange' }],
       })
       .first();
-
     if (!result) {
-      throw new NotFoundException('Could not find film');
+      throw new NotFoundException('Could not find range');
     }
     if (!result.canCreateFilm) {
       throw new ForbiddenException(
         'User does not have permission to create an film'
       );
     }
-
     return {
-      id: result.range,
-      rangeStart: {
-        value: result.rangeStart,
-        canRead: !!result.canReadRangeStart,
-        canEdit: !!result.canEditRangeStart,
-      },
-      rangeEnd: {
-        value: result.rangeEnd,
-        canRead: !!result.canReadRangeEnd,
-        canEdit: !!result.canEditRangeEnd,
-      },
+      id: rangeId,
+      start: result.start,
+      end: result.end,
       createdAt: result.createdAt,
     };
-  }
-
-  async update(
-    input: UpdateRange,
-    session: ISession,
-    id: string
-  ): Promise<Range> {
-    const range = await this.readOne(id, session);
-    return this.db.sgUpdateProperties({
-      session,
-      object: range,
-      props: ['rangeStart', 'rangeEnd'],
-      changes: input,
-      nodevar: 'range',
-    });
   }
 }

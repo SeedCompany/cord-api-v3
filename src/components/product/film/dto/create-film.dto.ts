@@ -1,7 +1,7 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { MinLength, ValidateNested } from 'class-validator';
-import { RangeInput } from '../../range/dto';
+import { CreateRange } from '../../range/dto';
 import { Film } from './film';
 
 @InputType()
@@ -10,8 +10,8 @@ export abstract class CreateFilm {
   @MinLength(2)
   readonly name: string;
 
-  @Field(() => RangeInput, { nullable: true })
-  readonly range?: RangeInput;
+  @Field(() => [CreateRange], { nullable: true })
+  readonly ranges?: CreateRange[];
 }
 
 @InputType()
