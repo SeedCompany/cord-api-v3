@@ -9,7 +9,13 @@ import {
 import { stripIndent } from 'common-tags';
 import { DateTime } from 'luxon';
 import { MergeExclusive } from 'type-fest';
-import { DateTimeField, Resource, simpleSwitch } from '../../../common';
+import {
+  DateTimeField,
+  Resource,
+  Secured,
+  SecuredProperty,
+  simpleSwitch,
+} from '../../../common';
 import { User } from '../../user/dto';
 import { FileNodeCategory } from './category';
 import { FileNodeType } from './type';
@@ -118,6 +124,16 @@ export class Directory extends IFileNode {
 
   readonly type: FileNodeType.Directory;
 }
+
+@ObjectType({
+  description: SecuredProperty.descriptionFor('a file'),
+})
+export abstract class SecuredFile extends SecuredProperty(File) {}
+
+/**
+ * A reference to a secured defined file. The value is the ID of the file.
+ */
+export type DefinedFile = Secured<string>;
 
 export const isDirectory = (node: FileNode): node is Directory =>
   node.type === FileNodeType.Directory;

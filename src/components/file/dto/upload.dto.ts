@@ -29,3 +29,16 @@ export abstract class CreateFileVersionInput {
   })
   readonly name: string;
 }
+
+@InputType()
+export abstract class CreateDefinedFileVersionInput {
+  @Field(() => ID, {
+    description: 'The ID returned from the `requestFileUpload` mutation',
+  })
+  readonly uploadId: string;
+
+  @Field({
+    description: 'An optional name. Defaults to file name.',
+  })
+  readonly name?: string;
+}

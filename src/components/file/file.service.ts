@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Inject,
   Injectable,
   NotFoundException,
@@ -14,7 +15,9 @@ import { generate } from 'shortid';
 import { ISession, NotImplementedError } from '../../common';
 import { DatabaseService, ILogger, Logger, matchSession } from '../../core';
 import {
+  CreateDefinedFileVersionInput,
   CreateFileVersionInput,
+  DefinedFile,
   Directory,
   File,
   FileListInput,
@@ -28,6 +31,7 @@ import {
   MoveFileInput,
   RenameFileInput,
   RequestUploadOutput,
+  SecuredFile,
 } from './dto';
 import { FilesBucketToken } from './files-s3-bucket.factory';
 import { getCategoryFromMimeType } from './mimeTypes';
@@ -375,7 +379,7 @@ export class FileService {
   }
 
   private async createFileInDb(
-    parentId: string,
+    parentId: string | undefined,
     name: string,
     session: ISession
   ) {
@@ -399,19 +403,21 @@ export class FileService {
       aclEditProp: 'canCreateFile',
     });
 
-    // create relationship: file -> parent (dir)
-    await this.db
-      .query()
-      .match([
-        [node('file', 'File', { id: fileId, active: true })],
-        [node('parent', 'Directory', { id: parentId, active: true })],
-      ])
-      .create([
-        node('file'),
-        relation('out', '', 'parent', { active: true }),
-        node('parent'),
-      ])
-      .run();
+    if (parentId) {
+      // create relationship: file -> parent (dir)
+      await this.db
+        .query()
+        .match([
+          [node('file', 'File', { id: fileId, active: true })],
+          [node('parent', 'Directory', { id: parentId, active: true })],
+        ])
+        .create([
+          node('file'),
+          relation('out', '', 'parent', { active: true }),
+          node('parent'),
+        ])
+        .run();
+    }
 
     // create relationship: file -> createdBy
     await this.db
@@ -431,6 +437,73 @@ export class FileService {
       .run();
 
     return fileId;
+  }
+
+  async createDefinedFile(
+    name: string,
+    session: ISession,
+    initialVersion?: CreateDefinedFileVersionInput
+  ) {
+    const fileId = await this.createFileInDb(undefined, name, session);
+    if (initialVersion) {
+      await this.createFileVersion(
+        {
+          parentId: fileId,
+          uploadId: initialVersion.uploadId,
+          name: initialVersion.name ?? name,
+        },
+        session
+      );
+    }
+    return fileId;
+  }
+
+  async updateDefinedFile(
+    file: DefinedFile,
+    input: CreateDefinedFileVersionInput | undefined,
+    session: ISession
+  ) {
+    if (!input) {
+      return;
+    }
+    if (!file.canRead || !file.canEdit || !file.value) {
+      throw new ForbiddenException(
+        'You do not have permission to update this file'
+      );
+    }
+    const name = input.name ?? (await this.getFile(file.value, session)).name;
+    await this.createFileVersion(
+      {
+        parentId: file.value,
+        uploadId: input.uploadId,
+        name,
+      },
+      session
+    );
+  }
+
+  async resolveDefinedFile(
+    input: DefinedFile,
+    session: ISession
+  ): Promise<SecuredFile> {
+    const { value: fileId, ...rest } = input;
+    if (!rest.canRead || !fileId) {
+      return rest;
+    }
+    try {
+      const file = await this.getFile(fileId, session);
+      return {
+        ...rest,
+        value: file,
+      };
+    } catch (e) {
+      // DefinedFiles are nullable. This works by creating the file without
+      // versions which causes the direct lookup to fail.
+      if (e instanceof NotFoundException) {
+        return rest;
+      }
+      throw e;
+    }
   }
 
   async rename(input: RenameFileInput, session: ISession): Promise<FileNode> {
