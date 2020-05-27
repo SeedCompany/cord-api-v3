@@ -5,14 +5,14 @@ import {
   NotFoundException,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { node } from 'cypher-query-builder';
 import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession, NotImplementedError } from '../../common';
 import { DatabaseService, ILogger, Logger, matchSession } from '../../core';
 import {
-  CreateFileInput,
+  CreateFileVersionInput,
   Directory,
   File,
   FileListInput,
@@ -24,7 +24,6 @@ import {
   MoveFileInput,
   RenameFileInput,
   RequestUploadOutput,
-  UpdateFileInput,
 } from './dto';
 import { FilesBucketToken } from './files-s3-bucket.factory';
 import { getCategoryFromMimeType } from './mimeTypes';
@@ -236,8 +235,8 @@ export class FileService {
     return { id, url };
   }
 
-  async createFile(
-    { parentId, uploadId, name }: CreateFileInput,
+  async createFileVersion(
+    { parentId, uploadId, name }: CreateFileVersionInput,
     session: ISession
   ): Promise<File> {
     let file;
@@ -348,93 +347,6 @@ export class FileService {
       `;
     await this.db.query().raw(qryOne, { parentId }).first();
     return this.getFile(fileId, session);
-  }
-
-  async updateFile(input: UpdateFileInput, session: ISession): Promise<File> {
-    const parentNode = await this.db
-      .query()
-      .match([
-        matchSession(session),
-        [
-          node('parent', 'File', {
-            id: input.parentId,
-            active: true,
-          }),
-          relation('out', '', 'name'),
-          node('parentName', 'Property', {
-            active: true,
-          }),
-        ],
-      ])
-      .return('parent.id as id, parentName.value as name')
-      .first();
-    if (!parentNode) {
-      throw new BadRequestException('parent not found');
-    }
-
-    let fv;
-    if (parentNode && parentNode.name !== 'testFile') {
-      fv = await this.bucket.getObject(`temp/${input.uploadId}`);
-      if (!fv) {
-        throw new BadRequestException('object not found in s3bucket');
-      }
-      await this.bucket.moveObject(
-        `temp/${input.uploadId}`,
-        `${input.uploadId}`
-      );
-    } else {
-      // to skip aws s3 calls while unit testing, assuming a fake test file
-      fv = { ContentType: 'text/plain', ContentLength: 1234 };
-    }
-
-    const inputForFileVersion = {
-      category: FileNodeCategory.Document, // TODO
-      id: input.uploadId,
-      mimeType: fv.ContentType,
-      modifiedAt: DateTime.local(),
-      size: fv.ContentLength,
-    };
-    const acls = {
-      canReadSize: true,
-      canEditSize: true,
-      canReadParent: true,
-      canEditParent: true,
-      canReadMimeType: true,
-      canEditMimeType: true,
-      canReadCategory: true,
-      canEditCategory: true,
-      canReadName: true,
-      canEditName: true,
-      canReadModifiedAt: true,
-      canEditModifiedAt: true,
-    };
-    await this.db.createNode({
-      session,
-      type: FileVersion.classType,
-      input: inputForFileVersion,
-      acls,
-    });
-
-    const qry = `
-      MATCH
-        (file: File {id: "${input.parentId}", active: true}),
-        (newFv:FileVersion {id: "${input.uploadId}", active: true}),
-        (user:User { id: "${session.userId}", active: true})
-      CREATE
-        (newFv)<-[:version {active: true, createdAt: datetime()}]-(file),
-        (newFv)-[:modifiedBy {active: true, modifiedAt: datetime()}]->(user)
-      RETURN
-        file, newFv, user
-    `;
-    await this.db
-      .query()
-      .raw(qry, {
-        fileId: input.parentId,
-        userId: session.userId,
-      })
-      .first();
-
-    return this.getFile(input.parentId, session);
   }
 
   async rename(input: RenameFileInput, session: ISession): Promise<FileNode> {

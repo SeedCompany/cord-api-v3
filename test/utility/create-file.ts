@@ -1,13 +1,13 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
-import { CreateFileInput, File } from '../../src/components/file/dto';
+import { CreateFileVersionInput, File } from '../../src/components/file/dto';
 import { TestApp } from './create-app';
 
 export async function createFile(
   app: TestApp,
-  input: Partial<CreateFileInput> = {}
+  input: Partial<CreateFileVersionInput> = {}
 ) {
-  const file: CreateFileInput = {
+  const file: CreateFileVersionInput = {
     uploadId: input.uploadId!,
     parentId: input.parentId!,
     name: faker.company.companyName(),

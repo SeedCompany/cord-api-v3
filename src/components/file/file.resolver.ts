@@ -6,11 +6,12 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
+import { stripIndent } from 'common-tags';
 import { IdArg, ISession, Session } from '../../common';
 import { User } from '../user';
 import {
   BaseNodeConsistencyInput,
-  CreateFileInput,
+  CreateFileVersionInput,
   File,
   FileNode,
   FileNodeType,
@@ -19,7 +20,6 @@ import {
   MoveFileInput,
   RenameFileInput,
   RequestUploadOutput,
-  UpdateFileInput,
 } from './dto';
 import { FileNodeResolver } from './file-node.resolver';
 
@@ -92,24 +92,19 @@ export class FileResolver extends FileNodeResolver(
   }
 
   @Mutation(() => File, {
-    description: 'Create a new file in the given directory after uploading it',
+    description: stripIndent`
+      Create a new file version.
+      This is always the second step after \`requestFileUpload\` mutation.
+      If the given parent is a file, this will attach the new version to it.
+      If the given parent is a directory, this will attach the new version to
+      the existing file with the same name or create a new file if not found.
+    `,
   })
-  createFile(
-    @Args('input') input: CreateFileInput,
+  createFileVersion(
+    @Args('input') input: CreateFileVersionInput,
     @Session() session: ISession
   ): Promise<File> {
-    return this.service.createFile(input, session);
-  }
-
-  @Mutation(() => File, {
-    description:
-      'Update an existing file (add a new version) after uploading it',
-  })
-  updateFile(
-    @Args('input') input: UpdateFileInput,
-    @Session() session: ISession
-  ): Promise<File> {
-    return this.service.updateFile(input, session);
+    return this.service.createFileVersion(input, session);
   }
 
   @Mutation(() => IFileNode, {

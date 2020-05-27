@@ -80,7 +80,7 @@ describe('file service', () => {
     // eslint-disable-next-line @typescript-eslint/unbound-method
     fileService.getFile = jest.fn().mockReturnValue(createTestFile);
 
-    const file = await fileService.createFile(
+    const file = await fileService.createFileVersion(
       {
         parentId: 'test-parent',
         name: 'test-file',
@@ -109,7 +109,7 @@ describe('file service', () => {
     bucket.moveObject = jest.fn().mockReturnValue({});
     // eslint-disable-next-line @typescript-eslint/unbound-method
     fileService.getFileNode = jest.fn().mockReturnValue(createTestFile);
-    const file = await fileService.createFile(
+    const file = await fileService.createFileVersion(
       {
         parentId: 'test-parent',
         name: 'test-file',
@@ -135,7 +135,7 @@ describe('file service', () => {
     bucket.moveObject = jest.fn().mockReturnValue({});
     // eslint-disable-next-line @typescript-eslint/unbound-method
     fileService.getFile = jest.fn().mockReturnValue(createTestFile);
-    const file = await fileService.createFile(
+    const file = await fileService.createFileVersion(
       {
         parentId: 'test-parent',
         name: 'test-file',
