@@ -6,6 +6,7 @@ import {
   SecuredProperty,
   SecuredPropertyList,
 } from '../../../common';
+import { DefinedFile } from '../../file/dto';
 import { Organization } from '../../organization';
 import { PartnershipAgreementStatus } from './partnership-agreement-status.enum';
 import { PartnershipType } from './partnership-type.enum';
@@ -34,6 +35,8 @@ export class Partnership extends Resource {
   @Field()
   readonly agreementStatus: SecuredPartnershipAgreementStatus;
 
+  readonly mou: DefinedFile;
+
   @Field()
   readonly mouStatus: SecuredPartnershipAgreementStatus;
 
@@ -42,6 +45,8 @@ export class Partnership extends Resource {
 
   @Field()
   readonly mouEnd: SecuredDate;
+
+  readonly agreement: DefinedFile;
 
   @Field(() => Organization)
   readonly organization: Organization;
