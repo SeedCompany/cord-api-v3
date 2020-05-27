@@ -26,6 +26,7 @@ import {
   FileNodeCategory,
   FileNodeType,
   FileVersion,
+  isDirectory,
   isFile,
   isFileVersion,
   MoveFileInput,
@@ -46,48 +47,25 @@ export class FileService {
   ) {}
 
   async getDirectory(id: string, session: ISession): Promise<Directory> {
-    const result = await this.db
-      .query()
-      .raw(
-        `
-      MATCH
-        (token:Token {active: true, value: $token})
-        <-[:token {active: true}]-
-        (requestingUser:User {
-          active: true,
-          id: $requestingUserId
-        }),
-        (dir: Directory {id: $uploadId, active: true})
-      WITH * OPTIONAL MATCH (dir)-[:type {active:true}]->(dirType:Property {active: true})
-      WITH * OPTIONAL MATCH (dir)-[:name {active:true}]->(dirName:Property {active: true})
-      RETURN
-        dir.createdAt as createdAt,
-        dir.id as id,
-        dirType.value as type,
-        dirName.value as name
-      `,
-        {
-          uploadId: id,
-          requestingUserId: session.userId,
-          token: session.token,
-        }
-      )
-      .first();
-
-    return {
-      createdAt: result!.createdAt,
-      createdById: session.userId!, // TODO
-      id: result!.id,
-      type: result!.type,
-      name: result!.name,
-      category: FileNodeCategory.Document, // TODO
-    };
+    const node = await this.getFileNode(id, session);
+    if (!isDirectory(node)) {
+      throw new BadRequestException('Node is not a directory');
+    }
+    return node;
   }
 
   async getFile(id: string, session: ISession): Promise<File> {
     const node = await this.getFileNode(id, session);
-    if (node.type !== FileNodeType.File) {
+    if (!isFile(node)) {
       throw new BadRequestException('Node is not a file');
+    }
+    return node;
+  }
+
+  async getFileVersion(id: string, session: ISession): Promise<FileVersion> {
+    const node = await this.getFileNode(id, session);
+    if (!isFileVersion(node)) {
+      throw new BadRequestException('Node is not a file version');
     }
     return node;
   }
@@ -100,7 +78,7 @@ export class FileService {
       q
         .with('*')
         .optionalMatch([
-          node('file'),
+          node('node'),
           relation('out', '', prop, isActive),
           node(variable, 'Property', isActive),
         ]);
@@ -120,21 +98,22 @@ export class FileService {
       .query()
       .match([
         matchSession(session),
-        [node('file', 'File', { id, ...isActive })],
-        [
-          node('file'),
-          relation('out', '', 'version', isActive),
-          node('fv', 'FileVersion', isActive),
-        ],
+        [node('node', 'FileNode', { id, ...isActive })],
       ])
       .call(matchNodeProp, 'type')
       .call(matchNodeProp, 'name')
+      .with('*')
+      .optionalMatch([
+        node('node'),
+        relation('out', '', 'version', isActive),
+        node('fv', 'FileVersion', isActive),
+      ])
       .call(matchLatestVersionProp, 'size')
       .call(matchLatestVersionProp, 'mimeType')
       .call(matchLatestVersionProp, 'category')
       .call(matchLatestVersionProp, 'createdAt', 'modifiedAt')
       .return({
-        file: [{ id: 'id', createdAt: 'createdAt' }],
+        node: [{ id: 'id', createdAt: 'createdAt' }],
         type: [{ value: 'type' }],
         name: [{ value: 'name' }],
         size: [{ value: 'size' }],
@@ -227,7 +206,7 @@ export class FileService {
         canReadName: true,
         canEditName: true,
       },
-      baseNodeLabel: 'Directory',
+      baseNodeLabel: ['Directory', 'FileNode'],
       aclEditProp: 'canCreateDirectory',
     });
 
@@ -317,6 +296,7 @@ export class FileService {
     await this.db.createNode({
       session,
       type: FileVersion.classType,
+      baseNodeLabel: ['FileVersion', 'FileNode'],
       input: {
         id: uploadId,
         name,
@@ -399,6 +379,7 @@ export class FileService {
     await this.db.createNode({
       session,
       type: File.classType,
+      baseNodeLabel: ['File', 'FileNode'],
       input: {
         id: fileId,
         name,
