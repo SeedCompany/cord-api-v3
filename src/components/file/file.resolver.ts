@@ -85,7 +85,7 @@ export class FileResolver extends FileNodeResolver(
   @Mutation(() => RequestUploadOutput, {
     description: 'Start the file upload process by requesting an upload',
   })
-  async requestUpload(
+  async requestFileUpload(
     @Session() _session: ISession // require authorized
   ): Promise<RequestUploadOutput> {
     return this.service.requestUpload();

@@ -14,7 +14,7 @@ export abstract class RequestUploadOutput {
 @InputType()
 export abstract class CreateFileInput {
   @Field(() => ID, {
-    description: 'The ID returned from the CreateUpload mutation',
+    description: 'The ID returned from the `requestFileUpload` mutation',
   })
   readonly uploadId: string;
 
@@ -32,7 +32,7 @@ export abstract class CreateFileInput {
 @InputType()
 export abstract class UpdateFileInput {
   @Field(() => ID, {
-    description: 'The ID returned from the CreateUpload mutation',
+    description: 'The ID returned from the `requestFileUpload` mutation',
   })
   readonly uploadId: string;
 
