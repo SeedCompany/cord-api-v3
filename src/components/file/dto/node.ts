@@ -119,6 +119,15 @@ export class Directory extends IFileNode {
   readonly type: FileNodeType.Directory;
 }
 
+export const isDirectory = (node: FileNode): node is Directory =>
+  node.type === FileNodeType.Directory;
+
+export const isFile = (node: FileNode): node is File =>
+  node.type === FileNodeType.File;
+
+export const isFileVersion = (node: FileNode): node is FileVersion =>
+  node.type === FileNodeType.FileVersion;
+
 @InputType()
 export abstract class BaseNodeConsistencyInput {
   @Field({

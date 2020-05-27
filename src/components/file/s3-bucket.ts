@@ -1,5 +1,5 @@
 import { S3 } from 'aws-sdk';
-import { GetObjectOutput } from 'aws-sdk/clients/s3';
+import { GetObjectOutput, HeadObjectOutput } from 'aws-sdk/clients/s3';
 import { Duration } from 'luxon';
 
 export interface BucketOptions {
@@ -37,6 +37,15 @@ export class S3Bucket {
   async getObject(key: string): Promise<GetObjectOutput> {
     return this.s3
       .getObject({
+        Bucket: this.bucket,
+        Key: key,
+      })
+      .promise();
+  }
+
+  async headObject(key: string): Promise<HeadObjectOutput> {
+    return this.s3
+      .headObject({
         Bucket: this.bucket,
         Key: key,
       })

@@ -64,11 +64,8 @@ export class FileResolver extends FileNodeResolver(
   @ResolveField(() => String, {
     description: 'A direct url to download the file',
   })
-  downloadUrl(
-    @Parent() node: File,
-    @Session() session: ISession
-  ): Promise<string> {
-    return this.service.getDownloadUrl(node.id, session);
+  downloadUrl(@Parent() node: File): Promise<string> {
+    return this.service.getDownloadUrl(node.id);
   }
 
   @Mutation(() => Boolean, {

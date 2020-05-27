@@ -5,7 +5,9 @@ import {
   NotFoundException,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
-import { node } from 'cypher-query-builder';
+import { AWSError } from 'aws-sdk';
+import { HeadObjectOutput } from 'aws-sdk/clients/s3';
+import { node, relation } from 'cypher-query-builder';
 import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
@@ -21,6 +23,8 @@ import {
   FileNodeCategory,
   FileNodeType,
   FileVersion,
+  isFile,
+  isFileVersion,
   MoveFileInput,
   RenameFileInput,
   RequestUploadOutput,
@@ -85,7 +89,8 @@ export class FileService {
   }
 
   async getFileNode(id: string, session: ISession): Promise<FileNode> {
-    this.logger.info(`Query readOne FileNode: id ${id} by ${session.userId}`);
+    this.logger.info(`getNode`, { id, userId: session.userId });
+
     const result = await this.db
       .query()
       .raw(
@@ -160,14 +165,15 @@ export class FileService {
     };
   }
 
-  async getDownloadUrl(fileId: string, _session: ISession): Promise<string> {
-    // before sending link, first check if object exists in s3,
-    const obj = await this.bucket.getObject(fileId);
-    if (!obj) {
-      throw new BadRequestException('object not found');
+  async getDownloadUrl(fileId: string): Promise<string> {
+    try {
+      // before sending link, first check if object exists in s3
+      await this.bucket.headObject(fileId);
+      return await this.bucket.getSignedUrlForPutObject(fileId);
+    } catch (e) {
+      this.logger.error('Unable to generate download url', { exception: e });
+      throw new ServerException('Unable to generate download url');
     }
-
-    return this.bucket.getSignedUrlForPutObject(fileId);
   }
 
   async getParents(
@@ -208,22 +214,22 @@ export class FileService {
       baseNodeLabel: 'Directory',
       aclEditProp: 'canCreateDirectory',
     });
-    // create createdby relationship
-    const qry = `
-      MATCH
-        (dirNode:Directory {id: "${id}", active: true}),
-        (user:User {id: "${session.userId}", active: true})
-      CREATE
-        (dirNode)-[:createdBy {active: true, createdAt: datetime()}]->(user)
-      RETURN
-        dirNode,user
-    `;
+
+    // create relationship: node -> createdBy
     await this.db
       .query()
-      .raw(qry, {
-        id,
-        userId: session.userId,
-      })
+      .match([
+        [node('dirNode', 'Directory', { id, active: true })],
+        [node('user', 'User', { id: session.userId, active: true })],
+      ])
+      .create([
+        node('dirNode'),
+        relation('out', '', 'createdBy', {
+          active: true,
+          createdAt: DateTime.local(),
+        }),
+        node('user'),
+      ])
       .run();
 
     return this.getDirectory(id, session);
@@ -235,22 +241,144 @@ export class FileService {
     return { id, url };
   }
 
+  /**
+   * Create a new file version.
+   * This is always the second step after `requestFileUpload` mutation.
+   * If the given parent is a file, this will attach the new version to it.
+   * If the given parent is a directory, this will attach the new version to
+   * the existing file with the same name or create a new file if not found.
+   */
   async createFileVersion(
     { parentId, uploadId, name }: CreateFileVersionInput,
     session: ISession
   ): Promise<File> {
-    let file;
-    if (name === 'testFile') {
-      // to skip aws s3 calls while unit testing, assuming a fake test file
-      file = { ContentType: 'plain/text', ContentLength: 1234 };
-    } else {
-      file = await this.bucket.getObject(`temp/${uploadId}`);
-      if (!file) {
-        throw new BadRequestException('object not found');
+    let upload;
+    try {
+      upload = await this.bucket.headObject(`temp/${uploadId}`);
+    } catch (e) {
+      if (e instanceof AWSError && e.code === 'NotFound') {
+        throw new NotFoundException('Could not find upload');
       }
-      await this.bucket.moveObject(`temp/${uploadId}`, `${uploadId}`);
+      throw new ServerException('Unable to create file version');
     }
 
+    let parent;
+    try {
+      parent = await this.getFileNode(parentId, session);
+    } catch (e) {
+      if (e instanceof NotFoundException) {
+        throw new NotFoundException('Could not find parent');
+      }
+      throw e;
+    }
+
+    if (isFileVersion(parent)) {
+      throw new BadRequestException(
+        'Only files and directories can be parents of a file version'
+      );
+    }
+
+    const fileId = isFile(parent)
+      ? parent.id
+      : await this.getOrCreateFileByName(parent.id, name, session);
+
+    await this.createFileVersionInDb(fileId, uploadId, name, upload, session);
+
+    await this.bucket.moveObject(`temp/${uploadId}`, uploadId);
+
+    return this.getFile(fileId, session);
+  }
+
+  private async createFileVersionInDb(
+    fileId: string,
+    uploadId: string,
+    name: string,
+    upload: HeadObjectOutput,
+    session: ISession
+  ) {
+    const createdAt = DateTime.local();
+
+    await this.db.createNode({
+      session,
+      type: FileVersion.classType,
+      input: {
+        id: uploadId,
+        name,
+        mimeType: upload.ContentType,
+        size: upload.ContentLength,
+        category: upload.ContentType
+          ? getCategoryFromMimeType(upload.ContentType)
+          : FileNodeCategory.Other,
+        createdAt,
+      },
+      acls: {
+        canReadSize: true,
+        canEditSize: true,
+        canReadParent: true,
+        canEditParent: true,
+        canReadMimeType: true,
+        canEditMimeType: true,
+        canReadCategory: true,
+        canEditCategory: true,
+        canReadName: true,
+        canEditName: true,
+        canReadModifiedAt: true,
+        canEditModifiedAt: true,
+      },
+    });
+
+    // Add FileNodeCategory label for Prop node between version and category
+    await this.db
+      .query()
+      .match([
+        [node('fv', 'FileVersion', { id: uploadId })],
+        [
+          node('fv'),
+          relation('out', 'rel', 'category', { active: true }),
+          node('cat', 'Property', { active: true }),
+        ],
+      ])
+      .setLabels({ cat: 'FileNodeCategory' })
+      .run();
+
+    // create relationships: file -> version, and version -> createdBy
+    await this.db
+      .query()
+      .match([
+        [node('file', 'File', { id: fileId })],
+        [node('fv', 'FileVersion', { id: uploadId })],
+        [node('user', 'User', { id: session.userId, active: true })],
+      ])
+      .create([
+        [
+          node('file'),
+          relation('out', '', 'version', { createdAt, active: true }),
+          node('fv'),
+        ],
+        [
+          node('fv'),
+          relation('out', '', 'createdBy', { createdAt, active: true }),
+          node('user'),
+        ],
+      ])
+      .run();
+  }
+
+  private async getOrCreateFileByName(
+    parentId: string,
+    name: string,
+    session: ISession
+  ) {
+    // TODO get and return existing file in dir with same name
+
+    return this.createFileInDb(parentId, name, session);
+  }
+
+  private async createFileInDb(
+    parentId: string,
+    name: string,
+    session: ISession
+  ) {
     const fileId = generate();
     await this.db.createNode({
       session,
@@ -268,90 +396,46 @@ export class FileService {
         canReadType: true,
         canEditType: true,
       },
-      baseNodeLabel: 'File',
       aclEditProp: 'canCreateFile',
     });
-    const inputForFileVersion = {
-      category: file.ContentType
-        ? getCategoryFromMimeType(file.ContentType)
-        : FileNodeCategory.Other,
-      id: uploadId,
-      mimeType: file.ContentType,
-      modifiedAt: DateTime.local(),
-      size: file.ContentLength,
-    };
-    const acls = {
-      canReadSize: true,
-      canEditSize: true,
-      canReadParent: true,
-      canEditParent: true,
-      canReadMimeType: true,
-      canEditMimeType: true,
-      canReadCategory: true,
-      canEditCategory: true,
-      canReadName: true,
-      canEditName: true,
-      canReadModifiedAt: true,
-      canEditModifiedAt: true,
-    };
-    await this.db.createNode({
-      session,
-      type: FileVersion.classType,
-      input: inputForFileVersion,
-      acls,
-    });
-    // Add FileNodeCategory label for Prop node btw version and category
+
+    // create relationship: file -> parent (dir)
     await this.db
       .query()
-      .raw(
-        `
-        MATCH
-          (fv:FileVersion {id: "${uploadId}"}),
-          (fv)-[rel:category {active: true}]->(cat:Property {active: true})
-        SET cat :FileNodeCategory
-      `
-      )
+      .match([
+        [node('file', 'File', { id: fileId, active: true })],
+        [node('parent', 'Directory', { id: parentId, active: true })],
+      ])
+      .create([
+        node('file'),
+        relation('out', '', 'parent', { active: true }),
+        node('parent'),
+      ])
       .run();
 
-    // create version relaitonship btw version and fileNode
-    const qry = `
-        MATCH
-          (file:File {id: "${fileId}"}),
-          (fv:FileVersion {id: "${uploadId}"}),
-          (user:User { id: "${session.userId}", active: true})
-        CREATE
-          (file)-[:version {active: true, createdAt: datetime()}]->(fv),
-          (file)-[:createdBy {active: true, createdAt: datetime()}]->(user),
-          (fv)-[:createdBy {active: true, createdAt: datetime()}]->(user)
-        RETURN
-          file, fv, user
-      `;
+    // create relationship: file -> createdBy
     await this.db
       .query()
-      .raw(qry, {
-        fileId,
-        name,
-        parentId,
-        userId: session.userId,
-      })
+      .match([
+        [node('file', 'File', { id: fileId })],
+        [node('user', 'User', { id: session.userId, active: true })],
+      ])
+      .create([
+        node('file'),
+        relation('out', '', 'createdBy', {
+          createdAt: DateTime.local(),
+          active: true,
+        }),
+        node('user'),
+      ])
       .run();
-    // create a parent relationship btw file and parent(type is directory)
-    const qryOne = `
-        MATCH
-          (file:File {id: "${fileId}", active: true}),
-          (parent:Directory { id: "${parentId}", active: true})
-        CREATE
-          (file)-[:parent {active: true}]->(parent)
-        RETURN
-          file, parent
-      `;
-    await this.db.query().raw(qryOne, { parentId }).first();
-    return this.getFile(fileId, session);
+
+    return fileId;
   }
 
   async rename(input: RenameFileInput, session: ISession): Promise<FileNode> {
+    const fileNode = await this.getFileNode(input.id, session);
     try {
-      const fileNode = await this.getFileNode(input.id, session);
       await this.db.updateProperties({
         session,
         object: fileNode,
@@ -371,40 +455,35 @@ export class FileService {
     if (input.name) {
       await this.rename({ id: input.id, name: input.name }, session);
     }
-    try {
-      const query = `
-        MATCH
-          (token:Token {
-            active: true,
-            value: $token
-          })<-[:token {active: true}]-
-          (requestingUser:User {
-            active: true,
-            id: $requestingUserId,
-            owningOrgId: $owningOrgId
-          }),
-          (newParent {id: $parentId, active: true}),
-          (file:FileNode {id: $id, active: true})-[rel:parent {active: true}]->(oldParent {active : true})
-        DELETE rel
-        CREATE (newParent)<-[:parent {active: true, createdAt: datetime()}]-(file)
-        RETURN  newParent
-      `;
 
+    try {
       await this.db
         .query()
-        .raw(query, {
-          id: input.id,
-          owningOrgId: session.owningOrgId,
-          parentId: input.parentId,
-          requestingUserId: session.userId,
-          token: session.token,
-        })
-        .first();
-      return await this.getFile(input.id, session);
+        .match([
+          matchSession(session),
+          [node('newParent', [], { id: input.parentId, active: true })],
+          [
+            node('file', 'FileNode', { id: input.id, active: true }),
+            relation('out', 'rel', 'parent', { active: true }),
+            node('oldParent', [], { active: true }),
+          ],
+        ])
+        .delete('rel')
+        .create([
+          node('newParent'),
+          relation('in', '', 'parent', {
+            active: true,
+            createdAt: DateTime.local(),
+          }),
+          node('file'),
+        ])
+        .run();
     } catch (e) {
       this.logger.error('Failed to move', { ...input, exception: e });
       throw new ServerException('Failed to move');
     }
+
+    return this.getFile(input.id, session);
   }
 
   async delete(id: string, session: ISession): Promise<void> {
