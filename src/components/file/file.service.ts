@@ -214,22 +214,7 @@ export class FileService {
       aclEditProp: 'canCreateDirectory',
     });
 
-    // create relationship: node -> createdBy
-    await this.db
-      .query()
-      .match([
-        [node('dirNode', 'Directory', { id, active: true })],
-        [node('user', 'User', { id: session.userId, active: true })],
-      ])
-      .create([
-        node('dirNode'),
-        relation('out', '', 'createdBy', {
-          active: true,
-          createdAt: DateTime.local(),
-        }),
-        node('user'),
-      ])
-      .run();
+    await this.attachCreator(id, session);
 
     if (parentId) {
       await this.attachParent(id, parentId);
@@ -345,24 +330,20 @@ export class FileService {
       .setLabels({ cat: 'FileNodeCategory' })
       .run();
 
-    // create relationships: file -> version, and version -> createdBy
+    await this.attachCreator(uploadId, session);
+
+    // create relationships: file -> version
     await this.db
       .query()
       .match([
         [node('file', 'File', { id: fileId })],
         [node('fv', 'FileVersion', { id: uploadId })],
-        [node('user', 'User', { id: session.userId, active: true })],
       ])
       .create([
         [
           node('file'),
           relation('out', '', 'version', { createdAt, active: true }),
           node('fv'),
-        ],
-        [
-          node('fv'),
-          relation('out', '', 'createdBy', { createdAt, active: true }),
-          node('user'),
         ],
       ])
       .run();
@@ -404,19 +385,24 @@ export class FileService {
       aclEditProp: 'canCreateFile',
     });
 
+    await this.attachCreator(fileId, session);
+
     if (parentId) {
       await this.attachParent(fileId, parentId);
     }
 
-    // create relationship: file -> createdBy
+    return fileId;
+  }
+
+  private async attachCreator(id: string, session: ISession) {
     await this.db
       .query()
       .match([
-        [node('file', 'File', { id: fileId })],
+        [node('node', 'FileNode', { id })],
         [node('user', 'User', { id: session.userId, active: true })],
       ])
       .create([
-        node('file'),
+        node('node'),
         relation('out', '', 'createdBy', {
           createdAt: DateTime.local(),
           active: true,
@@ -424,8 +410,6 @@ export class FileService {
         node('user'),
       ])
       .run();
-
-    return fileId;
   }
 
   private async attachParent(id: string, parentId: string) {
