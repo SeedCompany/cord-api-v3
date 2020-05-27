@@ -96,7 +96,7 @@ export class FileService {
           active: true,
           id: $requestingUserId
         }),
-        (dir: Directory {id: $id, active: true})-[:parent* {active: true}]-(parentDir:Directory)
+        (dir: Directory {id: $id, active: true})-[:parent* {active: true}]->(parentDir:Directory)
       WITH * OPTIONAL MATCH (parentDir)-[:type {active:true}]->(parentDirType:Property {active: true})
       WITH * OPTIONAL MATCH (parentDir)-[:name {active:true}]->(parentDirName:Property {active: true})
       RETURN
