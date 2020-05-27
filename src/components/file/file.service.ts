@@ -27,6 +27,7 @@ import {
   UpdateFileInput,
 } from './dto';
 import { FilesBucketToken } from './files-s3-bucket.factory';
+import { getCategoryFromMimeType } from './mimeTypes';
 import { S3Bucket } from './s3-bucket';
 
 @Injectable()
@@ -130,6 +131,7 @@ export class FileService {
     const common = {
       id: result.id,
       name: result.name,
+      category: result.category,
       createdAt: result.createdAt,
       createdById: session.userId!, // TODO
     };
@@ -142,7 +144,6 @@ export class FileService {
     }
     const commonFile = {
       ...common,
-      category: FileNodeCategory.Document, //TODO category should be derived based on the mimeType
       mimeType: result.mimeType,
       size: result.size,
     };
@@ -272,7 +273,9 @@ export class FileService {
       aclEditProp: 'canCreateFile',
     });
     const inputForFileVersion = {
-      category: FileNodeCategory.Document, // TODO
+      category: file.ContentType
+        ? getCategoryFromMimeType(file.ContentType)
+        : FileNodeCategory.Other,
       id: uploadId,
       mimeType: file.ContentType,
       modifiedAt: DateTime.local(),
