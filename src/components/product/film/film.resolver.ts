@@ -56,9 +56,6 @@ export class FilmResolver {
     @Args('input') { film: input }: UpdateFilmInput
   ): Promise<UpdateFilmOutput> {
     const film = await this.filmService.update(input, session);
-    // if (input.range) {
-    //   await this.rangeService.update(input.range, session, input.id);
-    // }
     return { film };
   }
 

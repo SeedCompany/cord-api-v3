@@ -227,7 +227,24 @@ export class FilmService {
       .match(matchSession(session, { withAclEdit: 'canReadFilms' }))
       .match([node('film', 'Film', { active: true, id: filmId })])
       .optionalMatch([...this.propMatch('name', 'film')])
-      .optionalMatch([...this.propMatch('range', 'film')])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node('canReadRange', 'Permission', {
+          property: 'range',
+          active: true,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('film'),
+      ])
+      .optionalMatch([
+        node('film'),
+        relation('out', '', 'range', { active: true }),
+        node('rangeNode', 'Property', { active: true }),
+      ])
       .return({
         film: [{ id: 'id', createdAt: 'createdAt' }],
         name: [{ value: 'name' }],
@@ -235,11 +252,10 @@ export class FilmService {
           { canReadFilms: 'canReadFilms', canCreateFilm: 'canCreateFilm' },
         ],
         canReadName: [{ read: 'canReadName', edit: 'canEditName' }],
-        range: [{ value: 'range' }],
+        rangeNode: [{ value: 'range' }],
         canReadRange: [{ read: 'canReadRange', edit: 'canEditRange' }],
       })
       .first();
-
     if (!result) {
       throw new NotFoundException('Could not find film');
     }
@@ -298,7 +314,7 @@ export class FilmService {
       nodevar: 'film',
       aclReadProp: 'canReadFilms',
       aclEditProp: 'canCreateFilm',
-      props: ['name'],
+      props: ['name', 'range'],
       input: {
         page,
         count,

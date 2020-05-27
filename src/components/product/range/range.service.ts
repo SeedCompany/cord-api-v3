@@ -180,14 +180,17 @@ export class RangeService {
         }),
         relation('out', '', 'baseNode', { active: true }),
         node('node'),
+      ])
+      .optionalMatch([
+        node('node'),
         relation('out', '', 'range', { active: true }),
-        node('range', 'Property', { active: true }),
+        node('rangeNode', 'Property', { active: true, id: rangeId }),
       ])
       .return({
         requestingUser: [
           { canReadFilms: 'canReadFilms', canCreateFilm: 'canCreateFilm' },
         ],
-        range: [{ start: 'start', end: 'end', id: 'id' }],
+        rangeNode: [{ start: 'start', end: 'end', id: 'id' }],
         canReadRange: [{ read: 'canReadRange', edit: 'canEditRange' }],
       })
       .first();
