@@ -6,7 +6,6 @@ import {
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../../common';
@@ -128,28 +127,6 @@ export class FilmService {
     ];
   };
 
-  // helper method for match properties
-  propMatch = (property: string, baseNode: string) => {
-    const perm = `canRead${upperFirst(property)}`;
-    return [
-      [
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node(perm, 'Permission', {
-          property,
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node(baseNode),
-        relation('out', '', property, { active: true }),
-        node(property, 'Property', { active: true }),
-      ],
-    ];
-  };
-
   async create(input: CreateFilm, session: ISession): Promise<Film> {
     const checkFm = await this.db
       .query()
@@ -171,8 +148,9 @@ export class FilmService {
     }
     const id = generate();
     const createdAt = DateTime.local();
+    let film;
     try {
-      await this.db
+      const query = this.db
         .query()
         .match(matchSession(session, { withAclEdit: 'canCreateFilm' }))
         .create([
@@ -204,29 +182,58 @@ export class FilmService {
             node('requestingUser'),
           ],
           ...this.permission('name', 'newFilm'),
+          ...this.permission('range', 'newFilm'),
         ])
-        .return('newFilm.id as id')
-        .first();
+        .return(
+          'newFilm.id as id, requestingUser.canCreateFilm as canCreateFilm'
+        );
+
+      film = await query.first();
     } catch (err) {
       this.logger.error(`Could not create film for user ${session.userId}`);
       throw new ServerException('Could not create film');
     }
 
-    if (input.ranges) {
+    if (input.ranges && film?.canCreateFilm) {
       for (const range of input.ranges) {
-        await this.rangeService.create(range, 'film', id, session);
+        await this.addRange(id, range.start, range.end, session);
       }
     }
     this.logger.info(`film created, id ${id}`);
     return this.readOne(id, session);
   }
 
+  // create a range and add it to a film
+  async addRange(
+    filmId: string,
+    start: number,
+    end: number,
+    session: ISession
+  ): Promise<void> {
+    const range = await this.rangeService.create({ start, end }, session);
+    if (range) {
+      const createdAt = DateTime.local();
+      const addMutation = this.db
+        .query()
+        .match(matchSession(session, { withAclEdit: 'canCreateFilm' }))
+        .match([
+          [node('film', 'Film', { active: true, id: filmId })],
+          [node('range', 'Range', { active: true, id: range.id })],
+        ])
+        .create([
+          node('film'),
+          relation('out', 'rel', 'range', { active: true, createdAt }),
+          node('range'),
+        ]);
+      await addMutation.first();
+    }
+  }
+
   async readOne(filmId: string, session: ISession): Promise<Film> {
-    const result = await this.db
+    const readFilm = this.db
       .query()
       .match(matchSession(session, { withAclEdit: 'canReadFilms' }))
       .match([node('film', 'Film', { active: true, id: filmId })])
-      .optionalMatch([...this.propMatch('name', 'film')])
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
@@ -239,30 +246,81 @@ export class FilmService {
         }),
         relation('out', '', 'baseNode', { active: true }),
         node('film'),
+        relation('out', '', 'name', { active: true }),
+        node('name', 'Property', { active: true }),
       ])
       .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node('canEditRange', 'Permission', {
+          property: 'range',
+          active: true,
+          edit: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('film'),
+      ])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node('canReadName', 'Permission', {
+          property: 'name',
+          active: true,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
         node('film'),
         relation('out', '', 'range', { active: true }),
         node('rangeNode', 'Property', { active: true }),
       ])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node('canEditName', 'Permission', {
+          property: 'name',
+          active: true,
+          edit: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('film'),
+      ])
+
       .return({
         film: [{ id: 'id', createdAt: 'createdAt' }],
         name: [{ value: 'name' }],
         requestingUser: [
           { canReadFilms: 'canReadFilms', canCreateFilm: 'canCreateFilm' },
         ],
-        canReadName: [{ read: 'canReadName', edit: 'canEditName' }],
+        canReadName: [{ read: 'canReadName' }],
+        canEditName: [{ edit: 'canEditName' }],
         rangeNode: [{ value: 'range' }],
-        canReadRange: [{ read: 'canReadRange', edit: 'canEditRange' }],
-      })
-      .first();
+        canReadRange: [{ read: 'canReadRange' }],
+        canEditRange: [{ edit: 'canEditRange' }],
+      });
+
+    let result;
+    try {
+      result = await readFilm.first();
+    } catch {
+      throw new ServerException('Read Film Error');
+    }
     if (!result) {
       throw new NotFoundException('Could not find film');
     }
-    if (!result.canCreateFilm) {
+    if (!result.canReadFilms) {
       throw new ForbiddenException(
-        'User does not have permission to create an film'
+        'User does not have permission to read a film'
       );
+    }
+    let ranges;
+    if (result.rangeNode && result.canReadRange) {
+      ranges = await this.rangeService.list(filmId, session);
     }
 
     return {
@@ -272,7 +330,7 @@ export class FilmService {
         canRead: !!result.canReadName,
         canEdit: !!result.canEditName,
       },
-      range: [],
+      range: ranges ? ranges.items : [],
       createdAt: result.createdAt,
     };
   }
@@ -287,6 +345,7 @@ export class FilmService {
       changes: name,
       nodevar: 'film',
     });
+    //TODO update Ranges
   }
 
   async delete(id: string, session: ISession): Promise<void> {

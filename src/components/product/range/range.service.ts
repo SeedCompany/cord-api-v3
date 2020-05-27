@@ -1,22 +1,14 @@
 import {
-  ForbiddenException,
   Injectable,
   NotFoundException,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../../common';
-import {
-  DatabaseService,
-  ILogger,
-  Logger,
-  matchSession,
-  OnIndex,
-} from '../../../core';
-import { CreateRange, Range } from './dto';
+import { DatabaseService, ILogger, Logger, OnIndex } from '../../../core';
+import { CreateRange, Range, RangeListOutput, UpdateRange } from './dto';
 
 @Injectable()
 export class RangeService {
@@ -36,177 +28,128 @@ export class RangeService {
     }
   }
 
-  // helper method for defining properties
-  property = (prop: string, range: any, baseNode: string, id: string) => {
-    if (!range) {
-      return [];
-    }
-    const createdAt = DateTime.local();
-    return [
-      [
-        node(baseNode),
-        relation('out', '', prop, {
-          active: true,
-          createdAt,
-        }),
-        node(prop, 'Range:Property', {
-          active: true,
-          id: id,
-          start: range.start,
-          end: range.end,
-          value: '',
-        }),
-      ],
-    ];
-  };
-
-  // helper method for defining permissions
-  permission = (property: string, baseNode: string) => {
-    const createdAt = DateTime.local();
-    return [
-      [
-        node('adminSG'),
-        relation('out', '', 'permission', {
-          active: true,
-          createdAt,
-        }),
-        node('', 'Permission', {
-          property,
-          active: true,
-          read: true,
-          edit: true,
-          admin: true,
-        }),
-        relation('out', '', 'baseNode', {
-          active: true,
-          createdAt,
-        }),
-        node(baseNode),
-      ],
-      [
-        node('readerSG'),
-        relation('out', '', 'permission', {
-          active: true,
-          createdAt,
-        }),
-        node('', 'Permission', {
-          property,
-          active: true,
-          read: true,
-          edit: false,
-          admin: false,
-        }),
-        relation('out', '', 'baseNode', {
-          active: true,
-          createdAt,
-        }),
-        node(baseNode),
-      ],
-    ];
-  };
-
-  // helper method for match properties
-  propMatch = (property: string, baseNode: string) => {
-    const perm = `canRead${upperFirst(property)}`;
-    return [
-      [
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node(perm, 'Permission', {
-          property,
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node(baseNode),
-        relation('out', '', property, { active: true }),
-        node(property, 'Property', { active: true }),
-      ],
-    ];
-  };
-
-  async create(
-    input: CreateRange,
-    type: string,
-    typeId: string,
-    session: ISession
-  ): Promise<Range> {
-    const perm = `canCreate${upperFirst(type)}`;
-    const baseNode = upperFirst(type);
+  async create(input: CreateRange, session: ISession): Promise<Range> {
+    const { start, end } = input;
     const id = generate();
+    const createdAt = DateTime.local();
     try {
       await this.db
         .query()
-        .match(matchSession(session, { withAclEdit: perm }))
-        .match([node('node', baseNode, { active: true, id: typeId })])
         .create([
-          ...this.property('range', input, 'node', id),
-          ...this.permission('range', 'node'),
+          node('range', 'Range:Property', {
+            value: 'placeholder',
+            active: true,
+            id,
+            createdAt,
+            start,
+            end,
+            owningOrgId: session.owningOrgId,
+          }),
         ])
         .return('range.id as id')
         .first();
     } catch (err) {
-      this.logger.error(`Could not create film for user ${session.userId}`);
-      throw new ServerException('Could not create film');
+      this.logger.error(`Could not create range for user ${session.userId}`);
+      throw new ServerException('Could not create range');
     }
     this.logger.info(`range created, id ${id}`);
-    return this.readOne(typeId, type, id, session);
+    return this.readOne(id, session);
   }
 
-  async readOne(
-    id: string,
-    type: string,
-    rangeId: string,
-    session: ISession
-  ): Promise<Range> {
-    const perm = `canRead${upperFirst(type)}s`;
-    const baseNode = upperFirst(type);
-    const result = await this.db
+  async readOne(rangeId: string, _session: ISession): Promise<Range> {
+    const readRange = this.db
       .query()
-      .match(matchSession(session, { withAclEdit: perm }))
-      .match([node('node', baseNode, { active: true, id: id })])
-      .optionalMatch([...this.propMatch('name', 'node')])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canReadRange', 'Permission', {
-          property: 'range',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('node'),
-      ])
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'range', { active: true }),
-        node('rangeNode', 'Property', { active: true, id: rangeId }),
-      ])
+      .match([node('range', 'Range:Property', { active: true, id: rangeId })])
       .return({
-        requestingUser: [
-          { canReadFilms: 'canReadFilms', canCreateFilm: 'canCreateFilm' },
-        ],
-        rangeNode: [{ start: 'start', end: 'end', id: 'id' }],
-        canReadRange: [{ read: 'canReadRange', edit: 'canEditRange' }],
-      })
-      .first();
+        range: [{ start: 'start', end: 'end', id: 'id' }],
+      });
+
+    const result = await readRange.first();
+
     if (!result) {
       throw new NotFoundException('Could not find range');
     }
-    if (!result.canCreateFilm) {
-      throw new ForbiddenException(
-        'User does not have permission to create an film'
-      );
-    }
+
     return {
       id: rangeId,
       start: result.start,
       end: result.end,
       createdAt: result.createdAt,
+    };
+  }
+
+  async update(input: UpdateRange, session: ISession): Promise<Range> {
+    const modifiedAt = DateTime.local();
+    const updateRange = this.db
+      .query()
+      .match([node('range', 'Range:Property', { active: true, id: input.id })])
+      .set({
+        values: {
+          range: {
+            start: input.start,
+            end: input.end,
+            modifiedAt,
+            modifiedBy: session.userId,
+          },
+        },
+      });
+    try {
+      const _result = await updateRange.first();
+      // console.log('result ', JSON.stringify(result, null, 2));
+    } catch (e) {
+      this.logger.error(e);
+      throw new ServerException('Range not updated');
+    }
+
+    return this.readOne(input.id, session);
+  }
+
+  async delete(id: string, session: ISession): Promise<void> {
+    const delRange = this.db
+      .query()
+      .match([node('range', 'Range:Property', { active: true, id })])
+      .set({
+        values: {
+          range: {
+            deletedBy: session.userId,
+            active: false,
+          },
+        },
+      });
+    try {
+      await delRange.first();
+    } catch (e) {
+      this.logger.error(e);
+      throw new ServerException('Range not deleted');
+    }
+  }
+
+  async list(nodeId: string, session: ISession): Promise<RangeListOutput> {
+    const query = this.db
+      .query()
+      .match([
+        node('node', 'BaseNode', { active: true, id: nodeId }),
+        relation('out', '', 'range', { active: true }),
+        node('range', 'Range:Property', { active: true }),
+      ])
+      .return('range.id as id');
+    const result = await query.run();
+    // console.log('result ', JSON.stringify(result, null, 2));
+
+    if (!result) {
+      return { items: [], total: 0, hasMore: false };
+    }
+    const items = await Promise.all(
+      result.map((r) => {
+        return this.readOne(r.id, session);
+      })
+    );
+    // console.log('items ', JSON.stringify(items, null, 2));
+
+    return {
+      items,
+      total: items.length,
+      hasMore: false,
     };
   }
 }

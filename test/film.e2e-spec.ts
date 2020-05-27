@@ -1,8 +1,6 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
-import { times } from 'lodash';
-import { generate, isValid } from 'shortid';
-import { Film } from '../src/components/product/film';
+import { isValid } from 'shortid';
 import {
   createFilm,
   createSession,
@@ -31,65 +29,66 @@ describe('Film e2e', () => {
     await createFilm(app, { name });
   });
 
-  // // READ FILM
-  // it.skip('create & read film by id', async () => {
-  //   const fm = await createFilm(app);
+  // READ FILM
+  it('create & read film by id', async () => {
+    const fm = await createFilm(app);
 
-  //   const { film: actual } = await app.graphql.query(
-  //     gql`
-  //       query fm($id: ID!) {
-  //         film(id: $id) {
-  //           ...film
-  //         }
-  //       }
-  //       ${fragments.film}
-  //     `,
-  //     {
-  //       id: fm.id,
-  //     }
-  //   );
+    const { film: actual } = await app.graphql.query(
+      gql`
+        query fm($id: ID!) {
+          film(id: $id) {
+            ...film
+          }
+        }
+        ${fragments.film}
+      `,
+      {
+        id: fm.id,
+      }
+    );
 
-  //   expect(actual.id).toBe(fm.id);
-  //   expect(isValid(actual.id)).toBe(true);
-  //   expect(actual.name.value).toBe(fm.name.value);
-  // });
+    expect(actual.id).toBe(fm.id);
+    expect(isValid(actual.id)).toBe(true);
+    expect(actual.name.value).toBe(fm.name.value);
+    expect(actual.name.range).toBe(fm.range);
+  });
 
-  // // UPDATE FILM
-  // it.skip('update film', async () => {
-  //   const fm = await createFilm(app);
+  // UPDATE FILM
+  it.skip('update film', async () => {
+    const fm = await createFilm(app);
 
-  //   const newName = faker.company.companyName();
+    const newName = faker.company.companyName();
 
-  //   const result = await app.graphql.mutate(
-  //     gql`
-  //       mutation updateFilm($input: UpdateFilmInput!) {
-  //         updateFilm(input: $input) {
-  //           film {
-  //             ...film
-  //           }
-  //         }
-  //       }
-  //       ${fragments.film}
-  //     `,
-  //     {
-  //       input: {
-  //         film: {
-  //           id: fm.id,
-  //           name: newName,
-  //           range: {
-  //             rangeStart: 23,
-  //             rangeEnd: 45,
-  //           },
-  //         },
-  //       },
-  //     }
-  //   );
+    const result = await app.graphql.mutate(
+      gql`
+        mutation updateFilm($input: UpdateFilmInput!) {
+          updateFilm(input: $input) {
+            film {
+              ...film
+            }
+          }
+        }
+        ${fragments.film}
+      `,
+      {
+        input: {
+          film: {
+            id: fm.id,
+            name: newName,
+            range: {
+              rangeStart: 23,
+              rangeEnd: 45,
+            },
+          },
+        },
+      }
+    );
 
-  //   const updated = result.updateFilm.film;
-  //   expect(updated).toBeTruthy();
-  //   // expect(updated.id).toBe(fm.id);
-  //   expect(updated.name.value).toBe(newName);
-  // });
+    const updated = result.updateFilm.film;
+    expect(updated).toBeTruthy();
+    // expect(updated.id).toBe(fm.id);
+    expect(updated.name.value).toBe(newName);
+  });
 
   // // DELETE FILM
   // it.skip('delete film', async () => {
