@@ -1,7 +1,16 @@
 import { Type } from '@nestjs/common';
 import { Field, ObjectType } from '@nestjs/graphql';
-import { Resource, SecuredString } from '../../../../common';
+import {
+  Resource,
+  SecuredPropertyList,
+  SecuredString,
+} from '../../../../common';
 import { Range } from '../../range/dto';
+
+@ObjectType({
+  description: SecuredPropertyList.descriptionFor('ranges'),
+})
+export abstract class SecuredRange extends SecuredPropertyList(Range) {}
 
 @ObjectType({
   implements: Resource,
@@ -13,6 +22,6 @@ export class Film extends Resource {
   @Field()
   readonly name: SecuredString;
 
-  @Field(() => [Range], { nullable: true })
-  readonly range: readonly Range[];
+  @Field(() => SecuredRange, { nullable: true })
+  readonly ranges: SecuredRange;
 }

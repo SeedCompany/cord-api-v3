@@ -35,10 +35,6 @@ export async function createFilm(
               start: faker.random.number(),
               end: faker.random.number(),
             },
-            {
-              start: faker.random.number(),
-              end: faker.random.number(),
-            },
           ],
         },
       },

@@ -1,6 +1,6 @@
 import { Type } from '@nestjs/common';
 import { Field, ObjectType } from '@nestjs/graphql';
-import { Resource, SecuredInt } from '../../../../common';
+import { Resource } from '../../../../common';
 
 @ObjectType({
   implements: Resource,
@@ -10,8 +10,8 @@ export class Range extends Resource {
   static classType = (Range as any) as Type<Range>;
 
   @Field()
-  readonly start: SecuredInt;
+  readonly start: number;
 
   @Field()
-  readonly end: SecuredInt;
+  readonly end: number;
 }

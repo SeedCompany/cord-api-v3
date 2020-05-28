@@ -59,17 +59,15 @@ export class RangeService {
   async readOne(rangeId: string, _session: ISession): Promise<Range> {
     const readRange = this.db
       .query()
-      .match([node('range', 'Range:Property', { active: true, id: rangeId })])
+      .match([node('range', 'Property', { active: true, id: rangeId })])
       .return({
         range: [{ start: 'start', end: 'end', id: 'id' }],
       });
 
     const result = await readRange.first();
-
     if (!result) {
       throw new NotFoundException('Could not find range');
     }
-
     return {
       id: rangeId,
       start: result.start,
@@ -86,21 +84,22 @@ export class RangeService {
       .set({
         values: {
           range: {
+            id: input.id,
             start: input.start,
             end: input.end,
             modifiedAt,
             modifiedBy: session.userId,
+            active: true,
+            value: 'placeholder',
           },
         },
       });
     try {
       const _result = await updateRange.first();
-      // console.log('result ', JSON.stringify(result, null, 2));
     } catch (e) {
       this.logger.error(e);
       throw new ServerException('Range not updated');
     }
-
     return this.readOne(input.id, session);
   }
 
@@ -134,18 +133,15 @@ export class RangeService {
       ])
       .return('range.id as id');
     const result = await query.run();
-    // console.log('result ', JSON.stringify(result, null, 2));
-
     if (!result) {
       return { items: [], total: 0, hasMore: false };
     }
     const items = await Promise.all(
-      result.map((r) => {
-        return this.readOne(r.id, session);
+      result.map(async (r) => {
+        const item = await this.readOne(r.id, session);
+        return item;
       })
     );
-    // console.log('items ', JSON.stringify(items, null, 2));
-
     return {
       items,
       total: items.length,

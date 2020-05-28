@@ -16,6 +16,7 @@ import {
   matchSession,
   OnIndex,
 } from '../../../core';
+import { Range } from '../range/dto';
 import { RangeService } from '../range/range.service';
 import {
   CreateFilm,
@@ -24,7 +25,6 @@ import {
   FilmListOutput,
   UpdateFilm,
 } from './dto';
-
 @Injectable()
 export class FilmService {
   constructor(
@@ -187,13 +187,11 @@ export class FilmService {
         .return(
           'newFilm.id as id, requestingUser.canCreateFilm as canCreateFilm'
         );
-
       film = await query.first();
     } catch (err) {
       this.logger.error(`Could not create film for user ${session.userId}`);
       throw new ServerException('Could not create film');
     }
-
     if (input.ranges && film?.canCreateFilm) {
       for (const range of input.ranges) {
         await this.addRange(id, range.start, range.end, session);
@@ -224,7 +222,8 @@ export class FilmService {
           node('film'),
           relation('out', 'rel', 'range', { active: true, createdAt }),
           node('range'),
-        ]);
+        ])
+        .return('range');
       await addMutation.first();
     }
   }
@@ -290,7 +289,6 @@ export class FilmService {
         relation('out', '', 'baseNode', { active: true }),
         node('film'),
       ])
-
       .return({
         film: [{ id: 'id', createdAt: 'createdAt' }],
         name: [{ value: 'name' }],
@@ -319,10 +317,9 @@ export class FilmService {
       );
     }
     let ranges;
-    if (result.rangeNode && result.canReadRange) {
+    if (result.range && result.canReadRange) {
       ranges = await this.rangeService.list(filmId, session);
     }
-
     return {
       id: result.id,
       name: {
@@ -330,14 +327,23 @@ export class FilmService {
         canRead: !!result.canReadName,
         canEdit: !!result.canEditName,
       },
-      range: ranges ? ranges.items : [],
+      ranges: {
+        value: ranges?.items ? (ranges?.items as Range[]) : [],
+        canRead: !!result.canReadRange,
+        canEdit: !!result.canEditRange,
+      },
       createdAt: result.createdAt,
     };
   }
 
   async update(input: UpdateFilm, session: ISession): Promise<Film> {
-    const { range, ...name } = input;
+    const { ranges, ...name } = input;
     const film = await this.readOne(input.id, session);
+    if (input.ranges) {
+      for (const range of input.ranges) {
+        await this.rangeService.update(range, session);
+      }
+    }
     return this.db.sgUpdateProperties({
       session,
       object: film,
@@ -345,7 +351,6 @@ export class FilmService {
       changes: name,
       nodevar: 'film',
     });
-    //TODO update Ranges
   }
 
   async delete(id: string, session: ISession): Promise<void> {
@@ -373,7 +378,7 @@ export class FilmService {
       nodevar: 'film',
       aclReadProp: 'canReadFilms',
       aclEditProp: 'canCreateFilm',
-      props: ['name', 'range'],
+      props: ['name'],
       input: {
         page,
         count,

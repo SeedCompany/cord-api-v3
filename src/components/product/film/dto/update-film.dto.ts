@@ -14,7 +14,7 @@ export abstract class UpdateFilm {
   readonly name?: string;
 
   @Field(() => [UpdateRange], { nullable: true })
-  readonly range?: UpdateRange[];
+  readonly ranges?: UpdateRange[];
 }
 
 @InputType()
