@@ -42,7 +42,7 @@ export class DirectoryResolver extends FileNodeResolver(
     })
     input: FileListInput
   ): Promise<FileListOutput> {
-    return this.service.listChildren(input, session);
+    return this.service.listChildren(node.id, input, session);
   }
 
   @Mutation(() => Directory)

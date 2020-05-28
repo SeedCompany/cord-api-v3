@@ -13,9 +13,10 @@ import {
   BaseNodeConsistencyInput,
   CreateFileVersionInput,
   File,
+  FileListInput,
+  FileListOutput,
   FileNode,
   FileNodeType,
-  FileVersion,
   IFileNode,
   MoveFileInput,
   RenameFileInput,
@@ -51,14 +52,20 @@ export class FileResolver extends FileNodeResolver(
     return this.users.readOne(node.modifiedById, session);
   }
 
-  @ResolveField(() => [FileVersion], {
-    description: 'Return the file versions of this file',
+  @ResolveField(() => FileListOutput, {
+    description: 'Return the versions of this file',
   })
-  async versions(
+  async children(
     @Session() session: ISession,
-    @Parent() node: File
-  ): Promise<FileVersion[]> {
-    return this.service.getVersions(node.id, session);
+    @Parent() node: File,
+    @Args({
+      name: 'input',
+      type: () => FileListInput,
+      defaultValue: FileListInput.defaultVal,
+    })
+    input: FileListInput
+  ): Promise<FileListOutput> {
+    return this.service.listChildren(node.id, input, session);
   }
 
   @ResolveField(() => String, {

@@ -217,16 +217,10 @@ export class FileService {
   }
 
   async listChildren(
+    _parentId: string,
     _input: FileListInput,
     _session: ISession
   ): Promise<FileListOutput> {
-    throw new NotImplementedError();
-  }
-
-  async getVersions(
-    _fileId: string,
-    _session: ISession
-  ): Promise<FileVersion[]> {
     throw new NotImplementedError();
   }
 
