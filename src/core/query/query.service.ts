@@ -10,6 +10,12 @@ import { generate } from 'shortid';
 import { DateTime } from 'luxon';
 const fetch = require('node-fetch');
 import { gql } from 'apollo-server-core';
+import {
+  createPermission,
+  createData,
+  createDataHolder,
+  createBaseNode,
+} from './queryTemplates';
 @Injectable()
 export class QueryService {
   private readonly db: Connection;
@@ -38,20 +44,25 @@ export class QueryService {
     return await result.json();
   }
 
-  async gqlCreateBaseNode(
+  async createBaseNode(
     baseNode: BaseNode,
-    sgAdminId: string,
-    sgReaderId: string,
-    requestingUserId: string
+    requestingUserId: string,
+    createReaderSg = true
   ) {
+    const sgAdminId = generate();
+    const sgReaderId = generate();
+
     let propQuery = '';
     let q = 0;
 
     for (let i = 0; i < baseNode.props.length; i++) {
       const prop = baseNode.props[i];
 
+      let adminPerm = '';
+      let readerPerm = '';
+      let dataQuery = '';
+
       const dhId = generate();
-      const dataId = generate();
 
       let valueType = '';
       if (typeof prop.value === 'boolean') {
@@ -66,172 +77,76 @@ export class QueryService {
         // throw Error('property type not recognized');
       }
 
-      let adminPerm = '';
       if (prop.addToAdminSg) {
-        const adminPermId = generate();
-        adminPerm += `
-          # create admin permission
-          q${q++}: CreatePermission(
-            id: "${adminPermId}"
-            createdAt:{formatted:"${baseNode.createdAt}"}
-            active:true
-            grantedPropertyName:"${prop.key}"
-            read:true
-            edit:true
-            admin:true
-          ){
-            id
-          }
-
-          # attach perm to reader sg
-          q${q++}: AddSecurityGroupPermissions(from:{id:"${sgAdminId}"}, to:{id:"${adminPermId}"}){
-            from{id}
-          }
-
-          # attach perm to data holder
-          q${q++}: AddPermissionGrant(from:{id:"${adminPermId}"}, to:{id:"${dhId}"}){
-            from{id}
-          }
-        `;
+        adminPerm = createPermission(
+          'q' + q++,
+          baseNode.createdAt,
+          prop.key,
+          sgAdminId,
+          dhId,
+          true,
+          true,
+          true
+        );
       }
 
-      let readerPerm = '';
       if (prop.addToReaderSg) {
-        const readerPermId = generate();
-        readerPerm += `
-          # create reader permission
-          q${q++}: CreatePermission(
-            id: "${readerPermId}"
-            createdAt:{formatted:"${baseNode.createdAt}"}
-            active:true
-            grantedPropertyName:"${prop.key}"
-            read:true
-            edit:false
-            admin:false
-          ){
-            id
-          }
-
-          # attach perm to reader sg
-          q${q++}: AddSecurityGroupPermissions(from:{id:"${sgReaderId}"}, to:{id:"${readerPermId}"}){
-            from{id}
-          }
-                      
-          # attach perm to data holder
-          q${q++}: AddPermissionGrant(from:{id:"${readerPermId}"}, to:{id:"${dhId}"}){
-            from{id}
-          }
-        `;
+        adminPerm = createPermission(
+          'q' + q++,
+          baseNode.createdAt,
+          prop.key,
+          sgAdminId,
+          dhId,
+          true,
+          false,
+          false
+        );
       }
 
-      let dataQuery = '';
       if (prop.baseNode === undefined) {
-        dataQuery = `
-        # create data
-        q${q++}: CreateData(
-          id: "${dataId}"
-          createdAt: { formatted: "${baseNode.createdAt}" }
-          active: true
-          value: "${prop.value}"
-        ) {
-          id
-        }
-        
-        # attach data to data holder
-        q${q++}: addDataOrBaseNodeToDataHolder(fromId:"${dhId}", toId:"${dataId}")
-        `;
+        dataQuery += createData(
+          'q' + q++,
+          baseNode.createdAt,
+          prop.value,
+          dhId,
+          prop.labels
+        );
       }
 
-      propQuery += `
-        # create data holder
-        q${q++}: CreateDataHolder(
-          id: "${dhId}"
-          createdAt: { formatted: "${baseNode.createdAt}" }
-          active: true
-          identifier: "${prop.key}"
-          valueType: ${valueType}
-          isSingleton: ${prop.isSingleton}
-        ) {
-          id
-        }
+      propQuery += createDataHolder(
+        'q' + q++,
+        dhId,
+        baseNode.createdAt,
+        prop.key,
+        valueType,
+        prop.isSingleton,
+        baseNode.id,
+        dataQuery,
+        adminPerm,
+        readerPerm
+      );
+    } // end prop loop
 
-        q${q++}: AddBaseNodeDataHolders(from:{id:"${
-        baseNode.id
-      }"}, to:{id:"${dhId}"}){
-          from{id}
-        }
-      
-        ${dataQuery}
-
-        ${adminPerm}
-
-        ${readerPerm}
-
-      `;
-    }
-
-    let query = `
-      mutation{
-        q${q++}: CreateBaseNode(
-          id: "${baseNode.id}"
-          createdAt: { formatted: "${baseNode.createdAt}"}
-          active: true
-        ){
-          id
-        }
-
-        # add label to base node
-        addLabel(baseNodeId:"${baseNode.id}", label:"${baseNode.label}")
-
-        q${q++}: CreateSecurityGroup(
-          id: "${sgAdminId}"
-          createdAt: { formatted: "${baseNode.createdAt}" }
-          active: true
-          name: "SG Admin for ${baseNode.id}"
-        ) {
-          id
-          
-        }
-
-        q${q++}:  AddSecurityGroupMembers(
-          from: { id: "${sgAdminId}" }
-          to: { id: "${requestingUserId}" }
-        ) {
-          from {
-            id
-          }
-        }
-      
-        q${q++}:  CreateSecurityGroup(
-          id: "${sgReaderId}"
-          createdAt: { formatted: "${baseNode.createdAt}" }
-          active: true
-          name: "SG Reader for ${baseNode.id}"
-        ) {
-          id
-          
-        }
-
-        q${q++}:  AddSecurityGroupMembers(
-          from: { id: "${sgReaderId}" }
-          to: { id: "${requestingUserId}" }
-        ) {
-          from {
-            id
-          }
-        }
-
-        ${propQuery}
-
-      }
-    `;
+    const query = createBaseNode(
+      `q` + q++,
+      baseNode.id,
+      baseNode.createdAt,
+      baseNode.label,
+      sgAdminId,
+      requestingUserId,
+      sgReaderId,
+      propQuery
+    );
 
     // console.log(query);
     const result = await this.sendGraphql(query);
+    if (!result) {
+      throw new ServerException('failed to create user');
+    }
 
-    // console.log(JSON.stringify(result));
+    console.log(result);
 
-    return baseNode.id;
+    return result;
   }
 
   async gqlReadBaseNode(
@@ -323,191 +238,6 @@ export class QueryService {
   }
 
   // Base Node
-
-  async createBaseNode(
-    baseNode: BaseNode,
-    requestingUserId: string | undefined,
-    createReaderSg = true
-  ) {
-    const sgAdminId = generate();
-    const sgReaderId = generate();
-
-    const gqlResult = await this.gqlCreateBaseNode(
-      baseNode,
-      sgAdminId,
-      sgReaderId,
-      baseNode.id
-    );
-
-    console.log(gqlResult);
-
-    const query = this.db.query();
-
-    // const returnObj: any = {};
-
-    let reqUser = '';
-
-    if (requestingUserId === baseNode.id) {
-      reqUser = 'baseNode';
-    } else {
-      reqUser = 'requestingUser';
-      query.match(
-        node(reqUser, 'User', {
-          id: requestingUserId,
-          active: true,
-        })
-      );
-    }
-    let createQuery = [];
-
-    // base node
-    const createBaseNode = [
-      node('baseNode', ['BaseNode', baseNode.label], {
-        id: baseNode.id,
-        createdAt: baseNode.createdAt,
-        active: true,
-        owningOrgId: 'Seed Company',
-      }),
-    ];
-
-    createQuery.push(createBaseNode);
-
-    // properties
-    const addProperty = (identifier: string, value: any, labels: string[]) => {
-      if (!value) {
-        return [];
-      }
-
-      const arr = [
-        node('baseNode'),
-        relation('out', '', identifier, {
-          active: true,
-          createdAt: baseNode.createdAt,
-        }),
-        node(identifier + '_var', labels, {
-          active: true,
-          value,
-          createdAt: baseNode.createdAt,
-        }),
-      ];
-
-      return arr;
-    };
-
-    // security groups
-    const adminSgId = generate();
-    createQuery.push([
-      node(reqUser),
-      relation('in', '', 'member', {
-        active: true,
-        createdAt: baseNode.createdAt,
-      }),
-      node('adminSG', 'SecurityGroup', {
-        id: adminSgId,
-        createdAt: baseNode.createdAt,
-        active: true,
-        name: `admin SG for ${baseNode.id}`,
-      }),
-    ]);
-
-    const readerSgId = generate();
-    if (createReaderSg) {
-      createQuery.push([
-        node(reqUser),
-        relation('in', '', 'member', {
-          active: true,
-          createdAt: baseNode.createdAt,
-        }),
-        node('readerSG', 'SecurityGroup', {
-          id: readerSgId,
-          createdAt: baseNode.createdAt,
-          active: true,
-          name: `reader SG for ${baseNode.id}`,
-        }),
-      ]);
-    }
-
-    // permissions
-    const addPermission = (
-      property: string,
-      sgCypherVar: string,
-      read: boolean,
-      edit: boolean,
-      admin: boolean
-    ) => {
-      return [
-        node(sgCypherVar),
-        relation('out', '', 'permission', {
-          active: true,
-          createdAt: baseNode.createdAt,
-        }),
-        node(property + sgCypherVar + '_permission', 'Permission', {
-          property,
-          active: true,
-          read,
-          edit,
-          admin,
-        }),
-        relation('out', '', 'baseNode', {
-          active: true,
-          createdAt: baseNode.createdAt,
-        }),
-        node('baseNode'),
-      ];
-    };
-
-    for (let i = 0; i < baseNode.props.length; i++) {
-      // properties
-      if (baseNode.props[i].addToAdminSg) {
-        createQuery.push(
-          addProperty(
-            baseNode.props[i].key,
-            baseNode.props[i].value,
-            baseNode.props[i].labels
-          )
-        );
-      }
-
-      // permissions
-      createQuery.push(
-        addPermission(baseNode.props[i].key, 'adminSG', true, true, true)
-      );
-
-      if (createReaderSg && baseNode.props[i].addToReaderSg) {
-        createQuery.push(
-          addPermission(baseNode.props[i].key, 'readerSG', true, false, false)
-        );
-      }
-
-      // returnObj[baseNode.props[i].key + '_var'] = [
-      //   {
-      //     value: baseNode.props[i].key,
-      //   },
-      // ];
-
-      // returnObj[baseNode.props[i].key + 'adminSG' + '_permission'] = [
-      //   {
-      //     read: baseNode.props[i].key + 'Read',
-      //     edit: baseNode.props[i].key + 'Edit',
-      //     admin: baseNode.props[i].key + 'Admin',
-      //   },
-      // ];
-    }
-
-    // run query
-    const result = await query
-      .create(createQuery)
-      .return({
-        baseNode: [{ id: 'id' }],
-      })
-      .first();
-
-    if (!result) {
-      throw new ServerException('failed to create user');
-    }
-
-    return result.id;
-  }
 
   async readBaseNode(
     baseNode: Partial<BaseNode>,

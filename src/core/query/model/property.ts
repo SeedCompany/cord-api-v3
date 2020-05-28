@@ -5,7 +5,7 @@ export interface Property {
   value: any;
   isSingleton: boolean;
   oldValue?: any;
-  labels: string[];
+  labels?: string[];
   addToAdminSg?: boolean;
   addToReaderSg?: boolean;
   baseNode?: BaseNode;

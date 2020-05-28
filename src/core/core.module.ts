@@ -25,7 +25,7 @@ const typeDefs = fs
 
 const schema = neo4jGraphQL.makeAugmentedSchema({
   typeDefs,
-  config: { debug: false },
+  config: { debug: true },
 });
 
 const driver = neo4j.driver(
