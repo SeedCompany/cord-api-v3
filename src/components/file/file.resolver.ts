@@ -107,20 +107,21 @@ export class FileResolver extends FileNodeResolver(
   @Mutation(() => IFileNode, {
     description: 'Rename a file or directory',
   })
-  renameFileNode(
+  async renameFileNode(
     @Args('input') input: RenameFileInput,
     @Session() session: ISession
   ): Promise<FileNode> {
-    return this.service.rename(input, session);
+    await this.service.rename(input, session);
+    return this.service.getFileNode(input.id, session);
   }
 
-  @Mutation(() => File, {
+  @Mutation(() => IFileNode, {
     description: 'Move a file or directory',
   })
   moveFileNode(
     @Args('input') input: MoveFileInput,
     @Session() session: ISession
-  ): Promise<File> {
+  ): Promise<FileNode> {
     return this.service.move(input, session);
   }
 

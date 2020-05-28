@@ -529,25 +529,23 @@ export class FileService {
     }
   }
 
-  async rename(input: RenameFileInput, session: ISession): Promise<FileNode> {
-    const fileNode = await this.getFileNode(input.id, session);
+  async rename(input: RenameFileInput, session: ISession): Promise<void> {
+    const fileNode = await this.getBaseNode(input.id, session);
     try {
-      await this.db.updateProperties({
+      await this.db.updateProperty({
         session,
         object: fileNode,
-        props: ['name'],
-        changes: input,
+        key: 'name',
+        value: input.name,
         nodevar: 'fileNode',
       });
-
-      return await this.getFileNode(input.id, session);
     } catch (e) {
       this.logger.error('could not rename', input);
       throw new ServerException('could not rename');
     }
   }
 
-  async move(input: MoveFileInput, session: ISession): Promise<File> {
+  async move(input: MoveFileInput, session: ISession): Promise<FileNode> {
     if (input.name) {
       await this.rename({ id: input.id, name: input.name }, session);
     }
@@ -579,11 +577,11 @@ export class FileService {
       throw new ServerException('Failed to move');
     }
 
-    return this.getFile(input.id, session);
+    return this.getFileNode(input.id, session);
   }
 
   async delete(id: string, session: ISession): Promise<void> {
-    const fileNode = await this.getFileNode(id, session);
+    const fileNode = await this.getBaseNode(id, session);
     try {
       await this.db.deleteNode({
         session,
