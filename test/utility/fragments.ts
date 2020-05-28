@@ -513,4 +513,5 @@ export const fragments = {
   permission,
   workflow,
   state,
+  film,
 };
