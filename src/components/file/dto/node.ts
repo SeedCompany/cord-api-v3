@@ -109,6 +109,8 @@ export class File extends BaseFile {
 
   readonly type: FileNodeType.File;
 
+  readonly latestVersionId: string;
+
   readonly modifiedById: string;
 
   @DateTimeField()

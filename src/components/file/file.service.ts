@@ -6,10 +6,10 @@ import {
   NotFoundException,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
-import { AWSError } from 'aws-sdk';
+import type { AWSError } from 'aws-sdk';
 import { HeadObjectOutput } from 'aws-sdk/clients/s3';
-import { node, Query, relation } from 'cypher-query-builder';
-import { camelCase, upperFirst } from 'lodash';
+import { Node, node, Query, relation } from 'cypher-query-builder';
+import { camelCase, intersection, isString, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession, NotImplementedError } from '../../common';
@@ -73,15 +73,18 @@ export class FileService {
   async getFileNode(id: string, session: ISession): Promise<FileNode> {
     this.logger.info(`getNode`, { id, userId: session.userId });
 
+    const base = await this.getBaseNode(id, session);
+    if (base.type === FileNodeType.Directory) {
+      return {
+        ...base,
+        type: FileNodeType.Directory,
+        category: FileNodeCategory.Directory,
+      };
+    }
+
+    const latestVersionId = await this.getLatestVersionId(id);
+
     const isActive = { active: true };
-    const matchNodeProp = (q: Query, prop: string, variable = prop) =>
-      q
-        .with('*')
-        .optionalMatch([
-          node('node'),
-          relation('out', '', prop, isActive),
-          node(variable, 'Property', isActive),
-        ]);
     const matchLatestVersionProp = (q: Query, prop: string, variable = prop) =>
       q
         .with('*')
@@ -94,59 +97,43 @@ export class FileService {
           relation('out', '', prop, isActive),
           node(variable, 'Property', isActive),
         ]);
+    const matchFileVersion = node('fv', 'FileVersion', {
+      id: latestVersionId,
+      ...isActive,
+    });
     const result = await this.db
       .query()
       .match([
         matchSession(session),
-        [node('node', 'FileNode', { id, ...isActive })],
-      ])
-      .call(matchNodeProp, 'type')
-      .call(matchNodeProp, 'name')
-      .with('*')
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'version', isActive),
-        node('fv', 'FileVersion', isActive),
+        [matchFileVersion],
+        [
+          matchFileVersion,
+          relation('out', '', 'createdBy', isActive),
+          node('createdBy'),
+        ],
       ])
       .call(matchLatestVersionProp, 'size')
       .call(matchLatestVersionProp, 'mimeType')
       .call(matchLatestVersionProp, 'category')
-      .call(matchLatestVersionProp, 'createdAt', 'modifiedAt')
       .return({
-        node: [{ id: 'id', createdAt: 'createdAt' }],
-        type: [{ value: 'type' }],
-        name: [{ value: 'name' }],
+        fv: [{ createdAt: 'createdAt' }],
         size: [{ value: 'size' }],
         mimeType: [{ value: 'mimeType' }],
         category: [{ value: 'category' }],
-        modifiedAt: [{ value: 'modifiedAt' }],
+        createdBy: [{ id: 'createdById' }],
       })
       .first();
     if (!result) {
       throw new NotFoundException();
     }
 
-    const type = result.type as FileNodeType;
-    const common = {
-      id: result.id,
-      name: result.name,
-      category: result.category,
-      createdAt: result.createdAt,
-      createdById: session.userId!, // TODO
-    };
-    if (type === FileNodeType.Directory) {
-      return {
-        ...common,
-        type: FileNodeType.Directory,
-        category: FileNodeCategory.Directory,
-      };
-    }
     const commonFile = {
-      ...common,
+      ...base,
       mimeType: result.mimeType,
       size: result.size,
+      category: result.category,
     };
-    if (type === FileNodeType.FileVersion) {
+    if (base.type === FileNodeType.FileVersion) {
       return {
         ...commonFile,
         type: FileNodeType.FileVersion,
@@ -155,16 +142,67 @@ export class FileService {
     return {
       ...commonFile,
       type: FileNodeType.File,
-      modifiedAt: result.modifiedAt,
-      modifiedById: session.userId!, // TODO
+      latestVersionId,
+      modifiedAt: result.createdAt,
+      modifiedById: result.createdById,
     };
   }
 
-  async getDownloadUrl(fileId: string): Promise<string> {
+  private async getBaseNode(id: string, session: ISession) {
+    const isActive = { active: true };
+    const fileNode = node('node', 'FileNode', { id, ...isActive });
+    const result = await this.db
+      .query()
+      .match([
+        matchSession(session),
+        [fileNode],
+        [
+          fileNode,
+          relation('out', '', 'name', isActive),
+          node('name', 'Property', isActive),
+        ],
+        [
+          fileNode,
+          relation('out', '', 'createdBy', isActive),
+          node('createdBy'),
+        ],
+      ])
+      .return([
+        'node',
+        {
+          name: [{ value: 'name' }],
+          createdBy: [{ id: 'createdById' }],
+        },
+      ])
+      .first();
+    if (!result) {
+      throw new NotFoundException();
+    }
+
+    const base = result.node as Node<{ id: string; createdAt: DateTime }>;
+    const type = intersection(base.labels, [
+      'Directory',
+      'File',
+      'FileVersion',
+    ])[0] as FileNodeType;
+
+    return {
+      type,
+      id: base.properties.id,
+      name: result.name,
+      createdAt: base.properties.createdAt,
+      createdById: result.createdById,
+    };
+  }
+
+  async getDownloadUrl(fileOrId: File | string): Promise<string> {
+    const id = isString(fileOrId)
+      ? await this.getLatestVersionId(fileOrId)
+      : fileOrId.latestVersionId;
     try {
       // before sending link, first check if object exists in s3
-      await this.bucket.headObject(fileId);
-      return await this.bucket.getSignedUrlForPutObject(fileId);
+      await this.bucket.headObject(id);
+      return await this.bucket.getSignedUrlForGetObject(id);
     } catch (e) {
       this.logger.error('Unable to generate download url', { exception: e });
       throw new ServerException('Unable to generate download url');
@@ -197,6 +235,10 @@ export class FileService {
     name: string,
     session: ISession
   ): Promise<Directory> {
+    if (parentId) {
+      // TODO Ensure name is unique
+    }
+
     const id = generate();
     await this.db.createNode({
       session,
@@ -204,7 +246,7 @@ export class FileService {
       input: {
         id,
         name,
-        type: FileNodeType.Directory,
+        createdAt: DateTime.local(),
       },
       acls: {
         canReadName: true,
@@ -245,7 +287,7 @@ export class FileService {
       upload = await this.bucket.headObject(`temp/${uploadId}`);
     } catch (e) {
       if (
-        (e instanceof AWSError && e.code === 'NotFound') ||
+        (e as AWSError).code === 'NotFound' ||
         e instanceof NotFoundException
       ) {
         throw new NotFoundException('Could not find upload');
@@ -319,37 +361,27 @@ export class FileService {
       },
     });
 
-    // Add FileNodeCategory label for Prop node between version and category
-    await this.db
-      .query()
-      .match([
-        [node('fv', 'FileVersion', { id: uploadId })],
-        [
-          node('fv'),
-          relation('out', 'rel', 'category', { active: true }),
-          node('cat', 'Property', { active: true }),
-        ],
-      ])
-      .setLabels({ cat: 'FileNodeCategory' })
-      .run();
-
     await this.attachCreator(uploadId, session);
+    await this.attachParent(uploadId, fileId);
+  }
 
-    // create relationships: file -> version
-    await this.db
+  private async getLatestVersionId(fileId: string): Promise<string> {
+    const isActive = { active: true };
+    const latestVersionResult = await this.db
       .query()
       .match([
-        [node('file', 'File', { id: fileId })],
-        [node('fv', 'FileVersion', { id: uploadId })],
+        node('node', 'FileNode', { id: fileId, ...isActive }),
+        relation('in', '', 'parent', isActive),
+        node('fv', 'FileVersion'),
       ])
-      .create([
-        [
-          node('file'),
-          relation('out', '', 'version', { createdAt, active: true }),
-          node('fv'),
-        ],
-      ])
-      .run();
+      .return('fv')
+      .orderBy('fv.createdAt', 'DESC')
+      .limit(1)
+      .first();
+    if (!latestVersionResult) {
+      throw new NotFoundException();
+    }
+    return latestVersionResult.fv.properties.id;
   }
 
   private async getOrCreateFileByName(
@@ -375,7 +407,7 @@ export class FileService {
       input: {
         id: fileId,
         name,
-        type: FileNodeType.File,
+        createdAt: DateTime.local(),
       },
       acls: {
         canReadParent: true,

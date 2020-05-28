@@ -1,9 +1,9 @@
 import { registerEnumType } from '@nestjs/graphql';
 
 export enum FileNodeType {
-  Directory = 'dir',
-  File = 'file',
-  FileVersion = 'fileVersion',
+  Directory = 'Directory',
+  File = 'File',
+  FileVersion = 'FileVersion',
 }
 
 registerEnumType(FileNodeType, {

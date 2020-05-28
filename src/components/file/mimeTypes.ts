@@ -18,7 +18,7 @@ interface MimeType {
  * An adapted subset of values from
  * http://svn.apache.org/repos/asf/httpd/httpd/trunk/docs/conf/mime.types
  */
-const mimeTypes: MimeType[] = [
+export const mimeTypes: MimeType[] = [
   {
     name: 'application/msword',
     extensions: ['doc', 'dot'],

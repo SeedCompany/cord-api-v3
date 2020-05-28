@@ -3,12 +3,12 @@ import { GetObjectOutput, HeadObjectOutput } from 'aws-sdk/clients/s3';
 import { assert } from 'ts-essentials';
 import { IS3Bucket } from './s3-bucket';
 
-type FakeFile = Required<
+type FakeAwsFile = Required<
   Pick<GetObjectOutput, 'Body' | 'ContentType' | 'ContentLength'>
 >;
 
 export class MemoryBucket implements IS3Bucket {
-  private readonly files = new Map<string, FakeFile>();
+  private readonly files = new Map<string, FakeAwsFile>();
 
   private get(key: string) {
     const contents = this.files.get(key);
@@ -25,7 +25,7 @@ export class MemoryBucket implements IS3Bucket {
   /**
    * This fakes the actual upload to "S3"
    */
-  save(signedUrl: string, file: FakeFile) {
+  save(signedUrl: string, file: FakeAwsFile) {
     let parsed;
     try {
       parsed = JSON.parse(signedUrl);
@@ -35,6 +35,21 @@ export class MemoryBucket implements IS3Bucket {
       throw new BadRequestException();
     }
     this.files.set(parsed.key, file);
+  }
+
+  /**
+   * This fakes the actual download from "S3"
+   */
+  download(signedUrl: string) {
+    let parsed;
+    try {
+      parsed = JSON.parse(signedUrl);
+      assert(parsed.operation === 'getObject');
+      assert(typeof parsed.key === 'string');
+    } catch (e) {
+      throw new BadRequestException();
+    }
+    return this.get(parsed.key).Body;
   }
 
   async headObject(key: string): Promise<HeadObjectOutput> {
