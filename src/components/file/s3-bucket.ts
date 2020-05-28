@@ -6,7 +6,18 @@ export interface BucketOptions {
   signedUrlExpiration?: Duration;
 }
 
-export class S3Bucket {
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export interface IS3Bucket {
+  getSignedUrlForPutObject: (key: string) => Promise<string>;
+  getSignedUrlForGetObject: (key: string) => Promise<string>;
+  getObject: (key: string) => Promise<GetObjectOutput>;
+  headObject: (key: string) => Promise<HeadObjectOutput>;
+  moveObject: (oldKey: string, newKey: string) => Promise<void>;
+  copyObject: (oldKey: string, newKey: string) => Promise<void>;
+  deleteObject: (key: string) => Promise<void>;
+}
+
+export class S3Bucket implements IS3Bucket {
   private readonly signedUrlExpires: Duration;
 
   constructor(

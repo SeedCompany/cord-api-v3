@@ -36,12 +36,12 @@ import {
 } from './dto';
 import { FilesBucketToken } from './files-s3-bucket.factory';
 import { getCategoryFromMimeType } from './mimeTypes';
-import { S3Bucket } from './s3-bucket';
+import { IS3Bucket } from './s3-bucket';
 
 @Injectable()
 export class FileService {
   constructor(
-    @Inject(FilesBucketToken) private readonly bucket: S3Bucket,
+    @Inject(FilesBucketToken) private readonly bucket: IS3Bucket,
     private readonly db: DatabaseService,
     @Logger('file:service') private readonly logger: ILogger
   ) {}
@@ -244,7 +244,10 @@ export class FileService {
     try {
       upload = await this.bucket.headObject(`temp/${uploadId}`);
     } catch (e) {
-      if (e instanceof AWSError && e.code === 'NotFound') {
+      if (
+        (e instanceof AWSError && e.code === 'NotFound') ||
+        e instanceof NotFoundException
+      ) {
         throw new NotFoundException('Could not find upload');
       }
       throw new ServerException('Unable to create file version');
