@@ -428,69 +428,6 @@ export class DatabaseService {
     return updated;
   }
 
-  async readProperty<TObject extends Resource>({
-    id,
-    session,
-    nodevar,
-    aclReadProp,
-    aclReadNode,
-  }: {
-    id: string;
-    session: ISession;
-    nodevar: string;
-    aclReadProp: string;
-    aclReadNode?: string;
-  }): Promise<ReadPropertyResult> {
-    const aclReadPropName = `canRead${upperFirst(aclReadProp)}`;
-    const aclEditPropName = `canEdit${upperFirst(aclReadProp)}`;
-
-    const aclReadNodeName = aclReadNode || `canRead${upperFirst(nodevar)}s`;
-    let content: string,
-      type: string = nodevar;
-
-    if (nodevar === 'lang') {
-      type = 'language';
-    }
-
-    if (aclReadProp === 'id' || aclReadProp === 'createdAt') {
-      content = `
-      (${nodevar}:${upperFirst(type)} { active: true, id: $id })
-      return ${nodevar}.${aclReadProp} as value, ${nodevar}.${aclReadNodeName} as canRead, null as canEdit
-      `;
-    } else {
-      content = `
-      (${nodevar}: ${upperFirst(type)} { active: true, id: $id })
-      WITH * OPTIONAL MATCH (user)<-[:member]-(acl:ACL { ${aclReadPropName}: true })
-      -[:toNode]->(${nodevar})-[:${aclReadProp} {active: true}]->(${aclReadProp}:Property {active: true})
-      RETURN ${aclReadProp}.value as value, acl.${aclReadPropName} as canRead, acl.${aclEditPropName} as canEdit
-      `;
-    }
-
-    const query = `
-    match  (token:Token {
-      active: true,
-      value: $token
-    })
-    <-[:token { active: true }]-
-    (user:User {  ${aclReadNodeName}: true }),${content}`;
-
-    const result = (await this.db
-      .query()
-      .raw(query, {
-        token: session.token,
-        userId: session.userId,
-        owningOrgId: session.owningOrgId,
-        id,
-      })
-      .first()) as ReadPropertyResult;
-
-    if (!result) {
-      return { value: null, canRead: false, canEdit: false };
-    }
-
-    return result;
-  }
-
   async sgUpdateProperty<TObject extends Resource, Key extends keyof TObject>({
     session,
     object,
@@ -576,6 +513,69 @@ export class DatabaseService {
         : // replace value directly
           { [key]: value }),
     };
+  }
+
+  async readProperty<TObject extends Resource>({
+    id,
+    session,
+    nodevar,
+    aclReadProp,
+    aclReadNode,
+  }: {
+    id: string;
+    session: ISession;
+    nodevar: string;
+    aclReadProp: string;
+    aclReadNode?: string;
+  }): Promise<ReadPropertyResult> {
+    const aclReadPropName = `canRead${upperFirst(aclReadProp)}`;
+    const aclEditPropName = `canEdit${upperFirst(aclReadProp)}`;
+
+    const aclReadNodeName = aclReadNode || `canRead${upperFirst(nodevar)}s`;
+    let content: string,
+      type: string = nodevar;
+
+    if (nodevar === 'lang') {
+      type = 'language';
+    }
+
+    if (aclReadProp === 'id' || aclReadProp === 'createdAt') {
+      content = `
+      (${nodevar}:${upperFirst(type)} { active: true, id: $id })
+      return ${nodevar}.${aclReadProp} as value, ${nodevar}.${aclReadNodeName} as canRead, null as canEdit
+      `;
+    } else {
+      content = `
+      (${nodevar}: ${upperFirst(type)} { active: true, id: $id })
+      WITH * OPTIONAL MATCH (user)<-[:member]-(acl:ACL { ${aclReadPropName}: true })
+      -[:toNode]->(${nodevar})-[:${aclReadProp} {active: true}]->(${aclReadProp}:Property {active: true})
+      RETURN ${aclReadProp}.value as value, acl.${aclReadPropName} as canRead, acl.${aclEditPropName} as canEdit
+      `;
+    }
+
+    const query = `
+    match  (token:Token {
+      active: true,
+      value: $token
+    })
+    <-[:token { active: true }]-
+    (user:User {  ${aclReadNodeName}: true }),${content}`;
+
+    const result = (await this.db
+      .query()
+      .raw(query, {
+        token: session.token,
+        userId: session.userId,
+        owningOrgId: session.owningOrgId,
+        id,
+      })
+      .first()) as ReadPropertyResult;
+
+    if (!result) {
+      return { value: null, canRead: false, canEdit: false };
+    }
+
+    return result;
   }
 
   async list<TObject extends Resource>({

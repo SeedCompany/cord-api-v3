@@ -387,8 +387,16 @@ export class FilmService {
         filter,
       },
     });
+    const items = result.items.length
+      ? await Promise.all(
+          result.items.map(async (r) => {
+            return this.readOne(r.id, session);
+          })
+        )
+      : [];
+
     return {
-      items: result.items,
+      items: (items as unknown) as Film[],
       hasMore: result.hasMore,
       total: result.total,
     };

@@ -108,7 +108,7 @@ describe('Film e2e', () => {
   });
 
   // LIST FILMs
-  it.only('list view of films', async () => {
+  it('list view of films', async () => {
     // create a bunch of films
     await Promise.all(
       times(10).map(() => createFilm(app, { name: generate() + ' Inc' }))
@@ -116,7 +116,7 @@ describe('Film e2e', () => {
 
     const { films } = await app.graphql.query(gql`
       query {
-        films(input: { filter: { name: "Inc" } }) {
+        films(input: { count: 15, filter: { name: "Inc" } }) {
           items {
             ...film
           }
@@ -126,7 +126,7 @@ describe('Film e2e', () => {
       }
       ${fragments.film}
     `);
-    console.log("films", films)
+
     expect(films.items.length).toBeGreaterThan(9);
   });
 });
