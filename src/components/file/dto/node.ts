@@ -8,7 +8,7 @@ import {
 } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { DateTime } from 'luxon';
-import { MergeExclusive } from 'type-fest';
+import { ConditionalExcept, MergeExclusive } from 'type-fest';
 import {
   DateTimeField,
   Resource,
@@ -75,6 +75,8 @@ export abstract class IFileNode extends Resource {
   readonly createdBy?: never;
 }
 
+export type BaseNode = ConditionalExcept<IFileNode, never | FileNodeCategory>;
+
 @ObjectType({
   isAbstract: true,
   implements: [IFileNode],
@@ -138,12 +140,16 @@ export abstract class SecuredFile extends SecuredProperty(File) {}
 export type DefinedFile = Secured<string>;
 
 export const isDirectory = (node: FileNode): node is Directory =>
+  isDirectoryNode(node);
+export const isDirectoryNode = (node: BaseNode) =>
   node.type === FileNodeType.Directory;
 
-export const isFile = (node: FileNode): node is File =>
-  node.type === FileNodeType.File;
+export const isFile = (node: FileNode): node is File => isFileNode(node);
+export const isFileNode = (node: BaseNode) => node.type === FileNodeType.File;
 
 export const isFileVersion = (node: FileNode): node is FileVersion =>
+  isFileVersionNode(node);
+export const isFileVersionNode = (node: BaseNode) =>
   node.type === FileNodeType.FileVersion;
 
 @InputType()

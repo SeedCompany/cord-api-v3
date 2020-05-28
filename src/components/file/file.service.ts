@@ -7,13 +7,10 @@ import {
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
 import type { AWSError } from 'aws-sdk';
-import { HeadObjectOutput } from 'aws-sdk/clients/s3';
-import { Node, node, Query, relation } from 'cypher-query-builder';
-import { camelCase, intersection, isString, upperFirst } from 'lodash';
-import { DateTime } from 'luxon';
+import { isString } from 'lodash';
 import { generate } from 'shortid';
 import { ISession, NotImplementedError } from '../../common';
-import { DatabaseService, ILogger, Logger, matchSession } from '../../core';
+import { ILogger, Logger } from '../../core';
 import {
   CreateDefinedFileVersionInput,
   CreateFileVersionInput,
@@ -28,12 +25,15 @@ import {
   FileVersion,
   isDirectory,
   isFile,
+  isFileNode,
   isFileVersion,
+  isFileVersionNode,
   MoveFileInput,
   RenameFileInput,
   RequestUploadOutput,
   SecuredFile,
 } from './dto';
+import { FileRepository } from './file.repository';
 import { FilesBucketToken } from './files-s3-bucket.factory';
 import { getCategoryFromMimeType } from './mimeTypes';
 import { IS3Bucket } from './s3-bucket';
@@ -42,7 +42,7 @@ import { IS3Bucket } from './s3-bucket';
 export class FileService {
   constructor(
     @Inject(FilesBucketToken) private readonly bucket: IS3Bucket,
-    private readonly db: DatabaseService,
+    private readonly repo: FileRepository,
     @Logger('file:service') private readonly logger: ILogger
   ) {}
 
@@ -73,7 +73,8 @@ export class FileService {
   async getFileNode(id: string, session: ISession): Promise<FileNode> {
     this.logger.info(`getNode`, { id, userId: session.userId });
 
-    const base = await this.getBaseNode(id, session);
+    const base = await this.repo.getBaseNode(id, session);
+
     if (base.type === FileNodeType.Directory) {
       return {
         ...base,
@@ -82,122 +83,26 @@ export class FileService {
       };
     }
 
-    const latestVersionId = await this.getLatestVersionId(id);
+    const latestVersionId = await this.repo.getLatestVersionId(id);
+    const version = await this.repo.getVersionDetails(latestVersionId, session);
 
-    const isActive = { active: true };
-    const matchLatestVersionProp = (q: Query, prop: string, variable = prop) =>
-      q
-        .with('*')
-        .optionalMatch([
-          node('requestingUser'),
-          relation('in', '', 'member'),
-          node('acl', 'ACL', { [camelCase(`canRead-${prop}`)]: true }),
-          relation('out', '', 'toNode'),
-          node('fv'),
-          relation('out', '', prop, isActive),
-          node(variable, 'Property', isActive),
-        ]);
-    const matchFileVersion = node('fv', 'FileVersion', {
-      id: latestVersionId,
-      ...isActive,
-    });
-    const result = await this.db
-      .query()
-      .match([
-        matchSession(session),
-        [matchFileVersion],
-        [
-          matchFileVersion,
-          relation('out', '', 'createdBy', isActive),
-          node('createdBy'),
-        ],
-      ])
-      .call(matchLatestVersionProp, 'size')
-      .call(matchLatestVersionProp, 'mimeType')
-      .call(matchLatestVersionProp, 'category')
-      .return({
-        fv: [{ createdAt: 'createdAt' }],
-        size: [{ value: 'size' }],
-        mimeType: [{ value: 'mimeType' }],
-        category: [{ value: 'category' }],
-        createdBy: [{ id: 'createdById' }],
-      })
-      .first();
-    if (!result) {
-      throw new NotFoundException();
-    }
-
-    const commonFile = {
-      ...base,
-      mimeType: result.mimeType,
-      size: result.size,
-      category: result.category,
-    };
     if (base.type === FileNodeType.FileVersion) {
-      return {
-        ...commonFile,
-        type: FileNodeType.FileVersion,
-      };
+      return version;
     }
+
     return {
-      ...commonFile,
+      ...version,
+      ...base,
       type: FileNodeType.File,
       latestVersionId,
-      modifiedAt: result.createdAt,
-      modifiedById: result.createdById,
-    };
-  }
-
-  private async getBaseNode(id: string, session: ISession) {
-    const isActive = { active: true };
-    const fileNode = node('node', 'FileNode', { id, ...isActive });
-    const result = await this.db
-      .query()
-      .match([
-        matchSession(session),
-        [fileNode],
-        [
-          fileNode,
-          relation('out', '', 'name', isActive),
-          node('name', 'Property', isActive),
-        ],
-        [
-          fileNode,
-          relation('out', '', 'createdBy', isActive),
-          node('createdBy'),
-        ],
-      ])
-      .return([
-        'node',
-        {
-          name: [{ value: 'name' }],
-          createdBy: [{ id: 'createdById' }],
-        },
-      ])
-      .first();
-    if (!result) {
-      throw new NotFoundException();
-    }
-
-    const base = result.node as Node<{ id: string; createdAt: DateTime }>;
-    const type = intersection(base.labels, [
-      'Directory',
-      'File',
-      'FileVersion',
-    ])[0] as FileNodeType;
-
-    return {
-      type,
-      id: base.properties.id,
-      name: result.name,
-      createdAt: base.properties.createdAt,
-      createdById: result.createdById,
+      modifiedAt: version.createdAt,
+      modifiedById: version.createdById,
     };
   }
 
   async getDownloadUrl(fileOrId: File | string): Promise<string> {
     const id = isString(fileOrId)
-      ? await this.getLatestVersionId(fileOrId)
+      ? await this.repo.getLatestVersionId(fileOrId)
       : fileOrId.latestVersionId;
     try {
       // before sending link, first check if object exists in s3
@@ -233,28 +138,7 @@ export class FileService {
       // TODO Ensure name is unique
     }
 
-    const id = generate();
-    await this.db.createNode({
-      session,
-      type: Directory.classType,
-      input: {
-        id,
-        name,
-        createdAt: DateTime.local(),
-      },
-      acls: {
-        canReadName: true,
-        canEditName: true,
-      },
-      baseNodeLabel: ['Directory', 'FileNode'],
-      aclEditProp: 'canCreateDirectory',
-    });
-
-    await this.attachCreator(id, session);
-
-    if (parentId) {
-      await this.attachParent(id, parentId);
-    }
+    const id = await this.repo.createDirectory(parentId, name, session);
 
     return this.getDirectory(id, session);
   }
@@ -291,7 +175,7 @@ export class FileService {
 
     let parent;
     try {
-      parent = await this.getFileNode(parentId, session);
+      parent = await this.repo.getBaseNode(parentId, session);
     } catch (e) {
       if (e instanceof NotFoundException) {
         throw new NotFoundException('Could not find parent');
@@ -299,83 +183,33 @@ export class FileService {
       throw e;
     }
 
-    if (isFileVersion(parent)) {
+    if (isFileVersionNode(parent)) {
       throw new BadRequestException(
         'Only files and directories can be parents of a file version'
       );
     }
 
-    const fileId = isFile(parent)
+    const fileId = isFileNode(parent)
       ? parent.id
       : await this.getOrCreateFileByName(parent.id, name, session);
 
-    await this.createFileVersionInDb(fileId, uploadId, name, upload, session);
+    const mimeType = upload.ContentType ?? 'application/octet-stream';
+    const category = getCategoryFromMimeType(mimeType);
+    await this.repo.createFileVersion(
+      fileId,
+      {
+        id: uploadId,
+        name,
+        mimeType,
+        size: upload.ContentLength ?? 0,
+        category,
+      },
+      session
+    );
 
     await this.bucket.moveObject(`temp/${uploadId}`, uploadId);
 
     return this.getFile(fileId, session);
-  }
-
-  private async createFileVersionInDb(
-    fileId: string,
-    uploadId: string,
-    name: string,
-    upload: HeadObjectOutput,
-    session: ISession
-  ) {
-    const createdAt = DateTime.local();
-
-    await this.db.createNode({
-      session,
-      type: FileVersion.classType,
-      baseNodeLabel: ['FileVersion', 'FileNode'],
-      input: {
-        id: uploadId,
-        name,
-        mimeType: upload.ContentType,
-        size: upload.ContentLength,
-        category: upload.ContentType
-          ? getCategoryFromMimeType(upload.ContentType)
-          : FileNodeCategory.Other,
-        createdAt,
-      },
-      acls: {
-        canReadSize: true,
-        canEditSize: true,
-        canReadParent: true,
-        canEditParent: true,
-        canReadMimeType: true,
-        canEditMimeType: true,
-        canReadCategory: true,
-        canEditCategory: true,
-        canReadName: true,
-        canEditName: true,
-        canReadModifiedAt: true,
-        canEditModifiedAt: true,
-      },
-    });
-
-    await this.attachCreator(uploadId, session);
-    await this.attachParent(uploadId, fileId);
-  }
-
-  private async getLatestVersionId(fileId: string): Promise<string> {
-    const isActive = { active: true };
-    const latestVersionResult = await this.db
-      .query()
-      .match([
-        node('node', 'FileNode', { id: fileId, ...isActive }),
-        relation('in', '', 'parent', isActive),
-        node('fv', 'FileVersion'),
-      ])
-      .return('fv')
-      .orderBy('fv.createdAt', 'DESC')
-      .limit(1)
-      .first();
-    if (!latestVersionResult) {
-      throw new NotFoundException();
-    }
-    return latestVersionResult.fv.properties.id;
   }
 
   private async getOrCreateFileByName(
@@ -385,75 +219,7 @@ export class FileService {
   ) {
     // TODO get and return existing file in dir with same name
 
-    return this.createFileInDb(parentId, name, session);
-  }
-
-  private async createFileInDb(
-    parentId: string | undefined,
-    name: string,
-    session: ISession
-  ) {
-    const fileId = generate();
-    await this.db.createNode({
-      session,
-      type: File.classType,
-      baseNodeLabel: ['File', 'FileNode'],
-      input: {
-        id: fileId,
-        name,
-        createdAt: DateTime.local(),
-      },
-      acls: {
-        canReadParent: true,
-        canEditParent: true,
-        canReadName: true,
-        canEditName: true,
-        canReadType: true,
-        canEditType: true,
-      },
-      aclEditProp: 'canCreateFile',
-    });
-
-    await this.attachCreator(fileId, session);
-
-    if (parentId) {
-      await this.attachParent(fileId, parentId);
-    }
-
-    return fileId;
-  }
-
-  private async attachCreator(id: string, session: ISession) {
-    await this.db
-      .query()
-      .match([
-        [node('node', 'FileNode', { id })],
-        [node('user', 'User', { id: session.userId, active: true })],
-      ])
-      .create([
-        node('node'),
-        relation('out', '', 'createdBy', {
-          createdAt: DateTime.local(),
-          active: true,
-        }),
-        node('user'),
-      ])
-      .run();
-  }
-
-  private async attachParent(id: string, parentId: string) {
-    await this.db
-      .query()
-      .match([
-        [node('node', 'FileNode', { id, active: true })],
-        [node('parent', 'FileNode', { id: parentId, active: true })],
-      ])
-      .create([
-        node('node'),
-        relation('out', '', 'parent', { active: true }),
-        node('parent'),
-      ])
-      .run();
+    return this.repo.createFile(parentId, name, session);
   }
 
   async createDefinedFile(
@@ -461,7 +227,7 @@ export class FileService {
     session: ISession,
     initialVersion?: CreateDefinedFileVersionInput
   ) {
-    const fileId = await this.createFileInDb(undefined, name, session);
+    const fileId = await this.repo.createFile(undefined, name, session);
     if (initialVersion) {
       await this.createFileVersion(
         {
@@ -524,163 +290,31 @@ export class FileService {
   }
 
   async rename(input: RenameFileInput, session: ISession): Promise<void> {
-    const fileNode = await this.getBaseNode(input.id, session);
-    try {
-      await this.db.updateProperty({
-        session,
-        object: fileNode,
-        key: 'name',
-        value: input.name,
-        nodevar: 'fileNode',
-      });
-    } catch (e) {
-      this.logger.error('could not rename', input);
-      throw new ServerException('could not rename');
-    }
+    const fileNode = await this.repo.getBaseNode(input.id, session);
+    await this.repo.rename(fileNode, input.name, session);
   }
 
   async move(input: MoveFileInput, session: ISession): Promise<FileNode> {
+    const fileNode = await this.repo.getBaseNode(input.id, session);
+
     if (input.name) {
-      await this.rename({ id: input.id, name: input.name }, session);
+      await this.repo.rename(fileNode, input.name, session);
     }
 
-    try {
-      await this.db
-        .query()
-        .match([
-          matchSession(session),
-          [node('newParent', [], { id: input.parentId, active: true })],
-          [
-            node('file', 'FileNode', { id: input.id, active: true }),
-            relation('out', 'rel', 'parent', { active: true }),
-            node('oldParent', [], { active: true }),
-          ],
-        ])
-        .delete('rel')
-        .create([
-          node('newParent'),
-          relation('in', '', 'parent', {
-            active: true,
-            createdAt: DateTime.local(),
-          }),
-          node('file'),
-        ])
-        .run();
-    } catch (e) {
-      this.logger.error('Failed to move', { ...input, exception: e });
-      throw new ServerException('Failed to move');
-    }
+    await this.repo.move(input.id, input.parentId, session);
 
     return this.getFileNode(input.id, session);
   }
 
   async delete(id: string, session: ISession): Promise<void> {
-    const fileNode = await this.getBaseNode(id, session);
-    try {
-      await this.db.deleteNode({
-        session,
-        object: fileNode,
-        aclEditProp: 'canDeleteOwnUser',
-      });
-    } catch (e) {
-      this.logger.error('Failed to delete', { id, exception: e });
-      throw new ServerException('Failed to delete');
-    }
+    const fileNode = await this.repo.getBaseNode(id, session);
+    await this.repo.delete(fileNode, session);
   }
 
   async checkFileConsistency(
     baseNode: string,
     session: ISession
   ): Promise<boolean> {
-    // file service creates three base nodes – File, Directory, and FileVersion
-    // this function checks consistencty of all three nodes
-    const bnode =
-      baseNode === 'FileVersion' ? 'FileVersion' : upperFirst(baseNode);
-    const fileNodes = await this.db
-      .query()
-      .match([
-        matchSession(session),
-        [
-          node('fileNode', bnode, {
-            active: true,
-          }),
-        ],
-      ])
-      .return('fileNode.id as id')
-      .run();
-
-    const requiredProperties =
-      baseNode === 'FileVersion'
-        ? ['size', 'mimeType']
-        : baseNode === 'File' || baseNode === 'Directory'
-        ? ['name']
-        : [];
-    // for File or Directory
-    if (baseNode === 'File' || baseNode === 'Directory') {
-      return (
-        (
-          await Promise.all(
-            fileNodes.map(async (fn) =>
-              ['createdBy', 'parent']
-                .map((rel) =>
-                  this.db.isRelationshipUnique({
-                    session,
-                    id: fn.id,
-                    relName: rel,
-                    srcNodeLabel: `${upperFirst(baseNode)}`,
-                  })
-                )
-                .every((n) => n)
-            )
-          )
-        ).every((n) => n) &&
-        (
-          await Promise.all(
-            fileNodes.map(async (fn) =>
-              this.db.hasProperties({
-                session,
-                id: fn.id,
-                props: requiredProperties,
-                nodevar: `${upperFirst(baseNode)}`,
-              })
-            )
-          )
-        ).every((n) => n)
-      );
-    }
-    // for FileVersions
-    else if (baseNode === 'FileVersion') {
-      return (
-        (
-          await Promise.all(
-            fileNodes.map(async (fn) =>
-              ['createdBy', 'category']
-                .map((rel) =>
-                  this.db.isRelationshipUnique({
-                    session,
-                    id: fn.id,
-                    relName: rel,
-                    srcNodeLabel: 'FileVersion',
-                  })
-                )
-                .every((n) => n)
-            )
-          )
-        ).every((n) => n) &&
-        (
-          await Promise.all(
-            fileNodes.map(async (fn) =>
-              this.db.hasProperties({
-                session,
-                id: fn.id,
-                props: requiredProperties,
-                nodevar: 'FileVersion',
-              })
-            )
-          )
-        ).every((n) => n)
-      );
-    }
-    return false;
+    return this.repo.checkFileConsistency(baseNode, session);
   }
 }
