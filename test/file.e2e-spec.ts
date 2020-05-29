@@ -120,10 +120,8 @@ describe('File e2e', () => {
     expect(file.createdBy.id).toEqual(me.id);
     expect(file.modifiedBy.id).toEqual(me.id);
     const modifiedAt = DateTime.fromISO(file.modifiedAt);
-    expect(modifiedAt.isValid).toBeTruthy();
     expect(modifiedAt.diffNow().as('seconds')).toBeGreaterThan(-30);
     const createdAt = DateTime.fromISO(file.createdAt);
-    expect(createdAt.isValid).toBeTruthy();
     expect(createdAt.diffNow().as('seconds')).toBeGreaterThan(-30);
     expect(bucket.download(file.downloadUrl)).toEqual(fakeFile.content);
   });
@@ -165,10 +163,8 @@ describe('File e2e', () => {
     expect(updated.size).toEqual(input.size);
     expect(updated.mimeType).toEqual(input.mimeType);
     const createdAt = DateTime.fromISO(updated.createdAt);
-    expect(createdAt.isValid).toBeTruthy();
     expect(createdAt.toISO()).toEqual(initial.createdAt);
     const modifiedAt = DateTime.fromISO(updated.modifiedAt);
-    expect(modifiedAt.isValid).toBeTruthy();
     expect(modifiedAt.diff(createdAt).as('days')).toBeGreaterThanOrEqual(2);
   }
 
@@ -180,7 +176,6 @@ describe('File e2e', () => {
     expect(dir.name).toEqual(name);
     expect(dir.createdBy.id).toEqual(me.id);
     const createdAt = DateTime.fromISO(dir.createdAt);
-    expect(createdAt.isValid).toBeTruthy();
     expect(createdAt.diffNow().as('seconds')).toBeGreaterThan(-30);
   });
 
