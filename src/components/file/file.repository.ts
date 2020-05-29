@@ -27,19 +27,18 @@ export class FileRepository {
 
   async getBaseNode(id: string, session: ISession): Promise<BaseNode> {
     const isActive = { active: true };
-    const fileNode = node('node', 'FileNode', { id, ...isActive });
-    const result = await this.db
+    const query = this.db
       .query()
       .match([
         matchSession(session),
-        [fileNode],
+        [node('node', 'FileNode', { id, ...isActive })],
         [
-          fileNode,
+          node('node'),
           relation('out', '', 'name', isActive),
           node('name', 'Property', isActive),
         ],
         [
-          fileNode,
+          node('node'),
           relation('out', '', 'createdBy', isActive),
           node('createdBy'),
         ],
@@ -50,8 +49,8 @@ export class FileRepository {
           name: [{ value: 'name' }],
           createdBy: [{ id: 'createdById' }],
         },
-      ])
-      .first();
+      ]);
+    const result = await query.first();
     if (!result) {
       throw new NotFoundException();
     }
