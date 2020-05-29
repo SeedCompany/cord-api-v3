@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { Node, node, Query, relation } from 'cypher-query-builder';
 import type { Pattern } from 'cypher-query-builder/dist/typings/clauses/pattern';
-import { camelCase, intersection, upperFirst } from 'lodash';
+import { camelCase, intersection } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
@@ -379,99 +379,42 @@ export class FileRepository {
     }
   }
 
-  async checkFileConsistency(
-    baseNode: string,
-    session: ISession
-  ): Promise<boolean> {
-    // file service creates three base nodes – File, Directory, and FileVersion
-    // this function checks consistencty of all three nodes
-    const bnode =
-      baseNode === 'FileVersion' ? 'FileVersion' : upperFirst(baseNode);
+  async checkConsistency(type: FileNodeType, session: ISession): Promise<void> {
     const fileNodes = await this.db
       .query()
-      .match([
-        matchSession(session),
-        [
-          node('fileNode', bnode, {
-            active: true,
-          }),
-        ],
-      ])
+      .matchNode('fileNode', type, isActive)
       .return('fileNode.id as id')
       .run();
 
     const requiredProperties =
-      baseNode === 'FileVersion'
-        ? ['size', 'mimeType']
-        : baseNode === 'File' || baseNode === 'Directory'
-        ? ['name']
-        : [];
-    // for File or Directory
-    if (baseNode === 'File' || baseNode === 'Directory') {
-      return (
-        (
-          await Promise.all(
-            fileNodes.map(async (fn) =>
-              ['createdBy', 'parent']
-                .map((rel) =>
-                  this.db.isRelationshipUnique({
-                    session,
-                    id: fn.id,
-                    relName: rel,
-                    srcNodeLabel: `${upperFirst(baseNode)}`,
-                  })
-                )
-                .every((n) => n)
-            )
-          )
-        ).every((n) => n) &&
-        (
-          await Promise.all(
-            fileNodes.map(async (fn) =>
-              this.db.hasProperties({
-                session,
-                id: fn.id,
-                props: requiredProperties,
-                nodevar: `${upperFirst(baseNode)}`,
-              })
-            )
-          )
-        ).every((n) => n)
-      );
+      type === FileNodeType.FileVersion
+        ? ['size', 'mimeType', 'category']
+        : ['name'];
+    const uniqueRelationships = ['createdBy', 'parent'];
+
+    for (const fn of fileNodes) {
+      for (const rel of uniqueRelationships) {
+        const unique = await this.db.isRelationshipUnique({
+          session,
+          id: fn.id,
+          relName: rel,
+          srcNodeLabel: type,
+        });
+        if (!unique) {
+          throw new Error(`Node ${fn.id} has multiple ${rel} relationships`);
+        }
+      }
+      for (const prop of requiredProperties) {
+        const hasIt = await this.db.hasProperty({
+          session,
+          id: fn.id,
+          prop,
+          nodevar: type,
+        });
+        if (!hasIt) {
+          throw new Error(`Node ${fn.id} is missing ${prop}`);
+        }
+      }
     }
-    // for FileVersions
-    else if (baseNode === 'FileVersion') {
-      return (
-        (
-          await Promise.all(
-            fileNodes.map(async (fn) =>
-              ['createdBy', 'category']
-                .map((rel) =>
-                  this.db.isRelationshipUnique({
-                    session,
-                    id: fn.id,
-                    relName: rel,
-                    srcNodeLabel: 'FileVersion',
-                  })
-                )
-                .every((n) => n)
-            )
-          )
-        ).every((n) => n) &&
-        (
-          await Promise.all(
-            fileNodes.map(async (fn) =>
-              this.db.hasProperties({
-                session,
-                id: fn.id,
-                props: requiredProperties,
-                nodevar: 'FileVersion',
-              })
-            )
-          )
-        ).every((n) => n)
-      );
-    }
-    return false;
   }
 }

@@ -1,11 +1,5 @@
 import { Type } from '@nestjs/common';
-import {
-  Field,
-  InputType,
-  Int,
-  InterfaceType,
-  ObjectType,
-} from '@nestjs/graphql';
+import { Field, Int, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { DateTime } from 'luxon';
 import { ConditionalExcept, MergeExclusive } from 'type-fest';
@@ -151,11 +145,3 @@ export const isFileVersion = (node: FileNode): node is FileVersion =>
   isFileVersionNode(node);
 export const isFileVersionNode = (node: BaseNode) =>
   node.type === FileNodeType.FileVersion;
-
-@InputType()
-export abstract class BaseNodeConsistencyInput {
-  @Field({
-    description: 'The BaseNode type',
-  })
-  readonly baseNode: string;
-}

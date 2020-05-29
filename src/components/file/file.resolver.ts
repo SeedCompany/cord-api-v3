@@ -10,7 +10,6 @@ import { stripIndent } from 'common-tags';
 import { IdArg, ISession, Session } from '../../common';
 import { User } from '../user';
 import {
-  BaseNodeConsistencyInput,
   CreateFileVersionInput,
   File,
   FileListInput,
@@ -134,11 +133,17 @@ export class FileResolver extends FileNodeResolver(
 
   @Query(() => Boolean, {
     description: 'Check Consistency in File Nodes',
+    deprecationReason: 'This should have never existed',
   })
   async checkFileConsistency(
-    @Args('input') input: BaseNodeConsistencyInput,
+    @Args({ name: 'type', type: () => FileNodeType }) type: FileNodeType,
     @Session() session: ISession
   ): Promise<boolean> {
-    return this.service.checkFileConsistency(input.baseNode, session);
+    try {
+      await this.service.checkConsistency(type, session);
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 }

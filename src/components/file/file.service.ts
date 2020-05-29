@@ -318,10 +318,7 @@ export class FileService {
     await this.repo.delete(fileNode, session);
   }
 
-  async checkFileConsistency(
-    baseNode: string,
-    session: ISession
-  ): Promise<boolean> {
-    return this.repo.checkFileConsistency(baseNode, session);
+  async checkConsistency(type: FileNodeType, session: ISession): Promise<void> {
+    return this.repo.checkConsistency(type, session);
   }
 }
