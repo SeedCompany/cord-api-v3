@@ -1,26 +1,53 @@
 import { gql } from 'apollo-server-core';
-import { Directory } from '../../src/components/file';
+import * as faker from 'faker';
+import { startCase } from 'lodash';
+import { AuthenticationService } from '../../src/components/authentication';
+import { FileService } from '../../src/components/file';
 import { TestApp } from './create-app';
+import { directory, RawDirectory } from './fragments';
 
-export async function createDirectory(app: TestApp) {
+export async function createRootDirectory(app: TestApp, name?: string) {
+  name = name ?? startCase(faker.lorem.words());
+  const session = await app
+    .get(AuthenticationService)
+    .createSession(app.graphql.authToken);
+  const actual = await app
+    .get(FileService)
+    .createDirectory(undefined, name, session);
+
+  expect(actual).toBeTruthy();
+  expect(actual.name).toBe(name);
+
+  return actual;
+}
+
+export async function createDirectory(
+  app: TestApp,
+  parentId: string,
+  name?: string
+) {
+  const input = {
+    parentId,
+    name: name ?? startCase(faker.lorem.words()),
+  };
+
   const result = await app.graphql.mutate(
     gql`
-      mutation createDirectory($name: String!) {
-        createDirectory(name: $name) {
-          id
-          name
+      mutation createDirectory($input: CreateDirectoryInput!) {
+        createDirectory(input: $input) {
+          ...directory
         }
       }
+      ${directory}
     `,
     {
-      name: 'testdir',
+      input,
     }
   );
 
-  const actual: Directory = result.createDirectory;
+  const actual: RawDirectory = result.createDirectory;
   expect(actual).toBeTruthy();
-
-  expect(actual.name.valueOf()).toBe('testdir');
+  expect(actual.name).toBe(input.name);
 
   return actual;
 }

@@ -3,7 +3,7 @@ import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { PaginatedList, SortablePaginationInput } from '../../../common';
 import { FileNodeCategory } from './category';
-import { Directory, File, FileOrDirectory } from './node';
+import { Directory, File, FileNode, IFileNode } from './node';
 import { FileNodeType } from './type';
 
 @InputType()
@@ -44,6 +44,9 @@ export class FileListInput extends SortablePaginationInput<
 }
 
 @ObjectType()
-export class FileListOutput extends PaginatedList(FileOrDirectory as any, {
-  itemsDescription: PaginatedList.itemDescriptionFor('file nodes'),
-}) {}
+export class FileListOutput extends PaginatedList<IFileNode, FileNode>(
+  IFileNode,
+  {
+    itemsDescription: PaginatedList.itemDescriptionFor('file nodes'),
+  }
+) {}

@@ -1,5 +1,13 @@
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import {
+  Args,
+  Mutation,
+  Parent,
+  Query,
+  ResolveField,
+  Resolver,
+} from '@nestjs/graphql';
 import { IdArg, ISession, Session } from '../../common';
+import { FileService, SecuredFile } from '../file';
 import {
   CreatePartnershipInput,
   CreatePartnershipOutput,
@@ -11,9 +19,12 @@ import {
 } from './dto';
 import { PartnershipService } from './partnership.service';
 
-@Resolver()
+@Resolver(Partnership.classType)
 export class PartnershipResolver {
-  constructor(private readonly service: PartnershipService) {}
+  constructor(
+    private readonly service: PartnershipService,
+    private readonly files: FileService
+  ) {}
 
   @Mutation(() => CreatePartnershipOutput, {
     description: 'Create a Partnership entry',
@@ -34,6 +45,26 @@ export class PartnershipResolver {
     @IdArg() id: string
   ): Promise<Partnership> {
     return this.service.readOne(id, session);
+  }
+
+  @ResolveField(() => SecuredFile, {
+    description: 'The MOU agreement',
+  })
+  async mou(
+    @Parent() partnership: Partnership,
+    @Session() session: ISession
+  ): Promise<SecuredFile> {
+    return this.files.resolveDefinedFile(partnership.mou, session);
+  }
+
+  @ResolveField(() => SecuredFile, {
+    description: 'The partner agreement',
+  })
+  async agreement(
+    @Parent() partnership: Partnership,
+    @Session() session: ISession
+  ): Promise<SecuredFile> {
+    return this.files.resolveDefinedFile(partnership.agreement, session);
   }
 
   @Query(() => PartnershipListOutput, {

@@ -12,14 +12,15 @@ export abstract class RequestUploadOutput {
 }
 
 @InputType()
-export abstract class CreateFileInput {
+export abstract class CreateFileVersionInput {
   @Field(() => ID, {
-    description: 'The ID returned from the CreateUpload mutation',
+    description: 'The ID returned from the `requestFileUpload` mutation',
   })
   readonly uploadId: string;
 
   @Field(() => ID, {
-    description: 'The directory to put this file in',
+    description:
+      'The directory ID if creating a new file or the file ID if creating a new version',
   })
   readonly parentId: string;
 
@@ -30,14 +31,27 @@ export abstract class CreateFileInput {
 }
 
 @InputType()
-export abstract class UpdateFileInput {
+export abstract class CreateDefinedFileVersionInput {
   @Field(() => ID, {
-    description: 'The ID returned from the CreateUpload mutation',
+    description: 'The ID returned from the `requestFileUpload` mutation',
   })
   readonly uploadId: string;
 
+  @Field({
+    description: 'An optional name. Defaults to file name.',
+  })
+  readonly name?: string;
+}
+
+@InputType()
+export abstract class CreateDirectoryInput {
   @Field(() => ID, {
-    description: 'The file ID to attach this new version to',
+    description: 'The ID for the parent directory',
   })
   readonly parentId: string;
+
+  @Field({
+    description: 'The directory name',
+  })
+  readonly name: string;
 }

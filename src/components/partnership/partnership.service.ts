@@ -9,6 +9,7 @@ import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
 import { DatabaseService, ILogger, Logger, matchSession } from '../../core';
+import { FileService } from '../file';
 import {
   CreatePartnership,
   Partnership,
@@ -20,6 +21,7 @@ import {
 @Injectable()
 export class PartnershipService {
   constructor(
+    private readonly files: FileService,
     private readonly db: DatabaseService,
     @Logger('partnership:service') private readonly logger: ILogger
   ) {}
@@ -120,6 +122,13 @@ export class PartnershipService {
     const createdAt = DateTime.local();
 
     try {
+      const mou = await this.files.createDefinedFile(`MOU`, session, input.mou);
+      const agreement = await this.files.createDefinedFile(
+        `Partner Agreement`,
+        session,
+        input.agreement
+      );
+
       const createPartnership = this.db
         .query()
         .match(matchSession(session, { withAclEdit: 'canCreatePartnership' }))
@@ -133,6 +142,8 @@ export class PartnershipService {
             }),
           ],
           ...this.property('agreementStatus', input.agreementStatus),
+          ...this.property('agreement', agreement),
+          ...this.property('mou', mou),
           ...this.property('mouStatus', input.mouStatus),
           ...this.property('mouStart', input.mouStart),
           ...this.property('mouEnd', input.mouEnd),
@@ -180,7 +191,6 @@ export class PartnershipService {
                   -[:organization {active: true, createdAt: datetime()}]->(organization)
         RETURN partnership.id as id
       `;
-
       await this.db
         .query()
         .raw(query, {
@@ -189,6 +199,7 @@ export class PartnershipService {
           projectId,
         })
         .first();
+
       return await this.readOne(id, session);
     } catch (e) {
       this.logger.warning('Failed to create partnership', {
@@ -205,6 +216,8 @@ export class PartnershipService {
       .match(matchSession(session, { withAclRead: 'canReadPartnerships' }))
       .match([node('partnership', 'Partnership', { active: true, id })])
       .optionalMatch([...this.propMatch('agreementStatus')])
+      .optionalMatch(this.propMatch('mou'))
+      .optionalMatch(this.propMatch('agreement'))
       .optionalMatch([...this.propMatch('mouStatus')])
       .optionalMatch([...this.propMatch('mouStart')])
       .optionalMatch([...this.propMatch('mouEnd')])
@@ -234,6 +247,20 @@ export class PartnershipService {
           {
             read: 'canReadAgreementStatusRead',
             edit: 'canReadAgreementStatusEdit',
+          },
+        ],
+        mou: [{ value: 'mou' }],
+        canReadMou: [
+          {
+            read: 'canReadMou',
+            edit: 'canEditMou',
+          },
+        ],
+        agreement: [{ value: 'agreement' }],
+        canReadAgreement: [
+          {
+            read: 'canReadAgreement',
+            edit: 'canEditAgreement',
           },
         ],
         mouStatus: [{ value: 'mouStatus' }],
@@ -292,6 +319,16 @@ export class PartnershipService {
         canRead: !!result.canReadAgreementStatus,
         canEdit: !!result.canEditAgreementStatus,
       },
+      mou: {
+        value: result.mou,
+        canRead: result.canReadMou,
+        canEdit: result.canEditMou,
+      },
+      agreement: {
+        value: result.agreement,
+        canRead: result.canReadAgreement,
+        canEdit: result.canEditAgreement,
+      },
       mouStatus: {
         value: result.mouStatus,
         canRead: !!result.canReadMouStatus,
@@ -327,16 +364,16 @@ export class PartnershipService {
   async update(input: UpdatePartnership, session: ISession) {
     const object = await this.readOne(input.id, session);
 
+    const { mou, agreement, ...rest } = input;
     await this.db.sgUpdateProperties({
       session,
       object,
       props: ['agreementStatus', 'mouStatus', 'mouStart', 'mouEnd', 'types'],
-      changes: {
-        ...input,
-        types: input.types as any,
-      },
+      changes: rest,
       nodevar: 'partnership',
     });
+    await this.files.updateDefinedFile(object.mou, mou, session);
+    await this.files.updateDefinedFile(object.agreement, agreement, session);
 
     return this.readOne(input.id, session);
   }

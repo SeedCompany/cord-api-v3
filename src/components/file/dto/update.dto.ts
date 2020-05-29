@@ -4,7 +4,7 @@ import { stripIndent } from 'common-tags';
 @InputType()
 export abstract class RenameFileInput {
   @Field(() => ID, {
-    description: "The file or directory's ID",
+    description: "The file node's ID",
   })
   readonly id: string;
 

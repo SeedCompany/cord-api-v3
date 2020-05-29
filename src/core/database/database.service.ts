@@ -12,11 +12,14 @@ import {
   Query,
   relation,
 } from 'cypher-query-builder';
+import type { Pattern } from 'cypher-query-builder/dist/typings/clauses/pattern';
 import { cloneDeep, Dictionary, Many, upperFirst } from 'lodash';
 import { DateTime, Duration } from 'luxon';
+import { assert } from 'ts-essentials';
 import {
   ISession,
   isSecured,
+  many,
   Order,
   Resource,
   unwrapSecured,
@@ -882,7 +885,7 @@ export class DatabaseService {
     type: Type<TObject>;
     input: ResourceInput<TObject>;
     acls: ACLs;
-    baseNodeLabel?: string;
+    baseNodeLabel?: Many<string>;
     aclEditProp?: string | false;
   }): Promise<void> {
     await this.createBaseNode<TObject>({
@@ -916,11 +919,13 @@ export class DatabaseService {
     type: Type<TObject>;
     input: ResourceInput<TObject>;
     acls: ACLs;
-    baseNodeLabel?: string;
+    baseNodeLabel?: Many<string>;
     aclEditProp?: string | false;
   }): Promise<void> {
-    const label = baseNodeLabel ?? type.name;
-    const aclEdit = aclEditProp ?? `canCreate${label}`;
+    const labels = (baseNodeLabel ? many(baseNodeLabel) : [type.name]).map(
+      upperFirst
+    );
+    const aclEdit = aclEditProp ?? `canCreate${labels[0]}`;
 
     try {
       await this.db
@@ -932,7 +937,7 @@ export class DatabaseService {
         ])
         .create([
           [
-            node('item', [upperFirst(label), 'BaseNode'], {
+            node('item', [...labels, 'BaseNode'], {
               active: true,
               createdAt: DateTime.local(),
               id: input.id,
@@ -1190,5 +1195,22 @@ export class DatabaseService {
       })
       .return('baseNode')
       .run();
+  }
+
+  assertPatternsIncludeIdentifier(
+    patterns: Pattern[][],
+    ...identifiers: string[]
+  ) {
+    if (process.env.NODE_ENV === 'production') {
+      return;
+    }
+    for (const identifier of identifiers) {
+      assert(
+        patterns.some((nodes) =>
+          nodes.some((node) => node.getNameString() === identifier)
+        ),
+        `Patterns must define identifier: "${identifier}"`
+      );
+    }
   }
 }

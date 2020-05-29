@@ -1,12 +1,23 @@
 import { S3 } from 'aws-sdk';
-import { GetObjectOutput } from 'aws-sdk/clients/s3';
+import { GetObjectOutput, HeadObjectOutput } from 'aws-sdk/clients/s3';
 import { Duration } from 'luxon';
 
 export interface BucketOptions {
   signedUrlExpiration?: Duration;
 }
 
-export class S3Bucket {
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export interface IS3Bucket {
+  getSignedUrlForPutObject: (key: string) => Promise<string>;
+  getSignedUrlForGetObject: (key: string) => Promise<string>;
+  getObject: (key: string) => Promise<GetObjectOutput>;
+  headObject: (key: string) => Promise<HeadObjectOutput>;
+  moveObject: (oldKey: string, newKey: string) => Promise<void>;
+  copyObject: (oldKey: string, newKey: string) => Promise<void>;
+  deleteObject: (key: string) => Promise<void>;
+}
+
+export class S3Bucket implements IS3Bucket {
   private readonly signedUrlExpires: Duration;
 
   constructor(
@@ -37,6 +48,15 @@ export class S3Bucket {
   async getObject(key: string): Promise<GetObjectOutput> {
     return this.s3
       .getObject({
+        Bucket: this.bucket,
+        Key: key,
+      })
+      .promise();
+  }
+
+  async headObject(key: string): Promise<HeadObjectOutput> {
+    return this.s3
+      .headObject({
         Bucket: this.bucket,
         Key: key,
       })

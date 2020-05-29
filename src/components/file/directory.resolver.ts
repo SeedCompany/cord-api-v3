@@ -7,13 +7,20 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { IdArg, ISession, Session } from '../../common';
-import { Directory, FileListInput, FileListOutput } from './dto';
-import { FileService } from './file.service';
+import {
+  CreateDirectoryInput,
+  Directory,
+  FileListInput,
+  FileListOutput,
+  FileNodeType,
+} from './dto';
+import { FileNodeResolver } from './file-node.resolver';
 
 @Resolver(Directory.classType)
-export class DirectoryResolver {
-  constructor(private readonly service: FileService) {}
-
+export class DirectoryResolver extends FileNodeResolver(
+  FileNodeType.Directory,
+  Directory.classType
+) {
   @Query(() => Directory)
   async directory(
     @IdArg() id: string,
@@ -35,14 +42,14 @@ export class DirectoryResolver {
     })
     input: FileListInput
   ): Promise<FileListOutput> {
-    return this.service.listChildren(input, session);
+    return this.service.listChildren(node.id, input, session);
   }
 
   @Mutation(() => Directory)
   async createDirectory(
     @Session() session: ISession,
-    @Args('name') name: string
+    @Args('input') { parentId, name }: CreateDirectoryInput
   ): Promise<Directory> {
-    return this.service.createDirectory(name, session);
+    return this.service.createDirectory(parentId, name, session);
   }
 }

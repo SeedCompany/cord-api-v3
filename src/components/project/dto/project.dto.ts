@@ -10,11 +10,8 @@ import {
   Sensitivity,
 } from '../../../common';
 import { SecuredBudget } from '../../budget';
-import { SecuredEngagementList } from '../../engagement';
 import { Directory } from '../../file';
 import { SecuredCountry } from '../../location';
-import { SecuredPartnershipList } from '../../partnership';
-import { SecuredProjectMemberList } from '../project-member';
 import { ProjectStatus } from './status.enum';
 import { SecuredProjectStep } from './step.enum';
 import { ProjectType } from './type.enum';
@@ -77,13 +74,13 @@ export class IProject extends Resource {
   readonly avatarLetters?: never;
 
   // Lazily attached in resolver
-  @Field(() => SecuredProjectMemberList, {
-    description: 'The project members',
-  })
+  // @Field(() => SecuredProjectMemberList, {
+  //   description: 'The project members',
+  // })
   team?: never;
 
   // Lazily attached in resolver
-  @Field(() => SecuredEngagementList)
+  // @Field(() => SecuredEngagementList)
   engagements?: never;
 
   // Lazily attached in resolver
@@ -91,7 +88,7 @@ export class IProject extends Resource {
   budget?: never;
 
   // Lazily attached in resolver
-  @Field(() => SecuredPartnershipList)
+  // @Field(() => SecuredPartnershipList)
   partnerships?: never;
 
   // Lazily attached in resolver

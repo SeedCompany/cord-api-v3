@@ -1,4 +1,8 @@
 import { gql } from 'apollo-server-core';
+import { Except, Merge } from 'type-fest';
+import { Directory, File } from '../../src/components/file';
+import { User } from '../../src/components/user';
+import { Raw } from './raw.type';
 
 export const org = gql`
   fragment org on Organization {
@@ -136,16 +140,62 @@ export const education = gql`
   }
 `;
 
-export const file = gql`
-  fragment file on FileNode {
+export const baseFileNode = gql`
+  fragment baseFileNode on FileNode {
     id
     type
-    createdBy
-    modifiedBy
-    size
     name
+    category
+    createdAt
+    createdBy {
+      ...user
+    }
   }
+  ${user}
 `;
+
+export const file = gql`
+  fragment file on File {
+    ...baseFileNode
+    mimeType
+    size
+    downloadUrl
+    modifiedAt
+    modifiedBy {
+      ...user
+    }
+    # When implemented:
+    # versions {
+    #  ...file
+    # }
+  }
+  ${baseFileNode}
+`;
+export type RawFile = Raw<
+  Merge<
+    Except<File, 'latestVersionId' | 'modifiedById' | 'createdById'>,
+    {
+      createdBy: User;
+      downloadUrl: string;
+      modifiedBy: User;
+    }
+  >
+>;
+
+export const directory = gql`
+  fragment directory on Directory {
+    ...baseFileNode
+  }
+  ${baseFileNode}
+`;
+export type RawDirectory = Raw<
+  Merge<
+    Except<Directory, 'createdById'>,
+    {
+      createdBy: User;
+    }
+  >
+>;
 
 export const product = gql`
   fragment product on Product {

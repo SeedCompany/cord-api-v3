@@ -1,25 +1,44 @@
 import { Type } from '@nestjs/common';
-import {
-  createUnionType,
-  Field,
-  InputType,
-  Int,
-  InterfaceType,
-  ObjectType,
-} from '@nestjs/graphql';
+import { Field, Int, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { DateTime } from 'luxon';
-import { DateTimeField, Resource } from '../../../common';
+import { ConditionalExcept, MergeExclusive } from 'type-fest';
+import {
+  DateTimeField,
+  Resource,
+  Secured,
+  SecuredProperty,
+  simpleSwitch,
+} from '../../../common';
 import { User } from '../../user/dto';
 import { FileNodeCategory } from './category';
 import { FileNodeType } from './type';
 
-@InterfaceType()
+/**
+ * This should be used for TypeScript types as we'll always be passing around
+ * concrete nodes.
+ */
+export type FileNode = MergeExclusive<
+  MergeExclusive<File, Directory>,
+  FileVersion
+>;
+
+@InterfaceType('FileNode', {
+  resolveType: (val: FileNode) =>
+    simpleSwitch(val.type, {
+      [FileNodeType.Directory]: Directory.classType,
+      [FileNodeType.File]: File.classType,
+      [FileNodeType.FileVersion]: FileVersion.classType,
+    }),
+})
 @ObjectType({
   isAbstract: true,
   implements: [Resource],
 })
-abstract class FileNode extends Resource {
+/**
+ * This should be used for GraphQL but never for TypeScript types.
+ */
+export abstract class IFileNode extends Resource {
   @Field(() => FileNodeType)
   readonly type: FileNodeType;
 
@@ -34,43 +53,32 @@ abstract class FileNode extends Resource {
   })
   readonly name: string;
 
-  @Field(() => [Directory], {
+  @Field(() => [IFileNode], {
     description: stripIndent`
       A list of the parents all the way up the tree.
       This can be used to populate a path-like UI,
       without having to fetch each parent serially.
     `,
   })
-  readonly parents: readonly Directory[];
+  readonly parents?: never;
 
-  @Field({
+  readonly createdById: string;
+  @Field(() => User, {
     description: 'The user who created this node',
   })
-  readonly createdBy: User;
+  readonly createdBy?: never;
 }
 
+export type BaseNode = ConditionalExcept<IFileNode, never | FileNodeCategory>;
+
 @ObjectType({
-  implements: [FileNode],
+  isAbstract: true,
+  implements: [IFileNode],
 })
-export class File extends FileNode {
-  /* TS wants a public constructor for "ClassType" */
-  static classType = (File as any) as Type<File>;
-
-  type: FileNodeType.File;
-
-  @Field({
-    description: 'The user who uploaded the first version of this file',
-  })
-  readonly createdBy: User;
-
-  @Field({
-    description: 'The user who uploaded the most recent version of this file',
-  })
-  readonly modifiedBy: User;
-
-  @DateTimeField()
-  readonly modifiedAt: DateTime;
-
+/**
+ * Both file and file version have these properties
+ */
+abstract class BaseFile extends IFileNode {
   @Field()
   readonly mimeType: string;
 
@@ -79,51 +87,61 @@ export class File extends FileNode {
 }
 
 @ObjectType({
-  implements: [FileNode],
+  implements: [IFileNode],
 })
-export class Directory extends FileNode {
+export class FileVersion extends BaseFile {
+  /* TS wants a public constructor for "ClassType" */
+  static classType = (FileVersion as any) as Type<FileVersion>;
+
+  readonly type: FileNodeType.FileVersion;
+}
+
+@ObjectType({
+  implements: [IFileNode],
+})
+export class File extends BaseFile {
+  /* TS wants a public constructor for "ClassType" */
+  static classType = (File as any) as Type<File>;
+
+  readonly type: FileNodeType.File;
+
+  readonly latestVersionId: string;
+
+  readonly modifiedById: string;
+
+  @DateTimeField()
+  readonly modifiedAt: DateTime;
+}
+
+@ObjectType({
+  implements: [IFileNode],
+})
+export class Directory extends IFileNode {
   /* TS wants a public constructor for "ClassType" */
   static classType = (Directory as any) as Type<Directory>;
 
   readonly type: FileNodeType.Directory;
-
-  @Field({
-    description: 'The user who created this directory',
-  })
-  readonly createdBy: User;
 }
 
 @ObjectType({
-  implements: [Resource],
+  description: SecuredProperty.descriptionFor('a file'),
 })
-export class FileVersion extends Resource {
-  /* TS wants a public constructor for "ClassType" */
-  static classType = (FileVersion as any) as Type<FileVersion>;
+export abstract class SecuredFile extends SecuredProperty(File) {}
 
-  @Field({
-    description: 'The user who created this file version',
-  })
-  readonly createdBy: User;
+/**
+ * A reference to a secured defined file. The value is the ID of the file.
+ */
+export type DefinedFile = Secured<string>;
 
-  @Field(() => Int)
-  readonly size: number;
-}
+export const isDirectory = (node: FileNode): node is Directory =>
+  isDirectoryNode(node);
+export const isDirectoryNode = (node: BaseNode) =>
+  node.type === FileNodeType.Directory;
 
-export const FileOrDirectory = createUnionType({
-  name: 'FileOrDirectory',
-  description: '',
-  types: () => [File.classType, Directory.classType],
-  resolveType: (value) =>
-    value.type === FileNodeType.Directory
-      ? Directory.classType
-      : File.classType,
-});
-export type FileOrDirectory = File | Directory;
+export const isFile = (node: FileNode): node is File => isFileNode(node);
+export const isFileNode = (node: BaseNode) => node.type === FileNodeType.File;
 
-@InputType()
-export abstract class BaseNodeConsistencyInput {
-  @Field({
-    description: 'The BaseNode type',
-  })
-  readonly baseNode: string;
-}
+export const isFileVersion = (node: FileNode): node is FileVersion =>
+  isFileVersionNode(node);
+export const isFileVersionNode = (node: BaseNode) =>
+  node.type === FileNodeType.FileVersion;

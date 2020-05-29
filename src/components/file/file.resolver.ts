@@ -6,55 +6,72 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
+import { stripIndent } from 'common-tags';
 import { IdArg, ISession, Session } from '../../common';
+import { User } from '../user';
 import {
-  BaseNodeConsistencyInput,
-  CreateFileInput,
+  CreateFileVersionInput,
   File,
-  FileOrDirectory,
-  FileVersion,
+  FileListInput,
+  FileListOutput,
+  FileNode,
+  FileNodeType,
+  IFileNode,
   MoveFileInput,
   RenameFileInput,
   RequestUploadOutput,
-  UpdateFileInput,
 } from './dto';
-import { FileService } from './file.service';
+import { FileNodeResolver } from './file-node.resolver';
 
 @Resolver(File.classType)
-export class FileResolver {
-  constructor(private readonly service: FileService) {}
-
+export class FileResolver extends FileNodeResolver(
+  FileNodeType.File,
+  File.classType
+) {
   @Query(() => File)
   async file(@IdArg() id: string, @Session() session: ISession): Promise<File> {
     return this.service.getFile(id, session);
   }
 
-  @Query(() => FileOrDirectory)
+  @Query(() => IFileNode)
   async fileNode(
     @IdArg() id: string,
     @Session() session: ISession
-  ): Promise<FileOrDirectory> {
+  ): Promise<FileNode> {
     return this.service.getFileNode(id, session);
   }
 
-  @ResolveField(() => [FileVersion], {
-    description: 'Return the file versions of this file',
+  @ResolveField(() => User, {
+    description: 'The user who uploaded the most recent version of this file',
   })
-  async versions(
+  async modifiedBy(
+    @Parent() node: File,
+    @Session() session: ISession
+  ): Promise<User> {
+    return this.users.readOne(node.modifiedById, session);
+  }
+
+  @ResolveField(() => FileListOutput, {
+    description: 'Return the versions of this file',
+  })
+  async children(
     @Session() session: ISession,
-    @Parent() node: File
-  ): Promise<FileVersion[]> {
-    return this.service.getVersions(node.id, session);
+    @Parent() node: File,
+    @Args({
+      name: 'input',
+      type: () => FileListInput,
+      defaultValue: FileListInput.defaultVal,
+    })
+    input: FileListInput
+  ): Promise<FileListOutput> {
+    return this.service.listChildren(node.id, input, session);
   }
 
   @ResolveField(() => String, {
     description: 'A direct url to download the file',
   })
-  downloadUrl(
-    @Parent() node: File,
-    @Session() session: ISession
-  ): Promise<string> {
-    return this.service.getDownloadUrl(node.id, session);
+  downloadUrl(@Parent() node: File): Promise<string> {
+    return this.service.getDownloadUrl(node);
   }
 
   @Mutation(() => Boolean, {
@@ -71,60 +88,62 @@ export class FileResolver {
   @Mutation(() => RequestUploadOutput, {
     description: 'Start the file upload process by requesting an upload',
   })
-  async requestUpload(
+  async requestFileUpload(
     @Session() _session: ISession // require authorized
   ): Promise<RequestUploadOutput> {
     return this.service.requestUpload();
   }
 
   @Mutation(() => File, {
-    description: 'Create a new file in the given directory after uploading it',
+    description: stripIndent`
+      Create a new file version.
+      This is always the second step after \`requestFileUpload\` mutation.
+      If the given parent is a file, this will attach the new version to it.
+      If the given parent is a directory, this will attach the new version to
+      the existing file with the same name or create a new file if not found.
+    `,
   })
-  createFile(
-    @Args('input') input: CreateFileInput,
+  createFileVersion(
+    @Args('input') input: CreateFileVersionInput,
     @Session() session: ISession
   ): Promise<File> {
-    return this.service.createFile(input, session);
+    return this.service.createFileVersion(input, session);
   }
 
-  @Mutation(() => File, {
-    description:
-      'Update an existing file (add a new version) after uploading it',
-  })
-  updateFile(
-    @Args('input') input: UpdateFileInput,
-    @Session() session: ISession
-  ): Promise<File> {
-    return this.service.updateFile(input, session);
-  }
-
-  @Mutation(() => FileOrDirectory, {
+  @Mutation(() => IFileNode, {
     description: 'Rename a file or directory',
   })
-  renameFileNode(
+  async renameFileNode(
     @Args('input') input: RenameFileInput,
     @Session() session: ISession
-  ): Promise<FileOrDirectory> {
-    return this.service.rename(input, session);
+  ): Promise<FileNode> {
+    await this.service.rename(input, session);
+    return this.service.getFileNode(input.id, session);
   }
 
-  @Mutation(() => File, {
+  @Mutation(() => IFileNode, {
     description: 'Move a file or directory',
   })
   moveFileNode(
     @Args('input') input: MoveFileInput,
     @Session() session: ISession
-  ): Promise<File> {
+  ): Promise<FileNode> {
     return this.service.move(input, session);
   }
 
   @Query(() => Boolean, {
     description: 'Check Consistency in File Nodes',
+    deprecationReason: 'This should have never existed',
   })
   async checkFileConsistency(
-    @Args('input') input: BaseNodeConsistencyInput,
+    @Args({ name: 'type', type: () => FileNodeType }) type: FileNodeType,
     @Session() session: ISession
   ): Promise<boolean> {
-    return this.service.checkFileConsistency(input.baseNode, session);
+    try {
+      await this.service.checkConsistency(type, session);
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 }
