@@ -145,29 +145,70 @@ export class ProjectMemberService {
     { page, count, sort, order, filter }: ProjectMemberListInput,
     session: ISession
   ): Promise<ProjectMemberListOutput> {
-    const result = await this.db.list<ProjectMember>({
-      session,
-      nodevar: 'projectMember',
-      aclReadProp: 'canReadProjectMembers',
-      aclEditProp: 'canCreateProjectMember',
-      props: [
-        { name: 'roles', secure: true, list: true },
-        { name: 'user', secure: true },
-        { name: 'modifiedAt', secure: false },
-      ],
-      input: {
-        page,
-        count,
-        sort,
-        order,
-        filter,
-      },
-    });
+    const { projectId } = filter;
+    let res: {
+      items: ProjectMember[];
+      hasMore: boolean;
+      total: number;
+    } = { items: [], hasMore: false, total: 0 };
+
+    if (projectId) {
+      const qry = `
+        MATCH
+          (token:Token {active: true, value: $token})
+          <-[:token {active: true}]-
+          (requestingUser:User {
+            active: true,
+            id: $requestingUserId
+          }),
+          (project:Project {id: $projectId, active: true, owningOrgId: $owningOrgId})<-[:project]-(projectMember:ProjectMember {active:true})-[:user {active: true}]->(requestingUser)
+        WITH COUNT(projectMember) as total, project, projectMember
+            MATCH(projectMember {active: true})-[:roles {active:true}]->(roles:Property {active: true})
+            RETURN total, projectMember.id as id, projectMember.createdAt as createdAt
+            ORDER BY ${sort} ${order}
+            SKIP $skip LIMIT $count
+      `;
+      const projectMembers = await this.db
+        .query()
+        .raw(qry, {
+          token: session.token,
+          requestingUserId: session.userId,
+          owningOrgId: session.owningOrgId,
+          projectId,
+          skip: (page - 1) * count,
+          count,
+        })
+        .run();
+      res.items = await Promise.all(
+        projectMembers.map(async (projectMember) =>
+          this.readOne(projectMember.id, session)
+        )
+      );
+    } else {
+      res = await this.db.list<ProjectMember>({
+        session,
+        nodevar: 'projectMember',
+        aclReadProp: 'canReadProjectMembers',
+        aclEditProp: 'canCreateProjectMember',
+        props: [
+          { name: 'roles', secure: true, list: true },
+          { name: 'user', secure: true },
+          { name: 'modifiedAt', secure: false },
+        ],
+        input: {
+          page,
+          count,
+          sort,
+          order,
+          filter,
+        },
+      });
+    }
 
     return {
-      items: result.items,
-      hasMore: result.hasMore,
-      total: result.total,
+      items: res.items,
+      hasMore: res.hasMore,
+      total: res.total,
     };
   }
 
