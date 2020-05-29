@@ -3,9 +3,10 @@ import { FilmModule } from './film/film.module';
 import { ProductResolver } from './product.resolver';
 import { ProductService } from './product.service';
 import { RangeModule } from './range/range.module';
+import { StoryModule } from './story';
 
 @Module({
-  imports: [FilmModule, RangeModule],
+  imports: [FilmModule, RangeModule, StoryModule],
   providers: [ProductResolver, ProductService],
   exports: [ProductService],
 })

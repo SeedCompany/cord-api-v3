@@ -3,3 +3,4 @@ export * from './product.service';
 export * from './product.module';
 export * from './film';
 export * from './range';
+export * from './story';
