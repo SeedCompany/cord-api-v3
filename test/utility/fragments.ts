@@ -473,6 +473,27 @@ export const film = gql`
   }
 `;
 
+export const story = gql`
+  fragment story on Story {
+    id
+    name {
+      value
+      canRead
+      canEdit
+    }
+    ranges {
+      value {
+        id
+        start
+        end
+      }
+      canRead
+      canEdit
+    }
+    createdAt
+  }
+`;
+
 export const workflow = gql`
   fragment workflow on Workflow {
     id
@@ -514,4 +535,5 @@ export const fragments = {
   workflow,
   state,
   film,
+  story,
 };
