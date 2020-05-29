@@ -6,7 +6,8 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { IdArg, ISession, Session } from '../../common';
+import { compact } from 'lodash';
+import { firstLettersOfWords, IdArg, ISession, Session } from '../../common';
 import {
   OrganizationListInput,
   SecuredOrganizationList,
@@ -37,6 +38,37 @@ export class UserResolver {
   })
   async user(@Session() session: ISession, @IdArg() id: string): Promise<User> {
     return this.userService.readOne(id, session);
+  }
+
+  @ResolveField(() => String, { nullable: true })
+  fullName(@Parent() user: User): string | undefined {
+    const realName = compact([
+      user.realFirstName.value,
+      user.realLastName.value,
+    ]).join(' ');
+    if (realName) {
+      return realName;
+    }
+    const displayName = compact([
+      user.displayFirstName.value,
+      user.displayLastName.value,
+    ]).join(' ');
+    if (displayName) {
+      return name;
+    }
+
+    return undefined;
+  }
+
+  @ResolveField(() => String, { nullable: true })
+  firstName(@Parent() user: User): string | undefined {
+    return user.realFirstName.value || user.displayFirstName.value || undefined;
+  }
+
+  @ResolveField(() => String, { nullable: true })
+  avatarLetters(@Parent() user: User): string | undefined {
+    const name = this.fullName(user);
+    return name ? firstLettersOfWords(name) : undefined;
   }
 
   @Query(() => UserListOutput, {
