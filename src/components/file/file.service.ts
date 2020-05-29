@@ -73,7 +73,7 @@ export class FileService {
   async getFileNode(id: string, session: ISession): Promise<FileNode> {
     this.logger.info(`getNode`, { id, userId: session.userId });
 
-    const base = await this.repo.getBaseNode(id, session);
+    const base = await this.repo.getBaseNodeById(id, session);
 
     if (base.type === FileNodeType.Directory) {
       return {
@@ -175,7 +175,7 @@ export class FileService {
 
     let parent;
     try {
-      parent = await this.repo.getBaseNode(parentId, session);
+      parent = await this.repo.getBaseNodeById(parentId, session);
     } catch (e) {
       if (e instanceof NotFoundException) {
         throw new NotFoundException('Could not find parent');
@@ -217,7 +217,14 @@ export class FileService {
     name: string,
     session: ISession
   ) {
-    // TODO get and return existing file in dir with same name
+    try {
+      const node = await this.repo.getBaseNodeByName(parentId, name, session);
+      return node.id;
+    } catch (e) {
+      if (!(e instanceof NotFoundException)) {
+        throw e;
+      }
+    }
 
     return this.repo.createFile(parentId, name, session);
   }
@@ -290,12 +297,12 @@ export class FileService {
   }
 
   async rename(input: RenameFileInput, session: ISession): Promise<void> {
-    const fileNode = await this.repo.getBaseNode(input.id, session);
+    const fileNode = await this.repo.getBaseNodeById(input.id, session);
     await this.repo.rename(fileNode, input.name, session);
   }
 
   async move(input: MoveFileInput, session: ISession): Promise<FileNode> {
-    const fileNode = await this.repo.getBaseNode(input.id, session);
+    const fileNode = await this.repo.getBaseNodeById(input.id, session);
 
     if (input.name) {
       await this.repo.rename(fileNode, input.name, session);
@@ -307,7 +314,7 @@ export class FileService {
   }
 
   async delete(id: string, session: ISession): Promise<void> {
-    const fileNode = await this.repo.getBaseNode(id, session);
+    const fileNode = await this.repo.getBaseNodeById(id, session);
     await this.repo.delete(fileNode, session);
   }
 

@@ -4,6 +4,7 @@ import {
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
 import { Node, node, Query, relation } from 'cypher-query-builder';
+import type { Pattern } from 'cypher-query-builder/dist/typings/clauses/pattern';
 import { camelCase, intersection, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
@@ -18,6 +19,8 @@ import {
   FileVersion,
 } from './dto';
 
+const isActive = { active: true };
+
 @Injectable()
 export class FileRepository {
   constructor(
@@ -25,22 +28,48 @@ export class FileRepository {
     @Logger('file:repository') private readonly logger: ILogger
   ) {}
 
-  async getBaseNode(id: string, session: ISession): Promise<BaseNode> {
-    const isActive = { active: true };
+  async getBaseNodeById(id: string, session: ISession): Promise<BaseNode> {
+    return this.getBaseNodeBy(session, [
+      [node('node', 'FileNode', { id, ...isActive })],
+      [
+        node('node'),
+        relation('out', '', 'name', isActive),
+        node('name', 'Property', isActive),
+      ],
+    ]);
+  }
+
+  async getBaseNodeByName(
+    parentId: string,
+    name: string,
+    session: ISession
+  ): Promise<BaseNode> {
+    return this.getBaseNodeBy(session, [
+      [
+        node('parent', 'FileNode', isActive),
+        relation('in', '', 'parent', isActive),
+        node('node', 'FileNode', isActive),
+        relation('out', '', 'name', isActive),
+        node('name', 'Property', { value: name, ...isActive }),
+      ],
+    ]);
+  }
+
+  private async getBaseNodeBy(
+    session: ISession,
+    patterns: Pattern[][]
+  ): Promise<BaseNode> {
+    this.db.assertPatternsIncludeIdentifier(patterns, 'node', 'name');
+
     const query = this.db
       .query()
       .match([
         matchSession(session),
-        [node('node', 'FileNode', { id, ...isActive })],
-        [
-          node('node'),
-          relation('out', '', 'name', isActive),
-          node('name', 'Property', isActive),
-        ],
+        ...patterns,
         [
           node('node'),
           relation('out', '', 'createdBy', isActive),
-          node('createdBy'),
+          node('createdBy', 'User'),
         ],
       ])
       .return([
@@ -72,7 +101,6 @@ export class FileRepository {
   }
 
   async getLatestVersionId(fileId: string): Promise<string> {
-    const isActive = { active: true };
     const latestVersionResult = await this.db
       .query()
       .match([
@@ -91,7 +119,6 @@ export class FileRepository {
   }
 
   async getVersionDetails(id: string, session: ISession): Promise<FileVersion> {
-    const isActive = { active: true };
     const matchLatestVersionProp = (q: Query, prop: string, variable = prop) =>
       q
         .with('*')

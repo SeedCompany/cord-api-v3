@@ -12,8 +12,10 @@ import {
   Query,
   relation,
 } from 'cypher-query-builder';
+import type { Pattern } from 'cypher-query-builder/dist/typings/clauses/pattern';
 import { cloneDeep, Dictionary, Many, upperFirst } from 'lodash';
 import { DateTime, Duration } from 'luxon';
+import { assert } from 'ts-essentials';
 import {
   ISession,
   isSecured,
@@ -396,6 +398,7 @@ export class DatabaseService {
 
     return returnVal;
   }
+
   async sgUpdateProperties<TObject extends Resource>({
     session,
     object,
@@ -1192,5 +1195,22 @@ export class DatabaseService {
       })
       .return('baseNode')
       .run();
+  }
+
+  assertPatternsIncludeIdentifier(
+    patterns: Pattern[][],
+    ...identifiers: string[]
+  ) {
+    if (process.env.NODE_ENV === 'production') {
+      return;
+    }
+    for (const identifier of identifiers) {
+      assert(
+        patterns.some((nodes) =>
+          nodes.some((node) => node.getNameString() === identifier)
+        ),
+        `Patterns must define identifier: "${identifier}"`
+      );
+    }
   }
 }
