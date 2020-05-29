@@ -184,6 +184,7 @@ export class ProjectMemberService {
           this.readOne(projectMember.id, session)
         )
       );
+      res.total = projectMembers[0].total;
     } else {
       res = await this.db.list<ProjectMember>({
         session,
