@@ -328,6 +328,8 @@ export class UserService {
           canReadOrgs: true,
           canCreateFilm: true,
           canReadFilms: true,
+          canCreateLiteracyMaterial: true,
+          canReadLiteracyMaterials: true,
           canReadUsers: true,
           canCreateLanguage: true,
           canReadLanguages: true,
