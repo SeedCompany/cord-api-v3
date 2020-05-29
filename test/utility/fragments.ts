@@ -523,6 +523,27 @@ export const film = gql`
   }
 `;
 
+export const literacyMaterial = gql`
+  fragment literacyMaterial on LiteracyMaterial {
+    id
+    name {
+      value
+      canRead
+      canEdit
+    }
+    ranges {
+      value {
+        id
+        start
+        end
+      }
+      canRead
+      canEdit
+    }
+    createdAt
+  }
+`;
+
 export const story = gql`
   fragment story on Story {
     id
@@ -585,5 +606,6 @@ export const fragments = {
   workflow,
   state,
   film,
+  literacyMaterial,
   story,
 };
