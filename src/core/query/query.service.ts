@@ -46,6 +46,98 @@ export class QueryService {
     return await result.json();
   }
 
+  async readBaseNode(baseNode: BaseNode, requestingUserId?: string) {
+    if (baseNode.id === undefined || baseNode.id === null) {
+      return;
+    }
+    if (requestingUserId === undefined) {
+      return;
+    }
+
+    let propsQuery = ``;
+    let q = 0;
+
+    if (!baseNode.props) {
+      return;
+    }
+
+    for (let i = 0; i < baseNode.props.length; i++) {
+      const prop = baseNode.props[i];
+
+      if (prop.key === undefined) {
+        continue;
+      }
+
+      propsQuery += `
+        ${prop.key}: secureReadDataSingletonByBaseNodeId(
+          baseNodeId: "${baseNode.id}"
+          requestingUserId: "${requestingUserId}"
+          identifier: "${prop.key}"
+        ){
+          value
+          canRead
+          canEdit
+          canAdmin
+        }
+      `;
+    }
+
+    let query = `
+      query{
+        baseNode: BaseNode(id:"${baseNode.id}"){
+          createdAt{formatted}
+        }
+
+        ${propsQuery}
+      }
+    `;
+
+    const result = await this.sendGraphql(query);
+
+    result.data['id'] = baseNode.id;
+    result.data['createdAt'] = result.data.baseNode[0].createdAt.formatted;
+
+    return result.data;
+  }
+
+  //////////////////////////////////////////////////////////////////
+
+  // Constraints
+
+  async createPropertyExistenceConstraintOnNodeAndRun(
+    label: string,
+    property: string
+  ) {
+    await this.db
+      .query()
+      .raw(`create constraint on (n:${label}) assert exists(n.${property})`)
+      .run();
+  }
+
+  async createPropertyExistenceConstraintOnRelationshipAndRun(
+    type: string,
+    property: string
+  ) {
+    await this.db
+      .query()
+      .raw(
+        `create constraint on ()-[n:${type}]-() assert exists(n.${property})`
+      )
+      .run();
+  }
+
+  async createPropertyUniquenessConstraintOnNodeAndRun(
+    label: string,
+    property: string
+  ) {
+    await this.db
+      .query()
+      .raw(`create constraint on (n:${label}) assert n.${property} is unique`)
+      .run();
+  }
+
+  // Base Node
+
   async createBaseNode(
     baseNode: BaseNode,
     requestingUserId: string,
@@ -80,7 +172,7 @@ export class QueryService {
       }
 
       if (prop.addToAdminSg) {
-        adminPerm = createPermission(
+        adminPerm += createPermission(
           'q' + q++,
           baseNode.createdAt,
           prop.key,
@@ -93,11 +185,11 @@ export class QueryService {
       }
 
       if (prop.addToReaderSg) {
-        adminPerm = createPermission(
+        readerPerm += createPermission(
           'q' + q++,
           baseNode.createdAt,
           prop.key,
-          sgAdminId,
+          sgReaderId,
           dhId,
           true,
           false,
@@ -140,218 +232,124 @@ export class QueryService {
       propQuery
     );
 
-    // console.log(query);
     const result = await this.sendGraphql(query);
     if (!result) {
       throw new ServerException('failed to create user');
     }
 
-    // console.log(result);
-
-    return result;
-  }
-
-  async gqlReadBaseNode(
-    baseNode: Partial<BaseNode>,
-    requestingUserId: string | undefined
-  ) {
-    if (requestingUserId === undefined) {
-      console.log('no requesting user id');
-      return;
-    }
-
-    let propsQuery = '';
-    let q = 0;
-
-    if (!baseNode.props) {
-      return;
-    }
-
-    for (let i = 0; i < baseNode.props.length; i++) {
-      const prop = baseNode.props[i];
-
-      if (prop.key === undefined) {
-        continue;
-      }
-
-      propsQuery += `
-        q${q++}: secureReadDataByBaseNodeId(
-          baseNodeId: "${baseNode.id}"
-          requestingUserId: "${requestingUserId}"
-          identifier: "${prop.key}"
-        ){
-          value
-        }
-      `;
-    }
-
-    let query = `
-      mutation{
-        ${propsQuery}
-      }
-    `;
-
-    // console.log(query);
-    const result = await this.sendGraphql(query);
-
-    // console.log(JSON.stringify(result));
-
-    for (let i = 0; i < q; i++) {
-      console.log(result.data['q' + i]);
-    }
-
     return baseNode.id;
   }
 
-  //////////////////////////////////////////////////////////////////
+  // async readBaseNode(baseNode: Partial<BaseNode>, requestingUserId?: string) {
+  //   const result2 = await this.gqlReadBaseNode(baseNode, requestingUserId);
 
-  // Constraints
+  //   return result2 as any;
 
-  async createPropertyExistenceConstraintOnNodeAndRun(
-    label: string,
-    property: string
-  ) {
-    await this.db
-      .query()
-      .raw(`create constraint on (n:${label}) assert exists(n.${property})`)
-      .run();
-  }
+  //   // const query = this.db.query();
 
-  async createPropertyExistenceConstraintOnRelationshipAndRun(
-    type: string,
-    property: string
-  ) {
-    await this.db
-      .query()
-      .raw(
-        `create constraint on ()-[n:${type}]-() assert exists(n.${property})`
-      )
-      .run();
-  }
+  //   // let returnString = '';
 
-  async createPropertyUniquenessConstraintOnNodeAndRun(
-    label: string,
-    property: string
-  ) {
-    await this.db
-      .query()
-      .raw(`create constraint on (n:${label}) assert n.${property} is unique`)
-      .run();
-  }
+  //   // // const returnObj: any = {};
 
-  // Base Node
+  //   // if (requestingUserId) {
+  //   //   query.match([
+  //   //     node('reqUser', 'User', {
+  //   //       id: requestingUserId,
+  //   //     }),
+  //   //   ]);
 
-  async readBaseNode(
-    baseNode: Partial<BaseNode>,
-    requestingUserId: string | undefined
-  ) {
-    const result2 = await this.gqlReadBaseNode(baseNode, requestingUserId);
+  //   //   query.match([
+  //   //     node('baseNode', 'BaseNode', {
+  //   //       id: baseNode.id,
+  //   //     }),
+  //   //   ]);
 
-    const query = this.db.query();
+  //   //   if (!baseNode.props) {
+  //   //     throw Error('baseNode.props needed');
+  //   //   }
 
-    let returnString = '';
+  //   //   /*
+  //   // we'll use an array to hold the 3 different permission types.
+  //   // in the property for loop we'll loop through the 3 permission types
+  //   // to find, definitively, if the user has that permission through ANY security group.
+  //   // It is possible that the user has a large amount of security group and that only one
+  //   // may give an admin = true, so we must ensure that each permission is
+  //   // searched for by itself.
+  //   // */
+  //   //   const perms = ['Read', 'Edit', 'Admin'];
 
-    // const returnObj: any = {};
+  //   //   for (let i = 0; i < baseNode.props.length; i++) {
+  //   //     const propName = baseNode.props[i].key;
 
-    if (requestingUserId) {
-      query.match([
-        node('reqUser', 'User', {
-          id: requestingUserId,
-        }),
-      ]);
+  //   //     for (let j = 0; j < perms.length; j++) {
+  //   //       query.optionalMatch([
+  //   //         node('reqUser'),
+  //   //         relation('in', '', 'member', {
+  //   //           active: true,
+  //   //         }),
+  //   //         node('sg', 'SecurityGroup', { active: true }),
+  //   //         relation('out', '', 'permission', {
+  //   //           active: true,
+  //   //         }),
+  //   //         node(
+  //   //           propName + '_permission_' + perms[j].toLowerCase(),
+  //   //           'Permission',
+  //   //           {
+  //   //             property: propName,
+  //   //             [perms[j].toLowerCase()]: true,
+  //   //             active: true,
+  //   //           }
+  //   //         ),
+  //   //         relation('out', '', 'baseNode', { active: true }),
+  //   //         node('baseNode'),
+  //   //         relation('out', '', propName, {
+  //   //           active: true,
+  //   //         }),
+  //   //         node(propName + '_var', baseNode.props[i].labels, {
+  //   //           active: true,
+  //   //         }),
+  //   //       ]);
 
-      query.match([
-        node('baseNode', 'BaseNode', {
-          id: baseNode.id,
-        }),
-      ]);
+  //   //       if (j === 0) {
+  //   //         // not sure yet how to wrap return clauses in functions using query builder
+  //   //         returnString += `collect(${propName}_var.value)[0] as ${propName}, `;
+  //   //         // returnObj[propName + '_var'] = [
+  //   //         //   {
+  //   //         //     value: propName,
+  //   //         //   },
+  //   //         // ];
+  //   //       }
 
-      if (!baseNode.props) {
-        throw Error('baseNode.props needed');
-      }
+  //   //       returnString += `collect(${propName}_permission_${perms[
+  //   //         j
+  //   //       ].toLowerCase()}.${perms[j].toLowerCase()})[0] as ${propName}${
+  //   //         perms[j]
+  //   //       },`;
 
-      /*
-    we'll use an array to hold the 3 different permission types. 
-    in the property for loop we'll loop through the 3 permission types
-    to find, definitively, if the user has that permission through ANY security group.
-    It is possible that the user has a large amount of security group and that only one
-    may give an admin = true, so we must ensure that each permission is 
-    searched for by itself.
-    */
-      const perms = ['Read', 'Edit', 'Admin'];
+  //   //       // if (i + 1 < baseNode.props.length && j <= 1) {
+  //   //       //   returnString += ',';
+  //   //       // }
 
-      for (let i = 0; i < baseNode.props.length; i++) {
-        const propName = baseNode.props[i].key;
+  //   //       // returnObj[propName + '_permission_' + perms[j].toLowerCase()] = [
+  //   //       //   {
+  //   //       //     [perms[j].toLowerCase()]: propName + perms[j],
+  //   //       //   },
+  //   //       // ];
+  //   //     }
+  //   //   }
 
-        for (let j = 0; j < perms.length; j++) {
-          query.optionalMatch([
-            node('reqUser'),
-            relation('in', '', 'member', {
-              active: true,
-            }),
-            node('sg', 'SecurityGroup', { active: true }),
-            relation('out', '', 'permission', {
-              active: true,
-            }),
-            node(
-              propName + '_permission_' + perms[j].toLowerCase(),
-              'Permission',
-              {
-                property: propName,
-                [perms[j].toLowerCase()]: true,
-                active: true,
-              }
-            ),
-            relation('out', '', 'baseNode', { active: true }),
-            node('baseNode'),
-            relation('out', '', propName, {
-              active: true,
-            }),
-            node(propName + '_var', baseNode.props[i].labels, {
-              active: true,
-            }),
-          ]);
+  //   //   returnString += `baseNode.id as id, baseNode.createdAt as createdAt`;
+  //   //   // returnObj['baseNode'] = [{ id: 'id' }, { createdAt: 'createdAt' }];
 
-          if (j === 0) {
-            // not sure yet how to wrap return clauses in functions using query builder
-            returnString += `collect(${propName}_var.value)[0] as ${propName}, `;
-            // returnObj[propName + '_var'] = [
-            //   {
-            //     value: propName,
-            //   },
-            // ];
-          }
+  //   //   const cypher = query.return(returnString);
 
-          returnString += `collect(${propName}_permission_${perms[
-            j
-          ].toLowerCase()}.${perms[j].toLowerCase()})[0] as ${propName}${
-            perms[j]
-          },`;
+  //   //   return await query.first();
+  //   // } else {
+  //   //   // todo: retrieve public or org viewable data
 
-          // if (i + 1 < baseNode.props.length && j <= 1) {
-          //   returnString += ',';
-          // }
-
-          // returnObj[propName + '_permission_' + perms[j].toLowerCase()] = [
-          //   {
-          //     [perms[j].toLowerCase()]: propName + perms[j],
-          //   },
-          // ];
-        }
-      }
-
-      returnString += `baseNode.id as id, baseNode.createdAt as createdAt`;
-      // returnObj['baseNode'] = [{ id: 'id' }, { createdAt: 'createdAt' }];
-
-      const cypher = query.return(returnString);
-      // console.log(cypher.interpolate());
-      return await query.first();
-    } else {
-      // todo: retrieve public or org viewable data
-      console.log('todo: public/org data');
-      return;
-    }
-  }
+  //   //   return;
+  //   // }
+  // }
 
   async updateBaseNode(baseNode: BaseNode, requestingUserId: string) {
     // if prop is array and includes old value, set old value to false and create new prop
@@ -482,12 +480,12 @@ export class QueryService {
     const result = await this.db
       .query()
       .match([
-        node('prop', 'Property', {
+        node('data', 'Data', {
           active: true,
           value: expectedValue,
         }),
       ])
-      .return({ prop: [{ value: 'value' }] })
+      .return({ data: [{ value: 'value' }] })
       .first();
 
     if (result) {
@@ -507,7 +505,7 @@ export class QueryService {
     const result = await this.db
       .query()
       .create([
-        node('token', ['Token', 'Property'], {
+        node('token', ['Token', 'Data'], {
           active: true,
           createdAt: createdAt.toNeo4JDateTime(),
           value: token,
@@ -536,16 +534,19 @@ export class QueryService {
       ])
       .optionalMatch([
         node('token'),
-        relation('in', '', 'token', {
+        relation('in', '', 'DATA'),
+        node('dh', 'DataHolder', {
           active: true,
+          identifier: 'token',
         }),
+        relation('in', '', 'DATAHOLDERS'),
         node('user', 'User', {
           active: true,
         }),
       ])
       .return({
         token: [{ value: 'token' }],
-        user: [{ owningOrgId: 'owningOrgId' }, { id: 'userId' }],
+        user: [{ id: 'userId' }],
       })
       .first();
 
@@ -565,11 +566,11 @@ export class QueryService {
           value: $token
         })
       MATCH
-        (:EmailAddress {active: true, value: $email})
+        (:Email {active: true, value: $email})
         <-[:DATA]-
         (:DataHolder {
           active: true,
-          identifier: "emailAddress"
+          identifier: "email"
         })
         <-[:DATAHOLDERS]-
         (user:User {
@@ -641,9 +642,9 @@ export class QueryService {
         throw new ServerException('Login failed');
       }
 
-      return result2.userId;
+      return result1.userId;
     } catch (e) {
-      console.log(e);
+      console.error(e);
     }
     return '';
   }

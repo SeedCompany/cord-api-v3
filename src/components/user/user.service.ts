@@ -73,7 +73,7 @@ export class UserService {
     //   'owningOrgId'
     // );
     await this.db2.createPropertyExistenceConstraintOnNodeAndRun(
-      'EmailAddress',
+      'Email',
       'value'
     );
     await this.db2.createPropertyExistenceConstraintOnRelationshipAndRun(
@@ -105,7 +105,7 @@ export class UserService {
       'id'
     );
     await this.db2.createPropertyUniquenessConstraintOnNodeAndRun(
-      'EmailAddress',
+      'Email',
       'value'
     );
   }
@@ -221,7 +221,7 @@ export class UserService {
       .raw(
         `
         MATCH
-        (email:EmailAddress {
+        (email:Email {
           value: $email
         })
         RETURN
@@ -249,7 +249,8 @@ export class UserService {
       session
     );
 
-    return this.readOne(userId, session);
+    const result = await this.readOne(userId, session);
+    return result;
   }
 
   async create(
@@ -282,12 +283,12 @@ export class UserService {
             addToReaderSg: false,
           },
           {
-            key: 'emailAddress',
+            key: 'email',
             value: input.email,
             isSingleton: true,
-            labels: ['EmailAddress'],
+            labels: ['Email'],
             addToAdminSg: true,
-            addToReaderSg: true,
+            addToReaderSg: false,
           },
           {
             key: 'realFirstName',
@@ -355,7 +356,7 @@ export class UserService {
   }
 
   async readOne(id: string, session: ISession): Promise<User> {
-    console.log('userid: ' + session.userId);
+    // this.logger.info('userid: ' + JSON.stringify(session.userId));
 
     const result = await this.db2.readBaseNode(
       {
@@ -367,7 +368,7 @@ export class UserService {
             key: 'email',
             value: '',
             isSingleton: true,
-            labels: ['Property', 'EmailAddress'],
+            labels: ['Email'],
             addToAdminSg: true,
             addToReaderSg: true,
           },
@@ -375,7 +376,6 @@ export class UserService {
             key: 'realFirstName',
             value: '',
             isSingleton: true,
-            labels: ['Property'],
             addToAdminSg: true,
             addToReaderSg: false,
           },
@@ -383,7 +383,6 @@ export class UserService {
             key: 'realLastName',
             value: '',
             isSingleton: true,
-            labels: ['Property'],
             addToAdminSg: true,
             addToReaderSg: false,
           },
@@ -391,7 +390,6 @@ export class UserService {
             key: 'displayFirstName',
             value: '',
             isSingleton: true,
-            labels: ['Property'],
             addToAdminSg: true,
             addToReaderSg: true,
           },
@@ -399,7 +397,6 @@ export class UserService {
             key: 'displayLastName',
             value: '',
             isSingleton: true,
-            labels: ['Property'],
             addToAdminSg: true,
             addToReaderSg: true,
           },
@@ -407,7 +404,6 @@ export class UserService {
             key: 'phone',
             value: '',
             isSingleton: true,
-            labels: ['Property'],
             addToAdminSg: true,
             addToReaderSg: false,
           },
@@ -415,7 +411,6 @@ export class UserService {
             key: 'timezone',
             value: '',
             isSingleton: true,
-            labels: ['Property'],
             addToAdminSg: true,
             addToReaderSg: false,
           },
@@ -423,17 +418,8 @@ export class UserService {
             key: 'bio',
             value: '',
             isSingleton: true,
-            labels: ['Property'],
             addToAdminSg: true,
             addToReaderSg: true,
-          },
-          {
-            key: 'password',
-            value: '',
-            isSingleton: true,
-            labels: ['Property'],
-            addToAdminSg: true,
-            addToReaderSg: false,
           },
         ],
       },
@@ -441,51 +427,51 @@ export class UserService {
     );
 
     if (result) {
-      const user: User = {
-        id: result.id,
-        createdAt: result.createdAt,
-        email: {
-          value: result.email,
-          canRead: !!result.emailRead,
-          canEdit: !!result.emailEdit,
-        },
-        realFirstName: {
-          value: result.realFirstName,
-          canRead: !!result.realFirstNameRead,
-          canEdit: !!result.realFirstNameEdit,
-        },
-        realLastName: {
-          value: result.realLastName,
-          canRead: !!result.realLastNameRead,
-          canEdit: !!result.realLastNameEdit,
-        },
-        displayFirstName: {
-          value: result.displayFirstName,
-          canRead: !!result.displayFirstNameRead,
-          canEdit: !!result.displayFirstNameEdit,
-        },
-        displayLastName: {
-          value: result.displayLastName,
-          canRead: !!result.displayLastNameRead,
-          canEdit: !!result.displayLastNameEdit,
-        },
-        phone: {
-          value: result.phone,
-          canRead: !!result.phoneRead,
-          canEdit: !!result.phoneEdit,
-        },
-        timezone: {
-          value: result.timezone,
-          canRead: !!result.timezoneRead,
-          canEdit: !!result.timezoneEdit,
-        },
-        bio: {
-          value: result.bio,
-          canRead: !!result.bioRead,
-          canEdit: !!result.bioEdit,
-        },
-      };
-      return user;
+      // const user: User = {
+      //   id: result.id,
+      //   createdAt: result.createdAt,
+      //   email: {
+      //     value: result.email,
+      //     canRead: !!result.emailRead,
+      //     canEdit: !!result.emailEdit,
+      //   },
+      //   realFirstName: {
+      //     value: result.realFirstName,
+      //     canRead: !!result.realFirstNameRead,
+      //     canEdit: !!result.realFirstNameEdit,
+      //   },
+      //   realLastName: {
+      //     value: result.realLastName,
+      //     canRead: !!result.realLastNameRead,
+      //     canEdit: !!result.realLastNameEdit,
+      //   },
+      //   displayFirstName: {
+      //     value: result.displayFirstName,
+      //     canRead: !!result.displayFirstNameRead,
+      //     canEdit: !!result.displayFirstNameEdit,
+      //   },
+      //   displayLastName: {
+      //     value: result.displayLastName,
+      //     canRead: !!result.displayLastNameRead,
+      //     canEdit: !!result.displayLastNameEdit,
+      //   },
+      //   phone: {
+      //     value: result.phone,
+      //     canRead: !!result.phoneRead,
+      //     canEdit: !!result.phoneEdit,
+      //   },
+      //   timezone: {
+      //     value: result.timezone,
+      //     canRead: !!result.timezoneRead,
+      //     canEdit: !!result.timezoneEdit,
+      //   },
+      //   bio: {
+      //     value: result.bio,
+      //     canRead: !!result.bioRead,
+      //     canEdit: !!result.bioEdit,
+      //   },
+      // };
+      return result;
     } else {
       // todo get public data
       throw new ForbiddenError('Not allowed');

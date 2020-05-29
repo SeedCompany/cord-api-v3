@@ -47,7 +47,7 @@ export class AdminService implements OnApplicationBootstrap {
           relation('out', '', 'email', {
             active: true,
           }),
-          node('email', 'EmailAddress', {
+          node('email', 'Email', {
             value: this.config.rootAdmin.email,
           }),
         ],
@@ -83,7 +83,7 @@ export class AdminService implements OnApplicationBootstrap {
     const findRoot = await this.db
       .query()
       .match([
-        node('email', 'EmailAddress', { active: true, value: email }),
+        node('email', 'Email', { active: true, value: email }),
         relation('in', '', 'email', { active: true }),
         node('root', 'User', { active: true }),
         relation('out', '', 'password', { active: true }),
@@ -129,7 +129,7 @@ export class AdminService implements OnApplicationBootstrap {
           relation('out', '', 'email', {
             active: true,
           }),
-          node('emailAddress', 'EmailAddress', {
+          node('email', 'Email', {
             value: this.config.rootAdmin.email,
           }),
         ],

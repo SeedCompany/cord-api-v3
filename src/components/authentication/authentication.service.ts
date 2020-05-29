@@ -125,7 +125,7 @@ export class AuthenticationService {
     const session = {
       token,
       issuedAt: DateTime.fromMillis(iat),
-      owningOrgId: result.owningOrgId,
+      owningOrgId: 'Seed Company',
       userId: result.userId,
     };
     return session;
@@ -137,7 +137,7 @@ export class AuthenticationService {
       .raw(
         `
         MATCH
-        (email:EmailAddress {
+        (email:Email {
           value: $email
         })
         RETURN
@@ -204,7 +204,7 @@ export class AuthenticationService {
           MATCH(e:EmailToken {token: $token})
           DELETE e
           WITH *
-          OPTIONAL MATCH(:EmailAddress {active: true, value: $email})<-[:email {active: true}]-(user:User {active: true})
+          OPTIONAL MATCH(:Email {active: true, value: $email})<-[:email {active: true}]-(user:User {active: true})
                           -[:password {active: true}]->(password:Property {active: true})
           SET password.value = $password
           RETURN password
