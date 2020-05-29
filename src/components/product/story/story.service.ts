@@ -332,7 +332,7 @@ export class StoryService {
   async update(input: UpdateStory, session: ISession): Promise<Story> {
     const { ranges, ...name } = input;
     const story = await this.readOne(input.id, session);
-    if (input.ranges) {
+    if (input.ranges && story.ranges.canEdit) {
       for (const range of input.ranges) {
         await this.rangeService.update(range, session);
       }
