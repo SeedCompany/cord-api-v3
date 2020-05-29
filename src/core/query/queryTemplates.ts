@@ -41,7 +41,7 @@ export function createPermission(
 export function addLabel(queryId: string, id: string, label: string) {
   return `
   # add label to node
-  ${queryId}: addLabel(baseNodeId:"${id}", label:"${label}")
+  ${queryId}: addLabel(nodeId:"${id}", label:"${label}")
   `;
 }
 
@@ -126,6 +126,7 @@ export function createBaseNode(
   sgReaderId: string,
   propQuery: string
 ): string {
+  const labelQuery = addLabel(`${queryId}_label`, baseNodeId, baseNodeLabel);
   return `
   mutation{
     ${queryId}: CreateBaseNode(
@@ -137,7 +138,7 @@ export function createBaseNode(
     }
 
     # add label to base node
-    addLabel(baseNodeId:"${baseNodeId}", label:"${baseNodeLabel}")
+    ${labelQuery} 
 
     ${queryId}_adminSG: CreateSecurityGroup(
       id: "${sgAdminId}"
@@ -181,4 +182,67 @@ export function createBaseNode(
 
   }
   `;
+}
+
+export function updateProperty(
+  queryId: string,
+  baseNodeId: string,
+  requestingUserId: string,
+  identifier: string,
+  newValue: string,
+  oldValue: string,
+  isSingleton: boolean,
+  labels?: string[]
+) {
+  let query = '';
+  const newDataId = generate();
+  let counter = 0;
+  let labelsQuery = '';
+
+  if (labels) {
+    labels.forEach((label) => {
+      labelsQuery += addLabel(`${queryId}_label${counter++}`, newDataId, label);
+    });
+  }
+
+  if (isSingleton) {
+    query = `
+    secureUpdateSingletonData( 
+      baseNodeId:"${baseNodeId}"
+      requestingUserId:"${requestingUserId}"
+      identifier:"${identifier}"
+      newDataId:"${newDataId}"
+      newValue:"${newValue}"
+    )
+  
+    ${labelsQuery}
+  `;
+  } else {
+    if (oldValue) {
+      query = `
+      secureUpdateArrayData( 
+        baseNodeId:"${baseNodeId}"
+        requestingUserId:"${requestingUserId}"
+        identifier:"${identifier}"
+        newDataId:"${newDataId}"
+        newValue:"${newValue}"
+        )
+        
+        ${labelsQuery}
+        `;
+    } else {
+      query = `
+      secureAddArrayData( 
+        baseNodeId:"${baseNodeId}"
+        requestingUserId:"${requestingUserId}"
+        identifier:"${identifier}"
+        newDataId:"${newDataId}"
+        newValue:"${newValue}"
+        )
+        
+        ${labelsQuery}
+        `;
+    }
+  }
+  return query;
 }

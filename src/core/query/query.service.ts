@@ -16,6 +16,7 @@ import {
   createData,
   createDataHolder,
   createBaseNode,
+  updateProperty,
 } from './queryTemplates';
 import * as argon2 from 'argon2';
 @Injectable()
@@ -44,60 +45,6 @@ export class QueryService {
     });
 
     return await result.json();
-  }
-
-  async readBaseNode(baseNode: BaseNode, requestingUserId?: string) {
-    if (baseNode.id === undefined || baseNode.id === null) {
-      return;
-    }
-    if (requestingUserId === undefined) {
-      return;
-    }
-
-    let propsQuery = ``;
-    let q = 0;
-
-    if (!baseNode.props) {
-      return;
-    }
-
-    for (let i = 0; i < baseNode.props.length; i++) {
-      const prop = baseNode.props[i];
-
-      if (prop.key === undefined) {
-        continue;
-      }
-
-      propsQuery += `
-        ${prop.key}: secureReadDataSingletonByBaseNodeId(
-          baseNodeId: "${baseNode.id}"
-          requestingUserId: "${requestingUserId}"
-          identifier: "${prop.key}"
-        ){
-          value
-          canRead
-          canEdit
-          canAdmin
-        }
-      `;
-    }
-
-    let query = `
-      query{
-        baseNode: BaseNode(id:"${baseNode.id}"){
-          createdAt{formatted}
-        }
-
-        ${propsQuery}
-      }
-    `;
-
-    const result = await this.sendGraphql(query);
-
-    result.data['id'] = baseNode.id;
-    result.data['createdAt'] = result.data.baseNode[0].createdAt.formatted;
-
-    return result.data;
   }
 
   //////////////////////////////////////////////////////////////////
@@ -232,240 +179,116 @@ export class QueryService {
       propQuery
     );
 
+    // this.logger.info(query);
+
     const result = await this.sendGraphql(query);
     if (!result) {
       throw new ServerException('failed to create user');
     }
 
+    // this.logger.info(JSON.stringify(result));
+
     return baseNode.id;
   }
 
-  // async readBaseNode(baseNode: Partial<BaseNode>, requestingUserId?: string) {
-  //   const result2 = await this.gqlReadBaseNode(baseNode, requestingUserId);
+  async readBaseNode(baseNode: BaseNode, requestingUserId?: string) {
+    if (baseNode.id === undefined || baseNode.id === null) {
+      return;
+    }
+    if (requestingUserId === undefined) {
+      return;
+    }
 
-  //   return result2 as any;
+    let propsQuery = ``;
+    let q = 0;
 
-  //   // const query = this.db.query();
+    if (!baseNode.props) {
+      return;
+    }
 
-  //   // let returnString = '';
+    for (let i = 0; i < baseNode.props.length; i++) {
+      const prop = baseNode.props[i];
 
-  //   // // const returnObj: any = {};
+      if (prop.key === undefined) {
+        continue;
+      }
 
-  //   // if (requestingUserId) {
-  //   //   query.match([
-  //   //     node('reqUser', 'User', {
-  //   //       id: requestingUserId,
-  //   //     }),
-  //   //   ]);
+      propsQuery += `
+        ${prop.key}: secureReadDataSingletonByBaseNodeId(
+          baseNodeId: "${baseNode.id}"
+          requestingUserId: "${requestingUserId}"
+          identifier: "${prop.key}"
+        ){
+          value
+          canRead
+          canEdit
+          canAdmin
+        }
+      `;
+    }
 
-  //   //   query.match([
-  //   //     node('baseNode', 'BaseNode', {
-  //   //       id: baseNode.id,
-  //   //     }),
-  //   //   ]);
+    let query = `
+      query{
+        baseNode: BaseNode(id:"${baseNode.id}"){
+          createdAt{formatted}
+        }
 
-  //   //   if (!baseNode.props) {
-  //   //     throw Error('baseNode.props needed');
-  //   //   }
+        ${propsQuery}
+      }
+    `;
 
-  //   //   /*
-  //   // we'll use an array to hold the 3 different permission types.
-  //   // in the property for loop we'll loop through the 3 permission types
-  //   // to find, definitively, if the user has that permission through ANY security group.
-  //   // It is possible that the user has a large amount of security group and that only one
-  //   // may give an admin = true, so we must ensure that each permission is
-  //   // searched for by itself.
-  //   // */
-  //   //   const perms = ['Read', 'Edit', 'Admin'];
+    const result = await this.sendGraphql(query);
 
-  //   //   for (let i = 0; i < baseNode.props.length; i++) {
-  //   //     const propName = baseNode.props[i].key;
+    result.data['id'] = baseNode.id;
+    result.data['createdAt'] = result.data.baseNode[0].createdAt.formatted;
 
-  //   //     for (let j = 0; j < perms.length; j++) {
-  //   //       query.optionalMatch([
-  //   //         node('reqUser'),
-  //   //         relation('in', '', 'member', {
-  //   //           active: true,
-  //   //         }),
-  //   //         node('sg', 'SecurityGroup', { active: true }),
-  //   //         relation('out', '', 'permission', {
-  //   //           active: true,
-  //   //         }),
-  //   //         node(
-  //   //           propName + '_permission_' + perms[j].toLowerCase(),
-  //   //           'Permission',
-  //   //           {
-  //   //             property: propName,
-  //   //             [perms[j].toLowerCase()]: true,
-  //   //             active: true,
-  //   //           }
-  //   //         ),
-  //   //         relation('out', '', 'baseNode', { active: true }),
-  //   //         node('baseNode'),
-  //   //         relation('out', '', propName, {
-  //   //           active: true,
-  //   //         }),
-  //   //         node(propName + '_var', baseNode.props[i].labels, {
-  //   //           active: true,
-  //   //         }),
-  //   //       ]);
-
-  //   //       if (j === 0) {
-  //   //         // not sure yet how to wrap return clauses in functions using query builder
-  //   //         returnString += `collect(${propName}_var.value)[0] as ${propName}, `;
-  //   //         // returnObj[propName + '_var'] = [
-  //   //         //   {
-  //   //         //     value: propName,
-  //   //         //   },
-  //   //         // ];
-  //   //       }
-
-  //   //       returnString += `collect(${propName}_permission_${perms[
-  //   //         j
-  //   //       ].toLowerCase()}.${perms[j].toLowerCase()})[0] as ${propName}${
-  //   //         perms[j]
-  //   //       },`;
-
-  //   //       // if (i + 1 < baseNode.props.length && j <= 1) {
-  //   //       //   returnString += ',';
-  //   //       // }
-
-  //   //       // returnObj[propName + '_permission_' + perms[j].toLowerCase()] = [
-  //   //       //   {
-  //   //       //     [perms[j].toLowerCase()]: propName + perms[j],
-  //   //       //   },
-  //   //       // ];
-  //   //     }
-  //   //   }
-
-  //   //   returnString += `baseNode.id as id, baseNode.createdAt as createdAt`;
-  //   //   // returnObj['baseNode'] = [{ id: 'id' }, { createdAt: 'createdAt' }];
-
-  //   //   const cypher = query.return(returnString);
-
-  //   //   return await query.first();
-  //   // } else {
-  //   //   // todo: retrieve public or org viewable data
-
-  //   //   return;
-  //   // }
-  // }
+    return result.data;
+  }
 
   async updateBaseNode(baseNode: BaseNode, requestingUserId: string) {
     // if prop is array and includes old value, set old value to false and create new prop
     // if prop is array and is missing old value, create new prop
     // if prop isn't array, optional match on old value and set to inactive, create new prop
 
-    const query = this.db
-      .query()
+    if (baseNode.id === undefined || baseNode.id === null) {
+      return;
+    }
+    if (requestingUserId === undefined) {
+      return;
+    }
+    if (!baseNode.props) {
+      return;
+    }
 
-      .match([
-        node('reqUser', 'User', {
-          active: true,
-          id: requestingUserId,
-        }),
-      ])
-      .match([
-        node('baseNode', 'BaseNode', {
-          active: true,
-          id: baseNode.id,
-        }),
-      ]);
+    let updates = '';
+    let q = 0;
 
     for (let i = 0; i < baseNode.props.length; i++) {
-      const propName = baseNode.props[i].key;
+      const data = baseNode.props[i];
 
       if (!baseNode.props[i].value) {
         continue;
       }
 
-      query.with('*');
-      // the property may or may not exist, first get to the base node with edit permission
-      query.match([
-        node('reqUser'),
-        relation('in', '', 'member', {
-          active: true,
-        }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', {
-          active: true,
-        }),
-        node('', 'Permission', {
-          property: propName,
-          edit: true,
-          active: true,
-        }),
-        relation('out', '', 'baseNode', {
-          active: true,
-        }),
-        node('baseNode'),
-      ]);
-
-      if (baseNode.props[i].isSingleton === true) {
-        if (baseNode.props[i].oldValue) {
-          // we are replacing an old value, not creating a new one
-          query
-
-            .optionalMatch([
-              node('baseNode'),
-              relation('out', propName + '_rel', propName, {
-                active: true,
-              }),
-              node(propName, baseNode.props[i].labels, {
-                active: true,
-                value: baseNode.props[i].oldValue,
-              }),
-            ])
-            .setValues(
-              {
-                [propName + '_rel']: { active: false },
-                [propName]: { active: false },
-              },
-              true
-            );
-        }
-      } else if (baseNode.props[i].isSingleton === false) {
-        // property is a singleton, it doesn't matter if it exists or not
-        query
-
-          .optionalMatch([
-            node('baseNode'),
-            relation('out', propName + '_rel', propName, {
-              active: true,
-            }),
-            node(propName, baseNode.props[i].labels, {
-              active: true,
-            }),
-          ])
-          .setValues(
-            {
-              [propName + '_rel']: { active: false },
-              [propName]: { active: false },
-            },
-            true
-          );
-      }
-
-      // create new property
-      query.create([
-        node('baseNode'),
-        relation('out', '', propName, {
-          active: true,
-          createdAt: baseNode.createdAt,
-        }),
-        node(propName + '_new', baseNode.props[i].labels, {
-          active: true,
-          value: baseNode.props[i].value,
-          createdAt: baseNode.createdAt,
-        }),
-      ]);
+      updates += updateProperty(
+        `${q++}`,
+        baseNode.id,
+        requestingUserId,
+        data.key,
+        data.value,
+        data.oldValue,
+        data.isSingleton,
+        data.labels
+      );
     }
 
-    query.return({
-      baseNode: [{ id: 'id' }],
-    });
+    const query = `
+      mutation{
+        ${updates}
+      }
+    `;
 
-    const result = await query.first();
+    const result = await this.sendGraphql(query);
 
     if (!result) {
       throw new ServerException('failed to update base node');
@@ -502,6 +325,7 @@ export class QueryService {
   // Authentication
 
   async createToken(token: string, createdAt: DateTime) {
+    const tokenId = generate();
     const result = await this.db
       .query()
       .create([
@@ -509,6 +333,7 @@ export class QueryService {
           active: true,
           createdAt: createdAt.toNeo4JDateTime(),
           value: token,
+          id: tokenId,
         }),
       ])
       .return({

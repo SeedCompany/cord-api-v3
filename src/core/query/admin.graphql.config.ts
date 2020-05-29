@@ -29,6 +29,8 @@ export class AdminGraphQLConfig implements GqlOptionsFactory, OnModuleDestroy {
     this.schema = neo4jGraphQL.makeAugmentedSchema({
       typeDefs,
       config: { debug: false },
+      introspection: true,
+      playground: true,
     });
 
     this.driver = neo4j.driver(

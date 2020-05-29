@@ -137,14 +137,72 @@ type Power implements AbstractNode {
 # GENERIC FUNCTIONS ######################################################################################
 
 extend type Mutation {
-  secureUpdateData(
-    dataHolderId: String
+  secureUpdateSingletonData(
+    baseNodeId: String
     requestingUserId: String
+    identifier: String
     newValue: String
-  ): Data
+    newDataId: String
+  ): String
     @cypher(
       statement: """
-      MATCH (n) Return n limit 1
+      MATCH (bn:BaseNode {id:$baseNodeId})
+
+      OPTIONAL MATCH
+      (user:User {id: $requestingUserId})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:PERMISSIONS]->(readPerm:Permission{active:true, edit:true})-[:GRANT]->(dh:DataHolder {active: true, identifier: $identifier})-[:DATA]->(data:Data {active: true})
+
+      SET
+      data.active = false
+
+      CREATE
+      (dh)-[:DATA]->(newData:Data {id: $newDataId, active: true, value: $newValue, createdAt: datetime()})
+
+      RETURN newData.id
+      """
+    )
+
+  secureAddArrayData(
+    baseNodeId: String
+    requestingUserId: String
+    identifier: String
+    newValue: String
+    newDataId: String
+  ): String
+    @cypher(
+      statement: """
+      MATCH (bn:BaseNode {id:$baseNodeId})
+
+      OPTIONAL MATCH
+      (user:User {id: $requestingUserId})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:PERMISSIONS]->(readPerm:Permission{active:true, edit:true})-[:GRANT]->(dh:DataHolder {active: true, identifier: $identifier})
+
+      CREATE
+      (dh)-[:DATA]->(newData:Data {id: $newDataId, active: true, value: $newValue, createdAt: datetime()})
+
+      RETURN newData.id
+      """
+    )
+
+  secureUpdateArrayData(
+    baseNodeId: String
+    requestingUserId: String
+    identifier: String
+    newValue: String
+    oldValue: String
+    newDataId: String
+  ): String
+    @cypher(
+      statement: """
+      MATCH (bn:BaseNode {id:$baseNodeId})
+
+      OPTIONAL MATCH
+      (user:User {id: $requestingUserId})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:PERMISSIONS]->(readPerm:Permission{active:true, edit:true})-[:GRANT]->(dh:DataHolder {active: true, identifier: $identifier})-[:DATA]->(data:Data {active: true, value: $oldValue})
+
+      SET data.active = false
+
+      CREATE
+      (dh)-[:DATA]->(newData:Data {id: $newDataId, active: true, value: $newValue, createdAt: datetime()})
+
+      RETURN newData.id
       """
     )
 }
@@ -189,10 +247,10 @@ extend type Query {
 }
 
 extend type Mutation {
-  addLabel(baseNodeId: String, label: String): String
+  addLabel(nodeId: String, label: String): String
     @cypher(
       statement: """
-      MATCH (n {id:$baseNodeId})
+      MATCH (n {id:$nodeId})
       CALL apoc.create.addLabels([n], [$label])
       YIELD node
       RETURN node.id

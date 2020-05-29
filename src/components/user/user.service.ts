@@ -240,7 +240,9 @@ export class UserService {
 
   async createAndLogin(input: CreateUser, session: ISession): Promise<User> {
     const userId = await this.create(input);
+    // this.logger.info(userId);
     session.userId = userId;
+
     await this.login(
       {
         email: input.email,
@@ -250,6 +252,7 @@ export class UserService {
     );
 
     const result = await this.readOne(userId, session);
+    // this.logger.info(JSON.stringify(result));
     return result;
   }
 
@@ -356,8 +359,6 @@ export class UserService {
   }
 
   async readOne(id: string, session: ISession): Promise<User> {
-    // this.logger.info('userid: ' + JSON.stringify(session.userId));
-
     const result = await this.db2.readBaseNode(
       {
         label: 'User',
@@ -427,50 +428,6 @@ export class UserService {
     );
 
     if (result) {
-      // const user: User = {
-      //   id: result.id,
-      //   createdAt: result.createdAt,
-      //   email: {
-      //     value: result.email,
-      //     canRead: !!result.emailRead,
-      //     canEdit: !!result.emailEdit,
-      //   },
-      //   realFirstName: {
-      //     value: result.realFirstName,
-      //     canRead: !!result.realFirstNameRead,
-      //     canEdit: !!result.realFirstNameEdit,
-      //   },
-      //   realLastName: {
-      //     value: result.realLastName,
-      //     canRead: !!result.realLastNameRead,
-      //     canEdit: !!result.realLastNameEdit,
-      //   },
-      //   displayFirstName: {
-      //     value: result.displayFirstName,
-      //     canRead: !!result.displayFirstNameRead,
-      //     canEdit: !!result.displayFirstNameEdit,
-      //   },
-      //   displayLastName: {
-      //     value: result.displayLastName,
-      //     canRead: !!result.displayLastNameRead,
-      //     canEdit: !!result.displayLastNameEdit,
-      //   },
-      //   phone: {
-      //     value: result.phone,
-      //     canRead: !!result.phoneRead,
-      //     canEdit: !!result.phoneEdit,
-      //   },
-      //   timezone: {
-      //     value: result.timezone,
-      //     canRead: !!result.timezoneRead,
-      //     canEdit: !!result.timezoneEdit,
-      //   },
-      //   bio: {
-      //     value: result.bio,
-      //     canRead: !!result.bioRead,
-      //     canEdit: !!result.bioEdit,
-      //   },
-      // };
       return result;
     } else {
       // todo get public data
@@ -494,56 +451,49 @@ export class UserService {
           {
             key: 'realFirstName',
             value: input.realFirstName,
-            labels: ['Property'],
-            isSingleton: false,
+            isSingleton: true,
             addToAdminSg: true,
             addToReaderSg: false,
           },
           {
             key: 'realLastName',
             value: input.realLastName,
-            labels: ['Property'],
-            isSingleton: false,
+            isSingleton: true,
             addToAdminSg: true,
             addToReaderSg: false,
           },
           {
             key: 'displayFirstName',
             value: input.displayFirstName,
-            labels: ['Property'],
-            isSingleton: false,
+            isSingleton: true,
             addToAdminSg: true,
             addToReaderSg: true,
           },
           {
             key: 'displayLastName',
             value: input.displayLastName,
-            labels: ['Property'],
-            isSingleton: false,
+            isSingleton: true,
             addToAdminSg: true,
             addToReaderSg: true,
           },
           {
             key: 'phone',
             value: input.phone,
-            labels: ['Property'],
-            isSingleton: false,
+            isSingleton: true,
             addToAdminSg: true,
             addToReaderSg: false,
           },
           {
             key: 'timezone',
             value: input.timezone,
-            labels: ['Property'],
-            isSingleton: false,
+            isSingleton: true,
             addToAdminSg: true,
             addToReaderSg: false,
           },
           {
             key: 'bio',
             value: input.bio,
-            labels: ['Property'],
-            isSingleton: false,
+            isSingleton: true,
             addToAdminSg: true,
             addToReaderSg: true,
           },
