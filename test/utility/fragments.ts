@@ -473,7 +473,6 @@ export const film = gql`
   }
 `;
 
-
 export const literacyMaterial = gql`
   fragment literacyMaterial on LiteracyMaterial {
     id
