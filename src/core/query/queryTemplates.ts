@@ -1,5 +1,6 @@
 // graphql templates
 import { generate } from 'shortid';
+import { Property } from './model';
 
 export function createPermission(
   queryId: string,
@@ -245,4 +246,39 @@ export function updateProperty(
     }
   }
   return query;
+}
+
+export function secureReadDataByBaseNodeId(
+  baseNodeId: string,
+  requestingUserId: string,
+  identifier: string,
+  isSingleton: boolean
+) {
+  if (isSingleton) {
+    return `
+    ${identifier}: secureReadDataSingletonByBaseNodeId(
+      baseNodeId: "${baseNodeId}"
+      requestingUserId: "${requestingUserId}"
+      identifier: "${identifier}"
+    ){
+      value
+      canRead
+      canEdit
+      canAdmin
+    }
+  `;
+  } else {
+    return `
+    ${identifier}: secureReadDataArrayByBaseNodeId(
+      baseNodeId: "${baseNodeId}"
+      requestingUserId: "${requestingUserId}"
+      identifier: "${identifier}"
+    ){
+      value
+      canRead
+      canEdit
+      canAdmin
+    }
+  `;
+  }
 }

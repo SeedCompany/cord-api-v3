@@ -207,8 +207,15 @@ extend type Mutation {
     )
 }
 
-type PropertyOutput {
+type SingletonPropertyOutput {
   value: String
+  canRead: Boolean
+  canEdit: Boolean
+  canAdmin: Boolean
+}
+
+type ArrayPropertyOutput {
+  value: [String]
   canRead: Boolean
   canEdit: Boolean
   canAdmin: Boolean
@@ -219,7 +226,7 @@ extend type Query {
     baseNodeId: String!
     requestingUserId: String!
     identifier: String!
-  ): PropertyOutput
+  ): SingletonPropertyOutput
     @cypher(
       statement: """
       MATCH (bn:BaseNode {id:$baseNodeId})
@@ -236,6 +243,36 @@ extend type Query {
       WITH
       {
         value: data.value,
+        canRead: readPerm.read,
+        canEdit: editPerm.edit,
+        canAdmin: adminPerm.admin
+      } as result
+
+      RETURN result
+      """
+    )
+
+  secureReadDataArrayByBaseNodeId(
+    baseNodeId: String!
+    requestingUserId: String!
+    identifier: String!
+  ): ArrayPropertyOutput
+    @cypher(
+      statement: """
+      MATCH (bn:BaseNode {id:$baseNodeId})
+
+      OPTIONAL MATCH
+      (user:User {id: $requestingUserId})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:PERMISSIONS]->(readPerm:Permission{active:true, read:true})-[:GRANT]->(:DataHolder {active: true, identifier: $identifier})-[:DATA]->(data:Data {active: true})
+
+      OPTIONAL MATCH
+      (user:User {id: $requestingUserId})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:PERMISSIONS]->(editPerm:Permission{active:true, edit:true})-[:GRANT]->(:DataHolder {active: true, identifier: $identifier})
+
+      OPTIONAL MATCH
+      (user:User {id: $requestingUserId})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:PERMISSIONS]->(adminPerm:Permission{active:true, admin:true})-[:GRANT]->(:DataHolder {active: true, identifier: $identifier})
+
+      WITH
+      {
+        value: collect(data.value),
         canRead: readPerm.read,
         canEdit: editPerm.edit,
         canAdmin: adminPerm.admin

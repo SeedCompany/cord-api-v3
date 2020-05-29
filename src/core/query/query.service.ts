@@ -17,6 +17,7 @@ import {
   createDataHolder,
   createBaseNode,
   updateProperty,
+  secureReadDataByBaseNodeId,
 } from './queryTemplates';
 import * as argon2 from 'argon2';
 @Injectable()
@@ -213,18 +214,12 @@ export class QueryService {
         continue;
       }
 
-      propsQuery += `
-        ${prop.key}: secureReadDataSingletonByBaseNodeId(
-          baseNodeId: "${baseNode.id}"
-          requestingUserId: "${requestingUserId}"
-          identifier: "${prop.key}"
-        ){
-          value
-          canRead
-          canEdit
-          canAdmin
-        }
-      `;
+      propsQuery += secureReadDataByBaseNodeId(
+        baseNode.id,
+        requestingUserId,
+        prop.key,
+        prop.isSingleton
+      );
     }
 
     let query = `
