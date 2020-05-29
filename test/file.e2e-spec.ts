@@ -163,7 +163,9 @@ describe('File e2e', () => {
     expect(updated.size).toEqual(input.size);
     expect(updated.mimeType).toEqual(input.mimeType);
     const createdAt = DateTime.fromISO(updated.createdAt);
-    expect(createdAt.toISO()).toEqual(initial.createdAt);
+    expect(createdAt.toMillis()).toEqual(
+      DateTime.fromISO(initial.createdAt).toMillis()
+    );
     const modifiedAt = DateTime.fromISO(updated.modifiedAt);
     expect(modifiedAt.diff(createdAt).as('days')).toBeGreaterThanOrEqual(2);
   }
