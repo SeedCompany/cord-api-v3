@@ -274,6 +274,14 @@ export class UserService {
         createdAt: createdAt.toString(),
         props: [
           {
+            key: 'token',
+            value: '',
+            isSingleton: false,
+            labels: ['Token'],
+            addToAdminSg: true,
+            addToReaderSg: false,
+          },
+          {
             key: 'emailAddress',
             value: input.email,
             isSingleton: true,
@@ -638,71 +646,12 @@ export class UserService {
 
   // copied from Authentication service.  Not DRY but circular dependency resolved
   async login(input: LoginInput, session: ISession): Promise<string> {
-    const result1 = await this.db
-      .query()
-      .raw(
-        `
-      MATCH
-        (token:Token {
-          active: true,
-          value: $token
-        })
-      MATCH
-        (:EmailAddress {active: true, value: $email})
-        <-[:email {active: true}]-
-        (user:User {
-          active: true
-        })
-        -[:password {active: true}]->
-        (password:Property {active: true})
-      RETURN
-        password.value as pash
-      `,
-        {
-          token: session.token,
-          email: input.email,
-        }
-      )
-      .first();
-
-    if (!result1 || !(await argon2.verify(result1.pash, input.password))) {
-      throw new UnauthenticatedException('Invalid credentials');
-    }
-
-    const result2 = await this.db
-      .query()
-      .raw(
-        `
-          MATCH
-            (token:Token {
-              active: true,
-              value: $token
-            }),
-            (:EmailAddress {active: true, value: $email})
-            <-[:email {active: true}]-
-            (user:User {
-              active: true
-            })
-          OPTIONAL MATCH
-            (token)-[r]-()
-          DELETE r
-          CREATE
-            (user)-[:token {active: true, createdAt: datetime()}]->(token)
-          RETURN
-            user.id as id
-        `,
-        {
-          token: session.token,
-          email: input.email,
-        }
-      )
-      .first();
-
-    if (!result2 || !result2.id) {
-      throw new ServerException('Login failed');
-    }
-
-    return result2.id;
+    const result = await this.db2.login(
+      session.token,
+      input.email,
+      input.password
+    );
+    return result;
   }
 
   async logout(token: string): Promise<void> {

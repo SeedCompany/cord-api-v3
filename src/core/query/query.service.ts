@@ -2,6 +2,7 @@
 import {
   Injectable,
   InternalServerErrorException as ServerException,
+  UnauthorizedException as UnauthenticatedException,
 } from '@nestjs/common';
 import { Connection, node, relation } from 'cypher-query-builder';
 import { BaseNode } from './model';
@@ -16,6 +17,7 @@ import {
   createDataHolder,
   createBaseNode,
 } from './queryTemplates';
+import * as argon2 from 'argon2';
 @Injectable()
 export class QueryService {
   private readonly db: Connection;
@@ -144,7 +146,7 @@ export class QueryService {
       throw new ServerException('failed to create user');
     }
 
-    console.log(result);
+    // console.log(result);
 
     return result;
   }
@@ -189,10 +191,10 @@ export class QueryService {
       }
     `;
 
-    console.log(query);
+    // console.log(query);
     const result = await this.sendGraphql(query);
 
-    console.log(JSON.stringify(result));
+    // console.log(JSON.stringify(result));
 
     for (let i = 0; i < q; i++) {
       console.log(result.data['q' + i]);
@@ -551,6 +553,98 @@ export class QueryService {
   }
 
   async login(token: string, email: string, password: string) {
-    const result1 = await this.db.query().match([]).first();
+    try {
+      // get the pash
+      const result1 = await this.db
+        .query()
+        .raw(
+          `
+      MATCH
+        (token:Token {
+          active: true,
+          value: $token
+        })
+      MATCH
+        (:EmailAddress {active: true, value: $email})
+        <-[:DATA]-
+        (:DataHolder {
+          active: true,
+          identifier: "emailAddress"
+        })
+        <-[:DATAHOLDERS]-
+        (user:User {
+          active: true
+        })
+        -[:DATAHOLDERS]->
+        (:DataHolder {
+          active: true,
+          identifier: "password"
+        })
+        -[:DATA]->
+        (password:Data {
+          active: true
+        })
+      RETURN
+        password.value as pash, 
+        user.id as userId
+        
+      `,
+          {
+            token: token,
+            email: email,
+          }
+        )
+        .first();
+
+      if (!result1 || !(await argon2.verify(result1.pash, password))) {
+        throw new UnauthenticatedException('Invalid credentials');
+      }
+
+      // create rel to show logged in
+      const result2 = await this.db
+        .query()
+        .raw(
+          `
+          MATCH
+            (token:Token {
+              active: true,
+              value: $token
+            })
+          MATCH
+            (user:User {
+              id: $userId
+            })
+            -[:DATAHOLDERS]->
+            (tokenHolder:DataHolder{
+              active: true,
+              identifier: "token"
+            })
+          OPTIONAL MATCH
+            (token)-[r]-()
+          DELETE r
+          CREATE
+            (tokenHolder)
+            -[:DATA]->
+            (token)
+          RETURN
+            tokenHolder.id as id
+        `,
+          {
+            token: token,
+            email: email,
+            userId: result1.userId,
+          }
+        )
+        .first();
+
+      if (!result2 || !result1.userId) {
+        throw new ServerException('Login failed');
+      }
+
+      return result2.userId;
+    } catch (e) {
+      console.log(e);
+    }
+    return '';
   }
 }

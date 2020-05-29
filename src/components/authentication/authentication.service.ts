@@ -83,92 +83,12 @@ export class AuthenticationService {
   }
 
   async login(input: LoginInput, session: ISession): Promise<string> {
-    try {
-      // get the pash
-      const result1 = await this.db
-        .query()
-        .raw(
-          `
-      MATCH
-        (token:Token {
-          active: true,
-          value: $token
-        })
-      MATCH
-        (:EmailAddress {active: true, value: $email})
-        <-[:DATA]-
-        (:DataHolder {
-          active: true,
-          identifier: "emailAddress"
-        })
-        <-[:DATAHOLDERS]-
-        (user:User {
-          active: true
-        })
-        -[:DATAHOLDERS]->
-        (tokenHolder:DataHolder {
-          active: true,
-          identifier: password
-        })
-        -[:DATA]->
-        (password:Data {
-          active: true
-        })
-      RETURN
-        password.value as pash, 
-        tokenHolder.id as tokenHolderId
-      `,
-          {
-            token: session.token,
-            email: input.email,
-          }
-        )
-        .first();
-
-      if (!result1 || !(await argon2.verify(result1.pash, input.password))) {
-        throw new UnauthenticatedException('Invalid credentials');
-      }
-
-      // create rel to show logged in
-      const result2 = await this.db
-        .query()
-        .raw(
-          `
-          MATCH
-            (token:Token {
-              active: true,
-              value: $token
-            }),
-            (tokenHolder:DataHolder {
-              id: $tokenHolderId
-            })
-          OPTIONAL MATCH
-            (token)-[r]-()
-          DELETE r
-          CREATE
-            (tokenHolder)
-            -[:DATA]->
-            (token)
-          RETURN
-            user.id as id
-        `,
-          {
-            token: session.token,
-            email: input.email,
-            tokenHolderId: result1.tokenHolderId,
-          }
-        )
-        .first();
-
-      if (!result2 || !result2.id) {
-        throw new ServerException('Login failed');
-      }
-
-      return result2.id;
-    } catch (e) {
-      console.log(e);
-    }
-    return '';
+    const result = await this.db2.login(
+      session.token,
+      input.email,
+      input.password
+    );
+    return result;
   }
 
   async logout(token: string): Promise<void> {
