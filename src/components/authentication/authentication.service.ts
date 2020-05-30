@@ -83,7 +83,6 @@ export class AuthenticationService {
   }
 
   async login(input: LoginInput, session: ISession): Promise<string> {
-    await this.db2.logout(session.token);
     const result = await this.db2.login(
       session.token,
       input.email,
