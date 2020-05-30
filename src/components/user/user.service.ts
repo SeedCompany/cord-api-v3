@@ -243,13 +243,15 @@ export class UserService {
     // this.logger.info(userId);
     session.userId = userId;
 
-    await this.login(
-      {
-        email: input.email,
-        password: input.password,
-      },
-      session
+    const loginResult = await this.db2.login(
+      session.token,
+      input.email,
+      input.password
     );
+
+    if (!loginResult) {
+      this.logger.error('failed to log in a newly ceated user');
+    }
 
     const result = await this.readOne(userId, session);
     // this.logger.info(JSON.stringify(result));
@@ -578,34 +580,5 @@ export class UserService {
         )
       ).every((n) => n)
     );
-  }
-
-  // copied from Authentication service.  Not DRY but circular dependency resolved
-  async login(input: LoginInput, session: ISession): Promise<string> {
-    const result = await this.db2.login(
-      session.token,
-      input.email,
-      input.password
-    );
-    return result;
-  }
-
-  async logout(token: string): Promise<void> {
-    await this.db
-      .query()
-      .raw(
-        `
-      MATCH
-        (token:Token)-[r]-()
-      DELETE
-        r
-      RETURN
-        token.value as token
-      `,
-        {
-          token,
-        }
-      )
-      .run();
   }
 }

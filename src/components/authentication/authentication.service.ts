@@ -92,22 +92,7 @@ export class AuthenticationService {
   }
 
   async logout(token: string): Promise<void> {
-    await this.db
-      .query()
-      .raw(
-        `
-      MATCH
-        (token:Token)-[r]-()
-      DELETE
-        r
-      RETURN
-        token.value as token
-      `,
-        {
-          token,
-        }
-      )
-      .run();
+    await this.db2.logout(token);
   }
 
   async createSession(token: string): Promise<ISession> {
