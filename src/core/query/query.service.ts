@@ -18,8 +18,10 @@ import {
   createBaseNode,
   updateProperty,
   secureReadDataByBaseNodeId,
+  secureDeleteData,
 } from './queryTemplates';
 import * as argon2 from 'argon2';
+import { POWERS } from './model/powers';
 @Injectable()
 export class QueryService {
   private readonly db: Connection;
@@ -317,6 +319,58 @@ export class QueryService {
     }
   }
 
+  async deletePropertiesOnBaseNode(
+    baseNode: BaseNode,
+    requestingUserId: string
+  ) {
+    // if prop is array and includes old value, set old value to false and create new prop
+    // if prop is array and is missing old value, create new prop
+    // if prop isn't array, optional match on old value and set to inactive, create new prop
+
+    if (baseNode.id === undefined || baseNode.id === null) {
+      return;
+    }
+    if (requestingUserId === undefined) {
+      return;
+    }
+    if (!baseNode.props) {
+      return;
+    }
+
+    let deletes = '';
+    let q = 0;
+
+    for (let i = 0; i < baseNode.props.length; i++) {
+      const data = baseNode.props[i];
+
+      if (!baseNode.props[i].value) {
+        continue;
+      }
+
+      deletes += secureDeleteData(
+        `q${q++}`,
+        baseNode.id,
+        requestingUserId,
+        data.key,
+        data.value
+      );
+    }
+
+    const query = `
+      mutation{
+        ${deletes}
+      }
+    `;
+
+    const result = await this.sendGraphql(query);
+
+    if (!result) {
+      throw new ServerException('failed to update base node');
+    }
+
+    return result.id;
+  }
+
   // Authentication
 
   async createToken(token: string, createdAt: DateTime) {
@@ -467,5 +521,156 @@ export class QueryService {
       console.error(e);
     }
     return '';
+  }
+
+  async mergeRootAdminUserAndSecurityGroup(email: string, password: string) {
+    // merge on the label, which will create a node if it doesn't exist
+    let sgId = generate();
+    const sgMergeResult = await this.db
+      .query()
+      .merge(node('sg', 'RootSecurityGroup'))
+      .onCreate.setValues({
+        'sg.id': sgId,
+        'sg.active': true,
+      })
+      .setVariables({
+        'sg.createdAt': 'datetime()',
+      })
+      .return({ sg: [{ id: 'sgId' }] })
+      .first();
+
+    if (sgMergeResult) {
+      sgId = sgMergeResult.sgId;
+    } else {
+      throw Error('failed to create root security group');
+    }
+
+    // check to see if user exists
+    let userId = generate();
+    const findUserResult = await this.db
+      .query()
+      .match([
+        node('user', 'User'),
+        relation('out', '', 'DATAHOLDERS'),
+        node('dh', 'DataHolder', {
+          active: true,
+          identifier: 'email',
+        }),
+        relation('out', '', 'DATA'),
+        node('email', 'Email', {
+          active: true,
+          value: email,
+        }),
+      ])
+
+      .return({ user: [{ id: 'userId' }] })
+      .first();
+
+    if (findUserResult) {
+      userId = findUserResult.userId;
+    } else {
+      // current root user doesn't exist yet, create it
+      const pash = await argon2.hash(password);
+      const createdAt = DateTime.local();
+
+      const createUserResult = await this.createBaseNode(
+        {
+          label: 'User',
+          id: userId,
+          createdAt: createdAt.toString(),
+          props: [
+            {
+              key: 'token',
+              value: '',
+              isSingleton: false,
+              labels: ['Token'],
+              addToAdminSg: true,
+              addToReaderSg: false,
+            },
+            {
+              key: 'email',
+              value: email,
+              isSingleton: true,
+              labels: ['Email'],
+              addToAdminSg: true,
+              addToReaderSg: false,
+            },
+            {
+              key: 'password',
+              value: pash,
+              isSingleton: true,
+              addToAdminSg: true,
+              addToReaderSg: false,
+            },
+          ],
+        },
+        userId, // the user being created is the 'requesting user'
+        false
+      );
+
+      if (!createUserResult) {
+        throw Error('failed creating root user');
+      }
+    }
+
+    // this.logger.info(`root user id: ${userId}`);
+
+    // ensure the user and sg are connected
+    const mergeUserAndSGResult = await this.db
+      .query()
+      .match([
+        node('sg', 'RootSecurityGroup', {
+          active: true,
+          id: sgId,
+        }),
+      ])
+      .match([
+        node('user', 'User', {
+          active: true,
+          id: userId,
+        }),
+      ])
+      .merge([node('sg'), relation('out', '', 'MEMBERS'), node('user')])
+      .return({ user: [{ id: 'userId' }] })
+      .first();
+
+    if (!mergeUserAndSGResult) {
+      throw Error('failed to connect root user and root security group');
+    }
+
+    // ensure security group has all the latest powers
+    for (let power in POWERS) {
+      if (typeof POWERS[power] === 'number') {
+        const powerId = generate();
+        const matchPowerResult = await this.db
+          .query()
+          .merge(
+            node('power', 'Power', {
+              value: power,
+            })
+          )
+          .onCreate.setValues({
+            'power.id': powerId,
+            'power.active': true,
+          })
+          .setVariables({
+            'power.createdAt': 'datetime()',
+          })
+          .with('*')
+          .match(
+            node('sg', 'RootSecurityGroup', {
+              active: true,
+              id: sgId,
+            })
+          )
+          .merge([node('sg'), relation('out', '', 'POWERS'), node('power')])
+          .return({ power: [{ id: 'id' }] })
+          .first();
+
+        if (!matchPowerResult) {
+          throw Error('Failed to merge power');
+        }
+      }
+    }
   }
 }

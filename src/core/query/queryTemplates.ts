@@ -194,7 +194,7 @@ export function updateProperty(
   oldValue: string,
   isSingleton: boolean,
   labels?: string[]
-) {
+): string {
   let query = '';
   const newDataId = generate();
   let counter = 0;
@@ -253,7 +253,7 @@ export function secureReadDataByBaseNodeId(
   requestingUserId: string,
   identifier: string,
   isSingleton: boolean
-) {
+): string {
   if (isSingleton) {
     return `
     ${identifier}: secureReadDataSingletonByBaseNodeId(
@@ -281,4 +281,47 @@ export function secureReadDataByBaseNodeId(
     }
   `;
   }
+}
+
+export function secureDeleteData(
+  queryId: string,
+  baseNodeId: string,
+  requestingUserId: string,
+  identifier: string,
+  value: string
+): string {
+  return `
+    ${queryId}: secureDeleteData(
+      baseNodeId: "${baseNodeId}"
+      requestingUserId: "${requestingUserId}"
+      identifier: "${identifier}"
+      value: "${value}"
+    )
+  `;
+}
+
+export function createPower(
+  queryId: string,
+  powerId: string,
+  createdAt: string,
+  value: string
+): string {
+  return `
+  ${queryId}: CreatePower(
+    id:"${powerId}"
+    createdAt:{formatted:"${createdAt}"}
+    active: true
+    value: "${value}"
+  )
+  `;
+}
+
+export function addPowerRelationship(
+  queryId: string,
+  sgId: string,
+  powerId: string
+): string {
+  return `
+  ${queryId}: AddSecurityGroupPowers(from:{id:"${sgId}"}, to:{id:"${powerId}"})
+  `;
 }

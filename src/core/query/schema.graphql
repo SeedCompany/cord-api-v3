@@ -6,7 +6,7 @@
 # where name = "apoc.create.addLabels"
 # return signature
 
-# ABSTRACTIONS ##########################################################################################
+# ABSTRACTIONS #############################################################
 
 interface AbstractNode {
   id: ID!
@@ -85,7 +85,7 @@ extend type Mutation {
     )
 }
 
-# SECURITY ################################################################################################
+# SECURITY ###############################################################
 
 type SecurityGroup implements AbstractNode {
   id: ID!
@@ -122,8 +122,12 @@ type Permission implements AbstractNode {
 }
 
 enum Powers {
-  CAN_CREATE_SECURITY_GROUP
-  CAN_CREATE_PROJECT
+  CREATE_SECURITY_GROUP
+  DELETE_SECURITY_GROUP
+  CREATE_PROJECT
+  DELETE_PROJECT
+  CREATE_USER
+  DELETE_USER
 }
 
 type Power implements AbstractNode {
@@ -134,7 +138,7 @@ type Power implements AbstractNode {
   securityGroup: SecurityGroup @relation(name: "POWERS", direction: "IN")
 }
 
-# GENERIC FUNCTIONS ######################################################################################
+# DATA ##################################################################
 
 extend type Mutation {
   secureUpdateSingletonData(
@@ -149,7 +153,7 @@ extend type Mutation {
       MATCH (bn:BaseNode {id:$baseNodeId})
 
       OPTIONAL MATCH
-      (user:User {id: $requestingUserId})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:PERMISSIONS]->(readPerm:Permission{active:true, edit:true})-[:GRANT]->(dh:DataHolder {active: true, identifier: $identifier})-[:DATA]->(data:Data {active: true})
+      (user:User {id: $requestingUserId, active: true})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:PERMISSIONS]->(readPerm:Permission{active:true, edit:true})-[:GRANT]->(dh:DataHolder {active: true, identifier: $identifier})-[:DATA]->(data:Data {active: true})
 
       SET
       data.active = false
@@ -173,7 +177,7 @@ extend type Mutation {
       MATCH (bn:BaseNode {id:$baseNodeId})
 
       OPTIONAL MATCH
-      (user:User {id: $requestingUserId})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:PERMISSIONS]->(readPerm:Permission{active:true, edit:true})-[:GRANT]->(dh:DataHolder {active: true, identifier: $identifier})
+      (user:User {id: $requestingUserId, active: true})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:PERMISSIONS]->(readPerm:Permission{active:true, edit:true})-[:GRANT]->(dh:DataHolder {active: true, identifier: $identifier})
 
       CREATE
       (dh)-[:DATA]->(newData:Data {id: $newDataId, active: true, value: $newValue, createdAt: datetime()})
@@ -195,7 +199,7 @@ extend type Mutation {
       MATCH (bn:BaseNode {id:$baseNodeId})
 
       OPTIONAL MATCH
-      (user:User {id: $requestingUserId})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:PERMISSIONS]->(readPerm:Permission{active:true, edit:true})-[:GRANT]->(dh:DataHolder {active: true, identifier: $identifier})-[:DATA]->(data:Data {active: true, value: $oldValue})
+      (user:User {id: $requestingUserId, active: true})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:PERMISSIONS]->(readPerm:Permission{active:true, edit:true})-[:GRANT]->(dh:DataHolder {active: true, identifier: $identifier})-[:DATA]->(data:Data {active: true, value: $oldValue})
 
       SET data.active = false
 
@@ -262,13 +266,13 @@ extend type Query {
       MATCH (bn:BaseNode {id:$baseNodeId})
 
       OPTIONAL MATCH
-      (user:User {id: $requestingUserId})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:PERMISSIONS]->(readPerm:Permission{active:true, read:true})-[:GRANT]->(:DataHolder {active: true, identifier: $identifier})-[:DATA]->(data:Data {active: true})
+      (user:User {id: $requestingUserId, active: true})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:PERMISSIONS]->(readPerm:Permission{active:true, read:true})-[:GRANT]->(:DataHolder {active: true, identifier: $identifier})-[:DATA]->(data:Data {active: true})
 
       OPTIONAL MATCH
-      (user:User {id: $requestingUserId})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:PERMISSIONS]->(editPerm:Permission{active:true, edit:true})-[:GRANT]->(:DataHolder {active: true, identifier: $identifier})
+      (user:User {id: $requestingUserId, active: true})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:PERMISSIONS]->(editPerm:Permission{active:true, edit:true})-[:GRANT]->(:DataHolder {active: true, identifier: $identifier})
 
       OPTIONAL MATCH
-      (user:User {id: $requestingUserId})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:PERMISSIONS]->(adminPerm:Permission{active:true, admin:true})-[:GRANT]->(:DataHolder {active: true, identifier: $identifier})
+      (user:User {id: $requestingUserId, active: true})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:PERMISSIONS]->(adminPerm:Permission{active:true, admin:true})-[:GRANT]->(:DataHolder {active: true, identifier: $identifier})
 
       WITH
       {
@@ -283,6 +287,8 @@ extend type Query {
     )
 }
 
+# LABEL ##########################################
+
 extend type Mutation {
   addLabel(nodeId: String, label: String): String
     @cypher(
@@ -291,6 +297,47 @@ extend type Mutation {
       CALL apoc.create.addLabels([n], [$label])
       YIELD node
       RETURN node.id
+      """
+    )
+}
+
+# DELETE #############################################
+
+extend type Mutation {
+  secureDeleteBaseNode(
+    baseNodeId: String!
+    requestingUserId: String!
+    baseNodeLabel: String!
+  ): Boolean
+    @cypher(
+      statement: """
+      MATCH (baseNode:BaseNode {id:$baseNodeId})
+
+      OPTIONAL MATCH
+      (user:User {id: $requestingUserId, active: true})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:POWERS]->(power:Power{active:true, value: $baseNodeLabel, delete:true})
+
+      SET baseNode.active = false
+
+      RETURN baseNode.active as active
+      """
+    )
+
+  secureDeleteData(
+    baseNodeId: String!
+    requestingUserId: String!
+    identifier: String!
+    value: String!
+  ): Boolean
+    @cypher(
+      statement: """
+      MATCH (bn:BaseNode {id:$baseNodeId})
+
+      OPTIONAL MATCH
+      (user:User {id: $requestingUserId, active: true})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:PERMISSIONS]->(readPerm:Permission{active:true, edit:true})-[:GRANT]->(:DataHolder {active: true, identifier: $identifier})-[:DATA]->(data:Data {active: true, value: $value})
+
+      SET data.active = false
+
+      RETURN data.active as active
       """
     )
 }

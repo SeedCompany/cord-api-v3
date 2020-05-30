@@ -509,11 +509,11 @@ export class UserService {
   async delete(id: string, session: ISession): Promise<void> {
     const user = await this.readOne(id, session);
     try {
-      await this.db.deleteNode({
-        session,
-        object: user,
-        aclEditProp: 'canDeleteOwnUser',
-      });
+      // await this.db.deleteNode({
+      //   session,
+      //   object: user,
+      //   aclEditProp: 'canDeleteOwnUser',
+      // });
     } catch (e) {
       this.logger.error('Could not delete user', { exception: e });
       throw new ServerException('Could not delete user');
