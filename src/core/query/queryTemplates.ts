@@ -117,6 +117,43 @@ export function createDataHolder(
   `;
 }
 
+export function createSecurityGroup(
+  queryId: string,
+  baseNodeId: string,
+  sgId: string,
+  createdAt: string,
+  name: string
+): string {
+  return `
+  ${queryId}: CreateSecurityGroup(
+    id: "${sgId}"
+    createdAt: { formatted: "${createdAt}" }
+    active: true
+    name: "${name}"
+  ) {
+    id
+    
+  }
+  `;
+}
+
+export function addSecurityGroupMember(
+  queryId: string,
+  sgId: string,
+  userId: string
+): string {
+  return `
+  ${queryId}:  AddSecurityGroupMembers(
+    from: { id: "${sgId}" }
+    to: { id: "${userId}" }
+  ) {
+    from {
+      id
+    }
+  }
+  `;
+}
+
 export function createBaseNode(
   queryId: string,
   baseNodeId: string,
@@ -128,6 +165,35 @@ export function createBaseNode(
   propQuery: string
 ): string {
   const labelQuery = addLabel(`${queryId}_label`, baseNodeId, baseNodeLabel);
+
+  const adminSGQuery = createSecurityGroup(
+    `${queryId}_admin_sg`,
+    baseNodeId,
+    sgAdminId,
+    createdAt,
+    `SG Admin for ${baseNodeId}`
+  );
+
+  const addAdminMember = addSecurityGroupMember(
+    `${queryId}_addAdminMember`,
+    sgAdminId,
+    requestingUserId
+  );
+
+  const readerSGQuery = createSecurityGroup(
+    `${queryId}_reader_sg`,
+    baseNodeId,
+    sgReaderId,
+    createdAt,
+    `SG Reader for ${baseNodeId}`
+  );
+
+  const addReaderMember = addSecurityGroupMember(
+    `${queryId}_addReaderMember`,
+    sgReaderId,
+    requestingUserId
+  );
+
   return `
   mutation{
     ${queryId}: CreateBaseNode(
@@ -141,43 +207,13 @@ export function createBaseNode(
     # add label to base node
     ${labelQuery} 
 
-    ${queryId}_adminSG: CreateSecurityGroup(
-      id: "${sgAdminId}"
-      createdAt: { formatted: "${createdAt}" }
-      active: true
-      name: "SG Admin for ${baseNodeId}"
-    ) {
-      id
-      
-    }
+    ${adminSGQuery}
 
-    ${queryId}_addAdminMember:  AddSecurityGroupMembers(
-      from: { id: "${sgAdminId}" }
-      to: { id: "${requestingUserId}" }
-    ) {
-      from {
-        id
-      }
-    }
+    ${addAdminMember}
   
-    ${queryId}_readerSG:  CreateSecurityGroup(
-      id: "${sgReaderId}"
-      createdAt: { formatted: "${createdAt}" }
-      active: true
-      name: "SG Reader for ${baseNodeId}"
-    ) {
-      id
-      
-    }
+    ${readerSGQuery}
 
-    ${queryId}_addReaderMember:  AddSecurityGroupMembers(
-      from: { id: "${sgReaderId}" }
-      to: { id: "${requestingUserId}" }
-    ) {
-      from {
-        id
-      }
-    }
+    ${addReaderMember}
 
     ${propQuery}
 
@@ -324,4 +360,20 @@ export function addPowerRelationship(
   return `
   ${queryId}: AddSecurityGroupPowers(from:{id:"${sgId}"}, to:{id:"${powerId}"})
   `;
+}
+
+export function addAdmin(queryId: string, baseNodeId: string, userId: string) {
+  return `
+  ${queryId}: AddBaseNodeAdmins(from:{id:"${baseNodeId}"}, to:{id:"${userId}"})
+  `;
+}
+
+export function addCreator(
+  queryId: string,
+  baseNodeId: string,
+  userId: string
+) {
+  return `
+    ${queryId}: AddBaseNodeCreator(from:{id:"${baseNodeId}"}, to:{id:"${userId}"})
+    `;
 }

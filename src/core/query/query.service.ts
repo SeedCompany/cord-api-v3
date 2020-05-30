@@ -91,7 +91,7 @@ export class QueryService {
   async createBaseNode(
     baseNode: BaseNode,
     requestingUserId: string,
-    createReaderSg = true
+    createReaderSG = true
   ) {
     const sgAdminId = generate();
     const sgReaderId = generate();

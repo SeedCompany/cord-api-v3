@@ -19,6 +19,8 @@ type BaseNode {
   createdAt: DateTime!
   active: Boolean!
   dataHolders: [DataHolder!]! @relation(name: "DATAHOLDERS", direction: "OUT")
+  admins: [BaseNode] @relation(name: "ADMINS", direction: "OUT")
+  creator: [BaseNode] @relation(name: "CREATOR", direction: "OUT")
   holderCount: Int
     @cypher(
       statement: """
@@ -308,13 +310,14 @@ extend type Mutation {
     baseNodeId: String!
     requestingUserId: String!
     baseNodeLabel: String!
+    power: Powers
   ): Boolean
     @cypher(
       statement: """
       MATCH (baseNode:BaseNode {id:$baseNodeId})
 
       OPTIONAL MATCH
-      (user:User {id: $requestingUserId, active: true})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:POWERS]->(power:Power{active:true, value: $baseNodeLabel, delete:true})
+      (user:User {id: $requestingUserId, active: true})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:POWERS]->(power:Power{active:true, value: $power})
 
       SET baseNode.active = false
 
