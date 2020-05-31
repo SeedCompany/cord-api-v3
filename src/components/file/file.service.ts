@@ -7,7 +7,6 @@ import {
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
 import type { AWSError } from 'aws-sdk';
-import { isString } from 'lodash';
 import { generate } from 'shortid';
 import { ISession, NotImplementedError } from '../../common';
 import { ILogger, Logger } from '../../core';
@@ -100,10 +99,11 @@ export class FileService {
     };
   }
 
-  async getDownloadUrl(fileOrId: File | string): Promise<string> {
-    const id = isString(fileOrId)
-      ? await this.repo.getLatestVersionId(fileOrId)
-      : fileOrId.latestVersionId;
+  async getDownloadUrl(node: FileNode): Promise<string> {
+    if (isDirectory(node)) {
+      throw new BadRequestException('Directories cannot be downloaded yet');
+    }
+    const id = isFile(node) ? node.latestVersionId : node.id;
     try {
       // before sending link, first check if object exists in s3
       await this.bucket.headObject(id);
