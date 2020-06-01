@@ -59,6 +59,11 @@ export const user = gql`
       canEdit
       canRead
     }
+    status {
+      value
+      canEdit
+      canRead
+    }
   }
 `;
 

@@ -2,6 +2,7 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { MinLength, ValidateNested } from 'class-validator';
 import { IsEmail } from '../../../common';
+import { UserStatus } from './user-status.enum';
 import { User } from './user.dto';
 
 @InputType()
@@ -37,6 +38,9 @@ export abstract class CreateUser {
 
   @Field()
   readonly password: string;
+
+  @Field(() => UserStatus, { nullable: true })
+  readonly status?: UserStatus;
 }
 
 @InputType()

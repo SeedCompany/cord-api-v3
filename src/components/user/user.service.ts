@@ -106,6 +106,7 @@ export class UserService {
         'phone',
         'timezone',
         'bio',
+        'status',
       ],
       input: {
         page,
@@ -381,6 +382,7 @@ export class UserService {
       ...property('phone', input.phone),
       ...property('timezone', input.timezone),
       ...property('bio', input.bio),
+      ...property('status', input.status),
       [
         node('user'),
         relation('in', '', 'member', { active: true, createdAt }),
@@ -411,6 +413,7 @@ export class UserService {
       ...permission('phone'),
       ...permission('timezone'),
       ...permission('bio'),
+      ...permission('status'),
     ]);
 
     query.return({
@@ -501,6 +504,7 @@ export class UserService {
         ...property('phone', 'sg'),
         ...property('bio', 'sg'),
         ...property('timezone', 'sg'),
+        ...property('status', 'sg'),
       ])
       .return({
         email: [{ value: 'email' }],
@@ -529,6 +533,8 @@ export class UserService {
         timezonePerm: [{ read: 'timezoneRead', edit: 'timezoneEdit' }],
         bioPerm: [{ read: 'bioRead', edit: 'bioEdit' }],
         sg: [{ id: 'sgId' }],
+        status: [{ value: 'status' }],
+        statusPerm: [{ read: 'statusRead', edit: 'statusEdit' }],
       });
 
     const result = await query.first();
@@ -577,6 +583,11 @@ export class UserService {
           canRead: !!result.bioRead,
           canEdit: !!result.bioEdit,
         },
+        status: {
+          value: result.status,
+          canRead: !!result.statusRead,
+          canEdit: !!result.statusEdit,
+        },
       };
       return user;
     } else {
@@ -605,6 +616,7 @@ export class UserService {
       phone: { value: '', canEdit: false, canRead: false },
       timezone: { value: '', canEdit: false, canRead: false },
       bio: { value: '', canEdit: false, canRead: false },
+      status: { value: '', canEdit: false, canRead: false },
     };
   }
 
@@ -623,6 +635,7 @@ export class UserService {
         'phone',
         'timezone',
         'bio',
+        'status',
       ],
       changes: input,
       nodevar: 'user',

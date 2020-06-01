@@ -148,6 +148,11 @@ describe('EngamgemetService', () => {
           canRead: true,
           canEdit: true,
         },
+        status: {
+          value: 'update-status',
+          canRead: true,
+          canEdit: true,
+        },
       },
       canRead: true,
       canEdit: true,

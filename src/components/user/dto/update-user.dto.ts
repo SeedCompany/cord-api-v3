@@ -1,6 +1,7 @@
 import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { MinLength, ValidateNested } from 'class-validator';
+import { UserStatus } from './user-status.enum';
 import { User } from './user.dto';
 
 @InputType()
@@ -34,6 +35,9 @@ export abstract class UpdateUser {
 
   @Field({ nullable: true })
   readonly bio?: string;
+
+  @Field(() => UserStatus, { nullable: true })
+  readonly status?: UserStatus;
 }
 
 @InputType()
