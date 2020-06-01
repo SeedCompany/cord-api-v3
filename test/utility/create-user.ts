@@ -2,6 +2,7 @@ import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { generate, isValid } from 'shortid';
 import { CreateUser, User } from '../../src/components/user';
+import { UserStatus } from '../../src/components/user/dto/user-status.enum';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
 
@@ -19,6 +20,7 @@ export async function createUser(
     phone: faker.phone.phoneNumber(),
     timezone: 'timezone detail' + generate(),
     bio: 'bio detail' + generate(),
+    status: UserStatus.Active,
     ...input,
   };
 

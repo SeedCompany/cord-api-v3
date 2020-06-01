@@ -7,7 +7,7 @@ import {
 import * as argon2 from 'argon2';
 import { node, relation } from 'cypher-query-builder';
 import { ConfigService, DatabaseService } from '../../core';
-import { UserService } from '../user';
+import { UserService, UserStatus } from '../user';
 import { RootSecurityGroup } from './root-security-group';
 
 @Injectable()
@@ -106,6 +106,7 @@ export class AdminService implements OnApplicationBootstrap {
         phone: 'root',
         timezone: 'root',
         bio: 'root',
+        status: UserStatus.Active,
       });
 
       if (!adminUser) {

@@ -2,6 +2,12 @@ import { Type } from '@nestjs/common';
 import { Field, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { Resource, SecuredProperty, SecuredString } from '../../../common';
+import { UserStatus } from './user-status.enum';
+
+@ObjectType({
+  description: SecuredProperty.descriptionFor('a user status'),
+})
+export abstract class SecuredUserStatus extends SecuredProperty(UserStatus) {}
 
 @ObjectType({
   implements: [Resource],
@@ -33,6 +39,9 @@ export class User extends Resource {
 
   @Field()
   bio: SecuredString;
+
+  @Field({ nullable: true })
+  readonly status: SecuredUserStatus;
 }
 
 @ObjectType({
@@ -57,4 +66,5 @@ export const RedactedUser: User = {
   phone: RedactedSecuredString,
   timezone: RedactedSecuredString,
   bio: RedactedSecuredString,
+  status: RedactedSecuredString,
 };
