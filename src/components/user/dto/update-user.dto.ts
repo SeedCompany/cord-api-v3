@@ -36,7 +36,7 @@ export abstract class UpdateUser {
   @Field({ nullable: true })
   readonly bio?: string;
 
-  @Field({ nullable: true })
+  @Field(() => UserStatus, { nullable: true })
   readonly status?: UserStatus;
 }
 
