@@ -7,11 +7,11 @@ import {
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
 import type { AWSError } from 'aws-sdk';
-import { isString } from 'lodash';
 import { generate } from 'shortid';
 import { ISession, NotImplementedError } from '../../common';
 import { ILogger, Logger } from '../../core';
 import {
+  BaseNode,
   CreateDefinedFileVersionInput,
   CreateFileVersionInput,
   DefinedFile,
@@ -24,6 +24,7 @@ import {
   FileNodeType,
   FileVersion,
   isDirectory,
+  isDirectoryNode,
   isFile,
   isFileNode,
   isFileVersion,
@@ -74,25 +75,31 @@ export class FileService {
     this.logger.info(`getNode`, { id, userId: session.userId });
 
     const base = await this.repo.getBaseNodeById(id, session);
+    return this.adaptBaseNodeToFileNode(base, session);
+  }
 
-    if (base.type === FileNodeType.Directory) {
+  private async adaptBaseNodeToFileNode(
+    node: BaseNode,
+    session: ISession
+  ): Promise<FileNode> {
+    if (node.type === FileNodeType.Directory) {
       return {
-        ...base,
+        ...node,
         type: FileNodeType.Directory,
         category: FileNodeCategory.Directory,
       };
     }
 
-    const latestVersionId = await this.repo.getLatestVersionId(id);
+    const latestVersionId = await this.repo.getLatestVersionId(node.id);
     const version = await this.repo.getVersionDetails(latestVersionId, session);
 
-    if (base.type === FileNodeType.FileVersion) {
+    if (node.type === FileNodeType.FileVersion) {
       return version;
     }
 
     return {
       ...version,
-      ...base,
+      ...node,
       type: FileNodeType.File,
       latestVersionId,
       modifiedAt: version.createdAt,
@@ -100,10 +107,11 @@ export class FileService {
     };
   }
 
-  async getDownloadUrl(fileOrId: File | string): Promise<string> {
-    const id = isString(fileOrId)
-      ? await this.repo.getLatestVersionId(fileOrId)
-      : fileOrId.latestVersionId;
+  async getDownloadUrl(node: FileNode): Promise<string> {
+    if (isDirectory(node)) {
+      throw new BadRequestException('Directories cannot be downloaded yet');
+    }
+    const id = isFile(node) ? node.latestVersionId : node.id;
     try {
       // before sending link, first check if object exists in s3
       await this.bucket.headObject(id);
@@ -115,10 +123,13 @@ export class FileService {
   }
 
   async getParents(
-    _nodeId: string,
-    _session: ISession
+    nodeId: string,
+    session: ISession
   ): Promise<readonly FileNode[]> {
-    throw new NotImplementedError();
+    const parents: BaseNode[] = []; // TODO
+    return Promise.all(
+      parents.map((node) => this.adaptBaseNodeToFileNode(node, session))
+    );
   }
 
   async listChildren(
@@ -135,7 +146,24 @@ export class FileService {
     session: ISession
   ): Promise<Directory> {
     if (parentId) {
-      // TODO Ensure name is unique
+      // Enforce parent exists and is a directory
+      const parent = await this.getParentNode(parentId, session);
+      if (!isDirectoryNode(parent)) {
+        throw new BadRequestException(
+          'Directories can only be created under directories'
+        );
+      }
+      try {
+        await this.repo.getBaseNodeByName(parentId, name, session);
+        throw new BadRequestException(
+          'Node with this name already exists in this directory',
+          'Duplicate'
+        );
+      } catch (e) {
+        if (!(e instanceof NotFoundException)) {
+          throw e;
+        }
+      }
     }
 
     const id = await this.repo.createDirectory(parentId, name, session);
@@ -173,16 +201,7 @@ export class FileService {
       throw new ServerException('Unable to create file version');
     }
 
-    let parent;
-    try {
-      parent = await this.repo.getBaseNodeById(parentId, session);
-    } catch (e) {
-      if (e instanceof NotFoundException) {
-        throw new NotFoundException('Could not find parent');
-      }
-      throw e;
-    }
-
+    const parent = await this.getParentNode(parentId, session);
     if (isFileVersionNode(parent)) {
       throw new BadRequestException(
         'Only files and directories can be parents of a file version'
@@ -210,6 +229,17 @@ export class FileService {
     await this.bucket.moveObject(`temp/${uploadId}`, uploadId);
 
     return this.getFile(fileId, session);
+  }
+
+  private async getParentNode(id: string, session: ISession) {
+    try {
+      return await this.repo.getBaseNodeById(id, session);
+    } catch (e) {
+      if (e instanceof NotFoundException) {
+        throw new NotFoundException('Could not find parent');
+      }
+      throw e;
+    }
   }
 
   private async getOrCreateFileByName(
