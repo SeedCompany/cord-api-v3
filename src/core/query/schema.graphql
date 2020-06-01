@@ -317,7 +317,7 @@ extend type Mutation {
       MATCH (baseNode:BaseNode {id:$baseNodeId})
 
       OPTIONAL MATCH
-      (user:User {id: $requestingUserId, active: true})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:POWERS]->(power:Power{active:true, value: $power})
+      (user:User {id: $requestingUserId, active: true})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:POWERS]->(:Power{active:true, value: $power})
 
       SET baseNode.active = false
 

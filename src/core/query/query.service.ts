@@ -639,16 +639,18 @@ export class QueryService {
       .query()
       .match([
         node('sg', 'RootSecurityGroup', {
-          active: true,
           id: sgId,
         }),
       ])
       .match([
         node('user', 'User', {
-          active: true,
           id: userId,
         }),
       ])
+      .setValues({
+        'sg.active': true,
+        'user.active': true,
+      })
       .merge([node('sg'), relation('out', '', 'MEMBERS'), node('user')])
       .return({ user: [{ id: 'userId' }] })
       .first();
