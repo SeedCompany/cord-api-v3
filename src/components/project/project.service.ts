@@ -38,6 +38,7 @@ import {
 import {
   ProjectMemberListInput,
   ProjectMemberService,
+  Role,
   SecuredProjectMemberList,
 } from './project-member';
 
@@ -377,6 +378,37 @@ export class ProjectService {
       },
     });
 
+    if (filter.mine) {
+      const myProjectIds = await Promise.all(
+        result.items.map(async (item) => {
+          return this.db
+            .query()
+            .match([
+              [
+                node('reqUser', 'User', { active: true, id: session.userId }),
+                relation('in', '', 'user'),
+                node('projMem', 'ProjectMember', { active: true }),
+                relation('out', '', 'roles', { active: true }),
+                node('projRole', 'Property', {
+                  active: true,
+                  value: [Role.ProjectManager],
+                }),
+              ],
+              [
+                node('projMem'),
+                relation('in', '', 'member', { active: true }),
+                node('proj', 'Project', { active: true, id: item.id }),
+              ],
+            ])
+            .return('proj.id as id')
+            .first();
+        })
+      );
+
+      result.items = myProjectIds
+        .map((proj) => result.items.filter((item) => item.id === proj!.id))
+        .flat();
+    }
     return {
       items: result.items.map((item) => ({
         ...item,
@@ -625,6 +657,15 @@ export class ProjectService {
           })
           .first();
       }
+      // When a project is created, reqUser should be added as a Project Member with Pro Man role
+      await this.projectMembers.create(
+        {
+          userId: session.userId!,
+          projectId: id,
+          roles: [Role.ProjectManager],
+        },
+        session
+      );
 
       const project = await this.readOne(id, session);
 

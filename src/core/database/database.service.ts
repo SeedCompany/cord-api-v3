@@ -666,7 +666,7 @@ export class DatabaseService {
     if (input.filter && Object.keys(input.filter).length) {
       const where: Record<string, any> = {};
       for (const k in input.filter) {
-        if (k !== 'id' && k !== 'userId') {
+        if (k !== 'id' && k !== 'userId' && k !== 'mine') {
           where[k + '.value'] = contains(input.filter[k]);
         }
       }

@@ -68,6 +68,12 @@ export abstract class ProjectFilters {
     nullable: true,
   })
   readonly userIds?: string[];
+
+  @Field({
+    nullable: true,
+    description: 'only mine',
+  })
+  readonly mine?: boolean;
 }
 
 const defaultFilters = {};

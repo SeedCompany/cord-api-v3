@@ -176,6 +176,35 @@ describe('Project e2e', () => {
     expect(projects.items.length).toBeGreaterThanOrEqual(numProjects);
   });
 
+  it('List view of my projects', async () => {
+    const numProjects = 3;
+    const type = ProjectType.Translation;
+    await Promise.all(
+      times(numProjects).map(() =>
+        createProject(app, {
+          type,
+        })
+      )
+    );
+
+    const { projects } = await app.graphql.query(
+      gql`
+        query projects {
+          projects(input: { filter: { mine: true } }) {
+            items {
+              ...project
+            }
+            hasMore
+            total
+          }
+        }
+        ${fragments.project}
+      `
+    );
+
+    expect(projects.items.length).toBeGreaterThanOrEqual(numProjects);
+  });
+
   it('returns false when consistency check shows multiple location nodes connected', async () => {
     const zone = await createZone(app);
 

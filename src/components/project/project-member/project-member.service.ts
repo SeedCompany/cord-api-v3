@@ -4,6 +4,8 @@ import {
   NotFoundException,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
+import { node, relation } from 'cypher-query-builder';
+import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../../common';
 import { DatabaseService, ILogger, Logger } from '../../../core';
@@ -115,20 +117,28 @@ export class ProjectMemberService {
         acls,
       });
       //connect the User to the ProjectMember
-      const query = `
-        MATCH (user:User {id: $userId, active: true}),
-          (project:Project {id: $projectId, active: true}),
-          (projectMember: ProjectMember {id: $id, active: true})
-        CREATE (project)<-[:project {active: true, createdAt: datetime()}]-(projectMember)-[:user {active: true, createAt: datetime()}]->(user)
-        RETURN projectMember.id as id
-      `;
       await this.db
         .query()
-        .raw(query, {
-          userId,
-          projectId,
-          id,
-        })
+        .match([
+          [node('user', 'User', { id: userId, active: true })],
+          [node('project', 'Project', { id: projectId, active: true })],
+          [node('projectMember', 'ProjectMember', { id, active: true })],
+        ])
+        .create([
+          node('project'),
+          relation('out', '', 'member', {
+            // direction is out per latest schema
+            active: true,
+            createdAt: DateTime.local(),
+          }),
+          node('projectMember'),
+          relation('out', '', 'user', {
+            active: true,
+            createdAt: DateTime.local(),
+          }),
+          node('user'),
+        ])
+        .return('projectMember.id as id')
         .first();
 
       return await this.readOne(id, session);
