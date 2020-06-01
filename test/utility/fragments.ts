@@ -63,6 +63,49 @@ export const user = gql`
       value
       canEdit
       canRead
+    organizations {
+      items {
+        id
+        name {
+          value
+        }
+      }
+      hasMore
+      total
+      canRead
+      canCreate
+    }
+    unavailabilities {
+      items {
+        id
+        description {
+          value
+        }
+        start
+        end
+      }
+      hasMore
+      total
+      canRead
+      canCreate
+    }
+    education {
+      items {
+        id
+        degree {
+          value
+        }
+        major {
+          value
+        }
+        institution {
+          value
+        }
+      }
+      hasMore
+      total
+      canRead
+      canCreate
     }
   }
 `;

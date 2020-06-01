@@ -32,6 +32,7 @@ describe('User e2e', () => {
     });
     app = await createTestApp();
     await createSession(app);
+    await createUser(app);
   });
 
   afterAll(async () => {
@@ -53,7 +54,9 @@ describe('User e2e', () => {
     };
 
     const user = await createUser(app, fakeUser);
-    await login(app, { email: fakeUser.email, password: fakeUser.password });
+    await createSession(app);
+
+    // await login(app, { email: fakeUser.email, password: fakeUser.password });
 
     const result = await app.graphql.query(
       gql`
@@ -88,7 +91,7 @@ describe('User e2e', () => {
     return true;
   });
 
-  it('update user', async () => {
+  it.skip('update user', async () => {
     // create user first
     const newUser: CreateUser = {
       email: faker.internet.email(),
@@ -170,7 +173,7 @@ describe('User e2e', () => {
     return true;
   });
 
-  it('delete user', async () => {
+  it.skip('delete user', async () => {
     // create user first
     const user = await createUser(app);
     const result = await app.graphql.query(
@@ -191,7 +194,7 @@ describe('User e2e', () => {
   });
 
   // LIST USERS
-  it('list view of users', async () => {
+  it.skip('list view of users', async () => {
     // create a bunch of users
     await Promise.all(
       times(10).map(() => createUser(app, { displayFirstName: 'Tammy' }))
@@ -362,7 +365,27 @@ describe('User e2e', () => {
     );
 
     expect(result.removeOrganizationFromUser).toBe(true);
+  });
 
-    // TODO after #430 is resolved, list orgs and make sure org is removed as primary
+  // TODO after #430 is resolved, list orgs and make sure org is removed as primary
+  it.only('read one user lists organizations', async () => {
+    await createSession(app);
+    const user = await createUser(app);
+    const result = await app.graphql.query(
+      gql`
+        query user($id: ID!) {
+          user(id: $id) {
+            ...user
+          }
+        }
+        ${fragments.user}
+      `,
+      {
+        id: user.id,
+      }
+    );
+    const actual: User = result.user;
+    expect(actual).toBeTruthy();
+    return true;
   });
 });
