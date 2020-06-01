@@ -152,9 +152,7 @@ extend type Mutation {
   ): String
     @cypher(
       statement: """
-      MATCH (bn:BaseNode {id:$baseNodeId})
-
-      OPTIONAL MATCH
+      MATCH (bn:BaseNode {id:$baseNodeId}),
       (user:User {id: $requestingUserId, active: true})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:PERMISSIONS]->(readPerm:Permission{active:true, edit:true})-[:GRANT]->(dh:DataHolder {active: true, identifier: $identifier})-[:DATA]->(data:Data {active: true})
 
       SET
@@ -176,9 +174,7 @@ extend type Mutation {
   ): String
     @cypher(
       statement: """
-      MATCH (bn:BaseNode {id:$baseNodeId})
-
-      OPTIONAL MATCH
+      MATCH (bn:BaseNode {id:$baseNodeId}),
       (user:User {id: $requestingUserId, active: true})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:PERMISSIONS]->(readPerm:Permission{active:true, edit:true})-[:GRANT]->(dh:DataHolder {active: true, identifier: $identifier})
 
       CREATE
@@ -198,9 +194,7 @@ extend type Mutation {
   ): String
     @cypher(
       statement: """
-      MATCH (bn:BaseNode {id:$baseNodeId})
-
-      OPTIONAL MATCH
+      MATCH (bn:BaseNode {id:$baseNodeId}),
       (user:User {id: $requestingUserId, active: true})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:PERMISSIONS]->(readPerm:Permission{active:true, edit:true})-[:GRANT]->(dh:DataHolder {active: true, identifier: $identifier})-[:DATA]->(data:Data {active: true, value: $oldValue})
 
       SET data.active = false
@@ -314,9 +308,7 @@ extend type Mutation {
   ): Boolean
     @cypher(
       statement: """
-      MATCH (baseNode:BaseNode {id:$baseNodeId})
-
-      OPTIONAL MATCH
+      MATCH (baseNode:BaseNode {id:$baseNodeId}),
       (user:User {id: $requestingUserId, active: true})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:POWERS]->(:Power{active:true, value: $power})
 
       SET baseNode.active = false

@@ -19,6 +19,7 @@ import {
   updateProperty,
   secureReadDataByBaseNodeId,
   secureDeleteData,
+  secureDeleteBaseNode,
 } from './queryTemplates';
 import * as argon2 from 'argon2';
 import { POWERS } from './model/powers';
@@ -294,6 +295,35 @@ export class QueryService {
     return result.id;
   }
 
+  async deleteBaseNode(
+    baseNodeId: string,
+    requestingUserId: string,
+    baseNodeLabel: string,
+    power: POWERS
+  ) {
+    const deleteQuery = secureDeleteBaseNode(
+      'd',
+      baseNodeId,
+      requestingUserId,
+      baseNodeLabel,
+      power
+    );
+
+    const query = `
+        mutation{
+          ${deleteQuery}
+        }
+      `;
+
+    const result = this.sendGraphql(query);
+
+    if (result) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   // Property Values
 
   async confirmPropertyValueExists(labels: string[], expectedValue: any) {
@@ -547,7 +577,7 @@ export class QueryService {
     let sgId = generate();
     const sgMergeResult = await this.db
       .query()
-      .merge(node('sg', 'RootSecurityGroup'))
+      .merge(node('sg', ['RootSecurityGroup', 'SecurityGroup']))
       .onCreate.setValues({
         'sg.id': sgId,
         'sg.active': true,
@@ -661,36 +691,34 @@ export class QueryService {
 
     // ensure security group has all the latest powers
     for (let power in POWERS) {
-      if (typeof POWERS[power] === 'number') {
-        const powerId = generate();
-        const matchPowerResult = await this.db
-          .query()
-          .merge(
-            node('power', 'Power', {
-              value: power,
-            })
-          )
-          .onCreate.setValues({
-            'power.id': powerId,
-            'power.active': true,
+      const powerId = generate();
+      const matchPowerResult = await this.db
+        .query()
+        .merge(
+          node('power', 'Power', {
+            value: power,
           })
-          .setVariables({
-            'power.createdAt': 'datetime()',
+        )
+        .onCreate.setValues({
+          'power.id': powerId,
+          'power.active': true,
+        })
+        .setVariables({
+          'power.createdAt': 'datetime()',
+        })
+        .with('*')
+        .match(
+          node('sg', 'RootSecurityGroup', {
+            active: true,
+            id: sgId,
           })
-          .with('*')
-          .match(
-            node('sg', 'RootSecurityGroup', {
-              active: true,
-              id: sgId,
-            })
-          )
-          .merge([node('sg'), relation('out', '', 'POWERS'), node('power')])
-          .return({ power: [{ id: 'id' }] })
-          .first();
+        )
+        .merge([node('sg'), relation('out', '', 'POWERS'), node('power')])
+        .return({ power: [{ id: 'id' }] })
+        .first();
 
-        if (!matchPowerResult) {
-          throw Error('Failed to merge power');
-        }
+      if (!matchPowerResult) {
+        throw Error('Failed to merge power');
       }
     }
   }

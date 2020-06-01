@@ -44,6 +44,7 @@ import {
 } from './unavailability';
 
 import _ = require('lodash');
+import { POWERS } from '../../core/query/model/powers';
 
 @Injectable()
 export class UserService {
@@ -511,6 +512,16 @@ export class UserService {
   async delete(id: string, session: ISession): Promise<void> {
     const user = await this.readOne(id, session);
     try {
+      if (session.userId) {
+        await this.db2.deleteBaseNode(
+          id,
+          session.userId,
+          'User',
+          POWERS.DELETE_USER
+        );
+      } else {
+        this.logger.error('no user id provided');
+      }
       // await this.db.deleteNode({
       //   session,
       //   object: user,

@@ -1,6 +1,7 @@
 // graphql templates
 import { generate } from 'shortid';
 import { Property } from './model';
+import { POWERS } from './model/powers';
 
 export function createPermission(
   queryId: string,
@@ -376,4 +377,22 @@ export function addCreator(
   return `
     ${queryId}: AddBaseNodeCreator(from:{id:"${baseNodeId}"}, to:{id:"${userId}"})
     `;
+}
+
+export function secureDeleteBaseNode(
+  queryId: string,
+  baseNodeId: string,
+  requestingUserId: string,
+  baseNodeLabel: string,
+  power: POWERS
+) {
+  return `
+  ${queryId}: secureDeleteBaseNode(
+    baseNodeId:"${baseNodeId}"
+    requestingUserId:"${requestingUserId}"
+    baseNodeLabel:"${baseNodeLabel}"
+    power:${power}
+  )
+  
+  `;
 }
