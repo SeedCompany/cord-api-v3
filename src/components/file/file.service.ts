@@ -11,6 +11,7 @@ import { generate } from 'shortid';
 import { ISession, NotImplementedError } from '../../common';
 import { ILogger, Logger } from '../../core';
 import {
+  BaseNode,
   CreateDefinedFileVersionInput,
   CreateFileVersionInput,
   DefinedFile,
@@ -74,25 +75,31 @@ export class FileService {
     this.logger.info(`getNode`, { id, userId: session.userId });
 
     const base = await this.repo.getBaseNodeById(id, session);
+    return this.adaptBaseNodeToFileNode(base, session);
+  }
 
-    if (base.type === FileNodeType.Directory) {
+  private async adaptBaseNodeToFileNode(
+    node: BaseNode,
+    session: ISession
+  ): Promise<FileNode> {
+    if (node.type === FileNodeType.Directory) {
       return {
-        ...base,
+        ...node,
         type: FileNodeType.Directory,
         category: FileNodeCategory.Directory,
       };
     }
 
-    const latestVersionId = await this.repo.getLatestVersionId(id);
+    const latestVersionId = await this.repo.getLatestVersionId(node.id);
     const version = await this.repo.getVersionDetails(latestVersionId, session);
 
-    if (base.type === FileNodeType.FileVersion) {
+    if (node.type === FileNodeType.FileVersion) {
       return version;
     }
 
     return {
       ...version,
-      ...base,
+      ...node,
       type: FileNodeType.File,
       latestVersionId,
       modifiedAt: version.createdAt,
@@ -116,10 +123,13 @@ export class FileService {
   }
 
   async getParents(
-    _nodeId: string,
-    _session: ISession
+    nodeId: string,
+    session: ISession
   ): Promise<readonly FileNode[]> {
-    throw new NotImplementedError();
+    const parents: BaseNode[] = []; // TODO
+    return Promise.all(
+      parents.map((node) => this.adaptBaseNodeToFileNode(node, session))
+    );
   }
 
   async listChildren(
