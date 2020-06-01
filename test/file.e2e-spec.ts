@@ -32,8 +32,6 @@ import {
 } from './utility/create-directory';
 import { RawFile } from './utility/fragments';
 
-jest.setTimeout(60_000 * 30);
-
 async function deleteNode(app: TestApp, id: string) {
   await app.graphql.mutate(
     gql`
