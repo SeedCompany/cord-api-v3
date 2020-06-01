@@ -23,6 +23,8 @@ import {
 } from './queryTemplates';
 import * as argon2 from 'argon2';
 import { POWERS } from './model/powers';
+import { OnIndex } from '../database/indexer';
+import { createIndexedAccessTypeNode } from 'typescript';
 @Injectable()
 export class QueryService {
   private readonly db: Connection;
@@ -31,6 +33,29 @@ export class QueryService {
       username: 'neo4j',
       password: 'asdf',
     });
+  }
+
+  // constraints on abstract nodes
+  @OnIndex()
+  async createIndexedAccessTypeNode() {
+    await this.createPropertyExistenceConstraintOnNodeAndRun(
+      'BaseNode',
+      'active'
+    );
+    await this.createPropertyExistenceConstraintOnNodeAndRun(
+      'BaseNode',
+      'createdAt'
+    );
+
+    await this.createPropertyExistenceConstraintOnNodeAndRun(
+      'Property',
+      'active'
+    );
+    await this.createPropertyExistenceConstraintOnNodeAndRun(
+      'Property',
+      'value'
+    );
+    await this.createPropertyUniquenessConstraintOnNodeAndRun('BaseNode', 'id');
   }
 
   // GraphQL Functions

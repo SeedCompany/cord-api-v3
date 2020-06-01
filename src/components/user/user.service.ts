@@ -61,14 +61,7 @@ export class UserService {
   @OnIndex()
   async createIndexes() {
     await this.db2.createPropertyExistenceConstraintOnNodeAndRun('User', 'id');
-    await this.db2.createPropertyExistenceConstraintOnNodeAndRun(
-      'BaseNode',
-      'active'
-    );
-    await this.db2.createPropertyExistenceConstraintOnNodeAndRun(
-      'BaseNode',
-      'createdAt'
-    );
+
     // await this.db2.createPropertyExistenceConstraintOnNodeAndRun(
     //   'User',
     //   'owningOrgId'
@@ -93,18 +86,7 @@ export class UserService {
       'password',
       'createdAt'
     );
-    await this.db2.createPropertyExistenceConstraintOnNodeAndRun(
-      'Property',
-      'active'
-    );
-    await this.db2.createPropertyExistenceConstraintOnNodeAndRun(
-      'Property',
-      'value'
-    );
-    await this.db2.createPropertyUniquenessConstraintOnNodeAndRun(
-      'BaseNode',
-      'id'
-    );
+
     await this.db2.createPropertyUniquenessConstraintOnNodeAndRun(
       'Email',
       'value'
@@ -241,7 +223,7 @@ export class UserService {
 
   async createAndLogin(input: CreateUser, session: ISession): Promise<User> {
     const userId = await this.create(input);
-    // this.logger.info(userId);
+
     session.userId = userId;
 
     const loginResult = await this.db2.login(
@@ -255,7 +237,7 @@ export class UserService {
     }
 
     const result = await this.readOne(userId, session);
-    // this.logger.info(JSON.stringify(result));
+
     return result;
   }
 
@@ -522,11 +504,6 @@ export class UserService {
       } else {
         this.logger.error('no user id provided');
       }
-      // await this.db.deleteNode({
-      //   session,
-      //   object: user,
-      //   aclEditProp: 'canDeleteOwnUser',
-      // });
     } catch (e) {
       this.logger.error('Could not delete user', { exception: e });
       throw new ServerException('Could not delete user');
