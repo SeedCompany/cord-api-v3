@@ -126,7 +126,7 @@ export class FileService {
     nodeId: string,
     session: ISession
   ): Promise<readonly FileNode[]> {
-    const parents: BaseNode[] = []; // TODO
+    const parents: BaseNode[] = await this.repo.getParentsById(session, nodeId);
     return Promise.all(
       parents.map((node) => this.adaptBaseNodeToFileNode(node, session))
     );
