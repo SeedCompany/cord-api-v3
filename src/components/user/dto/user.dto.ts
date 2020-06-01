@@ -41,7 +41,7 @@ export class User extends Resource {
   bio: SecuredString;
 
   @Field(() => SecuredUserStatus)
-  readonly status: SecuredUserStatus;
+  status: SecuredUserStatus;
 }
 
 @ObjectType({
