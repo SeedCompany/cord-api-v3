@@ -40,7 +40,7 @@ export class User extends Resource {
   @Field()
   bio: SecuredString;
 
-  @Field({ nullable: true })
+  @Field(() => SecuredUserStatus)
   readonly status: SecuredUserStatus;
 }
 

@@ -17,6 +17,8 @@ import {
   TestApp,
 } from './utility';
 
+jest.setTimeout(60_000 * 30);
+
 describe('User e2e', () => {
   let app: TestApp;
 
