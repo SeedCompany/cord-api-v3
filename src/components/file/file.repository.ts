@@ -60,7 +60,7 @@ export class FileRepository {
     return this.getBaseNodesBy(session, [
       [
         node('parent', 'FileNode', { id, ...isActive }),
-        relation('in', '', 'parent*', isActive),
+        relation('out', '', 'parent*', isActive),
         node('node', 'FileNode', isActive),
       ],
       [
