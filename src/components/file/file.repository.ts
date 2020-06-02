@@ -59,6 +59,18 @@ export class FileRepository {
     session: ISession,
     patterns: Pattern[][]
   ): Promise<BaseNode> {
+    const nodes = await this.getBaseNodesBy(session, patterns);
+    const node = nodes[0];
+    if (!node) {
+      throw new NotFoundException();
+    }
+    return node;
+  }
+
+  private async getBaseNodesBy(
+    session: ISession,
+    patterns: Pattern[][]
+  ): Promise<BaseNode[]> {
     this.db.assertPatternsIncludeIdentifier(patterns, 'node', 'name');
 
     const query = this.db
@@ -79,25 +91,26 @@ export class FileRepository {
           createdBy: [{ id: 'createdById' }],
         },
       ]);
-    const result = await query.first();
-    if (!result) {
-      throw new NotFoundException();
-    }
+    const results = await query.run();
 
-    const base = result.node as Node<{ id: string; createdAt: DateTime }>;
-    const type = intersection(base.labels, [
-      'Directory',
-      'File',
-      'FileVersion',
-    ])[0] as FileNodeType;
+    return results.map(
+      (result): BaseNode => {
+        const base = result.node as Node<{ id: string; createdAt: DateTime }>;
+        const type = intersection(base.labels, [
+          'Directory',
+          'File',
+          'FileVersion',
+        ])[0] as FileNodeType;
 
-    return {
-      type,
-      id: base.properties.id,
-      name: result.name as string,
-      createdAt: base.properties.createdAt,
-      createdById: result.createdById as string,
-    };
+        return {
+          type,
+          id: base.properties.id,
+          name: result.name as string,
+          createdAt: base.properties.createdAt,
+          createdById: result.createdById as string,
+        };
+      }
+    );
   }
 
   async getLatestVersionId(fileId: string): Promise<string> {
