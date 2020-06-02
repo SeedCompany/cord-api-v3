@@ -12,7 +12,7 @@ export abstract class PaginationInput {
   })
   @Min(1)
   @Max(100)
-  readonly count = 25;
+  readonly count: number = 25;
 
   @Field(() => Int, {
     description: stripIndent`
@@ -21,7 +21,7 @@ export abstract class PaginationInput {
     nullable: true,
   })
   @Min(1)
-  readonly page = 1;
+  readonly page: number = 1;
 
   protected constructor() {
     // no instantiation, shape only
