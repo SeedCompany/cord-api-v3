@@ -48,7 +48,6 @@ describe('Organization e2e', () => {
         id: org.id,
       }
     );
-
     expect(actual.id).toBe(org.id);
     expect(isValid(actual.id)).toBe(true);
     expect(actual.name.value).toBe(org.name.value);

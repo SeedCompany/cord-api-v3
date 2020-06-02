@@ -118,7 +118,7 @@ export class OrganizationService {
     ];
   };
 
-  async create(
+  async creates(
     input: CreateOrganization,
     session: ISession
   ): Promise<Organization> {
@@ -189,6 +189,44 @@ export class OrganizationService {
       throw new ServerException('Could not create organization');
     }
 
+    this.logger.info(`organization created, id ${id}`);
+
+    return this.readOne(id, session);
+  }
+
+  async create(
+    input: CreateOrganization,
+    session: ISession
+  ): Promise<Organization> {
+    const checkOrg = await this.db
+      .query()
+      .raw(
+        `
+        MATCH(org:OrgName {value: $name}) return org
+        `,
+        {
+          name: input.name,
+        }
+      )
+      .first();
+
+    if (checkOrg) {
+      throw new BadRequestException(
+        'Organization with that name already exists.',
+        'Duplicate'
+      );
+    }
+    const propLabels = {
+      name: 'OrgName',
+    };
+    const id = await this.db.sgCreateNode({
+      session,
+      input: input,
+      propLabels: propLabels,
+      nodevar: 'organization',
+      aclEditProp: 'canCreateOrg',
+      sgName: input.name,
+    });
     this.logger.info(`organization created, id ${id}`);
 
     return this.readOne(id, session);

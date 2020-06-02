@@ -12,6 +12,7 @@ import {
   Query,
   relation,
 } from 'cypher-query-builder';
+import { generate } from 'shortid';
 import type { Pattern } from 'cypher-query-builder/dist/typings/clauses/pattern';
 import { cloneDeep, Dictionary, Many, upperFirst } from 'lodash';
 import { DateTime, Duration } from 'luxon';
@@ -1213,4 +1214,155 @@ export class DatabaseService {
       );
     }
   }
+
+  async sgCreateNode<TObject>({
+    session,
+    input,
+    propLabels,
+    nodevar,
+    aclEditProp,
+    sgName,
+  }: {
+    session: ISession;
+    input: TObject;
+    propLabels: TObject;
+    nodevar: string;
+    aclEditProp?: string;
+    sgName: string;
+  }) {
+    try {
+      const id = generate();
+      const createdAt = DateTime.local();
+      const nodeName = upperFirst(nodevar);
+      const aclEditPropName = aclEditProp || `canEdit${nodeName}`;
+      const baseNode = nodeName + ':BaseNode';
+      const properties = [];
+      const permissions = [];
+      for (const key in input) {
+        const propLabel = propLabels[key];
+        properties.push(...this.sgProperty(key, input[key], propLabel));
+      }
+      for (const key in input) {
+        permissions.push(...this.sgPermission(key));
+      }
+      const query = this.db
+        .query()
+        .match(matchSession(session, { withAclEdit: aclEditPropName }))
+        .create([
+          [
+            node('newNode', baseNode, {
+              active: true,
+              createdAt,
+              id,
+              owningOrgId: session.owningOrgId,
+            }),
+          ],
+          ...properties,
+          [
+            node('adminSG', 'SecurityGroup', {
+              active: true,
+              createdAt,
+              name: sgName + ' admin',
+            }),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('requestingUser'),
+          ],
+          [
+            node('readerSG', 'SecurityGroup', {
+              active: true,
+              createdAt,
+              name: sgName + ' users',
+            }),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('requestingUser'),
+          ],
+          ...permissions,
+        ])
+        .return('newNode.id as id');
+      let result;
+      try {
+        result = await query.first();
+      } catch (err) {
+        this.logger.error(`Could not create node for user ${session.userId}`);
+        throw new ServerException('Could not create node');
+      }
+
+      if (!result) {
+        throw new ServerException('failed to create node');
+      }
+      return result.id;
+    } catch (err) {
+      this.logger.error(`Could not create node for user ${session.userId}`);
+      throw new ServerException('Could not create node');
+    }
+  }
+
+  // helper method for defining properties
+  sgProperty = (prop: string, value: any, propLabel: any) => {
+    if (!value) {
+      return [];
+    }
+    const createdAt = DateTime.local();
+    const property = (propLabel as string)
+      ? (propLabel as string) + ':Property'
+      : 'Property';
+    return [
+      [
+        node('newNode'),
+        relation('out', '', prop, {
+          active: true,
+          createdAt,
+        }),
+        node(prop, property, {
+          active: true,
+          value,
+        }),
+      ],
+    ];
+  };
+
+  // helper method for defining properties
+  sgPermission = (property: string) => {
+    const createdAt = DateTime.local();
+    return [
+      [
+        node('adminSG'),
+        relation('out', '', 'permission', {
+          active: true,
+          createdAt,
+        }),
+        node('', 'Permission', {
+          property,
+          active: true,
+          read: true,
+          edit: true,
+          admin: true,
+        }),
+        relation('out', '', 'baseNode', {
+          active: true,
+          createdAt,
+        }),
+        node('newNode'),
+      ],
+      [
+        node('readerSG'),
+        relation('out', '', 'permission', {
+          active: true,
+          createdAt,
+        }),
+        node('', 'Permission', {
+          property,
+          active: true,
+          read: true,
+          edit: false,
+          admin: false,
+        }),
+        relation('out', '', 'baseNode', {
+          active: true,
+          createdAt,
+        }),
+        node('newNode'),
+      ],
+    ];
+  };
 }
