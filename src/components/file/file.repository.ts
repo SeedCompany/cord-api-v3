@@ -60,7 +60,7 @@ export class FileRepository {
     return this.getBaseNodesBy(session, [
       [
         node('parent', 'FileNode', { id, ...isActive }),
-        relation('out', '', 'parent*', isActive),
+        relation('out', '', 'parent*..', isActive),
         node('node', 'FileNode', isActive),
       ],
       [
@@ -174,7 +174,7 @@ export class FileRepository {
           createdBy: [{ id: 'createdById' }],
         },
       ]);
-    const results = await query.run();
+    const results = (await query.run()).reverse();
 
     return results.map(
       (result): BaseNode => {
