@@ -155,6 +155,11 @@ export const fileNode = gql`
     createdBy {
       ...user
     }
+    parents {
+      id
+      name
+      type
+    }
     ... on FileVersion {
       mimeType
       size
@@ -180,6 +185,7 @@ export type RawBaseFileNode = RawNode<
   'createdById',
   {
     createdBy: User;
+    parents: Array<Pick<IFileNode, 'id' | 'type' | 'name'>>;
   }
 >;
 export type RawDirectory = RawBaseFileNode;

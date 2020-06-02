@@ -127,13 +127,14 @@ describe('File e2e', () => {
       const createdAt = DateTime.fromISO(file.createdAt);
       expect(createdAt.diffNow().as('seconds')).toBeGreaterThan(-30);
       expect(bucket.download(file.downloadUrl)).toEqual(fakeFile.content);
+      expect(file.parents[0].id).toEqual(root.id);
     }
   });
 
   it('get file version', async () => {
     const fakeFile = generateFakeFile();
     const upload = await requestFileUpload(app);
-    await uploadFile(app, root.id, fakeFile, upload);
+    const file = await uploadFile(app, root.id, fakeFile, upload);
 
     // Maybe get version from file.children when implemented
     const version = (await getFileNode(app, upload.id)) as RawFileVersion;
@@ -150,6 +151,7 @@ describe('File e2e', () => {
     const createdAt = DateTime.fromISO(version.createdAt);
     expect(createdAt.diffNow().as('seconds')).toBeGreaterThan(-30);
     expect(bucket.download(version.downloadUrl)).toEqual(fakeFile.content);
+    expect(version.parents[0].id).toEqual(file.id);
   });
 
   it('update file using file id', async () => {
@@ -207,7 +209,24 @@ describe('File e2e', () => {
       expect(dir.createdBy.id).toEqual(me.id);
       const createdAt = DateTime.fromISO(dir.createdAt);
       expect(createdAt.diffNow().as('seconds')).toBeGreaterThan(-30);
+      expect(dir.parents[0].id).toEqual(root.id);
     }
+  });
+
+  it('list parents', async () => {
+    const a = await createDirectory(app, root.id);
+    const b = await createDirectory(app, a.id);
+    const upload = await requestFileUpload(app);
+    const c = await uploadFile(app, b.id, {}, upload);
+    // Maybe get version from file.children when implemented
+    const version = await getFileNode(app, upload.id);
+    const { parents } = version;
+
+    expect(parents).toHaveLength(4);
+    expect(parents[0].id).toEqual(c.id);
+    expect(parents[1].id).toEqual(b.id);
+    expect(parents[2].id).toEqual(a.id);
+    expect(parents[3].id).toEqual(root.id);
   });
 
   it('delete file', async () => {
