@@ -4,7 +4,7 @@ import { startCase } from 'lodash';
 import { AuthenticationService } from '../../src/components/authentication';
 import { FileService } from '../../src/components/file';
 import { TestApp } from './create-app';
-import { directory, RawDirectory } from './fragments';
+import { fileNode, RawDirectory } from './fragments';
 
 export async function createRootDirectory(app: TestApp, name?: string) {
   name = name ?? startCase(faker.lorem.words());
@@ -35,10 +35,10 @@ export async function createDirectory(
     gql`
       mutation createDirectory($input: CreateDirectoryInput!) {
         createDirectory(input: $input) {
-          ...directory
+          ...fileNode
         }
       }
-      ${directory}
+      ${fileNode}
     `,
     {
       input,

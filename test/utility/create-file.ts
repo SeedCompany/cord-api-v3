@@ -71,10 +71,10 @@ export async function createFileVersion(
     gql`
       mutation createFileVersion($input: CreateFileVersionInput!) {
         createFileVersion(input: $input) {
-          ...file
+          ...fileNode
         }
       }
-      ${fragments.file}
+      ${fragments.fileNode}
     `,
     {
       input: file,

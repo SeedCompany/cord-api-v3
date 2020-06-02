@@ -1,6 +1,6 @@
 import { gql } from 'apollo-server-core';
 import { Except, Merge } from 'type-fest';
-import { Directory, File } from '../../src/components/file';
+import { File, FileVersion, IFileNode } from '../../src/components/file';
 import { User } from '../../src/components/user';
 import { Raw } from './raw.type';
 
@@ -145,8 +145,8 @@ export const education = gql`
   }
 `;
 
-export const baseFileNode = gql`
-  fragment baseFileNode on FileNode {
+export const fileNode = gql`
+  fragment fileNode on FileNode {
     id
     type
     name
@@ -155,52 +155,45 @@ export const baseFileNode = gql`
     createdBy {
       ...user
     }
+    ... on FileVersion {
+      mimeType
+      size
+      downloadUrl
+    }
+    ... on File {
+      mimeType
+      size
+      downloadUrl
+      modifiedAt
+      modifiedBy {
+        ...user
+      }
+    }
   }
   ${user}
 `;
-
-export const file = gql`
-  fragment file on File {
-    ...baseFileNode
-    mimeType
-    size
-    downloadUrl
-    modifiedAt
-    modifiedBy {
-      ...user
-    }
-    # When implemented:
-    # versions {
-    #  ...file
-    # }
+type RawNode<Node, Without extends keyof Node, Add> = Raw<
+  Merge<Except<Node, Without>, Add>
+>;
+export type RawBaseFileNode = RawNode<
+  IFileNode,
+  'createdById',
+  {
+    createdBy: User;
   }
-  ${baseFileNode}
-`;
-export type RawFile = Raw<
-  Merge<
-    Except<File, 'latestVersionId' | 'modifiedById' | 'createdById'>,
+>;
+export type RawDirectory = RawBaseFileNode;
+export type RawFileVersion = RawBaseFileNode &
+  RawNode<FileVersion, keyof IFileNode, { downloadUrl: string }>;
+export type RawFile = RawFileVersion &
+  RawNode<
+    File,
+    'latestVersionId' | 'modifiedById' | keyof IFileNode,
     {
-      createdBy: User;
-      downloadUrl: string;
       modifiedBy: User;
     }
-  >
->;
-
-export const directory = gql`
-  fragment directory on Directory {
-    ...baseFileNode
-  }
-  ${baseFileNode}
-`;
-export type RawDirectory = Raw<
-  Merge<
-    Except<Directory, 'createdById'>,
-    {
-      createdBy: User;
-    }
-  >
->;
+  >;
+export type RawFileNode = RawDirectory | RawFileVersion | RawFile;
 
 export const product = gql`
   fragment product on Product {
@@ -594,7 +587,6 @@ export const fragments = {
   language,
   unavailability,
   education,
-  file,
   product,
   project,
   partnership,

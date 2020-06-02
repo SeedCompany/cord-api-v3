@@ -217,7 +217,7 @@ describe('File e2e', () => {
           total
         }
       }
-      ${fragments.file}
+      ${fragments.fileNode}
     `);
 
     expect(files.items.length).toBeGreaterThan(numFiles);
