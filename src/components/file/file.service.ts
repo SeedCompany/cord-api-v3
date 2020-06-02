@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import type { AWSError } from 'aws-sdk';
 import { generate } from 'shortid';
-import { ISession, NotImplementedError } from '../../common';
+import { ISession } from '../../common';
 import { ILogger, Logger } from '../../core';
 import {
   BaseNode,
@@ -133,11 +133,19 @@ export class FileService {
   }
 
   async listChildren(
-    _parentId: string,
-    _input: FileListInput,
-    _session: ISession
+    parentId: string,
+    input: FileListInput,
+    session: ISession
   ): Promise<FileListOutput> {
-    throw new NotImplementedError();
+    const result = await this.repo.getChildrenById(session, parentId, input);
+    const items = await Promise.all(
+      result.children.map((node) => this.adaptBaseNodeToFileNode(node, session))
+    );
+    return {
+      items: items,
+      total: result.total,
+      hasMore: result.hasMore,
+    };
   }
 
   async createDirectory(

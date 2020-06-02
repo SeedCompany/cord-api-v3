@@ -3,7 +3,7 @@ import {
   NotFoundException,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
-import { Node, node, Query, relation } from 'cypher-query-builder';
+import { contains, node, Node, Query, relation } from 'cypher-query-builder';
 import type { Pattern } from 'cypher-query-builder/dist/typings/clauses/pattern';
 import { camelCase, intersection } from 'lodash';
 import { DateTime } from 'luxon';
@@ -14,6 +14,7 @@ import {
   BaseNode,
   Directory,
   File,
+  FileListInput,
   FileNodeCategory,
   FileNodeType,
   FileVersion,
@@ -103,6 +104,73 @@ export class FileRepository {
         createdById: res.createdById as string,
       };
     });
+  }
+
+  async getChildrenById(
+    session: ISession,
+    nodeId: string,
+    input: FileListInput
+  ): Promise<{ children: BaseNode[]; total: number; hasMore: boolean }> {
+    const query = this.db
+      .query()
+      .match([
+        matchSession(session),
+        [
+          node('parent', 'FileNode', { id: nodeId, ...isActive }),
+          relation('in', '', 'parent', isActive),
+          node('node', 'FileNode', isActive),
+        ],
+        [
+          node('node'),
+          relation('out', '', 'createdBy', isActive),
+          node('createdBy', 'User'),
+        ],
+        [
+          node('node'),
+          relation('out', '', 'name', isActive),
+          node('name', 'Property'),
+        ],
+      ])
+      .where({ 'name.value': contains(input.filter.name ?? '') })
+      .with('COUNT(node) as total, name, node, createdBy')
+      .return([
+        'node',
+        'total',
+        {
+          name: [{ value: 'name' }],
+          createdBy: [{ id: 'createdById' }],
+        },
+      ])
+      .orderBy([`${input.sort} ${input.order}`])
+      .skip((input.page - 1) * input.count)
+      .limit(input.count);
+
+    const result = await query.run();
+
+    const total = result.length === 0 ? 0 : result[0].total;
+
+    const children = result.map((res) => {
+      const base = res.node as Node<{ id: string; createdAt: DateTime }>;
+      const type = intersection(base.labels, [
+        'Directory',
+        'File',
+        'FileVersion',
+      ])[0] as FileNodeType;
+
+      return {
+        type,
+        id: base.properties.id,
+        name: res.name as string,
+        createdAt: base.properties.createdAt,
+        createdById: res.createdById as string,
+      };
+    });
+
+    return {
+      children,
+      total: total,
+      hasMore: false, // TODO
+    };
   }
 
   private async getBaseNodeBy(
