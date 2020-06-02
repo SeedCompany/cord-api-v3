@@ -6,8 +6,6 @@ import {
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { DateTime } from 'luxon';
-import { generate } from 'shortid';
 import { ISession } from '../../common';
 import {
   DatabaseService,
@@ -51,73 +49,6 @@ export class OrganizationService {
     }
   }
 
-  // helper method for defining properties
-  property = (prop: string, value: any) => {
-    if (!value) {
-      return [];
-    }
-    const createdAt = DateTime.local();
-    const propLabel = prop === 'name' ? 'Property:OrgName' : 'Property';
-    return [
-      [
-        node('newOrg'),
-        relation('out', '', prop, {
-          active: true,
-          createdAt,
-        }),
-        node(prop, propLabel, {
-          active: true,
-          value,
-        }),
-      ],
-    ];
-  };
-
-  // helper method for defining properties
-  permission = (property: string) => {
-    const createdAt = DateTime.local();
-    return [
-      [
-        node('adminSG'),
-        relation('out', '', 'permission', {
-          active: true,
-          createdAt,
-        }),
-        node('', 'Permission', {
-          property,
-          active: true,
-          read: true,
-          edit: true,
-          admin: true,
-        }),
-        relation('out', '', 'baseNode', {
-          active: true,
-          createdAt,
-        }),
-        node('newOrg'),
-      ],
-      [
-        node('readerSG'),
-        relation('out', '', 'permission', {
-          active: true,
-          createdAt,
-        }),
-        node('', 'Permission', {
-          property,
-          active: true,
-          read: true,
-          edit: false,
-          admin: false,
-        }),
-        relation('out', '', 'baseNode', {
-          active: true,
-          createdAt,
-        }),
-        node('newOrg'),
-      ],
-    ];
-  };
-
   async create(
     input: CreateOrganization,
     session: ISession
@@ -140,55 +71,17 @@ export class OrganizationService {
         'Duplicate'
       );
     }
-    const id = generate();
-    const createdAt = DateTime.local();
-    try {
-      await this.db
-        .query()
-        .match(matchSession(session, { withAclEdit: 'canCreateOrg' }))
-        .create([
-          [
-            node('newOrg', 'Organization:BaseNode', {
-              active: true,
-              createdAt,
-              id,
-              owningOrgId: session.owningOrgId,
-            }),
-          ],
-          ...this.property('name', input.name),
-          [
-            node('adminSG', 'SecurityGroup', {
-              active: true,
-              createdAt,
-              name: input.name + ' admin',
-            }),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('requestingUser'),
-          ],
-          [
-            node('readerSG', 'SecurityGroup', {
-              active: true,
-              createdAt,
-              name: input.name + ' users',
-            }),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('requestingUser'),
-          ],
-          ...this.permission('name'),
-        ])
-        .return('newOrg.id as id')
-        .first();
-
-      // if (!result) {
-      //   throw new ServerException('failed to create organization');
-      // }
-    } catch (err) {
-      this.logger.error(
-        `Could not create organization for user ${session.userId}`
-      );
-      throw new ServerException('Could not create organization');
-    }
-
+    const propLabels = {
+      name: 'OrgName',
+    };
+    const id = await this.db.sgCreateNode({
+      session,
+      input: input,
+      propLabels: propLabels,
+      nodevar: 'organization',
+      aclEditProp: 'canCreateOrg',
+      sgName: input.name,
+    });
     this.logger.info(`organization created, id ${id}`);
 
     return this.readOne(id, session);
