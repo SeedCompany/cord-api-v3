@@ -90,13 +90,13 @@ export class FileService {
       };
     }
 
-    const latestVersionId = await this.repo.getLatestVersionId(node.id);
-    const version = await this.repo.getVersionDetails(latestVersionId, session);
-
     if (node.type === FileNodeType.FileVersion) {
+      const version = await this.repo.getVersionDetails(node.id, session);
       return version;
     }
 
+    const latestVersionId = await this.repo.getLatestVersionId(node.id);
+    const version = await this.repo.getVersionDetails(latestVersionId, session);
     return {
       ...version,
       ...node,
