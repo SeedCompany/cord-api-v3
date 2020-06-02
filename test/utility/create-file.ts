@@ -5,7 +5,7 @@ import { CreateFileVersionInput } from '../../src/components/file';
 import { MemoryBucket } from '../../src/components/file/memory-bucket';
 import { mimeTypes } from '../../src/components/file/mimeTypes';
 import { TestApp } from './create-app';
-import { RawFile } from './fragments';
+import { RawFile, RawFileNode } from './fragments';
 import * as fragments from './fragments';
 
 export const generateFakeFile = () => ({
@@ -20,9 +20,10 @@ export type FakeFile = ReturnType<typeof generateFakeFile>;
 export async function uploadFile(
   app: TestApp,
   parentId: string,
-  input: Partial<FakeFile> = {}
+  input: Partial<FakeFile> = {},
+  uploadRequest?: UploadRequest
 ) {
-  const { id, url } = await requestFileUpload(app);
+  const { id, url } = uploadRequest ?? (await requestFileUpload(app));
 
   // fake file upload, this would normally be a direct POST to S3 from the client
   const { name, content: Body, mimeType: ContentType, size: ContentLength } = {
@@ -44,7 +45,12 @@ export async function uploadFile(
   return file;
 }
 
-export async function requestFileUpload(app: TestApp) {
+interface UploadRequest {
+  id: string;
+  url: string;
+}
+
+export async function requestFileUpload(app: TestApp): Promise<UploadRequest> {
   const res = await app.graphql.mutate(gql`
     mutation {
       requestFileUpload {
@@ -71,10 +77,10 @@ export async function createFileVersion(
     gql`
       mutation createFileVersion($input: CreateFileVersionInput!) {
         createFileVersion(input: $input) {
-          ...file
+          ...fileNode
         }
       }
-      ${fragments.file}
+      ${fragments.fileNode}
     `,
     {
       input: file,
@@ -82,6 +88,26 @@ export async function createFileVersion(
   );
 
   const actual: RawFile = result.createFileVersion;
+
+  return actual;
+}
+
+export async function getFileNode(app: TestApp, id: string) {
+  const result = await app.graphql.mutate(
+    gql`
+      query getFileNode($id: ID!) {
+        fileNode(id: $id) {
+          ...fileNode
+        }
+      }
+      ${fragments.fileNode}
+    `,
+    {
+      id,
+    }
+  );
+
+  const actual: RawFileNode = result.fileNode;
 
   return actual;
 }

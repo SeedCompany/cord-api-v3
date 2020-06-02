@@ -22,7 +22,9 @@ import {
   FakeFile,
   fragments,
   generateFakeFile,
+  getFileNode,
   login,
+  requestFileUpload,
   TestApp,
   uploadFile,
 } from './utility';
@@ -30,7 +32,7 @@ import {
   createDirectory,
   createRootDirectory,
 } from './utility/create-directory';
-import { RawFile } from './utility/fragments';
+import { RawFile, RawFileVersion } from './utility/fragments';
 
 async function deleteNode(app: TestApp, id: string) {
   await app.graphql.mutate(
@@ -107,23 +109,47 @@ describe('File e2e', () => {
   it('upload file and download', async () => {
     const fakeFile = generateFakeFile();
 
-    const file = await uploadFile(app, root.id, fakeFile);
+    const created = await uploadFile(app, root.id, fakeFile);
+    const fetched = (await getFileNode(app, created.id)) as RawFile;
+    for (const file of [created, fetched]) {
+      expect(file.id).toBeDefined();
+      expect(file.name).toEqual(fakeFile.name);
+      expect(file.type).toEqual(FileNodeType.File);
+      expect(file.size).toEqual(fakeFile.size);
+      expect(file.mimeType).toEqual(fakeFile.mimeType);
+      expect((FileNodeCategory as any)[file.category]).toEqual(
+        getCategoryFromMimeType(fakeFile.mimeType)
+      );
+      expect(file.createdBy.id).toEqual(me.id);
+      expect(file.modifiedBy.id).toEqual(me.id);
+      const modifiedAt = DateTime.fromISO(file.modifiedAt);
+      expect(modifiedAt.diffNow().as('seconds')).toBeGreaterThan(-30);
+      const createdAt = DateTime.fromISO(file.createdAt);
+      expect(createdAt.diffNow().as('seconds')).toBeGreaterThan(-30);
+      expect(bucket.download(file.downloadUrl)).toEqual(fakeFile.content);
+    }
+  });
 
-    expect(file.id).toBeDefined();
-    expect(file.name).toEqual(fakeFile.name);
-    expect(file.type).toEqual(FileNodeType.File);
-    expect(file.size).toEqual(fakeFile.size);
-    expect(file.mimeType).toEqual(fakeFile.mimeType);
-    expect((FileNodeCategory as any)[file.category]).toEqual(
+  it('get file version', async () => {
+    const fakeFile = generateFakeFile();
+    const upload = await requestFileUpload(app);
+    await uploadFile(app, root.id, fakeFile, upload);
+
+    // Maybe get version from file.children when implemented
+    const version = (await getFileNode(app, upload.id)) as RawFileVersion;
+
+    expect(version.id).toBeDefined();
+    expect(version.name).toEqual(fakeFile.name);
+    expect(version.type).toEqual(FileNodeType.FileVersion);
+    expect(version.size).toEqual(fakeFile.size);
+    expect(version.mimeType).toEqual(fakeFile.mimeType);
+    expect((FileNodeCategory as any)[version.category]).toEqual(
       getCategoryFromMimeType(fakeFile.mimeType)
     );
-    expect(file.createdBy.id).toEqual(me.id);
-    expect(file.modifiedBy.id).toEqual(me.id);
-    const modifiedAt = DateTime.fromISO(file.modifiedAt);
-    expect(modifiedAt.diffNow().as('seconds')).toBeGreaterThan(-30);
-    const createdAt = DateTime.fromISO(file.createdAt);
+    expect(version.createdBy.id).toEqual(me.id);
+    const createdAt = DateTime.fromISO(version.createdAt);
     expect(createdAt.diffNow().as('seconds')).toBeGreaterThan(-30);
-    expect(bucket.download(file.downloadUrl)).toEqual(fakeFile.content);
+    expect(bucket.download(version.downloadUrl)).toEqual(fakeFile.content);
   });
 
   it('update file using file id', async () => {
@@ -172,13 +198,16 @@ describe('File e2e', () => {
 
   it('create directory', async () => {
     const name = startCase(faker.lorem.words());
-    const dir = await createDirectory(app, root.id, name);
-    expect(dir.id).toBeDefined();
-    expect(dir.type).toEqual(FileNodeType.Directory);
-    expect(dir.name).toEqual(name);
-    expect(dir.createdBy.id).toEqual(me.id);
-    const createdAt = DateTime.fromISO(dir.createdAt);
-    expect(createdAt.diffNow().as('seconds')).toBeGreaterThan(-30);
+    const created = await createDirectory(app, root.id, name);
+    const fetched = await getFileNode(app, created.id);
+    for (const dir of [created, fetched]) {
+      expect(dir.id).toBeDefined();
+      expect(dir.type).toEqual(FileNodeType.Directory);
+      expect(dir.name).toEqual(name);
+      expect(dir.createdBy.id).toEqual(me.id);
+      const createdAt = DateTime.fromISO(dir.createdAt);
+      expect(createdAt.diffNow().as('seconds')).toBeGreaterThan(-30);
+    }
   });
 
   it('delete file', async () => {
@@ -193,7 +222,15 @@ describe('File e2e', () => {
     await expectNodeNotFound(app, id);
   });
 
-  it.todo('delete version');
+  it('delete version', async () => {
+    const upload = await requestFileUpload(app);
+    const file = await uploadFile(app, root.id, {}, upload);
+    // Maybe get version from file.children when implemented
+    const version = (await getFileNode(app, upload.id)) as RawFileVersion;
+    await deleteNode(app, version.id);
+    await expectNodeNotFound(app, version.id);
+    await expectNodeNotFound(app, file.id);
+  });
 
   it.skip('List view of files', async () => {
     // create a bunch of files
@@ -217,7 +254,7 @@ describe('File e2e', () => {
           total
         }
       }
-      ${fragments.file}
+      ${fragments.fileNode}
     `);
 
     expect(files.items.length).toBeGreaterThan(numFiles);
