@@ -56,54 +56,19 @@ export class FileRepository {
     ]);
   }
 
-  async getParentsById(session: ISession, nodeId: string): Promise<BaseNode[]> {
-    const query = this.db
-      .query()
-      .match([
-        matchSession(session),
-        [
-          node('parent', 'FileNode', { id: nodeId, ...isActive }),
-          relation('in', '', 'parent*', isActive),
-          node('node', 'FileNode', isActive),
-        ],
-        [
-          node('node'),
-          relation('out', '', 'createdBy', isActive),
-          node('createdBy', 'User'),
-        ],
-      ])
-      .optionalMatch([
-        [
-          node('node'),
-          relation('out', '', 'name', isActive),
-          node('name', 'Property', isActive),
-        ],
-      ])
-      .return([
-        'node',
-        {
-          name: [{ value: 'name' }],
-          createdBy: [{ id: 'createdById' }],
-        },
-      ]);
-    const result = await query.run();
-
-    return result.map((res) => {
-      const base = res.node as Node<{ id: string; createdAt: DateTime }>;
-      const type = intersection(base.labels, [
-        'Directory',
-        'File',
-        'FileVersion',
-      ])[0] as FileNodeType;
-
-      return {
-        type,
-        id: base.properties.id,
-        name: res.name as string,
-        createdAt: base.properties.createdAt,
-        createdById: res.createdById as string,
-      };
-    });
+  async getParentsById(id: string, session: ISession): Promise<BaseNode[]> {
+    return this.getBaseNodesBy(session, [
+      [
+        node('parent', 'FileNode', { id, ...isActive }),
+        relation('in', '', 'parent*', isActive),
+        node('node', 'FileNode', isActive),
+      ],
+      [
+        node('node'),
+        relation('out', '', 'name', isActive),
+        node('name', 'Property', isActive),
+      ],
+    ]);
   }
 
   async getChildrenById(
