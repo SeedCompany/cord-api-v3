@@ -226,11 +226,7 @@ describe('File e2e', () => {
     const version = await getFileNode(app, upload.id);
     const { parents } = version;
 
-    expect(parents).toHaveLength(4);
-    expect(parents[0].id).toEqual(c.id);
-    expect(parents[1].id).toEqual(b.id);
-    expect(parents[2].id).toEqual(a.id);
-    expect(parents[3].id).toEqual(root.id);
+    expect(parents.map((n) => n.id)).toEqual([c.id, b.id, a.id, root.id]);
   });
 
   it('delete file', async () => {
