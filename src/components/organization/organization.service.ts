@@ -1,11 +1,9 @@
 import {
   BadRequestException,
-  ForbiddenException,
   Injectable,
-  NotFoundException,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { node } from 'cypher-query-builder';
 import { ISession } from '../../common';
 import {
   DatabaseService,
@@ -88,54 +86,15 @@ export class OrganizationService {
   }
 
   async readOne(orgId: string, session: ISession): Promise<Organization> {
-    const result = await this.db
-      .query()
-      .match(matchSession(session, { withAclEdit: 'canReadOrgs' }))
-      .match([node('org', 'Organization', { active: true, id: orgId })])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canReadName', 'Permission', {
-          property: 'name',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('org'),
-        relation('out', '', 'name', { active: true }),
-        node('orgName', 'Property', { active: true }),
-      ])
-      .return({
-        org: [{ id: 'id', createdAt: 'createdAt' }],
-        orgName: [{ value: 'name' }],
-        requestingUser: [
-          { canReadOrgs: 'canReadOrgs', canCreateOrg: 'canCreateOrg' },
-        ],
-        canReadName: [{ read: 'canReadName', edit: 'canEditName' }],
-      })
-      .first();
-
-    if (!result) {
-      throw new NotFoundException('Could not find organization');
-    }
-
-    if (!result.canCreateOrg) {
-      throw new ForbiddenException(
-        'User does not have permission to create an organization'
-      );
-    }
-
-    return {
-      id: result.id,
-      name: {
-        value: result.name,
-        canRead: result.canReadName,
-        canEdit: result.canEditName,
-      },
-      createdAt: result.createdAt,
-    };
+    const result = await this.db.sgReadOne({
+      id: orgId,
+      session,
+      props: ['name'],
+      aclReadProp: 'canReadOrgs',
+      aclEditProp: 'canCreateOrg',
+      nodevar: 'organization',
+    });
+    return result;
   }
 
   async update(

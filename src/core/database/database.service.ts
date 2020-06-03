@@ -1365,4 +1365,96 @@ export class DatabaseService {
       ],
     ];
   };
+
+  async sgReadOne({
+    id,
+    session,
+    props,
+    aclReadProp,
+    aclEditProp,
+    nodevar,
+  }: {
+    id: string;
+    session: ISession;
+    props: string[];
+    aclReadProp?: string;
+    aclEditProp?: string;
+    nodevar: string;
+  }): Promise<any | undefined> {
+    const nodeName = upperFirst(nodevar);
+    const aclReadPropName = aclReadProp || `canRead${nodeName}s`;
+    const aclCreatePropName = aclEditProp || `canCreate${nodeName}`;
+    const output = {
+      node: [{ id: 'id', createdAt: 'createdAt' }],
+      requestingUser: [
+        { canReadOrgs: aclReadPropName, canCreateOrg: aclCreatePropName },
+      ],
+    };
+    const query = this.db
+      .query()
+      .match(matchSession(session, { withAclEdit: aclReadPropName }))
+      .match([node('node', nodeName, { active: true, id: id })]);
+
+    props.map((property) => {
+      const readPerm = 'canRead' + upperFirst(property);
+      const editPerm = 'canEdit' + upperFirst(property);
+      query.optionalMatch([...this.propMatch(property, 'node', readPerm)]);
+      Object.assign(output, {
+        [readPerm]: [{ read: readPerm, edit: editPerm }],
+      });
+      Object.assign(output, { [property]: [{ value: property }] });
+    });
+
+    query.return(output);
+    let result: any;
+    try {
+      result = await query.first();
+    } catch (e) {
+      this.logger.error(`Could not find node for user ${session.userId}`);
+      throw new ServerException('Could not find node');
+    }
+
+    if (!result) {
+      throw new NotFoundException('Could not find node');
+    }
+
+    if (!result[aclCreatePropName]) {
+      throw new ForbiddenException(
+        'User does not have permission to create an node'
+      );
+    }
+
+    const returnVal: Dictionary<any> = {};
+    returnVal.id = result.id;
+    returnVal.createdAt = result.createdAt;
+    props.map((property) => {
+      returnVal[property] = {
+        value: result[property],
+        canRead: !!result['canRead' + upperFirst(property)],
+        canEdit: !!result['canEdit' + upperFirst(property)],
+      };
+    });
+    return returnVal;
+  }
+
+  // helper method for optional properties
+  propMatch = (property: string, baseNode: string, perm: string) => {
+    return [
+      [
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node(perm, 'Permission', {
+          property,
+          active: true,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node(baseNode),
+        relation('out', '', property, { active: true }),
+        node(property, 'Property', { active: true }),
+      ],
+    ];
+  };
 }
