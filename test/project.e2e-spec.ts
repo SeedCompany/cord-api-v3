@@ -174,9 +174,22 @@ describe('Project e2e', () => {
     );
 
     expect(projects.items.length).toBeGreaterThanOrEqual(numProjects);
+    //delete all projects
+    projects.items.map(async (item: { id: any }) => {
+      await app.graphql.mutate(
+        gql`
+          mutation deleteProject($id: ID!) {
+            deleteProject(id: $id)
+          }
+        `,
+        {
+          id: item.id,
+        }
+      );
+    });
   });
 
-  it('List view of my projects', async () => {
+  it.only('List view of my projects', async () => {
     const numProjects = 3;
     const type = ProjectType.Translation;
     await Promise.all(
@@ -203,9 +216,22 @@ describe('Project e2e', () => {
     );
 
     expect(projects.items.length).toBeGreaterThanOrEqual(numProjects);
+    //delete all projects
+    // projects.items.map(async (item: { id: any }) => {
+    //   await app.graphql.mutate(
+    //     gql`
+    //       mutation deleteProject($id: ID!) {
+    //         deleteProject(id: $id)
+    //       }
+    //     `,
+    //     {
+    //       id: item.id,
+    //     }
+    //   );
+    // });
   });
 
-  it('returns false when consistency check shows multiple location nodes connected', async () => {
+  it.skip('returns false when consistency check shows multiple location nodes connected', async () => {
     const zone = await createZone(app);
 
     const region = await createRegion(app, {

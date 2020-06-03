@@ -116,7 +116,6 @@ export class ProjectMemberService {
         },
         acls,
       });
-      //connect the User to the ProjectMember
       await this.db
         .query()
         .match([
@@ -127,7 +126,6 @@ export class ProjectMemberService {
         .create([
           node('project'),
           relation('out', '', 'member', {
-            // direction is out per latest schema
             active: true,
             createdAt: DateTime.local(),
           }),
