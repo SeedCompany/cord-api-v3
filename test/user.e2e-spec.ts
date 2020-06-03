@@ -291,23 +291,6 @@ describe('User e2e', () => {
     );
 
     expect(result.removeOrganizationFromUser).toBe(true);
-
-    //NEED TO REMOVE
-    // await expect(
-    //   app.graphql.mutate(
-    //     gql`
-    //       mutation removeOrganizationFromUser($orgId: ID!, $userId: ID!) {
-    //         removeOrganizationFromUser(
-    //           input: { request: { orgId: $orgId, userId: $userId } }
-    //         )
-    //       }
-    //     `,
-    //     {
-    //       orgId: org.id,
-    //       userId: newUser.id,
-    //     }
-    //   )
-    // ).rejects.toThrow();
   });
 
   it('assign primary organization to user', async () => {
