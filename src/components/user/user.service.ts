@@ -810,7 +810,7 @@ export class UserService {
     request: AssignOrganizationToUser,
     session: ISession
   ): Promise<boolean> {
-    //TO DO: Refactor session later
+    //TO DO: Refactor session in the future
     const querySession = this.db.query();
     if (session.userId) {
       querySession.match([
@@ -824,11 +824,37 @@ export class UserService {
         : false;
 
     let query;
+
+    if (primary) {
+      query = `
+        MATCH 
+          (primaryOrg:Organization {
+            id: $orgId,
+            active: true
+          })
+          <-[:primaryOrganization {active: true}]-
+          (user:User {id: $userId, active: true})
+        RETURN  primaryOrg.id as id
+      `;
+      const addPrimary = await this.db
+        .query()
+        .raw(query, {
+          userId: request.userId,
+          orgId: request.orgId,
+        })
+        .first();
+
+      if (!addPrimary) {
+        throw new Error('already exists, try finding it');
+      }
+    }
+
     if (primary) {
       query = `
         MATCH (primaryOrg:Organization {id: $orgId, active: true}),
         (user:User {id: $userId, active: true})
-        CREATE (primaryOrg)<-[:primaryOrganization {active: true, createdAt: datetime()}]-(user)
+        CREATE (primaryOrg)<-[:primaryOrganization {active: true, createdAt: datetime()}]-(user),
+        (primaryOrg)<-[:organization {active: true, createdAt: datetime()}]-(user)
         RETURN  user.id as id
       `;
     } else {
@@ -848,6 +874,8 @@ export class UserService {
       })
       .first();
 
+    // console.log(result.buildQueryObject());
+
     if (!result) {
       return false;
     }
@@ -858,7 +886,7 @@ export class UserService {
     request: RemoveOrganizationFromUser,
     session: ISession
   ): Promise<boolean> {
-    //TO DO: Refactor session later
+    //TO DO: Refactor session in the future
     const querySession = this.db.query();
     if (session.userId) {
       querySession.match([
@@ -875,8 +903,10 @@ export class UserService {
     if (primary) {
       query = `
         MATCH (primaryOrg:Organization {id: $orgId, active: true})<-[primaryRel:primaryOrganization {active: true }]
+        -(user:User {id: $userId, active: true}),
+        MATCH (org:Organization {id: $orgId, active: true})<-[orgRel:organization {active: true }]
         -(user:User {id: $userId, active: true})
-        DELETE (primaryRel)
+        DELETE (primaryRel, orgRel)
         RETURN  user.id as id
       `;
     } else {
