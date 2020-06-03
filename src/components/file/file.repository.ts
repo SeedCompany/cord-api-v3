@@ -53,14 +53,17 @@ export class FileRepository {
   }
 
   async getParentsById(id: string, session: ISession): Promise<BaseNode[]> {
-    return this.getBaseNodesBy(session, [
+    const results = await this.getBaseNodeQuery(session, [
       [
-        node('parent', 'FileNode', { id, ...isActive }),
-        relation('out', '', 'parent*..', isActive),
+        node('start', 'FileNode', { id, ...isActive }),
+        relation('out', 'parent', 'parent', isActive, '*'),
         node('node', 'FileNode', isActive),
       ],
       matchName(),
-    ]);
+    ])
+      .orderBy('size(parent)')
+      .run();
+    return results.map(baseNodeFromResult);
   }
 
   async getChildrenById(
@@ -73,7 +76,7 @@ export class FileRepository {
       .match([
         matchSession(session),
         [
-          node('parent', 'FileNode', { id: nodeId, ...isActive }),
+          node('start', 'FileNode', { id: nodeId, ...isActive }),
           relation('in', '', 'parent', isActive),
           node('node', 'FileNode', isActive),
         ],
@@ -119,6 +122,12 @@ export class FileRepository {
     session: ISession,
     patterns: Pattern[][]
   ): Promise<BaseNode[]> {
+    const query = this.getBaseNodeQuery(session, patterns);
+    const results = await query.run();
+    return results.map(baseNodeFromResult);
+  }
+
+  private getBaseNodeQuery(session: ISession, patterns: Pattern[][]) {
     this.db.assertPatternsIncludeIdentifier(patterns, 'node', 'name');
 
     const query = this.db
@@ -131,8 +140,7 @@ export class FileRepository {
           createdBy: [{ id: 'createdById' }],
         },
       ]);
-    const results = (await query.run()).reverse();
-    return results.map(baseNodeFromResult);
+    return query;
   }
 
   async getLatestVersionId(fileId: string): Promise<string> {
