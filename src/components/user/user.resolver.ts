@@ -13,9 +13,11 @@ import {
   SecuredOrganizationList,
 } from '../organization';
 import {
+  AssignOrganizationToUserInput,
   CheckEmailArgs,
   CreateUserInput,
   CreateUserOutput,
+  RemoveOrganizationFromUserInput,
   UpdateUserInput,
   UpdateUserOutput,
   User,
@@ -170,5 +172,25 @@ export class UserResolver {
   })
   async checkUserConsistency(@Session() session: ISession): Promise<boolean> {
     return this.userService.checkUserConsistency(session);
+  }
+
+  @Mutation(() => Boolean, {
+    description: 'Assign organization OR primaryOrganization to user',
+  })
+  async assignOrganizationToUser(
+    @Session() session: ISession,
+    @Args('input') input: AssignOrganizationToUserInput
+  ): Promise<boolean> {
+    return this.userService.assignOrganizationToUser(input.request, session);
+  }
+
+  @Mutation(() => Boolean, {
+    description: 'Remove organization OR primaryOrganization from user',
+  })
+  async removeOrganizationFromUser(
+    @Session() session: ISession,
+    @Args('input') input: RemoveOrganizationFromUserInput
+  ): Promise<boolean> {
+    return this.userService.removeOrganizationFromUser(input.request, session);
   }
 }

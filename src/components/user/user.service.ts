@@ -25,7 +25,9 @@ import {
   SecuredOrganizationList,
 } from '../organization';
 import {
+  AssignOrganizationToUser,
   CreateUser,
+  RemoveOrganizationFromUser,
   UpdateUser,
   User,
   UserListInput,
@@ -460,6 +462,174 @@ export class UserService {
       }
       return result.id;
     }
+  }
+
+  async assignOrganizationToUser(
+    request: AssignOrganizationToUser,
+    session: ISession
+  ): Promise<boolean> {
+    // const query = this.db
+    //   .query()
+    //   .match([
+    //     [
+    //       node('user', 'User', {
+    //         active: true,
+    //         id: request.userId,
+    //       }),
+    //       relation('out', '', 'primaryOrganization', {
+    //         active: true,
+    //       }),
+    //       node('org', 'Organization', {
+    //         active: true,
+    //         id: request.orgId,
+    //       }),
+    //     ],
+    //   ])
+    //   .merge([
+    //     [node('user'), relation('out', '', 'primaryOrganization'), node('org')],
+    //   ]);
+
+    const querySession = this.db.query();
+    if (session.userId) {
+      querySession.match([
+        matchSession(session, { withAclEdit: 'canCreateOrg' }),
+      ]);
+    }
+
+    const primary =
+      request.primary !== null && request.primary !== undefined
+        ? request.primary
+        : false;
+
+    let query;
+    if (primary) {
+      query = `
+        MATCH (primaryOrg:Organization {id: $orgId, active: true}),
+        (user:User {id: $userId, active: true})
+        CREATE (primaryOrg)<-[:primaryOrganization {active: true, createdAt: datetime()}]-(user)
+        RETURN  user.id as id
+      `;
+    } else {
+      query = `
+        MATCH (org:Organization {id: $orgId, active: true}),
+        (user:User {id: $userId, active: true})
+        CREATE (org)<-[:organization {active: true, createdAt: datetime()}]-(user)
+        RETURN  user.id as id
+      `;
+    }
+
+    const result = await this.db
+      .query()
+      .raw(query, {
+        userId: request.userId,
+        orgId: request.orgId,
+      })
+      .first();
+
+    if (!result) {
+      return false;
+    }
+
+    return true;
+
+    // if (!addOrgan) {
+    //   throw new Error('already exists, try finding it');
+    // }
+
+    // console.log(query.buildQueryObject());
+    // const result = await query.first();
+
+    // const result = await (
+    //   request.orgId,
+    //   request.userId
+    // );
+
+    // if (!result || !result.orgId || !result.userId) {
+    //   return false;
+    // }
+  }
+
+  async removeOrganizationFromUser(
+    request: RemoveOrganizationFromUser,
+    session: ISession
+  ): Promise<boolean> {
+    // const query = this.db
+    //   .query()
+    //   .match(matchSession(session, { withAclEdit: 'canCreateOrg' }))
+    //   .match([
+    //     [
+    //       node('user', 'User', {
+    //         active: true,
+    //         id,
+    //       }),
+    //       relation('out', 'primaryOrg', 'primaryOrganization', {
+    //         active: true,
+    //       }),
+    //       node('org', 'Organization', { active: true, id: orgId }),
+    //     ],
+    //   ])
+    //   .delete('primaryOrg');
+    //.run();
+
+    const querySession = this.db.query();
+    if (session.userId) {
+      querySession.match([
+        matchSession(session, { withAclEdit: 'canCreateOrg' }),
+      ]);
+    }
+
+    const primary =
+      request.primary !== null && request.primary !== undefined
+        ? request.primary
+        : false;
+
+    let query;
+    if (primary) {
+      query = `
+        MATCH (primaryOrg:Organization {id: $orgId, active: true})<-[primaryRel:primaryOrganization {active: true }]
+        -(user:User {id: $userId, active: true})
+        DELETE (primaryRel)
+        RETURN  user.id as id
+      `;
+    } else {
+      query = `
+        MATCH (org:Organization {id: $orgId, active: true})<-[orgRel:organization {active: true }]
+        -(user:User {id: $userId, active: true})
+        DELETE (orgRel)
+        RETURN  user.id as id
+      `;
+    }
+
+    const result = await this.db
+      .query()
+      .raw(query, {
+        userId: request.userId,
+        orgId: request.orgId,
+      })
+      .first();
+
+    if (!result) {
+      return false;
+    }
+
+    return true;
+
+    // if (!removeOrgan) {
+    //   return true;
+    // }
+
+    // console.log(query.buildQueryObject());
+    // const result = await query.first();
+    // if (!result) {
+    //   return true;
+    // }
+
+    //return true;
+
+    // const result = await (
+    //   request.orgId,
+    //   request.userId
+    // );
   }
 
   async readOne(id: string, session: ISession): Promise<User> {
