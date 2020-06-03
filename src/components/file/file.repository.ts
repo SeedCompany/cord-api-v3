@@ -32,11 +32,7 @@ export class FileRepository {
   async getBaseNodeById(id: string, session: ISession): Promise<BaseNode> {
     return this.getBaseNodeBy(session, [
       [node('node', 'FileNode', { id, ...isActive })],
-      [
-        node('node'),
-        relation('out', '', 'name', isActive),
-        node('name', 'Property', isActive),
-      ],
+      matchName(),
     ]);
   }
 
@@ -63,11 +59,7 @@ export class FileRepository {
         relation('out', '', 'parent*..', isActive),
         node('node', 'FileNode', isActive),
       ],
-      [
-        node('node'),
-        relation('out', '', 'name', isActive),
-        node('name', 'Property', isActive),
-      ],
+      matchName(),
     ]);
   }
 
@@ -85,16 +77,8 @@ export class FileRepository {
           relation('in', '', 'parent', isActive),
           node('node', 'FileNode', isActive),
         ],
-        [
-          node('node'),
-          relation('out', '', 'createdBy', isActive),
-          node('createdBy', 'User'),
-        ],
-        [
-          node('node'),
-          relation('out', '', 'name', isActive),
-          node('name', 'Property'),
-        ],
+        matchCreatedBy(),
+        matchName(),
       ])
       .where({ 'name.value': contains(input.filter.name ?? '') })
       .with('COUNT(node) as total, name, node, createdBy')
@@ -114,22 +98,7 @@ export class FileRepository {
 
     const total = result.length === 0 ? 0 : result[0].total;
 
-    const children = result.map((res) => {
-      const base = res.node as Node<{ id: string; createdAt: DateTime }>;
-      const type = intersection(base.labels, [
-        'Directory',
-        'File',
-        'FileVersion',
-      ])[0] as FileNodeType;
-
-      return {
-        type,
-        id: base.properties.id,
-        name: res.name as string,
-        createdAt: base.properties.createdAt,
-        createdById: res.createdById as string,
-      };
-    });
+    const children = result.map(baseNodeFromResult);
 
     return {
       children,
@@ -143,11 +112,7 @@ export class FileRepository {
     patterns: Pattern[][]
   ): Promise<BaseNode> {
     const nodes = await this.getBaseNodesBy(session, patterns);
-    const node = nodes[0];
-    if (!node) {
-      throw new NotFoundException();
-    }
-    return node;
+    return first(nodes);
   }
 
   private async getBaseNodesBy(
@@ -158,15 +123,7 @@ export class FileRepository {
 
     const query = this.db
       .query()
-      .match([
-        matchSession(session),
-        ...patterns,
-        [
-          node('node'),
-          relation('out', '', 'createdBy', isActive),
-          node('createdBy', 'User'),
-        ],
-      ])
+      .match([matchSession(session), ...patterns, matchCreatedBy()])
       .return([
         'node',
         {
@@ -175,25 +132,7 @@ export class FileRepository {
         },
       ]);
     const results = (await query.run()).reverse();
-
-    return results.map(
-      (result): BaseNode => {
-        const base = result.node as Node<{ id: string; createdAt: DateTime }>;
-        const type = intersection(base.labels, [
-          'Directory',
-          'File',
-          'FileVersion',
-        ])[0] as FileNodeType;
-
-        return {
-          type,
-          id: base.properties.id,
-          name: result.name as string,
-          createdAt: base.properties.createdAt,
-          createdById: result.createdById as string,
-        };
-      }
-    );
+    return results.map(baseNodeFromResult);
   }
 
   async getLatestVersionId(fileId: string): Promise<string> {
@@ -514,3 +453,42 @@ export class FileRepository {
     }
   }
 }
+
+const matchName = () => [
+  node('node'),
+  relation('out', '', 'name', isActive),
+  node('name', 'Property', isActive),
+];
+const matchCreatedBy = () => [
+  node('node'),
+  relation('out', '', 'createdBy', isActive),
+  node('createdBy', 'User'),
+];
+
+function first<T>(nodes: T[]): T {
+  const node = nodes[0];
+  if (!node) {
+    throw new NotFoundException();
+  }
+  return node;
+}
+
+const baseNodeFromResult = (result: any): BaseNode => {
+  const base = result.node as Node<{ id: string; createdAt: DateTime }>;
+  const type = typeFromLabels(base);
+
+  return {
+    type,
+    id: base.properties.id,
+    name: result.name as string,
+    createdAt: base.properties.createdAt,
+    createdById: result.createdById as string,
+  };
+};
+
+const typeFromLabels = (base: Node<unknown>) =>
+  intersection(base.labels, [
+    'Directory',
+    'File',
+    'FileVersion',
+  ])[0] as FileNodeType;
