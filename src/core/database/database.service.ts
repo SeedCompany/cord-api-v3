@@ -1430,8 +1430,8 @@ export class DatabaseService {
     props.map((property) => {
       returnVal[property] = {
         value: result[property],
-        canRead: result['canRead' + upperFirst(property)],
-        canEdit: result['canEdit' + upperFirst(property)],
+        canRead: !!result['canRead' + upperFirst(property)],
+        canEdit: !!result['canEdit' + upperFirst(property)],
       };
     });
     return returnVal;
