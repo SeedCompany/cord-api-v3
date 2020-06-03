@@ -27,7 +27,6 @@ import {
   UnwrapSecured,
 } from '../../common';
 import { ILogger, Logger } from '..';
-import { Role } from '../../components/project';
 
 import _ = require('lodash');
 
@@ -659,7 +658,7 @@ export class DatabaseService {
           relation('out', '', 'roles', { active: true }),
           node('role', 'Property', {
             active: true,
-            value: [Role.ProjectManager],
+            value: ['ProjectManager'],
           }),
         ],
         [
