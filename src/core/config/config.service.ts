@@ -38,10 +38,21 @@ export class ConfigService {
     const driverConfig: Neo4JDriverConfig = {
       maxTransactionRetryTime: 30_000,
     };
+    let url = this.env.string('NEO4J_URL').optional('bolt://localhost');
+    const parsed = new URL(url);
+    const username =
+      parsed.username || this.env.string('NEO4J_USERNAME').required();
+    const password =
+      parsed.password || this.env.string('NEO4J_PASSWORD').required();
+    if (parsed.username || parsed.password) {
+      parsed.username = '';
+      parsed.password = '';
+      url = parsed.toString();
+    }
     return {
-      url: this.env.string('NEO4J_URL').optional('bolt://localhost'),
-      username: this.env.string('NEO4J_USERNAME').required(),
-      password: this.env.string('NEO4J_PASSWORD').required(),
+      url,
+      username,
+      password,
       driverConfig,
     };
   }
