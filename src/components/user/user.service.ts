@@ -823,60 +823,6 @@ export class UserService {
         ? request.primary
         : false;
 
-    const now = DateTime.local();
-    // const createRelation = this.db
-    //   .query()
-    //   .match([
-    //     node('user', 'User', {
-    //       active: true,
-    //       id: 'bGToZ4-UgM', //request.userId,
-    //     }),
-    //     relation('out', 'oldRel', 'organization', {
-    //       active: true,
-    //     }),
-    //     node('primaryOrg', 'Organization', {
-    //       active: true,
-    //       id: 'UprgKMiuI1', //request.orgId,
-    //     }),
-    //   ])
-    //   .setValues({ 'oldRel.active': false });
-    // .match([
-    //   node('user', 'User', {
-    //     active: true,
-    //     id: request.userId,
-    //   }),
-    //   node('primaryOrg', 'Organization', {
-    //     active: true,
-    //     id: request.orgId,
-    //   }),
-    // ])
-    // .optionalMatch([
-    //   node('user', 'User', {
-    //     active: true,
-    //     id: request.userId,
-    //   }),
-    // ])
-    // .optionalMatch([
-    //   node('primaryOrg', 'Organization', {
-    //     active: true,
-    //     id: request.orgId,
-    //   }),
-    // ])
-    // .merge([
-    //   node('user'),
-    //   relation('out', 'newRel', 'primaryOrganization', {
-    //     active: true,
-    //     createdAt: now,
-    //   }),
-    //   node('primaryOrg'),
-    // ])
-    // .return({
-    //   primaryOrg: [{ id: 'primaryOrgId' }],
-    // });
-
-    // console.log(createPrimaryRelation.buildQueryObject());
-    //await createRelation.first();
-
     await this.db
       .query()
       .match([
