@@ -349,25 +349,20 @@ describe('User e2e', () => {
     // remove primary organization from user
     const result = await app.graphql.mutate(
       gql`
-        mutation removeOrganizationFromUser(
-          $orgId: ID!
-          $userId: ID!
-          $primary: Boolean!
-        ) {
+        mutation removeOrganizationFromUser($orgId: ID!, $userId: ID!) {
           removeOrganizationFromUser(
-            input: {
-              request: { orgId: $orgId, userId: $userId, primary: $primary }
-            }
+            input: { request: { orgId: $orgId, userId: $userId } }
           )
         }
       `,
       {
         orgId: org.id,
         userId: newUser.id,
-        primary: true,
       }
     );
 
     expect(result.removeOrganizationFromUser).toBe(true);
+
+    // TODO after #430 is resolved, list orgs and make sure org is removed as primary
   });
 });

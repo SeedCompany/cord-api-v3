@@ -7,9 +7,6 @@ export class RemoveOrganizationFromUser {
 
   @Field(() => ID)
   readonly userId: string;
-
-  @Field(() => Boolean, { nullable: true })
-  readonly primary?: boolean;
 }
 
 @InputType()
