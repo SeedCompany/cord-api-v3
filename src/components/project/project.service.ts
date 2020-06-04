@@ -38,6 +38,7 @@ import {
 import {
   ProjectMemberListInput,
   ProjectMemberService,
+  Role,
   SecuredProjectMemberList,
 } from './project-member';
 
@@ -376,7 +377,6 @@ export class ProjectService {
         filter,
       },
     });
-
     return {
       items: result.items.map((item) => ({
         ...item,
@@ -625,6 +625,14 @@ export class ProjectService {
           })
           .first();
       }
+      await this.projectMembers.create(
+        {
+          userId: session.userId!,
+          projectId: id,
+          roles: [Role.ProjectManager],
+        },
+        session
+      );
 
       const project = await this.readOne(id, session);
 

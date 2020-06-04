@@ -12,10 +12,10 @@ import {
   Query,
   relation,
 } from 'cypher-query-builder';
-import { generate } from 'shortid';
 import type { Pattern } from 'cypher-query-builder/dist/typings/clauses/pattern';
 import { cloneDeep, Dictionary, Many, upperFirst } from 'lodash';
 import { DateTime, Duration } from 'luxon';
+import { generate } from 'shortid';
 import { assert } from 'ts-essentials';
 import {
   ISession,
@@ -617,6 +617,7 @@ export class DatabaseService {
       : { owningOrgId: owningOrgId || session.owningOrgId };
     const idFilter = input.filter.id ? { id: input.filter.id } : {};
     const userIdFilter = input.filter.userId ? { id: input.filter.userId } : {};
+    const mineFilter = input.filter.mine ? { id: session.userId } : {};
 
     const query = this.db.query().match([
       matchSession(session, {
@@ -648,6 +649,25 @@ export class DatabaseService {
         }),
       ]);
     }
+    if (mineFilter.id) {
+      query.match([
+        [
+          node('requestingUser'),
+          relation('in', '', 'user', { active: true }),
+          node('projectMember', 'ProjectMember', { active: true }),
+          relation('out', '', 'roles', { active: true }),
+          node('role', 'Property', {
+            active: true,
+            value: ['ProjectManager'],
+          }),
+        ],
+        [
+          node('projectMember'),
+          relation('in', '', 'member', { active: true }),
+          node('n'),
+        ],
+      ]);
+    }
     query.with('count(n) as total, requestingUser');
 
     for (const prop of props) {
@@ -666,7 +686,7 @@ export class DatabaseService {
     if (input.filter && Object.keys(input.filter).length) {
       const where: Record<string, any> = {};
       for (const k in input.filter) {
-        if (k !== 'id' && k !== 'userId') {
+        if (k !== 'id' && k !== 'userId' && k !== 'mine') {
           where[k + '.value'] = contains(input.filter[k]);
         }
       }

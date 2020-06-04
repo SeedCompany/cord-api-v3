@@ -67,9 +67,9 @@ export async function createFileVersion(
   input: MarkOptional<CreateFileVersionInput, 'name'>
 ) {
   const file: CreateFileVersionInput = {
+    ...input,
     uploadId: input.uploadId,
     parentId: input.parentId,
-    ...input,
     name: input.name ?? faker.system.fileName(),
   };
 
