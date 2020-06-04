@@ -9,6 +9,7 @@ import {
   UserStatus,
 } from '../src/components/user';
 import {
+  createOrganization,
   createSession,
   createTestApp,
   createUser,
@@ -31,6 +32,10 @@ describe('User e2e', () => {
     });
     app = await createTestApp();
     await createSession(app);
+  });
+
+  afterAll(async () => {
+    await app.close();
   });
 
   it('read one user by id', async () => {
@@ -231,7 +236,133 @@ describe('User e2e', () => {
     );
   });
 
-  afterAll(async () => {
-    await app.close();
+  it('assign organization to user', async () => {
+    const newUser = await createUser(app);
+    const org = await createOrganization(app);
+    const result = await app.graphql.mutate(
+      gql`
+        mutation assignOrganizationToUser($orgId: ID!, $userId: ID!) {
+          assignOrganizationToUser(
+            input: { request: { orgId: $orgId, userId: $userId } }
+          )
+        }
+      `,
+      {
+        orgId: org.id,
+        userId: newUser.id,
+      }
+    );
+
+    expect(result.assignOrganizationToUser).toBe(true);
+  });
+
+  it('remove organization from user', async () => {
+    const newUser = await createUser(app);
+    const org = await createOrganization(app);
+
+    // assign organization to user
+    await app.graphql.mutate(
+      gql`
+        mutation assignOrganizationToUser($orgId: ID!, $userId: ID!) {
+          assignOrganizationToUser(
+            input: { request: { orgId: $orgId, userId: $userId } }
+          )
+        }
+      `,
+      {
+        orgId: org.id,
+        userId: newUser.id,
+      }
+    );
+
+    // remove organization from user
+    const result = await app.graphql.mutate(
+      gql`
+        mutation removeOrganizationFromUser($orgId: ID!, $userId: ID!) {
+          removeOrganizationFromUser(
+            input: { request: { orgId: $orgId, userId: $userId } }
+          )
+        }
+      `,
+      {
+        orgId: org.id,
+        userId: newUser.id,
+      }
+    );
+
+    expect(result.removeOrganizationFromUser).toBe(true);
+  });
+
+  it('assign primary organization to user', async () => {
+    const newUser = await createUser(app);
+    const org = await createOrganization(app);
+    const result = await app.graphql.mutate(
+      gql`
+        mutation assignOrganizationToUser(
+          $orgId: ID!
+          $userId: ID!
+          $primary: Boolean!
+        ) {
+          assignOrganizationToUser(
+            input: {
+              request: { orgId: $orgId, userId: $userId, primary: $primary }
+            }
+          )
+        }
+      `,
+      {
+        orgId: org.id,
+        userId: newUser.id,
+        primary: true,
+      }
+    );
+
+    expect(result.assignOrganizationToUser).toBe(true);
+  });
+
+  it('remove primary organization from user', async () => {
+    const newUser = await createUser(app);
+    const org = await createOrganization(app);
+
+    // assign primary organization to user
+    await app.graphql.mutate(
+      gql`
+        mutation assignOrganizationToUser(
+          $orgId: ID!
+          $userId: ID!
+          $primary: Boolean!
+        ) {
+          assignOrganizationToUser(
+            input: {
+              request: { orgId: $orgId, userId: $userId, primary: $primary }
+            }
+          )
+        }
+      `,
+      {
+        orgId: org.id,
+        userId: newUser.id,
+        primary: true,
+      }
+    );
+
+    // remove primary organization from user
+    const result = await app.graphql.mutate(
+      gql`
+        mutation removeOrganizationFromUser($orgId: ID!, $userId: ID!) {
+          removeOrganizationFromUser(
+            input: { request: { orgId: $orgId, userId: $userId } }
+          )
+        }
+      `,
+      {
+        orgId: org.id,
+        userId: newUser.id,
+      }
+    );
+
+    expect(result.removeOrganizationFromUser).toBe(true);
+
+    // TODO after #430 is resolved, list orgs and make sure org is removed as primary
   });
 });

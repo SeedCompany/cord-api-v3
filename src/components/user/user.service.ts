@@ -25,7 +25,9 @@ import {
   SecuredOrganizationList,
 } from '../organization';
 import {
+  AssignOrganizationToUser,
   CreateUser,
+  RemoveOrganizationFromUser,
   UpdateUser,
   User,
   UserListInput,
@@ -802,5 +804,164 @@ export class UserService {
         }
       )
       .run();
+  }
+
+  async assignOrganizationToUser(
+    request: AssignOrganizationToUser,
+    session: ISession
+  ): Promise<boolean> {
+    //TO DO: Refactor session in the future
+    const querySession = this.db.query();
+    if (session.userId) {
+      querySession.match([
+        matchSession(session, { withAclEdit: 'canCreateOrg' }),
+      ]);
+    }
+
+    const primary =
+      request.primary !== null && request.primary !== undefined
+        ? request.primary
+        : false;
+
+    await this.db
+      .query()
+      .match([
+        node('user', 'User', {
+          active: true,
+          id: request.userId,
+        }),
+        relation('out', 'oldRel', 'organization', {
+          active: true,
+        }),
+        node('primaryOrg', 'Organization', {
+          active: true,
+          id: request.orgId,
+        }),
+      ])
+      .setValues({ 'oldRel.active': false })
+      .return('oldRel')
+      .first();
+
+    if (primary) {
+      await this.db
+        .query()
+        .match([
+          node('user', 'User', {
+            active: true,
+            id: request.userId,
+          }),
+          relation('out', 'oldRel', 'primaryOrganization', {
+            active: true,
+          }),
+          node('primaryOrg', 'Organization', {
+            active: true,
+            id: request.orgId,
+          }),
+        ])
+        .setValues({ 'oldRel.active': false })
+        .return('oldRel')
+        .first();
+    }
+
+    let queryCreate;
+    if (primary) {
+      queryCreate = this.db.query().raw(
+        `
+        MATCH (primaryOrg:Organization {id: $orgId, active: true}),
+        (user:User {id: $userId, active: true})
+        CREATE (primaryOrg)<-[:primaryOrganization {active: true, createdAt: datetime()}]-(user),
+        (primaryOrg)<-[:organization {active: true, createdAt: datetime()}]-(user)
+        RETURN  user.id as id
+      `,
+        {
+          userId: request.userId,
+          orgId: request.orgId,
+        }
+      );
+    } else {
+      queryCreate = this.db.query().raw(
+        `
+        MATCH (org:Organization {id: $orgId, active: true}),
+        (user:User {id: $userId, active: true})
+        CREATE (org)<-[:organization {active: true, createdAt: datetime()}]-(user)
+        RETURN  user.id as id
+      `,
+        {
+          userId: request.userId,
+          orgId: request.orgId,
+        }
+      );
+    }
+
+    const result = await queryCreate.first();
+
+    if (!result) {
+      return false;
+    }
+    return true;
+  }
+
+  async removeOrganizationFromUser(
+    request: RemoveOrganizationFromUser,
+    _session: ISession
+  ): Promise<boolean> {
+    const removeOrg = this.db
+      .query()
+      .match([
+        node('user', 'User', {
+          active: true,
+          id: request.userId,
+        }),
+        relation('out', 'oldRel', 'organization', {
+          active: true,
+        }),
+        node('org', 'Organization', {
+          active: true,
+          id: request.orgId,
+        }),
+      ])
+      .optionalMatch([
+        node('user'),
+        relation('out', 'primary', 'primaryOrganization', { active: true }),
+        node('org'),
+      ])
+      .setValues({ 'oldRel.active': false })
+      .return({ oldRel: [{ id: 'oldId' }], primary: [{ id: 'primaryId' }] });
+    let resultOrg;
+    try {
+      resultOrg = await removeOrg.first();
+    } catch (e) {
+      throw new NotFoundException('user and org are not connected');
+    }
+
+    if (resultOrg?.primaryId) {
+      const removePrimary = this.db
+        .query()
+        .match([
+          node('user', 'User', {
+            active: true,
+            id: request.userId,
+          }),
+          relation('out', 'oldRel', 'primaryOrganization', {
+            active: true,
+          }),
+          node('primaryOrg', 'Organization', {
+            active: true,
+            id: request.orgId,
+          }),
+        ])
+        .setValues({ 'oldRel.active': false })
+        .return('oldRel');
+      try {
+        await removePrimary.first();
+      } catch {
+        this.logger.info('not primary');
+      }
+    }
+
+    if (!resultOrg) {
+      return false;
+    }
+    return true;
   }
 }
