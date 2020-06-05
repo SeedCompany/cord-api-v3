@@ -26,12 +26,14 @@ describe('Favorite e2e', () => {
     await app.close();
   });
 
+  // ADD FAVORITE
   it('add to favorites', async () => {
     const name = faker.company.companyName();
     const org = await createOrganization(app, { name });
     await addFavorite(app, org.id);
   });
 
+  // REMOVE FROM FAVORITE
   it('remove from favorites', async () => {
     const name = faker.company.companyName();
     const org = await createOrganization(app, { name });
@@ -53,7 +55,7 @@ describe('Favorite e2e', () => {
     return org;
   });
 
-  // LIST Favorites
+  // LIST FAVORITES
   it('list view of favorites', async () => {
     // create a bunch of orgs
     await Promise.all(
