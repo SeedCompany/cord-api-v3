@@ -23,7 +23,6 @@ describe('Partnership e2e', () => {
   let project: Raw<Project>;
 
   beforeAll(async () => {
-    jest.setTimeout(50000);
     app = await createTestApp();
     await createSession(app);
     await createUser(app);

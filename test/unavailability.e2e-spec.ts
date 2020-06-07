@@ -18,7 +18,6 @@ describe('Unavailability e2e', () => {
   let user: User;
 
   beforeAll(async () => {
-    jest.setTimeout(50000);
     app = await createTestApp();
     await createSession(app);
     user = await createUser(app);

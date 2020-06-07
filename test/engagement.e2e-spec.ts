@@ -50,7 +50,6 @@ describe('Engagement e2e', () => {
     intern = await createUser(app);
     mentor = await createUser(app);
     await login(app, { email: user.email.value, password });
-    jest.setTimeout(50000);
   });
 
   afterAll(async () => {

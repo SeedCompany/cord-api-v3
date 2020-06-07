@@ -28,7 +28,6 @@ describe('Project e2e', () => {
   let app: TestApp;
 
   beforeAll(async () => {
-    jest.setTimeout(50000);
     app = await createTestApp();
     await createSession(app);
     await createUser(app);
