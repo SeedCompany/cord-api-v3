@@ -35,7 +35,7 @@
     "@nestjs/platform-express": "^7.0.9",
     "@patarapolw/prettyprint": "^1.0.3",
     "apollo-server-core": "^2.9.16",
-    "apollo-server-express": "^2.9.15",
+    "apollo-server-express": "^2.14.2",
     "argon2": "^0.26.1",
     "aws-sdk": "^2.608.0",
     "class-transformer": "^0.2.3",
