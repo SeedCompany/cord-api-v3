@@ -4,6 +4,7 @@
   "rootDir": "..",
   "roots": ["<rootDir>/test"],
   "testEnvironment": "node",
+  "testRunner": "jest-circus/runner",
   "testRegex": ".e2e-spec.ts$",
   "setupFiles": [
     "reflect-metadata",
