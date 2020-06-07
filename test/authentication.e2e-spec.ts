@@ -25,7 +25,7 @@ describe('Authentication e2e', () => {
   });
 
   it('Check Email Existence and Reset Password', async () => {
-    const sendEmail = spyOn(app.get(EmailService), 'send');
+    const sendEmail = jest.spyOn(app.get(EmailService), 'send');
 
     const email = faker.internet.email();
     const fakeUser: CreateUser = {
