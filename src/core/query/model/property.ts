@@ -9,4 +9,6 @@ export interface Property {
   addToAdminSg?: boolean;
   addToReaderSg?: boolean;
   baseNode?: BaseNode;
+  orderBy?: boolean;
+  asc?: boolean;
 }

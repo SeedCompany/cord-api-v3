@@ -97,29 +97,56 @@ export class UserService {
     { page, count, sort, order, filter }: UserListInput,
     session: ISession
   ): Promise<UserListOutput> {
-    const result = await this.db.list<User>({
-      session,
-      nodevar: 'user',
-      aclReadProp: 'canReadUsers',
-      aclEditProp: 'canCreateUser',
-      props: [
-        'email',
-        'realFirstName',
-        'realLastName',
-        'displayFirstName',
-        'displayLastName',
-        'phone',
-        'timezone',
-        'bio',
-      ],
-      input: {
-        page,
-        count,
-        sort,
-        order,
-        filter,
+    const result: any = await this.db2.searchBaseNode(
+      {
+        id: '',
+        createdAt: '',
+        label: 'User',
+        props: [
+          {
+            key: 'email',
+            value: '',
+            isSingleton: true,
+            labels: ['Email'],
+            addToAdminSg: true,
+            addToReaderSg: true,
+            orderBy: true,
+            asc: true,
+          },
+        ],
       },
-    });
+      session.userId,
+      page,
+      count,
+      sort,
+      order,
+      'filter me'
+    );
+    this.logger.info(JSON.stringify(result));
+
+    // const result = await this.db.list<User>({
+    //   session,
+    //   nodevar: 'user',
+    //   aclReadProp: 'canReadUsers',
+    //   aclEditProp: 'canCreateUser',
+    //   props: [
+    //     'email',
+    //     'realFirstName',
+    //     'realLastName',
+    //     'displayFirstName',
+    //     'displayLastName',
+    //     'phone',
+    //     'timezone',
+    //     'bio',
+    //   ],
+    //   input: {
+    //     page,
+    //     count,
+    //     sort,
+    //     order,
+    //     filter,
+    //   },
+    // });
 
     return {
       items: result.items,

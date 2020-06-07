@@ -47,6 +47,8 @@ type DataHolder implements AbstractNode {
   valueType: ValueTypeEnum!
   baseNode: BaseNode! @relation(name: "DATAHOLDERS", direction: "IN")
   data: [DataTarget] @relation(name: "DATA", direction: "OUT")
+  isPublicReadable: Boolean!
+  isOrgReadable: Boolean!
   activePropertyCount: Int
     @cypher(
       statement: """
@@ -226,24 +228,36 @@ extend type Query {
     baseNodeId: String!
     requestingUserId: String!
     identifier: String!
+    orgId: String = "NONE"
   ): SingletonPropertyOutput
     @cypher(
       statement: """
       MATCH (bn:BaseNode {id:$baseNodeId})
 
       OPTIONAL MATCH
-      (user:User {id: $requestingUserId})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:PERMISSIONS]->(readPerm:Permission{active:true, read:true})-[:GRANT]->(:DataHolder {active: true, identifier: $identifier})-[:DATA]->(data:Data {active: true})
+      (dh_read_public:DataHolder {active: true, identifier: $identifier, isPublicReadable: true})<-[:DATAHOLDERS]-(bn),
+      (dh_read_public)-[:DATA]->(public_data:Data {active: true})
 
       OPTIONAL MATCH
-      (user:User {id: $requestingUserId})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:PERMISSIONS]->(editPerm:Permission{active:true, edit:true})-[:GRANT]->(:DataHolder {active: true, identifier: $identifier})
+      (user:User {id: $requestingUserId})<-[:MEMBERS]-(org:Organization {active: true, id: $orgId}),
+
+      (dh_read_org:DataHolder {active: true, identifier: $identifier, isOrgReadable: true})<-[:DATAHOLDERS]-(bn),
+      (dh_read_org)-[:DATA]->(org_data:Data {active: true})
 
       OPTIONAL MATCH
-      (user:User {id: $requestingUserId})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:PERMISSIONS]->(adminPerm:Permission{active:true, admin:true})-[:GRANT]->(:DataHolder {active: true, identifier: $identifier})
+      (user:User {id: $requestingUserId})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:PERMISSIONS]->(readPerm:Permission{active:true, read:true})-[:GRANT]->(dh_read:DataHolder {active: true, identifier: $identifier})<-[:DATAHOLDERS]-(bn),
+      (dh_read)-[:DATA]->(data:Data {active: true})
+
+      OPTIONAL MATCH
+      (user:User {id: $requestingUserId})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:PERMISSIONS]->(editPerm:Permission{active:true, edit:true})-[:GRANT]->(:DataHolder {active: true, identifier: $identifier})<-[:DATAHOLDERS]-(bn)
+
+      OPTIONAL MATCH
+      (user:User {id: $requestingUserId})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:PERMISSIONS]->(adminPerm:Permission{active:true, admin:true})-[:GRANT]->(:DataHolder {active: true, identifier: $identifier})<-[:DATAHOLDERS]-(bn)
 
       WITH
       {
-        value: data.value,
-        canRead: readPerm.read,
+        value: coalesce(data.value, org_data.value, public_data.value),
+        canRead: coalesce(readPerm.read, dh_read_org.isOrgReadable, dh_read_public.isPublicReadable ),
         canEdit: editPerm.edit,
         canAdmin: adminPerm.admin
       } as result

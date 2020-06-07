@@ -25,6 +25,7 @@ import * as argon2 from 'argon2';
 import { POWERS } from './model/powers';
 import { OnIndex } from '../database/indexer';
 import { createIndexedAccessTypeNode } from 'typescript';
+import { searchProperty } from './cypher.template';
 @Injectable()
 export class QueryService {
   private readonly db: Connection;
@@ -56,6 +57,20 @@ export class QueryService {
       'value'
     );
     await this.createPropertyUniquenessConstraintOnNodeAndRun('BaseNode', 'id');
+    await this.createPropertyUniquenessConstraintOnNodeAndRun(
+      'DataHolder',
+      'id'
+    );
+    await this.createPropertyUniquenessConstraintOnNodeAndRun('Data', 'id');
+    await this.createPropertyUniquenessConstraintOnNodeAndRun(
+      'SecurityGroup',
+      'id'
+    );
+    await this.createPropertyUniquenessConstraintOnNodeAndRun(
+      'Permission',
+      'id'
+    );
+    await this.createPropertyUniquenessConstraintOnNodeAndRun('Power', 'id');
   }
 
   // GraphQL Functions
@@ -76,9 +91,7 @@ export class QueryService {
     return await result.json();
   }
 
-  //////////////////////////////////////////////////////////////////
-
-  // Constraints
+  // Constraints //////////////////////////////////////////////////////////////
 
   async createPropertyExistenceConstraintOnNodeAndRun(
     label: string,
@@ -112,7 +125,7 @@ export class QueryService {
       .run();
   }
 
-  // Base Node
+  // Base Node CRUD
 
   async createBaseNode(
     baseNode: BaseNode,
@@ -260,10 +273,19 @@ export class QueryService {
       }
     `;
 
+    this.logger.info(query);
+
     const result = await this.sendGraphql(query);
 
-    result.data['id'] = baseNode.id;
-    result.data['createdAt'] = result.data.baseNode[0].createdAt.formatted;
+    if (result) {
+      this.logger.info('baseNodeId ' + baseNode.id);
+      result.data['id'] = baseNode.id;
+      result.data['createdAt'] = result.data.baseNode[0].createdAt.formatted;
+      delete result.data['baseNode'];
+      this.logger.info(JSON.stringify(result));
+    } else {
+      throw Error('No data');
+    }
 
     return result.data;
   }
@@ -349,7 +371,87 @@ export class QueryService {
     }
   }
 
-  // Property Values
+  // Base Node Search
+
+  async searchBaseNode(
+    baseNode: BaseNode,
+    requestingUserId: string | undefined,
+    page: number,
+    count: number,
+    sort: string,
+    order: string,
+    filter: string
+  ) {
+    let query = this.db.query();
+
+    let propsQuery = '';
+    let returnQuery = '';
+    let orderByQuery = '';
+
+    for (let i = 0; i < baseNode.props.length; i++) {
+      const prop = baseNode.props[i];
+      const propNodeKey = `${prop.key}_node`;
+      propsQuery += searchProperty(baseNode.label, prop.key, propNodeKey);
+
+      if (prop.orderBy) {
+        if (prop.asc) {
+          orderByQuery = `${propNodeKey}.value ASC`;
+        } else {
+          orderByQuery = `${propNodeKey}.value DESC`;
+        }
+      }
+
+      returnQuery += `{${prop.key}: {value: ${propNodeKey}.value}} as node`;
+    }
+
+    query.raw(`
+    MATCH (requestingUser:User {id: "${requestingUserId}"})
+    ${propsQuery}
+    RETURN
+    ${returnQuery}
+    ORDER BY ${orderByQuery}
+    SKIP ${page * count - count}
+    LIMIT ${count}
+    `);
+
+    const printMe = query;
+
+    this.logger.info(printMe.interpolate());
+
+    const itemsQuery: any = await query.run();
+
+    let items = [];
+
+    for (let i = 0; i < itemsQuery.length; i++) {
+      items.push(itemsQuery[i].node);
+    }
+
+    this.logger.info(JSON.stringify(items));
+
+    // todo: count(baseNodes) as total
+    // const countQuery: any = await this.db
+    //   .query()
+    //   .raw(
+    //     `
+    //     MATCH (requestingUser:User {id: "${requestingUserId}})
+
+    //     RETURN count(requestingUser) as total
+    //     `
+    //   )
+    //   .first();
+
+    if (itemsQuery) {
+      return {
+        items,
+        total: 5,
+        hasMore: true,
+      };
+    } else {
+      return undefined;
+    }
+  }
+
+  // Property confirm and delete
 
   async confirmPropertyValueExists(labels: string[], expectedValue: any) {
     const result = await this.db

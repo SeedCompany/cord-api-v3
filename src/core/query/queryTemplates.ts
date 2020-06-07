@@ -91,7 +91,9 @@ export function createDataHolder(
   baseNodeId: string,
   dataQuery: string,
   adminPerm: string,
-  readerPerm: string
+  readerPerm: string,
+  isOrgReadable = false,
+  isPublicReadable = false
 ): string {
   return `
   # create data holder
@@ -102,6 +104,8 @@ export function createDataHolder(
     identifier: "${identifier}"
     valueType: ${valueType}
     isSingleton: ${isSingleton}
+    isOrgReadable: ${isOrgReadable}
+    isPublicReadable: ${isPublicReadable}
   ) {
     id
   }
