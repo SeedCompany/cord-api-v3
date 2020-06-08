@@ -56,7 +56,7 @@ describe('Favorite e2e', () => {
   });
 
   // LIST FAVORITES
-  it.only('list view of favorites', async () => {
+  it('list view of favorites', async () => {
     // create a bunch of orgs
     await Promise.all(
       times(10).map(async () => {
