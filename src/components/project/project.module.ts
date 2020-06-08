@@ -22,7 +22,6 @@ import { ProjectService } from './project.service';
     ProjectResolver,
     TranslationProjectResolver,
     InternshipProjectResolver,
-    OrganizationService,
     ProjectService,
   ],
   exports: [ProjectService, ProjectMemberModule],

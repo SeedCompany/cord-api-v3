@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
   InternalServerErrorException as ServerException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
@@ -23,12 +24,16 @@ import {
   OrganizationListOutput,
   UpdateOrganization,
 } from './dto';
+import { QueryService } from '../../core/query/query.service';
+import { ForbiddenError } from 'apollo-server-core';
+import { POWERS } from '../../core/query/model/powers';
 
 @Injectable()
 export class OrganizationService {
   constructor(
     @Logger('org:service') private readonly logger: ILogger,
-    private readonly db: DatabaseService
+    private readonly db: DatabaseService,
+    private readonly db2: QueryService
   ) {}
 
   @OnIndex()
@@ -122,127 +127,135 @@ export class OrganizationService {
     input: CreateOrganization,
     session: ISession
   ): Promise<Organization> {
-    const checkOrg = await this.db
-      .query()
-      .raw(
-        `
-        MATCH(org:OrgName {value: $name}) return org
-        `,
-        {
-          name: input.name,
-        }
-      )
-      .first();
+    if (!session.userId) {
+      throw new UnauthorizedException('user id not valid');
+    }
 
-    if (checkOrg) {
+    if (
+      (await this.db2.userCanCreateBaseNode(
+        session.userId,
+        POWERS.CREATE_ORGANIZATION
+      )) === false
+    ) {
+      throw new UnauthorizedException(
+        `user doesn't have permission to create an organization`
+      );
+    }
+
+    const checkOrgName = await this.db2.confirmPropertyValueExists(
+      ['OrganizationnameHolder'],
+      input.name
+    );
+
+    if (checkOrgName) {
       throw new BadRequestException(
         'Organization with that name already exists.',
         'Duplicate'
       );
     }
+
     const id = generate();
     const createdAt = DateTime.local();
-    try {
-      await this.db
-        .query()
-        .match(matchSession(session, { withAclEdit: 'canCreateOrg' }))
-        .create([
-          [
-            node('newOrg', 'Organization:BaseNode', {
-              active: true,
-              createdAt,
-              id,
-              owningOrgId: session.owningOrgId,
-            }),
-          ],
-          ...this.property('name', input.name),
-          [
-            node('adminSG', 'SecurityGroup', {
-              active: true,
-              createdAt,
-              name: input.name + ' admin',
-            }),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('requestingUser'),
-          ],
-          [
-            node('readerSG', 'SecurityGroup', {
-              active: true,
-              createdAt,
-              name: input.name + ' users',
-            }),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('requestingUser'),
-          ],
-          ...this.permission('name'),
-        ])
-        .return('newOrg.id as id')
-        .first();
 
-      // if (!result) {
-      //   throw new ServerException('failed to create organization');
-      // }
-    } catch (err) {
-      this.logger.error(
-        `Could not create organization for user ${session.userId}`
-      );
-      throw new ServerException('Could not create organization');
+    const createOrg = await this.db2.createBaseNode(
+      {
+        label: 'Organization',
+        id,
+        createdAt: createdAt.toString(),
+        props: [
+          {
+            key: 'name',
+            value: input.name,
+            isSingleton: true,
+            addToAdminSg: true,
+            addToReaderSg: true,
+            isOrgReadable: true,
+            isPublicReadable: true,
+          },
+        ],
+      },
+      session.userId,
+      true
+    );
+
+    if (!createOrg) {
+      throw new ServerException('failed to create organization');
     }
-
-    this.logger.info(`organization created, id ${id}`);
 
     return this.readOne(id, session);
   }
 
   async readOne(orgId: string, session: ISession): Promise<Organization> {
-    const result = await this.db
-      .query()
-      .match(matchSession(session, { withAclEdit: 'canReadOrgs' }))
-      .match([node('org', 'Organization', { active: true, id: orgId })])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canReadName', 'Permission', {
-          property: 'name',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('org'),
-        relation('out', '', 'name', { active: true }),
-        node('orgName', 'Property', { active: true }),
-      ])
-      .return({
-        org: [{ id: 'id', createdAt: 'createdAt' }],
-        orgName: [{ value: 'name' }],
-        requestingUser: [
-          { canReadOrgs: 'canReadOrgs', canCreateOrg: 'canCreateOrg' },
+    const readOrg = await this.db2.readBaseNode(
+      {
+        label: 'Organization',
+        id: orgId,
+        createdAt: '',
+        props: [
+          {
+            key: 'name',
+            value: '',
+            isSingleton: true,
+          },
         ],
-        canReadName: [{ read: 'canReadName', edit: 'canEditName' }],
-      })
-      .first();
-
-    if (!result) {
-      throw new NotFoundException('Could not find organization');
-    }
-
-    if (!result.canCreateOrg) {
-      throw new ForbiddenException(
-        'User does not have permission to create an organization'
-      );
-    }
-
-    return {
-      id: result.id,
-      name: {
-        value: result.name,
-        canRead: result.canReadName,
-        canEdit: result.canEditName,
       },
-      createdAt: result.createdAt,
-    };
+      session.userId
+    );
+
+    if (readOrg) {
+      return readOrg;
+    } else {
+      throw new NotFoundException(`Could not find org`);
+    }
+
+    // const result = await this.db
+    //   .query()
+    //   .match(matchSession(session, { withAclEdit: 'canReadOrgs' }))
+    //   .match([node('org', 'Organization', { active: true, id: orgId })])
+    //   .optionalMatch([
+    //     node('requestingUser'),
+    //     relation('in', '', 'member', { active: true }),
+    //     node('sg', 'SecurityGroup', { active: true }),
+    //     relation('out', '', 'permission', { active: true }),
+    //     node('canReadName', 'Permission', {
+    //       property: 'name',
+    //       active: true,
+    //       read: true,
+    //     }),
+    //     relation('out', '', 'baseNode', { active: true }),
+    //     node('org'),
+    //     relation('out', '', 'name', { active: true }),
+    //     node('orgName', 'Property', { active: true }),
+    //   ])
+    //   .return({
+    //     org: [{ id: 'id', createdAt: 'createdAt' }],
+    //     orgName: [{ value: 'name' }],
+    //     requestingUser: [
+    //       { canReadOrgs: 'canReadOrgs', canCreateOrg: 'canCreateOrg' },
+    //     ],
+    //     canReadName: [{ read: 'canReadName', edit: 'canEditName' }],
+    //   })
+    //   .first();
+
+    // if (!result) {
+    //   throw new NotFoundException('Could not find organization');
+    // }
+
+    // if (!result.canCreateOrg) {
+    //   throw new ForbiddenException(
+    //     'User does not have permission to create an organization'
+    //   );
+    // }
+
+    // return {
+    //   id: result.id,
+    //   name: {
+    //     value: result.name,
+    //     canRead: result.canReadName,
+    //     canEdit: result.canEditName,
+    //   },
+    //   createdAt: result.createdAt,
+    // };
   }
 
   async update(

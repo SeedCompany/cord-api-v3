@@ -204,6 +204,7 @@ export class QueryService {
         valueType,
         prop.isSingleton,
         baseNode.id,
+        baseNode.label,
         dataQuery,
         adminPerm,
         readerPerm
@@ -451,9 +452,12 @@ export class QueryService {
     }
   }
 
-  // Property confirm and delete
+  // Properties
 
-  async confirmPropertyValueExists(labels: string[], expectedValue: any) {
+  async confirmPropertyValueExists(
+    labels: string[],
+    expectedValue: any
+  ): Promise<boolean> {
     const result = await this.db
       .query()
       .match([
@@ -848,5 +852,43 @@ export class QueryService {
         throw Error('Failed to merge power');
       }
     }
+  }
+
+  // Authorization
+
+  async userCanCreateBaseNode(userId: string, power: POWERS): Promise<boolean> {
+    const result = await this.db
+      .raw(
+        `
+    MATCH 
+      (user:User {
+        active: true,
+        id: $userId
+      })
+      <-[:MEMBERS]-
+      (sg:SecurityGroup{
+        active: true
+      })
+      -[:POWERS]->
+      (power:Power {
+        active: true
+        value: $power
+      })
+      RETURN user.id as id
+    `,
+        {
+          userId,
+          power,
+        }
+      )
+      .first();
+
+    if (result) {
+      if (result.id === userId) {
+        return true;
+      }
+    }
+
+    return false;
   }
 }

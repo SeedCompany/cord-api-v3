@@ -89,12 +89,19 @@ export function createDataHolder(
   valueType: string,
   isSingleton: boolean,
   baseNodeId: string,
+  baseNodeLabel: string,
   dataQuery: string,
   adminPerm: string,
   readerPerm: string,
   isOrgReadable = false,
   isPublicReadable = false
 ): string {
+  const dhLabel = addLabel(
+    `${queryId}_label`,
+    dataHolderId,
+    `${baseNodeLabel}${identifier}Holder`
+  );
+
   return `
   # create data holder
   ${queryId}: CreateDataHolder(
@@ -109,6 +116,8 @@ export function createDataHolder(
   ) {
     id
   }
+
+  ${dhLabel}
 
   ${queryId}_baseNodeDataHolders: AddBaseNodeDataHolders(from:{id:"${baseNodeId}"}, to:{id:"${dataHolderId}"}){
     from{id}
