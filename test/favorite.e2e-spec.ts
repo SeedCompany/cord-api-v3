@@ -2,7 +2,7 @@ import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
 import { generate } from 'shortid';
-import { Favorite } from '../src/components/favorites';
+import { BaseNode, Favorite } from '../src/components/favorites';
 import {
   addFavorite,
   createOrganization,
@@ -56,7 +56,7 @@ describe('Favorite e2e', () => {
   });
 
   // LIST FAVORITES
-  it('list view of favorites', async () => {
+  it.only('list view of favorites', async () => {
     // create a bunch of orgs
     await Promise.all(
       times(10).map(async () => {
@@ -66,19 +66,25 @@ describe('Favorite e2e', () => {
         await addFavorite(app, org.id);
       })
     );
+    const baseNode = BaseNode.Organization;
 
-    const { favorites } = await app.graphql.query(gql`
-      query {
-        favorites(input: { filter: {} }) {
-          items {
-            ...fav
+    const { favorites } = await app.graphql.query(
+      gql`
+        query favorites($baseNode: BaseNode!) {
+          favorites(input: { filter: { baseNode: $baseNode } }) {
+            items {
+              ...fav
+            }
+            hasMore
+            total
           }
-          hasMore
-          total
         }
+        ${fragments.fav}
+      `,
+      {
+        baseNode,
       }
-      ${fragments.fav}
-    `);
+    );
     expect(favorites.items.length).toBeGreaterThan(9);
   });
 });

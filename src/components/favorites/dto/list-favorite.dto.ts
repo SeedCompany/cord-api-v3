@@ -6,15 +6,16 @@ import {
   SecuredList,
   SortablePaginationInput,
 } from '../../../common';
+import { BaseNode } from './base-node';
 import { Favorite } from './favorite';
 
 @InputType()
 export abstract class FavoriteFilters {
-  @Field({
-    description: 'Only favorites matching this id',
+  @Field(() => BaseNode, {
+    description: 'Only items matching this node',
     nullable: true,
   })
-  readonly baseNodeId?: string;
+  readonly baseNode?: BaseNode;
 }
 
 const defaultFilters = {};

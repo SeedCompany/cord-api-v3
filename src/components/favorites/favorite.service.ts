@@ -23,7 +23,7 @@ import {
 @Injectable()
 export class FavoriteService {
   constructor(
-    @Logger('org:service') private readonly logger: ILogger,
+    @Logger('fav:service') private readonly logger: ILogger,
     private readonly db: DatabaseService
   ) {}
 
@@ -98,21 +98,36 @@ export class FavoriteService {
     if (!session.userId) {
       throw new UnauthorizedException('user not logged in');
     }
+    const baseNode = input.filter.baseNode
+      ? input.filter.baseNode + ':BaseNode'
+      : 'BaseNode';
     const query = this.db
       .query()
       .match(matchSession(session))
       .match([
         node('requestingUser'),
         relation('out', '', 'favorite', { active: true }),
-        node('node', 'BaseNode', { active: true }),
+        node('node', baseNode, { active: true }),
       ])
       .return('node.id as baseNodeId')
       .orderBy([input.sort], input.order)
       .skip((input.page - 1) * input.count)
       .limit(input.count);
+
+    const countQuery = this.db
+      .query()
+      .match(matchSession(session))
+      .match([
+        node('requestingUser'),
+        relation('out', '', 'favorite', { active: true }),
+        node('node', baseNode, { active: true }),
+      ])
+      .return('count(node) as total');
     let result;
+    let countResult;
     try {
       result = await query.run();
+      countResult = await countQuery.run();
     } catch (e) {
       this.logger.error(e);
       throw new ServerException('favorite not found');
@@ -120,10 +135,13 @@ export class FavoriteService {
     if (!result) {
       return { items: [], total: 0, hasMore: false };
     }
+
+    const total = countResult[0]?.total || 0;
+    const hasMore = (input.page - 1) * input.count + input.count < total;
     return {
       items: (result as unknown) as Favorite[],
-      total: result.length,
-      hasMore: false,
+      total,
+      hasMore,
     };
   }
 }
