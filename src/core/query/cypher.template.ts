@@ -5,7 +5,17 @@ export function searchProperty(
 ): string {
   return `
   OPTIONAL MATCH
-  (${dataTag}_baseNodes:${baseNodeLabel})-[:DATAHOLDERS]->(${dataTag}_dh:DataHolder {identifier:"${identifier}"})-[:DATA]->(${dataTag}:Data),
-  (requestingUser)<-[:MEMBERS]-(:SecurityGroup)-[:PERMISSIONS]->(:Permission{read: true})-[:GRANT]->(${dataTag}_dh)
+    (${dataTag}_baseNodes:${baseNodeLabel})
+    -[:DATAHOLDERS]->
+    (${dataTag}_dh:DataHolder {identifier:"${identifier}"})
+    -[:DATA]->
+    (${dataTag}:Data),
+    (requestingUser)
+    <-[:MEMBERS]-
+    (:SecurityGroup)
+    -[:PERMISSIONS]->
+    (:Permission{read: true})
+    -[:GRANT]->
+    (${dataTag}_dh)
   `;
 }

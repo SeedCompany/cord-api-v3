@@ -97,7 +97,7 @@ export class UserService {
     { page, count, sort, order, filter }: UserListInput,
     session: ISession
   ): Promise<UserListOutput> {
-    const result: any = await this.db2.searchBaseNode(
+    const result: any = await this.db2.listBaseNode(
       {
         id: '',
         createdAt: '',
@@ -325,6 +325,7 @@ export class UserService {
             isSingleton: true,
             addToAdminSg: true,
             addToReaderSg: true,
+            isOrgReadable: true,
           },
           {
             key: 'displayLastName',
@@ -332,6 +333,7 @@ export class UserService {
             isSingleton: true,
             addToAdminSg: true,
             addToReaderSg: true,
+            isOrgReadable: true,
           },
           {
             key: 'phone',
@@ -346,6 +348,8 @@ export class UserService {
             isSingleton: true,
             addToAdminSg: true,
             addToReaderSg: false,
+            isOrgReadable: true,
+            isPublicReadable: true,
           },
           {
             key: 'bio',

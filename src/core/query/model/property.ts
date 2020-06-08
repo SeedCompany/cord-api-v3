@@ -11,4 +11,6 @@ export interface Property {
   baseNode?: BaseNode;
   orderBy?: boolean;
   asc?: boolean;
+  isPublicReadable?: boolean;
+  isOrgReadable?: boolean;
 }

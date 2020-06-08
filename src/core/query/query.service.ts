@@ -273,16 +273,16 @@ export class QueryService {
       }
     `;
 
-    this.logger.info(query);
+    // this.logger.info(query);
 
     const result = await this.sendGraphql(query);
 
     if (result) {
-      this.logger.info('baseNodeId ' + baseNode.id);
+      // this.logger.info('baseNodeId ' + baseNode.id);
       result.data['id'] = baseNode.id;
       result.data['createdAt'] = result.data.baseNode[0].createdAt.formatted;
       delete result.data['baseNode'];
-      this.logger.info(JSON.stringify(result));
+      // this.logger.info(JSON.stringify(result));
     } else {
       throw Error('No data');
     }
@@ -373,7 +373,7 @@ export class QueryService {
 
   // Base Node Search
 
-  async searchBaseNode(
+  async listBaseNode(
     baseNode: BaseNode,
     requestingUserId: string | undefined,
     page: number,

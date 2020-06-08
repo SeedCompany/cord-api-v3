@@ -239,10 +239,9 @@ extend type Query {
       (dh_read_public)-[:DATA]->(public_data:Data {active: true})
 
       OPTIONAL MATCH
-      (user:User {id: $requestingUserId})<-[:MEMBERS]-(org:Organization {active: true, id: $orgId}),
+      (org_user:User {id: $requestingUserId})<-[:MEMBERS]-(org:Organization {active: true, id: $orgId}),
 
-      (dh_read_org:DataHolder {active: true, identifier: $identifier, isOrgReadable: true})<-[:DATAHOLDERS]-(bn),
-      (dh_read_org)-[:DATA]->(org_data:Data {active: true})
+      (org_data:Data {active: true})<-[:DATA]-(dh_read_org:DataHolder {active: true, identifier: $identifier, isOrgReadable: true})<-[:DATAHOLDERS]-(bn)
 
       OPTIONAL MATCH
       (user:User {id: $requestingUserId})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:PERMISSIONS]->(readPerm:Permission{active:true, read:true})-[:GRANT]->(dh_read:DataHolder {active: true, identifier: $identifier})<-[:DATAHOLDERS]-(bn),
@@ -270,10 +269,21 @@ extend type Query {
     baseNodeId: String!
     requestingUserId: String!
     identifier: String!
+    orgId: String = "NONE"
   ): ArrayPropertyOutput
     @cypher(
       statement: """
       MATCH (bn:BaseNode {id:$baseNodeId})
+
+      OPTIONAL MATCH
+      (dh_read_public:DataHolder {active: true, identifier: $identifier, isPublicReadable: true})<-[:DATAHOLDERS]-(bn),
+      (dh_read_public)-[:DATA]->(public_data:Data {active: true})
+
+      OPTIONAL MATCH
+      (org_user:User {id: $requestingUserId})<-[:MEMBERS]-(org:Organization {active: true, id: $orgId}),
+
+      (dh_read_org:DataHolder {active: true, identifier: $identifier, isOrgReadable: true})<-[:DATAHOLDERS]-(bn),
+      (dh_read_org)-[:DATA]->(org_data:Data {active: true})
 
       OPTIONAL MATCH
       (user:User {id: $requestingUserId, active: true})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:PERMISSIONS]->(readPerm:Permission{active:true, read:true})-[:GRANT]->(:DataHolder {active: true, identifier: $identifier})-[:DATA]->(data:Data {active: true})
@@ -286,8 +296,8 @@ extend type Query {
 
       WITH
       {
-        value: collect(data.value),
-        canRead: readPerm.read,
+        value: apoc.coll.union( apoc.coll.union(collect(org_data.value),  collect(public_data.value)), collect(data.value)),
+        canRead: coalesce(readPerm.read, dh_read_org.isOrgReadable, dh_read_public.isPublicReadable ),
         canEdit: editPerm.edit,
         canAdmin: adminPerm.admin
       } as result
