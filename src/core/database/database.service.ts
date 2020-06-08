@@ -1404,6 +1404,20 @@ export class DatabaseService {
     const nodeName = upperFirst(nodevar);
     const aclReadPropName = aclReadProp || `canRead${nodeName}s`;
     const aclCreatePropName = aclEditProp || `canCreate${nodeName}`;
+    // If the reqUser is rootSg member or root user, give access to any node and its properties
+    if (await this.isRootSecurityGroupMember(session)) {
+      await this.db
+        .query()
+        .match([node('node', nodeName, { active: true, id: id })])
+        .match([
+          node('node'),
+          relation('out', '', '', { active: true }),
+          node('prop', 'Property', { active: true }),
+        ])
+        .return('node, prop')
+        .first();
+    }
+
     const output = {
       node: [{ id: 'id', createdAt: 'createdAt' }],
       requestingUser: [
@@ -1477,4 +1491,21 @@ export class DatabaseService {
       ],
     ];
   };
+
+  async isRootSecurityGroupMember(session: ISession): Promise<boolean> {
+    const result = await this.db
+      .query()
+      .match([
+        matchSession(session),
+        [
+          node('user', 'User', { active: true, id: session.userId }),
+          relation('in', '', 'member', { active: true }),
+          node('rSg', 'RootSecurityGroup', { active: true }),
+        ],
+      ])
+      .return('count(user) as total')
+      .first();
+
+    return (result?.total || 0) > 0;
+  }
 }
