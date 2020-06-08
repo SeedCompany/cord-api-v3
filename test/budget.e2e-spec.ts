@@ -22,7 +22,7 @@ import { createBudget, createBudgetRecord } from './utility/create-budget';
 import { createPartnership } from './utility/create-partnership';
 import { createProject } from './utility/create-project';
 
-describe('Budget e2e', () => {
+describe.skip('Budget e2e', () => {
   let app: TestApp;
   let project: Project;
   let budget: Budget;

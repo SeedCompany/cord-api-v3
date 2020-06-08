@@ -24,7 +24,7 @@ import { createCountry } from './utility/create-country';
 import { createProject } from './utility/create-project';
 import { createRegion } from './utility/create-region';
 
-describe('Project e2e', () => {
+describe.skip('Project e2e', () => {
   let app: TestApp;
 
   beforeAll(async () => {

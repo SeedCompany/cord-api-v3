@@ -15,7 +15,7 @@ import {
   TestApp,
 } from './utility';
 
-describe('ProjectMember e2e', () => {
+describe.skip('ProjectMember e2e', () => {
   let app: TestApp;
   let user: User;
   const password: string = faker.internet.password();

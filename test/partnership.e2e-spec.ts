@@ -17,7 +17,7 @@ import {
 } from './utility';
 import { createPartnership } from './utility/create-partnership';
 
-describe('Partnership e2e', () => {
+describe.skip('Partnership e2e', () => {
   let app: TestApp;
   let project: Project;
 

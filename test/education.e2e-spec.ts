@@ -13,7 +13,7 @@ import {
 } from './utility';
 import { fragments } from './utility/fragments';
 
-describe('Education e2e', () => {
+describe.skip('Education e2e', () => {
   let app: TestApp;
   let user: User;
 

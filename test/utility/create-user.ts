@@ -5,21 +5,17 @@ import { CreateUser, User } from '../../src/components/user';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
 
-export async function createUser(
-  app: TestApp,
-  input: Partial<CreateUser> = {}
-) {
+export async function createUser(app: TestApp, password: string) {
   const user: CreateUser = {
-    email: `${faker.internet.email()} ${Date.now()}`,
+    email: `email_${generate}@test.com`,
     realFirstName: faker.name.firstName(),
     realLastName: faker.name.lastName(),
-    displayFirstName: faker.name.firstName() + generate(),
-    displayLastName: faker.name.lastName() + generate(),
-    password: faker.internet.password(),
+    displayFirstName: faker.name.firstName(),
+    displayLastName: faker.name.lastName(),
+    password,
     phone: faker.phone.phoneNumber(),
-    timezone: 'timezone detail' + generate(),
-    bio: 'bio detail' + generate(),
-    ...input,
+    timezone: 'timezone detail',
+    bio: 'bio detail',
   };
 
   const result = await app.graphql.mutate(

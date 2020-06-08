@@ -14,7 +14,7 @@ import {
 import { createRegion } from './utility/create-region';
 import { createZone } from './utility/create-zone';
 
-describe('Region e2e', () => {
+describe.skip('Region e2e', () => {
   jest.setTimeout(50000);
   let app: TestApp;
   let director: User;

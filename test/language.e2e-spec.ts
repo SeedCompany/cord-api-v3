@@ -12,7 +12,7 @@ import {
 } from './utility';
 import { fragments } from './utility/fragments';
 
-describe('Language e2e', () => {
+describe.skip('Language e2e', () => {
   let app: TestApp;
 
   beforeAll(async () => {

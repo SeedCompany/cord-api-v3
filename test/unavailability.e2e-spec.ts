@@ -13,7 +13,7 @@ import {
 } from './utility';
 import { fragments } from './utility/fragments';
 
-describe('Unavailability e2e', () => {
+describe.skip('Unavailability e2e', () => {
   let app: TestApp;
   let user: User;
 

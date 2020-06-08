@@ -13,7 +13,7 @@ import {
 } from './utility';
 import { createDirectory } from './utility/create-directory';
 
-describe('File e2e', () => {
+describe.skip('File e2e', () => {
   let app: TestApp;
 
   beforeAll(async () => {

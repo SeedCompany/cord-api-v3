@@ -14,7 +14,7 @@ import {
 import { createCountry } from './utility/create-country';
 import { createRegion } from './utility/create-region';
 
-describe('Country e2e', () => {
+describe.skip('Country e2e', () => {
   let app: TestApp;
   let director: User;
   let zone: Zone;

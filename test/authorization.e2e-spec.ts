@@ -12,7 +12,7 @@ import { createProduct } from './utility/create-product';
 import { createSecurityGroup } from './utility/create-security-group';
 import { login } from './utility/login';
 
-describe('Authorization e2e', () => {
+describe.skip('Authorization e2e', () => {
   let app: TestApp;
   jest.setTimeout(200000);
 

@@ -700,7 +700,7 @@ export class QueryService {
   }
 
   async mergeRootAdminUserAndSecurityGroup(email: string, password: string) {
-    // merge on the label, which will create a node if it doesn't exist
+    // merge on the root sg label, which will create a node if it doesn't exist
     let sgId = generate();
     const sgMergeResult = await this.db
       .query()

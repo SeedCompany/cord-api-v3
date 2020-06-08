@@ -13,7 +13,7 @@ import {
 import { createZone } from './utility/create-zone';
 import { fragments } from './utility/fragments';
 
-describe('Zone e2e', () => {
+describe.skip('Zone e2e', () => {
   jest.setTimeout(300000);
   let app: TestApp;
   let director: User;

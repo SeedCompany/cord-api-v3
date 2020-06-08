@@ -11,7 +11,7 @@ import {
 } from './utility';
 import { createProduct } from './utility/create-product';
 
-describe('Product e2e', () => {
+describe.skip('Product e2e', () => {
   let app: TestApp;
 
   beforeAll(async () => {
