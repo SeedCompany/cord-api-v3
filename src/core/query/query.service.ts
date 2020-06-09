@@ -192,7 +192,8 @@ export class QueryService {
           baseNode.createdAt,
           prop.value,
           dhId,
-          prop.labels
+          baseNode.label,
+          prop.key
         );
       }
 
@@ -539,7 +540,7 @@ export class QueryService {
     const result = await this.db
       .query()
       .create([
-        node('token', ['Token', 'Data'], {
+        node('token', ['UsertokenData', 'Data'], {
           active: true,
           createdAt: createdAt.toNeo4JDateTime(),
           value: token,
@@ -562,7 +563,7 @@ export class QueryService {
     const result = await this.db
       .query()
       .match([
-        node('token', 'Token', {
+        node('token', 'UsertokenData', {
           active: true,
           value: token,
         }),
@@ -596,14 +597,14 @@ export class QueryService {
         .raw(
           `
       MATCH
-        (token:Token {
+        (token:UsertokenData {
           active: true,
           value: $token
         })
       MATCH
-        (:Email {active: true, value: $email})
+        (:UseremailData {active: true, value: $email})
         <-[:DATA]-
-        (:DataHolder {
+        (:UseremailHolder {
           active: true,
           identifier: "email"
         })
@@ -612,12 +613,12 @@ export class QueryService {
           active: true
         })
         -[:DATAHOLDERS]->
-        (:DataHolder {
+        (:UserpasswordHolder {
           active: true,
           identifier: "password"
         })
         -[:DATA]->
-        (password:Data {
+        (password:UserpasswordData {
           active: true
         })
       RETURN
@@ -632,6 +633,8 @@ export class QueryService {
         )
         .first();
 
+      this.logger.info(JSON.stringify(result1));
+
       if (!result1 || !(await argon2.verify(result1.pash, password))) {
         throw new UnauthenticatedException('Invalid credentials');
       }
@@ -642,7 +645,7 @@ export class QueryService {
         .raw(
           `
           MATCH
-            (token:Token {
+            (token:UsertokenData {
               active: true,
               value: $token
             })
@@ -651,7 +654,7 @@ export class QueryService {
               id: $userId
             })
             -[:DATAHOLDERS]->
-            (tokenHolder:DataHolder{
+            (tokenHolder:UsertokenHolder{
               active: true,
               identifier: "token"
             })
@@ -690,7 +693,7 @@ export class QueryService {
       .raw(
         `
         MATCH
-          (token:Token{ value: $token})-[r]-()
+          (token:UsertokenData{ value: $token})-[r]-()
         DELETE
           r
         RETURN
@@ -771,7 +774,6 @@ export class QueryService {
               key: 'email',
               value: email,
               isSingleton: true,
-              labels: ['Email'],
               addToAdminSg: true,
               addToReaderSg: false,
             },
@@ -871,7 +873,7 @@ export class QueryService {
       })
       -[:POWERS]->
       (power:Power {
-        active: true
+        active: true,
         value: $power
       })
       RETURN user.id as id

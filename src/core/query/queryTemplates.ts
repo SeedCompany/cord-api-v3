@@ -52,17 +52,17 @@ export function createData(
   createdAt: string,
   value: string,
   dataHolderId: string,
-  labels?: string[]
+  baseNodeLabel: string,
+  identifier: string
 ): string {
   const dataId = generate();
 
-  let labelQuery = '';
-  let counter = 0;
-  if (labels) {
-    labels.forEach((label) => {
-      labelQuery += addLabel(`${queryId}_label${counter++}`, dataId, label);
-    });
-  }
+  const fullLabel = addLabel(
+    `${queryId}_fullLabel`,
+    dataId,
+    `${baseNodeLabel}${identifier}Data`
+  );
+
   return `
   # create data node
   ${queryId}: CreateData(
@@ -74,7 +74,8 @@ export function createData(
     id
   }
 
-  ${labelQuery}
+
+  ${fullLabel}
   
   # attach data to data holder
   ${queryId}_dh: addDataOrBaseNodeToDataHolder(fromId:"${dataHolderId}", toId:"${dataId}")
