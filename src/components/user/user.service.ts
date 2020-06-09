@@ -160,7 +160,7 @@ export class UserService {
         ...input,
         filter: {
           ...input.filter,
-          userIds: [userId],
+          userId: userId,
         },
       },
       session

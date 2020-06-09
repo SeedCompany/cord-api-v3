@@ -365,4 +365,72 @@ describe('User e2e', () => {
 
     // TODO after #430 is resolved, list orgs and make sure org is removed as primary
   });
+
+  it.only('read one user lists organizations', async () => {
+    const fakeUser: CreateUser = {
+      email: faker.internet.email(),
+      realFirstName: faker.name.firstName(),
+      realLastName: faker.name.lastName(),
+      displayFirstName: faker.name.firstName(),
+      displayLastName: faker.name.lastName(),
+      password: faker.internet.password(),
+      phone: faker.phone.phoneNumber(),
+      timezone: 'timezone detail',
+      bio: 'bio detail',
+      status: UserStatus.Active,
+    };
+    const newUser = await createUser(app, fakeUser);
+    const org = await createOrganization(app);
+
+    const result = await app.graphql.mutate(
+      gql`
+        mutation assignOrganizationToUser(
+          $orgId: ID!
+          $userId: ID!
+          $primary: Boolean!
+        ) {
+          assignOrganizationToUser(
+            input: {
+              request: { orgId: $orgId, userId: $userId, primary: $primary }
+            }
+          )
+        }
+      `,
+      {
+        orgId: org.id,
+        userId: newUser.id,
+        primary: true,
+      }
+    );
+
+    expect(result.assignOrganizationToUser).toBe(true);
+
+    const result1 = await app.graphql.query(
+      gql`
+        query user($id: ID!) {
+          user(id: $id) {
+            ...user
+            organizations {
+              items {
+                name {
+                  value
+                  canRead
+                  canEdit
+                }
+              }
+              hasMore
+              total
+            }
+          }
+        }
+        ${fragments.user}
+      `,
+      {
+        id: newUser.id,
+      }
+    );
+    const actual: User = result1.user;
+    expect(actual).toBeTruthy();
+    return true;
+  });
 });
