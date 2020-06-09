@@ -1407,7 +1407,10 @@ export class DatabaseService {
     const output = {
       node: [{ id: 'id', createdAt: 'createdAt' }],
       requestingUser: [
-        { canReadOrgs: aclReadPropName, canCreateOrg: aclCreatePropName },
+        {
+          [aclReadPropName]: aclReadPropName,
+          [aclCreatePropName]: aclCreatePropName,
+        },
       ],
     };
     const query = this.db
@@ -1437,7 +1440,6 @@ export class DatabaseService {
     if (!result) {
       throw new NotFoundException('Could not find node');
     }
-
     if (!result[aclCreatePropName]) {
       throw new ForbiddenException(
         'User does not have permission to create an node'

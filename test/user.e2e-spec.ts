@@ -9,9 +9,11 @@ import {
   UserStatus,
 } from '../src/components/user';
 import {
+  createEducation,
   createOrganization,
   createSession,
   createTestApp,
+  createUnavailability,
   createUser,
   fragments,
   login,
@@ -70,7 +72,6 @@ describe('User e2e', () => {
     );
 
     const actual: User = result.user;
-    // console.log('actual ', JSON.stringify(actual, null, 2));
 
     expect(actual).toBeTruthy();
 
@@ -366,7 +367,7 @@ describe('User e2e', () => {
     // TODO after #430 is resolved, list orgs and make sure org is removed as primary
   });
 
-  it.only('read one user lists organizations', async () => {
+  it('read one users organizations', async () => {
     const fakeUser: CreateUser = {
       email: faker.internet.email(),
       realFirstName: faker.name.firstName(),
@@ -412,24 +413,87 @@ describe('User e2e', () => {
             ...user
             organizations {
               items {
-                name {
-                  value
-                  canRead
-                  canEdit
-                }
+                ...org
               }
               hasMore
               total
+              canRead
+              canCreate
             }
           }
         }
         ${fragments.user}
+        ${fragments.org}
       `,
       {
         id: newUser.id,
       }
     );
     const actual: User = result1.user;
+    expect(actual).toBeTruthy();
+    return true;
+  });
+
+  it('read one users education', async () => {
+    const newUser = await createUser(app);
+    await createEducation(app, { userId: newUser.id });
+
+    const result = await app.graphql.query(
+      gql`
+        query user($id: ID!) {
+          user(id: $id) {
+            ...user
+            education {
+              items {
+                ...education
+              }
+              hasMore
+              total
+              canRead
+              canCreate
+            }
+          }
+        }
+        ${fragments.user}
+        ${fragments.education}
+      `,
+      {
+        id: newUser.id,
+      }
+    );
+    const actual = result.user;
+    expect(actual).toBeTruthy();
+    return true;
+  });
+
+  it('read one users unavailablity', async () => {
+    const newUser = await createUser(app);
+    await createUnavailability(app, { userId: newUser.id });
+
+    const result = await app.graphql.query(
+      gql`
+        query user($id: ID!) {
+          user(id: $id) {
+            ...user
+            unavailabilities {
+              items {
+                ...unavailability
+              }
+              hasMore
+              total
+              canRead
+              canCreate
+            }
+          }
+        }
+        ${fragments.user}
+        ${fragments.unavailability}
+      `,
+      {
+        id: newUser.id,
+      }
+    );
+    const actual = result.user;
     expect(actual).toBeTruthy();
     return true;
   });

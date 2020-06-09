@@ -131,6 +131,39 @@ export class UserService {
     input: EducationListInput,
     session: ISession
   ): Promise<SecuredEducationList> {
+    const query = this.db
+      .query()
+      .match(matchSession(session, { withAclEdit: 'canReadEducationList' })) // Michel Query Refactor Will Fix This
+      .match([node('user', 'User', { active: true, id: userId })])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node('canRead', 'Permission', {
+          property: 'education',
+          active: true,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('user'),
+      ])
+      .return({
+        canRead: [{ read: 'canRead', edit: 'canEdit' }],
+      });
+    let user;
+    try {
+      user = await query.first();
+    } catch (e) {
+      this.logger.error(`Could not find education for user ${session.userId}`);
+      throw new ServerException('Could not find education');
+    }
+    if (!user) {
+      throw new NotFoundException('Could not find user');
+    }
+    if (!user.canRead) {
+      throw new UnauthenticatedException('cannot read education list');
+    }
     const result = await this.educations.list(
       {
         ...input,
@@ -141,11 +174,10 @@ export class UserService {
       },
       session
     );
-
     return {
       ...result,
-      canRead: true,
-      canCreate: true,
+      canRead: user.canRead,
+      canCreate: user.canEdit,
     };
   }
 
@@ -155,6 +187,41 @@ export class UserService {
     session: ISession
   ): Promise<SecuredOrganizationList> {
     // Just a thought, seemed like a good idea to try to reuse the logic/query there.
+    const query = this.db
+      .query()
+      .match(matchSession(session, { withAclEdit: 'canReadOrgs' }))
+      .match([node('user', 'User', { active: true, id: userId })])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node('canRead', 'Permission', {
+          property: 'organization',
+          active: true,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('user'),
+      ])
+      .return({
+        canRead: [{ read: 'canRead', edit: 'canEdit' }],
+      });
+    let user;
+    try {
+      user = await query.first();
+    } catch (e) {
+      this.logger.error(
+        `Could not find organizations for user ${session.userId}`
+      );
+      throw new ServerException('Could not find organization');
+    }
+    if (!user) {
+      throw new NotFoundException('Could not find user');
+    }
+    if (!user.canRead) {
+      throw new UnauthenticatedException('cannot read organization list');
+    }
     const result = await this.organizations.list(
       {
         ...input,
@@ -165,11 +232,10 @@ export class UserService {
       },
       session
     );
-
     return {
       ...result,
-      canRead: true, // TODO
-      canCreate: true, // TODO
+      canRead: user.canRead,
+      canCreate: user.canEdit,
     };
   }
 
@@ -178,6 +244,43 @@ export class UserService {
     input: UnavailabilityListInput,
     session: ISession
   ): Promise<SecuredUnavailabilityList> {
+    const query = this.db
+      .query()
+      .match(
+        matchSession(session, { withAclEdit: 'canReadUnavailabilityList' })
+      )
+      .match([node('user', 'User', { active: true, id: userId })])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node('canRead', 'Permission', {
+          property: 'unavailablity',
+          active: true,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('user'),
+      ])
+      .return({
+        canRead: [{ read: 'canRead', edit: 'canEdit' }],
+      });
+    let user;
+    try {
+      user = await query.first();
+    } catch (e) {
+      this.logger.error(
+        `Could not find unavailablity for user ${session.userId}`
+      );
+      throw new ServerException('Could not find unavailablity');
+    }
+    if (!user) {
+      throw new NotFoundException('Could not find user');
+    }
+    if (!user.canRead) {
+      throw new UnauthenticatedException('cannot read unavailablity list');
+    }
     const result = await this.unavailabilities.list(
       {
         ...input,
@@ -188,11 +291,10 @@ export class UserService {
       },
       session
     );
-
     return {
       ...result,
-      canRead: true,
-      canCreate: true,
+      canRead: user.canRead,
+      canCreate: user.canEdit,
     };
   }
 
@@ -412,6 +514,8 @@ export class UserService {
       ...permission('displayLastName'),
       ...permission('email'),
       ...permission('education'),
+      ...permission('organization'),
+      ...permission('unavailablity'),
       ...permission('phone'),
       ...permission('timezone'),
       ...permission('bio'),
