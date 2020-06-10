@@ -293,7 +293,8 @@ export function createBaseNode(
   sgAdminId: string,
   requestingUserId: string,
   sgReaderId: string,
-  propQuery: string
+  propQuery: string,
+  orgId?: string
 ): string {
   const labelQuery = addLabel(`${queryId}_label`, baseNodeId, baseNodeLabel);
 
@@ -337,6 +338,16 @@ export function createBaseNode(
     requestingUserId
   );
 
+  let addBaseNodeOrganizationQuery = '';
+
+  if (orgId) {
+    addBaseNodeOrganizationQuery = addBaseNodeOrganization(
+      `${queryId}_org`,
+      baseNodeId,
+      orgId
+    );
+  }
+
   return `
   mutation{
     ${queryId}: CreateBaseNode(
@@ -363,6 +374,8 @@ export function createBaseNode(
     ${addCreatorQuery}
 
     ${addBaseNodeAdminQuery}
+
+    ${addBaseNodeOrganizationQuery}
 
   }
   `;
@@ -424,6 +437,20 @@ export function addBaseNodeAdmin(
 ) {
   return `
   ${queryId}: AddBaseNodeAdmins(from:{id:"${baseNodeId}"}, to:{id:"${userId}"}){
+    from{
+      id
+    }
+  }
+  `;
+}
+
+export function addBaseNodeOrganization(
+  queryId: string,
+  baseNodeId: string,
+  orgId: string
+) {
+  return `
+  ${queryId}: AddBaseNodeOrganizations(from:{id:"${baseNodeId}"}, to:{id:"${orgId}"}){
     from{
       id
     }

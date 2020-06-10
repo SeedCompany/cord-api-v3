@@ -268,9 +268,9 @@ export class UserService {
   }
 
   async create(
-    input: CreateUser
+    input: CreateUser,
     // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-    // session: ISession = {} as ISession
+    session: ISession = {} as ISession
   ): Promise<string> {
     // ensure token doesn't have any users attached to it
     // if (!_.isEmpty(session)) {
@@ -365,7 +365,8 @@ export class UserService {
         ],
       },
       id, // the user being created is the 'requesting user'
-      true
+      true,
+      session.owningOrgId
     );
 
     return result;

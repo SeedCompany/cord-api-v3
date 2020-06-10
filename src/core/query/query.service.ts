@@ -130,7 +130,8 @@ export class QueryService {
   async createBaseNode(
     baseNode: BaseNode,
     requestingUserId: string,
-    createReaderSG = true
+    createReaderSG = true,
+    orgId?: string
   ) {
     const sgAdminId = generate();
     const sgReaderId = generate();
@@ -220,7 +221,8 @@ export class QueryService {
       sgAdminId,
       requestingUserId,
       sgReaderId,
-      propQuery
+      propQuery,
+      orgId
     );
 
     // this.logger.info(query);
@@ -707,6 +709,43 @@ export class QueryService {
   }
 
   async mergeRootAdminUserAndSecurityGroup(email: string, password: string) {
+    // merge on ROOT org to create or get the id
+    let rootOrgId = generate();
+    // const rootOrgHolderId = generate();
+    // const rootOrgDataId = generate();
+    // const rootOrgMergeResult = await this.db
+    //   .query()
+    //   .merge([
+    //     node('org', ['RootOrganization', 'Organization']),
+    //     relation('out', '', 'DATAHOLDERS'),
+    //     node('dh', 'OrganizationnameHolder'),
+    //     relation('out', '', 'DATA'),
+    //     node('name', 'OrganizationnameData', {
+    //       value: '__ROOT__',
+    //     }),
+    //   ])
+    //   .onCreate.setValues({
+    //     'org.id': rootOrgId,
+    //     'org.active': true,
+    //     'dh.id': rootOrgHolderId,
+    //     'dh.active': true,
+    //     'name.id': rootOrgDataId,
+    //     'name.active': true,
+    //   })
+    //   .setVariables({
+    //     'org.createdAt': 'datetime()',
+    //     'dh.createdAt': 'datetime()',
+    //     'name.createdAt': 'datetime()',
+    //   })
+    //   .return({ org: [{ id: 'orgId' }] })
+    //   .first();
+
+    // if (rootOrgMergeResult) {
+    //   rootOrgId = rootOrgMergeResult.orgId;
+    // } else {
+    //   throw Error('failed to create root organization');
+    // }
+
     // merge on the root sg label, which will create a node if it doesn't exist
     let sgId = generate();
     const sgMergeResult = await this.db
@@ -787,7 +826,8 @@ export class QueryService {
           ],
         },
         userId, // the user being created is the 'requesting user'
-        false
+        false,
+        rootOrgId
       );
 
       if (!createUserResult) {

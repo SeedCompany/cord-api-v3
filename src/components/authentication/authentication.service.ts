@@ -52,7 +52,7 @@ export class AuthenticationService {
     this.decodeJWT(token); // it will throw if invalid
 
     const doesExist = await this.db2.confirmPropertyValueExists(
-      ['Token'],
+      ['UsertokenData'],
       token
     );
 
@@ -63,12 +63,17 @@ export class AuthenticationService {
     const userRes = await this.db
       .query()
       .match([
-        node('token', 'Token', {
+        node('token', 'UsertokenData', {
           active: true,
           value: session.token,
         }),
-        relation('in', '', 'token', {
+        relation('in', '', 'DATA'),
+        node('dh', 'UsertokenHolder', {
           active: true,
+        }),
+        relation('in', '', 'DATAHOLDERS', {
+          active: true,
+          identifier: 'token',
         }),
         node('user', 'User'),
       ])

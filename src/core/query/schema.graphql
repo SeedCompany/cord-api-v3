@@ -21,6 +21,7 @@ type BaseNode {
   dataHolders: [DataHolder!]! @relation(name: "DATAHOLDERS", direction: "OUT")
   admins: [BaseNode] @relation(name: "ADMINS", direction: "OUT")
   creator: [BaseNode] @relation(name: "CREATOR", direction: "OUT")
+  organizations: [BaseNode] @relation(name: "ORGANIZATIONS", direction: "OUT")
   holderCount: Int
     @cypher(
       statement: """
@@ -46,6 +47,7 @@ type DataHolder implements AbstractNode {
   isSingleton: Boolean!
   valueType: ValueTypeEnum!
   baseNode: BaseNode! @relation(name: "DATAHOLDERS", direction: "IN")
+  baseNodesAsData: BaseNode @relation(name: "DATA", direction: "OUT")
   data: [DataTarget] @relation(name: "DATA", direction: "OUT")
   isPublicReadable: Boolean!
   isOrgReadable: Boolean!

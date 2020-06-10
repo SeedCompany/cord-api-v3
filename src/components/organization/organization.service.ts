@@ -163,7 +163,8 @@ export class OrganizationService {
         ],
       },
       session.userId,
-      true
+      true,
+      session.owningOrgId
     );
 
     if (!createOrg) {
