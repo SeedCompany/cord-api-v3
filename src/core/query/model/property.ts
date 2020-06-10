@@ -1,4 +1,4 @@
-import { BaseNode } from '../../../common/base-node';
+import { BaseNode } from './base-node';
 
 export interface Property {
   key: string;

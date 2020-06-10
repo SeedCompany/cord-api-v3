@@ -282,6 +282,7 @@ export class UserService {
     );
 
     const id = generate();
+    const edId = generate();
 
     const pash = await argon2.hash(input.password);
     const createdAt = DateTime.local();
@@ -292,6 +293,26 @@ export class UserService {
         id,
         createdAt: createdAt.toString(),
         props: [
+          // example of how you can (if you want) add child base node
+          {
+            key: 'education',
+            value: '',
+            isSingleton: false,
+            baseNode: {
+              label: 'Education',
+              id: edId,
+              createdAt: createdAt.toString(),
+              props: [
+                {
+                  key: 'degree',
+                  value: 'doctor',
+                  isSingleton: true,
+                  addToAdminSg: true,
+                  addToReaderSg: true,
+                },
+              ],
+            },
+          },
           {
             key: 'token',
             value: '',

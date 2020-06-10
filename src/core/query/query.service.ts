@@ -21,6 +21,7 @@ import {
   secureReadDataByBaseNodeId,
   secureDeleteData,
   secureDeleteBaseNode,
+  addChildBaseNode,
 } from './queryTemplates';
 import * as argon2 from 'argon2';
 import { POWERS } from './model/powers';
@@ -128,12 +129,13 @@ export class QueryService {
 
   // Base Node CRUD
 
-  async createBaseNode(
+  createBaseNodeQuery(
     baseNode: BaseNode,
     requestingUserId: string,
     createReaderSG = true,
-    orgId?: string
-  ) {
+    orgId?: string,
+    idPrefix: string = ''
+  ): string {
     const sgAdminId = generate();
     const sgReaderId = generate();
 
@@ -164,7 +166,7 @@ export class QueryService {
 
       if (prop.addToAdminSg) {
         adminPerm += createPermission(
-          'q' + q++,
+          'q' + idPrefix + q++,
           baseNode.createdAt,
           prop.key,
           sgAdminId,
@@ -177,7 +179,7 @@ export class QueryService {
 
       if (prop.addToReaderSg) {
         readerPerm += createPermission(
-          'q' + q++,
+          'q' + idPrefix + q++,
           baseNode.createdAt,
           prop.key,
           sgReaderId,
@@ -188,19 +190,31 @@ export class QueryService {
         );
       }
 
+      // if prop is actually a base node we need to create it first,
+      // otherwise its a normal property
       if (prop.baseNode === undefined) {
         dataQuery += createData(
-          'q' + q++,
+          'q' + idPrefix + q++,
           baseNode.createdAt,
           prop.value,
           dhId,
           baseNode.label,
           prop.key
         );
+      } else {
+        dataQuery += this.createBaseNodeQuery(
+          prop.baseNode,
+          requestingUserId,
+          createReaderSG,
+          undefined,
+          'Education'
+        );
+
+        dataQuery += addChildBaseNode(dhId, prop.baseNode.id);
       }
 
       propQuery += createDataHolder(
-        'q' + q++,
+        'q' + idPrefix + q++,
         dhId,
         baseNode.createdAt,
         prop.key,
@@ -215,7 +229,7 @@ export class QueryService {
     } // end prop loop
 
     const query = createBaseNode(
-      `q` + q++,
+      `q` + idPrefix + q++,
       baseNode.id,
       baseNode.createdAt,
       baseNode.label,
@@ -226,9 +240,30 @@ export class QueryService {
       orgId
     );
 
+    return query;
+  }
+
+  async createBaseNode(
+    baseNode: BaseNode,
+    requestingUserId: string,
+    createReaderSG = true,
+    orgId?: string
+  ): Promise<string> {
+    const query = this.createBaseNodeQuery(
+      baseNode,
+      requestingUserId,
+      createReaderSG,
+      orgId
+    );
     // this.logger.info(query);
 
-    const result = await this.sendGraphql(query);
+    const mutation = `
+    mutation{
+      ${query}
+    }
+    `;
+
+    const result = await this.sendGraphql(mutation);
     if (!result) {
       throw new ServerException('failed to create user');
     }

@@ -283,6 +283,19 @@ export function createDataHolder(
   `;
 }
 
+export function addChildBaseNode(
+  dhId: string,
+  childBaseNodeId: string
+): string {
+  const query = `
+  AddDataHolderBaseNodesAsData(from:{id:"${dhId}"}, to:{id:"${childBaseNodeId}"}){
+    from{id}
+  }
+  `;
+
+  return query;
+}
+
 // BASE NODE
 
 export function createBaseNode(
@@ -349,7 +362,6 @@ export function createBaseNode(
   }
 
   return `
-  mutation{
     ${queryId}: CreateBaseNode(
       id: "${baseNodeId}"
       createdAt: { formatted: "${createdAt}"}
@@ -376,8 +388,7 @@ export function createBaseNode(
     ${addBaseNodeAdminQuery}
 
     ${addBaseNodeOrganizationQuery}
-
-  }
+  
   `;
 }
 
