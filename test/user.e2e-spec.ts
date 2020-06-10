@@ -72,7 +72,6 @@ describe('User e2e', () => {
     );
 
     const actual: User = result.user;
-
     expect(actual).toBeTruthy();
 
     expect(isValid(actual.id)).toBe(true);
@@ -368,19 +367,7 @@ describe('User e2e', () => {
   });
 
   it('read one users organizations', async () => {
-    const fakeUser: CreateUser = {
-      email: faker.internet.email(),
-      realFirstName: faker.name.firstName(),
-      realLastName: faker.name.lastName(),
-      displayFirstName: faker.name.firstName(),
-      displayLastName: faker.name.lastName(),
-      password: faker.internet.password(),
-      phone: faker.phone.phoneNumber(),
-      timezone: 'timezone detail',
-      bio: 'bio detail',
-      status: UserStatus.Active,
-    };
-    const newUser = await createUser(app, fakeUser);
+    const newUser = await createUser(app);
     const org = await createOrganization(app);
     const result = await app.graphql.mutate(
       gql`
@@ -466,7 +453,7 @@ describe('User e2e', () => {
     return true;
   });
 
-  it.only('read one users unavailablity', async () => {
+  it('read one users unavailablity', async () => {
     const newUser = await createUser(app);
     const unavail = await createUnavailability(app, { userId: newUser.id });
 
