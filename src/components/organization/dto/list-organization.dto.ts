@@ -20,7 +20,7 @@ export abstract class OrganizationFilters {
     description: 'User IDs ANY of which must belong to the organizations',
     nullable: true,
   })
-  readonly userIds?: string[];
+  readonly userId?: string;
 }
 
 const defaultFilters = {};

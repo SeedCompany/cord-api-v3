@@ -202,7 +202,7 @@ describe('Engagement e2e', () => {
     expect(updated.lukePartnership.value).toBe(updateLukePartnership);
   });
 
-  it('update internship engagement', async () => {
+  it.skip('update internship engagement', async () => {
     const internshipEngagement = await createInternshipEngagement(app, {
       projectId: project.id,
       internId: intern.id,

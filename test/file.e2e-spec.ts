@@ -74,6 +74,7 @@ function resetNow() {
 }
 
 describe('File e2e', () => {
+  jest.setTimeout(50000);
   let app: TestApp;
   let bucket: MemoryBucket;
   let root: Directory;
