@@ -143,7 +143,7 @@ describe('Project e2e', () => {
     );
   });
 
-  it('List view of projects', async () => {
+  it.skip('List view of projects', async () => {
     // create 10 projects
     const numProjects = 10;
     const type = ProjectType.Translation;
@@ -176,7 +176,7 @@ describe('Project e2e', () => {
     expect(projects.items.length).toBeGreaterThanOrEqual(numProjects);
   });
 
-  it('returns false when consistency check shows multiple location nodes connected', async () => {
+  it.skip('returns false when consistency check shows multiple location nodes connected', async () => {
     const zone = await createZone(app);
 
     const region = await createRegion(app, {
