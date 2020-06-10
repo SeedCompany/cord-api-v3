@@ -633,7 +633,7 @@ export class QueryService {
         )
         .first();
 
-      this.logger.info(JSON.stringify(result1));
+      // this.logger.info(JSON.stringify(result1));
 
       if (!result1 || !(await argon2.verify(result1.pash, password))) {
         throw new UnauthenticatedException('Invalid credentials');

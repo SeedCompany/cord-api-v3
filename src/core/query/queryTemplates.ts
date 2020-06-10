@@ -105,12 +105,6 @@ export function addPowerRelationship(
   `;
 }
 
-export function addAdmin(queryId: string, baseNodeId: string, userId: string) {
-  return `
-  ${queryId}: AddBaseNodeAdmins(from:{id:"${baseNodeId}"}, to:{id:"${userId}"})
-  `;
-}
-
 // LABELS
 
 export function addLabel(queryId: string, id: string, label: string) {
@@ -337,6 +331,12 @@ export function createBaseNode(
     requestingUserId
   );
 
+  const addBaseNodeAdminQuery = addBaseNodeAdmin(
+    `${queryId}_bn_admin`,
+    baseNodeId,
+    requestingUserId
+  );
+
   return `
   mutation{
     ${queryId}: CreateBaseNode(
@@ -361,6 +361,8 @@ export function createBaseNode(
     ${propQuery}
 
     ${addCreatorQuery}
+
+    ${addBaseNodeAdminQuery}
 
   }
   `;
@@ -413,6 +415,20 @@ export function addCreator(
       }
     }
     `;
+}
+
+export function addBaseNodeAdmin(
+  queryId: string,
+  baseNodeId: string,
+  userId: string
+) {
+  return `
+  ${queryId}: AddBaseNodeAdmins(from:{id:"${baseNodeId}"}, to:{id:"${userId}"}){
+    from{
+      id
+    }
+  }
+  `;
 }
 
 export function secureDeleteBaseNode(
