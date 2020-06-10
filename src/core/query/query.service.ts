@@ -735,12 +735,12 @@ export class QueryService {
       .match([
         node('user', 'User'),
         relation('out', '', 'DATAHOLDERS'),
-        node('dh', 'DataHolder', {
+        node('dh', 'UseremailHolder', {
           active: true,
           identifier: 'email',
         }),
         relation('out', '', 'DATA'),
-        node('email', 'Email', {
+        node('email', 'UseremailData', {
           active: true,
           value: email,
         }),
