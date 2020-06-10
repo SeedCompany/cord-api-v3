@@ -4,6 +4,7 @@ import { UserModule } from '../user';
 import { AdminResolver } from './admin.resolver';
 import { AdminService } from './admin.service';
 import { QueryModule } from '../../core/query/query.module';
+import { OrganizationModule } from '../organization';
 
 @Module({
   imports: [UserModule, AuthorizationModule, QueryModule],
