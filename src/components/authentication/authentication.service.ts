@@ -180,22 +180,18 @@ export class AuthenticationService {
     // check token in db to verify the user id and owning org id.
     const result = await this.db
       .query()
-      .raw(
-        `
-          MATCH
-            (token:Token {
-              active: true,
-              value: $token
-            })
-          OPTIONAL MATCH
-            (token)<-[:token {active: true}]-(user:User {active: true})
-          RETURN
-            token, user.owningOrgId AS owningOrgId, user.id AS userId
-        `,
-        {
-          token,
-        }
-      )
+      .match([
+        node('token', 'Token', {
+          active: true,
+          value: token,
+        }),
+      ])
+      .optionalMatch([
+        node('token'),
+        relation('in', '', 'token', { active: true }),
+        node('user', 'User', { active: true }),
+      ])
+      .return('token, user.owningOrgId AS owningOrgId, user.id AS userId')
       .first();
 
     if (!result) {
