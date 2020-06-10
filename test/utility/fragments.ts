@@ -581,6 +581,12 @@ export const state = gql`
   }
 `;
 
+export const fav = gql`
+  fragment fav on Favorite {
+    baseNodeId
+  }
+`;
+
 export const fragments = {
   org,
   user,
@@ -605,4 +611,5 @@ export const fragments = {
   film,
   literacyMaterial,
   story,
+  fav,
 };

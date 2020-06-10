@@ -6,6 +6,7 @@ import { AuthorizationModule } from './components/authorization';
 import { BudgetModule } from './components/budget/budget.module';
 import { CeremonyModule } from './components/ceremony';
 import { EngagementModule } from './components/engagement';
+import { FavoriteModule } from './components/favorites/favorite.module';
 import { FileModule } from './components/file';
 import { LanguageModule } from './components/language';
 import { LocationModule } from './components/location';
@@ -33,6 +34,7 @@ import { CoreModule, LoggerModule } from './core';
     ProjectModule,
     LocationModule,
     OrganizationModule,
+    FavoriteModule,
     UserModule,
     PartnershipModule,
     WorkflowModule,
