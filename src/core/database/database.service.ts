@@ -668,7 +668,7 @@ export class DatabaseService {
         ],
       ]);
     }
-    query.with('count(n) as total, requestingUser');
+    query.with('count(n) as total, requestingUser, n');
 
     for (const prop of props) {
       const propName = typeof prop === 'object' ? prop.name : prop;

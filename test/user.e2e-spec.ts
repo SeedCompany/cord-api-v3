@@ -382,7 +382,6 @@ describe('User e2e', () => {
     };
     const newUser = await createUser(app, fakeUser);
     const org = await createOrganization(app);
-
     const result = await app.graphql.mutate(
       gql`
         mutation assignOrganizationToUser(
@@ -403,7 +402,6 @@ describe('User e2e', () => {
         primary: true,
       }
     );
-
     expect(result.assignOrganizationToUser).toBe(true);
 
     const result1 = await app.graphql.query(
@@ -429,14 +427,15 @@ describe('User e2e', () => {
         id: newUser.id,
       }
     );
-    const actual: User = result1.user;
+    const actual = result1.user;
     expect(actual).toBeTruthy();
+    expect(actual.organizations.items[0].id).toBe(org.id);
     return true;
   });
 
   it('read one users education', async () => {
     const newUser = await createUser(app);
-    await createEducation(app, { userId: newUser.id });
+    const edu = await createEducation(app, { userId: newUser.id });
 
     const result = await app.graphql.query(
       gql`
@@ -463,12 +462,13 @@ describe('User e2e', () => {
     );
     const actual = result.user;
     expect(actual).toBeTruthy();
+    expect(actual.education.items[0].id).toBe(edu.id);
     return true;
   });
 
-  it('read one users unavailablity', async () => {
+  it.only('read one users unavailablity', async () => {
     const newUser = await createUser(app);
-    await createUnavailability(app, { userId: newUser.id });
+    const unavail = await createUnavailability(app, { userId: newUser.id });
 
     const result = await app.graphql.query(
       gql`
@@ -495,6 +495,7 @@ describe('User e2e', () => {
     );
     const actual = result.user;
     expect(actual).toBeTruthy();
+    expect(actual.unavailabilities.items[0].id).toBe(unavail.id);
     return true;
   });
 });
