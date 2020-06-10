@@ -23,8 +23,8 @@ import {
   many,
   Order,
   Resource,
-  unwrapSecured,
   UnwrapSecured,
+  unwrapSecured,
 } from '../../common';
 import { ILogger, Logger } from '..';
 
@@ -1404,26 +1404,43 @@ export class DatabaseService {
     const nodeName = upperFirst(nodevar);
     const aclReadPropName = aclReadProp || `canRead${nodeName}s`;
     const aclCreatePropName = aclEditProp || `canCreate${nodeName}`;
-    // If the reqUser is rootSg member or root user, give access to any node and its properties
-    if (await this.isRootSecurityGroupMember(session)) {
-      await this.db
-        .query()
-        .match([node('node', nodeName, { active: true, id: id })])
-        .match([
-          node('node'),
-          relation('out', '', '', { active: true }),
-          node('prop', 'Property', { active: true }),
-        ])
-        .return('node, prop')
-        .first();
-    }
-
     const output = {
       node: [{ id: 'id', createdAt: 'createdAt' }],
       requestingUser: [
         { canReadOrgs: aclReadPropName, canCreateOrg: aclCreatePropName },
       ],
     };
+    const returnVal: Dictionary<any> = {};
+
+    if (await this.isRootSecurityGroupMember(session)) {
+      const rootOutput = {
+        baseNode: [{ id: 'id', createdAt: 'createdAt' }],
+      };
+      const qry = this.db
+        .query()
+        .match([node('baseNode', nodeName, { active: true, id: id })]);
+      props.map((prop) => {
+        qry.optionalMatch([
+          node('baseNode'),
+          relation('out', 'rel', prop, { active: true }),
+          node(prop, 'Property', { active: true }),
+        ]);
+        Object.assign(rootOutput, { [prop]: [{ value: prop }] });
+      });
+
+      const rootResult = await qry.return(rootOutput).first();
+      returnVal.id = rootResult!.id;
+      returnVal.createdAt = rootResult!.createdAt;
+      props.map((prop) => {
+        returnVal[prop] = {
+          value: rootResult![prop],
+          canRead: true,
+          canEdit: true,
+        };
+      });
+
+      return returnVal;
+    }
     const query = this.db
       .query()
       .match(matchSession(session, { withAclEdit: aclReadPropName }))
@@ -1458,7 +1475,6 @@ export class DatabaseService {
       );
     }
 
-    const returnVal: Dictionary<any> = {};
     returnVal.id = result.id;
     returnVal.createdAt = result.createdAt;
     props.map((property) => {
@@ -1468,6 +1484,7 @@ export class DatabaseService {
         canEdit: !!result['canEdit' + upperFirst(property)],
       };
     });
+
     return returnVal;
   }
 

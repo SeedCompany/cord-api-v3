@@ -1,19 +1,23 @@
 import { gql } from 'apollo-server-core';
+import { node, relation } from 'cypher-query-builder';
 import * as faker from 'faker';
 import { times } from 'lodash';
 import { generate, isValid } from 'shortid';
 import { Organization } from '../src/components/organization';
+import { DatabaseService } from '../src/core';
 import {
   createOrganization,
   createSession,
   createTestApp,
   createUser,
   fragments,
+  getUserFromSession,
   TestApp,
 } from './utility';
 
 describe('Organization e2e', () => {
   let app: TestApp;
+  jest.setTimeout(50000);
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -34,6 +38,40 @@ describe('Organization e2e', () => {
   // READ ORG
   it('create & read organization by id', async () => {
     const org = await createOrganization(app);
+
+    const { organization: actual } = await app.graphql.query(
+      gql`
+        query org($id: ID!) {
+          organization(id: $id) {
+            ...org
+          }
+        }
+        ${fragments.org}
+      `,
+      {
+        id: org.id,
+      }
+    );
+    expect(actual.id).toBe(org.id);
+    expect(isValid(actual.id)).toBe(true);
+    expect(actual.name.value).toBe(org.name.value);
+  });
+
+  it('create & read organization by root security group member id', async () => {
+    const org = await createOrganization(app);
+    const currentUser = await getUserFromSession(app);
+    const db = app.get(DatabaseService);
+    // attach current user to rootsg
+    await db
+      .query()
+      .match([node('user', 'User', { active: true, id: currentUser.id })])
+      .create([
+        node('user'),
+        relation('in', '', 'member', { active: true }),
+        node('rsg', 'RootSecurityGroup', { active: true }),
+      ])
+      .return('user')
+      .first();
 
     const { organization: actual } = await app.graphql.query(
       gql`

@@ -72,6 +72,7 @@ export class OrganizationService {
     const propLabels = {
       name: 'OrgName',
     };
+
     const id = await this.db.sgCreateNode({
       session,
       input: input,
