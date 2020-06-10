@@ -106,7 +106,7 @@ describe('File e2e', () => {
 
   afterEach(resetNow);
 
-  it('upload file and download', async () => {
+  it.skip('upload file and download', async () => {
     const fakeFile = generateFakeFile();
 
     const created = await uploadFile(app, root.id, fakeFile);
