@@ -3,6 +3,7 @@ import {
   Injectable,
   InternalServerErrorException as ServerException,
   UnauthorizedException as UnauthenticatedException,
+  NotFoundException,
 } from '@nestjs/common';
 import { Connection, node, relation } from 'cypher-query-builder';
 import { BaseNode } from './model';
@@ -453,6 +454,35 @@ export class QueryService {
     } else {
       return undefined;
     }
+  }
+
+  async getBaseNodeIdByPropertyValue(
+    label: string,
+    value: any
+  ): Promise<string> {
+    const result = await this.db
+      .query()
+      .match([
+        node('bn', 'BaseNode', {
+          active: true,
+        }),
+        relation('out', '', 'DATAHOLDERS'),
+        node('dh', 'DataHolder', {
+          active: true,
+        }),
+        relation('out', '', 'DATA'),
+        node('data', label, {
+          value,
+        }),
+      ])
+      .return({
+        bn: [{ id: 'id' }],
+      })
+      .first();
+    if (!result) {
+      throw new NotFoundException('base node not found');
+    }
+    return result.id;
   }
 
   // Properties

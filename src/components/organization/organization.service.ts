@@ -174,6 +174,14 @@ export class OrganizationService {
     return this.readOne(id, session);
   }
 
+  async getOrgIdByName(name: string): Promise<string> {
+    const id = await this.db2.getBaseNodeIdByPropertyValue(
+      'OrganizationnameData',
+      name
+    );
+    return id;
+  }
+
   async readOne(orgId: string, session: ISession): Promise<Organization> {
     const readOrg = await this.db2.readBaseNode(
       {

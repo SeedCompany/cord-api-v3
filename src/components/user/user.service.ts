@@ -276,6 +276,10 @@ export class UserService {
     // if (!_.isEmpty(session)) {
     //   await this.logout(session.token);
     // }
+    const seedCoId = await this.db2.getBaseNodeIdByPropertyValue(
+      'OrganizationnameData',
+      'Seed Company'
+    );
 
     const id = generate();
 
@@ -366,7 +370,7 @@ export class UserService {
       },
       id, // the user being created is the 'requesting user'
       true,
-      session.owningOrgId
+      seedCoId
     );
 
     return result;
