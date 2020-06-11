@@ -411,6 +411,46 @@ export class QueryService {
     }
   }
 
+  // BASE NODE to BASE NODE
+
+  async connectChildBaseNode(
+    parentBaseNodeId: string,
+    identifier: string,
+    childBaseNodeId: string,
+    requestingUserId: string
+  ) {
+    const result = await this.db
+      .query()
+      .match([
+        node('parent', 'BaseNode', {
+          active: true,
+          id: parentBaseNodeId,
+        }),
+        relation('out', '', 'DATAHOLDERS'),
+        node('dh', 'DataHolder', {
+          active: true,
+          identifier,
+        }),
+      ])
+      .with('*')
+      .match([
+        node('child', 'BaseNode', {
+          active: true,
+          id: childBaseNodeId,
+        }),
+      ])
+      .merge([node('dh'), relation('out', '', 'DATA'), node('child')])
+      .run();
+
+    if (!result) {
+      throw new ServerException(
+        'could not create base node to base node relationship'
+      );
+    }
+
+    return true;
+  }
+
   // Base Node Search
 
   async listBaseNode(

@@ -234,33 +234,36 @@ extend type Query {
   ): SingletonPropertyOutput
     @cypher(
       statement: """
-      MATCH (bn:BaseNode {id:$baseNodeId})
+      MATCH (bn:BaseNode {id:$baseNodeId, active: true})
+
+      OPTIONAL MATCH
+      (admin_user:User {id: $requestingUserId, active: true})<-[isAdmin:ADMINS]-(bn)-[:DATAHOLDERS]->(:DataHolder {active: true, identifier: $identifier})-[:DATA]->(admins_data:Data {active: true})
 
       OPTIONAL MATCH
       (dh_read_public:DataHolder {active: true, identifier: $identifier, isPublicReadable: true})<-[:DATAHOLDERS]-(bn),
       (dh_read_public)-[:DATA]->(public_data:Data {active: true})
 
       OPTIONAL MATCH
-      (org_user:User {id: $requestingUserId})<-[:MEMBERS]-(org:Organization {active: true, id: $orgId}),
+      (org_user:User {id: $requestingUserId, active: true})<-[:MEMBERS]-(org:Organization {active: true, id: $orgId}),
 
       (org_data:Data {active: true})<-[:DATA]-(dh_read_org:DataHolder {active: true, identifier: $identifier, isOrgReadable: true})<-[:DATAHOLDERS]-(bn)
 
       OPTIONAL MATCH
-      (user:User {id: $requestingUserId})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:PERMISSIONS]->(readPerm:Permission{active:true, read:true})-[:GRANT]->(dh_read:DataHolder {active: true, identifier: $identifier})<-[:DATAHOLDERS]-(bn),
+      (:User {id: $requestingUserId})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:PERMISSIONS]->(readPerm:Permission{active:true, read:true})-[:GRANT]->(dh_read:DataHolder {active: true, identifier: $identifier})<-[:DATAHOLDERS]-(bn),
       (dh_read)-[:DATA]->(data:Data {active: true})
 
       OPTIONAL MATCH
-      (user:User {id: $requestingUserId})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:PERMISSIONS]->(editPerm:Permission{active:true, edit:true})-[:GRANT]->(:DataHolder {active: true, identifier: $identifier})<-[:DATAHOLDERS]-(bn)
+      (:User {id: $requestingUserId})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:PERMISSIONS]->(editPerm:Permission{active:true, edit:true})-[:GRANT]->(:DataHolder {active: true, identifier: $identifier})<-[:DATAHOLDERS]-(bn)
 
       OPTIONAL MATCH
-      (user:User {id: $requestingUserId})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:PERMISSIONS]->(adminPerm:Permission{active:true, admin:true})-[:GRANT]->(:DataHolder {active: true, identifier: $identifier})<-[:DATAHOLDERS]-(bn)
+      (:User {id: $requestingUserId})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:PERMISSIONS]->(adminPerm:Permission{active:true, admin:true})-[:GRANT]->(:DataHolder {active: true, identifier: $identifier})<-[:DATAHOLDERS]-(bn)
 
       WITH
       {
-        value: coalesce(data.value, org_data.value, public_data.value),
-        canRead: coalesce(readPerm.read, dh_read_org.isOrgReadable, dh_read_public.isPublicReadable ),
-        canEdit: editPerm.edit,
-        canAdmin: adminPerm.admin
+        value: coalesce(data.value, org_data.value, public_data.value, admins_data.value),
+        canRead: coalesce(readPerm.read, dh_read_org.isOrgReadable, dh_read_public.isPublicReadable, case when count(isAdmin) > 0 then true end ),
+        canEdit: coalesce(editPerm.edit, case when count(isAdmin) > 0 then true end ),
+        canAdmin: coalesce(adminPerm.admin, case when count(isAdmin) > 0 then true end )
       } as result
 
       RETURN result
@@ -275,33 +278,36 @@ extend type Query {
   ): ArrayPropertyOutput
     @cypher(
       statement: """
-      MATCH (bn:BaseNode {id:$baseNodeId})
+      MATCH (bn:BaseNode {id:$baseNodeId, active: true})
+
+      OPTIONAL MATCH
+      (admin_user:User {id: $requestingUserId, active: true})<-[isAdmin:ADMINS]-(bn)-[:DATAHOLDERS]->(:DataHolder {active: true, identifier: $identifier})-[:DATA]->(admins_data:Data {active: true})
 
       OPTIONAL MATCH
       (dh_read_public:DataHolder {active: true, identifier: $identifier, isPublicReadable: true})<-[:DATAHOLDERS]-(bn),
       (dh_read_public)-[:DATA]->(public_data:Data {active: true})
 
       OPTIONAL MATCH
-      (org_user:User {id: $requestingUserId})<-[:MEMBERS]-(org:Organization {active: true, id: $orgId}),
+      (org_user:User {id: $requestingUserId, active: true})<-[:MEMBERS]-(org:Organization {active: true, id: $orgId}),
 
       (dh_read_org:DataHolder {active: true, identifier: $identifier, isOrgReadable: true})<-[:DATAHOLDERS]-(bn),
       (dh_read_org)-[:DATA]->(org_data:Data {active: true})
 
       OPTIONAL MATCH
-      (user:User {id: $requestingUserId, active: true})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:PERMISSIONS]->(readPerm:Permission{active:true, read:true})-[:GRANT]->(:DataHolder {active: true, identifier: $identifier})-[:DATA]->(data:Data {active: true})
+      (:User {id: $requestingUserId, active: true})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:PERMISSIONS]->(readPerm:Permission{active:true, read:true})-[:GRANT]->(:DataHolder {active: true, identifier: $identifier})-[:DATA]->(data:Data {active: true})
 
       OPTIONAL MATCH
-      (user:User {id: $requestingUserId, active: true})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:PERMISSIONS]->(editPerm:Permission{active:true, edit:true})-[:GRANT]->(:DataHolder {active: true, identifier: $identifier})
+      (:User {id: $requestingUserId, active: true})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:PERMISSIONS]->(editPerm:Permission{active:true, edit:true})-[:GRANT]->(:DataHolder {active: true, identifier: $identifier})
 
       OPTIONAL MATCH
-      (user:User {id: $requestingUserId, active: true})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:PERMISSIONS]->(adminPerm:Permission{active:true, admin:true})-[:GRANT]->(:DataHolder {active: true, identifier: $identifier})
+      (:User {id: $requestingUserId, active: true})<-[:MEMBERS]-(:SecurityGroup {active:true})-[:PERMISSIONS]->(adminPerm:Permission{active:true, admin:true})-[:GRANT]->(:DataHolder {active: true, identifier: $identifier})
 
       WITH
       {
-        value: apoc.coll.union( apoc.coll.union(collect(org_data.value),  collect(public_data.value)), collect(data.value)),
-        canRead: coalesce(readPerm.read, dh_read_org.isOrgReadable, dh_read_public.isPublicReadable ),
-        canEdit: editPerm.edit,
-        canAdmin: adminPerm.admin
+        value: apoc.coll.union( apoc.coll.union( apoc.coll.union(collect(org_data.value),  collect(public_data.value)), collect(data.value)), admins_data.value ),
+        canRead: coalesce(readPerm.read, dh_read_org.isOrgReadable, dh_read_public.isPublicReadable, case when count(isAdmin) > 0 then true end  ),
+        canEdit: coalesce(editPerm.edit, case when count(isAdmin) > 0 then true end ),
+        canAdmin: coalesce(adminPerm.admin, case when count(isAdmin) > 0 then true end )
       } as result
 
       RETURN result
