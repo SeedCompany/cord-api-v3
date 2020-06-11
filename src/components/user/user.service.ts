@@ -221,8 +221,8 @@ export class UserService {
     }
     if (!user.canRead) {
       throw new UnauthenticatedException(
-        'cannot read organization list',
-        `DEBUG: {requestingUser, ${session} target UserId ${userId}}`
+        'cannot read organization list' +
+          `DEBUG: {requestingUser, ${session} target UserId ${userId}}`
       );
     }
     const result = await this.organizations.list(

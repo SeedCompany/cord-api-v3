@@ -278,8 +278,8 @@ export class ProjectService {
 
     if (!result) {
       throw new NotFoundException(
-        'Could not find project',
-        `DEBUG: {requestingUser, ${session} target ProjectId ${id}}`
+        'Could not find project' +
+          `DEBUG: {requestingUser, ${session} target ProjectId ${id}}`
       );
     }
 
