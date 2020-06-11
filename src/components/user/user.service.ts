@@ -99,18 +99,17 @@ export class UserService {
   ): Promise<UserListOutput> {
     const result: any = await this.db2.listBaseNode(
       {
-        id: '',
-        createdAt: '',
         label: 'User',
         props: [
           {
             key: 'email',
             value: '',
             isSingleton: true,
-            addToAdminSg: true,
-            addToReaderSg: true,
-            orderBy: true,
-            asc: true,
+          },
+          {
+            key: 'realFirstName',
+            value: '',
+            isSingleton: true,
           },
         ],
       },
@@ -282,7 +281,6 @@ export class UserService {
     );
 
     const id = generate();
-    const edId = generate();
 
     const pash = await argon2.hash(input.password);
     const createdAt = DateTime.local();
@@ -294,25 +292,23 @@ export class UserService {
         createdAt: createdAt.toString(),
         props: [
           // example of how you can (if you want) add child base node
-          {
-            key: 'education',
-            value: '',
-            isSingleton: false,
-            baseNode: {
-              label: 'Education',
-              id: edId,
-              createdAt: createdAt.toString(),
-              props: [
-                {
-                  key: 'degree',
-                  value: 'doctor',
-                  isSingleton: true,
-                  addToAdminSg: true,
-                  addToReaderSg: true,
-                },
-              ],
-            },
-          },
+          // {
+          //   key: 'education',
+          //   value: '',
+          //   isSingleton: false,
+          //   baseNode: {
+          //     label: 'Education',
+          //     id: generate(),
+          //     createdAt: createdAt.toString(),
+          //     props: [
+          //       {
+          //         key: 's',
+          //         value: 'some value',
+          //         isSingleton: true,
+          //       },
+          //     ],
+          //   },
+          // },
           {
             key: 'token',
             value: '',

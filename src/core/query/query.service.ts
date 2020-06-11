@@ -454,7 +454,7 @@ export class QueryService {
   // Base Node Search
 
   async listBaseNode(
-    baseNode: BaseNode,
+    baseNode: Partial<BaseNode>,
     requestingUserId: string | undefined,
     page: number,
     count: number,
@@ -462,10 +462,14 @@ export class QueryService {
     order: string,
     filter: string
   ) {
+    if (!baseNode.props || !baseNode.label) {
+      throw new ServerException('list params not met');
+    }
+
     let query = this.db.query();
 
     let propsQuery = '';
-    let returnQuery = '';
+    let returnQueryProps = '';
     let orderByQuery = '';
 
     for (let i = 0; i < baseNode.props.length; i++) {
@@ -473,21 +477,31 @@ export class QueryService {
       const propNodeKey = `${prop.key}_node`;
       propsQuery += searchProperty(baseNode.label, prop.key, propNodeKey);
 
-      if (prop.orderBy) {
-        if (prop.asc) {
-          orderByQuery = `${propNodeKey}.value ASC`;
-        } else {
-          orderByQuery = `${propNodeKey}.value DESC`;
-        }
-      }
+      const comma = i + 1 < baseNode.props.length ? ',' : '';
 
-      returnQuery += `{${prop.key}: {value: ${propNodeKey}.value}} as node`;
+      returnQueryProps += `
+      ${prop.key}: {
+        value: ${propNodeKey}.value
+      } ${comma}
+      `;
     }
+
+    if (order === `ASC`) {
+      orderByQuery = `node.${sort}.value ASC`;
+    } else {
+      orderByQuery = `node.${sort}.value DESC`;
+    }
+
+    const returnQuery = `
+      {
+        ${returnQueryProps}
+      } as node
+    `;
 
     query.raw(`
     MATCH (requestingUser:User {id: "${requestingUserId}"})
     ${propsQuery}
-    RETURN
+    RETURN DISTINCT
     ${returnQuery}
     ORDER BY ${orderByQuery}
     SKIP ${page * count - count}
@@ -499,6 +513,8 @@ export class QueryService {
     this.logger.info(printMe.interpolate());
 
     const itemsQuery: any = await query.run();
+
+    this.logger.info(JSON.stringify(itemsQuery));
 
     let items = [];
 

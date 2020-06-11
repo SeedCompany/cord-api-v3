@@ -19,3 +19,7 @@ export function searchProperty(
     (${dataTag}_dh)
   `;
 }
+
+export function returnDomainObject() {}
+
+export function returnPropertyPortion() {}
