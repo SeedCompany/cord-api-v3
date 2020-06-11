@@ -274,6 +274,7 @@ export class ProjectService {
       result = await readProject.first();
     } catch (e) {
       this.logger.error('e :>> ', e);
+      return await Promise.reject(e);
     }
 
     if (!result) {
@@ -354,43 +355,50 @@ export class ProjectService {
     { page, count, sort, order, filter }: ProjectListInput,
     session: ISession
   ): Promise<ProjectListOutput> {
-    const result = await this.db.list<Project>({
-      session,
-      nodevar: 'project',
-      aclReadProp: 'canReadProjects',
-      aclEditProp: 'canCreateProject',
-      props: [
-        { name: 'type', secure: false },
-        { name: 'sensitivity', secure: false },
-        { name: 'name', secure: true },
-        { name: 'deptId', secure: true },
-        { name: 'step', secure: true },
-        { name: 'status', secure: false },
-        { name: 'location', secure: true },
-        { name: 'mouStart', secure: true },
-        { name: 'mouEnd', secure: true },
-        { name: 'estimatedSubmission', secure: true },
-        { name: 'modifiedAt', secure: false },
-      ],
-      input: {
-        page,
-        count,
-        sort,
-        order,
-        filter,
-      },
-    });
-    return {
-      items: result.items.map((item) => ({
-        ...item,
-        location: {
-          value: undefined,
-          canEdit: true,
-          canRead: true,
+    let result;
+    try {
+      result = await this.db.list<Project>({
+        session,
+        nodevar: 'project',
+        aclReadProp: 'canReadProjects',
+        aclEditProp: 'canCreateProject',
+        props: [
+          { name: 'type', secure: false },
+          { name: 'sensitivity', secure: false },
+          { name: 'name', secure: true },
+          { name: 'deptId', secure: true },
+          { name: 'step', secure: true },
+          { name: 'status', secure: false },
+          { name: 'location', secure: true },
+          { name: 'mouStart', secure: true },
+          { name: 'mouEnd', secure: true },
+          { name: 'estimatedSubmission', secure: true },
+          { name: 'modifiedAt', secure: false },
+        ],
+        input: {
+          page,
+          count,
+          sort,
+          order,
+          filter,
         },
-      })),
-      hasMore: result.hasMore,
-      total: result.total,
+      });
+    } catch (e) {
+      this.logger.error(e);
+    }
+    return {
+      items: result
+        ? result.items.map((item) => ({
+            ...item,
+            location: {
+              value: undefined,
+              canEdit: true,
+              canRead: true,
+            },
+          }))
+        : [],
+      hasMore: result ? result.hasMore : false,
+      total: result ? result.total : 0,
     };
   }
 
@@ -692,7 +700,7 @@ export class ProjectService {
       await this.db.deleteNode({
         session,
         object,
-        aclEditProp: 'canDeleteOwnUser',
+        aclEditProp: 'canCreateProject',
       });
     } catch (e) {
       this.logger.warning('Failed to delete project', {
