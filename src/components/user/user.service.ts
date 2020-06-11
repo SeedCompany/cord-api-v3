@@ -220,7 +220,10 @@ export class UserService {
       throw new NotFoundException('Could not find user');
     }
     if (!user.canRead) {
-      throw new UnauthenticatedException('cannot read organization list');
+      throw new UnauthenticatedException(
+        'cannot read organization list',
+        `DEBUG: {requestingUser, ${session} target UserId ${userId}}`
+      );
     }
     const result = await this.organizations.list(
       {

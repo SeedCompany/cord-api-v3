@@ -277,7 +277,10 @@ export class ProjectService {
     }
 
     if (!result) {
-      throw new NotFoundException('Could not find project');
+      throw new NotFoundException(
+        'Could not find project',
+        `DEBUG: {requestingUser, ${session} target ProjectId ${id}}`
+      );
     }
 
     const location = result.country
