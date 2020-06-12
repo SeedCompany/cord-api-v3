@@ -10,6 +10,7 @@ import {
   ProjectStep,
   ProjectType,
 } from '../src/components/project';
+import { User } from '../src/components/user/dto/user.dto';
 import { DatabaseService } from '../src/core';
 import {
   createCountry,
@@ -26,11 +27,15 @@ import {
 
 describe('Project e2e', () => {
   let app: TestApp;
+  let intern: User;
+  let mentor: User;
 
   beforeAll(async () => {
-    jest.setTimeout(50000);
+    jest.setTimeout(300000);
     app = await createTestApp();
     await createSession(app);
+    intern = await createUser(app);
+    mentor = await createUser(app);
     await createUser(app);
   });
   afterAll(async () => {
@@ -302,5 +307,90 @@ describe('Project e2e', () => {
         id: project.id,
       }
     );
+  });
+
+  it('List view of language engagement', async () => {
+    // create 2 engagements in a project
+    const numEngagements = 1; //2
+    //const type = ProjectType.Translation;
+    // const password: string = faker.internet.password();
+    // const user = await createUser(app, { password });
+    // await login(app, { email: user.email.value, password });
+    const project = await createProject(app);
+    await createLanguageEngagement(app, {
+      projectId: project.id,
+    });
+
+    // await createLanguageEngagement(app, {
+    //   projectId: project.id,
+    // });
+    const queryProject = await app.graphql.query(
+      gql`
+        query project($id: ID!) {
+          project(id: $id) {
+            ...project
+            engagements {
+              items {
+                ...languageEngagement
+              }
+              hasMore
+              total
+            }
+          }
+        }
+        ${fragments.project},
+        ${fragments.languageEngagement}
+      `,
+      {
+        id: project.id,
+      }
+    );
+    //console.log('queryProject ', JSON.stringify(queryProject, null, 2));
+    expect(
+      queryProject.project.engagements.items.length
+    ).toBeGreaterThanOrEqual(numEngagements);
+  });
+
+  it.only('List view of internship engagement', async () => {
+    // create 2 engagements in a project
+    const numEngagements = 1; //2
+
+    //const type = ProjectType.Internship;
+    const project = await createProject(app, { type: ProjectType.Internship });
+
+    //const password: string = faker.internet.password();
+    //const user = await createUser(app, { password });
+    //await login(app, { email: user.email.value, password });
+    await createInternshipEngagement(app, {
+      mentorId: mentor.id,
+      projectId: project.id,
+      internId: intern.id,
+    });
+
+    const queryProject = await app.graphql.query(
+      gql`
+        query project($id: ID!) {
+          project(id: $id) {
+            ...project
+            engagements {
+              items {
+                ...internshipEngagement
+              }
+              hasMore
+              total
+            }
+          }
+        }
+        ${fragments.project},
+        ${fragments.internshipEngagement}
+      `,
+      {
+        id: project.id,
+      }
+    );
+    //console.log('queryProject ', JSON.stringify(queryProject, null, 2));
+    expect(
+      queryProject.project.engagements.items.length
+    ).toBeGreaterThanOrEqual(numEngagements);
   });
 });

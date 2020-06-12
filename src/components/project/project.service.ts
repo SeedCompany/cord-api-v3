@@ -1,7 +1,6 @@
 import {
   Injectable,
   NotFoundException,
-  NotImplementedException,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
@@ -17,7 +16,11 @@ import {
   OnIndex,
 } from '../../core';
 import { Budget, BudgetService, BudgetStatus, SecuredBudget } from '../budget';
-import { EngagementListInput, SecuredEngagementList } from '../engagement';
+import {
+  EngagementListInput,
+  EngagementService,
+  SecuredEngagementList,
+} from '../engagement';
 import { Directory, FileService } from '../file';
 import { LocationService } from '../location';
 import {
@@ -51,6 +54,7 @@ export class ProjectService {
     private readonly budgets: BudgetService,
     private readonly partnerships: PartnershipService,
     private readonly fileService: FileService,
+    private readonly engagementService: EngagementService,
     @Logger('project:service') private readonly logger: ILogger
   ) {}
 
@@ -272,6 +276,7 @@ export class ProjectService {
     let result;
     try {
       result = await readProject.first();
+      //console.log('1 >>>>>>>', JSON.stringify(result, null, 2));
     } catch (e) {
       this.logger.error('e :>> ', e);
       return await Promise.reject(e);
@@ -426,12 +431,71 @@ export class ProjectService {
   }
 
   async listEngagements(
-    _project: Project,
-    _input: EngagementListInput,
-    _session: ISession
+    project: Project,
+    input: EngagementListInput,
+    session: ISession
   ): Promise<SecuredEngagementList> {
-    // Maybe call EngagementService?
-    throw new NotImplementedException();
+    this.logger.info('list engagements ', {
+      projectId: project.id,
+      input,
+      userId: session.userId,
+    });
+    //console.log('2 >>>>>>>');
+    //get a list of engagements
+    const listQuery = this.db
+      .query()
+      .match(matchSession(session, { withAclRead: 'canReadProjects' }));
+    listQuery
+      .match([
+        node('project', 'Project', { active: true, id: project.id }),
+        relation('out', '', 'engagement', { active: true }),
+        node('engagement', 'BaseNode', { active: true }),
+      ])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', {
+          active: true,
+        }),
+        node('canReadEngagement', 'Permission', {
+          active: true,
+          read: true,
+          property: 'engagement',
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('project'),
+      ])
+      .returnDistinct([
+        {
+          canReadEngagement: [{ read: 'canRead' }],
+          engagement: [{ id: 'id' }],
+        },
+      ]);
+
+    let result;
+    try {
+      result = await listQuery.run();
+      //console.log('listEngagements', result);
+    } catch (e) {
+      this.logger.error('e :>> ', e);
+    }
+
+    const items = result
+      ? await Promise.all(
+          result.map((r) => this.engagementService.readOne(r.id, session))
+        )
+      : [];
+    //console.log(items);
+
+    const retVal: SecuredEngagementList = {
+      total: items.length,
+      hasMore: false,
+      items,
+      canRead: true,
+      canCreate: false,
+    };
+    return retVal;
   }
 
   async listProjectMembers(
@@ -574,6 +638,7 @@ export class ProjectService {
           ...this.permission('mouEnd'),
           ...this.permission('estimatedSubmission'),
           ...this.permission('modifiedAt'),
+          ...this.permission('engagement'),
         ])
         .return('newProject.id as id');
 

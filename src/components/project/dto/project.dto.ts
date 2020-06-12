@@ -23,12 +23,14 @@ export type Project = MergeExclusive<TranslationProject, InternshipProject>;
 
 @InterfaceType('Project', {
   resolveType: (val: IProject) => {
+    //console.log(val);
     if (val.type === ProjectType.Translation) {
       return TranslationProject.classType;
     }
     if (val.type === ProjectType.Internship) {
       return InternshipProject.classType;
     }
+
     throw new Error('Could not resolve project type');
   },
 })
