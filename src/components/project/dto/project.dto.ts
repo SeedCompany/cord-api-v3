@@ -23,7 +23,7 @@ export type Project = MergeExclusive<TranslationProject, InternshipProject>;
 
 @InterfaceType('Project', {
   resolveType: (val: IProject) => {
-    //console.log(val);
+    //console.log('1-DTO', val);
     if (val.type === ProjectType.Translation) {
       return TranslationProject.classType;
     }

@@ -313,9 +313,6 @@ describe('Project e2e', () => {
     // create 2 engagements in a project
     const numEngagements = 1; //2
     //const type = ProjectType.Translation;
-    // const password: string = faker.internet.password();
-    // const user = await createUser(app, { password });
-    // await login(app, { email: user.email.value, password });
     const project = await createProject(app);
     await createLanguageEngagement(app, {
       projectId: project.id,
@@ -354,18 +351,17 @@ describe('Project e2e', () => {
   it.only('List view of internship engagement', async () => {
     // create 2 engagements in a project
     const numEngagements = 1; //2
-
     //const type = ProjectType.Internship;
     const project = await createProject(app, { type: ProjectType.Internship });
 
-    //const password: string = faker.internet.password();
-    //const user = await createUser(app, { password });
-    //await login(app, { email: user.email.value, password });
     await createInternshipEngagement(app, {
       mentorId: mentor.id,
       projectId: project.id,
       internId: intern.id,
     });
+    // await createLanguageEngagement(app, {
+    //   projectId: project.id,
+    // });
 
     const queryProject = await app.graphql.query(
       gql`

@@ -440,7 +440,7 @@ export class ProjectService {
       input,
       userId: session.userId,
     });
-    //console.log('2 >>>>>>>');
+    //console.log('FINAL-listEngagements');
     //get a list of engagements
     const listQuery = this.db
       .query()

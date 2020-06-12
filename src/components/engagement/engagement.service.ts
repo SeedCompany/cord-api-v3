@@ -782,7 +782,8 @@ export class EngagementService {
       .return('internshipEngagement');
 
     try {
-      await createIE.first();
+      const result = await createIE.first();
+      //console.log('result', JSON.stringify(result, null, 2));
     } catch (e) {
       this.logger.error('could not create Internship Engagement ', e);
       throw new ServerException('Could not create Internship Engagement');
