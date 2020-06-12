@@ -26,3 +26,4 @@ export * from './raw.type';
 export * from './add-favorite';
 export * from './create-region';
 export * from './create-country';
+export * from './create-engagement';
