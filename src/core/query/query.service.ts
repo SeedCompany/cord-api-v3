@@ -27,7 +27,7 @@ import * as argon2 from 'argon2';
 import { POWERS } from './model/powers';
 import { OnIndex } from '../database/indexer';
 import { createIndexedAccessTypeNode } from 'typescript';
-import { searchProperty } from './cypher.template';
+import { queryData } from './cypher.template';
 @Injectable()
 export class QueryService {
   private readonly db: Connection;
@@ -460,7 +460,7 @@ export class QueryService {
     count: number,
     sort: string,
     order: string,
-    filter: string
+    filter?: string
   ) {
     if (!baseNode.props || !baseNode.label) {
       throw new ServerException('list params not met');
@@ -468,22 +468,19 @@ export class QueryService {
 
     let query = this.db.query();
 
-    let propsQuery = '';
+    let propsQuery = ``;
     let returnQueryProps = '';
     let orderByQuery = '';
 
     for (let i = 0; i < baseNode.props.length; i++) {
       const prop = baseNode.props[i];
       const propNodeKey = `${prop.key}_node`;
-      propsQuery += searchProperty(baseNode.label, prop.key, propNodeKey);
+      const queries = queryData(baseNode.label, prop.key, propNodeKey, filter);
+      propsQuery += queries.matchQuery;
 
       const comma = i + 1 < baseNode.props.length ? ',' : '';
-
-      returnQueryProps += `
-      ${prop.key}: {
-        value: ${propNodeKey}.value
-      } ${comma}
-      `;
+      returnQueryProps += queries.returnQuery;
+      returnQueryProps += comma;
     }
 
     if (order === `ASC`) {
@@ -510,11 +507,11 @@ export class QueryService {
 
     const printMe = query;
 
-    this.logger.info(printMe.interpolate());
+    // this.logger.info(printMe.interpolate());
 
     const itemsQuery: any = await query.run();
 
-    this.logger.info(JSON.stringify(itemsQuery));
+    // this.logger.info(JSON.stringify(itemsQuery));
 
     let items = [];
 
@@ -522,25 +519,35 @@ export class QueryService {
       items.push(itemsQuery[i].node);
     }
 
-    this.logger.info(JSON.stringify(items));
+    // this.logger.info(JSON.stringify(items));
 
     // todo: count(baseNodes) as total
-    // const countQuery: any = await this.db
-    //   .query()
-    //   .raw(
-    //     `
-    //     MATCH (requestingUser:User {id: "${requestingUserId}})
+    const countQuery = this.db.query().raw(
+      `
+        MATCH (requestingUser:User {id: "${requestingUserId}"})
+        ${propsQuery}
+        WITH
+        ${returnQuery}
+        RETURN count(distinct node) as total
 
-    //     RETURN count(requestingUser) as total
-    //     `
-    //   )
-    //   .first();
+        `
+    );
+
+    const printMe2 = countQuery;
+    const countResult = await countQuery.first();
+
+    if (!countResult) {
+      throw new ServerException('count failed');
+    }
+    // this.logger.info(JSON.stringify(countResult));
+
+    const hasMore = page * count < countResult.total;
 
     if (itemsQuery) {
       return {
         items,
-        total: 5,
-        hasMore: true,
+        total: countResult.total,
+        hasMore,
       };
     } else {
       return undefined;

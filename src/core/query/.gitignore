@@ -1,1 +1,3 @@
-!*.graphql
+!schema.graphql
+temp.cypher
+temp.graphql

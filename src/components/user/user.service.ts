@@ -111,14 +111,44 @@ export class UserService {
             value: '',
             isSingleton: true,
           },
+          {
+            key: 'realLastName',
+            value: '',
+            isSingleton: true,
+          },
+          {
+            key: 'displayFirstName',
+            value: '',
+            isSingleton: true,
+          },
+          {
+            key: 'displayLastName',
+            value: '',
+            isSingleton: true,
+          },
+          {
+            key: 'phone',
+            value: '',
+            isSingleton: true,
+          },
+          {
+            key: 'timezone',
+            value: '',
+            isSingleton: true,
+          },
+          {
+            key: 'bio',
+            value: '',
+            isSingleton: true,
+          },
         ],
       },
       session.userId,
       page,
       count,
       sort,
-      order,
-      'filter me'
+      order
+      // filter
     );
     this.logger.info(JSON.stringify(result));
 
