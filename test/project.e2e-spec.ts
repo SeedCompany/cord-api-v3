@@ -14,6 +14,8 @@ import { User } from '../src/components/user/dto/user.dto';
 import { DatabaseService } from '../src/core';
 import {
   createCountry,
+  createInternshipEngagement,
+  createLanguageEngagement,
   createProject,
   createRegion,
   createSession,
