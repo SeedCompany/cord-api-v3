@@ -7,8 +7,10 @@ import { ProductMethodology } from '../src/components/product';
 import { Project } from '../src/components/project';
 import { User } from '../src/components/user';
 import {
+  createCountry,
   createLanguage,
   createProject,
+  createRegion,
   createSession,
   createTestApp,
   createUser,
@@ -19,12 +21,10 @@ import {
   Raw,
   TestApp,
 } from './utility';
-import { createCountry } from './utility/create-country';
 import {
   createInternshipEngagement,
   createLanguageEngagement,
 } from './utility/create-engagement';
-import { createRegion } from './utility/create-region';
 
 describe('Engagement e2e', () => {
   let app: TestApp;

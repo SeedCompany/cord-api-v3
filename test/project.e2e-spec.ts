@@ -12,6 +12,9 @@ import {
 } from '../src/components/project';
 import { DatabaseService } from '../src/core';
 import {
+  createCountry,
+  createProject,
+  createRegion,
   createSession,
   createTestApp,
   createUser,
@@ -20,9 +23,6 @@ import {
   fragments,
   TestApp,
 } from './utility';
-import { createCountry } from './utility/create-country';
-import { createProject } from './utility/create-project';
-import { createRegion } from './utility/create-region';
 
 describe('Project e2e', () => {
   let app: TestApp;
