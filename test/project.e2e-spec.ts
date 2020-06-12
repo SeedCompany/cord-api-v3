@@ -144,12 +144,12 @@ describe('Project e2e', () => {
     );
   });
 
-  it.skip('List view of projects', async () => {
+  it('List view of projects', async () => {
     // create 10 projects
     const numProjects = 10;
     const type = ProjectType.Translation;
     await Promise.all(
-      times(numProjects).map(() =>
+      times(numProjects).map(async () =>
         createProject(app, {
           type,
         })
@@ -175,26 +175,29 @@ describe('Project e2e', () => {
     );
 
     expect(projects.items.length).toBeGreaterThanOrEqual(numProjects);
+
     //delete all projects
-    projects.items.map(async (item: { id: any }) => {
-      await app.graphql.mutate(
-        gql`
-          mutation deleteProject($id: ID!) {
-            deleteProject(id: $id)
+    await Promise.all(
+      projects.items.map(async (item: { id: any }) => {
+        return app.graphql.mutate(
+          gql`
+            mutation deleteProject($id: ID!) {
+              deleteProject(id: $id)
+            }
+          `,
+          {
+            id: item.id,
           }
-        `,
-        {
-          id: item.id,
-        }
-      );
-    });
+        );
+      })
+    );
   });
 
   it('List view of my projects', async () => {
     const numProjects = 3;
     const type = ProjectType.Translation;
     await Promise.all(
-      times(numProjects).map(() =>
+      times(numProjects).map(async () =>
         createProject(app, {
           type,
         })
@@ -218,18 +221,20 @@ describe('Project e2e', () => {
 
     expect(projects.items.length).toBeGreaterThanOrEqual(numProjects);
     //delete all projects
-    projects.items.map(async (item: { id: any }) => {
-      await app.graphql.mutate(
-        gql`
-          mutation deleteProject($id: ID!) {
-            deleteProject(id: $id)
+    await Promise.all(
+      projects.items.map(async (item: { id: any }) => {
+        return app.graphql.mutate(
+          gql`
+            mutation deleteProject($id: ID!) {
+              deleteProject(id: $id)
+            }
+          `,
+          {
+            id: item.id,
           }
-        `,
-        {
-          id: item.id,
-        }
-      );
-    });
+        );
+      })
+    );
   });
 
   it.skip('returns false when consistency check shows multiple location nodes connected', async () => {
