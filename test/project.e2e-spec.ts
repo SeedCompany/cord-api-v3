@@ -348,16 +348,18 @@ describe('Project e2e', () => {
     ).toBeGreaterThanOrEqual(numEngagements);
   });
 
-  it.only('List view of internship engagement', async () => {
+  it('List view of internship engagement', async () => {
     // create 2 engagements in a project
     const numEngagements = 1; //2
-    //const type = ProjectType.Internship;
-    const project = await createProject(app, { type: ProjectType.Internship });
+    const type = ProjectType.Internship;
+    const country = await createCountry(app);
+    const project = await createProject(app, { type });
 
     await createInternshipEngagement(app, {
       mentorId: mentor.id,
       projectId: project.id,
       internId: intern.id,
+      countryOfOriginId: country.id,
     });
     // await createLanguageEngagement(app, {
     //   projectId: project.id,

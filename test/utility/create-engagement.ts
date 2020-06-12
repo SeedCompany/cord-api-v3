@@ -65,10 +65,10 @@ export async function createInternshipEngagement(
   input: Partial<CreateInternshipEngagement> = {}
 ) {
   const internshipEngagement: CreateInternshipEngagement = {
-    projectId: input.projectId ?? (await createProject(app)).id,
-    countryOfOriginId: input.countryOfOriginId ?? (await createCountry(app)).id,
-    internId: input.internId ?? (await createUser(app)).id,
-    mentorId: input.mentorId ?? (await createUser(app)).id,
+    projectId: input.projectId || (await createProject(app)).id,
+    countryOfOriginId: input.countryOfOriginId || (await createCountry(app)).id,
+    internId: input.internId || (await createUser(app)).id,
+    mentorId: input.mentorId || (await createUser(app)).id,
     position: InternPosition.AdministrativeSupportSpecialist,
     methodologies: [ProductMethodology.Film],
     disbursementCompleteDate: DateTime.local(),

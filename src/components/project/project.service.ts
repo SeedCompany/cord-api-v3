@@ -173,9 +173,11 @@ export class ProjectService {
   };
 
   async readOne(id: string, session: ISession): Promise<Project> {
+    this.logger.info('query readone project', { id, userId: session.userId });
     const readProject = this.db
       .query()
       .match(matchSession(session, { withAclRead: 'canReadProjects' }))
+      .with('*')
       .match([node('project', 'Project', { active: true, id })])
       .optionalMatch([...this.propMatch('type')])
       .optionalMatch([...this.propMatch('sensitivity')])
@@ -276,13 +278,12 @@ export class ProjectService {
     let result;
     try {
       result = await readProject.first();
-      //console.log('1 >>>>>>>', JSON.stringify(result, null, 2));
     } catch (e) {
       this.logger.error('e :>> ', e);
       return await Promise.reject(e);
     }
 
-    if (!result) {
+    if (!result || !result.type) {
       throw new NotFoundException(
         'Could not find project' +
           `DEBUG: {requestingUser, ${session} target ProjectId ${id}}`
