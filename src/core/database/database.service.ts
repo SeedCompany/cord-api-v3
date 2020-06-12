@@ -1265,6 +1265,30 @@ export class DatabaseService {
       for (const key in input) {
         permissions.push(...this.sgPermission(key));
       }
+      const permissionQueries = (await this.isRootSecurityGroupMember(session))
+        ? []
+        : [
+            [
+              node('adminSG', 'SecurityGroup', {
+                active: true,
+                createdAt,
+                name: sgName + ' admin',
+              }),
+              relation('out', '', 'member', { active: true, createdAt }),
+              node('requestingUser'),
+            ],
+            [
+              node('readerSG', 'SecurityGroup', {
+                active: true,
+                createdAt,
+                name: sgName + ' users',
+              }),
+              relation('out', '', 'member', { active: true, createdAt }),
+              node('requestingUser'),
+            ],
+            ...permissions,
+          ];
+
       const query = this.db
         .query()
         .match(matchSession(session, { withAclEdit: aclEditPropName }))
@@ -1278,25 +1302,7 @@ export class DatabaseService {
             }),
           ],
           ...properties,
-          [
-            node('adminSG', 'SecurityGroup', {
-              active: true,
-              createdAt,
-              name: sgName + ' admin',
-            }),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('requestingUser'),
-          ],
-          [
-            node('readerSG', 'SecurityGroup', {
-              active: true,
-              createdAt,
-              name: sgName + ' users',
-            }),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('requestingUser'),
-          ],
-          ...permissions,
+          ...permissionQueries,
         ])
         .return('newNode.id as id');
       let result;
