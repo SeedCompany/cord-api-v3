@@ -196,7 +196,7 @@ export class EducationService {
 
     const result = await this.db2.createBaseNode(
       {
-        label: 'User',
+        label: 'Education',
         id,
         createdAt: createdAt.toString(),
         props: [
@@ -227,6 +227,17 @@ export class EducationService {
       true,
       seedCoId
     );
+
+    const connectChild = await this.db2.connectChildBaseNode(
+      userId,
+      'education',
+      result,
+      userId
+    );
+
+    if (!connectChild) {
+      throw new ServerException('failed to connect education to user');
+    }
 
     return this.readOne(result, session);
 

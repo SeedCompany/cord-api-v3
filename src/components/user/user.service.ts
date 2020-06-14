@@ -417,6 +417,20 @@ export class UserService {
             addToAdminSg: true,
             addToReaderSg: false,
           },
+          {
+            key: 'unavailabilities',
+            value: '',
+            isSingleton: false,
+            addToAdminSg: true,
+            addToReaderSg: false,
+          },
+          {
+            key: 'education',
+            value: '',
+            isSingleton: false,
+            addToAdminSg: true,
+            addToReaderSg: false,
+          },
         ],
       },
       id, // the user being created is the 'requesting user'
