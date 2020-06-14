@@ -475,7 +475,19 @@ export class QueryService {
     for (let i = 0; i < baseNode.props.length; i++) {
       const prop = baseNode.props[i];
       const propNodeKey = `${prop.key}_node`;
-      const queries = queryData(baseNode.label, prop.key, propNodeKey, filter);
+      if (prop.key !== sort) {
+        filter = undefined;
+      }
+
+      const addIdAndCreatedAt = i === 0;
+      const queries = queryData(
+        baseNode.label,
+        prop.key,
+        propNodeKey,
+        addIdAndCreatedAt,
+        undefined,
+        filter
+      );
       propsQuery += queries.matchQuery;
 
       const comma = i + 1 < baseNode.props.length ? ',' : '';

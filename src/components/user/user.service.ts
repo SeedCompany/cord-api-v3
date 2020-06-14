@@ -97,6 +97,10 @@ export class UserService {
     { page, count, sort, order, filter }: UserListInput,
     session: ISession
   ): Promise<UserListOutput> {
+    let filterString = '';
+    if (filter.displayFirstName) {
+      filterString = 'displayFirstName';
+    }
     const result: any = await this.db2.listBaseNode(
       {
         label: 'User',
@@ -147,10 +151,10 @@ export class UserService {
       page,
       count,
       sort,
-      order
-      // filter
+      order,
+      filterString
     );
-    this.logger.info(JSON.stringify(result));
+    // this.logger.info(JSON.stringify(result));
 
     // const result = await this.db.list<User>({
     //   session,

@@ -3,6 +3,7 @@ export function queryData(
   baseNodeLabel: string,
   identifier: string,
   dataTag: string, // the cypher identifier that will be used to uniquly identify this data node in the query, must be unique in query
+  addIdAndCreatedAt: boolean,
   orgId?: string,
   filter?: string
 ): { matchQuery: string; returnQuery: string } {
@@ -13,6 +14,8 @@ export function queryData(
 
   let orgQuery = '';
   let orgReturnQuery = '';
+  let orgBaseNodeIdReturn = '';
+  let orgBaseNodeCreatedAtReturn = '';
   if (orgId) {
     orgQuery = `
     OPTIONAL MATCH
@@ -29,6 +32,9 @@ export function queryData(
     `;
 
     orgReturnQuery = ` , ${dataTag}_org_data.value `;
+
+    orgBaseNodeIdReturn = `, ${dataTag}_org_baseNodes.id`;
+    orgBaseNodeCreatedAtReturn = `, ${dataTag}_org_baseNodes.createdAt`;
   }
 
   const matchQuery = `
@@ -71,7 +77,28 @@ export function queryData(
 
   `;
 
+  let idAndCreatedAt = ``;
+  if (addIdAndCreatedAt) {
+    idAndCreatedAt = `
+      id: coalesce(
+        ${dataTag}_baseNodes.id, 
+        ${dataTag}_admins_baseNodes.id, 
+        ${dataTag}_public_baseNodes.id
+        ${orgBaseNodeIdReturn}
+      ),
+      createdAt: coalesce(
+        ${dataTag}_baseNodes.createdAt, 
+        ${dataTag}_admins_baseNodes.createdAt, 
+        ${dataTag}_public_baseNodes.createdAt
+        ${orgBaseNodeCreatedAtReturn}
+      ),
+    `;
+  }
+
   const returnQuery = `
+
+  ${idAndCreatedAt}
+
   ${identifier}: {
     value: coalesce(${dataTag}_read.value, ${dataTag}_admins_data.value, ${dataTag}_public_data.value ${orgReturnQuery})
   } 
