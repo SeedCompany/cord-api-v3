@@ -287,9 +287,7 @@ export class ProjectService {
       this.logger.error(
         `Could not find project DEBUG: requestingUser ${session.userId} target ProjectId ${id}`
       );
-      throw new NotFoundException(
-        `Could not find project DEBUG: requestingUser ${session.userId} target ProjectId ${id}`
-      );
+      throw new NotFoundException('Could not find project DEBUG');
     }
 
     const location = result.country
