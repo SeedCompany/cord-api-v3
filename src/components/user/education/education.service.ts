@@ -127,22 +127,28 @@ export class EducationService {
     }
     const result: any = await this.db2.listBaseNode(
       {
-        label: 'Education',
+        label: 'User',
         props: [
           {
-            key: 'degree',
-            value: '',
-            isSingleton: true,
-          },
-          {
-            key: 'major',
-            value: '',
-            isSingleton: true,
-          },
-          {
-            key: 'institution',
-            value: '',
-            isSingleton: true,
+            key: 'education',
+            isSingleton: false,
+            baseNode: {
+              label: 'Education',
+              props: [
+                {
+                  key: 'degree',
+                  isSingleton: true,
+                },
+                {
+                  key: 'major',
+                  isSingleton: true,
+                },
+                {
+                  key: 'institution',
+                  isSingleton: true,
+                },
+              ],
+            },
           },
         ],
       },
@@ -191,6 +197,10 @@ export class EducationService {
       'Seed Company'
     );
 
+    if (!session.userId) {
+      throw new UnauthenticatedException('user id not found');
+    }
+
     const id = generate();
     const createdAt = DateTime.local();
 
@@ -223,7 +233,7 @@ export class EducationService {
           },
         ],
       },
-      id, // the user being created is the 'requesting user'
+      session.userId, // the user being created is the 'requesting user'
       true,
       seedCoId
     );

@@ -1,16 +1,6 @@
 import { BaseNode } from './base-node';
+import { AbstractProperty } from './abstractProperty';
 
-export interface Property {
-  key: string;
-  value: any;
-  isSingleton: boolean;
-  oldValue?: any;
-  labels?: string[];
-  addToAdminSg?: boolean;
-  addToReaderSg?: boolean;
-  baseNode?: BaseNode;
-  orderBy?: boolean;
-  asc?: boolean;
-  isPublicReadable?: boolean;
-  isOrgReadable?: boolean;
+export interface Property extends AbstractProperty {
+  value?: any;
 }

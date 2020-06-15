@@ -1,15 +1,28 @@
 /* eslint-disable */
+
 export function queryData(
   baseNodeLabel: string,
   identifier: string,
   dataTag: string, // the cypher identifier that will be used to uniquly identify this data node in the query, must be unique in query
   addIdAndCreatedAt: boolean,
   orgId?: string,
-  filter?: string
+  filter?: string,
+  childBaseLabel?: string,
+  childPropIdentifier?: string
 ): { matchQuery: string; returnQuery: string } {
   let filterQuery = '';
   if (filter) {
     filterQuery = ` , value: "${filter}" `;
+  }
+
+  let childNodeQuery = '';
+  if (childBaseLabel) {
+    childNodeQuery = `
+        -[:DATA]->
+        (${dataTag}_childBaseNode:${childBaseLabel} {active: true)
+        -[:DATAHOLDERS]->
+        (${dataTag}_childDh:DataHolder {active: true, identifier:"${childPropIdentifier}"})
+      `;
   }
 
   let orgQuery = '';
@@ -27,6 +40,7 @@ export function queryData(
     (${dataTag}_org_baseNodes:${baseNodeLabel})
     -[:DATAHOLDERS]->
     (:DataHolder {active: true, identifier: "${identifier}", isOrgReadable: true})
+    ${childNodeQuery}
     -[:DATA]->
     (${dataTag}_org_data:Data {active: true ${filterQuery} })
     `;
@@ -44,6 +58,7 @@ export function queryData(
     (${dataTag}_baseNodes:${baseNodeLabel})
     -[:DATAHOLDERS]->
     (${dataTag}_dh:DataHolder {active: true, identifier:"${identifier}"})
+    ${childNodeQuery}
     -[:DATA]->
     (${dataTag}_read:Data),
 
@@ -62,6 +77,7 @@ export function queryData(
     (${dataTag}_admins_baseNodes:${baseNodeLabel})
     -[:DATAHOLDERS]->
     (:DataHolder {active: true, identifier: "${identifier}"})
+    ${childNodeQuery}
     -[:DATA]->
     (${dataTag}_admins_data:Data {active: true ${filterQuery} })
 
@@ -70,6 +86,7 @@ export function queryData(
     (${dataTag}_public_baseNodes:${baseNodeLabel})
     -[:DATAHOLDERS]->
     (:DataHolder {active: true, identifier: "${identifier}", isPublicReadable: true})
+    ${childNodeQuery}
     -[:DATA]->
     (${dataTag}_public_data:Data {active: true ${filterQuery} })
 
