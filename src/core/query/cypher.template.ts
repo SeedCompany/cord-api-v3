@@ -19,7 +19,7 @@ export function queryData(
   if (childBaseLabel) {
     childNodeQuery = `
         -[:DATA]->
-        (${dataTag}_childBaseNode:${childBaseLabel} {active: true)
+        (${dataTag}_childBaseNode:${childBaseLabel} {active: true})
         -[:DATAHOLDERS]->
         (${dataTag}_childDh:DataHolder {active: true, identifier:"${childPropIdentifier}"})
       `;
@@ -96,30 +96,56 @@ export function queryData(
 
   let idAndCreatedAt = ``;
   if (addIdAndCreatedAt) {
-    idAndCreatedAt = `
+    if (childBaseLabel) {
+      idAndCreatedAt = `
+      id: coalesce(
+        ${dataTag}_childBaseNode.id
+ 
+        ),
+        createdAt: coalesce(
+          ${dataTag}_childBaseNode.createdAt
+
+          ),
+          `;
+    } else {
+      idAndCreatedAt = `
       id: coalesce(
         ${dataTag}_baseNodes.id, 
         ${dataTag}_admins_baseNodes.id, 
         ${dataTag}_public_baseNodes.id
         ${orgBaseNodeIdReturn}
-      ),
-      createdAt: coalesce(
-        ${dataTag}_baseNodes.createdAt, 
-        ${dataTag}_admins_baseNodes.createdAt, 
-        ${dataTag}_public_baseNodes.createdAt
-        ${orgBaseNodeCreatedAtReturn}
-      ),
-    `;
+        ),
+        createdAt: coalesce(
+          ${dataTag}_baseNodes.createdAt, 
+          ${dataTag}_admins_baseNodes.createdAt, 
+          ${dataTag}_public_baseNodes.createdAt
+          ${orgBaseNodeCreatedAtReturn}
+          ),
+          `;
+    }
   }
 
-  const returnQuery = `
+  let returnQuery = '';
 
-  ${idAndCreatedAt}
-
-  ${identifier}: {
-    value: coalesce(${dataTag}_read.value, ${dataTag}_admins_data.value, ${dataTag}_public_data.value ${orgReturnQuery})
-  } 
-  `;
+  if (childBaseLabel) {
+    returnQuery = `
+    
+    ${idAndCreatedAt}
+    
+    ${childPropIdentifier}: {
+      value: coalesce(${dataTag}_read.value, ${dataTag}_admins_data.value, ${dataTag}_public_data.value ${orgReturnQuery})
+    } 
+    `;
+  } else {
+    returnQuery = `
+    
+    ${idAndCreatedAt}
+    
+    ${identifier}: {
+      value: coalesce(${dataTag}_read.value, ${dataTag}_admins_data.value, ${dataTag}_public_data.value ${orgReturnQuery})
+    } 
+    `;
+  }
 
   return {
     matchQuery,

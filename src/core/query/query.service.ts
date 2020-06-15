@@ -545,24 +545,55 @@ export class QueryService {
     for (let i = 0; i < baseNode.props.length; i++) {
       const prop = baseNode.props[i];
       const propNodeKey = `${prop.key}_node`;
+
       if (prop.key !== sort) {
         filter = undefined;
       }
 
-      const addIdAndCreatedAt = i === 0;
-      const queries = queryData(
-        baseNode.label,
-        prop.key,
-        propNodeKey,
-        addIdAndCreatedAt,
-        undefined,
-        filter
-      );
-      propsQuery += queries.matchQuery;
+      if (prop.baseNode && prop.baseNode.props) {
+        let childPropsQuery = '';
+        let childReturnQueryProps = '';
+        for (let j = 0; j < prop.baseNode.props.length; j++) {
+          const childProp = prop.baseNode.props[j];
+          const childPropNodeKey = `${prop.key}_${childProp.key}`;
 
-      const comma = i + 1 < baseNode.props.length ? ',' : '';
-      returnQueryProps += queries.returnQuery;
-      returnQueryProps += comma;
+          const addIdAndCreatedAt = i === 0 && j === 0;
+          const queries = queryData(
+            baseNode.label,
+            prop.key,
+            childPropNodeKey,
+            addIdAndCreatedAt,
+            undefined,
+            filter,
+            prop.baseNode.label,
+            childProp.key
+          );
+          childPropsQuery += queries.matchQuery;
+          const comma = j + 1 < prop.baseNode.props.length ? ',' : '';
+          childReturnQueryProps += queries.returnQuery;
+          childReturnQueryProps += comma;
+        }
+
+        propsQuery += childPropsQuery;
+        const comma = i + 1 < baseNode.props.length ? ',' : '';
+
+        returnQueryProps += childReturnQueryProps;
+        returnQueryProps += comma;
+      } else {
+        const addIdAndCreatedAt = i === 0;
+        const queries = queryData(
+          baseNode.label,
+          prop.key,
+          propNodeKey,
+          addIdAndCreatedAt,
+          undefined,
+          filter
+        );
+        propsQuery += queries.matchQuery;
+        const comma = i + 1 < baseNode.props.length ? ',' : '';
+        returnQueryProps += queries.returnQuery;
+        returnQueryProps += comma;
+      }
     }
 
     if (order === `ASC`) {
@@ -589,11 +620,11 @@ export class QueryService {
 
     const printMe = query;
 
-    // this.logger.info(printMe.interpolate());
+    this.logger.info(printMe.interpolate());
 
     const itemsQuery: any = await query.run();
 
-    // this.logger.info(JSON.stringify(itemsQuery));
+    this.logger.info(JSON.stringify(itemsQuery));
 
     let items = [];
 
