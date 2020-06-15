@@ -284,8 +284,11 @@ export class ProjectService {
     }
 
     if (!result || !result.type) {
+      this.logger.error(
+        `Could not find project DEBUG: requestingUser ${session.userId} target ProjectId ${id}`
+      );
       throw new NotFoundException(
-        `Could not find project DEBUG: {requestingUser, ${session.userId} target ProjectId ${id}}`
+        `Could not find project DEBUG: requestingUser ${session.userId} target ProjectId ${id}`
       );
     }
 
