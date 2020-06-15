@@ -179,6 +179,10 @@ export class OrganizationService {
       'OrganizationnameData',
       name
     );
+
+    if (!id) {
+      return '';
+    }
     return id;
   }
 

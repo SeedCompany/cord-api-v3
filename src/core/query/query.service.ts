@@ -28,10 +28,14 @@ import { POWERS } from './model/powers';
 import { OnIndex } from '../database/indexer';
 import { createIndexedAccessTypeNode } from 'typescript';
 import { queryData } from './cypher.template';
+import { ConfigService } from '../config/config.service';
 @Injectable()
 export class QueryService {
   private readonly db: Connection;
-  constructor(@Logger('db2:service') private readonly logger: ILogger) {
+  constructor(
+    private readonly config: ConfigService,
+    @Logger('db2:service') private readonly logger: ILogger
+  ) {
     this.db = new Connection('bolt://localhost', {
       username: 'neo4j',
       password: 'asdf',
@@ -73,6 +77,53 @@ export class QueryService {
       'id'
     );
     await this.createPropertyUniquenessConstraintOnNodeAndRun('Power', 'id');
+
+    // const seedOrgExists = await this.getBaseNodeIdByPropertyValue(
+    //   'OrganizationnameData',
+    //   'Seed Company'
+    // );
+
+    // console.log(seedOrgExists);
+
+    // if (!seedOrgExists) {
+    //   const rootUserId = await this.getBaseNodeIdByPropertyValue(
+    //     'UseremailData',
+    //     this.config.rootAdmin.email
+    //   );
+
+    //   if (!rootUserId) {
+    //     throw new ServerException('root user not found');
+    //   }
+
+    //   const id = generate();
+    //   const createdAt = DateTime.local();
+
+    //   const seedId = await this.createBaseNode(
+    //     {
+    //       label: 'Organization',
+    //       id,
+    //       createdAt: createdAt.toString(),
+    //       props: [
+    //         {
+    //           key: 'name',
+    //           value: 'Seed Company',
+    //           isSingleton: true,
+    //           addToAdminSg: true,
+    //           addToReaderSg: true,
+    //           isOrgReadable: true,
+    //           isPublicReadable: true,
+    //         },
+    //       ],
+    //     },
+    //     rootUserId,
+    //     true,
+    //     undefined
+    //   );
+
+    //   if (!seedId) {
+    //     throw new ServerException('failed to create seed org on startup');
+    //   }
+    // }
   }
 
   // GraphQL Functions
@@ -569,7 +620,7 @@ export class QueryService {
   async getBaseNodeIdByPropertyValue(
     label: string,
     value: any
-  ): Promise<string> {
+  ): Promise<string | undefined> {
     const result = await this.db
       .query()
       .match([
@@ -590,7 +641,8 @@ export class QueryService {
       })
       .first();
     if (!result) {
-      throw new NotFoundException('base node not found');
+      // throw new NotFoundException('base node not found');
+      return undefined;
     }
     return result.id;
   }
