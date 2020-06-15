@@ -228,6 +228,10 @@ export class EducationService {
       seedCoId
     );
 
+    if (!result) {
+      throw new ServerException('create education failed');
+    }
+
     const connectChild = await this.db2.connectChildBaseNode(
       userId,
       'education',

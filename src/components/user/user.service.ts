@@ -438,6 +438,10 @@ export class UserService {
       seedCoId
     );
 
+    if (!result) {
+      throw new ServerException('create base node failed');
+    }
+
     return result;
   }
 

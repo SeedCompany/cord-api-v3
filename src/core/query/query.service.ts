@@ -186,12 +186,28 @@ export class QueryService {
     createReaderSG = true,
     orgId?: string,
     idPrefix: string = ''
-  ): string {
+  ): string | undefined {
     const sgAdminId = generate();
     const sgReaderId = generate();
 
     let propQuery = '';
     let q = 0;
+
+    if (!baseNode.props) {
+      throw new ServerException('props not on baseNode');
+    }
+
+    if (!baseNode.id) {
+      throw new ServerException('id not on baseNode');
+    }
+
+    if (!baseNode.createdAt) {
+      throw new ServerException('createdAt not on baseNode');
+    }
+
+    if (!baseNode.label) {
+      throw new ServerException('label not on baseNode');
+    }
 
     for (let i = 0; i < baseNode.props.length; i++) {
       const prop = baseNode.props[i];
@@ -253,6 +269,9 @@ export class QueryService {
           prop.key
         );
       } else {
+        if (!prop.baseNode.id) {
+          throw new ServerException("a prop's baseNode id is not defined");
+        }
         dataQuery += this.createBaseNodeQuery(
           prop.baseNode,
           requestingUserId,
@@ -299,7 +318,7 @@ export class QueryService {
     requestingUserId: string,
     createReaderSG = true,
     orgId?: string
-  ): Promise<string> {
+  ): Promise<string | undefined> {
     const query = this.createBaseNodeQuery(
       baseNode,
       requestingUserId,
