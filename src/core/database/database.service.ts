@@ -1250,23 +1250,37 @@ export class DatabaseService {
     aclEditProp?: string;
     sgName: string;
   }) {
+    const id = generate();
+    const createdAt = DateTime.local();
+    const nodeName = upperFirst(nodevar);
+    const aclEditPropName = aclEditProp || `canEdit${nodeName}`;
+    const baseNode = nodeName + ':BaseNode';
+    const properties = [];
+    const permissions = [];
+    const isRootSGMember = await this.isRootSecurityGroupMember(session);
     try {
-      const id = generate();
-      const createdAt = DateTime.local();
-      const nodeName = upperFirst(nodevar);
-      const aclEditPropName = aclEditProp || `canEdit${nodeName}`;
-      const baseNode = nodeName + ':BaseNode';
-      const properties = [];
-      const permissions = [];
       for (const key in input) {
         const propLabel = propLabels[key];
         properties.push(...this.sgProperty(key, input[key], propLabel));
       }
       for (const key in input) {
-        permissions.push(...this.sgPermission(key));
+        isRootSGMember
+          ? permissions.push(...this.rootSGPermission(key))
+          : permissions.push(...this.sgPermission(key));
       }
-      const permissionQueries = (await this.isRootSecurityGroupMember(session))
-        ? []
+      const permissionQueries = isRootSGMember
+        ? [
+            [
+              node('rootSG', 'RootSecurityGroup', {
+                active: true,
+                createdAt,
+                name: sgName + ' root',
+              }),
+              relation('out', '', 'member', { active: true, createdAt }),
+              node('requestingUser'),
+            ],
+            ...permissions,
+          ]
         : [
             [
               node('adminSG', 'SecurityGroup', {
@@ -1305,20 +1319,17 @@ export class DatabaseService {
           ...permissionQueries,
         ])
         .return('newNode.id as id');
-      let result;
-      try {
-        result = await query.first();
-      } catch (err) {
-        this.logger.error(`Could not create node for user ${session.userId}`);
-        throw new ServerException('Could not create node');
-      }
+      const result = await query.first();
 
       if (!result) {
         throw new ServerException('failed to create node');
       }
       return result.id;
     } catch (err) {
-      this.logger.error(`Could not create node for user ${session.userId}`);
+      this.logger.error(
+        `Could not create node for user ${session.userId}`,
+        err
+      );
       throw new ServerException('Could not create node');
     }
   }
@@ -1382,6 +1393,31 @@ export class DatabaseService {
           read: true,
           edit: false,
           admin: false,
+        }),
+        relation('out', '', 'baseNode', {
+          active: true,
+          createdAt,
+        }),
+        node('newNode'),
+      ],
+    ];
+  };
+
+  rootSGPermission = (property: string) => {
+    const createdAt = DateTime.local();
+    return [
+      [
+        node('rootSG'),
+        relation('out', '', 'permission', {
+          active: true,
+          createdAt,
+        }),
+        node('', 'Permission', {
+          property,
+          active: true,
+          read: true,
+          edit: true,
+          root: true,
         }),
         relation('out', '', 'baseNode', {
           active: true,
