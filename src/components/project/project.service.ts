@@ -285,8 +285,7 @@ export class ProjectService {
 
     if (!result || !result.type) {
       throw new NotFoundException(
-        'Could not find project' +
-          `DEBUG: {requestingUser, ${session} target ProjectId ${id}}`
+        `Could not find project DEBUG: {requestingUser, ${session.userId} target ProjectId ${id}}`
       );
     }
 
@@ -441,7 +440,6 @@ export class ProjectService {
       input,
       userId: session.userId,
     });
-    //console.log('FINAL-listEngagements');
     //get a list of engagements
     const listQuery = this.db
       .query()
@@ -477,7 +475,6 @@ export class ProjectService {
     let result;
     try {
       result = await listQuery.run();
-      //console.log('listEngagements', result);
     } catch (e) {
       this.logger.error('e :>> ', e);
     }
@@ -487,7 +484,6 @@ export class ProjectService {
           result.map((r) => this.engagementService.readOne(r.id, session))
         )
       : [];
-    //console.log(items);
 
     const retVal: SecuredEngagementList = {
       total: items.length,

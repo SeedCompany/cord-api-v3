@@ -33,7 +33,7 @@ describe('Project e2e', () => {
   let mentor: User;
 
   beforeAll(async () => {
-    jest.setTimeout(300000);
+    jest.setTimeout(50000);
     app = await createTestApp();
     await createSession(app);
     intern = await createUser(app);
@@ -312,17 +312,14 @@ describe('Project e2e', () => {
   });
 
   it('List view of language engagement', async () => {
-    // create 2 engagements in a project
-    const numEngagements = 1; //2
+    // create 1 engagementsin a project
+    const numEngagements = 1;
     //const type = ProjectType.Translation;
     const project = await createProject(app);
     await createLanguageEngagement(app, {
       projectId: project.id,
     });
 
-    // await createLanguageEngagement(app, {
-    //   projectId: project.id,
-    // });
     const queryProject = await app.graphql.query(
       gql`
         query project($id: ID!) {
@@ -344,15 +341,14 @@ describe('Project e2e', () => {
         id: project.id,
       }
     );
-    //console.log('queryProject ', JSON.stringify(queryProject, null, 2));
     expect(
       queryProject.project.engagements.items.length
     ).toBeGreaterThanOrEqual(numEngagements);
   });
 
   it('List view of internship engagement', async () => {
-    // create 2 engagements in a project
-    const numEngagements = 1; //2
+    //create 1 engagements in a project
+    const numEngagements = 1;
     const type = ProjectType.Internship;
     const country = await createCountry(app);
     const project = await createProject(app, { type });
@@ -363,10 +359,6 @@ describe('Project e2e', () => {
       internId: intern.id,
       countryOfOriginId: country.id,
     });
-    // await createLanguageEngagement(app, {
-    //   projectId: project.id,
-    // });
-
     const queryProject = await app.graphql.query(
       gql`
         query project($id: ID!) {
@@ -388,7 +380,6 @@ describe('Project e2e', () => {
         id: project.id,
       }
     );
-    //console.log('queryProject ', JSON.stringify(queryProject, null, 2));
     expect(
       queryProject.project.engagements.items.length
     ).toBeGreaterThanOrEqual(numEngagements);

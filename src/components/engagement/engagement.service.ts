@@ -68,7 +68,7 @@ export class EngagementService {
     this.logger.info('readLangaugeEnagement', { id, userId: session.userId });
     const leQuery = this.db
       .query()
-      //.match(matchSession(session, { withAclRead: 'canReadEngagements' }))
+      .match(matchSession(session, { withAclRead: 'canReadEngagements' }))
       .match([
         node('languageEngagement', 'LanguageEngagement', {
           active: true,
@@ -235,9 +235,7 @@ export class EngagementService {
       });
     let result;
     try {
-      //console.log('TEST', leQuery.buildQueryObject());
       result = await leQuery.first();
-      //console.log('readone', result);
     } catch (error) {
       this.logger.error('could not read Language Enagement', error);
     }
@@ -373,59 +371,6 @@ export class EngagementService {
       hasMore: false,
     };
   }
-
-  // async list(
-  //   { page, count, sort, order, filter }: EngagementListInput,
-  //   session: ISession
-  // ): Promise<EngagementListOutput> {
-  //   const listQuery = this.db
-  //     .query()
-  //     .match(matchSession(session, { withAclRead: 'canReadProjects' }));
-  //   listQuery
-  //     .match([
-  //       node('project', 'Project', { active: true, id: filter.projectId }),
-  //       relation('out', '', 'engagement', { active: true }),
-  //       node('engagement', 'BaseNode', { active: true }),
-  //     ])
-  //     .optionalMatch([
-  //       node('requestingUser'),
-  //       relation('in', '', 'member', { active: true }),
-  //       node('sg', 'SecurityGroup', { active: true }),
-  //       relation('out', '', 'permission', {
-  //         active: true,
-  //         property: 'engagement',
-  //         read: true,
-  //       }),
-  //       node('canReadEngagement', 'Permission', { active: true }),
-  //       relation('out', '', 'baseNode', { active: true }),
-  //       node('project'),
-  //     ])
-  //     .return({
-  //       canReadEngagement: [{ read: 'canRead' }],
-  //       engagement: ['id', 'type'],
-  //     });
-
-  //   let result;
-  //   try {
-  //     result = await listQuery.run();
-  //   } catch (e) {
-  //     throw new NotFoundException('No engagements found');
-  //   }
-  //   let items;
-  //   if (result) {
-  //     items = await Promise.all(
-  //       result.map((row) => this.readOne(row.id, session))
-  //     );
-  //   } else {
-  //     throw new NotFoundException('No engagements found');
-  //   }
-
-  //   return {
-  //     items,
-  //     total: items.length,
-  //     hasMore: false,
-  //   };
-  // }
 
   async listProducts(
     engagement: LanguageEngagement,
@@ -853,7 +798,7 @@ export class EngagementService {
     this.logger.info('readInternshipEnagement', { id, userId: session.userId });
     const ieQuery = this.db
       .query()
-      //.match(matchSession(session, { withAclRead: 'canReadEngagements' }))
+      .match(matchSession(session, { withAclRead: 'canReadEngagements' }))
       .match([
         node('internshipEngagement', 'InternshipEngagement', {
           active: true,
