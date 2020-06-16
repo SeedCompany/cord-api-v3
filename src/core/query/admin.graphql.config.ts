@@ -21,9 +21,7 @@ export class AdminGraphQLConfig implements GqlOptionsFactory, OnModuleDestroy {
   schema: any;
   constructor(private readonly config: ConfigService) {
     const typeDefs = fs
-      .readFileSync(
-        '/Users/michael_marshall/Documents/dev/cord-api-v3/src/core/query/schema.graphql'
-      )
+      .readFileSync('./src/core/query/schema.graphql')
       .toString('utf-8');
 
     this.schema = neo4jGraphQL.makeAugmentedSchema({
