@@ -29,6 +29,7 @@ export type Project = MergeExclusive<TranslationProject, InternshipProject>;
     if (val.type === ProjectType.Internship) {
       return InternshipProject.classType;
     }
+
     throw new Error('Could not resolve project type');
   },
 })

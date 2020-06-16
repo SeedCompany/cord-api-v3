@@ -8,7 +8,9 @@ import { Project } from '../src/components/project';
 import { User } from '../src/components/user';
 import {
   createCountry,
+  createInternshipEngagement,
   createLanguage,
+  createLanguageEngagement,
   createProject,
   createRegion,
   createSession,
@@ -21,10 +23,6 @@ import {
   Raw,
   TestApp,
 } from './utility';
-import {
-  createInternshipEngagement,
-  createLanguageEngagement,
-} from './utility/create-engagement';
 
 describe('Engagement e2e', () => {
   let app: TestApp;
