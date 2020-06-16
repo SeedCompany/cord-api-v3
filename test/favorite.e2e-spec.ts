@@ -58,8 +58,9 @@ describe('Favorite e2e', () => {
   // LIST FAVORITES
   it('list view of favorites', async () => {
     // create a bunch of orgs
+    const numOrgs = 2;
     await Promise.all(
-      times(10).map(async () => {
+      times(numOrgs).map(async () => {
         const org = await createOrganization(app, {
           name: generate() + ' Inc',
         });
@@ -85,6 +86,6 @@ describe('Favorite e2e', () => {
         baseNode,
       }
     );
-    expect(favorites.items.length).toBeGreaterThan(9);
+    expect(favorites.items.length).toBeGreaterThan(numOrgs);
   });
 });

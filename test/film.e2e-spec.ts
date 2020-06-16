@@ -110,8 +110,9 @@ describe('Film e2e', () => {
   // LIST FILMs
   it('list view of films', async () => {
     // create a bunch of films
+    const numFilms = 2;
     await Promise.all(
-      times(10).map(() => createFilm(app, { name: generate() + ' Inc' }))
+      times(numFilms).map(() => createFilm(app, { name: generate() + ' Inc' }))
     );
 
     const { films } = await app.graphql.query(gql`
@@ -127,6 +128,6 @@ describe('Film e2e', () => {
       ${fragments.film}
     `);
 
-    expect(films.items.length).toBeGreaterThan(9);
+    expect(films.items.length).toBeGreaterThan(numFilms);
   });
 });

@@ -158,8 +158,8 @@ describe('Budget e2e', () => {
 
   it('lists budget for a projectId', async () => {
     // create budget first
-    // create 4 budget first
-    const numBudget = 4;
+    // create 2 budget first
+    const numBudget = 2;
     await Promise.all(
       times(numBudget).map(() => createBudget(app, { projectId: project.id }))
     );

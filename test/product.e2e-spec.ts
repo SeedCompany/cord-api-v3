@@ -15,7 +15,6 @@ describe('Product e2e', () => {
   let app: TestApp;
 
   beforeAll(async () => {
-    jest.setTimeout(50000);
     app = await createTestApp();
     await createSession(app);
     await createUser(app);
@@ -109,8 +108,8 @@ describe('Product e2e', () => {
   });
 
   it('List view of products', async () => {
-    // create 10 products
-    const numPartnerships = 10;
+    // create 2 products
+    const numPartnerships = 2;
     const type = ProductType.Songs;
     await Promise.all(
       times(numPartnerships).map(() =>

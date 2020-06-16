@@ -109,8 +109,9 @@ describe('LiteracyMaterial e2e', () => {
   // LIST LiteracyMaterials
   it('list view of LiteracyMaterials', async () => {
     // create a bunch of LiteracyMaterials
+    const numLitMat = 2;
     await Promise.all(
-      times(10).map(() =>
+      times(numLitMat).map(() =>
         createLiteracyMaterial(app, { name: generate() + ' Inc' })
       )
     );
@@ -128,6 +129,6 @@ describe('LiteracyMaterial e2e', () => {
       ${fragments.literacyMaterial}
     `);
 
-    expect(literacyMaterials.items.length).toBeGreaterThan(9);
+    expect(literacyMaterials.items.length).toBeGreaterThan(numLitMat);
   });
 });

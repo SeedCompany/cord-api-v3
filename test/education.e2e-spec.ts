@@ -105,8 +105,8 @@ describe('Education e2e', () => {
 
   // LIST Educations
   it('List view of educations', async () => {
-    // create 10 educations
-    const numEducations = 10;
+    // create 2 educations
+    const numEducations = 2;
     await Promise.all(
       times(numEducations).map(() => createEducation(app, { userId: user.id }))
     );

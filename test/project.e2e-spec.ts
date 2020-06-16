@@ -34,7 +34,6 @@ describe('Project e2e', () => {
   let mentor: Partial<User>;
 
   beforeAll(async () => {
-    jest.setTimeout(50000);
     app = await createTestApp();
     await createSession(app);
     await createUser(app);
@@ -152,9 +151,9 @@ describe('Project e2e', () => {
     );
   });
 
-  it.skip('List view of projects', async () => {
-    // create 10 projects
-    const numProjects = 10;
+  it('List view of projects', async () => {
+    // create 2 projects
+    const numProjects = 2;
     const type = ProjectType.Translation;
     await Promise.all(
       times(numProjects).map(async () =>
@@ -202,7 +201,7 @@ describe('Project e2e', () => {
   });
 
   it('List view of my projects', async () => {
-    const numProjects = 3;
+    const numProjects = 2;
     const type = ProjectType.Translation;
     await Promise.all(
       times(numProjects).map(async () =>

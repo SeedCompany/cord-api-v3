@@ -215,10 +215,10 @@ export class BudgetService {
     }
 
     if (!result) {
-      this.logger.error(`Could not find budget:  `, {
-        id,
-        userId: session.userId,
-      });
+      // this.logger.error(`Could not find budget:  `, {
+      //   id,
+      //   userId: session.userId,
+      // });
       throw new NotFoundException('Could not find budget');
     }
 

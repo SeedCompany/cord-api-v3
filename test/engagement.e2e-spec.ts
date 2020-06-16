@@ -38,7 +38,6 @@ describe('Engagement e2e', () => {
   const password: string = faker.internet.password();
 
   beforeAll(async () => {
-    jest.setTimeout(50000);
     app = await createTestApp();
     await createSession(app);
     user = await createUser(app, { password });

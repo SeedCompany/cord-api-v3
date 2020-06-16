@@ -74,7 +74,6 @@ function resetNow() {
 }
 
 describe('File e2e', () => {
-  jest.setTimeout(50000);
   let app: TestApp;
   let bucket: MemoryBucket;
   let root: Directory;
@@ -235,7 +234,7 @@ describe('File e2e', () => {
 
   it.skip('List view of files', async () => {
     // create a bunch of files
-    const numFiles = 10;
+    const numFiles = 2;
     await Promise.all(
       times(numFiles).map(() =>
         createFileVersion(app, {

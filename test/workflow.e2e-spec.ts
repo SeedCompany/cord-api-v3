@@ -17,8 +17,7 @@ import {
   TestApp,
 } from './utility';
 
-describe.skip('Authorization e2e', () => {
-  jest.setTimeout(300000);
+describe.skip('Workflow e2e', () => {
   let app: TestApp;
   let org: Organization;
   let sg: CreateSecurityGroupOutput;
@@ -201,7 +200,7 @@ describe.skip('Authorization e2e', () => {
 
   it('look up all states on workflow', async () => {
     const workflow = await createWorkflow(app, { baseNodeId: org.id });
-    const stateNum = 10;
+    const stateNum = 2;
     await Promise.all(
       times(stateNum).map(() =>
         addState(app, {

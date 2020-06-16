@@ -17,7 +17,6 @@ import {
 
 describe('Organization e2e', () => {
   let app: TestApp;
-  jest.setTimeout(50000);
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -145,8 +144,9 @@ describe('Organization e2e', () => {
   // LIST ORGs
   it('list view of organizations', async () => {
     // create a bunch of orgs
+    const numOrgs = 2;
     await Promise.all(
-      times(10).map(() =>
+      times(numOrgs).map(() =>
         createOrganization(app, { name: generate() + ' Inc' })
       )
     );
@@ -164,7 +164,7 @@ describe('Organization e2e', () => {
       ${fragments.org}
     `);
 
-    expect(organizations.items.length).toBeGreaterThan(9);
+    expect(organizations.items.length).toBeGreaterThan(numOrgs);
   });
 
   it.skip('Check consistency across organization nodes', async () => {

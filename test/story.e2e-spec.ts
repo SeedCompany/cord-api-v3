@@ -110,8 +110,11 @@ describe('Story e2e', () => {
   // LIST STORYs
   it('list view of storys', async () => {
     // create a bunch of storys
+    const numStorys = 2;
     await Promise.all(
-      times(10).map(() => createStory(app, { name: generate() + ' Inc' }))
+      times(numStorys).map(() =>
+        createStory(app, { name: generate() + ' Inc' })
+      )
     );
 
     const { storys } = await app.graphql.query(gql`
@@ -126,6 +129,6 @@ describe('Story e2e', () => {
       }
       ${fragments.story}
     `);
-    expect(storys.items.length).toBeGreaterThan(9);
+    expect(storys.items.length).toBeGreaterThan(numStorys);
   });
 });
