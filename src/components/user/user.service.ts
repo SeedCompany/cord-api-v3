@@ -45,6 +45,12 @@ import {
 } from './unavailability';
 
 import _ = require('lodash');
+import {
+  tryGetEditPerm,
+  addPropertyCoalesceWithClause,
+  addPropertyReturnClause,
+  property,
+} from '../../core/database/helpyHelper';
 
 @Injectable()
 export class UserService {
@@ -572,165 +578,133 @@ export class UserService {
   }
 
   async readOne(id: string, session: ISession): Promise<User> {
-    // this.logger.info('query read User ', { id, session });
-    const property = (property: string, sg: any) => {
-      const perm = property + 'Perm';
-      return [
-        [
-          node(sg),
-          relation('out', '', 'permission', { active: true }),
-          node(perm, 'Permission', {
-            property,
-            read: true,
-            active: true,
-          }),
-          relation('out', '', 'baseNode'),
-          node('user'),
-          relation('out', '', property, { active: true }),
-          node(property, 'Property', { active: true }),
-        ],
-      ];
-    };
-
     const query = this.db
       .query()
-      .match([node('user', 'User', { active: true, id })])
-      .optionalMatch([
-        [
-          node('sg', 'SecurityGroup', { active: true }),
-          relation('out', '', 'member', {
-            active: true,
-          }),
-          node('user'),
-        ],
+      .match([
+        node('requestingUser', 'User', {
+          active: true,
+          id: session.userId,
+        }),
       ])
-      .optionalMatch([...property('email', 'sg')])
-      .optionalMatch([...property('realFirstName', 'sg')])
-      .optionalMatch([...property('realLastName', 'sg')])
-      .optionalMatch([...property('displayFirstName', 'sg')])
-      .optionalMatch([...property('displayLastName', 'sg')])
-      .optionalMatch([...property('phone', 'sg')])
-      .optionalMatch([...property('bio', 'sg')])
-      .optionalMatch([...property('timezone', 'sg')])
-      .optionalMatch([...property('status', 'sg')])
+      .match([node('user', 'User', { active: true, id })])
+      .optionalMatch([...property('email')])
+      .optionalMatch([...tryGetEditPerm('email')])
+      .optionalMatch([...property('realFirstName')])
+      .optionalMatch([...tryGetEditPerm('realFirstName')])
+      .optionalMatch([...property('realLastName')])
+      .optionalMatch([...tryGetEditPerm('realLastName')])
+      .optionalMatch([...property('displayFirstName')])
+      .optionalMatch([...tryGetEditPerm('displayFirstName')])
+      .optionalMatch([...property('displayLastName')])
+      .optionalMatch([...tryGetEditPerm('displayLastName')])
+      .optionalMatch([...property('phone')])
+      .optionalMatch([...tryGetEditPerm('phone')])
+      .optionalMatch([...property('bio')])
+      .optionalMatch([...tryGetEditPerm('bio')])
+      .optionalMatch([...property('timezone')])
+      .optionalMatch([...tryGetEditPerm('timezone')])
+      .optionalMatch([...property('status')])
+      .optionalMatch([...tryGetEditPerm('status')])
 
-      .return({
-        email: [{ value: 'email' }],
-        realFirstName: [{ value: 'realFirstName' }],
-        realLastName: [{ value: 'realLastName' }],
-        displayFirstName: [{ value: 'displayFirstName' }],
-        displayLastName: [{ value: 'displayLastName' }],
-        phone: [{ value: 'phone' }],
-        timezone: [{ value: 'timezone' }],
-        bio: [{ value: 'bio' }],
-        user: [{ createdAt: 'createdAt', id: 'id' }],
-        emailPerm: [{ read: 'emailRead', edit: 'emailEdit' }],
-        realFirstNamePerm: [
-          { read: 'realFirstNameRead', edit: 'realFirstNameEdit' },
-        ],
-        realLastNamePerm: [
-          { read: 'realLastNameRead', edit: 'realLastNameEdit' },
-        ],
-        displayFirstNamePerm: [
-          { read: 'displayFirstNameRead', edit: 'displayFirstNameEdit' },
-        ],
-        displayLastNamePerm: [
-          { read: 'displayLastNameRead', edit: 'displayLastNameEdit' },
-        ],
-        phonePerm: [{ read: 'phoneRead', edit: 'phoneEdit' }],
-        timezonePerm: [{ read: 'timezoneRead', edit: 'timezoneEdit' }],
-        bioPerm: [{ read: 'bioRead', edit: 'bioEdit' }],
-        sg: [{ id: 'sgId' }],
-        status: [{ value: 'status' }],
-        statusPerm: [{ read: 'statusRead', edit: 'statusEdit' }],
-      });
-
-    const printMe = query;
-    this.logger.info(printMe.interpolate());
+      .with(
+        `
+        ${addPropertyCoalesceWithClause('email')},
+        ${addPropertyCoalesceWithClause('realFirstName')},
+        ${addPropertyCoalesceWithClause('realLastName')},
+        ${addPropertyCoalesceWithClause('displayFirstName')},
+        ${addPropertyCoalesceWithClause('displayLastName')},
+        ${addPropertyCoalesceWithClause('phone')},
+        ${addPropertyCoalesceWithClause('timezone')},
+        ${addPropertyCoalesceWithClause('bio')},
+        ${addPropertyCoalesceWithClause('status')},
+        coalesce(user.id) as id,
+        coalesce(user.createdAt) as createdAt
+      `
+      ).returnDistinct(`
+        ${addPropertyReturnClause('email')},
+        ${addPropertyReturnClause('realFirstName')},
+        ${addPropertyReturnClause('realLastName')},
+        ${addPropertyReturnClause('displayFirstName')},
+        ${addPropertyReturnClause('displayLastName')},
+        ${addPropertyReturnClause('phone')},
+        ${addPropertyReturnClause('timezone')},
+        ${addPropertyReturnClause('bio')},
+        ${addPropertyReturnClause('status')},
+        id,
+        createdAt
+        
+      `);
 
     const result = await query.first();
-
-    this.logger.info(JSON.stringify(result));
 
     if (result) {
       const user: User = {
         id: result.id,
         createdAt: result.createdAt,
         email: {
-          value: result.email,
+          value: result.emailValue,
           canRead: !!result.emailRead,
           canEdit: !!result.emailEdit,
         },
         realFirstName: {
-          value: result.realFirstName,
+          value: result.realFirstNameValue,
           canRead: !!result.realFirstNameRead,
           canEdit: !!result.realFirstNameEdit,
         },
         realLastName: {
-          value: result.realLastName,
+          value: result.realLastNameValue,
           canRead: !!result.realLastNameRead,
           canEdit: !!result.realLastNameEdit,
         },
         displayFirstName: {
-          value: result.displayFirstName,
+          value: result.displayFirstNameValue,
           canRead: !!result.displayFirstNameRead,
           canEdit: !!result.displayFirstNameEdit,
         },
         displayLastName: {
-          value: result.displayLastName,
+          value: result.displayLastNameValue,
           canRead: !!result.displayLastNameRead,
           canEdit: !!result.displayLastNameEdit,
         },
         phone: {
-          value: result.phone,
+          value: result.phoneValue,
           canRead: !!result.phoneRead,
           canEdit: !!result.phoneEdit,
         },
         timezone: {
-          value: result.timezone,
+          value: result.timezoneValue,
           canRead: !!result.timezoneRead,
           canEdit: !!result.timezoneEdit,
         },
         bio: {
-          value: result.bio,
+          value: result.bioValue,
           canRead: !!result.bioRead,
           canEdit: !!result.bioEdit,
         },
         status: {
-          value: result.status,
+          value: result.statusValue,
           canRead: !!result.statusRead,
           canEdit: !!result.statusEdit,
         },
       };
       return user;
     } else {
-      // maybe we don't have permission, let's just get the pubic info
-      const query = this.db
-        .query()
-        .match([node('user', 'User', { active: true, id })]);
-      query.return(['user']);
+      // todo: figure out public data
+      throw new ForbiddenError('Not allowed');
 
-      const noPerm = await query.first();
-      if (noPerm) {
-        throw new ForbiddenError('Not allowed');
-      }
+      // // maybe we don't have permission, let's just get the pubic info
+      // const query = this.db
+      //   .query()
+      //   .match([node('user', 'User', { active: true, id })]);
+      // query.return(['user']);
 
-      throw new NotFoundException(`Could not find user`);
+      // const noPerm = await query.first();
+      // if (noPerm) {
+      //   throw new ForbiddenError('Not allowed');
+      // }
+
+      // throw new NotFoundException(`Could not find user`);
     }
-
-    return {
-      id,
-      createdAt: CalendarDate.fromISO('1000-10-10'),
-      email: { value: '', canEdit: false, canRead: false },
-      realFirstName: { value: '', canEdit: false, canRead: false },
-      realLastName: { value: '', canEdit: false, canRead: false },
-      displayFirstName: { value: '', canEdit: false, canRead: false },
-      displayLastName: { value: '', canEdit: false, canRead: false },
-      phone: { value: '', canEdit: false, canRead: false },
-      timezone: { value: '', canEdit: false, canRead: false },
-      bio: { value: '', canEdit: false, canRead: false },
-      status: { value: '', canEdit: false, canRead: false },
-    };
   }
 
   async update(input: UpdateUser, session: ISession): Promise<User> {
