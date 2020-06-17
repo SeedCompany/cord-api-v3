@@ -72,6 +72,12 @@ export class ConfigService {
     };
   }
 
+  @Lazy() get defaultOrg() {
+    return {
+      name: this.env.string('DEFAULT_ORG_NAME').optional('Seed Company'),
+    };
+  }
+
   @Lazy() get cors(): CorsOptions {
     // regex is matched against origin which includes protocol and port (no path)
     // `cf\.com$` matches both root cf.com and all subdomains

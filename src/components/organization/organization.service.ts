@@ -34,7 +34,7 @@ export class OrganizationService {
       'CREATE CONSTRAINT ON (n:Organization) ASSERT n.id IS UNIQUE',
       'CREATE CONSTRAINT ON (n:Organization) ASSERT EXISTS(n.active)',
       'CREATE CONSTRAINT ON (n:Organization) ASSERT EXISTS(n.createdAt)',
-      'CREATE CONSTRAINT ON (n:Organization) ASSERT EXISTS(n.owningOrgId)',
+      // 'CREATE CONSTRAINT ON (n:Organization) ASSERT EXISTS(n.owningOrgId)',
 
       'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.active)',
       'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
