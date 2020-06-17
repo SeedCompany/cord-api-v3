@@ -24,8 +24,8 @@ import {
   createZone,
   expectNotFound,
   fragments,
-  TestApp,
   getUserFromSession,
+  TestApp,
 } from './utility';
 
 describe('Project e2e', () => {
