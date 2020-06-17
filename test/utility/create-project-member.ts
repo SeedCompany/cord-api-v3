@@ -5,13 +5,17 @@ import {
   ProjectMember,
 } from '../../src/components/project';
 import { createProject, createUser, fragments, TestApp } from '../utility';
+import { getUserFromSession } from './create-session';
 
 export async function createProjectMember(
   app: TestApp,
   input: Partial<CreateProjectMember> = {}
 ) {
   const projectMember: CreateProjectMember = {
-    userId: input.userId ?? (await createUser(app)).id,
+    userId:
+      input.userId ||
+      (await getUserFromSession(app)).id ||
+      (await createUser(app)).id,
     projectId: input.projectId ?? (await createProject(app)).id,
     ...input,
   };

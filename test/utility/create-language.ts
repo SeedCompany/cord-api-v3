@@ -10,7 +10,7 @@ export async function createLanguage(
   input: Partial<CreateLanguage> = {}
 ) {
   const language: CreateLanguage = {
-    name: faker.address.country() + generate(),
+    name: faker.address.country() + '' + generate(),
     displayName: faker.company.companyName(),
     beginFiscalYear: faker.random.number(4),
     ethnologueName: faker.finance.accountName(),
