@@ -19,6 +19,7 @@ import {
   createZone,
   expectNotFound,
   fragments,
+  getUserFromSession,
   login,
   Raw,
   TestApp,
@@ -32,8 +33,8 @@ describe('Engagement e2e', () => {
   let region: Region;
   let country: Country;
   let user: User;
-  let intern: User;
-  let mentor: User;
+  let intern: Partial<User>;
+  let mentor: Partial<User>;
   const password: string = faker.internet.password();
 
   beforeAll(async () => {
@@ -46,8 +47,8 @@ describe('Engagement e2e', () => {
     zone = await createZone(app, { directorId: user.id });
     region = await createRegion(app, { directorId: user.id, zoneId: zone.id });
     country = await createCountry(app, { regionId: region.id });
-    intern = await createUser(app);
-    mentor = await createUser(app);
+    intern = await getUserFromSession(app);
+    mentor = await getUserFromSession(app);
     await login(app, { email: user.email.value, password });
   });
 

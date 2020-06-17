@@ -24,21 +24,22 @@ import {
   createZone,
   expectNotFound,
   fragments,
+  getUserFromSession,
   TestApp,
 } from './utility';
 
 describe('Project e2e', () => {
   let app: TestApp;
-  let intern: User;
-  let mentor: User;
+  let intern: Partial<User>;
+  let mentor: Partial<User>;
 
   beforeAll(async () => {
     jest.setTimeout(50000);
     app = await createTestApp();
     await createSession(app);
-    intern = await createUser(app);
-    mentor = await createUser(app);
     await createUser(app);
+    intern = await getUserFromSession(app);
+    mentor = await getUserFromSession(app);
   });
   afterAll(async () => {
     await app.close();

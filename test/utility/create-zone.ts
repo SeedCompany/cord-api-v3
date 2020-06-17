@@ -1,6 +1,6 @@
 import { gql } from 'apollo-server-core';
 import { generate, isValid } from 'shortid';
-import { createUser } from '.';
+import { createUser, getUserFromSession } from '.';
 import { CreateZone, Zone } from '../../src/components/location';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
@@ -11,7 +11,10 @@ export async function createZone(
 ) {
   const zone: CreateZone = {
     name: 'Zone' + generate(),
-    directorId: input.directorId ?? (await createUser(app)).id,
+    directorId:
+      input.directorId ||
+      (await getUserFromSession(app)).id ||
+      (await createUser(app)).id,
     ...input,
   };
 

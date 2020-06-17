@@ -13,6 +13,7 @@ import { TestApp } from './create-app';
 import { createCountry } from './create-country';
 import { createLanguage } from './create-language';
 import { createProject } from './create-project';
+import { getUserFromSession } from './create-session';
 import { createUser } from './create-user';
 import { fragments } from './fragments';
 
@@ -64,11 +65,12 @@ export async function createInternshipEngagement(
   app: TestApp,
   input: Partial<CreateInternshipEngagement> = {}
 ) {
+  const currentUserId = (await getUserFromSession(app)).id;
   const internshipEngagement: CreateInternshipEngagement = {
     projectId: input.projectId || (await createProject(app)).id,
     countryOfOriginId: input.countryOfOriginId || (await createCountry(app)).id,
-    internId: input.internId || (await createUser(app)).id,
-    mentorId: input.mentorId || (await createUser(app)).id,
+    internId: input.internId || currentUserId || (await createUser(app)).id,
+    mentorId: input.mentorId || currentUserId || (await createUser(app)).id,
     position: InternPosition.AdministrativeSupportSpecialist,
     methodologies: [ProductMethodology.Film],
     disbursementCompleteDate: DateTime.local(),

@@ -3,6 +3,7 @@ import { generate, isValid } from 'shortid';
 import { createUser } from '.';
 import { CreateRegion, Region } from '../../src/components/location';
 import { TestApp } from './create-app';
+import { getUserFromSession } from './create-session';
 import { createZone } from './create-zone';
 import { fragments } from './fragments';
 
@@ -12,8 +13,11 @@ export async function createRegion(
 ) {
   const region: CreateRegion = {
     name: 'Region' + generate(),
-    zoneId: input.zoneId ?? (await createZone(app)).id,
-    directorId: input.directorId ?? (await createUser(app)).id,
+    zoneId: input.zoneId || (await createZone(app)).id,
+    directorId:
+      input.directorId ||
+      (await getUserFromSession(app)).id ||
+      (await createUser(app)).id,
     ...input,
   };
 
