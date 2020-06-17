@@ -385,4 +385,22 @@ describe('Project e2e', () => {
       queryProject.project.engagements.items.length
     ).toBeGreaterThanOrEqual(numEngagements);
   });
+
+  it('DB constraint for project.name uniqueness', async () => {
+    const projName = 'Fix the world';
+    const project = await createProject(app, { name: projName });
+    await expect(createProject(app, { name: projName })).rejects.toThrowError();
+
+    //clean up
+    await app.graphql.mutate(
+      gql`
+        mutation deleteProject($id: ID!) {
+          deleteProject(id: $id)
+        }
+      `,
+      {
+        id: project.id,
+      }
+    );
+  });
 });
