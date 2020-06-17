@@ -485,4 +485,41 @@ describe('User e2e', () => {
     expect(actual.unavailabilities.items[0].id).toBe(unavail.id);
     return true;
   });
+
+  it('read user avatar', async () => {
+    const fakeUser: CreateUser = {
+      email: faker.internet.email(),
+      realFirstName: faker.name.firstName(),
+      realLastName: faker.name.lastName(),
+      displayFirstName: faker.name.firstName(),
+      displayLastName: faker.name.lastName(),
+      password: faker.internet.password(),
+      phone: faker.phone.phoneNumber(),
+      timezone: 'timezone detail',
+      bio: 'bio detail',
+      status: UserStatus.Active,
+    };
+    const newUser = await createUser(app, fakeUser);
+
+    const result = await app.graphql.query(
+      gql`
+        query user($id: ID!) {
+          user(id: $id) {
+            ...user
+            avatarLetters
+          }
+        }
+        ${fragments.user}
+      `,
+      {
+        id: newUser.id,
+      }
+    );
+    const actual = result.user;
+    expect(actual.avatarLetters).toBe(
+      fakeUser.realFirstName[0] + fakeUser.realLastName[0]
+    );
+    expect(actual).toBeTruthy();
+    return true;
+  });
 });
