@@ -3,7 +3,7 @@ import {
   Injectable,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
-import { node } from 'cypher-query-builder';
+import { node, relation } from 'cypher-query-builder';
 import { ISession } from '../../common';
 import {
   DatabaseService,
@@ -19,6 +19,8 @@ import {
   OrganizationListOutput,
   UpdateOrganization,
 } from './dto';
+import { generate } from 'shortid';
+import { DateTime } from 'luxon';
 
 @Injectable()
 export class OrganizationService {
@@ -69,18 +71,70 @@ export class OrganizationService {
         'Duplicate'
       );
     }
-    const propLabels = {
-      name: 'OrgName',
-    };
 
-    const id = await this.db.sgCreateNode({
-      session,
-      input: input,
-      propLabels: propLabels,
-      nodevar: 'organization',
-      aclEditProp: 'canCreateOrg',
-      sgName: input.name,
-    });
+    // create org
+    const id = generate();
+    const orgSgId = generate();
+    const createdAt = DateTime.local().toString();
+    const createOrgResult = await this.db
+      .query()
+      .match(
+        node('publicSg', 'PublicSecurityGroup', {
+          active: true,
+        })
+      )
+      .create([
+        node('orgSg', ['OrgPublicSecurityGroup', 'SecurityGroup'], {
+          active: true,
+          id: orgSgId,
+          createdAt,
+        }),
+        relation('out', '', 'member'),
+        node('org', 'Organization', {
+          active: true,
+          id,
+          createdAt,
+        }),
+        relation('out', '', 'name', { active: true, createdAt }),
+        node('name', 'Property', {
+          active: true,
+          createdAt,
+          value: input.name,
+        }),
+      ])
+      .with('*')
+      .create([
+        node('publicSg'),
+        relation('out', '', 'permission', {
+          active: true,
+        }),
+        node('perm', 'Permission', {
+          active: true,
+          property: 'name',
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('org'),
+      ])
+      .return('org')
+      .first();
+
+    if (!createOrgResult) {
+      throw new ServerException('failed to create default org');
+    }
+
+    // const propLabels = {
+    //   name: 'OrgName',
+    // };
+
+    // const id = await this.db.sgCreateNode({
+    //   session,
+    //   input: input,
+    //   propLabels: propLabels,
+    //   nodevar: 'organization',
+    //   aclEditProp: 'canCreateOrg',
+    //   sgName: input.name,
+    // });
     this.logger.info(`organization created, id ${id}`);
 
     return this.readOne(id, session);

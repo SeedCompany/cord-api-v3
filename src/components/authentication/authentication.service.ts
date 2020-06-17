@@ -195,7 +195,7 @@ export class AuthenticationService {
       .first();
 
     if (!result) {
-      this.logger.warning('Failed to find active token in database', { token });
+      this.logger.info('Failed to find active token in database', { token });
       throw new UnauthenticatedException(
         'Session has not been established',
         'NoSession'

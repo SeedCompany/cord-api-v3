@@ -255,10 +255,22 @@ export class AdminService implements OnApplicationBootstrap {
       } else {
         // create org
         const id = generate();
+        const orgSgId = generate();
         const createdAt = DateTime.local().toString();
         const createOrgResult = await this.db
           .query()
+          .match(
+            node('publicSg', 'PublicSecurityGroup', {
+              active: true,
+            })
+          )
           .create([
+            node('orgSg', ['OrgPublicSecurityGroup', 'SecurityGroup'], {
+              active: true,
+              id: orgSgId,
+              createdAt,
+            }),
+            relation('out', '', 'member'),
             node('org', ['DefaultOrganization', 'Organization'], {
               active: true,
               id,
@@ -270,6 +282,20 @@ export class AdminService implements OnApplicationBootstrap {
               createdAt,
               value: this.config.defaultOrg.name,
             }),
+          ])
+          .with('*')
+          .create([
+            node('publicSg'),
+            relation('out', '', 'permission', {
+              active: true,
+            }),
+            node('perm', 'Permission', {
+              active: true,
+              property: 'name',
+              read: true,
+            }),
+            relation('out', '', 'baseNode', { active: true }),
+            node('org'),
           ])
           .return('org')
           .first();

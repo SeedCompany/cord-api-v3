@@ -46,6 +46,7 @@ import {
 } from './unavailability';
 
 import _ = require('lodash');
+import { match } from 'assert';
 
 @Injectable()
 export class UserService {
@@ -540,6 +541,23 @@ export class UserService {
     if (!result) {
       throw new ServerException('failed to create user');
     } else {
+      // attach user to publicSG
+      const attachUserToPublicSg = await this.db
+        .query()
+        .match(node('user', 'User', { id }))
+        .match(node('publicSg', 'PublicSecurityGroup', { active: true }))
+        .create([
+          node('publicSg'),
+          relation('out', '', 'member', { active: true }),
+          node('user'),
+        ])
+        .return('user')
+        .first();
+
+      if (!attachUserToPublicSg) {
+        this.logger.info('failed to attach user to public sg');
+      }
+
       if (session.userId) {
         const assignSG = this.db
           .query()
