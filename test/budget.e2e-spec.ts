@@ -46,7 +46,7 @@ describe('Budget e2e', () => {
     await app.close();
   });
 
-  it('create a budget', async () => {
+  it.skip('create a budget', async () => {
     const budget = await createBudget(app, { projectId: project.id });
     expect(budget.id).toBeDefined();
     const cd = (sd: Secured<string>) =>
@@ -55,7 +55,7 @@ describe('Budget e2e', () => {
     expect(budget.records.length).toBe(fiscal.length);
   });
 
-  it('read one budget by id', async () => {
+  it.skip('read one budget by id', async () => {
     // create budget first
     const budget = await createBudget(app, { projectId: project.id });
 
@@ -78,7 +78,7 @@ describe('Budget e2e', () => {
     expect(actual.status).toEqual(budget.status);
   });
 
-  it('update budget', async () => {
+  it.skip('update budget', async () => {
     const budgetStatusNew = 'Current';
 
     // create budget first
@@ -110,7 +110,7 @@ describe('Budget e2e', () => {
     expect(updated.status).toBe(budgetStatusNew);
   });
 
-  it('delete budget', async () => {
+  it.skip('delete budget', async () => {
     // create budget first
     const budget = await createBudget(app, { projectId: project.id });
 
@@ -144,7 +144,7 @@ describe('Budget e2e', () => {
     ).rejects.toThrowError();
   });
 
-  it('lists budget for a projectId', async () => {
+  it.skip('lists budget for a projectId', async () => {
     // create budget first
     // create 4 budget first
     const numBudget = 4;
@@ -168,7 +168,7 @@ describe('Budget e2e', () => {
     expect(budgets.items.length).toBeGreaterThanOrEqual(numBudget);
   });
 
-  it('Check consistency across budget nodes', async () => {
+  it.skip('Check consistency across budget nodes', async () => {
     // create a new budget for that project
     const budget = await createBudget(app, { projectId: project.id });
     // test it has proper schema

@@ -190,4 +190,25 @@ describe('Organization e2e', () => {
       }
     );
   });
+
+  it('shows canEdit true when it can be edited', async () => {
+    // create an org
+    const org = await createOrganization(app);
+
+    const { organization: actual } = await app.graphql.query(
+      gql`
+        query org($id: ID!) {
+          organization(id: $id) {
+            ...org
+          }
+        }
+        ${fragments.org}
+      `,
+      {
+        id: org.id,
+      }
+    );
+
+    expect(actual.name.canEdit).toBe(true);
+  });
 });

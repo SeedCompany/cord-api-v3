@@ -1452,9 +1452,44 @@ export class DatabaseService {
     props.map((property) => {
       const readPerm = 'canRead' + upperFirst(property);
       const editPerm = 'canEdit' + upperFirst(property);
-      query.optionalMatch([...this.propMatch(property, 'node', readPerm)]);
+      query.optionalMatch([
+        [
+          node('requestingUser'),
+          relation('in', '', 'member', { active: true }),
+          node('sg', 'SecurityGroup', { active: true }),
+          relation('out', '', 'permission', { active: true }),
+          node(editPerm, 'Permission', {
+            property,
+            active: true,
+            edit: true,
+          }),
+          relation('out', '', 'baseNode', { active: true }),
+          node('node'),
+          relation('out', '', property, { active: true }),
+          node(property, 'Property', { active: true }),
+        ],
+      ]);
+      query.optionalMatch([
+        [
+          node('requestingUser'),
+          relation('in', '', 'member', { active: true }),
+          node('sg', 'SecurityGroup', { active: true }),
+          relation('out', '', 'permission', { active: true }),
+          node(readPerm, 'Permission', {
+            property,
+            active: true,
+            read: true,
+          }),
+          relation('out', '', 'baseNode', { active: true }),
+          node('node'),
+          relation('out', '', property, { active: true }),
+          node(property, 'Property', { active: true }),
+        ],
+      ]);
+
       Object.assign(output, {
-        [readPerm]: [{ read: readPerm, edit: editPerm }],
+        [readPerm]: [{ read: readPerm }],
+        [editPerm]: [{ edit: editPerm }],
       });
       Object.assign(output, { [property]: [{ value: property }] });
     });
@@ -1489,27 +1524,6 @@ export class DatabaseService {
 
     return returnVal;
   }
-
-  // helper method for optional properties
-  propMatch = (property: string, baseNode: string, perm: string) => {
-    return [
-      [
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node(perm, 'Permission', {
-          property,
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node(baseNode),
-        relation('out', '', property, { active: true }),
-        node(property, 'Property', { active: true }),
-      ],
-    ];
-  };
 
   async isRootSecurityGroupMember(session: ISession): Promise<boolean> {
     const result = await this.db
