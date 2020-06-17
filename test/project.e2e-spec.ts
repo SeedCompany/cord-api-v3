@@ -90,7 +90,6 @@ describe('Project e2e', () => {
     expect(actual.estimatedSubmission.value).toBe(
       project.estimatedSubmission.value
     );
-    expect(actual.modifiedAt).toBeTruthy();
   });
 
   it('update project', async () => {
@@ -386,7 +385,7 @@ describe('Project e2e', () => {
   });
 
   it('DB constraint for project.name uniqueness', async () => {
-    const projName = 'Fix the world';
+    const projName = 'Fix the world ' + DateTime.local().toString();
     const project = await createProject(app, { name: projName });
     await expect(createProject(app, { name: projName })).rejects.toThrowError();
 

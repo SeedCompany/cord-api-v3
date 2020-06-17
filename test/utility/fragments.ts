@@ -252,7 +252,6 @@ export const project = gql`
       canRead
       canEdit
     }
-    modifiedAt
   }
 `;
 

@@ -32,7 +32,7 @@ describe('Budget e2e', () => {
         'Super Secret Project ' +
         faker.hacker.adjective() +
         faker.hacker.noun() +
-        DateTime.local.toString(),
+        DateTime.local().toString(),
       type: ProjectType.Translation,
       mouStart: DateTime.fromISO('2020-02-01'),
       mouEnd: DateTime.fromISO('2025-01-01'),
