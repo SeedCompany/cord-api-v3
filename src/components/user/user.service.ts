@@ -572,7 +572,7 @@ export class UserService {
   }
 
   async readOne(id: string, session: ISession): Promise<User> {
-    this.logger.info('query read User ', { id, session });
+    // this.logger.info('query read User ', { id, session });
     const property = (property: string, sg: any) => {
       const perm = property + 'Perm';
       return [
@@ -604,17 +604,16 @@ export class UserService {
           node('user'),
         ],
       ])
-      .optionalMatch([
-        ...property('email', 'sg'),
-        ...property('realFirstName', 'sg'),
-        ...property('realLastName', 'sg'),
-        ...property('displayFirstName', 'sg'),
-        ...property('displayLastName', 'sg'),
-        ...property('phone', 'sg'),
-        ...property('bio', 'sg'),
-        ...property('timezone', 'sg'),
-        ...property('status', 'sg'),
-      ])
+      .optionalMatch([...property('email', 'sg')])
+      .optionalMatch([...property('realFirstName', 'sg')])
+      .optionalMatch([...property('realLastName', 'sg')])
+      .optionalMatch([...property('displayFirstName', 'sg')])
+      .optionalMatch([...property('displayLastName', 'sg')])
+      .optionalMatch([...property('phone', 'sg')])
+      .optionalMatch([...property('bio', 'sg')])
+      .optionalMatch([...property('timezone', 'sg')])
+      .optionalMatch([...property('status', 'sg')])
+
       .return({
         email: [{ value: 'email' }],
         realFirstName: [{ value: 'realFirstName' }],
@@ -646,7 +645,12 @@ export class UserService {
         statusPerm: [{ read: 'statusRead', edit: 'statusEdit' }],
       });
 
+    const printMe = query;
+    this.logger.info(printMe.interpolate());
+
     const result = await query.first();
+
+    this.logger.info(JSON.stringify(result));
 
     if (result) {
       const user: User = {
