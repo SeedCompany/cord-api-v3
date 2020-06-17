@@ -486,8 +486,20 @@ describe('User e2e', () => {
     return true;
   });
 
-  it.only('read user avatar', async () => {
-    const newUser = await createUser(app);
+  it('read user avatar', async () => {
+    const fakeUser: CreateUser = {
+      email: faker.internet.email(),
+      realFirstName: faker.name.firstName(),
+      realLastName: faker.name.lastName(),
+      displayFirstName: faker.name.firstName(),
+      displayLastName: faker.name.lastName(),
+      password: faker.internet.password(),
+      phone: faker.phone.phoneNumber(),
+      timezone: 'timezone detail',
+      bio: 'bio detail',
+      status: UserStatus.Active,
+    };
+    const newUser = await createUser(app, fakeUser);
 
     const result = await app.graphql.query(
       gql`
@@ -504,7 +516,9 @@ describe('User e2e', () => {
       }
     );
     const actual = result.user;
-    expect(actual.avatarLetters).toBeTruthy();
+    expect(actual.avatarLetters).toBe(
+      fakeUser.realFirstName[0] + fakeUser.realLastName[0]
+    );
     expect(actual).toBeTruthy();
     return true;
   });
