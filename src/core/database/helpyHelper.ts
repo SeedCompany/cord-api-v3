@@ -1,4 +1,4 @@
-import { node, relation } from 'cypher-query-builder';
+import { node, Query, relation } from 'cypher-query-builder';
 
 export function tryGetEditPerm(property: string) {
   const perm = property + 'EditPerm';
@@ -23,18 +23,18 @@ export function tryGetEditPerm(property: string) {
 
 export function addPropertyCoalesceWithClause(property: string) {
   return `
-    coalesce(${property}.value) as ${property}Value,
-    coalesce(${property}ReadPerm.read) as ${property}Read,
-    coalesce(${property}EditPerm.edit) as ${property}Edit
+    ${property} {
+      value: coalesce(${property}.value),
+      canRead: coalesce(${property}ReadPerm.read),
+      canEdit: coalesce(${property}EditPerm.edit)
+    }
   `;
 }
 
-export function addPropertyReturnClause(property: string) {
-  return `
-    ${property}Value,
-    ${property}Read,
-    ${property}Edit
-  `;
+export function matchProperty(query: Query, ...names: string[]) {
+  for (const name of names) {
+    query.optionalMatch(property(name)).optionalMatch(tryGetEditPerm(name));
+  }
 }
 
 export function property(property: string) {

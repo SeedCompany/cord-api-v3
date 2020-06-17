@@ -4,12 +4,11 @@ import {
   InternalServerErrorException as ServerException,
   UnauthorizedException as UnauthenticatedException,
 } from '@nestjs/common';
-import { ForbiddenError } from 'apollo-server-core';
 import * as argon2 from 'argon2';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
-import { CalendarDate, ISession } from '../../common';
+import { ISession } from '../../common';
 import {
   DatabaseService,
   ILogger,
@@ -17,6 +16,10 @@ import {
   matchSession,
   OnIndex,
 } from '../../core';
+import {
+  addPropertyCoalesceWithClause,
+  matchProperty,
+} from '../../core/database/helpyHelper';
 import { LoginInput } from '../authentication/authentication.dto';
 import { AuthorizationService } from '../authorization';
 import {
@@ -45,12 +48,6 @@ import {
 } from './unavailability';
 
 import _ = require('lodash');
-import {
-  tryGetEditPerm,
-  addPropertyCoalesceWithClause,
-  addPropertyReturnClause,
-  property,
-} from '../../core/database/helpyHelper';
 
 @Injectable()
 export class UserService {
@@ -578,6 +575,17 @@ export class UserService {
   }
 
   async readOne(id: string, session: ISession): Promise<User> {
+    const props = [
+      'email',
+      'realFirstName',
+      'realLastName',
+      'displayFirstName',
+      'displayLastName',
+      'phone',
+      'timezone',
+      'bio',
+      'status',
+    ];
     const query = this.db
       .query()
       .match([
@@ -587,124 +595,20 @@ export class UserService {
         }),
       ])
       .match([node('user', 'User', { active: true, id })])
-      .optionalMatch([...property('email')])
-      .optionalMatch([...tryGetEditPerm('email')])
-      .optionalMatch([...property('realFirstName')])
-      .optionalMatch([...tryGetEditPerm('realFirstName')])
-      .optionalMatch([...property('realLastName')])
-      .optionalMatch([...tryGetEditPerm('realLastName')])
-      .optionalMatch([...property('displayFirstName')])
-      .optionalMatch([...tryGetEditPerm('displayFirstName')])
-      .optionalMatch([...property('displayLastName')])
-      .optionalMatch([...tryGetEditPerm('displayLastName')])
-      .optionalMatch([...property('phone')])
-      .optionalMatch([...tryGetEditPerm('phone')])
-      .optionalMatch([...property('bio')])
-      .optionalMatch([...tryGetEditPerm('bio')])
-      .optionalMatch([...property('timezone')])
-      .optionalMatch([...tryGetEditPerm('timezone')])
-      .optionalMatch([...property('status')])
-      .optionalMatch([...tryGetEditPerm('status')])
+      .call(matchProperty, ...props)
+      .with([
+        ...props.map(addPropertyCoalesceWithClause),
+        'coalesce(user.id) as id',
+        'coalesce(user.createdAt) as createdAt',
+      ])
+      .returnDistinct([...props, 'id', 'createdAt']);
 
-      .with(
-        `
-        ${addPropertyCoalesceWithClause('email')},
-        ${addPropertyCoalesceWithClause('realFirstName')},
-        ${addPropertyCoalesceWithClause('realLastName')},
-        ${addPropertyCoalesceWithClause('displayFirstName')},
-        ${addPropertyCoalesceWithClause('displayLastName')},
-        ${addPropertyCoalesceWithClause('phone')},
-        ${addPropertyCoalesceWithClause('timezone')},
-        ${addPropertyCoalesceWithClause('bio')},
-        ${addPropertyCoalesceWithClause('status')},
-        coalesce(user.id) as id,
-        coalesce(user.createdAt) as createdAt
-      `
-      ).returnDistinct(`
-        ${addPropertyReturnClause('email')},
-        ${addPropertyReturnClause('realFirstName')},
-        ${addPropertyReturnClause('realLastName')},
-        ${addPropertyReturnClause('displayFirstName')},
-        ${addPropertyReturnClause('displayLastName')},
-        ${addPropertyReturnClause('phone')},
-        ${addPropertyReturnClause('timezone')},
-        ${addPropertyReturnClause('bio')},
-        ${addPropertyReturnClause('status')},
-        id,
-        createdAt
-        
-      `);
-
-    const result = await query.first();
-
-    if (result) {
-      const user: User = {
-        id: result.id,
-        createdAt: result.createdAt,
-        email: {
-          value: result.emailValue,
-          canRead: !!result.emailRead,
-          canEdit: !!result.emailEdit,
-        },
-        realFirstName: {
-          value: result.realFirstNameValue,
-          canRead: !!result.realFirstNameRead,
-          canEdit: !!result.realFirstNameEdit,
-        },
-        realLastName: {
-          value: result.realLastNameValue,
-          canRead: !!result.realLastNameRead,
-          canEdit: !!result.realLastNameEdit,
-        },
-        displayFirstName: {
-          value: result.displayFirstNameValue,
-          canRead: !!result.displayFirstNameRead,
-          canEdit: !!result.displayFirstNameEdit,
-        },
-        displayLastName: {
-          value: result.displayLastNameValue,
-          canRead: !!result.displayLastNameRead,
-          canEdit: !!result.displayLastNameEdit,
-        },
-        phone: {
-          value: result.phoneValue,
-          canRead: !!result.phoneRead,
-          canEdit: !!result.phoneEdit,
-        },
-        timezone: {
-          value: result.timezoneValue,
-          canRead: !!result.timezoneRead,
-          canEdit: !!result.timezoneEdit,
-        },
-        bio: {
-          value: result.bioValue,
-          canRead: !!result.bioRead,
-          canEdit: !!result.bioEdit,
-        },
-        status: {
-          value: result.statusValue,
-          canRead: !!result.statusRead,
-          canEdit: !!result.statusEdit,
-        },
-      };
-      return user;
-    } else {
-      // todo: figure out public data
-      throw new ForbiddenError('Not allowed');
-
-      // // maybe we don't have permission, let's just get the pubic info
-      // const query = this.db
-      //   .query()
-      //   .match([node('user', 'User', { active: true, id })]);
-      // query.return(['user']);
-
-      // const noPerm = await query.first();
-      // if (noPerm) {
-      //   throw new ForbiddenError('Not allowed');
-      // }
-
-      // throw new NotFoundException(`Could not find user`);
+    const result = (await query.first()) as User | undefined;
+    if (!result) {
+      throw new NotFoundException('Could not find user');
     }
+
+    return result;
   }
 
   async update(input: UpdateUser, session: ISession): Promise<User> {
