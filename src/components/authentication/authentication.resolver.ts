@@ -52,7 +52,7 @@ export class AuthenticationResolver {
       if (!(e instanceof UnauthenticatedException)) {
         throw e;
       }
-      this.logger.error(
+      this.logger.info(
         'Failed to use existing session token, creating new one.',
         { exception: e }
       );

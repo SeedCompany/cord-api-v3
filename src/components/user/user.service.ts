@@ -4,16 +4,17 @@ import {
   InternalServerErrorException as ServerException,
   UnauthorizedException as UnauthenticatedException,
 } from '@nestjs/common';
-import { ForbiddenError } from 'apollo-server-core';
 import * as argon2 from 'argon2';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
-import { CalendarDate, ISession } from '../../common';
+import { ISession } from '../../common';
 import {
+  addPropertyCoalesceWithClause,
   DatabaseService,
   ILogger,
   Logger,
+  matchProperty,
   matchSession,
   OnIndex,
 } from '../../core';
@@ -334,6 +335,10 @@ export class UserService {
       session
     );
 
+    // Update now stale session prop
+    // TODO Do differently with create-person branch
+    session.userId = userId;
+
     return this.readOne(userId, session);
   }
 
@@ -572,161 +577,40 @@ export class UserService {
   }
 
   async readOne(id: string, session: ISession): Promise<User> {
-    this.logger.info('query read User ', { id, session });
-    const property = (property: string, sg: any) => {
-      const perm = property + 'Perm';
-      return [
-        [
-          node(sg),
-          relation('out', '', 'permission', { active: true }),
-          node(perm, 'Permission', {
-            property,
-            read: true,
-            active: true,
-          }),
-          relation('out', '', 'baseNode'),
-          node('user'),
-          relation('out', '', property, { active: true }),
-          node(property, 'Property', { active: true }),
-        ],
-      ];
-    };
-
+    const props = [
+      'email',
+      'realFirstName',
+      'realLastName',
+      'displayFirstName',
+      'displayLastName',
+      'phone',
+      'timezone',
+      'bio',
+      'status',
+    ];
     const query = this.db
       .query()
+      .match([
+        node('requestingUser', 'User', {
+          active: true,
+          id: session.userId,
+        }),
+      ])
       .match([node('user', 'User', { active: true, id })])
-      .optionalMatch([
-        [
-          node('sg', 'SecurityGroup', { active: true }),
-          relation('out', '', 'member', {
-            active: true,
-          }),
-          node('user'),
-        ],
+      .call(matchProperty, ...props)
+      .with([
+        ...props.map(addPropertyCoalesceWithClause),
+        'coalesce(user.id) as id',
+        'coalesce(user.createdAt) as createdAt',
       ])
-      .optionalMatch([
-        ...property('email', 'sg'),
-        ...property('realFirstName', 'sg'),
-        ...property('realLastName', 'sg'),
-        ...property('displayFirstName', 'sg'),
-        ...property('displayLastName', 'sg'),
-        ...property('phone', 'sg'),
-        ...property('bio', 'sg'),
-        ...property('timezone', 'sg'),
-        ...property('status', 'sg'),
-      ])
-      .return({
-        email: [{ value: 'email' }],
-        realFirstName: [{ value: 'realFirstName' }],
-        realLastName: [{ value: 'realLastName' }],
-        displayFirstName: [{ value: 'displayFirstName' }],
-        displayLastName: [{ value: 'displayLastName' }],
-        phone: [{ value: 'phone' }],
-        timezone: [{ value: 'timezone' }],
-        bio: [{ value: 'bio' }],
-        user: [{ createdAt: 'createdAt', id: 'id' }],
-        emailPerm: [{ read: 'emailRead', edit: 'emailEdit' }],
-        realFirstNamePerm: [
-          { read: 'realFirstNameRead', edit: 'realFirstNameEdit' },
-        ],
-        realLastNamePerm: [
-          { read: 'realLastNameRead', edit: 'realLastNameEdit' },
-        ],
-        displayFirstNamePerm: [
-          { read: 'displayFirstNameRead', edit: 'displayFirstNameEdit' },
-        ],
-        displayLastNamePerm: [
-          { read: 'displayLastNameRead', edit: 'displayLastNameEdit' },
-        ],
-        phonePerm: [{ read: 'phoneRead', edit: 'phoneEdit' }],
-        timezonePerm: [{ read: 'timezoneRead', edit: 'timezoneEdit' }],
-        bioPerm: [{ read: 'bioRead', edit: 'bioEdit' }],
-        sg: [{ id: 'sgId' }],
-        status: [{ value: 'status' }],
-        statusPerm: [{ read: 'statusRead', edit: 'statusEdit' }],
-      });
+      .returnDistinct([...props, 'id', 'createdAt']);
 
-    const result = await query.first();
-
-    if (result) {
-      const user: User = {
-        id: result.id,
-        createdAt: result.createdAt,
-        email: {
-          value: result.email,
-          canRead: !!result.emailRead,
-          canEdit: !!result.emailEdit,
-        },
-        realFirstName: {
-          value: result.realFirstName,
-          canRead: !!result.realFirstNameRead,
-          canEdit: !!result.realFirstNameEdit,
-        },
-        realLastName: {
-          value: result.realLastName,
-          canRead: !!result.realLastNameRead,
-          canEdit: !!result.realLastNameEdit,
-        },
-        displayFirstName: {
-          value: result.displayFirstName,
-          canRead: !!result.displayFirstNameRead,
-          canEdit: !!result.displayFirstNameEdit,
-        },
-        displayLastName: {
-          value: result.displayLastName,
-          canRead: !!result.displayLastNameRead,
-          canEdit: !!result.displayLastNameEdit,
-        },
-        phone: {
-          value: result.phone,
-          canRead: !!result.phoneRead,
-          canEdit: !!result.phoneEdit,
-        },
-        timezone: {
-          value: result.timezone,
-          canRead: !!result.timezoneRead,
-          canEdit: !!result.timezoneEdit,
-        },
-        bio: {
-          value: result.bio,
-          canRead: !!result.bioRead,
-          canEdit: !!result.bioEdit,
-        },
-        status: {
-          value: result.status,
-          canRead: !!result.statusRead,
-          canEdit: !!result.statusEdit,
-        },
-      };
-      return user;
-    } else {
-      // maybe we don't have permission, let's just get the pubic info
-      const query = this.db
-        .query()
-        .match([node('user', 'User', { active: true, id })]);
-      query.return(['user']);
-
-      const noPerm = await query.first();
-      if (noPerm) {
-        throw new ForbiddenError('Not allowed');
-      }
-
-      throw new NotFoundException(`Could not find user`);
+    const result = (await query.first()) as User | undefined;
+    if (!result) {
+      throw new NotFoundException('Could not find user');
     }
 
-    return {
-      id,
-      createdAt: CalendarDate.fromISO('1000-10-10'),
-      email: { value: '', canEdit: false, canRead: false },
-      realFirstName: { value: '', canEdit: false, canRead: false },
-      realLastName: { value: '', canEdit: false, canRead: false },
-      displayFirstName: { value: '', canEdit: false, canRead: false },
-      displayLastName: { value: '', canEdit: false, canRead: false },
-      phone: { value: '', canEdit: false, canRead: false },
-      timezone: { value: '', canEdit: false, canRead: false },
-      bio: { value: '', canEdit: false, canRead: false },
-      status: { value: '', canEdit: false, canRead: false },
-    };
+    return result;
   }
 
   async update(input: UpdateUser, session: ISession): Promise<User> {
