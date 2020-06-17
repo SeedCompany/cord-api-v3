@@ -4,6 +4,7 @@ import { times } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { CalendarDate } from '../src/common';
+import { Country } from '../src/components/location';
 import {
   Project,
   ProjectStatus,
@@ -32,11 +33,13 @@ describe('Project e2e', () => {
   let app: TestApp;
   let intern: Partial<User>;
   let mentor: Partial<User>;
+  let country: Country;
 
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
     await createUser(app);
+    country = await createCountry(app);
     intern = await getUserFromSession(app);
     mentor = await getUserFromSession(app);
   });
@@ -349,7 +352,6 @@ describe('Project e2e', () => {
     //create 1 engagements in a project
     const numEngagements = 1;
     const type = ProjectType.Internship;
-    const country = await createCountry(app);
     const project = await createProject(app, { type });
 
     await createInternshipEngagement(app, {
