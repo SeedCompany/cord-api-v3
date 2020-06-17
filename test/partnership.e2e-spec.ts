@@ -23,7 +23,6 @@ describe('Partnership e2e', () => {
   let project: Raw<Project>;
 
   beforeAll(async () => {
-    jest.setTimeout(50000);
     app = await createTestApp();
     await createSession(app);
     await createUser(app);
@@ -156,8 +155,8 @@ describe('Partnership e2e', () => {
   });
 
   it('List view of partnerships', async () => {
-    // create 10 partnerships
-    const numPartnerships = 10;
+    // create 2 partnerships
+    const numPartnerships = 2;
     const agreementStatus = PartnershipAgreementStatus.Signed;
     await Promise.all(
       times(numPartnerships).map(() =>
@@ -192,8 +191,8 @@ describe('Partnership e2e', () => {
     expect(partnerships.items.length).toBeGreaterThanOrEqual(numPartnerships);
   });
   it('List view of partnerships by projectId', async () => {
-    // create 10 partnerships
-    const numPartnerships = 10;
+    // create 2 partnerships
+    const numPartnerships = 2;
 
     await Promise.all(
       times(numPartnerships).map(() =>

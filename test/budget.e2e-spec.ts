@@ -32,7 +32,7 @@ describe('Budget e2e', () => {
         'Super Secret Project ' +
         faker.hacker.adjective() +
         faker.hacker.noun() +
-        DateTime.local.toString(),
+        DateTime.local().toString(),
       type: ProjectType.Translation,
       mouStart: DateTime.fromISO('2020-02-01'),
       mouEnd: DateTime.fromISO('2025-01-01'),
@@ -158,8 +158,8 @@ describe('Budget e2e', () => {
 
   it('lists budget for a projectId', async () => {
     // create budget first
-    // create 4 budget first
-    const numBudget = 4;
+    // create 2 budget first
+    const numBudget = 2;
     await Promise.all(
       times(numBudget).map(() => createBudget(app, { projectId: project.id }))
     );

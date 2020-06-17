@@ -58,7 +58,7 @@ describe('ProjectMember e2e', () => {
   });
 
   it('list view of ProjectMember', async () => {
-    const numProjectMembers = 10;
+    const numProjectMembers = 2;
     const userForList = await createUser(app);
     const projectForList = await createProject(app);
 

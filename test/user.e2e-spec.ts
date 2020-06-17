@@ -20,8 +20,6 @@ import {
   TestApp,
 } from './utility';
 
-jest.setTimeout(60_000 * 30);
-
 describe('User e2e', () => {
   let app: TestApp;
 
@@ -193,8 +191,9 @@ describe('User e2e', () => {
   // LIST USERS
   it('list view of users', async () => {
     // create a bunch of users
+    const numUsers = 2;
     await Promise.all(
-      times(10).map(() => createUser(app, { displayFirstName: 'Tammy' }))
+      times(numUsers).map(() => createUser(app, { displayFirstName: 'Tammy' }))
     );
 
     const { users } = await app.graphql.query(gql`
@@ -210,7 +209,7 @@ describe('User e2e', () => {
       ${fragments.user}
     `);
 
-    expect(users.items.length).toBeGreaterThan(9);
+    expect(users.items.length).toBeGreaterThan(numUsers);
   });
 
   it.skip('Check consistency across user nodes', async () => {

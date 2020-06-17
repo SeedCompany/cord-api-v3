@@ -128,7 +128,7 @@ describe('Language e2e', () => {
   // LIST Languages
   it('List view of languages', async () => {
     // create a bunch of languages
-    const numLanguages = 10;
+    const numLanguages = 2;
     await Promise.all(
       times(numLanguages).map(() =>
         createLanguage(app, { name: faker.address.country() + generate() })

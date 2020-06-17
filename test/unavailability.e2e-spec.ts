@@ -18,7 +18,6 @@ describe('Unavailability e2e', () => {
   let user: User;
 
   beforeAll(async () => {
-    jest.setTimeout(50000);
     app = await createTestApp();
     await createSession(app);
     user = await createUser(app);
@@ -105,10 +104,12 @@ describe('Unavailability e2e', () => {
   });
 
   it('List view of unavailabilities', async () => {
-    // create 10 unavailabilities
-    const num = 10;
+    // create 2 unavailabilities
+    const numUnavail = 2;
     await Promise.all(
-      times(num).map(() => createUnavailability(app, { userId: user.id }))
+      times(numUnavail).map(() =>
+        createUnavailability(app, { userId: user.id })
+      )
     );
 
     const { unavailabilities } = await app.graphql.query(gql`
@@ -124,7 +125,7 @@ describe('Unavailability e2e', () => {
       ${fragments.unavailability}
     `);
 
-    expect(unavailabilities.items.length).toBeGreaterThanOrEqual(num);
+    expect(unavailabilities.items.length).toBeGreaterThanOrEqual(numUnavail);
   });
 
   it('Check consistency across unavailability nodes', async () => {

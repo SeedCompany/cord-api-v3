@@ -4,6 +4,7 @@ import { times } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { CalendarDate } from '../src/common';
+import { Country } from '../src/components/location';
 import {
   Project,
   ProjectStatus,
@@ -32,12 +33,13 @@ describe('Project e2e', () => {
   let app: TestApp;
   let intern: Partial<User>;
   let mentor: Partial<User>;
+  let country: Country;
 
   beforeAll(async () => {
-    jest.setTimeout(50000);
     app = await createTestApp();
     await createSession(app);
     await createUser(app);
+    country = await createCountry(app);
     intern = await getUserFromSession(app);
     mentor = await getUserFromSession(app);
   });
@@ -91,7 +93,6 @@ describe('Project e2e', () => {
     expect(actual.estimatedSubmission.value).toBe(
       project.estimatedSubmission.value
     );
-    expect(actual.modifiedAt).toBeTruthy();
   });
 
   it('update project', async () => {
@@ -152,9 +153,9 @@ describe('Project e2e', () => {
     );
   });
 
-  it.skip('List view of projects', async () => {
-    // create 10 projects
-    const numProjects = 10;
+  it('List view of projects', async () => {
+    // create 2 projects
+    const numProjects = 2;
     const type = ProjectType.Translation;
     await Promise.all(
       times(numProjects).map(async () =>
@@ -202,7 +203,7 @@ describe('Project e2e', () => {
   });
 
   it('List view of my projects', async () => {
-    const numProjects = 3;
+    const numProjects = 2;
     const type = ProjectType.Translation;
     await Promise.all(
       times(numProjects).map(async () =>
@@ -351,7 +352,6 @@ describe('Project e2e', () => {
     //create 1 engagements in a project
     const numEngagements = 1;
     const type = ProjectType.Internship;
-    const country = await createCountry(app);
     const project = await createProject(app, { type });
 
     await createInternshipEngagement(app, {
@@ -387,7 +387,7 @@ describe('Project e2e', () => {
   });
 
   it('DB constraint for project.name uniqueness', async () => {
-    const projName = 'Fix the world';
+    const projName = 'Fix the world ' + DateTime.local().toString();
     const project = await createProject(app, { name: projName });
     await expect(createProject(app, { name: projName })).rejects.toThrowError();
 
