@@ -31,7 +31,8 @@ describe('Budget e2e', () => {
       name:
         'Super Secret Project ' +
         faker.hacker.adjective() +
-        faker.hacker.noun(),
+        faker.hacker.noun() +
+        DateTime.local.toString(),
       type: ProjectType.Translation,
       mouStart: DateTime.fromISO('2020-02-01'),
       mouEnd: DateTime.fromISO('2025-01-01'),
@@ -43,10 +44,21 @@ describe('Budget e2e', () => {
   });
 
   afterAll(async () => {
+    // delete the project because extra projects ruin things in our DB
+    await app.graphql.mutate(
+      gql`
+        mutation deleteProject($id: ID!) {
+          deleteProject(id: $id)
+        }
+      `,
+      {
+        id: project.id,
+      }
+    );
     await app.close();
   });
 
-  it.skip('create a budget', async () => {
+  it('create a budget', async () => {
     const budget = await createBudget(app, { projectId: project.id });
     expect(budget.id).toBeDefined();
     const cd = (sd: Secured<string>) =>
@@ -55,7 +67,7 @@ describe('Budget e2e', () => {
     expect(budget.records.length).toBe(fiscal.length);
   });
 
-  it.skip('read one budget by id', async () => {
+  it('read one budget by id', async () => {
     // create budget first
     const budget = await createBudget(app, { projectId: project.id });
 
@@ -78,7 +90,7 @@ describe('Budget e2e', () => {
     expect(actual.status).toEqual(budget.status);
   });
 
-  it.skip('update budget', async () => {
+  it('update budget', async () => {
     const budgetStatusNew = 'Current';
 
     // create budget first
@@ -110,7 +122,7 @@ describe('Budget e2e', () => {
     expect(updated.status).toBe(budgetStatusNew);
   });
 
-  it.skip('delete budget', async () => {
+  it('delete budget', async () => {
     // create budget first
     const budget = await createBudget(app, { projectId: project.id });
 
@@ -144,7 +156,7 @@ describe('Budget e2e', () => {
     ).rejects.toThrowError();
   });
 
-  it.skip('lists budget for a projectId', async () => {
+  it('lists budget for a projectId', async () => {
     // create budget first
     // create 4 budget first
     const numBudget = 4;
@@ -168,7 +180,7 @@ describe('Budget e2e', () => {
     expect(budgets.items.length).toBeGreaterThanOrEqual(numBudget);
   });
 
-  it.skip('Check consistency across budget nodes', async () => {
+  it('Check consistency across budget nodes', async () => {
     // create a new budget for that project
     const budget = await createBudget(app, { projectId: project.id });
     // test it has proper schema
