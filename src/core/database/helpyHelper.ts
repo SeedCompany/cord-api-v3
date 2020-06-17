@@ -23,11 +23,11 @@ export function tryGetEditPerm(property: string) {
 
 export function addPropertyCoalesceWithClause(property: string) {
   return `
-    ${property} {
-      value: coalesce(${property}.value),
-      canRead: coalesce(${property}ReadPerm.read),
-      canEdit: coalesce(${property}EditPerm.edit)
-    }
+    {
+      value: coalesce(${property}.value, null),
+      canRead: coalesce(${property}ReadPerm.read, false),
+      canEdit: coalesce(${property}EditPerm.edit, false)
+    } as ${property}
   `;
 }
 
