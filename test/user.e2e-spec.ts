@@ -485,4 +485,27 @@ describe('User e2e', () => {
     expect(actual.unavailabilities.items[0].id).toBe(unavail.id);
     return true;
   });
+
+  it.only('read user avatar', async () => {
+    const newUser = await createUser(app);
+
+    const result = await app.graphql.query(
+      gql`
+        query user($id: ID!) {
+          user(id: $id) {
+            ...user
+            avatarLetters
+          }
+        }
+        ${fragments.user}
+      `,
+      {
+        id: newUser.id,
+      }
+    );
+    const actual = result.user;
+    expect(actual.avatarLetters).toBeTruthy();
+    expect(actual).toBeTruthy();
+    return true;
+  });
 });
