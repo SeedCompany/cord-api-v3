@@ -337,6 +337,10 @@ export class UserService {
       session
     );
 
+    // Update now stale session prop
+    // TODO Do differently with create-person branch
+    session.userId = userId;
+
     return this.readOne(userId, session);
   }
 
