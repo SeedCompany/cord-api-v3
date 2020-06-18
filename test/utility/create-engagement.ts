@@ -1,7 +1,7 @@
 import { gql } from 'apollo-server-core';
+import * as faker from 'faker';
 import { DateTime } from 'luxon';
 import { isValid } from 'shortid';
-import * as faker from 'faker';
 import {
   CreateInternshipEngagement,
   CreateLanguageEngagement,

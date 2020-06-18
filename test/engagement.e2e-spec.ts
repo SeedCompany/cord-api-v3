@@ -169,7 +169,7 @@ describe('Engagement e2e', () => {
 
     const updateFirstScripture = false;
     const updateLukePartnership = false;
-    const updateParaTextRegistryId = faker.random.word()
+    const updateParaTextRegistryId = faker.random.word();
 
     const result = await app.graphql.mutate(
       gql`
