@@ -160,7 +160,7 @@ export class OrganizationService {
         }),
       ])
       .match([node('org', 'Organization', { active: true, id: orgId })])
-      .call(matchProperty, ...props)
+      .call(matchProperty, 'org', ...props)
       .with([
         ...props.map(addPropertyCoalesceWithClause),
         'coalesce(org.id) as id',

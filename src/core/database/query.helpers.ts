@@ -1,6 +1,9 @@
 import { node, Query, relation } from 'cypher-query-builder';
 
-export function tryGetEditPerm(property: string) {
+export function tryGetEditPerm(
+  property: string,
+  cypherIdentifierForBaseNode: string
+) {
   const perm = property + 'EditPerm';
   return [
     [
@@ -16,7 +19,7 @@ export function tryGetEditPerm(property: string) {
         active: true,
       }),
       relation('out', '', 'baseNode'),
-      node('user'),
+      node(cypherIdentifierForBaseNode),
     ],
   ];
 }
@@ -31,13 +34,22 @@ export function addPropertyCoalesceWithClause(property: string) {
   `;
 }
 
-export function matchProperty(query: Query, ...names: string[]) {
+export function matchProperty(
+  query: Query,
+  cypherIdentifierForBaseNode: string,
+  ...names: string[]
+) {
   for (const name of names) {
-    query.optionalMatch(property(name)).optionalMatch(tryGetEditPerm(name));
+    query
+      .optionalMatch(property(name, cypherIdentifierForBaseNode))
+      .optionalMatch(tryGetEditPerm(name, cypherIdentifierForBaseNode));
   }
 }
 
-export function property(property: string) {
+export function property(
+  property: string,
+  cypherIdentifierForBaseNode: string
+) {
   const perm = property + 'ReadPerm';
   return [
     [
@@ -53,9 +65,21 @@ export function property(property: string) {
         active: true,
       }),
       relation('out', '', 'baseNode'),
-      node('user'),
+      node(cypherIdentifierForBaseNode),
       relation('out', '', property, { active: true }),
       node(property, 'Property', { active: true }),
     ],
   ];
 }
+
+// export function createPropertyWithSecurityGroup(
+//   property: string,
+//   additionalLabel: string,
+//   addToAdmin: boolean,
+//   addToWriter: boolean,
+//   addToReader: boolean
+// ) {
+//   return [
+//     node(''), //
+//   ];
+// }

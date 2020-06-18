@@ -643,7 +643,7 @@ export class UserService {
         }),
       ])
       .match([node('user', 'User', { active: true, id })])
-      .call(matchProperty, ...props)
+      .call(matchProperty, 'user', ...props)
       .with([
         ...props.map(addPropertyCoalesceWithClause),
         'coalesce(user.id) as id',
