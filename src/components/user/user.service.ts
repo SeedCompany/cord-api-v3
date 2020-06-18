@@ -11,13 +11,13 @@ import { generate } from 'shortid';
 import { ISession } from '../../common';
 import {
   addPropertyCoalesceWithClause,
+  ConfigService,
   DatabaseService,
   ILogger,
   Logger,
   matchProperty,
   matchSession,
   OnIndex,
-  ConfigService,
 } from '../../core';
 import { LoginInput } from '../authentication/authentication.dto';
 import { AuthorizationService } from '../authorization';
@@ -47,7 +47,6 @@ import {
 } from './unavailability';
 
 import _ = require('lodash');
-import { match } from 'assert';
 
 @Injectable()
 export class UserService {
@@ -542,7 +541,7 @@ export class UserService {
       throw new ServerException('failed to create user');
     } else {
       // attach user to publicSG
-      this.logger.info(this.config.getDefaultOrgId());
+
       const attachUserToPublicSg = await this.db
         .query()
         .match(node('user', 'User', { id }))
