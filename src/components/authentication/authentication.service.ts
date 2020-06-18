@@ -94,8 +94,27 @@ export class AuthenticationService {
 
     const userId = await this.userService.create(input, session);
 
-    const _passwordHash = await argon2.hash(input.password);
-    // TODO write hash to DB
+    const passwordHash = await argon2.hash(input.password);
+    await this.db
+      .query()
+      .match([
+        node('user', 'User', {
+          active: true,
+          id: userId,
+        }),
+      ])
+      .create([
+        node('user'),
+        relation('out', '', 'password', {
+          active: true,
+          createdAt: DateTime.local(),
+        }),
+        node('password', 'Property', {
+          active: true,
+          value: passwordHash,
+        }),
+      ])
+      .run();
 
     return userId;
   }
