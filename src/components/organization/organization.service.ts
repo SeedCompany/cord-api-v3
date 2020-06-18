@@ -1,14 +1,20 @@
 import {
   BadRequestException,
   Injectable,
+  NotFoundException,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
-import { node } from 'cypher-query-builder';
+import { node, relation } from 'cypher-query-builder';
+import { DateTime } from 'luxon';
+import { generate } from 'shortid';
 import { ISession } from '../../common';
 import {
+  addPropertyCoalesceWithClause,
+  ConfigService,
   DatabaseService,
   ILogger,
   Logger,
+  matchProperty,
   matchSession,
   OnIndex,
 } from '../../core';
@@ -24,6 +30,7 @@ import {
 export class OrganizationService {
   constructor(
     @Logger('org:service') private readonly logger: ILogger,
+    private readonly config: ConfigService,
     private readonly db: DatabaseService
   ) {}
 
@@ -34,7 +41,7 @@ export class OrganizationService {
       'CREATE CONSTRAINT ON (n:Organization) ASSERT n.id IS UNIQUE',
       'CREATE CONSTRAINT ON (n:Organization) ASSERT EXISTS(n.active)',
       'CREATE CONSTRAINT ON (n:Organization) ASSERT EXISTS(n.createdAt)',
-      'CREATE CONSTRAINT ON (n:Organization) ASSERT EXISTS(n.owningOrgId)',
+      // 'CREATE CONSTRAINT ON (n:Organization) ASSERT EXISTS(n.owningOrgId)',
 
       'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.active)',
       'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
@@ -69,32 +76,103 @@ export class OrganizationService {
         'Duplicate'
       );
     }
-    const propLabels = {
-      name: 'OrgName',
-    };
 
-    const id = await this.db.sgCreateNode({
-      session,
-      input: input,
-      propLabels: propLabels,
-      nodevar: 'organization',
-      aclEditProp: 'canCreateOrg',
-      sgName: input.name,
-    });
+    // create org
+    const id = generate();
+    const orgSgId = generate();
+    const createdAt = DateTime.local().toString();
+    const createOrgResult = await this.db
+      .query()
+      .match(
+        node('publicSg', 'PublicSecurityGroup', {
+          active: true,
+        })
+      )
+      .create([
+        node('orgSg', ['OrgPublicSecurityGroup', 'SecurityGroup'], {
+          active: true,
+          id: orgSgId,
+          createdAt,
+        }),
+        relation('out', '', 'organization'),
+        node('org', 'Organization', {
+          active: true,
+          id,
+          createdAt,
+        }),
+        relation('out', '', 'name', { active: true, createdAt }),
+        node('name', 'Property', {
+          active: true,
+          createdAt,
+          value: input.name,
+        }),
+      ])
+      .with('*')
+      .create([
+        node('publicSg'),
+        relation('out', '', 'permission', {
+          active: true,
+        }),
+        node('perm', 'Permission', {
+          active: true,
+          property: 'name',
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('org'),
+      ])
+      .return('org')
+      .first();
+
+    if (!createOrgResult) {
+      throw new ServerException('failed to create default org');
+    }
+
+    // const propLabels = {
+    //   name: 'OrgName',
+    // };
+
+    // const id = await this.db.sgCreateNode({
+    //   session,
+    //   input: input,
+    //   propLabels: propLabels,
+    //   nodevar: 'organization',
+    //   aclEditProp: 'canCreateOrg',
+    //   sgName: input.name,
+    // });
     this.logger.info(`organization created, id ${id}`);
 
     return this.readOne(id, session);
   }
 
   async readOne(orgId: string, session: ISession): Promise<Organization> {
-    const result = await this.db.sgReadOne({
-      id: orgId,
-      session,
-      props: ['name'],
-      aclReadProp: 'canReadOrgs',
-      aclEditProp: 'canCreateOrg',
-      nodevar: 'organization',
-    });
+    const requestingUserId = session.userId
+      ? session.userId
+      : this.config.getAnonUserId();
+
+    const props = ['name'];
+    const query = this.db
+      .query()
+      .match([
+        node('requestingUser', 'User', {
+          active: true,
+          id: requestingUserId,
+        }),
+      ])
+      .match([node('org', 'Organization', { active: true, id: orgId })])
+      .call(matchProperty, ...props)
+      .with([
+        ...props.map(addPropertyCoalesceWithClause),
+        'coalesce(org.id) as id',
+        'coalesce(org.createdAt) as createdAt',
+      ])
+      .returnDistinct([...props, 'id', 'createdAt']);
+
+    const result = (await query.first()) as Organization | undefined;
+    if (!result) {
+      throw new NotFoundException('Could not find org');
+    }
+
     return result;
   }
 
