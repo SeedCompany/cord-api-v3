@@ -6,21 +6,18 @@ import {
 } from '@nestjs/common';
 import * as argon2 from 'argon2';
 import { node, relation } from 'cypher-query-builder';
-import { ConfigService, DatabaseService, Logger, ILogger } from '../../core';
+import { DateTime } from 'luxon';
+import { generate } from 'shortid';
+import { ConfigService, DatabaseService } from '../../core';
 import { UserService } from '../user';
 import { RootSecurityGroup } from './root-security-group';
-import { generate } from 'shortid';
-import { DateTime } from 'luxon';
-import { OrganizationService } from '../organization';
 
 @Injectable()
 export class AdminService implements OnApplicationBootstrap {
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
-    private readonly userService: UserService,
-    private readonly orgService: OrganizationService,
-    @Logger('admin:service') private readonly logger: ILogger
+    private readonly userService: UserService
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
@@ -188,7 +185,7 @@ export class AdminService implements OnApplicationBootstrap {
   async mergePublicSecurityGroup(): Promise<void> {
     const id = generate();
     const createdAt = DateTime.local();
-    const result = await this.db
+    await this.db
       .query()
       .merge([
         node('publicSg', ['PublicSecurityGroup', 'SecurityGroup'], {
