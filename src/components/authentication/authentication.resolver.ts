@@ -1,4 +1,3 @@
-import { UnauthorizedException as UnauthenticatedException } from '@nestjs/common';
 import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { Request, Response } from 'express';
 import { DateTime } from 'luxon';

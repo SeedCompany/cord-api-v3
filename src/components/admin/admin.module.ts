@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { AuthorizationModule } from '../authorization';
+import { OrganizationModule } from '../organization';
 import { UserModule } from '../user';
 import { AdminResolver } from './admin.resolver';
 import { AdminService } from './admin.service';
-import { OrganizationModule } from '../organization';
 
 @Module({
   imports: [UserModule, AuthorizationModule, OrganizationModule],
