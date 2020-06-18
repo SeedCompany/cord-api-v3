@@ -283,7 +283,8 @@ export class ProjectService {
       return await Promise.reject(e);
     }
 
-    if (!result || !result.type) {
+    if (!result) {
+      // || !result.type
       throw new NotFoundException(
         `Could not find project DEBUG: requestingUser ${session.userId} target ProjectId ${id}`
       );
