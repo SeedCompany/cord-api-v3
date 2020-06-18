@@ -446,7 +446,7 @@ export class DatabaseService {
     aclEditProp?: string;
     nodevar: string;
   }): Promise<TObject> {
-    const createdAt = DateTime.local();
+    const createdAt = DateTime.local().toString();
     const update = this.db
       .query()
       .match([matchSession(session)])
@@ -455,7 +455,6 @@ export class DatabaseService {
         node(nodevar, upperFirst(nodevar), {
           active: true,
           id: object.id,
-          owningOrgId: session.owningOrgId,
         }),
       ])
       .with('*')
@@ -494,6 +493,7 @@ export class DatabaseService {
       ])
       .return('newPropNode');
     let result;
+
     try {
       result = await update.first();
     } catch (e) {

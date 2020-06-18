@@ -101,7 +101,7 @@ export class OrganizationService {
           createdAt,
         }),
         relation('out', '', 'name', { active: true, createdAt }),
-        node('name', ['OrgName', 'Property'], {
+        node('name', ['Property', 'OrgName'], {
           active: true,
           createdAt,
           value: input.name,
