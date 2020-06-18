@@ -146,8 +146,8 @@ export class UserService {
           active: true,
           read: true,
         }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('user'),
+        // relation('out', '', 'baseNode', { active: true }),
+        // node('user'),
       ])
       .return({
         canRead: [{ read: 'canRead', edit: 'canEdit' }],
@@ -202,8 +202,8 @@ export class UserService {
           active: true,
           read: true,
         }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('user'),
+        // relation('out', '', 'baseNode', { active: true }),
+        // node('user'),
       ])
       .return({
         canRead: [{ read: 'canRead', edit: 'canEdit' }],
@@ -264,8 +264,8 @@ export class UserService {
           active: true,
           read: true,
         }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('user'),
+        // relation('out', '', 'baseNode', { active: true }),
+        // node('user'),
       ])
       .return({
         canRead: [{ read: 'canRead', edit: 'canEdit' }],

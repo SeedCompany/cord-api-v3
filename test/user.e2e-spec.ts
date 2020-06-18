@@ -521,4 +521,55 @@ describe('User e2e', () => {
     expect(actual).toBeTruthy();
     return true;
   });
+
+  it('list users with organizations', async () => {
+    const newUser = await createUser(app, { displayFirstName: 'Tammy' });
+    const org = await createOrganization(app);
+
+    const result = await app.graphql.mutate(
+      gql`
+        mutation assignOrganizationToUser(
+          $orgId: ID!
+          $userId: ID!
+          $primary: Boolean!
+        ) {
+          assignOrganizationToUser(
+            input: {
+              request: { orgId: $orgId, userId: $userId, primary: $primary }
+            }
+          )
+        }
+      `,
+      {
+        orgId: org.id,
+        userId: newUser.id,
+        primary: true,
+      }
+    );
+    expect(result.assignOrganizationToUser).toBe(true);
+
+    const { users } = await app.graphql.query(gql`
+      query {
+        users(input: { filter: { displayFirstName: "Tammy" } }) {
+          items {
+            ...user
+            organizations {
+              items {
+                ...org
+              }
+              hasMore
+              total
+              canRead
+              canCreate
+            }
+          }
+          hasMore
+          total
+        }
+      }
+      ${fragments.user}
+      ${fragments.org}
+    `);
+    expect(users.items[0].organizations).toBeTruthy();
+  });
 });
