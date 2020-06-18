@@ -14,8 +14,23 @@ import { EnvironmentService } from './environment.service';
 export class ConfigService {
   port = this.env.number('port').optional(3000);
   globalPrefix = '';
+  anonUserId: string;
+  defaultOrgId: string;
 
   jwtKey = this.env.string('JWT_AUTH_KEY').optional('cord-field');
+
+  getAnonUserId() {
+    return this.anonUserId;
+  }
+  setAnonUserId(id: string) {
+    this.anonUserId = id;
+  }
+  getDefaultOrgId() {
+    return this.defaultOrgId;
+  }
+  setDefaultOrgId(id: string) {
+    this.defaultOrgId = id;
+  }
 
   @Lazy() get email() {
     const send = this.env.boolean('EMAIL_SEND').optional(false);

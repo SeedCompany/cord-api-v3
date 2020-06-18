@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   InternalServerErrorException as ServerException,
+  NotFoundException,
 } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { ISession } from '../../common';
@@ -11,6 +12,9 @@ import {
   Logger,
   matchSession,
   OnIndex,
+  matchProperty,
+  addPropertyCoalesceWithClause,
+  ConfigService,
 } from '../../core';
 import {
   CreateOrganization,
@@ -26,6 +30,7 @@ import { DateTime } from 'luxon';
 export class OrganizationService {
   constructor(
     @Logger('org:service') private readonly logger: ILogger,
+    private readonly config: ConfigService,
     private readonly db: DatabaseService
   ) {}
 
@@ -89,7 +94,7 @@ export class OrganizationService {
           id: orgSgId,
           createdAt,
         }),
-        relation('out', '', 'member'),
+        relation('out', '', 'organization'),
         node('org', 'Organization', {
           active: true,
           id,
@@ -141,14 +146,33 @@ export class OrganizationService {
   }
 
   async readOne(orgId: string, session: ISession): Promise<Organization> {
-    const result = await this.db.sgReadOne({
-      id: orgId,
-      session,
-      props: ['name'],
-      aclReadProp: 'canReadOrgs',
-      aclEditProp: 'canCreateOrg',
-      nodevar: 'organization',
-    });
+    const requestingUserId = session.userId
+      ? session.userId
+      : this.config.getAnonUserId();
+
+    const props = ['name'];
+    const query = this.db
+      .query()
+      .match([
+        node('requestingUser', 'User', {
+          active: true,
+          id: requestingUserId,
+        }),
+      ])
+      .match([node('org', 'Organization', { active: true, id: orgId })])
+      .call(matchProperty, ...props)
+      .with([
+        ...props.map(addPropertyCoalesceWithClause),
+        'coalesce(org.id) as id',
+        'coalesce(org.createdAt) as createdAt',
+      ])
+      .returnDistinct([...props, 'id', 'createdAt']);
+
+    const result = (await query.first()) as Organization | undefined;
+    if (!result) {
+      throw new NotFoundException('Could not find org');
+    }
+
     return result;
   }
 

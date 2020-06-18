@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import * as argon2 from 'argon2';
 import { node, relation } from 'cypher-query-builder';
-import { ConfigService, DatabaseService } from '../../core';
+import { ConfigService, DatabaseService, Logger, ILogger } from '../../core';
 import { UserService } from '../user';
 import { RootSecurityGroup } from './root-security-group';
 import { generate } from 'shortid';
@@ -19,7 +19,8 @@ export class AdminService implements OnApplicationBootstrap {
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
     private readonly userService: UserService,
-    private readonly orgService: OrganizationService
+    private readonly orgService: OrganizationService,
+    @Logger('admin:service') private readonly logger: ILogger
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
@@ -43,6 +44,9 @@ export class AdminService implements OnApplicationBootstrap {
 
     // Default Organization
     await this.mergeDefaultOrg();
+
+    // Anonymous User for accessing public data by non-signed in viewers
+    await this.mergeAnonUser();
   }
 
   async rootAdminSecurityGroupExists(): Promise<boolean> {
@@ -211,7 +215,7 @@ export class AdminService implements OnApplicationBootstrap {
           active: true,
         }),
       ])
-      .return('org')
+      .return('org.id as id')
       .first();
 
     if (!isDefaultOrgResult) {
@@ -246,11 +250,13 @@ export class AdminService implements OnApplicationBootstrap {
             }),
           ])
           .setLabels({ org: 'DefaultOrganization' })
-          .return('org')
-          .run();
+          .return('org.id as id')
+          .first();
 
         if (!giveOrgDefaultLabel) {
           throw new ServerException('could not create default org');
+        } else {
+          this.config.setDefaultOrgId(giveOrgDefaultLabel.id);
         }
       } else {
         // create org
@@ -270,7 +276,7 @@ export class AdminService implements OnApplicationBootstrap {
               id: orgSgId,
               createdAt,
             }),
-            relation('out', '', 'member'),
+            relation('out', '', 'organization'),
             node('org', ['DefaultOrganization', 'Organization'], {
               active: true,
               id,
@@ -297,13 +303,42 @@ export class AdminService implements OnApplicationBootstrap {
             relation('out', '', 'baseNode', { active: true }),
             node('org'),
           ])
-          .return('org')
+          .return('org.id as id')
           .first();
 
         if (!createOrgResult) {
           throw new ServerException('failed to create default org');
+        } else {
+          this.config.setDefaultOrgId(createOrgResult.id);
         }
       }
+    } else {
+      this.config.setDefaultOrgId(isDefaultOrgResult.id);
+    }
+  }
+
+  async mergeAnonUser(): Promise<void> {
+    const anonResult = await this.db
+      .query()
+      .match(node('sg', 'PublicSecurityGroup'))
+      .merge([node('anon', ['AnonUser', 'User'])])
+      .onCreate.setValues({
+        anon: {
+          id: generate(),
+          createdAt: DateTime.local().toString(),
+          active: true,
+        },
+      })
+      .merge([
+        node('anon'),
+        relation('in', '', 'member', { active: true }),
+        node('sg'),
+      ])
+      .return('anon.id as id')
+      .first();
+
+    if (anonResult) {
+      this.config.setAnonUserId(anonResult.id);
     }
   }
 }
