@@ -348,6 +348,9 @@ export const languageEngagement = gql`
     statusModifiedAt {
       value
     }
+    paraTextRegistryId {
+      value
+    }
   }
 `;
 

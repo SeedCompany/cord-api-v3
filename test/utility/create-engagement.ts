@@ -1,6 +1,7 @@
 import { gql } from 'apollo-server-core';
 import { DateTime } from 'luxon';
 import { isValid } from 'shortid';
+import * as faker from 'faker';
 import {
   CreateInternshipEngagement,
   CreateLanguageEngagement,
@@ -31,6 +32,7 @@ export async function createLanguageEngagement(
     startDate: DateTime.local(),
     endDate: DateTime.local(),
     completeDate: DateTime.local(),
+    paraTextRegistryId: faker.random.word(),
     ...input,
   };
   const result = await app.graphql.mutate(

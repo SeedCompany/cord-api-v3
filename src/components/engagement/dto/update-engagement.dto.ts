@@ -36,6 +36,9 @@ export abstract class UpdateLanguageEngagement extends UpdateEngagement {
 
   @Field({ nullable: true })
   readonly lukePartnership?: boolean;
+
+  @Field({ nullable: true })
+  readonly paraTextRegistryId?: string;
 }
 
 @InputType()
