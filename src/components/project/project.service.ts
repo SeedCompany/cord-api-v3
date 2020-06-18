@@ -634,6 +634,9 @@ export class ProjectService {
           ...this.permission('mouStart'),
           ...this.permission('mouEnd'),
           ...this.permission('estimatedSubmission'),
+          ...this.permission('engagement'),
+          ...this.permission('teamMember'),
+          ...this.permission('partnership'),
           ...this.permission('modifiedAt'),
         ])
         .return('newProject.id as id');
