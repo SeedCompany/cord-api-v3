@@ -31,7 +31,6 @@ import {
   getUserFromSession,
   TestApp,
 } from './utility';
-import { createPartnership } from './utility/create-partnership';
 
 describe('Project e2e', () => {
   let app: TestApp;
