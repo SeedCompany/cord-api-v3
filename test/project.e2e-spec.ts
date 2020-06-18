@@ -440,9 +440,10 @@ describe('Project e2e', () => {
         id: project.id,
       }
     );
+
     expect(
       queryProject.project.partnerships.items.length
     ).toBeGreaterThanOrEqual(numPartnerships);
-    expect(queryProject.projects.partnerships.total).toBe(numPartnerships);
+    expect(queryProject.project.partnerships.total).toBe(numPartnerships);
   });
 });
