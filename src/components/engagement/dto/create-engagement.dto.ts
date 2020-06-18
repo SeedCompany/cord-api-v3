@@ -39,6 +39,9 @@ export abstract class CreateLanguageEngagement extends CreateEngagement {
 
   @Field({ nullable: true })
   readonly lukePartnership?: boolean;
+
+  @Field({ nullable: true })
+  readonly paraTextRegistryId?: string;
 }
 
 @InputType()

@@ -60,7 +60,6 @@ describe('Engagement e2e', () => {
       languageId: language.id,
       projectId: project.id,
     });
-
     expect(languageEngagement.id).toBeDefined();
   });
 
@@ -93,7 +92,6 @@ describe('Engagement e2e', () => {
         id: languageEngagement.id,
       }
     );
-
     expect(actual.id).toBe(languageEngagement.id);
     expect(actual.language).toMatchObject(languageEngagement.language);
     expect(actual.firstScripture).toMatchObject(
@@ -112,6 +110,9 @@ describe('Engagement e2e', () => {
     );
     expect(actual.startDate).toMatchObject(languageEngagement.startDate);
     expect(actual.endDate).toMatchObject(languageEngagement.endDate);
+    expect(actual.paraTextRegistryId).toMatchObject(
+      languageEngagement.paraTextRegistryId
+    );
   });
 
   it('read an internship engagement by id', async () => {
@@ -168,6 +169,7 @@ describe('Engagement e2e', () => {
 
     const updateFirstScripture = false;
     const updateLukePartnership = false;
+    const updateParaTextRegistryId = faker.random.word();
 
     const result = await app.graphql.mutate(
       gql`
@@ -188,6 +190,7 @@ describe('Engagement e2e', () => {
             id: languageEngagement.id,
             firstScripture: updateFirstScripture,
             lukePartnership: updateLukePartnership,
+            paraTextRegistryId: updateParaTextRegistryId,
           },
         },
       }
@@ -198,6 +201,7 @@ describe('Engagement e2e', () => {
     expect(updated.id).toBe(languageEngagement.id);
     expect(updated.firstScripture.value).toBe(updateFirstScripture);
     expect(updated.lukePartnership.value).toBe(updateLukePartnership);
+    expect(updated.paraTextRegistryId.value).toBe(updateParaTextRegistryId);
   });
 
   it.skip('update internship engagement', async () => {

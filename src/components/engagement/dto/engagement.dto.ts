@@ -8,6 +8,7 @@ import {
   SecuredBoolean,
   SecuredDate,
   SecuredDateTime,
+  SecuredString,
 } from '../../../common';
 import { SecuredCeremony } from '../../ceremony';
 import { SecuredLanguage } from '../../language';
@@ -113,6 +114,9 @@ export class LanguageEngagement extends IEngagement {
     description: 'Not used anymore, but exposing for legacy data.',
   })
   readonly sentPrintingDate: SecuredDate;
+
+  @Field()
+  readonly paraTextRegistryId: SecuredString;
 }
 
 @ObjectType({

@@ -107,6 +107,9 @@ export class EngagementService {
       ])
       .optionalMatch([...this.propMatch('modifiedAt', 'languageEngagement')])
       .optionalMatch([
+        ...this.propMatch('paraTextRegistryId', 'languageEngagement'),
+      ])
+      .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
         node('sg', 'SecurityGroup', { active: true }),
@@ -177,6 +180,7 @@ export class EngagementService {
         lastReactivatedAt: [{ value: 'lastReactivatedAt' }],
         statusModifiedAt: [{ value: 'statusModifiedAt' }],
         modifiedAt: [{ value: 'modifiedAt' }],
+        paraTextRegistryId: [{ value: 'paraTextRegistryId' }],
         permLanguage: [{ read: 'canReadLanguage', edit: 'canEditLanguage' }],
         permCeremony: [{ read: 'canReadCeremony', edit: 'canEditCeremony' }],
         canReadFirstScripture: [
@@ -184,6 +188,12 @@ export class EngagementService {
         ],
         canReadLukePartnership: [
           { read: 'canReadLukePartnership', edit: 'canEditLukePartnership' },
+        ],
+        canReadParaTextRegistryId: [
+          {
+            read: 'canReadParaTextRegistryId',
+            edit: 'canEditParaTextRegistryId',
+          },
         ],
         canReadSentPrintingDate: [
           {
@@ -271,8 +281,12 @@ export class EngagementService {
         canRead: !!result.canReadSentPrintingDate,
         canEdit: !!result.canEditSentPrintingDate,
       },
+      paraTextRegistryId: {
+        value: result.paraTextRegistryId,
+        canRead: !!result.canReadParaTextRegistryId,
+        canEdit: !!result.canEditParaTextRegistryId,
+      },
     };
-
     return {
       id,
       createdAt: result.createdAt,
@@ -550,6 +564,11 @@ export class EngagementService {
           input.firstScripture || undefined,
           'languageEngagement'
         ),
+        ...this.property(
+          'paraTextRegistryId',
+          input.paraTextRegistryId || undefined,
+          'languageEngagement'
+        ),
         [
           node('adminSG', 'SecurityGroup', {
             active: true,
@@ -578,6 +597,7 @@ export class EngagementService {
         ...this.permission('ceremony', 'languageEngagement'),
         ...this.permission('language', 'languageEngagement'),
         ...this.permission('status', 'languageEngagement'),
+        ...this.permission('paraTextRegistryId', 'languageEngagement'),
       ])
       .return('languageEngagement');
 
@@ -1145,6 +1165,7 @@ export class EngagementService {
           'communicationsCompleteDate',
           'startDate',
           'endDate',
+          'paraTextRegistryId',
         ],
         changes: {
           ...input,
