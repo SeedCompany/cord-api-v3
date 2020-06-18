@@ -95,7 +95,7 @@ export class OrganizationService {
           createdAt,
         }),
         relation('out', '', 'organization'),
-        node('org', 'Organization', {
+        node('org', ['Organization', 'BaseNode'], {
           active: true,
           id,
           createdAt,
