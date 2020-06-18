@@ -1,4 +1,3 @@
-import { UnauthorizedException as UnauthenticatedException } from '@nestjs/common';
 import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { Request, Response } from 'express';
 import { DateTime } from 'luxon';
@@ -49,9 +48,9 @@ export class AuthenticationResolver {
     try {
       session = await this.authService.createSession(token);
     } catch (e) {
-      if (!(e instanceof UnauthenticatedException)) {
-        throw e;
-      }
+      // if (!(e instanceof UnauthenticatedException)) {
+      //   throw e;
+      // }
       this.logger.info(
         'Failed to use existing session token, creating new one.',
         { exception: e }

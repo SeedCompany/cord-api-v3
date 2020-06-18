@@ -11,6 +11,7 @@ import { generate } from 'shortid';
 import { ISession } from '../../common';
 import {
   addPropertyCoalesceWithClause,
+  ConfigService,
   DatabaseService,
   ILogger,
   Logger,
@@ -55,6 +56,7 @@ export class UserService {
     private readonly organizations: OrganizationService,
     private readonly unavailabilities: UnavailabilityService,
     private readonly db: DatabaseService,
+    private readonly config: ConfigService,
     @Logger('user:service') private readonly logger: ILogger
   ) {}
 
@@ -67,8 +69,6 @@ export class UserService {
       'CREATE CONSTRAINT ON (n:User) ASSERT n.id IS UNIQUE',
       'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.active)',
       'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.createdAt)',
-      'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.owningOrgId)',
-      'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.owningOrgId)',
 
       // EMAIL REL
       'CREATE CONSTRAINT ON ()-[r:email]-() ASSERT EXISTS(r.active)',
@@ -540,6 +540,52 @@ export class UserService {
     if (!result) {
       throw new ServerException('failed to create user');
     } else {
+      // attach user to publicSG
+
+      const attachUserToPublicSg = await this.db
+        .query()
+        .match(node('user', 'User', { id }))
+        .match(node('publicSg', 'PublicSecurityGroup', { active: true }))
+
+        .create([
+          node('publicSg'),
+          relation('out', '', 'member', { active: true }),
+          node('user'),
+          relation('in', '', 'member', { active: true }),
+          node('defaultOrg'),
+        ])
+        .return('user')
+        .first();
+
+      if (!attachUserToPublicSg) {
+        this.logger.info('failed to attach user to public sg');
+      }
+
+      if (this.config.getDefaultOrgId()) {
+        const attachToOrgPublicSg = await this.db
+          .query()
+          .match(node('user', 'User', { id }))
+          .match([
+            node('orgPublicSg', 'OrgPublicSecurityGroup'),
+            relation('out', '', 'organization'),
+            node('defaultOrg', 'Organization', {
+              active: true,
+              id: this.config.getDefaultOrgId(),
+            }),
+          ])
+          .create([
+            node('user'),
+            relation('in', '', 'member', { active: true }),
+            node('orgPublicSg'),
+          ])
+
+          .run();
+
+        if (attachToOrgPublicSg) {
+          //
+        }
+      }
+
       if (session.userId) {
         const assignSG = this.db
           .query()
@@ -597,7 +643,7 @@ export class UserService {
         }),
       ])
       .match([node('user', 'User', { active: true, id })])
-      .call(matchProperty, ...props)
+      .call(matchProperty, 'user', ...props)
       .with([
         ...props.map(addPropertyCoalesceWithClause),
         'coalesce(user.id) as id',
