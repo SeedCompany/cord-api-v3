@@ -2,7 +2,8 @@ import { gql } from 'apollo-server-core';
 import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
 import { isValid } from 'shortid';
-import { CreateUser, User } from '../src/components/user';
+import { RegisterInput } from '../src/components/authentication';
+import { User } from '../src/components/user';
 import { EmailService } from '../src/core/email';
 import {
   createSession,
@@ -28,7 +29,7 @@ describe('Authentication e2e', () => {
     const sendEmail = spyOn(app.get(EmailService), 'send');
 
     const email = faker.internet.email();
-    const fakeUser: CreateUser = {
+    const fakeUser: RegisterInput = {
       email: email,
       realFirstName: faker.name.firstName(),
       realLastName: faker.name.lastName(),
@@ -90,7 +91,7 @@ describe('Authentication e2e', () => {
   });
 
   it('login user', async () => {
-    const fakeUser: CreateUser = {
+    const fakeUser: RegisterInput = {
       email: faker.internet.email(),
       realFirstName: faker.name.firstName(),
       realLastName: faker.name.lastName(),

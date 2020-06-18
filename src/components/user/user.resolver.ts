@@ -15,8 +15,8 @@ import {
 import {
   AssignOrganizationToUserInput,
   CheckEmailArgs,
-  CreateUserInput,
-  CreateUserOutput,
+  CreatePersonInput,
+  CreatePersonOutput,
   RemoveOrganizationFromUserInput,
   UpdateUserInput,
   UpdateUserOutput,
@@ -137,14 +137,15 @@ export class UserResolver {
     return this.userService.listEducations(id, input, session);
   }
 
-  @Mutation(() => CreateUserOutput, {
-    description: 'Create a user',
+  @Mutation(() => CreatePersonOutput, {
+    description: 'Create a person',
   })
-  async createUser(
+  async createPerson(
     @Session() session: ISession,
-    @Args('input') { user: input }: CreateUserInput
-  ): Promise<CreateUserOutput> {
-    const user = await this.userService.createAndLogin(input, session);
+    @Args('input') { person: input }: CreatePersonInput
+  ): Promise<CreatePersonOutput> {
+    const userId = await this.userService.create(input, session);
+    const user = await this.userService.readOne(userId, session);
     return { user };
   }
 

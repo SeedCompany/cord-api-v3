@@ -4,7 +4,6 @@ import {
   InternalServerErrorException as ServerException,
   UnauthorizedException as UnauthenticatedException,
 } from '@nestjs/common';
-import * as argon2 from 'argon2';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
@@ -19,8 +18,6 @@ import {
   matchSession,
   OnIndex,
 } from '../../core';
-import { LoginInput } from '../authentication/authentication.dto';
-import { AuthorizationService } from '../authorization';
 import {
   OrganizationListInput,
   OrganizationService,
@@ -28,7 +25,7 @@ import {
 } from '../organization';
 import {
   AssignOrganizationToUser,
-  CreateUser,
+  CreatePerson,
   RemoveOrganizationFromUser,
   UpdateUser,
   User,
@@ -46,12 +43,9 @@ import {
   UnavailabilityService,
 } from './unavailability';
 
-import _ = require('lodash');
-
 @Injectable()
 export class UserService {
   constructor(
-    private readonly auth: AuthorizationService,
     private readonly educations: EducationService,
     private readonly organizations: OrganizationService,
     private readonly unavailabilities: UnavailabilityService,
@@ -325,35 +319,8 @@ export class UserService {
     return true;
   }
 
-  async createAndLogin(input: CreateUser, session: ISession): Promise<User> {
-    const userId = await this.create(input, session);
-    await this.login(
-      {
-        email: input.email,
-        password: input.password,
-      },
-      session
-    );
-
-    // Update now stale session prop
-    // TODO Do differently with create-person branch
-    session.userId = userId;
-
-    return this.readOne(userId, session);
-  }
-
-  async create(
-    input: CreateUser,
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-    session: ISession = {} as ISession
-  ): Promise<string> {
-    // ensure token doesn't have any users attached to it
-    if (!_.isEmpty(session)) {
-      await this.logout(session.token);
-    }
-
+  async create(input: CreatePerson, session?: ISession): Promise<string> {
     const id = generate();
-    const pash = await argon2.hash(input.password);
     const createdAt = DateTime.local();
 
     // helper method for defining properties
@@ -486,7 +453,6 @@ export class UserService {
           createdAt,
         }),
       ],
-      ...property('password', pash),
       ...property('realFirstName', input.realFirstName),
       ...property('realLastName', input.realLastName),
       ...property('displayFirstName', input.displayFirstName),
@@ -515,7 +481,6 @@ export class UserService {
           name: `${input.realFirstName} ${input.realLastName} users`,
         }),
       ],
-      ...permission('password'),
       ...permission('realFirstName'),
       ...permission('realLastName'),
       ...permission('displayFirstName'),
@@ -539,87 +504,87 @@ export class UserService {
 
     if (!result) {
       throw new ServerException('failed to create user');
-    } else {
-      // attach user to publicSG
+    }
 
-      const attachUserToPublicSg = await this.db
+    // attach user to publicSG
+
+    const attachUserToPublicSg = await this.db
+      .query()
+      .match(node('user', 'User', { id }))
+      .match(node('publicSg', 'PublicSecurityGroup', { active: true }))
+
+      .create([
+        node('publicSg'),
+        relation('out', '', 'member', { active: true }),
+        node('user'),
+        relation('in', '', 'member', { active: true }),
+        node('defaultOrg'),
+      ])
+      .return('user')
+      .first();
+
+    if (!attachUserToPublicSg) {
+      this.logger.error('failed to attach user to public sg');
+    }
+
+    if (this.config.getDefaultOrgId()) {
+      const attachToOrgPublicSg = await this.db
         .query()
         .match(node('user', 'User', { id }))
-        .match(node('publicSg', 'PublicSecurityGroup', { active: true }))
-
+        .match([
+          node('orgPublicSg', 'OrgPublicSecurityGroup'),
+          relation('out', '', 'organization'),
+          node('defaultOrg', 'Organization', {
+            active: true,
+            id: this.config.getDefaultOrgId(),
+          }),
+        ])
         .create([
-          node('publicSg'),
-          relation('out', '', 'member', { active: true }),
           node('user'),
           relation('in', '', 'member', { active: true }),
-          node('defaultOrg'),
+          node('orgPublicSg'),
         ])
-        .return('user')
-        .first();
+        .run();
 
-      if (!attachUserToPublicSg) {
-        this.logger.info('failed to attach user to public sg');
+      if (attachToOrgPublicSg) {
+        //
       }
-
-      if (this.config.getDefaultOrgId()) {
-        const attachToOrgPublicSg = await this.db
-          .query()
-          .match(node('user', 'User', { id }))
-          .match([
-            node('orgPublicSg', 'OrgPublicSecurityGroup'),
-            relation('out', '', 'organization'),
-            node('defaultOrg', 'Organization', {
-              active: true,
-              id: this.config.getDefaultOrgId(),
-            }),
-          ])
-          .create([
-            node('user'),
-            relation('in', '', 'member', { active: true }),
-            node('orgPublicSg'),
-          ])
-
-          .run();
-
-        if (attachToOrgPublicSg) {
-          //
-        }
-      }
-
-      if (session.userId) {
-        const assignSG = this.db
-          .query()
-          .match([node('requestingUser', 'User', { id: session.userId })]);
-        assignSG
-          .create([
-            [
-              node('adminSG'),
-              relation('out', '', 'member', {
-                active: true,
-                admin: true,
-                createdAt,
-              }),
-              node('requestingUser'),
-            ],
-            [
-              node('readerSG'),
-              relation('out', '', 'member', {
-                active: true,
-                admin: true,
-                createdAt,
-              }),
-              node('requestingUser'),
-            ],
-          ])
-          .return({
-            requestingUser: [{ id: 'id' }],
-            readerSG: [{ id: 'readerSGid' }],
-            adminSG: [{ id: 'adminSGid' }],
-          });
-        await assignSG.first();
-      }
-      return result.id;
     }
+
+    if (session?.userId) {
+      const assignSG = this.db
+        .query()
+        .match([node('requestingUser', 'User', { id: session.userId })]);
+      assignSG
+        .create([
+          [
+            node('adminSG'),
+            relation('out', '', 'member', {
+              active: true,
+              admin: true,
+              createdAt,
+            }),
+            node('requestingUser'),
+          ],
+          [
+            node('readerSG'),
+            relation('out', '', 'member', {
+              active: true,
+              admin: true,
+              createdAt,
+            }),
+            node('requestingUser'),
+          ],
+        ])
+        .return({
+          requestingUser: [{ id: 'id' }],
+          readerSG: [{ id: 'readerSGid' }],
+          adminSG: [{ id: 'adminSGid' }],
+        });
+      await assignSG.first();
+    }
+
+    return result.id;
   }
 
   async readOne(id: string, session: ISession): Promise<User> {
@@ -753,94 +718,6 @@ export class UserService {
         )
       ).every((n) => n)
     );
-  }
-
-  // copied from Authentication service.  Not DRY but circular dependency resolved
-  async login(input: LoginInput, session: ISession): Promise<string> {
-    const result1 = await this.db
-      .query()
-      .raw(
-        `
-      MATCH
-        (token:Token {
-          active: true,
-          value: $token
-        })
-      MATCH
-        (:EmailAddress {active: true, value: $email})
-        <-[:email {active: true}]-
-        (user:User {
-          active: true
-        })
-        -[:password {active: true}]->
-        (password:Property {active: true})
-      RETURN
-        password.value as pash
-      `,
-        {
-          token: session.token,
-          email: input.email,
-        }
-      )
-      .first();
-
-    if (!result1 || !(await argon2.verify(result1.pash, input.password))) {
-      throw new UnauthenticatedException('Invalid credentials');
-    }
-
-    const result2 = await this.db
-      .query()
-      .raw(
-        `
-          MATCH
-            (token:Token {
-              active: true,
-              value: $token
-            }),
-            (:EmailAddress {active: true, value: $email})
-            <-[:email {active: true}]-
-            (user:User {
-              active: true
-            })
-          OPTIONAL MATCH
-            (token)-[r]-()
-          DELETE r
-          CREATE
-            (user)-[:token {active: true, createdAt: datetime()}]->(token)
-          RETURN
-            user.id as id
-        `,
-        {
-          token: session.token,
-          email: input.email,
-        }
-      )
-      .first();
-
-    if (!result2 || !result2.id) {
-      throw new ServerException('Login failed');
-    }
-
-    return result2.id;
-  }
-
-  async logout(token: string): Promise<void> {
-    await this.db
-      .query()
-      .raw(
-        `
-      MATCH
-        (token:Token)-[r]-()
-      DELETE
-        r
-      RETURN
-        token.value as token
-      `,
-        {
-          token,
-        }
-      )
-      .run();
   }
 
   async assignOrganizationToUser(

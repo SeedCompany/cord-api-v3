@@ -4,7 +4,7 @@ import {
   CreateProjectMember,
   ProjectMember,
 } from '../../src/components/project';
-import { createProject, createUser, fragments, TestApp } from '../utility';
+import { createPerson, createProject, fragments, TestApp } from '../utility';
 import { getUserFromSession } from './create-session';
 
 export async function createProjectMember(
@@ -15,7 +15,7 @@ export async function createProjectMember(
     userId:
       input.userId ||
       (await getUserFromSession(app)).id ||
-      (await createUser(app)).id,
+      (await createPerson(app)).id,
     projectId: input.projectId ?? (await createProject(app)).id,
     ...input,
   };

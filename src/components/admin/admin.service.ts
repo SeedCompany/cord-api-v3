@@ -9,7 +9,7 @@ import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ConfigService, DatabaseService } from '../../core';
-import { UserService } from '../user';
+import { AuthenticationService } from '../authentication';
 import { RootSecurityGroup } from './root-security-group';
 
 @Injectable()
@@ -17,7 +17,7 @@ export class AdminService implements OnApplicationBootstrap {
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
-    private readonly userService: UserService
+    private readonly authentication: AuthenticationService
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
@@ -123,9 +123,9 @@ export class AdminService implements OnApplicationBootstrap {
 
     if (findRoot === undefined) {
       // not found, create
-      const adminUser = await this.userService.create({
+      const adminUser = await this.authentication.register({
         email: email,
-        password: password,
+        password,
         displayFirstName: 'root',
         displayLastName: 'root',
         realFirstName: 'root',

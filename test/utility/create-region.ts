@@ -1,6 +1,6 @@
 import { gql } from 'apollo-server-core';
 import { generate, isValid } from 'shortid';
-import { createUser } from '.';
+import { createPerson } from '.';
 import { CreateRegion, Region } from '../../src/components/location';
 import { TestApp } from './create-app';
 import { getUserFromSession } from './create-session';
@@ -17,7 +17,7 @@ export async function createRegion(
     directorId:
       input.directorId ||
       (await getUserFromSession(app)).id ||
-      (await createUser(app)).id,
+      (await createPerson(app)).id,
     ...input,
   };
 

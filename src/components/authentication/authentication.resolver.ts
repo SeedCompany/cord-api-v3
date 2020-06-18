@@ -12,6 +12,7 @@ import {
   SessionOutput,
 } from './authentication.dto';
 import { AuthenticationService } from './authentication.service';
+import { RegisterInput, RegisterOutput } from './dto';
 import { SessionPipe } from './session.pipe';
 
 @Resolver()
@@ -82,11 +83,12 @@ export class AuthenticationResolver {
     description: 'Login a user',
   })
   async login(
+    @Args('input') input: LoginInput,
     @Session() session: ISession,
-    @Args('input') input: LoginInput
+    @Context('request') req: Request
   ): Promise<LoginOutput> {
     const userId = await this.authService.login(input, session);
-    const loggedInSession = await this.authService.createSession(session.token);
+    const loggedInSession = await this.updateSession(req);
     const user = await this.userService.readOne(userId, loggedInSession);
     return { user };
   }
@@ -94,9 +96,34 @@ export class AuthenticationResolver {
   @Mutation(() => Boolean, {
     description: 'Logout a user',
   })
-  async logout(@Session() session: ISession): Promise<boolean> {
+  async logout(
+    @Session() session: ISession,
+    @Context('request') req: Request
+  ): Promise<boolean> {
     await this.authService.logout(session.token);
+    await this.updateSession(req); // ensure session data is fresh
     return true;
+  }
+
+  @Mutation(() => RegisterOutput, {
+    description: 'Register a new user',
+  })
+  async register(
+    @Args('input') input: RegisterInput,
+    @Session() session: ISession,
+    @Context('request') req: Request
+  ): Promise<RegisterOutput> {
+    const userId = await this.authService.register(input, session);
+    await this.authService.login(input, session);
+    const loggedInSession = await this.updateSession(req);
+    const user = await this.userService.readOne(userId, loggedInSession);
+    return { user };
+  }
+
+  private async updateSession(req: Request) {
+    const newSession = await this.authService.createSession(req.session!.token);
+    req.session = newSession; // replace session given with session pipe
+    return newSession;
   }
 
   @Mutation(() => Boolean, {

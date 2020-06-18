@@ -13,9 +13,9 @@ import { ProductMethodology } from '../../src/components/product';
 import { TestApp } from './create-app';
 import { createCountry } from './create-country';
 import { createLanguage } from './create-language';
+import { createPerson } from './create-person';
 import { createProject } from './create-project';
 import { getUserFromSession } from './create-session';
-import { createUser } from './create-user';
 import { fragments } from './fragments';
 
 export async function createLanguageEngagement(
@@ -71,8 +71,8 @@ export async function createInternshipEngagement(
   const internshipEngagement: CreateInternshipEngagement = {
     projectId: input.projectId || (await createProject(app)).id,
     countryOfOriginId: input.countryOfOriginId || (await createCountry(app)).id,
-    internId: input.internId || currentUserId || (await createUser(app)).id,
-    mentorId: input.mentorId || currentUserId || (await createUser(app)).id,
+    internId: input.internId || currentUserId || (await createPerson(app)).id,
+    mentorId: input.mentorId || currentUserId || (await createPerson(app)).id,
     position: InternPosition.AdministrativeSupportSpecialist,
     methodologies: [ProductMethodology.Film],
     disbursementCompleteDate: DateTime.local(),

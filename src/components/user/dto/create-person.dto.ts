@@ -6,10 +6,10 @@ import { UserStatus } from './user-status.enum';
 import { User } from './user.dto';
 
 @InputType()
-export abstract class CreateUser {
-  @Field()
+export abstract class CreatePerson {
+  @Field({ nullable: true })
   @IsEmail()
-  readonly email: string;
+  readonly email?: string;
 
   @Field()
   @MinLength(2)
@@ -36,23 +36,20 @@ export abstract class CreateUser {
   @Field({ nullable: true })
   readonly bio?: string;
 
-  @Field()
-  readonly password: string;
-
   @Field(() => UserStatus, { nullable: true })
   readonly status?: UserStatus;
 }
 
 @InputType()
-export abstract class CreateUserInput {
+export abstract class CreatePersonInput {
   @Field()
-  @Type(() => CreateUser)
+  @Type(() => CreatePerson)
   @ValidateNested()
-  readonly user: CreateUser;
+  readonly person: CreatePerson;
 }
 
 @ObjectType()
-export abstract class CreateUserOutput {
+export abstract class CreatePersonOutput {
   @Field()
-  readonly user: User;
+  readonly user: User; // intentionally user
 }
