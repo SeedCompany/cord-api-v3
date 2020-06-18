@@ -10,6 +10,7 @@ import {
   ProjectStatus,
   ProjectStep,
   ProjectType,
+  Role,
 } from '../src/components/project';
 import { User } from '../src/components/user/dto/user.dto';
 import { DatabaseService } from '../src/core';
@@ -19,6 +20,7 @@ import {
   createLanguageEngagement,
   createPartnership,
   createProject,
+  createProjectMember,
   createRegion,
   createSession,
   createTestApp,
@@ -405,19 +407,63 @@ describe('Project e2e', () => {
     );
   });
 
+  it('List view of project members by projectId', async () => {
+    //create 2 Project member
+    const numProjectMembers = 2;
+    const user = await createUser(app);
+    const project = await createProject(app);
+    const userId = user.id;
+    const projectId = project.id;
+
+    await Promise.all(
+      times(numProjectMembers).map(() =>
+        createProjectMember(app, {
+          userId,
+          projectId,
+          roles: [Role.Consultant],
+        })
+      )
+    );
+
+    const queryProject = await app.graphql.query(
+      gql`
+        query project($id: ID!) {
+          project(id: $id) {
+            ...project
+            team {
+              items {
+                ...projectMember
+              }
+              hasMore
+              total
+            }
+          }
+        }
+        ${fragments.project},
+        ${fragments.projectMember}
+      `,
+      {
+        id: project.id,
+      }
+    );
+    // Remember the project Owner is also a team member so that should be +1
+    expect(queryProject.project.team.items.length).toBe(numProjectMembers + 1);
+    expect(queryProject.project.team.total).toBe(numProjectMembers + 1);
+  });
+
   it('List view of partnerships by projectId', async () => {
     //create 2 partnerships in a project
     const numPartnerships = 2;
     const type = ProjectType.Translation;
     const project = await createProject(app, { type });
 
-    await createPartnership(app, {
-      projectId: project.id,
-    });
-
-    await createPartnership(app, {
-      projectId: project.id,
-    });
+    await Promise.all(
+      times(numPartnerships).map(() =>
+        createPartnership(app, {
+          projectId: project.id,
+        })
+      )
+    );
 
     const queryProject = await app.graphql.query(
       gql`
