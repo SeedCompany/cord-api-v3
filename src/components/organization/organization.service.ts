@@ -62,7 +62,7 @@ export class OrganizationService {
       .query()
       .raw(
         `
-        MATCH(org:OrgName {value: $name}) return org
+        MATCH(org:OrgName {value: $name, active: true}) return org
         `,
         {
           name: input.name,
@@ -101,7 +101,7 @@ export class OrganizationService {
           createdAt,
         }),
         relation('out', '', 'name', { active: true, createdAt }),
-        node('name', 'Property', {
+        node('name', ['OrgName', 'Property'], {
           active: true,
           createdAt,
           value: input.name,
