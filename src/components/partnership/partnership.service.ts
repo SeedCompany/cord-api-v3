@@ -433,7 +433,7 @@ export class PartnershipService {
           ORDER BY ${sort} ${order}
           SKIP $skip LIMIT $count
       `;
-      const projBudgets = await this.db
+      const projectPartners = await this.db
         .query()
         .raw(query, {
           token: session.token,
@@ -446,10 +446,11 @@ export class PartnershipService {
         .run();
 
       result.items = await Promise.all(
-        projBudgets.map(async (partnership) =>
+        projectPartners.map(async (partnership) =>
           this.readOne(partnership.id, session)
         )
       );
+      result.total = result.items.length;
     } else {
       result = await this.db.list<Partnership>({
         session,

@@ -17,6 +17,7 @@ import {
   createCountry,
   createInternshipEngagement,
   createLanguageEngagement,
+  createPartnership,
   createProject,
   createRegion,
   createSession,
@@ -402,5 +403,47 @@ describe('Project e2e', () => {
         id: project.id,
       }
     );
+  });
+
+  it('List view of partnerships by projectId', async () => {
+    //create 2 partnerships in a project
+    const numPartnerships = 2;
+    const type = ProjectType.Translation;
+    const project = await createProject(app, { type });
+
+    await createPartnership(app, {
+      projectId: project.id,
+    });
+
+    await createPartnership(app, {
+      projectId: project.id,
+    });
+
+    const queryProject = await app.graphql.query(
+      gql`
+        query project($id: ID!) {
+          project(id: $id) {
+            ...project
+            partnerships {
+              items {
+                ...partnership
+              }
+              hasMore
+              total
+            }
+          }
+        }
+        ${fragments.project},
+        ${fragments.partnership}
+      `,
+      {
+        id: project.id,
+      }
+    );
+
+    expect(
+      queryProject.project.partnerships.items.length
+    ).toBeGreaterThanOrEqual(numPartnerships);
+    expect(queryProject.project.partnerships.total).toBe(numPartnerships);
   });
 });

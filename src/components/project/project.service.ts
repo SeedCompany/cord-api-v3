@@ -283,7 +283,6 @@ export class ProjectService {
       return await Promise.reject(e);
     }
 
-    //if (!result || !result.type) {
     if (!result) {
       throw new NotFoundException(
         `Could not find project DEBUG: requestingUser ${session.userId} target ProjectId ${id}`
@@ -635,8 +634,10 @@ export class ProjectService {
           ...this.permission('mouStart'),
           ...this.permission('mouEnd'),
           ...this.permission('estimatedSubmission'),
-          ...this.permission('modifiedAt'),
           ...this.permission('engagement'),
+          ...this.permission('teamMember'),
+          ...this.permission('partnership'),
+          ...this.permission('modifiedAt'),
         ])
         .return('newProject.id as id');
 
