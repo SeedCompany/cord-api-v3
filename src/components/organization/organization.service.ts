@@ -148,7 +148,7 @@ export class OrganizationService {
   async readOne(orgId: string, session: ISession): Promise<Organization> {
     const requestingUserId = session.userId
       ? session.userId
-      : this.config.getAnonUserId();
+      : this.config.anonUser.id;
 
     const props = ['name'];
     const query = this.db

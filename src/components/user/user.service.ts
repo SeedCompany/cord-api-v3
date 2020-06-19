@@ -527,7 +527,7 @@ export class UserService {
       this.logger.error('failed to attach user to public sg');
     }
 
-    if (this.config.getDefaultOrgId()) {
+    if (this.config.defaultOrg.id) {
       const attachToOrgPublicSg = await this.db
         .query()
         .match(node('user', 'User', { id }))
@@ -536,7 +536,7 @@ export class UserService {
           relation('out', '', 'organization'),
           node('defaultOrg', 'Organization', {
             active: true,
-            id: this.config.getDefaultOrgId(),
+            id: this.config.defaultOrg.id,
           }),
         ])
         .create([
