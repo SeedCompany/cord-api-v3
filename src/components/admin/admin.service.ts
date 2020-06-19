@@ -10,6 +10,7 @@ import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ConfigService, DatabaseService } from '../../core';
 import { AuthenticationService } from '../authentication';
+import { RootSecurityGroup } from './root-security-group';
 
 @Injectable()
 export class AdminService implements OnApplicationBootstrap {
@@ -57,9 +58,12 @@ export class AdminService implements OnApplicationBootstrap {
       ])
       .onCreate.setLabels({ sg: ['RootSecurityGroup', 'SecurityGroup'] })
       .setValues({
-        'sg.createdAt': createdAt,
-        'sg.active': true,
-        'sg.id': this.config.rootSecurityGroup.id,
+        sg: {
+          createdAt,
+          active: true,
+          id: this.config.rootSecurityGroup.id,
+          ...RootSecurityGroup,
+        },
       })
       .run();
   }
