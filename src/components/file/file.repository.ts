@@ -3,13 +3,23 @@ import {
   NotFoundException,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
-import { contains, node, Node, Query, relation } from 'cypher-query-builder';
+import {
+  contains,
+  hasLabel,
+  node,
+  Node,
+  Query,
+  relation,
+} from 'cypher-query-builder';
 import type { Pattern } from 'cypher-query-builder/dist/typings/clauses/pattern';
-import { camelCase } from 'lodash';
+import { AnyConditions } from 'cypher-query-builder/dist/typings/clauses/where-utils';
+import { camelCase, isEmpty } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
 import {
+  collect,
+  count,
   DatabaseService,
   hasMore,
   ILogger,
@@ -75,8 +85,9 @@ export class FileRepository {
   async getChildrenById(
     session: ISession,
     nodeId: string,
-    input: FileListInput
-  ): Promise<{ children: BaseNode[]; total: number; hasMore: boolean }> {
+    options: FileListInput | undefined
+  ) {
+    options = options ?? FileListInput.defaultVal;
     const query = this.db
       .query()
       .match([
@@ -89,31 +100,42 @@ export class FileRepository {
         matchCreatedBy(),
         matchName(),
       ])
-      .where({ 'name.value': contains(input.filter.name ?? '') })
-      .with('COUNT(node) as total, name, node, createdBy')
-      .return([
-        mapping('node', ['id', 'createdAt'], {
-          type: typeFromLabel('node'),
-          name: 'name.value',
-          createdById: 'createdBy.id',
-        }),
-        'total',
+      .call((q) => {
+        const conditions: AnyConditions = {};
+        if (options?.filter?.name) {
+          conditions['name.value'] = contains(options.filter.name);
+        }
+        if (options?.filter?.type) {
+          conditions['node'] = hasLabel(options.filter.type);
+        }
+        return isEmpty(conditions) ? q : q.where(conditions);
+      })
+      .with([
+        collect(
+          mapping('node', ['id', 'createdAt'], {
+            type: typeFromLabel('node'),
+            name: 'name.value',
+            createdById: 'createdBy.id',
+          }),
+          'nodes'
+        ),
+        count('node', { as: 'total', distinct: true }),
       ])
-      .orderBy([`${input.sort} ${input.order}`])
-      .skip((input.page - 1) * input.count)
-      .limit(input.count)
+      .raw('unwind nodes as node')
+      .return(['node', 'total'])
+      .orderBy('node.' + options.sort, options.order)
+      .skip((options.page - 1) * options.count)
+      .limit(options.count)
       .asResult<{ node: BaseNode; total: number }>();
 
     const result = await query.run();
-
-    const total = result.length === 0 ? 0 : result[0].total;
-
+    const total = result[0]?.total ?? 0;
     const children = result.map((r) => r.node);
 
     return {
       children,
       total,
-      hasMore: hasMore(input, total),
+      hasMore: hasMore(options, total),
     };
   }
 

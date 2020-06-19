@@ -40,7 +40,7 @@ export class FileListInput extends SortablePaginationInput<
   @Field({ nullable: true })
   @Type(() => FileFilters)
   @ValidateNested()
-  readonly filter: FileFilters = defaultFilters;
+  readonly filter?: FileFilters = defaultFilters;
 }
 
 @ObjectType()

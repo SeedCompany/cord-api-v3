@@ -134,7 +134,7 @@ export class FileService {
 
   async listChildren(
     parentId: string,
-    input: FileListInput,
+    input: FileListInput | undefined,
     session: ISession
   ): Promise<FileListOutput> {
     const result = await this.repo.getChildrenById(session, parentId, input);
