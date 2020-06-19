@@ -112,10 +112,11 @@ export class AdminService implements OnApplicationBootstrap {
       .query()
       .match([
         [
-          node('user', 'User'),
+          node('user', 'User', {
+            id: this.config.rootAdmin.id,
+          }),
           relation('out', '', 'email', {
             active: true,
-            id: this.config.rootAdmin.id,
           }),
           node('email', 'EmailAddress', {
             value: this.config.rootAdmin.email,
@@ -150,6 +151,7 @@ export class AdminService implements OnApplicationBootstrap {
 
     if (findRoot === undefined) {
       // not found, create
+
       const adminUser = await this.authentication.register({
         email: email,
         password,
