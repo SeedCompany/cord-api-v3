@@ -369,7 +369,7 @@ describe('File e2e', () => {
       ).toBeTruthy();
     });
 
-    it('filter category', async () => {
+    it.skip('filter category', async () => {
       const category = 'Video' as FileNodeCategory;
       const children = await getFileNodeChildren(app, dir.id, {
         filter: {
