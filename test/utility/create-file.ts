@@ -1,11 +1,14 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { MarkOptional } from 'ts-essentials';
-import { CreateFileVersionInput } from '../../src/components/file';
+import {
+  CreateFileVersionInput,
+  FileListInput,
+} from '../../src/components/file';
 import { MemoryBucket } from '../../src/components/file/memory-bucket';
 import { mimeTypes } from '../../src/components/file/mimeTypes';
 import { TestApp } from './create-app';
-import { RawFile, RawFileNode } from './fragments';
+import { RawFile, RawFileNode, RawFileNodeChildren } from './fragments';
 import * as fragments from './fragments';
 
 export const generateFakeFile = () => ({
@@ -93,7 +96,7 @@ export async function createFileVersion(
 }
 
 export async function getFileNode(app: TestApp, id: string) {
-  const result = await app.graphql.mutate(
+  const result = await app.graphql.query(
     gql`
       query getFileNode($id: ID!) {
         fileNode(id: $id) {
@@ -108,6 +111,40 @@ export async function getFileNode(app: TestApp, id: string) {
   );
 
   const actual: RawFileNode = result.fileNode;
+
+  return actual;
+}
+
+export async function getFileNodeChildren(
+  app: TestApp,
+  id: string,
+  input?: Partial<FileListInput>
+) {
+  const result = await app.graphql.query(
+    gql`
+      query getFileNode($id: ID!, $input: FileListInput) {
+        fileNode(id: $id) {
+          ... on File {
+            children(input: $input) {
+              ...children
+            }
+          }
+          ... on Directory {
+            children(input: $input) {
+              ...children
+            }
+          }
+        }
+      }
+      ${fragments.fileNodeChildren}
+    `,
+    {
+      id,
+      input,
+    }
+  );
+
+  const actual: RawFileNodeChildren = result.fileNode.children;
 
   return actual;
 }

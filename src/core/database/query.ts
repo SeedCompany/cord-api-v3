@@ -1,4 +1,11 @@
 import { Query } from 'cypher-query-builder';
+import { Except } from 'type-fest';
+
+// Work around `Dictionary` return type
+export type QueryWithResult<R> = Except<Query, 'run' | 'first'> & {
+  run: () => Promise<R[]>;
+  first: () => Promise<R>;
+};
 
 declare module 'cypher-query-builder/dist/typings/query' {
   interface Query {
@@ -22,6 +29,13 @@ declare module 'cypher-query-builder/dist/typings/query' {
       fn: (query: this, ...args: A) => this | void,
       ...args: A
     ) => this;
+
+    /**
+     * Defines the result type of the query.
+     * Only useful for TypeScript.
+     * Must be called directly before run()/first().
+     */
+    asResult: <R>() => QueryWithResult<R>;
   }
 }
 
@@ -32,4 +46,8 @@ Query.prototype.call = function call<A extends any[]>(
   ...args: A
 ): Query {
   return fn(this, ...args) || this;
+};
+
+Query.prototype.asResult = function asResult<R>(this: Query) {
+  return (this as unknown) as QueryWithResult<R>;
 };

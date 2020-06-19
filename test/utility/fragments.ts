@@ -1,6 +1,11 @@
 import { gql } from 'apollo-server-core';
 import { Except, Merge } from 'type-fest';
-import { File, FileVersion, IFileNode } from '../../src/components/file';
+import {
+  File,
+  FileListOutput,
+  FileVersion,
+  IFileNode,
+} from '../../src/components/file';
 import { User } from '../../src/components/user';
 import { Raw } from './raw.type';
 
@@ -145,6 +150,24 @@ export const education = gql`
   }
 `;
 
+export const fileNodeChildren = gql`
+  fragment children on FileListOutput {
+    total
+    hasMore
+    items {
+      id
+      type
+      name
+      ... on File {
+        category
+      }
+    }
+  }
+`;
+export type RawFileNodeChildren = Pick<FileListOutput, 'total' | 'hasMore'> & {
+  items: Array<Pick<IFileNode, 'id' | 'type' | 'name' | 'category'>>;
+};
+
 export const fileNode = gql`
   fragment fileNode on FileNode {
     id
@@ -154,6 +177,11 @@ export const fileNode = gql`
     createdAt
     createdBy {
       ...user
+    }
+    parents {
+      id
+      name
+      type
     }
     ... on FileVersion {
       mimeType
@@ -180,6 +208,7 @@ export type RawBaseFileNode = RawNode<
   'createdById',
   {
     createdBy: User;
+    parents: Array<Pick<IFileNode, 'id' | 'type' | 'name'>>;
   }
 >;
 export type RawDirectory = RawBaseFileNode;

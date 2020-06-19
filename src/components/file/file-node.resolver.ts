@@ -1,4 +1,4 @@
-import { Field, Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { Class } from 'type-fest';
 import { ISession, Session, simpleSwitch } from '../../common';
@@ -32,7 +32,7 @@ export function FileNodeResolver<T>(
       return this.users.readOne(node.createdById, session);
     }
 
-    @Field(() => [Directory], {
+    @ResolveField(() => [Directory], {
       description: stripIndent`
         A list of the parents all the way up the tree.
         This can be used to populate a path-like UI,

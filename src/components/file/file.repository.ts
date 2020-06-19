@@ -3,17 +3,35 @@ import {
   NotFoundException,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
-import { Node, node, Query, relation } from 'cypher-query-builder';
+import {
+  contains,
+  hasLabel,
+  node,
+  Node,
+  Query,
+  relation,
+} from 'cypher-query-builder';
 import type { Pattern } from 'cypher-query-builder/dist/typings/clauses/pattern';
-import { camelCase, intersection } from 'lodash';
+import { AnyConditions } from 'cypher-query-builder/dist/typings/clauses/where-utils';
+import { camelCase, isEmpty } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
-import { DatabaseService, ILogger, Logger, matchSession } from '../../core';
+import {
+  collect,
+  count,
+  DatabaseService,
+  hasMore,
+  ILogger,
+  Logger,
+  mapping,
+  matchSession,
+} from '../../core';
 import {
   BaseNode,
   Directory,
   File,
+  FileListInput,
   FileNodeCategory,
   FileNodeType,
   FileVersion,
@@ -31,11 +49,7 @@ export class FileRepository {
   async getBaseNodeById(id: string, session: ISession): Promise<BaseNode> {
     return this.getBaseNodeBy(session, [
       [node('node', 'FileNode', { id, ...isActive })],
-      [
-        node('node'),
-        relation('out', '', 'name', isActive),
-        node('name', 'Property', isActive),
-      ],
+      matchName(),
     ]);
   }
 
@@ -55,62 +69,109 @@ export class FileRepository {
     ]);
   }
 
+  async getParentsById(id: string, session: ISession): Promise<BaseNode[]> {
+    const query = this.getBaseNodeQuery(session, [
+      [
+        node('start', 'FileNode', { id, ...isActive }),
+        relation('out', 'parent', 'parent', isActive, '*'),
+        node('node', 'FileNode', isActive),
+      ],
+      matchName(),
+    ]);
+    query.orderBy('size(parent)');
+    return query.run();
+  }
+
+  async getChildrenById(
+    session: ISession,
+    nodeId: string,
+    options: FileListInput | undefined
+  ) {
+    options = options ?? FileListInput.defaultVal;
+    const query = this.db
+      .query()
+      .match([
+        matchSession(session),
+        [
+          node('start', 'FileNode', { id: nodeId, ...isActive }),
+          relation('in', '', 'parent', isActive),
+          node('node', 'FileNode', isActive),
+        ],
+        matchCreatedBy(),
+        matchName(),
+      ])
+      .call((q) => {
+        const conditions: AnyConditions = {};
+        if (options?.filter?.name) {
+          conditions['name.value'] = contains(options.filter.name);
+        }
+        if (options?.filter?.type) {
+          conditions['node'] = hasLabel(options.filter.type);
+        }
+        return isEmpty(conditions) ? q : q.where(conditions);
+      })
+      .with([
+        collect(
+          mapping('node', ['id', 'createdAt'], {
+            type: typeFromLabel('node'),
+            name: 'name.value',
+            createdById: 'createdBy.id',
+          }),
+          'nodes'
+        ),
+        count('node', { as: 'total', distinct: true }),
+      ])
+      .raw('unwind nodes as node')
+      .return(['node', 'total'])
+      .orderBy('node.' + options.sort, options.order)
+      .skip((options.page - 1) * options.count)
+      .limit(options.count)
+      .asResult<{ node: BaseNode; total: number }>();
+
+    const result = await query.run();
+    const total = result[0]?.total ?? 0;
+    const children = result.map((r) => r.node);
+
+    return {
+      children,
+      total,
+      hasMore: hasMore(options, total),
+    };
+  }
+
   private async getBaseNodeBy(
     session: ISession,
     patterns: Pattern[][]
   ): Promise<BaseNode> {
     const nodes = await this.getBaseNodesBy(session, patterns);
-    const node = nodes[0];
-    if (!node) {
-      throw new NotFoundException();
-    }
-    return node;
+    return first(nodes);
   }
 
   private async getBaseNodesBy(
     session: ISession,
     patterns: Pattern[][]
   ): Promise<BaseNode[]> {
+    const query = this.getBaseNodeQuery(session, patterns);
+    const results = await query.run();
+    return results;
+  }
+
+  private getBaseNodeQuery(session: ISession, patterns: Pattern[][]) {
     this.db.assertPatternsIncludeIdentifier(patterns, 'node', 'name');
 
     const query = this.db
       .query()
-      .match([
-        matchSession(session),
-        ...patterns,
-        [
-          node('node'),
-          relation('out', '', 'createdBy', isActive),
-          node('createdBy', 'User'),
-        ],
-      ])
+      .match([matchSession(session), ...patterns, matchCreatedBy()])
       .return([
-        'node',
+        `${typeFromLabel('node')} as type`,
         {
+          node: [{ id: 'id', createdAt: 'createdAt' }],
           name: [{ value: 'name' }],
           createdBy: [{ id: 'createdById' }],
         },
-      ]);
-    const results = await query.run();
-
-    return results.map(
-      (result): BaseNode => {
-        const base = result.node as Node<{ id: string; createdAt: DateTime }>;
-        const type = intersection(base.labels, [
-          'Directory',
-          'File',
-          'FileVersion',
-        ])[0] as FileNodeType;
-
-        return {
-          type,
-          id: base.properties.id,
-          name: result.name as string,
-          createdAt: base.properties.createdAt,
-          createdById: result.createdById as string,
-        };
-      }
-    );
+      ])
+      .asResult<BaseNode>();
+    return query;
   }
 
   async getLatestVersionId(fileId: string): Promise<string> {
@@ -431,3 +492,25 @@ export class FileRepository {
     }
   }
 }
+
+const matchName = () => [
+  node('node'),
+  relation('out', '', 'name', isActive),
+  node('name', 'Property', isActive),
+];
+const matchCreatedBy = () => [
+  node('node'),
+  relation('out', '', 'createdBy', isActive),
+  node('createdBy', 'User'),
+];
+
+function first<T>(nodes: T[]): T {
+  const node = nodes[0];
+  if (!node) {
+    throw new NotFoundException();
+  }
+  return node;
+}
+
+const typeFromLabel = (variable: string) =>
+  `[l in labels(${variable}) where l in ['FileVersion', 'File', 'Directory']][0]`;

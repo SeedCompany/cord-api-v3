@@ -14,15 +14,14 @@ import { getCategoryFromMimeType } from '../src/components/file/mimeTypes';
 import { User } from '../src/components/user';
 import { DatabaseService } from '../src/core';
 import {
-  createFileVersion,
   createSession,
   createTestApp,
   createUser,
   expectNotFound,
   FakeFile,
-  fragments,
   generateFakeFile,
   getFileNode,
+  getFileNodeChildren,
   login,
   requestFileUpload,
   TestApp,
@@ -32,7 +31,12 @@ import {
   createDirectory,
   createRootDirectory,
 } from './utility/create-directory';
-import { RawFile, RawFileVersion } from './utility/fragments';
+import {
+  RawDirectory,
+  RawFile,
+  RawFileNode,
+  RawFileVersion,
+} from './utility/fragments';
 
 async function deleteNode(app: TestApp, id: string) {
   await app.graphql.mutate(
@@ -106,7 +110,7 @@ describe('File e2e', () => {
 
   afterEach(resetNow);
 
-  it.skip('upload file and download', async () => {
+  it('upload file and download', async () => {
     const fakeFile = generateFakeFile();
 
     const created = await uploadFile(app, root.id, fakeFile);
@@ -127,13 +131,14 @@ describe('File e2e', () => {
       const createdAt = DateTime.fromISO(file.createdAt);
       expect(createdAt.diffNow().as('seconds')).toBeGreaterThan(-30);
       expect(bucket.download(file.downloadUrl)).toEqual(fakeFile.content);
+      expect(file.parents[0].id).toEqual(root.id);
     }
   });
 
   it('get file version', async () => {
     const fakeFile = generateFakeFile();
     const upload = await requestFileUpload(app);
-    await uploadFile(app, root.id, fakeFile, upload);
+    const file = await uploadFile(app, root.id, fakeFile, upload);
 
     // Maybe get version from file.children when implemented
     const version = (await getFileNode(app, upload.id)) as RawFileVersion;
@@ -150,6 +155,7 @@ describe('File e2e', () => {
     const createdAt = DateTime.fromISO(version.createdAt);
     expect(createdAt.diffNow().as('seconds')).toBeGreaterThan(-30);
     expect(bucket.download(version.downloadUrl)).toEqual(fakeFile.content);
+    expect(version.parents[0].id).toEqual(file.id);
   });
 
   it('update file using file id', async () => {
@@ -207,7 +213,20 @@ describe('File e2e', () => {
       expect(dir.createdBy.id).toEqual(me.id);
       const createdAt = DateTime.fromISO(dir.createdAt);
       expect(createdAt.diffNow().as('seconds')).toBeGreaterThan(-30);
+      expect(dir.parents[0].id).toEqual(root.id);
     }
+  });
+
+  it('list parents', async () => {
+    const a = await createDirectory(app, root.id);
+    const b = await createDirectory(app, a.id);
+    const upload = await requestFileUpload(app);
+    const c = await uploadFile(app, b.id, {}, upload);
+    // Maybe get version from file.children when implemented
+    const version = await getFileNode(app, upload.id);
+    const { parents } = version;
+
+    expect(parents.map((n) => n.id)).toEqual([c.id, b.id, a.id, root.id]);
   });
 
   it('delete file', async () => {
@@ -232,32 +251,171 @@ describe('File e2e', () => {
     await expectNodeNotFound(app, file.id);
   });
 
-  it.skip('List view of files', async () => {
-    // create a bunch of files
-    const numFiles = 2;
-    await Promise.all(
-      times(numFiles).map(() =>
-        createFileVersion(app, {
-          parentId: root.id,
-          uploadId: '',
-        })
-      )
-    );
-    // test reading new file
-    const { files } = await app.graphql.query(gql`
-      query {
-        files {
-          items {
-            ...file
-          }
-          hasMore
-          total
-        }
-      }
-      ${fragments.fileNode}
-    `);
+  describe('directory children', () => {
+    let dir: RawDirectory;
+    let expectedChildren: RawFileNode[];
+    let expectedTotalChildren: number;
+    let expectedTotalDirs: number;
+    let expectedTotalFiles: number;
+    let expectedTotalVideos: number;
+    beforeEach(async () => {
+      // Isolated directory to test in
+      dir = await createDirectory(app, root.id);
+      // create a bunch of files
+      expectedTotalFiles = 10;
+      const files = await Promise.all(
+        times(expectedTotalFiles).map(() =>
+          uploadFile(app, dir.id, {
+            mimeType: 'font/woff',
+          })
+        )
+      );
 
-    expect(files.items.length).toBeGreaterThan(numFiles);
+      expectedTotalVideos = 4;
+      const videos = await Promise.all(
+        times(expectedTotalVideos).map(() =>
+          uploadFile(app, dir.id, {
+            mimeType: 'video/mp4',
+          })
+        )
+      );
+      expectedTotalFiles += expectedTotalVideos;
+
+      expectedTotalDirs = 3;
+      const dirs = await Promise.all(
+        times(expectedTotalDirs).map(() => createDirectory(app, dir.id))
+      );
+      expectedTotalChildren = expectedTotalFiles + expectedTotalDirs;
+      expectedChildren = [...files, ...videos, ...dirs];
+    });
+
+    it('full list', async () => {
+      const children = await getFileNodeChildren(app, dir.id);
+      expect(children.total).toEqual(expectedTotalChildren);
+      expect(children.hasMore).toBeFalsy();
+      expect(children.items.length).toEqual(expectedTotalChildren);
+      expect(children.items.map((n) => n.id)).toEqual(
+        expect.arrayContaining(expectedChildren.map((n) => n.id))
+      );
+      const expectedFile = expectedChildren.find(
+        (n) => n.type === FileNodeType.File
+      )!;
+      const actualFile = children.items.find((n) => n.id === expectedFile.id)!;
+      expect(actualFile.category).toEqual(expectedFile.category);
+    });
+
+    it('paginated', async () => {
+      // Divide evenly between 3 pages
+      const count = Math.ceil(expectedTotalChildren / 3);
+
+      const firstPage = await getFileNodeChildren(app, dir.id, {
+        count,
+        page: 1,
+      });
+      expect(firstPage.total).toEqual(expectedTotalChildren);
+      expect(firstPage.hasMore).toBeTruthy();
+      expect(firstPage.items.length).toEqual(count); // complete page
+
+      const nextPage = await getFileNodeChildren(app, dir.id, {
+        count,
+        page: 2,
+      });
+      expect(nextPage.total).toEqual(expectedTotalChildren);
+      expect(nextPage.hasMore).toBeTruthy();
+      expect(nextPage.items.length).toEqual(count); // complete page
+      expect(nextPage.items.map((n) => n.id)).not.toEqual(
+        expect.arrayContaining(firstPage.items.map((n) => n.id))
+      );
+
+      const lastPage = await getFileNodeChildren(app, dir.id, {
+        count,
+        page: 3,
+      });
+      expect(lastPage.total).toEqual(expectedTotalChildren);
+      expect(lastPage.hasMore).toBeFalsy();
+      expect(lastPage.items.length).toEqual(expectedTotalChildren - count * 2); // partial page
+      expect(lastPage.items.map((n) => n.id)).not.toEqual(
+        expect.arrayContaining(
+          firstPage.items.concat(nextPage.items).map((n) => n.id)
+        )
+      );
+    });
+
+    it('filter files', async () => {
+      const children = await getFileNodeChildren(app, dir.id, {
+        filter: {
+          type: FileNodeType.File,
+        },
+      });
+      expect(children.total).toEqual(expectedTotalFiles);
+      expect(children.hasMore).toBeFalsy();
+      expect(children.items.length).toEqual(expectedTotalFiles);
+      expect(
+        children.items.every((n) => n.type === FileNodeType.File)
+      ).toBeTruthy();
+    });
+
+    it('filter directories', async () => {
+      const children = await getFileNodeChildren(app, dir.id, {
+        filter: {
+          type: FileNodeType.Directory,
+        },
+      });
+      expect(children.total).toEqual(expectedTotalDirs);
+      expect(children.hasMore).toBeFalsy();
+      expect(children.items.length).toEqual(expectedTotalDirs);
+      expect(
+        children.items.every((n) => n.type === FileNodeType.Directory)
+      ).toBeTruthy();
+    });
+
+    it.skip('filter category', async () => {
+      const category = 'Video' as FileNodeCategory;
+      const children = await getFileNodeChildren(app, dir.id, {
+        filter: {
+          category: [category],
+        },
+      });
+      expect(children.total).toEqual(expectedTotalVideos);
+      expect(children.hasMore).toBeFalsy();
+      expect(children.items.length).toEqual(expectedTotalVideos);
+      expect(
+        children.items.map((n) => n.category).every((n) => n === category)
+      ).toBeTruthy();
+    });
+  });
+
+  describe('file children', () => {
+    let file: RawFile;
+    const expectedVersionIds: string[] = [];
+    let expectedTotalVersions: number;
+    beforeEach(async () => {
+      const uploadRequest = await requestFileUpload(app);
+      file = await uploadFile(app, root.id, {}, uploadRequest);
+      // create a bunch of versions
+      const extraVersions = 2;
+      for (const _ of times(extraVersions)) {
+        const upload = await requestFileUpload(app);
+        await uploadFile(app, file.id, {}, upload);
+        expectedVersionIds.push(upload.id);
+      }
+
+      expectedVersionIds.push(uploadRequest.id); // initial version id
+      expectedTotalVersions = extraVersions + 1; // +1 for initial version
+    });
+
+    it('full list', async () => {
+      const children = await getFileNodeChildren(app, file.id);
+      expect(children.total).toEqual(expectedTotalVersions);
+      expect(children.hasMore).toBeFalsy();
+      expect(children.items.length).toEqual(expectedTotalVersions);
+      expect(children.items.map((n) => n.id)).toEqual(
+        expect.arrayContaining(expectedVersionIds)
+      );
+      expect(
+        children.items.every((n) => n.type === FileNodeType.FileVersion)
+      ).toBeTruthy();
+    });
   });
 
   describe('check consistency', () => {
