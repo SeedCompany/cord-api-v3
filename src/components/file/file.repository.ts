@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { contains, node, Node, Query, relation } from 'cypher-query-builder';
 import type { Pattern } from 'cypher-query-builder/dist/typings/clauses/pattern';
-import { camelCase, intersection } from 'lodash';
+import { camelCase } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
@@ -14,6 +14,7 @@ import {
   hasMore,
   ILogger,
   Logger,
+  mapping,
   matchSession,
 } from '../../core';
 import {
@@ -59,17 +60,16 @@ export class FileRepository {
   }
 
   async getParentsById(id: string, session: ISession): Promise<BaseNode[]> {
-    const results = await this.getBaseNodeQuery(session, [
+    const query = this.getBaseNodeQuery(session, [
       [
         node('start', 'FileNode', { id, ...isActive }),
         relation('out', 'parent', 'parent', isActive, '*'),
         node('node', 'FileNode', isActive),
       ],
       matchName(),
-    ])
-      .orderBy('size(parent)')
-      .run();
-    return results.map(baseNodeFromResult);
+    ]);
+    query.orderBy('size(parent)');
+    return query.run();
   }
 
   async getChildrenById(
@@ -92,22 +92,23 @@ export class FileRepository {
       .where({ 'name.value': contains(input.filter.name ?? '') })
       .with('COUNT(node) as total, name, node, createdBy')
       .return([
-        'node',
+        mapping('node', ['id', 'createdAt'], {
+          type: typeFromLabel('node'),
+          name: 'name.value',
+          createdById: 'createdBy.id',
+        }),
         'total',
-        {
-          name: [{ value: 'name' }],
-          createdBy: [{ id: 'createdById' }],
-        },
       ])
       .orderBy([`${input.sort} ${input.order}`])
       .skip((input.page - 1) * input.count)
-      .limit(input.count);
+      .limit(input.count)
+      .asResult<{ node: BaseNode; total: number }>();
 
     const result = await query.run();
 
     const total = result.length === 0 ? 0 : result[0].total;
 
-    const children = result.map(baseNodeFromResult);
+    const children = result.map((r) => r.node);
 
     return {
       children,
@@ -130,7 +131,7 @@ export class FileRepository {
   ): Promise<BaseNode[]> {
     const query = this.getBaseNodeQuery(session, patterns);
     const results = await query.run();
-    return results.map(baseNodeFromResult);
+    return results;
   }
 
   private getBaseNodeQuery(session: ISession, patterns: Pattern[][]) {
@@ -140,12 +141,14 @@ export class FileRepository {
       .query()
       .match([matchSession(session), ...patterns, matchCreatedBy()])
       .return([
-        'node',
+        `${typeFromLabel('node')} as type`,
         {
+          node: [{ id: 'id', createdAt: 'createdAt' }],
           name: [{ value: 'name' }],
           createdBy: [{ id: 'createdById' }],
         },
-      ]);
+      ])
+      .asResult<BaseNode>();
     return query;
   }
 
@@ -487,22 +490,5 @@ function first<T>(nodes: T[]): T {
   return node;
 }
 
-const baseNodeFromResult = (result: any): BaseNode => {
-  const base = result.node as Node<{ id: string; createdAt: DateTime }>;
-  const type = typeFromLabels(base);
-
-  return {
-    type,
-    id: base.properties.id,
-    name: result.name as string,
-    createdAt: base.properties.createdAt,
-    createdById: result.createdById as string,
-  };
-};
-
-const typeFromLabels = (base: Node<unknown>) =>
-  intersection(base.labels, [
-    'Directory',
-    'File',
-    'FileVersion',
-  ])[0] as FileNodeType;
+const typeFromLabel = (variable: string) =>
+  `[l in labels(${variable}) where l in ['FileVersion', 'File', 'Directory']][0]`;
