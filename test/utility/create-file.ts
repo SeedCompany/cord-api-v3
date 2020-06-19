@@ -96,7 +96,7 @@ export async function createFileVersion(
 }
 
 export async function getFileNode(app: TestApp, id: string) {
-  const result = await app.graphql.mutate(
+  const result = await app.graphql.query(
     gql`
       query getFileNode($id: ID!) {
         fileNode(id: $id) {
