@@ -1,5 +1,5 @@
 import { node, Query, relation } from 'cypher-query-builder';
-import { PaginationInput } from '../../common';
+import { ISession, Order, PaginationInput } from '../../common';
 import { mapping } from './mapping.helper';
 
 export * from './mapping.helper';
@@ -54,23 +54,21 @@ export function property(
 ) {
   const perm = property + 'ReadPerm';
   return [
-    [
-      node('requestingUser'),
-      relation('in', '', 'member'),
-      node('', 'SecurityGroup', {
-        active: true,
-      }),
-      relation('out', '', 'permission', { active: true }),
-      node(perm, 'Permission', {
-        property,
-        read: true,
-        active: true,
-      }),
-      relation('out', '', 'baseNode'),
-      node(cypherIdentifierForBaseNode),
-      relation('out', '', property, { active: true }),
-      node(property, 'Property', { active: true }),
-    ],
+    node('requestingUser'),
+    relation('in', '', 'member'),
+    node('', 'SecurityGroup', {
+      active: true,
+    }),
+    relation('out', '', 'permission', { active: true }),
+    node(perm, 'Permission', {
+      property,
+      read: true,
+      active: true,
+    }),
+    relation('out', '', 'baseNode'),
+    node(cypherIdentifierForBaseNode),
+    relation('out', '', property, { active: true }),
+    node(property, 'Property', { active: true }),
   ];
 }
 
@@ -113,6 +111,87 @@ export const count = (
 //     node(''), //
 //   ];
 // }
+
+export function matchRequestingUser(query: Query, session: ISession) {
+  query.match([
+    node('requestingUser', 'User', {
+      active: true,
+      id: session.userId,
+    }),
+  ]);
+}
+
+export function returnWithPropertyClauseForList(property: string) {
+  return `
+    ${property}: {
+      value: ${property}.value
+    }
+  `;
+}
+
+export function listWithObject(props: string[]) {
+  let block = ``;
+  for (let i = 0; i < props.length; i++) {
+    block += returnWithPropertyClauseForList(props[i]);
+    if (i + 1 < props.length) {
+      block += ',';
+    }
+  }
+  return block;
+}
+
+export function list(
+  query: Query,
+  session: ISession,
+  label: string,
+  props: string[],
+  page: number,
+  count: number,
+  sort: string,
+  order: Order
+) {
+  query.call(matchRequestingUser, session).match([
+    node('requestingUser'),
+    relation('in', '', 'member'),
+    node('', 'SecurityGroup', {
+      active: true,
+    }),
+    relation('out', '', 'permission', { active: true }),
+    node('', 'Permission', {
+      property: 'name',
+      read: true,
+      active: true,
+    }),
+    relation('out', '', 'baseNode'),
+    node('node', label, {
+      active: true,
+    }),
+    relation('out', '', sort, { active: true }),
+    node(sort, 'Property', { active: true }),
+  ]);
+
+  for (const prop of props) {
+    query.optionalMatch(property(prop, 'node'));
+  }
+
+  query
+    .with(
+      `
+  {
+    id: node.id,
+    createdAt: node.createdAt,
+    ${listWithObject(props)}
+  }
+  as node
+  `
+    )
+    .with(`collect(node) as nodes, count(node) as total`)
+    .raw(`unwind nodes as node`)
+    .return('node, total')
+    .orderBy([[`node.${sort}.value`, order]])
+    .skip((page - 1) * count)
+    .limit(count);
+}
 
 export const hasMore = (input: PaginationInput, total: number) =>
   // if skip + count is less than total, there is more

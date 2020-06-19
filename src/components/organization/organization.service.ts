@@ -13,6 +13,7 @@ import {
   ConfigService,
   DatabaseService,
   ILogger,
+  list,
   Logger,
   matchProperty,
   matchSession,
@@ -208,28 +209,28 @@ export class OrganizationService {
   }
 
   async list(
-    { page, count, sort, order, filter }: OrganizationListInput,
+    { page, count, sort, order }: OrganizationListInput,
     session: ISession
   ): Promise<OrganizationListOutput> {
-    const result = await this.db.list<Organization>({
-      session,
-      nodevar: 'organization',
-      aclReadProp: 'canReadOrgs',
-      aclEditProp: 'canCreateOrg',
-      props: ['name'],
-      input: {
-        page,
-        count,
-        sort,
-        order,
-        filter,
-      },
-    });
+    const label = 'Organization';
+    const props = ['name'];
+
+    const listQuery = this.db.query();
+
+    list(listQuery, session, label, props, page, count, sort, order);
+
+    const result = await listQuery.run();
+
+    if (!result) {
+      throw new ServerException('organizations failed');
+    }
+
+    const items = result.map((r: any) => r.node);
 
     return {
-      items: result.items,
-      hasMore: result.hasMore,
-      total: result.total,
+      items,
+      hasMore: (page - 1) * count + count < result[0].total,
+      total: result[0].total,
     };
   }
 
