@@ -31,7 +31,7 @@ describe('Authorization e2e', () => {
     await app.close();
   });
 
-  it('create security group', async () => {
+  it.skip('create security group', async () => {
     await login(app, {
       email: process.env.ROOT_ADMIN_EMAIL,
       password: process.env.ROOT_ADMIN_PASSWORD,
@@ -42,7 +42,7 @@ describe('Authorization e2e', () => {
     expect(sg.success).toBe(true);
   });
 
-  it('add property to security group', async () => {
+  it.skip('add property to security group', async () => {
     await login(app, {
       email: process.env.ROOT_ADMIN_EMAIL,
       password: process.env.ROOT_ADMIN_PASSWORD,
@@ -86,7 +86,7 @@ describe('Authorization e2e', () => {
     expect(perm).toBeTruthy();
   });
 
-  it('attach user to security group', async () => {
+  it.skip('attach user to security group', async () => {
     const newUser = await createUser(app);
     await login(app, {
       email: process.env.ROOT_ADMIN_EMAIL,
@@ -110,7 +110,7 @@ describe('Authorization e2e', () => {
     expect(result.attachUserToSecurityGroup).toBe(true);
   });
 
-  it('remove permission from security group', async () => {
+  it.skip('remove permission from security group', async () => {
     await login(app, {
       email: process.env.ROOT_ADMIN_EMAIL,
       password: process.env.ROOT_ADMIN_PASSWORD,
@@ -150,7 +150,7 @@ describe('Authorization e2e', () => {
     expect(result.removePermissionFromSecurityGroup).toBe(true);
   });
 
-  it('remove user from security group', async () => {
+  it.skip('remove user from security group', async () => {
     const newUser = await createUser(app);
     await login(app, {
       email: process.env.ROOT_ADMIN_EMAIL,
@@ -273,7 +273,7 @@ describe('Authorization e2e', () => {
     expect(result.promoteUserToAdminOfBaseNode).toBe(true);
   });
 
-  it('delete security group', async () => {
+  it.skip('delete security group', async () => {
     await login(app, {
       email: process.env.ROOT_ADMIN_EMAIL,
       password: process.env.ROOT_ADMIN_PASSWORD,
@@ -295,7 +295,7 @@ describe('Authorization e2e', () => {
     expect(result.deleteSecurityGroup).toBe(true);
   });
 
-  it('update security group name', async () => {
+  it.skip('update security group name', async () => {
     await login(app, {
       email: process.env.ROOT_ADMIN_EMAIL,
       password: process.env.ROOT_ADMIN_PASSWORD,

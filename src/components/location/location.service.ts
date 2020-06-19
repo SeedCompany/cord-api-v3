@@ -283,36 +283,7 @@ export class LocationService {
       .query()
       .match(matchSession(session))
       .match([node('zone', 'Zone', { active: true, id })])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canReadName', 'Permission', {
-          property: 'name',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('zone'),
-        relation('out', '', 'name', { active: true }),
-        node('zoneName', 'Property', { active: true }),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canReadDirector', 'Permission', {
-          property: 'director',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('zone'),
-        relation('out', '', 'director', { active: true }),
-        node('director', 'User', { active: true }),
-      ])
+
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
@@ -337,6 +308,36 @@ export class LocationService {
           property: 'director',
           active: true,
           edit: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('zone'),
+        relation('out', '', 'director', { active: true }),
+        node('director', 'User', { active: true }),
+      ])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node('canReadName', 'Permission', {
+          property: 'name',
+          active: true,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('zone'),
+        relation('out', '', 'name', { active: true }),
+        node('zoneName', 'Property', { active: true }),
+      ])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node('canReadDirector', 'Permission', {
+          property: 'director',
+          active: true,
+          read: true,
         }),
         relation('out', '', 'baseNode', { active: true }),
         node('zone'),
