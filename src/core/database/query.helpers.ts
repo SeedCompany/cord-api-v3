@@ -1,5 +1,8 @@
 import { node, Query, relation } from 'cypher-query-builder';
 import { PaginationInput } from '../../common';
+import { mapping } from './mapping.helper';
+
+export * from './mapping.helper';
 
 export function tryGetEditPerm(
   property: string,
@@ -26,13 +29,11 @@ export function tryGetEditPerm(
 }
 
 export function addPropertyCoalesceWithClause(property: string) {
-  return `
-    {
-      value: coalesce(${property}.value, null),
-      canRead: coalesce(${property}ReadPerm.read, false),
-      canEdit: coalesce(${property}EditPerm.edit, false)
-    } as ${property}
-  `;
+  return mapping(property, {
+    value: `coalesce(${property}.value, null)`,
+    canRead: `coalesce(${property}ReadPerm.read, false)`,
+    canEdit: `coalesce(${property}EditPerm.edit, false)`,
+  });
 }
 
 export function matchProperty(
@@ -72,6 +73,34 @@ export function property(
     ],
   ];
 }
+
+/**
+ * Returns a list containing the values returned by an expression.
+ * Using this function aggregates data by amalgamating multiple records or
+ * values into a single list.
+ *
+ * @param expression An expression returning a set of values.
+ * @param as         Output as this variable
+ * @see https://neo4j.com/docs/cypher-manual/current/functions/aggregating/#functions-collect
+ */
+export const collect = (expression: string, as?: string) =>
+  `collect(${expression})` + (as ? ' as ' + as : '');
+
+/**
+ * Returns the number of values or rows
+ *
+ * @param expression       The expression
+ * @param options          Function options
+ * @param options.distinct Whether the expression should be distinct
+ * @param options.as       Output as this variable
+ * @see https://neo4j.com/docs/cypher-manual/current/functions/aggregating/#functions-count
+ */
+export const count = (
+  expression: string,
+  options: { distinct?: boolean; as?: string }
+) =>
+  `count(${options.distinct ? 'DISTINCT ' : ''}${expression})` +
+  (options.as ? ' as ' + options.as : '');
 
 // export function createPropertyWithSecurityGroup(
 //   property: string,
