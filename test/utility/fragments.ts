@@ -260,23 +260,35 @@ export const partnership = gql`
     id
     agreementStatus {
       value
+      canRead
+      canEdit
     }
     mouStatus {
       value
+      canRead
+      canEdit
     }
     mouStart {
       value
+      canRead
+      canEdit
     }
     mouEnd {
       value
+      canRead
+      canEdit
     }
     types {
       value
+      canRead
+      canEdit
     }
     organization {
       id
       name {
         value
+        canRead
+        canEdit
       }
     }
   }

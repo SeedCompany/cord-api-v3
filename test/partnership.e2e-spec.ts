@@ -32,7 +32,7 @@ describe('Partnership e2e', () => {
     await app.close();
   });
 
-  it('create & read partnership by id', async () => {
+  it.only('create & read partnership by id', async () => {
     const partnership = await createPartnership(app);
 
     const result = await app.graphql.query(
@@ -64,6 +64,7 @@ describe('Partnership e2e', () => {
     );
     expect(actual.organization).toBeTruthy();
     expect(actual.organization?.id).toBe(partnership.organization?.id);
+    expect(actual.agreementStatus.canEdit).toBe(true);
   });
 
   it('update partnership', async () => {
