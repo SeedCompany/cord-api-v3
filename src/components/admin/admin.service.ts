@@ -10,7 +10,6 @@ import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ConfigService, DatabaseService } from '../../core';
 import { AuthenticationService } from '../authentication';
-import { RootSecurityGroup } from './root-security-group';
 
 @Injectable()
 export class AdminService implements OnApplicationBootstrap {
@@ -21,11 +20,14 @@ export class AdminService implements OnApplicationBootstrap {
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
-    // Root Security Group
+    // merge root security group
+    await this.mergeRootSecurityGroup();
 
-    if (!(await this.rootAdminSecurityGroupExists())) {
-      await this.createRootAdminSecurityGroup();
-    }
+    // merge public security group
+    await this.mergePublicSecurityGroup();
+
+    // merge anon user and connect to public sg
+    await this.mergeAnonUser();
 
     // Root Admin
 
@@ -37,48 +39,72 @@ export class AdminService implements OnApplicationBootstrap {
 
     await this.mergeRootAdminUserToSecurityGroup();
 
-    await this.mergePublicSecurityGroup();
+    await this.mergePublicSecurityGroupWithRootSg();
 
     // Default Organization
     await this.mergeDefaultOrg();
-
-    // Anonymous User for accessing public data by non-signed in viewers
-    await this.mergeAnonUser();
   }
 
-  async rootAdminSecurityGroupExists(): Promise<boolean> {
-    const result = await this.db
-      .query()
-      .match(
-        node('sg', 'RootSecurityGroup', {
-          active: true,
-        })
-      )
-      .return('sg')
-      .first();
-
-    return !!result;
-  }
-
-  async createRootAdminSecurityGroup(): Promise<void> {
-    const id = generate();
+  async mergeRootSecurityGroup() {
+    // merge root security group
     const createdAt = DateTime.local();
-    const result = await this.db
+    await this.db
       .query()
-      .create([
-        node('sg', ['RootSecurityGroup', 'SecurityGroup'], {
-          active: true,
-          id,
-          createdAt,
-          ...RootSecurityGroup,
+      .merge([
+        node('sg', 'RootSecurityGroup', {
+          id: this.config.rootSecurityGroup.id,
         }),
       ])
-      .return('sg')
-      .first();
+      .onCreate.setLabels({ sg: ['RootSecurityGroup', 'SecurityGroup'] })
+      .setValues({
+        'sg.createdAt': createdAt,
+        'sg.active': true,
+        'sg.id': this.config.rootSecurityGroup.id,
+      })
+      .run();
+  }
 
-    if (!result) {
-      throw new ServerException('Could not create root admin security group.');
-    }
+  async mergePublicSecurityGroup() {
+    const createdAt = DateTime.local();
+    await this.db
+      .query()
+      .merge([
+        node('sg', 'PublicSecurityGroup', {
+          id: this.config.publicSecurityGroup.id,
+        }),
+      ])
+      .onCreate.setLabels({ sg: ['PublicSecurityGroup', 'SecurityGroup'] })
+      .setValues({
+        'sg.createdAt': createdAt,
+        'sg.active': true,
+        'sg.id': this.config.publicSecurityGroup.id,
+      })
+      .run();
+  }
+
+  async mergeAnonUser() {
+    const createdAt = DateTime.local();
+    await this.db
+      .query()
+      .merge([
+        node('anon', 'AnonUser', {
+          id: this.config.anonUser.id,
+        }),
+      ])
+      .onCreate.setLabels({ anon: ['AnonUser', 'User'] })
+      .setValues({
+        'anon.createdAt': createdAt,
+        'anon.active': true,
+        'anon.id': this.config.anonUser.id,
+      })
+      .with('*')
+      .match([
+        node('publicSg', 'PublicSecurityGroup', {
+          id: this.config.publicSecurityGroup.id,
+        }),
+      ])
+      .merge([node('publicSg'), relation('out', '', 'member'), node('anon')])
+      .run();
   }
 
   async doesRootAdminUserAlreadyExist(): Promise<boolean> {
@@ -89,6 +115,7 @@ export class AdminService implements OnApplicationBootstrap {
           node('user', 'User'),
           relation('out', '', 'email', {
             active: true,
+            id: this.config.rootAdmin.id,
           }),
           node('email', 'EmailAddress', {
             value: this.config.rootAdmin.email,
@@ -137,6 +164,17 @@ export class AdminService implements OnApplicationBootstrap {
 
       if (!adminUser) {
         throw new ServerException('Could not create root admin user');
+      } else {
+        // set root admin id to config value
+        await this.db
+          .query()
+          .match([
+            node('user', 'User', {
+              id: adminUser,
+            }),
+          ])
+          .setValues({ 'user.id': this.config.rootAdmin.id })
+          .run();
       }
     } else if (await argon2.verify(findRoot.pash, password)) {
       // password match - do nothing
@@ -150,16 +188,18 @@ export class AdminService implements OnApplicationBootstrap {
   async mergeRootAdminUserToSecurityGroup(): Promise<void> {
     const makeAdmin = await this.db
       .query()
-      .match([[node('sg', 'RootSecurityGroup')]])
+      .match([
+        [
+          node('sg', 'RootSecurityGroup', {
+            id: this.config.rootSecurityGroup.id,
+          }),
+        ],
+      ])
       .with('*')
       .match([
         [
-          node('newRootAdmin', 'User'),
-          relation('out', '', 'email', {
-            active: true,
-          }),
-          node('emailAddress', 'EmailAddress', {
-            value: this.config.rootAdmin.email,
+          node('newRootAdmin', 'User', {
+            id: this.config.rootAdmin.id,
           }),
         ],
       ])
@@ -182,23 +222,30 @@ export class AdminService implements OnApplicationBootstrap {
     }
   }
 
-  async mergePublicSecurityGroup(): Promise<void> {
-    const id = generate();
+  async mergePublicSecurityGroupWithRootSg(): Promise<void> {
     const createdAt = DateTime.local();
     await this.db
       .query()
       .merge([
         node('publicSg', ['PublicSecurityGroup', 'SecurityGroup'], {
           active: true,
+          id: this.config.publicSecurityGroup.id,
         }),
       ])
       .onCreate.setValues({
-        publicSg: { id, createdAt: createdAt.toString(), active: true },
+        publicSg: {
+          id: this.config.publicSecurityGroup.id,
+          createdAt: createdAt.toString(),
+          active: true,
+        },
       })
       .setLabels({ publicSg: 'SecurityGroup' })
       .with('*')
-      .merge([node('rootSg', 'RootSecurityGroup')])
-      .with('*')
+      .match([
+        node('rootSg', 'RootSecurityGroup', {
+          id: this.config.rootSecurityGroup.id,
+        }),
+      ])
       .merge([node('publicSg'), relation('out', '', 'member'), node('rootSg')])
       .run();
   }
@@ -252,12 +299,9 @@ export class AdminService implements OnApplicationBootstrap {
 
         if (!giveOrgDefaultLabel) {
           throw new ServerException('could not create default org');
-        } else {
-          this.config.setDefaultOrgId(giveOrgDefaultLabel.id);
         }
       } else {
         // create org
-        const id = generate();
         const orgSgId = generate();
         const createdAt = DateTime.local().toString();
         const createOrgResult = await this.db
@@ -265,6 +309,7 @@ export class AdminService implements OnApplicationBootstrap {
           .match(
             node('publicSg', 'PublicSecurityGroup', {
               active: true,
+              id: this.config.publicSecurityGroup.id,
             })
           )
           .create([
@@ -276,7 +321,7 @@ export class AdminService implements OnApplicationBootstrap {
             relation('out', '', 'organization'),
             node('org', ['DefaultOrganization', 'Organization'], {
               active: true,
-              id,
+              id: this.config.defaultOrg.id,
               createdAt,
             }),
             relation('out', '', 'name', { active: true, createdAt }),
@@ -305,37 +350,8 @@ export class AdminService implements OnApplicationBootstrap {
 
         if (!createOrgResult) {
           throw new ServerException('failed to create default org');
-        } else {
-          this.config.setDefaultOrgId(createOrgResult.id);
         }
       }
-    } else {
-      this.config.setDefaultOrgId(isDefaultOrgResult.id);
-    }
-  }
-
-  async mergeAnonUser(): Promise<void> {
-    const anonResult = await this.db
-      .query()
-      .match(node('sg', 'PublicSecurityGroup'))
-      .merge([node('anon', ['AnonUser', 'User'])])
-      .onCreate.setValues({
-        anon: {
-          id: generate(),
-          createdAt: DateTime.local().toString(),
-          active: true,
-        },
-      })
-      .merge([
-        node('anon'),
-        relation('in', '', 'member', { active: true }),
-        node('sg'),
-      ])
-      .return('anon.id as id')
-      .first();
-
-    if (anonResult) {
-      this.config.setAnonUserId(anonResult.id);
     }
   }
 }
