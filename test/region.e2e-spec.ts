@@ -92,6 +92,7 @@ describe('Region e2e', () => {
     expect(actual.id).toBe(region.id);
     expect(isValid(actual.id)).toBe(true);
     expect(actual.name).toEqual(region.name);
+    expect(actual.director.canEdit).toBe(true);
   });
 
   it('update region', async () => {

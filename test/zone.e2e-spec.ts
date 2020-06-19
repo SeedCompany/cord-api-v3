@@ -77,6 +77,7 @@ describe('Zone e2e', () => {
     expect(actual.id).toBe(zone.id);
     expect(isValid(actual.id)).toBe(true);
     expect(actual.name).toEqual(zone.name);
+    expect(actual.director.canEdit).toBe(true);
   });
 
   it('update zone', async () => {
