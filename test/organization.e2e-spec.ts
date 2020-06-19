@@ -163,8 +163,8 @@ describe('Organization e2e', () => {
       }
       ${fragments.org}
     `);
-
     expect(organizations.items.length).toBeGreaterThan(numOrgs);
+    expect(organizations.items[0].name.value).toBeTruthy();
   });
 
   it.skip('Check consistency across organization nodes', async () => {
