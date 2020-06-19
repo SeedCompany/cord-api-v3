@@ -3,7 +3,7 @@ import {
   NotFoundException,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { node, Query, relation } from 'cypher-query-builder';
 import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
@@ -93,15 +93,33 @@ export class PartnershipService {
     ];
   };
 
-  propMatch = (property: string) => {
-    const perm = 'canRead' + upperFirst(property);
-    return [
+  propMatch = (query: Query, property: string) => {
+    const readPerm = 'canRead' + upperFirst(property);
+    const editPerm = 'canEdit' + upperFirst(property);
+    query.optionalMatch([
       [
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
         node('sg', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
-        node(perm, 'Permission', {
+        node(editPerm, 'Permission', {
+          property,
+          active: true,
+          edit: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('partnership'),
+        relation('out', '', property, { active: true }),
+        node(property, 'Property', { active: true }),
+      ],
+    ]);
+    query.optionalMatch([
+      [
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node(readPerm, 'Permission', {
           property,
           active: true,
           read: true,
@@ -111,7 +129,7 @@ export class PartnershipService {
         relation('out', '', property, { active: true }),
         node(property, 'Property', { active: true }),
       ],
-    ];
+    ]);
   };
 
   async create(
@@ -214,91 +232,134 @@ export class PartnershipService {
     const readPartnership = this.db
       .query()
       .match(matchSession(session, { withAclRead: 'canReadPartnerships' }))
-      .match([node('partnership', 'Partnership', { active: true, id })])
-      .optionalMatch([...this.propMatch('agreementStatus')])
-      .optionalMatch(this.propMatch('mou'))
-      .optionalMatch(this.propMatch('agreement'))
-      .optionalMatch([...this.propMatch('mouStatus')])
-      .optionalMatch([...this.propMatch('mouStart')])
-      .optionalMatch([...this.propMatch('mouEnd')])
-      .optionalMatch([...this.propMatch('types')])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canReadOrganization', 'Permission', {
-          property: 'organization',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('partnership'),
-        relation('out', '', 'organization', { active: true }),
-        node('organization', 'Organization', { active: true }),
-        relation('out', '', 'name', { active: true }),
-        node('organizationName', 'Property', { active: true }),
-      ])
-
-      .return({
-        partnership: [{ id: 'id', createdAt: 'createdAt' }],
-        agreementStatus: [{ value: 'agreementStatus' }],
-        canReadAgreementStatus: [
-          {
-            read: 'canReadAgreementStatusRead',
-            edit: 'canReadAgreementStatusEdit',
-          },
-        ],
-        mou: [{ value: 'mou' }],
-        canReadMou: [
-          {
-            read: 'canReadMou',
-            edit: 'canEditMou',
-          },
-        ],
-        agreement: [{ value: 'agreement' }],
-        canReadAgreement: [
-          {
-            read: 'canReadAgreement',
-            edit: 'canEditAgreement',
-          },
-        ],
-        mouStatus: [{ value: 'mouStatus' }],
-        canReadMouStatus: [
-          { read: 'canReadMouStatusRead', edit: 'canReadMouStatusEdit' },
-        ],
-        mouStart: [{ value: 'mouStart' }],
-        canReadMouStart: [
-          {
-            read: 'canReadMouStartRead',
-            edit: 'canReadMouStartEdit',
-          },
-        ],
-        mouEnd: [{ value: 'mouEnd' }],
-        canReadMouEnd: [
-          {
-            read: 'canReadMouEndRead',
-            edit: 'canReadMouEndEdit',
-          },
-        ],
-        organization: [
-          { id: 'organizationId', createdAt: 'organizationCreatedAt' },
-        ],
-        organizationName: [{ value: 'organizationName' }],
-        canReadOrganization: [
-          {
-            read: 'canReadOrganizationRead',
-            edit: 'canReadOrganizationEdit',
-          },
-        ],
-        types: [{ value: 'types' }],
-        canReadTypes: [
-          {
-            read: 'canReadTypesRead',
-            edit: 'canReadTypesEdit',
-          },
-        ],
-      });
+      .match([node('partnership', 'Partnership', { active: true, id })]);
+    this.propMatch(readPartnership, 'agreementStatus');
+    this.propMatch(readPartnership, 'mou');
+    this.propMatch(readPartnership, 'agreement');
+    this.propMatch(readPartnership, 'mouStatus');
+    this.propMatch(readPartnership, 'mouStart');
+    this.propMatch(readPartnership, 'mouEnd');
+    this.propMatch(readPartnership, 'types');
+    readPartnership.optionalMatch([
+      node('requestingUser'),
+      relation('in', '', 'member', { active: true }),
+      node('sg', 'SecurityGroup', { active: true }),
+      relation('out', '', 'permission', { active: true }),
+      node('canEditOrganization', 'Permission', {
+        property: 'organization',
+        active: true,
+        edit: true,
+      }),
+      relation('out', '', 'baseNode', { active: true }),
+      node('partnership'),
+      relation('out', '', 'organization', { active: true }),
+      node('organization', 'Organization', { active: true }),
+      relation('out', '', 'name', { active: true }),
+      node('organizationName', 'Property', { active: true }),
+    ]);
+    readPartnership.optionalMatch([
+      node('requestingUser'),
+      relation('in', '', 'member', { active: true }),
+      node('sg', 'SecurityGroup', { active: true }),
+      relation('out', '', 'permission', { active: true }),
+      node('canReadOrganization', 'Permission', {
+        property: 'organization',
+        active: true,
+        read: true,
+      }),
+      relation('out', '', 'baseNode', { active: true }),
+      node('partnership'),
+      relation('out', '', 'organization', { active: true }),
+      node('organization', 'Organization', { active: true }),
+      relation('out', '', 'name', { active: true }),
+      node('organizationName', 'Property', { active: true }),
+    ]);
+    readPartnership.return({
+      partnership: [{ id: 'id', createdAt: 'createdAt' }],
+      agreementStatus: [{ value: 'agreementStatus' }],
+      canReadAgreementStatus: [
+        {
+          read: 'canReadAgreementStatus',
+        },
+      ],
+      canEditAgreementStatus: [
+        {
+          edit: 'canEditAgreementStatus',
+        },
+      ],
+      mou: [{ value: 'mou' }],
+      canReadMou: [
+        {
+          read: 'canReadMou',
+        },
+      ],
+      canEditMou: [
+        {
+          edit: 'canEditMou',
+        },
+      ],
+      agreement: [{ value: 'agreement' }],
+      canReadAgreement: [
+        {
+          read: 'canReadAgreement',
+        },
+      ],
+      canEditAgreement: [
+        {
+          edit: 'canEditAgreement',
+        },
+      ],
+      mouStatus: [{ value: 'mouStatus' }],
+      canReadMouStatus: [{ read: 'canReadMouStatus' }],
+      canEditMouStatus: [{ edit: 'canEditMouStatus' }],
+      mouStart: [{ value: 'mouStart' }],
+      canReadMouStart: [
+        {
+          read: 'canReadMouStart',
+        },
+      ],
+      canEditMouStart: [
+        {
+          edit: 'canEditMouStart',
+        },
+      ],
+      mouEnd: [{ value: 'mouEnd' }],
+      canReadMouEnd: [
+        {
+          read: 'canReadMouEnd',
+        },
+      ],
+      canEditMouEnd: [
+        {
+          edit: 'canEditMouEnd',
+        },
+      ],
+      organization: [
+        { id: 'organizationId', createdAt: 'organizationCreatedAt' },
+      ],
+      organizationName: [{ value: 'organizationName' }],
+      canReadOrganization: [
+        {
+          read: 'canReadOrganization',
+        },
+      ],
+      canEditOrganization: [
+        {
+          edit: 'canEditOrganization',
+        },
+      ],
+      types: [{ value: 'types' }],
+      canReadTypes: [
+        {
+          read: 'canReadTypes',
+        },
+      ],
+      canEditTypes: [
+        {
+          edit: 'canEditTypes',
+        },
+      ],
+    });
 
     let result;
     try {
@@ -354,8 +415,8 @@ export class PartnershipService {
         createdAt: result.organizationCreatedAt,
         name: {
           value: result.organizationName,
-          canRead: !!result.canReadOrganizationRead,
-          canEdit: !!result.canReadOrganizationEdit,
+          canRead: !!result.canReadOrganization,
+          canEdit: !!result.canEditOrganization,
         },
       },
     };

@@ -313,12 +313,44 @@ export class LocationService {
         relation('out', '', 'director', { active: true }),
         node('director', 'User', { active: true }),
       ])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node('canEditName', 'Permission', {
+          property: 'name',
+          active: true,
+          edit: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('zone'),
+        relation('out', '', 'name', { active: true }),
+        node('zoneName', 'Property', { active: true }),
+      ])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node('canEditDirector', 'Permission', {
+          property: 'director',
+          active: true,
+          edit: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('zone'),
+        relation('out', '', 'director', { active: true }),
+        node('director', 'User', { active: true }),
+      ])
       .return({
         zone: [{ id: 'id', createdAt: 'createdAt' }],
         zoneName: [{ value: 'name' }],
         requestingUser: [{ canReadZone: 'canReadZone' }],
-        canReadName: [{ read: 'canReadName', edit: 'canEditName' }],
-        canReadDirector: [{ read: 'canReadDirector', edit: 'canEditDirector' }],
+        canReadName: [{ read: 'canReadName' }],
+        canReadDirector: [{ read: 'canReadDirector' }],
+        canEditName: [{ edit: 'canEditName' }],
+        canEditDirector: [{ edit: 'canEditDirector' }],
         director: [{ id: 'directorId' }],
       });
 
@@ -459,6 +491,52 @@ export class LocationService {
       .query()
       .match(matchSession(session))
       .match([node('region', 'Region', { active: true, id })])
+
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node('canEditName', 'Permission', {
+          property: 'name',
+          active: true,
+          edit: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('region'),
+        relation('out', '', 'name', { active: true }),
+        node('regionName', 'Property', { active: true }),
+      ])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node('canEditDirector', 'Permission', {
+          property: 'director',
+          active: true,
+          edit: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('region'),
+        relation('out', '', 'director', { active: true }),
+        node('director', 'User', { active: true }),
+      ])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node('canEditZone', 'Permission', {
+          property: 'zone',
+          active: true,
+          edit: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('region'),
+        relation('out', '', 'zone', { active: true }),
+        node('zone', 'Zone', { active: true }),
+      ])
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
@@ -508,9 +586,12 @@ export class LocationService {
         region: [{ id: 'id', createdAt: 'createdAt' }],
         regionName: [{ value: 'name' }],
         requestingUser: [{ canReadRegion: 'canReadRegion' }],
-        canReadName: [{ read: 'canReadName', edit: 'canEditName' }],
-        canReadZone: [{ read: 'canReadZone', edit: 'canEditZone' }],
-        canReadDirector: [{ read: 'canReadDirector', edit: 'canEditDirector' }],
+        canReadName: [{ read: 'canReadName' }],
+        canReadZone: [{ read: 'canReadZone' }],
+        canReadDirector: [{ read: 'canReadDirector' }],
+        canEditName: [{ edit: 'canEditName' }],
+        canEditZone: [{ edit: 'canEditZone' }],
+        canEditDirector: [{ edit: 'canEditDirector' }],
         director: [{ id: 'directorId' }],
         zone: [{ id: 'zoneId' }],
       });
@@ -721,12 +802,44 @@ export class LocationService {
         relation('out', '', 'region', { active: true }),
         node('region', 'Region', { active: true }),
       ])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node('canEditName', 'Permission', {
+          property: 'name',
+          active: true,
+          edit: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('country'),
+        relation('out', '', 'name', { active: true }),
+        node('countryName', 'Property', { active: true }),
+      ])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node('canEditRegion', 'Permission', {
+          property: 'region',
+          active: true,
+          edit: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('country'),
+        relation('out', '', 'region', { active: true }),
+        node('region', 'Region', { active: true }),
+      ])
       .return({
         country: [{ id: 'id', createdAt: 'createdAt' }],
         countryName: [{ value: 'name' }],
         requestingUser: [{ canReadCountry: 'canReadCountry' }],
-        canReadName: [{ read: 'canReadName', edit: 'canEditName' }],
-        canReadRegion: [{ read: 'canReadRegion', edit: 'canEditRegion' }],
+        canReadName: [{ read: 'canReadName' }],
+        canReadRegion: [{ read: 'canReadRegion' }],
+        canEditName: [{ edit: 'canEditName' }],
+        canEditRegion: [{ edit: 'canEditRegion' }],
         region: [{ id: 'regionId' }],
       });
 
