@@ -9,7 +9,13 @@ import { camelCase, intersection } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
-import { DatabaseService, ILogger, Logger, matchSession } from '../../core';
+import {
+  DatabaseService,
+  hasMore,
+  ILogger,
+  Logger,
+  matchSession,
+} from '../../core';
 import {
   BaseNode,
   Directory,
@@ -105,8 +111,8 @@ export class FileRepository {
 
     return {
       children,
-      total: total,
-      hasMore: false, // TODO
+      total,
+      hasMore: hasMore(input, total),
     };
   }
 

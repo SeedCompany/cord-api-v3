@@ -27,6 +27,7 @@ import {
   unwrapSecured,
 } from '../../common';
 import { ILogger, Logger } from '..';
+import { hasMore } from './query.helpers';
 
 import _ = require('lodash');
 
@@ -731,9 +732,6 @@ export class DatabaseService {
 
     const total = countResult[0]?.total || 0;
 
-    // if skip + count is less than total, there is more
-    const hasMore = (input.page - 1) * input.count + input.count < total;
-
     const items = result.map<TObject>((row) => {
       const item: any = {
         id: row.id,
@@ -776,7 +774,7 @@ export class DatabaseService {
     });
 
     return {
-      hasMore,
+      hasMore: hasMore(input, total),
       total,
       items,
     };

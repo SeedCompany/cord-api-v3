@@ -1,4 +1,5 @@
 import { node, Query, relation } from 'cypher-query-builder';
+import { PaginationInput } from '../../common';
 
 export function tryGetEditPerm(
   property: string,
@@ -83,3 +84,7 @@ export function property(
 //     node(''), //
 //   ];
 // }
+
+export const hasMore = (input: PaginationInput, total: number) =>
+  // if skip + count is less than total, there is more
+  (input.page - 1) * input.count + input.count < total;
