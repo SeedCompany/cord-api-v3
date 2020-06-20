@@ -34,12 +34,14 @@ export function tryGetEditPerm(
 }
 
 export function addPropertyCoalesceWithClause(property: string) {
-  return mapping(property, {
-    value: `coalesce(${property}.value, null)`,
-    canRead: `coalesce(${property}ReadPerm.read, false)`,
-    canEdit: `coalesce(${property}EditPerm.edit, false)`,
-  });
+  return mapping(property, securedProperty(property));
 }
+
+export const securedProperty = (property: string) => ({
+  value: `coalesce(${property}.value, null)`,
+  canRead: `coalesce(${property}ReadPerm.read, false)`,
+  canEdit: `coalesce(${property}EditPerm.edit, false)`,
+});
 
 export function matchProperty(
   query: Query,
@@ -159,7 +161,7 @@ export function list(
         createdAt: 'node.createdAt',
         ...mapFromList(props, (prop) =>
           // [key, value]
-          [prop, addPropertyCoalesceWithClause(prop)]
+          [prop, mapping(securedProperty(prop))]
         ),
       })
     )
