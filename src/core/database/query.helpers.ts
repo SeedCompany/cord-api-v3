@@ -1,5 +1,5 @@
 import { node, Query, relation } from 'cypher-query-builder';
-import { ISession, Order, PaginationInput } from '../../common';
+import { ISession, mapFromList, Order, PaginationInput } from '../../common';
 import { mapping } from './mapping.helper';
 
 export * from './mapping.helper';
@@ -111,7 +111,6 @@ export const count = (
 //     node(''), //
 //   ];
 // }
-
 export function matchRequestingUser(query: Query, session: ISession) {
   query.match([
     node('requestingUser', 'User', {
@@ -119,25 +118,6 @@ export function matchRequestingUser(query: Query, session: ISession) {
       id: session.userId,
     }),
   ]);
-}
-
-export function returnWithPropertyClauseForList(property: string) {
-  return `
-    ${property}: {
-      value: ${property}.value
-    }
-  `;
-}
-
-export function listWithObject(props: string[]) {
-  let block = ``;
-  for (let i = 0; i < props.length; i++) {
-    block += returnWithPropertyClauseForList(props[i]);
-    if (i + 1 < props.length) {
-      block += ',';
-    }
-  }
-  return block;
 }
 
 export function list(
@@ -170,20 +150,18 @@ export function list(
     node(sort, 'Property', { active: true }),
   ]);
 
-  for (const prop of props) {
-    query.optionalMatch(property(prop, 'node'));
-  }
+  query.call(matchProperty, 'node', ...props);
 
   query
     .with(
-      `
-  {
-    id: node.id,
-    createdAt: node.createdAt,
-    ${listWithObject(props)}
-  }
-  as node
-  `
+      mapping('node', {
+        id: 'node.id',
+        createdAt: 'node.createdAt',
+        ...mapFromList(props, (prop) =>
+          // [key, value]
+          [prop, addPropertyCoalesceWithClause(prop)]
+        ),
+      })
     )
     .with(`collect(node) as nodes, count(node) as total`)
     .raw(`unwind nodes as node`)
