@@ -12,6 +12,7 @@ import {
   addPropertyCoalesceWithClause,
   ConfigService,
   DatabaseService,
+  hasMore,
   ILogger,
   list,
   Logger,
@@ -209,7 +210,7 @@ export class OrganizationService {
   }
 
   async list(
-    { page, count, sort, order }: OrganizationListInput,
+    input: OrganizationListInput,
     session: ISession
   ): Promise<OrganizationListOutput> {
     const label = 'Organization';
@@ -217,7 +218,7 @@ export class OrganizationService {
 
     const listQuery = this.db.query();
 
-    list(listQuery, session, label, props, page, count, sort, order);
+    list(listQuery, session, label, props, input);
 
     const result = await listQuery.run();
 
@@ -225,12 +226,13 @@ export class OrganizationService {
       throw new ServerException('organizations failed');
     }
 
+    const total = result[0].total;
     const items = result.map((r: any) => r.node);
 
     return {
       items,
-      hasMore: (page - 1) * count + count < result[0].total,
-      total: result[0].total,
+      hasMore: hasMore(input, total),
+      total,
     };
   }
 

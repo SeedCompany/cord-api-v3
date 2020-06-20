@@ -1,5 +1,10 @@
 import { node, Query, relation } from 'cypher-query-builder';
-import { ISession, mapFromList, Order, PaginationInput } from '../../common';
+import {
+  ISession,
+  mapFromList,
+  PaginationInput,
+  SortablePaginationInput,
+} from '../../common';
 import { mapping } from './mapping.helper';
 
 export * from './mapping.helper';
@@ -125,10 +130,7 @@ export function list(
   session: ISession,
   label: string,
   props: string[],
-  page: number,
-  count: number,
-  sort: string,
-  order: Order
+  pagination: SortablePaginationInput
 ) {
   query.call(matchRequestingUser, session).match([
     node('requestingUser'),
@@ -146,8 +148,6 @@ export function list(
     node('node', label, {
       active: true,
     }),
-    relation('out', '', sort, { active: true }),
-    node(sort, 'Property', { active: true }),
   ]);
 
   query.call(matchProperty, 'node', ...props);
@@ -166,10 +166,12 @@ export function list(
     .with(`collect(node) as nodes, count(node) as total`)
     .raw(`unwind nodes as node`)
     .return('node, total')
-    .orderBy([[`node.${sort}.value`, order]])
-    .skip((page - 1) * count)
-    .limit(count);
+    .orderBy(`node.${pagination.sort}.value`, pagination.order)
+    .call(onePage, pagination);
 }
+
+export const onePage = (query: Query, input: PaginationInput) =>
+  query.skip((input.page - 1) * input.count).limit(input.count);
 
 export const hasMore = (input: PaginationInput, total: number) =>
   // if skip + count is less than total, there is more
