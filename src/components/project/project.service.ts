@@ -9,11 +9,17 @@ import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { fiscalYears, ISession, Sensitivity } from '../../common';
 import {
+  addBaseNodeMetaPropsWithClause,
   DatabaseService,
   ILogger,
+  listWithSecureObject,
+  listWithUnsecureObject,
   Logger,
+  matchProperty,
+  matchRequestingUser,
   matchSession,
   OnIndex,
+  printActualQuery,
 } from '../../core';
 import { Budget, BudgetService, BudgetStatus, SecuredBudget } from '../budget';
 import {
@@ -179,7 +185,7 @@ export class ProjectService {
       .match(matchSession(session, { withAclRead: 'canReadProjects' }))
       .with('*')
       .match([node('project', 'Project', { active: true, id })])
-      .optionalMatch([...this.propMatch('type')])
+      // .optionalMatch([...this.propMatch('type')])
       .optionalMatch([...this.propMatch('sensitivity')])
       .optionalMatch([...this.propMatch('name')])
       .optionalMatch([...this.propMatch('step')])
@@ -205,14 +211,14 @@ export class ProjectService {
       ])
 
       .return({
-        project: [{ id: 'id', createdAt: 'createdAt' }],
-        type: [{ value: 'type' }],
-        canReadType: [
-          {
-            read: 'canReadTypeRead',
-            edit: 'canReadTypeEdit',
-          },
-        ],
+        project: [{ id: 'id', createdAt: 'createdAt', type: 'type' }],
+        // type: [{ value: 'type' }],
+        // canReadType: [
+        //   {
+        //     read: 'canReadTypeRead',
+        //     edit: 'canReadTypeEdit',
+        //   },
+        // ],
         sensitivity: [{ value: 'sensitivity' }],
         canReadSensitivity: [
           { read: 'canReadSensitivityRead', edit: 'canReadSensitivitysEdit' },
@@ -357,54 +363,128 @@ export class ProjectService {
   }
 
   async list(
-    { page, count, sort, order, filter }: ProjectListInput,
+    { page, count, sort, order }: ProjectListInput,
     session: ISession
   ): Promise<ProjectListOutput> {
-    let result;
-    try {
-      result = await this.db.list<Project>({
-        session,
-        nodevar: 'project',
-        aclReadProp: 'canReadProjects',
-        aclEditProp: 'canCreateProject',
-        props: [
-          { name: 'type', secure: false },
-          { name: 'sensitivity', secure: false },
-          { name: 'name', secure: true },
-          { name: 'deptId', secure: true },
-          { name: 'step', secure: true },
-          { name: 'status', secure: false },
-          { name: 'location', secure: true },
-          { name: 'mouStart', secure: true },
-          { name: 'mouEnd', secure: true },
-          { name: 'estimatedSubmission', secure: true },
-          { name: 'modifiedAt', secure: false },
-        ],
-        input: {
-          page,
-          count,
-          sort,
-          order,
-          filter,
-        },
-      });
-    } catch (e) {
-      this.logger.error(e);
+    const label = 'Project';
+    const baseNodeMetaProps = ['id', 'createdAt', 'type'];
+    const unsecureProps = ['status', 'sensitivity'];
+    const secureProps = [
+      'name',
+      'deptId',
+      'step',
+      'location',
+      'mouStart',
+      'mouEnd',
+      'estimatedSubmission',
+      'modifiedAt',
+    ];
+
+    const listQuery = this.db
+      .query()
+      // match on requesting user
+      .call(matchRequestingUser, session)
+      // match on filter terms
+      .match([
+        node('requestingUser'),
+        relation('in', '', 'member'),
+        node('', 'SecurityGroup', {
+          active: true,
+        }),
+        relation('out', '', 'permission', { active: true }),
+        node('', 'Permission', {
+          property: 'name',
+          read: true,
+          active: true,
+        }),
+        relation('out', '', 'baseNode'),
+        node('node', label, {
+          active: true,
+        }),
+        relation('out', '', sort, { active: true }),
+        node(sort, 'Property', { active: true }),
+      ])
+      // match on the rest of the properties of the object requested
+      .call(matchProperty, 'project', ...secureProps, ...unsecureProps)
+
+      // form return object
+      .with(
+        `
+    {
+      ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
+      ${listWithUnsecureObject(unsecureProps)},
+      ${listWithSecureObject(secureProps)}
     }
+    as node
+    `
+      )
+      .with(`collect(distinct node) as nodes, count(distinct node) as total`)
+      .raw(`unwind nodes as node`)
+      .returnDistinct('node, total')
+      .orderBy([[`node.${sort}.value`, order]])
+      .skip((page - 1) * count)
+      .limit(count);
+
+    printActualQuery(this.logger, listQuery);
+
+    const result = await listQuery.run();
+
+    if (!result) {
+      throw new ServerException('projects failed');
+    }
+
+    const items = result.map((r: any) => r.node);
+
     return {
-      items: result
-        ? result.items.map((item) => ({
-            ...item,
-            location: {
-              value: undefined,
-              canEdit: true,
-              canRead: true,
-            },
-          }))
-        : [],
-      hasMore: result ? result.hasMore : false,
-      total: result ? result.total : 0,
+      items,
+      hasMore: (page - 1) * count + count < result[0].total,
+      total: result[0].total,
     };
+    // let result;
+    // try {
+    //   result = await this.db.list<Project>({
+    //     session,
+    //     nodevar: 'project',
+    //     aclReadProp: 'canReadProjects',
+    //     aclEditProp: 'canCreateProject',
+    //     props: [
+    //       // { name: 'type', secure: false },
+    //       { name: 'sensitivity', secure: false },
+    //       { name: 'name', secure: true },
+    //       { name: 'deptId', secure: true },
+    //       { name: 'step', secure: true },
+    //       { name: 'status', secure: false },
+    //       { name: 'location', secure: true },
+    //       { name: 'mouStart', secure: true },
+    //       { name: 'mouEnd', secure: true },
+    //       { name: 'estimatedSubmission', secure: true },
+    //       { name: 'modifiedAt', secure: false },
+    //     ],
+    //     input: {
+    //       page,
+    //       count,
+    //       sort,
+    //       order,
+    //       filter,
+    //     },
+    //   });
+    // } catch (e) {
+    //   this.logger.error(e);
+    // }
+    // return {
+    //   items: result
+    //     ? result.items.map((item) => ({
+    //         ...item,
+    //         location: {
+    //           value: undefined,
+    //           canEdit: true,
+    //           canRead: true,
+    //         },
+    //       }))
+    //     : [],
+    //   hasMore: result ? result.hasMore : false,
+    //   total: result ? result.total : 0,
+    // };
   }
 
   async currentBudget(
@@ -596,9 +676,10 @@ export class ProjectService {
               createdAt,
               id,
               owningOrgId: session.owningOrgId,
+              type: createInput.type,
             }),
           ],
-          ...this.property('type', createInput.type),
+          // ...this.property('type', createInput.type),
           ...this.property('sensitivity', createInput.sensitivity),
           ...this.property('name', createInput.name),
           ...this.property('step', createInput.step),
@@ -628,7 +709,7 @@ export class ProjectService {
             relation('out', '', 'member', { active: true, createdAt }),
             node('requestingUser'),
           ],
-          ...this.permission('type'),
+          // ...this.permission('type'),
           ...this.permission('sensitivity'),
           ...this.permission('name'),
           ...this.permission('step'),
@@ -874,7 +955,8 @@ export class ProjectService {
             return this.db.hasProperties({
               session,
               id: project.id,
-              props: ['type', 'status', 'name', 'step'],
+              // props: ['type', 'status', 'name', 'step'],
+              props: ['status', 'name', 'step'],
               nodevar: 'Project',
             });
           })

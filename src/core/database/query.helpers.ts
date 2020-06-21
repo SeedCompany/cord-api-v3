@@ -5,9 +5,15 @@ import {
   PaginationInput,
   SortablePaginationInput,
 } from '../../common';
+import { ILogger } from '../../core';
 import { mapping } from './mapping.helper';
 
 export * from './mapping.helper';
+
+export function printActualQuery(logger: ILogger, query: Query) {
+  const printMe = query;
+  logger.info(printMe.interpolate());
+}
 
 export function tryGetEditPerm(
   property: string,
@@ -107,17 +113,6 @@ export const count = (
   `count(${options.distinct ? 'DISTINCT ' : ''}${expression})` +
   (options.as ? ' as ' + options.as : '');
 
-// export function createPropertyWithSecurityGroup(
-//   property: string,
-//   additionalLabel: string,
-//   addToAdmin: boolean,
-//   addToWriter: boolean,
-//   addToReader: boolean
-// ) {
-//   return [
-//     node(''), //
-//   ];
-// }
 export function matchRequestingUser(query: Query, session: ISession) {
   query.match([
     node('requestingUser', 'User', {
@@ -125,6 +120,55 @@ export function matchRequestingUser(query: Query, session: ISession) {
       id: session.userId,
     }),
   ]);
+}
+
+export function returnWithSecurePropertyClauseForList(property: string) {
+  return `
+    ${property}: {
+      value: coalesce(${property}.value, null),
+      canRead: coalesce(${property}ReadPerm.read, false),
+      canEdit: coalesce(${property}EditPerm.edit, false)
+    }
+  `;
+}
+
+export function returnWithUnsecurePropertyClauseForList(property: string) {
+  return `
+    ${property}: coalesce(${property}.value, null)
+  `;
+}
+
+export function listWithUnsecureObject(props: string[]) {
+  let block = ``;
+  for (let i = 0; i < props.length; i++) {
+    block += returnWithUnsecurePropertyClauseForList(props[i]);
+    if (i + 1 < props.length) {
+      block += ',';
+    }
+  }
+  return block;
+}
+
+export function listWithSecureObject(props: string[]) {
+  let block = ``;
+  for (let i = 0; i < props.length; i++) {
+    block += returnWithSecurePropertyClauseForList(props[i]);
+    if (i + 1 < props.length) {
+      block += ',';
+    }
+  }
+  return block;
+}
+
+export function addBaseNodeMetaPropsWithClause(props: string[]) {
+  let block = ``;
+  for (let i = 0; i < props.length; i++) {
+    block += `${props[i]}: node.${props[i]}`;
+    if (i + 1 < props.length) {
+      block += ',';
+    }
+  }
+  return block;
 }
 
 export function list(
