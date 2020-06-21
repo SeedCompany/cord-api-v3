@@ -131,6 +131,9 @@ export class OrganizationService {
       throw new ServerException('failed to create default org');
     }
 
+    // add root admin to new org as an admin
+    await this.db.addRootAdminToBaseNodeAsAdmin(id, 'Organization');
+
     // const propLabels = {
     //   name: 'OrgName',
     // };

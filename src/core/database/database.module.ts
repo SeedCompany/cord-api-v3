@@ -1,5 +1,6 @@
 import { Module, OnApplicationShutdown } from '@nestjs/common';
 import { Connection } from 'cypher-query-builder';
+import { ConfigModule } from '../config/config.module';
 import { DeprecatedDBService } from '../deprecated-database.service';
 import { CypherFactory } from './cypher.factory';
 import { DatabaseService } from './database.service';
@@ -7,7 +8,7 @@ import { IndexerModule } from './indexer/indexer.module';
 import { ParameterTransformer } from './parameter-transformer.service';
 
 @Module({
-  imports: [IndexerModule],
+  imports: [IndexerModule, ConfigModule],
   providers: [
     CypherFactory,
     DatabaseService,

@@ -27,6 +27,7 @@ import {
   unwrapSecured,
 } from '../../common';
 import { ILogger, Logger } from '..';
+import { ConfigService } from '../config/config.service';
 import { hasMore } from './query.helpers';
 
 import _ = require('lodash');
@@ -86,11 +87,39 @@ export const matchSession = (
 export class DatabaseService {
   constructor(
     private readonly db: Connection,
+    private readonly config: ConfigService,
     @Logger('database:service') private readonly logger: ILogger
   ) {}
 
   query(): Query {
     return this.db.query();
+  }
+
+  async addRootAdminToBaseNodeAsAdmin(newBaseNodeId: string, label: string) {
+    const createdAt = DateTime.local();
+    await this.db
+      .query()
+      .match([
+        node('root', 'User', {
+          active: true,
+          id: this.config.rootAdmin.id,
+        }),
+      ])
+      .match([
+        node('node', label, {
+          active: true,
+          id: newBaseNodeId,
+        }),
+      ])
+      .merge([
+        node('root'),
+        relation('in', '', 'admin', {
+          active: true,
+          createdAt,
+        }),
+        node('node'),
+      ])
+      .run();
   }
 
   async updateProperties<TObject extends Resource>({
