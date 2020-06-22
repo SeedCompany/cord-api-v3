@@ -128,7 +128,7 @@ export class BudgetService {
 
     const id = generate();
     const createdAt = DateTime.local();
-    const status = BudgetStatus.Pending;
+    const status = BudgetStatus.Current;
 
     try {
       const createBudget = this.db
