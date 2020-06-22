@@ -44,9 +44,9 @@ export function addPropertyCoalesceWithClause(property: string) {
 }
 
 export const securedProperty = (property: string) => ({
-  value: `coalesce(${property}.value, null)`,
-  canRead: `coalesce(${property}ReadPerm.read, false)`,
-  canEdit: `coalesce(${property}EditPerm.edit, false)`,
+  value: coalesce(`${property}.value`),
+  canRead: coalesce(`${property}ReadPerm.read`, false),
+  canEdit: coalesce(`${property}EditPerm.edit`, false),
 });
 
 export function matchProperty(
@@ -112,6 +112,17 @@ export const count = (
 ) =>
   `count(${options.distinct ? 'DISTINCT ' : ''}${expression})` +
   (options.as ? ' as ' + options.as : '');
+
+/**
+ * Returns the first non-null value in the given list of expressions.
+ *
+ * `null` will be returned if all the arguments are `null`.
+ *
+ * @param expressions An expression which may return null.
+ * @see https://neo4j.com/docs/cypher-manual/current/functions/aggregating/#functions-coalesce
+ */
+export const coalesce = (...expressions: any[]) =>
+  `coalesce(${expressions.join(', ')})`;
 
 export function matchRequestingUser(query: Query, session: ISession) {
   query.match([
