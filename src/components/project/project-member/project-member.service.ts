@@ -191,9 +191,6 @@ export class ProjectMemberService {
         count,
       });
 
-      //console.log('1', projectMemQuery);
-      //console.log('2', projectMemQuery.buildQueryObject());
-
       const projectMembers = await projectMemQuery.run();
 
       result.items = await Promise.all(
