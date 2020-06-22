@@ -364,6 +364,7 @@ describe('User e2e', () => {
   it('read one users organizations', async () => {
     const newUser = await createUser(app);
     const org = await createOrganization(app);
+    console.log(newUser.id);
     const result = await app.graphql.mutate(
       gql`
         mutation assignOrganizationToUser(

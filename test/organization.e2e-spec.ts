@@ -59,17 +59,18 @@ describe('Organization e2e', () => {
   it('create & read organization by root security group member id', async () => {
     const currentUser = await getUserFromSession(app);
     const db = app.get(DatabaseService);
+    // should not run queries. everything should be graphql.
     // attach current user to rootsg
-    await db
-      .query()
-      .match([node('user', 'User', { active: true, id: currentUser.id })])
-      .create([
-        node('user'),
-        relation('in', '', 'member', { active: true }),
-        node('rsg', 'RootSecurityGroup', { active: true }),
-      ])
-      .return('user')
-      .first();
+    // await db
+    //   .query()
+    //   .match([node('user', 'User', { active: true, id: currentUser.id })])
+    //   .create([
+    //     node('user'),
+    //     relation('in', '', 'member', { active: true }),
+    //     node('rsg', 'RootSecurityGroup', { active: true }),
+    //   ])
+    //   .return('user')
+    //   .first();
     const org = await createOrganization(app);
     const { organization: actual } = await app.graphql.query(
       gql`
