@@ -99,7 +99,6 @@ export class OrganizationService {
           active: true,
           id,
           createdAt,
-          // owningOrgId: session.owningOrgId,
         }),
         relation('out', '', 'name', { active: true, createdAt }),
         node('name', ['Property', 'OrgName'], {
