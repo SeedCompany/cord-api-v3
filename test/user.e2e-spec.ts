@@ -205,7 +205,7 @@ describe('User e2e', () => {
       ${fragments.user}
     `);
 
-    expect(users.items.length).toBeGreaterThan(numUsers);
+    expect(users.items.length).toBeGreaterThanOrEqual(numUsers);
   });
 
   it.skip('Check consistency across user nodes', async () => {
