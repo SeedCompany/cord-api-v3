@@ -99,7 +99,7 @@ export class OrganizationService {
           active: true,
           id,
           createdAt,
-          owningOrgId: session.owningOrgId,
+          // owningOrgId: session.owningOrgId,
         }),
         relation('out', '', 'name', { active: true, createdAt }),
         node('name', ['Property', 'OrgName'], {
@@ -214,6 +214,7 @@ export class OrganizationService {
     const result = await this.db.list<Organization>({
       session,
       nodevar: 'organization',
+      skipOwningOrgCheck: true,
       aclReadProp: 'canReadOrgs',
       aclEditProp: 'canCreateOrg',
       props: ['name'],

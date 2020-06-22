@@ -674,7 +674,7 @@ export class DatabaseService {
     for (const prop of props) {
       const propName = typeof prop === 'object' ? prop.name : prop;
 
-      query.optionalMatch([
+      query.match([
         node('n', nodeName, {
           active: true,
           ...owningOrgFilter,
