@@ -1,10 +1,11 @@
 import { node, Query, relation } from 'cypher-query-builder';
+import { isFunction } from 'lodash';
 import {
   ISession,
   PaginationInput,
   SortablePaginationInput,
 } from '../../common';
-import { ILogger } from '../../core';
+import { ILogger } from '../logger';
 import { mapping } from './mapping.helper';
 
 export * from './mapping.helper';
@@ -239,21 +240,48 @@ export function filterQuery(
   }
 }
 
-export function listReturnBlock(
+export function listReturnBlock<T = any>(
   query: Query,
-  { page, count, sort, order }: SortablePaginationInput
+  { page, count, sort: sortInput, order }: SortablePaginationInput,
+  sort?: string | ((sortStr: string) => string)
 ) {
-  query
-    .with(`collect(distinct node) as nodes, count(distinct node) as total`)
+  return query
+    .with(['collect(distinct node) as nodes', 'count(distinct node) as total'])
     .raw(`unwind nodes as node`)
-    .returnDistinct('node, total')
-    .orderBy([[`node.${sort}.value`, order]])
-    .skip((page - 1) * count)
-    .limit(count);
+    .with(['node', 'total'])
+    .orderBy(
+      sort
+        ? isFunction(sort)
+          ? sort(sortInput)
+          : sort
+        : `node.${sortInput}.value`,
+      order
+    )
+    .with([
+      `collect(node)[${(page - 1) * count}..${page * count}] as items`,
+      'total',
+      `${(page - 1) * count + count} < total as hasMore`,
+    ])
+    .return(['items', 'total', 'hasMore'])
+    .asResult<{ items: T[]; total: number; hasMore: boolean }>();
 }
 
-export const onePage = (query: Query, input: PaginationInput) =>
-  query.skip((input.page - 1) * input.count).limit(input.count);
+export async function runListQuery<T>(
+  query: Query,
+  input: SortablePaginationInput
+) {
+  const result = await listReturnBlock<T>(query, input).first();
+
+  // result could be undefined if there are no matched nodes
+  // in that case the total truly is 0 we just can't express that in cypher
+  return (
+    result ?? {
+      items: [],
+      total: 0,
+      hasMore: false,
+    }
+  );
+}
 
 export const hasMore = (input: PaginationInput, total: number) =>
   // if skip + count is less than total, there is more
