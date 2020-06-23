@@ -8,12 +8,13 @@ import {
 import {
   Connection,
   contains,
+  greaterThan,
   node,
   Query,
   relation,
 } from 'cypher-query-builder';
-import type { Pattern } from 'cypher-query-builder/dist/typings/clauses/pattern';
-import { cloneDeep, Dictionary, Many, upperFirst } from 'lodash';
+import { Pattern } from 'cypher-query-builder/dist/typings/clauses/pattern';
+import { cloneDeep, Dictionary, join, Many, upperFirst } from 'lodash';
 import { DateTime, Duration } from 'luxon';
 import { generate } from 'shortid';
 import { assert } from 'ts-essentials';
@@ -673,17 +674,30 @@ export class DatabaseService {
     if (input.filter && Object.keys(input.filter).length) {
       for (const k in input.filter) {
         if (k !== 'id' && k !== 'userId' && k !== 'mine') {
-          query
-            .match([
-              node('n', nodeName, {
-                active: true,
-                ...owningOrgFilter,
-              }),
-              relation('out', '', k, { active: true }),
-              node(k, 'Property', { active: true }),
-            ])
-            .where({ [k + '.value']: contains(input.filter[k]) })
-            .with('*');
+          query.match([
+            node('n', nodeName, {
+              active: true,
+              ...owningOrgFilter,
+            }),
+            relation('out', '', k, { active: true }),
+            node(k, 'Property', { active: true }),
+          ]);
+          if (typeof input.filter[k] === 'string') {
+            query.where({ [k + '.value']: contains(input.filter[k]) });
+          } else {
+            //array
+            // k.value might be an array of multiple values
+            const filterList = join(
+              input.filter[k].map((i: string) => `'${i}'`),
+              ', '
+            );
+            query.where({
+              [`size([role IN ${k}.value WHERE role IN [ ${filterList} ] | 1])`]: greaterThan(
+                0
+              ),
+            });
+            query.with('*');
+          }
         }
       }
     }

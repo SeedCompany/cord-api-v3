@@ -93,6 +93,44 @@ describe('ProjectMember e2e', () => {
     );
   });
 
+  it('query two roles', async () => {
+    const numProjectMembers = 2;
+    const userForList = await createUser(app);
+    const projectForList = await createProject(app);
+
+    const userId = userForList.id;
+    const projectId = projectForList.id;
+
+    await Promise.all(
+      times(numProjectMembers).map(() =>
+        createProjectMember(app, {
+          userId,
+          projectId,
+          roles: [Role.Consultant],
+        })
+      )
+    );
+
+    const { projectMembers } = await app.graphql.query(
+      gql`
+        query {
+          projectMembers(
+            input: { filter: { roles: [OfficeOfThePresident, Consultant] } }
+          ) {
+            items {
+              id
+            }
+            hasMore
+            total
+          }
+        }
+      `
+    );
+    expect(projectMembers.items.length).toBeGreaterThanOrEqual(
+      numProjectMembers
+    );
+  });
+
   it('delete projectMember', async () => {
     await login(app, { email: user.email.value, password });
     const projectMember = await createProjectMember(app, { userId: user.id });
