@@ -319,7 +319,6 @@ export class BudgetService {
       })
       .run();
 
-    //NEED TO DISCUSS
     //console.log('projBudgets', JSON.stringify(projBudgets, null, 2));
     result.items = await Promise.all(
       projBudgets.map(async (budget) => this.readOne(budget.budgetId, session))
