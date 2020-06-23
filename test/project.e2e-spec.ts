@@ -15,7 +15,6 @@ import {
 import { User } from '../src/components/user/dto/user.dto';
 import { DatabaseService } from '../src/core';
 import {
-  createBudget,
   createCountry,
   createInternshipEngagement,
   createLanguageEngagement,
@@ -494,19 +493,9 @@ describe('Project e2e', () => {
     expect(queryProject.project.partnerships.total).toBe(numPartnerships);
   });
 
-  it('List view of budgets by projectId', async () => {
-    //create 2 budegts in a project
-    const numBudgets = 2;
+  it('Should have default status Current for first budget with project creation', async () => {
     const type = ProjectType.Translation;
     const project = await createProject(app, { type });
-
-    await Promise.all(
-      times(numBudgets).map(() =>
-        createBudget(app, {
-          projectId: project.id,
-        })
-      )
-    );
 
     const queryProject = await app.graphql.query(
       gql`
@@ -530,11 +519,7 @@ describe('Project e2e', () => {
       }
     );
 
-    console.log('queryProject', queryProject, null, 2);
-    //expect(queryProject.project.budget.items.length).toBe(numBudgets);
-    expect(queryProject.project.budget.total).toBe(numBudgets);
-    // expect(queryProject.project.budget.items.length).toBeGreaterThanOrEqual(
-    //   numBudgets
-    // );
+    //console.log(queryProject.project.budget.value.status);
+    expect(queryProject.project.budget.value.status).toBe('Current');
   });
 });

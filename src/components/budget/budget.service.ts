@@ -242,10 +242,6 @@ export class BudgetService {
     }
 
     if (!result) {
-      this.logger.error(`Could not find budget:  `, {
-        id,
-        userId: session.userId,
-      });
       throw new NotFoundException('Could not find budget');
     }
 
@@ -311,25 +307,25 @@ export class BudgetService {
           ORDER BY ${sort} ${order}
           SKIP $skip LIMIT $count
       `;
-    const projBudgetQuery = this.db.query().raw(query, {
-      token: session.token,
-      requestingUserId: session.userId,
-      owningOrgId: session.owningOrgId,
-      projectId,
-      skip: (page - 1) * count,
-      count,
-    });
-    //console.log('1', projBudgetQuery.buildQueryObject());
+    const projBudgets = await this.db
+      .query()
+      .raw(query, {
+        token: session.token,
+        requestingUserId: session.userId,
+        owningOrgId: session.owningOrgId,
+        projectId,
+        skip: (page - 1) * count,
+        count,
+      })
+      .run();
 
-    const projBudgets = await projBudgetQuery.run();
-
+    //NEED TO DISCUSS
+    //console.log('projBudgets', JSON.stringify(projBudgets, null, 2));
     result.items = await Promise.all(
       projBudgets.map(async (budget) => this.readOne(budget.budgetId, session))
     );
 
     result.total = result.items.length;
-    //console.log('result.total', result.total);
-
     return {
       items: result.items,
       hasMore: result.hasMore,
@@ -515,7 +511,7 @@ export class BudgetService {
       budgetRecord: [{ id: 'id', createdAt: 'createdAt' }],
       amount: [{ value: 'amount' }],
       canReadAmount: [{ read: 'canReadAmount' }],
-      canEditAmount: [{ edit: 'canReadAmount' }],
+      canEditAmount: [{ edit: 'canEditAmount' }],
       fiscalYear: [{ value: 'fiscalYear' }],
       canReadFiscalYear: [{ read: 'canReadFiscalYear' }],
       canEditFiscalYear: [{ edit: 'canEditFiscalYear' }],
@@ -560,13 +556,13 @@ export class BudgetService {
       },
       fiscalYear: {
         value: result.fiscalYear,
-        canRead: !!result.canReadFiscalYearRead,
-        canEdit: !!result.canReadFiscalYearEdit,
+        canRead: !!result.canReadFiscalYear,
+        canEdit: !!result.canEditFiscalYear,
       },
       amount: {
         value: result.amount,
-        canRead: !!result.canReadAmountRead,
-        canEdit: !!result.canReadAmountEdit,
+        canRead: !!result.canReadAmount,
+        canEdit: !!result.canEditAmount,
       },
     };
   }
