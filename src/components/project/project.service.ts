@@ -437,51 +437,6 @@ export class ProjectService {
       hasMore: (page - 1) * count + count < result[0].total,
       total: result[0].total,
     };
-    // let result;
-    // try {
-    //   result = await this.db.list<Project>({
-    //     session,
-    //     nodevar: 'project',
-    //     aclReadProp: 'canReadProjects',
-    //     aclEditProp: 'canCreateProject',
-    //     props: [
-    //       // { name: 'type', secure: false },
-    //       { name: 'sensitivity', secure: false },
-    //       { name: 'name', secure: true },
-    //       { name: 'deptId', secure: true },
-    //       { name: 'step', secure: true },
-    //       { name: 'status', secure: false },
-    //       { name: 'location', secure: true },
-    //       { name: 'mouStart', secure: true },
-    //       { name: 'mouEnd', secure: true },
-    //       { name: 'estimatedSubmission', secure: true },
-    //       { name: 'modifiedAt', secure: false },
-    //     ],
-    //     input: {
-    //       page,
-    //       count,
-    //       sort,
-    //       order,
-    //       filter,
-    //     },
-    //   });
-    // } catch (e) {
-    //   this.logger.error(e);
-    // }
-    // return {
-    //   items: result
-    //     ? result.items.map((item) => ({
-    //         ...item,
-    //         location: {
-    //           value: undefined,
-    //           canEdit: true,
-    //           canRead: true,
-    //         },
-    //       }))
-    //     : [],
-    //   hasMore: result ? result.hasMore : false,
-    //   total: result ? result.total : 0,
-    // };
   }
 
   async currentBudget(
