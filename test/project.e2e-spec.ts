@@ -492,4 +492,34 @@ describe('Project e2e', () => {
     ).toBeGreaterThanOrEqual(numPartnerships);
     expect(queryProject.project.partnerships.total).toBe(numPartnerships);
   });
+
+  it('Should have default status Current for first budget with project creation', async () => {
+    const type = ProjectType.Translation;
+    const project = await createProject(app, { type });
+
+    const queryProject = await app.graphql.query(
+      gql`
+        query project($id: ID!) {
+          project(id: $id) {
+            ...project
+            budget {
+              value {
+                id
+                status
+              }
+              canRead
+              canEdit
+            }
+          }
+        }
+        ${fragments.project}
+      `,
+      {
+        id: project.id,
+      }
+    );
+
+    //console.log(queryProject.project.budget.value.status);
+    expect(queryProject.project.budget.value.status).toBe('Current');
+  });
 });
