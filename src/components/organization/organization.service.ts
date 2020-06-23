@@ -14,15 +14,14 @@ import {
   ConfigService,
   DatabaseService,
   filterQuery,
-  hasMore,
   ILogger,
-  listReturnBlock,
   listWithSecureObject,
   Logger,
   matchProperties,
   matchRequestingUser,
   matchSession,
   OnIndex,
+  runListQuery,
 } from '../../core';
 import {
   CreateOrganization,
@@ -217,7 +216,7 @@ export class OrganizationService {
   }
 
   async list(
-    { page, count, sort, order, filter }: OrganizationListInput,
+    { filter, ...input }: OrganizationListInput,
     session: ISession
   ): Promise<OrganizationListOutput> {
     const label = 'Organization';
@@ -235,7 +234,7 @@ export class OrganizationService {
       listQuery.call(
         filterQuery,
         label,
-        sort,
+        input.sort,
         filter.userId,
         'User',
         'organization'
@@ -245,14 +244,14 @@ export class OrganizationService {
       listQuery.call(
         filterQuery,
         label,
-        sort,
+        input.sort,
         filter.userId,
         'User',
         'organization'
       );
     } else {
       // match on filter terms
-      listQuery.call(filterQuery, label, sort);
+      listQuery.call(filterQuery, label, input.sort);
     }
 
     // match on the rest of the properties of the object requested
@@ -268,22 +267,9 @@ export class OrganizationService {
             ${listWithSecureObject(secureProps)}
           } as node
         `
-      )
-      .call(listReturnBlock, { page, count, sort, order });
+      );
 
-    const result = await listQuery.run();
-
-    if (!result) {
-      throw new ServerException('projects failed');
-    }
-
-    const items = result.map((r: any) => r.node);
-
-    return {
-      items,
-      hasMore: hasMore({ count, page }, result[0].total),
-      total: result[0].total,
-    };
+    return runListQuery(listQuery, input);
   }
 
   async checkAllOrgs(session: ISession): Promise<boolean> {

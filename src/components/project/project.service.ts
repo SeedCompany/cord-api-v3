@@ -19,6 +19,7 @@ import {
   matchRequestingUser,
   matchSession,
   OnIndex,
+  runListQuery,
 } from '../../core';
 import { Budget, BudgetService, BudgetStatus, SecuredBudget } from '../budget';
 import {
@@ -362,7 +363,7 @@ export class ProjectService {
   }
 
   async list(
-    { page, count, sort, order }: ProjectListInput,
+    input: ProjectListInput,
     session: ISession
   ): Promise<ProjectListOutput> {
     const label = 'Project';
@@ -400,8 +401,8 @@ export class ProjectService {
         node('node', label, {
           active: true,
         }),
-        relation('out', '', sort, { active: true }),
-        node(sort, 'Property', { active: true }),
+        relation('out', '', input.sort, { active: true }),
+        node(input.sort, 'Property', { active: true }),
       ])
       // match on the rest of the properties of the object requested
       .call(matchProperties, 'project', ...secureProps, ...unsecureProps)
@@ -416,27 +417,8 @@ export class ProjectService {
     }
     as node
     `
-      )
-      .with(`collect(distinct node) as nodes, count(distinct node) as total`)
-      .raw(`unwind nodes as node`)
-      .returnDistinct('node, total')
-      .orderBy([[`node.${sort}.value`, order]])
-      .skip((page - 1) * count)
-      .limit(count);
-
-    const result = await listQuery.run();
-
-    if (!result) {
-      throw new ServerException('projects failed');
-    }
-
-    const items = result.map((r: any) => r.node);
-
-    return {
-      items,
-      hasMore: (page - 1) * count + count < result[0].total,
-      total: result[0].total,
-    };
+      );
+    return runListQuery<Project>(listQuery, input);
   }
 
   async currentBudget(
