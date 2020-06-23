@@ -5,13 +5,7 @@ import {
   InternalServerErrorException as ServerException,
   Type,
 } from '@nestjs/common';
-import {
-  Connection,
-  contains,
-  node,
-  Query,
-  relation,
-} from 'cypher-query-builder';
+import { Connection, node, Query, relation } from 'cypher-query-builder';
 import type { Pattern } from 'cypher-query-builder/dist/typings/clauses/pattern';
 import { cloneDeep, Dictionary, Many, upperFirst } from 'lodash';
 import { DateTime, Duration } from 'luxon';
@@ -669,12 +663,26 @@ export class DatabaseService {
         ],
       ]);
     }
-    query.with('count(n) as total, requestingUser, n');
+    query.with('count(n) as total, requestingUser');
+    if (input.filter && Object.keys(input.filter).length) {
+      for (const k in input.filter) {
+        if (k !== 'id' && k !== 'userId' && k !== 'mine') {
+          query.match([
+            node('n', nodeName, {
+              active: true,
+              ...owningOrgFilter,
+            }),
+            relation('out', '', k, { active: true }),
+            node(k, 'Property', { active: true, value: input.filter[k] }),
+          ]);
+        }
+      }
+    }
 
     for (const prop of props) {
       const propName = typeof prop === 'object' ? prop.name : prop;
 
-      query.match([
+      query.optionalMatch([
         node('n', nodeName, {
           active: true,
           ...owningOrgFilter,
@@ -682,18 +690,6 @@ export class DatabaseService {
         relation('out', '', propName as string, { active: true }),
         node(propName as string, 'Property', { active: true }),
       ]);
-    }
-
-    if (input.filter && Object.keys(input.filter).length) {
-      const where: Record<string, any> = {};
-      for (const k in input.filter) {
-        if (k !== 'id' && k !== 'userId' && k !== 'mine') {
-          where[k + '.value'] = contains(input.filter[k]);
-        }
-      }
-      if (Object.keys(where).length) {
-        query.where(where);
-      }
     }
 
     // Clone the query here, before we apply limit/offsets, so that we can get an accurate aggregate of the total filtered result set
@@ -726,7 +722,6 @@ export class DatabaseService {
       .orderBy([input.sort], input.order)
       .skip((input.page - 1) * input.count)
       .limit(input.count);
-
     const result = await query.run();
     const countResult = await countQuery.run();
 

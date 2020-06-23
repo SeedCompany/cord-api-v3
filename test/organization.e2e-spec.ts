@@ -210,4 +210,27 @@ describe('Organization e2e', () => {
 
     expect(actual.name.canEdit).toBe(true);
   });
+
+  it('List view filters on name', async () => {
+    const name = faker.commerce.productName();
+    await createOrganization(app, { name });
+
+    const { organizations } = await app.graphql.query(
+      gql`
+        query orgs($name: String!) {
+          organizations(input: { filter: { name: $name } }) {
+            items {
+              ...org
+            }
+            hasMore
+            total
+          }
+        }
+        ${fragments.org}
+      `,
+      { name }
+    );
+    expect(organizations.total).toEqual(1);
+    expect(organizations.items[0].name.value).toBe(name);
+  });
 });

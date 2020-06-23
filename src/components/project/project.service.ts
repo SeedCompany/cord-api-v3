@@ -365,6 +365,7 @@ export class ProjectService {
       result = await this.db.list<Project>({
         session,
         nodevar: 'project',
+        skipOwningOrgCheck: true,
         aclReadProp: 'canReadProjects',
         aclEditProp: 'canCreateProject',
         props: [
@@ -391,6 +392,7 @@ export class ProjectService {
     } catch (e) {
       this.logger.error(e);
     }
+
     return {
       items: result
         ? result.items.map((item) => ({
