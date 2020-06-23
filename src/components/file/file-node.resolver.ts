@@ -3,7 +3,7 @@ import { stripIndent } from 'common-tags';
 import { Class } from 'type-fest';
 import { ISession, Session, simpleSwitch } from '../../common';
 import { User, UserService } from '../user';
-import { Directory, FileNode, FileNodeType } from './dto';
+import { FileNode, FileNodeType, IFileNode } from './dto';
 import { FileService } from './file.service';
 
 export function FileNodeResolver<T>(
@@ -32,7 +32,7 @@ export function FileNodeResolver<T>(
       return this.users.readOne(node.createdById, session);
     }
 
-    @ResolveField(() => [Directory], {
+    @ResolveField(() => [IFileNode], {
       description: stripIndent`
         A list of the parents all the way up the tree.
         This can be used to populate a path-like UI,
