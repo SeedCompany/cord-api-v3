@@ -1,7 +1,6 @@
 import { node, Query, relation } from 'cypher-query-builder';
 import {
   ISession,
-  mapFromList,
   PaginationInput,
   SortablePaginationInput,
 } from '../../common';
@@ -49,7 +48,7 @@ export const securedProperty = (property: string) => ({
   canEdit: coalesce(`${property}EditPerm.edit`, false),
 });
 
-export function matchProperty(
+export function matchProperties(
   query: Query,
   cypherIdentifierForBaseNode: string,
   ...names: string[]
@@ -182,49 +181,75 @@ export function addBaseNodeMetaPropsWithClause(props: string[]) {
   return block;
 }
 
-export function list(
+export function filterQuery(
   query: Query,
-  session: ISession,
   label: string,
-  props: string[],
-  pagination: SortablePaginationInput
+  sort: string,
+  baseNodeId?: string,
+  baseNodeLabel?: string,
+  childNodeIdentifier?: string
 ) {
-  query.call(matchRequestingUser, session).match([
-    node('requestingUser'),
-    relation('in', '', 'member'),
-    node('', 'SecurityGroup', {
-      active: true,
-    }),
-    relation('out', '', 'permission', { active: true }),
-    node('', 'Permission', {
-      property: 'name',
-      read: true,
-      active: true,
-    }),
-    relation('out', '', 'baseNode'),
-    node('node', label, {
-      active: true,
-    }),
-  ]);
+  if (baseNodeId && baseNodeLabel) {
+    query.match([
+      node('requestingUser'),
+      relation('in', '', 'member'),
+      node('', 'SecurityGroup', {
+        active: true,
+      }),
+      relation('out', '', 'permission', { active: true }),
+      node('', 'Permission', {
+        property: childNodeIdentifier,
+        read: true,
+        active: true,
+      }),
+      relation('out', '', 'baseNode'),
+      node('parentNode', baseNodeLabel, {
+        active: true,
+        id: baseNodeId,
+      }),
+      relation('out', '', childNodeIdentifier, {
+        active: true,
+      }),
+      node('node', label, {
+        active: true,
+      }),
+      relation('out', '', sort, { active: true }),
+      node(sort, 'Property', { active: true }),
+    ]);
+  } else {
+    query.match([
+      node('requestingUser'),
+      relation('in', '', 'member'),
+      node('', 'SecurityGroup', {
+        active: true,
+      }),
+      relation('out', '', 'permission', { active: true }),
+      node('', 'Permission', {
+        property: sort,
+        read: true,
+        active: true,
+      }),
+      relation('out', '', 'baseNode'),
+      node('node', label, {
+        active: true,
+      }),
+      relation('out', '', sort, { active: true }),
+      node(sort, 'Property', { active: true }),
+    ]);
+  }
+}
 
-  query.call(matchProperty, 'node', ...props);
-
+export function listReturnBlock(
+  query: Query,
+  { page, count, sort, order }: SortablePaginationInput
+) {
   query
-    .with(
-      mapping('node', {
-        id: 'node.id',
-        createdAt: 'node.createdAt',
-        ...mapFromList(props, (prop) =>
-          // [key, value]
-          [prop, mapping(securedProperty(prop))]
-        ),
-      })
-    )
-    .with(`collect(node) as nodes, count(node) as total`)
+    .with(`collect(distinct node) as nodes, count(distinct node) as total`)
     .raw(`unwind nodes as node`)
-    .return('node, total')
-    .orderBy(`node.${pagination.sort}.value`, pagination.order)
-    .call(onePage, pagination);
+    .returnDistinct('node, total')
+    .orderBy([[`node.${sort}.value`, order]])
+    .skip((page - 1) * count)
+    .limit(count);
 }
 
 export const onePage = (query: Query, input: PaginationInput) =>

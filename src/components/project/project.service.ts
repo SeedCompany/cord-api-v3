@@ -15,11 +15,10 @@ import {
   listWithSecureObject,
   listWithUnsecureObject,
   Logger,
-  matchProperty,
+  matchProperties,
   matchRequestingUser,
   matchSession,
   OnIndex,
-  printActualQuery,
 } from '../../core';
 import { Budget, BudgetService, BudgetStatus, SecuredBudget } from '../budget';
 import {
@@ -405,7 +404,7 @@ export class ProjectService {
         node(sort, 'Property', { active: true }),
       ])
       // match on the rest of the properties of the object requested
-      .call(matchProperty, 'project', ...secureProps, ...unsecureProps)
+      .call(matchProperties, 'project', ...secureProps, ...unsecureProps)
 
       // form return object
       .with(
@@ -424,8 +423,6 @@ export class ProjectService {
       .orderBy([[`node.${sort}.value`, order]])
       .skip((page - 1) * count)
       .limit(count);
-
-    printActualQuery(this.logger, listQuery);
 
     const result = await listQuery.run();
 
