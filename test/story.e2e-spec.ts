@@ -131,4 +131,27 @@ describe('Story e2e', () => {
     `);
     expect(storys.items.length).toBeGreaterThan(numStorys);
   });
+
+  it('List view filters on name', async () => {
+    const name = faker.lorem.word();
+    await createStory(app, { name });
+
+    const { storys } = await app.graphql.query(
+      gql`
+        query storys($name: String!) {
+          storys(input: { filter: { name: $name } }) {
+            items {
+              ...story
+            }
+            hasMore
+            total
+          }
+        }
+        ${fragments.story}
+      `,
+      { name }
+    );
+    expect(storys.total).toEqual(1);
+    expect(storys.items[0].name.value).toBe(name);
+  });
 });

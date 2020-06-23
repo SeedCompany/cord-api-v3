@@ -399,6 +399,7 @@ export class LiteracyMaterialService {
     const result = await this.db.list<LiteracyMaterial>({
       session,
       nodevar: 'literacyMaterial',
+      skipOwningOrgCheck: true,
       aclReadProp: 'canReadLiteracyMaterials',
       aclEditProp: 'canCreateLiteracyMaterial',
       props: ['name'],

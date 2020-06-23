@@ -131,4 +131,27 @@ describe('LiteracyMaterial e2e', () => {
 
     expect(literacyMaterials.items.length).toBeGreaterThan(numLitMat);
   });
+
+  it('List view filters on name', async () => {
+    const name = faker.lorem.word();
+    await createLiteracyMaterial(app, { name });
+
+    const { literacyMaterials } = await app.graphql.query(
+      gql`
+        query literacyMaterials($name: String!) {
+          literacyMaterials(input: { filter: { name: $name } }) {
+            items {
+              ...literacyMaterial
+            }
+            hasMore
+            total
+          }
+        }
+        ${fragments.literacyMaterial}
+      `,
+      { name }
+    );
+    expect(literacyMaterials.total).toEqual(1);
+    expect(literacyMaterials.items[0].name.value).toBe(name);
+  });
 });

@@ -410,6 +410,7 @@ describe('User e2e', () => {
       }
     );
     const actual = result1.user;
+    console.log("actual", actual)
     expect(actual).toBeTruthy();
     expect(actual.organizations.items[0].id).toBe(org.id);
     return true;

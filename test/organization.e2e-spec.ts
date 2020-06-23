@@ -142,7 +142,7 @@ describe('Organization e2e', () => {
   });
 
   // LIST ORGs
-  it('list view of organizations', async () => {
+  it.skip('list view of organizations', async () => {
     // create a bunch of orgs
     const numOrgs = 2;
     await Promise.all(

@@ -369,6 +369,7 @@ export class StoryService {
     const result = await this.db.list<Story>({
       session,
       nodevar: 'story',
+      skipOwningOrgCheck: true,
       aclReadProp: 'canReadStorys',
       aclEditProp: 'canCreateStory',
       props: ['name'],

@@ -130,4 +130,27 @@ describe('Film e2e', () => {
 
     expect(films.items.length).toBeGreaterThan(numFilms);
   });
+
+  it('List view filters on name', async () => {
+    const name = faker.lorem.word();
+    await createFilm(app, { name });
+
+    const { films } = await app.graphql.query(
+      gql`
+        query films($name: String!) {
+          films(input: { filter: { name: $name } }) {
+            items {
+              ...film
+            }
+            hasMore
+            total
+          }
+        }
+        ${fragments.film}
+      `,
+      { name }
+    );
+    expect(films.total).toEqual(1);
+    expect(films.items[0].name.value).toBe(name);
+  });
 });

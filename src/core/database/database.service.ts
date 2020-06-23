@@ -663,7 +663,7 @@ export class DatabaseService {
         ],
       ]);
     }
-    query.with('count(n) as total, requestingUser');
+    query.with('count(n) as total, requestingUser, n');
     if (input.filter && Object.keys(input.filter).length) {
       for (const k in input.filter) {
         if (k !== 'id' && k !== 'userId' && k !== 'mine') {

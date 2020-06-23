@@ -376,6 +376,7 @@ export class FilmService {
     const result = await this.db.list<Film>({
       session,
       nodevar: 'film',
+      skipOwningOrgCheck: true,
       aclReadProp: 'canReadFilms',
       aclEditProp: 'canCreateFilm',
       props: ['name'],
