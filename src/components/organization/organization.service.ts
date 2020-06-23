@@ -9,12 +9,18 @@ import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
 import {
+  addBaseNodeMetaPropsWithClause,
   addPropertyCoalesceWithClause,
   ConfigService,
   DatabaseService,
+  filterQuery,
+  hasMore,
   ILogger,
+  listReturnBlock,
+  listWithSecureObject,
   Logger,
-  matchProperty,
+  matchProperties,
+  matchRequestingUser,
   matchSession,
   OnIndex,
 } from '../../core';
@@ -129,6 +135,9 @@ export class OrganizationService {
       throw new ServerException('failed to create default org');
     }
 
+    // add root admin to new org as an admin
+    await this.db.addRootAdminToBaseNodeAsAdmin(id, 'Organization');
+
     // const propLabels = {
     //   name: 'OrgName',
     // };
@@ -161,7 +170,7 @@ export class OrganizationService {
         }),
       ])
       .match([node('org', 'Organization', { active: true, id: orgId })])
-      .call(matchProperty, 'org', ...props)
+      .call(matchProperties, 'org', ...props)
       .with([
         ...props.map(addPropertyCoalesceWithClause),
         'coalesce(org.id) as id',
@@ -211,25 +220,69 @@ export class OrganizationService {
     { page, count, sort, order, filter }: OrganizationListInput,
     session: ISession
   ): Promise<OrganizationListOutput> {
-    const result = await this.db.list<Organization>({
-      session,
-      nodevar: 'organization',
-      aclReadProp: 'canReadOrgs',
-      aclEditProp: 'canCreateOrg',
-      props: ['name'],
-      input: {
-        page,
-        count,
+    const label = 'Organization';
+    const baseNodeMetaProps = ['id', 'createdAt'];
+    // const unsecureProps = [''];
+    const secureProps = ['name'];
+
+    const listQuery = this.db
+      .query()
+      // match on requesting user
+      .call(matchRequestingUser, session);
+
+    if (filter.userId) {
+      // match on filter terms using parent base node
+      listQuery.call(
+        filterQuery,
+        label,
         sort,
-        order,
-        filter,
-      },
-    });
+        filter.userId,
+        'User',
+        'organization'
+      );
+    } else if (filter.name) {
+      // match on filter terms using parent base node
+      listQuery.call(
+        filterQuery,
+        label,
+        sort,
+        filter.userId,
+        'User',
+        'organization'
+      );
+    } else {
+      // match on filter terms
+      listQuery.call(filterQuery, label, sort);
+    }
+
+    // match on the rest of the properties of the object requested
+    listQuery
+      .call(matchProperties, 'project', ...secureProps /* , ...unsecureProps */)
+
+      // form return object
+      // ${listWithUnsecureObject(unsecureProps)}, // removed from a few lines down
+      .with(
+        `
+          {
+            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
+            ${listWithSecureObject(secureProps)}
+          } as node
+        `
+      )
+      .call(listReturnBlock, { page, count, sort, order });
+
+    const result = await listQuery.run();
+
+    if (!result) {
+      throw new ServerException('projects failed');
+    }
+
+    const items = result.map((r: any) => r.node);
 
     return {
-      items: result.items,
-      hasMore: result.hasMore,
-      total: result.total,
+      items,
+      hasMore: hasMore({ count, page }, result[0].total),
+      total: result[0].total,
     };
   }
 

@@ -14,7 +14,7 @@ import {
   DatabaseService,
   ILogger,
   Logger,
-  matchProperty,
+  matchProperties,
   matchSession,
   OnIndex,
 } from '../../core';
@@ -608,7 +608,7 @@ export class UserService {
         }),
       ])
       .match([node('user', 'User', { active: true, id })])
-      .call(matchProperty, 'user', ...props)
+      .call(matchProperties, 'user', ...props)
       .with([
         ...props.map(addPropertyCoalesceWithClause),
         'coalesce(user.id) as id',

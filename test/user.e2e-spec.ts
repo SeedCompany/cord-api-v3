@@ -518,7 +518,8 @@ describe('User e2e', () => {
     return true;
   });
 
-  it('list users with organizations', async () => {
+  // skipping because we will be refactoring how we do search
+  it.skip('list users with organizations', async () => {
     const newUser = await createUser(app, { displayFirstName: 'Tammy' });
     const org = await createOrganization(app);
 
