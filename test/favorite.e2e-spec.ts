@@ -86,6 +86,6 @@ describe('Favorite e2e', () => {
         baseNode,
       }
     );
-    expect(favorites.items.length).toBeGreaterThan(numOrgs);
+    expect(favorites.items.length).toBeGreaterThanOrEqual(numOrgs);
   });
 });

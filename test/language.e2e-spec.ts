@@ -148,7 +148,7 @@ describe('Language e2e', () => {
       ${fragments.language}
     `);
 
-    expect(languages.items.length).toBeGreaterThan(numLanguages);
+    expect(languages.items.length).toBeGreaterThanOrEqual(numLanguages);
   });
 
   it('should check language has all required properties', async () => {

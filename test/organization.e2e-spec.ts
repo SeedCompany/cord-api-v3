@@ -142,7 +142,7 @@ describe('Organization e2e', () => {
   });
 
   // LIST ORGs
-  it.skip('list view of organizations', async () => {
+  it('list view of organizations', async () => {
     // create a bunch of orgs
     const numOrgs = 2;
     await Promise.all(
@@ -163,7 +163,7 @@ describe('Organization e2e', () => {
       }
       ${fragments.org}
     `);
-    expect(organizations.items.length).toBeGreaterThan(numOrgs);
+    expect(organizations.items.length).toBeGreaterThanOrEqual(numOrgs);
     expect(organizations.items[0].name.value).toBeTruthy();
   });
 
