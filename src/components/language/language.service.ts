@@ -8,7 +8,7 @@ import { node, relation } from 'cypher-query-builder';
 import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
-import { ISession, Sensitivity, simpleSwitch } from '../../common';
+import { ISession, Secured, Sensitivity, simpleSwitch } from '../../common';
 import {
   DatabaseService,
   ILogger,
@@ -419,6 +419,7 @@ export class LanguageService {
         'ethnologuePopulation',
         'organizationPopulation',
         'rodNumber',
+        'sensitivity',
       ],
       input: {
         page,
@@ -429,8 +430,16 @@ export class LanguageService {
       },
     });
 
+    const items = result.items.map(
+      (lang): Language => ({
+        ...lang,
+        sensitivity: ((lang.sensitivity as unknown) as Secured<Sensitivity>)
+          .value!,
+      })
+    );
+
     return {
-      items: result.items,
+      items,
       hasMore: result.hasMore,
       total: result.total,
     };
