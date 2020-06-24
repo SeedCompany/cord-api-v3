@@ -525,7 +525,6 @@ export class PartnershipService {
         })
         .run();
 
-      console.log('projectPartners', JSON.stringify(projectPartners, null, 2));
       result.items = await Promise.all(
         projectPartners.map(async (partnership) =>
           this.readOne(partnership.id, session)
