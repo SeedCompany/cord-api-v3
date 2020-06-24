@@ -150,36 +150,17 @@ export function returnWithUnsecurePropertyClauseForList(property: string) {
 }
 
 export function listWithUnsecureObject(props: string[]) {
-  let block = ``;
-  for (let i = 0; i < props.length; i++) {
-    block += returnWithUnsecurePropertyClauseForList(props[i]);
-    if (i + 1 < props.length) {
-      block += ',';
-    }
-  }
-  return block;
+  return props
+    .map((x) => returnWithUnsecurePropertyClauseForList(x))
+    .join(', ');
 }
 
 export function listWithSecureObject(props: string[]) {
-  let block = ``;
-  for (let i = 0; i < props.length; i++) {
-    block += returnWithSecurePropertyClauseForList(props[i]);
-    if (i + 1 < props.length) {
-      block += ',';
-    }
-  }
-  return block;
+  return props.map((x) => returnWithSecurePropertyClauseForList(x)).join(', ');
 }
 
 export function addBaseNodeMetaPropsWithClause(props: string[]) {
-  let block = ``;
-  for (let i = 0; i < props.length; i++) {
-    block += `${props[i]}: node.${props[i]}`;
-    if (i + 1 < props.length) {
-      block += ',';
-    }
-  }
-  return block;
+  return props.map((x) => `${x}: node.${x}`).join(', ');
 }
 
 export function filterQuery(
