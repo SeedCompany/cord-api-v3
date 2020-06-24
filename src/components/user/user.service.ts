@@ -517,8 +517,6 @@ export class UserService {
         node('publicSg'),
         relation('out', '', 'member', { active: true }),
         node('user'),
-        relation('in', '', 'member', { active: true }),
-        node('defaultOrg'),
       ])
       .return('user')
       .first();
