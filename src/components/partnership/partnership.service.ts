@@ -478,23 +478,6 @@ export class PartnershipService {
     } = { items: [], hasMore: false, total: 0 };
 
     if (projectId) {
-      // const query = `
-      // MATCH
-      //   (token:Token {active: true, value: $token})
-      //   <-[:token {active: true}]-
-      //   (requestingUser:User {
-      //     active: true,
-      //     id: $requestingUserId
-      //   }),
-      //   (project:Project {id: $projectId, active: true, owningOrgId: $owningOrgId})
-      //   -[:partnership]->(partnership:Partnership {active:true})
-      // WITH COUNT(partnership) as total, project, partnership
-      //     MATCH (partnership {active: true})-[:agreementStatus {active:true }]->(agreementStatus:Property {active: true})
-      //     RETURN total, partnership.id as id, agreementStatus.value as agreementStatus, partnership.createdAt as createdAt
-      //     ORDER BY ${sort} ${order}
-      //     SKIP $skip LIMIT $count
-      // `;
-
       const query = `
         MATCH 
           (token:Token {active: true, value: $token})
