@@ -478,22 +478,41 @@ export class PartnershipService {
     } = { items: [], hasMore: false, total: 0 };
 
     if (projectId) {
+      // const query = `
+      // MATCH
+      //   (token:Token {active: true, value: $token})
+      //   <-[:token {active: true}]-
+      //   (requestingUser:User {
+      //     active: true,
+      //     id: $requestingUserId
+      //   }),
+      //   (project:Project {id: $projectId, active: true, owningOrgId: $owningOrgId})
+      //   -[:partnership]->(partnership:Partnership {active:true})
+      // WITH COUNT(partnership) as total, project, partnership
+      //     MATCH (partnership {active: true})-[:agreementStatus {active:true }]->(agreementStatus:Property {active: true})
+      //     RETURN total, partnership.id as id, agreementStatus.value as agreementStatus, partnership.createdAt as createdAt
+      //     ORDER BY ${sort} ${order}
+      //     SKIP $skip LIMIT $count
+      // `;
+
       const query = `
-      MATCH
+        MATCH 
         (token:Token {active: true, value: $token})
         <-[:token {active: true}]-
         (requestingUser:User {
-          active: true,
-          id: $requestingUserId
+            active: true,
+            id: $requestingUserId
         }),
         (project:Project {id: $projectId, active: true, owningOrgId: $owningOrgId})
         -[:partnership]->(partnership:Partnership {active:true})
-      WITH COUNT(partnership) as total, project, partnership
-          MATCH (partnership {active: true})-[:agreementStatus {active:true }]->(agreementStatus:Property {active: true})
-          RETURN total, partnership.id as id, agreementStatus.value as agreementStatus, partnership.createdAt as createdAt
-          ORDER BY ${sort} ${order}
-          SKIP $skip LIMIT $count
+        WITH COUNT(partnership) as total, project, partnership
+        OPTIONAL MATCH (requestingUser)<-[:member { active: true }]-(sg:SecurityGroup { active: true })-[:permission { active: true }]->(canEditAgreementStatus:Permission { property: 'agreementStatus', active: true, edit: true })-[:baseNode { active: true }]->(partnership)-[:agreementStatus { active: true }]->(agreementStatus:Property { active: true })
+        OPTIONAL MATCH (requestingUser)<-[:member { active: true }]-(sg:SecurityGroup { active: true })-[:permission { active: true }]->(canReadAgreementStatus:Permission { property: 'agreementStatus', active: true, read: true })-[:baseNode { active: true }]->(partnership)-[:agreementStatus { active: true }]->(agreementStatus:Property { active: true })
+        RETURN total, partnership.id as id, agreementStatus.value as agreementStatus, partnership.createdAt as createdAt
+        ORDER BY ${sort} ${order}
+        SKIP $skip LIMIT $count
       `;
+
       const projectPartners = await this.db
         .query()
         .raw(query, {
@@ -506,6 +525,7 @@ export class PartnershipService {
         })
         .run();
 
+      console.log('projectPartners', JSON.stringify(projectPartners, null, 2));
       result.items = await Promise.all(
         projectPartners.map(async (partnership) =>
           this.readOne(partnership.id, session)
