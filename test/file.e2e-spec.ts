@@ -173,7 +173,7 @@ describe('File e2e', () => {
     // expect(updatedFile.name).not.toEqual(initialFile.name);
   });
 
-  it.skip('update file using directory with same file name', async () => {
+  it('update file using directory with same file name', async () => {
     const initial = await uploadFile(app, root.id);
     shiftNow({ days: 2 });
 
