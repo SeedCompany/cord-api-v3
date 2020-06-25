@@ -191,6 +191,7 @@ describe('Partnership e2e', () => {
 
     expect(partnerships.items.length).toBeGreaterThanOrEqual(numPartnerships);
   });
+
   it('List view of partnerships by projectId', async () => {
     // create 2 partnerships
     const numPartnerships = 2;
@@ -246,6 +247,47 @@ describe('Partnership e2e', () => {
       {
         id: partnership.id,
       }
+    );
+  });
+
+  it('create partnership does not create if organizationId is invalid', async () => {
+    const fakeOrgId = 'seedcompanyId';
+
+    const partnership = await createPartnership(app, {
+      organizationId: fakeOrgId,
+    });
+    // await expectNotFound(
+    //   app.graphql.query(
+    //     gql`
+    //       query partnership($id: ID!) {
+    //         partnership(id: $id) {
+    //           ...partnership
+    //         }
+    //       }
+    //       ${fragments.partnership}
+    //     `,
+    //     {
+    //       id: partnership.id,
+    //     }
+    //   )
+    // );
+
+    await expectNotFound(
+      app.graphql.query(
+        gql`
+          query partnership($id: ID!) {
+            partnership(id: $id) {
+              organization {
+                id
+              }
+            }
+          }
+          ${fragments.partnership}
+        `,
+        {
+          id: partnership.id,
+        }
+      )
     );
   });
 });
