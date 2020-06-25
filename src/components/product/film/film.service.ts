@@ -10,6 +10,7 @@ import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../../common';
 import {
+  ConfigService,
   DatabaseService,
   ILogger,
   Logger,
@@ -30,6 +31,7 @@ export class FilmService {
   constructor(
     @Logger('film:service') private readonly logger: ILogger,
     private readonly db: DatabaseService,
+    private readonly config: ConfigService,
     private readonly rangeService: RangeService
   ) {}
 
@@ -153,7 +155,12 @@ export class FilmService {
       const query = this.db
         .query()
         .match(matchSession(session, { withAclEdit: 'canCreateFilm' }))
-        .match([node('rootuser', 'User', { active: true, id: 'rootadminid' })])
+        .match([
+          node('rootuser', 'User', {
+            active: true,
+            id: this.config.rootAdmin.id,
+          }),
+        ])
         .create([
           [
             node('newFilm', 'Film:BaseNode', {

@@ -8,7 +8,13 @@ import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
-import { DatabaseService, ILogger, Logger, matchSession } from '../../core';
+import {
+  ConfigService,
+  DatabaseService,
+  ILogger,
+  Logger,
+  matchSession,
+} from '../../core';
 import { FileService } from '../file';
 import {
   CreatePartnership,
@@ -23,6 +29,7 @@ export class PartnershipService {
   constructor(
     private readonly files: FileService,
     private readonly db: DatabaseService,
+    private readonly config: ConfigService,
     @Logger('partnership:service') private readonly logger: ILogger
   ) {}
 
@@ -150,7 +157,12 @@ export class PartnershipService {
       const createPartnership = this.db
         .query()
         .match(matchSession(session, { withAclEdit: 'canCreatePartnership' }))
-        .match([node('rootuser', 'User', { active: true, id: 'rootadminid' })])
+        .match([
+          node('rootuser', 'User', {
+            active: true,
+            id: this.config.rootAdmin.id,
+          }),
+        ])
         .create([
           [
             node('newPartnership', 'Partnership', {

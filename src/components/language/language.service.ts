@@ -10,6 +10,7 @@ import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession, Secured, Sensitivity, simpleSwitch } from '../../common';
 import {
+  ConfigService,
   DatabaseService,
   ILogger,
   Logger,
@@ -29,6 +30,7 @@ import {
 export class LanguageService {
   constructor(
     private readonly db: DatabaseService,
+    private readonly config: ConfigService,
     @Logger('language:service') private readonly logger: ILogger
   ) {}
 
@@ -177,7 +179,12 @@ export class LanguageService {
       const createLanguage = this.db
         .query()
         .match(matchSession(session, { withAclEdit: 'canCreateLanguage' }))
-        .match([node('rootuser', 'User', { active: true, id: 'rootadminid' })])
+        .match([
+          node('rootuser', 'User', {
+            active: true,
+            id: this.config.rootAdmin.id,
+          }),
+        ])
         .create([
           [
             node('newLang', 'Language', {

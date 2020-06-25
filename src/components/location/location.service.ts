@@ -11,6 +11,7 @@ import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
 import {
+  ConfigService,
   DatabaseService,
   ILogger,
   Logger,
@@ -37,6 +38,7 @@ import {
 export class LocationService {
   constructor(
     @Logger('location:service') private readonly logger: ILogger,
+    private readonly config: ConfigService,
     private readonly db: DatabaseService,
     private readonly userService: UserService
   ) {}
@@ -399,7 +401,12 @@ export class LocationService {
       const createZone = this.db
         .query()
         .match(matchSession(session, { withAclEdit: 'canCreateZone' }))
-        .match([node('rootuser', 'User', { active: true, id: 'rootadminid' })])
+        .match([
+          node('rootuser', 'User', {
+            active: true,
+            id: this.config.rootAdmin.id,
+          }),
+        ])
         .create([
           [
             node('newZone', 'Zone', {
@@ -673,7 +680,12 @@ export class LocationService {
       const createRegion = this.db
         .query()
         .match(matchSession(session, { withAclEdit: 'canCreateRegion' }))
-        .match([node('rootuser', 'User', { active: true, id: 'rootadminid' })])
+        .match([
+          node('rootuser', 'User', {
+            active: true,
+            id: this.config.rootAdmin.id,
+          }),
+        ])
         .create([
           [
             node('newRegion', 'Region', {
@@ -928,7 +940,12 @@ export class LocationService {
       const createCountry = this.db
         .query()
         .match(matchSession(session, { withAclEdit: 'canCreateCountry' }))
-        .match([node('rootuser', 'User', { active: true, id: 'rootadminid' })])
+        .match([
+          node('rootuser', 'User', {
+            active: true,
+            id: this.config.rootAdmin.id,
+          }),
+        ])
         .create([
           [
             node('newCountry', 'Country', {

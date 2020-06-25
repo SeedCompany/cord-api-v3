@@ -94,24 +94,26 @@ export class OrganizationService {
         })
       )
       .create([
-        node('orgSg', ['OrgPublicSecurityGroup', 'SecurityGroup'], {
-          active: true,
-          id: orgSgId,
-          createdAt,
-        }),
-        relation('out', '', 'organization'),
-        node('org', ['Organization', 'BaseNode'], {
-          active: true,
-          id,
-          createdAt,
-          owningOrgId: session.owningOrgId,
-        }),
-        relation('out', '', 'name', { active: true, createdAt }),
-        node('name', ['Property', 'OrgName'], {
-          active: true,
-          createdAt,
-          value: input.name,
-        }),
+        [
+          node('orgSg', ['OrgPublicSecurityGroup', 'SecurityGroup'], {
+            active: true,
+            id: orgSgId,
+            createdAt,
+          }),
+          relation('out', '', 'organization'),
+          node('org', ['Organization', 'BaseNode'], {
+            active: true,
+            id,
+            createdAt,
+            owningOrgId: session.owningOrgId,
+          }),
+          relation('out', '', 'name', { active: true, createdAt }),
+          node('name', ['Property', 'OrgName'], {
+            active: true,
+            createdAt,
+            value: input.name,
+          }),
+        ],
       ])
       .with('*')
       .create([
@@ -127,6 +129,15 @@ export class OrganizationService {
         relation('out', '', 'baseNode', { active: true }),
         node('org'),
       ])
+      // .with('*')
+      // .create([
+      //   node('orgSg'),
+      //   relation('out', '', 'member', { active: true, createdAt }),
+      //   node('rootuser', 'User', {
+      //     active: true,
+      //     id: this.config.rootAdmin.id,
+      //   }),
+      // ])
       .return('org')
       .first();
 

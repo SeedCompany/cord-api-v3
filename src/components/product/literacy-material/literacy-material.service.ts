@@ -10,6 +10,7 @@ import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../../common';
 import {
+  ConfigService,
   DatabaseService,
   ILogger,
   Logger,
@@ -30,6 +31,7 @@ export class LiteracyMaterialService {
   constructor(
     @Logger('literacyMaterial:service') private readonly logger: ILogger,
     private readonly db: DatabaseService,
+    private readonly config: ConfigService,
     private readonly rangeService: RangeService
   ) {}
 
@@ -152,7 +154,12 @@ export class LiteracyMaterialService {
         .match(
           matchSession(session, { withAclEdit: 'canCreateLiteracyMaterial' })
         )
-        .match([node('rootuser', 'User', { active: true, id: 'rootadminid' })])
+        .match([
+          node('rootuser', 'User', {
+            active: true,
+            id: this.config.rootAdmin.id,
+          }),
+        ])
         .create([
           [
             node('newLiteracyMaterial', 'LiteracyMaterial:BaseNode', {

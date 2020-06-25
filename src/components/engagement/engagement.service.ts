@@ -8,7 +8,13 @@ import { first, intersection, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
-import { DatabaseService, ILogger, Logger, matchSession } from '../../core';
+import {
+  ConfigService,
+  DatabaseService,
+  ILogger,
+  Logger,
+  matchSession,
+} from '../../core';
 import { CeremonyService } from '../ceremony';
 import { CeremonyType } from '../ceremony/dto/type.enum';
 import { LanguageService } from '../language';
@@ -40,6 +46,7 @@ export class EngagementService {
     private readonly userService: UserService,
     private readonly languageService: LanguageService,
     private readonly locationService: LocationService,
+    private readonly config: ConfigService,
     @Logger(`engagement.service`) private readonly logger: ILogger
   ) {}
   async readOne(id: string, session: ISession): Promise<Engagement> {
@@ -525,7 +532,12 @@ export class EngagementService {
     const createLE = this.db
       .query()
       .match(matchSession(session, { withAclEdit: 'canCreateEngagement' }))
-      .match([node('rootuser', 'User', { active: true, id: 'rootadminid' })])
+      .match([
+        node('rootuser', 'User', {
+          active: true,
+          id: this.config.rootAdmin.id,
+        }),
+      ])
       .create([
         [
           node('languageEngagement', 'LanguageEngagement:BaseNode', {
@@ -675,7 +687,12 @@ export class EngagementService {
     const createIE = this.db
       .query()
       .match(matchSession(session, { withAclEdit: 'canCreateEngagement' }))
-      .match([node('rootuser', 'User', { active: true, id: 'rootadminid' })])
+      .match([
+        node('rootuser', 'User', {
+          active: true,
+          id: this.config.rootAdmin.id,
+        }),
+      ])
       .create([
         [
           node('internshipEngagement', 'InternshipEngagement:BaseNode', {

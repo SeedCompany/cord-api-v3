@@ -1343,7 +1343,12 @@ export class DatabaseService {
       const query = this.db
         .query()
         .match(matchSession(session, { withAclEdit: aclEditPropName }))
-        .match([node('rootuser', 'User', { active: true, id: 'rootadminid' })])
+        .match([
+          node('rootuser', 'User', {
+            active: true,
+            id: this.config.rootAdmin.id,
+          }),
+        ])
         .create([
           [
             node('newNode', baseNode, {

@@ -10,6 +10,7 @@ import { generate } from 'shortid';
 import { fiscalYears, ISession, Sensitivity } from '../../common';
 import {
   addBaseNodeMetaPropsWithClause,
+  ConfigService,
   DatabaseService,
   ILogger,
   listWithSecureObject,
@@ -61,6 +62,7 @@ export class ProjectService {
     private readonly partnerships: PartnershipService,
     private readonly fileService: FileService,
     private readonly engagementService: EngagementService,
+    private readonly config: ConfigService,
     @Logger('project:service') private readonly logger: ILogger
   ) {}
 
@@ -603,7 +605,12 @@ export class ProjectService {
       const createProject = this.db
         .query()
         .match(matchSession(session, { withAclEdit: 'canCreateProject' }))
-        .match([node('rootuser', 'User', { active: true, id: 'rootadminid' })])
+        .match([
+          node('rootuser', 'User', {
+            active: true,
+            id: this.config.rootAdmin.id,
+          }),
+        ])
         .create([
           [
             node('newProject', 'Project:BaseNode', {

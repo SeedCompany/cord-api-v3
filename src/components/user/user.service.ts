@@ -389,7 +389,34 @@ export class UserService {
       ];
     };
 
-    const query = this.db.query().create([
+    const rootUserAccess = () => {
+      if (!session) {
+        return [];
+      }
+      return [
+        [
+          node('adminSG'),
+          relation('out', '', 'member', { active: true, createdAt }),
+          node('rootuser'),
+        ],
+        [
+          node('readerSG'),
+          relation('out', '', 'member', { active: true, createdAt }),
+          node('rootuser'),
+        ],
+      ];
+    };
+
+    const query = this.db.query();
+    if (session) {
+      query.match([
+        node('rootuser', 'User', {
+          active: true,
+          id: this.config.rootAdmin.id,
+        }),
+      ]);
+    }
+    query.create([
       [
         node('user', 'User', {
           id,
@@ -481,6 +508,7 @@ export class UserService {
           name: `${input.realFirstName} ${input.realLastName} users`,
         }),
       ],
+      ...rootUserAccess(),
       ...permission('realFirstName'),
       ...permission('realLastName'),
       ...permission('displayFirstName'),
@@ -553,7 +581,12 @@ export class UserService {
       const assignSG = this.db
         .query()
         .match([node('requestingUser', 'User', { id: session.userId })])
-        .match([node('rootuser', 'User', { active: true, id: 'rootadminid' })]);
+        .match([
+          node('rootuser', 'User', {
+            active: true,
+            id: this.config.rootAdmin.id,
+          }),
+        ]);
       assignSG
         .create([
           [
