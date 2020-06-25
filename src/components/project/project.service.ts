@@ -1,4 +1,6 @@
 import {
+  forwardRef,
+  Inject,
   Injectable,
   NotFoundException,
   InternalServerErrorException as ServerException,
@@ -57,7 +59,9 @@ export class ProjectService {
     private readonly db: DatabaseService,
     private readonly projectMembers: ProjectMemberService,
     private readonly locationService: LocationService,
+    @Inject(forwardRef(() => BudgetService))
     private readonly budgets: BudgetService,
+    @Inject(forwardRef(() => PartnershipService))
     private readonly partnerships: PartnershipService,
     private readonly fileService: FileService,
     private readonly engagementService: EngagementService,

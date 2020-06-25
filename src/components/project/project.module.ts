@@ -1,24 +1,23 @@
-import { Module } from '@nestjs/common';
-import { BudgetModule } from '../budget';
-import { EngagementModule } from '../engagement';
-import { FileModule } from '../file';
-import { LocationModule } from '../location';
-import { OrganizationService } from '../organization';
-import { PartnershipModule } from '../partnership';
-import { UserModule } from '../user';
+import { forwardRef, Module } from '@nestjs/common';
+import { BudgetModule } from '../budget/budget.module';
+import { EngagementModule } from '../engagement/engagement.module';
+import { FileModule } from '../file/file.module';
+import { LocationModule } from '../location/location.module';
+import { PartnershipModule } from '../partnership/partnership.module';
+import { UserModule } from '../user/user.module';
 import {
   InternshipProjectResolver,
   TranslationProjectResolver,
 } from './project-lazy-fields.resolver';
-import { ProjectMemberModule } from './project-member';
+import { ProjectMemberModule } from './project-member/project-member.module';
 import { ProjectResolver } from './project.resolver';
 import { ProjectService } from './project.service';
 
 @Module({
   imports: [
     ProjectMemberModule,
-    BudgetModule,
-    PartnershipModule,
+    forwardRef(() => BudgetModule),
+    forwardRef(() => PartnershipModule),
     UserModule,
     LocationModule,
     FileModule,
@@ -28,7 +27,6 @@ import { ProjectService } from './project.service';
     ProjectResolver,
     TranslationProjectResolver,
     InternshipProjectResolver,
-    OrganizationService,
     ProjectService,
   ],
   exports: [ProjectService, ProjectMemberModule],

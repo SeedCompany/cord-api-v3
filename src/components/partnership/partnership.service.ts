@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   InternalServerErrorException as ServerException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { upperFirst } from 'lodash';
@@ -10,6 +11,8 @@ import { generate } from 'shortid';
 import { ISession } from '../../common';
 import { DatabaseService, ILogger, Logger, matchSession } from '../../core';
 import { FileService } from '../file';
+import { OrganizationService } from '../organization';
+import { ProjectService } from '../project/project.service';
 import {
   CreatePartnership,
   Partnership,
@@ -23,6 +26,8 @@ export class PartnershipService {
   constructor(
     private readonly files: FileService,
     private readonly db: DatabaseService,
+    private readonly orgService: OrganizationService,
+    private readonly projectService: ProjectService,
     @Logger('partnership:service') private readonly logger: ILogger
   ) {}
 
@@ -138,6 +143,14 @@ export class PartnershipService {
   ): Promise<Partnership> {
     const id = generate();
     const createdAt = DateTime.local();
+
+    if (!(await this.orgService.readOne(organizationId, session))) {
+      throw new UnauthorizedException('organization does not exist');
+    }
+
+    if (!(await this.projectService.readOne(projectId, session))) {
+      throw new UnauthorizedException('project does not exist');
+    }
 
     try {
       const mou = await this.files.createDefinedFile(`MOU`, session, input.mou);
