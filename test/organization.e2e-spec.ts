@@ -139,32 +139,6 @@ describe('Organization e2e', () => {
     expect(actual).toBeTruthy();
   });
 
-  // LIST ORGs
-  it('list view of organizations', async () => {
-    // create a bunch of orgs
-    const numOrgs = 2;
-    await Promise.all(
-      times(numOrgs).map(() =>
-        createOrganization(app, { name: generate() + ' Inc' })
-      )
-    );
-
-    const { organizations } = await app.graphql.query(gql`
-      query {
-        organizations(input: { filter: { name: "Inc" } }) {
-          items {
-            ...org
-          }
-          hasMore
-          total
-        }
-      }
-      ${fragments.org}
-    `);
-    expect(organizations.items.length).toBeGreaterThan(numOrgs);
-    expect(organizations.items[0].name.value).toBeTruthy();
-  });
-
   it.skip('Check consistency across organization nodes', async () => {
     // create an organization
     const organization = await createOrganization(app);
@@ -188,7 +162,7 @@ describe('Organization e2e', () => {
     );
   });
 
-  it.skip('shows canEdit true when it can be edited', async () => {
+  it('shows canEdit true when it can be edited', async () => {
     // create an org
     const org = await createOrganization(app);
 
@@ -207,5 +181,66 @@ describe('Organization e2e', () => {
     );
 
     expect(actual.name.canEdit).toBe(true);
+  });
+
+  // LIST ORGs
+  it.only('can filter on organization name', async () => {
+    const name = faker.company.companyName();
+    const org = await createOrganization(app, { name });
+
+    const { organizations: actual } = await app.graphql.query(
+      gql`
+        query org($name: String!) {
+          organizations(input: { filter: { name: $name } }) {
+            items {
+              ...org
+            }
+          }
+        }
+        ${fragments.org}
+      `,
+      {
+        name,
+      }
+    );
+
+    expect(actual.items[0].name.value).toBe(name);
+  });
+
+  it.only('list view of organizations filters on partial name', async () => {
+    // create a bunch of orgs
+    const numOrgs = 2;
+    await Promise.all(
+      times(numOrgs).map(() =>
+        createOrganization(app, { name: generate() + ' Inc' })
+      )
+    );
+
+    const { organizations } = await app.graphql.query(gql`
+      query {
+        organizations(input: { filter: { name: "Inc" } }) {
+          items {
+            ...org
+          }
+          hasMore
+          total
+        }
+      }
+      ${fragments.org}
+    `);
+
+    const orgNames = organizations.items.map(
+      (r: {
+        id: string;
+        name: {
+          value: string;
+          canRead: boolean;
+          canEdit: boolean;
+        };
+        createdAt: string;
+      }) => r.name.value
+    );
+    console.log('orgNames :>> ', orgNames);
+    expect(organizations.items.length).toBeGreaterThanOrEqual(numOrgs);
   });
 });
