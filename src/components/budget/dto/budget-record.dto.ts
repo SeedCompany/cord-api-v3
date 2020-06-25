@@ -1,6 +1,11 @@
 import { Type } from '@nestjs/common';
 import { Field, ObjectType } from '@nestjs/graphql';
-import { Resource, SecuredInt, SecuredString } from '../../../common';
+import {
+  Resource,
+  SecuredFloat,
+  SecuredInt,
+  SecuredString,
+} from '../../../common';
 
 @ObjectType({
   implements: [Resource],
@@ -14,5 +19,5 @@ export class BudgetRecord extends Resource {
   readonly fiscalYear: SecuredInt;
 
   @Field()
-  readonly amount: SecuredInt;
+  readonly amount: SecuredFloat;
 }
