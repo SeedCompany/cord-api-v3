@@ -93,6 +93,12 @@ export class OrganizationService {
           active: true,
         })
       )
+      .match(
+        node('rootuser', 'User', {
+          active: true,
+          id: this.config.rootAdmin.id,
+        })
+      )
       .create([
         [
           node('orgSg', ['OrgPublicSecurityGroup', 'SecurityGroup'], {
@@ -129,15 +135,12 @@ export class OrganizationService {
         relation('out', '', 'baseNode', { active: true }),
         node('org'),
       ])
-      // .with('*')
-      // .create([
-      //   node('orgSg'),
-      //   relation('out', '', 'member', { active: true, createdAt }),
-      //   node('rootuser', 'User', {
-      //     active: true,
-      //     id: this.config.rootAdmin.id,
-      //   }),
-      // ])
+      .with('*')
+      .create([
+        node('orgSg'),
+        relation('out', '', 'member', { active: true, createdAt }),
+        node('rootuser'),
+      ])
       .return('org')
       .first();
 
