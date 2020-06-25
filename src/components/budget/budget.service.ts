@@ -321,7 +321,6 @@ export class BudgetService {
         (project:Project {id: $projectId, active: true, owningOrgId: $owningOrgId})
         -[:budget]->(budget:Budget {active:true})
       WITH COUNT(budget) as total, project, budget
-          MATCH (budget {active: true})-[:status {active:true }]->(status:Property {active: true})
           OPTIONAL MATCH (requestingUser)<-[:member { active: true }]-(sg:SecurityGroup { active: true })-[:permission { active: true }]
           ->(canEditStatus:Permission { property: 'status', active: true, edit: true })
           -[:baseNode { active: true }]->(budget)-[:status { active: true }]->(status:Property { active: true })
