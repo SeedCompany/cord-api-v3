@@ -399,6 +399,7 @@ export class LocationService {
       const createZone = this.db
         .query()
         .match(matchSession(session, { withAclEdit: 'canCreateZone' }))
+        .match([node('rootuser', 'User', { active: true, id: 'rootadminid' })])
         .create([
           [
             node('newZone', 'Zone', {
@@ -426,6 +427,16 @@ export class LocationService {
             }),
             relation('out', '', 'member', { active: true, createdAt }),
             node('requestingUser'),
+          ],
+          [
+            node('adminSG'),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('rootuser'),
+          ],
+          [
+            node('readerSG'),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('rootuser'),
           ],
           ...this.permission('name', 'newZone'),
           ...this.permission('director', 'newZone'),
@@ -662,6 +673,7 @@ export class LocationService {
       const createRegion = this.db
         .query()
         .match(matchSession(session, { withAclEdit: 'canCreateRegion' }))
+        .match([node('rootuser', 'User', { active: true, id: 'rootadminid' })])
         .create([
           [
             node('newRegion', 'Region', {
@@ -689,6 +701,16 @@ export class LocationService {
             }),
             relation('out', '', 'member', { active: true, createdAt }),
             node('requestingUser'),
+          ],
+          [
+            node('adminSG'),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('rootuser'),
+          ],
+          [
+            node('readerSG'),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('rootuser'),
           ],
           ...this.permission('name', 'newRegion'),
           ...this.permission('director', 'newRegion'),
@@ -906,6 +928,7 @@ export class LocationService {
       const createCountry = this.db
         .query()
         .match(matchSession(session, { withAclEdit: 'canCreateCountry' }))
+        .match([node('rootuser', 'User', { active: true, id: 'rootadminid' })])
         .create([
           [
             node('newCountry', 'Country', {
@@ -933,6 +956,16 @@ export class LocationService {
             }),
             relation('out', '', 'member', { active: true, createdAt }),
             node('requestingUser'),
+          ],
+          [
+            node('adminSG'),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('rootuser'),
+          ],
+          [
+            node('readerSG'),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('rootuser'),
           ],
           ...this.permission('name', 'newCountry'),
           ...this.permission('region', 'newCountry'),

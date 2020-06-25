@@ -177,6 +177,7 @@ export class LanguageService {
       const createLanguage = this.db
         .query()
         .match(matchSession(session, { withAclEdit: 'canCreateLanguage' }))
+        .match([node('rootuser', 'User', { active: true, id: 'rootadminid' })])
         .create([
           [
             node('newLang', 'Language', {
@@ -214,6 +215,16 @@ export class LanguageService {
             }),
             relation('out', '', 'member', { active: true, createdAt }),
             node('requestingUser'),
+          ],
+          [
+            node('adminSG'),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('rootuser'),
+          ],
+          [
+            node('readerSG'),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('rootuser'),
           ],
           ...this.permission('name'),
           ...this.permission('displayName'),

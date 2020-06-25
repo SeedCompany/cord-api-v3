@@ -206,6 +206,7 @@ export class CeremonyService {
       await this.db
         .query()
         .match(matchSession(session, { withAclEdit: 'canCreateCeremony' }))
+        .match([node('rootuser', 'User', { active: true, id: 'rootadminid' })])
         .create([
           [
             node('newCeremony', 'Ceremony:BaseNode', {
@@ -233,6 +234,16 @@ export class CeremonyService {
             }),
             relation('out', '', 'member', { active: true, createdAt }),
             node('requestingUser'),
+          ],
+          [
+            node('adminSG'),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('rootuser'),
+          ],
+          [
+            node('readerSG'),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('rootuser'),
           ],
           ...this.permission('type'),
           ...this.permission('planned'),

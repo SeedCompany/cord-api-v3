@@ -603,6 +603,7 @@ export class ProjectService {
       const createProject = this.db
         .query()
         .match(matchSession(session, { withAclEdit: 'canCreateProject' }))
+        .match([node('rootuser', 'User', { active: true, id: 'rootadminid' })])
         .create([
           [
             node('newProject', 'Project:BaseNode', {
@@ -642,6 +643,16 @@ export class ProjectService {
             }),
             relation('out', '', 'member', { active: true, createdAt }),
             node('requestingUser'),
+          ],
+          [
+            node('adminSG'),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('rootuser'),
+          ],
+          [
+            node('readerSG'),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('rootuser'),
           ],
           // ...this.permission('type'),
           ...this.permission('sensitivity'),

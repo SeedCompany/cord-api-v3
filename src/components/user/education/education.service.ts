@@ -148,6 +148,7 @@ export class EducationService {
       const createEducation = this.db
         .query()
         .match(matchSession(session, { withAclEdit: 'canCreateEducation' }))
+        .match([node('rootuser', 'User', { active: true, id: 'rootadminid' })])
         .create([
           [
             node('newEducation', 'Education:BaseNode', {
@@ -177,6 +178,16 @@ export class EducationService {
             }),
             relation('out', '', 'member', { active: true, createdAt }),
             node('requestingUser'),
+          ],
+          [
+            node('adminSG'),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('rootuser'),
+          ],
+          [
+            node('readerSG'),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('rootuser'),
           ],
           ...this.permission('degree'),
           ...this.permission('major'),
