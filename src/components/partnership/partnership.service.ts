@@ -4,7 +4,7 @@ import {
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
-import { upperFirst } from 'lodash';
+import { flatMap, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { fiscalYears, ISession } from '../../common';
@@ -15,7 +15,7 @@ import {
   Logger,
   matchSession,
 } from '../../core';
-//import { BudgetService } from '../budget';
+import { BudgetService } from '../budget';
 import { FileService } from '../file';
 import {
   CreatePartnership,
@@ -31,7 +31,7 @@ export class PartnershipService {
     private readonly files: FileService,
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
-    //private readonly budgetService: BudgetService,
+    private readonly budgetService: BudgetService,
     @Logger('partnership:service') private readonly logger: ILogger
   ) {}
 
@@ -245,19 +245,27 @@ export class PartnershipService {
         })
         .first();
 
-      const fiscalRange = fiscalYears(input.mouStart, input.mouEnd);
-      console.log('fiscalRange', JSON.stringify(fiscalRange, null, 2));
-
       const partner = await this.readOne(id, session);
-      // console.log('partner', JSON.stringify(partner, null, 2));
-
-      //const budget = await this.budgetService.create({ projectId }, session);
-      // console.log('budget', JSON.stringify(budget, null, 2));
+      const budget = await this.budgetService.create({ projectId }, session);
+      //console.log('budget', JSON.stringify(budget, null, 2));
 
       //{ budgetId, organizationId, ...input }: CreateBudgetRecord,
-      //console.log('budget', budget.id, input.mouStart, input.mouEnd);
+      //const recordInput: CreateBudgetRecord = { budgetId, organizationId, ...input }:
 
-      //const budgetDetails = await this.budgetService.createRecord({ budgetId, organizationId, input.mouStart, input.mouStart }, session);
+      const fiscalRange = fiscalYears(input.mouStart, input.mouEnd);
+      //console.log('fiscalRange', JSON.stringify(fiscalRange, null, 2));
+
+      const inputRecords = flatMap(fiscalRange, (fiscalYear) => ({
+        budgetId: budget.id,
+        organizationId,
+        fiscalYear,
+      }));
+
+      await Promise.all(
+        inputRecords.map((record) =>
+          this.budgetService.createRecord(record, session)
+        )
+      );
 
       return partner; //return await this.readOne(id, session);
     } catch (e) {
