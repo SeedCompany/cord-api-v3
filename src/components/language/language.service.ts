@@ -355,7 +355,7 @@ export class LanguageService {
         canRead: !!result.canReadRodNumberRead,
         canEdit: !!result.canReadRodNumberEdit,
       },
-      sensitivity: result.sensitivity,
+      sensitivity: result.sensitivity || Sensitivity.Low,
     };
 
     return language;
