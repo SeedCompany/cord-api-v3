@@ -191,6 +191,7 @@ describe('Partnership e2e', () => {
 
     expect(partnerships.items.length).toBeGreaterThanOrEqual(numPartnerships);
   });
+
   it('List view of partnerships by projectId', async () => {
     // create 2 partnerships
     const numPartnerships = 2;

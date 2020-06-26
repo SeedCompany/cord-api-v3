@@ -16,7 +16,6 @@ import {
   Logger,
   matchSession,
 } from '../../core';
-import { PartnershipService } from '../partnership';
 import {
   Budget,
   BudgetListInput,
@@ -36,7 +35,6 @@ export class BudgetService {
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
-    private readonly partnershipService: PartnershipService,
     @Logger('budget:service') private readonly logger: ILogger
   ) {}
 
@@ -153,7 +151,7 @@ export class BudgetService {
 
     const id = generate();
     const createdAt = DateTime.local();
-    const status = BudgetStatus.Current;
+    const status = BudgetStatus.Pending;
 
     try {
       const createBudget = this.db

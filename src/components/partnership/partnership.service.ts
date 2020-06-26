@@ -22,6 +22,7 @@ import {
   Partnership,
   PartnershipListInput,
   PartnershipListOutput,
+  PartnershipType,
   UpdatePartnership,
 } from './dto';
 
@@ -245,29 +246,26 @@ export class PartnershipService {
         })
         .first();
 
-      const partner = await this.readOne(id, session);
-      const budget = await this.budgetService.create({ projectId }, session);
-      //console.log('budget', JSON.stringify(budget, null, 2));
-
-      //{ budgetId, organizationId, ...input }: CreateBudgetRecord,
-      //const recordInput: CreateBudgetRecord = { budgetId, organizationId, ...input }:
-
       const fiscalRange = fiscalYears(input.mouStart, input.mouEnd);
-      //console.log('fiscalRange', JSON.stringify(fiscalRange, null, 2));
+      if (
+        input.types?.includes(PartnershipType.Funding) &&
+        fiscalRange.length > 0
+      ) {
+        const budget = await this.budgetService.create({ projectId }, session);
 
-      const inputRecords = flatMap(fiscalRange, (fiscalYear) => ({
-        budgetId: budget.id,
-        organizationId,
-        fiscalYear,
-      }));
+        const inputRecords = flatMap(fiscalRange, (fiscalYear) => ({
+          budgetId: budget.id,
+          organizationId,
+          fiscalYear,
+        }));
 
-      await Promise.all(
-        inputRecords.map((record) =>
-          this.budgetService.createRecord(record, session)
-        )
-      );
-
-      return partner; //return await this.readOne(id, session);
+        await Promise.all(
+          inputRecords.map((record) =>
+            this.budgetService.createRecord(record, session)
+          )
+        );
+      }
+      return await this.readOne(id, session);
     } catch (e) {
       this.logger.warning('Failed to create partnership', {
         exception: e,

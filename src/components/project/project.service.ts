@@ -435,7 +435,6 @@ export class ProjectService {
       },
       session
     );
-    //console.log('budgets', JSON.stringify(budgets, null, 2));
 
     const current = budgets.items.find(
       (b) => b.status === BudgetStatus.Current
