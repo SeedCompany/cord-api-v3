@@ -451,7 +451,7 @@ describe('Project e2e', () => {
     expect(queryProject.project.team.total).toBe(numProjectMembers + 1);
   });
 
-  it('List view of partnerships by projectId', async () => {
+  it.skip('List view of partnerships by projectId', async () => {
     //create 2 partnerships in a project
     const numPartnerships = 2;
     const type = ProjectType.Translation;

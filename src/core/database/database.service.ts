@@ -1327,12 +1327,28 @@ export class DatabaseService {
               relation('out', '', 'member', { active: true, createdAt }),
               node('requestingUser'),
             ],
+            [
+              node('adminSG'),
+              relation('out', '', 'member', { active: true, createdAt }),
+              node('rootuser'),
+            ],
+            [
+              node('readerSG'),
+              relation('out', '', 'member', { active: true, createdAt }),
+              node('rootuser'),
+            ],
             ...permissions,
           ];
 
       const query = this.db
         .query()
         .match(matchSession(session, { withAclEdit: aclEditPropName }))
+        .match([
+          node('rootuser', 'User', {
+            active: true,
+            id: this.config.rootAdmin.id,
+          }),
+        ])
         .create([
           [
             node('newNode', baseNode, {

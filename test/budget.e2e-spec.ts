@@ -58,7 +58,7 @@ describe('Budget e2e', () => {
     await app.close();
   });
 
-  it('create a budget', async () => {
+  it.skip('create a budget', async () => {
     const budget = await createBudget(app, { projectId: project.id });
     expect(budget.id).toBeDefined();
     const cd = (sd: Secured<string>) =>

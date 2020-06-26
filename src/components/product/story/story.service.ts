@@ -10,6 +10,7 @@ import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../../common';
 import {
+  ConfigService,
   DatabaseService,
   ILogger,
   Logger,
@@ -30,6 +31,7 @@ export class StoryService {
   constructor(
     @Logger('story:service') private readonly logger: ILogger,
     private readonly db: DatabaseService,
+    private readonly config: ConfigService,
     private readonly rangeService: RangeService
   ) {}
 
@@ -146,6 +148,12 @@ export class StoryService {
       const query = this.db
         .query()
         .match(matchSession(session, { withAclEdit: 'canCreateStory' }))
+        .match([
+          node('rootuser', 'User', {
+            active: true,
+            id: this.config.rootAdmin.id,
+          }),
+        ])
         .create([
           [
             node('newStory', 'Story:BaseNode', {
@@ -173,6 +181,16 @@ export class StoryService {
             }),
             relation('out', '', 'member', { active: true, createdAt }),
             node('requestingUser'),
+          ],
+          [
+            node('adminSG'),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('rootuser'),
+          ],
+          [
+            node('readerSG'),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('rootuser'),
           ],
           ...this.permission('name', 'newStory'),
           ...this.permission('range', 'newStory'),

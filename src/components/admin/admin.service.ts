@@ -318,6 +318,12 @@ export class AdminService implements OnApplicationBootstrap {
               id: this.config.publicSecurityGroup.id,
             })
           )
+          .match(
+            node('rootuser', 'User', {
+              active: true,
+              id: this.config.rootAdmin.id,
+            })
+          )
           .create([
             node('orgSg', ['OrgPublicSecurityGroup', 'SecurityGroup'], {
               active: true,
@@ -350,6 +356,12 @@ export class AdminService implements OnApplicationBootstrap {
             }),
             relation('out', '', 'baseNode', { active: true }),
             node('org'),
+          ])
+          .with('*')
+          .create([
+            node('orgSg'),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('rootuser'),
           ])
           .return('org.id as id')
           .first();

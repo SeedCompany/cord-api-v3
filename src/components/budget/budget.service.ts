@@ -9,7 +9,13 @@ import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession, Order } from '../../common';
-import { DatabaseService, ILogger, Logger, matchSession } from '../../core';
+import {
+  ConfigService,
+  DatabaseService,
+  ILogger,
+  Logger,
+  matchSession,
+} from '../../core';
 import { PartnershipService } from '../partnership';
 import {
   Budget,
@@ -29,6 +35,7 @@ import {
 export class BudgetService {
   constructor(
     private readonly db: DatabaseService,
+    private readonly config: ConfigService,
     private readonly partnershipService: PartnershipService,
     @Logger('budget:service') private readonly logger: ILogger
   ) {}
@@ -152,6 +159,12 @@ export class BudgetService {
       const createBudget = this.db
         .query()
         .match(matchSession(session, { withAclEdit: 'canCreateBudget' }))
+        .match([
+          node('rootuser', 'User', {
+            active: true,
+            id: this.config.rootAdmin.id,
+          }),
+        ])
         .create([
           [
             node('budget', 'Budget:BaseNode', {
@@ -179,6 +192,16 @@ export class BudgetService {
             }),
             relation('out', '', 'member', { active: true, createdAt }),
             node('requestingUser'),
+          ],
+          [
+            node('adminSG'),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('rootuser'),
+          ],
+          [
+            node('readerSG'),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('rootuser'),
           ],
           ...this.permission('status', 'budget'),
         ])
@@ -375,6 +398,12 @@ export class BudgetService {
       const createBudgetRecord = this.db
         .query()
         .match(matchSession(session, { withAclEdit: 'canCreateBudget' }))
+        .match([
+          node('rootuser', 'User', {
+            active: true,
+            id: this.config.rootAdmin.id,
+          }),
+        ])
         .create([
           [
             node('budgetRecord', 'BudgetRecord:BaseNode', {
@@ -403,6 +432,16 @@ export class BudgetService {
             }),
             relation('out', '', 'member', { active: true, createdAt }),
             node('requestingUser'),
+          ],
+          [
+            node('adminSG'),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('rootuser'),
+          ],
+          [
+            node('readerSG'),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('rootuser'),
           ],
           ...this.permission('fiscalYear', 'budgetRecord'),
           ...this.permission('amount', 'budgetRecord'),
@@ -590,7 +629,7 @@ export class BudgetService {
           MATCH (budgetRecord {active: true})-[:amount {active:true }]->(amount:Property {active: true}),
           (budgetRecord)-[:organization { active: true }]->(org:Organization {active:true}),
           (budgetRecord)-[:fiscalYear {active: true}]->(fiscalYear {active: true})
-          RETURN total, budgetRecord.id as budgetRecordId, fiscalYear.value as fiscalYear, org.id as orgId
+          RETURN DISTINCT total, budgetRecord.id as budgetRecordId, fiscalYear.value as fiscalYear, org.id as orgId
           ORDER BY ${sort} ${order}
           SKIP $skip LIMIT $count
       `;

@@ -8,7 +8,13 @@ import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
-import { DatabaseService, ILogger, Logger, matchSession } from '../../core';
+import {
+  ConfigService,
+  DatabaseService,
+  ILogger,
+  Logger,
+  matchSession,
+} from '../../core';
 import {
   Ceremony,
   CeremonyListInput,
@@ -21,6 +27,7 @@ import {
 export class CeremonyService {
   constructor(
     private readonly db: DatabaseService,
+    private readonly config: ConfigService,
     @Logger('ceremony:service') private readonly logger: ILogger
   ) {}
 
@@ -206,6 +213,12 @@ export class CeremonyService {
       await this.db
         .query()
         .match(matchSession(session, { withAclEdit: 'canCreateCeremony' }))
+        .match([
+          node('rootuser', 'User', {
+            active: true,
+            id: this.config.rootAdmin.id,
+          }),
+        ])
         .create([
           [
             node('newCeremony', 'Ceremony:BaseNode', {
@@ -233,6 +246,16 @@ export class CeremonyService {
             }),
             relation('out', '', 'member', { active: true, createdAt }),
             node('requestingUser'),
+          ],
+          [
+            node('adminSG'),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('rootuser'),
+          ],
+          [
+            node('readerSG'),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('rootuser'),
           ],
           ...this.permission('type'),
           ...this.permission('planned'),
