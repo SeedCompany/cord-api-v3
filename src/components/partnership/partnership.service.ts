@@ -246,7 +246,7 @@ export class PartnershipService {
         })
         .first();
 
-      const fiscalRange = fiscalYears(input.mouStart, input.mouEnd);
+      const fiscalRange = fiscalYears(input.mouStart, input.mouEnd); // calculate the fiscalYears covered by this date range
       if (
         input.types?.includes(PartnershipType.Funding) &&
         fiscalRange.length > 0

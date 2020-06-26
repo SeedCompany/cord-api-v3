@@ -63,7 +63,7 @@ describe('Budget e2e', () => {
     expect(budget.id).toBeDefined();
     const cd = (sd: Secured<string>) =>
       sd.value ? CalendarDate.fromISO(sd.value) : undefined;
-    const fiscal = fiscalYears(cd(project.mouStart), cd(project.mouEnd));
+    const fiscal = fiscalYears(cd(project.mouStart), cd(project.mouEnd)); // calculate the fiscalYears covered by this date range
     expect(budget.records.length).toBe(fiscal.length);
   });
 
