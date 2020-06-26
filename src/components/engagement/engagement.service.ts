@@ -686,6 +686,8 @@ export class EngagementService {
       userId: session.userId,
     });
     const id = generate();
+    const adminSGid = generate();
+    const readerSGid = generate();
     const createdAt = DateTime.local();
     const ceremony = await this.ceremonyService.create(
       { type: CeremonyType.Certification },
@@ -750,6 +752,7 @@ export class EngagementService {
             active: true,
             createdAt,
             name: 'internEngagement admin',
+            id: adminSGid,
           }),
           relation('out', '', 'member', { active: true, createdAt }),
           node('requestingUser'),
@@ -759,6 +762,7 @@ export class EngagementService {
             active: true,
             createdAt,
             name: 'internEngagement users',
+            id: readerSGid,
           }),
           relation('out', '', 'member', { active: true, createdAt }),
           node('requestingUser'),
