@@ -173,6 +173,7 @@ export class FilmService {
           ...this.property('name', input.name, 'newFilm'),
           [
             node('adminSG', 'SecurityGroup', {
+              id: generate(),
               active: true,
               createdAt,
               name: input.name + ' admin',
@@ -182,6 +183,7 @@ export class FilmService {
           ],
           [
             node('readerSG', 'SecurityGroup', {
+              id: generate(),
               active: true,
               createdAt,
               name: input.name + ' users',

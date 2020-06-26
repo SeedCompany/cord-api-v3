@@ -31,6 +31,7 @@ import {
   Engagement,
   EngagementListInput,
   EngagementListOutput,
+  EngagementStatus,
   InternshipEngagement,
   LanguageEngagement,
   UpdateInternshipEngagement,
@@ -582,8 +583,14 @@ export class EngagementService {
           input.paraTextRegistryId || undefined,
           'languageEngagement'
         ),
+        ...this.property(
+          'status',
+          EngagementStatus.InDevelopment,
+          'languageEngagement'
+        ),
         [
           node('adminSG', 'SecurityGroup', {
+            id: generate(),
             active: true,
             createdAt,
             name: 'languageEngagement admin',
@@ -593,6 +600,7 @@ export class EngagementService {
         ],
         [
           node('readerSG', 'SecurityGroup', {
+            id: generate(),
             active: true,
             createdAt,
             name: 'languageEngagement users',

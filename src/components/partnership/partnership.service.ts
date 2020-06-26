@@ -181,6 +181,7 @@ export class PartnershipService {
           ...this.property('types', input.types),
           [
             node('adminSG', 'SecurityGroup', {
+              id: generate(),
               active: true,
               createdAt,
               name: `${input.mouStart} ${input.mouEnd} admin`,
@@ -190,6 +191,7 @@ export class PartnershipService {
           ],
           [
             node('readerSG', 'SecurityGroup', {
+              id: generate(),
               active: true,
               createdAt,
               name: `${input.mouStart} ${input.mouEnd} users`,

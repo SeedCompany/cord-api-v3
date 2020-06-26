@@ -419,6 +419,7 @@ export class LocationService {
           ...this.property('name', input.name, 'newZone'),
           [
             node('adminSG', 'SecurityGroup', {
+              id: generate(),
               active: true,
               createdAt,
               name: input.name + ' admin',
@@ -428,6 +429,7 @@ export class LocationService {
           ],
           [
             node('readerSG', 'SecurityGroup', {
+              id: generate(),
               active: true,
               createdAt,
               name: input.name + ' users',
@@ -698,6 +700,7 @@ export class LocationService {
           ...this.property('name', input.name, 'newRegion'),
           [
             node('adminSG', 'SecurityGroup', {
+              id: generate(),
               active: true,
               createdAt,
               name: input.name + ' admin',
@@ -707,6 +710,7 @@ export class LocationService {
           ],
           [
             node('readerSG', 'SecurityGroup', {
+              id: generate(),
               active: true,
               createdAt,
               name: input.name + ' users',
@@ -958,6 +962,7 @@ export class LocationService {
           ...this.property('name', input.name, 'newCountry'),
           [
             node('adminSG', 'SecurityGroup', {
+              id: generate(),
               active: true,
               createdAt,
               name: input.name + ' admin',
@@ -967,6 +972,7 @@ export class LocationService {
           ],
           [
             node('readerSG', 'SecurityGroup', {
+              id: generate(),
               active: true,
               createdAt,
               name: input.name + ' users',

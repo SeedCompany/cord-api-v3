@@ -231,6 +231,7 @@ export class CeremonyService {
           ...this.property('type', input.type),
           [
             node('adminSG', 'SecurityGroup', {
+              id: generate(),
               active: true,
               createdAt,
               name: input.type + ' admin',
@@ -240,6 +241,7 @@ export class CeremonyService {
           ],
           [
             node('readerSG', 'SecurityGroup', {
+              id: generate(),
               active: true,
               createdAt,
               name: input.type + ' users',

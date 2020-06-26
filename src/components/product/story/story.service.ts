@@ -166,6 +166,7 @@ export class StoryService {
           ...this.property('name', input.name, 'newStory'),
           [
             node('adminSG', 'SecurityGroup', {
+              id: generate(),
               active: true,
               createdAt,
               name: input.name + ' admin',
@@ -175,6 +176,7 @@ export class StoryService {
           ],
           [
             node('readerSG', 'SecurityGroup', {
+              id: generate(),
               active: true,
               createdAt,
               name: input.name + ' users',
