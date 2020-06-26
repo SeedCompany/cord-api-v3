@@ -172,6 +172,7 @@ export class LiteracyMaterialService {
           ...this.property('name', input.name, 'newLiteracyMaterial'),
           [
             node('adminSG', 'SecurityGroup', {
+              id: generate(),
               active: true,
               createdAt,
               name: input.name + ' admin',
@@ -181,6 +182,7 @@ export class LiteracyMaterialService {
           ],
           [
             node('readerSG', 'SecurityGroup', {
+              id: generate(),
               active: true,
               createdAt,
               name: input.name + ' users',

@@ -207,6 +207,7 @@ export class LanguageService {
           ...this.property('sensitivity', Sensitivity.Low),
           [
             node('adminSG', 'SecurityGroup', {
+              id: generate(),
               active: true,
               createdAt,
               name: input.name + ' admin',
@@ -216,6 +217,7 @@ export class LanguageService {
           ],
           [
             node('readerSG', 'SecurityGroup', {
+              id: generate(),
               active: true,
               createdAt,
               name: input.name + ' users',

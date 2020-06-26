@@ -1311,6 +1311,7 @@ export class DatabaseService {
         : [
             [
               node('adminSG', 'SecurityGroup', {
+                id: generate(),
                 active: true,
                 createdAt,
                 name: sgName + ' admin',
@@ -1320,6 +1321,7 @@ export class DatabaseService {
             ],
             [
               node('readerSG', 'SecurityGroup', {
+                id: generate(),
                 active: true,
                 createdAt,
                 name: sgName + ' users',

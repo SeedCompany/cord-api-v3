@@ -31,6 +31,7 @@ import {
   Engagement,
   EngagementListInput,
   EngagementListOutput,
+  EngagementStatus,
   InternshipEngagement,
   LanguageEngagement,
   UpdateInternshipEngagement,
@@ -582,8 +583,14 @@ export class EngagementService {
           input.paraTextRegistryId || undefined,
           'languageEngagement'
         ),
+        ...this.property(
+          'status',
+          EngagementStatus.InDevelopment,
+          'languageEngagement'
+        ),
         [
           node('adminSG', 'SecurityGroup', {
+            id: generate(),
             active: true,
             createdAt,
             name: 'languageEngagement admin',
@@ -593,6 +600,7 @@ export class EngagementService {
         ],
         [
           node('readerSG', 'SecurityGroup', {
+            id: generate(),
             active: true,
             createdAt,
             name: 'languageEngagement users',
@@ -678,6 +686,8 @@ export class EngagementService {
       userId: session.userId,
     });
     const id = generate();
+    const adminSGid = generate();
+    const readerSGid = generate();
     const createdAt = DateTime.local();
     const ceremony = await this.ceremonyService.create(
       { type: CeremonyType.Certification },
@@ -742,6 +752,7 @@ export class EngagementService {
             active: true,
             createdAt,
             name: 'internEngagement admin',
+            id: adminSGid,
           }),
           relation('out', '', 'member', { active: true, createdAt }),
           node('requestingUser'),
@@ -751,6 +762,7 @@ export class EngagementService {
             active: true,
             createdAt,
             name: 'internEngagement users',
+            id: readerSGid,
           }),
           relation('out', '', 'member', { active: true, createdAt }),
           node('requestingUser'),

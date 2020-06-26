@@ -175,6 +175,7 @@ export class EducationService {
           ...this.property('institution', input.institution),
           [
             node('adminSG', 'SecurityGroup', {
+              id: generate(),
               active: true,
               createdAt,
               name: `${input.degree} ${input.institution} admin`,
@@ -184,6 +185,7 @@ export class EducationService {
           ],
           [
             node('readerSG', 'SecurityGroup', {
+              id: generate(),
               active: true,
               createdAt,
               name: `${input.degree} ${input.institution} users`,

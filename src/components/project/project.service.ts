@@ -635,6 +635,7 @@ export class ProjectService {
           ...this.property('modifiedAt', createInput.modifiedAt),
           [
             node('adminSG', 'SecurityGroup', {
+              id: generate(),
               active: true,
               createdAt,
               name: `${input.name} ${input.type} admin`,
@@ -644,6 +645,7 @@ export class ProjectService {
           ],
           [
             node('readerSG', 'SecurityGroup', {
+              id: generate(),
               active: true,
               createdAt,
               name: `${input.name} ${input.type} users`,

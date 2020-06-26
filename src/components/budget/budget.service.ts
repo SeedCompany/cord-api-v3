@@ -177,6 +177,7 @@ export class BudgetService {
           ...this.property('status', status, 'budget'),
           [
             node('adminSG', 'SecurityGroup', {
+              id: generate(),
               active: true,
               createdAt,
               name: projectId + ' admin',
@@ -186,6 +187,7 @@ export class BudgetService {
           ],
           [
             node('readerSG', 'SecurityGroup', {
+              id: generate(),
               active: true,
               createdAt,
               name: projectId + ' users',
@@ -417,6 +419,7 @@ export class BudgetService {
           ...this.property('amount', '0', 'budgetRecord'),
           [
             node('adminSG', 'SecurityGroup', {
+              id: generate(),
               active: true,
               createdAt,
               name: input.fiscalYear.toString() + ' admin',
@@ -426,6 +429,7 @@ export class BudgetService {
           ],
           [
             node('readerSG', 'SecurityGroup', {
+              id: generate(),
               active: true,
               createdAt,
               name: input.fiscalYear.toString() + ' users',
