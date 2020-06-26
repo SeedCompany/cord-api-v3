@@ -1,4 +1,4 @@
-import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { PaginatedList, SortablePaginationInput } from '../../../common';
@@ -17,10 +17,7 @@ export abstract class LocationFilters {
   })
   readonly types?: Array<'country' | 'region' | 'zone'>;
 
-  @Field(() => [ID], {
-    description: 'User IDs ANY of which must be directors of the locations',
-    nullable: true,
-  })
+  // User IDs ANY of which must be directors of the locations
   readonly userIds?: string[];
 }
 

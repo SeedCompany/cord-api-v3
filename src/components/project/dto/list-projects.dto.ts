@@ -63,10 +63,7 @@ export abstract class ProjectFilters {
   })
   readonly modifiedAt?: DateTimeFilter;
 
-  @Field(() => [ID], {
-    description: 'User IDs ANY of which are team members',
-    nullable: true,
-  })
+  // User IDs ANY of which are team members
   readonly userIds?: string[];
 
   @Field({
