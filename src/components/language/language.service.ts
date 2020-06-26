@@ -18,6 +18,8 @@ import {
   OnIndex,
   UniquenessError,
 } from '../../core';
+import { LocationListInput, SecuredLocationList } from '../location';
+import { ProjectListInput, ProjectListOutput } from '../project';
 import {
   CreateLanguage,
   Language,
@@ -381,6 +383,34 @@ export class LanguageService {
     return language;
   }
 
+  async listLocations(
+    _language: Language,
+    _input: LocationListInput,
+    _session: ISession
+  ): Promise<SecuredLocationList> {
+    // TODO
+    return {
+      items: [],
+      total: 0,
+      hasMore: false,
+      canCreate: true,
+      canRead: true,
+    };
+  }
+
+  async listProjects(
+    _language: Language,
+    _input: ProjectListInput,
+    _session: ISession
+  ): Promise<ProjectListOutput> {
+    // TODO
+    return {
+      total: 0,
+      hasMore: false,
+      items: [],
+    };
+  }
+
   async update(input: UpdateLanguage, session: ISession): Promise<Language> {
     this.logger.info(`Update language`, { input, userId: session.userId });
     const language = await this.readOne(input.id, session);
@@ -464,6 +494,18 @@ export class LanguageService {
       total: result.total,
     };
   }
+
+  async addLocation(
+    _languageId: string,
+    _locationId: string,
+    _session: ISession
+  ): Promise<void> {}
+
+  async removeLocation(
+    _languageId: string,
+    _locationId: string,
+    _session: ISession
+  ): Promise<void> {}
 
   async checkLanguageConsistency(session: ISession): Promise<boolean> {
     const languages = await this.db

@@ -1,12 +1,40 @@
 import { Type } from '@nestjs/common';
 import { Field, ObjectType } from '@nestjs/graphql';
+import { stripIndent } from 'common-tags';
 import {
   Resource,
+  SecuredBoolean,
+  SecuredDate,
   SecuredInt,
   SecuredProperty,
   SecuredString,
   Sensitivity,
 } from '../../../common';
+
+@ObjectType()
+export class EthnologueLanguage {
+  @Field()
+  readonly id: SecuredString;
+
+  @Field({
+    description: 'ISO 639-3 code',
+  })
+  readonly code: SecuredString;
+
+  @Field({
+    description: stripIndent`
+      Provisional Ethnologue Code.
+      Used until official ethnologue code is created by SIL.
+    `,
+  })
+  readonly provisionalCode: SecuredString;
+
+  @Field()
+  readonly name: SecuredString;
+
+  @Field()
+  readonly population: SecuredInt;
+}
 
 @ObjectType({
   implements: [Resource],
@@ -15,28 +43,66 @@ export class Language extends Resource {
   /* TS wants a public constructor for "ClassType" */
   static classType = (Language as any) as Type<Language>;
 
-  @Field()
+  @Field({
+    description: `The real language name`,
+  })
   readonly name: SecuredString;
 
-  @Field()
+  @Field({
+    description: stripIndent`
+      The public name which will be used/shown when real name
+      is unauthorized to be viewed/read.
+      This should always be viewable.
+    `,
+  })
   readonly displayName: SecuredString;
 
-  @Field()
-  readonly beginFiscalYear: SecuredInt;
+  @Field({
+    description: `Whether this language is a dialect.`,
+  })
+  readonly isDialect: SecuredBoolean;
 
   @Field()
-  readonly ethnologueName: SecuredString;
+  readonly ethnologue: EthnologueLanguage;
 
-  @Field()
-  readonly ethnologuePopulation: SecuredInt;
+  @Field({
+    description: `An override for the ethnologue's population`,
+  })
+  readonly populationOverride: SecuredInt;
 
-  @Field()
-  readonly organizationPopulation: SecuredInt;
+  @Field({
+    description: stripIndent`
+      Registry of Dialects Code.
+      5 digit number including leading zeros.
+      https://globalrecordings.net/en/rod
+    `,
+  })
+  readonly registryOfDialectsCode: SecuredString;
 
-  @Field()
-  readonly rodNumber: SecuredString;
+  // consider making object
+  @Field({
+    description: `Whether this language has a Least Of These grant.`,
+  })
+  readonly leastOfThese: SecuredBoolean;
 
-  @Field(() => Sensitivity)
+  @Field({
+    description: `Reason why this language is apart of the Least of These program.`,
+  })
+  readonly leastOfTheseReason: SecuredString;
+
+  // Calculated. Not settable.
+  @Field({
+    description: 'The earliest start date from its engagements',
+  })
+  readonly sponsorDate: SecuredDate;
+
+  // Calculated. Not settable.
+  @Field(() => Sensitivity, {
+    description: stripIndent`
+      The language's sensitivity.
+      It's based on its most sensitive location.
+    `,
+  })
   readonly sensitivity: Sensitivity;
 }
 

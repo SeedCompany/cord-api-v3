@@ -1,7 +1,11 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { PaginatedList, SortablePaginationInput } from '../../../common';
+import {
+  PaginatedList,
+  SecuredList,
+  SortablePaginationInput,
+} from '../../../common';
 import { Location } from './location.dto';
 
 @InputType()
@@ -38,4 +42,9 @@ export class LocationListInput extends SortablePaginationInput<keyof Location>({
 @ObjectType()
 export class LocationListOutput extends PaginatedList(Location as any, {
   itemsDescription: PaginatedList.itemDescriptionFor('locations'),
+}) {}
+
+@ObjectType()
+export class SecuredLocationList extends SecuredList(Location as any, {
+  itemsDescription: SecuredList.descriptionFor('locations'),
 }) {}
