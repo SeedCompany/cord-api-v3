@@ -8,24 +8,22 @@ import {
   SecuredDateTime,
 } from '../../common';
 import { CoreModule, LoggerModule } from '../../core';
-import { AuthenticationModule, AuthenticationService } from '../authentication';
+import { AuthenticationService } from '../authentication';
+import { AuthenticationModule } from '../authentication/authentication.module';
 import { CeremonyService, SecuredCeremony } from '../ceremony';
 import { LanguageService, SecuredLanguage } from '../language';
 import { LocationService, SecuredCountry } from '../location';
-import { OrganizationModule, OrganizationService } from '../organization';
+import { OrganizationService } from '../organization';
+import { OrganizationModule } from '../organization/organization.module';
 import {
   ProductMethodology,
   ProductService,
   SecuredMethodologies,
 } from '../product';
-import {
-  EducationModule,
-  EducationService,
-  SecuredUser,
-  UnavailabilityModule,
-  UnavailabilityService,
-  UserModule,
-} from '../user';
+import { EducationService, SecuredUser, UnavailabilityService } from '../user';
+import { EducationModule } from '../user/education/education.module';
+import { UnavailabilityModule } from '../user/unavailability/unavailability.module';
+import { UserModule } from '../user/user.module';
 import {
   CreateInternshipEngagement,
   CreateLanguageEngagement,
