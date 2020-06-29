@@ -186,7 +186,7 @@ describe('Organization e2e', () => {
   // LIST ORGs
   it.only('can filter on organization name', async () => {
     const name = faker.company.companyName();
-    const org = await createOrganization(app, { name });
+    await createOrganization(app, { name });
 
     const { organizations: actual } = await app.graphql.query(
       gql`
@@ -195,6 +195,7 @@ describe('Organization e2e', () => {
             items {
               ...org
             }
+            total
           }
         }
         ${fragments.org}
@@ -204,6 +205,7 @@ describe('Organization e2e', () => {
       }
     );
 
+    expect(actual.total).toBe(1);
     expect(actual.items[0].name.value).toBe(name);
   });
 
