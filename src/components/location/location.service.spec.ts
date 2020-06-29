@@ -3,16 +3,14 @@ import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { Order } from '../../common';
 import { CoreModule, DatabaseService, LoggerModule } from '../../core';
-import { AuthenticationModule, AuthenticationService } from '../authentication';
+import { AuthenticationService } from '../authentication';
+import { AuthenticationModule } from '../authentication/authentication.module';
 import { OrganizationService } from '../organization';
-import {
-  EducationService,
-  UnavailabilityService,
-  UserModule,
-  UserService,
-} from '../user';
+import { EducationService, UnavailabilityService, UserService } from '../user';
+import { UserModule } from '../user/user.module';
 import { Country, LocationListOutput } from './dto';
-import { LocationModule, LocationService } from './index';
+import { LocationService } from './index';
+import { LocationModule } from './location.module';
 
 describe('LocationService', () => {
   let locationService: LocationService;

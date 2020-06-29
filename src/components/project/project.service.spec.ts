@@ -3,16 +3,14 @@ import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { CalendarDate, Order, Sensitivity } from '../../common';
 import { CoreModule, DatabaseService, LoggerModule } from '../../core';
-import { AuthenticationModule, AuthenticationService } from '../authentication';
-import { OrganizationModule, OrganizationService } from '../organization';
-import {
-  EducationModule,
-  EducationService,
-  UnavailabilityModule,
-  UnavailabilityService,
-  UserModule,
-  UserService,
-} from '../user';
+import { AuthenticationService } from '../authentication';
+import { AuthenticationModule } from '../authentication/authentication.module';
+import { OrganizationService } from '../organization';
+import { OrganizationModule } from '../organization/organization.module';
+import { EducationService, UnavailabilityService, UserService } from '../user';
+import { EducationModule } from '../user/education/education.module';
+import { UnavailabilityModule } from '../user/unavailability/unavailability.module';
+import { UserModule } from '../user/user.module';
 import {
   Project,
   ProjectListOutput,
