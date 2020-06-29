@@ -258,13 +258,13 @@ export class PartnershipService {
       .query()
       .match(matchSession(session, { withAclRead: 'canReadPartnerships' }))
       .match([node('partnership', 'Partnership', { active: true, id })]);
+    this.propMatch(readPartnership, 'mouStart');
+    this.propMatch(readPartnership, 'mouEnd');
+    this.propMatch(readPartnership, 'types');
     this.propMatch(readPartnership, 'agreementStatus');
     this.propMatch(readPartnership, 'mou');
     this.propMatch(readPartnership, 'agreement');
     this.propMatch(readPartnership, 'mouStatus');
-    this.propMatch(readPartnership, 'mouStart');
-    this.propMatch(readPartnership, 'mouEnd');
-    this.propMatch(readPartnership, 'types');
     readPartnership.optionalMatch([
       node('requestingUser'),
       relation('in', '', 'member', { active: true }),
