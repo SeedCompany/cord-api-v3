@@ -16,7 +16,6 @@ import {
   Logger,
   matchSession,
 } from '../../core';
-import { PartnershipService } from '../partnership';
 import {
   Budget,
   BudgetListInput,
@@ -36,7 +35,6 @@ export class BudgetService {
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
-    private readonly partnershipService: PartnershipService,
     @Logger('budget:service') private readonly logger: ILogger
   ) {}
 
@@ -153,7 +151,7 @@ export class BudgetService {
 
     const id = generate();
     const createdAt = DateTime.local();
-    const status = BudgetStatus.Current;
+    const status = BudgetStatus.Pending;
 
     try {
       const createBudget = this.db
@@ -321,7 +319,6 @@ export class BudgetService {
         (project:Project {id: $projectId, active: true, owningOrgId: $owningOrgId})
         -[:budget]->(budget:Budget {active:true})
       WITH COUNT(budget) as total, project, budget
-          MATCH (budget {active: true})-[:status {active:true }]->(status:Property {active: true})
           OPTIONAL MATCH (requestingUser)<-[:member { active: true }]-(sg:SecurityGroup { active: true })-[:permission { active: true }]
           ->(canEditStatus:Permission { property: 'status', active: true, edit: true })
           -[:baseNode { active: true }]->(budget)-[:status { active: true }]->(status:Property { active: true })
@@ -344,7 +341,6 @@ export class BudgetService {
       })
       .run();
 
-    //console.log('projBudgets', JSON.stringify(projBudgets, null, 2));
     result.items = await Promise.all(
       projBudgets.map(async (budget) => this.readOne(budget.budgetId, session))
     );
