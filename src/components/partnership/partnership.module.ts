@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { BudgetModule } from '../budget';
-import { FileModule } from '../file';
+import { BudgetModule } from '../budget/budget.module';
+import { FileModule } from '../file/file.module';
 import { PartnershipResolver } from './partnership.resolver';
 import { PartnershipService } from './partnership.service';
 
