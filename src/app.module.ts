@@ -14,6 +14,7 @@ import { OrganizationModule } from './components/organization';
 import { PartnershipModule } from './components/partnership';
 import { ProductModule } from './components/product';
 import { ProjectModule } from './components/project';
+import { SearchModule } from './components/search/search.module';
 import { UserModule } from './components/user';
 import { WorkflowModule } from './components/workflow/workflow.module';
 import { CoreModule, LoggerModule } from './core';
@@ -37,6 +38,7 @@ import { CoreModule, LoggerModule } from './core';
     FavoriteModule,
     UserModule,
     PartnershipModule,
+    SearchModule,
     WorkflowModule,
   ],
   controllers: [],
