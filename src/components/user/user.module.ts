@@ -1,9 +1,9 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { AuthenticationModule } from '../authentication';
-import { AuthorizationModule } from '../authorization';
-import { OrganizationModule } from '../organization';
-import { EducationModule } from './education';
-import { UnavailabilityModule } from './unavailability';
+import { AuthenticationModule } from '../authentication/authentication.module';
+import { AuthorizationModule } from '../authorization/authorization.module';
+import { OrganizationModule } from '../organization/organization.module';
+import { EducationModule } from './education/education.module';
+import { UnavailabilityModule } from './unavailability/unavailability.module';
 import { UserResolver } from './user.resolver';
 import { UserService } from './user.service';
 

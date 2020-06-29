@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
-import { CeremonyModule } from '../ceremony';
-import { LanguageModule } from '../language';
-import { LocationModule } from '../location';
-import { ProductModule } from '../product';
-import { UserModule } from '../user';
+import { CeremonyModule } from '../ceremony/ceremony.module';
+import { LanguageModule } from '../language/language.module';
+import { LocationModule } from '../location/location.module';
+import { ProductModule } from '../product/product.module';
+import { UserModule } from '../user/user.module';
 import { EngagementResolver } from './engagement.resolver';
 import { EngagementService } from './engagement.service';
 import { InternshipEngagementResolver } from './internship-engagement.resolver';

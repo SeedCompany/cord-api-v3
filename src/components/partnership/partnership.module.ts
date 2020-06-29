@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { FileModule } from '../file';
+import { FileModule } from '../file/file.module';
 import { PartnershipResolver } from './partnership.resolver';
 import { PartnershipService } from './partnership.service';
 

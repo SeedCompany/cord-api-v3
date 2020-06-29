@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { RangeModule } from '../range';
+import { RangeModule } from '../range/range.module';
 import { FilmResolver } from './film.resolver';
 import { FilmService } from './film.service';
 
