@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CoreModule, DatabaseService, LoggerModule } from '../../core';
-import { AuthenticationModule } from '../authentication';
+import { AuthenticationModule } from '../authentication/authentication.module';
 import { AuthorizationResolver } from './authorization.resolver';
 import { AuthorizationService } from './authorization.service';
 

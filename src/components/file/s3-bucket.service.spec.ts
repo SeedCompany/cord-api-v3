@@ -2,8 +2,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { GetObjectOutput } from 'aws-sdk/clients/s3';
 import { CoreModule, LoggerModule } from '../../core';
 import { AuthenticationModule } from '../authentication/authentication.module';
-import { OrganizationModule } from '../organization';
-import { UnavailabilityModule, UserModule } from '../user';
+import { OrganizationModule } from '../organization/organization.module';
+import { UnavailabilityModule } from '../user/unavailability/unavailability.module';
+import { UserModule } from '../user/user.module';
 import { FileModule } from './file.module';
 import {
   FilesBucketFactory,

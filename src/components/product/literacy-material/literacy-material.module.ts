@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { RangeModule } from '../range';
+import { RangeModule } from '../range/range.module';
 import { LiteracyMaterialResolver } from './literacy-material.resolver';
 import { LiteracyMaterialService } from './literacy-material.service';
 

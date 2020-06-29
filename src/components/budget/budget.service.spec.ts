@@ -2,8 +2,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { CoreModule, DatabaseService, LoggerModule } from '../../core';
-import { AuthenticationModule, AuthenticationService } from '../authentication';
-import { ProjectModule, ProjectService } from '../project';
+import { AuthenticationService } from '../authentication';
+import { AuthenticationModule } from '../authentication/authentication.module';
+import { ProjectService } from '../project';
+import { ProjectModule } from '../project/project.module';
 import { BudgetService } from './budget.service';
 import { Budget, BudgetStatus } from './dto';
 
