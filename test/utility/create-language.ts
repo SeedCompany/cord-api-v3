@@ -16,7 +16,7 @@ export async function createLanguage(
     ethnologueName: faker.finance.accountName(),
     ethnologuePopulation: faker.random.number(5),
     organizationPopulation: faker.random.number(10),
-    rodNumber: faker.random.number(100000),
+    rodNumber: faker.random.word(),
     ...input,
   };
 
