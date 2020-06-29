@@ -1,10 +1,11 @@
 import { gql } from 'apollo-server-core';
 import { sample, times } from 'lodash';
+import { CalendarDate } from '../src/common';
 import {
+  CreatePartnership,
   Partnership,
   PartnershipAgreementStatus,
   PartnershipType,
-  CreatePartnership,
 } from '../src/components/partnership';
 import { Project } from '../src/components/project/dto';
 import {
@@ -18,7 +19,6 @@ import {
   TestApp,
 } from './utility';
 import { createPartnership } from './utility/create-partnership';
-import { CalendarDate } from '../src/common';
 
 describe('Partnership e2e', () => {
   let app: TestApp;
