@@ -17,10 +17,10 @@ Clear and specific actions taken to cause the behavior. Steps should resemble th
 3. Scroll down to '....'
 4. See error
 
-**Please give the commit short hash of the API and Front End repo if you are able to**
-Run `git rev-parse --short HEAD` in each repo to retrieve the commit hash
-API:
-FE: 
+**Please give the commit short hash of the API and Front End repo if you are able to**.  
+Run `git rev-parse --short HEAD` in each repo to retrieve the commit hash.    
+API:    
+FE:      
 
 **Expected and Actual Results**
 Outline of the outcome of the test and the expected behavior. 
