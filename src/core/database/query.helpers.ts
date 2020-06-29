@@ -1,4 +1,4 @@
-import { node, Query, relation } from 'cypher-query-builder';
+import { contains, node, Query, relation } from 'cypher-query-builder';
 import { isFunction } from 'lodash';
 import {
   ISession,
@@ -170,7 +170,8 @@ export function filterQuery(
   baseNodeId?: string,
   baseNodeLabel?: string,
   childNodeIdentifier?: string,
-  filter?: Array<Record<string, any>>
+  // filter?: Array<Record<string, any>>
+  filter?: string
 ) {
   if (baseNodeId && baseNodeLabel) {
     query.match([
@@ -199,51 +200,49 @@ export function filterQuery(
       relation('out', '', sort, { active: true }),
       node(sort, 'Property', { active: true }),
     ]);
-  } else {
-    let filterKeys: string[] = [];
-    if (filter) {
-      filterKeys = Object.keys(filter);
-    }
-    [sort, ...filterKeys].map((key) => {
-      query.match([
-        node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup', {
-          active: true,
-        }),
-        relation('out', '', 'permission', { active: true }),
-        node('', 'Permission', {
-          property: key,
-          read: true,
-          active: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('node', label, {
-          active: true,
-        }),
-        relation('out', '', sort, { active: true }),
-        node(key, 'Property', { active: true }),
-      ]);
-      // if (filter?.[key as any]) {
-      //   if (typeof filter[key as any] === 'string') {
-      //     const searchTerm: string = filter[key as any];
-      //     query.where({ [key + '.value']: contains(searchTerm) });
-      //   } else {
-      //     //array
-      //     // k.value might be an array of multiple values
-      //     const filterList = join(
-      //       filter[key as any].map((i: string) => `'${i}'`),
-      //       ', '
-      //     );
-      //     query.where({
-      //       [`size([role IN ${k}.value WHERE role IN [ ${filterList} ] | 1])`]: greaterThan(
-      //         0
-      //       ),
-      //     });
-      //     query.with('*');
-      //   }
-      // }
+  } else if (filter) {
+    query.match([
+      node('requestingUser'),
+      relation('in', '', 'member'),
+      node('', 'SecurityGroup', {
+        active: true,
+      }),
+      relation('out', '', 'permission', { active: true }),
+      node('', 'Permission', {
+        property: sort,
+        read: true,
+        active: true,
+      }),
+      relation('out', '', 'baseNode'),
+      node('node', label, {
+        active: true,
+      }),
+      relation('out', '', sort, { active: true }),
+      node(sort, 'Property', { active: true }),
+    ]);
+    query.where({
+      [sort]: { value: contains(filter) },
     });
+  } else {
+    query.match([
+      node('requestingUser'),
+      relation('in', '', 'member'),
+      node('', 'SecurityGroup', {
+        active: true,
+      }),
+      relation('out', '', 'permission', { active: true }),
+      node('', 'Permission', {
+        property: sort,
+        read: true,
+        active: true,
+      }),
+      relation('out', '', 'baseNode'),
+      node('node', label, {
+        active: true,
+      }),
+      relation('out', '', sort, { active: true }),
+      node(sort, 'Property', { active: true }),
+    ]);
   }
 }
 
