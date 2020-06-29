@@ -1302,6 +1302,7 @@ export class DatabaseService {
                 active: true,
                 createdAt,
                 name: sgName + ' root',
+                id: generate(),
               }),
               relation('out', '', 'member', { active: true, createdAt }),
               node('requestingUser'),
