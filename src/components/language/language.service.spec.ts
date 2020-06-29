@@ -41,7 +41,7 @@ describe('LanguageService', () => {
       canEdit: true,
     },
     rodNumber: {
-      value: 321,
+      value: 'A321',
       canRead: true,
       canEdit: true,
     },
@@ -80,7 +80,7 @@ describe('LanguageService', () => {
       canEdit: true,
     },
     rodNumber: {
-      value: 321,
+      value: 'A321',
       canRead: true,
       canEdit: true,
     },
@@ -129,7 +129,7 @@ describe('LanguageService', () => {
         ethnologueName: 'create-ethnologuename',
         ethnologuePopulation: 999,
         organizationPopulation: 9999,
-        rodNumber: 321,
+        rodNumber: 'A321',
       },
       {
         token:
@@ -171,7 +171,7 @@ describe('LanguageService', () => {
         ethnologueName: 'test-ethnologuename',
         ethnologuePopulation: 999,
         organizationPopulation: 9999,
-        rodNumber: 321,
+        rodNumber: 'A321',
       },
       {
         token:
