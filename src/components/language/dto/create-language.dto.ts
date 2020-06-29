@@ -1,23 +1,16 @@
 import { Field, InputType, Int, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
-import {
-  IsPositive,
-  Max,
-  Min,
-  MinLength,
-  ValidateNested,
-} from 'class-validator';
+import { IsPositive, Max, Min, ValidateNested } from 'class-validator';
 import { DateTime } from 'luxon';
+import { NameField } from '../../../common';
 import { Language } from './language.dto';
 
 @InputType()
 export abstract class CreateLanguage {
-  @Field()
-  @MinLength(2)
+  @NameField()
   readonly name: string;
 
-  @Field()
-  @MinLength(2)
+  @NameField()
   readonly displayName: string;
 
   @Field(() => Int, { nullable: true })
@@ -25,8 +18,7 @@ export abstract class CreateLanguage {
   @Max(DateTime.local().year + 5)
   readonly beginFiscalYear?: number;
 
-  @Field({ nullable: true })
-  @MinLength(2)
+  @NameField({ nullable: true })
   readonly ethnologueName?: string;
 
   @Field(() => Int, { nullable: true })
