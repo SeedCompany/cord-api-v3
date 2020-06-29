@@ -442,7 +442,7 @@ export class EngagementService {
     if (!value) {
       return [];
     }
-    const createdAt = DateTime.local();
+    const createdAt = DateTime.local().toISO();
     let propLabel = 'Property';
     if (prop === 'position') {
       propLabel = 'Property:InternPosition';
@@ -685,7 +685,7 @@ export class EngagementService {
       userId: session.userId,
     });
     const id = generate();
-    const createdAt = DateTime.local();
+    const createdAt = DateTime.local().toISO();
     const ceremony = await this.ceremonyService.create(
       { type: CeremonyType.Certification },
       session
@@ -761,17 +761,26 @@ export class EngagementService {
             name: 'internEngagement users',
             id: generate(),
           }),
-          relation('out', '', 'member', { active: true, createdAt }),
+          relation('out', '', 'member', {
+            active: true,
+            createdAt,
+          }),
           node('requestingUser'),
         ],
         [
           node('adminSG'),
-          relation('out', '', 'member', { active: true, createdAt }),
+          relation('out', '', 'member', {
+            active: true,
+            createdAt,
+          }),
           node('rootuser'),
         ],
         [
           node('readerSG'),
-          relation('out', '', 'member', { active: true, createdAt }),
+          relation('out', '', 'member', {
+            active: true,
+            createdAt,
+          }),
           node('rootuser'),
         ],
         ...this.permission('completeDate', 'internshipEngagement'),
@@ -793,7 +802,8 @@ export class EngagementService {
         ...this.permission('mentor', 'internshipEngagement'),
       ])
       .return('internshipEngagement');
-
+    // const printme = createIE;
+    // console.log('printme :>> ', printme.interpolate());
     try {
       await createIE.first();
     } catch (e) {
@@ -855,6 +865,7 @@ export class EngagementService {
       )) as InternshipEngagement;
     } catch (e) {
       this.logger.error(e);
+      // console.log('e :>> ', e);
       throw new ServerException(`Could not create InternshipEngagement`);
     }
   }

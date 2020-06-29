@@ -1228,7 +1228,7 @@ export class DatabaseService {
     property: string,
     lables: string[]
   ): Promise<void> {
-    await this.db
+    const addLabel = this.db
       .query()
       .match([node('baseNode', { active: true, id: baseNodeId })])
       .match([
@@ -1241,8 +1241,10 @@ export class DatabaseService {
           prop: lables,
         },
       })
-      .return('baseNode')
-      .run();
+      .return('baseNode');
+    // const printme = addLabel;
+    // console.log('printme :>> ', printme.interpolate());
+    await addLabel.run();
   }
 
   assertPatternsIncludeIdentifier(
