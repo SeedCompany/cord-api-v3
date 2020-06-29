@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { OrganizationModule } from '../organization';
-import { UserModule } from '../user';
+import { OrganizationModule } from '../organization/organization.module';
+import { UserModule } from '../user/user.module';
 import { DirectoryResolver } from './directory.resolver';
 import { FileVersionResolver } from './file-version.resolver';
 import { FileRepository } from './file.repository';

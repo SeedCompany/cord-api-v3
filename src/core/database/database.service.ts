@@ -1302,6 +1302,7 @@ export class DatabaseService {
                 active: true,
                 createdAt,
                 name: sgName + ' root',
+                id: generate(),
               }),
               relation('out', '', 'member', { active: true, createdAt }),
               node('requestingUser'),
@@ -1311,6 +1312,7 @@ export class DatabaseService {
         : [
             [
               node('adminSG', 'SecurityGroup', {
+                id: generate(),
                 active: true,
                 createdAt,
                 name: sgName + ' admin',
@@ -1320,6 +1322,7 @@ export class DatabaseService {
             ],
             [
               node('readerSG', 'SecurityGroup', {
+                id: generate(),
                 active: true,
                 createdAt,
                 name: sgName + ' users',
@@ -1327,12 +1330,28 @@ export class DatabaseService {
               relation('out', '', 'member', { active: true, createdAt }),
               node('requestingUser'),
             ],
+            [
+              node('adminSG'),
+              relation('out', '', 'member', { active: true, createdAt }),
+              node('rootuser'),
+            ],
+            [
+              node('readerSG'),
+              relation('out', '', 'member', { active: true, createdAt }),
+              node('rootuser'),
+            ],
             ...permissions,
           ];
 
       const query = this.db
         .query()
         .match(matchSession(session, { withAclEdit: aclEditPropName }))
+        .match([
+          node('rootuser', 'User', {
+            active: true,
+            id: this.config.rootAdmin.id,
+          }),
+        ])
         .create([
           [
             node('newNode', baseNode, {

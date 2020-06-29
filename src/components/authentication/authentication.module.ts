@@ -1,6 +1,6 @@
 import { forwardRef, Global, Module, Provider } from '@nestjs/common';
 import { SESSION_PIPE_TOKEN } from '../../common/session';
-import { UserModule } from '../user';
+import { UserModule } from '../user/user.module';
 import { AuthenticationResolver } from './authentication.resolver';
 import { AuthenticationService } from './authentication.service';
 import { SessionPipe } from './session.pipe';

@@ -10,6 +10,7 @@ import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../../common';
 import {
+  ConfigService,
   DatabaseService,
   ILogger,
   Logger,
@@ -30,6 +31,7 @@ export class FilmService {
   constructor(
     @Logger('film:service') private readonly logger: ILogger,
     private readonly db: DatabaseService,
+    private readonly config: ConfigService,
     private readonly rangeService: RangeService
   ) {}
 
@@ -153,6 +155,12 @@ export class FilmService {
       const query = this.db
         .query()
         .match(matchSession(session, { withAclEdit: 'canCreateFilm' }))
+        .match([
+          node('rootuser', 'User', {
+            active: true,
+            id: this.config.rootAdmin.id,
+          }),
+        ])
         .create([
           [
             node('newFilm', 'Film:BaseNode', {
@@ -165,6 +173,7 @@ export class FilmService {
           ...this.property('name', input.name, 'newFilm'),
           [
             node('adminSG', 'SecurityGroup', {
+              id: generate(),
               active: true,
               createdAt,
               name: input.name + ' admin',
@@ -174,12 +183,23 @@ export class FilmService {
           ],
           [
             node('readerSG', 'SecurityGroup', {
+              id: generate(),
               active: true,
               createdAt,
               name: input.name + ' users',
             }),
             relation('out', '', 'member', { active: true, createdAt }),
             node('requestingUser'),
+          ],
+          [
+            node('adminSG'),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('rootuser'),
+          ],
+          [
+            node('readerSG'),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('rootuser'),
           ],
           ...this.permission('name', 'newFilm'),
           ...this.permission('range', 'newFilm'),

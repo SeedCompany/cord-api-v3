@@ -3,11 +3,15 @@ import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
 import { CoreModule, LoggerModule } from '../../core';
-import { AuthenticationModule, AuthenticationService } from '../authentication';
-import { OrganizationModule, OrganizationService } from '../organization';
+import { AuthenticationService } from '../authentication';
+import { AuthenticationModule } from '../authentication/authentication.module';
+import { OrganizationService } from '../organization';
+import { OrganizationModule } from '../organization/organization.module';
 import { CreatePerson, UpdateUser, User, UserStatus } from './dto';
-import { EducationModule, EducationService } from './education';
-import { UnavailabilityModule, UnavailabilityService } from './unavailability';
+import { EducationService } from './education';
+import { EducationModule } from './education/education.module';
+import { UnavailabilityService } from './unavailability';
+import { UnavailabilityModule } from './unavailability/unavailability.module';
 import { UserService } from './user.service';
 
 describe('UserService', () => {

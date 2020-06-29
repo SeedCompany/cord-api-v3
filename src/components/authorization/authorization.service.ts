@@ -6,7 +6,13 @@ import {
 import { node, relation } from 'cypher-query-builder';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
-import { DatabaseService, ILogger, Logger, matchSession } from '../../core';
+import {
+  DatabaseService,
+  ILogger,
+  Logger,
+  matchSession,
+  OnIndex,
+} from '../../core';
 import { AddPropertyToSecurityGroup } from './dto/add-property-to-security-group.dto';
 import { AttachUserToSecurityGroup } from './dto/attach-user-to-security-group.dto';
 import {
@@ -42,6 +48,19 @@ export class AuthorizationService {
     private readonly db: DatabaseService,
     @Logger('authorization:service') private readonly logger: ILogger
   ) {}
+
+  @OnIndex()
+  async createIndexes() {
+    const constraints = [
+      'CREATE CONSTRAINT ON (n:SecurityGroup) ASSERT EXISTS(n.id)',
+      'CREATE CONSTRAINT ON (n:SecurityGroup) ASSERT n.id IS UNIQUE',
+      'CREATE CONSTRAINT ON (n:SecurityGroup) ASSERT EXISTS(n.active)',
+      'CREATE CONSTRAINT ON (n:SecurityGroup) ASSERT EXISTS(n.createdAt)',
+    ];
+    for (const query of constraints) {
+      await this.db.query().raw(query).run();
+    }
+  }
 
   async listSecurityGroupsUserIsMemberOf(
     input: ListSecurityGroupInput,

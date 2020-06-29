@@ -9,8 +9,13 @@ import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession, Order } from '../../common';
-import { DatabaseService, ILogger, Logger, matchSession } from '../../core';
-import { PartnershipService } from '../partnership';
+import {
+  ConfigService,
+  DatabaseService,
+  ILogger,
+  Logger,
+  matchSession,
+} from '../../core';
 import {
   Budget,
   BudgetListInput,
@@ -29,7 +34,7 @@ import {
 export class BudgetService {
   constructor(
     private readonly db: DatabaseService,
-    private readonly partnershipService: PartnershipService,
+    private readonly config: ConfigService,
     @Logger('budget:service') private readonly logger: ILogger
   ) {}
 
@@ -146,12 +151,18 @@ export class BudgetService {
 
     const id = generate();
     const createdAt = DateTime.local();
-    const status = BudgetStatus.Current;
+    const status = BudgetStatus.Pending;
 
     try {
       const createBudget = this.db
         .query()
         .match(matchSession(session, { withAclEdit: 'canCreateBudget' }))
+        .match([
+          node('rootuser', 'User', {
+            active: true,
+            id: this.config.rootAdmin.id,
+          }),
+        ])
         .create([
           [
             node('budget', 'Budget:BaseNode', {
@@ -164,6 +175,7 @@ export class BudgetService {
           ...this.property('status', status, 'budget'),
           [
             node('adminSG', 'SecurityGroup', {
+              id: generate(),
               active: true,
               createdAt,
               name: projectId + ' admin',
@@ -173,12 +185,23 @@ export class BudgetService {
           ],
           [
             node('readerSG', 'SecurityGroup', {
+              id: generate(),
               active: true,
               createdAt,
               name: projectId + ' users',
             }),
             relation('out', '', 'member', { active: true, createdAt }),
             node('requestingUser'),
+          ],
+          [
+            node('adminSG'),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('rootuser'),
+          ],
+          [
+            node('readerSG'),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('rootuser'),
           ],
           ...this.permission('status', 'budget'),
         ])
@@ -296,7 +319,6 @@ export class BudgetService {
         (project:Project {id: $projectId, active: true, owningOrgId: $owningOrgId})
         -[:budget]->(budget:Budget {active:true})
       WITH COUNT(budget) as total, project, budget
-          MATCH (budget {active: true})-[:status {active:true }]->(status:Property {active: true})
           OPTIONAL MATCH (requestingUser)<-[:member { active: true }]-(sg:SecurityGroup { active: true })-[:permission { active: true }]
           ->(canEditStatus:Permission { property: 'status', active: true, edit: true })
           -[:baseNode { active: true }]->(budget)-[:status { active: true }]->(status:Property { active: true })
@@ -319,7 +341,6 @@ export class BudgetService {
       })
       .run();
 
-    //console.log('projBudgets', JSON.stringify(projBudgets, null, 2));
     result.items = await Promise.all(
       projBudgets.map(async (budget) => this.readOne(budget.budgetId, session))
     );
@@ -375,6 +396,12 @@ export class BudgetService {
       const createBudgetRecord = this.db
         .query()
         .match(matchSession(session, { withAclEdit: 'canCreateBudget' }))
+        .match([
+          node('rootuser', 'User', {
+            active: true,
+            id: this.config.rootAdmin.id,
+          }),
+        ])
         .create([
           [
             node('budgetRecord', 'BudgetRecord:BaseNode', {
@@ -388,6 +415,7 @@ export class BudgetService {
           ...this.property('amount', '0', 'budgetRecord'),
           [
             node('adminSG', 'SecurityGroup', {
+              id: generate(),
               active: true,
               createdAt,
               name: input.fiscalYear.toString() + ' admin',
@@ -397,12 +425,23 @@ export class BudgetService {
           ],
           [
             node('readerSG', 'SecurityGroup', {
+              id: generate(),
               active: true,
               createdAt,
               name: input.fiscalYear.toString() + ' users',
             }),
             relation('out', '', 'member', { active: true, createdAt }),
             node('requestingUser'),
+          ],
+          [
+            node('adminSG'),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('rootuser'),
+          ],
+          [
+            node('readerSG'),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('rootuser'),
           ],
           ...this.permission('fiscalYear', 'budgetRecord'),
           ...this.permission('amount', 'budgetRecord'),
@@ -590,7 +629,7 @@ export class BudgetService {
           MATCH (budgetRecord {active: true})-[:amount {active:true }]->(amount:Property {active: true}),
           (budgetRecord)-[:organization { active: true }]->(org:Organization {active:true}),
           (budgetRecord)-[:fiscalYear {active: true}]->(fiscalYear {active: true})
-          RETURN total, budgetRecord.id as budgetRecordId, fiscalYear.value as fiscalYear, org.id as orgId
+          RETURN DISTINCT total, budgetRecord.id as budgetRecordId, fiscalYear.value as fiscalYear, org.id as orgId
           ORDER BY ${sort} ${order}
           SKIP $skip LIMIT $count
       `;

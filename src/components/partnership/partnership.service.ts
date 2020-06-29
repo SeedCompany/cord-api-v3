@@ -5,11 +5,18 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
-import { upperFirst } from 'lodash';
+import { flatMap, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
-import { ISession } from '../../common';
-import { DatabaseService, ILogger, Logger, matchSession } from '../../core';
+import { fiscalYears, ISession } from '../../common';
+import {
+  ConfigService,
+  DatabaseService,
+  ILogger,
+  Logger,
+  matchSession,
+} from '../../core';
+import { BudgetService } from '../budget';
 import { FileService } from '../file';
 import { OrganizationService } from '../organization';
 import { ProjectService } from '../project/project.service';
@@ -18,6 +25,7 @@ import {
   Partnership,
   PartnershipListInput,
   PartnershipListOutput,
+  PartnershipType,
   UpdatePartnership,
 } from './dto';
 
@@ -26,6 +34,8 @@ export class PartnershipService {
   constructor(
     private readonly files: FileService,
     private readonly db: DatabaseService,
+    private readonly config: ConfigService,
+    private readonly budgetService: BudgetService,
     private readonly orgService: OrganizationService,
     private readonly projectService: ProjectService,
     @Logger('partnership:service') private readonly logger: ILogger
@@ -163,6 +173,12 @@ export class PartnershipService {
       const createPartnership = this.db
         .query()
         .match(matchSession(session, { withAclEdit: 'canCreatePartnership' }))
+        .match([
+          node('rootuser', 'User', {
+            active: true,
+            id: this.config.rootAdmin.id,
+          }),
+        ])
         .create([
           [
             node('newPartnership', 'Partnership', {
@@ -181,6 +197,7 @@ export class PartnershipService {
           ...this.property('types', input.types),
           [
             node('adminSG', 'SecurityGroup', {
+              id: generate(),
               active: true,
               createdAt,
               name: `${input.mouStart} ${input.mouEnd} admin`,
@@ -190,12 +207,23 @@ export class PartnershipService {
           ],
           [
             node('readerSG', 'SecurityGroup', {
+              id: generate(),
               active: true,
               createdAt,
               name: `${input.mouStart} ${input.mouEnd} users`,
             }),
             relation('out', '', 'member', { active: true, createdAt }),
             node('requestingUser'),
+          ],
+          [
+            node('adminSG'),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('rootuser'),
+          ],
+          [
+            node('readerSG'),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('rootuser'),
           ],
           ...this.permission('agreementStatus'),
           ...this.permission('mouStatus'),
@@ -231,6 +259,25 @@ export class PartnershipService {
         })
         .first();
 
+      const fiscalRange = fiscalYears(input.mouStart, input.mouEnd); // calculate the fiscalYears covered by this date range
+      if (
+        input.types?.includes(PartnershipType.Funding) &&
+        fiscalRange.length > 0
+      ) {
+        const budget = await this.budgetService.create({ projectId }, session);
+
+        const inputRecords = flatMap(fiscalRange, (fiscalYear) => ({
+          budgetId: budget.id,
+          organizationId,
+          fiscalYear,
+        }));
+
+        await Promise.all(
+          inputRecords.map((record) =>
+            this.budgetService.createRecord(record, session)
+          )
+        );
+      }
       return await this.readOne(id, session);
     } catch (e) {
       this.logger.warning('Failed to create partnership', {
@@ -246,13 +293,13 @@ export class PartnershipService {
       .query()
       .match(matchSession(session, { withAclRead: 'canReadPartnerships' }))
       .match([node('partnership', 'Partnership', { active: true, id })]);
+    this.propMatch(readPartnership, 'mouStart');
+    this.propMatch(readPartnership, 'mouEnd');
+    this.propMatch(readPartnership, 'types');
     this.propMatch(readPartnership, 'agreementStatus');
     this.propMatch(readPartnership, 'mou');
     this.propMatch(readPartnership, 'agreement');
     this.propMatch(readPartnership, 'mouStatus');
-    this.propMatch(readPartnership, 'mouStart');
-    this.propMatch(readPartnership, 'mouEnd');
-    this.propMatch(readPartnership, 'types');
     readPartnership.optionalMatch([
       node('requestingUser'),
       relation('in', '', 'member', { active: true }),

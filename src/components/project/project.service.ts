@@ -12,6 +12,7 @@ import { generate } from 'shortid';
 import { fiscalYears, ISession, Sensitivity } from '../../common';
 import {
   addBaseNodeMetaPropsWithClause,
+  ConfigService,
   DatabaseService,
   ILogger,
   listWithSecureObject,
@@ -65,6 +66,7 @@ export class ProjectService {
     private readonly partnerships: PartnershipService,
     private readonly fileService: FileService,
     private readonly engagementService: EngagementService,
+    private readonly config: ConfigService,
     @Logger('project:service') private readonly logger: ILogger
   ) {}
 
@@ -437,7 +439,6 @@ export class ProjectService {
       },
       session
     );
-    //console.log('budgets', JSON.stringify(budgets, null, 2));
 
     const current = budgets.items.find(
       (b) => b.status === BudgetStatus.Current
@@ -607,6 +608,12 @@ export class ProjectService {
       const createProject = this.db
         .query()
         .match(matchSession(session, { withAclEdit: 'canCreateProject' }))
+        .match([
+          node('rootuser', 'User', {
+            active: true,
+            id: this.config.rootAdmin.id,
+          }),
+        ])
         .create([
           [
             node('newProject', 'Project:BaseNode', {
@@ -631,6 +638,7 @@ export class ProjectService {
           ...this.property('modifiedAt', createInput.modifiedAt),
           [
             node('adminSG', 'SecurityGroup', {
+              id: generate(),
               active: true,
               createdAt,
               name: `${input.name} ${input.type} admin`,
@@ -640,12 +648,23 @@ export class ProjectService {
           ],
           [
             node('readerSG', 'SecurityGroup', {
+              id: generate(),
               active: true,
               createdAt,
               name: `${input.name} ${input.type} users`,
             }),
             relation('out', '', 'member', { active: true, createdAt }),
             node('requestingUser'),
+          ],
+          [
+            node('adminSG'),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('rootuser'),
+          ],
+          [
+            node('readerSG'),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('rootuser'),
           ],
           // ...this.permission('type'),
           ...this.permission('sensitivity'),
@@ -844,6 +863,7 @@ export class ProjectService {
       .filter((p) => p.types.value.includes(PartnershipType.Funding))
       .map((p) => p.organization.id);
 
+    // calculate the fiscalYears covered by this date range
     const fiscalRange = fiscalYears(
       project.mouStart.value,
       project.mouEnd.value

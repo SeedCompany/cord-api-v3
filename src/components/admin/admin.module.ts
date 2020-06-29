@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { AuthorizationModule } from '../authorization';
-import { OrganizationModule } from '../organization';
+import { AuthorizationModule } from '../authorization/authorization.module';
+import { OrganizationModule } from '../organization/organization.module';
 import { AdminResolver } from './admin.resolver';
 import { AdminService } from './admin.service';
 

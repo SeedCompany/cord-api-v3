@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { RangeModule } from '../range';
+import { RangeModule } from '../range/range.module';
 import { StoryResolver } from './story.resolver';
 import { StoryService } from './story.service';
 

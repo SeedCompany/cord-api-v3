@@ -8,7 +8,13 @@ import { first, intersection, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
-import { DatabaseService, ILogger, Logger, matchSession } from '../../core';
+import {
+  ConfigService,
+  DatabaseService,
+  ILogger,
+  Logger,
+  matchSession,
+} from '../../core';
 import { CeremonyService } from '../ceremony';
 import { CeremonyType } from '../ceremony/dto/type.enum';
 import { LanguageService } from '../language';
@@ -25,6 +31,7 @@ import {
   Engagement,
   EngagementListInput,
   EngagementListOutput,
+  EngagementStatus,
   InternshipEngagement,
   LanguageEngagement,
   UpdateInternshipEngagement,
@@ -40,6 +47,7 @@ export class EngagementService {
     private readonly userService: UserService,
     private readonly languageService: LanguageService,
     private readonly locationService: LocationService,
+    private readonly config: ConfigService,
     @Logger(`engagement.service`) private readonly logger: ILogger
   ) {}
   async readOne(id: string, session: ISession): Promise<Engagement> {
@@ -525,6 +533,12 @@ export class EngagementService {
     const createLE = this.db
       .query()
       .match(matchSession(session, { withAclEdit: 'canCreateEngagement' }))
+      .match([
+        node('rootuser', 'User', {
+          active: true,
+          id: this.config.rootAdmin.id,
+        }),
+      ])
       .create([
         [
           node('languageEngagement', 'LanguageEngagement:BaseNode', {
@@ -569,8 +583,14 @@ export class EngagementService {
           input.paraTextRegistryId || undefined,
           'languageEngagement'
         ),
+        ...this.property(
+          'status',
+          EngagementStatus.InDevelopment,
+          'languageEngagement'
+        ),
         [
           node('adminSG', 'SecurityGroup', {
+            id: generate(),
             active: true,
             createdAt,
             name: 'languageEngagement admin',
@@ -580,12 +600,23 @@ export class EngagementService {
         ],
         [
           node('readerSG', 'SecurityGroup', {
+            id: generate(),
             active: true,
             createdAt,
             name: 'languageEngagement users',
           }),
           relation('out', '', 'member', { active: true, createdAt }),
           node('requestingUser'),
+        ],
+        [
+          node('adminSG'),
+          relation('out', '', 'member', { active: true, createdAt }),
+          node('rootuser'),
+        ],
+        [
+          node('readerSG'),
+          relation('out', '', 'member', { active: true, createdAt }),
+          node('rootuser'),
         ],
         ...this.permission('firstScripture', 'languageEngagement'),
         ...this.permission('lukePartnership', 'languageEngagement'),
@@ -664,6 +695,12 @@ export class EngagementService {
     const createIE = this.db
       .query()
       .match(matchSession(session, { withAclEdit: 'canCreateEngagement' }))
+      .match([
+        node('rootuser', 'User', {
+          active: true,
+          id: this.config.rootAdmin.id,
+        }),
+      ])
       .create([
         [
           node('internshipEngagement', 'InternshipEngagement:BaseNode', {
@@ -713,6 +750,7 @@ export class EngagementService {
             active: true,
             createdAt,
             name: 'internEngagement admin',
+            id: generate(),
           }),
           relation('out', '', 'member', { active: true, createdAt }),
           node('requestingUser'),
@@ -722,9 +760,20 @@ export class EngagementService {
             active: true,
             createdAt,
             name: 'internEngagement users',
+            id: generate(),
           }),
           relation('out', '', 'member', { active: true, createdAt }),
           node('requestingUser'),
+        ],
+        [
+          node('adminSG'),
+          relation('out', '', 'member', { active: true, createdAt }),
+          node('rootuser'),
+        ],
+        [
+          node('readerSG'),
+          relation('out', '', 'member', { active: true, createdAt }),
+          node('rootuser'),
         ],
         ...this.permission('completeDate', 'internshipEngagement'),
         ...this.permission(

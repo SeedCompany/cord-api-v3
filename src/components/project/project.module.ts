@@ -3,6 +3,7 @@ import { BudgetModule } from '../budget/budget.module';
 import { EngagementModule } from '../engagement/engagement.module';
 import { FileModule } from '../file/file.module';
 import { LocationModule } from '../location/location.module';
+import { OrganizationService } from '../organization';
 import { PartnershipModule } from '../partnership/partnership.module';
 import { UserModule } from '../user/user.module';
 import {
@@ -27,6 +28,7 @@ import { ProjectService } from './project.service';
     ProjectResolver,
     TranslationProjectResolver,
     InternshipProjectResolver,
+    OrganizationService,
     ProjectService,
   ],
   exports: [ProjectService, ProjectMemberModule],
