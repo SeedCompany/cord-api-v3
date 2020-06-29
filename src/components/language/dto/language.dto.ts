@@ -34,7 +34,7 @@ export class Language extends Resource {
   readonly organizationPopulation: SecuredInt;
 
   @Field()
-  readonly rodNumber: SecuredInt;
+  readonly rodNumber: SecuredString;
 
   @Field(() => Sensitivity)
   readonly sensitivity: Sensitivity;
