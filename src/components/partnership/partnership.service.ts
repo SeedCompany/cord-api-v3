@@ -4,10 +4,10 @@ import {
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
-import { upperFirst } from 'lodash';
+import { flatMap, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
-import { ISession } from '../../common';
+import { fiscalYears, ISession } from '../../common';
 import {
   ConfigService,
   DatabaseService,
@@ -15,12 +15,14 @@ import {
   Logger,
   matchSession,
 } from '../../core';
+import { BudgetService } from '../budget';
 import { FileService } from '../file';
 import {
   CreatePartnership,
   Partnership,
   PartnershipListInput,
   PartnershipListOutput,
+  PartnershipType,
   UpdatePartnership,
 } from './dto';
 
@@ -30,6 +32,7 @@ export class PartnershipService {
     private readonly files: FileService,
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
+    private readonly budgetService: BudgetService,
     @Logger('partnership:service') private readonly logger: ILogger
   ) {}
 
@@ -243,6 +246,25 @@ export class PartnershipService {
         })
         .first();
 
+      const fiscalRange = fiscalYears(input.mouStart, input.mouEnd); // calculate the fiscalYears covered by this date range
+      if (
+        input.types?.includes(PartnershipType.Funding) &&
+        fiscalRange.length > 0
+      ) {
+        const budget = await this.budgetService.create({ projectId }, session);
+
+        const inputRecords = flatMap(fiscalRange, (fiscalYear) => ({
+          budgetId: budget.id,
+          organizationId,
+          fiscalYear,
+        }));
+
+        await Promise.all(
+          inputRecords.map((record) =>
+            this.budgetService.createRecord(record, session)
+          )
+        );
+      }
       return await this.readOne(id, session);
     } catch (e) {
       this.logger.warning('Failed to create partnership', {
