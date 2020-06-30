@@ -231,18 +231,6 @@ describe('Organization e2e', () => {
       ${fragments.org}
     `);
 
-    const orgNames = organizations.items.map(
-      (r: {
-        id: string;
-        name: {
-          value: string;
-          canRead: boolean;
-          canEdit: boolean;
-        };
-        createdAt: string;
-      }) => r.name.value
-    );
-    console.log('orgNames :>> ', orgNames);
     expect(organizations.items.length).toBeGreaterThanOrEqual(numOrgs);
   });
 });
