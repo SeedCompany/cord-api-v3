@@ -56,7 +56,7 @@ describe('Engagement e2e', () => {
     await app.close();
   });
 
-  it.only('create a language engagement', async () => {
+  it('create a language engagement', async () => {
     const languageEngagement = await createLanguageEngagement(app, {
       languageId: language.id,
       projectId: project.id,
@@ -198,10 +198,15 @@ describe('Engagement e2e', () => {
         },
       }
     );
-
     const updated = result.updateLanguageEngagement.engagement;
+    const difference = Interval.fromDateTimes(
+      DateTime.fromISO(languageEngagement.modifiedAt.toString()),
+      DateTime.fromISO(updated.modifiedAt)
+    )
+      .toDuration()
+      .toFormat('S');
     expect(updated).toBeTruthy();
-    expect(updated.modifiedAt).toBeTruthy();
+    expect(parseInt(difference)).toBeGreaterThan(0);
     expect(updated.id).toBe(languageEngagement.id);
     expect(updated.firstScripture.value).toBe(updateFirstScripture);
     expect(updated.lukePartnership.value).toBe(updateLukePartnership);
