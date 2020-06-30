@@ -21,7 +21,6 @@ import {
   matchRequestingUser,
   matchSession,
   OnIndex,
-  printActualQuery,
   runListQuery,
 } from '../../core';
 import {
@@ -263,6 +262,7 @@ export class OrganizationService {
         '',
         'User',
         'organization',
+        'name',
         filter.name
       );
     } else {
@@ -284,8 +284,6 @@ export class OrganizationService {
           } as node
         `
       );
-
-    printActualQuery(this.logger, listQuery);
 
     return runListQuery(listQuery, input);
   }

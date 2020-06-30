@@ -170,8 +170,8 @@ export function filterQuery(
   baseNodeId?: string,
   baseNodeLabel?: string,
   childNodeIdentifier?: string,
-  // filter?: Array<Record<string, any>>
-  filter?: string
+  filterKey?: string,
+  filterValue?: string
 ) {
   if (baseNodeId && baseNodeLabel) {
     query.match([
@@ -200,7 +200,7 @@ export function filterQuery(
       relation('out', '', sort, { active: true }),
       node(sort, 'Property', { active: true }),
     ]);
-  } else if (filter) {
+  } else if (filterKey && filterValue) {
     query.match([
       node('requestingUser'),
       relation('in', '', 'member'),
@@ -218,10 +218,10 @@ export function filterQuery(
         active: true,
       }),
       relation('out', '', sort, { active: true }),
-      node(sort, 'Property', { active: true }),
+      node(filterKey, 'Property', { active: true }),
     ]);
     query.where({
-      [sort]: { value: contains(filter) },
+      [filterKey]: { value: contains(filterValue) },
     });
   } else {
     query.match([
