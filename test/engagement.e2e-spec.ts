@@ -56,11 +56,12 @@ describe('Engagement e2e', () => {
     await app.close();
   });
 
-  it('create a language engagement', async () => {
+  it.only('create a language engagement', async () => {
     const languageEngagement = await createLanguageEngagement(app, {
       languageId: language.id,
       projectId: project.id,
     });
+    expect(languageEngagement.modifiedAt).toBeDefined();
     expect(languageEngagement.id).toBeDefined();
   });
 
@@ -111,6 +112,7 @@ describe('Engagement e2e', () => {
     );
     expect(actual.startDate).toMatchObject(languageEngagement.startDate);
     expect(actual.endDate).toMatchObject(languageEngagement.endDate);
+    expect(actual.modifiedAt).toBe(languageEngagement.modifiedAt);
     expect(actual.paraTextRegistryId).toMatchObject(
       languageEngagement.paraTextRegistryId
     );
@@ -199,6 +201,7 @@ describe('Engagement e2e', () => {
 
     const updated = result.updateLanguageEngagement.engagement;
     expect(updated).toBeTruthy();
+    expect(updated.modifiedAt).toBeTruthy();
     expect(updated.id).toBe(languageEngagement.id);
     expect(updated.firstScripture.value).toBe(updateFirstScripture);
     expect(updated.lukePartnership.value).toBe(updateLukePartnership);
