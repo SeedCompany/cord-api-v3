@@ -3,8 +3,9 @@ import { command } from 'execa';
 import { promises as fs } from 'fs';
 import * as pkgUp from 'pkg-up';
 import { PackageJson } from 'type-fest';
-import { ConfigService } from './config/config.service';
-import { ILogger, Logger } from './logger';
+import { ILogger, Logger } from '../logger';
+import { ConfigService } from './config.service';
+import { EnvironmentService } from './environment.service';
 
 export class VersionService implements OnModuleInit {
   private setVersion: (v: Version) => void;
@@ -14,6 +15,7 @@ export class VersionService implements OnModuleInit {
 
   constructor(
     private readonly config: ConfigService,
+    private readonly env: EnvironmentService,
     @Logger('version') private readonly logger: ILogger
   ) {}
 
@@ -36,6 +38,10 @@ export class VersionService implements OnModuleInit {
   }
 
   private async gitBranch() {
+    const env = this.env.string('GIT_BRANCH').optional();
+    if (env) {
+      return env;
+    }
     try {
       const res = await command('git symbolic-ref -q --short HEAD');
       return res.stdout;
@@ -45,6 +51,10 @@ export class VersionService implements OnModuleInit {
   }
 
   private async gitHash() {
+    const env = this.env.string('GIT_HASH').optional();
+    if (env) {
+      return env;
+    }
     try {
       const res = await command('git rev-parse -q --short HEAD');
       return res.stdout;
