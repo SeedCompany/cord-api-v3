@@ -1,6 +1,7 @@
 import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
-import { MinLength, ValidateNested } from 'class-validator';
+import { ValidateNested } from 'class-validator';
+import { NameField } from '../../../common';
 import { UserStatus } from './user-status.enum';
 import { User } from './user.dto';
 
@@ -11,20 +12,16 @@ export abstract class UpdateUser {
 
   // TODO Allow email to be changed? Implications?
 
-  @Field({ nullable: true })
-  @MinLength(2)
+  @NameField({ nullable: true })
   readonly realFirstName?: string;
 
-  @Field({ nullable: true })
-  @MinLength(2)
+  @NameField({ nullable: true })
   readonly realLastName?: string;
 
-  @Field({ nullable: true })
-  @MinLength(2)
+  @NameField({ nullable: true })
   readonly displayFirstName?: string;
 
-  @Field({ nullable: true })
-  @MinLength(2)
+  @NameField({ nullable: true })
   readonly displayLastName?: string;
 
   @Field({ nullable: true })

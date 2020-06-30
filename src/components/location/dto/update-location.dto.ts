@@ -1,6 +1,7 @@
 import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
-import { MinLength, ValidateNested } from 'class-validator';
+import { ValidateNested } from 'class-validator';
+import { NameField } from '../../../common';
 import { Country, Region, Zone } from './location.dto';
 
 @InputType()
@@ -8,8 +9,7 @@ export abstract class UpdateZone {
   @Field(() => ID)
   readonly id: string;
 
-  @Field({ nullable: true })
-  @MinLength(2)
+  @NameField({ nullable: true })
   readonly name?: string;
 
   @Field(() => ID, {
@@ -24,8 +24,7 @@ export abstract class UpdateRegion {
   @Field(() => ID)
   readonly id: string;
 
-  @Field({ nullable: true })
-  @MinLength(2)
+  @NameField({ nullable: true })
   readonly name?: string;
 
   @Field(() => ID, {
@@ -46,8 +45,7 @@ export abstract class UpdateCountry {
   @Field(() => ID)
   readonly id: string;
 
-  @Field({ nullable: true })
-  @MinLength(2)
+  @NameField({ nullable: true })
   readonly name?: string;
 
   @Field(() => ID, {
