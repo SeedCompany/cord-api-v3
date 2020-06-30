@@ -8,8 +8,9 @@ import {
   FileNodeCategory,
   FileNodeType,
 } from '../src/components/file';
+import { LocalBucket } from '../src/components/file/bucket';
 import { FileRepository } from '../src/components/file/file.repository';
-import { MemoryBucket } from '../src/components/file/memory-bucket';
+import { FilesBucketToken } from '../src/components/file/files-bucket.factory';
 import { getCategoryFromMimeType } from '../src/components/file/mimeTypes';
 import { User } from '../src/components/user';
 import { DatabaseService } from '../src/core';
@@ -79,14 +80,14 @@ function resetNow() {
 
 describe('File e2e', () => {
   let app: TestApp;
-  let bucket: MemoryBucket;
+  let bucket: LocalBucket;
   let root: Directory;
   let me: User;
   const myPassword = faker.internet.password();
 
   beforeAll(async () => {
     app = await createTestApp();
-    bucket = app.get(MemoryBucket);
+    bucket = app.get(FilesBucketToken);
     await createSession(app);
     me = await createUser(app, { password: myPassword });
   });
@@ -99,7 +100,7 @@ describe('File e2e', () => {
     const db = app.get(DatabaseService);
     // remove old data to ensure consistency check
     await db.query().matchNode('n', 'FileNode').detachDelete('n').run();
-    bucket.clear();
+    await bucket.clear();
     root = await createRootDirectory(app);
     // reset logged in user
     await login(app, {
@@ -130,7 +131,9 @@ describe('File e2e', () => {
       expect(modifiedAt.diffNow().as('seconds')).toBeGreaterThan(-30);
       const createdAt = DateTime.fromISO(file.createdAt);
       expect(createdAt.diffNow().as('seconds')).toBeGreaterThan(-30);
-      expect(bucket.download(file.downloadUrl)).toEqual(fakeFile.content);
+      expect((await bucket.download(file.downloadUrl)).Body).toEqual(
+        fakeFile.content
+      );
       expect(file.parents[0].id).toEqual(root.id);
     }
   });
@@ -154,7 +157,9 @@ describe('File e2e', () => {
     expect(version.createdBy.id).toEqual(me.id);
     const createdAt = DateTime.fromISO(version.createdAt);
     expect(createdAt.diffNow().as('seconds')).toBeGreaterThan(-30);
-    expect(bucket.download(version.downloadUrl)).toEqual(fakeFile.content);
+    expect((await bucket.download(version.downloadUrl)).Body).toEqual(
+      fakeFile.content
+    );
     expect(version.parents[0].id).toEqual(file.id);
   });
 
@@ -167,7 +172,7 @@ describe('File e2e', () => {
 
     const fakeFile = generateFakeFile();
     const updated = await uploadFile(app, initial.id, fakeFile);
-    assertFileChanges(updated, initial, fakeFile);
+    await assertFileChanges(updated, initial, fakeFile);
     expect(updated.modifiedBy.id).toEqual(current.id);
     // TODO Files have their own names, should these be updated to match the new version's name?
     // expect(updatedFile.name).not.toEqual(initialFile.name);
@@ -182,16 +187,18 @@ describe('File e2e', () => {
       name: initial.name,
     };
     const updated = await uploadFile(app, root.id, fakeFile);
-    assertFileChanges(updated, initial, fakeFile);
+    await assertFileChanges(updated, initial, fakeFile);
   });
 
-  function assertFileChanges(
+  async function assertFileChanges(
     updated: RawFile,
     initial: RawFile,
     input: FakeFile
   ) {
     expect(updated.id).toEqual(initial.id);
-    expect(bucket.download(updated.downloadUrl)).toEqual(input.content);
+    expect((await bucket.download(updated.downloadUrl)).Body).toEqual(
+      input.content
+    );
     expect(updated.size).toEqual(input.size);
     expect(updated.mimeType).toEqual(input.mimeType);
     const createdAt = DateTime.fromISO(updated.createdAt);

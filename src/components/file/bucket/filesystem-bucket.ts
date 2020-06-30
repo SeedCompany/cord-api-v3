@@ -1,0 +1,86 @@
+import { NotFoundException } from '@nestjs/common';
+import { GetObjectOutput, HeadObjectOutput } from 'aws-sdk/clients/s3';
+import { promises as fs } from 'fs';
+import { dirname, join, resolve } from 'path';
+import { FakeAwsFile, LocalBucket, LocalBucketOptions } from './local-bucket';
+
+export interface FilesystemBucketOptions extends LocalBucketOptions {
+  rootDirectory: string;
+}
+
+/**
+ * A bucket that uses the local filesystem
+ */
+export class FilesystemBucket extends LocalBucket {
+  private readonly rootDir: string;
+
+  constructor(options: FilesystemBucketOptions) {
+    super(options);
+    this.rootDir = resolve(options.rootDirectory);
+  }
+
+  protected async saveFile(key: string, file: FakeAwsFile) {
+    const { Body, ...info } = file;
+    await this.writeFile(key, Body);
+    await this.writeFile(`${key}.info`, JSON.stringify(info));
+  }
+
+  async clear(): Promise<void> {
+    await fs.rmdir(this.rootDir, {
+      recursive: true,
+    });
+  }
+
+  async getObject(key: string): Promise<GetObjectOutput> {
+    const rest = await this.headObject(key);
+    const Body = await this.readFile(key);
+    return { Body, ...rest };
+  }
+
+  async headObject(key: string): Promise<HeadObjectOutput> {
+    const path = this.getPath(key);
+    try {
+      await fs.stat(path);
+    } catch (e) {
+      throw new NotFoundException();
+    }
+    const raw = await this.readFile(key + '.info');
+    const info = JSON.parse(raw);
+    info.LastModified = new Date(info.LastModified);
+
+    return info;
+  }
+
+  async copyObject(oldKey: string, newKey: string) {
+    await fs.copyFile(this.getPath(oldKey), this.getPath(newKey));
+    await fs.copyFile(
+      this.getPath(oldKey) + '.info',
+      this.getPath(newKey) + '.info'
+    );
+  }
+
+  async deleteObject(key: string) {
+    await fs.unlink(this.getPath(key));
+    await fs.unlink(this.getPath(key) + '.info');
+  }
+
+  private async readFile(key: string) {
+    return fs.readFile(this.getPath(key), {
+      encoding: 'utf8',
+    });
+  }
+
+  private async writeFile(key: string, data: any) {
+    const path = this.getPath(key);
+    await fs.mkdir(dirname(path), {
+      recursive: true,
+    });
+    await fs.writeFile(this.getPath(key), data, {
+      encoding: 'utf8',
+    });
+  }
+
+  private getPath(key: string) {
+    return join(this.rootDir, key);
+  }
+}

@@ -6,7 +6,8 @@ import { FileVersionResolver } from './file-version.resolver';
 import { FileRepository } from './file.repository';
 import { FileResolver } from './file.resolver';
 import { FileService } from './file.service';
-import { FilesBucketFactory } from './files-s3-bucket.factory';
+import { FilesBucketFactory } from './files-bucket.factory';
+import { LocalBucketController } from './local-bucket.controller';
 
 @Module({
   imports: [OrganizationModule, UserModule],
@@ -18,6 +19,7 @@ import { FilesBucketFactory } from './files-s3-bucket.factory';
     FileVersionResolver,
     FileService,
   ],
+  controllers: [LocalBucketController],
   exports: [FileService],
 })
 export class FileModule {}
