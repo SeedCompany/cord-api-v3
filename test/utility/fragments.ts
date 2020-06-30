@@ -342,9 +342,33 @@ export const languageEngagement = gql`
   fragment languageEngagement on LanguageEngagement {
     id
     createdAt
+    modifiedAt
     language {
       value {
         id
+        createdAt
+        name {
+          value
+        }
+        displayName {
+          value
+        }
+        beginFiscalYear {
+          value
+        }
+        ethnologueName {
+          value
+        }
+        ethnologuePopulation {
+          value
+        }
+        organizationPopulation {
+          value
+        }
+        rodNumber {
+          value
+        }
+        sensitivity
       }
     }
     firstScripture {
@@ -399,6 +423,7 @@ export const internshipEngagement = gql`
   fragment internshipEngagement on InternshipEngagement {
     id
     createdAt
+    modifiedAt
     countryOfOrigin {
       value {
         id

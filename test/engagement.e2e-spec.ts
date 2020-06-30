@@ -1,5 +1,6 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
+import { DateTime, Interval } from 'luxon';
 import { InternPosition } from '../src/components/engagement';
 import { Language } from '../src/components/language';
 import { Country, Region, Zone } from '../src/components/location';
@@ -24,6 +25,8 @@ import {
   Raw,
   TestApp,
 } from './utility';
+
+import _ = require('lodash');
 
 describe('Engagement e2e', () => {
   let app: TestApp;
@@ -60,6 +63,7 @@ describe('Engagement e2e', () => {
       languageId: language.id,
       projectId: project.id,
     });
+    expect(languageEngagement.modifiedAt).toBeDefined();
     expect(languageEngagement.id).toBeDefined();
   });
 
@@ -110,6 +114,7 @@ describe('Engagement e2e', () => {
     );
     expect(actual.startDate).toMatchObject(languageEngagement.startDate);
     expect(actual.endDate).toMatchObject(languageEngagement.endDate);
+    expect(actual.modifiedAt).toBe(languageEngagement.modifiedAt);
     expect(actual.paraTextRegistryId).toMatchObject(
       languageEngagement.paraTextRegistryId
     );
@@ -195,16 +200,22 @@ describe('Engagement e2e', () => {
         },
       }
     );
-
     const updated = result.updateLanguageEngagement.engagement;
+    const difference = Interval.fromDateTimes(
+      DateTime.fromISO(languageEngagement.modifiedAt.toString()),
+      DateTime.fromISO(updated.modifiedAt)
+    )
+      .toDuration()
+      .toFormat('S');
     expect(updated).toBeTruthy();
+    expect(parseInt(difference)).toBeGreaterThan(0);
     expect(updated.id).toBe(languageEngagement.id);
     expect(updated.firstScripture.value).toBe(updateFirstScripture);
     expect(updated.lukePartnership.value).toBe(updateLukePartnership);
     expect(updated.paraTextRegistryId.value).toBe(updateParaTextRegistryId);
   });
 
-  it.skip('update internship engagement', async () => {
+  it('update internship engagement', async () => {
     const internshipEngagement = await createInternshipEngagement(app, {
       projectId: project.id,
       internId: intern.id,
@@ -223,6 +234,7 @@ describe('Engagement e2e', () => {
           updateInternshipEngagement(input: $input) {
             engagement {
               ...internshipEngagement
+              modifiedAt
             }
           }
         }
@@ -250,6 +262,14 @@ describe('Engagement e2e', () => {
     expect(updated.methodologies.value).toEqual(
       expect.arrayContaining(updateMethodologies)
     );
+
+    const difference = Interval.fromDateTimes(
+      DateTime.fromISO(internshipEngagement.modifiedAt.toString()),
+      DateTime.fromISO(updated.modifiedAt)
+    )
+      .toDuration()
+      .toFormat('S');
+    expect(parseInt(difference)).toBeGreaterThan(0);
   });
 
   it('delete engagement', async () => {
@@ -407,5 +427,49 @@ describe('Engagement e2e', () => {
     );
     expect(result.ceremony.planned.value).toBeTruthy();
     expect(result.ceremony.estimatedDate.value).toBe(date);
+  });
+
+  it('lists both language engagements and internship engagements', async () => {
+    await createLanguageEngagement(app, {
+      languageId: language.id,
+      projectId: project.id,
+    });
+    await createInternshipEngagement(app, {
+      projectId: project.id,
+      countryOfOriginId: country.id,
+      internId: intern.id,
+      mentorId: mentor.id,
+    });
+    const { engagements } = await app.graphql.query(
+      gql`
+        query {
+          engagements {
+            items {
+              __typename
+              id
+              ... on LanguageEngagement {
+                createdAt
+              }
+              ... on InternshipEngagement {
+                createdAt
+              }
+            }
+          }
+        }
+      `
+    );
+
+    expect(
+      _.some(engagements.items, {
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        __typename: 'InternshipEngagement',
+      })
+    ).toBeTruthy();
+    expect(
+      _.some(engagements.items, {
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        __typename: 'LanguageEngagement',
+      })
+    ).toBeTruthy();
   });
 });

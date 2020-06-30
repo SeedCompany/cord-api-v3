@@ -1,7 +1,7 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
-import { MinLength, ValidateNested } from 'class-validator';
-import { IsEmail } from '../../../common';
+import { ValidateNested } from 'class-validator';
+import { IsEmail, NameField } from '../../../common';
 import { UserStatus } from './user-status.enum';
 import { User } from './user.dto';
 
@@ -11,20 +11,16 @@ export abstract class CreatePerson {
   @IsEmail()
   readonly email?: string;
 
-  @Field()
-  @MinLength(2)
+  @NameField()
   readonly realFirstName: string;
 
-  @Field()
-  @MinLength(2)
+  @NameField()
   readonly realLastName: string;
 
-  @Field()
-  @MinLength(2)
+  @NameField()
   readonly displayFirstName: string;
 
-  @Field()
-  @MinLength(2)
+  @NameField()
   readonly displayLastName: string;
 
   @Field({ nullable: true })

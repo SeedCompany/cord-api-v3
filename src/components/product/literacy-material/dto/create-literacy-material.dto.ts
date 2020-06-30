@@ -1,13 +1,13 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
-import { MinLength, ValidateNested } from 'class-validator';
+import { ValidateNested } from 'class-validator';
+import { NameField } from '../../../../common';
 import { CreateRange } from '../../range/dto';
 import { LiteracyMaterial } from './literacy-material';
 
 @InputType()
 export abstract class CreateLiteracyMaterial {
-  @Field()
-  @MinLength(2)
+  @NameField()
   readonly name: string;
 
   @Field(() => [CreateRange], { nullable: true })

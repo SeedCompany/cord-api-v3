@@ -1,12 +1,12 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
-import { MinLength, ValidateNested } from 'class-validator';
+import { ValidateNested } from 'class-validator';
+import { NameField } from '../../../common';
 import { Organization } from './organization';
 
 @InputType()
 export abstract class CreateOrganization {
-  @Field()
-  @MinLength(2)
+  @NameField()
   readonly name: string;
 }
 

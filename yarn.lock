@@ -4214,6 +4214,7 @@ __metadata:
     dotenv: ^8.2.0
     dotenv-expand: ^5.1.0
     eslint: ^6.8.0
+    execa: ^4.0.2
     faker: ^4.1.0
     graphql: ^14.5.8
     graphql-tools: ^4.0.6
@@ -4231,6 +4232,7 @@ __metadata:
     mjml-react: ^1.0.57
     neo4j-driver: 1.7.6
     open: ^7.0.3
+    pkg-up: ^3.1.0
     prettier: ^2.0.4
     react: ^16.13.1
     react-dom: ^16.13.1
@@ -5722,6 +5724,23 @@ __metadata:
     signal-exit: ^3.0.2
     strip-final-newline: ^2.0.0
   checksum: 2/6f1eb2d6012ba061f9daee5cd0ba775dae71a5b18ab4003c4edc5f0b85047f98b982b71e731b237dde1ea3348b4a09deafa988eca5d1f1b6a9925f74c9907777
+  languageName: node
+  linkType: hard
+
+"execa@npm:^4.0.2":
+  version: 4.0.2
+  resolution: "execa@npm:4.0.2"
+  dependencies:
+    cross-spawn: ^7.0.0
+    get-stream: ^5.0.0
+    human-signals: ^1.1.1
+    is-stream: ^2.0.0
+    merge-stream: ^2.0.0
+    npm-run-path: ^4.0.0
+    onetime: ^5.1.0
+    signal-exit: ^3.0.2
+    strip-final-newline: ^2.0.0
+  checksum: 2/c48f3d6a044daa1bb5d93486e1c8eee12a8724b439b7f8c270c556a37cf7e2ffd528a86d2ef08adcbe78b485956cfca56c6027ec15d8370bef959097b9ba23ba
   languageName: node
   linkType: hard
 
@@ -11036,6 +11055,15 @@ __metadata:
   dependencies:
     find-up: ^4.0.0
   checksum: 2/1956ebf3cf5cc36a5d20e93851fcadd5a786774eb08667078561e72e0ab8ace91fc36a028d5305f0bfe7c89f9bf51886e2a3c8cb2c2620accfa3feb8da3c256b
+  languageName: node
+  linkType: hard
+
+"pkg-up@npm:^3.1.0":
+  version: 3.1.0
+  resolution: "pkg-up@npm:3.1.0"
+  dependencies:
+    find-up: ^3.0.0
+  checksum: 2/df82763250b5283c175918f9410f9651afc1750f951249b31c7c49a6918d9faf13a9ef11e9355cbb0d4d5039a5c9d4c7162755b3e6c26235d2e3baea086e4a54
   languageName: node
   linkType: hard
 

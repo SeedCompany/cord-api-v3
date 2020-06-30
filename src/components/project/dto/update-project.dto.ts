@@ -1,7 +1,7 @@
 import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
-import { MinLength, ValidateNested } from 'class-validator';
-import { CalendarDate, DateField } from '../../../common';
+import { ValidateNested } from 'class-validator';
+import { CalendarDate, DateField, NameField } from '../../../common';
 import { IProject, Project } from './project.dto';
 
 @InputType()
@@ -9,8 +9,7 @@ export abstract class UpdateProject {
   @Field(() => ID)
   readonly id: string;
 
-  @Field({ nullable: true })
-  @MinLength(2)
+  @NameField({ nullable: true })
   readonly name?: string;
 
   @Field(() => ID, {
