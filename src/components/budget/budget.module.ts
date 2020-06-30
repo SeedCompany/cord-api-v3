@@ -1,6 +1,7 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { LocationModule } from '../location/location.module';
 import { OrganizationModule } from '../organization/organization.module';
+import { PartnershipModule } from '../partnership/partnership.module';
 import { EducationModule } from '../user/education/education.module';
 import { UnavailabilityModule } from '../user/unavailability/unavailability.module';
 import { UserModule } from '../user/user.module';
@@ -12,7 +13,8 @@ import { BudgetService } from './budget.service';
   imports: [
     EducationModule,
     LocationModule,
-    OrganizationModule,
+    forwardRef(() => PartnershipModule),
+    forwardRef(() => OrganizationModule),
     UnavailabilityModule,
     UserModule,
   ],
