@@ -259,9 +259,11 @@ export class OrganizationService {
         filterQuery,
         label,
         input.sort,
-        filter.userId,
+        '',
         'User',
-        'organization'
+        'organization',
+        'name',
+        filter.name
       );
     } else {
       // match on filter terms
