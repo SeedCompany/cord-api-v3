@@ -63,6 +63,7 @@ describe('Engagement e2e', () => {
       languageId: language.id,
       projectId: project.id,
     });
+    expect(languageEngagement.modifiedAt).toBeDefined();
     expect(languageEngagement.id).toBeDefined();
   });
 
@@ -113,6 +114,7 @@ describe('Engagement e2e', () => {
     );
     expect(actual.startDate).toMatchObject(languageEngagement.startDate);
     expect(actual.endDate).toMatchObject(languageEngagement.endDate);
+    expect(actual.modifiedAt).toBe(languageEngagement.modifiedAt);
     expect(actual.paraTextRegistryId).toMatchObject(
       languageEngagement.paraTextRegistryId
     );
@@ -198,9 +200,15 @@ describe('Engagement e2e', () => {
         },
       }
     );
-
     const updated = result.updateLanguageEngagement.engagement;
+    const difference = Interval.fromDateTimes(
+      DateTime.fromISO(languageEngagement.modifiedAt.toString()),
+      DateTime.fromISO(updated.modifiedAt)
+    )
+      .toDuration()
+      .toFormat('S');
     expect(updated).toBeTruthy();
+    expect(parseInt(difference)).toBeGreaterThan(0);
     expect(updated.id).toBe(languageEngagement.id);
     expect(updated.firstScripture.value).toBe(updateFirstScripture);
     expect(updated.lukePartnership.value).toBe(updateLukePartnership);
