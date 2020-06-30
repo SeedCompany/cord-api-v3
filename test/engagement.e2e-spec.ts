@@ -206,7 +206,7 @@ describe('Engagement e2e', () => {
     expect(updated.paraTextRegistryId.value).toBe(updateParaTextRegistryId);
   });
 
-  it.skip('update internship engagement', async () => {
+  it('update internship engagement', async () => {
     const internshipEngagement = await createInternshipEngagement(app, {
       projectId: project.id,
       internId: intern.id,
