@@ -1,5 +1,6 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
+import { DateTime, Interval } from 'luxon';
 import { InternPosition } from '../src/components/engagement';
 import { Language } from '../src/components/language';
 import { Country, Region, Zone } from '../src/components/location';
@@ -225,6 +226,7 @@ describe('Engagement e2e', () => {
           updateInternshipEngagement(input: $input) {
             engagement {
               ...internshipEngagement
+              modifiedAt
             }
           }
         }
@@ -252,6 +254,14 @@ describe('Engagement e2e', () => {
     expect(updated.methodologies.value).toEqual(
       expect.arrayContaining(updateMethodologies)
     );
+
+    const difference = Interval.fromDateTimes(
+      DateTime.fromISO(internshipEngagement.modifiedAt.toString()),
+      DateTime.fromISO(updated.modifiedAt)
+    )
+      .toDuration()
+      .toFormat('S');
+    expect(parseInt(difference)).toBeGreaterThan(0);
   });
 
   it('delete engagement', async () => {
