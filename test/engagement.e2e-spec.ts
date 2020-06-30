@@ -25,6 +25,8 @@ import {
   TestApp,
 } from './utility';
 
+import _ = require('lodash');
+
 describe('Engagement e2e', () => {
   let app: TestApp;
   let project: Raw<Project>;
@@ -407,5 +409,49 @@ describe('Engagement e2e', () => {
     );
     expect(result.ceremony.planned.value).toBeTruthy();
     expect(result.ceremony.estimatedDate.value).toBe(date);
+  });
+
+  it('lists both language engagements and internship engagements', async () => {
+    await createLanguageEngagement(app, {
+      languageId: language.id,
+      projectId: project.id,
+    });
+    await createInternshipEngagement(app, {
+      projectId: project.id,
+      countryOfOriginId: country.id,
+      internId: intern.id,
+      mentorId: mentor.id,
+    });
+    const { engagements } = await app.graphql.query(
+      gql`
+        query {
+          engagements {
+            items {
+              __typename
+              id
+              ... on LanguageEngagement {
+                createdAt
+              }
+              ... on InternshipEngagement {
+                createdAt
+              }
+            }
+          }
+        }
+      `
+    );
+
+    expect(
+      _.some(engagements.items, {
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        __typename: 'InternshipEngagement',
+      })
+    ).toBeTruthy();
+    expect(
+      _.some(engagements.items, {
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        __typename: 'LanguageEngagement',
+      })
+    ).toBeTruthy();
   });
 });
