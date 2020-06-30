@@ -1,11 +1,12 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
-import { MarkOptional } from 'ts-essentials';
+import { assert, MarkOptional } from 'ts-essentials';
 import {
   CreateFileVersionInput,
   FileListInput,
 } from '../../src/components/file';
-import { MemoryBucket } from '../../src/components/file/memory-bucket';
+import { LocalBucket } from '../../src/components/file/bucket';
+import { FilesBucketToken } from '../../src/components/file/files-bucket.factory';
 import { mimeTypes } from '../../src/components/file/mimeTypes';
 import { TestApp } from './create-app';
 import { RawFile, RawFileNode, RawFileNodeChildren } from './fragments';
@@ -33,7 +34,10 @@ export async function uploadFile(
     ...generateFakeFile(),
     ...input,
   };
-  app.get(MemoryBucket).save(url, {
+
+  const bucket = app.get(FilesBucketToken);
+  assert(bucket instanceof LocalBucket);
+  await bucket.upload(url, {
     Body,
     ContentType,
     ContentLength,

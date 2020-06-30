@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
 import { LazyGetter as Lazy } from 'lazy-get-decorator';
+import { Duration } from 'luxon';
 import { Config as Neo4JDriverConfig } from 'neo4j-driver/types/v1';
+import { join } from 'path';
 import { LogLevel } from '../logger';
 import { EnvironmentService } from './environment.service';
 
@@ -13,7 +15,13 @@ import { EnvironmentService } from './environment.service';
 @Injectable()
 export class ConfigService {
   port = this.env.number('port').optional(3000);
+  hostUrl = this.env
+    .string('host_url')
+    .optional(`http://localhost:${this.port}`);
   globalPrefix = '';
+
+  /** Is this a jest process? */
+  jest = Boolean(this.env.string('JEST_WORKER_ID').optional());
 
   jwtKey = this.env.string('JWT_AUTH_KEY').optional('cord-field');
 
@@ -60,8 +68,17 @@ export class ConfigService {
   dbIndexesCreate = this.env.boolean('DB_CREATE_INDEXES').optional(true);
 
   @Lazy() get files() {
+    const bucket = this.env.string('FILES_S3_BUCKET').optional();
+    const localDirectory = this.env
+      .string('FILES_LOCAL_DIR')
+      .optional(this.jest ? null : '.files');
+    // Routes to LocalBucketController
+    const baseUrl = join(this.hostUrl, this.globalPrefix, 'file');
     return {
-      bucket: this.env.string('FILES_S3_BUCKET').optional('cord-field'),
+      bucket,
+      localDirectory,
+      baseUrl,
+      signedUrlExpires: Duration.fromObject({ minutes: 15 }),
     };
   }
 
