@@ -1,4 +1,4 @@
-import { node, Query, relation } from 'cypher-query-builder';
+import { contains, node, Query, relation } from 'cypher-query-builder';
 import { isFunction } from 'lodash';
 import {
   ISession,
@@ -169,7 +169,9 @@ export function filterQuery(
   sort: string,
   baseNodeId?: string,
   baseNodeLabel?: string,
-  childNodeIdentifier?: string
+  childNodeIdentifier?: string,
+  filterKey?: string,
+  filterValue?: string
 ) {
   if (baseNodeId && baseNodeLabel) {
     query.match([
@@ -198,6 +200,29 @@ export function filterQuery(
       relation('out', '', sort, { active: true }),
       node(sort, 'Property', { active: true }),
     ]);
+  } else if (filterKey && filterValue) {
+    query.match([
+      node('requestingUser'),
+      relation('in', '', 'member'),
+      node('', 'SecurityGroup', {
+        active: true,
+      }),
+      relation('out', '', 'permission', { active: true }),
+      node('', 'Permission', {
+        property: sort,
+        read: true,
+        active: true,
+      }),
+      relation('out', '', 'baseNode'),
+      node('node', label, {
+        active: true,
+      }),
+      relation('out', '', sort, { active: true }),
+      node(filterKey, 'Property', { active: true }),
+    ]);
+    query.where({
+      [filterKey]: { value: contains(filterValue) },
+    });
   } else {
     query.match([
       node('requestingUser'),
