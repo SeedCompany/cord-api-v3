@@ -1,6 +1,8 @@
 import { gql } from 'apollo-server-core';
 import { sample, times } from 'lodash';
+import { CalendarDate } from '../src/common';
 import {
+  CreatePartnership,
   Partnership,
   PartnershipAgreementStatus,
   PartnershipType,
@@ -248,5 +250,38 @@ describe('Partnership e2e', () => {
         id: partnership.id,
       }
     );
+  });
+
+  it('create partnership does not create if organizationId is invalid', async () => {
+    // create bad partnership with fake project id and org id
+    const badPartnership: CreatePartnership = {
+      projectId: 'fakeProj',
+      agreementStatus: PartnershipAgreementStatus.AwaitingSignature,
+      mouStatus: PartnershipAgreementStatus.AwaitingSignature,
+      types: [PartnershipType.Managing],
+      organizationId: 'fakeOrg',
+      mouStart: CalendarDate.local(),
+      mouEnd: CalendarDate.local(),
+    };
+
+    await expect(
+      app.graphql.mutate(
+        gql`
+          mutation createPartnership($input: CreatePartnershipInput!) {
+            createPartnership(input: $input) {
+              partnership {
+                ...partnership
+              }
+            }
+          }
+          ${fragments.partnership}
+        `,
+        {
+          input: {
+            partnership: badPartnership,
+          },
+        }
+      )
+    ).rejects.toThrowError();
   });
 });

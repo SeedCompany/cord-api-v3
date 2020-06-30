@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { BudgetModule } from '../budget/budget.module';
 import { EngagementModule } from '../engagement/engagement.module';
 import { FileModule } from '../file/file.module';
@@ -17,8 +17,8 @@ import { ProjectService } from './project.service';
 @Module({
   imports: [
     ProjectMemberModule,
-    BudgetModule,
-    PartnershipModule,
+    forwardRef(() => BudgetModule),
+    forwardRef(() => PartnershipModule),
     UserModule,
     LocationModule,
     FileModule,
