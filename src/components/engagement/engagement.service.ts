@@ -241,6 +241,7 @@ export class EngagementService {
     if (!result || !result.id) {
       throw new NotFoundException('could not find language Engagement');
     }
+
     const ceremony = result.ceremonyId
       ? await this.ceremonyService.readOne(result.ceremonyId, session)
       : undefined;
@@ -276,6 +277,7 @@ export class EngagementService {
         canEdit: !!result.canEditParaTextRegistryId,
       },
     };
+
     return {
       id,
       createdAt: result.createdAt,
@@ -587,6 +589,7 @@ export class EngagementService {
           EngagementStatus.InDevelopment,
           'languageEngagement'
         ),
+        ...this.property('modifiedAt', DateTime.local(), 'languageEngagement'),
         [
           node('adminSG', 'SecurityGroup', {
             id: generate(),
@@ -628,6 +631,7 @@ export class EngagementService {
         ...this.permission('language', 'languageEngagement'),
         ...this.permission('status', 'languageEngagement'),
         ...this.permission('paraTextRegistryId', 'languageEngagement'),
+        ...this.permission('modifiedAt', 'languageEngagement'),
       ])
       .return('languageEngagement');
 
@@ -1183,6 +1187,10 @@ export class EngagementService {
     session: ISession
   ): Promise<LanguageEngagement> {
     try {
+      const changes = {
+        ...input,
+        modifiedAt: DateTime.local(),
+      };
       const object = await this.readOne(input.id, session);
       await this.db.sgUpdateProperties({
         session,
@@ -1196,10 +1204,9 @@ export class EngagementService {
           'startDate',
           'endDate',
           'paraTextRegistryId',
+          'modifiedAt',
         ],
-        changes: {
-          ...input,
-        },
+        changes,
         nodevar: 'LanguageEngagement',
       });
 
