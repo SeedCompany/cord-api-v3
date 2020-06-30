@@ -37,8 +37,8 @@ export abstract class CreateLanguage {
   @IsPositive()
   readonly organizationPopulation?: number;
 
-  @Field(() => Int, { nullable: true })
-  readonly rodNumber?: number;
+  @Field({ nullable: true })
+  readonly rodNumber?: string;
 }
 
 @InputType()

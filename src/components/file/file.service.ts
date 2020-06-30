@@ -10,6 +10,7 @@ import type { AWSError } from 'aws-sdk';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
 import { ILogger, Logger } from '../../core';
+import { FileBucket } from './bucket';
 import {
   BaseNode,
   CreateDefinedFileVersionInput,
@@ -35,14 +36,13 @@ import {
   SecuredFile,
 } from './dto';
 import { FileRepository } from './file.repository';
-import { FilesBucketToken } from './files-s3-bucket.factory';
+import { FilesBucketToken } from './files-bucket.factory';
 import { getCategoryFromMimeType } from './mimeTypes';
-import { IS3Bucket } from './s3-bucket';
 
 @Injectable()
 export class FileService {
   constructor(
-    @Inject(FilesBucketToken) private readonly bucket: IS3Bucket,
+    @Inject(FilesBucketToken) private readonly bucket: FileBucket,
     private readonly repo: FileRepository,
     @Logger('file:service') private readonly logger: ILogger
   ) {}
