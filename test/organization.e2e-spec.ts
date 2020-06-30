@@ -242,7 +242,7 @@ describe('Organization e2e', () => {
         createdAt: string;
       }) => r.name.value
     );
-    console.log('orgNames :>> ', orgNames);
+
     expect(organizations.items.length).toBeGreaterThanOrEqual(numOrgs);
   });
 });
