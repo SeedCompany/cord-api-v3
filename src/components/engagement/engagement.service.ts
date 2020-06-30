@@ -685,7 +685,7 @@ export class EngagementService {
       userId: session.userId,
     });
     const id = generate();
-    const createdAt = DateTime.local().toISO();
+    const createdAt = DateTime.local();
     const ceremony = await this.ceremonyService.create(
       { type: CeremonyType.Certification },
       session
@@ -709,6 +709,7 @@ export class EngagementService {
             owningOrgId: session.owningOrgId,
           }),
         ],
+        ...this.property('modifiedAt', createdAt, 'internshipEngagement'),
         ...this.property(
           'completeDate',
           input.completeDate || undefined,
@@ -793,6 +794,7 @@ export class EngagementService {
         ...this.permission('methodologies', 'internshipEngagement'),
         ...this.permission('position', 'internshipEngagement'),
         ...this.permission('endDate', 'internshipEngagement'),
+        ...this.permission('modifiedAt', 'internshipEngagement'),
         ...this.permission('startDate', 'internshipEngagement'),
         ...this.permission('language', 'internshipEngagement'),
         ...this.permission('status', 'internshipEngagement'),
@@ -802,8 +804,7 @@ export class EngagementService {
         ...this.permission('mentor', 'internshipEngagement'),
       ])
       .return('internshipEngagement');
-    // const printme = createIE;
-    // console.log('printme :>> ', printme.interpolate());
+
     try {
       await createIE.first();
     } catch (e) {
@@ -865,7 +866,7 @@ export class EngagementService {
       )) as InternshipEngagement;
     } catch (e) {
       this.logger.error(e);
-      // console.log('e :>> ', e);
+
       throw new ServerException(`Could not create InternshipEngagement`);
     }
   }
@@ -885,6 +886,9 @@ export class EngagementService {
         }),
       ]);
     this.propMatch(ieQuery, 'completeDate', 'internshipEngagement');
+    this.propMatch(ieQuery, 'status', 'internshipEngagement');
+    this.propMatch(ieQuery, 'position', 'internshipEngagement');
+    this.propMatch(ieQuery, 'methodologies', 'internshipEngagement');
     this.propMatch(ieQuery, 'startDate', 'internshipEngagement');
     this.propMatch(ieQuery, 'endDate', 'internshipEngagement');
     this.propMatch(ieQuery, 'disbursementCompleteDate', 'internshipEngagement');
@@ -916,36 +920,7 @@ export class EngagementService {
         relation('out', '', 'type', { active: true }),
         node('ceremonyType', 'Property', { active: true }),
       ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('permStatus', 'Permission', {
-          property: 'status',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('internshipEngagement'),
-        relation('out', '', 'status', { active: true }),
-        node('engStatus', 'EngagementStatus', { active: true }),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('permPosition', 'Permission', {
-          property: 'position',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('internshipEngagement'),
-        relation('out', '', 'position', { active: true }),
-        node('internPosition', 'InternPosition', { active: true }),
-      ])
+
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
@@ -961,23 +936,7 @@ export class EngagementService {
         relation('out', '', 'countryOfOrigin', { active: true }),
         node('country', 'Country', { active: true }),
       ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('permMethodologies', 'Permission', {
-          property: 'methodologies',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('internshipEngagement'),
-        relation('out', '', 'methodologies', { active: true }),
-        node('methodologies', ['Property'], {
-          active: true,
-        }),
-      ])
+
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
@@ -1020,7 +979,7 @@ export class EngagementService {
         country: [{ id: 'countryOfOriginId' }],
         newCeremony: [{ id: 'ceremonyId' }],
         project: [{ id: 'projectId' }],
-        engStatus: [{ value: 'status' }],
+        status: [{ value: 'status' }],
         completeDate: [{ value: 'completeDate' }],
         disbursementCompleteDate: [{ value: 'disbursementCompleteDate' }],
         communicationsCompleteDate: [{ value: 'communicationsCompleteDate' }],
@@ -1032,7 +991,7 @@ export class EngagementService {
         statusModifiedAt: [{ value: 'statusModifiedAt' }],
         modifiedAt: [{ value: 'modifiedAt' }],
         methodologies: [{ value: 'methodologies' }],
-        internPosition: [{ value: 'position' }],
+        position: [{ value: 'position' }],
         canReadPosition: [{ read: 'canReadPosition' }],
         canEditPosition: [{ edit: 'canEditPosition' }],
         canReadStatus: [{ read: 'canReadStatus' }],
@@ -1102,7 +1061,7 @@ export class EngagementService {
         canEditModifiedAt: [{ edit: 'canEditModifiedAt' }],
       });
     // const printme = ieQuery;
-    // console.log('printme :>> ', printme.interpolate());
+    // console.log('printme :>> ', printme.build());
     let result;
     try {
       result = await ieQuery.first();
@@ -1325,9 +1284,11 @@ export class EngagementService {
           'communicationsCompleteDate',
           'startDate',
           'endDate',
+          'modifiedAt',
         ],
         changes: {
           ...input,
+          modifiedAt: DateTime.local(),
         },
         nodevar: 'InternshipEngagement',
       });

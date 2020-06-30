@@ -399,6 +399,7 @@ export const internshipEngagement = gql`
   fragment internshipEngagement on InternshipEngagement {
     id
     createdAt
+    modifiedAt
     countryOfOrigin {
       value {
         id
