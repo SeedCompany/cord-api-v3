@@ -160,6 +160,7 @@ export class ConfigService {
     levels: {
       'nest,nest:*': LogLevel.DEBUG,
       'config:environment': LogLevel.INFO,
+      version: LogLevel.DEBUG,
     },
   };
 

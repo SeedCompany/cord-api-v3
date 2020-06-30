@@ -21,6 +21,10 @@ EXPOSE 80
 
 CMD ["yarn", "start:prod"]
 
+ARG GIT_HASH
+ARG GIT_BRANCH
+RUN echo GIT_HASH=$GIT_HASH > .env
+RUN echo GIT_BRANCH=$GIT_BRANCH >> .env
 
 # Dev stage that installs dependencies and copies project files
 # This stage can run everything
