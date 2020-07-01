@@ -59,7 +59,7 @@ export async function createLanguageEngagement(
 
   expect(actual).toBeTruthy();
   expect(isValid(actual.id)).toBe(true);
-
+  expect(actual.modifiedAt).toBeTruthy();
   return actual;
 }
 

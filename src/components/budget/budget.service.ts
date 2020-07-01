@@ -325,7 +325,7 @@ export class BudgetService {
           OPTIONAL MATCH (requestingUser)<-[:member { active: true }]-(sg:SecurityGroup { active: true })-[:permission { active: true }]
           ->(canReadStatus:Permission { property: 'status', active: true, read: true })
           -[:baseNode { active: true }]->(budget)-[:status { active: true }]->(status:Property { active: true })
-          RETURN total, budget.id as budgetId, status.value as status, canReadStatus.read AS canReadStatus, canEditStatus.edit AS canEditStatus
+          RETURN DISTINCT total, budget.id as budgetId, status.value as status, canReadStatus.read AS canReadStatus, canEditStatus.edit AS canEditStatus
           ORDER BY ${sort} ${order}
           SKIP $skip LIMIT $count
       `;
@@ -355,6 +355,39 @@ export class BudgetService {
 
   async update(input: UpdateBudget, session: ISession): Promise<Budget> {
     const budget = await this.readOne(input.id, session);
+
+    //574 - Budget records are only editable if the budget is pending
+    if (budget.status.includes(BudgetStatus.Current)) {
+      throw new BadRequestException('budget can not be modified');
+    }
+
+    //Get Project.Status
+    const projectStatusQuery = this.db
+      .query()
+      .match(matchSession(session, { withAclRead: 'canReadBudgets' }))
+      .match([
+        node('budget', 'Budget', { active: true, id: input.id }),
+        relation('in', '', 'budget', {
+          active: true,
+        }),
+        node('project', 'Project', { active: true }),
+        relation('out', '', 'status', { active: true }),
+        node('status', 'Property', { active: true }),
+      ]);
+    projectStatusQuery.return([
+      {
+        project: [{ id: 'id' }],
+        status: [{ value: 'status' }],
+      },
+    ]);
+
+    const readProject = await projectStatusQuery.first();
+    //Budget records are only editable if Project.status not active - ProjectStatus.Active
+    if (readProject?.status.includes('Active')) {
+      throw new BadRequestException(
+        'budget of active project can not be modified '
+      );
+    }
 
     return this.db.sgUpdateProperties({
       session,

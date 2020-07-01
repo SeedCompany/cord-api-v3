@@ -1,7 +1,7 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { DateTime, Interval } from 'luxon';
-import { InternPosition } from '../src/components/engagement';
+import { EngagementStatus, InternPosition } from '../src/components/engagement';
 import { Language } from '../src/components/language';
 import { Country, Region, Zone } from '../src/components/location';
 import { ProductMethodology } from '../src/components/product';
@@ -65,6 +65,14 @@ describe('Engagement e2e', () => {
     });
     expect(languageEngagement.modifiedAt).toBeDefined();
     expect(languageEngagement.id).toBeDefined();
+    const difference = Interval.fromDateTimes(
+      DateTime.fromISO(languageEngagement.modifiedAt.toString()),
+      DateTime.local()
+    )
+      .toDuration()
+      .toFormat('S');
+    expect(parseInt(difference)).toBeGreaterThan(0);
+    expect(languageEngagement.status).toBe(EngagementStatus.InDevelopment);
   });
 
   it('create a internship engagement', async () => {
@@ -74,7 +82,16 @@ describe('Engagement e2e', () => {
       internId: intern.id,
       mentorId: mentor.id,
     });
+
     expect(internEngagement.id).toBeDefined();
+    const difference = Interval.fromDateTimes(
+      DateTime.fromISO(internEngagement.modifiedAt.toString()),
+      DateTime.local()
+    )
+      .toDuration()
+      .toFormat('S');
+    expect(parseInt(difference)).toBeGreaterThan(0);
+    expect(internEngagement.status).toBe(EngagementStatus.InDevelopment);
   });
 
   it('read a an language engagement by id', async () => {
