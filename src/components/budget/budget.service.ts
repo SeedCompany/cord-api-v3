@@ -383,7 +383,7 @@ export class BudgetService {
     ]);
 
     let readProject = await projectStatusQuery.first();
-    console.log('readProject', JSON.stringify(readProject, null, 2));
+    //console.log('readProject', JSON.stringify(readProject, null, 2));
     //Budget records are only editable if Project.status not active
     // if (readProject.status.includes(ProjectStatus.Active)) {
     //   throw new BadRequestException('budget of active project can not be modified ');
