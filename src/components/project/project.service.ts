@@ -198,7 +198,6 @@ export class ProjectService {
       .match(matchSession(session, { withAclRead: 'canReadProjects' }))
       .with('*')
       .match([node('project', 'Project', { active: true, id })])
-      // .optionalMatch([...this.propMatch('type')])
       .optionalMatch([...this.propMatch('sensitivity')])
       .optionalMatch([...this.propMatch('name')])
       .optionalMatch([...this.propMatch('step')])
@@ -225,13 +224,6 @@ export class ProjectService {
 
       .return({
         project: [{ id: 'id', createdAt: 'createdAt', type: 'type' }],
-        // type: [{ value: 'type' }],
-        // canReadType: [
-        //   {
-        //     read: 'canReadTypeRead',
-        //     edit: 'canReadTypeEdit',
-        //   },
-        // ],
         sensitivity: [{ value: 'sensitivity' }],
         canReadSensitivity: [
           { read: 'canReadSensitivityRead', edit: 'canReadSensitivitysEdit' },
@@ -637,7 +629,6 @@ export class ProjectService {
               type: createInput.type,
             }),
           ],
-          // ...this.property('type', createInput.type),
           ...this.property('sensitivity', createInput.sensitivity),
           ...this.property('name', createInput.name),
           ...this.property('step', createInput.step),
@@ -679,7 +670,6 @@ export class ProjectService {
             relation('out', '', 'member', { active: true, createdAt }),
             node('rootuser'),
           ],
-          // ...this.permission('type'),
           ...this.permission('sensitivity'),
           ...this.permission('name'),
           ...this.permission('step'),
