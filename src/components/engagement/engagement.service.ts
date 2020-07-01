@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   NotFoundException,
   InternalServerErrorException as ServerException,
@@ -678,22 +679,36 @@ export class EngagementService {
     });
     const id = generate();
     const createdAt = DateTime.local();
-    const ceremony = await this.ceremonyService.create(
-      { type: CeremonyType.Certification },
-      session
-    );
+    let ceremony;
+    try {
+      ceremony = await this.ceremonyService.create(
+        { type: CeremonyType.Certification },
+        session
+      );
+    } catch (e) {
+      throw new Error('could not create ceremony');
+    }
 
     const createIE = this.db
       .query()
       .match(matchSession(session, { withAclEdit: 'canCreateEngagement' }))
       .match([
-        node('rootuser', 'User', {
-          active: true,
-          id: this.config.rootAdmin.id,
-        }),
-      ])
-      .match([node('project', 'Project', { active: true, id: projectId })])
-      .match([node('intern', 'User', { active: true, id: internId })]);
+        [
+          node('rootuser', 'User', {
+            active: true,
+            id: this.config.rootAdmin.id,
+          }),
+        ],
+        [node('ceremony', 'Ceremony', { active: true, id: ceremony.id })],
+      ]);
+    if (projectId) {
+      createIE.match([
+        node('project', 'Project', { active: true, id: projectId }),
+      ]);
+    }
+    if (internId) {
+      createIE.match([node('intern', 'User', { active: true, id: internId })]);
+    }
     if (mentorId) {
       createIE.match([node('mentor', 'User', { active: true, id: mentorId })]);
     }
@@ -705,57 +720,95 @@ export class EngagementService {
         }),
       ]);
     }
+    createIE.create([
+      [
+        node('internshipEngagement', 'InternshipEngagement:BaseNode', {
+          active: true,
+          createdAt,
+          id,
+          owningOrgId: session.owningOrgId,
+        }),
+      ],
+      ...this.property('modifiedAt', createdAt, 'internshipEngagement'),
+      ...this.property(
+        'completeDate',
+        input.completeDate || undefined,
+        'internshipEngagement'
+      ),
+      ...this.property(
+        'disbursementCompleteDate',
+        input.disbursementCompleteDate || undefined,
+        'internshipEngagement'
+      ),
+      ...this.property(
+        'communicationsCompleteDate',
+        input.communicationsCompleteDate || undefined,
+        'internshipEngagement'
+      ),
+      ...this.property(
+        'startDate',
+        input.startDate || undefined,
+        'internshipEngagement'
+      ),
+      ...this.property(
+        'endDate',
+        input.endDate || undefined,
+        'internshipEngagement'
+      ),
+      ...this.property(
+        'methodologies',
+        input.methodologies || undefined,
+        'internshipEngagement'
+      ),
+      ...this.property(
+        'position',
+        input.position || undefined,
+        'internshipEngagement'
+      ),
+      ...this.property(
+        'status',
+        EngagementStatus.InDevelopment,
+        'internshipEngagement'
+      ),
+    ]);
+    createIE.create([
+      node('ceremony'),
+      relation('out', 'ceremonyRel', 'ceremony', { active: true, createdAt }),
+      node('internshipEngagement'),
+    ]);
+    if (projectId) {
+      createIE.create([
+        node('project'),
+        relation('in', 'engagementRel', 'engagement', {
+          active: true,
+          createdAt,
+        }),
+        node('internshipEngagement'),
+      ]);
+    }
+    if (internId) {
+      createIE.create([
+        node('intern'),
+        relation('out', 'internRel', 'intern', { active: true, createdAt }),
+        node('internshipEngagement'),
+      ]);
+    }
+    if (mentorId) {
+      createIE.create([
+        node('mentor'),
+        relation('out', 'mentorRel', 'mentor', { active: true, createdAt }),
+        node('internshipEngagement'),
+      ]);
+    }
+    if (countryOfOriginId) {
+      createIE.create([
+        node('countryOfOrigin'),
+        relation('out', 'countryRel', 'country', { active: true, createdAt }),
+        node('internshipEngagement'),
+      ]);
+    }
     createIE
       .create([
-        [
-          node('internshipEngagement', 'InternshipEngagement:BaseNode', {
-            active: true,
-            createdAt,
-            id,
-            owningOrgId: session.owningOrgId,
-          }),
-        ],
-        ...this.property('modifiedAt', createdAt, 'internshipEngagement'),
-        ...this.property(
-          'completeDate',
-          input.completeDate || undefined,
-          'internshipEngagement'
-        ),
-        ...this.property(
-          'disbursementCompleteDate',
-          input.disbursementCompleteDate || undefined,
-          'internshipEngagement'
-        ),
-        ...this.property(
-          'communicationsCompleteDate',
-          input.communicationsCompleteDate || undefined,
-          'internshipEngagement'
-        ),
-        ...this.property(
-          'startDate',
-          input.startDate || undefined,
-          'internshipEngagement'
-        ),
-        ...this.property(
-          'endDate',
-          input.endDate || undefined,
-          'internshipEngagement'
-        ),
-        ...this.property(
-          'methodologies',
-          input.methodologies || undefined,
-          'internshipEngagement'
-        ),
-        ...this.property(
-          'position',
-          input.position || undefined,
-          'internshipEngagement'
-        ),
-        ...this.property(
-          'status',
-          EngagementStatus.InDevelopment,
-          'internshipEngagement'
-        ),
         [
           node('adminSG', 'SecurityGroup', {
             active: true,
@@ -815,61 +868,62 @@ export class EngagementService {
         ...this.permission('mentor', 'internshipEngagement'),
       ])
       .return('internshipEngagement');
-
+    let IE;
     try {
-      await createIE.first();
+      IE = await createIE.first();
     } catch (e) {
+      // secondary queries to see what ID is bad
+      // check internId
+
       this.logger.error('could not create Internship Engagement ', e);
       throw new ServerException('Could not create Internship Engagement');
     }
-    const countryCond = `${
-      typeof countryOfOriginId !== 'undefined'
-        ? ',(countryOfOrigin:Country {id: $countryOfOriginId, active: true})'
-        : ''
-    }`;
-    const mentorCond = `${
-      typeof mentorId !== 'undefined'
-        ? ',(mentorUser:User {id: $mentorId, active: true})'
-        : ''
-    }`;
-    const countryRel = `${
-      typeof countryOfOriginId !== 'undefined'
-        ? ',(internshipEngagement)-[:countryOfOrigin {active: true, createdAt: datetime()}]->(countryOfOrigin)'
-        : ''
-    }`;
-    const mentorRel = `${
-      typeof mentorId !== 'undefined'
-        ? ',(internshipEngagement)-[:mentor {active: true, createdAt: datetime()}]->(mentorUser)'
-        : ''
-    }`;
-    const query = `
-        MATCH
-          (project:Project {id: $projectId, active: true})
-          ,(internshipEngagement:InternshipEngagement {id: $id, active: true})
-          ,(ceremony:Ceremony {id: $ceremonyId, active:true})
-          ,(internUser:User {id: $internId, active: true})
-          ${countryCond}${mentorCond}
-        CREATE
-          (internshipEngagement)<-[:engagement {active: true, createdAt: datetime()}]-(project)
-          ,(internshipEngagement)-[:ceremony {active: true, createdAt: datetime()}]->(ceremony)
-          ,(internshipEngagement)-[:intern {active: true, createdAt: datetime()}]->(internUser)
-          ${countryRel}${mentorRel}
-        RETURN
-          internshipEngagement.id as id
-      `;
 
+    if (!IE) {
+      if (
+        internId &&
+        !(await this.db
+          .query()
+          .match([node('intern', 'User', { active: true, id: internId })])
+          .return('intern.id')
+          .first())
+      ) {
+        throw new BadRequestException('internId is invalid');
+      }
+      if (
+        mentorId &&
+        !(await this.db
+          .query()
+          .match([node('mentor', 'User', { active: true, id: mentorId })])
+          .return('mentor.id')
+          .first())
+      ) {
+        throw new BadRequestException('mentorId is invalid');
+      }
+      if (
+        projectId &&
+        !(await this.db
+          .query()
+          .match([node('project', 'Project', { active: true, id: projectId })])
+          .return('project.id')
+          .first())
+      ) {
+        throw new BadRequestException('projectId is invalid');
+      }
+      if (
+        countryOfOriginId &&
+        !(await this.db
+          .query()
+          .match([
+            node('country', 'Country', { active: true, id: countryOfOriginId }),
+          ])
+          .return('country.id')
+          .first())
+      ) {
+        throw new BadRequestException('countryOfOriginId is invalid');
+      }
+    }
     try {
-      const connections = this.db.query().raw(query, {
-        id,
-        projectId,
-        internId,
-        mentorId,
-        countryOfOriginId,
-        ceremonyId: ceremony.id,
-      });
-
-      await connections.first();
-
       return (await this.readInternshipEngagement(
         id,
         session
@@ -1081,8 +1135,6 @@ export class EngagementService {
       });
     let result;
     try {
-      // const printme = ieQuery;
-      // console.log('printme :>> ', printme.interpolate());
       result = await ieQuery.first();
     } catch (error) {
       this.logger.error('could not read Internship Enagement', error);

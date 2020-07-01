@@ -489,4 +489,40 @@ describe('Engagement e2e', () => {
       })
     ).toBeTruthy();
   });
+
+  it('internship engagement creation fails and lets you know why if your ids are bad', async () => {
+    const badId = 'badId';
+    await expect(
+      createInternshipEngagement(app, {
+        projectId: badId,
+        countryOfOriginId: country.id,
+        internId: intern.id,
+        mentorId: mentor.id,
+      })
+    ).rejects.toThrow('projectId is invalid');
+    await expect(
+      createInternshipEngagement(app, {
+        projectId: project.id,
+        countryOfOriginId: badId,
+        internId: intern.id,
+        mentorId: mentor.id,
+      })
+    ).rejects.toThrow('countryOfOriginId is invalid');
+    await expect(
+      createInternshipEngagement(app, {
+        projectId: project.id,
+        countryOfOriginId: country.id,
+        internId: badId,
+        mentorId: mentor.id,
+      })
+    ).rejects.toThrow('internId is invalid');
+    await expect(
+      createInternshipEngagement(app, {
+        projectId: project.id,
+        countryOfOriginId: country.id,
+        internId: intern.id,
+        mentorId: badId,
+      })
+    ).rejects.toThrow('mentorId is invalid');
+  });
 });
