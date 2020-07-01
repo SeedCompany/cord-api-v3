@@ -6,17 +6,10 @@ import {
   SecuredList,
   SortablePaginationInput,
 } from '../../../common';
-import { PartnershipAgreementStatus } from './partnership-agreement-status.enum';
 import { Partnership } from './partnership.dto';
 
 @InputType()
 export abstract class PartnershipFilters {
-  @Field(() => PartnershipAgreementStatus, {
-    description: 'Only partnerships matching this agreement status',
-    nullable: true,
-  })
-  readonly agreementStatus?: PartnershipAgreementStatus;
-
   @Field(() => ID, {
     description: 'Find all partnerships in a project',
     nullable: true,
