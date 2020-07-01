@@ -164,7 +164,7 @@ describe('Partnership e2e', () => {
 
     const { partnerships } = await app.graphql.query(
       gql`
-        query partnerships($agreementStatus: PartnershipAgreementStatus!) {
+        query {
           partnerships(input: { filter: {} }) {
             items {
               id
