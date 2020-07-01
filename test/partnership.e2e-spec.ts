@@ -160,21 +160,12 @@ describe('Partnership e2e', () => {
   it('List view of partnerships', async () => {
     // create 2 partnerships
     const numPartnerships = 2;
-    const agreementStatus = PartnershipAgreementStatus.Signed;
-    await Promise.all(
-      times(numPartnerships).map(() =>
-        createPartnership(app, {
-          agreementStatus,
-        })
-      )
-    );
+    await Promise.all(times(numPartnerships).map(() => createPartnership(app)));
 
     const { partnerships } = await app.graphql.query(
       gql`
-        query partnerships($agreementStatus: PartnershipAgreementStatus!) {
-          partnerships(
-            input: { filter: { agreementStatus: $agreementStatus } }
-          ) {
+        query {
+          partnerships(input: { filter: {} }) {
             items {
               id
               agreementStatus {
@@ -185,10 +176,7 @@ describe('Partnership e2e', () => {
             total
           }
         }
-      `,
-      {
-        agreementStatus,
-      }
+      `
     );
 
     expect(partnerships.items.length).toBeGreaterThanOrEqual(numPartnerships);
