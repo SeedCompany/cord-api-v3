@@ -493,8 +493,7 @@ describe('Project e2e', () => {
     expect(queryProject.project.partnerships.total).toBe(numPartnerships);
   });
 
-  //TO DO: the test cases will be fixed after #574
-  it.skip('Should have default status Pending for first budget with project creation', async () => {
+  it('Should have default status as Pending for first budget with project creation', async () => {
     const type = ProjectType.Translation;
     const project = await createProject(app, { type });
 
@@ -519,8 +518,54 @@ describe('Project e2e', () => {
         id: project.id,
       }
     );
-
-    //console.log(queryProject.project.budget);
     expect(queryProject.project.budget.value.status).toBe('Pending');
+  });
+
+  it('Should have status as Current for budget with project update', async () => {
+    const project = await createProject(app);
+    const namenew = faker.random.word() + ' Project';
+
+    const result = await app.graphql.query(
+      gql`
+        mutation updateProject($id: ID!, $name: String!) {
+          updateProject(input: { project: { id: $id, name: $name } }) {
+            project {
+              ...project
+            }
+          }
+        }
+        ${fragments.project}
+      `,
+      {
+        id: project.id,
+        name: namenew,
+      }
+    );
+
+    expect(result.updateProject.project.id).toBe(project.id);
+    expect(result.updateProject.project.name.value).toBe(namenew);
+
+    const queryProject = await app.graphql.query(
+      gql`
+        query project($id: ID!) {
+          project(id: $id) {
+            ...project
+            budget {
+              value {
+                id
+                status
+              }
+              canRead
+              canEdit
+            }
+          }
+        }
+        ${fragments.project}
+      `,
+      {
+        id: project.id,
+      }
+    );
+    expect(queryProject.project.budget.value.status).toBe('Current');
   });
 });

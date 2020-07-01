@@ -447,8 +447,7 @@ export class ProjectService {
       },
       session
     );
-    //cross check
-    //console.log('project -budgets', JSON.stringify(budgets, null, 2));
+
     const current = budgets.items.find(
       (b) => b.status === BudgetStatus.Current
     );
@@ -820,20 +819,7 @@ export class ProjectService {
       (b) => b.status === BudgetStatus.Pending
     );
 
-    //NEED TO DISCUSS
-    //because input:UpdateProject - does not have input.status
-    //If input.status === active, call budgetservice.update status = active
-    //console.log('input:UpdateProject', JSON.stringify(input, null, 2));
-    //console.log('changes.status', JSON.stringify(changes, null, 2));
-
-    //NEED active not exist , current
     //574 -The pending budget should be set to active i.e CURRENT when the project gets set to active
-    //changes.status.includes(ProjectStatus.Active)
-    // const projectNotActive =
-    //   changes.status.includes(ProjectStatus.InDevelopment) ||
-    //   changes.status.includes(ProjectStatus.Pending)
-    //     ? true
-    //     : false;
     if (
       (changes.status.includes(ProjectStatus.InDevelopment) ||
         changes.status.includes(ProjectStatus.Pending)) &&

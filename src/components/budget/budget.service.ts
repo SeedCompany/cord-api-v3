@@ -356,12 +356,14 @@ export class BudgetService {
 
   async update(input: UpdateBudget, session: ISession): Promise<Budget> {
     const budget = await this.readOne(input.id, session);
+
     //574 - Budget records are only editable if the budget is pending
     if (budget.status.includes(BudgetStatus.Current)) {
-      throw new BadRequestException('budget can not modify');
+      throw new BadRequestException('budget can not be modified');
     }
 
-    const projectBudgetQuery = this.db
+    //Get Project.Status
+    const projectStatusQuery = this.db
       .query()
       .match(matchSession(session, { withAclRead: 'canReadBudgets' }))
       .match([
@@ -373,18 +375,18 @@ export class BudgetService {
         relation('out', '', 'status', { active: true }),
         node('status', 'Property', { active: true }),
       ]);
-    projectBudgetQuery.return([
+    projectStatusQuery.return([
       {
         project: [{ id: 'id' }],
         status: [{ value: 'status' }],
       },
     ]);
 
-    let readProject = await projectBudgetQuery.first();
-    //console.log('readProject', JSON.stringify(readProject, null, 2));
+    let readProject = await projectStatusQuery.first();
+    console.log('readProject', JSON.stringify(readProject, null, 2));
     //Budget records are only editable if Project.status not active
     // if (readProject.status.includes(ProjectStatus.Active)) {
-    //   throw new BadRequestException('can not modify budget of active project');
+    //   throw new BadRequestException('budget of active project can not be modified ');
     // }
 
     return this.db.sgUpdateProperties({
