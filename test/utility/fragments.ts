@@ -343,6 +343,7 @@ export const languageEngagement = gql`
     id
     createdAt
     modifiedAt
+    status
     language {
       value {
         id
@@ -424,6 +425,7 @@ export const internshipEngagement = gql`
     id
     createdAt
     modifiedAt
+    status
     countryOfOrigin {
       value {
         id

@@ -95,6 +95,7 @@ export class EngagementService {
     this.propMatch(leQuery, 'lastSuspendedAt', 'languageEngagement');
     this.propMatch(leQuery, 'lastReactivatedAt', 'languageEngagement');
     this.propMatch(leQuery, 'statusModifiedAt', 'languageEngagement');
+    this.propMatch(leQuery, 'status', 'languageEngagement');
     this.propMatch(leQuery, 'modifiedAt', 'languageEngagement');
     this.propMatch(leQuery, 'paraTextRegistryId', 'languageEngagement');
     leQuery
@@ -130,21 +131,7 @@ export class EngagementService {
         relation('out', '', 'language', { active: true }),
         node('newLanguage', 'Language', { active: true }),
       ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('permStatus', 'Permission', {
-          property: 'status',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('languageEngagement'),
-        relation('out', '', 'status', { active: true }),
-        node('engStatus', 'EngagementStatus', { active: true }),
-      ])
+
       .optionalMatch([
         node('languageEngagement'),
         relation('in', '', 'engagement'),
@@ -158,7 +145,7 @@ export class EngagementService {
         firstScripture: [{ value: 'firstScripture' }],
         lukePartnership: [{ value: 'lukePartnership' }],
         sentPrintingDate: [{ value: 'sentPrintingDate' }],
-        engStatus: [{ value: 'status' }],
+        status: [{ value: 'status' }],
         completeDate: [{ value: 'completeDate' }],
         disbursementCompleteDate: [{ value: 'disbursementCompleteDate' }],
         communicationsCompleteDate: [{ value: 'communicationsCompleteDate' }],
@@ -190,7 +177,8 @@ export class EngagementService {
             edit: 'canEditSentPrintingDate',
           },
         ],
-        permStatus: [{ read: 'canReadStatus', edit: 'canEditStatus' }],
+        canReadStatus: [{ read: 'canReadStatus' }],
+        canEditStatus: [{ edit: 'canEditStatus' }],
         canReadCompleteDate: [
           { read: 'canReadCompleteDate', edit: 'canEditCompleteDate' },
         ],
@@ -283,6 +271,7 @@ export class EngagementService {
       createdAt: result.createdAt,
       ...languageEngagement,
       status: result.status,
+      modifiedAt: result.modifiedAt,
       ceremony: {
         value: ceremony,
         canRead: !!result.canReadCeremony,
@@ -303,7 +292,6 @@ export class EngagementService {
         canRead: !!result.canReadCommunicationsCompleteDate,
         canEdit: !!result.canEditCommunicationsCompleteDate,
       },
-      modifiedAt: result.modifiedAt,
       startDate: {
         value: result.startDate,
         canRead: !!result.canReadStartDate,
@@ -749,6 +737,11 @@ export class EngagementService {
           input.position || undefined,
           'internshipEngagement'
         ),
+        ...this.property(
+          'status',
+          EngagementStatus.InDevelopment,
+          'internshipEngagement'
+        ),
         [
           node('adminSG', 'SecurityGroup', {
             active: true,
@@ -818,7 +811,7 @@ export class EngagementService {
     const countryCond = `${
       typeof countryOfOriginId !== 'undefined'
         ? ',(countryOfOrigin:Country {id: $countryOfOriginId, active: true})'
-        : ','
+        : ''
     }`;
     const mentorCond = `${
       typeof mentorId !== 'undefined'
@@ -1064,8 +1057,6 @@ export class EngagementService {
         canReadModifiedAt: [{ read: 'canReadModifiedAt' }],
         canEditModifiedAt: [{ edit: 'canEditModifiedAt' }],
       });
-    // const printme = ieQuery;
-    // console.log('printme :>> ', printme.build());
     let result;
     try {
       result = await ieQuery.first();
@@ -1128,6 +1119,7 @@ export class EngagementService {
       createdAt: result.createdAt,
       ...internshipEngagement,
       status: result.status,
+      modifiedAt: result.modifiedAt,
       ceremony: {
         value: ceremony,
         canRead: !!result.canReadCeremony,
@@ -1148,7 +1140,6 @@ export class EngagementService {
         canRead: !!result.canReadCommunicationsCompleteDate,
         canEdit: !!result.canEditCommunicationsCompleteDate,
       },
-      modifiedAt: result.modifiedAt,
       startDate: {
         value: result.startDate,
         canRead: !!result.canReadStartDate,
