@@ -521,7 +521,7 @@ describe('Project e2e', () => {
     expect(queryProject.project.budget.value.status).toBe('Pending');
   });
 
-  it('Should have status as Current for budget with project update', async () => {
+  it('Should have status as Current for budget with project update to active', async () => {
     const project = await createProject(app);
     const namenew = faker.random.word() + ' Project';
 

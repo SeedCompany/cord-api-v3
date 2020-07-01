@@ -818,17 +818,16 @@ export class ProjectService {
     const pendingBudget = budgets.items.find(
       (b) => b.status === BudgetStatus.Pending
     );
-
-    //574 -The pending budget should be set to active i.e CURRENT when the project gets set to active
+    //574 -The pending budget should be set to active i.e Current when the project gets set to active
     if (
       (changes.status.includes(ProjectStatus.InDevelopment) ||
         changes.status.includes(ProjectStatus.Pending)) &&
       pendingBudget?.status.includes(BudgetStatus.Pending)
     ) {
-      const id = pendingBudget.id;
-      const status = BudgetStatus.Current;
-
-      const input: UpdateBudget = { id, status };
+      const input: UpdateBudget = {
+        id: pendingBudget.id,
+        status: BudgetStatus.Current,
+      };
 
       await this.budgetService.update(input, session);
     }

@@ -29,7 +29,6 @@ import {
   UpdateBudget,
   UpdateBudgetRecord,
 } from './dto';
-import { ProjectStatus } from '../project';
 
 @Injectable()
 export class BudgetService {
@@ -382,12 +381,13 @@ export class BudgetService {
       },
     ]);
 
-    let readProject = await projectStatusQuery.first();
-    //console.log('readProject', JSON.stringify(readProject, null, 2));
-    //Budget records are only editable if Project.status not active
-    // if (readProject.status.includes(ProjectStatus.Active)) {
-    //   throw new BadRequestException('budget of active project can not be modified ');
-    // }
+    const readProject = await projectStatusQuery.first();
+    //Budget records are only editable if Project.status not active - ProjectStatus.Active
+    if (readProject?.status.includes('Active')) {
+      throw new BadRequestException(
+        'budget of active project can not be modified '
+      );
+    }
 
     return this.db.sgUpdateProperties({
       session,
