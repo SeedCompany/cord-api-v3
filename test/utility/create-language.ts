@@ -11,12 +11,12 @@ export async function createLanguage(
 ) {
   const language: CreateLanguage = {
     name: faker.address.country() + '' + generate(),
-    displayName: faker.company.companyName(),
+    displayName: faker.company.companyName() + '' + generate(),
     beginFiscalYear: faker.random.number(4),
-    ethnologueName: faker.finance.accountName(),
+    ethnologueName: faker.finance.accountName() + '' + generate(),
     ethnologuePopulation: faker.random.number(5),
     organizationPopulation: faker.random.number(10),
-    rodNumber: faker.random.word(),
+    rodNumber: faker.random.words() + '' + generate(),
     ...input,
   };
 

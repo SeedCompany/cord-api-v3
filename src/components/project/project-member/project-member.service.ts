@@ -41,8 +41,8 @@ export class ProjectMemberService {
           active: true,
           id: $requestingUserId,
           owningOrgId: $owningOrgId
-        }),
-        (projectMember:ProjectMember {active: true, id: $id})
+        })
+        MATCH(projectMember:ProjectMember {active: true, id: $id})-[:modifiedAt]->(modifiedAt:Property)
 
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadRoles:ACL {canReadRoles: true})-[:toNode]->(projectMember)-[:roles {active: true}]->(roles: Property {active: true})
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditRoles:ACL {canEditRoles: true})-[:toNode]->(projectMember)
@@ -51,6 +51,7 @@ export class ProjectMemberService {
         RETURN
           projectMember.id as id,
           projectMember.createdAt as createdAt,
+          modifiedAt.value as modifiedAt,
           user.id as userId,
           roles.value as roles,
           canReadRoles.canReadRoles as canReadRoles,
@@ -104,7 +105,6 @@ export class ProjectMemberService {
       canEditRoles: true,
       canReadUser: true,
     };
-
     try {
       await this.db.createNode({
         session,
@@ -112,6 +112,7 @@ export class ProjectMemberService {
         input: {
           id,
           roles: [],
+          modifiedAt: DateTime.local(),
           ...input,
         },
         acls,
