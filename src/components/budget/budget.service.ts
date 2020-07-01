@@ -29,6 +29,7 @@ import {
   UpdateBudget,
   UpdateBudgetRecord,
 } from './dto';
+import { ProjectStatus } from '../project';
 
 @Injectable()
 export class BudgetService {
@@ -325,7 +326,7 @@ export class BudgetService {
           OPTIONAL MATCH (requestingUser)<-[:member { active: true }]-(sg:SecurityGroup { active: true })-[:permission { active: true }]
           ->(canReadStatus:Permission { property: 'status', active: true, read: true })
           -[:baseNode { active: true }]->(budget)-[:status { active: true }]->(status:Property { active: true })
-          RETURN total, budget.id as budgetId, status.value as status, canReadStatus.read AS canReadStatus, canEditStatus.edit AS canEditStatus
+          RETURN DISTINCT total, budget.id as budgetId, status.value as status, canReadStatus.read AS canReadStatus, canEditStatus.edit AS canEditStatus
           ORDER BY ${sort} ${order}
           SKIP $skip LIMIT $count
       `;
@@ -355,6 +356,36 @@ export class BudgetService {
 
   async update(input: UpdateBudget, session: ISession): Promise<Budget> {
     const budget = await this.readOne(input.id, session);
+    //574 - Budget records are only editable if the budget is pending
+    if (budget.status.includes(BudgetStatus.Current)) {
+      throw new BadRequestException('budget can not modify');
+    }
+
+    const projectBudgetQuery = this.db
+      .query()
+      .match(matchSession(session, { withAclRead: 'canReadBudgets' }))
+      .match([
+        node('budget', 'Budget', { active: true, id: input.id }),
+        relation('in', '', 'budget', {
+          active: true,
+        }),
+        node('project', 'Project', { active: true }),
+        relation('out', '', 'status', { active: true }),
+        node('status', 'Property', { active: true }),
+      ]);
+    projectBudgetQuery.return([
+      {
+        project: [{ id: 'id' }],
+        status: [{ value: 'status' }],
+      },
+    ]);
+
+    let readProject = await projectBudgetQuery.first();
+    //console.log('readProject', JSON.stringify(readProject, null, 2));
+    //Budget records are only editable if Project.status not active
+    // if (readProject.status.includes(ProjectStatus.Active)) {
+    //   throw new BadRequestException('can not modify budget of active project');
+    // }
 
     return this.db.sgUpdateProperties({
       session,

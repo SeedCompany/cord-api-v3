@@ -24,7 +24,14 @@ import {
   OnIndex,
   runListQuery,
 } from '../../core';
-import { Budget, BudgetService, BudgetStatus, SecuredBudget } from '../budget';
+import {
+  Budget,
+  BudgetService,
+  BudgetStatus,
+  SecuredBudget,
+  UpdateBudgetInput,
+  UpdateBudget,
+} from '../budget';
 import {
   EngagementListInput,
   EngagementService,
@@ -43,6 +50,7 @@ import {
   Project,
   ProjectListInput,
   ProjectListOutput,
+  ProjectStatus,
   ProjectStep,
   stepToStatus,
   UpdateProject,
@@ -61,7 +69,7 @@ export class ProjectService {
     private readonly projectMembers: ProjectMemberService,
     private readonly locationService: LocationService,
     @Inject(forwardRef(() => BudgetService))
-    private readonly budgets: BudgetService,
+    private readonly budgetService: BudgetService,
     @Inject(forwardRef(() => PartnershipService))
     private readonly partnerships: PartnershipService,
     private readonly fileService: FileService,
@@ -431,7 +439,7 @@ export class ProjectService {
     project: Project,
     session: ISession
   ): Promise<SecuredBudget> {
-    const budgets = await this.budgets.list(
+    const budgets = await this.budgetService.list(
       {
         filter: {
           projectId: project.id,
@@ -439,13 +447,20 @@ export class ProjectService {
       },
       session
     );
-
+    //cross check
+    //console.log('project -budgets', JSON.stringify(budgets, null, 2));
     const current = budgets.items.find(
       (b) => b.status === BudgetStatus.Current
     );
 
+    //574 - if no current budget, then fallback to the first pending budget
+    let pendingBudget;
+    if (!current) {
+      pendingBudget = budgets.items[0];
+    }
+
     return {
-      value: current,
+      value: current ? current : pendingBudget,
       canEdit: true,
       canRead: true,
     };
@@ -792,6 +807,46 @@ export class ProjectService {
       nodevar: 'project',
     });
 
+    const budgets = await this.budgetService.list(
+      {
+        filter: {
+          projectId: input.id,
+        },
+      },
+      session
+    );
+
+    const pendingBudget = budgets.items.find(
+      (b) => b.status === BudgetStatus.Pending
+    );
+
+    //NEED TO DISCUSS
+    //because input:UpdateProject - does not have input.status
+    //If input.status === active, call budgetservice.update status = active
+    //console.log('input:UpdateProject', JSON.stringify(input, null, 2));
+    //console.log('changes.status', JSON.stringify(changes, null, 2));
+
+    //NEED active not exist , current
+    //574 -The pending budget should be set to active i.e CURRENT when the project gets set to active
+    //changes.status.includes(ProjectStatus.Active)
+    // const projectNotActive =
+    //   changes.status.includes(ProjectStatus.InDevelopment) ||
+    //   changes.status.includes(ProjectStatus.Pending)
+    //     ? true
+    //     : false;
+    if (
+      (changes.status.includes(ProjectStatus.InDevelopment) ||
+        changes.status.includes(ProjectStatus.Pending)) &&
+      pendingBudget?.status.includes(BudgetStatus.Pending)
+    ) {
+      const id = pendingBudget.id;
+      const status = BudgetStatus.Current;
+
+      const input: UpdateBudget = { id, status };
+
+      await this.budgetService.update(input, session);
+    }
+
     return result;
   }
 
@@ -820,7 +875,7 @@ export class ProjectService {
     project: Pick<Project, 'id' | 'mouStart' | 'mouEnd'>,
     session: ISession
   ): Promise<Budget> {
-    const budget = await this.budgets.create(
+    const budget = await this.budgetService.create(
       { projectId: project.id },
       session
     );
@@ -876,7 +931,9 @@ export class ProjectService {
       }))
     );
     return Promise.all(
-      inputRecords.map((record) => this.budgets.createRecord(record, session))
+      inputRecords.map((record) =>
+        this.budgetService.createRecord(record, session)
+      )
     );
   }
 
