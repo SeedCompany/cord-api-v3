@@ -14,6 +14,8 @@ import {
   addBaseNodeMetaPropsWithClause,
   ConfigService,
   DatabaseService,
+  EventBus,
+  IEventBus,
   ILogger,
   listWithSecureObject,
   listWithUnsecureObject,
@@ -55,6 +57,11 @@ import {
   UpdateProject,
 } from './dto';
 import {
+  ProjectCreatedEvent,
+  ProjectDeletedEvent,
+  ProjectUpdatedEvent,
+} from './events';
+import {
   ProjectMemberListInput,
   ProjectMemberService,
   Role,
@@ -74,6 +81,7 @@ export class ProjectService {
     private readonly fileService: FileService,
     private readonly engagementService: EngagementService,
     private readonly config: ConfigService,
+    @Inject(EventBus) private readonly eventBus: IEventBus,
     @Logger('project:service') private readonly logger: ILogger
   ) {}
 
@@ -767,6 +775,8 @@ export class ProjectService {
 
       const project = await this.readOne(id, session);
 
+      await this.eventBus.publish(new ProjectCreatedEvent(project, session));
+
       await this.createBudget(project, session);
 
       return project;
@@ -807,6 +817,10 @@ export class ProjectService {
       changes,
       nodevar: 'project',
     });
+
+    await this.eventBus.publish(
+      new ProjectUpdatedEvent(result, input, session)
+    );
 
     const budgets = await this.budgetService.list(
       {
@@ -856,6 +870,8 @@ export class ProjectService {
       });
       throw new ServerException('Failed to delete project');
     }
+
+    await this.eventBus.publish(new ProjectDeletedEvent(object, session));
   }
 
   async createBudget(
