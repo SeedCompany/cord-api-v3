@@ -6,6 +6,7 @@ import { generate } from 'shortid';
 import { CalendarDate } from '../src/common';
 import { Country } from '../src/components/location';
 import {
+  CreateProject,
   Project,
   ProjectStatus,
   ProjectStep,
@@ -98,6 +99,62 @@ describe('Project e2e', () => {
     );
   });
 
+  it.only('create & read project with budget by id', async () => {
+    const proj: CreateProject = {
+      name: faker.random.uuid(),
+      type: ProjectType.Translation,
+    };
+
+    const res = await app.graphql.mutate(
+      gql`
+        mutation createProject($input: CreateProjectInput!) {
+          createProject(input: $input) {
+            project {
+              ...project
+              budget {
+                value {
+                  ...budget
+                }
+              }
+            }
+          }
+        }
+        ${fragments.project}
+        ${fragments.budget}
+      `,
+      {
+        input: {
+          project: proj,
+        },
+      }
+    );
+    const project = res.createProject.project;
+    const result = await app.graphql.query(
+      gql`
+        query project($id: ID!) {
+          project(id: $id) {
+            ...project
+            budget {
+              value {
+                ...budget
+              }
+            }
+          }
+        }
+        ${fragments.project}
+        ${fragments.budget}
+      `,
+      {
+        id: project.id,
+      }
+    );
+
+    const actual = result.project;
+    expect(actual.id).toBe(project.id);
+    expect(actual.type).toBe(project.type);
+    expect(actual.budget.value.id).toBe(project.budget.value.id);
+  });
+
   it('update project', async () => {
     const project = await createProject(app);
     const namenew = faker.random.word() + ' Project';
@@ -185,7 +242,6 @@ describe('Project e2e', () => {
         type,
       }
     );
-
     expect(projects.items.length).toBeGreaterThanOrEqual(numProjects);
 
     //delete all projects
