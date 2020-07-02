@@ -756,8 +756,6 @@ export class ProjectService {
 
       await this.eventBus.publish(new ProjectCreatedEvent(project, session));
 
-      await this.createBudget(project, session);
-
       return project;
     } catch (e) {
       this.logger.warning(`Could not create project`, {
@@ -853,39 +851,7 @@ export class ProjectService {
     await this.eventBus.publish(new ProjectDeletedEvent(object, session));
   }
 
-  async createBudget(
-    project: Pick<Project, 'id' | 'mouStart' | 'mouEnd'>,
-    session: ISession
-  ): Promise<Budget> {
-    const budget = await this.budgetService.create(
-      { projectId: project.id },
-      session
-    );
-
-    // connect budget to project
-    await this.db
-      .query()
-      .matchNode('project', 'Project', { id: project.id, active: true })
-      .matchNode('budget', 'Budget', { id: budget.id, active: true })
-      .create([
-        node('project'),
-        relation('out', '', 'budget', {
-          active: true,
-          createdAt: DateTime.local(),
-        }),
-        node('budget'),
-      ])
-      .run();
-
-    const records = await this.attachBudgetRecords(budget, project, session);
-
-    return {
-      ...budget,
-      records,
-    };
-  }
-
-  private async attachBudgetRecords(
+  async attachBudgetRecords(
     budget: Budget,
     project: Pick<Project, 'id' | 'mouStart' | 'mouEnd'>,
     session: ISession

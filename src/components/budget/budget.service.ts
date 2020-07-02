@@ -209,6 +209,21 @@ export class BudgetService {
 
       await createBudget.first();
 
+      // connect budget to project
+      await this.db
+        .query()
+        .matchNode('project', 'Project', { id: projectId, active: true })
+        .matchNode('budget', 'Budget', { id, active: true })
+        .create([
+          node('project'),
+          relation('out', '', 'budget', {
+            active: true,
+            createdAt: DateTime.local(),
+          }),
+          node('budget'),
+        ])
+        .run();
+
       this.logger.info(`Created Budget`, {
         id,
         userId: session.userId,
