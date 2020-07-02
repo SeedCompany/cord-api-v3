@@ -15,6 +15,7 @@ import { PartnershipModule } from './components/partnership/partnership.module';
 import { ProductModule } from './components/product/product.module';
 import { ProjectModule } from './components/project/project.module';
 import { SearchModule } from './components/search/search.module';
+import { TimeZoneModule } from './components/timezone';
 import { UserModule } from './components/user/user.module';
 import { WorkflowModule } from './components/workflow/workflow.module';
 import { CoreModule, LoggerModule } from './core';
@@ -40,6 +41,7 @@ import { CoreModule, LoggerModule } from './core';
     PartnershipModule,
     SearchModule,
     WorkflowModule,
+    TimeZoneModule,
   ],
   controllers: [],
   providers: [DateTimeScalar, DateScalar],
