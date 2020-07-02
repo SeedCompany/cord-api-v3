@@ -1,4 +1,5 @@
 import {
+  Inject,
   Injectable,
   NotFoundException,
   InternalServerErrorException as ServerException,
@@ -12,6 +13,8 @@ import { fiscalYears, ISession } from '../../common';
 import {
   ConfigService,
   DatabaseService,
+  EventBus,
+  IEventBus,
   ILogger,
   Logger,
   matchSession,
@@ -28,6 +31,11 @@ import {
   PartnershipType,
   UpdatePartnership,
 } from './dto';
+import {
+  PartnershipCreatedEvent,
+  PartnershipDeletedEvent,
+  PartnershipUpdatedEvent,
+} from './events';
 
 @Injectable()
 export class PartnershipService {
@@ -38,6 +46,7 @@ export class PartnershipService {
     private readonly budgetService: BudgetService,
     private readonly orgService: OrganizationService,
     private readonly projectService: ProjectService,
+    @Inject(EventBus) private readonly eventBus: IEventBus,
     @Logger('partnership:service') private readonly logger: ILogger
   ) {}
 
@@ -259,6 +268,12 @@ export class PartnershipService {
         })
         .first();
 
+      const partnership = await this.readOne(id, session);
+      await this.eventBus.publish(
+        new PartnershipCreatedEvent(partnership, session)
+      );
+
+      // TODO move to event handler
       const fiscalRange = fiscalYears(input.mouStart, input.mouEnd); // calculate the fiscalYears covered by this date range
       if (
         input.types?.includes(PartnershipType.Funding) &&
@@ -278,7 +293,8 @@ export class PartnershipService {
           )
         );
       }
-      return await this.readOne(id, session);
+
+      return partnership;
     } catch (e) {
       this.logger.warning('Failed to create partnership', {
         exception: e,
@@ -497,7 +513,11 @@ export class PartnershipService {
     await this.files.updateDefinedFile(object.mou, mou, session);
     await this.files.updateDefinedFile(object.agreement, agreement, session);
 
-    return this.readOne(input.id, session);
+    const partnership = await this.readOne(input.id, session);
+    await this.eventBus.publish(
+      new PartnershipUpdatedEvent(partnership, input, session)
+    );
+    return partnership;
   }
 
   async delete(id: string, session: ISession): Promise<void> {
@@ -520,6 +540,8 @@ export class PartnershipService {
 
       throw new ServerException('Failed to delete partnership');
     }
+
+    await this.eventBus.publish(new PartnershipDeletedEvent(object, session));
   }
 
   async list(
@@ -540,7 +562,7 @@ export class PartnershipService {
 
     if (projectId) {
       const query = `
-        MATCH 
+        MATCH
           (token:Token {active: true, value: $token})
           <-[:token {active: true}]-
           (requestingUser:User {
