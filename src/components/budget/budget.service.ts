@@ -356,38 +356,38 @@ export class BudgetService {
   async update(input: UpdateBudget, session: ISession): Promise<Budget> {
     const budget = await this.readOne(input.id, session);
 
-    //574 - Budget records are only editable if the budget is pending
-    if (budget.status.includes(BudgetStatus.Current)) {
-      throw new BadRequestException('budget can not be modified');
-    }
+    // //574 - Budget records are only editable if the budget is pending
+    // if (budget.status.includes(BudgetStatus.Current)) {
+    //   throw new BadRequestException('budget can not be modified');
+    // }
 
-    //Get Project.Status
-    const projectStatusQuery = this.db
-      .query()
-      .match(matchSession(session, { withAclRead: 'canReadBudgets' }))
-      .match([
-        node('budget', 'Budget', { active: true, id: input.id }),
-        relation('in', '', 'budget', {
-          active: true,
-        }),
-        node('project', 'Project', { active: true }),
-        relation('out', '', 'status', { active: true }),
-        node('status', 'Property', { active: true }),
-      ]);
-    projectStatusQuery.return([
-      {
-        project: [{ id: 'id' }],
-        status: [{ value: 'status' }],
-      },
-    ]);
+    // //Get Project.Status
+    // const projectStatusQuery = this.db
+    //   .query()
+    //   .match(matchSession(session, { withAclRead: 'canReadBudgets' }))
+    //   .match([
+    //     node('budget', 'Budget', { active: true, id: input.id }),
+    //     relation('in', '', 'budget', {
+    //       active: true,
+    //     }),
+    //     node('project', 'Project', { active: true }),
+    //     relation('out', '', 'status', { active: true }),
+    //     node('status', 'Property', { active: true }),
+    //   ]);
+    // projectStatusQuery.return([
+    //   {
+    //     project: [{ id: 'id' }],
+    //     status: [{ value: 'status' }],
+    //   },
+    // ]);
 
-    const readProject = await projectStatusQuery.first();
-    //Budget records are only editable if Project.status not active - ProjectStatus.Active
-    if (readProject?.status.includes('Active')) {
-      throw new BadRequestException(
-        'budget of active project can not be modified '
-      );
-    }
+    // const readProject = await projectStatusQuery.first();
+    // //Budget records are only editable if Project.status not active - ProjectStatus.Active
+    // if (readProject?.status.includes('Active')) {
+    //   throw new BadRequestException(
+    //     'budget of active project can not be modified '
+    //   );
+    // }
 
     return this.db.sgUpdateProperties({
       session,
@@ -694,6 +694,32 @@ export class BudgetService {
     session: ISession
   ): Promise<BudgetRecord> {
     this.logger.info('Update budget Record, ', { id, userId: session.userId });
+
+    // 574 - Budget records are only editable if the budget is pending
+    // Get budget status
+    const budgetStatusQuery = this.db
+      .query()
+      .match(matchSession(session, { withAclRead: 'canReadBudgets' }))
+      .match([
+        node('budgetRecord', 'BudgetRecord', { active: true, id }),
+        relation('in', '', 'record', {
+          active: true,
+        }),
+        node('budget', 'Budget', { active: true }),
+        relation('out', '', 'status', { active: true }),
+        node('status', 'Property', { active: true }),
+      ]);
+    budgetStatusQuery.return([
+      {
+        budget: [{ id: 'id' }],
+        status: [{ value: 'status' }],
+      },
+    ]);
+
+    const readBudget = await budgetStatusQuery.first();
+    if (readBudget?.status.includes(BudgetStatus.Current)) {
+      throw new BadRequestException('budget records can not be modified');
+    }
 
     const br = await this.readOneRecord(id, session);
 
