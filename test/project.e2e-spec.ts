@@ -99,7 +99,7 @@ describe('Project e2e', () => {
     );
   });
 
-  it.only('create & read project with budget by id', async () => {
+  it('create & read project with budget by id', async () => {
     const proj: CreateProject = {
       name: faker.random.uuid(),
       type: ProjectType.Translation,
