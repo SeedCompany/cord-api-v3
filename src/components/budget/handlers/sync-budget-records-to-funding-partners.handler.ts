@@ -11,14 +11,17 @@ import {
   PartnershipDeletedEvent,
   PartnershipUpdatedEvent,
 } from '../../partnership/events';
+import { ProjectUpdatedEvent } from '../../project/events';
 import { BudgetService } from '../budget.service';
 
 type SubscribedEvent =
+  | ProjectUpdatedEvent
   | PartnershipCreatedEvent
   | PartnershipUpdatedEvent
   | PartnershipDeletedEvent;
 
 @EventsHandler(
+  ProjectUpdatedEvent,
   PartnershipCreatedEvent,
   PartnershipUpdatedEvent,
   PartnershipDeletedEvent
@@ -32,8 +35,9 @@ export class SyncBudgetRecordsToFundingPartners
   ) {}
 
   async handle(event: SubscribedEvent) {
-    this.logger.debug('Partnership mutation, syncing budget records', {
-      partnership: event.partnership,
+    this.logger.debug('Partnership/Project mutation, syncing budget records', {
+      ...event,
+      event: event.constructor.name,
     });
 
     if (
