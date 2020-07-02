@@ -2,7 +2,7 @@ import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
 import { isValid } from 'shortid';
-import { RegisterInput } from '../src/components/authentication/dto';
+import { SecuredTimeZone } from '../src/components/timezone';
 import { UpdateUser, User, UserStatus } from '../src/components/user';
 import {
   createEducation,
@@ -12,6 +12,7 @@ import {
   createUnavailability,
   createUser,
   fragments,
+  generateResisterInput,
   login,
   TestApp,
 } from './utility';
@@ -35,18 +36,7 @@ describe('User e2e', () => {
   });
 
   it('read one user by id', async () => {
-    const fakeUser: RegisterInput = {
-      email: faker.internet.email(),
-      realFirstName: faker.name.firstName(),
-      realLastName: faker.name.lastName(),
-      displayFirstName: faker.name.firstName(),
-      displayLastName: faker.name.lastName(),
-      password: faker.internet.password(),
-      phone: faker.phone.phoneNumber(),
-      timezone: 'timezone detail',
-      bio: 'bio detail',
-      status: UserStatus.Active,
-    };
+    const fakeUser = generateResisterInput();
 
     const user = await createUser(app, fakeUser);
     await login(app, { email: fakeUser.email, password: fakeUser.password });
@@ -75,7 +65,9 @@ describe('User e2e', () => {
     expect(actual.displayFirstName.value).toBe(fakeUser.displayFirstName);
     expect(actual.displayLastName.value).toBe(fakeUser.displayLastName);
     expect(actual.phone.value).toBe(fakeUser.phone);
-    expect(actual.timezone.value).toBe(fakeUser.timezone);
+    expect((actual.timezone as SecuredTimeZone).value?.name).toBe(
+      fakeUser.timezone
+    );
     expect(actual.bio.value).toBe(fakeUser.bio);
     expect(actual.status.value).toBe(fakeUser.status);
 
@@ -84,18 +76,7 @@ describe('User e2e', () => {
 
   it('update user', async () => {
     // create user first
-    const newUser: RegisterInput = {
-      email: faker.internet.email(),
-      realFirstName: faker.name.firstName(),
-      realLastName: faker.name.lastName(),
-      displayFirstName: faker.name.firstName(),
-      displayLastName: faker.name.lastName(),
-      password: faker.internet.password(),
-      phone: faker.phone.phoneNumber(),
-      timezone: 'timezone detail',
-      bio: 'bio detail',
-      status: UserStatus.Active,
-    };
+    const newUser = generateResisterInput();
     await createSession(app);
     const user = await createUser(app, newUser);
     await login(app, { email: newUser.email, password: newUser.password });
@@ -107,7 +88,7 @@ describe('User e2e', () => {
       displayFirstName: faker.name.firstName(),
       displayLastName: faker.name.lastName(),
       phone: faker.phone.phoneNumber(),
-      timezone: 'new timezone detail',
+      timezone: 'America/New_York',
       bio: 'new bio detail',
       status: UserStatus.Disabled,
     };
@@ -157,7 +138,9 @@ describe('User e2e', () => {
     expect(actual.displayFirstName.value).toBe(fakeUser.displayFirstName);
     expect(actual.displayLastName.value).toBe(fakeUser.displayLastName);
     expect(actual.phone.value).toBe(fakeUser.phone);
-    expect(actual.timezone.value).toBe(fakeUser.timezone);
+    expect((actual.timezone as SecuredTimeZone).value?.name).toBe(
+      fakeUser.timezone
+    );
     expect(actual.bio.value).toBe(fakeUser.bio);
     expect(actual.status.value).toBe(fakeUser.status);
 
@@ -482,18 +465,7 @@ describe('User e2e', () => {
   });
 
   it('read user avatar', async () => {
-    const fakeUser: RegisterInput = {
-      email: faker.internet.email(),
-      realFirstName: faker.name.firstName(),
-      realLastName: faker.name.lastName(),
-      displayFirstName: faker.name.firstName(),
-      displayLastName: faker.name.lastName(),
-      password: faker.internet.password(),
-      phone: faker.phone.phoneNumber(),
-      timezone: 'timezone detail',
-      bio: 'bio detail',
-      status: UserStatus.Active,
-    };
+    const fakeUser = generateResisterInput();
     const newUser = await createUser(app, fakeUser);
 
     const result = await app.graphql.query(

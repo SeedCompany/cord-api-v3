@@ -34,7 +34,6 @@ export class User extends Resource {
   @Field()
   phone: SecuredString;
 
-  @Field()
   timezone: SecuredString;
 
   @Field()

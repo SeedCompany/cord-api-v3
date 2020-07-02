@@ -55,7 +55,9 @@ export const user = gql`
       canRead
     }
     timezone {
-      value
+      value {
+        name
+      }
       canEdit
       canRead
     }

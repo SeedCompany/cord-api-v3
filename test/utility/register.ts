@@ -6,21 +6,25 @@ import { User, UserStatus } from '../../src/components/user';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
 
+export const generateResisterInput = (): RegisterInput => ({
+  email: `${faker.internet.email()} ${Date.now()}`,
+  realFirstName: faker.name.firstName(),
+  realLastName: faker.name.lastName(),
+  displayFirstName: faker.name.firstName() + generate(),
+  displayLastName: faker.name.lastName() + generate(),
+  password: faker.internet.password(),
+  phone: faker.phone.phoneNumber(),
+  timezone: 'America/Chicago',
+  bio: 'bio detail',
+  status: UserStatus.Active,
+});
+
 export async function registerUser(
   app: TestApp,
   input: Partial<RegisterInput> = {}
 ) {
   const user: RegisterInput = {
-    email: `${faker.internet.email()} ${Date.now()}`,
-    realFirstName: faker.name.firstName(),
-    realLastName: faker.name.lastName(),
-    displayFirstName: faker.name.firstName() + generate(),
-    displayLastName: faker.name.lastName() + generate(),
-    password: faker.internet.password(),
-    phone: faker.phone.phoneNumber(),
-    timezone: 'timezone detail' + generate(),
-    bio: 'bio detail' + generate(),
-    status: UserStatus.Active,
+    ...generateResisterInput(),
     ...input,
   };
 
