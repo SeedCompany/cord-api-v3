@@ -1216,7 +1216,7 @@ export class EngagementService {
         canEdit: !!result.canEditPosition,
       },
       methodologies: {
-        value: result.methodologies,
+        value: result.methodologies ? result.methodologies : [],
         canRead: !!result.canReadMethodologies,
         canEdit: !!result.canEditMethodologies,
       },

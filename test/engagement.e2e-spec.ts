@@ -594,4 +594,31 @@ describe('Engagement e2e', () => {
       })
     ).rejects.toThrow('languageId is invalid');
   });
+
+  it('should return empty methodologies array even if it is null', async () => {
+    // Create InternshipEngagement without methodologies
+    const internshipEngagement = await createInternshipEngagement(app, {
+      projectId: project.id,
+      internId: intern.id,
+      methodologies: [],
+    });
+
+    const { engagement: actual } = await app.graphql.query(
+      gql`
+      query {
+        engagement(id: "${internshipEngagement.id}") {
+          ... on InternshipEngagement {
+            id
+            methodologies {
+              value
+            }
+          }
+        }
+      }
+      `
+    );
+    expect(internshipEngagement.id).toBeDefined();
+    expect(actual.methodologies).toBeDefined();
+    expect(actual.methodologies.value).toMatchObject([]);
+  });
 });
