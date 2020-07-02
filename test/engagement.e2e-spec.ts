@@ -526,4 +526,20 @@ describe('Engagement e2e', () => {
       })
     ).rejects.toThrow('mentorId is invalid');
   });
+
+  it('translation engagement creation fails and lets you know why if your ids are bad', async () => {
+    const badId = 'badId';
+    await expect(
+      createLanguageEngagement(app, {
+        projectId: badId,
+        languageId: language.id,
+      })
+    ).rejects.toThrow('projectId is invalid');
+    await expect(
+      createLanguageEngagement(app, {
+        projectId: project.id,
+        languageId: badId,
+      })
+    ).rejects.toThrow('languageId is invalid');
+  });
 });
