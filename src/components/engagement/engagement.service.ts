@@ -524,61 +524,99 @@ export class EngagementService {
       .query()
       .match(matchSession(session, { withAclEdit: 'canCreateEngagement' }))
       .match([
-        node('rootuser', 'User', {
-          active: true,
-          id: this.config.rootAdmin.id,
-        }),
-      ])
-      .create([
         [
-          node('languageEngagement', 'LanguageEngagement:BaseNode', {
+          node('rootuser', 'User', {
             active: true,
-            createdAt,
-            id,
-            owningOrgId: session.owningOrgId,
+            id: this.config.rootAdmin.id,
           }),
         ],
-        ...this.property(
-          'completeDate',
-          input.completeDate || undefined,
-          'languageEngagement'
-        ),
-        ...this.property(
-          'disbursementCompleteDate',
-          input.disbursementCompleteDate || undefined,
-          'languageEngagement'
-        ),
-        ...this.property(
-          'communicationsCompleteDate',
-          input.communicationsCompleteDate || undefined,
-          'languageEngagement'
-        ),
-        ...this.property(
-          'startDate',
-          input.startDate || undefined,
-          'languageEngagement'
-        ),
-        ...this.property(
-          'lukePartnership',
-          input.lukePartnership || undefined,
-          'languageEngagement'
-        ),
-        ...this.property(
-          'firstScripture',
-          input.firstScripture || undefined,
-          'languageEngagement'
-        ),
-        ...this.property(
-          'paraTextRegistryId',
-          input.paraTextRegistryId || undefined,
-          'languageEngagement'
-        ),
-        ...this.property(
-          'status',
-          EngagementStatus.InDevelopment,
-          'languageEngagement'
-        ),
-        ...this.property('modifiedAt', DateTime.local(), 'languageEngagement'),
+        [node('ceremony', 'Ceremony', { active: true, id: ceremony.id })],
+      ]);
+    if (projectId) {
+      createLE.match([
+        node('project', 'Project', { active: true, id: projectId }),
+      ]);
+    }
+    if (languageId) {
+      createLE.match([
+        node('language', 'Language', { active: true, id: languageId }),
+      ]);
+    }
+    createLE.create([
+      [
+        node('languageEngagement', 'LanguageEngagement:BaseNode', {
+          active: true,
+          createdAt,
+          id,
+          owningOrgId: session.owningOrgId,
+        }),
+      ],
+      ...this.property(
+        'completeDate',
+        input.completeDate || undefined,
+        'languageEngagement'
+      ),
+      ...this.property(
+        'disbursementCompleteDate',
+        input.disbursementCompleteDate || undefined,
+        'languageEngagement'
+      ),
+      ...this.property(
+        'communicationsCompleteDate',
+        input.communicationsCompleteDate || undefined,
+        'languageEngagement'
+      ),
+      ...this.property(
+        'startDate',
+        input.startDate || undefined,
+        'languageEngagement'
+      ),
+      ...this.property(
+        'lukePartnership',
+        input.lukePartnership || undefined,
+        'languageEngagement'
+      ),
+      ...this.property(
+        'firstScripture',
+        input.firstScripture || undefined,
+        'languageEngagement'
+      ),
+      ...this.property(
+        'paraTextRegistryId',
+        input.paraTextRegistryId || undefined,
+        'languageEngagement'
+      ),
+      ...this.property(
+        'status',
+        EngagementStatus.InDevelopment,
+        'languageEngagement'
+      ),
+      ...this.property('modifiedAt', createdAt, 'languageEngagement'),
+    ]);
+    createLE.create([
+      node('ceremony'),
+      relation('in', 'ceremonyRel', 'ceremony', { active: true, createdAt }),
+      node('languageEngagement'),
+    ]);
+    if (projectId) {
+      createLE.create([
+        node('project'),
+        relation('out', 'engagementRel', 'engagement', {
+          active: true,
+          createdAt,
+        }),
+        node('languageEngagement'),
+      ]);
+    }
+    if (languageId) {
+      createLE.create([
+        node('language'),
+        relation('in', 'languageRel', 'language', { active: true, createdAt }),
+        node('languageEngagement'),
+      ]);
+    }
+    createLE
+      .create([
         [
           node('adminSG', 'SecurityGroup', {
             id: generate(),
@@ -623,36 +661,38 @@ export class EngagementService {
         ...this.permission('modifiedAt', 'languageEngagement'),
       ])
       .return('languageEngagement');
-
+    let le;
     try {
-      await createLE.first();
+      le = await createLE.first();
     } catch (e) {
       this.logger.error('could not create Language Engagement ', e);
       throw new ServerException('Could not create Langauge Engagement');
     }
-    // connect Language and Project to LanguageEngagement.
-    const query = `
-        MATCH
-          (project:Project {id: $projectId, active: true}),
-          (language:Language {id: $languageId, active: true}),
-          (ceremony:Ceremony {id: $ceremonyId, active: true}),
-          (languageEngagement:LanguageEngagement {id: $id, active: true})
-        CREATE
-          (project)-[:engagement {active:true, createAt: datetime()}]->(languageEngagement),
-          (languageEngagement)-[:language {active: true, createAt: datetime()}]->(language),
-          (languageEngagement)-[:ceremony {active: true, createAt: datetime()}]->(ceremony)
-        RETURN languageEngagement.id as id
-      `;
-    await this.db
-      .query()
-      .raw(query, {
-        languageId: languageId,
-        projectId: projectId,
-        ceremonyId: ceremony.id,
-        id,
-      })
-      .first();
-
+    if (!le) {
+      if (
+        projectId &&
+        !(await this.db
+          .query()
+          .match([node('project', 'Project', { active: true, id: projectId })])
+          .return('project.id')
+          .first())
+      ) {
+        throw new BadRequestException('projectId is invalid');
+      }
+      if (
+        languageId &&
+        !(await this.db
+          .query()
+          .match([
+            node('language', 'Language', { active: true, id: languageId }),
+          ])
+          .return('language.id')
+          .first())
+      ) {
+        throw new BadRequestException('languageId is invalid');
+      }
+      throw new ServerException('Could not create Language Engagement');
+    }
     const res = (await this.readLanguageEngagement(
       id,
       session
@@ -773,7 +813,7 @@ export class EngagementService {
     ]);
     createIE.create([
       node('ceremony'),
-      relation('out', 'ceremonyRel', 'ceremony', { active: true, createdAt }),
+      relation('in', 'ceremonyRel', 'ceremony', { active: true, createdAt }),
       node('internshipEngagement'),
     ]);
     if (projectId) {
@@ -881,7 +921,6 @@ export class EngagementService {
       this.logger.error('could not create Internship Engagement ', e);
       throw new ServerException('Could not create Internship Engagement');
     }
-
     if (!IE) {
       if (
         internId &&
@@ -918,13 +957,17 @@ export class EngagementService {
         !(await this.db
           .query()
           .match([
-            node('country', 'Country', { active: true, id: countryOfOriginId }),
+            node('country', 'Country', {
+              active: true,
+              id: countryOfOriginId,
+            }),
           ])
           .return('country.id')
           .first())
       ) {
         throw new BadRequestException('countryOfOriginId is invalid');
       }
+      throw new ServerException('Could not create Internship Engagement');
     }
     try {
       return (await this.readInternshipEngagement(
