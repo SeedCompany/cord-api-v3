@@ -2,6 +2,7 @@ import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
 import { isValid } from 'shortid';
+import { SecuredTimeZone } from '../src/components/timezone';
 import { UpdateUser, User, UserStatus } from '../src/components/user';
 import {
   createEducation,
@@ -64,7 +65,9 @@ describe('User e2e', () => {
     expect(actual.displayFirstName.value).toBe(fakeUser.displayFirstName);
     expect(actual.displayLastName.value).toBe(fakeUser.displayLastName);
     expect(actual.phone.value).toBe(fakeUser.phone);
-    expect(actual.timezone.value).toBe(fakeUser.timezone);
+    expect((actual.timezone as SecuredTimeZone).value?.name).toBe(
+      fakeUser.timezone
+    );
     expect(actual.bio.value).toBe(fakeUser.bio);
     expect(actual.status.value).toBe(fakeUser.status);
 
@@ -85,7 +88,7 @@ describe('User e2e', () => {
       displayFirstName: faker.name.firstName(),
       displayLastName: faker.name.lastName(),
       phone: faker.phone.phoneNumber(),
-      timezone: 'new timezone detail',
+      timezone: 'America/New_York',
       bio: 'new bio detail',
       status: UserStatus.Disabled,
     };
@@ -135,7 +138,9 @@ describe('User e2e', () => {
     expect(actual.displayFirstName.value).toBe(fakeUser.displayFirstName);
     expect(actual.displayLastName.value).toBe(fakeUser.displayLastName);
     expect(actual.phone.value).toBe(fakeUser.phone);
-    expect(actual.timezone.value).toBe(fakeUser.timezone);
+    expect((actual.timezone as SecuredTimeZone).value?.name).toBe(
+      fakeUser.timezone
+    );
     expect(actual.bio.value).toBe(fakeUser.bio);
     expect(actual.status.value).toBe(fakeUser.status);
 

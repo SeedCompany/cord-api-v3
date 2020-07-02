@@ -14,7 +14,7 @@ export const generateResisterInput = (): RegisterInput => ({
   displayLastName: faker.name.lastName() + generate(),
   password: faker.internet.password(),
   phone: faker.phone.phoneNumber(),
-  timezone: 'timezone detail',
+  timezone: 'America/Chicago',
   bio: 'bio detail',
   status: UserStatus.Active,
 });

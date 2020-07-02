@@ -2,6 +2,7 @@ import { gql } from 'apollo-server-core';
 import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
 import { isValid } from 'shortid';
+import { SecuredTimeZone } from '../src/components/timezone';
 import { User } from '../src/components/user';
 import { EmailService } from '../src/core/email';
 import {
@@ -109,7 +110,9 @@ describe('Authentication e2e', () => {
     expect(actual.displayFirstName.value).toBe(fakeUser.displayFirstName);
     expect(actual.displayLastName.value).toBe(fakeUser.displayLastName);
     expect(actual.phone.value).toBe(fakeUser.phone);
-    expect(actual.timezone.value).toBe(fakeUser.timezone);
+    expect((actual.timezone as SecuredTimeZone).value?.name).toBe(
+      fakeUser.timezone
+    );
     expect(actual.bio.value).toBe(fakeUser.bio);
 
     return true;
