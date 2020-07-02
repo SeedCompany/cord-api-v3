@@ -595,7 +595,7 @@ export class EngagementService {
     ]);
     createLE.create([
       node('ceremony'),
-      relation('out', 'ceremonyRel', 'ceremony', { active: true, createdAt }),
+      relation('in', 'ceremonyRel', 'ceremony', { active: true, createdAt }),
       node('languageEngagement'),
     ]);
     if (projectId) {
@@ -813,7 +813,7 @@ export class EngagementService {
     ]);
     createIE.create([
       node('ceremony'),
-      relation('out', 'ceremonyRel', 'ceremony', { active: true, createdAt }),
+      relation('in', 'ceremonyRel', 'ceremony', { active: true, createdAt }),
       node('internshipEngagement'),
     ]);
     if (projectId) {
