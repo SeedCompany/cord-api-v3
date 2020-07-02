@@ -31,6 +31,7 @@
     "@golevelup/nestjs-discovery": "^2.2.3",
     "@nestjs/common": "^7.0.9",
     "@nestjs/core": "^7.0.9",
+    "@nestjs/cqrs": "^7.0.0",
     "@nestjs/graphql": "^7.3.7",
     "@nestjs/platform-express": "^7.0.9",
     "@patarapolw/prettyprint": "^1.0.3",

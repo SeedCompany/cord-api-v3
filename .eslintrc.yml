@@ -26,3 +26,8 @@ rules:
     - selector: parameter
       format: [camelCase]
       leadingUnderscore: allow
+  no-restricted-imports:
+    - error
+    - paths:
+        - name: '@nestjs/cqrs'
+          message: Import from our core module instead

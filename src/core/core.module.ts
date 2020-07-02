@@ -6,6 +6,7 @@ import { ConfigModule } from './config/config.module';
 import { CoreController } from './core.controller';
 import { DatabaseModule } from './database/database.module';
 import { EmailModule } from './email';
+import { EventsModule } from './events';
 import { ExceptionFilter } from './exception.filter';
 import { GraphQLConfig } from './graphql.config';
 import { ValidationPipe } from './validation.pipe';
@@ -17,6 +18,7 @@ import { ValidationPipe } from './validation.pipe';
     DatabaseModule,
     EmailModule,
     GraphQLModule.forRootAsync({ useClass: GraphQLConfig }),
+    EventsModule,
   ],
   providers: [
     AwsS3Factory,
@@ -24,6 +26,12 @@ import { ValidationPipe } from './validation.pipe';
     { provide: APP_PIPE, useClass: ValidationPipe },
   ],
   controllers: [CoreController],
-  exports: [AwsS3Factory, ConfigModule, DatabaseModule, EmailModule],
+  exports: [
+    AwsS3Factory,
+    ConfigModule,
+    DatabaseModule,
+    EmailModule,
+    EventsModule,
+  ],
 })
 export class CoreModule {}
