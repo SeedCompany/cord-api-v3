@@ -779,7 +779,7 @@ export class EngagementService {
     if (projectId) {
       createIE.create([
         node('project'),
-        relation('in', 'engagementRel', 'engagement', {
+        relation('out', 'engagementRel', 'engagement', {
           active: true,
           createdAt,
         }),
@@ -789,21 +789,24 @@ export class EngagementService {
     if (internId) {
       createIE.create([
         node('intern'),
-        relation('out', 'internRel', 'intern', { active: true, createdAt }),
+        relation('in', 'internRel', 'intern', { active: true, createdAt }),
         node('internshipEngagement'),
       ]);
     }
     if (mentorId) {
       createIE.create([
         node('mentor'),
-        relation('out', 'mentorRel', 'mentor', { active: true, createdAt }),
+        relation('in', 'mentorRel', 'mentor', { active: true, createdAt }),
         node('internshipEngagement'),
       ]);
     }
     if (countryOfOriginId) {
       createIE.create([
         node('countryOfOrigin'),
-        relation('out', 'countryRel', 'country', { active: true, createdAt }),
+        relation('in', 'countryRel', 'countryOfOrigin', {
+          active: true,
+          createdAt,
+        }),
         node('internshipEngagement'),
       ]);
     }
@@ -1134,6 +1137,7 @@ export class EngagementService {
         canEditModifiedAt: [{ edit: 'canEditModifiedAt' }],
       });
     let result;
+
     try {
       result = await ieQuery.first();
     } catch (error) {
@@ -1288,9 +1292,10 @@ export class EngagementService {
     { mentorId, countryOfOriginId, ...input }: UpdateInternshipEngagement,
     session: ISession
   ): Promise<InternshipEngagement> {
+    const createdAt = DateTime.local();
     try {
       if (mentorId) {
-        await this.db
+        const mentorQ = this.db
           .query()
           .match(matchSession(session))
           .match([
@@ -1309,16 +1314,16 @@ export class EngagementService {
             node('internshipEngagement'),
             relation('out', '', 'mentor', {
               active: true,
-              createdAt: DateTime.local(),
+              createdAt,
             }),
             node('newMentorUser'),
           ])
-          .return('internshipEngagement.id as id')
-          .first();
+          .return('internshipEngagement.id as id');
+        await mentorQ.first();
       }
 
       if (countryOfOriginId) {
-        await this.db
+        const countryQ = this.db
           .query()
           .match([
             node('newCountry', 'Country', {
@@ -1339,12 +1344,13 @@ export class EngagementService {
             node('internshipEngagement'),
             relation('out', '', 'countryOfOrigin', {
               active: true,
-              createdAt: DateTime.local(),
+              createdAt,
             }),
             node('newCountry'),
           ])
-          .return('internshipEngagement.id as id')
-          .first();
+          .return('internshipEngagement.id as id');
+
+        await countryQ.first();
       }
       const object = await this.readInternshipEngagement(input.id, session);
       await this.db.sgUpdateProperties({
