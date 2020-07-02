@@ -8,6 +8,7 @@ import { UserModule } from '../user/user.module';
 import { BudgetRecordResolver } from './budget-record.resolver';
 import { BudgetResolver } from './budget.resolver';
 import { BudgetService } from './budget.service';
+import * as handlers from './handlers';
 
 @Module({
   imports: [
@@ -18,7 +19,12 @@ import { BudgetService } from './budget.service';
     UnavailabilityModule,
     UserModule,
   ],
-  providers: [BudgetResolver, BudgetRecordResolver, BudgetService],
+  providers: [
+    BudgetResolver,
+    BudgetRecordResolver,
+    BudgetService,
+    ...Object.values(handlers),
+  ],
   exports: [BudgetService],
 })
 export class BudgetModule {}
