@@ -2,7 +2,6 @@ import { gql } from 'apollo-server-core';
 import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
 import { isValid } from 'shortid';
-import { RegisterInput } from '../src/components/authentication';
 import { User } from '../src/components/user';
 import { EmailService } from '../src/core/email';
 import {
@@ -10,6 +9,7 @@ import {
   createTestApp,
   createUser,
   fragments,
+  generateResisterInput,
   login,
   logout,
   TestApp,
@@ -28,18 +28,8 @@ describe('Authentication e2e', () => {
   it('Check Email Existence and Reset Password', async () => {
     const sendEmail = spyOn(app.get(EmailService), 'send');
 
-    const email = faker.internet.email();
-    const fakeUser: RegisterInput = {
-      email: email,
-      realFirstName: faker.name.firstName(),
-      realLastName: faker.name.lastName(),
-      displayFirstName: faker.name.firstName(),
-      displayLastName: faker.name.lastName(),
-      password: faker.internet.password(),
-      phone: faker.phone.phoneNumber(),
-      timezone: 'timezone detail',
-      bio: 'bio detail',
-    };
+    const fakeUser = generateResisterInput();
+    const email = fakeUser.email;
     // create user first
     await createUser(app, fakeUser);
     const checkRes = await app.graphql.mutate(
@@ -91,18 +81,7 @@ describe('Authentication e2e', () => {
   });
 
   it('login user', async () => {
-    const fakeUser: RegisterInput = {
-      email: faker.internet.email(),
-      realFirstName: faker.name.firstName(),
-      realLastName: faker.name.lastName(),
-      displayFirstName: faker.name.firstName(),
-      displayLastName: faker.name.lastName(),
-      password: faker.internet.password(),
-      phone: faker.phone.phoneNumber(),
-      timezone: 'timezone detail',
-      bio: 'bio detail',
-    };
-
+    const fakeUser = generateResisterInput();
     const user = await createUser(app, fakeUser);
     const _logout = await logout(app);
 
