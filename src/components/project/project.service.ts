@@ -727,27 +727,6 @@ export class ProjectService {
           throw new ServerException('Could not find location');
         }
       }
-      // Create root directory
-      const rootDir = await this.fileService.createDirectory(
-        undefined,
-        `${id} root directory`,
-        session
-      );
-      await this.db
-        .query()
-        .match([
-          [node('project', 'Project', { id, active: true })],
-          [node('dir', 'Directory', { id: rootDir.id, active: true })],
-        ])
-        .create([
-          node('project'),
-          relation('out', '', 'rootDirectory', {
-            active: true,
-            createdAt: DateTime.local(),
-          }),
-          node('dir'),
-        ])
-        .run();
 
       const qry = `
         MATCH
