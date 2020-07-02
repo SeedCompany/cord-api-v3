@@ -5,7 +5,7 @@ import { EngagementStatus, InternPosition } from '../src/components/engagement';
 import { Language } from '../src/components/language';
 import { Country, Region, Zone } from '../src/components/location';
 import { ProductMethodology } from '../src/components/product';
-import { Project } from '../src/components/project';
+import { Project, ProjectType } from '../src/components/project';
 import { User } from '../src/components/user';
 import {
   createCountry,
@@ -31,6 +31,7 @@ import _ = require('lodash');
 describe('Engagement e2e', () => {
   let app: TestApp;
   let project: Raw<Project>;
+  let internshipProject: Raw<Project>;
   let language: Language;
   let zone: Zone;
   let region: Region;
@@ -42,9 +43,14 @@ describe('Engagement e2e', () => {
 
   beforeAll(async () => {
     app = await createTestApp();
+
     await createSession(app);
+
     user = await createUser(app, { password });
     project = await createProject(app);
+    internshipProject = await createProject(app, {
+      type: ProjectType.Internship,
+    });
     language = await createLanguage(app);
     zone = await createZone(app, { directorId: user.id });
     region = await createRegion(app, { directorId: user.id, zoneId: zone.id });
@@ -77,7 +83,7 @@ describe('Engagement e2e', () => {
 
   it('creates a internship engagement', async () => {
     const internEngagement = await createInternshipEngagement(app, {
-      projectId: project.id,
+      projectId: internshipProject.id,
       countryOfOriginId: country.id,
       internId: intern.id,
       mentorId: mentor.id,
@@ -140,7 +146,7 @@ describe('Engagement e2e', () => {
   it('reads an internship engagement by id', async () => {
     const internshipEngagement = await createInternshipEngagement(app, {
       mentorId: mentor.id,
-      projectId: project.id,
+      projectId: internshipProject.id,
       countryOfOriginId: country.id,
       internId: intern.id,
     });
@@ -234,7 +240,7 @@ describe('Engagement e2e', () => {
 
   it('updates internship engagement', async () => {
     const internshipEngagement = await createInternshipEngagement(app, {
-      projectId: project.id,
+      projectId: internshipProject.id,
       internId: intern.id,
     });
     const updatePosition = InternPosition.LanguageProgramManager;
@@ -327,7 +333,7 @@ describe('Engagement e2e', () => {
   });
 
   it('has consistency in ceremony basenode', async () => {
-    project = await createProject(app);
+    project = await createProject(app, { type: ProjectType.Translation });
     language = await createLanguage(app);
     const languageEngagement = await createLanguageEngagement(app, {
       languageId: language.id,
@@ -366,7 +372,7 @@ describe('Engagement e2e', () => {
 
   it('has consistency in internship engagement nodes', async () => {
     await createInternshipEngagement(app, {
-      projectId: project.id,
+      projectId: internshipProject.id,
       countryOfOriginId: country.id,
       internId: intern.id,
       mentorId: mentor.id,
@@ -395,7 +401,7 @@ describe('Engagement e2e', () => {
   });
 
   it('updates ceremony for language engagement', async () => {
-    project = await createProject(app);
+    project = await createProject(app, { type: ProjectType.Translation });
     language = await createLanguage(app);
     const languageEngagement = await createLanguageEngagement(app, {
       languageId: language.id,
@@ -448,7 +454,7 @@ describe('Engagement e2e', () => {
   });
   it('updates ceremony for internship engagement', async () => {
     const ie = await createInternshipEngagement(app, {
-      projectId: project.id,
+      projectId: internshipProject.id,
       internId: intern.id,
       mentorId: mentor.id,
       countryOfOriginId: country.id,
@@ -505,7 +511,7 @@ describe('Engagement e2e', () => {
       projectId: project.id,
     });
     await createInternshipEngagement(app, {
-      projectId: project.id,
+      projectId: internshipProject.id,
       countryOfOriginId: country.id,
       internId: intern.id,
       mentorId: mentor.id,
@@ -555,7 +561,7 @@ describe('Engagement e2e', () => {
     ).rejects.toThrow('projectId is invalid');
     await expect(
       createInternshipEngagement(app, {
-        projectId: project.id,
+        projectId: internshipProject.id,
         countryOfOriginId: badId,
         internId: intern.id,
         mentorId: mentor.id,
@@ -563,7 +569,7 @@ describe('Engagement e2e', () => {
     ).rejects.toThrow('countryOfOriginId is invalid');
     await expect(
       createInternshipEngagement(app, {
-        projectId: project.id,
+        projectId: internshipProject.id,
         countryOfOriginId: country.id,
         internId: badId,
         mentorId: mentor.id,
@@ -571,7 +577,7 @@ describe('Engagement e2e', () => {
     ).rejects.toThrow('internId is invalid');
     await expect(
       createInternshipEngagement(app, {
-        projectId: project.id,
+        projectId: internshipProject.id,
         countryOfOriginId: country.id,
         internId: intern.id,
         mentorId: badId,
@@ -598,7 +604,7 @@ describe('Engagement e2e', () => {
   it('should return empty methodologies array even if it is null', async () => {
     // Create InternshipEngagement without methodologies
     const internshipEngagement = await createInternshipEngagement(app, {
-      projectId: project.id,
+      projectId: internshipProject.id,
       internId: intern.id,
       methodologies: [],
     });
@@ -620,5 +626,13 @@ describe('Engagement e2e', () => {
     expect(internshipEngagement.id).toBeDefined();
     expect(actual.methodologies).toBeDefined();
     expect(actual.methodologies.value).toMatchObject([]);
+  });
+
+  it('should throw error if Project type does not match with Engagement type', async () => {
+    await expect(
+      createInternshipEngagement(app, {
+        projectId: project.id,
+      })
+    ).rejects.toThrowError();
   });
 });

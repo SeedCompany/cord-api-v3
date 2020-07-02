@@ -25,6 +25,7 @@ import {
   ProductService,
   SecuredProductList,
 } from '../product';
+import { ProjectType } from '../project/dto/type.enum';
 import { UserService } from '../user';
 import {
   CreateInternshipEngagement,
@@ -506,6 +507,13 @@ export class EngagementService {
     { languageId, projectId, ...input }: CreateLanguageEngagement,
     session: ISession
   ): Promise<LanguageEngagement> {
+    // LanguageEngagements can only be created on TranslationProjects
+    const projectType = await this.getProjectTypeById(projectId);
+
+    if (projectType && projectType !== ProjectType.Translation) {
+      throw new BadRequestException('That Project type is not Translation');
+    }
+
     this.logger.info('Mutation create language engagement ', {
       input,
       projectId,
@@ -710,6 +718,13 @@ export class EngagementService {
     }: CreateInternshipEngagement,
     session: ISession
   ): Promise<InternshipEngagement> {
+    // InternshipEngagements can only be created on InternshipProjects
+    const projectType = await this.getProjectTypeById(projectId);
+
+    if (projectType && projectType !== ProjectType.Internship) {
+      throw new BadRequestException('That Project type is not Intership');
+    }
+
     this.logger.info('Mutation create internship engagement ', {
       input,
       projectId,
@@ -1559,5 +1574,16 @@ export class EngagementService {
         )
       ).every((n) => n)
     );
+  }
+
+  protected async getProjectTypeById(
+    projectId: string
+  ): Promise<ProjectType | undefined> {
+    const qr = `
+    MATCH (p:Project {id: $projectId, active: true}) RETURN p.type as type
+    `;
+    const results = await this.db.query().raw(qr, { projectId }).first();
+
+    return results?.type as ProjectType | undefined;
   }
 }
