@@ -12,6 +12,7 @@ import {
   OrganizationListInput,
   SecuredOrganizationList,
 } from '../organization';
+import { SecuredTimeZone, TimeZoneService } from '../timezone';
 import {
   AssignOrganizationToUserInput,
   CheckEmailArgs,
@@ -33,7 +34,10 @@ import { UserService } from './user.service';
 
 @Resolver(User.classType)
 export class UserResolver {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly timeZoneService: TimeZoneService
+  ) {}
 
   @Query(() => User, {
     description: 'Look up a user by its ID',
@@ -71,6 +75,16 @@ export class UserResolver {
   avatarLetters(@Parent() user: User): string | undefined {
     const name = this.fullName(user);
     return name ? firstLettersOfWords(name) : undefined;
+  }
+
+  @ResolveField(() => SecuredTimeZone)
+  async timezone(@Parent() user: User): Promise<SecuredTimeZone> {
+    const tz = user.timezone.value;
+    const zones = await this.timeZoneService.timezones();
+    return {
+      ...user.timezone,
+      value: tz ? zones[tz] : undefined,
+    };
   }
 
   @Query(() => UserListOutput, {

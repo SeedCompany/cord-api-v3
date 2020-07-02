@@ -1,4 +1,5 @@
 import { Field, Float, ObjectType } from '@nestjs/graphql';
+import { SecuredProperty } from '../../common';
 
 @ObjectType({
   description: 'An IANA Time Zone',
@@ -25,3 +26,8 @@ export abstract class IanaCountry {
   @Field(() => [TimeZone])
   zones: TimeZone[];
 }
+
+@ObjectType({
+  description: SecuredProperty.descriptionFor('a timezone'),
+})
+export class SecuredTimeZone extends SecuredProperty(TimeZone) {}
