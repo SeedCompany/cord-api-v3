@@ -1,6 +1,7 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
+import { DateTime, Interval } from 'luxon';
 import { isValid } from 'shortid';
 import { ProjectMember, Role } from '../src/components/project';
 import { User } from '../src/components/user';
@@ -33,6 +34,14 @@ describe('ProjectMember e2e', () => {
     await login(app, { email: user.email.value, password });
     const projectMember = await createProjectMember(app, { userId: user.id });
     expect(projectMember.id).toBeDefined();
+    expect(projectMember.modifiedAt).toBeDefined();
+    const difference = Interval.fromDateTimes(
+      DateTime.fromISO(projectMember.modifiedAt.toString()),
+      DateTime.local()
+    )
+      .toDuration()
+      .toFormat('S');
+    expect(parseInt(difference)).toBeGreaterThan(0);
   });
 
   it('read one projectMember by id', async () => {
@@ -151,10 +160,18 @@ describe('ProjectMember e2e', () => {
         },
       }
     );
-
     expect(result.updateProjectMember.projectMember.id).toBe(projectMember.id);
     expect(result.updateProjectMember.projectMember.roles.value).toEqual(
       expect.arrayContaining([Role.Intern])
     );
+    const updated = result.updateProjectMember.projectMember;
+    const difference = Interval.fromDateTimes(
+      DateTime.fromISO(projectMember.modifiedAt.toString()),
+      DateTime.fromISO(updated.modifiedAt)
+    )
+      .toDuration()
+      .toFormat('S');
+    expect(updated).toBeTruthy();
+    expect(parseInt(difference)).toBeGreaterThan(0);
   });
 });

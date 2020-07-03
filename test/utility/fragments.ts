@@ -329,6 +329,7 @@ export const projectMember = gql`
   fragment projectMember on ProjectMember {
     id
     createdAt
+    modifiedAt
     roles {
       value
     }
