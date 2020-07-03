@@ -122,7 +122,8 @@ export class ConfigService {
     const rawOrigin = this.env.string('CORS_ORIGIN').optional('*');
     // Always use regex instead of literal `*` so the current origin is returned
     // instead of `*`. fetch credentials="include" requires specific origin.
-    const origin = rawOrigin === '*' ? /.*/ : new RegExp(rawOrigin);
+    const origin =
+      rawOrigin === '*' ? /.*/ : rawOrigin.split(',').map((o) => new RegExp(o));
     return {
       origin,
       credentials: true,
