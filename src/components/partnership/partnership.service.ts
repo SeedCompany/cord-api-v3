@@ -443,13 +443,13 @@ export class PartnershipService {
       },
       mou: {
         value: result.mou,
-        canRead: result.canReadMou,
-        canEdit: result.canEditMou,
+        canRead: !!result.canReadMou,
+        canEdit: !!result.canEditMou,
       },
       agreement: {
         value: result.agreement,
-        canRead: result.canReadAgreement,
-        canEdit: result.canEditAgreement,
+        canRead: !!result.canReadAgreement,
+        canEdit: !!result.canEditAgreement,
       },
       mouStatus: {
         value: result.mouStatus,
