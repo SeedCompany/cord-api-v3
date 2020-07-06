@@ -1,7 +1,7 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { IsEmail, NameField } from '../../../common';
+import { IsEmail, IsIanaTimezone, NameField } from '../../../common';
 import { UserStatus } from './user-status.enum';
 import { User } from './user.dto';
 
@@ -27,6 +27,7 @@ export abstract class CreatePerson {
   readonly phone?: string;
 
   @Field({ nullable: true })
+  @IsIanaTimezone()
   readonly timezone?: string;
 
   @Field({ nullable: true })
