@@ -221,7 +221,6 @@ export class ProjectService {
         relation('out', '', 'location', { active: true }),
         node('country', 'Country', { active: true }),
       ])
-
       .return({
         project: [{ id: 'id', createdAt: 'createdAt', type: 'type' }],
         sensitivity: [{ value: 'sensitivity' }],
@@ -277,7 +276,7 @@ export class ProjectService {
             edit: 'canReadModifiedAtEdit',
           },
         ],
-        country: [{ id: 'contryId' }],
+        country: [{ id: 'countryId' }],
         canReadLocation: [
           {
             read: 'canReadLocationRead',
@@ -300,9 +299,9 @@ export class ProjectService {
       );
     }
 
-    const location = result.country
-      ? this.locationService
-          .readOneCountry(result.country.properties.id, session)
+    const location = result.countryId
+      ? await this.locationService
+          .readOneCountry(result.countryId, session)
           .then((country) => {
             return {
               value: {
@@ -618,28 +617,45 @@ export class ProjectService {
             active: true,
             id: this.config.rootAdmin.id,
           }),
-        ])
-        .create([
+        ]);
+      if (locationId) {
+        createProject.match([
+          node('country', 'Country', { active: true, id: locationId }),
+        ]);
+      }
+      createProject.create([
+        [
+          node('newProject', 'Project:BaseNode', {
+            active: true,
+            createdAt,
+            id,
+            owningOrgId: session.owningOrgId,
+            type: createInput.type,
+          }),
+        ],
+        ...this.property('sensitivity', createInput.sensitivity),
+        ...this.property('name', createInput.name),
+        ...this.property('step', createInput.step),
+        ...this.property('status', createInput.status),
+        ...this.property('mouStart', createInput.mouStart),
+        ...this.property('mouEnd', createInput.mouEnd),
+        ...this.property(
+          'estimatedSubmission',
+          createInput.estimatedSubmission
+        ),
+        ...this.property('modifiedAt', createInput.modifiedAt),
+      ]);
+      if (locationId) {
+        createProject.create([
           [
-            node('newProject', 'Project:BaseNode', {
-              active: true,
-              createdAt,
-              id,
-              owningOrgId: session.owningOrgId,
-              type: createInput.type,
-            }),
+            node('country'),
+            relation('in', '', 'location', { active: true, createdAt }),
+            node('newProject'),
           ],
-          ...this.property('sensitivity', createInput.sensitivity),
-          ...this.property('name', createInput.name),
-          ...this.property('step', createInput.step),
-          ...this.property('status', createInput.status),
-          ...this.property('mouStart', createInput.mouStart),
-          ...this.property('mouEnd', createInput.mouEnd),
-          ...this.property(
-            'estimatedSubmission',
-            createInput.estimatedSubmission
-          ),
-          ...this.property('modifiedAt', createInput.modifiedAt),
+        ]);
+      }
+      createProject
+        .create([
           [
             node('adminSG', 'SecurityGroup', {
               id: generate(),
@@ -681,15 +697,28 @@ export class ProjectService {
           ...this.permission('teamMember'),
           ...this.permission('partnership'),
           ...this.permission('modifiedAt'),
+          ...this.permission('location'),
         ])
         .return('newProject.id as id');
-
+      let cp;
       try {
-        await createProject.first();
+        cp = await createProject.first();
       } catch (e) {
         this.logger.error('e :>> ', e);
       }
-
+      let location;
+      if (locationId) {
+        location = await this.db
+          .query()
+          .match([node('country', 'Country', { active: true, id: locationId })])
+          .return('country.id')
+          .first();
+      }
+      if (!cp) {
+        if (locationId && !location) {
+          throw new ServerException('Could not find location');
+        }
+      }
       // Create root directory
       const rootDir = await this.fileService.createDirectory(
         undefined,
@@ -727,22 +756,6 @@ export class ProjectService {
         })
         .run();
 
-      if (locationId) {
-        const query = `
-            MATCH (country:Country {id: $locationId, active: true}),
-              (project:Project {id: $id, active: true})
-            CREATE (project)-[:location { active: true, createdAt: datetime()}]->(country)
-            RETURN project.id as id
-          `;
-
-        await this.db
-          .query()
-          .raw(query, {
-            locationId,
-            id,
-          })
-          .first();
-      }
       await this.projectMembers.create(
         {
           userId: session.userId!,
