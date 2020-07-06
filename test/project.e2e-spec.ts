@@ -4,7 +4,7 @@ import { times } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { CalendarDate } from '../src/common';
-import { Country } from '../src/components/location';
+import { Country, Region, Zone } from '../src/components/location';
 import {
   CreateProject,
   Project,
@@ -38,12 +38,20 @@ describe('Project e2e', () => {
   let intern: Partial<User>;
   let mentor: Partial<User>;
   let country: Country;
+  let director: User;
+  let zone: Zone;
+  let region: Region;
 
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await createUser(app);
-    country = await createCountry(app);
+    director = await createUser(app);
+    zone = await createZone(app, { directorId: director.id });
+    region = await createRegion(app, {
+      directorId: director.id,
+      zoneId: zone.id,
+    });
+    country = await createCountry(app, { regionId: region.id });
     intern = await getUserFromSession(app);
     mentor = await getUserFromSession(app);
   });
@@ -99,10 +107,11 @@ describe('Project e2e', () => {
     );
   });
 
-  it('create & read project with budget by id', async () => {
+  it('create & read project with budget and location by id', async () => {
     const proj: CreateProject = {
       name: faker.random.uuid(),
       type: ProjectType.Translation,
+      locationId: country.id,
     };
 
     const res = await app.graphql.mutate(
@@ -114,6 +123,14 @@ describe('Project e2e', () => {
               budget {
                 value {
                   ...budget
+                }
+              }
+              location {
+                value {
+                  id
+                  name {
+                    value
+                  }
                 }
               }
             }
@@ -129,6 +146,7 @@ describe('Project e2e', () => {
       }
     );
     const project = res.createProject.project;
+
     const result = await app.graphql.query(
       gql`
         query project($id: ID!) {
@@ -137,6 +155,14 @@ describe('Project e2e', () => {
             budget {
               value {
                 ...budget
+              }
+            }
+            location {
+              value {
+                id
+                name {
+                  value
+                }
               }
             }
           }
@@ -153,6 +179,9 @@ describe('Project e2e', () => {
     expect(actual.id).toBe(project.id);
     expect(actual.type).toBe(project.type);
     expect(actual.budget.value.id).toBe(project.budget.value.id);
+    expect(actual.location.value.name.value).toBe(
+      project.location.value.name.value
+    );
   });
 
   it('update project', async () => {
