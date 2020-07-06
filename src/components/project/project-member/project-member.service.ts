@@ -41,12 +41,13 @@ export class ProjectMemberService {
           active: true,
           id: $requestingUserId,
           owningOrgId: $owningOrgId
-        })
-        MATCH(projectMember:ProjectMember {active: true, id: $id})-[:modifiedAt]->(modifiedAt:Property)
+        }),
+       (projectMember:ProjectMember {active: true, id: $id})
 
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadRoles:ACL {canReadRoles: true})-[:toNode]->(projectMember)-[:roles {active: true}]->(roles: Property {active: true})
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditRoles:ACL {canEditRoles: true})-[:toNode]->(projectMember)
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadUser:ACL {canReadUser: true})-[:toNode]->(projectMember)-[:user {active: true}]->(user)
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadModifiedAt:ACL {})-[:toNode]->(projectMember)-[:modifiedAt {active: true}]->(modifiedAt:Property {active: true})
 
         RETURN
           projectMember.id as id,
@@ -237,10 +238,11 @@ export class ProjectMemberService {
     await this.db.updateProperties({
       session,
       object,
-      props: ['roles'],
+      props: ['roles', 'modifiedAt'],
       changes: {
         ...input,
         roles: (input.roles ? input.roles : undefined) as any,
+        modifiedAt: DateTime.local(),
       },
       nodevar: 'projectMember',
     });
