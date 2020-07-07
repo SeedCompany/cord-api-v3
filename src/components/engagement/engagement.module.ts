@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { CeremonyModule } from '../ceremony/ceremony.module';
+import { FileModule } from '../file/file.module';
 import { LanguageModule } from '../language/language.module';
 import { LocationModule } from '../location/location.module';
 import { ProductModule } from '../product/product.module';
@@ -11,6 +12,7 @@ import { LanguageEngagementResolver } from './language-engagement.resolver';
 
 @Module({
   imports: [
+    FileModule,
     UserModule,
     CeremonyModule,
     ProductModule,

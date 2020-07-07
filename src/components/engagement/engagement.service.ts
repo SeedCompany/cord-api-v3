@@ -18,6 +18,7 @@ import {
 } from '../../core';
 import { CeremonyService } from '../ceremony';
 import { CeremonyType } from '../ceremony/dto/type.enum';
+import { FileService } from '../file';
 import { LanguageService } from '../language';
 import { LocationService } from '../location';
 import {
@@ -50,6 +51,7 @@ export class EngagementService {
     private readonly languageService: LanguageService,
     private readonly locationService: LocationService,
     private readonly config: ConfigService,
+    private readonly files: FileService,
     @Logger(`engagement.service`) private readonly logger: ILogger
   ) {}
   async readOne(id: string, session: ISession): Promise<Engagement> {
@@ -100,6 +102,8 @@ export class EngagementService {
     this.propMatch(leQuery, 'status', 'languageEngagement');
     this.propMatch(leQuery, 'modifiedAt', 'languageEngagement');
     this.propMatch(leQuery, 'paraTextRegistryId', 'languageEngagement');
+    this.propMatch(leQuery, 'pnp', 'languageEngagement');
+
     leQuery
       .optionalMatch([
         node('requestingUser'),
@@ -159,6 +163,7 @@ export class EngagementService {
         statusModifiedAt: [{ value: 'statusModifiedAt' }],
         modifiedAt: [{ value: 'modifiedAt' }],
         paraTextRegistryId: [{ value: 'paraTextRegistryId' }],
+        pnp: [{ value: 'pnp' }],
         permLanguage: [{ read: 'canReadLanguage', edit: 'canEditLanguage' }],
         permCeremony: [{ read: 'canReadCeremony', edit: 'canEditCeremony' }],
         canReadFirstScripture: [
@@ -171,6 +176,12 @@ export class EngagementService {
           {
             read: 'canReadParaTextRegistryId',
             edit: 'canEditParaTextRegistryId',
+          },
+        ],
+        canReadPnp: [
+          {
+            read: 'canReadPnp',
+            edit: 'canEditPnp',
           },
         ],
         canReadSentPrintingDate: [
@@ -265,6 +276,11 @@ export class EngagementService {
         value: result.paraTextRegistryId,
         canRead: !!result.canReadParaTextRegistryId,
         canEdit: !!result.canEditParaTextRegistryId,
+      },
+      pnp: {
+        value: result.pnp,
+        canRead: !!result.canReadPnp,
+        canEdit: !!result.canEditPnp,
       },
     };
 
@@ -524,6 +540,8 @@ export class EngagementService {
     // Initial LanguageEngagement
     const id = generate();
     const createdAt = DateTime.local();
+    const pnp = await this.files.createDefinedFile(`PNP`, session, input.pnp);
+
     const ceremony = await this.ceremonyService.create(
       { type: CeremonyType.Dedication },
       session
@@ -594,6 +612,7 @@ export class EngagementService {
         input.paraTextRegistryId || undefined,
         'languageEngagement'
       ),
+      ...this.property('pnp', pnp || undefined, 'languageEngagement'),
       ...this.property(
         'status',
         EngagementStatus.InDevelopment,
@@ -666,6 +685,7 @@ export class EngagementService {
         ...this.permission('language', 'languageEngagement'),
         ...this.permission('status', 'languageEngagement'),
         ...this.permission('paraTextRegistryId', 'languageEngagement'),
+        ...this.permission('pnp', 'languageEngagement'),
         ...this.permission('modifiedAt', 'languageEngagement'),
       ])
       .return('languageEngagement');
@@ -734,6 +754,12 @@ export class EngagementService {
     });
     const id = generate();
     const createdAt = DateTime.local();
+    const growthPlan = await this.files.createDefinedFile(
+      `Growth Plan`,
+      session,
+      input.growthPlan
+    );
+
     let ceremony;
     try {
       ceremony = await this.ceremonyService.create(
@@ -818,6 +844,11 @@ export class EngagementService {
       ...this.property(
         'position',
         input.position || undefined,
+        'internshipEngagement'
+      ),
+      ...this.property(
+        'growthPlan',
+        growthPlan || undefined,
         'internshipEngagement'
       ),
       ...this.property(
@@ -924,6 +955,7 @@ export class EngagementService {
         ...this.permission('ceremony', 'internshipEngagement'),
         ...this.permission('intern', 'internshipEngagement'),
         ...this.permission('mentor', 'internshipEngagement'),
+        ...this.permission('growthPlan', 'internshipEngagement'),
       ])
       .return('internshipEngagement');
     let IE;
@@ -1044,6 +1076,7 @@ export class EngagementService {
     this.propMatch(ieQuery, 'lastReactivatedAt', 'internshipEngagement');
     this.propMatch(ieQuery, 'statusModifiedAt', 'internshipEngagement');
     this.propMatch(ieQuery, 'methodologies', 'internshipEngagement');
+    this.propMatch(ieQuery, 'growthPlan', 'internshipEngagement');
 
     ieQuery
       .optionalMatch([
@@ -1125,11 +1158,16 @@ export class EngagementService {
         statusModifiedAt: [{ value: 'statusModifiedAt' }],
 
         methodologies: [{ value: 'methodologies' }],
+        growthPlan: [{ value: 'growthPlan' }],
 
         canReadPosition: [{ read: 'canReadPosition' }],
         canEditPosition: [{ edit: 'canEditPosition' }],
         canReadStatus: [{ read: 'canReadStatus' }],
         canEditStatus: [{ edit: 'canEditStatus' }],
+
+        canReadGrowthPlan: [{ read: 'canReadGrowthPlan' }],
+        canEditGrowthPlan: [{ edit: 'canEditGrowthPlan' }],
+
         canReadCompleteDate: [{ read: 'canReadCompleteDate' }],
         canEditCompleteDate: [{ edit: 'canEditCompleteDate' }],
         canReadMethodologies: [
@@ -1250,6 +1288,11 @@ export class EngagementService {
         canRead: !!result.canReadCountryOfOrigin,
         canEdit: !!result.canEditCountryOfOrigin,
       },
+      growthPlan: {
+        value: result.growthPlan,
+        canRead: !!result.canReadGrowthPlan,
+        canEdit: !!result.canEditGrowthPlan,
+      },
     };
 
     return {
@@ -1316,8 +1359,9 @@ export class EngagementService {
     session: ISession
   ): Promise<LanguageEngagement> {
     try {
+      const { pnp, ...rest } = input;
       const changes = {
-        ...input,
+        ...rest,
         modifiedAt: DateTime.local(),
       };
       const object = await this.readOne(input.id, session);
@@ -1338,7 +1382,9 @@ export class EngagementService {
         changes,
         nodevar: 'LanguageEngagement',
       });
-
+      if (object.pnp) {
+        await this.files.updateDefinedFile(object.pnp, pnp, session);
+      }
       return (await this.readOne(input.id, session)) as LanguageEngagement;
     } catch (e) {
       this.logger.error(e);
@@ -1347,7 +1393,12 @@ export class EngagementService {
   }
 
   async updateInternshipEngagement(
-    { mentorId, countryOfOriginId, ...input }: UpdateInternshipEngagement,
+    {
+      growthPlan,
+      mentorId,
+      countryOfOriginId,
+      ...input
+    }: UpdateInternshipEngagement,
     session: ISession
   ): Promise<InternshipEngagement> {
     const createdAt = DateTime.local();
@@ -1443,6 +1494,13 @@ export class EngagementService {
           ]);
         }
       });
+      if (object.growthPlan) {
+        await this.files.updateDefinedFile(
+          object.growthPlan,
+          growthPlan,
+          session
+        );
+      }
       const result = await this.readInternshipEngagement(input.id, session);
       // console.log('result ', JSON.stringify(result, null, 2));
 

@@ -11,6 +11,7 @@ import {
   SecuredString,
 } from '../../../common';
 import { SecuredCeremony } from '../../ceremony';
+import { DefinedFile } from '../../file/dto';
 import { SecuredLanguage } from '../../language';
 import { SecuredCountry } from '../../location';
 import { SecuredMethodologies } from '../../product';
@@ -117,6 +118,8 @@ export class LanguageEngagement extends IEngagement {
 
   @Field()
   readonly paraTextRegistryId: SecuredString;
+
+  readonly pnp: DefinedFile;
 }
 
 @ObjectType({
@@ -145,4 +148,6 @@ export class InternshipEngagement extends IEngagement {
 
   @Field()
   readonly methodologies: SecuredMethodologies;
+
+  readonly growthPlan: DefinedFile;
 }
