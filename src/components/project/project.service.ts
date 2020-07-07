@@ -14,6 +14,7 @@ import {
   addBaseNodeMetaPropsWithClause,
   ConfigService,
   DatabaseService,
+  filterQuery,
   ILogger,
   listWithSecureObject,
   listWithUnsecureObject,
@@ -367,7 +368,7 @@ export class ProjectService {
   }
 
   async list(
-    input: ProjectListInput,
+    { filter, ...input }: ProjectListInput,
     session: ISession
   ): Promise<ProjectListOutput> {
     const label = 'Project';
@@ -387,42 +388,42 @@ export class ProjectService {
     const listQuery = this.db
       .query()
       // match on requesting user
-      .call(matchRequestingUser, session)
+      .call(matchRequestingUser, session);
+
+    if (filter.name) {
+      // match on filter terms using parent base node
+      listQuery.call(
+        filterQuery,
+        label,
+        input.sort,
+        '',
+        'User',
+        'project',
+        'name',
+        filter.name
+      );
+    } else {
       // match on filter terms
-      .match([
-        node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup', {
-          active: true,
-        }),
-        relation('out', '', 'permission', { active: true }),
-        node('', 'Permission', {
-          property: 'name',
-          read: true,
-          active: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('node', label, {
-          active: true,
-        }),
-        relation('out', '', input.sort, { active: true }),
-        node(input.sort, 'Property', { active: true }),
-      ])
-      // match on the rest of the properties of the object requested
+      listQuery.call(filterQuery, label, input.sort);
+    }
+
+    // match on the rest of the properties of the object requested
+    listQuery
       .call(matchProperties, 'project', ...secureProps, ...unsecureProps)
 
       // form return object
+      // ${listWithUnsecureObject(unsecureProps)}, // removed from a few lines down
       .with(
         `
-    {
-      ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
-      ${listWithUnsecureObject(unsecureProps)},
-      ${listWithSecureObject(secureProps)}
-    }
-    as node
-    `
+          {
+            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
+            ${listWithUnsecureObject(unsecureProps)},
+            ${listWithSecureObject(secureProps)}
+          } as node
+        `
       );
-    return runListQuery<Project>(listQuery, input);
+
+    return runListQuery(listQuery, input);
   }
 
   async currentBudget(
