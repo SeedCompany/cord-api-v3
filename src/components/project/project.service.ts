@@ -384,7 +384,7 @@ export class ProjectService {
       'estimatedSubmission',
       'modifiedAt',
     ];
-
+    // Need to filter data with arrays (not yet implemented)
     const listQuery = this.db
       .query()
       // match on requesting user
@@ -401,6 +401,39 @@ export class ProjectService {
         'project',
         'name',
         filter.name
+      );
+    } else if (filter.type) {
+      listQuery.call(
+        filterQuery,
+        label,
+        input.sort,
+        '',
+        'User',
+        'project',
+        'type',
+        filter.type
+      );
+    } else if (filter.createdAt) {
+      listQuery.call(
+        filterQuery,
+        label,
+        input.sort,
+        '',
+        'User',
+        'project',
+        'createdAt',
+        filter.createdAt.toString()
+      );
+    } else if (filter.modifiedAt) {
+      listQuery.call(
+        filterQuery,
+        label,
+        input.sort,
+        '',
+        'User',
+        'project',
+        'modifiedAt',
+        filter.modifiedAt.toString()
       );
     } else {
       // match on filter terms
