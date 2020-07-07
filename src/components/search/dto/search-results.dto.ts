@@ -12,14 +12,14 @@ import { User } from '../../user/dto';
 
 // Expand this to add to searchable types / results
 const searchable = {
-  Organization,
-  Country,
-  Region,
-  Zone,
-  Language,
-  TranslationProject,
-  InternshipProject,
-  User,
+  Organization: Organization.classType,
+  Country: Country.classType,
+  Region: Region.classType,
+  Zone: Zone.classType,
+  Language: Language.classType,
+  TranslationProject: TranslationProject.classType,
+  InternshipProject: InternshipProject.classType,
+  User: User.classType,
 } as const;
 
 // Expand this to add more search types, but not result types.
@@ -33,19 +33,26 @@ const searchableAbstracts = {
  * Everything below is based on objects above and should not need to be modified
  ******************************************************************************/
 
+export type SearchableMap = {
+  [K in keyof typeof searchable]: InstanceType<typeof searchable[K]>;
+};
+
+export const SearchResultTypes = Object.keys(searchable);
+
 // __typename is a GQL thing to identify type at runtime
 // It makes since to match this to not conflict with actual properties and
 // to match what GQL does on the consuming side.
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export type SearchItem<T, S> = T & { __typename: S };
 
-export type SearchResult = {
-  [K in keyof typeof searchable]: SearchItem<typeof searchable[K], K>;
-}[keyof typeof searchable];
+export type SearchResultMap = {
+  [K in keyof SearchableMap]: SearchItem<SearchableMap[K], K>;
+};
+export type SearchResult = SearchResultMap[keyof SearchableMap];
 
 export const SearchResult = createUnionType({
   name: 'SearchResult',
-  types: () => Object.values(searchable) as any, // ignore errors for abstract classes
+  types: () => Object.values(searchable),
   resolveType: (value: SearchResult) =>
     simpleSwitch(value.__typename, searchable),
 });
