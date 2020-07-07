@@ -402,39 +402,6 @@ export class ProjectService {
         'name',
         filter.name
       );
-    } else if (filter.type) {
-      listQuery.call(
-        filterQuery,
-        label,
-        input.sort,
-        '',
-        'User',
-        'project',
-        'type',
-        filter.type
-      );
-    } else if (filter.createdAt) {
-      listQuery.call(
-        filterQuery,
-        label,
-        input.sort,
-        '',
-        'User',
-        'project',
-        'createdAt',
-        filter.createdAt.toString()
-      );
-    } else if (filter.modifiedAt) {
-      listQuery.call(
-        filterQuery,
-        label,
-        input.sort,
-        '',
-        'User',
-        'project',
-        'modifiedAt',
-        filter.modifiedAt.toString()
-      );
     } else {
       // match on filter terms
       listQuery.call(filterQuery, label, input.sort);
@@ -632,7 +599,6 @@ export class ProjectService {
   ): Promise<Project> {
     const id = generate();
     const createdAt = DateTime.local();
-
     const createInput = {
       id,
       sensitivity: Sensitivity.High, // TODO: this needs to be calculated based on language engagement
