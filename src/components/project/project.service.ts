@@ -106,9 +106,6 @@ export class ProjectService {
 
   // helper method for defining properties
   property = (prop: string, value: any) => {
-    if (!value) {
-      return [];
-    }
     const createdAt = DateTime.local();
     return [
       [
@@ -126,7 +123,7 @@ export class ProjectService {
   };
 
   // helper method for defining properties
-  permission = (property: string) => {
+  permission = (property: string, canEdit = false) => {
     const createdAt = DateTime.local();
     return [
       [
@@ -158,7 +155,7 @@ export class ProjectService {
           property,
           active: true,
           read: true,
-          edit: false,
+          edit: canEdit,
           admin: false,
         }),
         relation('out', '', 'baseNode', {
@@ -329,39 +326,39 @@ export class ProjectService {
       sensitivity: result.sensitivity,
       name: {
         value: result.name,
-        canRead: !!result.canReadName,
-        canEdit: !!result.canEditName,
+        canRead: !!result.canReadNameRead,
+        canEdit: !!result.canReadNameEdit,
       },
       deptId: {
         value: result.deptId,
-        canRead: !!result.canReadDeptId,
-        canEdit: !!result.canEditDeptId,
+        canRead: !!result.canReadDeptIdRead,
+        canEdit: !!result.canReadDeptIdEdit,
       },
       step: {
         value: result.step,
-        canRead: !!result.canReadStep,
-        canEdit: !!result.canEditStep,
+        canRead: !!result.canReadStepRead,
+        canEdit: !!result.canReadStepEdit,
       },
       status: result.status,
       location: {
         ...location,
-        canRead: !!result.canReadLocation,
-        canEdit: !!result.canEditLocation,
+        canRead: !!result.canReadLocationRead,
+        canEdit: !!result.canReadLocationEdit,
       },
       mouStart: {
         value: result.mouStart,
-        canRead: !!result.canReadMouStart,
-        canEdit: !!result.canEditMouStart,
+        canRead: !!result.canReadMouStartRead,
+        canEdit: !!result.canReadMouStartEdit,
       },
       mouEnd: {
         value: result.mouEnd,
-        canRead: !!result.canReadMouEnd,
-        canEdit: !!result.canEditMouEnd,
+        canRead: !!result.canReadMouEndRead,
+        canEdit: !!result.canReadMouEndEdit,
       },
       estimatedSubmission: {
         value: result.estimatedSubmission,
-        canRead: !!result.canReadEstimatedSubmission,
-        canEdit: !!result.canEditEstimatedSubmission,
+        canRead: !!result.canReadEstimatedSubmissionRead,
+        canEdit: !!result.canEditEstimatedSubmissionEdit,
       },
     };
   }
@@ -515,7 +512,7 @@ export class ProjectService {
       hasMore: false,
       items,
       canRead: true,
-      canCreate: false,
+      canCreate: true,
     };
     return retVal;
   }
@@ -607,6 +604,7 @@ export class ProjectService {
       modifiedAt: DateTime.local(),
       ...input,
     };
+    const canEdit = createInput.status === ProjectStatus.InDevelopment;
 
     try {
       const createProject = this.db
@@ -687,11 +685,11 @@ export class ProjectService {
             node('rootuser'),
           ],
           ...this.permission('sensitivity'),
-          ...this.permission('name'),
+          ...this.permission('name', canEdit),
           ...this.permission('step'),
           ...this.permission('status'),
-          ...this.permission('mouStart'),
-          ...this.permission('mouEnd'),
+          ...this.permission('mouStart', canEdit),
+          ...this.permission('mouEnd', canEdit),
           ...this.permission('estimatedSubmission'),
           ...this.permission('engagement'),
           ...this.permission('teamMember'),

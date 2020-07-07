@@ -77,8 +77,8 @@ export class UserService {
       'CREATE CONSTRAINT ON ()-[r:password]-() ASSERT EXISTS(r.createdAt)',
 
       // PROPERTY NODE
-      'CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.active)',
+      // 'CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.value)',
+      // 'CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.active)',
     ];
     for (const query of constraints) {
       await this.db.query().raw(query).run();
