@@ -12,14 +12,14 @@ import { User } from '../../user/dto';
 
 // Expand this to add to searchable types / results
 const searchable = {
-  Organization,
-  Country,
-  Region,
-  Zone,
-  Language,
-  TranslationProject,
-  InternshipProject,
-  User,
+  Organization: Organization.classType,
+  Country: Country.classType,
+  Region: Region.classType,
+  Zone: Zone.classType,
+  Language: Language.classType,
+  TranslationProject: TranslationProject.classType,
+  InternshipProject: InternshipProject.classType,
+  User: User.classType,
 } as const;
 
 // Expand this to add more search types, but not result types.
@@ -40,12 +40,15 @@ const searchableAbstracts = {
 export type SearchItem<T, S> = T & { __typename: S };
 
 export type SearchResult = {
-  [K in keyof typeof searchable]: SearchItem<typeof searchable[K], K>;
+  [K in keyof typeof searchable]: SearchItem<
+    InstanceType<typeof searchable[K]>,
+    K
+  >;
 }[keyof typeof searchable];
 
 export const SearchResult = createUnionType({
   name: 'SearchResult',
-  types: () => Object.values(searchable) as any, // ignore errors for abstract classes
+  types: () => Object.values(searchable),
   resolveType: (value: SearchResult) =>
     simpleSwitch(value.__typename, searchable),
 });
