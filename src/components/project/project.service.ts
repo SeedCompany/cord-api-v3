@@ -512,7 +512,7 @@ export class ProjectService {
       hasMore: false,
       items,
       canRead: true,
-      canCreate: false,
+      canCreate: true,
     };
     return retVal;
   }
