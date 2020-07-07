@@ -4,11 +4,18 @@ import {
   NotFoundException,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { node, Query, relation } from 'cypher-query-builder';
+import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../../common';
-import { DatabaseService, ILogger, Logger } from '../../../core';
+import {
+  ConfigService,
+  DatabaseService,
+  ILogger,
+  Logger,
+  matchSession,
+} from '../../../core';
 import { RedactedUser, User, UserService } from '../../user';
 import {
   CreateProjectMember,
@@ -22,51 +29,198 @@ import {
 export class ProjectMemberService {
   constructor(
     private readonly db: DatabaseService,
+    private readonly config: ConfigService,
     private readonly userService: UserService,
     @Logger('project:member:service') private readonly logger: ILogger
   ) {}
 
-  async readOne(id: string, session: ISession): Promise<ProjectMember> {
-    const result = await this.db
-      .query()
-      .raw(
-        `
-        MATCH
-        (toekn: Token {
+  // helper method for defining properties
+  property = (prop: string, value: any) => {
+    if (!value) {
+      return [];
+    }
+    const createdAt = DateTime.local();
+    return [
+      [
+        node('newProjectMember'),
+        relation('out', '', prop, {
           active: true,
-          value: $token
-        })
-          <-[:token {active: true}]-
-        (requestingUser:User {
-          active: true,
-          id: $requestingUserId,
-          owningOrgId: $owningOrgId
+          createdAt,
         }),
-       (projectMember:ProjectMember {active: true, id: $id})
+        node(prop, 'Property', {
+          active: true,
+          value,
+        }),
+      ],
+    ];
+  };
 
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadRoles:ACL {canReadRoles: true})-[:toNode]->(projectMember)-[:roles {active: true}]->(roles: Property {active: true})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canEditRoles:ACL {canEditRoles: true})-[:toNode]->(projectMember)
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadUser:ACL {canReadUser: true})-[:toNode]->(projectMember)-[:user {active: true}]->(user)
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(canReadModifiedAt:ACL {})-[:toNode]->(projectMember)-[:modifiedAt {active: true}]->(modifiedAt:Property {active: true})
+  // helper method for defining properties
+  permission = (property: string) => {
+    const createdAt = DateTime.local();
+    return [
+      [
+        node('adminSG'),
+        relation('out', '', 'permission', {
+          active: true,
+          createdAt,
+        }),
+        node('', 'Permission', {
+          property,
+          active: true,
+          read: true,
+          edit: true,
+          admin: true,
+        }),
+        relation('out', '', 'baseNode', {
+          active: true,
+          createdAt,
+        }),
+        node('newProjectMember'),
+      ],
+      [
+        node('readerSG'),
+        relation('out', '', 'permission', {
+          active: true,
+          createdAt,
+        }),
+        node('', 'Permission', {
+          property,
+          active: true,
+          read: true,
+          edit: false,
+          admin: false,
+        }),
+        relation('out', '', 'baseNode', {
+          active: true,
+          createdAt,
+        }),
+        node('newProjectMember'),
+      ],
+    ];
+  };
 
-        RETURN
-          projectMember.id as id,
-          projectMember.createdAt as createdAt,
-          modifiedAt.value as modifiedAt,
-          user.id as userId,
-          roles.value as roles,
-          canReadRoles.canReadRoles as canReadRoles,
-          canEditRoles.canEditRoles as canEditRoles,
-          canReadUser.canReadUser as canReadUser
-        `,
+  propMatch = (query: Query, property: string) => {
+    const readPerm = 'canRead' + upperFirst(property);
+    const editPerm = 'canEdit' + upperFirst(property);
+    query.optionalMatch([
+      [
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node(editPerm, 'Permission', {
+          property,
+          active: true,
+          edit: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('projectMember'),
+        relation('out', '', property, { active: true }),
+        node(property, 'Property', { active: true }),
+      ],
+    ]);
+    query.optionalMatch([
+      [
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node(readPerm, 'Permission', {
+          property,
+          active: true,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('projectMember'),
+        relation('out', '', property, { active: true }),
+        node(property, 'Property', { active: true }),
+      ],
+    ]);
+  };
+
+  async readOne(id: string, session: ISession): Promise<ProjectMember> {
+    const readProjectMember = this.db
+      .query()
+      .match(matchSession(session, { withAclRead: 'canReadProjectMembers' }))
+      .match([node('projectMember', 'ProjectMember', { active: true, id })]);
+    readProjectMember.optionalMatch([
+      node('requestingUser'),
+      relation('in', '', 'member', { active: true }),
+      node('sg', 'SecurityGroup', { active: true }),
+      relation('out', '', 'permission', { active: true }),
+      node('canEditUser', 'Permission', {
+        property: 'user',
+        active: true,
+        edit: true,
+      }),
+      relation('out', '', 'baseNode', { active: true }),
+      node('projectMember'),
+      relation('out', '', 'user', { active: true }),
+      node('user', 'User', { active: true }),
+    ]);
+    readProjectMember.optionalMatch([
+      node('requestingUser'),
+      relation('in', '', 'member', { active: true }),
+      node('sg', 'SecurityGroup', { active: true }),
+      relation('out', '', 'permission', { active: true }),
+      node('canReadUser', 'Permission', {
+        property: 'user',
+        active: true,
+        read: true,
+      }),
+      relation('out', '', 'baseNode', { active: true }),
+      node('projectMember'),
+      relation('out', '', 'user', { active: true }),
+      node('user', 'User', { active: true }),
+    ]);
+    this.propMatch(readProjectMember, 'roles');
+    this.propMatch(readProjectMember, 'modifiedAt');
+
+    readProjectMember.return({
+      projectMember: [{ id: 'id', createdAt: 'createdAt' }],
+      roles: [{ value: 'roles' }],
+      canReadRoles: [
         {
-          token: session.token,
-          requestingUserId: session.userId,
-          owningOrgId: session.owningOrgId,
-          id,
-        }
-      )
-      .first();
+          read: 'canReadRoles',
+        },
+      ],
+      canEditRoles: [
+        {
+          edit: 'canEditRoles',
+        },
+      ],
+      modifiedAt: [{ value: 'modifiedAt' }],
+      canReadModifiedAt: [
+        {
+          read: 'canReadModifiedAt',
+        },
+      ],
+      canEditModifiedAt: [
+        {
+          edit: 'canEditModifiedAt',
+        },
+      ],
+      user: [{ id: 'userId' }],
+      canReadUser: [
+        {
+          read: 'canReadUser',
+        },
+      ],
+      canEditUser: [
+        {
+          edit: 'canEditUser',
+        },
+      ],
+    });
+
+    let result;
+    try {
+      result = await readProjectMember.first();
+    } catch (e) {
+      this.logger.error('e :>> ', e);
+      return await Promise.reject(e);
+    }
 
     if (!result) {
       throw new NotFoundException('Could not find project member');
@@ -101,23 +255,68 @@ export class ProjectMemberService {
     session: ISession
   ): Promise<ProjectMember> {
     const id = generate();
-    const acls = {
-      canReadRoles: true,
-      canEditRoles: true,
-      canReadUser: true,
-    };
+    const createdAt = DateTime.local();
+
     try {
-      await this.db.createNode({
-        session,
-        type: ProjectMember.classType,
-        input: {
-          id,
-          roles: [],
-          modifiedAt: DateTime.local(),
-          ...input,
-        },
-        acls,
-      });
+      const createProjectMember = this.db
+        .query()
+        .match(matchSession(session, { withAclEdit: 'canCreateProjectMember' }))
+        .match([
+          node('rootuser', 'User', {
+            active: true,
+            id: this.config.rootAdmin.id,
+          }),
+        ])
+        .create([
+          [
+            node('newProjectMember', 'ProjectMember:BaseNode', {
+              active: true,
+              createdAt,
+              id,
+              owningOrgId: session.owningOrgId,
+            }),
+          ],
+          ...this.property('roles', input.roles),
+          ...this.property('modifiedAt', createdAt),
+          [
+            node('adminSG', 'SecurityGroup', {
+              id: generate(),
+              active: true,
+              createdAt,
+              name: `projectmember-SG admin`,
+            }),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('requestingUser'),
+          ],
+          [
+            node('readerSG', 'SecurityGroup', {
+              id: generate(),
+              active: true,
+              createdAt,
+              name: `projectmember-SG users`,
+            }),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('requestingUser'),
+          ],
+          [
+            node('adminSG'),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('rootuser'),
+          ],
+          [
+            node('readerSG'),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('rootuser'),
+          ],
+          ...this.permission('roles'),
+          ...this.permission('modifiedAt'),
+          ...this.permission('user'),
+        ])
+        .return('newProjectMember.id as id');
+      await createProjectMember.first();
+
+      // connect the Project to the ProjectMember
+      // and connect ProjectMember to User
       await this.db
         .query()
         .match([
@@ -235,7 +434,7 @@ export class ProjectMemberService {
   ): Promise<ProjectMember> {
     const object = await this.readOne(input.id, session);
 
-    await this.db.updateProperties({
+    await this.db.sgUpdateProperties({
       session,
       object,
       props: ['roles', 'modifiedAt'],
