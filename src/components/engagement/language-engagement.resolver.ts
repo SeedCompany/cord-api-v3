@@ -30,9 +30,7 @@ export class LanguageEngagementResolver {
     );
   }
 
-  @ResolveField(() => SecuredFile, {
-    description: 'The pnp',
-  })
+  @ResolveField(() => SecuredFile)
   async pnp(
     @Parent() engagement: LanguageEngagement,
     @Session() session: ISession

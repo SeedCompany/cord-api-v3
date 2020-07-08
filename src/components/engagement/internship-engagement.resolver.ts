@@ -7,9 +7,7 @@ import { InternshipEngagement } from './dto';
 export class InternshipEngagementResolver {
   constructor(private readonly files: FileService) {}
 
-  @ResolveField(() => SecuredFile, {
-    description: 'The growthPlan',
-  })
+  @ResolveField(() => SecuredFile)
   async growthPlan(
     @Parent() engagement: InternshipEngagement,
     @Session() session: ISession

@@ -44,7 +44,7 @@ export abstract class CreateLanguageEngagement extends CreateEngagement {
   @Field({ nullable: true })
   readonly paraTextRegistryId?: string;
 
-  @Field({ description: 'pnp', nullable: true })
+  @Field({ nullable: true })
   readonly pnp?: CreateDefinedFileVersionInput;
 }
 
@@ -65,7 +65,7 @@ export abstract class CreateInternshipEngagement extends CreateEngagement {
   @Field(() => [ProductMethodology], { nullable: true })
   readonly methodologies?: ProductMethodology[];
 
-  @Field({ description: 'growthPlan', nullable: true })
+  @Field({ nullable: true })
   readonly growthPlan?: CreateDefinedFileVersionInput;
 }
 
