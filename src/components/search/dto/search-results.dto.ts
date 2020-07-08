@@ -1,4 +1,5 @@
 import { createUnionType, registerEnumType } from '@nestjs/graphql';
+import { mapValues } from 'lodash';
 import { simpleSwitch } from '../../../common';
 import { Language } from '../../language/dto';
 import { Country, Location, Region, Zone } from '../../location/dto';
@@ -62,9 +63,12 @@ export type SearchType =
   | keyof typeof searchableAbstracts;
 
 // Don't use outside of defining GQL schema
-export const GqlSearchType = {
-  ...searchable,
-  ...searchableAbstracts,
-};
+export const GqlSearchType = mapValues(
+  {
+    ...searchable,
+    ...searchableAbstracts,
+  },
+  (v, k) => k
+);
 
 registerEnumType(GqlSearchType, { name: 'SearchType' });
