@@ -76,8 +76,8 @@ export class EngagementService {
   async readLanguageEngagement(
     id: string,
     session: ISession
-  ): Promise<Engagement> {
-    this.logger.info('readLangaugeEnagement', { id, userId: session.userId });
+  ): Promise<LanguageEngagement> {
+    this.logger.info('readLanguageEngagement', { id, userId: session.userId });
     const leQuery = this.db
       .query()
       .match(matchSession(session, { withAclRead: 'canReadEngagements' }))
@@ -721,10 +721,7 @@ export class EngagementService {
       }
       throw new ServerException('Could not create Language Engagement');
     }
-    const res = (await this.readLanguageEngagement(
-      id,
-      session
-    )) as LanguageEngagement;
+    const res = await this.readLanguageEngagement(id, session);
     return res;
   }
 
@@ -1017,10 +1014,7 @@ export class EngagementService {
       throw new ServerException('Could not create Internship Engagement');
     }
     try {
-      return (await this.readInternshipEngagement(
-        id,
-        session
-      )) as InternshipEngagement;
+      return await this.readInternshipEngagement(id, session);
     } catch (e) {
       this.logger.error(e);
 
@@ -1031,8 +1025,11 @@ export class EngagementService {
   async readInternshipEngagement(
     id: string,
     session: ISession
-  ): Promise<Engagement> {
-    this.logger.info('readInternshipEnagement', { id, userId: session.userId });
+  ): Promise<InternshipEngagement> {
+    this.logger.info('readInternshipEngagement', {
+      id,
+      userId: session.userId,
+    });
     const ieQuery = this.db
       .query()
       .match(matchSession(session, { withAclRead: 'canReadEngagements' }))
@@ -1364,7 +1361,7 @@ export class EngagementService {
         ...rest,
         modifiedAt: DateTime.local(),
       };
-      const object = await this.readOne(input.id, session);
+      const object = await this.readLanguageEngagement(input.id, session);
       await this.db.sgUpdateProperties({
         session,
         object,
@@ -1382,12 +1379,11 @@ export class EngagementService {
         changes,
         nodevar: 'LanguageEngagement',
       });
-      if (object.pnp) {
-        await this.files.updateDefinedFile(object.pnp, pnp, session);
-      }
-      return (await this.readOne(input.id, session)) as LanguageEngagement;
+      await this.files.updateDefinedFile(object.pnp, pnp, session);
+
+      return await this.readLanguageEngagement(input.id, session);
     } catch (e) {
-      this.logger.error(e);
+      this.logger.error('Error updating language engagement', { exception: e });
       throw new ServerException('Could not update LanguageEngagement');
     }
   }
@@ -1494,17 +1490,15 @@ export class EngagementService {
           ]);
         }
       });
-      if (object.growthPlan) {
-        await this.files.updateDefinedFile(
-          object.growthPlan,
-          growthPlan,
-          session
-        );
-      }
-      const result = await this.readInternshipEngagement(input.id, session);
-      // console.log('result ', JSON.stringify(result, null, 2));
+      await this.files.updateDefinedFile(
+        object.growthPlan,
+        growthPlan,
+        session
+      );
 
-      return result as InternshipEngagement;
+      const result = await this.readInternshipEngagement(input.id, session);
+
+      return result;
     } catch (e) {
       this.logger.warning('Failed to update InternshipEngagement', {
         exception: e,
