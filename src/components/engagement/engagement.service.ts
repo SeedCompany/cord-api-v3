@@ -578,7 +578,7 @@ export class EngagementService {
       ),
       ...this.property(
         'endDate',
-        input.startDate || undefined,
+        input.endDate || undefined,
         'languageEngagement'
       ),
       ...this.property(
