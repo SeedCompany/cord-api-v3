@@ -430,10 +430,10 @@ export class EngagementService {
   };
 
   // helper method for defining properties
-  property = (prop: string, value: any, baseNode: string) => {
-    if (!value) {
-      return [];
-    }
+  property = (prop: string, value: any | null, baseNode: string) => {
+    // if (!value) {
+    //   return [];
+    // }
     const createdAt = DateTime.local().toISO();
     let propLabel = 'Property';
     if (prop === 'position') {
