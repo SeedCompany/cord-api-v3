@@ -4,6 +4,7 @@ import { assert, MarkOptional } from 'ts-essentials';
 import {
   CreateFileVersionInput,
   FileListInput,
+  RequestUploadOutput,
 } from '../../src/components/file';
 import { LocalBucket } from '../../src/components/file/bucket';
 import { FilesBucketToken } from '../../src/components/file/files-bucket.factory';
@@ -21,43 +22,9 @@ export const generateFakeFile = () => ({
 
 export type FakeFile = ReturnType<typeof generateFakeFile>;
 
-export async function uploadFile(
-  app: TestApp,
-  parentId: string,
-  input: Partial<FakeFile> = {},
-  uploadRequest?: UploadRequest
-) {
-  const { id, url } = uploadRequest ?? (await requestFileUpload(app));
-
-  // fake file upload, this would normally be a direct POST to S3 from the client
-  const { name, content: Body, mimeType: ContentType, size: ContentLength } = {
-    ...generateFakeFile(),
-    ...input,
-  };
-
-  const bucket = app.get(FilesBucketToken);
-  assert(bucket instanceof LocalBucket);
-  await bucket.upload(url, {
-    Body,
-    ContentType,
-    ContentLength,
-  });
-
-  const file = await createFileVersion(app, {
-    uploadId: id,
-    parentId,
-    name: input.name ?? name,
-  });
-
-  return file;
-}
-
-interface UploadRequest {
-  id: string;
-  url: string;
-}
-
-export async function requestFileUpload(app: TestApp): Promise<UploadRequest> {
+export async function requestFileUpload(
+  app: TestApp
+): Promise<RequestUploadOutput> {
   const res = await app.graphql.mutate(gql`
     mutation {
       requestFileUpload {
@@ -68,6 +35,33 @@ export async function requestFileUpload(app: TestApp): Promise<UploadRequest> {
   `);
   return res.requestFileUpload;
 }
+
+// fake file upload, this would normally be a direct POST to S3 from the client
+export const uploadFileContents = async (
+  app: TestApp,
+  url: string,
+  input: Partial<FakeFile> = {}
+) => {
+  const completeInput = {
+    ...generateFakeFile(),
+    ...input,
+  };
+  const {
+    content: Body,
+    mimeType: ContentType,
+    size: ContentLength,
+  } = completeInput;
+
+  const bucket = app.get(FilesBucketToken);
+  assert(bucket instanceof LocalBucket);
+  await bucket.upload(url, {
+    Body,
+    ContentType,
+    ContentLength,
+  });
+
+  return completeInput;
+};
 
 export async function createFileVersion(
   app: TestApp,

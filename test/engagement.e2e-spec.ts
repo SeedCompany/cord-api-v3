@@ -1,16 +1,12 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { DateTime, Interval } from 'luxon';
-import { assert } from 'ts-essentials';
 import { EngagementStatus, InternPosition } from '../src/components/engagement';
-import { LocalBucket } from '../src/components/file/bucket';
-import { FilesBucketToken } from '../src/components/file/files-bucket.factory';
 import { Language } from '../src/components/language';
 import { Country, Region, Zone } from '../src/components/location';
 import { ProductMethodology } from '../src/components/product';
 import { Project, ProjectType } from '../src/components/project';
 import { User } from '../src/components/user';
-import { DatabaseService } from '../src/core';
 import {
   createCountry,
   createInternshipEngagement,
@@ -24,12 +20,12 @@ import {
   createZone,
   expectNotFound,
   fragments,
-  generateFakeFile,
   getUserFromSession,
   login,
   Raw,
   requestFileUpload,
   TestApp,
+  uploadFileContents,
 } from './utility';
 
 import _ = require('lodash');
@@ -45,7 +41,6 @@ describe('Engagement e2e', () => {
   let user: User;
   let intern: Partial<User>;
   let mentor: Partial<User>;
-  let bucket: LocalBucket;
   const password: string = faker.internet.password();
 
   beforeAll(async () => {
@@ -65,13 +60,6 @@ describe('Engagement e2e', () => {
     intern = await getUserFromSession(app);
     mentor = await getUserFromSession(app);
     await login(app, { email: user.email.value, password });
-
-    bucket = app.get(FilesBucketToken);
-
-    const db = app.get(DatabaseService);
-    // remove old data to ensure consistency check
-    await db.query().matchNode('n', 'FileNode').detachDelete('n').run();
-    await bucket.clear();
   });
 
   afterAll(async () => {
@@ -115,33 +103,15 @@ describe('Engagement e2e', () => {
   });
 
   it('reads a an language engagement by id', async () => {
-    const fakeFile = generateFakeFile();
-    const { id, url } = await requestFileUpload(app);
-
-    // fake file upload, this would normally be a direct POST to S3 from the client
-    const {
-      name,
-      content: Body,
-      mimeType: ContentType,
-      size: ContentLength,
-    } = {
-      ...fakeFile,
-    };
-
-    const bucket = app.get(FilesBucketToken);
-    assert(bucket instanceof LocalBucket);
-    await bucket.upload(url, {
-      Body,
-      ContentType,
-      ContentLength,
-    });
+    const upload = await requestFileUpload(app);
+    const fakeFile = await uploadFileContents(app, upload.url);
 
     const languageEngagement = await createLanguageEngagement(app, {
       languageId: language.id,
       projectId: project.id,
       pnp: {
-        uploadId: id,
-        name: name,
+        uploadId: upload.id,
+        name: fakeFile.name,
       },
     });
 
@@ -185,26 +155,8 @@ describe('Engagement e2e', () => {
   });
 
   it('reads an internship engagement by id', async () => {
-    const fakeFile = generateFakeFile();
-    const { id, url } = await requestFileUpload(app);
-
-    // fake file upload, this would normally be a direct POST to S3 from the client
-    const {
-      name,
-      content: Body,
-      mimeType: ContentType,
-      size: ContentLength,
-    } = {
-      ...fakeFile,
-    };
-
-    const bucket = app.get(FilesBucketToken);
-    assert(bucket instanceof LocalBucket);
-    await bucket.upload(url, {
-      Body,
-      ContentType,
-      ContentLength,
-    });
+    const upload = await requestFileUpload(app);
+    const fakeFile = await uploadFileContents(app, upload.url);
 
     const internshipEngagement = await createInternshipEngagement(app, {
       mentorId: mentor.id,
@@ -212,8 +164,8 @@ describe('Engagement e2e', () => {
       countryOfOriginId: country.id,
       internId: intern.id,
       growthPlan: {
-        uploadId: id,
-        name: name,
+        uploadId: upload.id,
+        name: fakeFile.name,
       },
     });
 
