@@ -1,9 +1,40 @@
 import { Field, ID, InputType, Int, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
-import { IsPositive, Max, Min, ValidateNested } from 'class-validator';
-import { DateTime } from 'luxon';
+import {
+  IsAlpha,
+  IsLowercase,
+  IsNumberString,
+  IsPositive,
+  Length,
+  ValidateNested,
+} from 'class-validator';
 import { NameField } from '../../../common';
 import { Language } from './language.dto';
+
+@InputType()
+export abstract class UpdateEthnologueLanguage {
+  @NameField({ nullable: true })
+  readonly id?: string;
+
+  @NameField({ nullable: true })
+  @IsAlpha()
+  @IsLowercase()
+  @Length(3)
+  readonly code?: string;
+
+  @NameField({ nullable: true })
+  @IsAlpha()
+  @IsLowercase()
+  @Length(3)
+  readonly provisionalCode?: string;
+
+  @NameField({ nullable: true })
+  readonly name?: string;
+
+  @Field(() => Int, { nullable: true })
+  @IsPositive()
+  readonly population?: number;
+}
 
 @InputType()
 export abstract class UpdateLanguage {
@@ -16,24 +47,28 @@ export abstract class UpdateLanguage {
   @NameField({ nullable: true })
   readonly displayName?: string;
 
-  @Field(() => Int, { nullable: true })
-  @Min(1990)
-  @Max(DateTime.local().year + 5)
-  readonly beginFiscalYear?: number;
-
-  @NameField({ nullable: true })
-  readonly ethnologueName?: string;
-
-  @Field(() => Int, { nullable: true })
-  @IsPositive()
-  readonly ethnologuePopulation?: number;
-
-  @Field(() => Int, { nullable: true })
-  @IsPositive()
-  readonly organizationPopulation?: number;
+  @Field({ nullable: true })
+  readonly isDialect: boolean = false;
 
   @Field({ nullable: true })
-  readonly rodNumber?: string;
+  @Type(() => UpdateEthnologueLanguage)
+  @ValidateNested()
+  readonly ethnologue?: UpdateEthnologueLanguage;
+
+  @Field(() => Int, { nullable: true })
+  @IsPositive()
+  readonly populationOverride: number;
+
+  @Field({ nullable: true })
+  @Length(5)
+  @IsNumberString()
+  readonly registryOfDialectsCode?: string;
+
+  @Field({ nullable: true })
+  readonly leastOfThese: boolean = false;
+
+  @NameField({ nullable: true })
+  readonly leastOfTheseReason?: string;
 }
 
 @InputType()

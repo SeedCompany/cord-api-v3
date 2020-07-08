@@ -5,10 +5,10 @@ import {
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { upperFirst } from 'lodash';
+import { first, intersection, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
-import { ISession, Secured, Sensitivity, simpleSwitch } from '../../common';
+import { ISession, Sensitivity, simpleSwitch } from '../../common';
 import {
   ConfigService,
   DatabaseService,
@@ -19,18 +19,28 @@ import {
   UniquenessError,
 } from '../../core';
 import {
+  Location,
+  LocationListInput,
+  LocationService,
+  SecuredLocationList,
+} from '../location';
+import { ProjectListInput, ProjectListOutput } from '../project';
+import {
   CreateLanguage,
   Language,
   LanguageListInput,
   LanguageListOutput,
   UpdateLanguage,
 } from './dto';
+import { EthnologueLanguageService } from './ethnologue-language';
 
 @Injectable()
 export class LanguageService {
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
+    private readonly ethnologueLanguageService: EthnologueLanguageService,
+    private readonly locationService: LocationService,
     @Logger('language:service') private readonly logger: ILogger
   ) {}
 
@@ -67,6 +77,16 @@ export class LanguageService {
       // RODNUMBER NODE
       'CREATE CONSTRAINT ON (n:LanguageRodNumber) ASSERT EXISTS(n.value)',
       'CREATE CONSTRAINT ON (n:LanguageRodNumber) ASSERT n.value IS UNIQUE',
+
+      // ETHNOLOGUELANGUAGE REL
+      'CREATE CONSTRAINT ON ()-[r:ethnologue]-() ASSERT EXISTS(r.active)',
+      'CREATE CONSTRAINT ON ()-[r:ethnologue]-() ASSERT EXISTS(r.createdAt)',
+
+      // ETHNOLOGUELANGUAGE NODE
+      'CREATE CONSTRAINT ON (n:EthnologueLanguage) ASSERT EXISTS(n.id)',
+      'CREATE CONSTRAINT ON (n:EthnologueLanguage) ASSERT EXISTS(n.active)',
+      'CREATE CONSTRAINT ON (n:EthnologueLanguage) ASSERT EXISTS(n.createdAt)',
+      'CREATE CONSTRAINT ON (n:EthnologueLanguage) ASSERT EXISTS(n.owningOrgId)',
 
       // PROPERTY NODE
       //'CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.value)',
@@ -176,6 +196,11 @@ export class LanguageService {
     const createdAt = DateTime.local();
 
     try {
+      const { ethnologueId } = await this.ethnologueLanguageService.create(
+        input?.ethnologue,
+        session
+      );
+
       const createLanguage = this.db
         .query()
         .match(matchSession(session, { withAclEdit: 'canCreateLanguage' }))
@@ -196,15 +221,15 @@ export class LanguageService {
           ],
           ...this.property('name', input.name),
           ...this.property('displayName', input.displayName),
-          ...this.property('beginFiscalYear', input.beginFiscalYear),
-          ...this.property('ethnologuePopulation', input.ethnologuePopulation),
-          ...this.property('ethnologueName', input.ethnologueName),
-          ...this.property(
-            'organizationPopulation',
-            input.organizationPopulation
-          ),
-          ...this.property('rodNumber', input.rodNumber),
           ...this.property('sensitivity', Sensitivity.Low),
+          ...this.property('isDialect', input.isDialect),
+          ...this.property('populationOverride', input.populationOverride),
+          ...this.property(
+            'registryOfDialectsCode',
+            input.registryOfDialectsCode
+          ),
+          ...this.property('leastOfThese', input.leastOfThese),
+          ...this.property('leastOfTheseReason', input.leastOfTheseReason),
           [
             node('adminSG', 'SecurityGroup', {
               id: generate(),
@@ -237,15 +262,35 @@ export class LanguageService {
           ],
           ...this.permission('name'),
           ...this.permission('displayName'),
-          ...this.permission('beginFiscalYear'),
-          ...this.permission('ethnologueName'),
-          ...this.permission('ethnologuePopulation'),
-          ...this.permission('organizationPopulation'),
-          ...this.permission('rodNumber'),
+          ...this.permission('isDialect'),
+          ...this.permission('populationOverride'),
+          ...this.permission('registryOfDialectsCode'),
+          ...this.permission('leastOfThese'),
+          ...this.permission('leastOfTheseReason'),
           ...this.permission('sensitivity'),
+          ...this.permission('ethnologue'),
         ])
         .return('newLang.id as id');
+
       await createLanguage.first();
+
+      // connect ethnologueLanguage to language
+      await this.db
+        .query()
+        .matchNode('language', 'Language', { id: id, active: true })
+        .matchNode('ethnologueLanguage', 'EthnologueLanguage', {
+          id: ethnologueId,
+          active: true,
+        })
+        .create([
+          node('language'),
+          relation('out', '', 'ethnologue', {
+            active: true,
+            createdAt: DateTime.local(),
+          }),
+          node('ethnologueLanguage'),
+        ])
+        .run();
     } catch (e) {
       if (e instanceof UniquenessError) {
         const prop =
@@ -279,12 +324,27 @@ export class LanguageService {
       .match([node('lang', 'Language', { active: true, id: langId })])
       .optionalMatch([...this.propMatch('name')])
       .optionalMatch([...this.propMatch('displayName')])
-      .optionalMatch([...this.propMatch('beginFiscalYear')])
-      .optionalMatch([...this.propMatch('ethnologueName')])
-      .optionalMatch([...this.propMatch('ethnologuePopulation')])
-      .optionalMatch([...this.propMatch('organizationPopulation')])
-      .optionalMatch([...this.propMatch('rodNumber')])
+      .optionalMatch([...this.propMatch('isDialect')])
+      .optionalMatch([...this.propMatch('populationOverride')])
+      .optionalMatch([...this.propMatch('registryOfDialectsCode')])
+      .optionalMatch([...this.propMatch('leastOfThese')])
+      .optionalMatch([...this.propMatch('leastOfTheseReason')])
       .optionalMatch([...this.propMatch('sensitivity')])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node('canReadEthnologueLanguages', 'Permission', {
+          property: 'ethnologue',
+          active: true,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('lang'),
+        relation('out', '', 'ethnologue', { active: true }),
+        node('ethnologueLanguage', 'EthnologueLanguage', { active: true }),
+      ])
       .return({
         lang: [{ id: 'id', createdAt: 'createdAt' }],
         name: [{ value: 'name' }],
@@ -293,49 +353,50 @@ export class LanguageService {
         canReadDisplayName: [
           { read: 'canReadDisplayNameRead', edit: 'canReadDisplayNameEdit' },
         ],
-        beginFiscalYear: [{ value: 'beginFiscalYear' }],
-        canReadBeginFiscalYear: [
-          {
-            read: 'canReadBeginFiscalYearRead',
-            edit: 'canReadBeginFiscalYearEdit',
-          },
-        ],
-        ethnologueName: [{ value: 'ethnologueName' }],
-        canReadEthnologueName: [
-          {
-            read: 'canReadEthnologueNameRead',
-            edit: 'canReadEthnologueNameEdit',
-          },
-        ],
-        ethnologuePopulation: [{ value: 'ethnologuePopulation' }],
-        canReadEthnologuePopulation: [
-          {
-            read: 'canReadEthnologuePopulationRead',
-            edit: 'canReadEthnologuePopulationEdit',
-          },
-        ],
-        organizationPopulation: [{ value: 'organizationPopulation' }],
-        canReadOrganizationPopulation: [
-          {
-            read: 'canReadOrganizationPopulationRead',
-            edit: 'canReadOrganizationPopulationEdit',
-          },
-        ],
         sensitivity: [{ value: 'sensitivity' }],
         canReadSensitivity: [
           { read: 'canReadSensitivityRead', edit: 'canReadSensitivityEdit' },
         ],
-        rodNumber: [{ value: 'rodNumber' }],
-        canReadRodNumber: [
-          { read: 'canReadRodNumberRead', edit: 'canReadRodNumberEdit' },
+        isDialect: [{ value: 'isDialect' }],
+        populationOverride: [{ value: 'populationOverride' }],
+        canReadPopulationOverride: [
+          {
+            read: 'canReadPopulationOverrideRead',
+            edit: 'canReadPopulationOverrideEdit',
+          },
         ],
+        registryOfDialectsCode: [{ value: 'registryOfDialectsCode' }],
+        canReadRegistryOfDialectsCode: [
+          {
+            read: 'canReadRegistryOfDialectsCodeRead',
+            edit: 'canReadRegistryOfDialectsCodeEdit',
+          },
+        ],
+        leastOfThese: [{ value: 'leastOfThese' }],
+        canReadLeastOfThese: [
+          { read: 'canReadLeastOfTheseRead', edit: 'canReadLeastOfTheseEdit' },
+        ],
+        leastOfTheseReason: [{ value: 'leastOfTheseReason' }],
+        canReadLeastOfTheseReason: [
+          {
+            read: 'canReadLeastOfTheseReasonRead',
+            edit: 'canReadLeastOfTheseReasonEdit',
+          },
+        ],
+        ethnologueLanguage: [{ id: 'ethnologueLanguageId' }],
       });
 
     const result = await readLanguage.first();
+
     if (!result || !result.id) {
       this.logger.warning(`Could not find language`, { id: langId });
       throw new NotFoundException('Could not find language');
     }
+
+    const { ethnologue } = await this.ethnologueLanguageService.readOne(
+      result.ethnologueLanguageId,
+      session
+    );
 
     const language: Language = {
       id: result.id,
@@ -350,30 +411,36 @@ export class LanguageService {
         canRead: !!result.canReadDisplayNameRead,
         canEdit: !!result.canReadDisplayNameEdit,
       },
-      beginFiscalYear: {
-        value: result.beginFiscalYear,
-        canRead: !!result.canReadBeginFiscalYearRead,
-        canEdit: !!result.canReadBeginFiscalYearEdit,
+      isDialect: {
+        value: result.isDialect,
+        canRead: !!result.canReadIsDialectRead,
+        canEdit: !!result.canReadIsDialectEdit,
       },
-      ethnologueName: {
-        value: result.ethnologueName,
-        canRead: !!result.canReadEthnologueNameRead,
-        canEdit: !!result.canReadEthnologueNameEdit,
+      ethnologue: ethnologue,
+      populationOverride: {
+        value: result.populationOverride,
+        canRead: !!result.canReadPopulationOverrideRead,
+        canEdit: !!result.canReadPopulationOverrideEdit,
       },
-      ethnologuePopulation: {
-        value: result.ethnologuePopulation,
-        canRead: !!result.canReadEthnologuePopulationRead,
-        canEdit: !!result.canReadEthnologuePopulationEdit,
+      registryOfDialectsCode: {
+        value: result.registryOfDialectsCode,
+        canRead: !!result.canReadRegistryOfDialectsCodeRead,
+        canEdit: !!result.canReadRegistryOfDialectsCodeEdit,
       },
-      organizationPopulation: {
-        value: result.organizationPopulation,
-        canRead: !!result.canReadOrganizationPopulationRead,
-        canEdit: !!result.canReadOrganizationPopulationEdit,
+      leastOfThese: {
+        value: result.leastOfThese,
+        canRead: !!result.canReadLeastOfTheseRead,
+        canEdit: !!result.canReadLeastOfTheseEdit,
       },
-      rodNumber: {
-        value: result.rodNumber,
-        canRead: !!result.canReadRodNumberRead,
-        canEdit: !!result.canReadRodNumberEdit,
+      leastOfTheseReason: {
+        value: result.leastOfTheseReason,
+        canRead: !!result.canReadLeastOfTheseReasonRead,
+        canEdit: !!result.canReadLeastOfTheseReasonEdit,
+      },
+      sponsorDate: {
+        value: result.sponsorDate,
+        canRead: !!result.canReadSponsorDateRead,
+        canEdit: !!result.canReadSponsorDateEdit,
       },
       sensitivity: result.sensitivity || Sensitivity.Low,
     };
@@ -381,25 +448,164 @@ export class LanguageService {
     return language;
   }
 
-  async update(input: UpdateLanguage, session: ISession): Promise<Language> {
-    this.logger.info(`Update language`, { input, userId: session.userId });
-    const language = await this.readOne(input.id, session);
+  async listLocations(
+    language: Language,
+    _input: LocationListInput,
+    session: ISession
+  ): Promise<SecuredLocationList> {
+    const result = await this.db
+      .query()
+      .matchNode('language', 'Language', { id: language.id, active: true })
+      .match([
+        node('language'),
+        relation('out', '', 'location', { active: true }),
+        node('location', {
+          active: true,
+        }),
+      ])
+      .return({
+        location: [{ id: 'id' }],
+      })
+      .run();
 
-    return this.db.sgUpdateProperties({
+    const permission = await this.db
+      .query()
+      .match([
+        [
+          node('requestingUser'),
+          relation('in', '', 'member', { active: true }),
+          node('sg', 'SecurityGroup', { active: true }),
+          relation('out', '', 'permission', { active: true }),
+          node('canReadLocation', 'Permission', {
+            property: 'location',
+            active: true,
+            read: true,
+          }),
+        ],
+      ])
+      .return({
+        canReadLocation: [
+          {
+            read: 'canReadLocationRead',
+            create: 'canReadLocationCreate',
+          },
+        ],
+      })
+      .first();
+
+    const items = await Promise.all(
+      result.map(
+        async (location): Promise<Location> => {
+          return this.locationService.readOne(location.id, session);
+        }
+      )
+    );
+
+    return {
+      items: items,
+      total: items.length,
+      hasMore: false,
+      canCreate: !!permission?.canReadLocationCreate,
+      canRead: !!permission?.canReadLocationRead,
+    };
+  }
+
+  async listProjects(
+    language: Language,
+    _input: ProjectListInput,
+    _session: ISession
+  ): Promise<ProjectListOutput> {
+    const result = await this.db
+      .query()
+      .matchNode('language', 'Language', { id: language.id, active: true })
+      .match([
+        node('language'),
+        relation('out', '', 'project', { active: true }),
+        node('project', 'Project', {
+          active: true,
+        }),
+      ])
+      .return({
+        project: [{ id: 'id' }],
+      })
+      .run();
+
+    this.logger.debug(`list projects results`, { total: result.length });
+
+    return {
+      total: 0,
+      hasMore: false,
+      items: [],
+    };
+  }
+
+  async update(
+    { ethnologue: newEthnologue, ...input }: UpdateLanguage,
+    session: ISession
+  ): Promise<Language> {
+    this.logger.info(`Update language`, { input, userId: session.userId });
+    const { ethnologue: oldEthnologue, ...language } = await this.readOne(
+      input.id,
+      session
+    );
+
+    await this.db.sgUpdateProperties({
       session,
       object: language,
       props: [
         'name',
         'displayName',
-        'beginFiscalYear',
-        'ethnologueName',
-        'ethnologuePopulation',
-        'organizationPopulation',
-        'rodNumber',
+        'isDialect',
+        'populationOverride',
+        'registryOfDialectsCode',
+        'leastOfThese',
+        'leastOfTheseReason',
       ],
       changes: input,
       nodevar: 'language', // not sure if this is right, just trying to get this to compile - michael
     });
+
+    // Update EthnologueLanguage
+    if (newEthnologue) {
+      const readLanguage = this.db
+        .query()
+        .match(matchSession(session, { withAclRead: 'canReadLanguages' }))
+        .match([node('lang', 'Language', { active: true, id: input.id })])
+        .optionalMatch([
+          node('requestingUser'),
+          relation('in', '', 'member', { active: true }),
+          node('sg', 'SecurityGroup', { active: true }),
+          relation('out', '', 'permission', { active: true }),
+          node('canReadEthnologueLanguages', 'Permission', {
+            property: 'ethnologue',
+            active: true,
+            read: true,
+          }),
+          relation('out', '', 'baseNode', { active: true }),
+          node('lang'),
+          relation('out', '', 'ethnologue', { active: true }),
+          node('ethnologueLanguage', 'EthnologueLanguage', { active: true }),
+        ])
+        .return({
+          ethnologueLanguage: [{ id: 'ethnologueLanguageId' }],
+        });
+
+      const result = await readLanguage.first();
+      if (!result || !result.ethnologueLanguageId) {
+        this.logger.warning(`Could not find ethnologue language`, {
+          id: input.id,
+        });
+        throw new NotFoundException('Could not find ethnologue language');
+      }
+
+      await this.ethnologueLanguageService.update(
+        result.ethnologueLanguageId,
+        newEthnologue,
+        session
+      );
+    }
+
+    return this.readOne(input.id, session);
   }
 
   async delete(id: string, session: ISession): Promise<void> {
@@ -431,16 +637,7 @@ export class LanguageService {
       nodevar: 'language',
       aclReadProp: 'canReadLanguages',
       aclEditProp: 'canCreateLanguage',
-      props: [
-        'name',
-        'displayName',
-        'beginFiscalYear',
-        'ethnologueName',
-        'ethnologuePopulation',
-        'organizationPopulation',
-        'rodNumber',
-        'sensitivity',
-      ],
+      props: ['name', 'displayName', 'sensitivity'],
       input: {
         page,
         count,
@@ -450,12 +647,10 @@ export class LanguageService {
       },
     });
 
-    const items = result.items.map(
-      (lang): Language => ({
-        ...lang,
-        sensitivity: ((lang.sensitivity as unknown) as Secured<Sensitivity>)
-          .value!,
-      })
+    const items = await Promise.all(
+      result.items.map(
+        (lang): Promise<Language> => this.readOne(lang.id, session)
+      )
     );
 
     return {
@@ -463,6 +658,67 @@ export class LanguageService {
       hasMore: result.hasMore,
       total: result.total,
     };
+  }
+
+  async addLocation(
+    languageId: string,
+    locationId: string,
+    session: ISession
+  ): Promise<void> {
+    const locationLabel = await this.getLocationLabelById(locationId);
+
+    if (!locationLabel) {
+      throw new BadRequestException('Cannot find location');
+    }
+
+    await this.removeLocation(languageId, locationId, session);
+    await this.db
+      .query()
+      .matchNode('language', 'Language', { id: languageId, active: true })
+      .matchNode('location', locationLabel, {
+        id: locationId,
+        active: true,
+      })
+      .create([
+        node('language'),
+        relation('out', '', 'location', {
+          active: true,
+          createdAt: DateTime.local(),
+        }),
+        node('location'),
+      ])
+      .run();
+  }
+
+  async removeLocation(
+    languageId: string,
+    locationId: string,
+    _session: ISession
+  ): Promise<void> {
+    const locationLabel = await this.getLocationLabelById(locationId);
+
+    if (!locationLabel) {
+      throw new BadRequestException('Cannot find location');
+    }
+
+    await this.db
+      .query()
+      .matchNode('language', 'Language', { id: languageId, active: true })
+      .matchNode('location', locationLabel, {
+        id: locationId,
+        active: true,
+      })
+      .match([
+        [
+          node('language'),
+          relation('out', 'rel', 'location', { active: true }),
+          node('location'),
+        ],
+      ])
+      .setValues({
+        'rel.active': false,
+      })
+      .run();
   }
 
   async checkLanguageConsistency(session: ISession): Promise<boolean> {
@@ -491,5 +747,18 @@ export class LanguageService {
     );
 
     return yayNay.every((n) => n);
+  }
+
+  async getLocationLabelById(id: string): Promise<string | undefined> {
+    const query = `
+    MATCH (place {id: $id, active: true}) RETURN labels(place) as labels
+    `;
+    const results = await this.db.query().raw(query, { id }).first();
+    // MATCH one of these labels.
+    const label = first(
+      intersection(results?.labels, ['Country', 'Region', 'Zone'])
+    );
+
+    return label;
   }
 }

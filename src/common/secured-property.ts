@@ -1,4 +1,4 @@
-import { Field, Int, ObjectType } from '@nestjs/graphql';
+import { Field, Float, Int, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { GraphQLBoolean, GraphQLScalarType, GraphQLString } from 'graphql';
 import { isObject } from 'lodash';
@@ -80,6 +80,11 @@ export abstract class SecuredString extends SecuredProperty<string>(
   description: SecuredProperty.descriptionFor('an integer'),
 })
 export abstract class SecuredInt extends SecuredProperty<number>(Int) {}
+
+@ObjectType({
+  description: SecuredProperty.descriptionFor('a float'),
+})
+export abstract class SecuredFloat extends SecuredProperty<number>(Float) {}
 
 @ObjectType({
   description: SecuredProperty.descriptionFor('a boolean'),

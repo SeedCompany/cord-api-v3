@@ -20,7 +20,7 @@ export function SecuredList<Type, ListItem = Type>(
     readonly canRead: boolean;
 
     @Field({
-      description: `Whether the current user can create an ${itemClass.name.toLowerCase()} in this list`,
+      description: `Whether the current user can add items to this list via the appropriate mutation`,
     })
     readonly canCreate: boolean;
   }

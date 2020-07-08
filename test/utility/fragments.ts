@@ -92,25 +92,50 @@ export const language = gql`
       canEdit
       canRead
     }
-    ethnologueName {
+    isDialect {
+      value
+    }
+    populationOverride {
       value
       canEdit
       canRead
     }
-    ethnologuePopulation {
+    registryOfDialectsCode {
       value
       canEdit
       canRead
     }
-    organizationPopulation {
+    leastOfThese {
       value
       canEdit
       canRead
     }
-    rodNumber {
+    leastOfTheseReason {
       value
       canEdit
       canRead
+    }
+    ethnologue {
+      code {
+        value
+        canRead
+        canEdit
+      }
+      provisionalCode {
+        value
+        canRead
+        canEdit
+      }
+      name {
+        value
+        canRead
+        canEdit
+      }
+      population {
+        value
+        canRead
+        canEdit
+      }
     }
     sensitivity
   }
@@ -349,30 +374,7 @@ export const languageEngagement = gql`
     status
     language {
       value {
-        id
-        createdAt
-        name {
-          value
-        }
-        displayName {
-          value
-        }
-        beginFiscalYear {
-          value
-        }
-        ethnologueName {
-          value
-        }
-        ethnologuePopulation {
-          value
-        }
-        organizationPopulation {
-          value
-        }
-        rodNumber {
-          value
-        }
-        sensitivity
+        ...language
       }
     }
     firstScripture {
@@ -421,6 +423,7 @@ export const languageEngagement = gql`
       value
     }
   }
+  ${language}
 `;
 
 export const internshipEngagement = gql`

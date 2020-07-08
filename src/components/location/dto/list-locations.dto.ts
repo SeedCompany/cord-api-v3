@@ -1,7 +1,11 @@
-import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { PaginatedList, SortablePaginationInput } from '../../../common';
+import {
+  PaginatedList,
+  SecuredList,
+  SortablePaginationInput,
+} from '../../../common';
 import { Location } from './location.dto';
 
 @InputType()
@@ -17,10 +21,7 @@ export abstract class LocationFilters {
   })
   readonly types?: Array<'country' | 'region' | 'zone'>;
 
-  @Field(() => [ID], {
-    description: 'User IDs ANY of which must be directors of the locations',
-    nullable: true,
-  })
+  // User IDs ANY of which must be directors of the locations
   readonly userIds?: string[];
 }
 
@@ -41,4 +42,9 @@ export class LocationListInput extends SortablePaginationInput<keyof Location>({
 @ObjectType()
 export class LocationListOutput extends PaginatedList(Location as any, {
   itemsDescription: PaginatedList.itemDescriptionFor('locations'),
+}) {}
+
+@ObjectType()
+export class SecuredLocationList extends SecuredList(Location as any, {
+  itemsDescription: SecuredList.descriptionFor('locations'),
 }) {}
