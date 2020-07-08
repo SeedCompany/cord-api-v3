@@ -5,3 +5,4 @@ export * from './deprecated-database.service';
 export * from './database';
 export * from './database/indexer';
 export * from './email';
+export * from './events';

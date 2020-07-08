@@ -14,6 +14,8 @@ import {
   addBaseNodeMetaPropsWithClause,
   ConfigService,
   DatabaseService,
+  EventBus,
+  IEventBus,
   ILogger,
   listWithSecureObject,
   listWithUnsecureObject,
@@ -55,6 +57,11 @@ import {
   UpdateProject,
 } from './dto';
 import {
+  ProjectCreatedEvent,
+  ProjectDeletedEvent,
+  ProjectUpdatedEvent,
+} from './events';
+import {
   ProjectMemberListInput,
   ProjectMemberService,
   Role,
@@ -74,6 +81,7 @@ export class ProjectService {
     private readonly fileService: FileService,
     private readonly engagementService: EngagementService,
     private readonly config: ConfigService,
+    @Inject(EventBus) private readonly eventBus: IEventBus,
     @Logger('project:service') private readonly logger: ILogger
   ) {}
 
@@ -717,27 +725,6 @@ export class ProjectService {
           throw new ServerException('Could not find location');
         }
       }
-      // Create root directory
-      const rootDir = await this.fileService.createDirectory(
-        undefined,
-        `${id} root directory`,
-        session
-      );
-      await this.db
-        .query()
-        .match([
-          [node('project', 'Project', { id, active: true })],
-          [node('dir', 'Directory', { id: rootDir.id, active: true })],
-        ])
-        .create([
-          node('project'),
-          relation('out', '', 'rootDirectory', {
-            active: true,
-            createdAt: DateTime.local(),
-          }),
-          node('dir'),
-        ])
-        .run();
 
       const qry = `
         MATCH
@@ -765,7 +752,7 @@ export class ProjectService {
 
       const project = await this.readOne(id, session);
 
-      await this.createBudget(project, session);
+      await this.eventBus.publish(new ProjectCreatedEvent(project, session));
 
       return project;
     } catch (e) {
@@ -805,6 +792,10 @@ export class ProjectService {
       changes,
       nodevar: 'project',
     });
+
+    await this.eventBus.publish(
+      new ProjectUpdatedEvent(result, input, session)
+    );
 
     const budgets = await this.budgetService.list(
       {
@@ -854,41 +845,11 @@ export class ProjectService {
       });
       throw new ServerException('Failed to delete project');
     }
+
+    await this.eventBus.publish(new ProjectDeletedEvent(object, session));
   }
 
-  async createBudget(
-    project: Pick<Project, 'id' | 'mouStart' | 'mouEnd'>,
-    session: ISession
-  ): Promise<Budget> {
-    const budget = await this.budgetService.create(
-      { projectId: project.id },
-      session
-    );
-
-    // connect budget to project
-    await this.db
-      .query()
-      .matchNode('project', 'Project', { id: project.id, active: true })
-      .matchNode('budget', 'Budget', { id: budget.id, active: true })
-      .create([
-        node('project'),
-        relation('out', '', 'budget', {
-          active: true,
-          createdAt: DateTime.local(),
-        }),
-        node('budget'),
-      ])
-      .run();
-
-    const records = await this.attachBudgetRecords(budget, project, session);
-
-    return {
-      ...budget,
-      records,
-    };
-  }
-
-  private async attachBudgetRecords(
+  async attachBudgetRecords(
     budget: Budget,
     project: Pick<Project, 'id' | 'mouStart' | 'mouEnd'>,
     session: ISession

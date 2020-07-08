@@ -7,6 +7,7 @@ import { FileRepository } from './file.repository';
 import { FileResolver } from './file.resolver';
 import { FileService } from './file.service';
 import { FilesBucketFactory } from './files-bucket.factory';
+import * as handlers from './handlers';
 import { LocalBucketController } from './local-bucket.controller';
 
 @Module({
@@ -18,6 +19,7 @@ import { LocalBucketController } from './local-bucket.controller';
     FileResolver,
     FileVersionResolver,
     FileService,
+    ...Object.values(handlers),
   ],
   controllers: [LocalBucketController],
   exports: [FileService],

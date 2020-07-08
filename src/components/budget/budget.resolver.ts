@@ -14,6 +14,8 @@ import {
   Budget,
   BudgetListInput,
   BudgetListOutput,
+  CreateBudgetInput,
+  CreateBudgetOutput,
   UpdateBudgetInput,
   UpdateBudgetOutput,
 } from './dto';
@@ -50,6 +52,17 @@ export class BudgetResolver {
   @ResolveField(() => Int)
   async total(@Parent() budget: Budget): Promise<number> {
     return sumBy(budget.records, (record) => record.amount.value ?? 0);
+  }
+
+  @Mutation(() => CreateBudgetOutput, {
+    description: 'Create a budget',
+  })
+  async createBudget(
+    @Session() session: ISession,
+    @Args('input') { budget: input }: CreateBudgetInput
+  ): Promise<CreateBudgetOutput> {
+    const budget = await this.service.create(input, session);
+    return { budget };
   }
 
   @Mutation(() => UpdateBudgetOutput, {
