@@ -87,7 +87,7 @@ describe('Engagement e2e', () => {
     expect(languageEngagement.status).toBe(EngagementStatus.InDevelopment);
   });
 
-  it('creates a language engagement with only required fields', async () => {
+  it('create a language engagement with only required fields', async () => {
     const languageEngagement = {
       languageId: language.id,
       projectId: project.id,
@@ -149,7 +149,7 @@ describe('Engagement e2e', () => {
     expect(internEngagement.status).toBe(EngagementStatus.InDevelopment);
   });
 
-  it('creates a internship engagement with only requited fields', async () => {
+  it('create a internship engagement with only requited fields', async () => {
     const internshipEngagement: CreateInternshipEngagement = {
       projectId: internshipProject.id,
       internId: user.id,

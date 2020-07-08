@@ -116,7 +116,7 @@ export class ProjectService {
         }),
         node(prop, 'Property', {
           active: true,
-          value: value,
+          value,
         }),
       ],
     ];
