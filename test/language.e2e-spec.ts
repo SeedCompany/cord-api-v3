@@ -55,8 +55,8 @@ describe('Language e2e', () => {
 
     expect(actual.id).toBe(language.id);
     expect(isValid(actual.id)).toBeTruthy();
-    expect(actual.ethnologuePopulation.value).toEqual(
-      language.ethnologuePopulation.value
+    expect(actual.ethnologue.population.value).toEqual(
+      language.ethnologue.population.value
     );
     expect(actual.name.value).toEqual(language.name.value);
   });

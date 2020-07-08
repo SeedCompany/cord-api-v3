@@ -467,6 +467,8 @@ export class UserService {
           canDeleteOwnUser: true,
           canDeleteLocation: true,
           canCreateLocation: true,
+          canCreateEthnologueLanguage: true,
+          canReadEthnologueLanguages: true,
           owningOrgId: 'Seed Company',
           isAdmin: true,
         }),

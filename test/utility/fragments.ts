@@ -92,25 +92,50 @@ export const language = gql`
       canEdit
       canRead
     }
-    ethnologueName {
+    isDialect {
+      value
+    }
+    populationOverride {
       value
       canEdit
       canRead
     }
-    ethnologuePopulation {
+    registryOfDialectsCode {
       value
       canEdit
       canRead
     }
-    organizationPopulation {
+    leastOfThese {
       value
       canEdit
       canRead
     }
-    rodNumber {
+    leastOfTheseReason {
       value
       canEdit
       canRead
+    }
+    ethnologue {
+      code {
+        value
+        canRead
+        canEdit
+      }
+      provisionalCode {
+        value
+        canRead
+        canEdit
+      }
+      name {
+        value
+        canRead
+        canEdit
+      }
+      population {
+        value
+        canRead
+        canEdit
+      }
     }
     sensitivity
   }
@@ -360,17 +385,50 @@ export const languageEngagement = gql`
         beginFiscalYear {
           value
         }
-        ethnologueName {
+        isDialect {
           value
         }
-        ethnologuePopulation {
+        populationOverride {
           value
+          canEdit
+          canRead
         }
-        organizationPopulation {
+        registryOfDialectsCode {
           value
+          canEdit
+          canRead
         }
-        rodNumber {
+        leastOfThese {
           value
+          canEdit
+          canRead
+        }
+        leastOfTheseReason {
+          value
+          canEdit
+          canRead
+        }
+        ethnologue {
+          code {
+            value
+            canRead
+            canEdit
+          }
+          provisionalCode {
+            value
+            canRead
+            canEdit
+          }
+          name {
+            value
+            canRead
+            canEdit
+          }
+          population {
+            value
+            canRead
+            canEdit
+          }
         }
         sensitivity
       }
