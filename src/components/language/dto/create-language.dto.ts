@@ -44,6 +44,9 @@ export abstract class CreateLanguage {
   @NameField()
   readonly displayName: string;
 
+  @NameField({ nullable: true })
+  readonly displayNamePronunciation?: string;
+
   @Field({ nullable: true })
   readonly isDialect: boolean = false;
 

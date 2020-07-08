@@ -138,6 +138,11 @@ export const language = gql`
       }
     }
     sensitivity
+    displayNamePronunciation {
+      value
+      canRead
+      canEdit
+    }
   }
 `;
 

@@ -47,6 +47,9 @@ export abstract class UpdateLanguage {
   @NameField({ nullable: true })
   readonly displayName?: string;
 
+  @NameField({ nullable: true })
+  readonly displayNamePronunciation?: string;
+
   @Field({ nullable: true })
   readonly isDialect: boolean = false;
 

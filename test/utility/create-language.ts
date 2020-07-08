@@ -29,6 +29,7 @@ export async function createLanguage(
     leastOfThese: faker.random.boolean(),
     leastOfTheseReason: faker.random.word(),
     ethnologue: ethnologueLanguage,
+    displayNamePronunciation: faker.random.word(),
     ...input,
   };
 

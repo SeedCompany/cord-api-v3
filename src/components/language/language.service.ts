@@ -230,6 +230,10 @@ export class LanguageService {
           ),
           ...this.property('leastOfThese', input.leastOfThese),
           ...this.property('leastOfTheseReason', input.leastOfTheseReason),
+          ...this.property(
+            'displayNamePronunciation',
+            input.displayNamePronunciation
+          ),
           [
             node('adminSG', 'SecurityGroup', {
               id: generate(),
@@ -269,6 +273,7 @@ export class LanguageService {
           ...this.permission('leastOfTheseReason'),
           ...this.permission('sensitivity'),
           ...this.permission('ethnologue'),
+          ...this.permission('displayNamePronunciation'),
         ])
         .return('newLang.id as id');
 
@@ -329,6 +334,7 @@ export class LanguageService {
       .optionalMatch([...this.propMatch('registryOfDialectsCode')])
       .optionalMatch([...this.propMatch('leastOfThese')])
       .optionalMatch([...this.propMatch('leastOfTheseReason')])
+      .optionalMatch([...this.propMatch('displayNamePronunciation')])
       .optionalMatch([...this.propMatch('sensitivity')])
       .optionalMatch([
         node('requestingUser'),
@@ -381,6 +387,13 @@ export class LanguageService {
           {
             read: 'canReadLeastOfTheseReasonRead',
             edit: 'canReadLeastOfTheseReasonEdit',
+          },
+        ],
+        displayNamePronunciation: [{ value: 'displayNamePronunciation' }],
+        canReadDisplayNamePronunciation: [
+          {
+            read: 'canReadDisplayNamePronunciationRead',
+            edit: 'canReadDisplayNamePronunciationEdit',
           },
         ],
         ethnologueLanguage: [{ id: 'ethnologueLanguageId' }],
@@ -441,6 +454,11 @@ export class LanguageService {
         value: result.sponsorDate,
         canRead: !!result.canReadSponsorDateRead,
         canEdit: !!result.canReadSponsorDateEdit,
+      },
+      displayNamePronunciation: {
+        value: result.displayNamePronunciation,
+        canRead: !!result.canReadDisplayNamePronunciationRead,
+        canEdit: !!result.canReadDisplayNamePronunciationEdit,
       },
       sensitivity: result.sensitivity || Sensitivity.Low,
     };
@@ -560,6 +578,7 @@ export class LanguageService {
         'registryOfDialectsCode',
         'leastOfThese',
         'leastOfTheseReason',
+        'displayNamePronunciation',
       ],
       changes: input,
       nodevar: 'language', // not sure if this is right, just trying to get this to compile - michael
