@@ -58,6 +58,11 @@ export class Language extends Resource {
   readonly displayName: SecuredString;
 
   @Field({
+    description: 'The pronunciation of the display name',
+  })
+  readonly displayNamePronunciation: SecuredString;
+
+  @Field({
     description: `Whether this language is a dialect.`,
   })
   readonly isDialect: SecuredBoolean;
