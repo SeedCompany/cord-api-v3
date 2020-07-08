@@ -431,9 +431,6 @@ export class EngagementService {
 
   // helper method for defining properties
   property = (prop: string, value: any | null, baseNode: string) => {
-    // if (!value) {
-    //   return [];
-    // }
     const createdAt = DateTime.local().toISO();
     let propLabel = 'Property';
     if (prop === 'position') {
@@ -576,6 +573,11 @@ export class EngagementService {
       ),
       ...this.property(
         'startDate',
+        input.startDate || undefined,
+        'languageEngagement'
+      ),
+      ...this.property(
+        'endDate',
         input.startDate || undefined,
         'languageEngagement'
       ),
