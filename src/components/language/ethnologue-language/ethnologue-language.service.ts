@@ -25,7 +25,7 @@ export class EthnologueLanguageService {
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
-    @Logger('ethnologue:language:service') private readonly logger: ILogger
+    @Logger('language:ethnologue:service') private readonly logger: ILogger
   ) {}
 
   // helper method for defining properties
@@ -361,7 +361,8 @@ export class EthnologueLanguageService {
         });
       await query.run();
     } catch (e) {
-      this.logger.error('e:>>', e);
+      this.logger.error('update failed', { exception: e });
+      throw new ServerException('Failed to update ethnologue language');
     }
   }
 }

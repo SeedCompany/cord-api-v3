@@ -449,13 +449,13 @@ export class LanguageService {
   }
 
   async listLocations(
-    _language: Language,
+    language: Language,
     _input: LocationListInput,
-    _session: ISession
+    session: ISession
   ): Promise<SecuredLocationList> {
     const result = await this.db
       .query()
-      .matchNode('language', 'Language', { id: _language.id, active: true })
+      .matchNode('language', 'Language', { id: language.id, active: true })
       .match([
         node('language'),
         relation('out', '', 'location', { active: true }),
@@ -468,10 +468,35 @@ export class LanguageService {
       })
       .run();
 
+    const permission = await this.db
+      .query()
+      .match([
+        [
+          node('requestingUser'),
+          relation('in', '', 'member', { active: true }),
+          node('sg', 'SecurityGroup', { active: true }),
+          relation('out', '', 'permission', { active: true }),
+          node('canReadLocation', 'Permission', {
+            property: 'location',
+            active: true,
+            read: true,
+          }),
+        ],
+      ])
+      .return({
+        canReadLocation: [
+          {
+            read: 'canReadLocationRead',
+            create: 'canReadLocationCreate',
+          },
+        ],
+      })
+      .first();
+
     const items = await Promise.all(
       result.map(
         async (location): Promise<Location> => {
-          return this.locationService.readOne(location.id, _session);
+          return this.locationService.readOne(location.id, session);
         }
       )
     );
@@ -480,19 +505,19 @@ export class LanguageService {
       items: items,
       total: items.length,
       hasMore: false,
-      canCreate: true,
-      canRead: true,
+      canCreate: !!permission?.canReadLocationCreate,
+      canRead: !!permission?.canReadLocationRead,
     };
   }
 
   async listProjects(
-    _language: Language,
+    language: Language,
     _input: ProjectListInput,
     _session: ISession
   ): Promise<ProjectListOutput> {
     const result = await this.db
       .query()
-      .matchNode('language', 'Language', { id: _language.id, active: true })
+      .matchNode('language', 'Language', { id: language.id, active: true })
       .match([
         node('language'),
         relation('out', '', 'project', { active: true }),
@@ -505,7 +530,7 @@ export class LanguageService {
       })
       .run();
 
-    this.logger.info(`Language project lists ${result.length}`);
+    this.logger.debug(`list projects results`, { total: result.length });
 
     return {
       total: 0,
@@ -636,22 +661,22 @@ export class LanguageService {
   }
 
   async addLocation(
-    _languageId: string,
-    _locationId: string,
-    _session: ISession
+    languageId: string,
+    locationId: string,
+    session: ISession
   ): Promise<void> {
-    const locationLabel = await this.getLocationLabelById(_locationId);
+    const locationLabel = await this.getLocationLabelById(locationId);
 
     if (!locationLabel) {
       throw new BadRequestException('Cannot find location');
     }
 
-    await this.removeLocation(_languageId, _locationId, _session);
+    await this.removeLocation(languageId, locationId, session);
     await this.db
       .query()
-      .matchNode('language', 'Language', { id: _languageId, active: true })
+      .matchNode('language', 'Language', { id: languageId, active: true })
       .matchNode('location', locationLabel, {
-        id: _locationId,
+        id: locationId,
         active: true,
       })
       .create([
@@ -666,11 +691,11 @@ export class LanguageService {
   }
 
   async removeLocation(
-    _languageId: string,
-    _locationId: string,
+    languageId: string,
+    locationId: string,
     _session: ISession
   ): Promise<void> {
-    const locationLabel = await this.getLocationLabelById(_locationId);
+    const locationLabel = await this.getLocationLabelById(locationId);
 
     if (!locationLabel) {
       throw new BadRequestException('Cannot find location');
@@ -678,9 +703,9 @@ export class LanguageService {
 
     await this.db
       .query()
-      .matchNode('language', 'Language', { id: _languageId, active: true })
+      .matchNode('language', 'Language', { id: languageId, active: true })
       .matchNode('location', locationLabel, {
-        id: _locationId,
+        id: locationId,
         active: true,
       })
       .match([
