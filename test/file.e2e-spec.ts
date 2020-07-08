@@ -7,6 +7,7 @@ import {
   Directory,
   FileNodeCategory,
   FileNodeType,
+  RequestUploadOutput,
 } from '../src/components/file';
 import { LocalBucket } from '../src/components/file/bucket';
 import { FileRepository } from '../src/components/file/file.repository';
@@ -15,6 +16,7 @@ import { getCategoryFromMimeType } from '../src/components/file/mimeTypes';
 import { User } from '../src/components/user';
 import { DatabaseService } from '../src/core';
 import {
+  createFileVersion,
   createSession,
   createTestApp,
   createUser,
@@ -26,7 +28,7 @@ import {
   login,
   requestFileUpload,
   TestApp,
-  uploadFile,
+  uploadFileContents,
 } from './utility';
 import {
   createDirectory,
@@ -38,6 +40,25 @@ import {
   RawFileNode,
   RawFileVersion,
 } from './utility/fragments';
+
+export async function uploadFile(
+  app: TestApp,
+  parentId: string,
+  input: Partial<FakeFile> = {},
+  uploadRequest?: RequestUploadOutput
+) {
+  const { id, url } = uploadRequest ?? (await requestFileUpload(app));
+
+  const fakeFile = await uploadFileContents(app, url, input);
+
+  const fileNode = await createFileVersion(app, {
+    uploadId: id,
+    parentId,
+    name: fakeFile.name,
+  });
+
+  return fileNode;
+}
 
 async function deleteNode(app: TestApp, id: string) {
   await app.graphql.mutate(

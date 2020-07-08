@@ -422,6 +422,11 @@ export const languageEngagement = gql`
     paraTextRegistryId {
       value
     }
+    pnp {
+      value {
+        id
+      }
+    }
   }
   ${language}
 `;
@@ -485,6 +490,11 @@ export const internshipEngagement = gql`
     }
     statusModifiedAt {
       value
+    }
+    growthPlan {
+      value {
+        id
+      }
     }
   }
 `;

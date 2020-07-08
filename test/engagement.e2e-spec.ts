@@ -23,7 +23,9 @@ import {
   getUserFromSession,
   login,
   Raw,
+  requestFileUpload,
   TestApp,
+  uploadFileContents,
 } from './utility';
 
 import _ = require('lodash');
@@ -101,9 +103,16 @@ describe('Engagement e2e', () => {
   });
 
   it('reads a an language engagement by id', async () => {
+    const upload = await requestFileUpload(app);
+    const fakeFile = await uploadFileContents(app, upload.url);
+
     const languageEngagement = await createLanguageEngagement(app, {
       languageId: language.id,
       projectId: project.id,
+      pnp: {
+        uploadId: upload.id,
+        name: fakeFile.name,
+      },
     });
 
     const { engagement: actual } = await app.graphql.query(
@@ -119,6 +128,7 @@ describe('Engagement e2e', () => {
         id: languageEngagement.id,
       }
     );
+
     expect(actual.id).toBe(languageEngagement.id);
     expect(actual.language).toMatchObject(languageEngagement.language);
     expect(actual.firstScripture).toMatchObject(
@@ -141,14 +151,22 @@ describe('Engagement e2e', () => {
     expect(actual.paraTextRegistryId).toMatchObject(
       languageEngagement.paraTextRegistryId
     );
+    expect(actual.pnp).toMatchObject(languageEngagement.pnp);
   });
 
   it('reads an internship engagement by id', async () => {
+    const upload = await requestFileUpload(app);
+    const fakeFile = await uploadFileContents(app, upload.url);
+
     const internshipEngagement = await createInternshipEngagement(app, {
       mentorId: mentor.id,
       projectId: internshipProject.id,
       countryOfOriginId: country.id,
       internId: intern.id,
+      growthPlan: {
+        uploadId: upload.id,
+        name: fakeFile.name,
+      },
     });
 
     const { engagement: actual } = await app.graphql.query(
@@ -187,6 +205,7 @@ describe('Engagement e2e', () => {
     );
     expect(actual.startDate).toMatchObject(internshipEngagement.startDate);
     expect(actual.endDate).toMatchObject(internshipEngagement.endDate);
+    expect(actual.growthPlan).toMatchObject(internshipEngagement.growthPlan);
   });
 
   it('update language engagement', async () => {

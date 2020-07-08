@@ -2,6 +2,7 @@ import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { CalendarDate, DateField } from '../../../common';
+import { CreateDefinedFileVersionInput } from '../../file/dto';
 import { ProductMethodology } from '../../product/dto';
 import { InternshipEngagement, LanguageEngagement } from './engagement.dto';
 import { InternPosition } from './intern-position.enum';
@@ -42,6 +43,9 @@ export abstract class CreateLanguageEngagement extends CreateEngagement {
 
   @Field({ nullable: true })
   readonly paraTextRegistryId?: string;
+
+  @Field({ nullable: true })
+  readonly pnp?: CreateDefinedFileVersionInput;
 }
 
 @InputType()
@@ -60,6 +64,9 @@ export abstract class CreateInternshipEngagement extends CreateEngagement {
 
   @Field(() => [ProductMethodology], { nullable: true })
   readonly methodologies?: ProductMethodology[];
+
+  @Field({ nullable: true })
+  readonly growthPlan?: CreateDefinedFileVersionInput;
 }
 
 @InputType()
