@@ -4,6 +4,7 @@ import { compact } from 'lodash';
 import { ISession } from '../../common';
 import { DatabaseService, matchSession } from '../../core';
 import { OrganizationService } from '../organization';
+import { UserService } from '../user';
 import {
   SearchableMap,
   SearchInput,
@@ -28,11 +29,13 @@ export class SearchService {
   /* eslint-disable @typescript-eslint/naming-convention */
   private readonly hydrators: HydratorMap = {
     Organization: (...args) => this.orgs.readOne(...args),
+    User: (...args) => this.users.readOne(...args),
   };
   /* eslint-enable @typescript-eslint/naming-convention */
 
   constructor(
     private readonly db: DatabaseService,
+    private readonly users: UserService,
     private readonly orgs: OrganizationService
   ) {}
 
