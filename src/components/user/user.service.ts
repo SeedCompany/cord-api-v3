@@ -133,7 +133,7 @@ export class UserService {
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('securityGroup', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
         node('canRead', 'Permission', {
           property: 'education',
@@ -189,7 +189,7 @@ export class UserService {
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('securityGroup', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
         node('canRead', 'Permission', {
           property: 'organization',
@@ -251,7 +251,7 @@ export class UserService {
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('securityGroup', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
         node('canRead', 'Permission', {
           property: 'unavailablity',
@@ -324,11 +324,7 @@ export class UserService {
     const createdAt = DateTime.local();
 
     // helper method for defining properties
-    const property = (prop: string, value: any) => {
-      if (!value) {
-        return [];
-      }
-
+    const property = (prop: string, value: any | null) => {
       return [
         [
           node('user'),
@@ -563,7 +559,7 @@ export class UserService {
       .first();
 
     if (!attachUserToPublicSg) {
-      this.logger.error('failed to attach user to public sg');
+      this.logger.error('failed to attach user to public securityGroup');
     }
 
     if (this.config.defaultOrg.id) {

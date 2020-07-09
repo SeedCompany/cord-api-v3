@@ -10,7 +10,7 @@ import {
   createTestApp,
   createUser,
   fragments,
-  generateResisterInput,
+  generateRegisterInput,
   login,
   logout,
   TestApp,
@@ -29,7 +29,7 @@ describe('Authentication e2e', () => {
   it('Check Email Existence and Reset Password', async () => {
     const sendEmail = spyOn(app.get(EmailService), 'send');
 
-    const fakeUser = generateResisterInput();
+    const fakeUser = generateRegisterInput();
     const email = fakeUser.email;
     // create user first
     await createUser(app, fakeUser);
@@ -82,7 +82,7 @@ describe('Authentication e2e', () => {
   });
 
   it('login user', async () => {
-    const fakeUser = generateResisterInput();
+    const fakeUser = generateRegisterInput();
     const user = await createUser(app, fakeUser);
     const _logout = await logout(app);
 

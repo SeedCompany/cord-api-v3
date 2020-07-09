@@ -2,6 +2,7 @@ import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
 import { isValid } from 'shortid';
+import { RegisterInput } from '../src/components/authentication';
 import { SecuredTimeZone } from '../src/components/timezone';
 import { UpdateUser, User, UserStatus } from '../src/components/user';
 import {
@@ -12,7 +13,8 @@ import {
   createUnavailability,
   createUser,
   fragments,
-  generateResisterInput,
+  generateRegisterInput,
+  generateRequireFieldsRegisterInput,
   login,
   TestApp,
 } from './utility';
@@ -36,7 +38,7 @@ describe('User e2e', () => {
   });
 
   it('read one user by id', async () => {
-    const fakeUser = generateResisterInput();
+    const fakeUser = generateRegisterInput();
 
     const user = await createUser(app, fakeUser);
     await login(app, { email: fakeUser.email, password: fakeUser.password });
@@ -74,9 +76,47 @@ describe('User e2e', () => {
     return true;
   });
 
+  it('create user with required input fields', async () => {
+    const user: RegisterInput = {
+      ...generateRequireFieldsRegisterInput(),
+    };
+
+    const result = await app.graphql.mutate(
+      gql`
+        mutation createUser($input: RegisterInput!) {
+          register(input: $input) {
+            user {
+              ...user
+            }
+          }
+        }
+        ${fragments.user}
+      `,
+      {
+        input: user,
+      }
+    );
+
+    const actual: User = result.register.user;
+    expect(actual).toBeTruthy();
+
+    expect(isValid(actual.id)).toBe(true);
+    expect(actual.email.value).toBe(user.email);
+    expect(actual.realFirstName.value).toBe(user.realFirstName);
+    expect(actual.realLastName.value).toBe(user.realLastName);
+    expect(actual.displayFirstName.value).toBe(user.displayFirstName);
+    expect(actual.displayLastName.value).toBe(user.displayLastName);
+    expect(actual.phone.value).toBeNull();
+    expect(actual.bio.value).toBeNull();
+    expect(actual.status.value).toBeNull();
+    expect((actual.timezone as SecuredTimeZone).value?.name).toBe(
+      user.timezone
+    );
+  });
+
   it('update user', async () => {
     // create user first
-    const newUser = generateResisterInput();
+    const newUser = generateRegisterInput();
     await createSession(app);
     const user = await createUser(app, newUser);
     await login(app, { email: newUser.email, password: newUser.password });
@@ -465,7 +505,7 @@ describe('User e2e', () => {
   });
 
   it('read user avatar', async () => {
-    const fakeUser = generateResisterInput();
+    const fakeUser = generateRegisterInput();
     const newUser = await createUser(app, fakeUser);
 
     const result = await app.graphql.query(
