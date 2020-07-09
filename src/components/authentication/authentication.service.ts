@@ -8,7 +8,7 @@ import * as argon2 from 'argon2';
 import { node, relation } from 'cypher-query-builder';
 import { sign, verify } from 'jsonwebtoken';
 import { DateTime } from 'luxon';
-import { ISession } from '../../common';
+import { DuplicateException, ISession } from '../../common';
 import {
   ConfigService,
   DatabaseService,
@@ -92,7 +92,16 @@ export class AuthenticationService {
       await this.logout(session.token);
     }
 
-    const userId = await this.userService.create(input, session);
+    let userId;
+    try {
+      userId = await this.userService.create(input, session);
+    } catch (e) {
+      // remap field prop as `email` field is at a different location in register() than createPerson()
+      if (e instanceof DuplicateException && e.field === 'person.email') {
+        throw new DuplicateException('email', e.message, e.previous);
+      }
+      throw e;
+    }
 
     const passwordHash = await argon2.hash(input.password);
     await this.db

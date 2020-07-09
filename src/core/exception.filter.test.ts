@@ -1,4 +1,10 @@
-import { NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { InputException, ServerException } from '../common/exceptions';
 import { ExceptionFilter } from './exception.filter';
 
 describe('ExceptionFilter', () => {
@@ -69,5 +75,42 @@ describe('ExceptionFilter', () => {
       expect(res.extensions.code).toEqual('NotFound');
       expect(res.extensions.description).toEqual('Could not find resource');
     });
+
+    it('BadRequestException', () => {
+      const ex = new BadRequestException('what happened');
+      const res = new ExceptionFilter().catchGql(ex);
+      expect(res.message).toEqual('what happened');
+      expect(res.extensions.status).toEqual(400);
+      expect(res.extensions.code).toEqual('Input');
+    });
+
+    it('ForbiddenException', () => {
+      const ex = new ForbiddenException();
+      const res = new ExceptionFilter().catchGql(ex);
+      expect(res.extensions.code).toEqual('Unauthorized');
+    });
+
+    it('UnauthorizedException', () => {
+      const ex = new UnauthorizedException();
+      const res = new ExceptionFilter().catchGql(ex);
+      expect(res.extensions.code).toEqual('Unauthenticated');
+    });
+  });
+
+  it('ServerException', () => {
+    const ex = new ServerException('what happened');
+    const res = new ExceptionFilter().catchGql(ex);
+    expect(res.message).toEqual('what happened');
+    expect(res.extensions.status).toEqual(500);
+    expect(res.extensions.code).toEqual('Server');
+  });
+
+  it('InputException', () => {
+    const ex = new InputException('what happened', 'field.name');
+    const res = new ExceptionFilter().catchGql(ex);
+    expect(res.message).toEqual('what happened');
+    expect(res.extensions.status).toEqual(400);
+    expect(res.extensions.code).toEqual('Input');
+    expect(res.extensions.field).toEqual('field.name');
   });
 });

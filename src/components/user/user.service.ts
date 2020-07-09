@@ -1,13 +1,12 @@
 import {
   Injectable,
   NotFoundException,
-  InternalServerErrorException as ServerException,
   UnauthorizedException as UnauthenticatedException,
 } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
-import { ISession } from '../../common';
+import { DuplicateException, ISession, ServerException } from '../../common';
 import {
   addPropertyCoalesceWithClause,
   ConfigService,
@@ -17,6 +16,7 @@ import {
   matchProperties,
   matchSession,
   OnIndex,
+  UniquenessError,
 } from '../../core';
 import {
   OrganizationListInput,
@@ -530,10 +530,21 @@ export class UserService {
       readerSG: [{ id: 'readerSGid' }],
       adminSG: [{ id: 'adminSGid' }],
     });
-    const result = await query.first();
-
+    let result;
+    try {
+      result = await query.first();
+    } catch (e) {
+      if (e instanceof UniquenessError && e.label === 'EmailAddress') {
+        throw new DuplicateException(
+          'person.email',
+          'Email address is already in use',
+          e
+        );
+      }
+      throw new ServerException('Failed to create user', e);
+    }
     if (!result) {
-      throw new ServerException('failed to create user');
+      throw new ServerException('Failed to create user');
     }
 
     // attach user to publicSG

@@ -28,6 +28,7 @@ export class UniquenessError extends ConstraintError {
   constructor(
     readonly node: number,
     readonly label: string,
+    readonly property: string,
     readonly value: string,
     message: string
   ) {
@@ -39,7 +40,13 @@ export class UniquenessError extends ConstraintError {
       return e;
     }
     const info = getUniqueFailureInfo(e);
-    const ex = new this(info.node, info.label, info.value, e.message);
+    const ex = new this(
+      info.node,
+      info.label,
+      info.property,
+      info.value,
+      e.message
+    );
     ex.stack = e.stack;
     return ex;
   }
@@ -48,6 +55,7 @@ export class UniquenessError extends ConstraintError {
     level: LogLevel.WARNING,
     message: 'Duplicate property',
     label: this.label,
+    property: this.property,
     value: this.value,
   };
 }
@@ -68,7 +76,7 @@ export const createBetterError = (e: Error) => {
   return e;
 };
 
-const uniqueMsgRegex = /^Node\((\d+)\) already exists with label `(\w+)` and property `value` = '(.+)'$/;
+const uniqueMsgRegex = /^Node\((\d+)\) already exists with label `(\w+)` and property `(.+)` = '(.+)'$/;
 const getUniqueFailureInfo = (e: Neo.Neo4jError) => {
   const matches = uniqueMsgRegex.exec(e.message);
   if (!matches) {
@@ -79,6 +87,7 @@ const getUniqueFailureInfo = (e: Neo.Neo4jError) => {
   return {
     node: Number(matches[1]),
     label: matches[2],
-    value: matches[3],
+    property: matches[3],
+    value: matches[4],
   };
 };
