@@ -607,6 +607,8 @@ export class PartnershipService {
         aclEditProp: 'canCreatePartnership',
         props: [
           { name: 'agreementStatus', secure: true },
+          { name: 'mou', secure: true },
+          { name: 'agreement', secure: true },
           { name: 'mouStatus', secure: true },
           { name: 'mouStart', secure: true },
           { name: 'mouEnd', secure: true },
@@ -621,6 +623,28 @@ export class PartnershipService {
           filter,
         },
       });
+
+      await Promise.all(
+        result.items.map(async (item) => {
+          const query = `
+              MATCH (partnership:Partnership {id: $id, active: true})
+                -[:organization {active: true}]->(organization)
+              RETURN organization.id as id
+            `;
+          const orgId = await this.db
+            .query()
+            .raw(query, {
+              id: item.id,
+            })
+            .first();
+
+          const org = await this.orgService.readOne(orgId?.id, session);
+          Object.assign(item, {
+            ...item,
+            organization: org,
+          });
+        })
+      );
     }
 
     return {
