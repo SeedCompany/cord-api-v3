@@ -525,13 +525,9 @@ export class PartnershipService {
     // if user has access to project mou and there is no partnership override
     if (result.projectMouStart && result.mouStartOveride !== null) {
       mouStart = result.mouStartOverride ?? result.projectMouStart;
-    } else {
-      this.logger.info(`user doesn't have access or there is no override`);
     }
     if (result.projectMouEnd && result.mouEndOverride !== null) {
       mouEnd = result.mouEndOverride ?? result.projectMouEnd;
-    } else {
-      this.logger.info(`user doesn't have access or there is no override`);
     }
 
     return {
