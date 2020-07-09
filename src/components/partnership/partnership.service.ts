@@ -1,5 +1,4 @@
 import {
-  Inject,
   Injectable,
   NotFoundException,
   InternalServerErrorException as ServerException,
@@ -13,7 +12,6 @@ import { fiscalYears, ISession } from '../../common';
 import {
   ConfigService,
   DatabaseService,
-  EventBus,
   IEventBus,
   ILogger,
   Logger,
@@ -46,7 +44,7 @@ export class PartnershipService {
     private readonly budgetService: BudgetService,
     private readonly orgService: OrganizationService,
     private readonly projectService: ProjectService,
-    @Inject(EventBus) private readonly eventBus: IEventBus,
+    private readonly eventBus: IEventBus,
     @Logger('partnership:service') private readonly logger: ILogger
   ) {}
 

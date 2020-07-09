@@ -5,13 +5,10 @@ import { AnyFn } from '../../common';
 import { IEventHandler } from './event-handler.decorator';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
-export interface IEventBus<EventBase extends IEvent = IEvent> {
+export abstract class IEventBus<EventBase extends IEvent = IEvent> {
   publish: <T extends EventBase>(event: T) => Promise<void>;
   publishAll: (events: EventBase[]) => Promise<void>;
 }
-
-// eslint-disable-next-line no-restricted-imports
-export { EventBus } from '@nestjs/cqrs';
 
 /**
  * An EventBus where you can wait for event handling to finish.
