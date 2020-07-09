@@ -157,7 +157,7 @@ describe('Partnership e2e', () => {
     );
   });
 
-  it.only('update mou overrides partnership', async () => {
+  it('update mou overrides partnership', async () => {
     const partnership = await createPartnership(app);
 
     const mouStartOverride = '1981-01-01';
@@ -294,8 +294,8 @@ describe('Partnership e2e', () => {
       mouStatus: PartnershipAgreementStatus.AwaitingSignature,
       types: [PartnershipType.Managing],
       organizationId: 'fakeOrg',
-      mouStart: CalendarDate.local(),
-      mouEnd: CalendarDate.local(),
+      mouStartOverride: CalendarDate.local(),
+      mouEndOverride: CalendarDate.local(),
     };
 
     await expect(

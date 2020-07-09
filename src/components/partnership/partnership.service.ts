@@ -51,7 +51,6 @@ export class PartnershipService {
   // helper method for defining properties
   property = (prop: string, value: any) => {
     if (!value) {
-      // return [];
       value = null;
     }
     const createdAt = DateTime.local();
@@ -200,17 +199,15 @@ export class PartnershipService {
           ...this.property('agreement', agreement),
           ...this.property('mou', mou),
           ...this.property('mouStatus', input.mouStatus),
-          ...this.property('mouStart', input.mouStart),
-          ...this.property('mouEnd', input.mouEnd),
+          ...this.property('mouStartOverride', input.mouStartOverride),
+          ...this.property('mouEndOverride', input.mouEndOverride),
           ...this.property('types', input.types),
-          ...this.property('mouStartOverride', null),
-          ...this.property('mouEndOverride', null),
           [
             node('adminSG', 'SecurityGroup', {
               id: generate(),
               active: true,
               createdAt,
-              name: `${input.mouStart} ${input.mouEnd} admin`,
+              name: `partnership ${id} admin`,
             }),
             relation('out', '', 'member', { active: true, createdAt }),
             node('requestingUser'),
@@ -220,7 +217,7 @@ export class PartnershipService {
               id: generate(),
               active: true,
               createdAt,
-              name: `${input.mouStart} ${input.mouEnd} users`,
+              name: `partnership ${id} users`,
             }),
             relation('out', '', 'member', { active: true, createdAt }),
             node('requestingUser'),
@@ -277,7 +274,10 @@ export class PartnershipService {
       );
 
       // TODO move to event handler
-      const fiscalRange = fiscalYears(input.mouStart, input.mouEnd); // calculate the fiscalYears covered by this date range
+      const fiscalRange = fiscalYears(
+        partnership.mouStart.value,
+        partnership.mouEnd.value
+      ); // calculate the fiscalYears covered by this date range
       if (
         input.types?.includes(PartnershipType.Funding) &&
         fiscalRange.length > 0
