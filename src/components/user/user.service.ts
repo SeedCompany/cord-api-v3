@@ -117,7 +117,7 @@ export class UserService {
     return {
       items: result.items,
       hasMore: result.hasMore,
-      total: result.total,
+      total: result.items.length,
     };
   }
 
