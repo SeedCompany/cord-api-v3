@@ -51,7 +51,8 @@ export class PartnershipService {
   // helper method for defining properties
   property = (prop: string, value: any) => {
     if (!value) {
-      return [];
+      // return [];
+      value = null;
     }
     const createdAt = DateTime.local();
     const propLabel = 'Property';
@@ -122,7 +123,7 @@ export class PartnershipService {
       [
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
         node(editPerm, 'Permission', {
           property,
@@ -139,7 +140,7 @@ export class PartnershipService {
       [
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
         node(readPerm, 'Permission', {
           property,
@@ -202,6 +203,8 @@ export class PartnershipService {
           ...this.property('mouStart', input.mouStart),
           ...this.property('mouEnd', input.mouEnd),
           ...this.property('types', input.types),
+          ...this.property('mouStartOverride', null),
+          ...this.property('mouEndOverride', null),
           [
             node('adminSG', 'SecurityGroup', {
               id: generate(),
@@ -238,6 +241,8 @@ export class PartnershipService {
           ...this.permission('mouEnd'),
           ...this.permission('types'),
           ...this.permission('organization'),
+          ...this.permission('mouStartOverride'),
+          ...this.permission('mouEndOverride'),
         ])
         .return('newPartnership.id as id');
 
@@ -306,11 +311,18 @@ export class PartnershipService {
     const readPartnership = this.db
       .query()
       .match(matchSession(session, { withAclRead: 'canReadPartnerships' }))
-      .match([node('partnership', 'Partnership', { active: true, id })]);
+      .match([node('partnership', 'Partnership', { active: true, id })])
+      .match([
+        node('project', 'Project', {
+          active: true,
+        }),
+        relation('out', '', 'partnership'),
+        node('partnership'),
+      ]);
     readPartnership.optionalMatch([
       node('requestingUser'),
       relation('in', '', 'member', { active: true }),
-      node('sg', 'SecurityGroup', { active: true }),
+      node('', 'SecurityGroup', { active: true }),
       relation('out', '', 'permission', { active: true }),
       node('canEditOrganization', 'Permission', {
         property: 'organization',
@@ -327,7 +339,7 @@ export class PartnershipService {
     readPartnership.optionalMatch([
       node('requestingUser'),
       relation('in', '', 'member', { active: true }),
-      node('sg', 'SecurityGroup', { active: true }),
+      node('', 'SecurityGroup', { active: true }),
       relation('out', '', 'permission', { active: true }),
       node('canReadOrganization', 'Permission', {
         property: 'organization',
@@ -341,6 +353,40 @@ export class PartnershipService {
       relation('out', '', 'name', { active: true }),
       node('organizationName', 'Property', { active: true }),
     ]);
+    readPartnership.optionalMatch([
+      node('requestingUser'),
+      relation('in', '', 'member', { active: true }),
+      node('', 'SecurityGroup', { active: true }),
+      relation('out', '', 'permission', { active: true }),
+      node('projectMouStartPerm', 'Permission', {
+        property: 'mouStart',
+        active: true,
+        read: true,
+      }),
+      relation('out', '', 'baseNode', { active: true }),
+      node('project'),
+      relation('out', '', 'mouStart'),
+      node('projectMouStart', 'Property', {
+        active: true,
+      }),
+    ]);
+    readPartnership.optionalMatch([
+      node('requestingUser'),
+      relation('in', '', 'member', { active: true }),
+      node('', 'SecurityGroup', { active: true }),
+      relation('out', '', 'permission', { active: true }),
+      node('projectMouEndPerm', 'Permission', {
+        property: 'mouEnd',
+        active: true,
+        read: true,
+      }),
+      relation('out', '', 'baseNode', { active: true }),
+      node('project'),
+      relation('out', '', 'mouEnd'),
+      node('projectMouEnd', 'Property', {
+        active: true,
+      }),
+    ]);
     this.propMatch(readPartnership, 'mouStart');
     this.propMatch(readPartnership, 'mouEnd');
     this.propMatch(readPartnership, 'types');
@@ -348,8 +394,34 @@ export class PartnershipService {
     this.propMatch(readPartnership, 'mou');
     this.propMatch(readPartnership, 'agreement');
     this.propMatch(readPartnership, 'mouStatus');
+    this.propMatch(readPartnership, 'mouStartOverride');
+    this.propMatch(readPartnership, 'mouEndOverride');
 
     readPartnership.return({
+      mouStartOverride: [{ value: 'mouStartOverride' }],
+      canReadMouStartOverride: [
+        {
+          read: 'canReadMouStartOverride',
+        },
+      ],
+      canEditMouStartOverride: [
+        {
+          edit: 'canEditMouStartOverride',
+        },
+      ],
+      mouEndOverride: [{ value: 'mouEndOverride' }],
+      canReadMouEndOverride: [
+        {
+          read: 'canReadMouEndOverride',
+        },
+      ],
+      canEditMouEndOverride: [
+        {
+          edit: 'canEditMouEndOverride',
+        },
+      ],
+      projectMouStart: [{ value: 'projectMouStart' }],
+      projectMouEnd: [{ value: 'projectMouEnd' }],
       partnership: [{ id: 'id', createdAt: 'createdAt' }],
       agreementStatus: [{ value: 'agreementStatus' }],
       canReadAgreementStatus: [
@@ -447,6 +519,21 @@ export class PartnershipService {
       throw new NotFoundException('Could not find partnership');
     }
 
+    let mouStart = null;
+    let mouEnd = null;
+
+    // if user has access to project mou and there is no partnership override
+    if (result.projectMouStart && result.mouStartOveride !== null) {
+      mouStart = result.mouStartOverride ?? result.projectMouStart;
+    } else {
+      this.logger.info(`user doesn't have access or there is no override`);
+    }
+    if (result.projectMouEnd && result.mouEndOverride !== null) {
+      mouEnd = result.mouEndOverride ?? result.projectMouEnd;
+    } else {
+      this.logger.info(`user doesn't have access or there is no override`);
+    }
+
     return {
       id,
       createdAt: result.createdAt,
@@ -471,14 +558,24 @@ export class PartnershipService {
         canEdit: !!result.canEditMouStatus,
       },
       mouStart: {
-        value: result.mouStart,
+        value: mouStart,
         canRead: !!result.canReadMouStart,
         canEdit: !!result.canEditMouStart,
       },
       mouEnd: {
-        value: result.mouEnd,
+        value: mouEnd,
         canRead: !!result.canReadMouEnd,
         canEdit: !!result.canEditMouEnd,
+      },
+      mouStartOverride: {
+        value: result.mouStartOverride,
+        canRead: !!result.canReadMouStartOverride,
+        canEdit: !!result.canEditMouStartOverride,
+      },
+      mouEndOverride: {
+        value: result.mouEndOverride,
+        canRead: !!result.canReadMouEndOverride,
+        canEdit: !!result.canEditMouEndOverride,
       },
       types: {
         value: result.types ?? [],
@@ -498,13 +595,20 @@ export class PartnershipService {
   }
 
   async update(input: UpdatePartnership, session: ISession) {
+    // mou start and end are now computed fields and do not get updated directly
     const object = await this.readOne(input.id, session);
 
     const { mou, agreement, ...rest } = input;
     await this.db.sgUpdateProperties({
       session,
       object,
-      props: ['agreementStatus', 'mouStatus', 'mouStart', 'mouEnd', 'types'],
+      props: [
+        'agreementStatus',
+        'mouStatus',
+        'types',
+        'mouStartOverride',
+        'mouEndOverride',
+      ],
       changes: rest,
       nodevar: 'partnership',
     });
