@@ -110,8 +110,8 @@ describe('partnership service', () => {
         agreementStatus: PartnershipAgreementStatus.NotAttached,
         mouStatus: PartnershipAgreementStatus.NotAttached,
         types: [PartnershipType.Technical],
-        mouStart: DateTime.local(),
-        mouEnd: DateTime.local(),
+        mouStartOverride: DateTime.local(),
+        mouEndOverride: DateTime.local(),
         projectId,
       },
       mockSession as ISession
