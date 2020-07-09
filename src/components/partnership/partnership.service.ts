@@ -624,7 +624,7 @@ export class PartnershipService {
         },
       });
 
-      await Promise.all(
+      const items = await Promise.all(
         result.items.map(async (item) => {
           const query = `
               MATCH (partnership:Partnership {id: $id, active: true})
@@ -639,12 +639,13 @@ export class PartnershipService {
             .first();
 
           const org = await this.orgService.readOne(orgId?.id, session);
-          Object.assign(item, {
+          return {
             ...item,
             organization: org,
-          });
+          };
         })
       );
+      result.items = items;
     }
 
     return {
