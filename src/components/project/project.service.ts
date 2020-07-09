@@ -15,6 +15,7 @@ import {
   ConfigService,
   DatabaseService,
   filterQuery,
+  finalFilter,
   ILogger,
   listWithSecureObject,
   listWithUnsecureObject,
@@ -393,7 +394,7 @@ export class ProjectService {
     if (filter.name) {
       // match on filter terms using parent base node
       listQuery.call(
-        filterQuery,
+        finalFilter,
         label,
         input.sort,
         '',
@@ -401,6 +402,28 @@ export class ProjectService {
         'project',
         'name',
         filter.name
+      );
+    } else if (filter.status) {
+      listQuery.call(
+        finalFilter,
+        label,
+        input.sort,
+        '',
+        'User',
+        'project',
+        'status',
+        filter.status
+      );
+    } else if (filter.mine) {
+      listQuery.call(
+        finalFilter,
+        label,
+        input.sort,
+        '',
+        'User',
+        'project',
+        'mine',
+        filter.mine
       );
     } else {
       // match on filter terms

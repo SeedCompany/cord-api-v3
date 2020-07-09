@@ -1,5 +1,12 @@
-import { contains, node, Query, relation } from 'cypher-query-builder';
-import { isFunction } from 'lodash';
+import {
+  contains,
+  equals,
+  greaterThan,
+  node,
+  Query,
+  relation,
+} from 'cypher-query-builder';
+import { isFunction, join } from 'lodash';
 import {
   ISession,
   PaginationInput,
@@ -163,6 +170,52 @@ export function addBaseNodeMetaPropsWithClause(props: string[]) {
   return props.map((x) => `${x}: node.${x}`).join(', ');
 }
 
+export function finalFilter(
+  query: Query,
+  label: string,
+  sort: string,
+  baseNodeId?: string,
+  baseNodeLabel?: string,
+  childNodeIdentifier?: string,
+  filterKey?: string,
+  filterValue?: any
+) {
+  if (typeof filterValue === 'string') {
+    return filterQuery(
+      query,
+      label,
+      sort,
+      baseNodeId,
+      baseNodeLabel,
+      childNodeIdentifier,
+      filterKey,
+      filterValue
+    );
+  } else if (typeof filterValue === 'boolean') {
+    return filterBooleanQuery(
+      query,
+      label,
+      sort,
+      baseNodeId,
+      baseNodeLabel,
+      childNodeIdentifier,
+      filterKey,
+      filterValue
+    );
+  } else if (typeof filterValue === 'object') {
+    return filterListQuery(
+      query,
+      label,
+      sort,
+      baseNodeId,
+      baseNodeLabel,
+      childNodeIdentifier,
+      filterKey,
+      filterValue
+    );
+  }
+}
+
 export function filterQuery(
   query: Query,
   label: string,
@@ -209,7 +262,7 @@ export function filterQuery(
       }),
       relation('out', '', 'permission', { active: true }),
       node('', 'Permission', {
-        property: sort,
+        property: filterKey,
         read: true,
         active: true,
       }),
@@ -217,7 +270,7 @@ export function filterQuery(
       node('node', label, {
         active: true,
       }),
-      relation('out', '', sort, { active: true }),
+      relation('out', '', filterKey, { active: true }),
       node(filterKey, 'Property', { active: true }),
     ]);
     query.where({
@@ -232,7 +285,7 @@ export function filterQuery(
       }),
       relation('out', '', 'permission', { active: true }),
       node('', 'Permission', {
-        property: sort,
+        property: filterKey,
         read: true,
         active: true,
       }),
@@ -240,8 +293,181 @@ export function filterQuery(
       node('node', label, {
         active: true,
       }),
+      relation('out', '', filterKey, { active: true }),
+      node(filterKey, 'Property', { active: true }),
+    ]);
+  }
+}
+
+export function filterListQuery(
+  query: Query,
+  label: string,
+  sort: string,
+  baseNodeId?: string,
+  baseNodeLabel?: string,
+  childNodeIdentifier?: string,
+  filterKey?: string,
+  filterValue?: string[]
+) {
+  if (baseNodeId && baseNodeLabel) {
+    query.match([
+      node('requestingUser'),
+      relation('in', '', 'member'),
+      node('', 'SecurityGroup', {
+        active: true,
+      }),
+      relation('out', '', 'permission', { active: true }),
+      node('', 'Permission', {
+        property: childNodeIdentifier,
+        read: true,
+        active: true,
+      }),
+      relation('out', '', 'baseNode'),
+      node('parentNode', baseNodeLabel, {
+        active: true,
+        id: baseNodeId,
+      }),
+      relation('out', '', childNodeIdentifier, {
+        active: true,
+      }),
+      node('node', label, {
+        active: true,
+      }),
       relation('out', '', sort, { active: true }),
       node(sort, 'Property', { active: true }),
+    ]);
+  } else if (filterKey && filterValue) {
+    query.match([
+      node('requestingUser'),
+      relation('in', '', 'member'),
+      node('', 'SecurityGroup', {
+        active: true,
+      }),
+      relation('out', '', 'permission', { active: true }),
+      node('', 'Permission', {
+        property: filterKey,
+        read: true,
+        active: true,
+      }),
+      relation('out', '', 'baseNode'),
+      node('node', label, {
+        active: true,
+      }),
+      relation('out', '', filterKey, { active: true }),
+      node(filterKey, 'Property', { active: true }),
+    ]);
+    const filterList = join(
+      filterValue.map((i: string) => `'${i}'`),
+      ', '
+    );
+    query.where({
+      [`size([role IN ${filterKey}.value WHERE role IN [ ${filterList} ] | 1])`]: greaterThan(
+        0
+      ),
+    });
+    query.with('*');
+  } else {
+    query.match([
+      node('requestingUser'),
+      relation('in', '', 'member'),
+      node('', 'SecurityGroup', {
+        active: true,
+      }),
+      relation('out', '', 'permission', { active: true }),
+      node('', 'Permission', {
+        property: filterKey,
+        read: true,
+        active: true,
+      }),
+      relation('out', '', 'baseNode'),
+      node('node', label, {
+        active: true,
+      }),
+      relation('out', '', filterKey, { active: true }),
+      node(filterKey, 'Property', { active: true }),
+    ]);
+  }
+}
+
+export function filterBooleanQuery(
+  query: Query,
+  label: string,
+  sort: string,
+  baseNodeId?: string,
+  baseNodeLabel?: string,
+  childNodeIdentifier?: string,
+  filterKey?: string,
+  filterValue?: boolean
+) {
+  if (baseNodeId && baseNodeLabel) {
+    query.match([
+      node('requestingUser'),
+      relation('in', '', 'member'),
+      node('', 'SecurityGroup', {
+        active: true,
+      }),
+      relation('out', '', 'permission', { active: true }),
+      node('', 'Permission', {
+        property: childNodeIdentifier,
+        read: true,
+        active: true,
+      }),
+      relation('out', '', 'baseNode'),
+      node('parentNode', baseNodeLabel, {
+        active: true,
+        id: baseNodeId,
+      }),
+      relation('out', '', childNodeIdentifier, {
+        active: true,
+      }),
+      node('node', label, {
+        active: true,
+      }),
+      relation('out', '', sort, { active: true }),
+      node(sort, 'Property', { active: true }),
+    ]);
+  } else if (filterKey && filterValue) {
+    query.match([
+      node('requestingUser'),
+      relation('in', '', 'member'),
+      node('', 'SecurityGroup', {
+        active: true,
+      }),
+      relation('out', '', 'permission', { active: true }),
+      node('', 'Permission', {
+        property: filterKey,
+        read: true,
+        active: true,
+      }),
+      relation('out', '', 'baseNode'),
+      node('node', label, {
+        active: true,
+      }),
+      relation('out', '', filterKey, { active: true }),
+      node(filterKey, 'Property', { active: true }),
+    ]);
+    query.where({
+      [filterKey]: { value: equals(filterValue) },
+    });
+  } else {
+    query.match([
+      node('requestingUser'),
+      relation('in', '', 'member'),
+      node('', 'SecurityGroup', {
+        active: true,
+      }),
+      relation('out', '', 'permission', { active: true }),
+      node('', 'Permission', {
+        property: filterKey,
+        read: true,
+        active: true,
+      }),
+      relation('out', '', 'baseNode'),
+      node('node', label, {
+        active: true,
+      }),
+      relation('out', '', filterKey, { active: true }),
+      node(filterKey, 'Property', { active: true }),
     ]);
   }
 }

@@ -290,6 +290,35 @@ describe('Project e2e', () => {
     );
   });
 
+  it.only('List view of projects test', async () => {
+    // create 2 projects
+    const numProjects = 2;
+    const type = ProjectType.Translation;
+    await Promise.all(
+      times(numProjects).map(async () =>
+        createProject(app, {
+          type,
+        })
+      )
+    );
+
+    const { projects } = await app.graphql.query(
+      gql`
+        query {
+          projects(input: { filter: { status: [InDevelopment] } }) {
+            items {
+              ...project
+            }
+            hasMore
+            total
+          }
+        }
+        ${fragments.project}
+      `
+    );
+    expect(projects.items.length).toBeGreaterThanOrEqual(numProjects);
+  });
+
   it('List view of my projects', async () => {
     const numProjects = 2;
     const type = ProjectType.Translation;
