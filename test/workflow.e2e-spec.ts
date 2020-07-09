@@ -20,7 +20,7 @@ import {
 describe.skip('Workflow e2e', () => {
   let app: TestApp;
   let org: Organization;
-  let sg: CreateSecurityGroupOutput;
+  let securityGroup: CreateSecurityGroupOutput;
   const password: string = faker.internet.password();
   const email = `${faker.internet.email()} ${Date.now()}`;
   let user: User;
@@ -38,7 +38,7 @@ describe.skip('Workflow e2e', () => {
       email: process.env.ROOT_ADMIN_EMAIL,
       password: process.env.ROOT_ADMIN_PASSWORD,
     });
-    sg = await createSecurityGroup(app);
+    securityGroup = await createSecurityGroup(app);
 
     user = await createUser(app, { password: password, email: email });
 
@@ -55,14 +55,14 @@ describe.skip('Workflow e2e', () => {
         }
       `,
       {
-        sgId: sg.id,
+        sgId: securityGroup.id,
         userId: user.id,
       }
     );
     await login(app, { email, password });
     org = await createOrganization(app);
     await createPermission(app, {
-      sgId: sg.id!,
+      sgId: securityGroup.id!,
       baseNodeId: org.id,
       propertyName: 'name',
       read: true,
@@ -122,7 +122,7 @@ describe.skip('Workflow e2e', () => {
         input: {
           groupState: {
             stateId: workflow.startingState.id,
-            securityGroupId: sg.id,
+            securityGroupId: securityGroup.id,
           },
         },
       }
@@ -247,7 +247,7 @@ describe.skip('Workflow e2e', () => {
         input: {
           groupState: {
             stateId: workflow.startingState.id,
-            securityGroupId: sg.id,
+            securityGroupId: securityGroup.id,
           },
         },
       }
@@ -316,7 +316,7 @@ describe.skip('Workflow e2e', () => {
         input: {
           groupState: {
             stateId: workflow.startingState.id,
-            securityGroupId: sg.id,
+            securityGroupId: securityGroup.id,
           },
         },
       }
@@ -349,7 +349,7 @@ describe.skip('Workflow e2e', () => {
         input: {
           groupState: {
             stateId: workflow.startingState.id,
-            securityGroupId: sg.id,
+            securityGroupId: securityGroup.id,
           },
         },
       }
@@ -365,7 +365,7 @@ describe.skip('Workflow e2e', () => {
         input: {
           groupState: {
             stateId: workflow.startingState.id,
-            securityGroupId: sg.id,
+            securityGroupId: securityGroup.id,
           },
         },
       }
@@ -393,7 +393,7 @@ describe.skip('Workflow e2e', () => {
         input: {
           groupState: {
             stateId: workflow.startingState.id,
-            securityGroupId: sg.id,
+            securityGroupId: securityGroup.id,
           },
         },
       }
@@ -421,7 +421,7 @@ describe.skip('Workflow e2e', () => {
         input: {
           groupState: {
             stateId: workflow.startingState.id,
-            securityGroupId: sg.id,
+            securityGroupId: securityGroup.id,
           },
         },
       }
@@ -437,7 +437,7 @@ describe.skip('Workflow e2e', () => {
         input: {
           groupState: {
             stateId: workflow.startingState.id,
-            securityGroupId: sg.id,
+            securityGroupId: securityGroup.id,
           },
         },
       }
@@ -467,7 +467,7 @@ describe.skip('Workflow e2e', () => {
         input: {
           groupState: {
             stateId: workflow.startingState.id,
-            securityGroupId: sg.id,
+            securityGroupId: securityGroup.id,
           },
         },
       }
@@ -535,7 +535,7 @@ describe.skip('Workflow e2e', () => {
         input: {
           groupState: {
             stateId: workflow.startingState.id,
-            securityGroupId: sg.id,
+            securityGroupId: securityGroup.id,
           },
         },
       }
@@ -590,7 +590,7 @@ describe.skip('Workflow e2e', () => {
         input: {
           groupState: {
             stateId: workflow.startingState.id,
-            securityGroupId: sg.id,
+            securityGroupId: securityGroup.id,
           },
         },
       }

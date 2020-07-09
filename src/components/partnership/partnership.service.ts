@@ -124,7 +124,7 @@ export class PartnershipService {
       [
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('securityGroup', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
         node(editPerm, 'Permission', {
           property,
@@ -141,7 +141,7 @@ export class PartnershipService {
       [
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('securityGroup', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
         node(readPerm, 'Permission', {
           property,
@@ -312,7 +312,7 @@ export class PartnershipService {
     readPartnership.optionalMatch([
       node('requestingUser'),
       relation('in', '', 'member', { active: true }),
-      node('sg', 'SecurityGroup', { active: true }),
+      node('securityGroup', 'SecurityGroup', { active: true }),
       relation('out', '', 'permission', { active: true }),
       node('canEditOrganization', 'Permission', {
         property: 'organization',
@@ -329,7 +329,7 @@ export class PartnershipService {
     readPartnership.optionalMatch([
       node('requestingUser'),
       relation('in', '', 'member', { active: true }),
-      node('sg', 'SecurityGroup', { active: true }),
+      node('securityGroup', 'SecurityGroup', { active: true }),
       relation('out', '', 'permission', { active: true }),
       node('canReadOrganization', 'Permission', {
         property: 'organization',
@@ -572,10 +572,10 @@ export class PartnershipService {
           (project:Project {id: $projectId, active: true, owningOrgId: $owningOrgId})
         -[:partnership]->(partnership:Partnership {active:true})
         WITH COUNT(partnership) as total, project, partnership
-        OPTIONAL MATCH (requestingUser)<-[:member { active: true }]-(sg:SecurityGroup { active: true })-[:permission { active: true }]
+        OPTIONAL MATCH (requestingUser)<-[:member { active: true }]-(securityGroup:SecurityGroup { active: true })-[:permission { active: true }]
         ->(canEditAgreementStatus:Permission { property: 'agreementStatus', active: true, edit: true })
         -[:baseNode { active: true }]->(partnership)-[:agreementStatus { active: true }]->(agreementStatus:Property { active: true })
-        OPTIONAL MATCH (requestingUser)<-[:member { active: true }]-(sg:SecurityGroup { active: true })-[:permission { active: true }]
+        OPTIONAL MATCH (requestingUser)<-[:member { active: true }]-(securityGroup:SecurityGroup { active: true })-[:permission { active: true }]
         ->(canReadAgreementStatus:Permission { property: 'agreementStatus', active: true, read: true })
         -[:baseNode { active: true }]->(partnership)-[:agreementStatus { active: true }]->(agreementStatus:Property { active: true })
         RETURN total, partnership.id as id, agreementStatus.value as agreementStatus, partnership.createdAt as createdAt

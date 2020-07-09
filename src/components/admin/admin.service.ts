@@ -27,7 +27,7 @@ export class AdminService implements OnApplicationBootstrap {
     // merge public security group
     await this.mergePublicSecurityGroup();
 
-    // merge anon user and connect to public sg
+    // merge anon user and connect to public SecurityGroup
     await this.mergeAnonUser();
 
     // Root Admin
@@ -52,13 +52,15 @@ export class AdminService implements OnApplicationBootstrap {
     await this.db
       .query()
       .merge([
-        node('sg', 'RootSecurityGroup', {
+        node('securityGroup', 'RootSecurityGroup', {
           id: this.config.rootSecurityGroup.id,
         }),
       ])
-      .onCreate.setLabels({ sg: ['RootSecurityGroup', 'SecurityGroup'] })
+      .onCreate.setLabels({
+        securityGroup: ['RootSecurityGroup', 'SecurityGroup'],
+      })
       .setValues({
-        sg: {
+        securityGroup: {
           createdAt,
           active: true,
           id: this.config.rootSecurityGroup.id,
@@ -73,15 +75,17 @@ export class AdminService implements OnApplicationBootstrap {
     await this.db
       .query()
       .merge([
-        node('sg', 'PublicSecurityGroup', {
+        node('securityGroup', 'PublicSecurityGroup', {
           id: this.config.publicSecurityGroup.id,
         }),
       ])
-      .onCreate.setLabels({ sg: ['PublicSecurityGroup', 'SecurityGroup'] })
+      .onCreate.setLabels({
+        securityGroup: ['PublicSecurityGroup', 'SecurityGroup'],
+      })
       .setValues({
-        'sg.createdAt': createdAt,
-        'sg.active': true,
-        'sg.id': this.config.publicSecurityGroup.id,
+        'securityGroup.createdAt': createdAt,
+        'securityGroup.active': true,
+        'securityGroup.id': this.config.publicSecurityGroup.id,
       })
       .run();
   }
@@ -196,7 +200,7 @@ export class AdminService implements OnApplicationBootstrap {
       .query()
       .match([
         [
-          node('sg', 'RootSecurityGroup', {
+          node('securityGroup', 'RootSecurityGroup', {
             id: this.config.rootSecurityGroup.id,
           }),
         ],
@@ -212,12 +216,12 @@ export class AdminService implements OnApplicationBootstrap {
       .with('*')
       .merge([
         [
-          node('sg'),
+          node('securityGroup'),
           relation('out', 'adminLink', 'member'),
           node('newRootAdmin'),
         ],
       ])
-      // .setValues({ sg: RootSecurityGroup })
+      // .setValues({ securityGroup: RootSecurityGroup })
       .return('newRootAdmin')
       .first();
 

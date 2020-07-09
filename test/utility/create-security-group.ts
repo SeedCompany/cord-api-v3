@@ -29,9 +29,9 @@ export async function createSecurityGroup(
       },
     }
   );
-  const sg: CreateSecurityGroupOutput = result.createSecurityGroup;
+  const securityGroup: CreateSecurityGroupOutput = result.createSecurityGroup;
 
-  expect(sg.success).toBeTruthy();
+  expect(securityGroup.success).toBeTruthy();
 
-  return sg;
+  return securityGroup;
 }

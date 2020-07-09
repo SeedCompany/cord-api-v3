@@ -111,7 +111,7 @@ export class BudgetService {
       [
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('securityGroup', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
         node(editPerm, 'Permission', {
           property,
@@ -128,7 +128,7 @@ export class BudgetService {
       [
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('securityGroup', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
         node(readPerm, 'Permission', {
           property,
@@ -334,10 +334,10 @@ export class BudgetService {
         (project:Project {id: $projectId, active: true, owningOrgId: $owningOrgId})
         -[:budget]->(budget:Budget {active:true})
       WITH COUNT(budget) as total, project, budget
-          OPTIONAL MATCH (requestingUser)<-[:member { active: true }]-(sg:SecurityGroup { active: true })-[:permission { active: true }]
+          OPTIONAL MATCH (requestingUser)<-[:member { active: true }]-(securityGroup:SecurityGroup { active: true })-[:permission { active: true }]
           ->(canEditStatus:Permission { property: 'status', active: true, edit: true })
           -[:baseNode { active: true }]->(budget)-[:status { active: true }]->(status:Property { active: true })
-          OPTIONAL MATCH (requestingUser)<-[:member { active: true }]-(sg:SecurityGroup { active: true })-[:permission { active: true }]
+          OPTIONAL MATCH (requestingUser)<-[:member { active: true }]-(securityGroup:SecurityGroup { active: true })-[:permission { active: true }]
           ->(canReadStatus:Permission { property: 'status', active: true, read: true })
           -[:baseNode { active: true }]->(budget)-[:status { active: true }]->(status:Property { active: true })
           RETURN DISTINCT total, budget.id as budgetId, status.value as status, canReadStatus.read AS canReadStatus, canEditStatus.edit AS canEditStatus
@@ -529,7 +529,7 @@ export class BudgetService {
     readBudgetRecord.optionalMatch([
       node('requestingUser'),
       relation('in', '', 'member', { active: true }),
-      node('sg', 'SecurityGroup', { active: true }),
+      node('securityGroup', 'SecurityGroup', { active: true }),
       relation('out', '', 'permission', { active: true }),
       node('canEditOrganization', 'Permission', {
         property: 'organization',
@@ -546,7 +546,7 @@ export class BudgetService {
     readBudgetRecord.optionalMatch([
       node('requestingUser'),
       relation('in', '', 'member', { active: true }),
-      node('sg', 'SecurityGroup', { active: true }),
+      node('securityGroup', 'SecurityGroup', { active: true }),
       relation('out', '', 'permission', { active: true }),
       node('canReadOrganization', 'Permission', {
         property: 'organization',

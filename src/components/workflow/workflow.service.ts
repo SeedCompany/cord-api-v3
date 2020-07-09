@@ -233,7 +233,7 @@ export class WorkflowService {
           [
             ...matchSession(session),
             relation('in', '', 'member'),
-            node('sg', 'SecurityGroup'),
+            node('securityGroup', 'SecurityGroup'),
             relation('out', '', 'permission'),
             node('permission', 'Permission', {
               read: true,
@@ -265,7 +265,7 @@ export class WorkflowService {
           [
             ...matchSession(session),
             relation('in', '', 'member'),
-            node('sg', 'SecurityGroup'),
+            node('securityGroup', 'SecurityGroup'),
             relation('out', '', 'permission'),
             node('permission', 'Permission', {
               read: true,
@@ -507,7 +507,7 @@ export class WorkflowService {
             relation('in', '', 'member', {
               admin: true,
             }),
-            node('sg', 'SecurityGroup', {
+            node('securityGroup', 'SecurityGroup', {
               id: input.securityGroupId,
             }),
           ],
@@ -523,7 +523,7 @@ export class WorkflowService {
             relation('out', '', 'securityGroup', {
               active: true,
             }),
-            node('sg'),
+            node('securityGroup'),
           ],
         ])
         .first();
@@ -558,7 +558,7 @@ export class WorkflowService {
             relation('in', '', 'member', {
               admin: true,
             }),
-            node('sg', 'SecurityGroup', {
+            node('securityGroup', 'SecurityGroup', {
               id: input.securityGroupId,
             }),
           ],
@@ -567,7 +567,7 @@ export class WorkflowService {
               id: input.stateId,
             }),
             relation('out', 'rel', 'securityGroup'),
-            node('sg'),
+            node('securityGroup'),
           ],
         ])
         .detachDelete('rel')
@@ -602,7 +602,7 @@ export class WorkflowService {
               id: session.userId,
             }),
             relation('in', '', 'member'),
-            node('sg', 'SecurityGroup', {
+            node('securityGroup', 'SecurityGroup', {
               id: input.securityGroupId,
             }),
           ],
@@ -619,7 +619,7 @@ export class WorkflowService {
               active: true,
               onEnter: true,
             }),
-            node('sg'),
+            node('securityGroup'),
           ],
         ])
         .first();
@@ -652,7 +652,7 @@ export class WorkflowService {
               id: session.userId,
             }),
             relation('in', '', 'member'),
-            node('sg', 'SecurityGroup', {
+            node('securityGroup', 'SecurityGroup', {
               id: input.securityGroupId,
             }),
           ],
@@ -661,7 +661,7 @@ export class WorkflowService {
               id: input.stateId,
             }),
             relation('out', 'rel', 'notification'),
-            node('sg'),
+            node('securityGroup'),
           ],
         ])
         .detachDelete('rel')
@@ -687,7 +687,7 @@ export class WorkflowService {
           [
             ...matchSession(session),
             relation('in', '', 'member'),
-            node('sg', 'SecurityGroup'),
+            node('securityGroup', 'SecurityGroup'),
             relation('out', '', 'permission'),
             node('permission', 'Permission', {
               read: true,
@@ -718,7 +718,7 @@ export class WorkflowService {
           [
             ...matchSession(session),
             relation('in', '', 'member'),
-            node('sg', 'SecurityGroup'),
+            node('securityGroup', 'SecurityGroup'),
             relation('out', '', 'permission'),
             node('permission', 'Permission', {
               read: true,
@@ -768,7 +768,7 @@ export class WorkflowService {
           [
             ...matchSession(session),
             relation('in', '', 'member'),
-            node('sg', 'SecurityGroup'),
+            node('securityGroup', 'SecurityGroup'),
             relation('out', '', 'permission'),
             node('permission', 'Permission', {
               write: true,
@@ -1001,7 +1001,7 @@ export class WorkflowService {
           [
             ...matchSession(session),
             relation('in', '', 'member'),
-            node('sg', 'SecurityGroup'),
+            node('securityGroup', 'SecurityGroup'),
             relation('out', '', 'permission'),
             node('permission', 'Permission', {
               read: true,

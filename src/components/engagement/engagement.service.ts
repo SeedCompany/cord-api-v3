@@ -108,7 +108,7 @@ export class EngagementService {
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('securityGroup', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
         node('permCeremony', 'Permission', {
           property: 'ceremony',
@@ -125,7 +125,7 @@ export class EngagementService {
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('securityGroup', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
         node('permLanguage', 'Permission', {
           property: 'language',
@@ -413,7 +413,7 @@ export class EngagementService {
       [
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('securityGroup', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
         node(editPerm, 'Permission', {
           property,
@@ -430,7 +430,7 @@ export class EngagementService {
       [
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('securityGroup', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
         node(readPerm, 'Permission', {
           property,
@@ -1046,7 +1046,7 @@ export class EngagementService {
     ieQuery.optionalMatch([
       node('requestingUser'),
       relation('in', '', 'member', { active: true }),
-      node('sg', 'SecurityGroup', { active: true }),
+      node('securityGroup', 'SecurityGroup', { active: true }),
       relation('out', '', 'permission', { active: true }),
       node('permIntern', 'Permission', {
         property: 'intern',
@@ -1079,7 +1079,7 @@ export class EngagementService {
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('securityGroup', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
         node('permCeremony', 'Permission', {
           property: 'ceremony',
@@ -1097,7 +1097,7 @@ export class EngagementService {
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('securityGroup', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
         node('permCountryOfOrigin', 'Permission', {
           property: 'countryOfOrigin',
@@ -1113,7 +1113,7 @@ export class EngagementService {
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('securityGroup', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
         node('permMentor', 'Permission', {
           property: 'mentor',

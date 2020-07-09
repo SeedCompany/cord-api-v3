@@ -75,11 +75,11 @@ export class AuthorizationService {
             id: input.userId,
           }),
           relation('in', '', 'member'),
-          node('sg', 'SecurityGroup'),
+          node('securityGroup', 'SecurityGroup'),
         ],
       ])
       .return({
-        sg: [{ id: 'id', name: 'name' }],
+        securityGroup: [{ id: 'id', name: 'name' }],
       })
       .run()) as SecurityGroup[];
 
@@ -102,11 +102,11 @@ export class AuthorizationService {
           relation('in', '', 'member', {
             admin: true,
           }),
-          node('sg', 'SecurityGroup'),
+          node('securityGroup', 'SecurityGroup'),
         ],
       ])
       .return({
-        sg: [{ id: 'id', name: 'name' }],
+        securityGroup: [{ id: 'id', name: 'name' }],
       })
       .run()) as SecurityGroup[];
 
@@ -123,7 +123,7 @@ export class AuthorizationService {
       .query()
       .match([
         [
-          node('sg', 'SecurityGroup', {
+          node('securityGroup', 'SecurityGroup', {
             id: input.sgId,
           }),
           relation('out', '', 'permission'),
@@ -176,14 +176,14 @@ export class AuthorizationService {
           }),
         ],
         [
-          node('sg', 'SecurityGroup', {
+          node('securityGroup', 'SecurityGroup', {
             id: request.sgId,
           }),
         ],
       ])
       .merge([
         [
-          node('sg'),
+          node('securityGroup'),
           relation('out', '', 'permission'),
           node('permission', 'Permission', {
             id,
@@ -213,7 +213,7 @@ export class AuthorizationService {
       .query()
       .match([
         [
-          node('sg', 'SecurityGroup', {}),
+          node('securityGroup', 'SecurityGroup', {}),
           relation('out', '', 'member'),
           node('user', 'User'),
           relation('out', '', 'token', {
@@ -263,7 +263,7 @@ export class AuthorizationService {
       .query()
       .match([
         [
-          node('sg', 'SecurityGroup', {
+          node('securityGroup', 'SecurityGroup', {
             canAddSgProperties: true,
           }),
           relation('out', '', 'member'),
@@ -315,7 +315,7 @@ export class AuthorizationService {
       .query()
       .match([
         [
-          node('sg', 'SecurityGroup', {
+          node('securityGroup', 'SecurityGroup', {
             id: request.sgId,
           }),
           relation('out', '', 'member', {
@@ -336,7 +336,9 @@ export class AuthorizationService {
           }),
         ],
       ])
-      .merge([[node('sg'), relation('out', '', 'member'), node('user')]])
+      .merge([
+        [node('securityGroup'), relation('out', '', 'member'), node('user')],
+      ])
       .first();
 
     const result = await this.getSecurityGroupMember(
@@ -382,7 +384,7 @@ export class AuthorizationService {
             id: request.id,
           }),
           relation('in', '', 'permission'),
-          node('sg', 'SecurityGroup', {
+          node('securityGroup', 'SecurityGroup', {
             id: request.sgId,
           }),
         ],
@@ -422,7 +424,7 @@ export class AuthorizationService {
       .query()
       .match([
         [
-          node('sg', 'SecurityGroup', {
+          node('securityGroup', 'SecurityGroup', {
             id: request.sgId,
           }),
           relation('out', '', 'member', {
@@ -442,7 +444,7 @@ export class AuthorizationService {
             id: request.userId,
           }),
           relation('in', 'm', 'member'),
-          node('sg'),
+          node('securityGroup'),
         ],
       ])
       .delete('m')
@@ -472,7 +474,7 @@ export class AuthorizationService {
       .query()
       .match([
         [
-          node('sg', 'SecurityGroup', {
+          node('securityGroup', 'SecurityGroup', {
             id: request.sgId,
           }),
           relation('out', '', 'member', {
@@ -492,7 +494,7 @@ export class AuthorizationService {
             id: request.userId,
           }),
           relation('in', 'm', 'member'),
-          node('sg'),
+          node('securityGroup'),
         ],
       ])
       .set({
@@ -605,12 +607,12 @@ export class AuthorizationService {
             relation('in', '', 'member', {
               admin: true,
             }),
-            node('sg', 'SecurityGroup', {
+            node('securityGroup', 'SecurityGroup', {
               id,
             }),
           ],
         ])
-        .detachDelete('sg')
+        .detachDelete('securityGroup')
         .run();
     } catch (e) {
       this.logger.warning('Failed to delete security group', {
@@ -632,7 +634,7 @@ export class AuthorizationService {
       .query()
       .match([
         [
-          node('sg', 'SecurityGroup', {
+          node('securityGroup', 'SecurityGroup', {
             id: request.id,
           }),
           relation('out', '', 'member', {
@@ -650,7 +652,7 @@ export class AuthorizationService {
       ])
       .set({
         values: {
-          'sg.name': request.name,
+          'securityGroup.name': request.name,
         },
       })
       .run();
@@ -694,7 +696,7 @@ export class AuthorizationService {
       .query()
       .match([
         [
-          node('sg', 'SecurityGroup', {
+          node('securityGroup', 'SecurityGroup', {
             id: sgId,
           }),
           relation('out', 'm', 'member'),
@@ -704,7 +706,7 @@ export class AuthorizationService {
         ],
       ])
       .return({
-        sg: [{ id: 'sgId', name: 'sgName' }],
+        securityGroup: [{ id: 'sgId', name: 'sgName' }],
         user: [{ id: 'userId' }],
         m: [{ admin: 'admin' }],
       })

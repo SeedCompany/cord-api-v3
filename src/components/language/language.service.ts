@@ -174,7 +174,7 @@ export class LanguageService {
       [
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('securityGroup', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
         node(perm, 'Permission', {
           property,
@@ -339,7 +339,7 @@ export class LanguageService {
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('securityGroup', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
         node('canReadEthnologueLanguages', 'Permission', {
           property: 'ethnologue',
@@ -492,7 +492,7 @@ export class LanguageService {
         [
           node('requestingUser'),
           relation('in', '', 'member', { active: true }),
-          node('sg', 'SecurityGroup', { active: true }),
+          node('securityGroup', 'SecurityGroup', { active: true }),
           relation('out', '', 'permission', { active: true }),
           node('canReadLocation', 'Permission', {
             property: 'location',
@@ -593,7 +593,7 @@ export class LanguageService {
         .optionalMatch([
           node('requestingUser'),
           relation('in', '', 'member', { active: true }),
-          node('sg', 'SecurityGroup', { active: true }),
+          node('securityGroup', 'SecurityGroup', { active: true }),
           relation('out', '', 'permission', { active: true }),
           node('canReadEthnologueLanguages', 'Permission', {
             property: 'ethnologue',

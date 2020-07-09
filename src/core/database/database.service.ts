@@ -286,7 +286,7 @@ export class DatabaseService {
       [
         // node('requestingUser'),
         // relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('securityGroup', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission'),
         node('perm', 'Permission', {
           property,
@@ -300,7 +300,7 @@ export class DatabaseService {
       ],
     ]);
 
-    query.return(['sg', 'perm', 'n', property]);
+    query.return(['securityGroup', 'perm', 'n', property]);
 
     let result;
     try {
@@ -373,7 +373,7 @@ export class DatabaseService {
       query.match([
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('securityGroup', 'SecurityGroup', { active: true }),
       ]);
     }
     const permNodes: string[] = [];
@@ -385,7 +385,7 @@ export class DatabaseService {
 
       query.match([
         [
-          node('sg', 'SecurityGroup', { active: true }),
+          node('securityGroup', 'SecurityGroup', { active: true }),
           relation('out', '', 'permission'),
           node(permName, 'Permission', {
             property,
@@ -399,9 +399,12 @@ export class DatabaseService {
         ],
       ]);
     });
-    query.return(['sg', 'n', ...props, ...permNodes]);
+    query.return(['securityGroup', 'n', ...props, ...permNodes]);
 
-    let result: { sg: any; perm: any; p: any; n: any } | any | undefined;
+    let result:
+      | { securityGroup: any; perm: any; p: any; n: any }
+      | any
+      | undefined;
     try {
       result = await query.first();
     } catch (e) {
@@ -491,7 +494,7 @@ export class DatabaseService {
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member'),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('securityGroup', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission'),
         node('', 'Permission', {
           property: key as string,
@@ -1546,7 +1549,7 @@ export class DatabaseService {
         [
           node('requestingUser'),
           relation('in', '', 'member', { active: true }),
-          node('sg', 'SecurityGroup', { active: true }),
+          node('securityGroup', 'SecurityGroup', { active: true }),
           relation('out', '', 'permission', { active: true }),
           node(editPerm, 'Permission', {
             property,
@@ -1563,7 +1566,7 @@ export class DatabaseService {
         [
           node('requestingUser'),
           relation('in', '', 'member', { active: true }),
-          node('sg', 'SecurityGroup', { active: true }),
+          node('securityGroup', 'SecurityGroup', { active: true }),
           relation('out', '', 'permission', { active: true }),
           node(readPerm, 'Permission', {
             property,

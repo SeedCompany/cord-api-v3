@@ -37,9 +37,9 @@ describe('Authorization e2e', () => {
       password: process.env.ROOT_ADMIN_PASSWORD,
     });
 
-    const sg = await createSecurityGroup(app);
+    const securityGroup = await createSecurityGroup(app);
 
-    expect(sg.success).toBe(true);
+    expect(securityGroup.success).toBe(true);
   });
 
   it.skip('add property to security group', async () => {
@@ -48,7 +48,7 @@ describe('Authorization e2e', () => {
       password: process.env.ROOT_ADMIN_PASSWORD,
     });
 
-    const sg = await createSecurityGroup(app);
+    const securityGroup = await createSecurityGroup(app);
     const result = await app.graphql.mutate(
       gql`
         mutation addPropertyToSecurityGroup($sgId: ID!, $propName: String!) {
@@ -58,7 +58,7 @@ describe('Authorization e2e', () => {
         }
       `,
       {
-        sgId: sg.id,
+        sgId: securityGroup.id,
         propName: 'canCreateFile',
       }
     );
@@ -72,11 +72,11 @@ describe('Authorization e2e', () => {
       password: process.env.ROOT_ADMIN_PASSWORD,
     });
 
-    const sg = await createSecurityGroup(app);
+    const securityGroup = await createSecurityGroup(app);
     const org = await createOrganization(app);
 
     const perm = await createPermission(app, {
-      sgId: sg.id!,
+      sgId: securityGroup.id!,
       baseNodeId: org.id,
       propertyName: 'name',
       read: true,
@@ -92,7 +92,7 @@ describe('Authorization e2e', () => {
       email: process.env.ROOT_ADMIN_EMAIL,
       password: process.env.ROOT_ADMIN_PASSWORD,
     });
-    const sg = await createSecurityGroup(app);
+    const securityGroup = await createSecurityGroup(app);
     const result = await app.graphql.mutate(
       gql`
         mutation attachUserToSecurityGroup($sgId: ID!, $userId: ID!) {
@@ -102,7 +102,7 @@ describe('Authorization e2e', () => {
         }
       `,
       {
-        sgId: sg.id,
+        sgId: securityGroup.id,
         userId: newUser.id,
       }
     );
@@ -116,10 +116,10 @@ describe('Authorization e2e', () => {
       password: process.env.ROOT_ADMIN_PASSWORD,
     });
 
-    const sg = await createSecurityGroup(app);
+    const securityGroup = await createSecurityGroup(app);
     const project = await createProduct(app);
     const permId = await createPermission(app, {
-      sgId: sg.id!,
+      sgId: securityGroup.id!,
       baseNodeId: project.id,
       propertyName: 'name',
       read: true,
@@ -142,7 +142,7 @@ describe('Authorization e2e', () => {
       `,
       {
         id: permId,
-        sgId: sg.id,
+        sgId: securityGroup.id,
         baseNodeId: project.id,
       }
     );
@@ -156,7 +156,7 @@ describe('Authorization e2e', () => {
       email: process.env.ROOT_ADMIN_EMAIL,
       password: process.env.ROOT_ADMIN_PASSWORD,
     });
-    const sg = await createSecurityGroup(app);
+    const securityGroup = await createSecurityGroup(app);
 
     // attach the user to the SG first
     await app.graphql.mutate(
@@ -168,7 +168,7 @@ describe('Authorization e2e', () => {
         }
       `,
       {
-        sgId: sg.id,
+        sgId: securityGroup.id,
         userId: newUser.id,
       }
     );
@@ -182,7 +182,7 @@ describe('Authorization e2e', () => {
         }
       `,
       {
-        sgId: sg.id,
+        sgId: securityGroup.id,
         userId: newUser.id,
       }
     );
@@ -199,7 +199,7 @@ describe('Authorization e2e', () => {
           }
         `,
         {
-          sgId: sg.id,
+          sgId: securityGroup.id,
           userId: newUser.id,
         }
       )
@@ -213,7 +213,7 @@ describe('Authorization e2e', () => {
       email: process.env.ROOT_ADMIN_EMAIL,
       password: process.env.ROOT_ADMIN_PASSWORD,
     });
-    const sg = await createSecurityGroup(app);
+    const securityGroup = await createSecurityGroup(app);
 
     // attach the user to the SG first
     await app.graphql.mutate(
@@ -225,7 +225,7 @@ describe('Authorization e2e', () => {
         }
       `,
       {
-        sgId: sg.id,
+        sgId: securityGroup.id,
         userId: newUser.id,
       }
     );
@@ -239,7 +239,7 @@ describe('Authorization e2e', () => {
         }
       `,
       {
-        sgId: sg.id,
+        sgId: securityGroup.id,
         userId: newUser.id,
       }
     );
@@ -278,8 +278,8 @@ describe('Authorization e2e', () => {
       email: process.env.ROOT_ADMIN_EMAIL,
       password: process.env.ROOT_ADMIN_PASSWORD,
     });
-    const sg = await createSecurityGroup(app);
-    expect(sg.id).toBeTruthy();
+    const securityGroup = await createSecurityGroup(app);
+    expect(securityGroup.id).toBeTruthy();
 
     const result = await app.graphql.mutate(
       gql`
@@ -288,7 +288,7 @@ describe('Authorization e2e', () => {
         }
       `,
       {
-        id: sg.id,
+        id: securityGroup.id,
       }
     );
 
@@ -301,7 +301,7 @@ describe('Authorization e2e', () => {
       password: process.env.ROOT_ADMIN_PASSWORD,
     });
 
-    const sg = await createSecurityGroup(app);
+    const securityGroup = await createSecurityGroup(app);
 
     const newName = faker.random.word();
 
@@ -317,12 +317,12 @@ describe('Authorization e2e', () => {
         }
       `,
       {
-        id: sg.id,
+        id: securityGroup.id,
         name: newName,
       }
     );
 
-    expect(result.updateSecurityGroupName.id).toBe(sg.id);
+    expect(result.updateSecurityGroupName.id).toBe(securityGroup.id);
     expect(result.updateSecurityGroupName.name).toBe(newName);
   });
 });
