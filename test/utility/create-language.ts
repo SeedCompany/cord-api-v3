@@ -15,21 +15,24 @@ export async function createLanguage(
 ) {
   const ethnologueLanguage: CreateEthnologueLanguage = {
     id: faker.random.word() + '' + generate(),
-    code: faker.random.word().substr(0, 3),
-    provisionalCode: faker.random.word().substr(0, 3),
+    code: faker.helpers.replaceSymbols('???').toLowerCase(),
+    provisionalCode: faker.helpers.replaceSymbols('???').toLowerCase(),
     name: faker.name.firstName(),
     population: faker.random.number(),
+    ...input.ethnologue,
   };
   const language: CreateLanguage = {
     name: faker.address.country() + '' + generate(),
     displayName: faker.company.companyName() + '' + generate(),
+    displayNamePronunciation: faker.random.word(),
     isDialect: faker.random.boolean(),
     populationOverride: faker.random.number(),
-    registryOfDialectsCode: faker.random.number(1000).toString(),
+    registryOfDialectsCode: faker.random
+      .number({ min: 10000, max: 99999 })
+      .toString(),
     leastOfThese: faker.random.boolean(),
-    leastOfTheseReason: faker.random.word(),
+    leastOfTheseReason: faker.lorem.sentence(),
     ethnologue: ethnologueLanguage,
-    displayNamePronunciation: faker.random.word(),
     ...input,
   };
 
