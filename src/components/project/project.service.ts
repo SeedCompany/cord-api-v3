@@ -14,7 +14,6 @@ import {
   addBaseNodeMetaPropsWithClause,
   ConfigService,
   DatabaseService,
-  EventBus,
   IEventBus,
   ILogger,
   listWithSecureObject,
@@ -81,7 +80,7 @@ export class ProjectService {
     private readonly fileService: FileService,
     private readonly engagementService: EngagementService,
     private readonly config: ConfigService,
-    @Inject(EventBus) private readonly eventBus: IEventBus,
+    private readonly eventBus: IEventBus,
     @Logger('project:service') private readonly logger: ILogger
   ) {}
 

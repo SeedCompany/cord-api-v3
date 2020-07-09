@@ -2,7 +2,7 @@ import { Module, OnApplicationBootstrap } from '@nestjs/common';
 // eslint-disable-next-line no-restricted-imports
 import { CommandBus, EventBus } from '@nestjs/cqrs';
 import { ExplorerService } from '@nestjs/cqrs/dist/services/explorer.service';
-import { SyncEventBus } from './event-bus.service';
+import { IEventBus, SyncEventBus } from './event-bus.service';
 
 @Module({
   providers: [
@@ -10,8 +10,9 @@ import { SyncEventBus } from './event-bus.service';
     CommandBus,
     { provide: EventBus, useExisting: SyncEventBus },
     SyncEventBus,
+    { provide: IEventBus, useExisting: SyncEventBus },
   ],
-  exports: [EventBus],
+  exports: [EventBus, IEventBus],
 })
 export class EventsModule implements OnApplicationBootstrap {
   constructor(
