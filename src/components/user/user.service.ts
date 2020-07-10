@@ -133,7 +133,7 @@ export class UserService {
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
-        node('securityGroup', 'SecurityGroup', { active: true }),
+        node('', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
         node('canRead', 'Permission', {
           property: 'education',
@@ -189,7 +189,7 @@ export class UserService {
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
-        node('securityGroup', 'SecurityGroup', { active: true }),
+        node('', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
         node('canRead', 'Permission', {
           property: 'organization',
@@ -251,7 +251,7 @@ export class UserService {
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
-        node('securityGroup', 'SecurityGroup', { active: true }),
+        node('', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
         node('canRead', 'Permission', {
           property: 'unavailablity',
