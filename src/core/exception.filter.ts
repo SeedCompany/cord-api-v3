@@ -1,5 +1,14 @@
-import { ArgumentsHost, Catch, HttpException } from '@nestjs/common';
+import {
+  ArgumentsHost,
+  BadRequestException,
+  Catch,
+  ForbiddenException,
+  HttpException,
+  InternalServerErrorException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { GqlArgumentsHost, GqlExceptionFilter } from '@nestjs/graphql';
+import { compact, uniq } from 'lodash';
 import { Exception, simpleSwitch } from '../common';
 
 @Catch()
@@ -22,6 +31,11 @@ export class ExceptionFilter implements GqlExceptionFilter {
       stack = ex.stack,
       ...extensions
     } = this.gatherExtraInfo(ex);
+    if (!extensions.codes) {
+      extensions.codes = [extensions.code];
+    } else if (!extensions.code) {
+      extensions.code = extensions.codes[0];
+    }
     return {
       message,
       stack,
@@ -36,7 +50,7 @@ export class ExceptionFilter implements GqlExceptionFilter {
     if (ex instanceof Exception) {
       const { name, message, stack, previous, ...rest } = ex;
       return {
-        code: name.replace(/(Exception|Error)$/, ''),
+        codes: this.errorToCodes(ex),
         ...rest,
       };
     }
@@ -55,21 +69,66 @@ export class ExceptionFilter implements GqlExceptionFilter {
         ? { message: res }
         : (res as { message: string; error?: string });
 
-    let code = error
-      ? error.replace(/\s/g, '')
-      : ex.constructor.name.replace(/(Exception|Error)$/, '');
-    code =
-      simpleSwitch(code, {
-        InternalServerError: 'Server',
-        BadRequest: 'Input',
-        Forbidden: 'Unauthorized',
-        Unauthorized: 'Unauthenticated',
-      }) ?? code;
+    let codes = this.errorToCodes(ex);
+    if (error) {
+      let code = error.replace(/\s/g, '');
+      code =
+        simpleSwitch(code, {
+          InternalServerError: 'Server',
+          BadRequest: 'Input',
+          Forbidden: 'Unauthorized',
+          Unauthorized: 'Unauthenticated',
+        }) ?? code;
+      codes = [code, ...codes];
+    }
+    if ('code' in data) {
+      codes = [(data as { code: string }).code, ...codes];
+    }
+    codes = uniq(codes);
 
     return {
-      code,
+      codes,
       status: ex.getStatus(),
       ...data,
     };
+  }
+
+  private errorToCodes(ex: Error) {
+    return compact(
+      this.getProtoChain(ex).flatMap((e) => this.errorToCode(e, ex))
+    );
+  }
+
+  private getProtoChain<T = object>(obj: T, chain: T[] = []): T[] {
+    if (!obj || typeof obj !== 'object') {
+      return chain;
+    }
+    const ex = Object.getPrototypeOf(obj);
+    if (ex == null) {
+      return chain.slice(0, -1);
+    }
+    return this.getProtoChain(ex, [...chain, ex]);
+  }
+
+  private errorToCode(obj: object, ex: Error) {
+    const type = obj.constructor;
+
+    if (type === InternalServerErrorException) {
+      return 'Server';
+    }
+    if (type === BadRequestException) {
+      return ['Input', 'Client'];
+    }
+    if (type === ForbiddenException) {
+      return ['Unauthorized', 'Client'];
+    }
+    if (type === UnauthorizedException) {
+      return ['Unauthenticated', 'Client'];
+    }
+    if (type === HttpException) {
+      return (ex as HttpException).getStatus() < 500 ? 'Client' : 'Server';
+    }
+
+    return type.name.replace(/(Exception|Error)$/, '');
   }
 }
