@@ -1,4 +1,3 @@
-import { Type } from '@nestjs/common';
 import { Field, ObjectType } from '@nestjs/graphql';
 import { Resource } from '../../../common';
 import { BibleBook } from './bible-book';
@@ -12,9 +11,6 @@ import { ProductType } from './product-type';
   implements: [Resource],
 })
 export class Product extends Resource {
-  /* TS wants a public constructor for "ClassType" */
-  static classType = (Product as any) as Type<Product>;
-
   @Field(() => ProductType)
   readonly type: ProductType;
 

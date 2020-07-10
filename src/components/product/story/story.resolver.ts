@@ -11,7 +11,7 @@ import {
 } from './dto';
 import { StoryService } from './story.service';
 
-@Resolver(Story.classType)
+@Resolver(Story)
 export class StoryResolver {
   constructor(private readonly storyService: StoryService) {}
 

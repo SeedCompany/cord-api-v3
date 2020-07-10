@@ -1,4 +1,3 @@
-import { Type } from '@nestjs/common';
 import { Field, ObjectType } from '@nestjs/graphql';
 import {
   Resource,
@@ -29,9 +28,6 @@ export abstract class SecuredPartnershipTypes extends SecuredPropertyList(
   implements: [Resource],
 })
 export class Partnership extends Resource {
-  /* TS wants a public constructor for "ClassType" */
-  static classType = (Partnership as any) as Type<Partnership>;
-
   @Field()
   readonly agreementStatus: SecuredPartnershipAgreementStatus;
 

@@ -8,7 +8,7 @@ import {
 } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { IdArg, ISession, Session } from '../../common';
-import { User } from '../user';
+import { User, UserService } from '../user';
 import {
   CreateFileVersionInput,
   File,
@@ -21,13 +21,15 @@ import {
   RenameFileInput,
   RequestUploadOutput,
 } from './dto';
-import { FileNodeResolver } from './file-node.resolver';
+import { FileService } from './file.service';
 
-@Resolver(File.classType)
-export class FileResolver extends FileNodeResolver(
-  FileNodeType.File,
-  File.classType
-) {
+@Resolver(File)
+export class FileResolver {
+  constructor(
+    protected readonly service: FileService,
+    protected readonly users: UserService
+  ) {}
+
   @Query(() => File)
   async file(@IdArg() id: string, @Session() session: ISession): Promise<File> {
     return this.service.getFile(id, session);

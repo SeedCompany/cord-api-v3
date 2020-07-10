@@ -20,7 +20,7 @@ import {
   UpdateBudgetOutput,
 } from './dto';
 
-@Resolver(Budget.classType)
+@Resolver(Budget)
 export class BudgetResolver {
   constructor(private readonly service: BudgetService) {}
 

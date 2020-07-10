@@ -1,4 +1,3 @@
-import { Type } from '@nestjs/common';
 import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { MergeExclusive } from 'type-fest';
@@ -9,34 +8,26 @@ import {
   SecuredString,
   Sensitivity,
 } from '../../../common';
-import { SecuredBudget } from '../../budget';
-import { SecuredEngagementList } from '../../engagement';
-import { Directory } from '../../file';
 import { SecuredCountry } from '../../location';
-import { SecuredPartnershipList } from '../../partnership';
-import { SecuredProjectMemberList } from '../project-member';
 import { ProjectStatus } from './status.enum';
 import { SecuredProjectStep } from './step.enum';
 import { ProjectType } from './type.enum';
 
-export type Project = MergeExclusive<TranslationProject, InternshipProject>;
+type AnyProject = MergeExclusive<TranslationProject, InternshipProject>;
 
-@InterfaceType('Project', {
-  resolveType: (val: IProject) => {
+@InterfaceType({
+  resolveType: (val: Project) => {
     if (val.type === ProjectType.Translation) {
-      return TranslationProject.classType;
+      return TranslationProject;
     }
     if (val.type === ProjectType.Internship) {
-      return InternshipProject.classType;
+      return InternshipProject;
     }
 
     throw new Error('Could not resolve project type');
   },
 })
-export class IProject extends Resource {
-  /* TS wants a public constructor for "ClassType" */
-  static classType = (IProject as any) as Type<IProject>;
-
+class Project extends Resource {
   @Field(() => ProjectType)
   readonly type: ProjectType;
 
@@ -72,50 +63,22 @@ export class IProject extends Resource {
 
   @DateTimeField()
   readonly modifiedAt: DateTime;
-
-  // Lazily attached in resolver
-  @Field(() => String, { nullable: true })
-  readonly avatarLetters?: never;
-
-  // Lazily attached in resolver
-  @Field(() => SecuredProjectMemberList, {
-    description: 'The project members',
-  })
-  team?: never;
-
-  // Lazily attached in resolver
-  @Field(() => SecuredEngagementList)
-  engagements?: never;
-
-  // Lazily attached in resolver
-  @Field(() => SecuredBudget)
-  budget?: never;
-
-  // Lazily attached in resolver
-  @Field(() => SecuredPartnershipList)
-  partnerships?: never;
-
-  // Lazily attached in resolver
-  @Field(() => Directory)
-  rootDirectory?: never;
 }
 
-@ObjectType({
-  implements: [IProject, Resource],
-})
-export class TranslationProject extends IProject {
-  /* TS wants a public constructor for "ClassType" */
-  static classType = (TranslationProject as any) as Type<TranslationProject>;
+// class name has to match schema name for interface resolvers to work.
+// export as different names to maintain compatibility with our codebase.
+export { Project as IProject, AnyProject as Project };
 
+@ObjectType({
+  implements: [Project, Resource],
+})
+export class TranslationProject extends Project {
   readonly type: ProjectType.Translation;
 }
 
 @ObjectType({
-  implements: [IProject, Resource],
+  implements: [Project, Resource],
 })
-export class InternshipProject extends IProject {
-  /* TS wants a public constructor for "ClassType" */
-  static classType = (InternshipProject as any) as Type<InternshipProject>;
-
+export class InternshipProject extends Project {
   readonly type: ProjectType.Internship;
 }

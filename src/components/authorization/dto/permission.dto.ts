@@ -1,10 +1,7 @@
-import { Type } from '@nestjs/common';
 import { Field, ID, ObjectType } from '@nestjs/graphql';
 
 @ObjectType()
 export class Permission {
-  static classType = (Permission as any) as Type<Permission>;
-
   @Field(() => ID)
   readonly id: string;
 

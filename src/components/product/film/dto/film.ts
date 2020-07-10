@@ -1,4 +1,3 @@
-import { Type } from '@nestjs/common';
 import { Field, ObjectType } from '@nestjs/graphql';
 import {
   Resource,
@@ -16,9 +15,6 @@ export abstract class SecuredRange extends SecuredPropertyList(Range) {}
   implements: Resource,
 })
 export class Film extends Resource {
-  /* TS wants a public constructor for "ClassType" */
-  static classType = (Film as any) as Type<Film>;
-
   @Field()
   readonly name: SecuredString;
 

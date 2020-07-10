@@ -1,4 +1,3 @@
-import { Type } from '@nestjs/common';
 import { Field, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { DateTimeField, Resource } from '../../../../common';
@@ -9,9 +8,6 @@ import { SecuredRoles } from './role.dto';
   implements: [Resource],
 })
 export class ProjectMember extends Resource {
-  /* TS wants a public constructor for "ClassType" */
-  static classType = (ProjectMember as any) as Type<ProjectMember>;
-
   @Field()
   readonly user: SecuredUser;
 

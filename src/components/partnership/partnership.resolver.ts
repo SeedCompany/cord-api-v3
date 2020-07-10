@@ -19,7 +19,7 @@ import {
 } from './dto';
 import { PartnershipService } from './partnership.service';
 
-@Resolver(Partnership.classType)
+@Resolver(Partnership)
 export class PartnershipResolver {
   constructor(
     private readonly service: PartnershipService,

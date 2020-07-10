@@ -1,11 +1,7 @@
-import { Type } from '@nestjs/common';
 import { Field, ID, ObjectType } from '@nestjs/graphql';
 
 @ObjectType()
 export class State {
-  /* TS wants a public constructor for "ClassType" */
-  static classType = (State as any) as Type<State>;
-
   @Field(() => ID)
   readonly id: string;
 
@@ -15,9 +11,6 @@ export class State {
 
 @ObjectType()
 export class CurrentState {
-  /* TS wants a public constructor for "ClassType" */
-  static classType = (CurrentState as any) as Type<CurrentState>;
-
   @Field(() => ID)
   readonly id: string;
 }

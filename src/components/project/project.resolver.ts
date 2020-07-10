@@ -1,5 +1,16 @@
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { IdArg, ISession, Session } from '../../common';
+import {
+  Args,
+  Mutation,
+  Parent,
+  Query,
+  ResolveField,
+  Resolver,
+} from '@nestjs/graphql';
+import { firstLettersOfWords, IdArg, ISession, Session } from '../../common';
+import { SecuredBudget } from '../budget';
+import { EngagementListInput, SecuredEngagementList } from '../engagement';
+import { Directory } from '../file';
+import { PartnershipListInput, SecuredPartnershipList } from '../partnership';
 import {
   CreateProjectInput,
   CreateProjectOutput,
@@ -10,9 +21,13 @@ import {
   UpdateProjectInput,
   UpdateProjectOutput,
 } from './dto';
+import {
+  ProjectMemberListInput,
+  SecuredProjectMemberList,
+} from './project-member/dto';
 import { ProjectService } from './project.service';
 
-@Resolver()
+@Resolver(IProject)
 export class ProjectResolver {
   constructor(private readonly projectService: ProjectService) {}
 
@@ -40,6 +55,78 @@ export class ProjectResolver {
     @Session() session: ISession
   ): Promise<ProjectListOutput> {
     return this.projectService.list(input, session);
+  }
+
+  @ResolveField(() => String, { nullable: true })
+  avatarLetters(@Parent() project: Project): string | undefined {
+    return project.name.canRead && project.name.value
+      ? firstLettersOfWords(project.name.value)
+      : undefined;
+  }
+
+  @ResolveField(() => SecuredBudget, {
+    description: `The project's current budget`,
+  })
+  async budget(
+    @Parent() project: Project,
+    @Session() session: ISession
+  ): Promise<SecuredBudget> {
+    return this.projectService.currentBudget(project, session);
+  }
+
+  @ResolveField(() => SecuredEngagementList)
+  async engagements(
+    @Session() session: ISession,
+    @Parent() project: Project,
+    @Args({
+      name: 'input',
+      type: () => EngagementListInput,
+      nullable: true,
+      defaultValue: EngagementListInput.defaultVal,
+    })
+    input: EngagementListInput
+  ): Promise<SecuredEngagementList> {
+    return this.projectService.listEngagements(project, input, session);
+  }
+
+  @ResolveField(() => SecuredProjectMemberList, {
+    description: 'The project members',
+  })
+  async team(
+    @Session() session: ISession,
+    @Parent() { id }: Project,
+    @Args({
+      name: 'input',
+      type: () => ProjectMemberListInput,
+      defaultValue: ProjectMemberListInput.defaultVal,
+    })
+    input: ProjectMemberListInput
+  ): Promise<SecuredProjectMemberList> {
+    return this.projectService.listProjectMembers(id, input, session);
+  }
+
+  @ResolveField(() => SecuredPartnershipList)
+  async partnerships(
+    @Session() session: ISession,
+    @Parent() { id }: Project,
+    @Args({
+      name: 'input',
+      type: () => PartnershipListInput,
+      defaultValue: PartnershipListInput.defaultVal,
+    })
+    input: PartnershipListInput
+  ): Promise<SecuredPartnershipList> {
+    return this.projectService.listPartnerships(id, input, session);
+  }
+
+  @ResolveField(() => Directory, {
+    description: 'The root filesystem directory of this project',
+  })
+  async rootDirectory(
+    @Session() session: ISession,
+    @Parent() { id }: Project
+  ): Promise<Directory> {
+    return this.projectService.getRootDirectory(id, session);
   }
 
   @Mutation(() => CreateProjectOutput, {

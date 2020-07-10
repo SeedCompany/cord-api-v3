@@ -38,7 +38,7 @@ export class UnavailabilityService {
     try {
       await this.db.createNode({
         session,
-        type: Unavailability.classType,
+        type: Unavailability,
         input: { id, ...input },
         acls,
       });

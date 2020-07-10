@@ -4,12 +4,18 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Request } from 'express';
+import type * as core from 'express-serve-static-core';
 import { ISession } from '../../common';
 import { ConfigService } from '../../core';
 import { AuthenticationService } from './authentication.service';
 
 declare module 'express' {
-  interface Request {
+  interface Request<
+    P extends core.Params = core.ParamsDictionary,
+    ResBody = any,
+    ReqBody = any,
+    ReqQuery = core.Query
+  > extends core.Request<P, ResBody, ReqBody, ReqQuery> {
     session?: ISession;
   }
 }

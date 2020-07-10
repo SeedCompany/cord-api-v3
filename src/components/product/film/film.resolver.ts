@@ -11,7 +11,7 @@ import {
 } from './dto';
 import { FilmService } from './film.service';
 
-@Resolver(Film.classType)
+@Resolver(Film)
 export class FilmResolver {
   constructor(private readonly filmService: FilmService) {}
 

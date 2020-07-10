@@ -3,7 +3,6 @@ import {
   Injectable,
   NotFoundException,
   InternalServerErrorException as ServerException,
-  Type,
 } from '@nestjs/common';
 import {
   Connection,
@@ -18,6 +17,7 @@ import { DateTime, Duration } from 'luxon';
 import { generate } from 'shortid';
 import { assert } from 'ts-essentials';
 import {
+  AbstractClassType,
   ISession,
   isSecured,
   many,
@@ -930,7 +930,7 @@ export class DatabaseService {
     aclEditProp,
   }: {
     session: ISession;
-    type: Type<TObject>;
+    type: AbstractClassType<TObject>;
     input: ResourceInput<TObject>;
     acls: ACLs;
     baseNodeLabel?: Many<string>;
@@ -964,7 +964,7 @@ export class DatabaseService {
     aclEditProp,
   }: {
     session: ISession;
-    type: Type<TObject>;
+    type: AbstractClassType<TObject>;
     input: ResourceInput<TObject>;
     acls: ACLs;
     baseNodeLabel?: Many<string>;

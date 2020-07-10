@@ -12,15 +12,13 @@ import {
   Directory,
   FileListInput,
   FileListOutput,
-  FileNodeType,
 } from './dto';
-import { FileNodeResolver } from './file-node.resolver';
+import { FileService } from './file.service';
 
-@Resolver(Directory.classType)
-export class DirectoryResolver extends FileNodeResolver(
-  FileNodeType.Directory,
-  Directory.classType
-) {
+@Resolver(Directory)
+export class DirectoryResolver {
+  constructor(protected readonly service: FileService) {}
+
   @Query(() => Directory)
   async directory(
     @IdArg() id: string,

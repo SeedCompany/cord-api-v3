@@ -1,4 +1,3 @@
-import { Type } from '@nestjs/common';
 import { Field, Int, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { DateTime } from 'luxon';
@@ -10,7 +9,6 @@ import {
   SecuredProperty,
   simpleSwitch,
 } from '../../../common';
-import { User } from '../../user/dto';
 import { FileNodeCategory } from './category';
 import { FileNodeType } from './type';
 
@@ -18,27 +16,23 @@ import { FileNodeType } from './type';
  * This should be used for TypeScript types as we'll always be passing around
  * concrete nodes.
  */
-export type FileNode = MergeExclusive<
+export type AnyFileNode = MergeExclusive<
   MergeExclusive<File, Directory>,
   FileVersion
 >;
 
-@InterfaceType('FileNode', {
-  resolveType: (val: FileNode) =>
+@InterfaceType({
+  resolveType: (val: AnyFileNode) =>
     simpleSwitch(val.type, {
-      [FileNodeType.Directory]: Directory.classType,
-      [FileNodeType.File]: File.classType,
-      [FileNodeType.FileVersion]: FileVersion.classType,
+      [FileNodeType.Directory]: Directory,
+      [FileNodeType.File]: File,
+      [FileNodeType.FileVersion]: FileVersion,
     }),
-})
-@ObjectType({
-  isAbstract: true,
-  implements: [Resource],
 })
 /**
  * This should be used for GraphQL but never for TypeScript types.
  */
-export abstract class IFileNode extends Resource {
+abstract class FileNode extends Resource {
   @Field(() => FileNodeType)
   readonly type: FileNodeType;
 
@@ -53,32 +47,22 @@ export abstract class IFileNode extends Resource {
   })
   readonly name: string;
 
-  @Field(() => [IFileNode], {
-    description: stripIndent`
-      A list of the parents all the way up the tree.
-      This can be used to populate a path-like UI,
-      without having to fetch each parent serially.
-    `,
-  })
-  readonly parents?: never;
-
   readonly createdById: string;
-  @Field(() => User, {
-    description: 'The user who created this node',
-  })
-  readonly createdBy?: never;
 }
 
-export type BaseNode = ConditionalExcept<IFileNode, never | FileNodeCategory>;
+// class name has to match schema name for interface resolvers to work.
+// export as different names to maintain compatibility with our codebase.
+export { FileNode as IFileNode, AnyFileNode as FileNode };
+
+export type BaseNode = ConditionalExcept<FileNode, never | FileNodeCategory>;
 
 @ObjectType({
   isAbstract: true,
-  implements: [IFileNode],
 })
 /**
  * Both file and file version have these properties
  */
-abstract class BaseFile extends IFileNode {
+abstract class BaseFile extends FileNode {
   @Field()
   readonly mimeType: string;
 
@@ -87,22 +71,16 @@ abstract class BaseFile extends IFileNode {
 }
 
 @ObjectType({
-  implements: [IFileNode],
+  implements: [FileNode, Resource],
 })
 export class FileVersion extends BaseFile {
-  /* TS wants a public constructor for "ClassType" */
-  static classType = (FileVersion as any) as Type<FileVersion>;
-
   readonly type: FileNodeType.FileVersion;
 }
 
 @ObjectType({
-  implements: [IFileNode],
+  implements: [FileNode, Resource],
 })
 export class File extends BaseFile {
-  /* TS wants a public constructor for "ClassType" */
-  static classType = (File as any) as Type<File>;
-
   readonly type: FileNodeType.File;
 
   readonly latestVersionId: string;
@@ -114,12 +92,9 @@ export class File extends BaseFile {
 }
 
 @ObjectType({
-  implements: [IFileNode],
+  implements: [FileNode, Resource],
 })
-export class Directory extends IFileNode {
-  /* TS wants a public constructor for "ClassType" */
-  static classType = (Directory as any) as Type<Directory>;
-
+export class Directory extends FileNode {
   readonly type: FileNodeType.Directory;
 }
 
@@ -133,15 +108,15 @@ export abstract class SecuredFile extends SecuredProperty(File) {}
  */
 export type DefinedFile = Secured<string>;
 
-export const isDirectory = (node: FileNode): node is Directory =>
+export const isDirectory = (node: AnyFileNode): node is Directory =>
   isDirectoryNode(node);
 export const isDirectoryNode = (node: BaseNode) =>
   node.type === FileNodeType.Directory;
 
-export const isFile = (node: FileNode): node is File => isFileNode(node);
+export const isFile = (node: AnyFileNode): node is File => isFileNode(node);
 export const isFileNode = (node: BaseNode) => node.type === FileNodeType.File;
 
-export const isFileVersion = (node: FileNode): node is FileVersion =>
+export const isFileVersion = (node: AnyFileNode): node is FileVersion =>
   isFileVersionNode(node);
 export const isFileVersionNode = (node: BaseNode) =>
   node.type === FileNodeType.FileVersion;

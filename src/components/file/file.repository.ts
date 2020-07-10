@@ -262,7 +262,7 @@ export class FileRepository {
     const id = generate();
     await this.db.createNode({
       session,
-      type: Directory.classType,
+      type: Directory,
       input: {
         id,
         name,
@@ -293,7 +293,7 @@ export class FileRepository {
     const fileId = generate();
     await this.db.createNode({
       session,
-      type: File.classType,
+      type: File,
       baseNodeLabel: ['File', 'FileNode'],
       input: {
         id: fileId,
@@ -329,7 +329,7 @@ export class FileRepository {
 
     await this.db.createNode({
       session,
-      type: FileVersion.classType,
+      type: FileVersion,
       baseNodeLabel: ['FileVersion', 'FileNode'],
       input: {
         ...input,

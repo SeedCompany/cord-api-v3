@@ -40,11 +40,11 @@ export class LocationListInput extends SortablePaginationInput<keyof Location>({
 }
 
 @ObjectType()
-export class LocationListOutput extends PaginatedList(Location as any, {
+export class LocationListOutput extends PaginatedList(Location, {
   itemsDescription: PaginatedList.itemDescriptionFor('locations'),
 }) {}
 
 @ObjectType()
-export class SecuredLocationList extends SecuredList(Location as any, {
+export class SecuredLocationList extends SecuredList(Location, {
   itemsDescription: SecuredList.descriptionFor('locations'),
 }) {}

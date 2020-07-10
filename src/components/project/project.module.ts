@@ -6,10 +6,6 @@ import { LocationModule } from '../location/location.module';
 import { OrganizationService } from '../organization';
 import { PartnershipModule } from '../partnership/partnership.module';
 import { UserModule } from '../user/user.module';
-import {
-  InternshipProjectResolver,
-  TranslationProjectResolver,
-} from './project-lazy-fields.resolver';
 import { ProjectMemberModule } from './project-member/project-member.module';
 import { ProjectResolver } from './project.resolver';
 import { ProjectService } from './project.service';
@@ -24,13 +20,7 @@ import { ProjectService } from './project.service';
     FileModule,
     EngagementModule,
   ],
-  providers: [
-    ProjectResolver,
-    TranslationProjectResolver,
-    InternshipProjectResolver,
-    OrganizationService,
-    ProjectService,
-  ],
+  providers: [ProjectResolver, OrganizationService, ProjectService],
   exports: [ProjectService, ProjectMemberModule],
 })
 export class ProjectModule {}

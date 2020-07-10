@@ -18,7 +18,7 @@ import {
 } from './dto';
 import { OrganizationService } from './organization.service';
 
-@Resolver(Organization.classType)
+@Resolver(Organization)
 export class OrganizationResolver {
   constructor(private readonly orgs: OrganizationService) {}
 

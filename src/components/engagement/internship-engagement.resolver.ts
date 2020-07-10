@@ -3,7 +3,7 @@ import { ISession, Session } from '../../common';
 import { FileService, SecuredFile } from '../file';
 import { InternshipEngagement } from './dto';
 
-@Resolver(InternshipEngagement.classType)
+@Resolver(InternshipEngagement)
 export class InternshipEngagementResolver {
   constructor(private readonly files: FileService) {}
 

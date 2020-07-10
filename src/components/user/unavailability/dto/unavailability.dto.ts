@@ -1,4 +1,3 @@
-import { Type } from '@nestjs/common';
 import { Field, ObjectType } from '@nestjs/graphql';
 import {
   DateTimeField,
@@ -11,9 +10,6 @@ import {
   implements: [Resource],
 })
 export class Unavailability extends Resource {
-  /* TS wants a public constructor for "ClassType" */
-  static classType = (Unavailability as any) as Type<Unavailability>;
-
   @Field()
   readonly description: SecuredString;
 

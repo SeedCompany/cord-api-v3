@@ -11,7 +11,7 @@ import {
 } from './dto';
 import { LiteracyMaterialService } from './literacy-material.service';
 
-@Resolver(LiteracyMaterial.classType)
+@Resolver(LiteracyMaterial)
 export class LiteracyMaterialResolver {
   constructor(
     private readonly literacyMaterialService: LiteracyMaterialService
