@@ -8,6 +8,7 @@ import {
 import {
   Connection,
   contains,
+  equals,
   node,
   Query,
   relation,
@@ -713,11 +714,31 @@ export class DatabaseService {
       ]);
     }
 
+    query.with([
+      // with the ACL fields
+      'requestingUser',
+
+      // always with <node>
+      'n',
+
+      // with the rest of the requested properties
+      ...props.map((prop) => {
+        const propName = (typeof prop === 'object'
+          ? prop.name
+          : prop) as string;
+        return propName;
+      }),
+    ]);
+
     if (input.filter && Object.keys(input.filter).length) {
       const where: Record<string, any> = {};
       for (const k in input.filter) {
         if (k !== 'id' && k !== 'userId' && k !== 'mine') {
-          where[k + '.value'] = contains(input.filter[k]);
+          if (!Array.isArray(input.filter[k])) {
+            where[k + '.value'] = contains(input.filter[k]);
+          } else {
+            where[k + '.value'] = equals(input.filter[k]);
+          }
         }
       }
       if (Object.keys(where).length) {

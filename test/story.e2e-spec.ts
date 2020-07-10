@@ -129,6 +129,6 @@ describe('Story e2e', () => {
       }
       ${fragments.story}
     `);
-    expect(storys.items.length).toBeGreaterThan(numStorys);
+    expect(storys.items.length).toBeGreaterThanOrEqual(numStorys);
   });
 });

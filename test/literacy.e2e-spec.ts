@@ -129,6 +129,6 @@ describe('LiteracyMaterial e2e', () => {
       ${fragments.literacyMaterial}
     `);
 
-    expect(literacyMaterials.items.length).toBeGreaterThan(numLitMat);
+    expect(literacyMaterials.items.length).toBeGreaterThanOrEqual(numLitMat);
   });
 });
