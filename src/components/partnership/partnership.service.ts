@@ -234,8 +234,6 @@ export class PartnershipService {
           ],
           ...this.permission('agreementStatus'),
           ...this.permission('mouStatus'),
-          ...this.permission('mouStart'),
-          ...this.permission('mouEnd'),
           ...this.permission('types'),
           ...this.permission('organization'),
           ...this.permission('mouStartOverride'),
@@ -421,6 +419,12 @@ export class PartnershipService {
         },
       ],
       projectMouStart: [{ value: 'projectMouStart' }],
+      projectMouStartPerm: [
+        {
+          read: 'canReadProjectMouStart',
+          edit: 'canEditProjectMouStart',
+        },
+      ],
       projectMouEnd: [{ value: 'projectMouEnd' }],
       partnership: [{ id: 'id', createdAt: 'createdAt' }],
       agreementStatus: [{ value: 'agreementStatus' }],
