@@ -1,4 +1,3 @@
-import { Type } from '@nestjs/common';
 import { Field, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { GraphQLString } from 'graphql';
 import { Resource, SecuredProperty, SecuredString } from '../../../../common';
@@ -25,9 +24,6 @@ export abstract class SecuredDegree extends SecuredProperty<string>(
   implements: [Resource],
 })
 export class Education extends Resource {
-  /* TS wants a public constructor for "ClassType" */
-  static classType = (Education as any) as Type<Education>;
-
   @Field()
   readonly degree: SecuredDegree;
 

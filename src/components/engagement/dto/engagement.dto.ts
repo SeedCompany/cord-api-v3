@@ -1,4 +1,3 @@
-import { Type } from '@nestjs/common';
 import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { MergeExclusive } from 'type-fest';
@@ -97,9 +96,6 @@ export class IEngagement extends Resource {
   implements: [IEngagement, Resource],
 })
 export class LanguageEngagement extends IEngagement {
-  /* TS wants a public constructor for "ClassType" */
-  static classType = (LanguageEngagement as any) as Type<LanguageEngagement>;
-
   @Field()
   readonly language: SecuredLanguage;
 
@@ -124,11 +120,6 @@ export class LanguageEngagement extends IEngagement {
   implements: [IEngagement, Resource],
 })
 export class InternshipEngagement extends IEngagement {
-  /* TS wants a public constructor for "ClassType" */
-  static classType = (InternshipEngagement as any) as Type<
-    InternshipEngagement
-  >;
-
   @Field()
   // To the implementor: We can move this to a separate resolver if we will
   // just be looking up by ID via different query/service call.

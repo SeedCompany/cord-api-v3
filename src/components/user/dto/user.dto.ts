@@ -1,4 +1,3 @@
-import { Type } from '@nestjs/common';
 import { Field, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { Resource, SecuredProperty, SecuredString } from '../../../common';
@@ -13,9 +12,6 @@ export abstract class SecuredUserStatus extends SecuredProperty(UserStatus) {}
   implements: [Resource],
 })
 export class User extends Resource {
-  /* TS wants a public constructor for "ClassType" */
-  static classType = (User as any) as Type<User>;
-
   @Field()
   email: SecuredString;
 

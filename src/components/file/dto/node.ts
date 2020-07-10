@@ -1,4 +1,3 @@
-import { Type } from '@nestjs/common';
 import { Field, Int, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { DateTime } from 'luxon';
@@ -75,9 +74,6 @@ abstract class BaseFile extends FileNode {
   implements: [FileNode, Resource],
 })
 export class FileVersion extends BaseFile {
-  /* TS wants a public constructor for "ClassType" */
-  static classType = (FileVersion as any) as Type<FileVersion>;
-
   readonly type: FileNodeType.FileVersion;
 }
 
@@ -85,9 +81,6 @@ export class FileVersion extends BaseFile {
   implements: [FileNode, Resource],
 })
 export class File extends BaseFile {
-  /* TS wants a public constructor for "ClassType" */
-  static classType = (File as any) as Type<File>;
-
   readonly type: FileNodeType.File;
 
   readonly latestVersionId: string;
@@ -102,9 +95,6 @@ export class File extends BaseFile {
   implements: [FileNode, Resource],
 })
 export class Directory extends FileNode {
-  /* TS wants a public constructor for "ClassType" */
-  static classType = (Directory as any) as Type<Directory>;
-
   readonly type: FileNodeType.Directory;
 }
 

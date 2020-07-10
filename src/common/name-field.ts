@@ -9,5 +9,5 @@ export const NameField = (options?: FieldOptions) =>
     Transform((value) => {
       return value ? value.trim() : value;
     }) as PropertyDecorator,
-    MinLength(2) as PropertyDecorator
+    MinLength(2)
   );

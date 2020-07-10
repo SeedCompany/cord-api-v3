@@ -1,4 +1,3 @@
-import { Type } from '@nestjs/common';
 import { Field, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import {
@@ -40,9 +39,6 @@ export class EthnologueLanguage {
   implements: [Resource],
 })
 export class Language extends Resource {
-  /* TS wants a public constructor for "ClassType" */
-  static classType = (Language as any) as Type<Language>;
-
   @Field({
     description: `The real language name`,
   })

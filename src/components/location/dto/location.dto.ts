@@ -1,4 +1,3 @@
-import { Type } from '@nestjs/common';
 import {
   createUnionType,
   Field,
@@ -18,9 +17,6 @@ export abstract class Place {
   implements: [Resource, Place],
 })
 export class Zone extends Resource implements Place {
-  /* TS wants a public constructor for "ClassType" */
-  static classType = (Zone as any) as Type<Zone>;
-
   @Field()
   readonly name: SecuredString;
 
@@ -37,9 +33,6 @@ export class SecuredZone extends SecuredProperty(Zone) {}
   implements: [Resource, Place],
 })
 export class Region extends Resource implements Place {
-  /* TS wants a public constructor for "ClassType" */
-  static classType = (Region as any) as Type<Region>;
-
   @Field()
   readonly name: SecuredString;
 
@@ -59,9 +52,6 @@ export class SecuredRegion extends SecuredProperty(Region) {}
   implements: [Resource, Place],
 })
 export class Country extends Resource implements Place {
-  /* TS wants a public constructor for "ClassType" */
-  static classType = (Country as any) as Type<Country>;
-
   @Field()
   name: SecuredString;
 

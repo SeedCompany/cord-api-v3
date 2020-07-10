@@ -1,4 +1,3 @@
-import { Type } from '@nestjs/common';
 import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { MergeExclusive } from 'type-fest';
@@ -29,9 +28,6 @@ type AnyProject = MergeExclusive<TranslationProject, InternshipProject>;
   },
 })
 class Project extends Resource {
-  /* TS wants a public constructor for "ClassType" */
-  static classType = (Project as any) as Type<Project>;
-
   @Field(() => ProjectType)
   readonly type: ProjectType;
 
@@ -77,9 +73,6 @@ export { Project as IProject, AnyProject as Project };
   implements: [Project, Resource],
 })
 export class TranslationProject extends Project {
-  /* TS wants a public constructor for "ClassType" */
-  static classType = (TranslationProject as any) as Type<TranslationProject>;
-
   readonly type: ProjectType.Translation;
 }
 
@@ -87,8 +80,5 @@ export class TranslationProject extends Project {
   implements: [Project, Resource],
 })
 export class InternshipProject extends Project {
-  /* TS wants a public constructor for "ClassType" */
-  static classType = (InternshipProject as any) as Type<InternshipProject>;
-
   readonly type: ProjectType.Internship;
 }
