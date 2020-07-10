@@ -1,12 +1,11 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { FileNodeType, FileVersion } from './dto';
-import { FileNodeResolver } from './file-node.resolver';
+import { FileVersion } from './dto';
+import { FileService } from './file.service';
 
 @Resolver(FileVersion.classType)
-export class FileVersionResolver extends FileNodeResolver(
-  FileNodeType.FileVersion,
-  FileVersion.classType
-) {
+export class FileVersionResolver {
+  constructor(protected readonly service: FileService) {}
+
   @ResolveField(() => String, {
     description: 'A direct url to download the file version',
   })
