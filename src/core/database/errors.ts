@@ -7,8 +7,40 @@ declare module 'neo4j-driver/types/v1' {
   }
 }
 
+const defineLogEntry = (obj: object, logEntry: LogEntry) => {
+  Object.defineProperty(obj, 'logProps', {
+    value: logEntry,
+    writable: true,
+    configurable: true,
+    enumerable: false,
+  });
+};
+
+export class SyntaxError extends Neo.Neo4jError {
+  static readonly code = 'Neo.ClientError.Statement.SyntaxError' as const;
+
+  constructor(message: string) {
+    super(message);
+    this.name = this.constructor.name;
+    defineLogEntry(this, {
+      level: LogLevel.ERROR,
+      message: this.message,
+      exception: this,
+    });
+  }
+
+  static fromNeo(e: Neo.Neo4jError) {
+    if (e instanceof SyntaxError) {
+      return e;
+    }
+    const ex = new this(e.message);
+    ex.stack = e.stack;
+    return ex;
+  }
+}
+
 export class ConstraintError extends Neo.Neo4jError {
-  readonly code = 'Neo.ClientError.Schema.ConstraintValidationFailed' as const;
+  static readonly code = 'Neo.ClientError.Schema.ConstraintValidationFailed' as const;
   constructor(message: string) {
     super(message);
     this.name = this.constructor.name;
@@ -33,6 +65,13 @@ export class UniquenessError extends ConstraintError {
     message: string
   ) {
     super(message);
+    defineLogEntry(this, {
+      level: LogLevel.WARNING,
+      message: 'Duplicate property',
+      label: this.label,
+      property: this.property,
+      value: this.value,
+    });
   }
 
   static fromNeo(e: Neo.Neo4jError) {
@@ -50,14 +89,6 @@ export class UniquenessError extends ConstraintError {
     ex.stack = e.stack;
     return ex;
   }
-
-  logProps = {
-    level: LogLevel.WARNING,
-    message: 'Duplicate property',
-    label: this.label,
-    property: this.property,
-    value: this.value,
-  };
 }
 
 export const isNeo4jError = (e: unknown): e is Neo.Neo4jError =>
@@ -67,11 +98,14 @@ export const createBetterError = (e: Error) => {
   if (!isNeo4jError(e)) {
     return e;
   }
-  if (e.code === 'Neo.ClientError.Schema.ConstraintValidationFailed') {
+  if (e.code === ConstraintError.code) {
     if (e.message.includes('already exists with label')) {
       return UniquenessError.fromNeo(e);
     }
     return ConstraintError.fromNeo(e);
+  }
+  if (e.code === SyntaxError.code) {
+    return SyntaxError.fromNeo(e);
   }
   return e;
 };
