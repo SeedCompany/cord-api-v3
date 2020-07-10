@@ -29,7 +29,7 @@ import {
 } from './dto';
 import { LanguageService } from './language.service';
 
-@Resolver(Language.classType)
+@Resolver(Language)
 export class LanguageResolver {
   constructor(private readonly langService: LanguageService) {}
 

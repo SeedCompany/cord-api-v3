@@ -19,10 +19,10 @@ type AnyProject = MergeExclusive<TranslationProject, InternshipProject>;
 @InterfaceType({
   resolveType: (val: Project) => {
     if (val.type === ProjectType.Translation) {
-      return TranslationProject.classType;
+      return TranslationProject;
     }
     if (val.type === ProjectType.Internship) {
-      return InternshipProject.classType;
+      return InternshipProject;
     }
 
     throw new Error('Could not resolve project type');

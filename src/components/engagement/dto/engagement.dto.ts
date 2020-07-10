@@ -38,9 +38,7 @@ export const isInternshipEngagement = (
 
 @InterfaceType('Engagement', {
   resolveType: (val: Engagement) =>
-    isLanguageEngagement(val)
-      ? LanguageEngagement.classType
-      : InternshipEngagement.classType,
+    isLanguageEngagement(val) ? LanguageEngagement : InternshipEngagement,
 })
 /**
  * This should be used for GraphQL but never for TypeScript types.

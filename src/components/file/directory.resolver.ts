@@ -15,7 +15,7 @@ import {
 } from './dto';
 import { FileService } from './file.service';
 
-@Resolver(Directory.classType)
+@Resolver(Directory)
 export class DirectoryResolver {
   constructor(protected readonly service: FileService) {}
 

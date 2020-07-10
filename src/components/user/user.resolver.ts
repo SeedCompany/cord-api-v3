@@ -32,7 +32,7 @@ import {
 } from './unavailability';
 import { UserService } from './user.service';
 
-@Resolver(User.classType)
+@Resolver(User)
 export class UserResolver {
   constructor(
     private readonly userService: UserService,

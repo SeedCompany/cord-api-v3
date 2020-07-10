@@ -8,7 +8,7 @@ import {
 } from './dto';
 import { FavoriteService } from './favorite.service';
 
-@Resolver(Favorite.classType)
+@Resolver(Favorite)
 export class FavoriteResolver {
   constructor(private readonly favs: FavoriteService) {}
 

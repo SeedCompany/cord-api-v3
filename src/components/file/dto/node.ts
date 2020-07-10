@@ -25,9 +25,9 @@ export type AnyFileNode = MergeExclusive<
 @InterfaceType({
   resolveType: (val: AnyFileNode) =>
     simpleSwitch(val.type, {
-      [FileNodeType.Directory]: Directory.classType,
-      [FileNodeType.File]: File.classType,
-      [FileNodeType.FileVersion]: FileVersion.classType,
+      [FileNodeType.Directory]: Directory,
+      [FileNodeType.File]: File,
+      [FileNodeType.FileVersion]: FileVersion,
     }),
 })
 /**

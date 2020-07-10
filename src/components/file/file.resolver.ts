@@ -23,7 +23,7 @@ import {
 } from './dto';
 import { FileService } from './file.service';
 
-@Resolver(File.classType)
+@Resolver(File)
 export class FileResolver {
   constructor(
     protected readonly service: FileService,

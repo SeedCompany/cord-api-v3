@@ -6,28 +6,28 @@ import { Country, Location, Region, Zone } from '../../location/dto';
 import { Organization } from '../../organization/dto';
 import {
   InternshipProject,
-  IProject,
+  IProject as Project,
   TranslationProject,
 } from '../../project/dto';
 import { User } from '../../user/dto';
 
 // Expand this to add to searchable types / results
 const searchable = {
-  Organization: Organization.classType,
-  Country: Country.classType,
-  Region: Region.classType,
-  Zone: Zone.classType,
-  Language: Language.classType,
-  TranslationProject: TranslationProject.classType,
-  InternshipProject: InternshipProject.classType,
-  User: User.classType,
+  Organization,
+  Country,
+  Region,
+  Zone,
+  Language,
+  TranslationProject,
+  InternshipProject,
+  User,
 } as const;
 
 // Expand this to add more search types, but not result types.
 // Only use if not a concrete type.
 const searchableAbstracts = {
-  Project: IProject,
-  Location: Location,
+  Project,
+  Location,
 } as const;
 
 /*******************************************************************************
@@ -35,7 +35,7 @@ const searchableAbstracts = {
  ******************************************************************************/
 
 export type SearchableMap = {
-  [K in keyof typeof searchable]: InstanceType<typeof searchable[K]>;
+  [K in keyof typeof searchable]: typeof searchable[K]['prototype'];
 };
 
 export const SearchResultTypes = Object.keys(searchable);
@@ -53,7 +53,7 @@ export type SearchResult = SearchResultMap[keyof SearchableMap];
 
 export const SearchResult = createUnionType({
   name: 'SearchResult',
-  types: () => Object.values(searchable),
+  types: () => Object.values(searchable) as any, // ignore errors for abstract classes
   resolveType: (value: SearchResult) =>
     simpleSwitch(value.__typename, searchable),
 });

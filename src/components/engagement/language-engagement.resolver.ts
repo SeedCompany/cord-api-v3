@@ -5,7 +5,7 @@ import { ProductListInput, SecuredProductList } from '../product/dto';
 import { LanguageEngagement } from './dto';
 import { EngagementService } from './engagement.service';
 
-@Resolver(LanguageEngagement.classType)
+@Resolver(LanguageEngagement)
 export class LanguageEngagementResolver {
   constructor(
     private readonly engagements: EngagementService,

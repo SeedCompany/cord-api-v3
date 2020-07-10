@@ -2,7 +2,7 @@ import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { FileVersion } from './dto';
 import { FileService } from './file.service';
 
-@Resolver(FileVersion.classType)
+@Resolver(FileVersion)
 export class FileVersionResolver {
   constructor(protected readonly service: FileService) {}
 

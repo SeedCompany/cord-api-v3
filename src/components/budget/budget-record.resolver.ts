@@ -15,7 +15,7 @@ import {
   UpdateBudgetRecordOutput,
 } from './dto';
 
-@Resolver(BudgetRecord.classType)
+@Resolver(BudgetRecord)
 export class BudgetRecordResolver {
   constructor(
     private readonly service: BudgetService,

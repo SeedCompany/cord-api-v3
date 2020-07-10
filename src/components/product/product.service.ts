@@ -41,7 +41,7 @@ export class ProductService {
     try {
       await this.db.createNode({
         session,
-        type: Product.classType,
+        type: Product,
         input: {
           id,
           ...input,
