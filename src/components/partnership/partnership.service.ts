@@ -578,27 +578,28 @@ export class PartnershipService {
         -[:baseNode { active: true }]->(partnership)-[:agreementStatus { active: true }]->(agreementStatus:Property { active: true })
         RETURN total, partnership.id as id, agreementStatus.value as agreementStatus, partnership.createdAt as createdAt
         ORDER BY ${sort} ${order}
-        SKIP $skip LIMIT $count
       `;
 
-      const projectPartners = await this.db
+      let projectPartners = await this.db
         .query()
         .raw(query, {
           token: session.token,
           requestingUserId: session.userId,
           owningOrgId: session.owningOrgId,
           projectId,
-          skip: (page - 1) * count,
-          count,
         })
         .run();
+
+      result.total = projectPartners.length;
+      result.hasMore = count * page < result.total ?? true;
+
+      projectPartners = projectPartners.splice((page - 1) * count, count);
 
       result.items = await Promise.all(
         projectPartners.map(async (partnership) =>
           this.readOne(partnership.id, session)
         )
       );
-      result.total = result.items.length;
     } else {
       result = await this.db.list<Partnership>({
         session,
