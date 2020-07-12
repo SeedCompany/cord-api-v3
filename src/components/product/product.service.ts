@@ -8,7 +8,7 @@ import { difference } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
-import { DatabaseService, ILogger, Logger } from '../../core';
+import { DatabaseService, ILogger, Logger, matchSession } from '../../core';
 import {
   AnyProduct,
   CreateProduct,
@@ -101,7 +101,8 @@ export class ProductService {
       ],
     });
 
-    if (!result || !result.id.value) {
+    if (!result || !result.id) {
+      this.logger.warning(`Could not find product`, { id: id });
       throw new NotFoundException('Could not find product');
     }
 
