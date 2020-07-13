@@ -569,7 +569,18 @@ export class PartnershipService {
           }),
           (project:Project {id: $projectId, active: true, owningOrgId: $owningOrgId})
         -[:partnership]->(partnership:Partnership {active:true})
-        WITH COUNT(partnership) as total, project, partnership
+        WITH COUNT(partnership) as total
+        
+        MATCH
+          (token:Token {active: true, value: $token})
+          <-[:token {active: true}]-
+          (requestingUser:User {
+              active: true,
+              id: $requestingUserId
+          }),
+          (project:Project {id: $projectId, active: true, owningOrgId: $owningOrgId})
+        -[:partnership]->(partnership:Partnership {active:true})
+        WITH total, project, partnership
         OPTIONAL MATCH (requestingUser)<-[:member { active: true }]-(sg:SecurityGroup { active: true })-[:permission { active: true }]
         ->(canEditAgreementStatus:Permission { property: 'agreementStatus', active: true, edit: true })
         -[:baseNode { active: true }]->(partnership)-[:agreementStatus { active: true }]->(agreementStatus:Property { active: true })
@@ -578,22 +589,23 @@ export class PartnershipService {
         -[:baseNode { active: true }]->(partnership)-[:agreementStatus { active: true }]->(agreementStatus:Property { active: true })
         RETURN total, partnership.id as id, agreementStatus.value as agreementStatus, partnership.createdAt as createdAt
         ORDER BY ${sort} ${order}
+        SKIP $skip LIMIT $count
       `;
 
-      let projectPartners = await this.db
+      const projectPartners = await this.db
         .query()
         .raw(query, {
           token: session.token,
           requestingUserId: session.userId,
           owningOrgId: session.owningOrgId,
           projectId,
+          skip: (page - 1) * count,
+          count,
         })
         .run();
 
-      result.total = projectPartners.length;
+      result.total = projectPartners[0]?.total || 0;
       result.hasMore = count * page < result.total ?? true;
-
-      projectPartners = projectPartners.splice((page - 1) * count, count);
 
       result.items = await Promise.all(
         projectPartners.map(async (partnership) =>
