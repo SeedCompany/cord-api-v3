@@ -1,12 +1,10 @@
 import { gql } from 'apollo-server-core';
-import * as faker from 'faker';
 import { times } from 'lodash';
-import { DateTime } from 'luxon';
 import { isValid } from 'shortid';
 import { CalendarDate, fiscalYears, Secured } from '../src/common';
 import { Budget } from '../src/components/budget';
 import { PartnershipType } from '../src/components/partnership';
-import { Project, ProjectType } from '../src/components/project';
+import { Project } from '../src/components/project';
 import {
   createBudget,
   createProject,
@@ -27,16 +25,7 @@ describe('Budget e2e', () => {
     app = await createTestApp();
     await createSession(app);
     await createUser(app);
-    project = await createProject(app, {
-      name:
-        'Super Secret Project ' +
-        faker.hacker.adjective() +
-        faker.hacker.noun() +
-        DateTime.local().toString(),
-      type: ProjectType.Translation,
-      mouStart: DateTime.fromISO('2020-02-01'),
-      mouEnd: DateTime.fromISO('2025-01-01'),
-    });
+    project = await createProject(app);
     await createPartnership(app, {
       projectId: project.id,
       types: [PartnershipType.Funding],
@@ -164,19 +153,23 @@ describe('Budget e2e', () => {
       times(numBudget).map(() => createBudget(app, { projectId: project.id }))
     );
 
-    const { budgets } = await app.graphql.query(gql`
-      query {
-        budgets (input: { filter: { projectId : "${project.id}" }}) {
-          items {
-            ...budget
+    const { budgets } = await app.graphql.query(
+      gql`
+        query budgets($id: ID!) {
+          budgets(input: { filter: { projectId: $id } }) {
+            items {
+              ...budget
+            }
+            hasMore
+            total
           }
-          hasMore
-          total
         }
+        ${fragments.budget}
+      `,
+      {
+        id: project.id,
       }
-      ${fragments.budget}
-    `);
-
+    );
     expect(budgets.items.length).toBeGreaterThanOrEqual(numBudget);
   });
 

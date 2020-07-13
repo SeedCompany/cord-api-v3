@@ -311,7 +311,7 @@ export class BudgetService {
       ...input,
     };
 
-    const result: {
+    let result: {
       items: Budget[];
       hasMore: boolean;
       total: number;
@@ -323,7 +323,8 @@ export class BudgetService {
       userId: session.userId,
     });
 
-    const query = `
+    if (projectId) {
+      const query = `
       MATCH
         (token:Token {active: true, value: $token})
         <-[:token {active: true}]-
@@ -342,25 +343,64 @@ export class BudgetService {
           -[:baseNode { active: true }]->(budget)-[:status { active: true }]->(status:Property { active: true })
           RETURN DISTINCT total, budget.id as budgetId, status.value as status, canReadStatus.read AS canReadStatus, canEditStatus.edit AS canEditStatus
           ORDER BY ${sort} ${order}
-          SKIP $skip LIMIT $count
       `;
-    const projBudgets = await this.db
-      .query()
-      .raw(query, {
-        token: session.token,
-        requestingUserId: session.userId,
-        owningOrgId: session.owningOrgId,
-        projectId,
-        skip: (page - 1) * count,
-        count,
-      })
-      .run();
+      let projBudgets = await this.db
+        .query()
+        .raw(query, {
+          token: session.token,
+          requestingUserId: session.userId,
+          owningOrgId: session.owningOrgId,
+          projectId,
+        })
+        .run();
 
-    result.items = await Promise.all(
-      projBudgets.map(async (budget) => this.readOne(budget.budgetId, session))
-    );
+      result.total = projBudgets.length;
+      result.hasMore = count * page < result.total ?? true;
 
-    result.total = result.items.length;
+      projBudgets = projBudgets.splice((page - 1) * count, count);
+
+      result.items = await Promise.all(
+        projBudgets.map(async (budget) =>
+          this.readOne(budget.budgetId, session)
+        )
+      );
+    } else {
+      result = await this.db.list<Budget>({
+        session,
+        nodevar: 'budget',
+        aclReadProp: 'canReadBudgets',
+        aclEditProp: 'canCreateBudget',
+        props: [{ name: 'status', secure: false }],
+        input: {
+          page,
+          count,
+          sort,
+          order,
+          filter,
+        },
+      });
+
+      const items = await Promise.all(
+        result.items.map(async (item) => {
+          const records = await this.listRecords(
+            {
+              sort: 'fiscalYear',
+              order: Order.ASC,
+              page: 1,
+              count: 75,
+              filter: { budgetId: item.id },
+            },
+            session
+          );
+          return {
+            ...item,
+            records: records.items,
+          };
+        })
+      );
+      result.items = items;
+    }
+
     return {
       items: result.items,
       hasMore: result.hasMore,
