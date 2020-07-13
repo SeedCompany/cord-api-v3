@@ -149,6 +149,25 @@ export class BudgetService {
   ): Promise<Budget> {
     this.logger.info('Creating budget', { projectId });
 
+    const readProject = this.db
+      .query()
+      .match(matchSession(session, { withAclRead: 'canReadProjects' }))
+      .match([node('project', 'Project', { active: true, id: projectId })]);
+    readProject.return({
+      project: [{ id: 'id', createdAt: 'createdAt' }],
+      requestingUser: [
+        {
+          canReadProjects: 'canReadProjects',
+          canCreateProject: 'canCreateProject',
+        },
+      ],
+    });
+
+    const result = await readProject.first();
+    if (!result) {
+      throw new NotFoundException('project does not exist');
+    }
+
     const id = generate();
     const createdAt = DateTime.local();
     const status = BudgetStatus.Pending;
