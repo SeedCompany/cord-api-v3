@@ -1,6 +1,7 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { isValid } from 'shortid';
+import { CalendarDate } from '../../src/common';
 import {
   CreateProject,
   Project,
@@ -17,6 +18,8 @@ export async function createProject(
   const project: CreateProject = {
     name: faker.random.uuid(),
     type: ProjectType.Translation,
+    mouStart: CalendarDate.fromISO('1991-01-01'),
+    mouEnd: CalendarDate.fromISO('1992-01-01'),
     ...input,
   };
 

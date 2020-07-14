@@ -157,6 +157,51 @@ describe('Partnership e2e', () => {
     );
   });
 
+  it('update mou overrides partnership', async () => {
+    const partnership = await createPartnership(app);
+
+    const mouStartOverride = '1981-01-01';
+    const mouEndOverride = '2020-01-01';
+
+    const result = await app.graphql.query(
+      gql`
+        mutation updatePartnership(
+          $id: ID!
+          $startOverride: Date!
+          $endOverride: Date!
+        ) {
+          updatePartnership(
+            input: {
+              partnership: {
+                id: $id
+                mouStartOverride: $startOverride
+                mouEndOverride: $endOverride
+              }
+            }
+          ) {
+            partnership {
+              ...partnership
+            }
+          }
+        }
+        ${fragments.partnership}
+      `,
+      {
+        id: partnership.id,
+        startOverride: mouStartOverride,
+        endOverride: mouEndOverride,
+      }
+    );
+
+    expect(result.updatePartnership.partnership.id).toBe(partnership.id);
+    expect(result.updatePartnership.partnership.mouStart.value).toBe(
+      mouStartOverride
+    );
+    expect(result.updatePartnership.partnership.mouEnd.value).toBe(
+      mouEndOverride
+    );
+  });
+
   it('List view of partnerships', async () => {
     // create 2 partnerships
     const numPartnerships = 2;
@@ -217,7 +262,8 @@ describe('Partnership e2e', () => {
     expect(partnerships.items.length).toBeGreaterThanOrEqual(numPartnerships);
   });
 
-  it('Check consistency across partnership nodes', async () => {
+  // skipping until we refactor consistency checks
+  it.skip('Check consistency across partnership nodes', async () => {
     // create a partnership
     const partnership = await createPartnership(app);
     // test it has proper schema
@@ -248,8 +294,8 @@ describe('Partnership e2e', () => {
       mouStatus: PartnershipAgreementStatus.AwaitingSignature,
       types: [PartnershipType.Managing],
       organizationId: 'fakeOrg',
-      mouStart: CalendarDate.local(),
-      mouEnd: CalendarDate.local(),
+      mouStartOverride: CalendarDate.local(),
+      mouEndOverride: CalendarDate.local(),
     };
 
     await expect(

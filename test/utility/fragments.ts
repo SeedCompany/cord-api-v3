@@ -339,6 +339,16 @@ export const partnership = gql`
       canRead
       canEdit
     }
+    mouStartOverride {
+      value
+      canRead
+      canEdit
+    }
+    mouEndOverride {
+      value
+      canRead
+      canEdit
+    }
     types {
       value
       canRead

@@ -28,10 +28,10 @@ export class CreatePartnership {
   readonly mouStatus?: PartnershipAgreementStatus;
 
   @DateField({ nullable: true })
-  readonly mouStart?: CalendarDate;
+  readonly mouStartOverride?: CalendarDate;
 
   @DateField({ nullable: true })
-  readonly mouEnd?: CalendarDate;
+  readonly mouEndOverride?: CalendarDate;
 
   @Field(() => [PartnershipType], { nullable: true })
   readonly types?: PartnershipType[];

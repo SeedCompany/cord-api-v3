@@ -22,8 +22,8 @@ export async function createPartnership(
     mouStatus: PartnershipAgreementStatus.AwaitingSignature,
     types: [PartnershipType.Managing],
     organizationId: input.organizationId || (await createOrganization(app)).id,
-    mouStart: CalendarDate.local(),
-    mouEnd: CalendarDate.local(),
+    mouStartOverride: CalendarDate.local(),
+    mouEndOverride: CalendarDate.local(),
     ...input,
   };
 

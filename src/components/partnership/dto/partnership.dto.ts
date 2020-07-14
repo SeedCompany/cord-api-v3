@@ -42,6 +42,12 @@ export class Partnership extends Resource {
   @Field()
   readonly mouEnd: SecuredDate;
 
+  @Field()
+  readonly mouStartOverride: SecuredDate;
+
+  @Field()
+  readonly mouEndOverride: SecuredDate;
+
   readonly agreement: DefinedFile;
 
   @Field(() => Organization)
