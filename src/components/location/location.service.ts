@@ -203,19 +203,16 @@ export class LocationService {
       .query()
       .raw(
         `
-          MATCH (location {active: true})-[:name {active:true }]->(name:Property {active: true})
+          MATCH (name: Property:LocationName)<-[:name]-(location)
           WHERE name.value CONTAINS $filter
-          WITH COUNT(name) as total, name, location
-          MATCH (location {active: true})-[:name {active:true }]->(name:Property {active: true})
-          RETURN total, location.id as id, name.value as name
+          RETURN location.id as id, name.value as name
           ORDER BY ${sort} ${order}
           SKIP $skip LIMIT $count
-
         `,
         {
           skip: (page - 1) * count,
           count,
-          filter: filter.name,
+          filter: filter.name ?? '',
         }
       )
       .run();
