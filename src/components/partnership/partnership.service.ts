@@ -426,6 +426,12 @@ export class PartnershipService {
         },
       ],
       projectMouEnd: [{ value: 'projectMouEnd' }],
+      projectMouEndPerm: [
+        {
+          read: 'canReadProjectMouEnd',
+          edit: 'canEditProjectMouEnd',
+        },
+      ],
       partnership: [{ id: 'id', createdAt: 'createdAt' }],
       agreementStatus: [{ value: 'agreementStatus' }],
       canReadAgreementStatus: [
@@ -534,6 +540,18 @@ export class PartnershipService {
       mouEnd = result.mouEndOverride ?? result.projectMouEnd;
     }
 
+    let canReadMouStart = false;
+
+    if (result.canReadProjectMouStart && result.canReadMouStartOverride) {
+      canReadMouStart = true;
+    }
+
+    let canReadMouEnd = false;
+
+    if (result.canReadProjectMouEnd && result.canEditMouEndOverride) {
+      canReadMouEnd = true;
+    }
+
     return {
       id,
       createdAt: result.createdAt,
@@ -559,13 +577,13 @@ export class PartnershipService {
       },
       mouStart: {
         value: mouStart,
-        canRead: !!result.canReadMouStart,
-        canEdit: !!result.canEditMouStart,
+        canRead: canReadMouStart,
+        canEdit: false, // edit the project mou or edit the partnerhsip mou override
       },
       mouEnd: {
         value: mouEnd,
-        canRead: !!result.canReadMouEnd,
-        canEdit: !!result.canEditMouEnd,
+        canRead: canReadMouEnd,
+        canEdit: false, // edit the project mou or edit the partnerhsip mou override
       },
       mouStartOverride: {
         value: result.mouStartOverride,
