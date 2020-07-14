@@ -569,7 +569,18 @@ export class PartnershipService {
           }),
           (project:Project {id: $projectId, active: true, owningOrgId: $owningOrgId})
         -[:partnership]->(partnership:Partnership {active:true})
-        WITH COUNT(partnership) as total, project, partnership
+        WITH COUNT(partnership) as total
+        
+        MATCH
+          (token:Token {active: true, value: $token})
+          <-[:token {active: true}]-
+          (requestingUser:User {
+              active: true,
+              id: $requestingUserId
+          }),
+          (project:Project {id: $projectId, active: true, owningOrgId: $owningOrgId})
+        -[:partnership]->(partnership:Partnership {active:true})
+        WITH total, project, partnership
         OPTIONAL MATCH (requestingUser)<-[:member { active: true }]-(sg:SecurityGroup { active: true })-[:permission { active: true }]
         ->(canEditAgreementStatus:Permission { property: 'agreementStatus', active: true, edit: true })
         -[:baseNode { active: true }]->(partnership)-[:agreementStatus { active: true }]->(agreementStatus:Property { active: true })
@@ -593,12 +604,14 @@ export class PartnershipService {
         })
         .run();
 
+      result.total = projectPartners[0]?.total || 0;
+      result.hasMore = count * page < result.total ?? true;
+
       result.items = await Promise.all(
         projectPartners.map(async (partnership) =>
           this.readOne(partnership.id, session)
         )
       );
-      result.total = result.items.length;
     } else {
       result = await this.db.list<Partnership>({
         session,
@@ -607,6 +620,8 @@ export class PartnershipService {
         aclEditProp: 'canCreatePartnership',
         props: [
           { name: 'agreementStatus', secure: true },
+          { name: 'mou', secure: true },
+          { name: 'agreement', secure: true },
           { name: 'mouStatus', secure: true },
           { name: 'mouStart', secure: true },
           { name: 'mouEnd', secure: true },
@@ -621,6 +636,29 @@ export class PartnershipService {
           filter,
         },
       });
+
+      const items = await Promise.all(
+        result.items.map(async (item) => {
+          const query = `
+              MATCH (partnership:Partnership {id: $id, active: true})
+                -[:organization {active: true}]->(organization)
+              RETURN organization.id as id
+            `;
+          const orgId = await this.db
+            .query()
+            .raw(query, {
+              id: item.id,
+            })
+            .first();
+
+          const org = await this.orgService.readOne(orgId?.id, session);
+          return {
+            ...item,
+            organization: org,
+          };
+        })
+      );
+      result.items = items;
     }
 
     return {
