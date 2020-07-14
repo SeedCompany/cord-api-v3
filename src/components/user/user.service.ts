@@ -692,7 +692,13 @@ export class UserService {
     ];
     const query = this.db
       .query()
-      .match(matchSession(session, { withAclRead: 'canReadUsers' }))
+      .match([
+        node('requestingUser', 'User', {
+          active: true,
+          id: session.userId,
+          canReadUsers: true,
+        }),
+      ])
       .match([node('user', 'User', { active: true, id })]);
 
     for (const prop of props) {
