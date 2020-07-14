@@ -587,7 +587,7 @@ export class PartnershipService {
         OPTIONAL MATCH (requestingUser)<-[:member { active: true }]-(sg:SecurityGroup { active: true })-[:permission { active: true }]
         ->(canReadAgreementStatus:Permission { property: 'agreementStatus', active: true, read: true })
         -[:baseNode { active: true }]->(partnership)-[:agreementStatus { active: true }]->(agreementStatus:Property { active: true })
-        RETURN total, partnership.id as id, agreementStatus.value as agreementStatus, partnership.createdAt as createdAt
+        RETURN DISTINCT total, partnership.id as id, agreementStatus.value as agreementStatus, partnership.createdAt as createdAt
         ORDER BY ${sort} ${order}
         SKIP $skip LIMIT $count
       `;
@@ -667,6 +667,7 @@ export class PartnershipService {
       total: result.total,
     };
   }
+
   async checkPartnershipConsistency(session: ISession): Promise<boolean> {
     const partnerships = await this.db
       .query()
