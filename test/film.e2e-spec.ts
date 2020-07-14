@@ -128,6 +128,6 @@ describe('Film e2e', () => {
       ${fragments.film}
     `);
 
-    expect(films.items.length).toBeGreaterThan(numFilms);
+    expect(films.items.length).toBeGreaterThanOrEqual(numFilms);
   });
 });
