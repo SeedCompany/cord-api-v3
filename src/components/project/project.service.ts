@@ -112,7 +112,7 @@ export class ProjectService {
   }
 
   // helper method for defining properties
-  property = (prop: string, value: any) => {
+  property = (prop: string, value: any | null) => {
     const createdAt = DateTime.local();
     return [
       [
@@ -602,7 +602,6 @@ export class ProjectService {
   ): Promise<Project> {
     const id = generate();
     const createdAt = DateTime.local();
-
     const createInput = {
       id,
       sensitivity: Sensitivity.High, // TODO: this needs to be calculated based on language engagement

@@ -107,6 +107,39 @@ describe('Project e2e', () => {
     );
   });
 
+  it('create project with required fields', async () => {
+    const project: CreateProject = {
+      name: faker.random.uuid(),
+      type: ProjectType.Translation,
+    };
+
+    const result = await app.graphql.mutate(
+      gql`
+        mutation createProject($input: CreateProjectInput!) {
+          createProject(input: $input) {
+            project {
+              ...project
+            }
+          }
+        }
+        ${fragments.project}
+      `,
+      {
+        input: {
+          project,
+        },
+      }
+    );
+
+    const actual: Project = result.createProject.project;
+    expect(actual.id).toBeDefined();
+    expect(actual.deptId.value).toBeNull();
+    expect(actual.location.value).toBeNull();
+    expect(actual.mouStart.value).toBeNull();
+    expect(actual.mouEnd.value).toBeNull();
+    expect(actual.estimatedSubmission.value).toBeNull();
+  });
+
   it('create & read project with budget and location by id', async () => {
     const proj: CreateProject = {
       name: faker.random.uuid(),

@@ -1,7 +1,13 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { DateTime, Interval } from 'luxon';
-import { EngagementStatus, InternPosition } from '../src/components/engagement';
+import {
+  CreateInternshipEngagement,
+  EngagementStatus,
+  InternPosition,
+  InternshipEngagement,
+  LanguageEngagement,
+} from '../src/components/engagement';
 import { Language } from '../src/components/language';
 import { Country, Region, Zone } from '../src/components/location';
 import { ProductMethodology } from '../src/components/product';
@@ -83,6 +89,49 @@ describe('Engagement e2e', () => {
     expect(languageEngagement.status).toBe(EngagementStatus.InDevelopment);
   });
 
+  it('create a language engagement with only required fields', async () => {
+    const languageEngagement = {
+      languageId: language.id,
+      projectId: project.id,
+    };
+    const result = await app.graphql.mutate(
+      gql`
+        mutation createLanguageEngagement(
+          $input: CreateLanguageEngagementInput!
+        ) {
+          createLanguageEngagement(input: $input) {
+            engagement {
+              ...languageEngagement
+            }
+          }
+        }
+        ${fragments.languageEngagement}
+      `,
+      {
+        input: {
+          engagement: languageEngagement,
+        },
+      }
+    );
+
+    const actual: LanguageEngagement =
+      result.createLanguageEngagement.engagement;
+    expect(actual.id).toBeDefined();
+    expect(actual.firstScripture.value).toBeNull();
+    expect(actual.lukePartnership.value).toBeNull();
+    expect(actual.sentPrintingDate.value).toBeNull();
+    expect(actual.completeDate.value).toBeNull();
+    expect(actual.disbursementCompleteDate.value).toBeNull();
+    expect(actual.communicationsCompleteDate.value).toBeNull();
+    expect(actual.startDate.value).toBeNull();
+    expect(actual.endDate.value).toBeNull();
+    expect(actual.initialEndDate.value).toBeNull();
+    expect(actual.lastSuspendedAt.value).toBeNull();
+    expect(actual.lastReactivatedAt.value).toBeNull();
+    expect(actual.statusModifiedAt.value).toBeNull();
+    expect(actual.paraTextRegistryId.value).toBeNull();
+  });
+
   it('creates a internship engagement', async () => {
     const internEngagement = await createInternshipEngagement(app, {
       projectId: internshipProject.id,
@@ -100,6 +149,49 @@ describe('Engagement e2e', () => {
       .toFormat('S');
     expect(parseInt(difference)).toBeGreaterThan(0);
     expect(internEngagement.status).toBe(EngagementStatus.InDevelopment);
+  });
+
+  it('create a internship engagement with only requited fields', async () => {
+    const internshipEngagement: CreateInternshipEngagement = {
+      projectId: internshipProject.id,
+      internId: user.id,
+    };
+
+    const result = await app.graphql.mutate(
+      gql`
+        mutation createInternshipEngagement(
+          $input: CreateInternshipEngagementInput!
+        ) {
+          createInternshipEngagement(input: $input) {
+            engagement {
+              ...internshipEngagement
+            }
+          }
+        }
+        ${fragments.internshipEngagement}
+      `,
+      {
+        input: {
+          engagement: internshipEngagement,
+        },
+      }
+    );
+
+    const actual: InternshipEngagement =
+      result.createInternshipEngagement.engagement;
+    expect(actual.id).toBeDefined();
+    expect(actual.countryOfOrigin.value).toBeNull();
+    expect(actual.mentor.value).toBeNull();
+    expect(actual.position.value).toBeNull();
+    expect(actual.completeDate.value).toBeNull();
+    expect(actual.disbursementCompleteDate.value).toBeNull();
+    expect(actual.communicationsCompleteDate.value).toBeNull();
+    expect(actual.startDate.value).toBeNull();
+    expect(actual.endDate.value).toBeNull();
+    expect(actual.initialEndDate.value).toBeNull();
+    expect(actual.lastSuspendedAt.value).toBeNull();
+    expect(actual.lastReactivatedAt.value).toBeNull();
+    expect(actual.statusModifiedAt.value).toBeNull();
   });
 
   it('reads a an language engagement by id', async () => {
@@ -471,6 +563,7 @@ describe('Engagement e2e', () => {
     expect(result.ceremony.planned.value).toBeTruthy();
     expect(result.ceremony.estimatedDate.value).toBe(date);
   });
+
   it('updates ceremony for internship engagement', async () => {
     const ie = await createInternshipEngagement(app, {
       projectId: internshipProject.id,
