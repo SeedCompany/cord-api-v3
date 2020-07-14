@@ -122,7 +122,7 @@ export class PartnershipService {
       [
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
         node(editPerm, 'Permission', {
           property,
@@ -139,7 +139,7 @@ export class PartnershipService {
       [
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
         node(readPerm, 'Permission', {
           property,
@@ -310,7 +310,7 @@ export class PartnershipService {
     readPartnership.optionalMatch([
       node('requestingUser'),
       relation('in', '', 'member', { active: true }),
-      node('sg', 'SecurityGroup', { active: true }),
+      node('', 'SecurityGroup', { active: true }),
       relation('out', '', 'permission', { active: true }),
       node('canEditOrganization', 'Permission', {
         property: 'organization',
@@ -327,7 +327,7 @@ export class PartnershipService {
     readPartnership.optionalMatch([
       node('requestingUser'),
       relation('in', '', 'member', { active: true }),
-      node('sg', 'SecurityGroup', { active: true }),
+      node('', 'SecurityGroup', { active: true }),
       relation('out', '', 'permission', { active: true }),
       node('canReadOrganization', 'Permission', {
         property: 'organization',

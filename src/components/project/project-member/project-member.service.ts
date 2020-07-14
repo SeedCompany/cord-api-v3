@@ -107,7 +107,7 @@ export class ProjectMemberService {
       [
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
         node(editPerm, 'Permission', {
           property,
@@ -124,7 +124,7 @@ export class ProjectMemberService {
       [
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
         node(readPerm, 'Permission', {
           property,
@@ -147,7 +147,7 @@ export class ProjectMemberService {
     readProjectMember.optionalMatch([
       node('requestingUser'),
       relation('in', '', 'member', { active: true }),
-      node('sg', 'SecurityGroup', { active: true }),
+      node('', 'SecurityGroup', { active: true }),
       relation('out', '', 'permission', { active: true }),
       node('canEditUser', 'Permission', {
         property: 'user',
@@ -162,7 +162,7 @@ export class ProjectMemberService {
     readProjectMember.optionalMatch([
       node('requestingUser'),
       relation('in', '', 'member', { active: true }),
-      node('sg', 'SecurityGroup', { active: true }),
+      node('', 'SecurityGroup', { active: true }),
       relation('out', '', 'permission', { active: true }),
       node('canReadUser', 'Permission', {
         property: 'user',
