@@ -286,7 +286,7 @@ export class LocationService {
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
         node('canEditName', 'Permission', {
           property: 'name',
@@ -301,7 +301,7 @@ export class LocationService {
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
         node('canEditDirector', 'Permission', {
           property: 'director',
@@ -316,7 +316,7 @@ export class LocationService {
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
         node('canReadName', 'Permission', {
           property: 'name',
@@ -331,7 +331,7 @@ export class LocationService {
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
         node('canReadDirector', 'Permission', {
           property: 'director',
@@ -513,7 +513,7 @@ export class LocationService {
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
         node('canEditName', 'Permission', {
           property: 'name',
@@ -528,7 +528,7 @@ export class LocationService {
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
         node('canEditDirector', 'Permission', {
           property: 'director',
@@ -543,7 +543,7 @@ export class LocationService {
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
         node('canEditZone', 'Permission', {
           property: 'zone',
@@ -558,7 +558,7 @@ export class LocationService {
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
         node('canReadName', 'Permission', {
           property: 'name',
@@ -573,7 +573,7 @@ export class LocationService {
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
         node('canReadDirector', 'Permission', {
           property: 'director',
@@ -588,7 +588,7 @@ export class LocationService {
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
         node('canReadZone', 'Permission', {
           property: 'zone',
@@ -811,7 +811,7 @@ export class LocationService {
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
         node('canReadName', 'Permission', {
           property: 'name',
@@ -826,7 +826,7 @@ export class LocationService {
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
         node('canReadRegion', 'Permission', {
           property: 'region',
@@ -841,7 +841,7 @@ export class LocationService {
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
         node('canEditName', 'Permission', {
           property: 'name',
@@ -856,7 +856,7 @@ export class LocationService {
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
         node('canEditRegion', 'Permission', {
           property: 'region',

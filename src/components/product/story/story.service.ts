@@ -249,7 +249,7 @@ export class StoryService {
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
         node('canReadRange', 'Permission', {
           property: 'range',
@@ -264,7 +264,7 @@ export class StoryService {
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
         node('canEditRange', 'Permission', {
           property: 'range',
@@ -277,7 +277,7 @@ export class StoryService {
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
         node('canReadName', 'Permission', {
           property: 'name',
@@ -292,7 +292,7 @@ export class StoryService {
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
         node('canEditName', 'Permission', {
           property: 'name',
