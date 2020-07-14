@@ -533,24 +533,17 @@ export class PartnershipService {
     let mouEnd = null;
 
     // if user has access to project mou and there is no partnership override
-    if (result.projectMouStart && result.mouStartOveride !== null) {
+    if (result.canReadProjectMouStart && result.canReadMouStartOverride) {
       mouStart = result.mouStartOverride ?? result.projectMouStart;
     }
-    if (result.projectMouEnd && result.mouEndOverride !== null) {
+    if (result.canReadProjectMouEnd && result.canReadMouEndOverride) {
       mouEnd = result.mouEndOverride ?? result.projectMouEnd;
     }
 
-    let canReadMouStart = false;
-
-    if (result.canReadProjectMouStart && result.canReadMouStartOverride) {
-      canReadMouStart = true;
-    }
-
-    let canReadMouEnd = false;
-
-    if (result.canReadProjectMouEnd && result.canEditMouEndOverride) {
-      canReadMouEnd = true;
-    }
+    const canReadMouStart =
+      result.canReadProjectMouStart && result.canReadMouStartOverride;
+    const canReadMouEnd =
+      result.canReadProjectMouEnd && result.canEditMouEndOverride;
 
     return {
       id,
