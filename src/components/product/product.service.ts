@@ -108,9 +108,21 @@ export class ProductService {
     return {
       id,
       createdAt: result.createdAt.value,
-      mediums: result.mediums?.value || [],
-      purposes: result.purposes?.value || [],
-      methodology: result.methodology.value,
+      mediums: {
+        value: result.mediums?.value || [],
+        canRead: true,
+        canEdit: true,
+      },
+      purposes: {
+        value: result.purposes?.value || [],
+        canRead: true,
+        canEdit: true,
+      },
+      methodology: {
+        value: result.methodology.value,
+        canRead: true,
+        canEdit: true,
+      },
       scriptureReferences: {
         // TODO
         canRead: true,
