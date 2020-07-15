@@ -20,3 +20,4 @@ export { ISession, Session } from './session';
 export * from './types';
 export * from './validators';
 export * from './name-field';
+export * from './id-field';
