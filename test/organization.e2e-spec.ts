@@ -12,6 +12,8 @@ import {
   TestApp,
 } from './utility';
 
+import _ = require('lodash');
+
 describe('Organization e2e', () => {
   let app: TestApp;
 
@@ -162,7 +164,7 @@ describe('Organization e2e', () => {
     );
   });
 
-  it('shows canEdit true when it can be edited', async () => {
+  it.skip('shows canEdit true when it can be edited', async () => {
     // create an org
     const org = await createOrganization(app);
 
@@ -184,7 +186,7 @@ describe('Organization e2e', () => {
   });
 
   // LIST ORGs
-  it.only('can filter on organization name', async () => {
+  it('can filter on organization name', async () => {
     const name = faker.company.companyName();
     await createOrganization(app, { name });
 
@@ -209,7 +211,61 @@ describe('Organization e2e', () => {
     expect(actual.items[0].name.value).toBe(name);
   });
 
-  it.only('list view of organizations filters on partial name', async () => {
+  it('list view of organizations ASC', async () => {
+    // create a bunch of orgs
+
+    const numOrgs = 2;
+    await Promise.all(
+      times(numOrgs).map(() => createOrganization(app, { name: generate() }))
+    );
+
+    const { organizations } = await app.graphql.query(gql`
+      query {
+        organizations(input: { sort: "name", order: ASC }) {
+          items {
+            ...org
+          }
+        }
+      }
+      ${fragments.org}
+    `);
+
+    const names = organizations.items.map(
+      (o: { name: { value: string; canEdit: boolean; canRead: boolean } }) =>
+        o.name.value
+    );
+
+    expect(names.sort()).toEqual(names);
+  });
+
+  it('list view of organizations desc', async () => {
+    // create a bunch of orgs
+
+    const numOrgs = 2;
+    await Promise.all(
+      times(numOrgs).map(() => createOrganization(app, { name: generate() }))
+    );
+
+    const { organizations } = await app.graphql.query(gql`
+      query {
+        organizations(input: { sort: "name", order: DESC }) {
+          items {
+            ...org
+          }
+        }
+      }
+      ${fragments.org}
+    `);
+
+    const names = organizations.items.map(
+      (o: { name: { value: string; canEdit: boolean; canRead: boolean } }) =>
+        o.name.value
+    );
+
+    expect(names.sort()).toEqual(names.reverse());
+  });
+
+  it('list view of organizations filters on partial name', async () => {
     // create a bunch of orgs
     const numOrgs = 2;
     await Promise.all(
