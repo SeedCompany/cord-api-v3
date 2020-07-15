@@ -25,9 +25,9 @@ describe('User e2e', () => {
   beforeAll(async () => {
     process.env = Object.assign(process.env, {
       // eslint-disable-next-line @typescript-eslint/naming-convention
-      ROOT_ADMIN_EMAIL: 'asdf@asdf.asdf',
+      ROOT_ADMIN_EMAIL: 'devops@tsco.org',
       // eslint-disable-next-line @typescript-eslint/naming-convention
-      ROOT_ADMIN_PASSWORD: 'asdf',
+      ROOT_ADMIN_PASSWORD: 'admin',
     });
     app = await createTestApp();
     await createSession(app);
@@ -215,9 +215,19 @@ describe('User e2e', () => {
       times(numUsers).map(() => createUser(app, { displayFirstName: 'Tammy' }))
     );
 
+    await login(app, {
+      email: process.env.ROOT_ADMIN_EMAIL,
+      password: process.env.ROOT_ADMIN_PASSWORD,
+    });
+
     const { users } = await app.graphql.query(gql`
       query {
-        users(input: { filter: { displayFirstName: "Tammy" } }) {
+        users(
+          input: {
+            sort: "displayFirstName"
+            filter: { displayFirstName: "Tammy" }
+          }
+        ) {
           items {
             ...user
           }

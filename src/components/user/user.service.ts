@@ -3,7 +3,7 @@ import {
   NotFoundException,
   UnauthorizedException as UnauthenticatedException,
 } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
+import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { DuplicateException, ISession, ServerException } from '../../common';
@@ -676,43 +676,6 @@ export class UserService {
     return result.id;
   }
 
-  propMatch = (query: Query, property: string, baseNode: string) => {
-    const readPerm = property + 'ReadPerm';
-    const editPerm = property + 'EditPerm';
-    query.optionalMatch([
-      [
-        node(baseNode),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node(editPerm, 'Permission', {
-          property,
-          active: true,
-          edit: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node(baseNode),
-      ],
-    ]);
-    query.optionalMatch([
-      [
-        node(baseNode),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node(readPerm, 'Permission', {
-          property,
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node(baseNode),
-        relation('out', '', property, { active: true }),
-        node(property, 'Property', { active: true }),
-      ],
-    ]);
-  };
-
   async readOne(id: string, session: ISession): Promise<User> {
     const requestingUserId = session.userId ?? this.config.anonUser.id;
     const props = [
@@ -735,13 +698,8 @@ export class UserService {
           canReadUsers: true,
         }),
       ])
-      .match([node('user', 'User', { active: true, id })]);
-
-    for (const prop of props) {
-      this.propMatch(query, prop, 'user');
-    }
-
-    query
+      .match([node('user', 'User', { active: true, id })])
+      .call(matchProperties, 'user', ...props)
       .with([
         ...props.map(addPropertyCoalesceWithClause),
         'coalesce(user.id) as id',
