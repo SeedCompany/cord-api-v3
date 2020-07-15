@@ -1,7 +1,7 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { NameField, IdField } from '../../../common';
+import { IdField, NameField } from '../../../common';
 import { ScriptureRangeInput } from '../../scripture';
 import { LiteracyMaterial } from './literacy-material.dto';
 
