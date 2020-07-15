@@ -1,11 +1,19 @@
 import { gql } from 'apollo-server-core';
-import { Except, Merge } from 'type-fest';
+import { Except, Merge, MergeExclusive } from 'type-fest';
+import { Secured } from '../../src/common';
+import {
+  IEngagement,
+  InternshipEngagement,
+  LanguageEngagement,
+} from '../../src/components/engagement/dto';
 import {
   File,
   FileListOutput,
   FileVersion,
   IFileNode,
+  SecuredFile,
 } from '../../src/components/file';
+import { SecuredLanguage } from '../../src/components/language/dto';
 import { Product, ProductApproach } from '../../src/components/product/dto';
 import { User } from '../../src/components/user';
 import { Raw } from './raw.type';
@@ -422,26 +430,12 @@ export const projectMember = gql`
   }
 `;
 
-export const languageEngagement = gql`
-  fragment languageEngagement on LanguageEngagement {
+export const engagement = gql`
+  fragment engagement on Engagement {
     id
     createdAt
     modifiedAt
     status
-    language {
-      value {
-        ...language
-      }
-    }
-    firstScripture {
-      value
-    }
-    lukePartnership {
-      value
-    }
-    sentPrintingDate {
-      value
-    }
     # status, // WIP
     ceremony {
       value {
@@ -475,84 +469,97 @@ export const languageEngagement = gql`
     statusModifiedAt {
       value
     }
-    paraTextRegistryId {
-      value
+    ... on LanguageEngagement {
+      language {
+        value {
+          ...language
+        }
+      }
+      firstScripture {
+        value
+      }
+      lukePartnership {
+        value
+      }
+      sentPrintingDate {
+        value
+      }
+      paraTextRegistryId {
+        value
+      }
+      pnp {
+        value {
+          id
+        }
+      }
     }
-    pnp {
-      value {
-        id
+    ... on InternshipEngagement {
+      countryOfOrigin {
+        value {
+          id
+        }
+      }
+      intern {
+        value {
+          id
+        }
+      }
+      mentor {
+        value {
+          id
+        }
+      }
+      position {
+        value
+      }
+      methodologies {
+        value
+      }
+      growthPlan {
+        value {
+          id
+        }
       }
     }
   }
   ${language}
 `;
+type RawBaseEngagement = Except<Raw<IEngagement>, 'ceremony'> & {
+  ceremony: Secured<{ id: string }>;
+};
+export type RawLanguageEngagement = RawBaseEngagement &
+  Merge<
+    Except<LanguageEngagement, keyof IEngagement>,
+    {
+      language: SecuredLanguage;
+      pnp: SecuredFile;
+    }
+  >;
+export type RawInternshipEngagement = RawBaseEngagement &
+  Merge<
+    Except<InternshipEngagement, keyof IEngagement>,
+    {
+      language: SecuredLanguage;
+      pnp: SecuredFile;
+    }
+  >;
+export type RawEngagement = MergeExclusive<
+  RawLanguageEngagement,
+  RawInternshipEngagement
+>;
+
+export const languageEngagement = gql`
+  fragment languageEngagement on LanguageEngagement {
+    ...engagement
+  }
+  ${engagement}
+`;
 
 export const internshipEngagement = gql`
   fragment internshipEngagement on InternshipEngagement {
-    id
-    createdAt
-    modifiedAt
-    status
-    countryOfOrigin {
-      value {
-        id
-      }
-    }
-    intern {
-      value {
-        id
-      }
-    }
-    mentor {
-      value {
-        id
-      }
-    }
-    position {
-      value
-    }
-    methodologies {
-      value
-    }
-    # status, // WIP
-    ceremony {
-      value {
-        id
-      }
-    }
-    completeDate {
-      value
-    }
-    disbursementCompleteDate {
-      value
-    }
-    communicationsCompleteDate {
-      value
-    }
-    startDate {
-      value
-    }
-    endDate {
-      value
-    }
-    initialEndDate {
-      value
-    }
-    lastSuspendedAt {
-      value
-    }
-    lastReactivatedAt {
-      value
-    }
-    statusModifiedAt {
-      value
-    }
-    growthPlan {
-      value {
-        id
-      }
-    }
+    ...engagement
   }
+  ${engagement}
 `;
 
 export const zone = gql`

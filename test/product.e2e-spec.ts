@@ -1,6 +1,5 @@
 import { gql } from 'apollo-server-core';
 import { times } from 'lodash';
-import { LanguageEngagement } from '../src/components/engagement/dto';
 import {
   createLanguageEngagement,
   createSession,
@@ -8,15 +7,14 @@ import {
   createUser,
   expectNotFound,
   fragments,
-  Raw,
   TestApp,
 } from './utility';
 import { createProduct } from './utility/create-product';
-import { RawProduct } from './utility/fragments';
+import { RawLanguageEngagement, RawProduct } from './utility/fragments';
 
 describe('Product e2e', () => {
   let app: TestApp;
-  let engagement: Raw<LanguageEngagement>;
+  let engagement: RawLanguageEngagement;
 
   beforeAll(async () => {
     app = await createTestApp();

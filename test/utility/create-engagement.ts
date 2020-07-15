@@ -6,8 +6,6 @@ import {
   CreateInternshipEngagement,
   CreateLanguageEngagement,
   InternPosition,
-  InternshipEngagement,
-  LanguageEngagement,
 } from '../../src/components/engagement';
 import { ProductMethodology } from '../../src/components/product';
 import { TestApp } from './create-app';
@@ -16,8 +14,11 @@ import { createLanguage } from './create-language';
 import { createPerson } from './create-person';
 import { createProject } from './create-project';
 import { getUserFromSession } from './create-session';
-import { fragments } from './fragments';
-import { Raw } from './raw.type';
+import {
+  fragments,
+  RawInternshipEngagement,
+  RawLanguageEngagement,
+} from './fragments';
 
 export async function createLanguageEngagement(
   app: TestApp,
@@ -56,7 +57,7 @@ export async function createLanguageEngagement(
     }
   );
 
-  const actual: Raw<LanguageEngagement> =
+  const actual: RawLanguageEngagement =
     result.createLanguageEngagement.engagement;
 
   expect(actual).toBeTruthy();
@@ -105,7 +106,7 @@ export async function createInternshipEngagement(
     }
   );
 
-  const actual: InternshipEngagement =
+  const actual: RawInternshipEngagement =
     result.createInternshipEngagement.engagement;
 
   expect(actual).toBeTruthy();
