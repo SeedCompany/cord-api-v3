@@ -481,22 +481,22 @@ export class DatabaseService {
     const update = this.db
       .query()
       .match([matchSession(session)])
-      .with('*')
       .optionalMatch([
         node(nodevar, upperFirst(nodevar), {
-          active: true,
           id: object.id,
+          active: true,
         }),
       ])
-      .with('*')
       .optionalMatch([
         node('requestingUser'),
-        relation('in', '', 'member'),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission'),
+        relation('in', '', 'member', { active: true }),
+        node('', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
         node('', 'Permission', {
           property: key as string,
           active: true,
+          admin: true,
+          read: true,
           edit: true,
         }),
         relation('out', '', 'baseNode', { active: true }),
@@ -519,7 +519,6 @@ export class DatabaseService {
           active: true,
           createdAt,
           value,
-          owningOrgId: session.owningOrgId,
         }),
       ])
       .return('newPropNode');
