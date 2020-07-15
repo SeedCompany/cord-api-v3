@@ -121,7 +121,6 @@ describe('Story e2e', () => {
       }
       ${fragments.story}
     `);
-    console.log('stories ', JSON.stringify(stories, null, 2));
 
     expect(stories.items.length).toBeGreaterThanOrEqual(numStorys);
   });
