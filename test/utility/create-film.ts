@@ -1,6 +1,6 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
-import { CreateFilm, Film } from '../../src/components/product/film';
+import { CreateFilm, Film } from '../../src/components/film';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
 
@@ -26,16 +26,6 @@ export async function createFilm(
         film: {
           ...input,
           name,
-          ranges: [
-            {
-              start: faker.random.number(),
-              end: faker.random.number(),
-            },
-            {
-              start: faker.random.number(),
-              end: faker.random.number(),
-            },
-          ],
         },
       },
     }

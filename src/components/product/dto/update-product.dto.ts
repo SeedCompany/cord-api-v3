@@ -1,32 +1,59 @@
 import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { BibleBook } from './bible-book';
+import { stripIndent } from 'common-tags';
+import { ScriptureRangeInput } from '../../scripture/dto';
 import { ProductMedium } from './product-medium';
 import { ProductMethodology } from './product-methodology';
 import { ProductPurpose } from './product-purpose';
-import { ProductType } from './product-type';
-import { Product } from './product.dto';
+import { AnyProduct, Product } from './product.dto';
 
 @InputType()
 export abstract class UpdateProduct {
   @Field(() => ID)
   readonly id: string;
 
-  @Field(() => ProductType, { nullable: true })
-  readonly type: ProductType;
+  @Field(() => ID, {
+    nullable: true,
+    description: stripIndent`
+      An ID of a \`Producible\` object to change.
 
-  @Field(() => [BibleBook], { nullable: true })
-  readonly books: BibleBook[];
+      Note only \`DerivativeScriptureProduct\`s can use this field.
+    `,
+  })
+  readonly produces?: string;
+
+  @Field(() => [ScriptureRangeInput], {
+    nullable: true,
+    description: stripIndent`
+      Change this list of \`scriptureReferences\` if provided.
+
+      Note only \`DirectScriptureProduct\`s can use this field.
+    `,
+  })
+  readonly scriptureReferences?: ScriptureRangeInput[];
+
+  @Field(() => [ScriptureRangeInput], {
+    nullable: true,
+    description: stripIndent`
+      The \`Producible\` defines a \`scriptureReferences\` list, and this is
+      used by default in this product's \`scriptureReferences\` list.
+      If this product _specifically_ needs to customize the references, then
+      this property can be set (and read) to "override" the \`producible\`'s list.
+
+      Note only \`DerivativeScriptureProduct\`s can use this field.
+    `,
+  })
+  readonly scriptureReferencesOverride?: ScriptureRangeInput[];
 
   @Field(() => [ProductMedium], { nullable: true })
-  readonly mediums: ProductMedium[];
+  readonly mediums?: ProductMedium[];
 
   @Field(() => [ProductPurpose], { nullable: true })
-  readonly purposes: ProductPurpose[];
+  readonly purposes?: ProductPurpose[];
 
   @Field(() => ProductMethodology, { nullable: true })
-  readonly methodology: ProductMethodology;
+  readonly methodology?: ProductMethodology;
 }
 
 @InputType()
@@ -39,6 +66,6 @@ export abstract class UpdateProductInput {
 
 @ObjectType()
 export abstract class UpdateProductOutput {
-  @Field()
-  readonly product: Product;
+  @Field(() => Product)
+  readonly product: AnyProduct;
 }

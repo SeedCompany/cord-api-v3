@@ -6,6 +6,7 @@ import {
   FileVersion,
   IFileNode,
 } from '../../src/components/file';
+import { Product, ProductApproach } from '../../src/components/product/dto';
 import { User } from '../../src/components/user';
 import { Raw } from './raw.type';
 
@@ -256,17 +257,57 @@ export type RawFile = RawFileVersion &
   >;
 export type RawFileNode = RawDirectory | RawFileVersion | RawFile;
 
+export const scriptureReference = gql`
+  fragment scriptureReference on ScriptureReference {
+    book
+    chapter
+    verse
+  }
+`;
+
+export const scriptureRange = gql`
+  fragment scriptureRange on SecuredScriptureRanges {
+    canEdit
+    canRead
+    value {
+      start {
+        ...scriptureReference
+      }
+      end {
+        ...scriptureReference
+      }
+    }
+  }
+  ${scriptureReference}
+`;
+
 export const product = gql`
   fragment product on Product {
     id
-    type
-    books
-    mediums
-    purposes
+    createdAt
+    mediums {
+      canEdit
+      canRead
+      value
+    }
+    purposes {
+      canEdit
+      canRead
+      value
+    }
     approach
-    methodology
+    methodology {
+      canEdit
+      canRead
+      value
+    }
+    scriptureReferences {
+      ...scriptureRange
+    }
   }
+  ${scriptureRange}
 `;
+export type RawProduct = Raw<Product> & { approach?: ProductApproach };
 
 export const project = gql`
   fragment project on Project {
@@ -609,17 +650,12 @@ export const film = gql`
       canRead
       canEdit
     }
-    ranges {
-      value {
-        id
-        start
-        end
-      }
-      canRead
-      canEdit
+    scriptureReferences {
+      ...scriptureRange
     }
     createdAt
   }
+  ${scriptureRange}
 `;
 
 export const literacyMaterial = gql`
@@ -630,17 +666,12 @@ export const literacyMaterial = gql`
       canRead
       canEdit
     }
-    ranges {
-      value {
-        id
-        start
-        end
-      }
-      canRead
-      canEdit
+    scriptureReferences {
+      ...scriptureRange
     }
     createdAt
   }
+  ${scriptureRange}
 `;
 
 export const story = gql`
@@ -651,17 +682,12 @@ export const story = gql`
       canRead
       canEdit
     }
-    ranges {
-      value {
-        id
-        start
-        end
-      }
-      canRead
-      canEdit
+    scriptureReferences {
+      ...scriptureRange
     }
     createdAt
   }
+  ${scriptureRange}
 `;
 
 export const workflow = gql`

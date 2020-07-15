@@ -23,14 +23,18 @@ export const isSecured = <T>(value: T | Secured<T>): value is Secured<T> =>
 export const unwrapSecured = <T>(value: T | Secured<T>): T | undefined =>
   isSecured(value) ? value.value : value;
 
-export function SecuredProperty<T>(
-  valueClass: Class<T> | AbstractClassType<T> | GraphQLScalarType | object
+export function SecuredProperty<GqlType, TsType = GqlType>(
+  valueClass:
+    | Class<GqlType>
+    | AbstractClassType<GqlType>
+    | GraphQLScalarType
+    | object
 ) {
   @ObjectType({ isAbstract: true, implements: [Readable, Editable] })
   abstract class SecuredPropertyClass
-    implements Readable, Editable, Secured<T> {
+    implements Readable, Editable, Secured<TsType> {
     @Field(() => valueClass, { nullable: true })
-    readonly value?: T;
+    readonly value?: TsType;
     @Field()
     readonly canRead: boolean;
     @Field()

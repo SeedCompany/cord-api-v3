@@ -1,6 +1,6 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
-import { CreateStory, Story } from '../../src/components/product/story';
+import { CreateStory, Story } from '../../src/components/story';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
 
@@ -26,16 +26,6 @@ export async function createStory(
         story: {
           ...input,
           name,
-          ranges: [
-            {
-              start: faker.random.number(),
-              end: faker.random.number(),
-            },
-            {
-              start: faker.random.number(),
-              end: faker.random.number(),
-            },
-          ],
         },
       },
     }

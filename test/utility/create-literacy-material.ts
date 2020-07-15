@@ -3,7 +3,7 @@ import * as faker from 'faker';
 import {
   CreateLiteracyMaterial,
   LiteracyMaterial,
-} from '../../src/components/product/literacy-material';
+} from '../../src/components/literacy-material';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
 
@@ -29,16 +29,6 @@ export async function createLiteracyMaterial(
         literacyMaterial: {
           ...input,
           name,
-          ranges: [
-            {
-              start: faker.random.number(),
-              end: faker.random.number(),
-            },
-            {
-              start: faker.random.number(),
-              end: faker.random.number(),
-            },
-          ],
         },
       },
     }

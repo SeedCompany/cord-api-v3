@@ -17,6 +17,7 @@ import { createPerson } from './create-person';
 import { createProject } from './create-project';
 import { getUserFromSession } from './create-session';
 import { fragments } from './fragments';
+import { Raw } from './raw.type';
 
 export async function createLanguageEngagement(
   app: TestApp,
@@ -55,7 +56,8 @@ export async function createLanguageEngagement(
     }
   );
 
-  const actual: LanguageEngagement = result.createLanguageEngagement.engagement;
+  const actual: Raw<LanguageEngagement> =
+    result.createLanguageEngagement.engagement;
 
   expect(actual).toBeTruthy();
   expect(isValid(actual.id)).toBe(true);

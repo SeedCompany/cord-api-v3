@@ -8,17 +8,10 @@ import {
 } from '../../../common';
 import { ProductApproach } from './product-approach';
 import { ProductMethodology } from './product-methodology';
-import { ProductType } from './product-type';
-import { Product } from './product.dto';
+import { AnyProduct, Product } from './product.dto';
 
 @InputType()
 export abstract class ProductFilters {
-  @Field(() => ProductType, {
-    description: 'Only products matching this type',
-    nullable: true,
-  })
-  readonly type?: ProductType;
-
   @Field(() => ProductApproach, {
     description: 'Only products matching this approach',
     nullable: true,
@@ -49,9 +42,14 @@ export class ProductListInput extends SortablePaginationInput<keyof Product>({
 }
 
 @ObjectType()
-export class ProductListOutput extends PaginatedList(Product) {}
+export class ProductListOutput extends PaginatedList<Product, AnyProduct>(
+  Product
+) {}
 
 @ObjectType({
   description: SecuredList.descriptionFor('products'),
 })
-export abstract class SecuredProductList extends SecuredList(Product) {}
+export abstract class SecuredProductList extends SecuredList<
+  Product,
+  AnyProduct
+>(Product) {}

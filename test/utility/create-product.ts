@@ -2,23 +2,15 @@ import { gql } from 'apollo-server-core';
 import { isValid } from 'shortid';
 import {
   CreateProduct,
-  Product,
   ProductMedium,
   ProductMethodology,
   ProductPurpose,
-  ProductType,
 } from '../../src/components/product';
-import { BibleBook } from '../../src/components/product/dto/bible-book';
 import { TestApp } from './create-app';
-import { fragments } from './fragments';
+import { fragments, RawProduct } from './fragments';
 
-export async function createProduct(
-  app: TestApp,
-  input: Partial<CreateProduct> = {}
-) {
+export async function createProduct(app: TestApp, input: CreateProduct) {
   const product: CreateProduct = {
-    type: ProductType.BibleStories,
-    books: [BibleBook.Genesis],
     mediums: [ProductMedium.Print],
     purposes: [ProductPurpose.ChurchLife],
     methodology: ProductMethodology.Paratext,
@@ -43,11 +35,10 @@ export async function createProduct(
     }
   );
 
-  const actual: Product = result.createProduct.product;
+  const actual: RawProduct = result.createProduct.product;
   expect(actual).toBeTruthy();
 
   expect(isValid(actual.id)).toBe(true);
-  expect(actual.type).toBe(product.type);
 
   return actual;
 }
