@@ -686,4 +686,89 @@ describe('Project e2e', () => {
     );
     expect(queryProject.project.budget.value.status).toBe('Current');
   });
+
+  // #727 create without mouStart, mouEnd, estimatedSubmission
+  it('can create without mouStart, mouEnd and estimatedSubmission', async () => {
+    const project: CreateProject = {
+      name: faker.random.uuid(),
+      type: ProjectType.Translation,
+    };
+
+    const { createProject } = await app.graphql.mutate(
+      gql`
+        mutation createProject($input: CreateProjectInput!) {
+          createProject(input: $input) {
+            project {
+              ...project
+            }
+          }
+        }
+        ${fragments.project}
+      `,
+      {
+        input: {
+          project,
+        },
+      }
+    );
+    expect(createProject.project.id).toBeDefined();
+  });
+
+  it('can create without mouStart, if mouEnd is defined', async () => {
+    const project: CreateProject = {
+      name: faker.random.uuid(),
+      type: ProjectType.Translation,
+      mouEnd: CalendarDate.fromISO('1992-11-01'),
+      estimatedSubmission: CalendarDate.fromISO('1993-11-01'),
+    };
+
+    const { createProject } = await app.graphql.mutate(
+      gql`
+        mutation createProject($input: CreateProjectInput!) {
+          createProject(input: $input) {
+            project {
+              ...project
+            }
+          }
+        }
+        ${fragments.project}
+      `,
+      {
+        input: {
+          project,
+        },
+      }
+    );
+
+    expect(createProject.project.id).toBeDefined();
+  });
+
+  it('can create without mouStart, if mouEnd is defined', async () => {
+    const project: CreateProject = {
+      name: faker.random.uuid(),
+      type: ProjectType.Translation,
+      locationId: '',
+      mouEnd: CalendarDate.fromISO('1992-11-01'),
+      estimatedSubmission: CalendarDate.fromISO('1993-11-01'),
+    };
+
+    const { createProject } = await app.graphql.mutate(
+      gql`
+        mutation createProject($input: CreateProjectInput!) {
+          createProject(input: $input) {
+            project {
+              ...project
+            }
+          }
+        }
+        ${fragments.project}
+      `,
+      {
+        input: {
+          project,
+        },
+      }
+    );
+    expect(createProject.project.id).toBeDefined();
+  });
 });
