@@ -2,7 +2,7 @@ import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
 import { generate, isValid } from 'shortid';
-import { LiteracyMaterial } from '../src/components/product/literacy-material';
+import { LiteracyMaterial } from '../src/components/literacy-material';
 import {
   createLiteracyMaterial,
   createSession,
@@ -72,20 +72,12 @@ describe('LiteracyMaterial e2e', () => {
           literacyMaterial: {
             id: lm.id,
             name: newName,
-            ranges: [
-              {
-                id: lm.ranges.value[0].id,
-                start: faker.random.number(),
-                end: faker.random.number(),
-              },
-            ],
           },
         },
       }
     );
     const updated = result.updateLiteracyMaterial.literacyMaterial;
     expect(updated).toBeTruthy();
-    expect(updated.ranges.value[0].id).toBe(lm.ranges.value[0].id);
     expect(updated.name.value).toBe(newName);
   });
 

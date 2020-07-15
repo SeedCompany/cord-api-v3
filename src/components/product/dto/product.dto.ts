@@ -1,31 +1,65 @@
-import { Field, ObjectType } from '@nestjs/graphql';
+import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
+import { stripIndent } from 'common-tags';
+import { MergeExclusive } from 'type-fest';
 import { Resource } from '../../../common';
-import { BibleBook } from './bible-book';
-import { ProductApproach } from './product-approach';
-import { ProductMedium } from './product-medium';
-import { ProductMethodology } from './product-methodology';
-import { ProductPurpose } from './product-purpose';
-import { ProductType } from './product-type';
+import { SecuredScriptureRanges } from '../../scripture';
+import { Producible, SecuredProducible } from './producible.dto';
+import { SecuredProductMediums } from './product-medium';
+import { SecuredMethodology } from './product-methodology';
+import { SecuredProductPurposes } from './product-purpose';
+
+@InterfaceType({
+  resolveType: (product: AnyProduct) =>
+    product.produces ? DerivativeScriptureProduct : DirectScriptureProduct,
+})
+export class Product extends Producible {
+  @Field()
+  readonly mediums: SecuredProductMediums;
+
+  @Field()
+  readonly purposes: SecuredProductPurposes;
+
+  @Field()
+  readonly methodology: SecuredMethodology;
+}
 
 @ObjectType({
-  implements: [Resource],
+  implements: [Product, Producible, Resource],
+  description: stripIndent`
+    A product producing direct scripture only.
+  `,
 })
-export class Product extends Resource {
-  @Field(() => ProductType)
-  readonly type: ProductType;
+export class DirectScriptureProduct extends Product {}
 
-  @Field(() => [BibleBook])
-  readonly books: BibleBook[];
+@ObjectType({
+  implements: [Product, Producible, Resource],
+  description: stripIndent`
+    A product producing derivative of scripture.
+    Only meaning that this has a relationship to a \`Producible\` object.
+  `,
+})
+export class DerivativeScriptureProduct extends Product {
+  @Field({
+    description: stripIndent`
+      The object that this product is producing.
+      i.e. A film named "Jesus Film".
+    `,
+  })
+  readonly produces: SecuredProducible;
 
-  @Field(() => [ProductMedium])
-  readonly mediums: ProductMedium[];
-
-  @Field(() => [ProductPurpose])
-  readonly purposes: ProductPurpose[];
-
-  @Field(() => ProductApproach)
-  readonly approach: ProductApproach;
-
-  @Field(() => ProductMethodology)
-  readonly methodology: ProductMethodology;
+  @Field({
+    nullable: true,
+    description: stripIndent`
+      The \`Producible\` defines a \`scriptureReferences\` list, and this is
+      used by default in this product's \`scriptureReferences\` list.
+      If this product _specifically_ needs to customize the references, then
+      this property can be set (and read) to "override" the \`producible\`'s list.
+    `,
+  })
+  readonly scriptureReferencesOverride?: SecuredScriptureRanges;
 }
+
+export type AnyProduct = MergeExclusive<
+  DirectScriptureProduct,
+  DerivativeScriptureProduct
+>;

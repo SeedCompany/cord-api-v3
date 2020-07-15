@@ -2,7 +2,7 @@ import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
 import { generate, isValid } from 'shortid';
-import { Story } from '../src/components/product/story/dto';
+import { Story } from '../src/components/story/dto';
 import {
   createSession,
   createStory,
@@ -73,20 +73,12 @@ describe('Story e2e', () => {
           story: {
             id: st.id,
             name: newName,
-            ranges: [
-              {
-                id: st.ranges.value[0].id,
-                start: faker.random.number(),
-                end: faker.random.number(),
-              },
-            ],
           },
         },
       }
     );
     const updated = result.updateStory.story;
     expect(updated).toBeTruthy();
-    expect(updated.ranges.value[0].id).toBe(st.ranges.value[0].id);
     expect(updated.name.value).toBe(newName);
   });
 
@@ -119,7 +111,7 @@ describe('Story e2e', () => {
 
     const { storys } = await app.graphql.query(gql`
       query {
-        storys(input: { count: 15, filter: { name: "Inc" } }) {
+        stories(input: { count: 15, filter: { name: "Inc" } }) {
           items {
             ...story
           }

@@ -1,30 +1,37 @@
 import { gql } from 'apollo-server-core';
 import { times } from 'lodash';
-import { Product, ProductType } from '../src/components/product';
+import { LanguageEngagement } from '../src/components/engagement/dto';
 import {
+  createLanguageEngagement,
   createSession,
   createTestApp,
   createUser,
   expectNotFound,
   fragments,
+  Raw,
   TestApp,
 } from './utility';
 import { createProduct } from './utility/create-product';
+import { RawProduct } from './utility/fragments';
 
 describe('Product e2e', () => {
   let app: TestApp;
+  let engagement: Raw<LanguageEngagement>;
 
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
     await createUser(app);
+    engagement = await createLanguageEngagement(app);
   });
   afterAll(async () => {
     await app.close();
   });
 
   it('create & read product by id', async () => {
-    const product = await createProduct(app);
+    const product = await createProduct(app, {
+      engagementId: engagement.id,
+    });
 
     const result = await app.graphql.query(
       gql`
@@ -39,24 +46,23 @@ describe('Product e2e', () => {
         id: product.id,
       }
     );
-    const actual: Product = result.product;
+    const actual: RawProduct = result.product;
     expect(actual.id).toBe(product.id);
-    expect(actual.type).toBe(product.type);
-    expect(actual.books).toEqual(expect.arrayContaining(product.books));
-    expect(actual.mediums).toEqual(expect.arrayContaining(product.mediums));
-    expect(actual.purposes).toEqual(expect.arrayContaining(product.purposes));
+    expect(actual.mediums.value).toEqual(product.mediums.value);
+    expect(actual.purposes.value).toEqual(product.purposes.value);
     expect(actual.approach).toBe(product.approach);
-    expect(actual.methodology).toBe(product.methodology);
+    expect(actual.methodology.value).toBe(product.methodology.value);
   });
 
   it('update product', async () => {
-    const product = await createProduct(app);
-    const typenew = 'Songs';
+    const product = await createProduct(app, {
+      engagementId: engagement.id,
+    });
 
     const result = await app.graphql.query(
       gql`
-        mutation updateProduct($id: ID!, $type: ProductType!) {
-          updateProduct(input: { product: { id: $id, type: $type } }) {
+        mutation updateProduct($id: ID!) {
+          updateProduct(input: { product: { id: $id } }) {
             product {
               ...product
             }
@@ -66,16 +72,16 @@ describe('Product e2e', () => {
       `,
       {
         id: product.id,
-        type: typenew,
       }
     );
 
     expect(result.updateProduct.product.id).toBe(product.id);
-    expect(result.updateProduct.product.type).toBe(typenew);
   });
 
   it('delete product', async () => {
-    const product = await createProduct(app);
+    const product = await createProduct(app, {
+      engagementId: engagement.id,
+    });
     expect(product.id).toBeTruthy();
     const result = await app.graphql.mutate(
       gql`
@@ -110,31 +116,27 @@ describe('Product e2e', () => {
   it('List view of products', async () => {
     // create 2 products
     const numPartnerships = 2;
-    const type = ProductType.Songs;
     await Promise.all(
       times(numPartnerships).map(() =>
         createProduct(app, {
-          type,
+          engagementId: engagement.id,
         })
       )
     );
 
     const { products } = await app.graphql.query(
       gql`
-        query products($type: ProductType!) {
-          products(input: { filter: { type: $type } }) {
+        query products {
+          products {
             items {
               id
-              type
             }
             hasMore
             total
           }
         }
       `,
-      {
-        type,
-      }
+      {}
     );
 
     expect(products.items.length).toBeGreaterThanOrEqual(numPartnerships);

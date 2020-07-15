@@ -117,7 +117,9 @@ describe('Authorization e2e', () => {
     });
 
     const sg = await createSecurityGroup(app);
-    const project = await createProduct(app);
+    const project = await createProduct(app, {
+      engagementId: '',
+    });
     const permId = await createPermission(app, {
       sgId: sg.id!,
       baseNodeId: project.id,

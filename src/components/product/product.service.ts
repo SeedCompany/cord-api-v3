@@ -3,10 +3,14 @@ import {
   NotFoundException,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
+import { Node, node, relation } from 'cypher-query-builder';
+import { difference } from 'lodash';
+import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
 import { DatabaseService, ILogger, Logger } from '../../core';
 import {
+  AnyProduct,
   CreateProduct,
   MethodologyToApproach,
   Product,
@@ -22,7 +26,7 @@ export class ProductService {
     @Logger('product:service') private readonly logger: ILogger
   ) {}
 
-  async create(input: CreateProduct, session: ISession): Promise<Product> {
+  async create(input: CreateProduct, session: ISession): Promise<AnyProduct> {
     const id = generate();
     const acls = {
       canReadType: true,
@@ -51,6 +55,24 @@ export class ProductService {
         },
         acls,
       });
+
+      if (input.produces) {
+        await this.db
+          .query()
+          .match([
+            [node('product', 'Product', { id, active: true })],
+            [node('pr', 'Producible', { id: input.produces, active: true })],
+          ])
+          .create([
+            node('product'),
+            relation('out', '', 'produces', {
+              active: true,
+              createdAt: DateTime.local(),
+            }),
+            node('pr'),
+          ])
+          .run();
+      }
     } catch (e) {
       this.logger.warning('Failed to create product', {
         exception: e,
@@ -62,7 +84,7 @@ export class ProductService {
     return this.readOne(id, session);
   }
 
-  async readOne(id: string, session: ISession): Promise<Product> {
+  async readOne(id: string, session: ISession): Promise<AnyProduct> {
     const result = await this.db.readProperties({
       session,
       id,
@@ -86,12 +108,15 @@ export class ProductService {
     return {
       id,
       createdAt: result.createdAt.value,
-      type: result.type.value,
-      books: result.books?.value || [],
       mediums: result.mediums?.value || [],
       purposes: result.purposes?.value || [],
-      approach: result.approach.value,
       methodology: result.methodology.value,
+      scriptureReferences: {
+        // TODO
+        canRead: true,
+        canEdit: true,
+        value: [],
+      },
     };
   }
 
@@ -105,12 +130,9 @@ export class ProductService {
       aclReadProp: 'canReadProducts',
       aclEditProp: 'canCreateProduct',
       props: [
-        { name: 'type', secure: false },
-        { name: 'books', secure: false, list: true },
-        { name: 'mediums', secure: false, list: true },
-        { name: 'purposes', secure: false, list: true },
-        { name: 'approach', secure: false },
-        { name: 'methodology', secure: false },
+        { name: 'mediums', secure: true, list: true },
+        { name: 'purposes', secure: true, list: true },
+        { name: 'methodology', secure: true },
       ],
       input: {
         page,
@@ -121,33 +143,69 @@ export class ProductService {
       },
     });
 
+    let items = result.items.map((item) => ({
+      ...item,
+      scriptureReferences: {
+        // TODO
+        canRead: true,
+        canEdit: true,
+        value: [],
+      },
+    }));
+
+    // TODO this is bad, we should at least fetch the the producible IDs in the
+    // list query above. Then we may have to call each service to fully hydrate
+    // the object (film, story, song, etc.).
+    // This logic also needs to be applied to readOne()
+    items = await Promise.all(
+      items.map(async (item) => {
+        const produces = await this.db
+          .query()
+          .match([
+            node('product', 'Product', { id: item.id, active: true }),
+            relation('out', 'produces', { active: true }),
+            node('p', 'Producible', { active: true }),
+          ])
+          .return('p')
+          .asResult<{ p: Node<{ id: string; createdAt: DateTime }> }>()
+          .first();
+        if (!produces) {
+          return item;
+        }
+        return {
+          ...item,
+          produces: {
+            value: {
+              id: produces.p.properties.id,
+              createdAt: produces.p.properties.createdAt,
+              __typename: difference(produces.p.labels, [
+                'Producible',
+                'BaseNode',
+              ])[0],
+            },
+          },
+        };
+      })
+    );
+
     return {
-      items: result.items,
+      items,
       hasMore: result.hasMore,
       total: result.total,
     };
   }
 
-  async update(input: UpdateProduct, session: ISession): Promise<Product> {
+  async update(input: UpdateProduct, session: ISession): Promise<AnyProduct> {
+    // TODO scriptureReferences, produces
+    const { produces, scriptureReferences, ...rest } = input;
+
     const object = await this.readOne(input.id, session);
 
     return this.db.updateProperties({
       session,
       object,
-      props: [
-        'type',
-        'books',
-        'mediums',
-        'purposes',
-        'approach',
-        'methodology',
-      ],
-      changes: {
-        ...input,
-        ...(input.methodology
-          ? { approach: MethodologyToApproach[input.methodology] }
-          : {}),
-      },
+      props: ['mediums', 'purposes', 'methodology'],
+      changes: rest,
       nodevar: 'product',
     });
   }

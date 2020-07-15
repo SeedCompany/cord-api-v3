@@ -1,17 +1,29 @@
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import {
+  Args,
+  Mutation,
+  Parent,
+  Query,
+  ResolveField,
+  Resolver,
+} from '@nestjs/graphql';
 import { IdArg, ISession, Session } from '../../common';
 import {
+  AnyProduct,
   CreateProductInput,
   CreateProductOutput,
+  MethodologyToApproach,
+  ProducibleType,
   Product,
+  ProductApproach,
   ProductListInput,
   ProductListOutput,
+  ProductType,
   UpdateProductInput,
   UpdateProductOutput,
 } from './dto';
 import { ProductService } from './product.service';
 
-@Resolver('Product')
+@Resolver(Product)
 export class ProductResolver {
   constructor(private readonly productService: ProductService) {}
 
@@ -21,7 +33,7 @@ export class ProductResolver {
   async product(
     @Session() session: ISession,
     @IdArg() id: string
-  ): Promise<Product> {
+  ): Promise<AnyProduct> {
     return this.productService.readOne(id, session);
   }
 
@@ -38,6 +50,34 @@ export class ProductResolver {
     input: ProductListInput
   ): Promise<ProductListOutput> {
     return this.productService.list(input, session);
+  }
+
+  @ResolveField(() => ProductApproach, { nullable: true })
+  approach(@Parent() product: AnyProduct): ProductApproach | null {
+    return product.methodology.value
+      ? MethodologyToApproach[product.methodology.value]
+      : null;
+  }
+
+  @ResolveField(() => ProductType, {
+    description:
+      'Provide what would be the "type" of product in the old schema.',
+  })
+  legacyType(@Parent() product: AnyProduct): ProductType {
+    if (product.produces) {
+      const type = product.produces.value?.__typename;
+      if (type === ProducibleType.Film) {
+        return ProductType.JesusFilm; // TODO not entirely true
+      } else if (type === ProducibleType.Song) {
+        return ProductType.Songs;
+      } else if (type === ProducibleType.Story) {
+        return ProductType.BibleStories;
+      } else if (type === ProducibleType.LiteracyMaterial) {
+        return ProductType.LiteracyMaterials;
+      }
+    }
+    // TODO determine from product.scriptureReferences
+    return ProductType.IndividualBooks;
   }
 
   @Mutation(() => CreateProductOutput, {

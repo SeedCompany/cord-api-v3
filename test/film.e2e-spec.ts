@@ -2,7 +2,7 @@ import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
 import { generate, isValid } from 'shortid';
-import { Film } from '../src/components/product/film/dto';
+import { Film } from '../src/components/film/dto';
 import {
   createFilm,
   createSession,
@@ -73,20 +73,12 @@ describe('Film e2e', () => {
           film: {
             id: fm.id,
             name: newName,
-            ranges: [
-              {
-                id: fm.ranges.value[0].id,
-                start: faker.random.number(),
-                end: faker.random.number(),
-              },
-            ],
           },
         },
       }
     );
     const updated = result.updateFilm.film;
     expect(updated).toBeTruthy();
-    expect(updated.ranges.value[0].id).toBe(fm.ranges.value[0].id);
     expect(updated.name.value).toBe(newName);
   });
 
