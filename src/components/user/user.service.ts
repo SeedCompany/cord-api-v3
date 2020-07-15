@@ -8,13 +8,19 @@ import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { DuplicateException, ISession, ServerException } from '../../common';
 import {
+  addBaseNodeMetaPropsWithClause,
   addPropertyCoalesceWithClause,
   ConfigService,
   DatabaseService,
+  filterQuery,
   ILogger,
+  listWithSecureObject,
   Logger,
+  matchProperties,
+  matchRequestingUser,
   matchSession,
   OnIndex,
+  runListQuery,
   UniquenessError,
 } from '../../core';
 import {
@@ -85,39 +91,72 @@ export class UserService {
   }
 
   async list(
-    { page, count, sort, order, filter }: UserListInput,
+    { filter, ...input }: UserListInput,
     session: ISession
   ): Promise<UserListOutput> {
-    const result = await this.db.list<User>({
-      session,
-      nodevar: 'user',
-      aclReadProp: 'canReadUsers',
-      aclEditProp: 'canCreateUser',
-      props: [
-        'email',
-        'realFirstName',
-        'realLastName',
-        'displayFirstName',
-        'displayLastName',
-        'phone',
-        'timezone',
-        'bio',
-        'status',
-      ],
-      input: {
-        page,
-        count,
-        sort,
-        order,
-        filter,
-      },
-    });
+    const label = 'User';
+    const baseNodeMetaProps = ['id', 'createdAt'];
+    const secureProps = [
+      'email',
+      'realFirstName',
+      'realLastName',
+      'displayFirstName',
+      'displayLastName',
+      'phone',
+      'timezone',
+      'bio',
+      'status',
+    ];
 
-    return {
-      items: result.items,
-      hasMore: result.hasMore,
-      total: result.total,
-    };
+    const listQuery = this.db
+      .query()
+      // match on requesting user
+      .call(matchRequestingUser, session);
+
+    if (filter.displayFirstName) {
+      // match on filter terms using parent base node
+      listQuery.call(
+        filterQuery,
+        label,
+        input.sort,
+        '',
+        'User',
+        'organization',
+        'displayFirstName',
+        filter.displayFirstName
+      );
+    } else if (filter.displayLastName) {
+      // match on filter terms using parent base node
+      listQuery.call(
+        filterQuery,
+        label,
+        input.sort,
+        '',
+        'User',
+        'organization',
+        'displayLastName',
+        filter.displayLastName
+      );
+    } else {
+      // match on filter terms
+      listQuery.call(filterQuery, label, input.sort);
+    }
+
+    // match on the rest of the properties of the object requested
+    listQuery
+      .call(matchProperties, 'node', ...secureProps /* , ...unsecureProps */)
+
+      // form return object
+      // ${listWithUnsecureObject(unsecureProps)}, // removed from a few lines down
+      .with(
+        `
+          {
+            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
+            ${listWithSecureObject(secureProps)}
+          } as node
+        `
+      );
+    return runListQuery(listQuery, input);
   }
 
   async listEducations(
@@ -675,6 +714,7 @@ export class UserService {
   };
 
   async readOne(id: string, session: ISession): Promise<User> {
+    const requestingUserId = session.userId ?? this.config.anonUser.id;
     const props = [
       'email',
       'realFirstName',
@@ -691,7 +731,7 @@ export class UserService {
       .match([
         node('requestingUser', 'User', {
           active: true,
-          id: session.userId,
+          id: requestingUserId,
           canReadUsers: true,
         }),
       ])
