@@ -1,8 +1,9 @@
-import { Field, ID, InputType } from '@nestjs/graphql';
+import { Field, InputType } from '@nestjs/graphql';
+import { IdField } from '../../../common';
 
 @InputType()
 export class AddPropertyToSecurityGroup {
-  @Field(() => ID)
+  @IdField()
   readonly sgId: string;
 
   @Field()

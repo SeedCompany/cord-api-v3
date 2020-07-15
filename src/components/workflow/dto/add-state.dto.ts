@@ -1,11 +1,12 @@
-import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
+import { IdField } from '../../../common';
 import { State } from './state.dto';
 
 @InputType()
 export abstract class AddState {
-  @Field(() => ID)
+  @IdField()
   readonly workflowId: string;
 
   @Field()

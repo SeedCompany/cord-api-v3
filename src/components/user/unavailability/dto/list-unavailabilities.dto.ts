@@ -1,7 +1,8 @@
-import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import {
+  IdField,
   Order,
   PaginatedList,
   SecuredList,
@@ -11,7 +12,7 @@ import { Unavailability } from './unavailability.dto';
 
 @InputType()
 export abstract class UnavailabilityFilters {
-  @Field(() => ID, {
+  @IdField({
     description: 'Unavailabilities for UserId',
     nullable: true,
   })

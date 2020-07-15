@@ -1,10 +1,11 @@
-import { Field, ID, InterfaceType } from '@nestjs/graphql';
+import { InterfaceType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
+import { IdField } from './id-field';
 import { DateTimeField } from './luxon.graphql';
 
 @InterfaceType()
 export abstract class Resource {
-  @Field(() => ID)
+  @IdField()
   readonly id: string;
 
   @DateTimeField()

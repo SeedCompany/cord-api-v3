@@ -1,7 +1,7 @@
-import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { CalendarDate, DateField, NameField } from '../../../common';
+import { CalendarDate, DateField, IdField, NameField } from '../../../common';
 import { IProject, Project } from './project.dto';
 import { ProjectType } from './type.enum';
 
@@ -13,7 +13,7 @@ export abstract class CreateProject {
   @Field(() => ProjectType)
   readonly type: ProjectType;
 
-  @Field(() => ID, {
+  @IdField({
     description: 'A country ID',
     nullable: true,
   })

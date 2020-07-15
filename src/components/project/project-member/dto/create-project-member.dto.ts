@@ -1,17 +1,18 @@
-import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
+import { IdField } from '../../../../common';
 import { ProjectMember } from './project-member.dto';
 import { Role } from './role.dto';
 
 @InputType()
 export class CreateProjectMember {
-  @Field(() => ID, {
+  @IdField({
     description: 'A user ID',
   })
   readonly userId: string;
 
-  @Field(() => ID, {
+  @IdField({
     description: 'A project ID',
   })
   readonly projectId: string;

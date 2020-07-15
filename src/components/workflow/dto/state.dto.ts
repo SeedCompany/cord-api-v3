@@ -1,8 +1,9 @@
-import { Field, ID, ObjectType } from '@nestjs/graphql';
+import { Field, ObjectType } from '@nestjs/graphql';
+import { IdField } from '../../../common';
 
 @ObjectType()
 export class State {
-  @Field(() => ID)
+  @IdField()
   readonly id: string;
 
   @Field()
@@ -11,6 +12,6 @@ export class State {
 
 @ObjectType()
 export class CurrentState {
-  @Field(() => ID)
+  @IdField()
   readonly id: string;
 }

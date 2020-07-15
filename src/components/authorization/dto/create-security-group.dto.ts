@@ -1,4 +1,5 @@
-import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { IdField } from '../../../common';
 
 @InputType()
 export class CreateSecurityGroup {
@@ -16,6 +17,6 @@ export abstract class CreateSecurityGroupInput {
 export class CreateSecurityGroupOutput {
   @Field()
   success: boolean;
-  @Field(() => ID, { nullable: true })
+  @IdField({ nullable: true })
   id: string | null;
 }

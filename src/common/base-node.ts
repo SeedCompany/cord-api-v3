@@ -1,10 +1,11 @@
-import { Field, ID, ObjectType } from '@nestjs/graphql';
+import { Field, ObjectType } from '@nestjs/graphql';
 import { Organization } from '../components/organization';
 import { User } from '../components/user';
+import { IdField } from './id-field';
 
 @ObjectType()
 export class BaseNode {
-  @Field(() => ID)
+  @IdField()
   id: string;
 
   @Field(() => User)

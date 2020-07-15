@@ -1,11 +1,12 @@
-import { Field, ID, InputType, Int, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, Int, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { Budget, BudgetRecord, BudgetStatus } from '.';
+import { IdField } from '../../../common';
 
 @InputType()
 export abstract class UpdateBudget {
-  @Field(() => ID)
+  @IdField()
   readonly id: string;
 
   @Field(() => BudgetStatus)
@@ -28,7 +29,7 @@ export abstract class UpdateBudgetOutput {
 
 @InputType()
 export abstract class UpdateBudgetRecord {
-  @Field(() => ID)
+  @IdField()
   readonly id: string;
 
   @Field(() => Int)

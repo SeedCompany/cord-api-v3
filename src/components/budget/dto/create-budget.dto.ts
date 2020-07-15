@@ -1,11 +1,12 @@
-import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { MinLength, ValidateNested } from 'class-validator';
+import { IdField } from '../../../common';
 import { Budget } from './budget.dto';
 
 @InputType()
 export abstract class CreateBudget {
-  @Field(() => ID)
+  @IdField()
   @MinLength(2)
   readonly projectId: string;
 }

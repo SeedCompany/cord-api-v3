@@ -1,7 +1,7 @@
-import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { NameField } from '../../../common';
+import { IdField, NameField } from '../../../common';
 import { Country, Region, Zone } from './location.dto';
 
 @InputType()
@@ -9,7 +9,7 @@ export abstract class CreateZone {
   @NameField()
   readonly name: string;
 
-  @Field(() => ID, {
+  @IdField({
     description: 'A user ID that will be the director of the zone',
   })
   readonly directorId: string;
@@ -20,12 +20,12 @@ export abstract class CreateRegion {
   @NameField()
   readonly name: string;
 
-  @Field(() => ID, {
+  @IdField({
     description: 'The zone ID that the region will be associated with',
   })
   readonly zoneId: string;
 
-  @Field(() => ID, {
+  @IdField({
     description: 'A user ID that will be the director of the region',
   })
   readonly directorId: string;
@@ -36,7 +36,7 @@ export abstract class CreateCountry {
   @NameField()
   readonly name: string;
 
-  @Field(() => ID)
+  @IdField()
   readonly regionId: string;
 }
 

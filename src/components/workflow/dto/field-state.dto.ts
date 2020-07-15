@@ -1,10 +1,11 @@
-import { Field, ID, InputType } from '@nestjs/graphql';
+import { Field, InputType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
+import { IdField } from '../../../common';
 
 @InputType()
 export abstract class RequiredField {
-  @Field(() => ID)
+  @IdField()
   readonly stateId: string;
 
   @Field()

@@ -1,4 +1,4 @@
-import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { stripIndent } from 'common-tags';
@@ -7,13 +7,14 @@ import { ProductMedium } from './product-medium';
 import { ProductMethodology } from './product-methodology';
 import { ProductPurpose } from './product-purpose';
 import { AnyProduct, Product } from './product.dto';
+import { IdField } from '../../../common';
 
 @InputType()
 export abstract class UpdateProduct {
-  @Field(() => ID)
+  @IdField()
   readonly id: string;
 
-  @Field(() => ID, {
+  @IdField({
     nullable: true,
     description: stripIndent`
       An ID of a \`Producible\` object to change.

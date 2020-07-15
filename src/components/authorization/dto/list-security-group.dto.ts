@@ -1,9 +1,10 @@
-import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { IdField } from '../../../common';
 import { SecurityGroup } from './security-group.dto';
 
 @InputType()
 export class ListSecurityGroupInput {
-  @Field(() => ID)
+  @IdField()
   readonly userId: string;
 }
 
