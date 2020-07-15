@@ -7,7 +7,6 @@ import { Budget } from './budget.dto';
 @InputType()
 export abstract class CreateBudget {
   @IdField()
-  @MinLength(2)
   readonly projectId: string;
 }
 
