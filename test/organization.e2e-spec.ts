@@ -11,6 +11,7 @@ import {
   fragments,
   TestApp,
 } from './utility';
+
 import _ = require('lodash');
 
 describe('Organization e2e', () => {
