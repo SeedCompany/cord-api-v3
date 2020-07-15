@@ -1,6 +1,8 @@
 import { Args, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { ISession, Session } from '../../common';
 import { FileService, SecuredFile } from '../file';
+import { LanguageService } from '../language';
+import { SecuredLanguage } from '../language/dto';
 import { ProductListInput, SecuredProductList } from '../product/dto';
 import { LanguageEngagement } from './dto';
 import { EngagementService } from './engagement.service';
@@ -9,8 +11,22 @@ import { EngagementService } from './engagement.service';
 export class LanguageEngagementResolver {
   constructor(
     private readonly engagements: EngagementService,
+    private readonly languages: LanguageService,
     private readonly files: FileService
   ) {}
+
+  @ResolveField(() => SecuredLanguage)
+  async language(
+    @Parent() engagement: LanguageEngagement,
+    @Session() session: ISession
+  ): Promise<SecuredLanguage> {
+    const { value: id, ...rest } = engagement.language;
+    const value = id ? await this.languages.readOne(id, session) : undefined;
+    return {
+      value,
+      ...rest,
+    };
+  }
 
   @ResolveField(() => SecuredProductList)
   async products(

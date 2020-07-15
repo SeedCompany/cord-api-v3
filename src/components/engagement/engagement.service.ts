@@ -19,15 +19,12 @@ import {
 import { CeremonyService } from '../ceremony';
 import { CeremonyType } from '../ceremony/dto/type.enum';
 import { FileService } from '../file';
-import { LanguageService } from '../language';
-import { LocationService } from '../location';
 import {
   ProductListInput,
   ProductService,
   SecuredProductList,
 } from '../product';
 import { ProjectType } from '../project/dto/type.enum';
-import { UserService } from '../user';
 import {
   CreateInternshipEngagement,
   CreateLanguageEngagement,
@@ -47,9 +44,6 @@ export class EngagementService {
     private readonly db: DatabaseService,
     private readonly ceremonyService: CeremonyService,
     private readonly products: ProductService,
-    private readonly userService: UserService,
-    private readonly languageService: LanguageService,
-    private readonly locationService: LocationService,
     private readonly config: ConfigService,
     private readonly files: FileService,
     @Logger(`engagement.service`) private readonly logger: ILogger
@@ -243,17 +237,9 @@ export class EngagementService {
       throw new NotFoundException('could not find language Engagement');
     }
 
-    const ceremony = result.ceremonyId
-      ? await this.ceremonyService.readOne(result.ceremonyId, session)
-      : undefined;
-
-    const language = result.languageId
-      ? await this.languageService.readOne(result.languageId, session)
-      : undefined;
-
     const languageEngagement = {
       language: {
-        value: language,
+        value: result.languageId,
         canRead: !!result.canReadLanguage,
         canEdit: !!result.canEditLanguage,
       },
@@ -291,7 +277,7 @@ export class EngagementService {
       status: result.status,
       modifiedAt: result.modifiedAt,
       ceremony: {
-        value: ceremony,
+        value: result.ceremonyId,
         canRead: !!result.canReadCeremony,
         canEdit: !!result.canEditCeremony,
       },
@@ -1242,25 +1228,6 @@ export class EngagementService {
       throw new NotFoundException('could not find internship Engagement');
     }
 
-    const ceremony = result.ceremonyId
-      ? await this.ceremonyService.readOne(result.ceremonyId, session)
-      : undefined;
-
-    const internUser = result.internUserId
-      ? await this.userService.readOne(result.internUserId, session)
-      : undefined;
-
-    const mentorUser = result.mentorUserId
-      ? await this.userService.readOne(result.mentorUserId, session)
-      : undefined;
-
-    const countryOfOrigin = result.countryOfOriginId
-      ? await this.locationService.readOneCountry(
-          result.countryOfOriginId,
-          session
-        )
-      : undefined;
-
     const internshipEngagement = {
       position: {
         value: result.position,
@@ -1273,17 +1240,17 @@ export class EngagementService {
         canEdit: !!result.canEditMethodologies,
       },
       intern: {
-        value: internUser,
+        value: result.internUserId,
         canRead: !!result.canReadIntern,
         canEdit: !!result.canEditIntern,
       },
       mentor: {
-        value: mentorUser,
+        value: result.mentorUserId,
         canRead: !!result.canReadMentor,
         canEdit: !!result.canEditMentor,
       },
       countryOfOrigin: {
-        value: countryOfOrigin,
+        value: result.countryOfOriginId,
         canRead: !!result.canReadCountryOfOrigin,
         canEdit: !!result.canEditCountryOfOrigin,
       },
@@ -1301,7 +1268,7 @@ export class EngagementService {
       status: result.status,
       modifiedAt: result.modifiedAt,
       ceremony: {
-        value: ceremony,
+        value: result.ceremonyId,
         canRead: !!result.canReadCeremony,
         canEdit: !!result.canEditCeremony,
       },
