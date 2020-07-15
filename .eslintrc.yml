@@ -17,6 +17,10 @@ rules:
     - selector: memberLike
       format: [camelCase]
       leadingUnderscore: forbid
+      # allow `__typename` exception since it's a GQL standard.
+    - selector: property
+      filter: __typename
+      format: ~
     - selector: property
       format: [camelCase, PascalCase]
       leadingUnderscore: forbid

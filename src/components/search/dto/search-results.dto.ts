@@ -43,7 +43,6 @@ export const SearchResultTypes = Object.keys(searchable);
 // __typename is a GQL thing to identify type at runtime
 // It makes since to match this to not conflict with actual properties and
 // to match what GQL does on the consuming side.
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export type SearchItem<T, S> = T & { __typename: S };
 
 export type SearchResultMap = {
