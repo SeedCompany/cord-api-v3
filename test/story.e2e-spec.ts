@@ -105,13 +105,13 @@ describe('Story e2e', () => {
     const numStorys = 2;
     await Promise.all(
       times(numStorys).map(() =>
-        createStory(app, { name: generate() + ' Inc' })
+        createStory(app, { name: generate() + ' Story' })
       )
     );
 
-    const { storys } = await app.graphql.query(gql`
+    const { stories } = await app.graphql.query(gql`
       query {
-        stories(input: { count: 15, filter: { name: "Inc" } }) {
+        stories(input: { count: 15, filter: { name: "Story" } }) {
           items {
             ...story
           }
@@ -121,6 +121,8 @@ describe('Story e2e', () => {
       }
       ${fragments.story}
     `);
-    expect(storys.items.length).toBeGreaterThanOrEqual(numStorys);
+    console.log('stories ', JSON.stringify(stories, null, 2));
+
+    expect(stories.items.length).toBeGreaterThanOrEqual(numStorys);
   });
 });

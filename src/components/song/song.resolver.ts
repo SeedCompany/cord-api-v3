@@ -40,7 +40,7 @@ export class SongResolver {
   @Mutation(() => CreateSongOutput, {
     description: 'Create a song',
   })
-  async createStory(
+  async createSong(
     @Session() session: ISession,
     @Args('input') { song: input }: CreateSongInput
   ): Promise<CreateSongOutput> {
@@ -51,7 +51,7 @@ export class SongResolver {
   @Mutation(() => UpdateSongOutput, {
     description: 'Update a song',
   })
-  async updateStory(
+  async updateSong(
     @Session() session: ISession,
     @Args('input') { song: input }: UpdateSongInput
   ): Promise<UpdateSongOutput> {
@@ -62,7 +62,7 @@ export class SongResolver {
   @Mutation(() => Boolean, {
     description: 'Delete a song',
   })
-  async deleteStory(
+  async deleteSong(
     @Session() session: ISession,
     @IdArg() id: string
   ): Promise<boolean> {
