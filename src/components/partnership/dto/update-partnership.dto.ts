@@ -1,7 +1,7 @@
-import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { CalendarDate, DateField } from '../../../common';
+import { CalendarDate, DateField, IdField } from '../../../common';
 import { CreateDefinedFileVersionInput } from '../../file/dto';
 import { PartnershipAgreementStatus } from './partnership-agreement-status.enum';
 import { PartnershipType } from './partnership-type.enum';
@@ -9,7 +9,7 @@ import { Partnership } from './partnership.dto';
 
 @InputType()
 export abstract class UpdatePartnership {
-  @Field(() => ID)
+  @IdField()
   readonly id: string;
 
   @Field(() => PartnershipAgreementStatus, { nullable: true })

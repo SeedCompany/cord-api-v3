@@ -1,13 +1,13 @@
-import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { IsIanaTimezone, NameField } from '../../../common';
+import { IdField, IsIanaTimezone, NameField } from '../../../common';
 import { UserStatus } from './user-status.enum';
 import { User } from './user.dto';
 
 @InputType()
 export abstract class UpdateUser {
-  @Field(() => ID)
+  @IdField()
   readonly id: string;
 
   // TODO Allow email to be changed? Implications?

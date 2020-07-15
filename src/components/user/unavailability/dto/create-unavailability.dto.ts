@@ -1,13 +1,13 @@
-import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { DateTime } from 'luxon';
-import { DateTimeField } from '../../../../common';
+import { DateTimeField, IdField } from '../../../../common';
 import { Unavailability } from './unavailability.dto';
 
 @InputType()
 export class CreateUnavailability {
-  @Field(() => ID)
+  @IdField()
   readonly userId: string;
 
   @Field()

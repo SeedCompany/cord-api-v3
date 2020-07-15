@@ -1,7 +1,8 @@
-import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import {
+  IdField,
   PaginatedList,
   SecuredList,
   SortablePaginationInput,
@@ -11,7 +12,7 @@ import { Budget } from './budget.dto';
 
 @InputType()
 export abstract class BudgetFilters {
-  @Field(() => ID, {
+  @IdField({
     description: 'Only budgets matching this projectId',
     nullable: true,
   })
@@ -42,7 +43,7 @@ export abstract class SecuredBudgetList extends SecuredList(Budget) {}
 
 @InputType()
 export abstract class BudgetRecordFilters {
-  @Field(() => ID, {
+  @IdField({
     description: 'Only budget records matching this budgetId',
     nullable: true,
   })

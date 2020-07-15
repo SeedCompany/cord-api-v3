@@ -1,18 +1,18 @@
-import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { NameField } from '../../../common';
+import { IdField, NameField } from '../../../common';
 import { Country, Region, Zone } from './location.dto';
 
 @InputType()
 export abstract class UpdateZone {
-  @Field(() => ID)
+  @IdField()
   readonly id: string;
 
   @NameField({ nullable: true })
   readonly name?: string;
 
-  @Field(() => ID, {
+  @IdField({
     description: 'A user ID that will be the new director of the zone',
     nullable: true,
   })
@@ -21,19 +21,19 @@ export abstract class UpdateZone {
 
 @InputType()
 export abstract class UpdateRegion {
-  @Field(() => ID)
+  @IdField()
   readonly id: string;
 
   @NameField({ nullable: true })
   readonly name?: string;
 
-  @Field(() => ID, {
+  @IdField({
     description: 'The zone ID that the region will be associated with',
     nullable: true,
   })
   readonly zoneId?: string;
 
-  @Field(() => ID, {
+  @IdField({
     description: 'A user ID that will be the director of the region',
     nullable: true,
   })
@@ -42,15 +42,13 @@ export abstract class UpdateRegion {
 
 @InputType()
 export abstract class UpdateCountry {
-  @Field(() => ID)
+  @IdField()
   readonly id: string;
 
   @NameField({ nullable: true })
   readonly name?: string;
 
-  @Field(() => ID, {
-    nullable: true,
-  })
+  @IdField({ nullable: true })
   readonly regionId?: string;
 }
 

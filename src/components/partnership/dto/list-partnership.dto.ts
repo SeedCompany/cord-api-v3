@@ -1,7 +1,8 @@
-import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import {
+  IdField,
   PaginatedList,
   SecuredList,
   SortablePaginationInput,
@@ -10,7 +11,7 @@ import { Partnership } from './partnership.dto';
 
 @InputType()
 export abstract class PartnershipFilters {
-  @Field(() => ID, {
+  @IdField({
     description: 'Find all partnerships in a project',
     nullable: true,
   })

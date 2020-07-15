@@ -1,10 +1,11 @@
-import { Field, ID, ObjectType } from '@nestjs/graphql';
+import { Field, ObjectType } from '@nestjs/graphql';
 import { ValidateNested } from 'class-validator';
+import { IdField } from '../../../common';
 import { State } from './state.dto';
 
 @ObjectType()
 export class Workflow {
-  @Field(() => ID)
+  @IdField()
   readonly id: string;
 
   @Field()

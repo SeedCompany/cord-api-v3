@@ -1,12 +1,12 @@
-import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { CalendarDate, DateField } from '../../../common';
+import { CalendarDate, DateField, IdField } from '../../../common';
 import { Ceremony } from './ceremony.dto';
 
 @InputType()
 export abstract class UpdateCeremony {
-  @Field(() => ID)
+  @IdField()
   readonly id: string;
 
   @Field({ nullable: true })

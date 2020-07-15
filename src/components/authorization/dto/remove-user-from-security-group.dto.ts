@@ -1,11 +1,12 @@
-import { Field, ID, InputType } from '@nestjs/graphql';
+import { Field, InputType } from '@nestjs/graphql';
+import { IdField } from '../../../common';
 
 @InputType()
 export class RemoveUserFromSecurityGroup {
-  @Field(() => ID)
+  @IdField()
   readonly sgId: string;
 
-  @Field(() => ID)
+  @IdField()
   readonly userId: string;
 }
 

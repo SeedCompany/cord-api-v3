@@ -1,4 +1,4 @@
-import { Field, ID, InputType, Int, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, Int, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import {
   IsAlpha,
@@ -8,7 +8,7 @@ import {
   Length,
   ValidateNested,
 } from 'class-validator';
-import { NameField } from '../../../common';
+import { IdField, NameField } from '../../../common';
 import { Language } from './language.dto';
 
 @InputType()
@@ -38,7 +38,7 @@ export abstract class UpdateEthnologueLanguage {
 
 @InputType()
 export abstract class UpdateLanguage {
-  @Field(() => ID)
+  @IdField()
   readonly id: string;
 
   @NameField({ nullable: true })

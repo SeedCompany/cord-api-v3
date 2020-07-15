@@ -1,7 +1,8 @@
-import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import {
+  IdField,
   PaginatedList,
   SecuredList,
   SortablePaginationInput,
@@ -22,7 +23,7 @@ export abstract class EngagementFilters {
   })
   readonly name?: string;
 
-  @Field(() => ID, {
+  @IdField({
     description: 'Only engagements matching this projectId',
     nullable: true,
   })

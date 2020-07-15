@@ -1,8 +1,9 @@
-import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { IdField } from '../../../common';
 
 @InputType()
 export class UpdateSecurityGroupName {
-  @Field(() => ID)
+  @IdField()
   readonly id: string;
 
   @Field()
@@ -17,7 +18,7 @@ export abstract class UpdateSecurityGroupNameInput {
 
 @ObjectType()
 export class UpdateSecurityGroupNameOutput {
-  @Field(() => ID)
+  @IdField()
   id: string;
 
   @Field()

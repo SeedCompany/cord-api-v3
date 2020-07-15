@@ -1,9 +1,10 @@
-import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { IdField } from '../../../common';
 import { Permission } from './permission.dto';
 
 @InputType()
 export class ListPermissionInput {
-  @Field(() => ID)
+  @IdField()
   readonly sgId: string;
 }
 
