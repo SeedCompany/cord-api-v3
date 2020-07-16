@@ -1,4 +1,11 @@
-import { contains, inArray, node, Query, relation } from 'cypher-query-builder';
+import {
+  contains,
+  inArray,
+  node,
+  Query,
+  relation,
+  regexp,
+} from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { isFunction } from 'lodash';
 import { DateTime } from 'luxon';
@@ -385,7 +392,7 @@ export function filterByString(
   ]);
   query.where({
     readPerm: inArray(['permList'], true),
-    [filterKey]: { value: contains(filterValue) },
+    [filterKey]: { value: regexp(`.*${filterValue}.*`, true) },
   });
 }
 
