@@ -22,6 +22,9 @@ import {
   matchSession,
   OnIndex,
   runListQuery,
+  printActualQuery,
+  addPropertyMatches,
+  matchUserPermissions,
 } from '../../core';
 import {
   CreateOrganization,
@@ -176,20 +179,19 @@ export class OrganizationService {
     const props = ['name'];
     const query = this.db
       .query()
-      .match([
-        node('requestingUser', 'User', {
-          active: true,
-          id: requestingUserId,
-        }),
-      ])
+      .call(matchRequestingUser, session)
       .match([node('org', 'Organization', { active: true, id: orgId })])
-      .call(matchProperties, 'org', ...props)
+      // .call(matchProperties, 'org', ...props)
+      .call(matchUserPermissions, 'org')
+      .call(addPropertyMatches, 'org', ...props)
       .with([
         ...props.map(addPropertyCoalesceWithClause),
         'coalesce(org.id) as id',
         'coalesce(org.createdAt) as createdAt',
       ])
       .returnDistinct([...props, 'id', 'createdAt']);
+
+    printActualQuery(this.logger, query);
 
     const result = (await query.first()) as Organization | undefined;
     if (!result) {

@@ -15,6 +15,8 @@ import {
   ILogger,
   Logger,
   matchSession,
+  matchProperties,
+  printActualQuery,
 } from '../../core';
 import { CeremonyService } from '../ceremony';
 import { CeremonyType } from '../ceremony/dto/type.enum';
@@ -78,6 +80,53 @@ export class EngagementService {
     session: ISession
   ): Promise<LanguageEngagement> {
     this.logger.info('readLanguageEngagement', { id, userId: session.userId });
+
+    const requestingUserId = session.userId
+      ? session.userId
+      : this.config.anonUser.id;
+
+    const props = [
+      'firstScripture',
+      'lukePartnership',
+      'sentPrintingDate',
+      'completeDate',
+      'startDate',
+      'endDate',
+      'disbursementCompleteDate',
+      'communicationsCompleteteDate',
+      'initialEndDate',
+      'lastSuspendedAt',
+      'lastReactivatedAt',
+      'statusModifiedAt',
+      'status',
+      'modifiedAt',
+      'paraTextRegistryId',
+      'pnp',
+    ];
+
+    const query2 = this.db
+      .query()
+      .match([
+        node('requestingUser', 'User', {
+          active: true,
+          id: requestingUserId,
+        }),
+      ])
+      .match([
+        node('languageEngagement', 'LanguageEngagement', {
+          active: true,
+          id,
+        }),
+      ])
+      .call(matchProperties, 'languageEngagement', ...props)
+      .return('*');
+
+    printActualQuery(this.logger, query2);
+
+    // const result2 = await query2.run();
+
+    // console.log(result2);
+
     const leQuery = this.db
       .query()
       .match(matchSession(session, { withAclRead: 'canReadEngagements' }))

@@ -1,4 +1,4 @@
-import { contains, node, Query, relation } from 'cypher-query-builder';
+import { contains, inArray, node, Query, relation } from 'cypher-query-builder';
 import { isFunction } from 'lodash';
 import {
   ISession,
@@ -292,3 +292,59 @@ export async function runListQuery<T>(
 export const hasMore = (input: PaginationInput, total: number) =>
   // if skip + count is less than total, there is more
   (input.page - 1) * input.count + input.count < total;
+
+export function matchUserPermissions(query: Query, baseNodeIdentifier: string) {
+  query
+    .match([
+      node('requestingUser'),
+      relation('in', '', 'member', {}, [1]),
+      node('', 'SecurityGroup', { active: true }),
+      relation('out', '', 'permission'),
+      node('perms', 'Permission', { active: true }),
+      relation('out', '', 'baseNode'),
+      node(baseNodeIdentifier),
+    ])
+    .with(`collect(perms) as permList, ${baseNodeIdentifier}`);
+}
+
+export function addPropertyMatches(
+  query: Query,
+  cypherIdentifierForBaseNode: string,
+  ...properties: string[]
+) {
+  for (const property of properties) {
+    addOptionalMatchForProperty(query, property, cypherIdentifierForBaseNode);
+  }
+}
+
+export function addOptionalMatchForProperty(
+  query: Query,
+  property: string,
+  cypherIdentifierForBaseNode: string
+) {
+  const readPerm = property + 'ReadPerm';
+  const editPerm = property + 'EditPerm';
+  query
+    .optionalMatch([
+      node(readPerm, 'Permission', {
+        property,
+        read: true,
+        active: true,
+      }),
+      relation('out', '', 'baseNode'),
+      node(cypherIdentifierForBaseNode),
+      relation('out', '', property, { active: true }),
+      node(property, 'Property', { active: true }),
+    ])
+    .where({ [readPerm]: inArray(['permList'], true) })
+    .optionalMatch([
+      node(editPerm, 'Permission', {
+        property,
+        edit: true,
+        active: true,
+      }),
+      relation('out', '', 'baseNode'),
+      node(cypherIdentifierForBaseNode),
+    ])
+    .where({ [editPerm]: inArray(['permList'], true) });
+}
