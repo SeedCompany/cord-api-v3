@@ -496,7 +496,6 @@ export class DatabaseService {
           property: key as string,
           active: true,
           admin: true,
-          read: true,
           edit: true,
         }),
         relation('out', '', 'baseNode', { active: true }),
