@@ -1,5 +1,8 @@
 import { contains, inArray, node, Query, relation } from 'cypher-query-builder';
+import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { isFunction } from 'lodash';
+import { DateTime } from 'luxon';
+import { generate } from 'shortid';
 import {
   ISession,
   PaginationInput,
@@ -13,6 +16,13 @@ export * from './mapping.helper';
 export function printActualQuery(logger: ILogger, query: Query) {
   const printMe = query;
   logger.info(printMe.interpolate());
+}
+
+// eslint-disable-next-line @seedcompany/no-unused-vars
+function printQueryInConsole(query: Query) {
+  const printMe = query;
+  // eslint-disable-next-line no-console
+  console.log(printMe.interpolate());
 }
 
 export function tryGetEditPerm(
@@ -251,7 +261,7 @@ export function listReturnBlock<T = any>(
   { page, count, sort: sortInput, order }: SortablePaginationInput,
   sort?: string | ((sortStr: string) => string)
 ) {
-  return query
+  query
     .with(['collect(distinct node) as nodes', 'count(distinct node) as total'])
     .raw(`unwind nodes as node`)
     .with(['node', 'total'])
@@ -268,8 +278,12 @@ export function listReturnBlock<T = any>(
       'total',
       `${(page - 1) * count + count} < total as hasMore`,
     ])
-    .return(['items', 'total', 'hasMore'])
-    .asResult<{ items: T[]; total: number; hasMore: boolean }>();
+    .return(['items', 'total', 'hasMore']);
+
+  // for troubleshooting
+  // printQueryInConsole(query);
+
+  return query.asResult<{ items: T[]; total: number; hasMore: boolean }>();
 }
 
 export async function runListQuery<T>(
@@ -293,35 +307,35 @@ export const hasMore = (input: PaginationInput, total: number) =>
   // if skip + count is less than total, there is more
   (input.page - 1) * input.count + input.count < total;
 
-export function matchUserPermissions(query: Query, baseNodeIdentifier: string) {
-  query
-    .match([
-      node('requestingUser'),
-      relation('in', '', 'member', {}, [1]),
-      node('', 'SecurityGroup', { active: true }),
-      relation('out', '', 'permission'),
-      node('perms', 'Permission', { active: true }),
-      relation('out', '', 'baseNode'),
-      node(baseNodeIdentifier),
-    ])
-    .with(`collect(perms) as permList, ${baseNodeIdentifier}`);
+export function matchUserPermissions(query: Query, label: string, id?: string) {
+  query.match([
+    node('requestingUser'),
+    relation('in', '', 'member', {}, [1]),
+    node('', 'SecurityGroup', { active: true }),
+    relation('out', '', 'permission'),
+    node('perms', 'Permission', { active: true }),
+    relation('out', '', 'baseNode'),
+    node('node', label, { active: true }),
+  ]);
+  if (id) {
+    query.where({ node: { id } });
+  }
+
+  query.with(`collect(perms) as permList, node`);
 }
 
-export function addPropertyMatches(
+// READ/LIST Property-ALL   functions that take a prop array
+export function addAllPropertyOptionalMatches(
   query: Query,
-  cypherIdentifierForBaseNode: string,
   ...properties: string[]
 ) {
   for (const property of properties) {
-    addOptionalMatchForProperty(query, property, cypherIdentifierForBaseNode);
+    getProperty(query, property);
   }
 }
 
-export function addOptionalMatchForProperty(
-  query: Query,
-  property: string,
-  cypherIdentifierForBaseNode: string
-) {
+// READ/LIST Property-SINGLE   functions that add queries for one property
+export function getProperty(query: Query, property: string) {
   const readPerm = property + 'ReadPerm';
   const editPerm = property + 'EditPerm';
   query
@@ -332,7 +346,7 @@ export function addOptionalMatchForProperty(
         active: true,
       }),
       relation('out', '', 'baseNode'),
-      node(cypherIdentifierForBaseNode),
+      node('node'),
       relation('out', '', property, { active: true }),
       node(property, 'Property', { active: true }),
     ])
@@ -344,7 +358,214 @@ export function addOptionalMatchForProperty(
         active: true,
       }),
       relation('out', '', 'baseNode'),
-      node(cypherIdentifierForBaseNode),
+      node('node'),
     ])
     .where({ [editPerm]: inArray(['permList'], true) });
+}
+
+// LIST Filtering
+export function filterByString(
+  query: Query,
+  label: string,
+  filterKey: string,
+  filterValue: string
+) {
+  query.match([
+    node('readPerm', 'Permission', {
+      property: filterKey,
+      read: true,
+      active: true,
+    }),
+    relation('out', '', 'baseNode'),
+    node('node', label, {
+      active: true,
+    }),
+    relation('out', '', filterKey, { active: true }),
+    node(filterKey, 'Property', { active: true }),
+  ]);
+  query.where({
+    readPerm: inArray(['permList'], true),
+    [filterKey]: { value: contains(filterValue) },
+  });
+}
+
+// used to search a specific user's relationship to the target base node
+// for example, searching all orgs a user is a part of
+export function filterByUser(
+  query: Query,
+  userId: string,
+  relationshipType: string,
+  relationshipDirection: RelationDirection,
+  label: string
+) {
+  query.match([
+    node('user', 'User', { active: true, id: userId }),
+    relation(relationshipDirection, '', relationshipType, { active: true }),
+    node('node', label, { active: true }),
+  ]);
+}
+
+export interface Property {
+  key: string;
+  value: any;
+  addToAdminSg: boolean;
+  addToWriterSg: boolean;
+  addToReaderSg: boolean;
+  isPublic: boolean;
+  isOrgPublic: boolean;
+  label?: string;
+}
+
+// assumes 'requestingUser', 'root' and 'publicSG' cypher identifiers have been matched
+export function createBaseNode(query: Query, label: string, props: Property[]) {
+  const createdAt = DateTime.local().toString();
+
+  query.create([
+    node('node', [label, 'BaseNode'], {
+      active: true,
+      createdAt,
+      id: generate(),
+    }),
+  ]);
+
+  createSG(query, 'adminSG');
+  createSG(query, 'writerSG');
+  createSG(query, 'readerSG');
+  addUserToSG(query, 'requestingUser', 'adminSG');
+  addUserToSG(query, 'requestingUser', 'writerSG');
+  addUserToSG(query, 'requestingUser', 'readerSG');
+
+  for (const prop of props) {
+    const labels = ['Property'];
+    if (prop.label) {
+      labels.push(prop.label);
+    }
+    query.create([
+      node('node'),
+      relation('out', '', prop.key, { active: true, createdAt }),
+      node('', labels, { active: true, createdAt, value: prop.value }),
+    ]);
+
+    if (prop.addToAdminSg) {
+      query.create([
+        node('adminSG'),
+        relation('out', '', 'permission', {
+          active: true,
+        }),
+        node('', 'Permission', {
+          active: true,
+          createdAt,
+          property: prop.key,
+          read: true,
+          edit: true,
+          admin: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('node'),
+      ]);
+    }
+
+    if (prop.addToWriterSg) {
+      query.create([
+        node('writerSG'),
+        relation('out', '', 'permission', {
+          active: true,
+        }),
+        node('', 'Permission', {
+          active: true,
+          createdAt,
+          property: prop.key,
+          read: true,
+          edit: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('node'),
+      ]);
+    }
+
+    if (prop.addToReaderSg) {
+      query.create([
+        node('readerSG'),
+        relation('out', '', 'permission', {
+          active: true,
+        }),
+        node('', 'Permission', {
+          active: true,
+          createdAt,
+          property: prop.key,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('node'),
+      ]);
+    }
+
+    if (prop.isPublic) {
+      query.create([
+        node('publicSG'),
+        relation('out', '', 'permission', {
+          active: true,
+        }),
+        node('', 'Permission', {
+          active: true,
+          createdAt,
+          property: prop.key,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('node'),
+      ]);
+    }
+
+    // assumes 'orgSG' cypher variable is declared in a previous query
+    if (prop.isOrgPublic) {
+      query.create([
+        node('orgSG'),
+        relation('out', '', 'permission', {
+          active: true,
+        }),
+        node('', 'Permission', {
+          active: true,
+          createdAt,
+          property: prop.key,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('node'),
+      ]);
+    }
+  }
+}
+
+// assumes 'root' cypher variable is declared in query
+export function createSG(
+  query: Query,
+  cypherIdentifier: string,
+  label?: string
+) {
+  const labels = ['SecurityGroup'];
+  if (label) {
+    labels.push(label);
+  }
+  const createdAt = DateTime.local().toString();
+
+  query.create([
+    node('root'),
+    relation('in', '', 'member', { active: true }),
+    node(cypherIdentifier, labels, { active: true, createdAt, id: generate() }),
+  ]);
+}
+
+export function addUserToSG(
+  query: Query,
+  userCypherIdentifier: string,
+  sGcypherIdentifier: string
+) {
+  const createdAt = DateTime.local().toString();
+
+  query.create([
+    node(userCypherIdentifier),
+    relation('in', '', 'member', { active: true, createdAt }),
+    node(sGcypherIdentifier),
+  ]);
 }

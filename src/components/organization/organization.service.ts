@@ -4,27 +4,27 @@ import {
   NotFoundException,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
-import { DateTime } from 'luxon';
-import { generate } from 'shortid';
+import { node } from 'cypher-query-builder';
 import { ISession } from '../../common';
 import {
+  addAllPropertyOptionalMatches,
   addBaseNodeMetaPropsWithClause,
   addPropertyCoalesceWithClause,
   ConfigService,
+  createBaseNode,
+  createSG,
   DatabaseService,
-  filterQuery,
+  filterByString,
+  filterByUser,
   ILogger,
   listWithSecureObject,
   Logger,
-  matchProperties,
   matchRequestingUser,
   matchSession,
-  OnIndex,
-  runListQuery,
-  printActualQuery,
-  addPropertyMatches,
   matchUserPermissions,
+  OnIndex,
+  Property,
+  runListQuery,
 } from '../../core';
 import {
   CreateOrganization,
@@ -68,14 +68,9 @@ export class OrganizationService {
   ): Promise<Organization> {
     const checkOrg = await this.db
       .query()
-      .raw(
-        `
-        MATCH(org:OrgName {value: $name, active: true}) return org
-        `,
-        {
-          name: input.name,
-        }
-      )
+      .raw(`MATCH(org:OrgName {value: $name, active: true}) return org`, {
+        name: input.name,
+      })
       .first();
 
     if (checkOrg) {
@@ -86,87 +81,48 @@ export class OrganizationService {
     }
 
     // create org
-    const id = generate();
-    const orgSgId = generate();
-    const createdAt = DateTime.local().toString();
-    const createOrgResult = await this.db
-      .query()
-      .match(
-        node('publicSg', 'PublicSecurityGroup', {
-          active: true,
-        })
-      )
-      .match(
-        node('rootuser', 'User', {
-          active: true,
-          id: this.config.rootAdmin.id,
-        })
-      )
-      .create([
-        [
-          node('orgSg', ['OrgPublicSecurityGroup', 'SecurityGroup'], {
-            active: true,
-            id: orgSgId,
-            createdAt,
-          }),
-          relation('out', '', 'organization'),
-          node('org', ['Organization', 'BaseNode'], {
-            active: true,
-            id,
-            createdAt,
-            owningOrgId: session.owningOrgId,
-          }),
-          relation('out', '', 'name', { active: true, createdAt }),
-          node('name', ['Property', 'OrgName'], {
-            active: true,
-            createdAt,
-            value: input.name,
-          }),
-        ],
-      ])
-      .with('*')
-      .create([
-        node('publicSg'),
-        relation('out', '', 'permission', {
-          active: true,
-        }),
-        node('perm', 'Permission', {
-          active: true,
-          property: 'name',
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('org'),
-      ])
-      .with('*')
-      .create([
-        node('orgSg'),
-        relation('out', '', 'member', { active: true, createdAt }),
-        node('rootuser'),
-      ])
-      .return('org')
-      .first();
+    const secureProps: Property[] = [
+      {
+        key: 'name',
+        value: input.name,
+        addToAdminSg: true,
+        addToWriterSg: true,
+        addToReaderSg: true,
+        isPublic: true,
+        isOrgPublic: true,
+        label: 'OrgName',
+      },
+    ];
+    // const baseMetaProps = [];
 
-    if (!createOrgResult) {
+    const query = this.db
+      .query()
+      .match([
+        node('root', 'User', { active: true, id: this.config.rootAdmin.id }),
+      ])
+      .match([
+        node('publicSG', 'PublicSecurityGroup', {
+          active: true,
+          id: this.config.publicSecurityGroup.id,
+        }),
+      ])
+      .call(matchRequestingUser, session)
+      .call(createSG, 'orgSG', 'OrgPublicSecurityGroup')
+      .call(createBaseNode, 'Organization', secureProps)
+      .return('node.id as id');
+
+    const result = await query.first();
+
+    if (!result) {
       throw new ServerException('failed to create default org');
     }
+
+    const id = result.id;
 
     // add root admin to new org as an admin
     await this.db.addRootAdminToBaseNodeAsAdmin(id, 'Organization');
 
-    // const propLabels = {
-    //   name: 'OrgName',
-    // };
-
-    // const id = await this.db.sgCreateNode({
-    //   session,
-    //   input: input,
-    //   propLabels: propLabels,
-    //   nodevar: 'organization',
-    //   aclEditProp: 'canCreateOrg',
-    //   sgName: input.name,
-    // });
-    this.logger.info(`organization created, id ${id}`);
+    this.logger.debug(`organization created, id ${id}`);
 
     return this.readOne(id, session);
   }
@@ -180,18 +136,16 @@ export class OrganizationService {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([node('org', 'Organization', { active: true, id: orgId })])
-      // .call(matchProperties, 'org', ...props)
-      .call(matchUserPermissions, 'org')
-      .call(addPropertyMatches, 'org', ...props)
+      .call(matchUserPermissions, 'Organization', orgId)
+      .call(addAllPropertyOptionalMatches, ...props)
       .with([
         ...props.map(addPropertyCoalesceWithClause),
-        'coalesce(org.id) as id',
-        'coalesce(org.createdAt) as createdAt',
+        'coalesce(node.id) as id',
+        'coalesce(node.createdAt) as createdAt',
       ])
       .returnDistinct([...props, 'id', 'createdAt']);
 
-    printActualQuery(this.logger, query);
+    // printActualQuery(this.logger, query);
 
     const result = (await query.first()) as Organization | undefined;
     if (!result) {
@@ -240,41 +194,30 @@ export class OrganizationService {
     // const unsecureProps = [''];
     const secureProps = ['name'];
 
-    const listQuery = this.db
+    const query = this.db
       .query()
-      // match on requesting user
-      .call(matchRequestingUser, session);
+      .call(matchRequestingUser, session)
+      .call(matchUserPermissions, 'Organization');
 
-    if (filter.userId) {
-      // match on filter terms using parent base node
-      listQuery.call(
-        filterQuery,
-        label,
-        input.sort,
-        filter.userId,
-        'User',
-        'organization'
-      );
-    } else if (filter.name) {
-      // match on filter terms using parent base node
-      listQuery.call(
-        filterQuery,
-        label,
-        input.sort,
-        '',
-        'User',
+    if (filter.name) {
+      query.call(filterByString, 'Organization', 'name', filter.name);
+    } else if (filter.userId && session.userId) {
+      query.call(
+        filterByUser,
+        session.userId,
         'organization',
-        'name',
-        filter.name
+        'out',
+        'Organization'
       );
-    } else {
-      // match on filter terms
-      listQuery.call(filterQuery, label, input.sort);
     }
 
     // match on the rest of the properties of the object requested
-    listQuery
-      .call(matchProperties, 'project', ...secureProps /* , ...unsecureProps */)
+    query
+      .call(
+        addAllPropertyOptionalMatches,
+        ...secureProps
+        //...unsecureProps
+      )
 
       // form return object
       // ${listWithUnsecureObject(unsecureProps)}, // removed from a few lines down
@@ -287,7 +230,7 @@ export class OrganizationService {
         `
       );
 
-    return runListQuery(listQuery, input);
+    return runListQuery(query, input);
   }
 
   async checkAllOrgs(session: ISession): Promise<boolean> {
