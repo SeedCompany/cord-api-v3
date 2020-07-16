@@ -6,10 +6,10 @@ import {
 } from '@nestjs/common';
 import {
   Connection,
-  contains,
   equals,
   node,
   Query,
+  regexp,
   relation,
 } from 'cypher-query-builder';
 import type { Pattern } from 'cypher-query-builder/dist/typings/clauses/pattern';
@@ -733,7 +733,7 @@ export class DatabaseService {
       for (const k in input.filter) {
         if (k !== 'id' && k !== 'userId' && k !== 'mine') {
           if (!Array.isArray(input.filter[k])) {
-            where[k + '.value'] = contains(input.filter[k]);
+            where[k + '.value'] = regexp(`.*${input.filter[k]}.*`, true);
           } else {
             where[k + '.value'] = equals(input.filter[k]);
           }
