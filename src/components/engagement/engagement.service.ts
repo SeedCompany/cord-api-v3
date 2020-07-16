@@ -14,8 +14,8 @@ import {
   DatabaseService,
   ILogger,
   Logger,
-  matchSession,
   matchProperties,
+  matchSession,
   printActualQuery,
 } from '../../core';
 import { CeremonyService } from '../ceremony';

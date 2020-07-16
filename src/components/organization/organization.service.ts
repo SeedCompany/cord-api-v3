@@ -128,9 +128,9 @@ export class OrganizationService {
   }
 
   async readOne(orgId: string, session: ISession): Promise<Organization> {
-    const requestingUserId = session.userId
-      ? session.userId
-      : this.config.anonUser.id;
+    if (!session.userId) {
+      session.userId = this.config.anonUser.id;
+    }
 
     const props = ['name'];
     const query = this.db
@@ -200,15 +200,9 @@ export class OrganizationService {
       .call(matchUserPermissions, 'Organization');
 
     if (filter.name) {
-      query.call(filterByString, 'Organization', 'name', filter.name);
+      query.call(filterByString, label, 'name', filter.name);
     } else if (filter.userId && session.userId) {
-      query.call(
-        filterByUser,
-        session.userId,
-        'organization',
-        'out',
-        'Organization'
-      );
+      query.call(filterByUser, session.userId, 'organization', 'out', label);
     }
 
     // match on the rest of the properties of the object requested
