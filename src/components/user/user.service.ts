@@ -139,7 +139,11 @@ export class UserService {
       );
     } else {
       // match on filter terms
-      listQuery.call(filterQuery, label, input.sort);
+      listQuery.call(
+        filterQuery,
+        label,
+        baseNodeMetaProps.includes(input.sort) ? secureProps[0] : input.sort
+      );
     }
 
     // match on the rest of the properties of the object requested
@@ -156,7 +160,7 @@ export class UserService {
           } as node
         `
       );
-    return runListQuery(listQuery, input);
+    return runListQuery(listQuery, input, secureProps.includes(input.sort));
   }
 
   async listEducations(
