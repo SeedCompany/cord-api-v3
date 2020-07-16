@@ -8,17 +8,19 @@ import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { DuplicateException, ISession, ServerException } from '../../common';
 import {
+  addAllPropertyOptionalMatches,
   addBaseNodeMetaPropsWithClause,
   addPropertyCoalesceWithClause,
   ConfigService,
   DatabaseService,
-  filterQuery,
+  filterByString,
   ILogger,
   listWithSecureObject,
   Logger,
   matchProperties,
   matchRequestingUser,
   matchSession,
+  matchUserPermissions,
   OnIndex,
   runListQuery,
   UniquenessError,
@@ -108,47 +110,34 @@ export class UserService {
       'status',
     ];
 
-    const listQuery = this.db
+    const query = this.db
       .query()
-      // match on requesting user
-      .call(matchRequestingUser, session);
+      .call(matchRequestingUser, session)
+      .call(matchUserPermissions, 'User');
 
     if (filter.displayFirstName) {
-      // match on filter terms using parent base node
-      listQuery.call(
-        filterQuery,
+      query.call(
+        filterByString,
         label,
-        input.sort,
-        '',
-        'User',
-        'organization',
         'displayFirstName',
         filter.displayFirstName
       );
     } else if (filter.displayLastName) {
-      // match on filter terms using parent base node
-      listQuery.call(
-        filterQuery,
+      query.call(
+        filterByString,
         label,
-        input.sort,
-        '',
-        'User',
-        'organization',
         'displayLastName',
         filter.displayLastName
-      );
-    } else {
-      // match on filter terms
-      listQuery.call(
-        filterQuery,
-        label,
-        baseNodeMetaProps.includes(input.sort) ? secureProps[0] : input.sort
       );
     }
 
     // match on the rest of the properties of the object requested
-    listQuery
-      .call(matchProperties, 'node', ...secureProps /* , ...unsecureProps */)
+    query
+      .call(
+        addAllPropertyOptionalMatches,
+        ...secureProps
+        //...unsecureProps
+      )
 
       // form return object
       // ${listWithUnsecureObject(unsecureProps)}, // removed from a few lines down
@@ -160,7 +149,8 @@ export class UserService {
           } as node
         `
       );
-    return runListQuery(listQuery, input, secureProps.includes(input.sort));
+
+    return runListQuery(query, input, secureProps.includes(input.sort));
   }
 
   async listEducations(
