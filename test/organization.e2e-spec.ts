@@ -164,7 +164,7 @@ describe('Organization e2e', () => {
     );
   });
 
-  it.skip('shows canEdit true when it can be edited', async () => {
+  it('shows canEdit true when it can be edited', async () => {
     // create an org
     const org = await createOrganization(app);
 
