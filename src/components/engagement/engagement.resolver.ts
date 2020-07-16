@@ -1,5 +1,13 @@
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import {
+  Args,
+  Mutation,
+  Parent,
+  Query,
+  ResolveField,
+  Resolver,
+} from '@nestjs/graphql';
 import { IdArg, ISession, Session } from '../../common';
+import { CeremonyService, SecuredCeremony } from '../ceremony';
 import {
   CreateInternshipEngagementInput,
   CreateInternshipEngagementOutput,
@@ -17,9 +25,12 @@ import {
 } from './dto';
 import { EngagementService } from './engagement.service';
 
-@Resolver()
+@Resolver(IEngagement)
 export class EngagementResolver {
-  constructor(private readonly service: EngagementService) {}
+  constructor(
+    private readonly service: EngagementService,
+    private readonly ceremonies: CeremonyService
+  ) {}
 
   @Query(() => IEngagement, {
     description: 'Lookup an engagement by ID',
@@ -45,6 +56,19 @@ export class EngagementResolver {
     @Session() session: ISession
   ): Promise<EngagementListOutput> {
     return this.service.list(input, session);
+  }
+
+  @ResolveField(() => SecuredCeremony)
+  async ceremony(
+    @Parent() engagement: Engagement,
+    @Session() session: ISession
+  ): Promise<SecuredCeremony> {
+    const { value: id, ...rest } = engagement.ceremony;
+    const value = id ? await this.ceremonies.readOne(id, session) : undefined;
+    return {
+      value,
+      ...rest,
+    };
   }
 
   @Mutation(() => CreateLanguageEngagementOutput, {

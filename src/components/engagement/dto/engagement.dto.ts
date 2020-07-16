@@ -4,17 +4,14 @@ import { MergeExclusive } from 'type-fest';
 import {
   DateTimeField,
   Resource,
+  Secured,
   SecuredBoolean,
   SecuredDate,
   SecuredDateTime,
   SecuredString,
 } from '../../../common';
-import { SecuredCeremony } from '../../ceremony';
 import { DefinedFile } from '../../file/dto';
-import { SecuredLanguage } from '../../language';
-import { SecuredCountry } from '../../location';
 import { SecuredMethodologies } from '../../product';
-import { SecuredUser } from '../../user';
 import { SecuredInternPosition } from './intern-position.enum';
 import { EngagementStatus } from './status.enum';
 
@@ -22,32 +19,31 @@ import { EngagementStatus } from './status.enum';
  * This should be used for TypeScript types as we'll always be passing around
  * concrete engagements.
  */
-export type Engagement = MergeExclusive<
+export type AnyEngagement = MergeExclusive<
   LanguageEngagement,
   InternshipEngagement
 >;
 
 export const isLanguageEngagement = (
-  val: Engagement
+  val: AnyEngagement
 ): val is LanguageEngagement => 'language' in val;
 
 export const isInternshipEngagement = (
-  val: Engagement
+  val: AnyEngagement
 ): val is InternshipEngagement => !isLanguageEngagement(val);
 
-@InterfaceType('Engagement', {
-  resolveType: (val: Engagement) =>
+@InterfaceType({
+  resolveType: (val: AnyEngagement) =>
     isLanguageEngagement(val) ? LanguageEngagement : InternshipEngagement,
 })
 /**
  * This should be used for GraphQL but never for TypeScript types.
  */
-export class IEngagement extends Resource {
+class Engagement extends Resource {
   @Field(() => EngagementStatus)
   readonly status: EngagementStatus; // TODO Workflow
 
-  @Field()
-  readonly ceremony: SecuredCeremony;
+  readonly ceremony: Secured<string>;
 
   @Field({
     description: 'Translation / Growth Plan complete date',
@@ -92,12 +88,15 @@ export class IEngagement extends Resource {
   readonly modifiedAt: DateTime;
 }
 
+// class name has to match schema name for interface resolvers to work.
+// export as different names to maintain compatibility with our codebase.
+export { Engagement as IEngagement, AnyEngagement as Engagement };
+
 @ObjectType({
-  implements: [IEngagement, Resource],
+  implements: [Engagement, Resource],
 })
-export class LanguageEngagement extends IEngagement {
-  @Field()
-  readonly language: SecuredLanguage;
+export class LanguageEngagement extends Engagement {
+  readonly language: Secured<string>;
 
   @Field()
   readonly firstScripture: SecuredBoolean;
@@ -117,20 +116,14 @@ export class LanguageEngagement extends IEngagement {
 }
 
 @ObjectType({
-  implements: [IEngagement, Resource],
+  implements: [Engagement, Resource],
 })
-export class InternshipEngagement extends IEngagement {
-  @Field()
-  // To the implementor: We can move this to a separate resolver if we will
-  // just be looking up by ID via different query/service call.
-  // Talk to Carson.
-  readonly countryOfOrigin: SecuredCountry;
+export class InternshipEngagement extends Engagement {
+  readonly countryOfOrigin: Secured<string>;
 
-  @Field()
-  readonly intern: SecuredUser;
+  readonly intern: Secured<string>;
 
-  @Field()
-  readonly mentor: SecuredUser;
+  readonly mentor: Secured<string>;
 
   @Field()
   readonly position: SecuredInternPosition;
