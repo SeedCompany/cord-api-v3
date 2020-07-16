@@ -3,8 +3,8 @@ import {
   inArray,
   node,
   Query,
-  relation,
   regexp,
+  relation,
 } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { isFunction } from 'lodash';
