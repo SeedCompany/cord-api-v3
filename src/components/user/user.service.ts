@@ -91,6 +91,400 @@ export class UserService {
     }
   }
 
+  // helper method for defining properties
+  property = (prop: string, value: any | null) => {
+    const createdAt = DateTime.local();
+    return [
+      [
+        node('user'),
+        relation('out', '', prop, {
+          active: true,
+          createdAt,
+        }),
+        node(prop, 'Property', {
+          active: true,
+          value,
+        }),
+      ],
+    ];
+  };
+
+  // helper method for defining properties
+  permission = (property: string) => {
+    const createdAt = DateTime.local();
+    return [
+      [
+        node('adminSG'),
+        relation('out', '', 'permission', {
+          active: true,
+          createdAt,
+        }),
+        node('', 'Permission', {
+          property,
+          active: true,
+          read: true,
+          edit: true,
+          admin: true,
+        }),
+        relation('out', '', 'baseNode', {
+          active: true,
+          createdAt,
+        }),
+        node('user'),
+      ],
+      [
+        node('readerSG'),
+        relation('out', '', 'permission', {
+          active: true,
+          createdAt,
+        }),
+        node('', 'Permission', {
+          property,
+          active: true,
+          read: true,
+          edit: false,
+          admin: false,
+        }),
+        relation('out', '', 'baseNode', {
+          active: true,
+          createdAt,
+        }),
+        node('user'),
+      ],
+    ];
+  };
+
+  rootUserAccess = (session?: ISession) => {
+    const createdAt = DateTime.local();
+
+    if (!session) {
+      return [];
+    }
+    return [
+      [
+        node('adminSG'),
+        relation('out', '', 'member', { active: true, createdAt }),
+        node('rootuser'),
+      ],
+      [
+        node('readerSG'),
+        relation('out', '', 'member', { active: true, createdAt }),
+        node('rootuser'),
+      ],
+    ];
+  };
+
+  async create(input: CreatePerson, session?: ISession): Promise<string> {
+    const id = generate();
+    const createdAt = DateTime.local();
+
+    const query = this.db.query();
+    if (session) {
+      query.match([
+        node('rootuser', 'User', {
+          active: true,
+          id: this.config.rootAdmin.id,
+        }),
+      ]);
+    }
+    query.create([
+      [
+        node('user', 'User', {
+          id,
+          active: true,
+          createdAt,
+          createdByUserId: 'system',
+          canCreateBudget: true,
+          canReadBudgets: true,
+          canCreateFile: true,
+          canReadFiles: true,
+          canCreateFileVersion: true,
+          canReadFileVersions: true,
+          canCreateDirectory: true,
+          canReadDirectorys: true,
+          canCreateOrg: true,
+          canReadOrgs: true,
+          canCreateFilm: true,
+          canReadFilms: true,
+          canCreateLiteracyMaterial: true,
+          canReadLiteracyMaterials: true,
+          canCreateStory: true,
+          canReadStorys: true,
+          canReadUsers: true,
+          canCreateLanguage: true,
+          canReadLanguages: true,
+          canCreateEducation: true,
+          canReadEducationList: true,
+          canCreateUnavailability: true,
+          canReadUnavailabilityList: true,
+          canCreatePartnership: true,
+          canReadPartnerships: true,
+          canCreateProduct: true,
+          canReadProducts: true,
+          canCreateProject: true,
+          canReadProjects: true,
+          canCreateZone: true,
+          canReadZone: true,
+          canCreateRegion: true,
+          canReadRegion: true,
+          canCreateCountry: true,
+          canReadCountry: true,
+          canCreateCeremony: true,
+          canReadCeremonies: true,
+          canCreateProjectMember: true,
+          canReadProjectMembers: true,
+          canCreateEngagement: true,
+          canReadEngagements: true,
+          canDeleteOwnUser: true,
+          canDeleteLocation: true,
+          canCreateLocation: true,
+          canCreateEthnologueLanguage: true,
+          canReadEthnologueLanguages: true,
+          owningOrgId: 'Seed Company',
+          isAdmin: true,
+        }),
+        relation('out', '', 'email', {
+          active: true,
+          createdAt,
+        }),
+        node('email', 'EmailAddress:Property', {
+          active: true,
+          value: input.email,
+          createdAt,
+        }),
+      ],
+      ...this.property('realFirstName', input.realFirstName),
+      ...this.property('realLastName', input.realLastName),
+      ...this.property('displayFirstName', input.displayFirstName),
+      ...this.property('displayLastName', input.displayLastName),
+      ...this.property('phone', input.phone),
+      ...this.property('timezone', input.timezone),
+      ...this.property('bio', input.bio),
+      ...this.property('status', input.status),
+      [
+        node('user'),
+        relation('in', '', 'member', { active: true, createdAt }),
+        node('adminSG', 'SecurityGroup', {
+          id: generate(),
+          createdAt,
+          active: true,
+          name: `${input.realFirstName} ${input.realLastName} admin`,
+        }),
+      ],
+      [
+        node('user'),
+        relation('in', '', 'member', { active: true, createdAt }),
+        node('readerSG', 'SecurityGroup', {
+          id: generate(),
+          createdAt,
+          active: true,
+          name: `${input.realFirstName} ${input.realLastName} users`,
+        }),
+      ],
+      ...this.rootUserAccess(session),
+      ...this.permission('realFirstName'),
+      ...this.permission('realLastName'),
+      ...this.permission('displayFirstName'),
+      ...this.permission('displayLastName'),
+      ...this.permission('email'),
+      ...this.permission('education'),
+      ...this.permission('organization'),
+      ...this.permission('unavailablity'),
+      ...this.permission('phone'),
+      ...this.permission('timezone'),
+      ...this.permission('bio'),
+      ...this.permission('status'),
+    ]);
+
+    query.return({
+      user: [{ id: 'id' }],
+      readerSG: [{ id: 'readerSGid' }],
+      adminSG: [{ id: 'adminSGid' }],
+    });
+    let result;
+    try {
+      result = await query.first();
+    } catch (e) {
+      if (e instanceof UniquenessError && e.label === 'EmailAddress') {
+        throw new DuplicateException(
+          'person.email',
+          'Email address is already in use',
+          e
+        );
+      }
+      throw new ServerException('Failed to create user', e);
+    }
+    if (!result) {
+      throw new ServerException('Failed to create user');
+    }
+
+    // attach user to publicSG
+
+    const attachUserToPublicSg = await this.db
+      .query()
+      .match(node('user', 'User', { id }))
+      .match(node('publicSg', 'PublicSecurityGroup', { active: true }))
+
+      .create([
+        node('publicSg'),
+        relation('out', '', 'member', { active: true }),
+        node('user'),
+      ])
+      .return('user')
+      .first();
+
+    if (!attachUserToPublicSg) {
+      this.logger.error('failed to attach user to public securityGroup');
+    }
+
+    if (this.config.defaultOrg.id) {
+      const attachToOrgPublicSg = await this.db
+        .query()
+        .match(node('user', 'User', { id }))
+        .match([
+          node('orgPublicSg', 'OrgPublicSecurityGroup'),
+          relation('out', '', 'organization'),
+          node('defaultOrg', 'Organization', {
+            active: true,
+            id: this.config.defaultOrg.id,
+          }),
+        ])
+        .create([
+          node('user'),
+          relation('in', '', 'member', { active: true }),
+          node('orgPublicSg'),
+        ])
+        .run();
+
+      if (attachToOrgPublicSg) {
+        //
+      }
+    }
+
+    if (session?.userId) {
+      const assignSG = this.db
+        .query()
+        .match([node('requestingUser', 'User', { id: session.userId })])
+        .match([
+          node('rootuser', 'User', {
+            active: true,
+            id: this.config.rootAdmin.id,
+          }),
+        ]);
+      assignSG
+        .create([
+          [
+            node('adminSG'),
+            relation('out', '', 'member', {
+              active: true,
+              admin: true,
+              createdAt,
+            }),
+            node('requestingUser'),
+          ],
+          [
+            node('readerSG'),
+            relation('out', '', 'member', {
+              active: true,
+              admin: true,
+              createdAt,
+            }),
+            node('requestingUser'),
+          ],
+          [
+            node('adminSG'),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('rootuser'),
+          ],
+          [
+            node('readerSG'),
+            relation('out', '', 'member', { active: true, createdAt }),
+            node('rootuser'),
+          ],
+        ])
+        .return({
+          requestingUser: [{ id: 'id' }],
+          readerSG: [{ id: 'readerSGid' }],
+          adminSG: [{ id: 'adminSGid' }],
+        });
+      await assignSG.first();
+    }
+
+    return result.id;
+  }
+
+  async readOne(id: string, session: ISession): Promise<User> {
+    if (!session.userId) {
+      session.userId = this.config.anonUser.id;
+    }
+
+    const props = [
+      'email',
+      'realFirstName',
+      'realLastName',
+      'displayFirstName',
+      'displayLastName',
+      'phone',
+      'timezone',
+      'bio',
+      'status',
+    ];
+    const query = this.db
+      .query()
+      .call(matchRequestingUser, session)
+      .call(matchUserPermissions, 'User', id)
+      .call(addAllSecureProperties, ...props)
+      .with([
+        ...props.map(addPropertyCoalesceWithClause),
+        'coalesce(node.id) as id',
+        'coalesce(node.createdAt) as createdAt',
+      ])
+      .returnDistinct([...props, 'id', 'createdAt']);
+
+    const result = (await query.first()) as User | undefined;
+    if (!result) {
+      throw new NotFoundException('Could not find user');
+    }
+
+    return result;
+  }
+
+  async update(input: UpdateUser, session: ISession): Promise<User> {
+    this.logger.info('mutation update User', { input, session });
+    const user = await this.readOne(input.id, session);
+
+    return this.db.sgUpdateProperties({
+      session,
+      object: user,
+      props: [
+        'realFirstName',
+        'realLastName',
+        'displayFirstName',
+        'displayLastName',
+        'phone',
+        'timezone',
+        'bio',
+        'status',
+      ],
+      changes: input,
+      nodevar: 'user',
+    });
+  }
+
+  async delete(id: string, session: ISession): Promise<void> {
+    const user = await this.readOne(id, session);
+    try {
+      await this.db.deleteNode({
+        session,
+        object: user,
+        aclEditProp: 'canDeleteOwnUser',
+      });
+    } catch (e) {
+      this.logger.error('Could not delete user', { exception: e });
+      throw new ServerException('Could not delete user');
+    }
+  }
+
   async list(
     { filter, ...input }: UserListInput,
     session: ISession
@@ -350,457 +744,6 @@ export class UserService {
     return true;
   }
 
-  async create(input: CreatePerson, session?: ISession): Promise<string> {
-    const id = generate();
-    const createdAt = DateTime.local();
-
-    // helper method for defining properties
-    const property = (prop: string, value: any | null) => {
-      return [
-        [
-          node('user'),
-          relation('out', '', prop, {
-            active: true,
-            createdAt,
-          }),
-          node(prop, 'Property', {
-            active: true,
-            value,
-          }),
-        ],
-      ];
-    };
-
-    // helper method for defining properties
-    const permission = (property: string) => {
-      const createdAt = DateTime.local();
-      return [
-        [
-          node('adminSG'),
-          relation('out', '', 'permission', {
-            active: true,
-            createdAt,
-          }),
-          node('', 'Permission', {
-            property,
-            active: true,
-            read: true,
-            edit: true,
-            admin: true,
-          }),
-          relation('out', '', 'baseNode', {
-            active: true,
-            createdAt,
-          }),
-          node('user'),
-        ],
-        [
-          node('readerSG'),
-          relation('out', '', 'permission', {
-            active: true,
-            createdAt,
-          }),
-          node('', 'Permission', {
-            property,
-            active: true,
-            read: true,
-            edit: false,
-            admin: false,
-          }),
-          relation('out', '', 'baseNode', {
-            active: true,
-            createdAt,
-          }),
-          node('user'),
-        ],
-      ];
-    };
-
-    const rootUserAccess = () => {
-      if (!session) {
-        return [];
-      }
-      return [
-        [
-          node('adminSG'),
-          relation('out', '', 'member', { active: true, createdAt }),
-          node('rootuser'),
-        ],
-        [
-          node('readerSG'),
-          relation('out', '', 'member', { active: true, createdAt }),
-          node('rootuser'),
-        ],
-      ];
-    };
-
-    const query = this.db.query();
-    if (session) {
-      query.match([
-        node('rootuser', 'User', {
-          active: true,
-          id: this.config.rootAdmin.id,
-        }),
-      ]);
-    }
-    query.create([
-      [
-        node('user', 'User', {
-          id,
-          active: true,
-          createdAt,
-          createdByUserId: 'system',
-          canCreateBudget: true,
-          canReadBudgets: true,
-          canCreateFile: true,
-          canReadFiles: true,
-          canCreateFileVersion: true,
-          canReadFileVersions: true,
-          canCreateDirectory: true,
-          canReadDirectorys: true,
-          canCreateOrg: true,
-          canReadOrgs: true,
-          canCreateFilm: true,
-          canReadFilms: true,
-          canCreateLiteracyMaterial: true,
-          canReadLiteracyMaterials: true,
-          canCreateStory: true,
-          canReadStorys: true,
-          canReadUsers: true,
-          canCreateLanguage: true,
-          canReadLanguages: true,
-          canCreateEducation: true,
-          canReadEducationList: true,
-          canCreateUnavailability: true,
-          canReadUnavailabilityList: true,
-          canCreatePartnership: true,
-          canReadPartnerships: true,
-          canCreateProduct: true,
-          canReadProducts: true,
-          canCreateProject: true,
-          canReadProjects: true,
-          canCreateZone: true,
-          canReadZone: true,
-          canCreateRegion: true,
-          canReadRegion: true,
-          canCreateCountry: true,
-          canReadCountry: true,
-          canCreateCeremony: true,
-          canReadCeremonies: true,
-          canCreateProjectMember: true,
-          canReadProjectMembers: true,
-          canCreateEngagement: true,
-          canReadEngagements: true,
-          canDeleteOwnUser: true,
-          canDeleteLocation: true,
-          canCreateLocation: true,
-          canCreateEthnologueLanguage: true,
-          canReadEthnologueLanguages: true,
-          owningOrgId: 'Seed Company',
-          isAdmin: true,
-        }),
-        relation('out', '', 'email', {
-          active: true,
-          createdAt,
-        }),
-        node('email', 'EmailAddress:Property', {
-          active: true,
-          value: input.email,
-          createdAt,
-        }),
-      ],
-      ...property('realFirstName', input.realFirstName),
-      ...property('realLastName', input.realLastName),
-      ...property('displayFirstName', input.displayFirstName),
-      ...property('displayLastName', input.displayLastName),
-      ...property('phone', input.phone),
-      ...property('timezone', input.timezone),
-      ...property('bio', input.bio),
-      ...property('status', input.status),
-      [
-        node('user'),
-        relation('in', '', 'member', { active: true, createdAt }),
-        node('adminSG', 'SecurityGroup', {
-          id: generate(),
-          createdAt,
-          active: true,
-          name: `${input.realFirstName} ${input.realLastName} admin`,
-        }),
-      ],
-      [
-        node('user'),
-        relation('in', '', 'member', { active: true, createdAt }),
-        node('readerSG', 'SecurityGroup', {
-          id: generate(),
-          createdAt,
-          active: true,
-          name: `${input.realFirstName} ${input.realLastName} users`,
-        }),
-      ],
-      ...rootUserAccess(),
-      ...permission('realFirstName'),
-      ...permission('realLastName'),
-      ...permission('displayFirstName'),
-      ...permission('displayLastName'),
-      ...permission('email'),
-      ...permission('education'),
-      ...permission('organization'),
-      ...permission('unavailablity'),
-      ...permission('phone'),
-      ...permission('timezone'),
-      ...permission('bio'),
-      ...permission('status'),
-    ]);
-
-    query.return({
-      user: [{ id: 'id' }],
-      readerSG: [{ id: 'readerSGid' }],
-      adminSG: [{ id: 'adminSGid' }],
-    });
-    let result;
-    try {
-      result = await query.first();
-    } catch (e) {
-      if (e instanceof UniquenessError && e.label === 'EmailAddress') {
-        throw new DuplicateException(
-          'person.email',
-          'Email address is already in use',
-          e
-        );
-      }
-      throw new ServerException('Failed to create user', e);
-    }
-    if (!result) {
-      throw new ServerException('Failed to create user');
-    }
-
-    // attach user to publicSG
-
-    const attachUserToPublicSg = await this.db
-      .query()
-      .match(node('user', 'User', { id }))
-      .match(node('publicSg', 'PublicSecurityGroup', { active: true }))
-
-      .create([
-        node('publicSg'),
-        relation('out', '', 'member', { active: true }),
-        node('user'),
-      ])
-      .return('user')
-      .first();
-
-    if (!attachUserToPublicSg) {
-      this.logger.error('failed to attach user to public securityGroup');
-    }
-
-    if (this.config.defaultOrg.id) {
-      const attachToOrgPublicSg = await this.db
-        .query()
-        .match(node('user', 'User', { id }))
-        .match([
-          node('orgPublicSg', 'OrgPublicSecurityGroup'),
-          relation('out', '', 'organization'),
-          node('defaultOrg', 'Organization', {
-            active: true,
-            id: this.config.defaultOrg.id,
-          }),
-        ])
-        .create([
-          node('user'),
-          relation('in', '', 'member', { active: true }),
-          node('orgPublicSg'),
-        ])
-        .run();
-
-      if (attachToOrgPublicSg) {
-        //
-      }
-    }
-
-    if (session?.userId) {
-      const assignSG = this.db
-        .query()
-        .match([node('requestingUser', 'User', { id: session.userId })])
-        .match([
-          node('rootuser', 'User', {
-            active: true,
-            id: this.config.rootAdmin.id,
-          }),
-        ]);
-      assignSG
-        .create([
-          [
-            node('adminSG'),
-            relation('out', '', 'member', {
-              active: true,
-              admin: true,
-              createdAt,
-            }),
-            node('requestingUser'),
-          ],
-          [
-            node('readerSG'),
-            relation('out', '', 'member', {
-              active: true,
-              admin: true,
-              createdAt,
-            }),
-            node('requestingUser'),
-          ],
-          [
-            node('adminSG'),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('rootuser'),
-          ],
-          [
-            node('readerSG'),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('rootuser'),
-          ],
-        ])
-        .return({
-          requestingUser: [{ id: 'id' }],
-          readerSG: [{ id: 'readerSGid' }],
-          adminSG: [{ id: 'adminSGid' }],
-        });
-      await assignSG.first();
-    }
-
-    return result.id;
-  }
-
-  async readOne(id: string, session: ISession): Promise<User> {
-    if (!session.userId) {
-      session.userId = this.config.anonUser.id;
-    }
-
-    const props = [
-      'email',
-      'realFirstName',
-      'realLastName',
-      'displayFirstName',
-      'displayLastName',
-      'phone',
-      'timezone',
-      'bio',
-      'status',
-    ];
-    const query = this.db
-      .query()
-      .call(matchRequestingUser, session)
-      .call(matchUserPermissions, 'User', id)
-      .call(addAllSecureProperties, ...props)
-      .with([
-        ...props.map(addPropertyCoalesceWithClause),
-        'coalesce(node.id) as id',
-        'coalesce(node.createdAt) as createdAt',
-      ])
-      .returnDistinct([...props, 'id', 'createdAt']);
-
-    const result = (await query.first()) as User | undefined;
-    if (!result) {
-      throw new NotFoundException('Could not find user');
-    }
-
-    return result;
-  }
-
-  async update(input: UpdateUser, session: ISession): Promise<User> {
-    this.logger.info('mutation update User', { input, session });
-    const user = await this.readOne(input.id, session);
-
-    return this.db.sgUpdateProperties({
-      session,
-      object: user,
-      props: [
-        'realFirstName',
-        'realLastName',
-        'displayFirstName',
-        'displayLastName',
-        'phone',
-        'timezone',
-        'bio',
-        'status',
-      ],
-      changes: input,
-      nodevar: 'user',
-    });
-  }
-
-  async delete(id: string, session: ISession): Promise<void> {
-    const user = await this.readOne(id, session);
-    try {
-      await this.db.deleteNode({
-        session,
-        object: user,
-        aclEditProp: 'canDeleteOwnUser',
-      });
-    } catch (e) {
-      this.logger.error('Could not delete user', { exception: e });
-      throw new ServerException('Could not delete user');
-    }
-  }
-
-  async checkUserConsistency(session: ISession): Promise<boolean> {
-    const users = await this.db
-      .query()
-      .match([
-        matchSession(session),
-        [
-          node('user', 'User', {
-            active: true,
-          }),
-        ],
-      ])
-      .return('user.id as id')
-      .run();
-
-    return (
-      (
-        await Promise.all(
-          users.map(async (user) => {
-            return this.db.hasProperties({
-              session,
-              id: user.id,
-              props: [
-                'email',
-                'realFirstName',
-                'realLastName',
-                'displayFirstName',
-                'displayLastName',
-                'phone',
-                'timezone',
-                'bio',
-              ],
-              nodevar: 'user',
-            });
-          })
-        )
-      ).every((n) => n) &&
-      (
-        await Promise.all(
-          users.map(async (user) => {
-            return this.db.isUniqueProperties({
-              session,
-              id: user.id,
-              props: [
-                'email',
-                'realFirstName',
-                'realLastName',
-                'displayFirstName',
-                'displayLastName',
-                'phone',
-                'timezone',
-                'bio',
-              ],
-              nodevar: 'user',
-            });
-          })
-        )
-      ).every((n) => n)
-    );
-  }
-
   async assignOrganizationToUser(
     request: AssignOrganizationToUser,
     session: ISession
@@ -958,5 +901,65 @@ export class UserService {
       return false;
     }
     return true;
+  }
+
+  async checkUserConsistency(session: ISession): Promise<boolean> {
+    const users = await this.db
+      .query()
+      .match([
+        matchSession(session),
+        [
+          node('user', 'User', {
+            active: true,
+          }),
+        ],
+      ])
+      .return('user.id as id')
+      .run();
+
+    return (
+      (
+        await Promise.all(
+          users.map(async (user) => {
+            return this.db.hasProperties({
+              session,
+              id: user.id,
+              props: [
+                'email',
+                'realFirstName',
+                'realLastName',
+                'displayFirstName',
+                'displayLastName',
+                'phone',
+                'timezone',
+                'bio',
+              ],
+              nodevar: 'user',
+            });
+          })
+        )
+      ).every((n) => n) &&
+      (
+        await Promise.all(
+          users.map(async (user) => {
+            return this.db.isUniqueProperties({
+              session,
+              id: user.id,
+              props: [
+                'email',
+                'realFirstName',
+                'realLastName',
+                'displayFirstName',
+                'displayLastName',
+                'phone',
+                'timezone',
+                'bio',
+              ],
+              nodevar: 'user',
+            });
+          })
+        )
+      ).every((n) => n)
+    );
   }
 }
