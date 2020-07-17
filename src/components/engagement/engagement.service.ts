@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 import {
   BadRequestException,
   Injectable,
@@ -1060,6 +1062,8 @@ export class EngagementService {
         : filter.type === 'language'
         ? 'language:LanguageEngagement'
         : 'engagement';
+    // const filterLabels = filter.type === 'internship' ? ['InternshipEngagement'] : [];
+    // const labels = ['BaseNode', 'Engagement', ...filterLabels];
 
     const tmpNode = matchNode.substring(0, matchNode.indexOf(':'));
     const node = tmpNode ? tmpNode : 'engagement';
@@ -1095,19 +1099,22 @@ export class EngagementService {
     input: ProductListInput,
     session: ISession
   ): Promise<SecuredProductList> {
-    const result = await this.products.list(
-      {
-        ...input,
-        filter: {
-          ...input.filter,
-          engagementId: engagement.id,
-        },
-      },
-      session
-    );
+    // const result = await this.products.list(
+    //   {
+    //     ...input,
+    //     filter: {
+    //       ...input.filter,
+    //       engagementId: engagement.id,
+    //     },
+    //   },
+    //   session
+    // );
 
     return {
-      ...result,
+      items: [],
+      total: 0,
+      hasMore: false,
+      // ...result,
       canRead: true, // TODO
       canCreate: true, // TODO
     };
