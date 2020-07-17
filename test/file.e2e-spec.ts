@@ -189,12 +189,16 @@ describe('File e2e', () => {
     shiftNow({ days: 2 });
 
     // change user
-    const current = await createUser(app);
+    const current = await login(app, {
+      email: me.email.value,
+      password: myPassword,
+    });
 
     const fakeFile = generateFakeFile();
     const updated = await uploadFile(app, initial.id, fakeFile);
     await assertFileChanges(updated, initial, fakeFile);
-    expect(updated.modifiedBy.id).toEqual(current.id);
+
+    expect(updated.modifiedBy.id).toEqual(current.login.user.id);
     // TODO Files have their own names, should these be updated to match the new version's name?
     // expect(updatedFile.name).not.toEqual(initialFile.name);
   });
