@@ -3,18 +3,26 @@ import {
   NotFoundException,
   UnauthorizedException as UnauthenticatedException,
 } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
+import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { DuplicateException, ISession, ServerException } from '../../common';
 import {
+  addAllPropertyOptionalMatches,
+  addBaseNodeMetaPropsWithClause,
   addPropertyCoalesceWithClause,
   ConfigService,
   DatabaseService,
+  filterByString,
   ILogger,
+  listWithSecureObject,
   Logger,
+  matchProperties,
+  matchRequestingUser,
   matchSession,
+  matchUserPermissions,
   OnIndex,
+  runListQuery,
   UniquenessError,
 } from '../../core';
 import {
@@ -85,39 +93,64 @@ export class UserService {
   }
 
   async list(
-    { page, count, sort, order, filter }: UserListInput,
+    { filter, ...input }: UserListInput,
     session: ISession
   ): Promise<UserListOutput> {
-    const result = await this.db.list<User>({
-      session,
-      nodevar: 'user',
-      aclReadProp: 'canReadUsers',
-      aclEditProp: 'canCreateUser',
-      props: [
-        'email',
-        'realFirstName',
-        'realLastName',
-        'displayFirstName',
-        'displayLastName',
-        'phone',
-        'timezone',
-        'bio',
-        'status',
-      ],
-      input: {
-        page,
-        count,
-        sort,
-        order,
-        filter,
-      },
-    });
+    const label = 'User';
+    const baseNodeMetaProps = ['id', 'createdAt'];
+    const secureProps = [
+      'email',
+      'realFirstName',
+      'realLastName',
+      'displayFirstName',
+      'displayLastName',
+      'phone',
+      'timezone',
+      'bio',
+      'status',
+    ];
 
-    return {
-      items: result.items,
-      hasMore: result.hasMore,
-      total: result.total,
-    };
+    const query = this.db
+      .query()
+      .call(matchRequestingUser, session)
+      .call(matchUserPermissions, 'User');
+
+    if (filter.displayFirstName) {
+      query.call(
+        filterByString,
+        label,
+        'displayFirstName',
+        filter.displayFirstName
+      );
+    } else if (filter.displayLastName) {
+      query.call(
+        filterByString,
+        label,
+        'displayLastName',
+        filter.displayLastName
+      );
+    }
+
+    // match on the rest of the properties of the object requested
+    query
+      .call(
+        addAllPropertyOptionalMatches,
+        ...secureProps
+        //...unsecureProps
+      )
+
+      // form return object
+      // ${listWithUnsecureObject(unsecureProps)}, // removed from a few lines down
+      .with(
+        `
+          {
+            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
+            ${listWithSecureObject(secureProps)}
+          } as node
+        `
+      );
+
+    return runListQuery(query, input, secureProps.includes(input.sort));
   }
 
   async listEducations(
@@ -637,44 +670,8 @@ export class UserService {
     return result.id;
   }
 
-  propMatch = (query: Query, property: string, baseNode: string) => {
-    const readPerm = property + 'ReadPerm';
-    const editPerm = property + 'EditPerm';
-    query.optionalMatch([
-      [
-        node(baseNode),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node(editPerm, 'Permission', {
-          property,
-          active: true,
-          edit: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node(baseNode),
-      ],
-    ]);
-    query.optionalMatch([
-      [
-        node(baseNode),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node(readPerm, 'Permission', {
-          property,
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node(baseNode),
-        relation('out', '', property, { active: true }),
-        node(property, 'Property', { active: true }),
-      ],
-    ]);
-  };
-
   async readOne(id: string, session: ISession): Promise<User> {
+    const requestingUserId = session.userId ?? this.config.anonUser.id;
     const props = [
       'email',
       'realFirstName',
@@ -691,17 +688,12 @@ export class UserService {
       .match([
         node('requestingUser', 'User', {
           active: true,
-          id: session.userId,
+          id: requestingUserId,
           canReadUsers: true,
         }),
       ])
-      .match([node('user', 'User', { active: true, id })]);
-
-    for (const prop of props) {
-      this.propMatch(query, prop, 'user');
-    }
-
-    query
+      .match([node('user', 'User', { active: true, id })])
+      .call(matchProperties, 'user', ...props)
       .with([
         ...props.map(addPropertyCoalesceWithClause),
         'coalesce(user.id) as id',

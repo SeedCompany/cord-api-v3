@@ -239,7 +239,7 @@ export function filterQuery(
       }),
       relation('out', '', 'permission', { active: true }),
       node('', 'Permission', {
-        property: sort,
+        property: filterKey,
         read: true,
         active: true,
       }),
@@ -247,7 +247,7 @@ export function filterQuery(
       node('node', label, {
         active: true,
       }),
-      relation('out', '', sort, { active: true }),
+      relation('out', '', filterKey, { active: true }),
       node(filterKey, 'Property', { active: true }),
     ]);
     query.where({
@@ -279,6 +279,7 @@ export function filterQuery(
 export function listReturnBlock<T = any>(
   query: Query,
   { page, count, sort: sortInput, order }: SortablePaginationInput,
+  isSecuredSort: boolean,
   sort?: string | ((sortStr: string) => string)
 ) {
   query
@@ -290,7 +291,9 @@ export function listReturnBlock<T = any>(
         ? isFunction(sort)
           ? sort(sortInput)
           : sort
-        : `node.${sortInput}.value`,
+        : isSecuredSort
+        ? `node.${sortInput}.value`
+        : `node.${sortInput}`,
       order
     )
     .with([
@@ -308,9 +311,10 @@ export function listReturnBlock<T = any>(
 
 export async function runListQuery<T>(
   query: Query,
-  input: SortablePaginationInput
+  input: SortablePaginationInput,
+  isSecuredSort = true
 ) {
-  const result = await listReturnBlock<T>(query, input).first();
+  const result = await listReturnBlock<T>(query, input, isSecuredSort).first();
 
   // result could be undefined if there are no matched nodes
   // in that case the total truly is 0 we just can't express that in cypher
