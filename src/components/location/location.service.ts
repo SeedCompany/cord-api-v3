@@ -406,7 +406,7 @@ export class LocationService {
         ])
         .create([
           [
-            node('newZone', 'Zone', {
+            node('newZone', ['Zone', 'BaseNode'], {
               active: true,
               createdAt,
               id,
@@ -687,7 +687,7 @@ export class LocationService {
         ])
         .create([
           [
-            node('newRegion', 'Region', {
+            node('newRegion', ['Region', 'BaseNode'], {
               active: true,
               createdAt,
               id,
@@ -949,7 +949,7 @@ export class LocationService {
         ])
         .create([
           [
-            node('newCountry', 'Country', {
+            node('newCountry', ['Country', 'BaseNode'], {
               active: true,
               createdAt,
               id,
