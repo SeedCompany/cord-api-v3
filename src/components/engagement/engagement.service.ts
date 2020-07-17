@@ -152,6 +152,7 @@ export class EngagementService {
       throw new NotFoundException('could not find language Engagement');
     }
 
+    // todo: refactor with/return query to remove the need to do mapping
     const response = {
       ...result,
       language: {

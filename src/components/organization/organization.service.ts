@@ -226,7 +226,7 @@ export class OrganizationService {
         `
       );
 
-    return runListQuery(query, input);
+    return runListQuery(query, input, secureProps.includes(input.sort));
   }
 
   async checkAllOrgs(session: ISession): Promise<boolean> {

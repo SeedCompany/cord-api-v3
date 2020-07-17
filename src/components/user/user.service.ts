@@ -8,7 +8,7 @@ import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { DuplicateException, ISession, ServerException } from '../../common';
 import {
-  addAllPropertyOptionalMatches,
+  addAllSecureProperties,
   addBaseNodeMetaPropsWithClause,
   addPropertyCoalesceWithClause,
   ConfigService,
@@ -134,7 +134,7 @@ export class UserService {
     // match on the rest of the properties of the object requested
     query
       .call(
-        addAllPropertyOptionalMatches,
+        addAllSecureProperties,
         ...secureProps
         //...unsecureProps
       )
