@@ -5,7 +5,7 @@ import {
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
-import { first, intersection, upperFirst } from 'lodash';
+import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
@@ -36,7 +36,6 @@ import { ProjectType } from '../project/dto/type.enum';
 import {
   CreateInternshipEngagement,
   CreateLanguageEngagement,
-  Engagement,
   EngagementListInput,
   EngagementListOutput,
   EngagementStatus,
@@ -235,12 +234,16 @@ export class EngagementService {
     }
     createLE.create([
       [
-        node('languageEngagement', 'LanguageEngagement:BaseNode', {
-          active: true,
-          createdAt,
-          id,
-          owningOrgId: session.owningOrgId,
-        }),
+        node(
+          'languageEngagement',
+          ['LanguageEngagement', 'Engagement', 'BaseNode'],
+          {
+            active: true,
+            createdAt,
+            id,
+            owningOrgId: session.owningOrgId,
+          }
+        ),
       ],
       ...this.property(
         'completeDate',
@@ -391,7 +394,7 @@ export class EngagementService {
       }
       throw new ServerException('Could not create Language Engagement');
     }
-    const res = await this.readLanguageEngagement(id, session);
+    const res = (await this.readOne(id, session)) as LanguageEngagement;
     return res;
   }
 
@@ -470,12 +473,16 @@ export class EngagementService {
     }
     createIE.create([
       [
-        node('internshipEngagement', 'InternshipEngagement:BaseNode', {
-          active: true,
-          createdAt,
-          id,
-          owningOrgId: session.owningOrgId,
-        }),
+        node(
+          'internshipEngagement',
+          ['InternshipEngagement', 'Engagement', 'BaseNode'],
+          {
+            active: true,
+            createdAt,
+            id,
+            owningOrgId: session.owningOrgId,
+          }
+        ),
       ],
       ...this.property('modifiedAt', createdAt, 'internshipEngagement'),
       ...this.property(
@@ -684,7 +691,7 @@ export class EngagementService {
       throw new ServerException('Could not create Internship Engagement');
     }
     try {
-      return await this.readInternshipEngagement(id, session);
+      return (await this.readOne(id, session)) as InternshipEngagement;
     } catch (e) {
       this.logger.error(e);
 
@@ -694,30 +701,11 @@ export class EngagementService {
 
   // READ ///////////////////////////////////////////////////////////
 
-  async readOne(id: string, session: ISession): Promise<Engagement> {
-    const qr = `
-    MATCH (engagement {id: $id, active: true}) RETURN labels(engagement) as labels
-    `;
-
-    const results = await this.db.query().raw(qr, { id }).first();
-    const label = first(
-      intersection(results?.labels, [
-        'LanguageEngagement',
-        'InternshipEngagement',
-      ])
-    );
-
-    if (label === 'LanguageEngagement') {
-      return this.readLanguageEngagement(id, session);
-    }
-    return this.readInternshipEngagement(id, session);
-  }
-
-  async readLanguageEngagement(
+  async readOne(
     id: string,
     session: ISession
-  ): Promise<LanguageEngagement> {
-    this.logger.debug('readLanguageEngagement', { id, userId: session.userId });
+  ): Promise<LanguageEngagement | InternshipEngagement> {
+    this.logger.debug('readOne', { id, userId: session.userId });
 
     if (!session.userId) {
       this.logger.info('using anon user id');
@@ -725,22 +713,30 @@ export class EngagementService {
     }
 
     const props = [
-      'firstScripture',
-      'lukePartnership',
-      'sentPrintingDate',
+      // Engagement
+      'status',
+      'statusModifiedAt',
       'completeDate',
-      'startDate',
-      'endDate',
       'disbursementCompleteDate',
       'communicationsCompleteDate',
       'initialEndDate',
+      'startDate',
+      'endDate',
+      'modifiedAt',
       'lastSuspendedAt',
       'lastReactivatedAt',
-      'statusModifiedAt',
-      'status',
-      'modifiedAt',
+
+      // Language specific
+      'firstScripture',
+      'lukePartnership',
+      'sentPrintingDate',
       'paraTextRegistryId',
       'pnp',
+
+      // Internship specific
+      'position',
+      'methodologies',
+      'growthPlan',
     ];
 
     const baseNodeMetaProps = ['id', 'createdAt'];
@@ -759,97 +755,6 @@ export class EngagementService {
         childBaseNodeLabel: 'Language',
         childBaseNodeMetaPropertyKey: 'id',
         returnIdentifier: 'languageId',
-      },
-    ];
-
-    const query = this.db
-      .query()
-      .call(matchRequestingUser, session)
-      .call(matchUserPermissions, 'LanguageEngagement', id)
-      .call(addAllSecureProperties, ...props)
-      .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
-      .with([
-        ...props.map(addPropertyCoalesceWithClause),
-        ...childBaseNodeMetaProps.map(addShapeForChildBaseNodeMetaProperty),
-        ...baseNodeMetaProps.map(addShapeForBaseNodeMetaProperty),
-      ])
-      .returnDistinct([
-        ...props,
-        ...baseNodeMetaProps,
-        ...childBaseNodeMetaProps.map((x) => x.returnIdentifier),
-      ]);
-
-    let result;
-
-    try {
-      result = await query.first();
-    } catch (error) {
-      this.logger.error('could not read Language Enagement', error);
-    }
-    if (!result || !result.id) {
-      throw new NotFoundException('could not find language Engagement');
-    }
-
-    // todo: refactor with/return query to remove the need to do mapping
-    const response = {
-      ...result,
-      language: {
-        value: result.languageId,
-        canRead: !!result.canReadLanguage,
-        canEdit: !!result.canEditLanguage,
-      },
-      ceremony: {
-        value: result.ceremonyId,
-        canRead: !!result.canReadCeremony,
-        canEdit: !!result.canEditCeremony,
-      },
-      status: result.status.value,
-      modifiedAt: result.modifiedAt.value,
-    };
-
-    return response as LanguageEngagement;
-  }
-
-  async readInternshipEngagement(
-    id: string,
-    session: ISession
-  ): Promise<InternshipEngagement> {
-    this.logger.debug('readInternshipEngagement', {
-      id,
-      userId: session.userId,
-    });
-
-    if (!session.userId) {
-      this.logger.info('using anon user id');
-      session.userId = this.config.anonUser.id;
-    }
-
-    const props = [
-      'modifiedAt',
-      'status',
-      'startDate',
-      'completeDate',
-      'position',
-      'endDate',
-      'disbursementCompleteDate',
-      'communicationsCompleteDate',
-      'initialEndDate',
-      'lastSuspendedAt',
-      'lastReactivatedAt',
-      'statusModifiedAt',
-      'methodologies',
-      'growthPlan',
-    ];
-
-    const baseNodeMetaProps = ['id', 'createdAt'];
-
-    const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
-      {
-        parentBaseNodePropertyKey: 'ceremony',
-        parentRelationDirection: 'out',
-        childBaseNodeLabel: 'Ceremony',
-        childBaseNodeMetaPropertyKey: 'id',
-        returnIdentifier: 'ceremonyId',
       },
       {
         parentBaseNodePropertyKey: 'intern',
@@ -877,18 +782,20 @@ export class EngagementService {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .call(matchUserPermissions, 'InternshipEngagement', id)
+      .call(matchUserPermissions, 'Engagement', id)
       .call(addAllSecureProperties, ...props)
       .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
       .with([
         ...props.map(addPropertyCoalesceWithClause),
         ...childBaseNodeMetaProps.map(addShapeForChildBaseNodeMetaProperty),
         ...baseNodeMetaProps.map(addShapeForBaseNodeMetaProperty),
+        'node',
       ])
       .returnDistinct([
         ...props,
         ...baseNodeMetaProps,
         ...childBaseNodeMetaProps.map((x) => x.returnIdentifier),
+        'labels(node) as labels',
       ]);
 
     let result;
@@ -896,24 +803,31 @@ export class EngagementService {
     try {
       result = await query.first();
     } catch (error) {
-      this.logger.error('could not read Internship Enagement', error);
+      this.logger.error('could not read Enagement', error);
     }
     if (!result || !result.id) {
-      throw new NotFoundException('could not find internship Engagement');
+      throw new NotFoundException('could not find Engagement');
     }
 
     // todo: refactor with/return query to remove the need to do mapping
-    const response = {
+    const response: any = {
       ...result,
-      methodologies: {
-        value: result.methodologies.value ? result.methodologies.value : [],
-        canRead: !!result.canReadMethodologies,
-        canEdit: !!result.canEditMethodologies,
+      status: result.status.value,
+      modifiedAt: result.modifiedAt.value,
+      language: {
+        value: result.languageId,
+        canRead: !!result.canReadLanguage,
+        canEdit: !!result.canEditLanguage,
       },
       ceremony: {
         value: result.ceremonyId,
         canRead: !!result.canReadCeremony,
         canEdit: !!result.canEditCeremony,
+      },
+      methodologies: {
+        value: result.methodologies.value ? result.methodologies.value : [],
+        canRead: !!result.canReadMethodologies,
+        canEdit: !!result.canEditMethodologies,
       },
       countryOfOrigin: {
         value: result.countryOfOriginId,
@@ -930,14 +844,20 @@ export class EngagementService {
         canRead: !!result.canReadMentor,
         canEdit: !!result.canEditMentor,
       },
-      status: result.status.value,
-      modifiedAt: result.modifiedAt.value,
     };
 
-    return response as InternshipEngagement;
+    if (result.labels.includes('LanguageEngagement')) {
+      response.__typename = 'LanguageEngagement';
+      return (response as unknown) as LanguageEngagement;
+    } else if (result.labels.includes('InternshipEngagement')) {
+      response.__typename = 'InternshipEngagement';
+      return (response as unknown) as InternshipEngagement;
+    } else {
+      throw new NotFoundException('could not find Engagement');
+    }
   }
 
-  // UPDATE /////////////////////////////////////////////////////////
+  // UPDATE ////////////////////////////////////////////////////////
 
   async updateLanguageEngagement(
     input: UpdateLanguageEngagement,
@@ -949,7 +869,10 @@ export class EngagementService {
         ...rest,
         modifiedAt: DateTime.local(),
       };
-      const object = await this.readLanguageEngagement(input.id, session);
+      const object = (await this.readOne(
+        input.id,
+        session
+      )) as LanguageEngagement;
       await this.db.sgUpdateProperties({
         session,
         object,
@@ -969,7 +892,7 @@ export class EngagementService {
       });
       await this.files.updateDefinedFile(object.pnp, pnp, session);
 
-      return await this.readLanguageEngagement(input.id, session);
+      return (await this.readOne(input.id, session)) as LanguageEngagement;
     } catch (e) {
       this.logger.error('Error updating language engagement', { exception: e });
       throw new ServerException('Could not update LanguageEngagement');
@@ -1045,7 +968,10 @@ export class EngagementService {
 
         await countryQ.first();
       }
-      const object = await this.readInternshipEngagement(input.id, session);
+      const object = (await this.readOne(
+        input.id,
+        session
+      )) as InternshipEngagement;
       await this.db.sgUpdateProperties({
         session,
         object,
@@ -1084,7 +1010,10 @@ export class EngagementService {
         session
       );
 
-      const result = await this.readInternshipEngagement(input.id, session);
+      const result = (await this.readOne(
+        input.id,
+        session
+      )) as InternshipEngagement;
 
       return result;
     } catch (e) {
