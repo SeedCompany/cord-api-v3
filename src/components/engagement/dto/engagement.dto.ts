@@ -24,22 +24,15 @@ export type AnyEngagement = MergeExclusive<
   InternshipEngagement
 >;
 
-export const isLanguageEngagement = (
-  val: AnyEngagement
-): val is LanguageEngagement => 'language' in val;
-
-export const isInternshipEngagement = (
-  val: AnyEngagement
-): val is InternshipEngagement => !isLanguageEngagement(val);
-
 @InterfaceType({
-  resolveType: (val: AnyEngagement) =>
-    isLanguageEngagement(val) ? LanguageEngagement : InternshipEngagement,
+  resolveType: (val: AnyEngagement) => val.__typename,
 })
 /**
  * This should be used for GraphQL but never for TypeScript types.
  */
 class Engagement extends Resource {
+  readonly __typename: string;
+
   @Field(() => EngagementStatus)
   readonly status: EngagementStatus; // TODO Workflow
 
