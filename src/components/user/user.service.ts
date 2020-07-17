@@ -17,7 +17,6 @@ import {
   ILogger,
   listWithSecureObject,
   Logger,
-  matchProperties,
   matchRequestingUser,
   matchSession,
   matchUserPermissions,
@@ -671,7 +670,10 @@ export class UserService {
   }
 
   async readOne(id: string, session: ISession): Promise<User> {
-    const requestingUserId = session.userId ?? this.config.anonUser.id;
+    if (!session.userId) {
+      session.userId = this.config.anonUser.id;
+    }
+
     const props = [
       'email',
       'realFirstName',
@@ -685,19 +687,13 @@ export class UserService {
     ];
     const query = this.db
       .query()
-      .match([
-        node('requestingUser', 'User', {
-          active: true,
-          id: requestingUserId,
-          canReadUsers: true,
-        }),
-      ])
-      .match([node('user', 'User', { active: true, id })])
-      .call(matchProperties, 'user', ...props)
+      .call(matchRequestingUser, session)
+      .call(matchUserPermissions, 'User', id)
+      .call(addAllSecureProperties, ...props)
       .with([
         ...props.map(addPropertyCoalesceWithClause),
-        'coalesce(user.id) as id',
-        'coalesce(user.createdAt) as createdAt',
+        'coalesce(node.id) as id',
+        'coalesce(node.createdAt) as createdAt',
       ])
       .returnDistinct([...props, 'id', 'createdAt']);
 
