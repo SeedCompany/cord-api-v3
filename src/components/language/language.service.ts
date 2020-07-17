@@ -212,7 +212,7 @@ export class LanguageService {
         ])
         .create([
           [
-            node('newLang', 'Language', {
+            node('newLang', ['Language', 'BaseNode'], {
               active: true,
               createdAt,
               id,

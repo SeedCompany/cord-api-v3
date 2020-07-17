@@ -7,9 +7,10 @@ import {
 import { node } from 'cypher-query-builder';
 import { ISession } from '../../common';
 import {
-  addAllPropertyOptionalMatches,
+  addAllSecureProperties,
   addBaseNodeMetaPropsWithClause,
   addPropertyCoalesceWithClause,
+  addUserToSG,
   ConfigService,
   createBaseNode,
   createSG,
@@ -109,6 +110,7 @@ export class OrganizationService {
       .call(matchRequestingUser, session)
       .call(createSG, 'orgSG', 'OrgPublicSecurityGroup')
       .call(createBaseNode, 'Organization', secureProps)
+      .call(addUserToSG, 'requestingUser', 'adminSG') // must come after base node creation
       .return('node.id as id');
 
     const result = await query.first();
@@ -137,7 +139,7 @@ export class OrganizationService {
       .query()
       .call(matchRequestingUser, session)
       .call(matchUserPermissions, 'Organization', orgId)
-      .call(addAllPropertyOptionalMatches, ...props)
+      .call(addAllSecureProperties, ...props)
       .with([
         ...props.map(addPropertyCoalesceWithClause),
         'coalesce(node.id) as id',
@@ -208,7 +210,7 @@ export class OrganizationService {
     // match on the rest of the properties of the object requested
     query
       .call(
-        addAllPropertyOptionalMatches,
+        addAllSecureProperties,
         ...secureProps
         //...unsecureProps
       )

@@ -10,13 +10,19 @@ import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
 import {
+  addAllMetaPropertiesOfChildBaseNodes,
+  addAllSecureProperties,
+  addPropertyCoalesceWithClause,
+  addShapeForBaseNodeMetaProperty,
+  addShapeForChildBaseNodeMetaProperty,
+  ChildBaseNodeMetaProperty,
   ConfigService,
   DatabaseService,
   ILogger,
   Logger,
-  matchProperties,
+  matchRequestingUser,
   matchSession,
-  printActualQuery,
+  matchUserPermissions,
 } from '../../core';
 import { CeremonyService } from '../ceremony';
 import { CeremonyType } from '../ceremony/dto/type.enum';
@@ -73,11 +79,12 @@ export class EngagementService {
     id: string,
     session: ISession
   ): Promise<LanguageEngagement> {
-    this.logger.info('readLanguageEngagement', { id, userId: session.userId });
+    this.logger.debug('readLanguageEngagement', { id, userId: session.userId });
 
-    const requestingUserId = session.userId
-      ? session.userId
-      : this.config.anonUser.id;
+    if (!session.userId) {
+      this.logger.info('using anon user id');
+      session.userId = this.config.anonUser.id;
+    }
 
     const props = [
       'firstScripture',
@@ -87,7 +94,7 @@ export class EngagementService {
       'startDate',
       'endDate',
       'disbursementCompleteDate',
-      'communicationsCompleteteDate',
+      'communicationsCompleteDate',
       'initialEndDate',
       'lastSuspendedAt',
       'lastReactivatedAt',
@@ -98,187 +105,46 @@ export class EngagementService {
       'pnp',
     ];
 
-    const query2 = this.db
+    const baseNodeMetaProps = ['id', 'createdAt'];
+
+    const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
+      {
+        parentBaseNodePropertyKey: 'ceremony',
+        parentRelationDirection: 'out',
+        childBaseNodeLabel: 'Ceremony',
+        childBaseNodeMetaPropertyKey: 'id',
+        returnIdentifier: 'ceremonyId',
+      },
+      {
+        parentBaseNodePropertyKey: 'language',
+        parentRelationDirection: 'out',
+        childBaseNodeLabel: 'Language',
+        childBaseNodeMetaPropertyKey: 'id',
+        returnIdentifier: 'languageId',
+      },
+    ];
+
+    const query = this.db
       .query()
-      .match([
-        node('requestingUser', 'User', {
-          active: true,
-          id: requestingUserId,
-        }),
+      .call(matchRequestingUser, session)
+      .call(matchUserPermissions, 'LanguageEngagement', id)
+      .call(addAllSecureProperties, ...props)
+      .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
+      .with([
+        ...props.map(addPropertyCoalesceWithClause),
+        ...childBaseNodeMetaProps.map(addShapeForChildBaseNodeMetaProperty),
+        ...baseNodeMetaProps.map(addShapeForBaseNodeMetaProperty),
       ])
-      .match([
-        node('languageEngagement', 'LanguageEngagement', {
-          active: true,
-          id,
-        }),
-      ])
-      .call(matchProperties, 'languageEngagement', ...props)
-      .return('*');
-
-    printActualQuery(this.logger, query2);
-
-    // const result2 = await query2.run();
-
-    // console.log(result2);
-
-    const leQuery = this.db
-      .query()
-      .match(matchSession(session, { withAclRead: 'canReadEngagements' }))
-      .match([
-        node('languageEngagement', 'LanguageEngagement', {
-          active: true,
-          id,
-        }),
+      .returnDistinct([
+        ...props,
+        ...baseNodeMetaProps,
+        ...childBaseNodeMetaProps.map((x) => x.returnIdentifier),
       ]);
-    this.propMatch(leQuery, 'firstScripture', 'languageEngagement');
-    this.propMatch(leQuery, 'lukePartnership', 'languageEngagement');
-    this.propMatch(leQuery, 'sentPrintingDate', 'languageEngagement');
-    this.propMatch(leQuery, 'completeDate', 'languageEngagement');
-    this.propMatch(leQuery, 'startDate', 'languageEngagement');
-    this.propMatch(leQuery, 'endDate', 'languageEngagement');
-    this.propMatch(leQuery, 'disbursementCompleteDate', 'languageEngagement');
-    this.propMatch(leQuery, 'communicationsCompleteDate', 'languageEngagement');
-    this.propMatch(leQuery, 'initialEndDate', 'languageEngagement');
-    this.propMatch(leQuery, 'lastSuspendedAt', 'languageEngagement');
-    this.propMatch(leQuery, 'lastReactivatedAt', 'languageEngagement');
-    this.propMatch(leQuery, 'statusModifiedAt', 'languageEngagement');
-    this.propMatch(leQuery, 'status', 'languageEngagement');
-    this.propMatch(leQuery, 'modifiedAt', 'languageEngagement');
-    this.propMatch(leQuery, 'paraTextRegistryId', 'languageEngagement');
-    this.propMatch(leQuery, 'pnp', 'languageEngagement');
 
-    leQuery
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('permCeremony', 'Permission', {
-          property: 'ceremony',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('languageEngagement'),
-        relation('out', '', 'ceremony', { active: true }),
-        node('newCeremony', 'Ceremony', { active: true }),
-        relation('out', '', 'type', { active: true }),
-        node('ceremonyType', 'Property', { active: true }),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('permLanguage', 'Permission', {
-          property: 'language',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('languageEngagement'),
-        relation('out', '', 'language', { active: true }),
-        node('newLanguage', 'Language', { active: true }),
-      ])
-
-      .optionalMatch([
-        node('languageEngagement'),
-        relation('in', '', 'engagement'),
-        node('project', 'Project', { active: true }),
-      ])
-      .return({
-        languageEngagement: [{ id: 'id', createdAt: 'createdAt' }],
-        newLanguage: [{ id: 'languageId' }],
-        newCeremony: [{ id: 'ceremonyId' }],
-        project: ['project'],
-        firstScripture: [{ value: 'firstScripture' }],
-        lukePartnership: [{ value: 'lukePartnership' }],
-        sentPrintingDate: [{ value: 'sentPrintingDate' }],
-        status: [{ value: 'status' }],
-        completeDate: [{ value: 'completeDate' }],
-        disbursementCompleteDate: [{ value: 'disbursementCompleteDate' }],
-        communicationsCompleteDate: [{ value: 'communicationsCompleteDate' }],
-        startDate: [{ value: 'startDate' }],
-        endDate: [{ value: 'endDate' }],
-        initialEndDate: [{ value: 'initialEndDate' }],
-        lastSuspendedAt: [{ value: 'lastSuspendedAt' }],
-        lastReactivatedAt: [{ value: 'lastReactivatedAt' }],
-        statusModifiedAt: [{ value: 'statusModifiedAt' }],
-        modifiedAt: [{ value: 'modifiedAt' }],
-        paraTextRegistryId: [{ value: 'paraTextRegistryId' }],
-        pnp: [{ value: 'pnp' }],
-        permLanguage: [{ read: 'canReadLanguage', edit: 'canEditLanguage' }],
-        permCeremony: [{ read: 'canReadCeremony', edit: 'canEditCeremony' }],
-        canReadFirstScripture: [
-          { read: 'canReadFirstScripture', edit: 'canEditFirstScripture' },
-        ],
-        canReadLukePartnership: [
-          { read: 'canReadLukePartnership', edit: 'canEditLukePartnership' },
-        ],
-        canReadParaTextRegistryId: [
-          {
-            read: 'canReadParaTextRegistryId',
-            edit: 'canEditParaTextRegistryId',
-          },
-        ],
-        canReadPnp: [
-          {
-            read: 'canReadPnp',
-            edit: 'canEditPnp',
-          },
-        ],
-        canReadSentPrintingDate: [
-          {
-            read: 'canReadSentPrintingDate',
-            edit: 'canEditSentPrintingDate',
-          },
-        ],
-        canReadStatus: [{ read: 'canReadStatus' }],
-        canEditStatus: [{ edit: 'canEditStatus' }],
-        canReadCompleteDate: [
-          { read: 'canReadCompleteDate', edit: 'canEditCompleteDate' },
-        ],
-        canReadDisbursementCompleteDate: [
-          {
-            read: 'canReadDisbursementCompleteDate',
-            edit: 'canEditDisbursementCompleteDate',
-          },
-        ],
-        canReadCommunicationsCompleteDate: [
-          {
-            read: 'canReadCommunicationsCompleteDate',
-            edit: 'canEditCommunicationsCompleteDate',
-          },
-        ],
-        canReadStartDate: [
-          { read: 'canReadStartDate', edit: 'canEditStartDate' },
-        ],
-        canReadEndDate: [{ read: 'canReadEndDate', edit: 'canEditEndDate' }],
-        canReadInitialEndDate: [
-          { read: 'canReadInitialEndDate', edit: 'canEditInitialEndDate' },
-        ],
-        canReadLastSuspendedAt: [
-          { read: 'canReadLastSuspendedAt', edit: 'canEditLastSuspendedAt' },
-        ],
-        canReadLastReactivatedAt: [
-          {
-            read: 'canReadLastReactivatedAt',
-            edit: 'canEditLastReactivatedAt',
-          },
-        ],
-        canReadStatusModifiedAt: [
-          {
-            read: 'canReadStatusModifiedAt',
-            edit: 'canEditStatusModifiedAt',
-          },
-        ],
-        canReadModifiedAt: [
-          { read: 'canReadModifiedAt', edit: 'canEditModifiedAt' },
-        ],
-      });
     let result;
+
     try {
-      result = await leQuery.first();
+      result = await query.first();
     } catch (error) {
       this.logger.error('could not read Language Enagement', error);
     }
@@ -286,96 +152,23 @@ export class EngagementService {
       throw new NotFoundException('could not find language Engagement');
     }
 
-    const languageEngagement = {
+    const response = {
+      ...result,
       language: {
         value: result.languageId,
         canRead: !!result.canReadLanguage,
         canEdit: !!result.canEditLanguage,
       },
-      firstScripture: {
-        value: result.firstScripture,
-        canRead: !!result.canReadFirstScripture,
-        canEdit: !!result.canEditFirstScripture,
-      },
-      lukePartnership: {
-        value: result.lukePartnership,
-        canRead: !!result.canReadLukePartnership,
-        canEdit: !!result.canEditLukePartnership,
-      },
-      sentPrintingDate: {
-        value: result.sentPrintingDate,
-        canRead: !!result.canReadSentPrintingDate,
-        canEdit: !!result.canEditSentPrintingDate,
-      },
-      paraTextRegistryId: {
-        value: result.paraTextRegistryId,
-        canRead: !!result.canReadParaTextRegistryId,
-        canEdit: !!result.canEditParaTextRegistryId,
-      },
-      pnp: {
-        value: result.pnp,
-        canRead: !!result.canReadPnp,
-        canEdit: !!result.canEditPnp,
-      },
-    };
-
-    return {
-      id,
-      createdAt: result.createdAt,
-      ...languageEngagement,
-      status: result.status,
-      modifiedAt: result.modifiedAt,
       ceremony: {
         value: result.ceremonyId,
         canRead: !!result.canReadCeremony,
         canEdit: !!result.canEditCeremony,
       },
-      completeDate: {
-        value: result.completeDate,
-        canRead: !!result.canReadCompleteDate,
-        canEdit: !!result.canEditCompleteDate,
-      },
-      disbursementCompleteDate: {
-        value: result.disbursementCompleteDate,
-        canRead: !!result.CanReadDisbursementCompleteDate,
-        canEdit: !!result.CanEditDisbursementCompleteDate,
-      },
-      communicationsCompleteDate: {
-        value: result.communicationsCompleteDate,
-        canRead: !!result.canReadCommunicationsCompleteDate,
-        canEdit: !!result.canEditCommunicationsCompleteDate,
-      },
-      startDate: {
-        value: result.startDate,
-        canRead: !!result.canReadStartDate,
-        canEdit: !!result.canEditStartDate,
-      },
-      endDate: {
-        value: result.endDate,
-        canRead: !!result.canReadEndDate,
-        canEdit: !!result.canEditEndDate,
-      },
-      initialEndDate: {
-        value: result.initialEndDate,
-        canRead: !!result.canReadInitialEndDate,
-        canEdit: !!result.canEditInitialEndDate,
-      },
-      lastSuspendedAt: {
-        value: result.lastSuspendedAt,
-        canRead: !!result.canReadLastSuspendedAt,
-        canEdit: !!result.canEditLastSuspendedAt,
-      },
-      lastReactivatedAt: {
-        value: result.lastReactivatedAt,
-        canRead: !!result.canReadLastReactivatedAt,
-        canEdit: !!result.canEditLastReactivatedAt,
-      },
-      statusModifiedAt: {
-        value: result.statusModifiedAt,
-        canRead: !!result.canReadStatusModifiedAt,
-        canEdit: !!result.canEditStatusModifiedAt,
-      },
+      status: result.status.value,
+      modifiedAt: result.modifiedAt.value,
     };
+
+    return response as LanguageEngagement;
   }
 
   async list(
@@ -578,6 +371,8 @@ export class EngagementService {
       { type: CeremonyType.Dedication },
       session
     );
+
+    this.logger.info('ceremony created: ', ceremony);
     const createLE = this.db
       .query()
       .match(matchSession(session, { withAclEdit: 'canCreateEngagement' }))
