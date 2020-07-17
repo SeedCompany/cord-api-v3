@@ -189,7 +189,7 @@ export class UserService {
     }
     query.create([
       [
-        node('user', 'User', {
+        node('user', ['User', 'BaseNode'], {
           id,
           active: true,
           createdAt,
