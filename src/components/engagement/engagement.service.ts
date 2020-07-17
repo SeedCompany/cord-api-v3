@@ -56,184 +56,8 @@ export class EngagementService {
     private readonly files: FileService,
     @Logger(`engagement.service`) private readonly logger: ILogger
   ) {}
-  async readOne(id: string, session: ISession): Promise<Engagement> {
-    const qr = `
-    MATCH (engagement {id: $id, active: true}) RETURN labels(engagement) as labels
-    `;
 
-    const results = await this.db.query().raw(qr, { id }).first();
-    const label = first(
-      intersection(results?.labels, [
-        'LanguageEngagement',
-        'InternshipEngagement',
-      ])
-    );
-
-    if (label === 'LanguageEngagement') {
-      return this.readLanguageEngagement(id, session);
-    }
-    return this.readInternshipEngagement(id, session);
-  }
-
-  async readLanguageEngagement(
-    id: string,
-    session: ISession
-  ): Promise<LanguageEngagement> {
-    this.logger.debug('readLanguageEngagement', { id, userId: session.userId });
-
-    if (!session.userId) {
-      this.logger.info('using anon user id');
-      session.userId = this.config.anonUser.id;
-    }
-
-    const props = [
-      'firstScripture',
-      'lukePartnership',
-      'sentPrintingDate',
-      'completeDate',
-      'startDate',
-      'endDate',
-      'disbursementCompleteDate',
-      'communicationsCompleteDate',
-      'initialEndDate',
-      'lastSuspendedAt',
-      'lastReactivatedAt',
-      'statusModifiedAt',
-      'status',
-      'modifiedAt',
-      'paraTextRegistryId',
-      'pnp',
-    ];
-
-    const baseNodeMetaProps = ['id', 'createdAt'];
-
-    const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
-      {
-        parentBaseNodePropertyKey: 'ceremony',
-        parentRelationDirection: 'out',
-        childBaseNodeLabel: 'Ceremony',
-        childBaseNodeMetaPropertyKey: 'id',
-        returnIdentifier: 'ceremonyId',
-      },
-      {
-        parentBaseNodePropertyKey: 'language',
-        parentRelationDirection: 'out',
-        childBaseNodeLabel: 'Language',
-        childBaseNodeMetaPropertyKey: 'id',
-        returnIdentifier: 'languageId',
-      },
-    ];
-
-    const query = this.db
-      .query()
-      .call(matchRequestingUser, session)
-      .call(matchUserPermissions, 'LanguageEngagement', id)
-      .call(addAllSecureProperties, ...props)
-      .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
-      .with([
-        ...props.map(addPropertyCoalesceWithClause),
-        ...childBaseNodeMetaProps.map(addShapeForChildBaseNodeMetaProperty),
-        ...baseNodeMetaProps.map(addShapeForBaseNodeMetaProperty),
-      ])
-      .returnDistinct([
-        ...props,
-        ...baseNodeMetaProps,
-        ...childBaseNodeMetaProps.map((x) => x.returnIdentifier),
-      ]);
-
-    let result;
-
-    try {
-      result = await query.first();
-    } catch (error) {
-      this.logger.error('could not read Language Enagement', error);
-    }
-    if (!result || !result.id) {
-      throw new NotFoundException('could not find language Engagement');
-    }
-
-    // todo: refactor with/return query to remove the need to do mapping
-    const response = {
-      ...result,
-      language: {
-        value: result.languageId,
-        canRead: !!result.canReadLanguage,
-        canEdit: !!result.canEditLanguage,
-      },
-      ceremony: {
-        value: result.ceremonyId,
-        canRead: !!result.canReadCeremony,
-        canEdit: !!result.canEditCeremony,
-      },
-      status: result.status.value,
-      modifiedAt: result.modifiedAt.value,
-    };
-
-    return response as LanguageEngagement;
-  }
-
-  async list(
-    { page, count, sort, order, filter }: EngagementListInput,
-    session: ISession
-  ): Promise<EngagementListOutput> {
-    const matchNode =
-      filter.type === 'internship'
-        ? 'internship:InternshipEngagement'
-        : filter.type === 'language'
-        ? 'language:LanguageEngagement'
-        : 'engagement';
-
-    const tmpNode = matchNode.substring(0, matchNode.indexOf(':'));
-    const node = tmpNode ? tmpNode : 'engagement';
-
-    const query = `
-      MATCH (${matchNode} {active: true})<-[:engagement {active: true}]-(project)
-      RETURN ${node}.id as id
-      ORDER BY ${node}.${sort} ${order}
-      SKIP $skip LIMIT $count
-    `;
-    const result = await this.db
-      .query()
-      .raw(query, {
-        skip: (page - 1) * count,
-        count,
-        type: filter.type,
-      })
-      .run();
-
-    const items = await Promise.all(
-      result.map((row) => this.readOne(row.id, session))
-    );
-
-    return {
-      items,
-      total: items.length,
-      hasMore: false,
-    };
-  }
-
-  async listProducts(
-    engagement: LanguageEngagement,
-    input: ProductListInput,
-    session: ISession
-  ): Promise<SecuredProductList> {
-    const result = await this.products.list(
-      {
-        ...input,
-        filter: {
-          ...input.filter,
-          engagementId: engagement.id,
-        },
-      },
-      session
-    );
-
-    return {
-      ...result,
-      canRead: true, // TODO
-      canCreate: true, // TODO
-    };
-  }
+  // HELPER //////////////////////////////////////////////////////////
 
   propMatch = (query: Query, property: string, baseNode: string) => {
     const readPerm = 'canRead' + upperFirst(property);
@@ -344,6 +168,19 @@ export class EngagementService {
       ],
     ];
   };
+
+  protected async getProjectTypeById(
+    projectId: string
+  ): Promise<ProjectType | undefined> {
+    const qr = `
+    MATCH (p:Project {id: $projectId, active: true}) RETURN p.type as type
+    `;
+    const results = await this.db.query().raw(qr, { projectId }).first();
+
+    return results?.type as ProjectType | undefined;
+  }
+
+  // CREATE /////////////////////////////////////////////////////////
 
   async createLanguageEngagement(
     { languageId, projectId, ...input }: CreateLanguageEngagement,
@@ -855,6 +692,124 @@ export class EngagementService {
     }
   }
 
+  // READ ///////////////////////////////////////////////////////////
+
+  async readOne(id: string, session: ISession): Promise<Engagement> {
+    const qr = `
+    MATCH (engagement {id: $id, active: true}) RETURN labels(engagement) as labels
+    `;
+
+    const results = await this.db.query().raw(qr, { id }).first();
+    const label = first(
+      intersection(results?.labels, [
+        'LanguageEngagement',
+        'InternshipEngagement',
+      ])
+    );
+
+    if (label === 'LanguageEngagement') {
+      return this.readLanguageEngagement(id, session);
+    }
+    return this.readInternshipEngagement(id, session);
+  }
+
+  async readLanguageEngagement(
+    id: string,
+    session: ISession
+  ): Promise<LanguageEngagement> {
+    this.logger.debug('readLanguageEngagement', { id, userId: session.userId });
+
+    if (!session.userId) {
+      this.logger.info('using anon user id');
+      session.userId = this.config.anonUser.id;
+    }
+
+    const props = [
+      'firstScripture',
+      'lukePartnership',
+      'sentPrintingDate',
+      'completeDate',
+      'startDate',
+      'endDate',
+      'disbursementCompleteDate',
+      'communicationsCompleteDate',
+      'initialEndDate',
+      'lastSuspendedAt',
+      'lastReactivatedAt',
+      'statusModifiedAt',
+      'status',
+      'modifiedAt',
+      'paraTextRegistryId',
+      'pnp',
+    ];
+
+    const baseNodeMetaProps = ['id', 'createdAt'];
+
+    const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
+      {
+        parentBaseNodePropertyKey: 'ceremony',
+        parentRelationDirection: 'out',
+        childBaseNodeLabel: 'Ceremony',
+        childBaseNodeMetaPropertyKey: 'id',
+        returnIdentifier: 'ceremonyId',
+      },
+      {
+        parentBaseNodePropertyKey: 'language',
+        parentRelationDirection: 'out',
+        childBaseNodeLabel: 'Language',
+        childBaseNodeMetaPropertyKey: 'id',
+        returnIdentifier: 'languageId',
+      },
+    ];
+
+    const query = this.db
+      .query()
+      .call(matchRequestingUser, session)
+      .call(matchUserPermissions, 'LanguageEngagement', id)
+      .call(addAllSecureProperties, ...props)
+      .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
+      .with([
+        ...props.map(addPropertyCoalesceWithClause),
+        ...childBaseNodeMetaProps.map(addShapeForChildBaseNodeMetaProperty),
+        ...baseNodeMetaProps.map(addShapeForBaseNodeMetaProperty),
+      ])
+      .returnDistinct([
+        ...props,
+        ...baseNodeMetaProps,
+        ...childBaseNodeMetaProps.map((x) => x.returnIdentifier),
+      ]);
+
+    let result;
+
+    try {
+      result = await query.first();
+    } catch (error) {
+      this.logger.error('could not read Language Enagement', error);
+    }
+    if (!result || !result.id) {
+      throw new NotFoundException('could not find language Engagement');
+    }
+
+    // todo: refactor with/return query to remove the need to do mapping
+    const response = {
+      ...result,
+      language: {
+        value: result.languageId,
+        canRead: !!result.canReadLanguage,
+        canEdit: !!result.canEditLanguage,
+      },
+      ceremony: {
+        value: result.ceremonyId,
+        canRead: !!result.canReadCeremony,
+        canEdit: !!result.canEditCeremony,
+      },
+      status: result.status.value,
+      modifiedAt: result.modifiedAt.value,
+    };
+
+    return response as LanguageEngagement;
+  }
+
   async readInternshipEngagement(
     id: string,
     session: ISession
@@ -1165,6 +1120,8 @@ export class EngagementService {
     };
   }
 
+  // UPDATE /////////////////////////////////////////////////////////
+
   async updateLanguageEngagement(
     input: UpdateLanguageEngagement,
     session: ISession
@@ -1321,6 +1278,8 @@ export class EngagementService {
     }
   }
 
+  // DELETE /////////////////////////////////////////////////////////
+
   async delete(id: string, session: ISession): Promise<void> {
     const object = await this.readOne(id, session);
 
@@ -1342,6 +1301,73 @@ export class EngagementService {
       throw new ServerException('Failed to delete partnership');
     }
   }
+
+  // LIST ///////////////////////////////////////////////////////////
+
+  async list(
+    { page, count, sort, order, filter }: EngagementListInput,
+    session: ISession
+  ): Promise<EngagementListOutput> {
+    const matchNode =
+      filter.type === 'internship'
+        ? 'internship:InternshipEngagement'
+        : filter.type === 'language'
+        ? 'language:LanguageEngagement'
+        : 'engagement';
+
+    const tmpNode = matchNode.substring(0, matchNode.indexOf(':'));
+    const node = tmpNode ? tmpNode : 'engagement';
+
+    const query = `
+      MATCH (${matchNode} {active: true})<-[:engagement {active: true}]-(project)
+      RETURN ${node}.id as id
+      ORDER BY ${node}.${sort} ${order}
+      SKIP $skip LIMIT $count
+    `;
+    const result = await this.db
+      .query()
+      .raw(query, {
+        skip: (page - 1) * count,
+        count,
+        type: filter.type,
+      })
+      .run();
+
+    const items = await Promise.all(
+      result.map((row) => this.readOne(row.id, session))
+    );
+
+    return {
+      items,
+      total: items.length,
+      hasMore: false,
+    };
+  }
+
+  async listProducts(
+    engagement: LanguageEngagement,
+    input: ProductListInput,
+    session: ISession
+  ): Promise<SecuredProductList> {
+    const result = await this.products.list(
+      {
+        ...input,
+        filter: {
+          ...input.filter,
+          engagementId: engagement.id,
+        },
+      },
+      session
+    );
+
+    return {
+      ...result,
+      canRead: true, // TODO
+      canCreate: true, // TODO
+    };
+  }
+
+  // CONSISTENCY ////////////////////////////////////////////////////
 
   async checkEngagementConsistency(
     baseNode: string,
@@ -1440,16 +1466,5 @@ export class EngagementService {
         )
       ).every((n) => n)
     );
-  }
-
-  protected async getProjectTypeById(
-    projectId: string
-  ): Promise<ProjectType | undefined> {
-    const qr = `
-    MATCH (p:Project {id: $projectId, active: true}) RETURN p.type as type
-    `;
-    const results = await this.db.query().raw(qr, { projectId }).first();
-
-    return results?.type as ProjectType | undefined;
   }
 }
