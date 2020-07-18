@@ -169,7 +169,15 @@ export class ProductService {
       throw new NotFoundException('Could not find product');
     }
 
-    return result;
+    return {
+      ...result,
+      scriptureReferences: {
+        // TODO
+        canRead: true,
+        canEdit: true,
+        value: [],
+      },
+    };
   }
 
   async update(input: UpdateProduct, session: ISession): Promise<AnyProduct> {
@@ -249,35 +257,21 @@ export class ProductService {
         `
       );
 
-    return runListQuery(query, input, secureProps.includes(input.sort));
-    // const result = await this.db.list<Product>({
-    //   session,
-    //   nodevar: 'product',
-    //   aclReadProp: 'canReadProducts',
-    //   aclEditProp: 'canCreateProduct',
-    //   props: [
-    //     { name: 'mediums', secure: true, list: true },
-    //     { name: 'purposes', secure: true, list: true },
-    //     { name: 'methodology', secure: true },
-    //   ],
-    //   input: {
-    //     page,
-    //     count,
-    //     sort,
-    //     order,
-    //     filter,
-    //   },
-    // });
+    const result = await runListQuery(
+      query,
+      input,
+      secureProps.includes(input.sort)
+    );
 
-    // let items = result.items.map((item) => ({
-    //   ...item,
-    //   scriptureReferences: {
-    //     // TODO
-    //     canRead: true,
-    //     canEdit: true,
-    //     value: [],
-    //   },
-    // }));
+    const items = result.items.map((item) => ({
+      ...(item as Product),
+      scriptureReferences: {
+        // TODO
+        canRead: true,
+        canEdit: true,
+        value: [],
+      },
+    }));
 
     // // TODO this is bad, we should at least fetch the the producible IDs in the
     // // list query above. Then we may have to call each service to fully hydrate
@@ -314,10 +308,10 @@ export class ProductService {
     //   })
     // );
 
-    // return {
-    //   items,
-    //   hasMore: result.hasMore,
-    //   total: result.total,
-    // };
+    return {
+      items,
+      hasMore: result.hasMore,
+      total: result.total,
+    };
   }
 }
