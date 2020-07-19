@@ -26,13 +26,7 @@ import {
   OnIndex,
   runListQuery,
 } from '../../core';
-import {
-  Budget,
-  BudgetService,
-  BudgetStatus,
-  SecuredBudget,
-  UpdateBudget,
-} from '../budget';
+import { Budget, BudgetService, BudgetStatus, UpdateBudget } from '../budget';
 import {
   EngagementListInput,
   EngagementService,
@@ -195,331 +189,6 @@ export class ProjectService {
       ],
     ];
   };
-
-  async readOne(id: string, session: ISession): Promise<Project> {
-    this.logger.info('query readone project', { id, userId: session.userId });
-    const label = 'Project';
-    const baseNodeMetaProps = ['id', 'createdAt', 'type'];
-    const unsecureProps = ['status', 'sensitivity'];
-    const secureProps = [
-      'name',
-      'deptId',
-      'step',
-      'mouStart',
-      'mouEnd',
-      'estimatedSubmission',
-      'modifiedAt',
-      'location',
-    ];
-    const readProject = this.db
-      .query()
-      // there should be a alternative function for matchSession in query helper.
-      .match(matchSession(session, { withAclRead: 'canReadProjects' }))
-      .call(matchUserPermissions, label, id)
-      .call(addAllSecureProperties, ...secureProps, ...unsecureProps)
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canReadLocation', 'Permission', {
-          property: 'location',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('project'),
-        relation('out', '', 'location', { active: true }),
-        node('country', 'Country', { active: true }),
-      ])
-      .return(
-        `
-          {
-            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
-            ${listWithUnsecureObject(unsecureProps)},
-            ${listWithSecureObject(secureProps)},
-            countryId: country.id,
-            canReadLocation: canReadLocation
-          } as project
-        `
-      );
-
-    let result;
-    try {
-      result = await readProject.first();
-    } catch (e) {
-      this.logger.error('e :>> ', e);
-      return await Promise.reject(e);
-    }
-
-    if (!result) {
-      throw new NotFoundException(
-        `Could not find project DEBUG: requestingUser ${session.userId} target ProjectId ${id}`
-      );
-    }
-
-    const location = result.countryId
-      ? await this.locationService
-          .readOneCountry(result.countryId, session)
-          .then((country) => {
-            return {
-              value: {
-                id: country.id,
-                name: { ...country.name },
-                region: { ...country.region },
-                createdAt: country.createdAt,
-              },
-            };
-          })
-          .catch(() => {
-            return {
-              value: undefined,
-            };
-          })
-      : {
-          value: undefined,
-        };
-
-    return {
-      id,
-      createdAt: result.project.createdAt,
-      modifiedAt: result.project.modifiedAt.value,
-      type: result.project.type,
-      sensitivity: result.project.sensitivity,
-      name: result.project.name,
-      deptId: result.project.deptId,
-      step: result.project.step,
-      status: result.project.status,
-      location: {
-        ...location,
-        canRead: !!result.project.canReadLocation.read,
-        canEdit: !!result.project.canReadLocation.edit,
-      },
-      mouStart: result.project.mouStart,
-      mouEnd: result.project.mouEnd,
-      estimatedSubmission: result.project.estimatedSubmission,
-    };
-  }
-
-  async list(
-    { filter, ...input }: ProjectListInput,
-    session: ISession
-  ): Promise<ProjectListOutput> {
-    const label = 'Project';
-    const baseNodeMetaProps = ['id', 'createdAt', 'type'];
-    const unsecureProps = ['status', 'sensitivity'];
-    const secureProps = [
-      'name',
-      'deptId',
-      'step',
-      'location',
-      'mouStart',
-      'mouEnd',
-      'estimatedSubmission',
-      'modifiedAt',
-    ];
-
-    const listQuery = this.db
-      .query()
-      // there should be a alternative function for matchSession in query helper.
-      .match(matchSession(session, { withAclRead: 'canReadProjects' }))
-      .call(matchUserPermissions, label);
-    // filter by filter options
-    if (filter.status) {
-      listQuery.call(filterByStringArray, label, 'status', filter.status);
-    }
-    if (filter.sensitivity) {
-      listQuery.call(
-        filterByStringArray,
-        label,
-        'sensitivity',
-        filter.sensitivity
-      );
-    }
-    // match on the rest of the properties of the object requested
-    listQuery
-      .call(addAllSecureProperties, ...secureProps, ...unsecureProps)
-
-      // form return object
-      .with(
-        `
-          {
-            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
-            ${listWithUnsecureObject(unsecureProps)},
-            ${listWithSecureObject(secureProps)}
-          }
-          as node
-        `
-      );
-    return runListQuery<Project>(listQuery, input);
-  }
-
-  async currentBudget(
-    project: Project,
-    session: ISession
-  ): Promise<SecuredBudget> {
-    const budgets = await this.budgetService.list(
-      {
-        filter: {
-          projectId: project.id,
-        },
-      },
-      session
-    );
-
-    const current = budgets.items.find(
-      (b) => b.status === BudgetStatus.Current
-    );
-
-    //574 - if no current budget, then fallback to the first pending budget
-    let pendingBudget;
-    if (!current) {
-      pendingBudget = budgets.items[0];
-    }
-
-    return {
-      value: current ? current : pendingBudget,
-      canEdit: true,
-      canRead: true,
-    };
-  }
-
-  async listEngagements(
-    project: Project,
-    input: EngagementListInput,
-    session: ISession
-  ): Promise<SecuredEngagementList> {
-    this.logger.info('list engagements ', {
-      projectId: project.id,
-      input,
-      userId: session.userId,
-    });
-    //get a list of engagements
-    const listQuery = this.db
-      .query()
-      .match(matchSession(session, { withAclRead: 'canReadProjects' }));
-    listQuery
-      .match([
-        node('project', 'Project', { active: true, id: project.id }),
-        relation('out', '', 'engagement', { active: true }),
-        node('engagement', 'BaseNode', { active: true }),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', {
-          active: true,
-        }),
-        node('canReadEngagement', 'Permission', {
-          active: true,
-          read: true,
-          property: 'engagement',
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('project'),
-      ])
-      .returnDistinct([
-        {
-          canReadEngagement: [{ read: 'canRead' }],
-          engagement: [{ id: 'id' }],
-        },
-      ]);
-
-    let result;
-    try {
-      result = await listQuery.run();
-    } catch (e) {
-      this.logger.error('e :>> ', e);
-    }
-
-    const items = result
-      ? await Promise.all(
-          result.map((r) => this.engagementService.readOne(r.id, session))
-        )
-      : [];
-
-    const retVal: SecuredEngagementList = {
-      total: items.length,
-      hasMore: false,
-      items,
-      canRead: true,
-      canCreate: true,
-    };
-    return retVal;
-  }
-
-  async listProjectMembers(
-    projectId: string,
-    input: ProjectMemberListInput,
-    session: ISession
-  ): Promise<SecuredProjectMemberList> {
-    const result = await this.projectMembers.list(
-      {
-        ...input,
-        filter: {
-          ...input.filter,
-          projectId: projectId,
-        },
-      },
-      session
-    );
-
-    return {
-      ...result,
-      canRead: true, // TODO
-      canCreate: true, // TODO
-    };
-  }
-
-  async listPartnerships(
-    projectId: string,
-    input: PartnershipListInput,
-    session: ISession
-  ): Promise<SecuredPartnershipList> {
-    const result = await this.partnerships.list(
-      {
-        ...input,
-        filter: {
-          ...input.filter,
-          projectId: projectId,
-        },
-      },
-      session
-    );
-
-    return {
-      ...result,
-      canCreate: true,
-      canRead: true,
-    };
-  }
-
-  async getRootDirectory(
-    projectId: string,
-    session: ISession
-  ): Promise<Directory> {
-    const rootRef = await this.db
-      .query()
-      .match(matchSession(session, { withAclRead: 'canReadProjects' }))
-      .match([
-        [
-          node('project', 'Project', { active: true, id: projectId }),
-          relation('out', 'rootDirectory', { active: true }),
-          node('directory', 'BaseNode:Directory'),
-        ],
-      ])
-      .return({
-        directory: [{ id: 'id' }],
-      })
-      .first();
-    if (!rootRef?.id) {
-      throw new NotFoundException(
-        'Could not find root directory associated to this project'
-      );
-    }
-    return this.fileService.getDirectory(rootRef.id, session);
-  }
 
   async create(
     { locationId, ...input }: CreateProject,
@@ -688,6 +357,111 @@ export class ProjectService {
     }
   }
 
+  async readOne(id: string, session: ISession): Promise<Project> {
+    this.logger.info('query readone project', { id, userId: session.userId });
+    const label = 'Project';
+    const baseNodeMetaProps = ['id', 'createdAt', 'type'];
+    const unsecureProps = ['status', 'sensitivity'];
+    const secureProps = [
+      'name',
+      'deptId',
+      'step',
+      'mouStart',
+      'mouEnd',
+      'estimatedSubmission',
+      'modifiedAt',
+      'location',
+    ];
+    const readProject = this.db
+      .query()
+      // there should be a alternative function for matchSession in query helper.
+      .match(matchSession(session, { withAclRead: 'canReadProjects' }))
+      .call(matchUserPermissions, label, id)
+      .call(addAllSecureProperties, ...secureProps, ...unsecureProps)
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node('canReadLocation', 'Permission', {
+          property: 'location',
+          active: true,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('project'),
+        relation('out', '', 'location', { active: true }),
+        node('country', 'Country', { active: true }),
+      ])
+      .return(
+        `
+          {
+            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
+            ${listWithUnsecureObject(unsecureProps)},
+            ${listWithSecureObject(secureProps)},
+            countryId: country.id,
+            canReadLocation: canReadLocation
+          } as project
+        `
+      );
+
+    let result;
+    try {
+      result = await readProject.first();
+    } catch (e) {
+      this.logger.error('e :>> ', e);
+      return await Promise.reject(e);
+    }
+
+    if (!result) {
+      throw new NotFoundException(
+        `Could not find project DEBUG: requestingUser ${session.userId} target ProjectId ${id}`
+      );
+    }
+
+    const location = result.countryId
+      ? await this.locationService
+          .readOneCountry(result.countryId, session)
+          .then((country) => {
+            return {
+              value: {
+                id: country.id,
+                name: { ...country.name },
+                region: { ...country.region },
+                createdAt: country.createdAt,
+              },
+            };
+          })
+          .catch(() => {
+            return {
+              value: undefined,
+            };
+          })
+      : {
+          value: undefined,
+        };
+
+    return {
+      id,
+      createdAt: result.project.createdAt,
+      modifiedAt: result.project.modifiedAt.value,
+      type: result.project.type,
+      sensitivity: result.project.sensitivity,
+      name: result.project.name,
+      deptId: result.project.deptId,
+      step: result.project.step,
+      status: result.project.status,
+      location: {
+        ...location,
+        canRead: !!result.project.canReadLocation.read,
+        canEdit: !!result.project.canReadLocation.edit,
+      },
+      mouStart: result.project.mouStart,
+      mouEnd: result.project.mouEnd,
+      estimatedSubmission: result.project.estimatedSubmission,
+    };
+  }
+
   async update(input: UpdateProject, session: ISession): Promise<Project> {
     const object = await this.readOne(input.id, session);
 
@@ -770,6 +544,196 @@ export class ProjectService {
     }
 
     await this.eventBus.publish(new ProjectDeletedEvent(object, session));
+  }
+
+  async list(
+    { filter, ...input }: ProjectListInput,
+    session: ISession
+  ): Promise<ProjectListOutput> {
+    const label = 'Project';
+    const baseNodeMetaProps = ['id', 'createdAt', 'type'];
+    const unsecureProps = ['status', 'sensitivity'];
+    const secureProps = [
+      'name',
+      'deptId',
+      'step',
+      'location',
+      'mouStart',
+      'mouEnd',
+      'estimatedSubmission',
+      'modifiedAt',
+    ];
+
+    const listQuery = this.db
+      .query()
+      // there should be a alternative function for matchSession in query helper.
+      .match(matchSession(session, { withAclRead: 'canReadProjects' }))
+      .call(matchUserPermissions, label);
+    // filter by filter options
+    if (filter.status) {
+      listQuery.call(filterByStringArray, label, 'status', filter.status);
+    }
+    if (filter.sensitivity) {
+      listQuery.call(
+        filterByStringArray,
+        label,
+        'sensitivity',
+        filter.sensitivity
+      );
+    }
+    // match on the rest of the properties of the object requested
+    listQuery
+      .call(addAllSecureProperties, ...secureProps, ...unsecureProps)
+
+      // form return object
+      .with(
+        `
+          {
+            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
+            ${listWithUnsecureObject(unsecureProps)},
+            ${listWithSecureObject(secureProps)}
+          }
+          as node
+        `
+      );
+    return runListQuery<Project>(listQuery, input);
+  }
+
+  async listEngagements(
+    project: Project,
+    input: EngagementListInput,
+    session: ISession
+  ): Promise<SecuredEngagementList> {
+    this.logger.info('list engagements ', {
+      projectId: project.id,
+      input,
+      userId: session.userId,
+    });
+    //get a list of engagements
+    const listQuery = this.db
+      .query()
+      .match(matchSession(session, { withAclRead: 'canReadProjects' }));
+    listQuery
+      .match([
+        node('project', 'Project', { active: true, id: project.id }),
+        relation('out', '', 'engagement', { active: true }),
+        node('engagement', 'BaseNode', { active: true }),
+      ])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', {
+          active: true,
+        }),
+        node('canReadEngagement', 'Permission', {
+          active: true,
+          read: true,
+          property: 'engagement',
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('project'),
+      ])
+      .returnDistinct([
+        {
+          canReadEngagement: [{ read: 'canRead' }],
+          engagement: [{ id: 'id' }],
+        },
+      ]);
+
+    let result;
+    try {
+      result = await listQuery.run();
+    } catch (e) {
+      this.logger.error('e :>> ', e);
+    }
+
+    const items = result
+      ? await Promise.all(
+          result.map((r) => this.engagementService.readOne(r.id, session))
+        )
+      : [];
+
+    const retVal: SecuredEngagementList = {
+      total: items.length,
+      hasMore: false,
+      items,
+      canRead: true,
+      canCreate: true,
+    };
+    return retVal;
+  }
+
+  async listProjectMembers(
+    projectId: string,
+    input: ProjectMemberListInput,
+    session: ISession
+  ): Promise<SecuredProjectMemberList> {
+    const result = await this.projectMembers.list(
+      {
+        ...input,
+        filter: {
+          ...input.filter,
+          projectId: projectId,
+        },
+      },
+      session
+    );
+
+    return {
+      ...result,
+      canRead: true, // TODO
+      canCreate: true, // TODO
+    };
+  }
+
+  async listPartnerships(
+    projectId: string,
+    input: PartnershipListInput,
+    session: ISession
+  ): Promise<SecuredPartnershipList> {
+    const result = await this.partnerships.list(
+      {
+        ...input,
+        filter: {
+          ...input.filter,
+          projectId: projectId,
+        },
+      },
+      session
+    );
+
+    return {
+      ...result,
+      canCreate: true,
+      canRead: true,
+    };
+  }
+
+  async getRootDirectory(
+    projectId: string,
+    session: ISession
+  ): Promise<Directory> {
+    const rootRef = await this.db
+      .query()
+      .match(matchSession(session, { withAclRead: 'canReadProjects' }))
+      .match([
+        [
+          node('project', 'Project', { active: true, id: projectId }),
+          relation('out', 'rootDirectory', { active: true }),
+          node('directory', 'BaseNode:Directory'),
+        ],
+      ])
+      .return({
+        directory: [{ id: 'id' }],
+      })
+      .first();
+    if (!rootRef?.id) {
+      throw new NotFoundException(
+        'Could not find root directory associated to this project'
+      );
+    }
+    return this.fileService.getDirectory(rootRef.id, session);
   }
 
   async attachBudgetRecords(
