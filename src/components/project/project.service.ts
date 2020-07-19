@@ -602,7 +602,11 @@ export class ProjectService {
           as node
         `
       );
-    return runListQuery<Project>(listQuery, input);
+    return runListQuery<Project>(
+      listQuery,
+      input,
+      secureProps.includes(input.sort)
+    );
   }
 
   async listEngagements(
