@@ -26,7 +26,13 @@ import {
   OnIndex,
   runListQuery,
 } from '../../core';
-import { Budget, BudgetService, BudgetStatus, UpdateBudget } from '../budget';
+import {
+  Budget,
+  BudgetService,
+  BudgetStatus,
+  SecuredBudget,
+  UpdateBudget,
+} from '../budget';
 import {
   EngagementListInput,
   EngagementService,
@@ -706,6 +712,36 @@ export class ProjectService {
     return {
       ...result,
       canCreate: true,
+      canRead: true,
+    };
+  }
+
+  async currentBudget(
+    project: Project,
+    session: ISession
+  ): Promise<SecuredBudget> {
+    const budgets = await this.budgetService.list(
+      {
+        filter: {
+          projectId: project.id,
+        },
+      },
+      session
+    );
+
+    const current = budgets.items.find(
+      (b) => b.status === BudgetStatus.Current
+    );
+
+    //574 - if no current budget, then fallback to the first pending budget
+    let pendingBudget;
+    if (!current) {
+      pendingBudget = budgets.items[0];
+    }
+
+    return {
+      value: current ? current : pendingBudget,
+      canEdit: true,
       canRead: true,
     };
   }
