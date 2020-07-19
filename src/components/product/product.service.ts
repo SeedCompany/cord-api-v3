@@ -14,6 +14,7 @@ import {
   createBaseNode,
   createSG,
   DatabaseService,
+  filterByEngagement,
   filterByString,
   ILogger,
   listWithSecureObject,
@@ -235,7 +236,13 @@ export class ProductService {
     } else if (filter.approach) {
       query.call(filterByString, label, 'approach', filter.approach);
     } else if (filter.engagementId) {
-      // Todo
+      query.call(
+        filterByEngagement,
+        filter.engagementId,
+        'engagement',
+        'out',
+        label
+      );
     }
 
     // match on the rest of the properties of the object requested
