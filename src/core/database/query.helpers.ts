@@ -1,5 +1,6 @@
 import {
   contains,
+  equals,
   inArray,
   node,
   Query,
@@ -605,6 +606,31 @@ export function filterByString(
   });
 }
 
+export function filterByArray(
+  query: Query,
+  label: string,
+  filterKey: string,
+  filterValue: string[]
+) {
+  query.match([
+    node('readPerm', 'Permission', {
+      property: filterKey,
+      read: true,
+      active: true,
+    }),
+    relation('out', '', 'baseNode'),
+    node('node', label, {
+      active: true,
+    }),
+    relation('out', '', filterKey, { active: true }),
+    node(filterKey, 'Property', { active: true }),
+  ]);
+  query.where({
+    readPerm: inArray(['permList'], true),
+    [filterKey]: { value: equals(filterValue) },
+  });
+}
+
 // used to search a specific user's relationship to the target base node
 // for example, searching all orgs a user is a part of
 export function filterByUser(
@@ -632,6 +658,20 @@ export function filterByEngagement(
 ) {
   query.match([
     node('engagement', 'Engagement', { active: true, id: engagementId }),
+    relation(relationshipDirection, '', relationshipType, { active: true }),
+    node('node', label, { active: true }),
+  ]);
+}
+
+export function filterByProject(
+  query: Query,
+  projectId: string,
+  relationshipType: string,
+  relationshipDirection: RelationDirection,
+  label: string
+) {
+  query.match([
+    node('project', 'Project', { active: true, id: projectId }),
     relation(relationshipDirection, '', relationshipType, { active: true }),
     node('node', label, { active: true }),
   ]);

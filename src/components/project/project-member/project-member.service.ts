@@ -12,17 +12,22 @@ import { ISession } from '../../../common';
 import {
   addAllMetaPropertiesOfChildBaseNodes,
   addAllSecureProperties,
+  addBaseNodeMetaPropsWithClause,
   addPropertyCoalesceWithClause,
   addShapeForBaseNodeMetaProperty,
   addShapeForChildBaseNodeMetaProperty,
   ChildBaseNodeMetaProperty,
   ConfigService,
   DatabaseService,
+  filterByArray,
+  filterByProject,
   ILogger,
+  listWithSecureObject,
   Logger,
   matchRequestingUser,
   matchSession,
   matchUserPermissions,
+  runListQuery,
 } from '../../../core';
 import { UserService } from '../../user';
 import {
@@ -292,9 +297,14 @@ export class ProjectMemberService {
 
     const response: any = {
       ...result,
+      roles: {
+        value: result.roles.value || [],
+        canRead: result.roles.canRead,
+        canEdit: result.roles.canEdit,
+      },
       modifiedAt: result.modifiedAt.value,
       user: {
-        value: result.userId,
+        value: await this.userService.readOne(result.userId, session),
         canRead: !!result.canReadUser,
         canEdit: !!result.canEditUser,
       },
@@ -346,78 +356,76 @@ export class ProjectMemberService {
   }
 
   async list(
-    input: Partial<ProjectMemberListInput>,
+    { filter, ...input }: ProjectMemberListInput,
     session: ISession
   ): Promise<ProjectMemberListOutput> {
-    const { page, count, sort, order, filter } = {
-      ...ProjectMemberListInput.defaultVal,
-      ...input,
-    };
+    const label = 'ProjectMember';
+    const baseNodeMetaProps = ['id', 'createdAt'];
+    // const unsecureProps = [''];
+    const secureProps = ['roles', 'modifiedAt'];
 
-    const { projectId } = filter;
-    let result: {
-      items: ProjectMember[];
-      hasMore: boolean;
-      total: number;
-    } = { items: [], hasMore: false, total: 0 };
+    const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
+      {
+        parentBaseNodePropertyKey: 'user',
+        parentRelationDirection: 'out',
+        childBaseNodeLabel: 'User',
+        childBaseNodeMetaPropertyKey: 'id',
+        returnIdentifier: 'userId',
+      },
+    ];
 
-    if (projectId) {
-      const qry = `
-        MATCH
-          (token:Token {active: true, value: $token})
-          <-[:token {active: true}]-
-          (requestingUser:User {
-            active: true,
-            id: $requestingUserId
-          }),
-          (project:Project {id: $projectId, active: true, owningOrgId: $owningOrgId})
-          -[:member]->(projectMember:ProjectMember {active:true})
-        WITH COUNT(projectMember) as total, project, projectMember
-            MATCH(projectMember {active: true})-[:roles {active:true}]->(roles:Property {active: true})
-            RETURN total, projectMember.id as id, projectMember.createdAt as createdAt
-            ORDER BY ${sort} ${order}
-            SKIP $skip LIMIT $count
-      `;
-      const projectMemQuery = this.db.query().raw(qry, {
-        token: session.token,
-        requestingUserId: session.userId,
-        owningOrgId: session.owningOrgId,
-        projectId,
-        skip: (page - 1) * count,
-        count,
-      });
+    const query = this.db
+      .query()
+      .call(matchRequestingUser, session)
+      .call(matchUserPermissions, 'ProjectMember');
 
-      const projectMembers = await projectMemQuery.run();
-
-      result.items = await Promise.all(
-        projectMembers.map(async (projectMember) =>
-          this.readOne(projectMember.id, session)
-        )
-      );
-      result.total = result.items.length;
-    } else {
-      result = await this.db.list<ProjectMember>({
-        session,
-        nodevar: 'projectMember',
-        aclReadProp: 'canReadProjectMembers',
-        aclEditProp: 'canCreateProjectMember',
-        props: [
-          { name: 'roles', secure: true, list: true },
-          { name: 'user', secure: true },
-          { name: 'modifiedAt', secure: false },
-        ],
-        input: {
-          page,
-          count,
-          sort,
-          order,
-          filter,
-        },
-      });
+    if (filter.roles) {
+      query.call(filterByArray, label, 'roles', filter.roles);
+    } else if (filter.projectId) {
+      query.call(filterByProject, filter.projectId, 'member', 'out', label);
     }
 
+    // match on the rest of the properties of the object requested
+    query
+      .call(
+        addAllSecureProperties,
+        ...secureProps
+        //...unsecureProps
+      )
+      .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
+      // form return object
+      // ${listWithUnsecureObject(unsecureProps)}, // removed from a few lines down
+      .with(
+        `
+          {
+            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
+            ${listWithSecureObject(secureProps)}
+          } as node
+        `
+      );
+
+    const result = await runListQuery(
+      query,
+      input,
+      secureProps.includes(input.sort)
+    );
+    const items = result.items.map((item) => ({
+      ...(item as ProjectMember),
+      roles: {
+        value: (item as ProjectMember).roles.value || [],
+        canRead: (item as ProjectMember).roles.canRead,
+        canEdit: (item as ProjectMember).roles.canEdit,
+      },
+      // Todo
+      user: {
+        value: undefined,
+        canRead: true,
+        canEdit: true,
+      },
+    }));
+
     return {
-      items: result.items,
+      items,
       hasMore: result.hasMore,
       total: result.total,
     };
