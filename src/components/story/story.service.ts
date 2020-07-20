@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -8,7 +7,7 @@ import {
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
-import { ISession } from '../../common';
+import { DuplicateException, ISession } from '../../common';
 import {
   ConfigService,
   DatabaseService,
@@ -133,9 +132,9 @@ export class StoryService {
       .first();
 
     if (checkStory) {
-      throw new BadRequestException(
-        'Story with that name already exists.',
-        'Duplicate'
+      throw new DuplicateException(
+        'story.name',
+        'Story with this name already exists.'
       );
     }
     const id = generate();

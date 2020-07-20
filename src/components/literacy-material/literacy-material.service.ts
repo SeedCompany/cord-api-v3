@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -8,7 +7,7 @@ import {
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
-import { ISession } from '../../common';
+import { DuplicateException, ISession } from '../../common';
 import {
   ConfigService,
   DatabaseService,
@@ -137,9 +136,9 @@ export class LiteracyMaterialService {
       .first();
 
     if (checkLiteracy) {
-      throw new BadRequestException(
-        'Literacy with that name already exists.',
-        'Duplicate'
+      throw new DuplicateException(
+        'literacyMaterial.name',
+        'Literacy with this name already exists'
       );
     }
     const id = generate();

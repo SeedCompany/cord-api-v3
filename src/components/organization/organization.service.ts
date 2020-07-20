@@ -1,11 +1,10 @@
 import {
-  BadRequestException,
   Injectable,
   NotFoundException,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
 import { node } from 'cypher-query-builder';
-import { ISession } from '../../common';
+import { DuplicateException, ISession } from '../../common';
 import {
   addAllSecureProperties,
   addBaseNodeMetaPropsWithClause,
@@ -75,9 +74,9 @@ export class OrganizationService {
       .first();
 
     if (checkOrg) {
-      throw new BadRequestException(
-        'Organization with that name already exists.',
-        'Duplicate'
+      throw new DuplicateException(
+        'organization.name',
+        'Organization with this name already exists'
       );
     }
 
