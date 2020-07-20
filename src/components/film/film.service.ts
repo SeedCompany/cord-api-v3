@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -8,7 +7,7 @@ import {
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
-import { ISession } from '../../common';
+import { DuplicateException, ISession } from '../../common';
 import {
   ConfigService,
   DatabaseService,
@@ -140,9 +139,9 @@ export class FilmService {
       .first();
 
     if (checkFm) {
-      throw new BadRequestException(
-        'Film with that name already exists.',
-        'Duplicate'
+      throw new DuplicateException(
+        'film.name',
+        'Film with this name already exists'
       );
     }
     const id = generate();

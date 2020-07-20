@@ -8,7 +8,12 @@ import { node, relation } from 'cypher-query-builder';
 import { first, intersection, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
-import { ISession, Sensitivity, simpleSwitch } from '../../common';
+import {
+  DuplicateException,
+  ISession,
+  Sensitivity,
+  simpleSwitch,
+} from '../../common';
 import {
   ConfigService,
   DatabaseService,
@@ -304,9 +309,10 @@ export class LanguageService {
             LanguageDisplayName: 'displayName',
             LanguageRodNumber: 'rodNumber',
           }) ?? e.label;
-        throw new BadRequestException(
-          `Language with ${prop}="${e.value}" already exists`,
-          'Duplicate'
+        throw new DuplicateException(
+          `language.${prop}`,
+          `${prop} with value ${e.value} already exists`,
+          e
         );
       }
       this.logger.error(`Could not create`, { ...input, exception: e });
