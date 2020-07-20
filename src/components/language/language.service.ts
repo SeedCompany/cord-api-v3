@@ -29,7 +29,7 @@ import {
   LocationService,
   SecuredLocationList,
 } from '../location';
-import { ProjectListInput, SecuredProjectList } from '../project';
+import { ProjectListInput, ProjectListOutput, Project } from '../project';
 import {
   CreateLanguage,
   Language,
@@ -534,34 +534,239 @@ export class LanguageService {
     };
   }
 
+  //Added to avoid circular reference with project service
+  async readProject(id: string, session: ISession): Promise<Project> {
+    this.logger.info('query readone project', { id, userId: session.userId });
+    const readProject = this.db
+      .query()
+      .match(matchSession(session, { withAclRead: 'canReadProjects' }))
+      .with('*')
+      .match([node('project', 'Project', { active: true, id })])
+      .optionalMatch([...this.propMatch('sensitivity')])
+      .optionalMatch([...this.propMatch('name')])
+      .optionalMatch([...this.propMatch('step')])
+      .optionalMatch([...this.propMatch('status')])
+      .optionalMatch([...this.propMatch('mouStart')])
+      .optionalMatch([...this.propMatch('mouEnd')])
+      .optionalMatch([...this.propMatch('estimatedSubmission')])
+      .optionalMatch([...this.propMatch('modifiedAt')])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node('canReadLocation', 'Permission', {
+          property: 'location',
+          active: true,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('project'),
+        relation('out', '', 'location', { active: true }),
+        node('country', 'Country', { active: true }),
+      ])
+      .return({
+        project: [{ id: 'id', createdAt: 'createdAt', type: 'type' }],
+        sensitivity: [{ value: 'sensitivity' }],
+        canReadSensitivity: [
+          { read: 'canReadSensitivityRead', edit: 'canReadSensitivitysEdit' },
+        ],
+        name: [{ value: 'name' }],
+        canReadName: [
+          {
+            read: 'canReadNameRead',
+            edit: 'canReadNameEdit',
+          },
+        ],
+        step: [{ value: 'step' }],
+        canReadStep: [
+          {
+            read: 'canReadStepRead',
+            edit: 'canReadStepEdit',
+          },
+        ],
+        status: [{ value: 'status' }],
+        canReadStatus: [
+          {
+            read: 'canReadStatusRead',
+            edit: 'canReadStatusEdit',
+          },
+        ],
+        mouStart: [{ value: 'mouStart' }],
+        canReadMouStart: [
+          {
+            read: 'canReadMouStartRead',
+            edit: 'canReadMouStartEdit',
+          },
+        ],
+        mouEnd: [{ value: 'mouEnd' }],
+        canReadMouEnd: [
+          {
+            read: 'canReadMouEndRead',
+            edit: 'canReadMouEndEdit',
+          },
+        ],
+        estimatedSubmission: [{ value: 'estimatedSubmission' }],
+        canReadEstimatedSubmission: [
+          {
+            read: 'canReadEstimatedSubmissionRead',
+            edit: 'canReadEstimatedSubmissionEdit',
+          },
+        ],
+        modifiedAt: [{ value: 'modifiedAt' }],
+        canReadModifiedAt: [
+          {
+            read: 'canReadModifiedAtRead',
+            edit: 'canReadModifiedAtEdit',
+          },
+        ],
+        country: [{ id: 'countryId' }],
+        canReadLocation: [
+          {
+            read: 'canReadLocationRead',
+            edit: 'canReadLocationEdit',
+          },
+        ],
+      });
+
+    let result;
+    try {
+      result = await readProject.first();
+    } catch (e) {
+      this.logger.error('e :>> ', e);
+      return await Promise.reject(e);
+    }
+
+    if (!result) {
+      throw new NotFoundException(
+        `Could not find project DEBUG: requestingUser ${session.userId} target ProjectId ${id}`
+      );
+    }
+
+    const location = result.countryId
+      ? await this.locationService
+          .readOneCountry(result.countryId, session)
+          .then((country) => {
+            return {
+              value: {
+                id: country.id,
+                name: { ...country.name },
+                region: { ...country.region },
+                createdAt: country.createdAt,
+              },
+            };
+          })
+          .catch(() => {
+            return {
+              value: undefined,
+            };
+          })
+      : {
+          value: undefined,
+        };
+
+    return {
+      id,
+      createdAt: result.createdAt,
+      modifiedAt: result.modifiedAt,
+      type: result.type,
+      sensitivity: result.sensitivity,
+      name: {
+        value: result.name,
+        canRead: !!result.canReadNameRead,
+        canEdit: !!result.canReadNameEdit,
+      },
+      deptId: {
+        value: result.deptId,
+        canRead: !!result.canReadDeptIdRead,
+        canEdit: !!result.canReadDeptIdEdit,
+      },
+      step: {
+        value: result.step,
+        canRead: !!result.canReadStepRead,
+        canEdit: !!result.canReadStepEdit,
+      },
+      status: result.status,
+      location: {
+        ...location,
+        canRead: !!result.canReadLocationRead,
+        canEdit: !!result.canReadLocationEdit,
+      },
+      mouStart: {
+        value: result.mouStart,
+        canRead: !!result.canReadMouStartRead,
+        canEdit: !!result.canReadMouStartEdit,
+      },
+      mouEnd: {
+        value: result.mouEnd,
+        canRead: !!result.canReadMouEndRead,
+        canEdit: !!result.canReadMouEndEdit,
+      },
+      estimatedSubmission: {
+        value: result.estimatedSubmission,
+        canRead: !!result.canReadEstimatedSubmissionRead,
+        canEdit: !!result.canEditEstimatedSubmissionEdit,
+      },
+    };
+  }
+
   async listProjects(
     language: Language,
-    _input: ProjectListInput,
-    _session: ISession
-  ): Promise<SecuredProjectList> {
-    const result = await this.db
+    input: ProjectListInput,
+    session: ISession
+  ): Promise<ProjectListOutput> {
+    const { page, count } = {
+      ...ProjectListInput.defaultVal,
+      ...input,
+    };
+
+    let result: {
+      items: Project[];
+      hasMore: boolean;
+      total: number;
+    } = { items: [], hasMore: false, total: 0 };
+
+    const queryProject = this.db
       .query()
-      .matchNode('language', 'Language', { id: language.id, active: true })
+      .match(matchSession(session, { withAclRead: 'canReadProjects' }))
+      .match([node('language', 'Language', { id: language.id, active: true })])
       .match([
         node('language'),
-        relation('out', '', 'project', { active: true }),
+        relation('in', '', 'language', { active: true }),
+        node('langEngagement', 'LanguageEngagement', {
+          active: true,
+        }),
+        relation('in', '', 'engagement', { active: true }),
         node('project', 'Project', {
           active: true,
         }),
-      ])
-      .return({
-        project: [{ id: 'id' }],
-      })
-      .run();
+      ]);
+    queryProject.return({
+      project: [{ id: 'id', createdAt: 'createdAt' }],
+      requestingUser: [
+        {
+          canReadProjects: 'canReadProjects',
+          canCreateProject: 'canCreateProject',
+        },
+      ],
+    });
 
-    this.logger.debug(`list projects results`, { total: result.length });
+    let readProject = await queryProject.run();
+    this.logger.debug(`list projects results`, { total: readProject.length });
+
+    result.total = readProject.length;
+    result.hasMore = count * page < result.total ?? true;
+
+    readProject = readProject.splice((page - 1) * count, count);
+
+    result.items = await Promise.all(
+      readProject.map(async (project) => this.readProject(project.id, session))
+    );
 
     return {
-      total: 0,
-      hasMore: false,
-      items: [],
-      canRead: true,
-      canCreate: true,
+      items: result.items,
+      hasMore: result.hasMore,
+      total: result.total,
     };
   }
 
