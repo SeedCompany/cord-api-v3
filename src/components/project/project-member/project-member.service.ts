@@ -5,6 +5,7 @@ import {
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
+import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
@@ -20,7 +21,6 @@ import {
   ConfigService,
   DatabaseService,
   filterByArray,
-  filterByProject,
   ILogger,
   listWithSecureObject,
   Logger,
@@ -382,7 +382,7 @@ export class ProjectMemberService {
     if (filter.roles) {
       query.call(filterByArray, label, 'roles', filter.roles);
     } else if (filter.projectId) {
-      query.call(filterByProject, filter.projectId, 'member', 'out', label);
+      this.filterByProject(query, filter.projectId, 'member', 'out', label);
     }
 
     // match on the rest of the properties of the object requested
@@ -430,5 +430,19 @@ export class ProjectMemberService {
       hasMore: result.hasMore,
       total: result.total,
     };
+  }
+
+  protected filterByProject(
+    query: Query,
+    projectId: string,
+    relationshipType: string,
+    relationshipDirection: RelationDirection,
+    label: string
+  ) {
+    query.match([
+      node('project', 'Project', { active: true, id: projectId }),
+      relation(relationshipDirection, '', relationshipType, { active: true }),
+      node('node', label, { active: true }),
+    ]);
   }
 }

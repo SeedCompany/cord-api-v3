@@ -663,20 +663,6 @@ export function filterByEngagement(
   ]);
 }
 
-export function filterByProject(
-  query: Query,
-  projectId: string,
-  relationshipType: string,
-  relationshipDirection: RelationDirection,
-  label: string
-) {
-  query.match([
-    node('project', 'Project', { active: true, id: projectId }),
-    relation(relationshipDirection, '', relationshipType, { active: true }),
-    node('node', label, { active: true }),
-  ]);
-}
-
 // WITH CLAUSES or SHAPING helpers //////////////////////////////////////////////////////
 
 export function addPropertyCoalesceWithClause(property: string) {
