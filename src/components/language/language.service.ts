@@ -29,7 +29,7 @@ import {
   LocationService,
   SecuredLocationList,
 } from '../location';
-import { ProjectListInput, ProjectListOutput } from '../project';
+import { ProjectListInput, SecuredProjectList } from '../project';
 import {
   CreateLanguage,
   Language,
@@ -538,7 +538,7 @@ export class LanguageService {
     language: Language,
     _input: ProjectListInput,
     _session: ISession
-  ): Promise<ProjectListOutput> {
+  ): Promise<SecuredProjectList> {
     const result = await this.db
       .query()
       .matchNode('language', 'Language', { id: language.id, active: true })
@@ -560,6 +560,8 @@ export class LanguageService {
       total: 0,
       hasMore: false,
       items: [],
+      canRead: true,
+      canCreate: true,
     };
   }
 

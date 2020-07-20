@@ -17,7 +17,7 @@ import {
   Session,
 } from '../../common';
 import { LocationListInput, SecuredLocationList } from '../location';
-import { ProjectListInput, ProjectListOutput } from '../project/dto';
+import { ProjectListInput, SecuredProjectList } from '../project/dto';
 import {
   CreateLanguageInput,
   CreateLanguageOutput,
@@ -95,7 +95,7 @@ export class LanguageResolver {
     return this.langService.listLocations(language, input, session);
   }
 
-  @ResolveField(() => ProjectListOutput, {
+  @ResolveField(() => SecuredProjectList, {
     description: 'The list of projects the language is engagement in.',
   })
   async projects(
@@ -107,7 +107,7 @@ export class LanguageResolver {
       defaultValue: ProjectListInput.defaultVal,
     })
     input: ProjectListInput
-  ): Promise<ProjectListOutput> {
+  ): Promise<SecuredProjectList> {
     return this.langService.listProjects(language, input, session);
   }
 
