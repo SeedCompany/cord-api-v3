@@ -420,7 +420,7 @@ export class UserService {
     }
 
     if (!id) {
-      throw new BadRequestException('No User found with this id');
+      throw new BadRequestException('id is missing, Could not fond user');
     }
 
     const props = [
