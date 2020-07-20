@@ -10,13 +10,21 @@ import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../../common';
 import {
+  addAllMetaPropertiesOfChildBaseNodes,
+  addAllSecureProperties,
+  addPropertyCoalesceWithClause,
+  addShapeForBaseNodeMetaProperty,
+  addShapeForChildBaseNodeMetaProperty,
+  ChildBaseNodeMetaProperty,
   ConfigService,
   DatabaseService,
   ILogger,
   Logger,
+  matchRequestingUser,
   matchSession,
+  matchUserPermissions,
 } from '../../../core';
-import { RedactedUser, User, UserService } from '../../user';
+import { UserService } from '../../user';
 import {
   CreateProjectMember,
   ProjectMember,
@@ -139,117 +147,6 @@ export class ProjectMemberService {
     ]);
   };
 
-  async readOne(id: string, session: ISession): Promise<ProjectMember> {
-    const readProjectMember = this.db
-      .query()
-      .match(matchSession(session, { withAclRead: 'canReadProjectMembers' }))
-      .match([node('projectMember', 'ProjectMember', { active: true, id })]);
-    readProjectMember.optionalMatch([
-      node('requestingUser'),
-      relation('in', '', 'member', { active: true }),
-      node('', 'SecurityGroup', { active: true }),
-      relation('out', '', 'permission', { active: true }),
-      node('canEditUser', 'Permission', {
-        property: 'user',
-        active: true,
-        edit: true,
-      }),
-      relation('out', '', 'baseNode', { active: true }),
-      node('projectMember'),
-      relation('out', '', 'user', { active: true }),
-      node('user', 'User', { active: true }),
-    ]);
-    readProjectMember.optionalMatch([
-      node('requestingUser'),
-      relation('in', '', 'member', { active: true }),
-      node('', 'SecurityGroup', { active: true }),
-      relation('out', '', 'permission', { active: true }),
-      node('canReadUser', 'Permission', {
-        property: 'user',
-        active: true,
-        read: true,
-      }),
-      relation('out', '', 'baseNode', { active: true }),
-      node('projectMember'),
-      relation('out', '', 'user', { active: true }),
-      node('user', 'User', { active: true }),
-    ]);
-    this.propMatch(readProjectMember, 'roles');
-    this.propMatch(readProjectMember, 'modifiedAt');
-
-    readProjectMember.return({
-      projectMember: [{ id: 'id', createdAt: 'createdAt' }],
-      roles: [{ value: 'roles' }],
-      canReadRoles: [
-        {
-          read: 'canReadRoles',
-        },
-      ],
-      canEditRoles: [
-        {
-          edit: 'canEditRoles',
-        },
-      ],
-      modifiedAt: [{ value: 'modifiedAt' }],
-      canReadModifiedAt: [
-        {
-          read: 'canReadModifiedAt',
-        },
-      ],
-      canEditModifiedAt: [
-        {
-          edit: 'canEditModifiedAt',
-        },
-      ],
-      user: [{ id: 'userId' }],
-      canReadUser: [
-        {
-          read: 'canReadUser',
-        },
-      ],
-      canEditUser: [
-        {
-          edit: 'canEditUser',
-        },
-      ],
-    });
-
-    let result;
-    try {
-      result = await readProjectMember.first();
-    } catch (e) {
-      this.logger.error('e :>> ', e);
-      return await Promise.reject(e);
-    }
-
-    if (!result) {
-      throw new NotFoundException('Could not find project member');
-    }
-
-    let user: User = RedactedUser;
-    if (result.canReadUser) {
-      user = await this.userService.readOne(result.userId, session);
-    }
-
-    return {
-      id: id,
-      createdAt: result.createdAt,
-      modifiedAt: result.modifiedAt,
-      user: {
-        value: {
-          ...user,
-        },
-        canRead: true,
-        canEdit: true,
-      },
-      roles: {
-        value: result.roles || [],
-        canEdit: true,
-        canRead: true,
-      },
-    };
-  }
-
   async create(
     { userId, projectId, ...input }: CreateProjectMember,
     session: ISession
@@ -350,6 +247,104 @@ export class ProjectMemberService {
     }
   }
 
+  async readOne(id: string, session: ISession): Promise<ProjectMember> {
+    if (!session.userId) {
+      session.userId = this.config.anonUser.id;
+    }
+
+    const props = ['roles', 'modifiedAt'];
+
+    const baseNodeMetaProps = ['id', 'createdAt'];
+
+    const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
+      {
+        parentBaseNodePropertyKey: 'user',
+        parentRelationDirection: 'out',
+        childBaseNodeLabel: 'User',
+        childBaseNodeMetaPropertyKey: 'id',
+        returnIdentifier: 'userId',
+      },
+    ];
+
+    const query = this.db
+      .query()
+      .call(matchRequestingUser, session)
+      .call(matchUserPermissions, 'ProjectMember', id)
+      .call(addAllSecureProperties, ...props)
+      .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
+      .with([
+        ...props.map(addPropertyCoalesceWithClause),
+        ...childBaseNodeMetaProps.map(addShapeForChildBaseNodeMetaProperty),
+        ...baseNodeMetaProps.map(addShapeForBaseNodeMetaProperty),
+        'node',
+      ])
+      .returnDistinct([
+        ...props,
+        ...baseNodeMetaProps,
+        ...childBaseNodeMetaProps.map((x) => x.returnIdentifier),
+        'labels(node) as labels',
+      ]);
+
+    const result = await query.first();
+    if (!result) {
+      throw new NotFoundException('Could not find project memeber');
+    }
+
+    const response: any = {
+      ...result,
+      modifiedAt: result.modifiedAt.value,
+      user: {
+        value: result.userId,
+        canRead: !!result.canReadUser,
+        canEdit: !!result.canEditUser,
+      },
+    };
+
+    return (response as unknown) as ProjectMember;
+  }
+
+  async update(
+    input: UpdateProjectMember,
+    session: ISession
+  ): Promise<ProjectMember> {
+    const object = await this.readOne(input.id, session);
+
+    await this.db.sgUpdateProperties({
+      session,
+      object,
+      props: ['roles', 'modifiedAt'],
+      changes: {
+        ...input,
+        roles: (input.roles ? input.roles : undefined) as any,
+        modifiedAt: DateTime.local(),
+      },
+      nodevar: 'projectMember',
+    });
+    return this.readOne(input.id, session);
+  }
+
+  async delete(id: string, session: ISession): Promise<void> {
+    const object = await this.readOne(id, session);
+
+    if (!object) {
+      throw new NotFoundException('Could not find project member');
+    }
+
+    try {
+      await this.db.deleteNode({
+        session,
+        object,
+        aclEditProp: 'canDeleteOwnUser',
+      });
+    } catch (e) {
+      this.logger.warning('Failed to delete project member', {
+        exception: e,
+      });
+
+      throw new ServerException('Failed to delete project member');
+    }
+  }
+
   async list(
     input: Partial<ProjectMemberListInput>,
     session: ISession
@@ -426,47 +421,5 @@ export class ProjectMemberService {
       hasMore: result.hasMore,
       total: result.total,
     };
-  }
-
-  async update(
-    input: UpdateProjectMember,
-    session: ISession
-  ): Promise<ProjectMember> {
-    const object = await this.readOne(input.id, session);
-
-    await this.db.sgUpdateProperties({
-      session,
-      object,
-      props: ['roles', 'modifiedAt'],
-      changes: {
-        ...input,
-        roles: (input.roles ? input.roles : undefined) as any,
-        modifiedAt: DateTime.local(),
-      },
-      nodevar: 'projectMember',
-    });
-    return this.readOne(input.id, session);
-  }
-
-  async delete(id: string, session: ISession): Promise<void> {
-    const object = await this.readOne(id, session);
-
-    if (!object) {
-      throw new NotFoundException('Could not find project member');
-    }
-
-    try {
-      await this.db.deleteNode({
-        session,
-        object,
-        aclEditProp: 'canDeleteOwnUser',
-      });
-    } catch (e) {
-      this.logger.warning('Failed to delete project member', {
-        exception: e,
-      });
-
-      throw new ServerException('Failed to delete project member');
-    }
   }
 }
