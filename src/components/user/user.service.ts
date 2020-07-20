@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   NotFoundException,
   UnauthorizedException as UnauthenticatedException,
@@ -416,6 +417,10 @@ export class UserService {
   async readOne(id: string, session: ISession): Promise<User> {
     if (!session.userId) {
       session.userId = this.config.anonUser.id;
+    }
+
+    if (!id) {
+      throw new BadRequestException('No User found with this id');
     }
 
     const props = [
