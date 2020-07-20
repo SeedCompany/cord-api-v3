@@ -10,11 +10,14 @@ import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession, Order } from '../../common';
 import {
+  addAllSecureProperties,
   ConfigService,
   DatabaseService,
   ILogger,
   Logger,
   matchSession,
+  matchUserPermissions,
+  runListQuery,
 } from '../../core';
 import {
   Budget,
@@ -265,28 +268,23 @@ export class BudgetService {
       userId: session.userId,
     });
 
+    const props = ['status'];
     const readBudget = this.db
       .query()
       .match(matchSession(session, { withAclRead: 'canReadBudgets' }))
-      .match([node('budget', 'Budget', { active: true, id })]);
-    this.propMatch(readBudget, 'status', 'budget');
+      .call(matchUserPermissions, 'Budget', id)
+      .call(addAllSecureProperties, ...props);
     readBudget.return({
-      budget: [{ id: 'id', createdAt: 'createdAt' }],
+      node: [{ id: 'id', createdAt: 'createdAt' }],
       status: [{ value: 'status' }],
-      canReadStatus: [
+      statusReadPerm: [
         {
           read: 'canReadStatus',
         },
       ],
-      canEditStatus: [
+      statusEditPerm: [
         {
           edit: 'canEditStatus',
-        },
-      ],
-      requestingUser: [
-        {
-          canReadBudgets: 'canReadBudgets',
-          canCreateBudget: 'canCreateBudget',
         },
       ],
     });
@@ -336,52 +334,52 @@ export class BudgetService {
       total: number;
     } = { items: [], hasMore: false, total: 0 };
 
+    let listResult: {
+      items: Array<{
+        identity: string;
+        labels: string[];
+        properties: Budget;
+      }>;
+      hasMore: boolean;
+      total: number;
+    };
+
+    let items = [];
+
     const { projectId } = filter;
     this.logger.info('Listing budgets on projectId ', {
       projectId,
       userId: session.userId,
     });
+    const secureProps = ['status'];
 
     if (projectId) {
-      const query = `
-      MATCH
-        (token:Token {active: true, value: $token})
-        <-[:token {active: true}]-
-        (requestingUser:User {
-          active: true,
-          id: $requestingUserId
-        }),
-        (project:Project {id: $projectId, active: true, owningOrgId: $owningOrgId})
-        -[:budget]->(budget:Budget {active:true})
-      WITH COUNT(budget) as total, project, budget
-          OPTIONAL MATCH (requestingUser)<-[:member { active: true }]-(sg:SecurityGroup { active: true })-[:permission { active: true }]
-          ->(canEditStatus:Permission { property: 'status', active: true, edit: true })
-          -[:baseNode { active: true }]->(budget)-[:status { active: true }]->(status:Property { active: true })
-          OPTIONAL MATCH (requestingUser)<-[:member { active: true }]-(sg:SecurityGroup { active: true })-[:permission { active: true }]
-          ->(canReadStatus:Permission { property: 'status', active: true, read: true })
-          -[:baseNode { active: true }]->(budget)-[:status { active: true }]->(status:Property { active: true })
-          RETURN DISTINCT total, budget.id as budgetId, status.value as status, canReadStatus.read AS canReadStatus, canEditStatus.edit AS canEditStatus
-          ORDER BY ${sort} ${order}
-      `;
-      let projBudgets = await this.db
+      const query = this.db
         .query()
-        .raw(query, {
-          token: session.token,
-          requestingUserId: session.userId,
-          owningOrgId: session.owningOrgId,
-          projectId,
+        .match(matchSession(session))
+        .match([
+          node('project', 'Project', {
+            id: projectId,
+            active: true,
+            owningOrgId: session.owningOrgId,
+          }),
+          relation('out', '', 'budget'),
+          node('node', 'Budget', { active: true }),
+        ]);
+      this.propMatch(query, 'status', 'node');
+      listResult = await runListQuery(
+        query,
+        {
+          ...BudgetListInput.defaultVal,
+          ...input,
+        },
+        secureProps.includes(sort)
+      );
+
+      items = await Promise.all(
+        listResult.items.map((item) => {
+          return this.readOne(item.properties.id, session);
         })
-        .run();
-
-      result.total = projBudgets.length;
-      result.hasMore = count * page < result.total ?? true;
-
-      projBudgets = projBudgets.splice((page - 1) * count, count);
-
-      result.items = await Promise.all(
-        projBudgets.map(async (budget) =>
-          this.readOne(budget.budgetId, session)
-        )
       );
     } else {
       result = await this.db.list<Budget>({
@@ -399,7 +397,7 @@ export class BudgetService {
         },
       });
 
-      const items = await Promise.all(
+      items = await Promise.all(
         result.items.map(async (item) => {
           const records = await this.listRecords(
             {
@@ -417,11 +415,10 @@ export class BudgetService {
           };
         })
       );
-      result.items = items;
     }
 
     return {
-      items: result.items,
+      items,
       hasMore: result.hasMore,
       total: result.total,
     };
