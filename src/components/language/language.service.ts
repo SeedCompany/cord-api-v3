@@ -539,7 +539,7 @@ export class LanguageService {
     };
   }
 
-  //Added to avoid circular reference with project service
+  //TODO - Need to implement QueryBus to avoid circular reference with project service
   async readOneProject(id: string, session: ISession): Promise<Project> {
     this.logger.info('query readone project', { id, userId: session.userId });
     const label = 'Project';
