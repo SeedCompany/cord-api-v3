@@ -22,6 +22,11 @@ import {
   matchSession,
   OnIndex,
   UniquenessError,
+  matchUserPermissions,
+  addAllSecureProperties,
+  addBaseNodeMetaPropsWithClause,
+  listWithUnsecureObject,
+  listWithSecureObject,
 } from '../../core';
 import {
   Location,
@@ -535,21 +540,27 @@ export class LanguageService {
   }
 
   //Added to avoid circular reference with project service
-  async readProject(id: string, session: ISession): Promise<Project> {
+  async readOneProject(id: string, session: ISession): Promise<Project> {
     this.logger.info('query readone project', { id, userId: session.userId });
+    const label = 'Project';
+    const baseNodeMetaProps = ['id', 'createdAt', 'type'];
+    const unsecureProps = ['status', 'sensitivity'];
+    const secureProps = [
+      'name',
+      'deptId',
+      'step',
+      'mouStart',
+      'mouEnd',
+      'estimatedSubmission',
+      'modifiedAt',
+      'location',
+    ];
     const readProject = this.db
       .query()
+      // there should be a alternative function for matchSession in query helper.
       .match(matchSession(session, { withAclRead: 'canReadProjects' }))
-      .with('*')
-      .match([node('project', 'Project', { active: true, id })])
-      .optionalMatch([...this.propMatch('sensitivity')])
-      .optionalMatch([...this.propMatch('name')])
-      .optionalMatch([...this.propMatch('step')])
-      .optionalMatch([...this.propMatch('status')])
-      .optionalMatch([...this.propMatch('mouStart')])
-      .optionalMatch([...this.propMatch('mouEnd')])
-      .optionalMatch([...this.propMatch('estimatedSubmission')])
-      .optionalMatch([...this.propMatch('modifiedAt')])
+      .call(matchUserPermissions, label, id)
+      .call(addAllSecureProperties, ...secureProps, ...unsecureProps)
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
@@ -565,69 +576,17 @@ export class LanguageService {
         relation('out', '', 'location', { active: true }),
         node('country', 'Country', { active: true }),
       ])
-      .return({
-        project: [{ id: 'id', createdAt: 'createdAt', type: 'type' }],
-        sensitivity: [{ value: 'sensitivity' }],
-        canReadSensitivity: [
-          { read: 'canReadSensitivityRead', edit: 'canReadSensitivitysEdit' },
-        ],
-        name: [{ value: 'name' }],
-        canReadName: [
+      .return(
+        `
           {
-            read: 'canReadNameRead',
-            edit: 'canReadNameEdit',
-          },
-        ],
-        step: [{ value: 'step' }],
-        canReadStep: [
-          {
-            read: 'canReadStepRead',
-            edit: 'canReadStepEdit',
-          },
-        ],
-        status: [{ value: 'status' }],
-        canReadStatus: [
-          {
-            read: 'canReadStatusRead',
-            edit: 'canReadStatusEdit',
-          },
-        ],
-        mouStart: [{ value: 'mouStart' }],
-        canReadMouStart: [
-          {
-            read: 'canReadMouStartRead',
-            edit: 'canReadMouStartEdit',
-          },
-        ],
-        mouEnd: [{ value: 'mouEnd' }],
-        canReadMouEnd: [
-          {
-            read: 'canReadMouEndRead',
-            edit: 'canReadMouEndEdit',
-          },
-        ],
-        estimatedSubmission: [{ value: 'estimatedSubmission' }],
-        canReadEstimatedSubmission: [
-          {
-            read: 'canReadEstimatedSubmissionRead',
-            edit: 'canReadEstimatedSubmissionEdit',
-          },
-        ],
-        modifiedAt: [{ value: 'modifiedAt' }],
-        canReadModifiedAt: [
-          {
-            read: 'canReadModifiedAtRead',
-            edit: 'canReadModifiedAtEdit',
-          },
-        ],
-        country: [{ id: 'countryId' }],
-        canReadLocation: [
-          {
-            read: 'canReadLocationRead',
-            edit: 'canReadLocationEdit',
-          },
-        ],
-      });
+            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
+            ${listWithUnsecureObject(unsecureProps)},
+            ${listWithSecureObject(secureProps)},
+            countryId: country.id,
+            canReadLocation: canReadLocation
+          } as project
+        `
+      );
 
     let result;
     try {
@@ -667,46 +626,22 @@ export class LanguageService {
 
     return {
       id,
-      createdAt: result.createdAt,
-      modifiedAt: result.modifiedAt,
-      type: result.type,
-      sensitivity: result.sensitivity,
-      name: {
-        value: result.name,
-        canRead: !!result.canReadNameRead,
-        canEdit: !!result.canReadNameEdit,
-      },
-      deptId: {
-        value: result.deptId,
-        canRead: !!result.canReadDeptIdRead,
-        canEdit: !!result.canReadDeptIdEdit,
-      },
-      step: {
-        value: result.step,
-        canRead: !!result.canReadStepRead,
-        canEdit: !!result.canReadStepEdit,
-      },
-      status: result.status,
+      createdAt: result.project.createdAt,
+      modifiedAt: result.project.modifiedAt.value,
+      type: result.project.type,
+      sensitivity: result.project.sensitivity,
+      name: result.project.name,
+      deptId: result.project.deptId,
+      step: result.project.step,
+      status: result.project.status,
       location: {
         ...location,
         canRead: !!result.canReadLocationRead,
         canEdit: !!result.canReadLocationEdit,
       },
-      mouStart: {
-        value: result.mouStart,
-        canRead: !!result.canReadMouStartRead,
-        canEdit: !!result.canReadMouStartEdit,
-      },
-      mouEnd: {
-        value: result.mouEnd,
-        canRead: !!result.canReadMouEndRead,
-        canEdit: !!result.canReadMouEndEdit,
-      },
-      estimatedSubmission: {
-        value: result.estimatedSubmission,
-        canRead: !!result.canReadEstimatedSubmissionRead,
-        canEdit: !!result.canEditEstimatedSubmissionEdit,
-      },
+      mouStart: result.project.mouStart,
+      mouEnd: result.project.mouEnd,
+      estimatedSubmission: result.project.estimatedSubmission,
     };
   }
 
@@ -760,7 +695,9 @@ export class LanguageService {
     readProject = readProject.splice((page - 1) * count, count);
 
     result.items = await Promise.all(
-      readProject.map(async (project) => this.readProject(project.id, session))
+      readProject.map(async (project) =>
+        this.readOneProject(project.id, session)
+      )
     );
 
     return {

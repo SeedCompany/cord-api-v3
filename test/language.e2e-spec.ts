@@ -172,7 +172,7 @@ describe('Language e2e', () => {
     );
   });
 
-  it.only('The list of projects the language is engagement in', async () => {
+  it('The list of projects the language is engagement in', async () => {
     const numProjects = 1;
     const language = await createLanguage(app);
     const project = await createProject(app);
@@ -209,8 +209,7 @@ describe('Language e2e', () => {
         id: language.id,
       }
     );
-    console.log('1', JSON.stringify(queryProject, null, 2));
-    //expect(queryProject.language.projects.items.length).toBe(numProjects);
-    //expect(queryProject.language.projects.total).toBe(numProjects);
+    expect(queryProject.language.projects.items.length).toBe(numProjects);
+    expect(queryProject.language.projects.total).toBe(numProjects);
   });
 });
