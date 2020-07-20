@@ -15,18 +15,18 @@ import {
   simpleSwitch,
 } from '../../common';
 import {
+  addAllSecureProperties,
+  addBaseNodeMetaPropsWithClause,
   ConfigService,
   DatabaseService,
   ILogger,
+  listWithSecureObject,
+  listWithUnsecureObject,
   Logger,
   matchSession,
+  matchUserPermissions,
   OnIndex,
   UniquenessError,
-  matchUserPermissions,
-  addAllSecureProperties,
-  addBaseNodeMetaPropsWithClause,
-  listWithUnsecureObject,
-  listWithSecureObject,
 } from '../../core';
 import {
   Location,
@@ -34,7 +34,7 @@ import {
   LocationService,
   SecuredLocationList,
 } from '../location';
-import { ProjectListInput, ProjectListOutput, Project } from '../project';
+import { Project, ProjectListInput, ProjectListOutput } from '../project';
 import {
   CreateLanguage,
   Language,
@@ -655,7 +655,7 @@ export class LanguageService {
       ...input,
     };
 
-    let result: {
+    const result: {
       items: Project[];
       hasMore: boolean;
       total: number;
