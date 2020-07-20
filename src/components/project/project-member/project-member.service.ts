@@ -404,18 +404,19 @@ export class ProjectMemberService {
         `
       );
 
-    const result = await runListQuery(
+    const result: ProjectMemberListOutput = await runListQuery(
       query,
       input,
       secureProps.includes(input.sort)
     );
     const items = result.items.map((item) => ({
-      ...(item as ProjectMember),
+      ...item,
       roles: {
-        value: (item as ProjectMember).roles.value || [],
-        canRead: (item as ProjectMember).roles.canRead,
-        canEdit: (item as ProjectMember).roles.canEdit,
+        value: item.roles.value || [],
+        canRead: item.roles.canRead,
+        canEdit: item.roles.canEdit,
       },
+      modifiedAt: (item.modifiedAt as any).value,
       // Todo
       user: {
         value: undefined,
