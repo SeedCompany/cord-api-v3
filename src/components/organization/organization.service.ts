@@ -14,8 +14,8 @@ import {
   createBaseNode,
   createSG,
   DatabaseService,
+  filterByBaseNodeId,
   filterByString,
-  filterByUser,
   ILogger,
   listWithSecureObject,
   Logger,
@@ -203,7 +203,14 @@ export class OrganizationService {
     if (filter.name) {
       query.call(filterByString, label, 'name', filter.name);
     } else if (filter.userId && session.userId) {
-      query.call(filterByUser, session.userId, 'organization', 'out', label);
+      query.call(
+        filterByBaseNodeId,
+        session.userId,
+        'organization',
+        'out',
+        'User',
+        label
+      );
     }
 
     // match on the rest of the properties of the object requested

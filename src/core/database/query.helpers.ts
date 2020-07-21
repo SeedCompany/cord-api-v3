@@ -422,20 +422,30 @@ export function getMetaPropertyOfChildBaseNode(
 }
 
 export function matchUserPermissions(query: Query, label: string, id?: string) {
-  query.match([
-    node('requestingUser'),
-    relation('in', '', 'member', {}, [1]),
-    node('', 'SecurityGroup', { active: true }),
-    relation('out', '', 'permission'),
-    node('perms', 'Permission', { active: true }),
-    relation('out', '', 'baseNode'),
-    node('node', label, { active: true }),
-  ]);
+  query
+    .match([
+      node('requestingUser'),
+      relation('in', '', 'member', {}, [1]),
+      node('sg', 'SecurityGroup', { active: true }),
+    ])
+    .with('collect(distinct sg) as sgList')
+    .match([
+      node('sg'),
+      relation('out', '', 'permission'),
+      node('perm', 'Permission', { active: true }),
+      relation('out', '', 'baseNode'),
+      node('node', label, { active: true }),
+    ]);
   if (id) {
-    query.where({ node: { id } });
+    query.where({
+      node: { id },
+      sg: inArray(['sgList', true]),
+    });
+  } else {
+    query.where({ sg: inArray(['sgList', true]) });
   }
 
-  query.with(`collect(perms) as permList, node`);
+  query.with(`collect(distinct perm) as permList, node`);
 }
 
 export function matchRequestingUser(query: Query, session: ISession) {
@@ -633,6 +643,23 @@ export function filterByArray(
 
 // used to search a specific user's relationship to the target base node
 // for example, searching all orgs a user is a part of
+export function filterByBaseNodeId(
+  query: Query,
+  filterNodeId: string,
+  relationshipType: string,
+  relationshipDirection: RelationDirection,
+  filterBaseNodelabel: string,
+  originBaseNodeLabel: string
+) {
+  query.match([
+    node('node', originBaseNodeLabel, { active: true }),
+    relation(relationshipDirection, '', relationshipType, { active: true }),
+    node('bn', filterBaseNodelabel, { active: true, id: filterNodeId }),
+  ]);
+}
+
+// used to search a specific user's relationship to the target base node
+// for example, searching all orgs a user is a part of
 export function filterByUser(
   query: Query,
   userId: string,
@@ -775,7 +802,7 @@ export function listReturnBlock<T = any>(
     .return(['items', 'total', 'hasMore']);
 
   // for troubleshooting
-  // printQueryInConsole(query);
+  printQueryInConsole(query);
 
   return query.asResult<{ items: T[]; total: number; hasMore: boolean }>();
 }
@@ -788,6 +815,8 @@ export async function runListQuery<T>(
   isSecuredSort = true
 ) {
   const result = await listReturnBlock<T>(query, input, isSecuredSort).first();
+
+  // console.log(JSON.stringify(result));
 
   // result could be undefined if there are no matched nodes
   // in that case the total truly is 0 we just can't express that in cypher
