@@ -53,7 +53,7 @@ export function createBaseNode(
   query: Query,
   label: string,
   props: Property[],
-  baseNodeProps?: { owningOrgId: string | undefined; type: string },
+  baseNodeProps?: { owningOrgId?: string | undefined; type?: string },
   editableProps?: string[]
 ) {
   const createdAt = DateTime.local().toString();
