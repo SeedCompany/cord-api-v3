@@ -7,7 +7,7 @@ import {
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
-import { upperFirst } from 'lodash';
+import { isFunction, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
@@ -25,6 +25,13 @@ import {
   matchRequestingUser,
   matchSession,
   matchUserPermissions,
+  listWithSecureObject,
+  listWithUnsecureObject,
+  printActualQuery,
+  addBaseNodeMetaPropsWithClause,
+  runListQuery,
+  filterByString,
+  filterByBaseNodeId,
 } from '../../core';
 import { CeremonyService } from '../ceremony';
 import { CeremonyType } from '../ceremony/dto/type.enum';
@@ -802,6 +809,8 @@ export class EngagementService {
 
     let result;
 
+    printActualQuery(this.logger, query);
+
     try {
       result = await query.first();
     } catch (error) {
@@ -1053,45 +1062,199 @@ export class EngagementService {
   // LIST ///////////////////////////////////////////////////////////
 
   async list(
-    { page, count, sort, order, filter }: EngagementListInput,
+    { filter, ...input }: EngagementListInput,
     session: ISession
   ): Promise<EngagementListOutput> {
-    const matchNode =
-      filter.type === 'internship'
-        ? 'internship:InternshipEngagement'
-        : filter.type === 'language'
-        ? 'language:LanguageEngagement'
-        : 'engagement';
-    // const filterLabels = filter.type === 'internship' ? ['InternshipEngagement'] : [];
-    // const labels = ['BaseNode', 'Engagement', ...filterLabels];
+    let label = 'Engagement';
+    if (filter.type === 'language') {
+      label = 'LanguageEngagement';
+    } else if (filter.type === 'internship') {
+      label = 'InternshipEngagement';
+    }
 
-    const tmpNode = matchNode.substring(0, matchNode.indexOf(':'));
-    const node = tmpNode ? tmpNode : 'engagement';
+    const baseNodeMetaProps = ['id', 'createdAt'];
+    // const unsecureProps = [''];
+    const secureProps = [
+      // Engagement
+      'statusModifiedAt',
+      'completeDate',
+      'disbursementCompleteDate',
+      'communicationsCompleteDate',
+      'initialEndDate',
+      'startDate',
+      'endDate',
+      'lastSuspendedAt',
+      'lastReactivatedAt',
 
-    const query = `
-      MATCH (${matchNode} {active: true})<-[:engagement {active: true}]-(project)
-      RETURN ${node}.id as id
-      ORDER BY ${node}.${sort} ${order}
-      SKIP $skip LIMIT $count
-    `;
-    const result = await this.db
+      // Language specific
+      'firstScripture',
+      'lukePartnership',
+      'sentPrintingDate',
+      'paraTextRegistryId',
+      'pnp',
+
+      // Internship specific
+      'position',
+      'growthPlan',
+    ];
+
+    const securePropsThatOnlyReturnTheirValue = ['status', 'methodologies'];
+
+    const securePropertiesThatNeedSpecialWithTreament = ['modifiedAt'];
+
+    const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
+      {
+        parentBaseNodePropertyKey: 'ceremony',
+        parentRelationDirection: 'out',
+        childBaseNodeLabel: 'Ceremony',
+        childBaseNodeMetaPropertyKey: 'id',
+        returnIdentifier: 'ceremonyId',
+      },
+      {
+        parentBaseNodePropertyKey: 'language',
+        parentRelationDirection: 'out',
+        childBaseNodeLabel: 'Language',
+        childBaseNodeMetaPropertyKey: 'id',
+        returnIdentifier: 'languageId',
+      },
+      {
+        parentBaseNodePropertyKey: 'intern',
+        parentRelationDirection: 'out',
+        childBaseNodeLabel: 'User',
+        childBaseNodeMetaPropertyKey: 'id',
+        returnIdentifier: 'internUserId',
+      },
+      {
+        parentBaseNodePropertyKey: 'countryOfOrigin',
+        parentRelationDirection: 'out',
+        childBaseNodeLabel: 'Country',
+        childBaseNodeMetaPropertyKey: 'id',
+        returnIdentifier: 'countryOfOriginId',
+      },
+      {
+        parentBaseNodePropertyKey: 'mentor',
+        parentRelationDirection: 'out',
+        childBaseNodeLabel: 'User',
+        childBaseNodeMetaPropertyKey: 'id',
+        returnIdentifier: 'mentorUserId',
+      },
+    ];
+
+    const query = this.db
       .query()
-      .raw(query, {
-        skip: (page - 1) * count,
-        count,
-        type: filter.type,
-      })
-      .run();
+      .call(matchRequestingUser, session)
+      .call(matchUserPermissions, label)
+      .orderBy('node.createdAt')
+      .skip((input.page - 1) * input.count)
+      .limit(input.page * input.count);
 
-    const items = await Promise.all(
-      result.map((row) => this.readOne(row.id, session))
+    if (filter.projectId) {
+      query.call(
+        filterByBaseNodeId,
+        filter.projectId,
+        'engagement',
+        'in',
+        'Project',
+        label
+      );
+    }
+
+    /*
+MATCH (requestingUser:User { active: true, id: 'rootadminid' })
+MATCH (requestingUser)<-[:member*1..]-(sg:SecurityGroup { active: true })
+with collect(distinct sg) as sgList
+match (sg)-[:permission]->(perm:Permission { active: true })-[:baseNode]->(node:Engagement { active: true })
+where sg IN sgList
+WITH collect(distinct perm) as permList, node
+order by node.createdAt
+skip 0
+limit 5
+return node.id
+
+    */
+
+    // need to experiment with doing skips and limits early to increase query performance
+
+    // query
+    // .with(['collect(distinct node) as nodes', 'count(distinct node) as total'])
+    // .raw(`unwind nodes as node`)
+    // .with(['node', 'total'])
+    // .orderBy('node.createdAt')
+    // .with([
+    //   `collect(node)[${(input.page - 1) * input.count}..${input.page * input.count}] as items`,
+    //   'total',
+    //   `${(input.page - 1) * input.count + input.count} < total as hasMore`,
+    // ])
+
+    // match on the rest of the properties of the object requested
+    query
+      .call(
+        addAllSecureProperties,
+        ...secureProps,
+        ...securePropsThatOnlyReturnTheirValue,
+        ...securePropertiesThatNeedSpecialWithTreament
+      )
+
+      .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps);
+
+    // form return object
+    //${listWithUnsecureObject(unsecureProps)},
+    query.with(
+      `
+        {
+          __typename:
+            case
+            when 'InternshipEngagement' IN labels(node)
+            then 'InternshipEngagement'
+            when 'LanguageEngagement' IN labels(node)
+            then 'LanguageEngagement'
+            end
+          ,
+          ceremony: {
+            value: ceremony.id,
+            canRead: true,
+            canEdit: false
+          },
+          language: {
+            value: language.id,
+            canRead: true,
+            canEdit: false
+          },
+          methodologies: {
+            value: 
+              case
+              when methodologies IS NULL OR methodologies.value IS NULL
+              then []
+              else methodologies.value
+              end
+            ,
+            canRead: methodologiesReadPerm.read,
+            canEdit: methodologiesEditPerm.edit
+          },
+          countryOfOrigin: {
+            value: countryOfOrigin.id,
+            canRead: true,
+            canEdit: false
+          },
+          intern: {
+            value: intern.id,
+            canRead: true,
+            canEdit: false
+          },
+          mentor: {
+            value: mentor.id,
+            canRead: true,
+            canEdit: false
+          },
+          status: status.value,
+          modifiedAt: modifiedAt.value,
+          ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
+          ${listWithSecureObject(secureProps)}
+        } as node
+      `
     );
 
-    return {
-      items,
-      total: items.length,
-      hasMore: false,
-    };
+    return await runListQuery(query, input, secureProps.includes(input.sort));
   }
 
   async listProducts(
