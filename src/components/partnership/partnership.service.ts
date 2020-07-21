@@ -10,12 +10,20 @@ import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { fiscalYears, ISession } from '../../common';
 import {
+  addAllMetaPropertiesOfChildBaseNodes,
+  addAllSecureProperties,
+  addPropertyCoalesceWithClause,
+  addShapeForBaseNodeMetaProperty,
+  addShapeForChildBaseNodeMetaProperty,
+  ChildBaseNodeMetaProperty,
   ConfigService,
   DatabaseService,
   IEventBus,
   ILogger,
   Logger,
+  matchRequestingUser,
   matchSession,
+  matchUserPermissions,
 } from '../../core';
 import { BudgetService } from '../budget';
 import { FileService } from '../file';
@@ -306,268 +314,84 @@ export class PartnershipService {
   }
 
   async readOne(id: string, session: ISession): Promise<Partnership> {
-    const readPartnership = this.db
-      .query()
-      .match(matchSession(session, { withAclRead: 'canReadPartnerships' }))
-      .match([node('partnership', 'Partnership', { active: true, id })])
-      .match([
-        node('project', 'Project', {
-          active: true,
-        }),
-        relation('out', '', 'partnership'),
-        node('partnership'),
-      ]);
-    readPartnership.optionalMatch([
-      node('requestingUser'),
-      relation('in', '', 'member', { active: true }),
-      node('', 'SecurityGroup', { active: true }),
-      relation('out', '', 'permission', { active: true }),
-      node('canEditOrganization', 'Permission', {
-        property: 'organization',
-        active: true,
-        edit: true,
-      }),
-      relation('out', '', 'baseNode', { active: true }),
-      node('partnership'),
-      relation('out', '', 'organization', { active: true }),
-      node('organization', 'Organization', { active: true }),
-      relation('out', '', 'name', { active: true }),
-      node('organizationName', 'Property', { active: true }),
-    ]);
-    readPartnership.optionalMatch([
-      node('requestingUser'),
-      relation('in', '', 'member', { active: true }),
-      node('', 'SecurityGroup', { active: true }),
-      relation('out', '', 'permission', { active: true }),
-      node('canReadOrganization', 'Permission', {
-        property: 'organization',
-        active: true,
-        read: true,
-      }),
-      relation('out', '', 'baseNode', { active: true }),
-      node('partnership'),
-      relation('out', '', 'organization', { active: true }),
-      node('organization', 'Organization', { active: true }),
-      relation('out', '', 'name', { active: true }),
-      node('organizationName', 'Property', { active: true }),
-    ]);
-    readPartnership.optionalMatch([
-      node('requestingUser'),
-      relation('in', '', 'member', { active: true }),
-      node('', 'SecurityGroup', { active: true }),
-      relation('out', '', 'permission', { active: true }),
-      node('projectMouStartPerm', 'Permission', {
-        property: 'mouStart',
-        active: true,
-        read: true,
-      }),
-      relation('out', '', 'baseNode', { active: true }),
-      node('project'),
-      relation('out', '', 'mouStart'),
-      node('projectMouStart', 'Property', {
-        active: true,
-      }),
-    ]);
-    readPartnership.optionalMatch([
-      node('requestingUser'),
-      relation('in', '', 'member', { active: true }),
-      node('', 'SecurityGroup', { active: true }),
-      relation('out', '', 'permission', { active: true }),
-      node('projectMouEndPerm', 'Permission', {
-        property: 'mouEnd',
-        active: true,
-        read: true,
-      }),
-      relation('out', '', 'baseNode', { active: true }),
-      node('project'),
-      relation('out', '', 'mouEnd'),
-      node('projectMouEnd', 'Property', {
-        active: true,
-      }),
-    ]);
-    this.propMatch(readPartnership, 'mouStart');
-    this.propMatch(readPartnership, 'mouEnd');
-    this.propMatch(readPartnership, 'types');
-    this.propMatch(readPartnership, 'agreementStatus');
-    this.propMatch(readPartnership, 'mou');
-    this.propMatch(readPartnership, 'agreement');
-    this.propMatch(readPartnership, 'mouStatus');
-    this.propMatch(readPartnership, 'mouStartOverride');
-    this.propMatch(readPartnership, 'mouEndOverride');
+    this.logger.debug('readOne', { id, userId: session.userId });
 
-    readPartnership.return({
-      mouStartOverride: [{ value: 'mouStartOverride' }],
-      canReadMouStartOverride: [
-        {
-          read: 'canReadMouStartOverride',
-        },
-      ],
-      canEditMouStartOverride: [
-        {
-          edit: 'canEditMouStartOverride',
-        },
-      ],
-      mouEndOverride: [{ value: 'mouEndOverride' }],
-      canReadMouEndOverride: [
-        {
-          read: 'canReadMouEndOverride',
-        },
-      ],
-      canEditMouEndOverride: [
-        {
-          edit: 'canEditMouEndOverride',
-        },
-      ],
-      projectMouStart: [{ value: 'projectMouStart' }],
-      projectMouStartPerm: [
-        {
-          read: 'canReadProjectMouStart',
-          edit: 'canEditProjectMouStart',
-        },
-      ],
-      projectMouEnd: [{ value: 'projectMouEnd' }],
-      projectMouEndPerm: [
-        {
-          read: 'canReadProjectMouEnd',
-          edit: 'canEditProjectMouEnd',
-        },
-      ],
-      partnership: [{ id: 'id', createdAt: 'createdAt' }],
-      agreementStatus: [{ value: 'agreementStatus' }],
-      canReadAgreementStatus: [
-        {
-          read: 'canReadAgreementStatus',
-        },
-      ],
-      canEditAgreementStatus: [
-        {
-          edit: 'canEditAgreementStatus',
-        },
-      ],
-      mou: [{ value: 'mou' }],
-      canReadMou: [
-        {
-          read: 'canReadMou',
-        },
-      ],
-      canEditMou: [
-        {
-          edit: 'canEditMou',
-        },
-      ],
-      agreement: [{ value: 'agreement' }],
-      canReadAgreement: [
-        {
-          read: 'canReadAgreement',
-        },
-      ],
-      canEditAgreement: [
-        {
-          edit: 'canEditAgreement',
-        },
-      ],
-      mouStatus: [{ value: 'mouStatus' }],
-      canReadMouStatus: [{ read: 'canReadMouStatus' }],
-      canEditMouStatus: [{ edit: 'canEditMouStatus' }],
-      mouStart: [{ value: 'mouStart' }],
-      canReadMouStart: [
-        {
-          read: 'canReadMouStart',
-        },
-      ],
-      canEditMouStart: [
-        {
-          edit: 'canEditMouStart',
-        },
-      ],
-      mouEnd: [{ value: 'mouEnd' }],
-      canReadMouEnd: [
-        {
-          read: 'canReadMouEnd',
-        },
-      ],
-      canEditMouEnd: [
-        {
-          edit: 'canEditMouEnd',
-        },
-      ],
-      organization: [
-        { id: 'organizationId', createdAt: 'organizationCreatedAt' },
-      ],
-      organizationName: [{ value: 'organizationName' }],
-      canReadOrganization: [
-        {
-          read: 'canReadOrganization',
-        },
-      ],
-      canEditOrganization: [
-        {
-          edit: 'canEditOrganization',
-        },
-      ],
-      types: [{ value: 'types' }],
-      canReadTypes: [
-        {
-          read: 'canReadTypes',
-        },
-      ],
-      canEditTypes: [
-        {
-          edit: 'canEditTypes',
-        },
-      ],
-    });
+    if (!session.userId) {
+      this.logger.info('using anon user id');
+      session.userId = this.config.anonUser.id;
+    }
+
+    const props = [
+      'agreementStatus',
+      'mouStatus',
+      'mouStart',
+      'mouEnd',
+      'mouStartOverride',
+      'mouEndOverride',
+      'types',
+      'mou',
+      'agreement',
+    ];
+
+    const baseNodeMetaProps = ['id', 'createdAt'];
+
+    const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
+      {
+        parentBaseNodePropertyKey: 'organization',
+        parentRelationDirection: 'out',
+        childBaseNodeLabel: 'Organization',
+        childBaseNodeMetaPropertyKey: 'id',
+        returnIdentifier: 'organizationId',
+      },
+    ];
+
+    const query = this.db
+      .query()
+      .call(matchRequestingUser, session)
+      .call(matchUserPermissions, 'Partnership', id)
+      .call(addAllSecureProperties, ...props)
+      .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
+      .with([
+        ...props.map(addPropertyCoalesceWithClause),
+        ...childBaseNodeMetaProps.map(addShapeForChildBaseNodeMetaProperty),
+        ...baseNodeMetaProps.map(addShapeForBaseNodeMetaProperty),
+        'node',
+      ])
+      .returnDistinct([
+        ...props,
+        ...baseNodeMetaProps,
+        ...childBaseNodeMetaProps.map((x) => x.returnIdentifier),
+        'labels(node) as labels',
+      ]);
 
     let result;
     try {
-      result = await readPartnership.first();
-    } catch (e) {
-      this.logger.error('e :>> ', e);
+      result = await query.first();
+    } catch (error) {
+      this.logger.error('could not read partnership', error);
     }
-
-    if (!result) {
-      throw new NotFoundException('Could not find partnership');
+    if (!result || !result.id) {
+      throw new NotFoundException('could not find Partnership');
     }
 
     let mouStart = null;
     let mouEnd = null;
 
     // if user has access to project mou and there is no partnership override
-    if (result.canReadProjectMouStart && result.canReadMouStartOverride) {
-      mouStart = result.mouStartOverride ?? result.projectMouStart;
+    if (result.mouStart.canRead || result.mouStartOverride.canRead) {
+      mouStart = result.mouStartOverride.value ?? result.mouStart.value;
     }
-    if (result.canReadProjectMouEnd && result.canReadMouEndOverride) {
-      mouEnd = result.mouEndOverride ?? result.projectMouEnd;
+    if (result.mouEnd.canRead || result.mouEndOverride.canRead) {
+      mouEnd = result.mouEndOverride.value ?? result.mouEnd.value;
     }
 
     const canReadMouStart =
-      result.canReadProjectMouStart && result.canReadMouStartOverride;
+      result.mouStart.canRead || result.mouStartOverride.canRead;
     const canReadMouEnd =
-      result.canReadProjectMouEnd && result.canEditMouEndOverride;
+      result.mouEnd.canRead || result.mouEndOverride.canRead;
 
-    return {
-      id,
-      createdAt: result.createdAt,
-      agreementStatus: {
-        value: result.agreementStatus,
-        canRead: !!result.canReadAgreementStatus,
-        canEdit: !!result.canEditAgreementStatus,
-      },
-      mou: {
-        value: result.mou,
-        canRead: !!result.canReadMou,
-        canEdit: !!result.canEditMou,
-      },
-      agreement: {
-        value: result.agreement,
-        canRead: !!result.canReadAgreement,
-        canEdit: !!result.canEditAgreement,
-      },
-      mouStatus: {
-        value: result.mouStatus,
-        canRead: !!result.canReadMouStatus,
-        canEdit: !!result.canEditMouStatus,
-      },
+    const response: any = {
+      ...result,
       mouStart: {
         value: mouStart,
         canRead: canReadMouStart,
@@ -578,31 +402,10 @@ export class PartnershipService {
         canRead: canReadMouEnd,
         canEdit: false, // edit the project mou or edit the partnerhsip mou override
       },
-      mouStartOverride: {
-        value: result.mouStartOverride,
-        canRead: !!result.canReadMouStartOverride,
-        canEdit: !!result.canEditMouStartOverride,
-      },
-      mouEndOverride: {
-        value: result.mouEndOverride,
-        canRead: !!result.canReadMouEndOverride,
-        canEdit: !!result.canEditMouEndOverride,
-      },
-      types: {
-        value: result.types ?? [],
-        canRead: !!result.canReadTypes,
-        canEdit: !!result.canEditTypes,
-      },
-      organization: {
-        id: result.organizationId,
-        createdAt: result.organizationCreatedAt,
-        name: {
-          value: result.organizationName,
-          canRead: !!result.canReadOrganization,
-          canEdit: !!result.canEditOrganization,
-        },
-      },
+      organization: this.orgService.readOne(result.organizationId, session),
     };
+
+    return (response as unknown) as Partnership;
   }
 
   async update(input: UpdatePartnership, session: ISession) {
