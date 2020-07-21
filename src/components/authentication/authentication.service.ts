@@ -255,6 +255,14 @@ export class AuthenticationService {
     return session;
   }
 
+  async changePassword(
+    _oldPassword: string,
+    _newPassword: string,
+    _session: ISession
+  ): Promise<void> {
+    // TODO
+  }
+
   async forgotPassword(email: string): Promise<void> {
     const result = await this.db
       .query()
