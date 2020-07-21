@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import type { AWSError } from 'aws-sdk';
 import { generate } from 'shortid';
-import { ISession } from '../../common';
+import { DuplicateException, ISession } from '../../common';
 import { ILogger, Logger } from '../../core';
 import { FileBucket } from './bucket';
 import {
@@ -163,9 +163,9 @@ export class FileService {
       }
       try {
         await this.repo.getBaseNodeByName(parentId, name, session);
-        throw new BadRequestException(
-          'Node with this name already exists in this directory',
-          'Duplicate'
+        throw new DuplicateException(
+          'name',
+          'Node with this name already exists in this directory'
         );
       } catch (e) {
         if (!(e instanceof NotFoundException)) {

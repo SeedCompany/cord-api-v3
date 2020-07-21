@@ -8,7 +8,12 @@ import { node, relation } from 'cypher-query-builder';
 import { first, intersection, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
-import { ISession, Sensitivity, simpleSwitch } from '../../common';
+import {
+  DuplicateException,
+  ISession,
+  Sensitivity,
+  simpleSwitch,
+} from '../../common';
 import {
   ConfigService,
   DatabaseService,
@@ -24,7 +29,7 @@ import {
   LocationService,
   SecuredLocationList,
 } from '../location';
-import { ProjectListInput, ProjectListOutput } from '../project';
+import { ProjectListInput, SecuredProjectList } from '../project';
 import {
   CreateLanguage,
   Language,
@@ -304,9 +309,10 @@ export class LanguageService {
             LanguageDisplayName: 'displayName',
             LanguageRodNumber: 'rodNumber',
           }) ?? e.label;
-        throw new BadRequestException(
-          `Language with ${prop}="${e.value}" already exists`,
-          'Duplicate'
+        throw new DuplicateException(
+          `language.${prop}`,
+          `${prop} with value ${e.value} already exists`,
+          e
         );
       }
       this.logger.error(`Could not create`, { ...input, exception: e });
@@ -532,7 +538,7 @@ export class LanguageService {
     language: Language,
     _input: ProjectListInput,
     _session: ISession
-  ): Promise<ProjectListOutput> {
+  ): Promise<SecuredProjectList> {
     const result = await this.db
       .query()
       .matchNode('language', 'Language', { id: language.id, active: true })
@@ -554,6 +560,8 @@ export class LanguageService {
       total: 0,
       hasMore: false,
       items: [],
+      canRead: true,
+      canCreate: true,
     };
   }
 
