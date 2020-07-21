@@ -5,6 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
+import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { flatMap, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
@@ -12,6 +13,7 @@ import { fiscalYears, ISession } from '../../common';
 import {
   addAllMetaPropertiesOfChildBaseNodes,
   addAllSecureProperties,
+  addBaseNodeMetaPropsWithClause,
   addPropertyCoalesceWithClause,
   addShapeForBaseNodeMetaProperty,
   addShapeForChildBaseNodeMetaProperty,
@@ -20,10 +22,12 @@ import {
   DatabaseService,
   IEventBus,
   ILogger,
+  listWithSecureObject,
   Logger,
   matchRequestingUser,
   matchSession,
   matchUserPermissions,
+  runListQuery,
 } from '../../core';
 import { BudgetService } from '../budget';
 import { FileService } from '../file';
@@ -464,125 +468,95 @@ export class PartnershipService {
     input: Partial<PartnershipListInput>,
     session: ISession
   ): Promise<PartnershipListOutput> {
-    const { page, count, sort, order, filter } = {
+    const { sort, filter } = {
       ...PartnershipListInput.defaultVal,
       ...input,
     };
 
-    const { projectId } = filter;
-    let result: {
-      items: Partnership[];
-      hasMore: boolean;
-      total: number;
-    } = { items: [], hasMore: false, total: 0 };
+    const label = 'Partnership';
+    const baseNodeMetaProps = ['id', 'createdAt'];
+    // const unsecureProps = [''];
+    const secureProps = [
+      'agreementStatus',
+      'mouStatus',
+      'mouStart',
+      'mouEnd',
+      'mouStartOverride',
+      'mouEndOverride',
+      'types',
+      'mou',
+      'agreement',
+    ];
 
-    if (projectId) {
-      const query = `
-        MATCH
-          (token:Token {active: true, value: $token})
-          <-[:token {active: true}]-
-          (requestingUser:User {
-              active: true,
-              id: $requestingUserId
-          }),
-          (project:Project {id: $projectId, active: true, owningOrgId: $owningOrgId})
-        -[:partnership]->(partnership:Partnership {active:true})
-        WITH COUNT(partnership) as total
-        
-        MATCH
-          (token:Token {active: true, value: $token})
-          <-[:token {active: true}]-
-          (requestingUser:User {
-              active: true,
-              id: $requestingUserId
-          }),
-          (project:Project {id: $projectId, active: true, owningOrgId: $owningOrgId})
-        -[:partnership]->(partnership:Partnership {active:true})
-        WITH total, project, partnership
-        OPTIONAL MATCH (requestingUser)<-[:member { active: true }]-(sg:SecurityGroup { active: true })-[:permission { active: true }]
-        ->(canEditAgreementStatus:Permission { property: 'agreementStatus', active: true, edit: true })
-        -[:baseNode { active: true }]->(partnership)-[:agreementStatus { active: true }]->(agreementStatus:Property { active: true })
-        OPTIONAL MATCH (requestingUser)<-[:member { active: true }]-(sg:SecurityGroup { active: true })-[:permission { active: true }]
-        ->(canReadAgreementStatus:Permission { property: 'agreementStatus', active: true, read: true })
-        -[:baseNode { active: true }]->(partnership)-[:agreementStatus { active: true }]->(agreementStatus:Property { active: true })
-        RETURN DISTINCT total, partnership.id as id, agreementStatus.value as agreementStatus, partnership.createdAt as createdAt
-        ORDER BY ${sort} ${order}
-        SKIP $skip LIMIT $count
-      `;
+    const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
+      {
+        parentBaseNodePropertyKey: 'organization',
+        parentRelationDirection: 'out',
+        childBaseNodeLabel: 'Organization',
+        childBaseNodeMetaPropertyKey: 'id',
+        returnIdentifier: 'organizationId',
+      },
+    ];
 
-      const projectPartners = await this.db
-        .query()
-        .raw(query, {
-          token: session.token,
-          requestingUserId: session.userId,
-          owningOrgId: session.owningOrgId,
-          projectId,
-          skip: (page - 1) * count,
-          count,
-        })
-        .run();
+    const query = this.db
+      .query()
+      .call(matchRequestingUser, session)
+      .call(matchUserPermissions, 'Partnership');
 
-      result.total = projectPartners[0]?.total || 0;
-      result.hasMore = count * page < result.total ?? true;
-
-      result.items = await Promise.all(
-        projectPartners.map(async (partnership) =>
-          this.readOne(partnership.id, session)
-        )
+    if (filter.projectId) {
+      this.filterByProject(
+        query,
+        filter.projectId,
+        'partnership',
+        'out',
+        label
       );
-    } else {
-      result = await this.db.list<Partnership>({
-        session,
-        nodevar: 'partnership',
-        aclReadProp: 'canReadPartnerships',
-        aclEditProp: 'canCreatePartnership',
-        props: [
-          { name: 'agreementStatus', secure: true },
-          { name: 'mou', secure: true },
-          { name: 'agreement', secure: true },
-          { name: 'mouStatus', secure: true },
-          { name: 'mouStart', secure: true },
-          { name: 'mouEnd', secure: true },
-          { name: 'mouStartOverride', secure: true },
-          { name: 'mouEndOverride', secure: true },
-          { name: 'organization', secure: false },
-          { name: 'types', secure: true, list: true },
-        ],
-        input: {
-          page,
-          count,
-          sort,
-          order,
-          filter,
-        },
-      });
-
-      const items = await Promise.all(
-        result.items.map(async (item) => {
-          const query = `
-              MATCH (partnership:Partnership {id: $id, active: true})
-                -[:organization {active: true}]->(organization)
-              RETURN organization.id as id
-            `;
-          const orgId = await this.db
-            .query()
-            .raw(query, {
-              id: item.id,
-            })
-            .first();
-
-          const org = await this.orgService.readOne(orgId?.id, session);
-          return {
-            ...item,
-            organization: org,
-          };
-        })
-      );
-      result.items = items;
     }
 
+    // match on the rest of the properties of the object requested
+    query
+      .call(
+        addAllSecureProperties,
+        ...secureProps
+        //...unsecureProps
+      )
+      .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
+      // form return object
+      // ${listWithUnsecureObject(unsecureProps)}, // removed from a few lines down
+      .with(
+        `
+          {
+            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
+            ${listWithSecureObject(secureProps)},
+            ${childBaseNodeMetaProps
+              .map(
+                (x) =>
+                  `${x.returnIdentifier}: ${x.parentBaseNodePropertyKey}.${x.childBaseNodeMetaPropertyKey}`
+              )
+              .join(', ')}
+          } as node
+        `
+      );
+
+    const result: PartnershipListOutput = await runListQuery(
+      query,
+      input as PartnershipListInput,
+      secureProps.includes(sort)
+    );
+    const items = await Promise.all(
+      result.items.map(async (item) => {
+        return {
+          ...item,
+          organization: await this.orgService.readOne(
+            (item as any).organizationId,
+            session
+          ),
+        };
+      })
+    );
+
     return {
-      items: result.items,
+      items,
       hasMore: result.hasMore,
       total: result.total,
     };
@@ -640,5 +614,19 @@ export class PartnershipService {
         )
       ).every((n) => n)
     );
+  }
+
+  protected filterByProject(
+    query: Query,
+    projectId: string,
+    relationshipType: string,
+    relationshipDirection: RelationDirection,
+    label: string
+  ) {
+    query.match([
+      node('project', 'Project', { active: true, id: projectId }),
+      relation(relationshipDirection, '', relationshipType, { active: true }),
+      node('node', label, { active: true }),
+    ]);
   }
 }
