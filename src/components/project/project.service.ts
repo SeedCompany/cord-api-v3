@@ -8,12 +8,12 @@ import {
 import { node, relation } from 'cypher-query-builder';
 import { flatMap, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
-import { generate } from 'shortid';
 import { fiscalYears, ISession, Sensitivity } from '../../common';
 import {
   addAllSecureProperties,
   addBaseNodeMetaPropsWithClause,
   ConfigService,
+  createBaseNode,
   DatabaseService,
   filterByStringArray,
   IEventBus,
@@ -21,9 +21,11 @@ import {
   listWithSecureObject,
   listWithUnsecureObject,
   Logger,
+  matchRequestingUser,
   matchSession,
   matchUserPermissions,
   OnIndex,
+  Property,
   runListQuery,
 } from '../../core';
 import {
@@ -200,10 +202,8 @@ export class ProjectService {
     { locationId, ...input }: CreateProject,
     session: ISession
   ): Promise<Project> {
-    const id = generate();
     const createdAt = DateTime.local();
     const createInput = {
-      id,
       sensitivity: Sensitivity.High, // TODO: this needs to be calculated based on language engagement
       step: ProjectStep.EarlyConversations,
       status: stepToStatus(ProjectStep.EarlyConversations),
@@ -211,13 +211,86 @@ export class ProjectService {
       ...input,
     };
     const canEdit = createInput.status === ProjectStatus.InDevelopment;
-
+    const secureProps: Property[] = [
+      {
+        key: 'name',
+        value: createInput.name,
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'sensitivity',
+        value: createInput.sensitivity,
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'step',
+        value: createInput.step,
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'status',
+        value: createInput.status,
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'mouStart',
+        value: createInput.mouStart,
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'mouEnd',
+        value: createInput.mouEnd,
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'estimatedSubmission',
+        value: createInput.estimatedSubmission,
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'modifiedAt',
+        value: createInput.modifiedAt,
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+    ];
     try {
       const createProject = this.db
         .query()
-        .match(matchSession(session, { withAclEdit: 'canCreateProject' }))
+        .call(matchRequestingUser, session)
         .match([
-          node('rootuser', 'User', {
+          node('root', 'User', {
             active: true,
             id: this.config.rootAdmin.id,
           }),
@@ -227,88 +300,37 @@ export class ProjectService {
           node('country', 'Country', { active: true, id: locationId }),
         ]);
       }
+      createProject.call(
+        createBaseNode,
+        'Project',
+        secureProps,
+        {
+          owningOrgId: session.owningOrgId,
+          type: createInput.type,
+        },
+        canEdit ? ['name', 'mouStart', 'mouEnd'] : []
+      );
       createProject.create([
-        [
-          node('newProject', 'Project:BaseNode', {
-            active: true,
-            createdAt,
-            id,
-            owningOrgId: session.owningOrgId,
-            type: createInput.type,
-          }),
-        ],
-        ...this.property('sensitivity', createInput.sensitivity),
-        ...this.property('name', createInput.name),
-        ...this.property('step', createInput.step),
-        ...this.property('status', createInput.status),
-        ...this.property('mouStart', createInput.mouStart),
-        ...this.property('mouEnd', createInput.mouEnd),
-        ...this.property(
-          'estimatedSubmission',
-          createInput.estimatedSubmission
-        ),
-        ...this.property('modifiedAt', createInput.modifiedAt),
+        ...this.permission('engagement'),
+        ...this.permission('teamMember'),
+        ...this.permission('partnership'),
+        ...this.permission('location'),
       ]);
       if (locationId) {
         createProject.create([
           [
             node('country'),
             relation('in', '', 'location', { active: true, createdAt }),
-            node('newProject'),
+            node('node'),
           ],
         ]);
       }
-      createProject
-        .create([
-          [
-            node('adminSG', 'SecurityGroup', {
-              id: generate(),
-              active: true,
-              createdAt,
-              name: `${input.name} ${input.type} admin`,
-            }),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('requestingUser'),
-          ],
-          [
-            node('readerSG', 'SecurityGroup', {
-              id: generate(),
-              active: true,
-              createdAt,
-              name: `${input.name} ${input.type} users`,
-            }),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('requestingUser'),
-          ],
-          [
-            node('adminSG'),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('rootuser'),
-          ],
-          [
-            node('readerSG'),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('rootuser'),
-          ],
-          ...this.permission('sensitivity'),
-          ...this.permission('name', canEdit),
-          ...this.permission('step'),
-          ...this.permission('status'),
-          ...this.permission('mouStart', canEdit),
-          ...this.permission('mouEnd', canEdit),
-          ...this.permission('estimatedSubmission'),
-          ...this.permission('engagement'),
-          ...this.permission('teamMember'),
-          ...this.permission('partnership'),
-          ...this.permission('modifiedAt'),
-          ...this.permission('location'),
-        ])
-        .return('newProject.id as id');
-      let cp;
-      try {
-        cp = await createProject.first();
-      } catch (e) {
-        this.logger.error('e :>> ', e);
+      createProject.return('node.id as id');
+
+      const result = await createProject.first();
+
+      if (!result) {
+        throw new ServerException('failed to create a project');
       }
       let location;
       if (locationId) {
@@ -318,37 +340,23 @@ export class ProjectService {
           .return('country.id')
           .first();
       }
-      if (!cp) {
+
+      if (!result) {
         if (locationId && !location) {
           throw new ServerException('Could not find location');
         }
       }
 
-      const qry = `
-        MATCH
-          (project:Project {id: "${id}", active: true})-[:name]->(proName:Property),
-          (project:Project)-[:step]->(proStep:Property {active: true}),
-          (project:Project)-[:status]->(proStatus:Property {active: true})
-        SET proName :ProjectName, proStep :ProjectStep, proStatus :ProjectStatus
-        RETURN project.id
-      `;
-      await this.db
-        .query()
-        .raw(qry, {
-          id,
-        })
-        .run();
-
       await this.projectMembers.create(
         {
           userId: session.userId!,
-          projectId: id,
+          projectId: result.id,
           roles: [Role.ProjectManager],
         },
         session
       );
 
-      const project = await this.readOne(id, session);
+      const project = await this.readOne(result.id, session);
 
       await this.eventBus.publish(new ProjectCreatedEvent(project, session));
 
@@ -380,8 +388,7 @@ export class ProjectService {
     ];
     const readProject = this.db
       .query()
-      // there should be a alternative function for matchSession in query helper.
-      .match(matchSession(session, { withAclRead: 'canReadProjects' }))
+      .call(matchRequestingUser, session)
       .call(matchUserPermissions, label, id)
       .call(addAllSecureProperties, ...secureProps, ...unsecureProps)
       .optionalMatch([
@@ -572,8 +579,7 @@ export class ProjectService {
 
     const listQuery = this.db
       .query()
-      // there should be a alternative function for matchSession in query helper.
-      .match(matchSession(session, { withAclRead: 'canReadProjects' }))
+      .call(matchRequestingUser, session)
       .call(matchUserPermissions, label);
     // filter by filter options
     if (filter.status) {

@@ -48,7 +48,14 @@ export interface Property {
 }
 
 // assumes 'requestingUser', 'root' and 'publicSG' cypher identifiers have been matched
-export function createBaseNode(query: Query, label: string, props: Property[]) {
+// add baseNodeProps and editableProps
+export function createBaseNode(
+  query: Query,
+  label: string,
+  props: Property[],
+  baseNodeProps?: { owningOrgId: string | undefined; type: string },
+  editableProps?: string[]
+) {
   const createdAt = DateTime.local().toString();
 
   query.create([
@@ -56,6 +63,7 @@ export function createBaseNode(query: Query, label: string, props: Property[]) {
       active: true,
       createdAt,
       id: generate(),
+      ...baseNodeProps,
     }),
   ]);
 
@@ -125,6 +133,7 @@ export function createBaseNode(query: Query, label: string, props: Property[]) {
           createdAt,
           property: prop.key,
           read: true,
+          edit: editableProps?.includes(prop.key) ? true : false,
         }),
         relation('out', '', 'baseNode', { active: true }),
         node('node'),
