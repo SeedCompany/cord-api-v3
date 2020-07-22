@@ -10,7 +10,8 @@ export abstract class UpdateUser {
   @IdField()
   readonly id: string;
 
-  // TODO Allow email to be changed? Implications?
+  @Field({ nullable: true })
+  readonly email?: string;
 
   @NameField({ nullable: true })
   readonly realFirstName?: string;
