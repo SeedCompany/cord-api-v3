@@ -36,7 +36,7 @@ export class LocalBucketController {
     }
     // Chokes on json files because they are parsed with body-parser.
     // Need to disable it for this path or create a workaround.
-    const contents = (await rawBody(req)).toString('utf8').trim();
+    const contents = await rawBody(req);
     if (!contents) {
       throw new BadRequestException();
     }

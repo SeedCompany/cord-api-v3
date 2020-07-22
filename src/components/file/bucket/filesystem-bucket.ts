@@ -45,7 +45,7 @@ export class FilesystemBucket extends LocalBucket {
       throw new NotFoundException();
     }
     const raw = await this.readFile(key + '.info');
-    const info = JSON.parse(raw);
+    const info = JSON.parse(raw.toString());
     info.LastModified = new Date(info.LastModified);
 
     return info;
@@ -65,9 +65,7 @@ export class FilesystemBucket extends LocalBucket {
   }
 
   private async readFile(key: string) {
-    return fs.readFile(this.getPath(key), {
-      encoding: 'utf8',
-    });
+    return fs.readFile(this.getPath(key));
   }
 
   private async writeFile(key: string, data: any) {
@@ -75,9 +73,7 @@ export class FilesystemBucket extends LocalBucket {
     await fs.mkdir(dirname(path), {
       recursive: true,
     });
-    await fs.writeFile(this.getPath(key), data, {
-      encoding: 'utf8',
-    });
+    await fs.writeFile(this.getPath(key), data);
   }
 
   private getPath(key: string) {
