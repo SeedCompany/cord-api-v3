@@ -1,5 +1,6 @@
 import {
   contains,
+  greaterThan,
   inArray,
   node,
   Query,
@@ -639,6 +640,40 @@ export function filterByStringArray(
     [filterKey]: { value: inArray(filterValue) },
   });
   query.with(`permList, node`);
+}
+
+// LIST Filtering
+export function filterByChildBaseNodeCount(
+  query: Query,
+  label: string,
+  filterKey: string
+) {
+  query.match([
+    node('readPerm', 'Permission', {
+      property: filterKey,
+      read: true,
+      active: true,
+    }),
+    relation('out', '', 'baseNode'),
+    node('node', label, {
+      active: true,
+    }),
+    relation('out', '', filterKey, { active: true }),
+    node(filterKey, 'BaseNode', { active: true }),
+  ]);
+  query
+    .with(
+      `
+      readPerm,
+      permList,
+      node,
+      ${count(filterKey, { distinct: true, as: `${filterKey}_count` })}
+    `
+    )
+    .where({
+      readPerm: inArray(['permList'], true),
+      [`${filterKey}_count`]: greaterThan(0),
+    });
 }
 
 // used to search a specific user's relationship to the target base node

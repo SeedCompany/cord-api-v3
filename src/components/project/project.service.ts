@@ -15,6 +15,7 @@ import {
   ConfigService,
   createBaseNode,
   DatabaseService,
+  filterByChildBaseNodeCount,
   filterByStringArray,
   IEventBus,
   ILogger,
@@ -593,6 +594,9 @@ export class ProjectService {
         filter.sensitivity
       );
     }
+    if (filter.clusters) {
+      listQuery.call(filterByChildBaseNodeCount, label, 'engagement');
+    }
     // match on the rest of the properties of the object requested
     listQuery
       .call(addAllSecureProperties, ...secureProps, ...unsecureProps)
@@ -626,9 +630,7 @@ export class ProjectService {
       userId: session.userId,
     });
     //get a list of engagements
-    const listQuery = this.db
-      .query()
-      .match(matchSession(session, { withAclRead: 'canReadProjects' }));
+    const listQuery = this.db.query().call(matchRequestingUser, session);
     listQuery.match([
       node('project', 'Project', { active: true, id: project.id }),
       relation('out', '', 'engagement', { active: true }),
@@ -661,6 +663,7 @@ export class ProjectService {
       canRead: true,
       canCreate: true,
     };
+
     return retVal;
   }
 
