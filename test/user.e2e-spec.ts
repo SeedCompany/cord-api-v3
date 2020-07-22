@@ -394,7 +394,7 @@ describe('User e2e', () => {
     // TODO after #430 is resolved, list orgs and make sure org is removed as primary
   });
 
-  it('read one users organizations', async () => {
+  it.skip('read one users organizations', async () => {
     const newUser = await createUser(app);
     const org = await createOrganization(app);
     const result = await app.graphql.mutate(
