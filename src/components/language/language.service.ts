@@ -15,11 +15,16 @@ import {
   simpleSwitch,
 } from '../../common';
 import {
+  addAllSecureProperties,
+  addBaseNodeMetaPropsWithClause,
   ConfigService,
   DatabaseService,
   ILogger,
+  listWithSecureObject,
+  listWithUnsecureObject,
   Logger,
   matchSession,
+  matchUserPermissions,
   OnIndex,
   UniquenessError,
 } from '../../core';
@@ -29,7 +34,7 @@ import {
   LocationService,
   SecuredLocationList,
 } from '../location';
-import { ProjectListInput, SecuredProjectList } from '../project';
+import { Project, ProjectListInput, SecuredProjectList } from '../project';
 import {
   CreateLanguage,
   Language,
@@ -534,34 +539,173 @@ export class LanguageService {
     };
   }
 
+  //TODO - user QueryBus implementation to avoid circular reference with project service
+  async readOneProject(id: string, session: ISession): Promise<Project> {
+    this.logger.info('query readone project', { id, userId: session.userId });
+    const label = 'Project';
+    const baseNodeMetaProps = ['id', 'createdAt', 'type'];
+    const unsecureProps = ['status', 'sensitivity'];
+    const secureProps = [
+      'name',
+      'deptId',
+      'step',
+      'mouStart',
+      'mouEnd',
+      'estimatedSubmission',
+      'modifiedAt',
+      'location',
+    ];
+    const readProject = this.db
+      .query()
+      // there should be a alternative function for matchSession in query helper.
+      .match(matchSession(session, { withAclRead: 'canReadProjects' }))
+      .call(matchUserPermissions, label, id)
+      .call(addAllSecureProperties, ...secureProps, ...unsecureProps)
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('sg', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node('canReadLocation', 'Permission', {
+          property: 'location',
+          active: true,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('project'),
+        relation('out', '', 'location', { active: true }),
+        node('country', 'Country', { active: true }),
+      ])
+      .return(
+        `
+          {
+            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
+            ${listWithUnsecureObject(unsecureProps)},
+            ${listWithSecureObject(secureProps)},
+            countryId: country.id,
+            canReadLocation: canReadLocation
+          } as project
+        `
+      );
+
+    let result;
+    try {
+      result = await readProject.first();
+    } catch (e) {
+      this.logger.error('e :>> ', e);
+      return await Promise.reject(e);
+    }
+
+    if (!result) {
+      throw new NotFoundException(
+        `Could not find project DEBUG: requestingUser ${session.userId} target ProjectId ${id}`
+      );
+    }
+
+    const location = result.countryId
+      ? await this.locationService
+          .readOneCountry(result.countryId, session)
+          .then((country) => {
+            return {
+              value: {
+                id: country.id,
+                name: { ...country.name },
+                region: { ...country.region },
+                createdAt: country.createdAt,
+              },
+            };
+          })
+          .catch(() => {
+            return {
+              value: undefined,
+            };
+          })
+      : {
+          value: undefined,
+        };
+
+    return {
+      id,
+      createdAt: result.project.createdAt,
+      modifiedAt: result.project.modifiedAt.value,
+      type: result.project.type,
+      sensitivity: result.project.sensitivity,
+      name: result.project.name,
+      deptId: result.project.deptId,
+      step: result.project.step,
+      status: result.project.status,
+      location: {
+        ...location,
+        canRead: !!result.canReadLocationRead,
+        canEdit: !!result.canReadLocationEdit,
+      },
+      mouStart: result.project.mouStart,
+      mouEnd: result.project.mouEnd,
+      estimatedSubmission: result.project.estimatedSubmission,
+    };
+  }
+
   async listProjects(
     language: Language,
-    _input: ProjectListInput,
-    _session: ISession
+    input: ProjectListInput,
+    session: ISession
   ): Promise<SecuredProjectList> {
-    const result = await this.db
+    const { page, count } = {
+      ...ProjectListInput.defaultVal,
+      ...input,
+    };
+
+    const result: {
+      items: Project[];
+      hasMore: boolean;
+      total: number;
+    } = { items: [], hasMore: false, total: 0 };
+
+    const queryProject = this.db
       .query()
-      .matchNode('language', 'Language', { id: language.id, active: true })
+      .match(matchSession(session, { withAclRead: 'canReadProjects' }))
+      .match([node('language', 'Language', { id: language.id, active: true })])
       .match([
         node('language'),
-        relation('out', '', 'project', { active: true }),
+        relation('in', '', 'language', { active: true }),
+        node('langEngagement', 'LanguageEngagement', {
+          active: true,
+        }),
+        relation('in', '', 'engagement', { active: true }),
         node('project', 'Project', {
           active: true,
         }),
-      ])
-      .return({
-        project: [{ id: 'id' }],
-      })
-      .run();
+      ]);
+    queryProject.return({
+      project: [{ id: 'id', createdAt: 'createdAt' }],
+      requestingUser: [
+        {
+          canReadProjects: 'canReadProjects',
+          canCreateProject: 'canCreateProject',
+        },
+      ],
+    });
 
-    this.logger.debug(`list projects results`, { total: result.length });
+    let readProject = await queryProject.run();
+    this.logger.debug(`list projects results`, { total: readProject.length });
+
+    result.total = readProject.length;
+    result.hasMore = count * page < result.total ?? true;
+
+    readProject = readProject.splice((page - 1) * count, count);
+
+    result.items = await Promise.all(
+      readProject.map(async (project) =>
+        this.readOneProject(project.id, session)
+      )
+    );
 
     return {
-      total: 0,
-      hasMore: false,
-      items: [],
-      canRead: true,
-      canCreate: true,
+      items: result.items,
+      hasMore: result.hasMore,
+      total: result.total,
+      canCreate: !!readProject[0]?.canCreateProject,
+      canRead: !!readProject[0]?.canReadProjects,
     };
   }
 
