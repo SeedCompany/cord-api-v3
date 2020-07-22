@@ -34,12 +34,7 @@ import {
   LocationService,
   SecuredLocationList,
 } from '../location';
-import {
-  Project,
-  ProjectListInput,
-  ProjectListOutput,
-  SecuredProjectList,
-} from '../project';
+import { Project, ProjectListInput, SecuredProjectList } from '../project';
 import {
   CreateLanguage,
   Language,
