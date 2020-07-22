@@ -34,7 +34,12 @@ import {
   LocationService,
   SecuredLocationList,
 } from '../location';
-import { Project, ProjectListInput, ProjectListOutput } from '../project';
+import {
+  Project,
+  ProjectListInput,
+  ProjectListOutput,
+  SecuredProjectList,
+} from '../project';
 import {
   CreateLanguage,
   Language,
@@ -539,7 +544,7 @@ export class LanguageService {
     };
   }
 
-  //TODO - Need to implement QueryBus to avoid circular reference with project service
+  //TODO - user QueryBus implementation to avoid circular reference with project service
   async readOneProject(id: string, session: ISession): Promise<Project> {
     this.logger.info('query readone project', { id, userId: session.userId });
     const label = 'Project';
@@ -649,7 +654,7 @@ export class LanguageService {
     language: Language,
     input: ProjectListInput,
     session: ISession
-  ): Promise<ProjectListOutput> {
+  ): Promise<SecuredProjectList> {
     const { page, count } = {
       ...ProjectListInput.defaultVal,
       ...input,
@@ -704,6 +709,8 @@ export class LanguageService {
       items: result.items,
       hasMore: result.hasMore,
       total: result.total,
+      canCreate: !!readProject[0]?.canCreateProject,
+      canRead: !!readProject[0]?.canReadProjects,
     };
   }
 
