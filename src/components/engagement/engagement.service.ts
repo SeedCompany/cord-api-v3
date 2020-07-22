@@ -805,18 +805,34 @@ export class EngagementService {
         ...baseNodeMetaProps.map(addShapeForBaseNodeMetaProperty),
         'node',
         `
-            case
-            when 'InternshipEngagement' IN labels(node)
-            then 'InternshipEngagement'
-            when 'LanguageEngagement' IN labels(node)
-            then 'LanguageEngagement'
-            end as __typename
+          case
+          when 'InternshipEngagement' IN labels(node)
+          then 'InternshipEngagement'
+          when 'LanguageEngagement' IN labels(node)
+          then 'LanguageEngagement'
+          end as __typename
+        `,
+        `
+          {
+            value: ceremony.id,
+            canRead: ceremonyReadPerm.read,
+            canEdit: ceremonyEditPerm.edit
+          } as ceremony
+        `,
+        `
+          {
+            value: language.id,
+            canRead: languageReadPerm.read,
+            canEdit: languageEditPerm.edit
+          } as language
         `,
       ])
       .returnDistinct([
         ...props,
         ...baseNodeMetaProps,
         ...childBaseNodeMetaProps.map((x) => x.returnIdentifier),
+        'ceremony',
+        'language',
         'labels(node) as labels',
         '__typename',
       ]);
@@ -839,16 +855,6 @@ export class EngagementService {
       ...result,
       status: result.status.value,
       modifiedAt: result.modifiedAt.value,
-      language: {
-        value: result.languageId,
-        canRead: !!result.canReadLanguage,
-        canEdit: !!result.canEditLanguage,
-      },
-      ceremony: {
-        value: result.ceremonyId,
-        canRead: !!result.canReadCeremony,
-        canEdit: !!result.canEditCeremony,
-      },
       methodologies: {
         value: result.methodologies.value ? result.methodologies.value : [],
         canRead: !!result.canReadMethodologies,
