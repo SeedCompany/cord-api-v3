@@ -422,6 +422,29 @@ export function getMetaPropertyOfChildBaseNode(
 }
 
 export function matchUserPermissions(query: Query, label: string, id?: string) {
+  query.match([
+    node('requestingUser'),
+    relation('in', '', 'member', {}, [1]),
+    node('', 'SecurityGroup', { active: true }),
+    relation('out', '', 'permission'),
+    node('perms', 'Permission', { active: true }),
+    relation('out', '', 'baseNode'),
+    node('node', label, { active: true }),
+  ]);
+  if (id) {
+    query.where({ node: { id } });
+  }
+
+  query.with(`collect(perms) as permList, node`);
+}
+
+export function matchUserPermissionsForList(
+  query: Query,
+  label: string,
+  page: number,
+  count: number,
+  id?: string
+) {
   query
     .match([
       node('requestingUser'),
@@ -442,10 +465,16 @@ export function matchUserPermissions(query: Query, label: string, id?: string) {
       sg: inArray(['sgList', true]),
     });
   } else {
-    query.where({ sg: inArray(['sgList', true]) });
+    query.where({ sg: inArray(['sgList'], true) });
   }
 
-  query.with(`collect(distinct perm) as permList, node`);
+  query
+    .with(
+      `collect(distinct perm) as permList, node, count(distinct node) as total`
+    )
+    .with(
+      `permList, node, total, ${(page - 1) * count + count} < total as hasMore`
+    );
 }
 
 export function matchRequestingUser(query: Query, session: ISession) {

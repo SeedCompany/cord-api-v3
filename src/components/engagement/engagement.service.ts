@@ -32,6 +32,7 @@ import {
   runListQuery,
   filterByString,
   filterByBaseNodeId,
+  matchUserPermissionsForList,
 } from '../../core';
 import { CeremonyService } from '../ceremony';
 import { CeremonyType } from '../ceremony/dto/type.enum';
@@ -1159,33 +1160,6 @@ export class EngagementService {
       );
     }
 
-    /*
-MATCH (requestingUser:User { active: true, id: 'rootadminid' })
-MATCH (requestingUser)<-[:member*1..]-(sg:SecurityGroup { active: true })
-with collect(distinct sg) as sgList
-match (sg)-[:permission]->(perm:Permission { active: true })-[:baseNode]->(node:Engagement { active: true })
-where sg IN sgList
-WITH collect(distinct perm) as permList, node
-order by node.createdAt
-skip 0
-limit 5
-return node.id
-
-    */
-
-    // need to experiment with doing skips and limits early to increase query performance
-
-    // query
-    // .with(['collect(distinct node) as nodes', 'count(distinct node) as total'])
-    // .raw(`unwind nodes as node`)
-    // .with(['node', 'total'])
-    // .orderBy('node.createdAt')
-    // .with([
-    //   `collect(node)[${(input.page - 1) * input.count}..${input.page * input.count}] as items`,
-    //   'total',
-    //   `${(input.page - 1) * input.count + input.count} < total as hasMore`,
-    // ])
-
     // match on the rest of the properties of the object requested
     query
       .call(
@@ -1255,6 +1229,33 @@ return node.id
     );
 
     return await runListQuery(query, input, secureProps.includes(input.sort));
+
+    // query
+    // .with(['collect(distinct node) as items', 'total', 'hasMore'])
+    // .raw(`unwind nodes as node`)
+    // .with(['node', 'total'])
+    // .with([
+    //   `collect(node)[${(input.page - 1) * input.count}..${
+    //     input.page * input.count
+    //   }] as items`,
+    //   'total',
+    //   `${(input.page - 1) * input.count + input.count} < total as hasMore`,
+    // ])
+    // .return(['items', 'total', 'hasMore']);
+
+    // printActualQuery(this.logger, query);
+
+    // const result = await query
+    //   .asResult<{ items: []; total: number; hasMore: boolean }>()
+    //   .first();
+
+    // return (
+    //   result ?? {
+    //     items: [],
+    //     total: 0,
+    //     hasMore: false,
+    //   }
+    // );
   }
 
   async listProducts(
