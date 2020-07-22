@@ -629,33 +629,17 @@ export class ProjectService {
     const listQuery = this.db
       .query()
       .match(matchSession(session, { withAclRead: 'canReadProjects' }));
-    listQuery
-      .match([
-        node('project', 'Project', { active: true, id: project.id }),
-        relation('out', '', 'engagement', { active: true }),
-        node('engagement', 'BaseNode', { active: true }),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', {
-          active: true,
-        }),
-        node('canReadEngagement', 'Permission', {
-          active: true,
-          read: true,
-          property: 'engagement',
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('project'),
-      ])
-      .returnDistinct([
-        {
-          canReadEngagement: [{ read: 'canRead' }],
-          engagement: [{ id: 'id' }],
-        },
-      ]);
+    listQuery.match([
+      node('project', 'Project', { active: true, id: project.id }),
+      relation('out', '', 'engagement', { active: true }),
+      node('engagement', 'BaseNode', { active: true }),
+    ]);
+    listQuery.optionalMatch([...this.propMatch('engagement')]).returnDistinct([
+      {
+        canReadEngagement: [{ read: 'canRead' }],
+        engagement: [{ id: 'id' }],
+      },
+    ]);
 
     let result;
     try {
