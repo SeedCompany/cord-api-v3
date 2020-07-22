@@ -30,7 +30,7 @@ export abstract class LocalBucket extends FileBucket {
   async upload(signed: string, file: FakeAwsFile) {
     const key = this.validateSignedUrl('putObject', signed);
     await this.saveFile(key, {
-      ContentLength: file.Body.length,
+      ContentLength: file.Body.byteLength,
       LastModified: new Date(),
       ...file,
     });
