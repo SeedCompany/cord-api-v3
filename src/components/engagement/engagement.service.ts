@@ -7,7 +7,7 @@ import {
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
-import { upperFirst } from 'lodash';
+import { isFunction, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
@@ -25,6 +25,14 @@ import {
   matchRequestingUser,
   matchSession,
   matchUserPermissions,
+  listWithSecureObject,
+  listWithUnsecureObject,
+  printActualQuery,
+  addBaseNodeMetaPropsWithClause,
+  runListQuery,
+  filterByString,
+  filterByBaseNodeId,
+  matchUserPermissionsForList,
 } from '../../core';
 import { CeremonyService } from '../ceremony';
 import { CeremonyType } from '../ceremony/dto/type.enum';
@@ -707,7 +715,11 @@ export class EngagementService {
     id: string,
     session: ISession
   ): Promise<LanguageEngagement | InternshipEngagement> {
-    this.logger.debug('readOne', { id, userId: session.userId });
+    this.logger.info('readOne', { id, userId: session.userId });
+
+    if (!id) {
+      throw new NotFoundException('no id given');
+    }
 
     if (!session.userId) {
       this.logger.info('using anon user id');
@@ -792,15 +804,26 @@ export class EngagementService {
         ...childBaseNodeMetaProps.map(addShapeForChildBaseNodeMetaProperty),
         ...baseNodeMetaProps.map(addShapeForBaseNodeMetaProperty),
         'node',
+        `
+            case
+            when 'InternshipEngagement' IN labels(node)
+            then 'InternshipEngagement'
+            when 'LanguageEngagement' IN labels(node)
+            then 'LanguageEngagement'
+            end as __typename
+        `,
       ])
       .returnDistinct([
         ...props,
         ...baseNodeMetaProps,
         ...childBaseNodeMetaProps.map((x) => x.returnIdentifier),
         'labels(node) as labels',
+        '__typename',
       ]);
 
     let result;
+
+    // printActualQuery(this.logger, query);
 
     try {
       result = await query.first();
@@ -848,11 +871,9 @@ export class EngagementService {
       },
     };
 
-    if (result.labels.includes('LanguageEngagement')) {
-      response.__typename = 'LanguageEngagement';
+    if (result.__typename === 'LanguageEngagement') {
       return (response as unknown) as LanguageEngagement;
-    } else if (result.labels.includes('InternshipEngagement')) {
-      response.__typename = 'InternshipEngagement';
+    } else if (result.__typename === 'InternshipEngagement') {
       return (response as unknown) as InternshipEngagement;
     } else {
       throw new NotFoundException('could not find Engagement');
@@ -1053,44 +1074,70 @@ export class EngagementService {
   // LIST ///////////////////////////////////////////////////////////
 
   async list(
-    { page, count, sort, order, filter }: EngagementListInput,
+    { filter, ...input }: EngagementListInput,
     session: ISession
   ): Promise<EngagementListOutput> {
-    const matchNode =
-      filter.type === 'internship'
-        ? 'internship:InternshipEngagement'
-        : filter.type === 'language'
-        ? 'language:LanguageEngagement'
-        : 'engagement';
-    // const filterLabels = filter.type === 'internship' ? ['InternshipEngagement'] : [];
-    // const labels = ['BaseNode', 'Engagement', ...filterLabels];
+    let label = 'Engagement';
+    if (filter.type === 'language') {
+      label = 'LanguageEngagement';
+    } else if (filter.type === 'internship') {
+      label = 'InternshipEngagement';
+    }
 
-    const tmpNode = matchNode.substring(0, matchNode.indexOf(':'));
-    const node = tmpNode ? tmpNode : 'engagement';
+    const secureProps = [
+      // Engagement
+      'statusModifiedAt',
+      'completeDate',
+      'disbursementCompleteDate',
+      'communicationsCompleteDate',
+      'initialEndDate',
+      'startDate',
+      'endDate',
+      'lastSuspendedAt',
+      'lastReactivatedAt',
 
-    const query = `
-      MATCH (${matchNode} {active: true})<-[:engagement {active: true}]-(project)
-      RETURN ${node}.id as id
-      ORDER BY ${node}.${sort} ${order}
-      SKIP $skip LIMIT $count
-    `;
-    const result = await this.db
+      // Language specific
+      'firstScripture',
+      'lukePartnership',
+      'sentPrintingDate',
+      'paraTextRegistryId',
+      'pnp',
+
+      // Internship specific
+      'position',
+      'growthPlan',
+    ];
+
+    const query = this.db
       .query()
-      .raw(query, {
-        skip: (page - 1) * count,
-        count,
-        type: filter.type,
-      })
-      .run();
+      .call(matchRequestingUser, session)
+      .call(matchUserPermissionsForList, label, input.page, input.count);
+
+    if (filter.projectId) {
+      query.call(
+        filterByBaseNodeId,
+        filter.projectId,
+        'engagement',
+        'in',
+        'Project',
+        label
+      );
+    }
+
+    const result = await runListQuery(
+      query,
+      input,
+      secureProps.includes(input.sort)
+    );
 
     const items = await Promise.all(
-      result.map((row) => this.readOne(row.id, session))
+      result.items.map((row: any) => this.readOne(row.properties.id, session))
     );
 
     return {
       items,
-      total: items.length,
-      hasMore: false,
+      hasMore: result.hasMore,
+      total: result.total,
     };
   }
 

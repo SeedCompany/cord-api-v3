@@ -15,8 +15,8 @@ import {
   ConfigService,
   createBaseNode,
   DatabaseService,
+  filterByArray,
   filterByChildBaseNodeCount,
-  filterByStringArray,
   IEventBus,
   ILogger,
   listWithSecureObject,
@@ -584,15 +584,10 @@ export class ProjectService {
       .call(matchUserPermissions, label);
     // filter by filter options
     if (filter.status) {
-      listQuery.call(filterByStringArray, label, 'status', filter.status);
+      listQuery.call(filterByArray, label, 'status', filter.status);
     }
     if (filter.sensitivity) {
-      listQuery.call(
-        filterByStringArray,
-        label,
-        'sensitivity',
-        filter.sensitivity
-      );
+      listQuery.call(filterByArray, label, 'sensitivity', filter.sensitivity);
     }
     if (filter.clusters) {
       listQuery.call(filterByChildBaseNodeCount, label, 'engagement');

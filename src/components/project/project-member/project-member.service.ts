@@ -5,18 +5,31 @@ import {
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
+import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../../common';
 import {
+  addAllMetaPropertiesOfChildBaseNodes,
+  addAllSecureProperties,
+  addBaseNodeMetaPropsWithClause,
+  addPropertyCoalesceWithClause,
+  addShapeForBaseNodeMetaProperty,
+  addShapeForChildBaseNodeMetaProperty,
+  ChildBaseNodeMetaProperty,
   ConfigService,
   DatabaseService,
+  filterByArray,
   ILogger,
+  listWithSecureObject,
   Logger,
+  matchRequestingUser,
   matchSession,
+  matchUserPermissions,
+  runListQuery,
 } from '../../../core';
-import { RedactedUser, User, UserService } from '../../user';
+import { UserService } from '../../user';
 import {
   CreateProjectMember,
   ProjectMember,
@@ -139,117 +152,6 @@ export class ProjectMemberService {
     ]);
   };
 
-  async readOne(id: string, session: ISession): Promise<ProjectMember> {
-    const readProjectMember = this.db
-      .query()
-      .match(matchSession(session, { withAclRead: 'canReadProjectMembers' }))
-      .match([node('projectMember', 'ProjectMember', { active: true, id })]);
-    readProjectMember.optionalMatch([
-      node('requestingUser'),
-      relation('in', '', 'member', { active: true }),
-      node('', 'SecurityGroup', { active: true }),
-      relation('out', '', 'permission', { active: true }),
-      node('canEditUser', 'Permission', {
-        property: 'user',
-        active: true,
-        edit: true,
-      }),
-      relation('out', '', 'baseNode', { active: true }),
-      node('projectMember'),
-      relation('out', '', 'user', { active: true }),
-      node('user', 'User', { active: true }),
-    ]);
-    readProjectMember.optionalMatch([
-      node('requestingUser'),
-      relation('in', '', 'member', { active: true }),
-      node('', 'SecurityGroup', { active: true }),
-      relation('out', '', 'permission', { active: true }),
-      node('canReadUser', 'Permission', {
-        property: 'user',
-        active: true,
-        read: true,
-      }),
-      relation('out', '', 'baseNode', { active: true }),
-      node('projectMember'),
-      relation('out', '', 'user', { active: true }),
-      node('user', 'User', { active: true }),
-    ]);
-    this.propMatch(readProjectMember, 'roles');
-    this.propMatch(readProjectMember, 'modifiedAt');
-
-    readProjectMember.return({
-      projectMember: [{ id: 'id', createdAt: 'createdAt' }],
-      roles: [{ value: 'roles' }],
-      canReadRoles: [
-        {
-          read: 'canReadRoles',
-        },
-      ],
-      canEditRoles: [
-        {
-          edit: 'canEditRoles',
-        },
-      ],
-      modifiedAt: [{ value: 'modifiedAt' }],
-      canReadModifiedAt: [
-        {
-          read: 'canReadModifiedAt',
-        },
-      ],
-      canEditModifiedAt: [
-        {
-          edit: 'canEditModifiedAt',
-        },
-      ],
-      user: [{ id: 'userId' }],
-      canReadUser: [
-        {
-          read: 'canReadUser',
-        },
-      ],
-      canEditUser: [
-        {
-          edit: 'canEditUser',
-        },
-      ],
-    });
-
-    let result;
-    try {
-      result = await readProjectMember.first();
-    } catch (e) {
-      this.logger.error('e :>> ', e);
-      return await Promise.reject(e);
-    }
-
-    if (!result) {
-      throw new NotFoundException('Could not find project member');
-    }
-
-    let user: User = RedactedUser;
-    if (result.canReadUser) {
-      user = await this.userService.readOne(result.userId, session);
-    }
-
-    return {
-      id: id,
-      createdAt: result.createdAt,
-      modifiedAt: result.modifiedAt,
-      user: {
-        value: {
-          ...user,
-        },
-        canRead: true,
-        canEdit: true,
-      },
-      roles: {
-        value: result.roles || [],
-        canEdit: true,
-        canRead: true,
-      },
-    };
-  }
-
   async create(
     { userId, projectId, ...input }: CreateProjectMember,
     session: ISession
@@ -350,82 +252,65 @@ export class ProjectMemberService {
     }
   }
 
-  async list(
-    input: Partial<ProjectMemberListInput>,
-    session: ISession
-  ): Promise<ProjectMemberListOutput> {
-    const { page, count, sort, order, filter } = {
-      ...ProjectMemberListInput.defaultVal,
-      ...input,
-    };
-
-    const { projectId } = filter;
-    let result: {
-      items: ProjectMember[];
-      hasMore: boolean;
-      total: number;
-    } = { items: [], hasMore: false, total: 0 };
-
-    if (projectId) {
-      const qry = `
-        MATCH
-          (token:Token {active: true, value: $token})
-          <-[:token {active: true}]-
-          (requestingUser:User {
-            active: true,
-            id: $requestingUserId
-          }),
-          (project:Project {id: $projectId, active: true, owningOrgId: $owningOrgId})
-          -[:member]->(projectMember:ProjectMember {active:true})
-        WITH COUNT(projectMember) as total, project, projectMember
-            MATCH(projectMember {active: true})-[:roles {active:true}]->(roles:Property {active: true})
-            RETURN total, projectMember.id as id, projectMember.createdAt as createdAt
-            ORDER BY ${sort} ${order}
-            SKIP $skip LIMIT $count
-      `;
-      const projectMemQuery = this.db.query().raw(qry, {
-        token: session.token,
-        requestingUserId: session.userId,
-        owningOrgId: session.owningOrgId,
-        projectId,
-        skip: (page - 1) * count,
-        count,
-      });
-
-      const projectMembers = await projectMemQuery.run();
-
-      result.items = await Promise.all(
-        projectMembers.map(async (projectMember) =>
-          this.readOne(projectMember.id, session)
-        )
-      );
-      result.total = result.items.length;
-    } else {
-      result = await this.db.list<ProjectMember>({
-        session,
-        nodevar: 'projectMember',
-        aclReadProp: 'canReadProjectMembers',
-        aclEditProp: 'canCreateProjectMember',
-        props: [
-          { name: 'roles', secure: true, list: true },
-          { name: 'user', secure: true },
-          { name: 'modifiedAt', secure: false },
-        ],
-        input: {
-          page,
-          count,
-          sort,
-          order,
-          filter,
-        },
-      });
+  async readOne(id: string, session: ISession): Promise<ProjectMember> {
+    if (!session.userId) {
+      session.userId = this.config.anonUser.id;
     }
 
-    return {
-      items: result.items,
-      hasMore: result.hasMore,
-      total: result.total,
+    const props = ['roles', 'modifiedAt'];
+
+    const baseNodeMetaProps = ['id', 'createdAt'];
+
+    const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
+      {
+        parentBaseNodePropertyKey: 'user',
+        parentRelationDirection: 'out',
+        childBaseNodeLabel: 'User',
+        childBaseNodeMetaPropertyKey: 'id',
+        returnIdentifier: 'userId',
+      },
+    ];
+
+    const query = this.db
+      .query()
+      .call(matchRequestingUser, session)
+      .call(matchUserPermissions, 'ProjectMember', id)
+      .call(addAllSecureProperties, ...props)
+      .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
+      .with([
+        ...props.map(addPropertyCoalesceWithClause),
+        ...childBaseNodeMetaProps.map(addShapeForChildBaseNodeMetaProperty),
+        ...baseNodeMetaProps.map(addShapeForBaseNodeMetaProperty),
+        'node',
+      ])
+      .returnDistinct([
+        ...props,
+        ...baseNodeMetaProps,
+        ...childBaseNodeMetaProps.map((x) => x.returnIdentifier),
+        'labels(node) as labels',
+      ]);
+
+    const result = await query.first();
+    if (!result) {
+      throw new NotFoundException('Could not find project memeber');
+    }
+
+    const response: any = {
+      ...result,
+      roles: {
+        value: result.roles.value || [],
+        canRead: result.roles.canRead,
+        canEdit: result.roles.canEdit,
+      },
+      modifiedAt: result.modifiedAt.value,
+      user: {
+        value: await this.userService.readOne(result.userId, session),
+        canRead: !!result.canReadUser,
+        canEdit: !!result.canEditUser,
+      },
     };
+
+    return (response as unknown) as ProjectMember;
   }
 
   async update(
@@ -468,5 +353,96 @@ export class ProjectMemberService {
 
       throw new ServerException('Failed to delete project member');
     }
+  }
+
+  async list(
+    { filter, ...input }: ProjectMemberListInput,
+    session: ISession
+  ): Promise<ProjectMemberListOutput> {
+    const label = 'ProjectMember';
+    const baseNodeMetaProps = ['id', 'createdAt'];
+    // const unsecureProps = [''];
+    const secureProps = ['roles', 'modifiedAt'];
+
+    const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
+      {
+        parentBaseNodePropertyKey: 'user',
+        parentRelationDirection: 'out',
+        childBaseNodeLabel: 'User',
+        childBaseNodeMetaPropertyKey: 'id',
+        returnIdentifier: 'userId',
+      },
+    ];
+
+    const query = this.db
+      .query()
+      .call(matchRequestingUser, session)
+      .call(matchUserPermissions, 'ProjectMember');
+
+    if (filter.roles) {
+      query.call(filterByArray, label, 'roles', filter.roles);
+    } else if (filter.projectId) {
+      this.filterByProject(query, filter.projectId, 'member', 'out', label);
+    }
+
+    // match on the rest of the properties of the object requested
+    query
+      .call(
+        addAllSecureProperties,
+        ...secureProps
+        //...unsecureProps
+      )
+      .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
+      // form return object
+      // ${listWithUnsecureObject(unsecureProps)}, // removed from a few lines down
+      .with(
+        `
+          {
+            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
+            ${listWithSecureObject(secureProps)}
+          } as node
+        `
+      );
+
+    const result: ProjectMemberListOutput = await runListQuery(
+      query,
+      input,
+      secureProps.includes(input.sort)
+    );
+    const items = result.items.map((item) => ({
+      ...item,
+      roles: {
+        value: item.roles.value || [],
+        canRead: item.roles.canRead,
+        canEdit: item.roles.canEdit,
+      },
+      modifiedAt: (item.modifiedAt as any).value,
+      // Todo
+      user: {
+        value: undefined,
+        canRead: true,
+        canEdit: true,
+      },
+    }));
+
+    return {
+      items,
+      hasMore: result.hasMore,
+      total: result.total,
+    };
+  }
+
+  protected filterByProject(
+    query: Query,
+    projectId: string,
+    relationshipType: string,
+    relationshipDirection: RelationDirection,
+    label: string
+  ) {
+    query.match([
+      node('project', 'Project', { active: true, id: projectId }),
+      relation(relationshipDirection, '', relationshipType, { active: true }),
+      node('node', label, { active: true }),
+    ]);
   }
 }
