@@ -207,7 +207,7 @@ export class OrganizationService {
         filterByBaseNodeId,
         session.userId,
         'organization',
-        'out',
+        'in',
         'User',
         label
       );
