@@ -740,6 +740,8 @@ export class PartnershipService {
           { name: 'mouStatus', secure: true },
           { name: 'mouStart', secure: true },
           { name: 'mouEnd', secure: true },
+          { name: 'mouStartOverride', secure: true },
+          { name: 'mouEndOverride', secure: true },
           { name: 'organization', secure: false },
           { name: 'types', secure: true, list: true },
         ],
