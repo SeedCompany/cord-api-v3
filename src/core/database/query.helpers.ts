@@ -467,13 +467,13 @@ export function matchUserPermissionsForList(
     query.where({ sg: inArray(['sgList'], true) });
   }
 
-  query
-    .with(
-      `collect(distinct perm) as permList, node, count(distinct node) as total`
-    )
-    .with(
-      `permList, node, total, ${(page - 1) * count + count} < total as hasMore`
-    );
+  // query
+  //   .with(
+  //     `collect(distinct perm) as permList, node, count(distinct node) as total`
+  //   )
+  //   .with(
+  //     `permList, node, total, ${(page - 1) * count + count} < total as hasMore`
+  //   );
 }
 
 export function matchRequestingUser(query: Query, session: ISession) {
@@ -805,7 +805,7 @@ export function listReturnBlock<T = any>(
     .return(['items', 'total', 'hasMore']);
 
   // for troubleshooting
-  printQueryInConsole(query);
+  // printQueryInConsole(query);
 
   return query.asResult<{ items: T[]; total: number; hasMore: boolean }>();
 }

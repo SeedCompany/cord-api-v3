@@ -715,7 +715,11 @@ export class EngagementService {
     id: string,
     session: ISession
   ): Promise<LanguageEngagement | InternshipEngagement> {
-    this.logger.debug('readOne', { id, userId: session.userId });
+    this.logger.info('readOne', { id, userId: session.userId });
+
+    if (!id) {
+      throw new NotFoundException('no id given');
+    }
 
     if (!session.userId) {
       this.logger.info('using anon user id');
@@ -800,6 +804,14 @@ export class EngagementService {
         ...childBaseNodeMetaProps.map(addShapeForChildBaseNodeMetaProperty),
         ...baseNodeMetaProps.map(addShapeForBaseNodeMetaProperty),
         'node',
+        `
+            case
+            when 'InternshipEngagement' IN labels(node)
+            then 'InternshipEngagement'
+            when 'LanguageEngagement' IN labels(node)
+            then 'LanguageEngagement'
+            end as __typename
+        `,
       ])
       .returnDistinct([
         ...props,
@@ -810,7 +822,7 @@ export class EngagementService {
 
     let result;
 
-    printActualQuery(this.logger, query);
+    // printActualQuery(this.logger, query);
 
     try {
       result = await query.first();
@@ -824,6 +836,7 @@ export class EngagementService {
     // todo: refactor with/return query to remove the need to do mapping
     const response: any = {
       ...result,
+      // __typename: result.__typename,
       status: result.status.value,
       modifiedAt: result.modifiedAt.value,
       language: {
@@ -1144,10 +1157,10 @@ export class EngagementService {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .call(matchUserPermissions, label)
-      .orderBy('node.createdAt')
-      .skip((input.page - 1) * input.count)
-      .limit(input.page * input.count);
+      .call(matchUserPermissionsForList, label, input.page, input.count);
+    // .orderBy('node.createdAt')
+    // .skip((input.page - 1) * input.count)
+    // .limit(input.page * input.count);
 
     if (filter.projectId) {
       query.call(
@@ -1161,74 +1174,87 @@ export class EngagementService {
     }
 
     // match on the rest of the properties of the object requested
-    query
-      .call(
-        addAllSecureProperties,
-        ...secureProps,
-        ...securePropsThatOnlyReturnTheirValue,
-        ...securePropertiesThatNeedSpecialWithTreament
-      )
+    // query
+    //   .call(
+    //     addAllSecureProperties,
+    //     ...secureProps,
+    //     ...securePropsThatOnlyReturnTheirValue,
+    //     ...securePropertiesThatNeedSpecialWithTreament
+    //   )
 
-      .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps);
+    //   .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps);
 
-    // form return object
-    //${listWithUnsecureObject(unsecureProps)},
-    query.with(
-      `
-        {
-          __typename:
-            case
-            when 'InternshipEngagement' IN labels(node)
-            then 'InternshipEngagement'
-            when 'LanguageEngagement' IN labels(node)
-            then 'LanguageEngagement'
-            end
-          ,
-          ceremony: {
-            value: ceremony.id,
-            canRead: true,
-            canEdit: false
-          },
-          language: {
-            value: language.id,
-            canRead: true,
-            canEdit: false
-          },
-          methodologies: {
-            value: 
-              case
-              when methodologies IS NULL OR methodologies.value IS NULL
-              then []
-              else methodologies.value
-              end
-            ,
-            canRead: methodologiesReadPerm.read,
-            canEdit: methodologiesEditPerm.edit
-          },
-          countryOfOrigin: {
-            value: countryOfOrigin.id,
-            canRead: true,
-            canEdit: false
-          },
-          intern: {
-            value: intern.id,
-            canRead: true,
-            canEdit: false
-          },
-          mentor: {
-            value: mentor.id,
-            canRead: true,
-            canEdit: false
-          },
-          status: status.value,
-          modifiedAt: modifiedAt.value,
-          ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
-          ${listWithSecureObject(secureProps)}
-        } as node
-      `
+    // // form return object
+    // //${listWithUnsecureObject(unsecureProps)},
+    // query.with(
+    //   `
+    //     {
+    //       __typename:
+    //         case
+    //         when 'InternshipEngagement' IN labels(node)
+    //         then 'InternshipEngagement'
+    //         when 'LanguageEngagement' IN labels(node)
+    //         then 'LanguageEngagement'
+    //         end
+    //       ,
+    //       ceremony: {
+    //         value: ceremony.id,
+    //         canRead: true,
+    //         canEdit: false
+    //       },
+    //       language: {
+    //         value: language.id,
+    //         canRead: true,
+    //         canEdit: false
+    //       },
+    //       methodologies: {
+    //         value:
+    //           case
+    //           when methodologies IS NULL OR methodologies.value IS NULL
+    //           then []
+    //           else methodologies.value
+    //           end
+    //         ,
+    //         canRead: methodologiesReadPerm.read,
+    //         canEdit: methodologiesEditPerm.edit
+    //       },
+    //       countryOfOrigin: {
+    //         value: countryOfOrigin.id,
+    //         canRead: true,
+    //         canEdit: false
+    //       },
+    //       intern: {
+    //         value: intern.id,
+    //         canRead: true,
+    //         canEdit: false
+    //       },
+    //       mentor: {
+    //         value: mentor.id,
+    //         canRead: true,
+    //         canEdit: false
+    //       },
+    //       status: status.value,
+    //       modifiedAt: modifiedAt.value,
+    //       ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
+    //       ${listWithSecureObject(secureProps)}
+    //     } as node
+    //   `
+    // );
+
+    const result = await runListQuery(
+      query,
+      input,
+      secureProps.includes(input.sort)
     );
 
-    return await runListQuery(query, input, secureProps.includes(input.sort));
+    const items = await Promise.all(
+      result.items.map((row: any) => this.readOne(row.properties.id, session))
+    );
+    return {
+      items,
+      hasMore: result.hasMore,
+      total: result.total,
+    };
 
     // query
     // .with(['collect(distinct node) as items', 'total', 'hasMore'])
