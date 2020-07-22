@@ -845,6 +845,7 @@ export async function runListQuery<T>(
 ) {
   const result = await listReturnBlock<T>(query, input, isSecuredSort).first();
 
+  // troubleshooting
   // console.log(JSON.stringify(result));
 
   // result could be undefined if there are no matched nodes

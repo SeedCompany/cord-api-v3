@@ -818,6 +818,7 @@ export class EngagementService {
         ...baseNodeMetaProps,
         ...childBaseNodeMetaProps.map((x) => x.returnIdentifier),
         'labels(node) as labels',
+        '__typename',
       ]);
 
     let result;
@@ -836,7 +837,6 @@ export class EngagementService {
     // todo: refactor with/return query to remove the need to do mapping
     const response: any = {
       ...result,
-      // __typename: result.__typename,
       status: result.status.value,
       modifiedAt: result.modifiedAt.value,
       language: {
@@ -871,11 +871,9 @@ export class EngagementService {
       },
     };
 
-    if (result.labels.includes('LanguageEngagement')) {
-      response.__typename = 'LanguageEngagement';
+    if (result.__typename === 'LanguageEngagement') {
       return (response as unknown) as LanguageEngagement;
-    } else if (result.labels.includes('InternshipEngagement')) {
-      response.__typename = 'InternshipEngagement';
+    } else if (result.__typename === 'InternshipEngagement') {
       return (response as unknown) as InternshipEngagement;
     } else {
       throw new NotFoundException('could not find Engagement');
@@ -1086,8 +1084,6 @@ export class EngagementService {
       label = 'InternshipEngagement';
     }
 
-    const baseNodeMetaProps = ['id', 'createdAt'];
-    // const unsecureProps = [''];
     const secureProps = [
       // Engagement
       'statusModifiedAt',
@@ -1112,55 +1108,10 @@ export class EngagementService {
       'growthPlan',
     ];
 
-    const securePropsThatOnlyReturnTheirValue = ['status', 'methodologies'];
-
-    const securePropertiesThatNeedSpecialWithTreament = ['modifiedAt'];
-
-    const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
-      {
-        parentBaseNodePropertyKey: 'ceremony',
-        parentRelationDirection: 'out',
-        childBaseNodeLabel: 'Ceremony',
-        childBaseNodeMetaPropertyKey: 'id',
-        returnIdentifier: 'ceremonyId',
-      },
-      {
-        parentBaseNodePropertyKey: 'language',
-        parentRelationDirection: 'out',
-        childBaseNodeLabel: 'Language',
-        childBaseNodeMetaPropertyKey: 'id',
-        returnIdentifier: 'languageId',
-      },
-      {
-        parentBaseNodePropertyKey: 'intern',
-        parentRelationDirection: 'out',
-        childBaseNodeLabel: 'User',
-        childBaseNodeMetaPropertyKey: 'id',
-        returnIdentifier: 'internUserId',
-      },
-      {
-        parentBaseNodePropertyKey: 'countryOfOrigin',
-        parentRelationDirection: 'out',
-        childBaseNodeLabel: 'Country',
-        childBaseNodeMetaPropertyKey: 'id',
-        returnIdentifier: 'countryOfOriginId',
-      },
-      {
-        parentBaseNodePropertyKey: 'mentor',
-        parentRelationDirection: 'out',
-        childBaseNodeLabel: 'User',
-        childBaseNodeMetaPropertyKey: 'id',
-        returnIdentifier: 'mentorUserId',
-      },
-    ];
-
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
       .call(matchUserPermissionsForList, label, input.page, input.count);
-    // .orderBy('node.createdAt')
-    // .skip((input.page - 1) * input.count)
-    // .limit(input.page * input.count);
 
     if (filter.projectId) {
       query.call(
@@ -1173,74 +1124,6 @@ export class EngagementService {
       );
     }
 
-    // match on the rest of the properties of the object requested
-    // query
-    //   .call(
-    //     addAllSecureProperties,
-    //     ...secureProps,
-    //     ...securePropsThatOnlyReturnTheirValue,
-    //     ...securePropertiesThatNeedSpecialWithTreament
-    //   )
-
-    //   .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps);
-
-    // // form return object
-    // //${listWithUnsecureObject(unsecureProps)},
-    // query.with(
-    //   `
-    //     {
-    //       __typename:
-    //         case
-    //         when 'InternshipEngagement' IN labels(node)
-    //         then 'InternshipEngagement'
-    //         when 'LanguageEngagement' IN labels(node)
-    //         then 'LanguageEngagement'
-    //         end
-    //       ,
-    //       ceremony: {
-    //         value: ceremony.id,
-    //         canRead: true,
-    //         canEdit: false
-    //       },
-    //       language: {
-    //         value: language.id,
-    //         canRead: true,
-    //         canEdit: false
-    //       },
-    //       methodologies: {
-    //         value:
-    //           case
-    //           when methodologies IS NULL OR methodologies.value IS NULL
-    //           then []
-    //           else methodologies.value
-    //           end
-    //         ,
-    //         canRead: methodologiesReadPerm.read,
-    //         canEdit: methodologiesEditPerm.edit
-    //       },
-    //       countryOfOrigin: {
-    //         value: countryOfOrigin.id,
-    //         canRead: true,
-    //         canEdit: false
-    //       },
-    //       intern: {
-    //         value: intern.id,
-    //         canRead: true,
-    //         canEdit: false
-    //       },
-    //       mentor: {
-    //         value: mentor.id,
-    //         canRead: true,
-    //         canEdit: false
-    //       },
-    //       status: status.value,
-    //       modifiedAt: modifiedAt.value,
-    //       ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
-    //       ${listWithSecureObject(secureProps)}
-    //     } as node
-    //   `
-    // );
-
     const result = await runListQuery(
       query,
       input,
@@ -1250,38 +1133,12 @@ export class EngagementService {
     const items = await Promise.all(
       result.items.map((row: any) => this.readOne(row.properties.id, session))
     );
+
     return {
       items,
       hasMore: result.hasMore,
       total: result.total,
     };
-
-    // query
-    // .with(['collect(distinct node) as items', 'total', 'hasMore'])
-    // .raw(`unwind nodes as node`)
-    // .with(['node', 'total'])
-    // .with([
-    //   `collect(node)[${(input.page - 1) * input.count}..${
-    //     input.page * input.count
-    //   }] as items`,
-    //   'total',
-    //   `${(input.page - 1) * input.count + input.count} < total as hasMore`,
-    // ])
-    // .return(['items', 'total', 'hasMore']);
-
-    // printActualQuery(this.logger, query);
-
-    // const result = await query
-    //   .asResult<{ items: []; total: number; hasMore: boolean }>()
-    //   .first();
-
-    // return (
-    //   result ?? {
-    //     items: [],
-    //     total: 0,
-    //     hasMore: false,
-    //   }
-    // );
   }
 
   async listProducts(
