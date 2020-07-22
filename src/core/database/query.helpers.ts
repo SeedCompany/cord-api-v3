@@ -647,22 +647,6 @@ export function filterByUser(
   ]);
 }
 
-// used to search a specific engagement's relationship to the target base node
-// for example, searching all products a engagement is a part of
-export function filterByEngagement(
-  query: Query,
-  engagementId: string,
-  relationshipType: string,
-  relationshipDirection: RelationDirection,
-  label: string
-) {
-  query.match([
-    node('engagement', 'Engagement', { active: true, id: engagementId }),
-    relation(relationshipDirection, '', relationshipType, { active: true }),
-    node('node', label, { active: true }),
-  ]);
-}
-
 // WITH CLAUSES or SHAPING helpers //////////////////////////////////////////////////////
 
 export function addPropertyCoalesceWithClause(property: string) {

@@ -3,18 +3,19 @@ import {
   NotFoundException,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
-import { node } from 'cypher-query-builder';
+import { node, Query, relation } from 'cypher-query-builder';
+import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { ISession } from '../../common';
 import {
   addAllSecureProperties,
   addBaseNodeMetaPropsWithClause,
   addPropertyCoalesceWithClause,
+  addShapeForBaseNodeMetaProperty,
   addUserToSG,
   ConfigService,
   createBaseNode,
   createSG,
   DatabaseService,
-  filterByEngagement,
   filterByString,
   ILogger,
   listWithSecureObject,
@@ -105,7 +106,7 @@ export class ProductService {
     // add root admin to new product as an admin
     await this.db.addRootAdminToBaseNodeAsAdmin(id, 'Product');
 
-    this.logger.debug(`product created, id ${id}`);
+    this.logger.debug(`product created`, { id });
 
     return this.readOne(id, session);
     // try {
@@ -152,6 +153,8 @@ export class ProductService {
 
   async readOne(id: string, session: ISession): Promise<AnyProduct> {
     const props = ['mediums', 'purposes', 'methodology'];
+    const baseNodeMetaProps = ['id', 'createdAt'];
+
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
@@ -159,8 +162,7 @@ export class ProductService {
       .call(addAllSecureProperties, ...props)
       .with([
         ...props.map(addPropertyCoalesceWithClause),
-        'coalesce(node.id) as id',
-        'coalesce(node.createdAt) as createdAt',
+        ...baseNodeMetaProps.map(addShapeForBaseNodeMetaProperty),
       ])
       .returnDistinct([...props, 'id', 'createdAt']);
 
@@ -236,8 +238,8 @@ export class ProductService {
     } else if (filter.approach) {
       query.call(filterByString, label, 'approach', filter.approach);
     } else if (filter.engagementId) {
-      query.call(
-        filterByEngagement,
+      this.filterByEngagement(
+        query,
         filter.engagementId,
         'engagement',
         'out',
@@ -320,5 +322,21 @@ export class ProductService {
       hasMore: result.hasMore,
       total: result.total,
     };
+  }
+
+  // used to search a specific engagement's relationship to the target base node
+  // for example, searching all products a engagement is a part of
+  protected filterByEngagement(
+    query: Query,
+    engagementId: string,
+    relationshipType: string,
+    relationshipDirection: RelationDirection,
+    label: string
+  ) {
+    query.match([
+      node('engagement', 'Engagement', { active: true, id: engagementId }),
+      relation(relationshipDirection, '', relationshipType, { active: true }),
+      node('node', label, { active: true }),
+    ]);
   }
 }
