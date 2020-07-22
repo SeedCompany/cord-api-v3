@@ -5,6 +5,7 @@ import { ISession, Session } from '../../common';
 import { ConfigService, ILogger, Logger } from '../../core';
 import { UserService } from '../user';
 import {
+  ChangePasswordArgs,
   ForgotPasswordArgs,
   LoginInput,
   LoginOutput,
@@ -124,6 +125,17 @@ export class AuthenticationResolver {
     const newSession = await this.authService.createSession(req.session!.token);
     req.session = newSession; // replace session given with session pipe
     return newSession;
+  }
+
+  @Mutation(() => Boolean, {
+    description: 'Change your password',
+  })
+  async changePassword(
+    @Args() { oldPassword, newPassword }: ChangePasswordArgs,
+    @Session() session: ISession
+  ): Promise<boolean> {
+    await this.authService.changePassword(oldPassword, newPassword, session);
+    return true;
   }
 
   @Mutation(() => Boolean, {
