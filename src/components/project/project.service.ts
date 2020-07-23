@@ -384,7 +384,6 @@ export class ProjectService {
       'mouEnd',
       'estimatedSubmission',
       'modifiedAt',
-      'location',
     ];
     const readProject = this.db
       .query()
@@ -392,17 +391,13 @@ export class ProjectService {
       .call(matchUserPermissions, label, id)
       .call(addAllSecureProperties, ...secureProps, ...unsecureProps)
       .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
         node('canReadLocation', 'Permission', {
           property: 'location',
-          active: true,
           read: true,
+          active: true,
         }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('project'),
+        relation('out', '', 'baseNode'),
+        node('node'),
         relation('out', '', 'location', { active: true }),
         node('country', 'Country', { active: true }),
       ])
@@ -413,7 +408,8 @@ export class ProjectService {
             ${listWithUnsecureObject(unsecureProps)},
             ${listWithSecureObject(secureProps)},
             countryId: country.id,
-            canReadLocation: canReadLocation
+            canReadLocationRead: canReadLocation.read,
+            canReadLocationEdit: canReadLocation.edit
           } as project
         `
       );
@@ -466,8 +462,8 @@ export class ProjectService {
       status: result.project.status,
       location: {
         ...location,
-        canRead: !!result.project.canReadLocation.read,
-        canEdit: !!result.project.canReadLocation.edit,
+        canRead: !!result.project.canReadLocationRead,
+        canEdit: !!result.project.canReadLocationEdit,
       },
       mouStart: result.project.mouStart,
       mouEnd: result.project.mouEnd,
