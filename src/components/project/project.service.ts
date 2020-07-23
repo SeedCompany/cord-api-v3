@@ -135,7 +135,7 @@ export class ProjectService {
 
   // helper method for defining properties
   permission = (property: string, canEdit = false) => {
-    const createdAt = DateTime.local();
+    const createdAt = DateTime.local().toString();
     return [
       [
         node('adminSG'),
@@ -173,7 +173,7 @@ export class ProjectService {
           active: true,
           createdAt,
         }),
-        node('newProject'),
+        node('node'),
       ],
     ];
   };
@@ -327,7 +327,6 @@ export class ProjectService {
         ]);
       }
       createProject.return('node.id as id');
-
       const result = await createProject.first();
 
       if (!result) {
