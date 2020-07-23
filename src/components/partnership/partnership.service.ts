@@ -279,6 +279,11 @@ export class PartnershipService {
         .first();
 
       const partnership = await this.readOne(id, session);
+
+      if (!input.types) {
+        return partnership;
+      }
+
       await this.eventBus.publish(
         new PartnershipCreatedEvent(partnership, session)
       );

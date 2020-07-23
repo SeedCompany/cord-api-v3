@@ -42,6 +42,13 @@ export class SyncBudgetRecordsToFundingPartners
 
     if (
       event instanceof PartnershipCreatedEvent &&
+      !event.partnership.types?.value
+    ) {
+      // Partnership Type is not provided, so do nothing.
+      return;
+    }
+    if (
+      event instanceof PartnershipCreatedEvent &&
       !event.partnership.types.value.includes(PartnershipType.Funding)
     ) {
       // Partnership is not and never was funding, so do nothing.
