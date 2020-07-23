@@ -725,7 +725,7 @@ export function filterByChildBaseNodeCount(
     )
     .where({
       readPerm: inArray(['permList'], true),
-      [`${filterKey}_count`]: greaterThan(0),
+      [`${filterKey}_count`]: greaterThan(1),
     });
 }
 
