@@ -389,8 +389,10 @@ export function getMetaPropertyOfChildBaseNode(
   query: Query,
   childBaseNodeProperty: ChildBaseNodeMetaProperty
 ) {
-  // const parentReadPerm =
-  //   childBaseNodeProperty.parentBaseNodePropertyKey + 'ReadPerm';
+  const parentReadPerm =
+    childBaseNodeProperty.parentBaseNodePropertyKey + 'ReadPerm';
+  const parentEditPerm =
+    childBaseNodeProperty.parentBaseNodePropertyKey + 'EditPerm';
 
   /*
     To get a child base node's property, we need a bunch of stuff.
@@ -401,33 +403,46 @@ export function getMetaPropertyOfChildBaseNode(
     so that the values can be extracted in the result query.
     */
 
-  query.optionalMatch([
-    // node(parentReadPerm, 'Permission', {
-    //   property: childBaseNodeProperty.parentBaseNodePropertyKey,
-    //   read: true,
-    //   active: true,
-    // }),
-    // relation('out', '', 'baseNode'),
-    node('node'),
-    relation(
-      childBaseNodeProperty.parentRelationDirection,
-      '',
-      childBaseNodeProperty.parentBaseNodePropertyKey,
-      {
+  query
+    .optionalMatch([
+      node(parentReadPerm, 'Permission', {
+        property: childBaseNodeProperty.parentBaseNodePropertyKey,
+        read: true,
         active: true,
-      }
-    ),
-    node(
-      childBaseNodeProperty.parentBaseNodePropertyKey,
-      [childBaseNodeProperty.childBaseNodeLabel, 'BaseNode'],
-      {
+      }),
+      relation('out', '', 'baseNode'),
+      node('node'),
+      relation(
+        childBaseNodeProperty.parentRelationDirection,
+        '',
+        childBaseNodeProperty.parentBaseNodePropertyKey,
+        {
+          active: true,
+        }
+      ),
+      node(
+        childBaseNodeProperty.parentBaseNodePropertyKey,
+        [childBaseNodeProperty.childBaseNodeLabel, 'BaseNode'],
+        {
+          active: true,
+        }
+      ),
+    ])
+    .where({
+      [parentReadPerm]: inArray(['permList'], true),
+    })
+    .optionalMatch([
+      node(parentEditPerm, 'Permission', {
+        property: childBaseNodeProperty.parentBaseNodePropertyKey,
+        edit: true,
         active: true,
-      }
-    ),
-  ]);
-  // .where({
-  //   [parentReadPerm]: inArray(['permList'], true),
-  // });
+      }),
+      relation('out', '', 'baseNode'),
+      node('node'),
+    ])
+    .where({
+      [parentEditPerm]: inArray(['permList'], true),
+    });
 }
 
 export function matchUserPermissions(query: Query, label: string, id?: string) {

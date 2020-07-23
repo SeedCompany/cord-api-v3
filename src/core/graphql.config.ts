@@ -5,12 +5,23 @@ import { Request, Response } from 'express';
 import { GraphQLError, GraphQLFormattedError } from 'graphql';
 import { GqlContextType } from '../common';
 import { ConfigService } from './config/config.service';
+import { VersionService } from './config/version.service';
 
 @Injectable()
 export class GraphQLConfig implements GqlOptionsFactory {
-  constructor(private readonly config: ConfigService) {}
+  constructor(
+    private readonly config: ConfigService,
+    private readonly versionService: VersionService
+  ) {}
 
   async createGqlOptions(): Promise<GqlModuleOptions> {
+    // Apply git hash to Apollo Studio.
+    // They only look for env, so applying that way.
+    const version = await this.versionService.version;
+    if (version.hash) {
+      process.env.APOLLO_SERVER_USER_VERSION = version.hash;
+    }
+
     return {
       autoSchemaFile: 'schema.graphql',
       context: this.context,

@@ -1,12 +1,9 @@
 {
   "preset": "ts-jest",
-  "testTimeout": 60000,
+  "testTimeout": 100000,
   "rootDir": "..",
   "roots": ["<rootDir>/test"],
   "testEnvironment": "node",
   "testRegex": ".e2e-spec.ts$",
-  "setupFiles": [
-    "reflect-metadata",
-    "./src/app.module.ts"
-  ]
+  "setupFiles": ["reflect-metadata", "./src/app.module.ts"]
 }

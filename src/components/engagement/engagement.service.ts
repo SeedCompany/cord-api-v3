@@ -805,18 +805,58 @@ export class EngagementService {
         ...baseNodeMetaProps.map(addShapeForBaseNodeMetaProperty),
         'node',
         `
-            case
-            when 'InternshipEngagement' IN labels(node)
-            then 'InternshipEngagement'
-            when 'LanguageEngagement' IN labels(node)
-            then 'LanguageEngagement'
-            end as __typename
+          case
+          when 'InternshipEngagement' IN labels(node)
+          then 'InternshipEngagement'
+          when 'LanguageEngagement' IN labels(node)
+          then 'LanguageEngagement'
+          end as __typename
+        `,
+        `
+          {
+            value: ceremony.id,
+            canRead: ceremonyReadPerm.read,
+            canEdit: ceremonyEditPerm.edit
+          } as ceremony
+        `,
+        `
+          {
+            value: language.id,
+            canRead: languageReadPerm.read,
+            canEdit: languageEditPerm.edit
+          } as language
+        `,
+        `
+          {
+            value: intern.id,
+            canRead: internReadPerm.read,
+            canEdit: internEditPerm.edit
+          } as intern
+        `,
+        `
+          {
+            value: countryOfOrigin.id,
+            canRead: countryOfOriginReadPerm.read,
+            canEdit: countryOfOriginEditPerm.edit
+          } as countryOfOrigin
+        `,
+        `
+          {
+            value: mentor.id,
+            canRead: mentorReadPerm.read,
+            canEdit: mentorEditPerm.edit
+          } as mentor
         `,
       ])
       .returnDistinct([
         ...props,
         ...baseNodeMetaProps,
         ...childBaseNodeMetaProps.map((x) => x.returnIdentifier),
+        'ceremony',
+        'language',
+        'intern',
+        'mentor',
+        'countryOfOrigin',
         'labels(node) as labels',
         '__typename',
       ]);
@@ -839,35 +879,10 @@ export class EngagementService {
       ...result,
       status: result.status.value,
       modifiedAt: result.modifiedAt.value,
-      language: {
-        value: result.languageId,
-        canRead: !!result.canReadLanguage,
-        canEdit: !!result.canEditLanguage,
-      },
-      ceremony: {
-        value: result.ceremonyId,
-        canRead: !!result.canReadCeremony,
-        canEdit: !!result.canEditCeremony,
-      },
       methodologies: {
         value: result.methodologies.value ? result.methodologies.value : [],
         canRead: !!result.canReadMethodologies,
         canEdit: !!result.canEditMethodologies,
-      },
-      countryOfOrigin: {
-        value: result.countryOfOriginId,
-        canRead: !!result.canReadCountryOfOrigin,
-        canEdit: !!result.canEditCountryOfOrigin,
-      },
-      intern: {
-        value: result.internUserId,
-        canRead: !!result.canReadIntern,
-        canEdit: !!result.canEditIntern,
-      },
-      mentor: {
-        value: result.mentorUserId,
-        canRead: !!result.canReadMentor,
-        canEdit: !!result.canEditMentor,
       },
     };
 
