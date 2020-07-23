@@ -631,7 +631,7 @@ describe('Engagement e2e', () => {
     const { engagements } = await app.graphql.query(
       gql`
         query {
-          engagements {
+          engagements(input: { count: 7 }) {
             items {
               __typename
               id
