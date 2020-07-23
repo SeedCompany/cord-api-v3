@@ -221,6 +221,7 @@ export class ProjectService {
         addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
+        label: 'ProjectName',
       },
       {
         key: 'sensitivity',
@@ -239,6 +240,7 @@ export class ProjectService {
         addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
+        label: 'ProjectStep',
       },
       {
         key: 'status',
@@ -248,6 +250,7 @@ export class ProjectService {
         addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
+        label: 'ProjectStatus',
       },
       {
         key: 'mouStart',
@@ -428,9 +431,9 @@ export class ProjectService {
       );
     }
 
-    const location = result.countryId
+    const location = result.project.countryId
       ? await this.locationService
-          .readOneCountry(result.countryId, session)
+          .readOneCountry(result.project.countryId, session)
           .then((country) => {
             return {
               value: {
