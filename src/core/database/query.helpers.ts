@@ -1,5 +1,6 @@
 import {
   contains,
+  equals,
   greaterThan,
   inArray,
   node,
@@ -670,6 +671,31 @@ export function filterByString(
 }
 
 export function filterByArray(
+  query: Query,
+  label: string,
+  filterKey: string,
+  filterValue: string[]
+) {
+  query.match([
+    node('readPerm', 'Permission', {
+      property: filterKey,
+      read: true,
+      active: true,
+    }),
+    relation('out', '', 'baseNode'),
+    node('node', label, {
+      active: true,
+    }),
+    relation('out', '', filterKey, { active: true }),
+    node(filterKey, 'Property', { active: true }),
+  ]);
+  query.where({
+    readPerm: inArray(['permList'], true),
+    [filterKey]: { value: equals(filterValue) },
+  });
+}
+
+export function filterBySubarray(
   query: Query,
   label: string,
   filterKey: string,
