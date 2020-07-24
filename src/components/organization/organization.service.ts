@@ -1,11 +1,10 @@
 import {
-  BadRequestException,
   Injectable,
   NotFoundException,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
 import { node } from 'cypher-query-builder';
-import { ISession } from '../../common';
+import { DuplicateException, ISession } from '../../common';
 import {
   addAllSecureProperties,
   addBaseNodeMetaPropsWithClause,
@@ -15,8 +14,8 @@ import {
   createBaseNode,
   createSG,
   DatabaseService,
+  filterByBaseNodeId,
   filterByString,
-  filterByUser,
   ILogger,
   listWithSecureObject,
   Logger,
@@ -75,9 +74,9 @@ export class OrganizationService {
       .first();
 
     if (checkOrg) {
-      throw new BadRequestException(
-        'Organization with that name already exists.',
-        'Duplicate'
+      throw new DuplicateException(
+        'organization.name',
+        'Organization with this name already exists'
       );
     }
 
@@ -204,7 +203,14 @@ export class OrganizationService {
     if (filter.name) {
       query.call(filterByString, label, 'name', filter.name);
     } else if (filter.userId && session.userId) {
-      query.call(filterByUser, session.userId, 'organization', 'out', label);
+      query.call(
+        filterByBaseNodeId,
+        session.userId,
+        'organization',
+        'in',
+        'User',
+        label
+      );
     }
 
     // match on the rest of the properties of the object requested

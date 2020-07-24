@@ -8,7 +8,12 @@ import { node, relation } from 'cypher-query-builder';
 import { first, intersection, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
-import { ISession, Sensitivity, simpleSwitch } from '../../common';
+import {
+  DuplicateException,
+  ISession,
+  Sensitivity,
+  simpleSwitch,
+} from '../../common';
 import {
   ConfigService,
   DatabaseService,
@@ -24,7 +29,12 @@ import {
   LocationService,
   SecuredLocationList,
 } from '../location';
-import { ProjectListInput, ProjectListOutput } from '../project';
+import {
+  Project,
+  ProjectListInput,
+  ProjectService,
+  SecuredProjectList,
+} from '../project';
 import {
   CreateLanguage,
   Language,
@@ -41,6 +51,7 @@ export class LanguageService {
     private readonly config: ConfigService,
     private readonly ethnologueLanguageService: EthnologueLanguageService,
     private readonly locationService: LocationService,
+    private readonly projectService: ProjectService,
     @Logger('language:service') private readonly logger: ILogger
   ) {}
 
@@ -304,9 +315,10 @@ export class LanguageService {
             LanguageDisplayName: 'displayName',
             LanguageRodNumber: 'rodNumber',
           }) ?? e.label;
-        throw new BadRequestException(
-          `Language with ${prop}="${e.value}" already exists`,
-          'Duplicate'
+        throw new DuplicateException(
+          `language.${prop}`,
+          `${prop} with value ${e.value} already exists`,
+          e
         );
       }
       this.logger.error(`Could not create`, { ...input, exception: e });
@@ -530,30 +542,65 @@ export class LanguageService {
 
   async listProjects(
     language: Language,
-    _input: ProjectListInput,
-    _session: ISession
-  ): Promise<ProjectListOutput> {
-    const result = await this.db
+    input: ProjectListInput,
+    session: ISession
+  ): Promise<SecuredProjectList> {
+    const { page, count } = {
+      ...ProjectListInput.defaultVal,
+      ...input,
+    };
+
+    const result: {
+      items: Project[];
+      hasMore: boolean;
+      total: number;
+    } = { items: [], hasMore: false, total: 0 };
+
+    const queryProject = this.db
       .query()
-      .matchNode('language', 'Language', { id: language.id, active: true })
+      .match(matchSession(session, { withAclRead: 'canReadProjects' }))
+      .match([node('language', 'Language', { id: language.id, active: true })])
       .match([
         node('language'),
-        relation('out', '', 'project', { active: true }),
+        relation('in', '', 'language', { active: true }),
+        node('langEngagement', 'LanguageEngagement', {
+          active: true,
+        }),
+        relation('in', '', 'engagement', { active: true }),
         node('project', 'Project', {
           active: true,
         }),
-      ])
-      .return({
-        project: [{ id: 'id' }],
-      })
-      .run();
+      ]);
+    queryProject.return({
+      project: [{ id: 'id', createdAt: 'createdAt' }],
+      requestingUser: [
+        {
+          canReadProjects: 'canReadProjects',
+          canCreateProject: 'canCreateProject',
+        },
+      ],
+    });
 
-    this.logger.debug(`list projects results`, { total: result.length });
+    let readProject = await queryProject.run();
+    this.logger.debug(`list projects results`, { total: readProject.length });
+
+    result.total = readProject.length;
+    result.hasMore = count * page < result.total ?? true;
+
+    readProject = readProject.splice((page - 1) * count, count);
+
+    result.items = await Promise.all(
+      readProject.map(async (project) =>
+        this.projectService.readOne(project.id, session)
+      )
+    );
 
     return {
-      total: 0,
-      hasMore: false,
-      items: [],
+      items: result.items,
+      hasMore: result.hasMore,
+      total: result.total,
+      canCreate: !!readProject[0]?.canCreateProject,
+      canRead: !!readProject[0]?.canReadProjects,
     };
   }
 

@@ -1,4 +1,5 @@
 import { ArgsType, Field, InputType, ObjectType } from '@nestjs/graphql';
+import { MinLength } from 'class-validator';
 import { stripIndent } from 'common-tags';
 import { IsEmail } from '../../common';
 import { User } from '../user';
@@ -49,6 +50,16 @@ export abstract class ResetPasswordInput {
 
   @Field()
   readonly password: string;
+}
+
+@ArgsType()
+export abstract class ChangePasswordArgs {
+  @Field()
+  readonly oldPassword: string;
+
+  @Field()
+  @MinLength(6)
+  readonly newPassword: string;
 }
 
 @ArgsType()

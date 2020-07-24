@@ -4,6 +4,8 @@ import { times } from 'lodash';
 import { isValid } from 'shortid';
 import {
   createLanguage,
+  createLanguageEngagement,
+  createProject,
   createSession,
   createTestApp,
   createUser,
@@ -168,5 +170,46 @@ describe('Language e2e', () => {
         id: language.id,
       }
     );
+  });
+
+  it('The list of projects the language is engagement in', async () => {
+    const numProjects = 1;
+    const language = await createLanguage(app);
+    const project = await createProject(app);
+    const languageId = language.id;
+    const projectId = project.id;
+
+    await Promise.all(
+      times(numProjects).map(() =>
+        createLanguageEngagement(app, {
+          projectId,
+          languageId,
+        })
+      )
+    );
+
+    const queryProject = await app.graphql.query(
+      gql`
+        query language($id: ID!) {
+          language(id: $id) {
+            ...language
+            projects {
+              items {
+                ...project
+              }
+              hasMore
+              total
+            }
+          }
+        }
+        ${fragments.language},
+        ${fragments.project}
+      `,
+      {
+        id: language.id,
+      }
+    );
+    expect(queryProject.language.projects.items.length).toBe(numProjects);
+    expect(queryProject.language.projects.total).toBe(numProjects);
   });
 });

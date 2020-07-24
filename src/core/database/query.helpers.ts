@@ -1,5 +1,7 @@
 import {
   contains,
+  equals,
+  greaterThan,
   inArray,
   node,
   Query,
@@ -48,7 +50,14 @@ export interface Property {
 }
 
 // assumes 'requestingUser', 'root' and 'publicSG' cypher identifiers have been matched
-export function createBaseNode(query: Query, label: string, props: Property[]) {
+// add baseNodeProps and editableProps
+export function createBaseNode(
+  query: Query,
+  label: string,
+  props: Property[],
+  baseNodeProps?: { owningOrgId?: string | undefined; type?: string },
+  editableProps?: string[]
+) {
   const createdAt = DateTime.local().toString();
 
   query.create([
@@ -56,6 +65,7 @@ export function createBaseNode(query: Query, label: string, props: Property[]) {
       active: true,
       createdAt,
       id: generate(),
+      ...baseNodeProps,
     }),
   ]);
 
@@ -125,6 +135,7 @@ export function createBaseNode(query: Query, label: string, props: Property[]) {
           createdAt,
           property: prop.key,
           read: true,
+          edit: editableProps?.includes(prop.key) ? true : false,
         }),
         relation('out', '', 'baseNode', { active: true }),
         node('node'),
@@ -379,8 +390,10 @@ export function getMetaPropertyOfChildBaseNode(
   query: Query,
   childBaseNodeProperty: ChildBaseNodeMetaProperty
 ) {
-  // const parentReadPerm =
-  //   childBaseNodeProperty.parentBaseNodePropertyKey + 'ReadPerm';
+  const parentReadPerm =
+    childBaseNodeProperty.parentBaseNodePropertyKey + 'ReadPerm';
+  const parentEditPerm =
+    childBaseNodeProperty.parentBaseNodePropertyKey + 'EditPerm';
 
   /*
     To get a child base node's property, we need a bunch of stuff.
@@ -391,36 +404,53 @@ export function getMetaPropertyOfChildBaseNode(
     so that the values can be extracted in the result query.
     */
 
-  query.optionalMatch([
-    // node(parentReadPerm, 'Permission', {
-    //   property: childBaseNodeProperty.parentBaseNodePropertyKey,
-    //   read: true,
-    //   active: true,
-    // }),
-    // relation('out', '', 'baseNode'),
-    node('node'),
-    relation(
-      childBaseNodeProperty.parentRelationDirection,
-      '',
-      childBaseNodeProperty.parentBaseNodePropertyKey,
-      {
+  query
+    .optionalMatch([
+      node(parentReadPerm, 'Permission', {
+        property: childBaseNodeProperty.parentBaseNodePropertyKey,
+        read: true,
         active: true,
-      }
-    ),
-    node(
-      childBaseNodeProperty.parentBaseNodePropertyKey,
-      [childBaseNodeProperty.childBaseNodeLabel, 'BaseNode'],
-      {
+      }),
+      relation('out', '', 'baseNode'),
+      node('node'),
+      relation(
+        childBaseNodeProperty.parentRelationDirection,
+        '',
+        childBaseNodeProperty.parentBaseNodePropertyKey,
+        {
+          active: true,
+        }
+      ),
+      node(
+        childBaseNodeProperty.parentBaseNodePropertyKey,
+        [childBaseNodeProperty.childBaseNodeLabel, 'BaseNode'],
+        {
+          active: true,
+        }
+      ),
+    ])
+    .where({
+      [parentReadPerm]: inArray(['permList'], true),
+    })
+    .optionalMatch([
+      node(parentEditPerm, 'Permission', {
+        property: childBaseNodeProperty.parentBaseNodePropertyKey,
+        edit: true,
         active: true,
-      }
-    ),
-  ]);
-  // .where({
-  //   [parentReadPerm]: inArray(['permList'], true),
-  // });
+      }),
+      relation('out', '', 'baseNode'),
+      node('node'),
+    ])
+    .where({
+      [parentEditPerm]: inArray(['permList'], true),
+    });
 }
 
-export function matchUserPermissions(query: Query, label: string, id?: string) {
+export function matchUserPermissions(
+  query: Query,
+  label?: string,
+  id?: string
+) {
   query.match([
     node('requestingUser'),
     relation('in', '', 'member', {}, [1]),
@@ -428,13 +458,54 @@ export function matchUserPermissions(query: Query, label: string, id?: string) {
     relation('out', '', 'permission'),
     node('perms', 'Permission', { active: true }),
     relation('out', '', 'baseNode'),
-    node('node', label, { active: true }),
+    label
+      ? node('node', label, { active: true })
+      : node('node', { active: true }),
   ]);
   if (id) {
     query.where({ node: { id } });
   }
 
   query.with(`collect(perms) as permList, node`);
+}
+
+export function matchUserPermissionsForList(
+  query: Query,
+  label: string,
+  page: number,
+  count: number,
+  id?: string
+) {
+  query
+    .match([
+      node('requestingUser'),
+      relation('in', '', 'member', {}, [1]),
+      node('sg', 'SecurityGroup', { active: true }),
+    ])
+    .with('collect(distinct sg) as sgList')
+    .match([
+      node('sg'),
+      relation('out', '', 'permission'),
+      node('perm', 'Permission', { active: true }),
+      relation('out', '', 'baseNode'),
+      node('node', label, { active: true }),
+    ]);
+  if (id) {
+    query.where({
+      node: { id },
+      sg: inArray(['sgList', true]),
+    });
+  } else {
+    query.where({ sg: inArray(['sgList'], true) });
+  }
+
+  // query
+  //   .with(
+  //     `collect(distinct perm) as permList, node, count(distinct node) as total`
+  //   )
+  //   .with(
+  //     `permList, node, total, ${(page - 1) * count + count} < total as hasMore`
+  //   );
 }
 
 export function matchRequestingUser(query: Query, session: ISession) {
@@ -605,6 +676,108 @@ export function filterByString(
   });
 }
 
+export function filterByArray(
+  query: Query,
+  label: string,
+  filterKey: string,
+  filterValue: string[]
+) {
+  query.match([
+    node('readPerm', 'Permission', {
+      property: filterKey,
+      read: true,
+      active: true,
+    }),
+    relation('out', '', 'baseNode'),
+    node('node', label, {
+      active: true,
+    }),
+    relation('out', '', filterKey, { active: true }),
+    node(filterKey, 'Property', { active: true }),
+  ]);
+  query.where({
+    readPerm: inArray(['permList'], true),
+    [filterKey]: { value: equals(filterValue) },
+  });
+}
+
+export function filterBySubarray(
+  query: Query,
+  label: string,
+  filterKey: string,
+  filterValue: string[]
+) {
+  query.match([
+    node('readPerm', 'Permission', {
+      property: filterKey,
+      read: true,
+      active: true,
+    }),
+    relation('out', '', 'baseNode'),
+    node('node', label, {
+      active: true,
+    }),
+    relation('out', '', filterKey, { active: true }),
+    node(filterKey, 'Property', { active: true }),
+  ]);
+  query.where({
+    readPerm: inArray(['permList'], true),
+    [filterKey]: { value: inArray(filterValue) },
+  });
+  query.with(`permList, node`);
+}
+
+// LIST Filtering
+export function filterByChildBaseNodeCount(
+  query: Query,
+  label: string,
+  filterKey: string
+) {
+  query.match([
+    node('readPerm', 'Permission', {
+      property: filterKey,
+      read: true,
+      active: true,
+    }),
+    relation('out', '', 'baseNode'),
+    node('node', label, {
+      active: true,
+    }),
+    relation('out', '', filterKey, { active: true }),
+    node(filterKey, 'BaseNode', { active: true }),
+  ]);
+  query
+    .with(
+      `
+      readPerm,
+      permList,
+      node,
+      ${count(filterKey, { distinct: true, as: `${filterKey}_count` })}
+    `
+    )
+    .where({
+      readPerm: inArray(['permList'], true),
+      [`${filterKey}_count`]: greaterThan(1),
+    });
+}
+
+// used to search a specific user's relationship to the target base node
+// for example, searching all orgs a user is a part of
+export function filterByBaseNodeId(
+  query: Query,
+  filterNodeId: string,
+  relationshipType: string,
+  relationshipDirection: RelationDirection,
+  filterBaseNodelabel: string,
+  originBaseNodeLabel: string
+) {
+  query.match([
+    node('node', originBaseNodeLabel, { active: true }),
+    relation(relationshipDirection, '', relationshipType, { active: true }),
+    node('bn', filterBaseNodelabel, { active: true, id: filterNodeId }),
+  ]);
+}
+
 // used to search a specific user's relationship to the target base node
 // for example, searching all orgs a user is a part of
 export function filterByUser(
@@ -762,6 +935,9 @@ export async function runListQuery<T>(
   isSecuredSort = true
 ) {
   const result = await listReturnBlock<T>(query, input, isSecuredSort).first();
+
+  // troubleshooting
+  // console.log(JSON.stringify(result));
 
   // result could be undefined if there are no matched nodes
   // in that case the total truly is 0 we just can't express that in cypher

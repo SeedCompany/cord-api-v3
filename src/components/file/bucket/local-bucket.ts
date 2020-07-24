@@ -9,7 +9,7 @@ export interface LocalBucketOptions extends BucketOptions {
 }
 
 export type FakeAwsFile = Required<Pick<GetObjectOutput, 'ContentType'>> &
-  Pick<GetObjectOutput, 'ContentLength' | 'LastModified'> & { Body: string };
+  Pick<GetObjectOutput, 'ContentLength' | 'LastModified'> & { Body: Buffer };
 
 /**
  * Common functionality for "local" (non-s3) buckets
@@ -30,7 +30,7 @@ export abstract class LocalBucket extends FileBucket {
   async upload(signed: string, file: FakeAwsFile) {
     const key = this.validateSignedUrl('putObject', signed);
     await this.saveFile(key, {
-      ContentLength: file.Body.length,
+      ContentLength: file.Body.byteLength,
       LastModified: new Date(),
       ...file,
     });

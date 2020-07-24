@@ -1,6 +1,7 @@
 import { OnModuleInit } from '@nestjs/common';
 import { command } from 'execa';
 import { promises as fs } from 'fs';
+import { LazyGetter } from 'lazy-get-decorator';
 import * as pkgUp from 'pkg-up';
 import { PackageJson } from 'type-fest';
 import { ILogger, Logger } from '../logger';
@@ -8,11 +9,6 @@ import { ConfigService } from './config.service';
 import { EnvironmentService } from './environment.service';
 
 export class VersionService implements OnModuleInit {
-  private setVersion: (v: Version) => void;
-  readonly version = new Promise<Version>((res) => {
-    this.setVersion = res;
-  });
-
   constructor(
     private readonly config: ConfigService,
     private readonly env: EnvironmentService,
@@ -20,9 +16,12 @@ export class VersionService implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    const version = await this.determine();
-    this.setVersion(version);
+    const version = await this.version;
     this.logger.debug(`${version}`);
+  }
+
+  @LazyGetter() get version(): Promise<Version> {
+    return this.determine();
   }
 
   private async determine() {

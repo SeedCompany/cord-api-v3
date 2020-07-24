@@ -17,12 +17,6 @@ export abstract class EngagementFilters {
   })
   readonly type?: 'language' | 'internship';
 
-  @Field({
-    description: 'Only engagements matching this name',
-    nullable: true,
-  })
-  readonly name?: string;
-
   @IdField({
     description: 'Only engagements matching this projectId',
     nullable: true,
