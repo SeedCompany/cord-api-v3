@@ -1,6 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { GqlModuleOptions, GqlOptionsFactory } from '@nestjs/graphql';
 import { ContextFunction } from 'apollo-server-core';
+import {
+  PersistedQueryNotFoundError,
+  PersistedQueryNotSupportedError,
+  SyntaxError,
+  ValidationError,
+} from 'apollo-server-errors';
 import { Request, Response } from 'express';
 import { GraphQLError, GraphQLFormattedError } from 'graphql';
 import { GqlContextType } from '../common';
@@ -57,6 +63,10 @@ export class GraphQLConfig implements GqlOptionsFactory {
       delete extensions.exception;
     }
 
+    if (!extensions.codes) {
+      extensions.codes = this.resolveCodes(error, extensions.code);
+    }
+
     return {
       message: error.message,
       extensions,
@@ -64,4 +74,21 @@ export class GraphQLConfig implements GqlOptionsFactory {
       path: error.path,
     };
   };
+
+  private resolveCodes(error: GraphQLError, code: string): string[] {
+    if (
+      [
+        ValidationError,
+        SyntaxError,
+        PersistedQueryNotFoundError,
+        PersistedQueryNotSupportedError,
+      ].some((cls) => error instanceof cls)
+    ) {
+      return [code, 'GraphQL', 'Client'];
+    }
+    if (error.message.includes('Cannot return null for non-nullable field')) {
+      return [code, 'GraphQL', 'Server'];
+    }
+    return [code, 'Server'];
+  }
 }

@@ -5,14 +5,22 @@ import {
 import { node, relation } from 'cypher-query-builder';
 import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
-import { generate } from 'shortid';
 import { ISession } from '../../../common';
 import {
+  addAllSecureProperties,
+  addPropertyCoalesceWithClause,
+  addShapeForBaseNodeMetaProperty,
+  addUserToSG,
   ConfigService,
+  createBaseNode,
+  createSG,
   DatabaseService,
   ILogger,
   Logger,
+  matchRequestingUser,
   matchSession,
+  matchUserPermissions,
+  Property,
 } from '../../../core';
 import {
   CreateEthnologueLanguage,
@@ -113,6 +121,104 @@ export class EthnologueLanguageService {
     ];
   };
 
+  async create(
+    input: CreateEthnologueLanguage | undefined,
+    session: ISession
+  ): Promise<{ ethnologue: EthnologueLanguage; ethnologueId: string }> {
+    if (!input) {
+      input = Object.assign({}) as CreateEthnologueLanguage;
+    }
+
+    // create org
+    const secureProps: Property[] = [
+      {
+        key: 'id',
+        value: input.id,
+        addToAdminSg: true,
+        addToWriterSg: true,
+        addToReaderSg: true,
+        isPublic: true,
+        isOrgPublic: true,
+        label: 'Id',
+      },
+      {
+        key: 'code',
+        value: input.code,
+        addToAdminSg: true,
+        addToWriterSg: true,
+        addToReaderSg: true,
+        isPublic: true,
+        isOrgPublic: true,
+        label: 'Code',
+      },
+      {
+        key: 'provisionalCode',
+        value: input.provisionalCode,
+        addToAdminSg: true,
+        addToWriterSg: true,
+        addToReaderSg: true,
+        isPublic: true,
+        isOrgPublic: true,
+        label: 'ProvisionalCode',
+      },
+      {
+        key: 'name',
+        value: input.name,
+        addToAdminSg: true,
+        addToWriterSg: true,
+        addToReaderSg: true,
+        isPublic: true,
+        isOrgPublic: true,
+        label: 'Name',
+      },
+      {
+        key: 'population',
+        value: input.population,
+        addToAdminSg: true,
+        addToWriterSg: true,
+        addToReaderSg: true,
+        isPublic: true,
+        isOrgPublic: true,
+        label: 'Population',
+      },
+    ];
+    // const baseMetaProps = [];
+
+    const query = this.db
+      .query()
+      .match([
+        node('root', 'User', { active: true, id: this.config.rootAdmin.id }),
+      ])
+      .match([
+        node('publicSG', 'PublicSecurityGroup', {
+          active: true,
+          id: this.config.publicSecurityGroup.id,
+        }),
+      ])
+      .call(matchRequestingUser, session)
+      .call(createSG, 'orgSG', 'OrgPublicSecurityGroup')
+      .call(createBaseNode, 'EthnologueLanguage', secureProps, {
+        owningOrgId: session.owningOrgId,
+      })
+      .call(addUserToSG, 'requestingUser', 'adminSG') // must come after base node creation
+      .return('node.id as id');
+
+    const result = await query.first();
+
+    if (!result) {
+      throw new ServerException('failed to create ethnologuelanguage');
+    }
+
+    const id = result.id;
+
+    // add root admin to new org as an admin
+    await this.db.addRootAdminToBaseNodeAsAdmin(id, 'EthnologueLanguage');
+
+    this.logger.debug(`ethnologue language created`, { id });
+
+    return this.readOne(id, session);
+  }
+
   async readOne(
     id: string,
     session: ISession
@@ -122,188 +228,39 @@ export class EthnologueLanguageService {
       userId: session.userId,
     });
 
-    const readEthnologueLanguage = this.db
+    if (!session.userId) {
+      this.logger.info('using anon user id');
+      session.userId = this.config.anonUser.id;
+    }
+
+    const props = ['id', 'code', 'provisionalCode', 'name', 'population'];
+
+    const baseNodeMetaProps = ['createdAt'];
+
+    const query = this.db
       .query()
-      .match(
-        matchSession(session, { withAclRead: 'canReadEthnologueLanguages' })
-      )
-      .match([
-        node('ethnologueLanguage', 'EthnologueLanguage', {
-          active: true,
-          id: id,
-        }),
+      .call(matchRequestingUser, session)
+      .call(matchUserPermissions, 'EthnologueLanguage', id)
+      .call(addAllSecureProperties, ...props)
+      .with([
+        ...props.map(addPropertyCoalesceWithClause),
+        ...baseNodeMetaProps.map(addShapeForBaseNodeMetaProperty),
+        'node.id as ethnologueId',
+        'node',
       ])
-      .optionalMatch([...this.propMatch('id')])
-      .optionalMatch([...this.propMatch('code')])
-      .optionalMatch([...this.propMatch('provisionalCode')])
-      .optionalMatch([...this.propMatch('name')])
-      .optionalMatch([...this.propMatch('population')])
-      .return({
-        ethnologueLanguage: [{ id: 'ethnologueId' }],
-        id: [{ value: 'id' }],
-        canReadId: [
-          {
-            read: 'canReadIdRead',
-            edit: 'canReadIdEdit',
-          },
-        ],
-        code: [{ value: 'code' }],
-        canReadCode: [
-          {
-            read: 'canReadCodeRead',
-            edit: 'canReadCodeEdit',
-          },
-        ],
-        provisionalCode: [{ value: 'provisionalCode' }],
-        canReadProvisionalCode: [
-          {
-            read: 'canReadProvisionalCodeRead',
-            edit: 'canReadProvisionalCodeEdit',
-          },
-        ],
-        name: [{ value: 'name' }],
-        canReadName: [
-          {
-            read: 'canReadNameRead',
-            edit: 'canReadNameEdit',
-          },
-        ],
-        population: [{ value: 'population' }],
-        canReadPopulation: [
-          {
-            read: 'canReadPopulationRead',
-            edit: 'canReadPopulationEdit',
-          },
-        ],
-      });
+      .returnDistinct([
+        ...props,
+        ...baseNodeMetaProps,
+        'ethnologueId',
+        'labels(node) as labels',
+      ]);
 
-    const result = await readEthnologueLanguage.first();
-
-    // if (!result || !result.id) {
-    //   this.logger.warning(`Could not find ethnologueLanguage`, { id: id });
-    //   throw new NotFoundException('Could not find ethnologueLanguage');
-    // }
-
-    const ethnologueLanguage: EthnologueLanguage = {
-      id: {
-        value: result?.id,
-        canRead: !!result?.canReadIdRead,
-        canEdit: !!result?.canReadIdEdit,
-      },
-      code: {
-        value: result?.code,
-        canRead: !!result?.canReadCodeRead,
-        canEdit: !!result?.canReadCodeEdit,
-      },
-      provisionalCode: {
-        value: result?.provisionalCode,
-        canRead: !!result?.canReadProvisionalCodeRead,
-        canEdit: !!result?.canReadProvisionalCodeEdit,
-      },
-      name: {
-        value: result?.name,
-        canRead: !!result?.canReadNameRead,
-        canEdit: !!result?.canReadNameEdit,
-      },
-      population: {
-        value: result?.population,
-        canRead: !!result?.canReadPopulationRead,
-        canEdit: !!result?.canReadPopulationEdit,
-      },
-    };
+    const result = await query.first();
 
     return {
-      ethnologue: ethnologueLanguage,
+      ethnologue: result as EthnologueLanguage,
       ethnologueId: result?.ethnologueId,
     };
-  }
-
-  async create(
-    input: CreateEthnologueLanguage | undefined,
-    session: ISession
-  ): Promise<{ ethnologue: EthnologueLanguage; ethnologueId: string }> {
-    if (!input) {
-      input = Object.assign({}) as CreateEthnologueLanguage;
-    }
-
-    const id = generate();
-    const createdAt = DateTime.local();
-
-    try {
-      const createEthnologueLanguage = this.db
-        .query()
-        .match(
-          matchSession(session, { withAclEdit: 'canCreateEthnologueLanguage' })
-        )
-        .match([
-          node('rootuser', 'User', {
-            active: true,
-            id: this.config.rootAdmin.id,
-          }),
-        ])
-        .create([
-          [
-            node('newEthnologueLanguage', 'EthnologueLanguage', {
-              active: true,
-              createdAt,
-              id,
-              owningOrgId: session.owningOrgId,
-            }),
-          ],
-          ...this.property('id', input.id),
-          ...this.property('code', input.code),
-          ...this.property('provisionalCode', input.provisionalCode),
-          ...this.property('name', input.name),
-          ...this.property('population', input.population),
-          [
-            node('adminSG', 'SecurityGroup', {
-              id: generate(),
-              active: true,
-              createdAt,
-              name: id + ' admin',
-            }),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('requestingUser'),
-          ],
-          [
-            node('readerSG', 'SecurityGroup', {
-              id: generate(),
-              active: true,
-              createdAt,
-              name: id + ' users',
-            }),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('requestingUser'),
-          ],
-          [
-            node('adminSG'),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('rootuser'),
-          ],
-          [
-            node('readerSG'),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('rootuser'),
-          ],
-          ...this.permission('id'),
-          ...this.permission('code'),
-          ...this.permission('provisionalCode'),
-          ...this.permission('name'),
-          ...this.permission('population'),
-        ])
-        .return('newEthnologueLanguage.id as id');
-
-      await createEthnologueLanguage.first();
-    } catch (e) {
-      this.logger.warning('Failed to create ethnologuelanguage', {
-        exception: e,
-      });
-
-      throw new ServerException('Failed to create ethnologuelanguage');
-    }
-
-    const result = await this.readOne(id, session);
-    return result;
   }
 
   async update(id: string, input: UpdateEthnologueLanguage, session: ISession) {

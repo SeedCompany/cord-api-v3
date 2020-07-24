@@ -10,6 +10,7 @@ import {
 import { LanguageService } from '../language';
 import { LocationService } from '../location';
 import { OrganizationService } from '../organization';
+import { ProjectService } from '../project';
 import { UserService } from '../user';
 import {
   SearchableMap,
@@ -40,6 +41,8 @@ export class SearchService {
     Region: (...args) => this.location.readOneRegion(...args),
     Zone: (...args) => this.location.readOneZone(...args),
     Language: (...args) => this.language.readOne(...args),
+    TranslationProject: (...args) => this.projects.readOneTranslation(...args),
+    InternshipProject: (...args) => this.projects.readOneInternship(...args),
   };
   /* eslint-enable @typescript-eslint/naming-convention */
 
@@ -48,7 +51,8 @@ export class SearchService {
     private readonly users: UserService,
     private readonly orgs: OrganizationService,
     private readonly location: LocationService,
-    private readonly language: LanguageService
+    private readonly language: LanguageService,
+    private readonly projects: ProjectService
   ) {}
 
   async search(input: SearchInput, session: ISession): Promise<SearchOutput> {

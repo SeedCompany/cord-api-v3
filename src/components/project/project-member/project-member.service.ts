@@ -21,6 +21,7 @@ import {
   ConfigService,
   DatabaseService,
   filterByArray,
+  filterByBaseNodeId,
   ILogger,
   listWithSecureObject,
   Logger,
@@ -382,7 +383,14 @@ export class ProjectMemberService {
     if (filter.roles) {
       query.call(filterByArray, label, 'roles', filter.roles);
     } else if (filter.projectId) {
-      this.filterByProject(query, filter.projectId, 'member', 'out', label);
+      query.call(
+        filterByBaseNodeId,
+        filter.projectId,
+        'member',
+        'in',
+        'Project',
+        label
+      );
     }
 
     // match on the rest of the properties of the object requested
@@ -409,21 +417,10 @@ export class ProjectMemberService {
       input,
       secureProps.includes(input.sort)
     );
-    const items = result.items.map((item) => ({
-      ...item,
-      roles: {
-        value: item.roles.value || [],
-        canRead: item.roles.canRead,
-        canEdit: item.roles.canEdit,
-      },
-      modifiedAt: (item.modifiedAt as any).value,
-      // Todo
-      user: {
-        value: undefined,
-        canRead: true,
-        canEdit: true,
-      },
-    }));
+
+    const items = await Promise.all(
+      result.items.map((row: any) => this.readOne(row.id, session))
+    );
 
     return {
       items,
