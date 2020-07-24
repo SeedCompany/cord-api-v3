@@ -627,42 +627,23 @@ export class ProjectService {
       input,
       userId: session.userId,
     });
-    //get a list of engagements
-    const listQuery = this.db.query().call(matchRequestingUser, session);
-    listQuery.match([
-      node('project', 'Project', { active: true, id: project.id }),
-      relation('out', '', 'engagement', { active: true }),
-      node('engagement', 'BaseNode', { active: true }),
-    ]);
-    listQuery.optionalMatch([...this.propMatch('engagement')]).returnDistinct([
+
+    const result = await this.engagementService.list(
       {
-        canReadEngagement: [{ read: 'canRead' }],
-        engagement: [{ id: 'id' }],
+        ...input,
+        filter: {
+          ...input.filter,
+          projectId: project.id,
+        },
       },
-    ]);
+      session
+    );
 
-    let result;
-    try {
-      result = await listQuery.run();
-    } catch (e) {
-      this.logger.error('e :>> ', e);
-    }
-
-    const items = result
-      ? await Promise.all(
-          result.map((r) => this.engagementService.readOne(r.id, session))
-        )
-      : [];
-
-    const retVal: SecuredEngagementList = {
-      total: items.length,
-      hasMore: false,
-      items,
-      canRead: true,
+    return {
+      ...result,
       canCreate: true,
+      canRead: true,
     };
-
-    return retVal;
   }
 
   async listProjectMembers(
