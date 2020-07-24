@@ -197,7 +197,9 @@ export class EthnologueLanguageService {
       ])
       .call(matchRequestingUser, session)
       .call(createSG, 'orgSG', 'OrgPublicSecurityGroup')
-      .call(createBaseNode, 'EthnologueLanguage', secureProps)
+      .call(createBaseNode, 'EthnologueLanguage', secureProps, {
+        owningOrgId: session.owningOrgId,
+      })
       .call(addUserToSG, 'requestingUser', 'adminSG') // must come after base node creation
       .return('node.id as id');
 
@@ -206,86 +208,11 @@ export class EthnologueLanguageService {
     if (!result) {
       throw new ServerException('failed to create ethnologuelanguage');
     }
-    // const id = generate();
-    // const createdAt = DateTime.local();
-
-    // try {
-    //   const createEthnologueLanguage = this.db
-    //     .query()
-    //     .match(
-    //       matchSession(session, { withAclEdit: 'canCreateEthnologueLanguage' })
-    //     )
-    //     .match([
-    //       node('rootuser', 'User', {
-    //         active: true,
-    //         id: this.config.rootAdmin.id,
-    //       }),
-    //     ])
-    //     .create([
-    //       [
-    //         node('newEthnologueLanguage', ['EthnologueLanguage', 'BaseNode'], {
-    //           active: true,
-    //           createdAt,
-    //           id,
-    //           owningOrgId: session.owningOrgId,
-    //         }),
-    //       ],
-    //       ...this.property('id', input.id),
-    //       ...this.property('code', input.code),
-    //       ...this.property('provisionalCode', input.provisionalCode),
-    //       ...this.property('name', input.name),
-    //       ...this.property('population', input.population),
-    //       [
-    //         node('adminSG', 'SecurityGroup', {
-    //           id: generate(),
-    //           active: true,
-    //           createdAt,
-    //           name: id + ' admin',
-    //         }),
-    //         relation('out', '', 'member', { active: true, createdAt }),
-    //         node('requestingUser'),
-    //       ],
-    //       [
-    //         node('readerSG', 'SecurityGroup', {
-    //           id: generate(),
-    //           active: true,
-    //           createdAt,
-    //           name: id + ' users',
-    //         }),
-    //         relation('out', '', 'member', { active: true, createdAt }),
-    //         node('requestingUser'),
-    //       ],
-    //       [
-    //         node('adminSG'),
-    //         relation('out', '', 'member', { active: true, createdAt }),
-    //         node('rootuser'),
-    //       ],
-    //       [
-    //         node('readerSG'),
-    //         relation('out', '', 'member', { active: true, createdAt }),
-    //         node('rootuser'),
-    //       ],
-    //       ...this.permission('id'),
-    //       ...this.permission('code'),
-    //       ...this.permission('provisionalCode'),
-    //       ...this.permission('name'),
-    //       ...this.permission('population'),
-    //     ])
-    //     .return('newEthnologueLanguage.id as id');
-
-    //   await createEthnologueLanguage.first();
-    // } catch (e) {
-    //   this.logger.warning('Failed to create ethnologuelanguage', {
-    //     exception: e,
-    //   });
-
-    //   throw new ServerException('Failed to create ethnologuelanguage');
-    // }
 
     const id = result.id;
 
     // add root admin to new org as an admin
-    await this.db.addRootAdminToBaseNodeAsAdmin(id, 'Organization');
+    await this.db.addRootAdminToBaseNodeAsAdmin(id, 'EthnologueLanguage');
 
     this.logger.debug(`ethnologue language created`, { id });
 
