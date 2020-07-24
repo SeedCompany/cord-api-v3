@@ -1,6 +1,7 @@
 import {
   contains,
   equals,
+  greaterThan,
   inArray,
   node,
   Query,
@@ -49,7 +50,14 @@ export interface Property {
 }
 
 // assumes 'requestingUser', 'root' and 'publicSG' cypher identifiers have been matched
-export function createBaseNode(query: Query, label: string, props: Property[]) {
+// add baseNodeProps and editableProps
+export function createBaseNode(
+  query: Query,
+  label: string,
+  props: Property[],
+  baseNodeProps?: { owningOrgId?: string | undefined; type?: string },
+  editableProps?: string[]
+) {
   const createdAt = DateTime.local().toString();
 
   query.create([
@@ -57,6 +65,7 @@ export function createBaseNode(query: Query, label: string, props: Property[]) {
       active: true,
       createdAt,
       id: generate(),
+      ...baseNodeProps,
     }),
   ]);
 
@@ -126,6 +135,7 @@ export function createBaseNode(query: Query, label: string, props: Property[]) {
           createdAt,
           property: prop.key,
           read: true,
+          edit: editableProps?.includes(prop.key) ? true : false,
         }),
         relation('out', '', 'baseNode', { active: true }),
         node('node'),
@@ -683,6 +693,66 @@ export function filterByArray(
     readPerm: inArray(['permList'], true),
     [filterKey]: { value: equals(filterValue) },
   });
+}
+
+export function filterBySubarray(
+  query: Query,
+  label: string,
+  filterKey: string,
+  filterValue: string[]
+) {
+  query.match([
+    node('readPerm', 'Permission', {
+      property: filterKey,
+      read: true,
+      active: true,
+    }),
+    relation('out', '', 'baseNode'),
+    node('node', label, {
+      active: true,
+    }),
+    relation('out', '', filterKey, { active: true }),
+    node(filterKey, 'Property', { active: true }),
+  ]);
+  query.where({
+    readPerm: inArray(['permList'], true),
+    [filterKey]: { value: inArray(filterValue) },
+  });
+  query.with(`permList, node`);
+}
+
+// LIST Filtering
+export function filterByChildBaseNodeCount(
+  query: Query,
+  label: string,
+  filterKey: string
+) {
+  query.match([
+    node('readPerm', 'Permission', {
+      property: filterKey,
+      read: true,
+      active: true,
+    }),
+    relation('out', '', 'baseNode'),
+    node('node', label, {
+      active: true,
+    }),
+    relation('out', '', filterKey, { active: true }),
+    node(filterKey, 'BaseNode', { active: true }),
+  ]);
+  query
+    .with(
+      `
+      readPerm,
+      permList,
+      node,
+      ${count(filterKey, { distinct: true, as: `${filterKey}_count` })}
+    `
+    )
+    .where({
+      readPerm: inArray(['permList'], true),
+      [`${filterKey}_count`]: greaterThan(1),
+    });
 }
 
 // used to search a specific user's relationship to the target base node

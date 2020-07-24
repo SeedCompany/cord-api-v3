@@ -71,6 +71,12 @@ export abstract class ProjectFilters {
     description: 'only mine',
   })
   readonly mine?: boolean;
+
+  @Field({
+    nullable: true,
+    description: 'Cluster project',
+  })
+  readonly clusters?: boolean;
 }
 
 const defaultFilters = {};
