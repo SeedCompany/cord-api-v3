@@ -12,11 +12,14 @@ import { ISession, Order } from '../../common';
 import {
   addAllSecureProperties,
   ConfigService,
+  createBaseNode,
   DatabaseService,
   ILogger,
   Logger,
+  matchRequestingUser,
   matchSession,
   matchUserPermissions,
+  Property,
   runListQuery,
 } from '../../core';
 import {
@@ -171,95 +174,67 @@ export class BudgetService {
       throw new NotFoundException('project does not exist');
     }
 
-    const id = generate();
-    const createdAt = DateTime.local();
-    const status = BudgetStatus.Pending;
+    const secureProps: Property[] = [
+      {
+        key: 'status',
+        value: BudgetStatus.Pending,
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+    ];
 
     try {
       const createBudget = this.db
         .query()
-        .match(matchSession(session, { withAclEdit: 'canCreateBudget' }))
+        .call(matchRequestingUser, session)
         .match([
-          node('rootuser', 'User', {
+          node('root', 'User', {
             active: true,
             id: this.config.rootAdmin.id,
           }),
-        ])
-        .create([
-          [
-            node('budget', 'Budget:BaseNode', {
-              active: true,
-              createdAt,
-              id,
-              owningOrgId: session.owningOrgId,
-            }),
-          ],
-          ...this.property('status', status, 'budget'),
-          [
-            node('adminSG', 'SecurityGroup', {
-              id: generate(),
-              active: true,
-              createdAt,
-              name: projectId + ' admin',
-            }),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('requestingUser'),
-          ],
-          [
-            node('readerSG', 'SecurityGroup', {
-              id: generate(),
-              active: true,
-              createdAt,
-              name: projectId + ' users',
-            }),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('requestingUser'),
-          ],
-          [
-            node('adminSG'),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('rootuser'),
-          ],
-          [
-            node('readerSG'),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('rootuser'),
-          ],
-          ...this.permission('status', 'budget'),
-        ])
-        .return('budget.id as id');
+        ]);
+      createBudget.call(createBaseNode, 'Budget', secureProps, {
+        owningOrgId: session.owningOrgId,
+      });
+      createBudget.return('node.id as id');
 
-      await createBudget.first();
+      const result = await createBudget.first();
+
+      if (!result) {
+        throw new ServerException('failed to create a budget');
+      }
 
       // connect budget to project
       await this.db
         .query()
         .matchNode('project', 'Project', { id: projectId, active: true })
-        .matchNode('budget', 'Budget', { id, active: true })
+        .matchNode('budget', 'Budget', { id: result.id, active: true })
         .create([
           node('project'),
           relation('out', '', 'budget', {
             active: true,
-            createdAt: DateTime.local(),
+            createdAt: DateTime.local().toString(),
           }),
           node('budget'),
         ])
         .run();
 
       this.logger.info(`Created Budget`, {
-        id,
+        id: result.id,
         userId: session.userId,
       });
+
+      return await this.readOne(result.id, session);
     } catch (e) {
       this.logger.error(`Could not create budget`, {
-        id,
         userId: session.userId,
         exception: e,
       });
       throw new ServerException('Could not create budget');
     }
-
-    return this.readOne(id, session);
   }
 
   async createRecord(
@@ -391,7 +366,7 @@ export class BudgetService {
     const props = ['status'];
     const readBudget = this.db
       .query()
-      .match(matchSession(session, { withAclRead: 'canReadBudgets' }))
+      .call(matchRequestingUser, session)
       .call(matchUserPermissions, 'Budget', id)
       .call(addAllSecureProperties, ...props);
     readBudget.return({
@@ -636,28 +611,10 @@ export class BudgetService {
     input: Partial<BudgetListInput>,
     session: ISession
   ): Promise<BudgetListOutput> {
-    const { page, count, sort, order, filter } = {
+    const { sort, filter } = {
       ...BudgetListInput.defaultVal,
       ...input,
     };
-
-    let result: {
-      items: Budget[];
-      hasMore: boolean;
-      total: number;
-    } = { items: [], hasMore: false, total: 0 };
-
-    let listResult: {
-      items: Array<{
-        identity: string;
-        labels: string[];
-        properties: Budget;
-      }>;
-      hasMore: boolean;
-      total: number;
-    };
-
-    let items = [];
 
     const { projectId } = filter;
     this.logger.info('Listing budgets on projectId ', {
@@ -666,74 +623,49 @@ export class BudgetService {
     });
     const secureProps = ['status'];
 
+    const query = this.db.query().call(matchRequestingUser, session);
     if (projectId) {
-      const query = this.db
-        .query()
-        .match(matchSession(session))
-        .match([
-          node('project', 'Project', {
-            id: projectId,
-            active: true,
-            owningOrgId: session.owningOrgId,
-          }),
-          relation('out', '', 'budget'),
-          node('node', 'Budget', { active: true }),
-        ]);
-      this.propMatch(query, 'status', 'node');
-      listResult = await runListQuery(
-        query,
-        {
-          ...BudgetListInput.defaultVal,
-          ...input,
-        },
-        secureProps.includes(sort)
-      );
-
-      items = await Promise.all(
-        listResult.items.map((item) => {
-          return this.readOne(item.properties.id, session);
-        })
-      );
+      query.match([
+        node('project', 'Project', {
+          id: projectId,
+          active: true,
+          owningOrgId: session.owningOrgId,
+        }),
+        relation('out', '', 'budget'),
+        node('node', 'Budget', { active: true }),
+      ]);
     } else {
-      result = await this.db.list<Budget>({
-        session,
-        nodevar: 'budget',
-        aclReadProp: 'canReadBudgets',
-        aclEditProp: 'canCreateBudget',
-        props: [{ name: 'status', secure: false }],
-        input: {
-          page,
-          count,
-          sort,
-          order,
-          filter,
-        },
-      });
-
-      items = await Promise.all(
-        result.items.map(async (item) => {
-          const records = await this.listRecords(
-            {
-              sort: 'fiscalYear',
-              order: Order.ASC,
-              page: 1,
-              count: 75,
-              filter: { budgetId: item.id },
-            },
-            session
-          );
-          return {
-            ...item,
-            records: records.items,
-          };
-        })
-      );
+      query.match([node('node', 'Budget', { active: true })]);
     }
+    this.propMatch(query, 'status', 'node');
+
+    const listResult: {
+      items: Array<{
+        identity: string;
+        labels: string[];
+        properties: Budget;
+      }>;
+      hasMore: boolean;
+      total: number;
+    } = await runListQuery(
+      query,
+      {
+        ...BudgetListInput.defaultVal,
+        ...input,
+      },
+      secureProps.includes(sort)
+    );
+
+    const items = await Promise.all(
+      listResult.items.map((item) => {
+        return this.readOne(item.properties.id, session);
+      })
+    );
 
     return {
       items,
-      hasMore: result.hasMore,
-      total: result.total,
+      hasMore: listResult.hasMore,
+      total: listResult.total,
     };
   }
 
