@@ -109,9 +109,6 @@ export class LanguageService {
   }
   // helper method for defining properties
   property = (prop: string, value: any) => {
-    if (!value) {
-      return [];
-    }
     const createdAt = DateTime.local();
     const propLabel =
       simpleSwitch(prop, {
