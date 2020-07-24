@@ -446,7 +446,11 @@ export function getMetaPropertyOfChildBaseNode(
     });
 }
 
-export function matchUserPermissions(query: Query, label: string, id?: string) {
+export function matchUserPermissions(
+  query: Query,
+  label?: string,
+  id?: string
+) {
   query.match([
     node('requestingUser'),
     relation('in', '', 'member', {}, [1]),
@@ -454,7 +458,9 @@ export function matchUserPermissions(query: Query, label: string, id?: string) {
     relation('out', '', 'permission'),
     node('perms', 'Permission', { active: true }),
     relation('out', '', 'baseNode'),
-    node('node', label, { active: true }),
+    label
+      ? node('node', label, { active: true })
+      : node('node', { active: true }),
   ]);
   if (id) {
     query.where({ node: { id } });
