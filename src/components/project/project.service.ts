@@ -51,12 +51,15 @@ import {
 } from '../partnership';
 import {
   CreateProject,
+  InternshipProject,
   Project,
   ProjectListInput,
   ProjectListOutput,
   ProjectStatus,
   ProjectStep,
+  ProjectType,
   stepToStatus,
+  TranslationProject,
   UpdateProject,
 } from './dto';
 import {
@@ -372,6 +375,28 @@ export class ProjectService {
         `Could not create project ${e.name} ${e.value}`
       );
     }
+  }
+
+  async readOneTranslation(
+    id: string,
+    session: ISession
+  ): Promise<TranslationProject> {
+    const project = await this.readOne(id, session);
+    if (project.type !== ProjectType.Translation) {
+      throw new Error('Project is not a translation project');
+    }
+    return project as TranslationProject;
+  }
+
+  async readOneInternship(
+    id: string,
+    session: ISession
+  ): Promise<InternshipProject> {
+    const project = await this.readOne(id, session);
+    if (project.type !== ProjectType.Internship) {
+      throw new Error('Project is not an internship project');
+    }
+    return project as InternshipProject;
   }
 
   async readOne(id: string, session: ISession): Promise<Project> {
