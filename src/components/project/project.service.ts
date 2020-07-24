@@ -307,9 +307,10 @@ export class ProjectService {
           node('country', 'Country', { active: true, id: locationId }),
         ]);
       }
+
       createProject.call(
         createBaseNode,
-        'Project',
+        `Project:${input.type}Project`,
         secureProps,
         {
           owningOrgId: session.owningOrgId,
