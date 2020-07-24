@@ -1161,22 +1161,19 @@ export class EngagementService {
     input: ProductListInput,
     session: ISession
   ): Promise<SecuredProductList> {
-    // const result = await this.products.list(
-    //   {
-    //     ...input,
-    //     filter: {
-    //       ...input.filter,
-    //       engagementId: engagement.id,
-    //     },
-    //   },
-    //   session
-    // );
+    const result = await this.products.list(
+      {
+        ...input,
+        filter: {
+          ...input.filter,
+          engagementId: engagement.id,
+        },
+      },
+      session
+    );
 
     return {
-      items: [],
-      total: 0,
-      hasMore: false,
-      // ...result,
+      ...result,
       canRead: true, // TODO
       canCreate: true, // TODO
     };
