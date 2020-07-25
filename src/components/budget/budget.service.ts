@@ -7,14 +7,15 @@ import {
 import { node, Query, relation } from 'cypher-query-builder';
 import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
-import { generate } from 'shortid';
 import { ISession, Order } from '../../common';
 import {
   addAllSecureProperties,
+  addBaseNodeMetaPropsWithClause,
   ConfigService,
   createBaseNode,
   DatabaseService,
   ILogger,
+  listWithSecureObject,
   Logger,
   matchRequestingUser,
   matchSession,
@@ -247,109 +248,93 @@ export class BudgetService {
 
     this.logger.info('Creating BudgetRecord', input);
     // on Init, create a budget will create a budget record for each org and each fiscal year in the project input.projectId
-    const id = generate();
-    const createdAt = DateTime.local();
+    const createdAt = DateTime.local().toString();
+
+    const secureProps: Property[] = [
+      {
+        key: 'fiscalYear',
+        value: input.fiscalYear,
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'amount',
+        value: '0',
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+    ];
 
     try {
       const createBudgetRecord = this.db
         .query()
-        .match(matchSession(session, { withAclEdit: 'canCreateBudget' }))
+        .call(matchRequestingUser, session)
         .match([
-          node('rootuser', 'User', {
+          node('root', 'User', {
             active: true,
             id: this.config.rootAdmin.id,
           }),
-        ])
-        .create([
-          [
-            node('budgetRecord', 'BudgetRecord:BaseNode', {
-              active: true,
-              createdAt,
-              id,
-              owningOrgId: session.owningOrgId,
-            }),
-          ],
-          ...this.property('fiscalYear', input.fiscalYear, 'budgetRecord'),
-          ...this.property('amount', '0', 'budgetRecord'),
-          [
-            node('adminSG', 'SecurityGroup', {
-              id: generate(),
-              active: true,
-              createdAt,
-              name: input.fiscalYear.toString() + ' admin',
-            }),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('requestingUser'),
-          ],
-          [
-            node('readerSG', 'SecurityGroup', {
-              id: generate(),
-              active: true,
-              createdAt,
-              name: input.fiscalYear.toString() + ' users',
-            }),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('requestingUser'),
-          ],
-          [
-            node('adminSG'),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('rootuser'),
-          ],
-          [
-            node('readerSG'),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('rootuser'),
-          ],
-          ...this.permission('fiscalYear', 'budgetRecord'),
-          ...this.permission('amount', 'budgetRecord'),
-          ...this.permission('organization', 'budgetRecord'),
-        ])
-        .return('budgetRecord.id as id');
+        ]);
+      createBudgetRecord.call(createBaseNode, 'BudgetRecord', secureProps, {
+        owningOrgId: session.owningOrgId,
+      });
+      createBudgetRecord
+        .create([...this.permission('organization', 'node')])
+        .return('node.id as id');
 
-      await createBudgetRecord.first();
+      const result = await createBudgetRecord.first();
+
+      if (!result) {
+        throw new ServerException('failed to create a budget record');
+      }
 
       this.logger.info(`Created Budget Record`, {
-        id,
+        id: result.id,
         userId: session.userId,
       });
 
       // connect to budget
-      const query = `
-      MATCH
-        (budget:Budget {id: $budgetId, active: true}),
-        (br:BudgetRecord {id: $id, active: true})
-      CREATE (budget)-[:record {active: true, createdAt: datetime()}]->(br)
-    `;
-      await this.db
+      const query = this.db
         .query()
-        .raw(query, {
-          budgetId,
-          id,
-        })
-        .first();
+        .match([node('budget', 'Budget', { id: budgetId, active: true })])
+        .match([node('br', 'BudgetRecord', { id: result.id, active: true })])
+        .create([
+          node('budget'),
+          relation('out', '', 'record', { active: true, createdAt }),
+          node('br'),
+        ])
+        .return('br');
+      await query.first();
 
       // connect budget record to org
-      const orgQuery = `
-        MATCH
-        (organization:Organization {id: $organizationId, active: true}),
-        (br:BudgetRecord {id: $id, active: true})
-      CREATE (br)-[:organization {active: true, createdAt: datetime()}]->(organization)
-    `;
-      await this.db
+      const orgQuery = this.db
         .query()
-        .raw(orgQuery, {
-          organizationId,
-          id,
-        })
-        .first();
+        .match([
+          node('organization', 'Organization', {
+            id: organizationId,
+            active: true,
+          }),
+        ])
+        .match([node('br', 'BudgetRecord', { id: result.id, active: true })])
+        .create([
+          node('br'),
+          relation('out', '', 'organization', { active: true, createdAt }),
+          node('organization'),
+        ])
+        .return('br');
+      await orgQuery.first();
 
-      const result = await this.readOneRecord(id, session);
+      const bugetRecord = await this.readOneRecord(result.id, session);
 
-      return result;
+      return bugetRecord;
     } catch (exception) {
       this.logger.error(`Could not create Budget Record`, {
-        id,
         userId: session.userId,
         exception,
       });
@@ -363,26 +348,21 @@ export class BudgetService {
       userId: session.userId,
     });
 
-    const props = ['status'];
+    const baseNodeMetaProps = ['id', 'createdAt', 'type'];
+    const secureProps = ['status'];
     const readBudget = this.db
       .query()
       .call(matchRequestingUser, session)
       .call(matchUserPermissions, 'Budget', id)
-      .call(addAllSecureProperties, ...props);
-    readBudget.return({
-      node: [{ id: 'id', createdAt: 'createdAt' }],
-      status: [{ value: 'status' }],
-      statusReadPerm: [
-        {
-          read: 'canReadStatus',
-        },
-      ],
-      statusEditPerm: [
-        {
-          edit: 'canEditStatus',
-        },
-      ],
-    });
+      .call(addAllSecureProperties, ...secureProps)
+      .return(
+        `
+          {
+            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
+            ${listWithSecureObject(secureProps)}
+          } as budget
+        `
+      );
 
     let result;
     try {
@@ -407,9 +387,9 @@ export class BudgetService {
     );
 
     return {
-      id: result.id,
-      createdAt: result.createdAt,
-      status: result.canReadStatus ? result.status : undefined,
+      id,
+      createdAt: result.budget.createdAt,
+      status: result.budget.status.canRead ? result.budget.status : undefined,
       records: records.items,
     };
   }
@@ -420,13 +400,14 @@ export class BudgetService {
       userId: session.userId,
     });
 
-    const readBudgetRecord = this.db
+    const baseNodeMetaProps = ['id', 'createdAt'];
+    const secureProps = ['amount', 'fiscalYear'];
+    const readQuery = this.db
       .query()
-      .match(matchSession(session, { withAclRead: 'canReadBudgets' }))
-      .match([node('budgetRecord', 'BudgetRecord', { active: true, id })]);
-    this.propMatch(readBudgetRecord, 'amount', 'budgetRecord');
-    this.propMatch(readBudgetRecord, 'fiscalYear', 'budgetRecord');
-    readBudgetRecord.optionalMatch([
+      .call(matchRequestingUser, session)
+      .call(matchUserPermissions, 'BudgetRecord', id)
+      .call(addAllSecureProperties, ...secureProps);
+    readQuery.optionalMatch([
       node('requestingUser'),
       relation('in', '', 'member', { active: true }),
       node('', 'SecurityGroup', { active: true }),
@@ -437,56 +418,47 @@ export class BudgetService {
         edit: true,
       }),
       relation('out', '', 'baseNode', { active: true }),
-      node('budgetRecord'),
+      node('node'),
       relation('out', '', 'organization', { active: true }),
       node('organization', 'Organization', { active: true }),
       relation('out', '', 'name', { active: true }),
       node('organizationName', 'Property', { active: true }),
     ]);
-    readBudgetRecord.optionalMatch([
-      node('requestingUser'),
-      relation('in', '', 'member', { active: true }),
-      node('', 'SecurityGroup', { active: true }),
-      relation('out', '', 'permission', { active: true }),
-      node('canReadOrganization', 'Permission', {
-        property: 'organization',
-        active: true,
-        read: true,
-      }),
-      relation('out', '', 'baseNode', { active: true }),
-      node('budgetRecord'),
-      relation('out', '', 'organization', { active: true }),
-      node('organization', 'Organization', { active: true }),
-      relation('out', '', 'name', { active: true }),
-      node('organizationName', 'Property', { active: true }),
-    ]);
-    readBudgetRecord.return({
-      budgetRecord: [{ id: 'id', createdAt: 'createdAt' }],
-      amount: [{ value: 'amount' }],
-      canReadAmount: [{ read: 'canReadAmount' }],
-      canEditAmount: [{ edit: 'canEditAmount' }],
-      fiscalYear: [{ value: 'fiscalYear' }],
-      canReadFiscalYear: [{ read: 'canReadFiscalYear' }],
-      canEditFiscalYear: [{ edit: 'canEditFiscalYear' }],
-      organization: [
-        { id: 'organizationId', createdAt: 'organizationCreatedAt' },
-      ],
-      organizationName: [{ value: 'organizationName' }],
-      canReadOrganization: [
-        {
-          read: 'canReadOrganization',
-        },
-      ],
-      canEditOrganization: [
-        {
-          edit: 'canEditOrganization',
-        },
-      ],
-    });
+    readQuery
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node('canReadOrganization', 'Permission', {
+          property: 'organization',
+          active: true,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('node'),
+        relation('out', '', 'organization', { active: true }),
+        node('organization', 'Organization', { active: true }),
+        relation('out', '', 'name', { active: true }),
+        node('organizationName', 'Property', { active: true }),
+      ])
+      .return(
+        `
+          {
+            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
+            ${listWithSecureObject(secureProps)},
+            organizationId: organization.id,
+            organizationCreatedAt: organization.createdAt,
+            organizationName: organizationName.value,
+            canReadOrganization: canReadOrganization.read,
+            canEditOrganization: canEditOrganization.edit
+          } as budgetRecord
+        `
+      );
 
     let result;
     try {
-      result = await readBudgetRecord.first();
+      result = await readQuery.first();
     } catch (e) {
       this.logger.error('e :>> ', e);
     }
@@ -501,21 +473,21 @@ export class BudgetService {
 
     return {
       id,
-      createdAt: result.createdAt,
+      createdAt: result.budgetRecord.createdAt,
       organizationId: {
-        value: result.organizationId,
-        canRead: !!result.canReadOrganization,
-        canEdit: !!result.canEditOrganization,
+        value: result.budgetRecord.organizationId,
+        canRead: !!result.budgetRecord.canReadOrganization,
+        canEdit: !!result.budgetRecord.canEditOrganization,
       },
       fiscalYear: {
-        value: result.fiscalYear,
-        canRead: !!result.canReadFiscalYear,
-        canEdit: !!result.canEditFiscalYear,
+        value: result.budgetRecord.fiscalYear.value,
+        canRead: !!result.budgetRecord.fiscalYear.canRead,
+        canEdit: !!result.budgetRecord.fiscalYear.canEdit,
       },
       amount: {
-        value: result.amount,
-        canRead: !!result.canReadAmount,
-        canEdit: !!result.canEditAmount,
+        value: result.budgetRecord.amount.value,
+        canRead: !!result.budgetRecord.amount.canRead,
+        canEdit: !!result.budgetRecord.amount.canEdit,
       },
     };
   }
@@ -670,7 +642,7 @@ export class BudgetService {
   }
 
   async listRecords(
-    { page, count, sort, order, filter }: BudgetRecordListInput,
+    { filter, ...input }: BudgetRecordListInput,
     session: ISession
   ): Promise<BudgetRecordListOutput> {
     const { budgetId } = filter;
@@ -679,44 +651,39 @@ export class BudgetService {
       userId: session.userId,
     });
 
-    const query = `
-      MATCH
-        (token:Token {active: true, value: $token})
-        <-[:token {active: true}]-
-        (requestingUser:User {
-          active: true,
-          id: $requestingUserId
-        }),
-        (budget:Budget {id: $budgetId, active: true, owningOrgId: $owningOrgId})
-        -[:record]->(budgetRecord:BudgetRecord {active:true})
-      WITH COUNT(budgetRecord) as total, budgetRecord
-          MATCH (budgetRecord {active: true})-[:amount {active:true }]->(amount:Property {active: true}),
-          (budgetRecord)-[:organization { active: true }]->(org:Organization {active:true}),
-          (budgetRecord)-[:fiscalYear {active: true}]->(fiscalYear {active: true})
-          RETURN DISTINCT total, budgetRecord.id as budgetRecordId, fiscalYear.value as fiscalYear, org.id as orgId
-          ORDER BY ${sort} ${order}
-          SKIP $skip LIMIT $count
-      `;
-    const brs = await this.db
+    const query = this.db
       .query()
-      .raw(query, {
-        token: session.token,
-        requestingUserId: session.userId,
-        owningOrgId: session.owningOrgId,
-        budgetId,
-        skip: (page - 1) * count,
-        count,
-      })
-      .run();
+      .call(matchRequestingUser, session)
+      .match([
+        node('budget', 'Budget', {
+          id: budgetId,
+          active: true,
+          owningOrgId: session.owningOrgId,
+        }),
+        relation('out', '', 'record'),
+        node('node', 'BudgetRecord', { active: true }),
+      ]);
+
+    const listResult: {
+      items: Array<{
+        identity: string;
+        labels: string[];
+        properties: BudgetRecord;
+      }>;
+      hasMore: boolean;
+      total: number;
+    } = await runListQuery(query, input);
 
     const items = await Promise.all(
-      brs.map((br) => this.readOneRecord(br.budgetRecordId, session))
+      listResult.items.map((item) => {
+        return this.readOneRecord(item.properties.id, session);
+      })
     );
 
     return {
       items,
-      hasMore: false, // TODO
-      total: items.length,
+      hasMore: listResult.hasMore,
+      total: listResult.total,
     };
   }
 
