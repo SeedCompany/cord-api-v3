@@ -1172,10 +1172,31 @@ export class EngagementService {
       session
     );
 
+    const permission = await this.db
+      .query()
+      .call(matchRequestingUser, session)
+      .match([
+        [
+          node('requestingUser'),
+          relation('in', '', 'member', { active: true }),
+          node('', 'SecurityGroup', { active: true }),
+          relation('out', '', 'permission', { active: true }),
+          node('canRead', 'Permission', {
+            property: 'product',
+            active: true,
+            read: true,
+          }),
+        ],
+      ])
+      .return({
+        canRead: [{ read: 'canRead', edit: 'canEdit' }],
+      })
+      .first();
+
     return {
       ...result,
-      canRead: true, // TODO
-      canCreate: true, // TODO
+      canRead: !!permission?.canRead,
+      canCreate: !!permission?.canEdit,
     };
   }
 

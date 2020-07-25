@@ -43,6 +43,50 @@ export class ProductService {
     @Logger('product:service') private readonly logger: ILogger
   ) {}
 
+  permission = (property: string, nodeName: string, canEdit = false) => {
+    const createdAt = DateTime.local().toString();
+    return [
+      [
+        node('adminSG'),
+        relation('out', '', 'permission', {
+          active: true,
+          createdAt,
+        }),
+        node('', 'Permission', {
+          property,
+          active: true,
+          read: true,
+          edit: true,
+          admin: true,
+        }),
+        relation('out', '', 'baseNode', {
+          active: true,
+          createdAt,
+        }),
+        node(nodeName),
+      ],
+      [
+        node('readerSG'),
+        relation('out', '', 'permission', {
+          active: true,
+          createdAt,
+        }),
+        node('', 'Permission', {
+          property,
+          active: true,
+          read: true,
+          edit: canEdit,
+          admin: false,
+        }),
+        relation('out', '', 'baseNode', {
+          active: true,
+          createdAt,
+        }),
+        node(nodeName),
+      ],
+    ];
+  };
+
   async create(
     { engagementId, ...input }: CreateProduct,
     session: ISession
@@ -114,6 +158,7 @@ export class ProductService {
           relation('in', '', 'engagement', { active: true, createdAt }),
           node('node'),
         ],
+        ...this.permission('product', 'engagement', true),
       ]);
     }
 
