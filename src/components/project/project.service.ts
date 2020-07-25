@@ -8,7 +8,12 @@ import {
 import { node, relation } from 'cypher-query-builder';
 import { flatMap, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
-import { fiscalYears, ISession, Sensitivity } from '../../common';
+import {
+  fiscalYears,
+  InputException,
+  ISession,
+  Sensitivity,
+} from '../../common';
 import {
   addAllSecureProperties,
   addBaseNodeMetaPropsWithClause,
@@ -346,7 +351,10 @@ export class ProjectService {
 
       if (!result) {
         if (locationId && !location) {
-          throw new ServerException('Could not find location');
+          throw new InputException(
+            'Could not find location',
+            'project.locationId'
+          );
         }
       }
 
