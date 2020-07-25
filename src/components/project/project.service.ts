@@ -639,10 +639,35 @@ export class ProjectService {
       session
     );
 
+    const permission = await this.db
+      .query()
+      .match([
+        [
+          node('requestingUser'),
+          relation('in', '', 'member', { active: true }),
+          node('', 'SecurityGroup', { active: true }),
+          relation('out', '', 'permission', { active: true }),
+          node('canReadEngagement', 'Permission', {
+            property: 'engagement',
+            active: true,
+            read: true,
+          }),
+        ],
+      ])
+      .return({
+        canReadEngagement: [
+          {
+            read: 'canReadEngagementRead',
+            edit: 'canReadEngagementCreate',
+          },
+        ],
+      })
+      .first();
+
     return {
       ...result,
-      canCreate: true,
-      canRead: true,
+      canRead: !!permission?.canReadEngagementRead,
+      canCreate: !!permission?.canReadEngagementCreate,
     };
   }
 
@@ -662,10 +687,35 @@ export class ProjectService {
       session
     );
 
+    const permission = await this.db
+      .query()
+      .match([
+        [
+          node('requestingUser'),
+          relation('in', '', 'member', { active: true }),
+          node('', 'SecurityGroup', { active: true }),
+          relation('out', '', 'permission', { active: true }),
+          node('canReadTeamMember', 'Permission', {
+            property: 'teamMember',
+            active: true,
+            read: true,
+          }),
+        ],
+      ])
+      .return({
+        canReadTeamMember: [
+          {
+            read: 'canReadTeamMemberRead',
+            edit: 'canReadTeamMemberCreate',
+          },
+        ],
+      })
+      .first();
+
     return {
       ...result,
-      canRead: true, // TODO
-      canCreate: true, // TODO
+      canRead: !!permission?.canReadTeamMemberRead,
+      canCreate: !!permission?.canReadTeamMemberCreate,
     };
   }
 
@@ -685,10 +735,35 @@ export class ProjectService {
       session
     );
 
+    const permission = await this.db
+      .query()
+      .match([
+        [
+          node('requestingUser'),
+          relation('in', '', 'member', { active: true }),
+          node('', 'SecurityGroup', { active: true }),
+          relation('out', '', 'permission', { active: true }),
+          node('canReadPartnership', 'Permission', {
+            property: 'partnership',
+            active: true,
+            read: true,
+          }),
+        ],
+      ])
+      .return({
+        canReadPartnership: [
+          {
+            read: 'canReadPartnershipRead',
+            edit: 'canReadPartnershipCreate',
+          },
+        ],
+      })
+      .first();
+
     return {
       ...result,
-      canCreate: true,
-      canRead: true,
+      canRead: !!permission?.canReadPartnershipRead,
+      canCreate: !!permission?.canReadPartnershipCreate,
     };
   }
 
