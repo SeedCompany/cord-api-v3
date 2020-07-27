@@ -95,7 +95,7 @@ export class AdminService implements OnApplicationBootstrap {
           id: this.config.anonUser.id,
         }),
       ])
-      .onCreate.setLabels({ anon: ['AnonUser', 'User'] })
+      .onCreate.setLabels({ anon: ['AnonUser', 'User', 'BaseNode'] })
       .setValues({
         'anon.createdAt': createdAt,
         'anon.active': true,
