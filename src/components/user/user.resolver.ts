@@ -60,7 +60,7 @@ export class UserResolver {
       user.displayLastName.value,
     ]).join(' ');
     if (displayName) {
-      return name;
+      return displayName;
     }
 
     return undefined;
