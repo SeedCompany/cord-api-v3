@@ -29,7 +29,7 @@ docker-compose up
 ## Usage
 
 Develop: `yarn start:dev`  
-Test: `yarn test:e2e -i`
+Test: `yarn test:e2e`
 
 See scripts in package.json for other commands to run
 
