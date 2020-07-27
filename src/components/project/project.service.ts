@@ -8,7 +8,12 @@ import {
 import { node, relation } from 'cypher-query-builder';
 import { flatMap, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
-import { fiscalYears, ISession, Sensitivity } from '../../common';
+import {
+  fiscalYears,
+  InputException,
+  ISession,
+  Sensitivity,
+} from '../../common';
 import {
   addAllSecureProperties,
   addBaseNodeMetaPropsWithClause,
@@ -350,7 +355,10 @@ export class ProjectService {
 
       if (!result) {
         if (locationId && !location) {
-          throw new ServerException('Could not find location');
+          throw new InputException(
+            'Could not find location',
+            'project.locationId'
+          );
         }
       }
 
@@ -653,42 +661,48 @@ export class ProjectService {
       input,
       userId: session.userId,
     });
-    //get a list of engagements
-    const listQuery = this.db.query().call(matchRequestingUser, session);
-    listQuery.match([
-      node('project', 'Project', { active: true, id: project.id }),
-      relation('out', '', 'engagement', { active: true }),
-      node('engagement', 'BaseNode', { active: true }),
-    ]);
-    listQuery.optionalMatch([...this.propMatch('engagement')]).returnDistinct([
+
+    const result = await this.engagementService.list(
       {
-        canReadEngagement: [{ read: 'canRead' }],
-        engagement: [{ id: 'id' }],
+        ...input,
+        filter: {
+          ...input.filter,
+          projectId: project.id,
+        },
       },
-    ]);
+      session
+    );
 
-    let result;
-    try {
-      result = await listQuery.run();
-    } catch (e) {
-      this.logger.error('e :>> ', e);
-    }
+    const permission = await this.db
+      .query()
+      .match([
+        [
+          node('requestingUser'),
+          relation('in', '', 'member', { active: true }),
+          node('', 'SecurityGroup', { active: true }),
+          relation('out', '', 'permission', { active: true }),
+          node('canReadEngagement', 'Permission', {
+            property: 'engagement',
+            active: true,
+            read: true,
+          }),
+        ],
+      ])
+      .return({
+        canReadEngagement: [
+          {
+            read: 'canReadEngagementRead',
+            edit: 'canReadEngagementCreate',
+          },
+        ],
+      })
+      .first();
 
-    const items = result
-      ? await Promise.all(
-          result.map((r) => this.engagementService.readOne(r.id, session))
-        )
-      : [];
-
-    const retVal: SecuredEngagementList = {
-      total: items.length,
-      hasMore: false,
-      items,
-      canRead: true,
-      canCreate: true,
+    return {
+      ...result,
+      canRead: !!permission?.canReadEngagementRead,
+      canCreate: !!permission?.canReadEngagementCreate,
     };
-
-    return retVal;
   }
 
   async listProjectMembers(
@@ -707,10 +721,35 @@ export class ProjectService {
       session
     );
 
+    const permission = await this.db
+      .query()
+      .match([
+        [
+          node('requestingUser'),
+          relation('in', '', 'member', { active: true }),
+          node('', 'SecurityGroup', { active: true }),
+          relation('out', '', 'permission', { active: true }),
+          node('canReadTeamMember', 'Permission', {
+            property: 'teamMember',
+            active: true,
+            read: true,
+          }),
+        ],
+      ])
+      .return({
+        canReadTeamMember: [
+          {
+            read: 'canReadTeamMemberRead',
+            edit: 'canReadTeamMemberCreate',
+          },
+        ],
+      })
+      .first();
+
     return {
       ...result,
-      canRead: true, // TODO
-      canCreate: true, // TODO
+      canRead: !!permission?.canReadTeamMemberRead,
+      canCreate: !!permission?.canReadTeamMemberCreate,
     };
   }
 
@@ -730,10 +769,35 @@ export class ProjectService {
       session
     );
 
+    const permission = await this.db
+      .query()
+      .match([
+        [
+          node('requestingUser'),
+          relation('in', '', 'member', { active: true }),
+          node('', 'SecurityGroup', { active: true }),
+          relation('out', '', 'permission', { active: true }),
+          node('canReadPartnership', 'Permission', {
+            property: 'partnership',
+            active: true,
+            read: true,
+          }),
+        ],
+      ])
+      .return({
+        canReadPartnership: [
+          {
+            read: 'canReadPartnershipRead',
+            edit: 'canReadPartnershipCreate',
+          },
+        ],
+      })
+      .first();
+
     return {
       ...result,
-      canCreate: true,
-      canRead: true,
+      canRead: !!permission?.canReadPartnershipRead,
+      canCreate: !!permission?.canReadPartnershipCreate,
     };
   }
 
