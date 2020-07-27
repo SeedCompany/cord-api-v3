@@ -440,7 +440,6 @@ export class PartnershipService {
     });
 
     const readProject = await projectMapPartner.first();
-    console.log('readProject', JSON.stringify(readProject, null, 2));
 
     let mouStart = null;
     let mouEnd = null;
@@ -617,12 +616,23 @@ export class PartnershipService {
     );
     const items = await Promise.all(
       result.items.map(async (item) => {
+        const resultOne = await this.readOne(item.id, session);
+
         return {
           ...item,
           types: {
             value: item.types.value ? item.types.value : [],
             canRead: !!item.types.canRead,
             canEdit: !!item.types.canEdit,
+          mouStart: {
+            value: resultOne.mouStart.value,
+            canRead: resultOne.mouStart.canRead,
+            canEdit: false, // edit the project mou or edit the partnerhsip mou override
+          },
+          mouEnd: {
+            value: resultOne.mouEnd.value,
+            canRead: resultOne.mouEnd.canRead,
+            canEdit: false, // edit the project mou or edit the partnerhsip mou override
           },
           organization: await this.orgService.readOne(
             (item as any).organizationId,
