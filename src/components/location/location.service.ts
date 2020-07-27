@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  ForbiddenException,
   Injectable,
   NotFoundException,
   InternalServerErrorException as ServerException,
@@ -11,14 +10,22 @@ import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
 import {
+  addAllMetaPropertiesOfChildBaseNodes,
+  addAllSecureProperties,
+  addPropertyCoalesceWithClause,
+  addShapeForBaseNodeMetaProperty,
+  addShapeForChildBaseNodeMetaProperty,
+  ChildBaseNodeMetaProperty,
   ConfigService,
   DatabaseService,
   ILogger,
   Logger,
+  matchRequestingUser,
   matchSession,
+  matchUserPermissions,
   OnIndex,
 } from '../../core';
-import { RedactedUser, User, UserService } from '../user';
+import { UserService } from '../user';
 import {
   Country,
   CreateCountry,
@@ -278,56 +285,14 @@ export class LocationService {
   async readOneZone(id: string, session: ISession): Promise<Zone> {
     this.logger.info(`Query readOne Zone`, { id, userId: session.userId });
 
-    const readZone = this.db
-      .query()
-      .match(matchSession(session))
-      .match([node('zone', 'Zone', { active: true, id })])
+    const props = ['name'];
+    const baseNodeMetaProps = ['id', 'createdAt'];
 
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canEditName', 'Permission', {
-          property: 'name',
-          active: true,
-          edit: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('zone'),
-        relation('out', '', 'name', { active: true }),
-        node('zoneName', 'Property', { active: true }),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canEditDirector', 'Permission', {
-          property: 'director',
-          active: true,
-          edit: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('zone'),
-        relation('out', '', 'director', { active: true }),
-        node('director', 'User', { active: true }),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canReadName', 'Permission', {
-          property: 'name',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('zone'),
-        relation('out', '', 'name', { active: true }),
-        node('zoneName', 'Property', { active: true }),
-      ])
+    const query = this.db
+      .query()
+      .call(matchRequestingUser, session)
+      .call(matchUserPermissions, 'Zone', id)
+      .call(addAllSecureProperties, ...props)
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
@@ -343,48 +308,52 @@ export class LocationService {
         relation('out', '', 'director', { active: true }),
         node('director', 'User', { active: true }),
       ])
-      .return({
-        zone: [{ id: 'id', createdAt: 'createdAt' }],
-        zoneName: [{ value: 'name' }],
-        requestingUser: [{ canReadZone: 'canReadZone' }],
-        canReadName: [{ read: 'canReadName' }],
-        canReadDirector: [{ read: 'canReadDirector' }],
-        canEditName: [{ edit: 'canEditName' }],
-        canEditDirector: [{ edit: 'canEditDirector' }],
-        director: [{ id: 'directorId' }],
-      });
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node('canEditDirector', 'Permission', {
+          property: 'director',
+          active: true,
+          edit: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('zone'),
+      ])
+      .with([
+        ...props.map(addPropertyCoalesceWithClause),
+        ...baseNodeMetaProps.map(addShapeForBaseNodeMetaProperty),
+        'node',
+        'director.id as directorId',
+        'canReadDirector.read as canReadDirector',
+        'canEditDirector.edit as canEditDirector',
+      ])
+      .returnDistinct([
+        ...props,
+        ...baseNodeMetaProps,
+        'directorId',
+        'canReadDirector',
+        'canEditDirector',
+        'labels(node) as labels',
+      ]);
 
-    const result = await readZone.first();
-    if (!result || !result.id) {
+    const result = await query.first();
+    if (!result) {
       this.logger.error(`Could not find zone`);
       throw new NotFoundException('Could not find zone');
     }
 
-    if (!result.canReadZone) {
-      throw new ForbiddenException(
-        'User does not have permission to read this zone'
-      );
-    }
-
-    let director: User = RedactedUser;
-    if (result.canReadDirector) {
-      director = await this.userService.readOne(result.directorId, session);
-    }
-
-    return {
-      id: result.id,
-      name: {
-        value: result.name,
-        canRead: !!result.canReadName,
-        canEdit: !!result.canEditName,
-      },
+    const response: any = {
+      ...result,
       director: {
-        value: { ...director },
-        canEdit: !!result.canEditDirector,
+        value: await this.userService.readOne(result.directorId, session),
         canRead: !!result.canReadDirector,
+        canEdit: !!result.canEditDirector,
       },
-      createdAt: result.createdAt,
     };
+
+    return (response as unknown) as Zone;
   }
 
   async createZone(
@@ -502,28 +471,44 @@ export class LocationService {
 
   async readOneRegion(id: string, session: ISession): Promise<Region> {
     this.logger.info(`Query readOne Region`, { id, userId: session.userId });
+
     if (!id) {
       throw new BadRequestException('No region id to search for');
     }
-    const readRegion = this.db
-      .query()
-      .match(matchSession(session))
-      .match([node('region', 'Region', { active: true, id })])
 
+    const props = ['name'];
+    const baseNodeMetaProps = ['id', 'createdAt'];
+
+    const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
+      {
+        parentBaseNodePropertyKey: 'zone',
+        parentRelationDirection: 'out',
+        childBaseNodeLabel: 'Zone',
+        childBaseNodeMetaPropertyKey: 'id',
+        returnIdentifier: 'zoneId',
+      },
+    ];
+
+    const query = this.db
+      .query()
+      .call(matchRequestingUser, session)
+      .call(matchUserPermissions, 'Region', id)
+      .call(addAllSecureProperties, ...props)
+      .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member', { active: true }),
         node('', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission', { active: true }),
-        node('canEditName', 'Permission', {
-          property: 'name',
+        node('canReadDirector', 'Permission', {
+          property: 'director',
           active: true,
-          edit: true,
+          read: true,
         }),
         relation('out', '', 'baseNode', { active: true }),
-        node('region'),
-        relation('out', '', 'name', { active: true }),
-        node('regionName', 'Property', { active: true }),
+        node('zone'),
+        relation('out', '', 'director', { active: true }),
+        node('director', 'User', { active: true }),
       ])
       .optionalMatch([
         node('requestingUser'),
@@ -536,136 +521,52 @@ export class LocationService {
           edit: true,
         }),
         relation('out', '', 'baseNode', { active: true }),
-        node('region'),
-        relation('out', '', 'director', { active: true }),
-        node('director', 'User', { active: true }),
+        node('zone'),
       ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canEditZone', 'Permission', {
-          property: 'zone',
-          active: true,
-          edit: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('region'),
-        relation('out', '', 'zone', { active: true }),
-        node('zone', 'Zone', { active: true }),
+      .with([
+        ...props.map(addPropertyCoalesceWithClause),
+        ...childBaseNodeMetaProps.map(addShapeForChildBaseNodeMetaProperty),
+        ...baseNodeMetaProps.map(addShapeForBaseNodeMetaProperty),
+        'node',
+        'director.id as directorId',
+        'canReadDirector.read as canReadDirector',
+        'canEditDirector.edit as canEditDirector',
+        'coalesce(zoneReadPerm.read, false) as canReadZone',
+        'coalesce(zoneEditPerm.edit, false) as canEditZone',
       ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canReadName', 'Permission', {
-          property: 'name',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('region'),
-        relation('out', '', 'name', { active: true }),
-        node('regionName', 'Property', { active: true }),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canReadDirector', 'Permission', {
-          property: 'director',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('region'),
-        relation('out', '', 'director', { active: true }),
-        node('director', 'User', { active: true }),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canReadZone', 'Permission', {
-          property: 'zone',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('region'),
-        relation('out', '', 'zone', { active: true }),
-        node('zone', 'Zone', { active: true }),
-      ])
-      .return({
-        region: [{ id: 'id', createdAt: 'createdAt' }],
-        regionName: [{ value: 'name' }],
-        requestingUser: [{ canReadRegion: 'canReadRegion' }],
-        canReadName: [{ read: 'canReadName' }],
-        canReadZone: [{ read: 'canReadZone' }],
-        canReadDirector: [{ read: 'canReadDirector' }],
-        canEditName: [{ edit: 'canEditName' }],
-        canEditZone: [{ edit: 'canEditZone' }],
-        canEditDirector: [{ edit: 'canEditDirector' }],
-        director: [{ id: 'directorId' }],
-        zone: [{ id: 'zoneId' }],
-      });
+      .returnDistinct([
+        ...props,
+        ...baseNodeMetaProps,
+        ...childBaseNodeMetaProps.map((x) => x.returnIdentifier),
+        'directorId',
+        'canReadDirector',
+        'canEditDirector',
+        'canReadZone',
+        'canEditZone',
+        'labels(node) as labels',
+      ]);
 
-    const result = await readRegion.first();
-
-    if (!result || !result.id) {
+    const result = await query.first();
+    if (!result) {
       this.logger.error(`Could not find region`);
       throw new NotFoundException('Could not find region');
     }
 
-    if (!result.canReadRegion) {
-      throw new ForbiddenException(
-        'User does not have permission to read this region'
-      );
-    }
-    // fill in the director info if you can read it
-    let director: User = RedactedUser;
-    if (result.canReadDirector) {
-      director = await this.userService.readOne(result.directorId, session);
-    }
-
-    // fill in the zone id
-    let zone: Zone = {
-      id: '',
-      createdAt: DateTime.fromSeconds(0),
-      name: { value: '', canRead: false, canEdit: false },
-      director: { value: RedactedUser, canRead: false, canEdit: false },
-    };
-    if (result.canReadZone) {
-      zone = await this.readOneZone(result.zoneId, session);
-    }
-
-    return {
-      id: result.id,
-      name: {
-        value: result.name,
-        canRead: !!result.canReadName,
-        canEdit: !!result.canEditName,
-      },
+    const response: any = {
+      ...result,
       director: {
-        value: {
-          ...director,
-        },
-        canEdit: !!result.canEditDirector,
+        value: await this.userService.readOne(result.directorId, session),
         canRead: !!result.canReadDirector,
+        canEdit: !!result.canEditDirector,
       },
       zone: {
-        value: {
-          ...zone,
-        },
+        value: await this.readOneZone(result.zoneId, session),
         canRead: !!result.canReadZone,
         canEdit: !!result.canEditZone,
       },
-      createdAt: result.createdAt,
     };
+
+    return (response as unknown) as Region;
   }
 
   async createRegion(
@@ -801,133 +702,63 @@ export class LocationService {
 
   async readOneCountry(id: string, session: ISession): Promise<Country> {
     this.logger.info(`Query readOne Country`, { id, userId: session.userId });
+
     if (!id) {
       throw new BadRequestException('No country id to search for');
     }
-    const readCountry = this.db
+
+    const props = ['name'];
+    const baseNodeMetaProps = ['id', 'createdAt'];
+
+    const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
+      {
+        parentBaseNodePropertyKey: 'region',
+        parentRelationDirection: 'out',
+        childBaseNodeLabel: 'Region',
+        childBaseNodeMetaPropertyKey: 'id',
+        returnIdentifier: 'regionId',
+      },
+    ];
+
+    const query = this.db
       .query()
-      .match(matchSession(session))
-      .match([node('country', 'Country', { active: true, id })])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canReadName', 'Permission', {
-          property: 'name',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('country'),
-        relation('out', '', 'name', { active: true }),
-        node('countryName', 'Property', { active: true }),
+      .call(matchRequestingUser, session)
+      .call(matchUserPermissions, 'Country', id)
+      .call(addAllSecureProperties, ...props)
+      .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
+      .with([
+        ...props.map(addPropertyCoalesceWithClause),
+        ...childBaseNodeMetaProps.map(addShapeForChildBaseNodeMetaProperty),
+        ...baseNodeMetaProps.map(addShapeForBaseNodeMetaProperty),
+        'node',
+        'coalesce(regionReadPerm.read, false) as canReadRegion',
+        'coalesce(regionEditPerm.edit, false) as canEditRegion',
       ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canReadRegion', 'Permission', {
-          property: 'region',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('country'),
-        relation('out', '', 'region', { active: true }),
-        node('region', 'Region', { active: true }),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canEditName', 'Permission', {
-          property: 'name',
-          active: true,
-          edit: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('country'),
-        relation('out', '', 'name', { active: true }),
-        node('countryName', 'Property', { active: true }),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canEditRegion', 'Permission', {
-          property: 'region',
-          active: true,
-          edit: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('country'),
-        relation('out', '', 'region', { active: true }),
-        node('region', 'Region', { active: true }),
-      ])
-      .return({
-        country: [{ id: 'id', createdAt: 'createdAt' }],
-        countryName: [{ value: 'name' }],
-        requestingUser: [{ canReadCountry: 'canReadCountry' }],
-        canReadName: [{ read: 'canReadName' }],
-        canReadRegion: [{ read: 'canReadRegion' }],
-        canEditName: [{ edit: 'canEditName' }],
-        canEditRegion: [{ edit: 'canEditRegion' }],
-        region: [{ id: 'regionId' }],
-      });
+      .returnDistinct([
+        ...props,
+        ...baseNodeMetaProps,
+        ...childBaseNodeMetaProps.map((x) => x.returnIdentifier),
+        'canReadRegion',
+        'canEditRegion',
+        'labels(node) as labels',
+      ]);
 
-    const result = await readCountry.first();
-
-    if (!result || !result.id) {
+    const result = await query.first();
+    if (!result) {
       this.logger.error(`Could not find country`);
       throw new NotFoundException('Could not find country');
     }
 
-    if (!result.canReadCountry) {
-      throw new ForbiddenException(
-        'User does not have permission to read this country'
-      );
-    }
-
-    let region: Region = {
-      id: '',
-      createdAt: DateTime.fromSeconds(0),
-      name: { value: '', canRead: false, canEdit: false },
-      director: { value: RedactedUser, canRead: false, canEdit: false },
-      zone: {
-        canRead: false,
-        canEdit: false,
-        value: {
-          id: '',
-          createdAt: DateTime.fromSeconds(0),
-          name: { value: '', canRead: false, canEdit: false },
-          director: { value: RedactedUser, canRead: false, canEdit: false },
-        },
-      },
-    };
-    if (result.canReadRegion) {
-      region = await this.readOneRegion(result.regionId, session);
-    }
-
-    return {
-      id: result.id,
-      name: {
-        value: result.name,
-        canRead: !!result.canReadName,
-        canEdit: !!result.canEditName,
-      },
+    const response: any = {
+      ...result,
       region: {
-        value: {
-          ...region,
-        },
+        value: await this.readOneRegion(result.regionId, session),
         canRead: !!result.canReadRegion,
         canEdit: !!result.canEditRegion,
       },
-      createdAt: result.createdAt,
     };
+
+    return (response as unknown) as Country;
   }
 
   async createCountry(
