@@ -4,7 +4,7 @@ import {
   NotFoundException,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { inArray, node, regexp, relation } from 'cypher-query-builder';
 import { first, intersection } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
@@ -24,6 +24,7 @@ import {
   matchSession,
   matchUserPermissions,
   OnIndex,
+  runListQuery,
 } from '../../core';
 import { UserService } from '../user';
 import {
@@ -200,38 +201,52 @@ export class LocationService {
     }
   }
 
-  // TODO Filter types is irrelevant right now
-  // TODO hasMore is not implemented
   async list(
-    { page, count, sort, order, filter }: LocationListInput,
+    { filter, ...input }: LocationListInput,
     session: ISession
   ): Promise<LocationListOutput> {
-    const result = await this.db
-      .query()
-      .raw(
-        `
-          MATCH (name: Property:LocationName)<-[:name]-(location)
-          WHERE name.value CONTAINS $filter
-          RETURN location.id as id, name.value as name
-          ORDER BY ${sort} ${order}
-          SKIP $skip LIMIT $count
-        `,
-        {
-          skip: (page - 1) * count,
-          count,
-          filter: filter.name ?? '',
-        }
-      )
-      .run();
+    const types = filter.types ?? ['Zone', 'Region', 'Country'];
 
+    const query = this.db
+      .query()
+      .call(matchRequestingUser, session)
+      .match([
+        node('requestingUser'),
+        relation('in', '', 'member', {}, [1]),
+        node('', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission'),
+        node('perms', 'Permission', { active: true }),
+        relation('out', '', 'baseNode'),
+        node('location', { active: true }),
+      ])
+      .match([
+        node('name', ['Property', 'LocationName']),
+        relation('in', '', 'name'),
+        node('location'),
+      ])
+      .with(
+        'name, location, head([x IN labels(location) WHERE x <> "BaseNode"]) as label'
+      )
+      .where({
+        name: { value: regexp(`.*${filter.name}.*`, true) },
+        label: inArray(types),
+      }).with(`{ 
+        id: location.id, 
+        createdAt: location.createdAt, 
+        name: name.value 
+      } as node`);
+
+    const result = await runListQuery(query, input, false);
+    if (!result) {
+      throw new BadRequestException('No location');
+    }
     const items = await Promise.all(
-      result.map((row) => this.readOne(row.id, session))
+      result.items.map((row: any) => this.readOne(row.id, session))
     );
 
     return {
+      ...(result as LocationListOutput),
       items,
-      total: items.length,
-      hasMore: false, // TODO
     };
   }
 
