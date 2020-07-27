@@ -302,12 +302,13 @@ export class BudgetService {
       throw new NotFoundException('Could not find budget');
     }
 
+    // TODO: refactor to make the count adjustable
     const records = await this.listRecords(
       {
         sort: 'fiscalYear',
         order: Order.ASC,
         page: 1,
-        count: 25,
+        count: 1000,
         filter: { budgetId: id },
       },
       session
