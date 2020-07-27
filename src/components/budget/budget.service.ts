@@ -7,14 +7,21 @@ import {
 import { node, Query, relation } from 'cypher-query-builder';
 import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
-import { generate } from 'shortid';
 import { ISession, Order } from '../../common';
 import {
+  addAllSecureProperties,
+  addBaseNodeMetaPropsWithClause,
   ConfigService,
+  createBaseNode,
   DatabaseService,
   ILogger,
+  listWithSecureObject,
   Logger,
+  matchRequestingUser,
   matchSession,
+  matchUserPermissions,
+  Property,
+  runListQuery,
 } from '../../core';
 import {
   Budget,
@@ -168,95 +175,171 @@ export class BudgetService {
       throw new NotFoundException('project does not exist');
     }
 
-    const id = generate();
-    const createdAt = DateTime.local();
-    const status = BudgetStatus.Pending;
+    const secureProps: Property[] = [
+      {
+        key: 'status',
+        value: BudgetStatus.Pending,
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+    ];
 
     try {
       const createBudget = this.db
         .query()
-        .match(matchSession(session, { withAclEdit: 'canCreateBudget' }))
+        .call(matchRequestingUser, session)
         .match([
-          node('rootuser', 'User', {
+          node('root', 'User', {
             active: true,
             id: this.config.rootAdmin.id,
           }),
-        ])
-        .create([
-          [
-            node('budget', 'Budget:BaseNode', {
-              active: true,
-              createdAt,
-              id,
-              owningOrgId: session.owningOrgId,
-            }),
-          ],
-          ...this.property('status', status, 'budget'),
-          [
-            node('adminSG', 'SecurityGroup', {
-              id: generate(),
-              active: true,
-              createdAt,
-              name: projectId + ' admin',
-            }),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('requestingUser'),
-          ],
-          [
-            node('readerSG', 'SecurityGroup', {
-              id: generate(),
-              active: true,
-              createdAt,
-              name: projectId + ' users',
-            }),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('requestingUser'),
-          ],
-          [
-            node('adminSG'),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('rootuser'),
-          ],
-          [
-            node('readerSG'),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('rootuser'),
-          ],
-          ...this.permission('status', 'budget'),
-        ])
-        .return('budget.id as id');
+        ]);
+      createBudget.call(createBaseNode, 'Budget', secureProps, {
+        owningOrgId: session.owningOrgId,
+      });
+      createBudget.return('node.id as id');
 
-      await createBudget.first();
+      const result = await createBudget.first();
+
+      if (!result) {
+        throw new ServerException('failed to create a budget');
+      }
 
       // connect budget to project
       await this.db
         .query()
         .matchNode('project', 'Project', { id: projectId, active: true })
-        .matchNode('budget', 'Budget', { id, active: true })
+        .matchNode('budget', 'Budget', { id: result.id, active: true })
         .create([
           node('project'),
           relation('out', '', 'budget', {
             active: true,
-            createdAt: DateTime.local(),
+            createdAt: DateTime.local().toString(),
           }),
           node('budget'),
         ])
         .run();
 
       this.logger.info(`Created Budget`, {
-        id,
+        id: result.id,
         userId: session.userId,
       });
+
+      return await this.readOne(result.id, session);
     } catch (e) {
       this.logger.error(`Could not create budget`, {
-        id,
         userId: session.userId,
         exception: e,
       });
       throw new ServerException('Could not create budget');
     }
+  }
 
-    return this.readOne(id, session);
+  async createRecord(
+    { budgetId, organizationId, ...input }: CreateBudgetRecord,
+    session: ISession
+  ): Promise<BudgetRecord> {
+    if (!input.fiscalYear || !organizationId) {
+      throw new BadRequestException();
+    }
+
+    this.logger.info('Creating BudgetRecord', input);
+    // on Init, create a budget will create a budget record for each org and each fiscal year in the project input.projectId
+    const createdAt = DateTime.local().toString();
+
+    const secureProps: Property[] = [
+      {
+        key: 'fiscalYear',
+        value: input.fiscalYear,
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'amount',
+        value: '0',
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+    ];
+
+    try {
+      const createBudgetRecord = this.db
+        .query()
+        .call(matchRequestingUser, session)
+        .match([
+          node('root', 'User', {
+            active: true,
+            id: this.config.rootAdmin.id,
+          }),
+        ]);
+      createBudgetRecord.call(createBaseNode, 'BudgetRecord', secureProps, {
+        owningOrgId: session.owningOrgId,
+      });
+      createBudgetRecord
+        .create([...this.permission('organization', 'node')])
+        .return('node.id as id');
+
+      const result = await createBudgetRecord.first();
+
+      if (!result) {
+        throw new ServerException('failed to create a budget record');
+      }
+
+      this.logger.info(`Created Budget Record`, {
+        id: result.id,
+        userId: session.userId,
+      });
+
+      // connect to budget
+      const query = this.db
+        .query()
+        .match([node('budget', 'Budget', { id: budgetId, active: true })])
+        .match([node('br', 'BudgetRecord', { id: result.id, active: true })])
+        .create([
+          node('budget'),
+          relation('out', '', 'record', { active: true, createdAt }),
+          node('br'),
+        ])
+        .return('br');
+      await query.first();
+
+      // connect budget record to org
+      const orgQuery = this.db
+        .query()
+        .match([
+          node('organization', 'Organization', {
+            id: organizationId,
+            active: true,
+          }),
+        ])
+        .match([node('br', 'BudgetRecord', { id: result.id, active: true })])
+        .create([
+          node('br'),
+          relation('out', '', 'organization', { active: true, createdAt }),
+          node('organization'),
+        ])
+        .return('br');
+      await orgQuery.first();
+
+      const bugetRecord = await this.readOneRecord(result.id, session);
+
+      return bugetRecord;
+    } catch (exception) {
+      this.logger.error(`Could not create Budget Record`, {
+        userId: session.userId,
+        exception,
+      });
+      throw new ServerException('Could not create Budget Record');
+    }
   }
 
   async readOne(id: string, session: ISession): Promise<Budget> {
@@ -265,31 +348,21 @@ export class BudgetService {
       userId: session.userId,
     });
 
+    const baseNodeMetaProps = ['id', 'createdAt', 'type'];
+    const secureProps = ['status'];
     const readBudget = this.db
       .query()
-      .match(matchSession(session, { withAclRead: 'canReadBudgets' }))
-      .match([node('budget', 'Budget', { active: true, id })]);
-    this.propMatch(readBudget, 'status', 'budget');
-    readBudget.return({
-      budget: [{ id: 'id', createdAt: 'createdAt' }],
-      status: [{ value: 'status' }],
-      canReadStatus: [
-        {
-          read: 'canReadStatus',
-        },
-      ],
-      canEditStatus: [
-        {
-          edit: 'canEditStatus',
-        },
-      ],
-      requestingUser: [
-        {
-          canReadBudgets: 'canReadBudgets',
-          canCreateBudget: 'canCreateBudget',
-        },
-      ],
-    });
+      .call(matchRequestingUser, session)
+      .call(matchUserPermissions, 'Budget', id)
+      .call(addAllSecureProperties, ...secureProps)
+      .return(
+        `
+          {
+            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
+            ${listWithSecureObject(secureProps)}
+          } as budget
+        `
+      );
 
     let result;
     try {
@@ -314,263 +387,13 @@ export class BudgetService {
     );
 
     return {
-      id: result.id,
-      createdAt: result.createdAt,
-      status: result.canReadStatus ? result.status : undefined,
+      id,
+      createdAt: result.budget.createdAt,
+      status: result.budget.status.canRead
+        ? result.budget.status.value
+        : undefined,
       records: records.items,
     };
-  }
-
-  async list(
-    input: Partial<BudgetListInput>,
-    session: ISession
-  ): Promise<BudgetListOutput> {
-    const { page, count, sort, order, filter } = {
-      ...BudgetListInput.defaultVal,
-      ...input,
-    };
-
-    let result: {
-      items: Budget[];
-      hasMore: boolean;
-      total: number;
-    } = { items: [], hasMore: false, total: 0 };
-
-    const { projectId } = filter;
-    this.logger.info('Listing budgets on projectId ', {
-      projectId,
-      userId: session.userId,
-    });
-
-    if (projectId) {
-      const query = `
-      MATCH
-        (token:Token {active: true, value: $token})
-        <-[:token {active: true}]-
-        (requestingUser:User {
-          active: true,
-          id: $requestingUserId
-        }),
-        (project:Project {id: $projectId, active: true, owningOrgId: $owningOrgId})
-        -[:budget]->(budget:Budget {active:true})
-      WITH COUNT(budget) as total, project, budget
-          OPTIONAL MATCH (requestingUser)<-[:member { active: true }]-(sg:SecurityGroup { active: true })-[:permission { active: true }]
-          ->(canEditStatus:Permission { property: 'status', active: true, edit: true })
-          -[:baseNode { active: true }]->(budget)-[:status { active: true }]->(status:Property { active: true })
-          OPTIONAL MATCH (requestingUser)<-[:member { active: true }]-(sg:SecurityGroup { active: true })-[:permission { active: true }]
-          ->(canReadStatus:Permission { property: 'status', active: true, read: true })
-          -[:baseNode { active: true }]->(budget)-[:status { active: true }]->(status:Property { active: true })
-          RETURN DISTINCT total, budget.id as budgetId, status.value as status, canReadStatus.read AS canReadStatus, canEditStatus.edit AS canEditStatus
-          ORDER BY ${sort} ${order}
-      `;
-      let projBudgets = await this.db
-        .query()
-        .raw(query, {
-          token: session.token,
-          requestingUserId: session.userId,
-          owningOrgId: session.owningOrgId,
-          projectId,
-        })
-        .run();
-
-      result.total = projBudgets.length;
-      result.hasMore = count * page < result.total ?? true;
-
-      projBudgets = projBudgets.splice((page - 1) * count, count);
-
-      result.items = await Promise.all(
-        projBudgets.map(async (budget) =>
-          this.readOne(budget.budgetId, session)
-        )
-      );
-    } else {
-      result = await this.db.list<Budget>({
-        session,
-        nodevar: 'budget',
-        aclReadProp: 'canReadBudgets',
-        aclEditProp: 'canCreateBudget',
-        props: [{ name: 'status', secure: false }],
-        input: {
-          page,
-          count,
-          sort,
-          order,
-          filter,
-        },
-      });
-
-      const items = await Promise.all(
-        result.items.map(async (item) => {
-          const records = await this.listRecords(
-            {
-              sort: 'fiscalYear',
-              order: Order.ASC,
-              page: 1,
-              count: 75,
-              filter: { budgetId: item.id },
-            },
-            session
-          );
-          return {
-            ...item,
-            records: records.items,
-          };
-        })
-      );
-      result.items = items;
-    }
-
-    return {
-      items: result.items,
-      hasMore: result.hasMore,
-      total: result.total,
-    };
-  }
-
-  async update(input: UpdateBudget, session: ISession): Promise<Budget> {
-    const budget = await this.readOne(input.id, session);
-
-    return this.db.sgUpdateProperties({
-      session,
-      object: budget,
-      props: ['status'],
-      changes: input,
-      nodevar: 'budget',
-    });
-  }
-
-  async delete(id: string, session: ISession): Promise<void> {
-    const budget = await this.readOne(id, session);
-
-    // cascade delete each budget record in this budget
-    await Promise.all(
-      budget.records.map((br) => this.deleteRecord(br.id, session))
-    );
-    await this.db.deleteNode({
-      session,
-      object: budget,
-      aclEditProp: 'canCreateBudget',
-    });
-  }
-
-  async createRecord(
-    { budgetId, organizationId, ...input }: CreateBudgetRecord,
-    session: ISession
-  ): Promise<BudgetRecord> {
-    if (!input.fiscalYear || !organizationId) {
-      throw new BadRequestException();
-    }
-
-    this.logger.info('Creating BudgetRecord', input);
-    // on Init, create a budget will create a budget record for each org and each fiscal year in the project input.projectId
-    const id = generate();
-    const createdAt = DateTime.local();
-
-    try {
-      const createBudgetRecord = this.db
-        .query()
-        .match(matchSession(session, { withAclEdit: 'canCreateBudget' }))
-        .match([
-          node('rootuser', 'User', {
-            active: true,
-            id: this.config.rootAdmin.id,
-          }),
-        ])
-        .create([
-          [
-            node('budgetRecord', 'BudgetRecord:BaseNode', {
-              active: true,
-              createdAt,
-              id,
-              owningOrgId: session.owningOrgId,
-            }),
-          ],
-          ...this.property('fiscalYear', input.fiscalYear, 'budgetRecord'),
-          ...this.property('amount', '0', 'budgetRecord'),
-          [
-            node('adminSG', 'SecurityGroup', {
-              id: generate(),
-              active: true,
-              createdAt,
-              name: input.fiscalYear.toString() + ' admin',
-            }),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('requestingUser'),
-          ],
-          [
-            node('readerSG', 'SecurityGroup', {
-              id: generate(),
-              active: true,
-              createdAt,
-              name: input.fiscalYear.toString() + ' users',
-            }),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('requestingUser'),
-          ],
-          [
-            node('adminSG'),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('rootuser'),
-          ],
-          [
-            node('readerSG'),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('rootuser'),
-          ],
-          ...this.permission('fiscalYear', 'budgetRecord'),
-          ...this.permission('amount', 'budgetRecord'),
-          ...this.permission('organization', 'budgetRecord'),
-        ])
-        .return('budgetRecord.id as id');
-
-      await createBudgetRecord.first();
-
-      this.logger.info(`Created Budget Record`, {
-        id,
-        userId: session.userId,
-      });
-
-      // connect to budget
-      const query = `
-      MATCH
-        (budget:Budget {id: $budgetId, active: true}),
-        (br:BudgetRecord {id: $id, active: true})
-      CREATE (budget)-[:record {active: true, createdAt: datetime()}]->(br)
-    `;
-      await this.db
-        .query()
-        .raw(query, {
-          budgetId,
-          id,
-        })
-        .first();
-
-      // connect budget record to org
-      const orgQuery = `
-        MATCH
-        (organization:Organization {id: $organizationId, active: true}),
-        (br:BudgetRecord {id: $id, active: true})
-      CREATE (br)-[:organization {active: true, createdAt: datetime()}]->(organization)
-    `;
-      await this.db
-        .query()
-        .raw(orgQuery, {
-          organizationId,
-          id,
-        })
-        .first();
-
-      const result = await this.readOneRecord(id, session);
-
-      return result;
-    } catch (exception) {
-      this.logger.error(`Could not create Budget Record`, {
-        id,
-        userId: session.userId,
-        exception,
-      });
-      throw new ServerException('Could not create Budget Record');
-    }
   }
 
   async readOneRecord(id: string, session: ISession): Promise<BudgetRecord> {
@@ -579,13 +402,14 @@ export class BudgetService {
       userId: session.userId,
     });
 
-    const readBudgetRecord = this.db
+    const baseNodeMetaProps = ['id', 'createdAt'];
+    const secureProps = ['amount', 'fiscalYear'];
+    const readQuery = this.db
       .query()
-      .match(matchSession(session, { withAclRead: 'canReadBudgets' }))
-      .match([node('budgetRecord', 'BudgetRecord', { active: true, id })]);
-    this.propMatch(readBudgetRecord, 'amount', 'budgetRecord');
-    this.propMatch(readBudgetRecord, 'fiscalYear', 'budgetRecord');
-    readBudgetRecord.optionalMatch([
+      .call(matchRequestingUser, session)
+      .call(matchUserPermissions, 'BudgetRecord', id)
+      .call(addAllSecureProperties, ...secureProps);
+    readQuery.optionalMatch([
       node('requestingUser'),
       relation('in', '', 'member', { active: true }),
       node('', 'SecurityGroup', { active: true }),
@@ -596,56 +420,47 @@ export class BudgetService {
         edit: true,
       }),
       relation('out', '', 'baseNode', { active: true }),
-      node('budgetRecord'),
+      node('node'),
       relation('out', '', 'organization', { active: true }),
       node('organization', 'Organization', { active: true }),
       relation('out', '', 'name', { active: true }),
       node('organizationName', 'Property', { active: true }),
     ]);
-    readBudgetRecord.optionalMatch([
-      node('requestingUser'),
-      relation('in', '', 'member', { active: true }),
-      node('', 'SecurityGroup', { active: true }),
-      relation('out', '', 'permission', { active: true }),
-      node('canReadOrganization', 'Permission', {
-        property: 'organization',
-        active: true,
-        read: true,
-      }),
-      relation('out', '', 'baseNode', { active: true }),
-      node('budgetRecord'),
-      relation('out', '', 'organization', { active: true }),
-      node('organization', 'Organization', { active: true }),
-      relation('out', '', 'name', { active: true }),
-      node('organizationName', 'Property', { active: true }),
-    ]);
-    readBudgetRecord.return({
-      budgetRecord: [{ id: 'id', createdAt: 'createdAt' }],
-      amount: [{ value: 'amount' }],
-      canReadAmount: [{ read: 'canReadAmount' }],
-      canEditAmount: [{ edit: 'canEditAmount' }],
-      fiscalYear: [{ value: 'fiscalYear' }],
-      canReadFiscalYear: [{ read: 'canReadFiscalYear' }],
-      canEditFiscalYear: [{ edit: 'canEditFiscalYear' }],
-      organization: [
-        { id: 'organizationId', createdAt: 'organizationCreatedAt' },
-      ],
-      organizationName: [{ value: 'organizationName' }],
-      canReadOrganization: [
-        {
-          read: 'canReadOrganization',
-        },
-      ],
-      canEditOrganization: [
-        {
-          edit: 'canEditOrganization',
-        },
-      ],
-    });
+    readQuery
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member', { active: true }),
+        node('', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission', { active: true }),
+        node('canReadOrganization', 'Permission', {
+          property: 'organization',
+          active: true,
+          read: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('node'),
+        relation('out', '', 'organization', { active: true }),
+        node('organization', 'Organization', { active: true }),
+        relation('out', '', 'name', { active: true }),
+        node('organizationName', 'Property', { active: true }),
+      ])
+      .return(
+        `
+          {
+            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
+            ${listWithSecureObject(secureProps)},
+            organizationId: organization.id,
+            organizationCreatedAt: organization.createdAt,
+            organizationName: organizationName.value,
+            canReadOrganization: canReadOrganization.read,
+            canEditOrganization: canEditOrganization.edit
+          } as budgetRecord
+        `
+      );
 
     let result;
     try {
-      result = await readBudgetRecord.first();
+      result = await readQuery.first();
     } catch (e) {
       this.logger.error('e :>> ', e);
     }
@@ -660,74 +475,35 @@ export class BudgetService {
 
     return {
       id,
-      createdAt: result.createdAt,
+      createdAt: result.budgetRecord.createdAt,
       organizationId: {
-        value: result.organizationId,
-        canRead: !!result.canReadOrganization,
-        canEdit: !!result.canEditOrganization,
+        value: result.budgetRecord.organizationId,
+        canRead: !!result.budgetRecord.canReadOrganization,
+        canEdit: !!result.budgetRecord.canEditOrganization,
       },
       fiscalYear: {
-        value: result.fiscalYear,
-        canRead: !!result.canReadFiscalYear,
-        canEdit: !!result.canEditFiscalYear,
+        value: result.budgetRecord.fiscalYear.value,
+        canRead: !!result.budgetRecord.fiscalYear.canRead,
+        canEdit: !!result.budgetRecord.fiscalYear.canEdit,
       },
       amount: {
-        value: result.amount,
-        canRead: !!result.canReadAmount,
-        canEdit: !!result.canEditAmount,
+        value: result.budgetRecord.amount.value,
+        canRead: !!result.budgetRecord.amount.canRead,
+        canEdit: !!result.budgetRecord.amount.canEdit,
       },
     };
   }
 
-  async listRecords(
-    { page, count, sort, order, filter }: BudgetRecordListInput,
-    session: ISession
-  ): Promise<BudgetRecordListOutput> {
-    const { budgetId } = filter;
-    this.logger.info('Listing budget records on budgetId ', {
-      budgetId,
-      userId: session.userId,
+  async update(input: UpdateBudget, session: ISession): Promise<Budget> {
+    const budget = await this.readOne(input.id, session);
+
+    return this.db.sgUpdateProperties({
+      session,
+      object: budget,
+      props: ['status'],
+      changes: input,
+      nodevar: 'budget',
     });
-
-    const query = `
-      MATCH
-        (token:Token {active: true, value: $token})
-        <-[:token {active: true}]-
-        (requestingUser:User {
-          active: true,
-          id: $requestingUserId
-        }),
-        (budget:Budget {id: $budgetId, active: true, owningOrgId: $owningOrgId})
-        -[:record]->(budgetRecord:BudgetRecord {active:true})
-      WITH COUNT(budgetRecord) as total, budgetRecord
-          MATCH (budgetRecord {active: true})-[:amount {active:true }]->(amount:Property {active: true}),
-          (budgetRecord)-[:organization { active: true }]->(org:Organization {active:true}),
-          (budgetRecord)-[:fiscalYear {active: true}]->(fiscalYear {active: true})
-          RETURN DISTINCT total, budgetRecord.id as budgetRecordId, fiscalYear.value as fiscalYear, org.id as orgId
-          ORDER BY ${sort} ${order}
-          SKIP $skip LIMIT $count
-      `;
-    const brs = await this.db
-      .query()
-      .raw(query, {
-        token: session.token,
-        requestingUserId: session.userId,
-        owningOrgId: session.owningOrgId,
-        budgetId,
-        skip: (page - 1) * count,
-        count,
-      })
-      .run();
-
-    const items = await Promise.all(
-      brs.map((br) => this.readOneRecord(br.budgetRecordId, session))
-    );
-
-    return {
-      items,
-      hasMore: false, // TODO
-      total: items.length,
-    };
   }
 
   async updateRecord(
@@ -782,6 +558,20 @@ export class BudgetService {
     }
   }
 
+  async delete(id: string, session: ISession): Promise<void> {
+    const budget = await this.readOne(id, session);
+
+    // cascade delete each budget record in this budget
+    await Promise.all(
+      budget.records.map((br) => this.deleteRecord(br.id, session))
+    );
+    await this.db.deleteNode({
+      session,
+      object: budget,
+      aclEditProp: 'canCreateBudget',
+    });
+  }
+
   async deleteRecord(id: string, session: ISession): Promise<void> {
     const br = await this.readOneRecord(id, session);
     await this.db.deleteNode({
@@ -789,6 +579,114 @@ export class BudgetService {
       object: br,
       aclEditProp: 'canCreateBudget',
     });
+  }
+
+  async list(
+    input: Partial<BudgetListInput>,
+    session: ISession
+  ): Promise<BudgetListOutput> {
+    const { sort, filter } = {
+      ...BudgetListInput.defaultVal,
+      ...input,
+    };
+
+    const { projectId } = filter;
+    this.logger.info('Listing budgets on projectId ', {
+      projectId,
+      userId: session.userId,
+    });
+    const secureProps = ['status'];
+
+    const query = this.db.query().call(matchRequestingUser, session);
+    if (projectId) {
+      query.match([
+        node('project', 'Project', {
+          id: projectId,
+          active: true,
+          owningOrgId: session.owningOrgId,
+        }),
+        relation('out', '', 'budget'),
+        node('node', 'Budget', { active: true }),
+      ]);
+    } else {
+      query.match([node('node', 'Budget', { active: true })]);
+    }
+    this.propMatch(query, 'status', 'node');
+
+    const listResult: {
+      items: Array<{
+        identity: string;
+        labels: string[];
+        properties: Budget;
+      }>;
+      hasMore: boolean;
+      total: number;
+    } = await runListQuery(
+      query,
+      {
+        ...BudgetListInput.defaultVal,
+        ...input,
+      },
+      secureProps.includes(sort)
+    );
+
+    const items = await Promise.all(
+      listResult.items.map((item) => {
+        return this.readOne(item.properties.id, session);
+      })
+    );
+
+    return {
+      items,
+      hasMore: listResult.hasMore,
+      total: listResult.total,
+    };
+  }
+
+  async listRecords(
+    { filter, ...input }: BudgetRecordListInput,
+    session: ISession
+  ): Promise<BudgetRecordListOutput> {
+    const { budgetId } = filter;
+    this.logger.info('Listing budget records on budgetId ', {
+      budgetId,
+      userId: session.userId,
+    });
+
+    const query = this.db
+      .query()
+      .call(matchRequestingUser, session)
+      .match([
+        node('budget', 'Budget', {
+          id: budgetId,
+          active: true,
+          owningOrgId: session.owningOrgId,
+        }),
+        relation('out', '', 'record'),
+        node('node', 'BudgetRecord', { active: true }),
+      ]);
+
+    const listResult: {
+      items: Array<{
+        identity: string;
+        labels: string[];
+        properties: BudgetRecord;
+      }>;
+      hasMore: boolean;
+      total: number;
+    } = await runListQuery(query, input);
+
+    const items = await Promise.all(
+      listResult.items.map((item) => {
+        return this.readOneRecord(item.properties.id, session);
+      })
+    );
+
+    return {
+      items,
+      hasMore: listResult.hasMore,
+      total: listResult.total,
+    };
   }
 
   async checkBudgetConsistency(session: ISession): Promise<boolean> {
