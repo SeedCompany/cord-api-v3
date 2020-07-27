@@ -389,7 +389,9 @@ export class BudgetService {
     return {
       id,
       createdAt: result.budget.createdAt,
-      status: result.budget.status.canRead ? result.budget.status : undefined,
+      status: result.budget.status.canRead
+        ? result.budget.status.value
+        : undefined,
       records: records.items,
     };
   }
