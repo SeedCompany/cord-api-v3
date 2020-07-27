@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
+import { DateTime } from 'luxon';
 import { ISession } from '../../common';
 import {
   addAllSecureProperties,
@@ -42,7 +43,55 @@ export class ProductService {
     @Logger('product:service') private readonly logger: ILogger
   ) {}
 
-  async create(input: CreateProduct, session: ISession): Promise<AnyProduct> {
+  permission = (property: string, nodeName: string, canEdit = false) => {
+    const createdAt = DateTime.local().toString();
+    return [
+      [
+        node('adminSG'),
+        relation('out', '', 'permission', {
+          active: true,
+          createdAt,
+        }),
+        node('', 'Permission', {
+          property,
+          active: true,
+          read: true,
+          edit: true,
+          admin: true,
+        }),
+        relation('out', '', 'baseNode', {
+          active: true,
+          createdAt,
+        }),
+        node(nodeName),
+      ],
+      [
+        node('readerSG'),
+        relation('out', '', 'permission', {
+          active: true,
+          createdAt,
+        }),
+        node('', 'Permission', {
+          property,
+          active: true,
+          read: true,
+          edit: canEdit,
+          admin: false,
+        }),
+        relation('out', '', 'baseNode', {
+          active: true,
+          createdAt,
+        }),
+        node(nodeName),
+      ],
+    ];
+  };
+
+  async create(
+    { engagementId, ...input }: CreateProduct,
+    session: ISession
+  ): Promise<AnyProduct> {
+    const createdAt = DateTime.local();
     // create product
     const secureProps: Property[] = [
       {
@@ -82,7 +131,15 @@ export class ProductService {
       .query()
       .match([
         node('root', 'User', { active: true, id: this.config.rootAdmin.id }),
-      ])
+      ]);
+
+    if (engagementId) {
+      query.match([
+        node('engagement', 'Engagement', { active: true, id: engagementId }),
+      ]);
+    }
+
+    query
       .match([
         node('publicSG', 'PublicSecurityGroup', {
           active: true,
@@ -92,8 +149,20 @@ export class ProductService {
       .call(matchRequestingUser, session)
       .call(createSG, 'orgSG', 'OrgPublicSecurityGroup')
       .call(createBaseNode, 'Product', secureProps)
-      .call(addUserToSG, 'requestingUser', 'adminSG') // must come after base node creation
-      .return('node.id as id');
+      .call(addUserToSG, 'requestingUser', 'adminSG'); // must come after base node creation
+
+    if (engagementId) {
+      query.create([
+        [
+          node('engagement'),
+          relation('in', '', 'engagement', { active: true, createdAt }),
+          node('node'),
+        ],
+        ...this.permission('product', 'engagement', true),
+      ]);
+    }
+
+    query.return('node.id as id');
 
     const result = await query.first();
 
@@ -242,7 +311,7 @@ export class ProductService {
         query,
         filter.engagementId,
         'engagement',
-        'out',
+        'in',
         label
       );
     }

@@ -139,4 +139,38 @@ describe('Product e2e', () => {
 
     expect(products.items.length).toBeGreaterThanOrEqual(numPartnerships);
   });
+
+  it('should return list of products filtered by engagementId', async () => {
+    // create 2 products
+    const numProducts = 2;
+    await Promise.all(
+      times(numProducts).map(() =>
+        createProduct(app, {
+          engagementId: engagement.id,
+        })
+      )
+    );
+
+    const { engagement: actual } = await app.graphql.query(
+      gql`
+        query engagement($id: ID!) {
+          engagement(id: $id) {
+            ... on LanguageEngagement {
+              id
+              products {
+                items {
+                  id
+                }
+              }
+            }
+          }
+        }
+      `,
+      {
+        id: engagement.id,
+      }
+    );
+
+    expect(actual.products.items.length).toBeGreaterThanOrEqual(numProducts);
+  });
 });
