@@ -383,21 +383,83 @@ export class PartnershipService {
       throw new NotFoundException('could not find Partnership');
     }
 
+    const projectMapPartner = this.db
+      .query()
+      .match(matchSession(session, { withAclRead: 'canReadPartnerships' }))
+      .match([node('partnership', 'Partnership', { active: true, id })]);
+    projectMapPartner.optionalMatch([
+      node('requestingUser'),
+      relation('in', '', 'member', { active: true }),
+      node('', 'SecurityGroup', { active: true }),
+      relation('out', '', 'permission', { active: true }),
+      node('projectMouStartPerm', 'Permission', {
+        property: 'mouStart',
+        active: true,
+        read: true,
+      }),
+      relation('out', '', 'baseNode', { active: true }),
+      node('project'),
+      relation('out', '', 'mouStart'),
+      node('projectMouStart', 'Property', {
+        active: true,
+      }),
+    ]);
+    projectMapPartner.optionalMatch([
+      node('requestingUser'),
+      relation('in', '', 'member', { active: true }),
+      node('', 'SecurityGroup', { active: true }),
+      relation('out', '', 'permission', { active: true }),
+      node('projectMouEndPerm', 'Permission', {
+        property: 'mouEnd',
+        active: true,
+        read: true,
+      }),
+      relation('out', '', 'baseNode', { active: true }),
+      node('project'),
+      relation('out', '', 'mouEnd'),
+      node('projectMouEnd', 'Property', {
+        active: true,
+      }),
+    ]);
+
+    projectMapPartner.return({
+      projectMouStart: [{ value: 'projectMouStart' }],
+      projectMouStartPerm: [
+        {
+          read: 'canReadProjectMouStart',
+          edit: 'canEditProjectMouStart',
+        },
+      ],
+      projectMouEnd: [{ value: 'projectMouEnd' }],
+      projectMouEndPerm: [
+        {
+          read: 'canReadProjectMouEnd',
+          edit: 'canEditProjectMouEnd',
+        },
+      ],
+    });
+
+    const readProject = await projectMapPartner.first();
+    console.log('readProject', JSON.stringify(readProject, null, 2));
+
     let mouStart = null;
     let mouEnd = null;
 
     // if user has access to project mou and there is no partnership override
-    if (result.mouStart.canRead || result.mouStartOverride.canRead) {
-      mouStart = result.mouStartOverride.value ?? result.mouStart.value;
+    if (
+      readProject?.canReadProjectMouStart ||
+      result.mouStartOverride.canRead
+    ) {
+      mouStart = result.mouStartOverride.value ?? readProject?.projectMouStart;
     }
-    if (result.mouEnd.canRead || result.mouEndOverride.canRead) {
-      mouEnd = result.mouEndOverride.value ?? result.mouEnd.value;
+    if (readProject?.canReadProjectMouEnd || result.mouEndOverride.canRead) {
+      mouEnd = result.mouEndOverride.value ?? readProject?.projectMouEnd;
     }
 
     const canReadMouStart =
-      result.mouStart.canRead || result.mouStartOverride.canRead;
+      readProject?.canReadProjectMouStart || result.mouStartOverride.canRead;
     const canReadMouEnd =
-      result.mouEnd.canRead || result.mouEndOverride.canRead;
+      readProject?.canReadProjectMouEnd || result.mouEndOverride.canRead;
 
     const response: any = {
       ...result,
