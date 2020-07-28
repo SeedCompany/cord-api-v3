@@ -206,7 +206,8 @@ export class SyncBudgetRecordsToFundingPartners
 
     try {
       if (
-        event instanceof (PartnershipUpdatedEvent || PartnershipCreatedEvent)
+        event instanceof PartnershipUpdatedEvent ||
+        event instanceof PartnershipCreatedEvent
       ) {
         await this.synchronizePartnershipBudgetRecords(
           event.partnership,
