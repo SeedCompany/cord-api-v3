@@ -1,20 +1,29 @@
 import {
-  ForbiddenException,
   Injectable,
   NotFoundException,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { generate } from 'shortid';
 import { DuplicateException, ISession } from '../../common';
 import {
+  addAllSecureProperties,
+  addBaseNodeMetaPropsWithClause,
+  addPropertyCoalesceWithClause,
+  addUserToSG,
   ConfigService,
+  createBaseNode,
+  createSG,
   DatabaseService,
+  filterByString,
   ILogger,
+  listWithSecureObject,
   Logger,
-  matchSession,
+  matchRequestingUser,
+  matchUserPermissions,
   OnIndex,
+  Property,
+  runListQuery,
 } from '../../core';
 import {
   CreateLiteracyMaterial,
@@ -141,79 +150,53 @@ export class LiteracyMaterialService {
         'Literacy with this name already exists'
       );
     }
-    const id = generate();
-    const createdAt = DateTime.local();
-    try {
-      const query = this.db
-        .query()
-        .match(
-          matchSession(session, { withAclEdit: 'canCreateLiteracyMaterial' })
-        )
-        .match([
-          node('rootuser', 'User', {
-            active: true,
-            id: this.config.rootAdmin.id,
-          }),
-        ])
-        .create([
-          [
-            node(
-              'newLiteracyMaterial',
-              ['LiteracyMaterial', 'Producible', 'BaseNode'],
-              {
-                active: true,
-                createdAt,
-                id,
-                owningOrgId: session.owningOrgId,
-              }
-            ),
-          ],
-          ...this.property('name', input.name, 'newLiteracyMaterial'),
-          [
-            node('adminSG', 'SecurityGroup', {
-              id: generate(),
-              active: true,
-              createdAt,
-              name: input.name + ' admin',
-            }),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('requestingUser'),
-          ],
-          [
-            node('readerSG', 'SecurityGroup', {
-              id: generate(),
-              active: true,
-              createdAt,
-              name: input.name + ' users',
-            }),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('requestingUser'),
-          ],
-          [
-            node('adminSG'),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('rootuser'),
-          ],
-          [
-            node('readerSG'),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('rootuser'),
-          ],
-          ...this.permission('name', 'newLiteracyMaterial'),
-          ...this.permission('range', 'newLiteracyMaterial'),
-          // TODO scriptureReferences
-        ])
-        .return(
-          'newLiteracyMaterial.id as id, requestingUser.canCreateLiteracyMaterial as canCreateLiteracyMaterial'
-        );
-      await query.first();
-    } catch (err) {
-      this.logger.error(
-        `Could not create literacyMaterial for user ${session.userId}`
-      );
-      throw new ServerException('Could not create literacyMaterial');
+
+    // create literacy-material
+    const secureProps: Property[] = [
+      {
+        key: 'name',
+        value: input.name,
+        addToAdminSg: true,
+        addToWriterSg: true,
+        addToReaderSg: true,
+        isPublic: true,
+        isOrgPublic: true,
+        label: 'LiteracyName',
+      },
+    ];
+
+    const query = this.db
+      .query()
+      .match([
+        node('root', 'User', { active: true, id: this.config.rootAdmin.id }),
+      ])
+      .match([
+        node('publicSG', 'PublicSecurityGroup', {
+          active: true,
+          id: this.config.publicSecurityGroup.id,
+        }),
+      ])
+      .call(matchRequestingUser, session)
+      .call(createSG, 'orgSG', 'OrgPublicSecurityGroup')
+      .call(createBaseNode, 'LiteracyMaterial:Producible', secureProps, {
+        owningOrgId: session.owningOrgId,
+      })
+      // TODO scriptureReferences
+      .call(addUserToSG, 'requestingUser', 'adminSG') // must come after base node creation
+      .return('node.id as id');
+
+    const result = await query.first();
+    if (!result) {
+      throw new ServerException('failed to create default literacyMaterial');
     }
-    this.logger.info(`literacyMaterial created`, { id });
+
+    const id = result.id;
+
+    // add root admin to new literacyMaterial as an admin
+    await this.db.addRootAdminToBaseNodeAsAdmin(id, 'LiteracyMaterial');
+
+    this.logger.debug(`literacyMaterial created`, { id });
+
     return this.readOne(id, session);
   }
 
@@ -221,115 +204,36 @@ export class LiteracyMaterialService {
     literacyMaterialId: string,
     session: ISession
   ): Promise<LiteracyMaterial> {
-    const readLiteracy = this.db
-      .query()
-      .match(matchSession(session, { withAclEdit: 'canReadLiteracyMaterials' }))
-      .match([
-        node('literacyMaterial', 'LiteracyMaterial', {
-          active: true,
-          id: literacyMaterialId,
-        }),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canReadRange', 'Permission', {
-          property: 'range',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('literacyMaterial'),
-        relation('out', '', 'name', { active: true }),
-        node('name', 'Property', { active: true }),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canEditRange', 'Permission', {
-          property: 'range',
-          active: true,
-          edit: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('literacyMaterial'),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canReadName', 'Permission', {
-          property: 'name',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('literacyMaterial'),
-        relation('out', '', 'range', { active: true }),
-        node('rangeNode', 'Property', { active: true }),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canEditName', 'Permission', {
-          property: 'name',
-          active: true,
-          edit: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('literacyMaterial'),
-      ])
-      .return({
-        literacyMaterial: [{ id: 'id', createdAt: 'createdAt' }],
-        name: [{ value: 'name' }],
-        requestingUser: [
-          {
-            canReadLiteracyMaterials: 'canReadLiteracyMaterials',
-            canCreateLiteracyMaterial: 'canCreateLiteracyMaterial',
-          },
-        ],
-        canReadName: [{ read: 'canReadName' }],
-        canEditName: [{ edit: 'canEditName' }],
-        rangeNode: [{ value: 'range' }],
-        canReadRange: [{ read: 'canReadRange' }],
-        canEditRange: [{ edit: 'canEditRange' }],
-      });
+    if (!session.userId) {
+      session.userId = this.config.anonUser.id;
+    }
 
-    let result;
-    try {
-      result = await readLiteracy.first();
-    } catch {
-      throw new ServerException('Read LiteracyMaterial Error');
-    }
+    const props = ['name', 'range'];
+    const query = this.db
+      .query()
+      .call(matchRequestingUser, session)
+      .call(matchUserPermissions, 'LiteracyMaterial', literacyMaterialId)
+      .call(addAllSecureProperties, ...props)
+      .with([
+        ...props.map(addPropertyCoalesceWithClause),
+        'coalesce(node.id) as id',
+        'coalesce(node.createdAt) as createdAt',
+      ])
+      .returnDistinct([...props, 'id', 'createdAt']);
+
+    const result = (await query.first()) as LiteracyMaterial | undefined;
     if (!result) {
-      throw new NotFoundException('Could not find literacyMaterial');
+      throw new NotFoundException('Could not find org');
     }
-    if (!result.canReadLiteracyMaterials) {
-      throw new ForbiddenException(
-        'User does not have permission to read a literacyMaterial'
-      );
-    }
+
     return {
-      id: result.id,
-      name: {
-        value: result.name,
-        canRead: !!result.canReadName,
-        canEdit: !!result.canEditName,
-      },
+      ...result,
       scriptureReferences: {
         // TODO
         canRead: true,
         canEdit: true,
         value: [],
       },
-      createdAt: result.createdAt,
     };
   }
 
@@ -365,33 +269,51 @@ export class LiteracyMaterialService {
   }
 
   async list(
-    { page, count, sort, order, filter }: LiteracyMaterialListInput,
+    { filter, ...input }: LiteracyMaterialListInput,
     session: ISession
   ): Promise<LiteracyMaterialListOutput> {
-    const result = await this.db.list<LiteracyMaterial>({
-      session,
-      nodevar: 'literacyMaterial',
-      aclReadProp: 'canReadLiteracyMaterials',
-      aclEditProp: 'canCreateLiteracyMaterial',
-      props: ['name'],
-      input: {
-        page,
-        count,
-        sort,
-        order,
-        filter,
-      },
+    const label = 'LiteracyMaterial';
+    const baseNodeMetaProps = ['id', 'createdAt'];
+    const secureProps = ['name'];
+
+    const query = this.db
+      .query()
+      .call(matchRequestingUser, session)
+      .call(matchUserPermissions, label);
+
+    if (filter.name) {
+      query.call(filterByString, label, 'name', filter.name);
+    }
+
+    // match on the rest of the properties of the object requested
+    query.call(addAllSecureProperties, ...secureProps).with(
+      `
+          {
+            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
+            ${listWithSecureObject(secureProps)}
+          } as node
+        `
+    );
+
+    const result: LiteracyMaterialListOutput = await runListQuery(
+      query,
+      input,
+      secureProps.includes(input.sort)
+    );
+    const items = result.items.map((row: any) => {
+      return {
+        ...row,
+        scriptureReferences: {
+          // TODO
+          canRead: true,
+          canEdit: true,
+          value: [],
+        },
+      };
     });
-    const items = result.items.length
-      ? await Promise.all(
-          result.items.map(async (r) => {
-            return this.readOne(r.id, session);
-          })
-        )
-      : [];
 
     return {
-      items: (items as unknown) as LiteracyMaterial[],
+      items,
       hasMore: result.hasMore,
       total: result.total,
     };
