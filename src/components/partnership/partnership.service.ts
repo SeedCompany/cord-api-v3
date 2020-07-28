@@ -200,7 +200,7 @@ export class PartnershipService {
         ])
         .create([
           [
-            node('newPartnership', 'Partnership', {
+            node('newPartnership', ['Partnership', 'BaseNode'], {
               active: true,
               createdAt,
               id,
