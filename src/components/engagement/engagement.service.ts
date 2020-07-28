@@ -10,7 +10,7 @@ import { node, Query, relation } from 'cypher-query-builder';
 import { isFunction, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
-import { ISession } from '../../common';
+import { ISession, DuplicateException } from '../../common';
 import {
   addAllMetaPropertiesOfChildBaseNodes,
   addAllSecureProperties,
@@ -189,6 +189,48 @@ export class EngagementService {
     return results?.type as ProjectType | undefined;
   }
 
+  protected async getIEByProjectAndIntern(
+    projectId: string,
+    internId: string
+  ): Promise<InternshipEngagement | undefined> {
+    const result = await this.db
+      .query()
+      .match([node('intern', 'User', { active: true, id: internId })])
+      .match([node('project', 'Project', { active: true, id: projectId })])
+      .match([
+        node('project'),
+        relation('out', '', 'engagement'),
+        node('internshipEngagement'),
+        relation('out', '', 'intern'),
+        node('intern'),
+      ])
+      .return('internshipEngagement.id as id')
+      .first();
+
+    return (result as unknown) as InternshipEngagement | undefined;
+  }
+
+  protected async getLEByProjectAndLanguage(
+    projectId: string,
+    languageId: string
+  ): Promise<LanguageEngagement | undefined> {
+    const result = await this.db
+      .query()
+      .match([node('language', 'Language', { active: true, id: languageId })])
+      .match([node('project', 'Project', { active: true, id: projectId })])
+      .match([
+        node('project'),
+        relation('out', '', 'engagement'),
+        node('internshipEngagement'),
+        relation('out', '', 'language'),
+        node('language'),
+      ])
+      .return('internshipEngagement.id as id')
+      .first();
+
+    return (result as unknown) as LanguageEngagement | undefined;
+  }
+
   // CREATE /////////////////////////////////////////////////////////
 
   async createLanguageEngagement(
@@ -200,6 +242,13 @@ export class EngagementService {
 
     if (projectType && projectType !== ProjectType.Translation) {
       throw new BadRequestException('That Project type is not Translation');
+    }
+
+    if (await this.getLEByProjectAndLanguage(projectId, languageId)) {
+      throw new DuplicateException(
+        'engagement.languageId',
+        'LanguageEngagement with this projectId and languageId already exists'
+      );
     }
 
     this.logger.info('Mutation create language engagement ', {
@@ -423,6 +472,13 @@ export class EngagementService {
 
     if (projectType && projectType !== ProjectType.Internship) {
       throw new BadRequestException('That Project type is not Intership');
+    }
+
+    if (await this.getIEByProjectAndIntern(projectId, internId)) {
+      throw new DuplicateException(
+        'engagement.internId',
+        'InternshipEngagement with this projectId and internId already exists'
+      );
     }
 
     this.logger.info('Mutation create internship engagement ', {
