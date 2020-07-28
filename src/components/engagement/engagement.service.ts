@@ -716,7 +716,7 @@ export class EngagementService {
     session: ISession
   ): Promise<LanguageEngagement | InternshipEngagement> {
     this.logger.info('readOne', { id, userId: session.userId });
-
+    
     if (!id) {
       throw new NotFoundException('no id given');
     }
@@ -883,6 +883,26 @@ export class EngagementService {
         value: result.methodologies.value ? result.methodologies.value : [],
         canRead: !!result.canReadMethodologies,
         canEdit: !!result.canEditMethodologies,
+      },
+      intern: {
+        value: result.intern.value ? result.intern.value : null,
+        canRead: !!result.intern.canRead,
+        canEdit: !!result.intern.canEdit,
+      },
+      mentor: {
+        value: result.mentor.value ? result.mentor.value : null,
+        canRead: !!result.mentor.canRead,
+        canEdit: !!result.mentor.canEdit,
+      },
+      countryOfOrigin: {
+        value: result.countryOfOrigin.value ? result.countryOfOrigin.value : null,
+        canRead: !!result.countryOfOrigin.canRead,
+        canEdit: !!result.countryOfOrigin.canEdit,
+      },
+      ceremony: {
+        value: result.ceremony.value ? result.ceremony.value : null,
+        canRead: !!result.ceremony.canRead,
+        canEdit: !!result.ceremony.canEdit,
       },
     };
 
