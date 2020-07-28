@@ -2,18 +2,26 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  InternalServerErrorException as ServerException,
 } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
-import { generate } from 'shortid';
 import { ISession } from '../../common';
 import {
+  addAllSecureProperties,
+  addBaseNodeMetaPropsWithClause,
   ConfigService,
+  createBaseNode,
   DatabaseService,
   ILogger,
+  listWithSecureObject,
   Logger,
+  matchRequestingUser,
   matchSession,
+  matchUserPermissions,
+  Property,
+  runListQuery,
 } from '../../core';
 import {
   Ceremony,
@@ -118,156 +126,68 @@ export class CeremonyService {
     ];
   };
 
-  async readOne(id: string, session: ISession): Promise<Ceremony> {
-    this.logger.info(`Query readOne Ceremony`, { id, userId: session.userId });
-    if (!id) {
-      throw new BadRequestException('No ceremony id to search for');
-    }
-    const readCeremony = await this.db
-      .query()
-      .match(matchSession(session))
-      .match([node('ceremony', 'Ceremony', { active: true, id })])
-      .optionalMatch([...this.propMatch('type')])
-      .optionalMatch([...this.propMatch('planned')])
-      .optionalMatch([...this.propMatch('estimatedDate')])
-      .optionalMatch([...this.propMatch('actualDate')])
-      .return({
-        ceremony: [{ id: 'id', createdAt: 'createdAt' }],
-        type: [{ value: 'type' }],
-        canReadType: [{ read: 'canReadType', edit: 'canEditType' }],
-        planned: [{ value: 'planned' }],
-        canReadPlanned: [{ read: 'canReadPlanned', edit: 'canEditPlanned' }],
-        estimatedDate: [{ value: 'estimatedDate' }],
-        canReadEstimatedDate: [
-          { read: 'canReadEstimatedDate', edit: 'canEditEstimatedDate' },
-        ],
-        actualDate: [{ value: 'actualDate' }],
-        canReadActualDate: [
-          { read: 'canReadActualDate', edit: 'canEditActualDate' },
-        ],
-      })
-      .first();
-
-    if (!readCeremony) {
-      throw new NotFoundException('Could not find ceremony');
-    }
-
-    return {
-      id,
-      createdAt: readCeremony.createdAt,
-      type: readCeremony.type,
-      planned: {
-        value: !!readCeremony.planned,
-        canRead: !!readCeremony.canReadPlanned,
-        canEdit: !!readCeremony.canEditPlanned,
-      },
-      estimatedDate: {
-        value: readCeremony.estimatedDate,
-        canRead: !!readCeremony.canReadEstimatedDate,
-        canEdit: !!readCeremony.canEditEstimatedDate,
-      },
-      actualDate: {
-        value: readCeremony.actualDate,
-        canRead: !!readCeremony.canReadActualDate,
-        canEdit: !!readCeremony.canEditActualDate,
-      },
-    };
-  }
-
-  async list(
-    { page, count, sort, order, filter }: CeremonyListInput,
-    session: ISession
-  ): Promise<CeremonyListOutput> {
-    const result = await this.db.list<Ceremony>({
-      session,
-      nodevar: 'ceremony',
-      aclReadProp: 'canReadCeremonies',
-      aclEditProp: 'canCreateCeremony',
-      props: [
-        { name: 'type', secure: false },
-        { name: 'planned', secure: true },
-        { name: 'estimatedDate', secure: true },
-        { name: 'actualDate', secure: true },
-      ],
-      input: {
-        page,
-        count,
-        sort,
-        order,
-        filter,
-      },
-    });
-
-    return {
-      items: result.items,
-      hasMore: result.hasMore,
-      total: result.total,
-    };
-  }
-
   async create(input: CreateCeremony, session: ISession): Promise<Ceremony> {
-    const id = generate();
-    const createdAt = DateTime.local();
+    const secureProps: Property[] = [
+      {
+        key: 'type',
+        value: input.type,
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'planned',
+        value: input.planned,
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'estimatedDate',
+        value: input.estimatedDate,
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'actualDate',
+        value: input.actualDate,
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+    ];
 
     try {
-      await this.db
+      const query = this.db
         .query()
-        .match(matchSession(session, { withAclEdit: 'canCreateCeremony' }))
+        .call(matchRequestingUser, session)
         .match([
-          node('rootuser', 'User', {
+          node('root', 'User', {
             active: true,
             id: this.config.rootAdmin.id,
           }),
         ])
-        .create([
-          [
-            node('newCeremony', 'Ceremony:BaseNode', {
-              active: true,
-              createdAt,
-              id,
-              owningOrgId: session.owningOrgId,
-            }),
-          ],
-          ...this.property('type', input.type),
-          [
-            node('adminSG', 'SecurityGroup', {
-              id: generate(),
-              active: true,
-              createdAt,
-              name: input.type + ' admin',
-            }),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('requestingUser'),
-          ],
-          [
-            node('readerSG', 'SecurityGroup', {
-              id: generate(),
-              active: true,
-              createdAt,
-              name: input.type + ' users',
-            }),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('requestingUser'),
-          ],
-          [
-            node('adminSG'),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('rootuser'),
-          ],
-          [
-            node('readerSG'),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('rootuser'),
-          ],
-          ...this.permission('type'),
-          ...this.permission('planned'),
-          ...this.permission('estimatedDate'),
-          ...this.permission('actualDate'),
-        ])
-        .return('newCeremony.id as id')
-        .first();
+        .call(createBaseNode, `Project:${input.type}Project`, secureProps, {
+          owningOrgId: session.owningOrgId,
+        })
+        .return('node.id as id');
 
-      return await this.readOne(id, session);
+      const result = await query.first();
+
+      if (!result) {
+        throw new ServerException('failed to create a budget');
+      }
+
+      return await this.readOne(result.id, session);
     } catch (e) {
       this.logger.warning('Failed to create ceremony', {
         exception: e,
@@ -275,6 +195,55 @@ export class CeremonyService {
 
       throw e;
     }
+  }
+
+  async readOne(id: string, session: ISession): Promise<Ceremony> {
+    this.logger.info(`Query readOne Ceremony`, { id, userId: session.userId });
+    if (!id) {
+      throw new BadRequestException('No ceremony id to search for');
+    }
+    const baseNodeMetaProps = ['id', 'createdAt'];
+    const secureProps = ['type', 'planned', 'estimatedDate', 'actualDate'];
+    const readCeremony = this.db
+      .query()
+      .call(matchRequestingUser, session)
+      .call(matchUserPermissions, 'Budget', id)
+      .call(addAllSecureProperties, ...secureProps)
+      .return(
+        `
+          {
+            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
+            ${listWithSecureObject(secureProps)}
+          } as ceremony
+        `
+      );
+
+    const result = await readCeremony.first();
+
+    if (!result) {
+      throw new NotFoundException('Could not find ceremony');
+    }
+
+    return {
+      id: result.ceremony.id,
+      createdAt: result.ceremony.createdAt,
+      type: result.ceremony.type.value,
+      planned: {
+        value: !!result.ceremony.planned.value,
+        canRead: !!result.ceremony.planned.canRead,
+        canEdit: !!result.ceremony.planned.canEdit,
+      },
+      estimatedDate: {
+        value: result.ceremony.estimatedDate.value,
+        canRead: !!result.ceremony.estimatedDate.canRead,
+        canEdit: !!result.ceremony.estimatedDate.canEdit,
+      },
+      actualDate: {
+        value: result.ceremony.actualDate.value,
+        canRead: !!result.ceremony.actualDate.canRead,
+        canEdit: !!result.ceremony.actualDate.canEdit,
+      },
+    };
   }
 
   async update(input: UpdateCeremony, session: ISession): Promise<Ceremony> {
@@ -308,6 +277,38 @@ export class CeremonyService {
       });
       throw e;
     }
+  }
+
+  async list(
+    { filter, ...input }: CeremonyListInput,
+    session: ISession
+  ): Promise<CeremonyListOutput> {
+    const query = this.db
+      .query()
+      .call(matchRequestingUser, session)
+      .match([node('node', 'Ceremony', { active: true })]);
+
+    const listResult: {
+      items: Array<{
+        identity: string;
+        labels: string[];
+        properties: Ceremony;
+      }>;
+      hasMore: boolean;
+      total: number;
+    } = await runListQuery(query, input);
+
+    const items = await Promise.all(
+      listResult.items.map((item) => {
+        return this.readOne(item.properties.id, session);
+      })
+    );
+
+    return {
+      items,
+      hasMore: listResult.hasMore,
+      total: listResult.total,
+    };
   }
 
   async checkCeremonyConsistency(session: ISession): Promise<boolean> {
