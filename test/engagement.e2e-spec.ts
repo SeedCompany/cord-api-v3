@@ -55,10 +55,6 @@ describe('Engagement e2e', () => {
     await createSession(app);
 
     user = await createUser(app, { password });
-    project = await createProject(app);
-    internshipProject = await createProject(app, {
-      type: ProjectType.Internship,
-    });
     language = await createLanguage(app);
     zone = await createZone(app, { directorId: user.id });
     region = await createRegion(app, { directorId: user.id, zoneId: zone.id });
@@ -73,6 +69,7 @@ describe('Engagement e2e', () => {
   });
 
   it('creates a language engagement', async () => {
+    project = await createProject(app);
     const languageEngagement = await createLanguageEngagement(app, {
       languageId: language.id,
       projectId: project.id,
@@ -90,6 +87,7 @@ describe('Engagement e2e', () => {
   });
 
   it('create a language engagement with only required fields', async () => {
+    project = await createProject(app);
     const languageEngagement = {
       languageId: language.id,
       projectId: project.id,
@@ -133,6 +131,9 @@ describe('Engagement e2e', () => {
   });
 
   it('creates a internship engagement', async () => {
+    internshipProject = await createProject(app, {
+      type: ProjectType.Internship,
+    });
     const internEngagement = await createInternshipEngagement(app, {
       projectId: internshipProject.id,
       countryOfOriginId: country.id,
@@ -152,6 +153,9 @@ describe('Engagement e2e', () => {
   });
 
   it('create a internship engagement with only requited fields', async () => {
+    internshipProject = await createProject(app, {
+      type: ProjectType.Internship,
+    });
     const internshipEngagement: CreateInternshipEngagement = {
       projectId: internshipProject.id,
       internId: user.id,
@@ -195,6 +199,7 @@ describe('Engagement e2e', () => {
   });
 
   it('reads a an language engagement by id', async () => {
+    project = await createProject(app);
     const upload = await requestFileUpload(app);
     const fakeFile = await uploadFileContents(app, upload.url);
 
@@ -249,6 +254,9 @@ describe('Engagement e2e', () => {
   it('reads an internship engagement by id', async () => {
     const upload = await requestFileUpload(app);
     const fakeFile = await uploadFileContents(app, upload.url);
+    internshipProject = await createProject(app, {
+      type: ProjectType.Internship,
+    });
 
     const internshipEngagement = await createInternshipEngagement(app, {
       mentorId: mentor.id,
@@ -301,6 +309,7 @@ describe('Engagement e2e', () => {
   });
 
   it('update language engagement', async () => {
+    project = await createProject(app);
     const languageEngagement = await createLanguageEngagement(app, {
       projectId: project.id,
       languageId: language.id,
@@ -350,6 +359,9 @@ describe('Engagement e2e', () => {
   });
 
   it('updates internship engagement', async () => {
+    internshipProject = await createProject(app, {
+      type: ProjectType.Internship,
+    });
     const internshipEngagement = await createInternshipEngagement(app, {
       projectId: internshipProject.id,
       internId: intern.id,
@@ -408,6 +420,7 @@ describe('Engagement e2e', () => {
   });
 
   it('deletes engagement', async () => {
+    project = await createProject(app);
     const languageEngagement = await createLanguageEngagement(app, {
       projectId: project.id,
       languageId: language.id,
@@ -463,6 +476,7 @@ describe('Engagement e2e', () => {
   });
 
   it('has consistency in language engagement nodes', async () => {
+    project = await createProject(app);
     language = await createLanguage(app);
     await createLanguageEngagement(app, {
       languageId: language.id,
@@ -482,6 +496,9 @@ describe('Engagement e2e', () => {
   });
 
   it('has consistency in internship engagement nodes', async () => {
+    internshipProject = await createProject(app, {
+      type: ProjectType.Internship,
+    });
     await createInternshipEngagement(app, {
       projectId: internshipProject.id,
       countryOfOriginId: country.id,
@@ -565,6 +582,9 @@ describe('Engagement e2e', () => {
   });
 
   it('updates ceremony for internship engagement', async () => {
+    internshipProject = await createProject(app, {
+      type: ProjectType.Internship,
+    });
     const ie = await createInternshipEngagement(app, {
       projectId: internshipProject.id,
       internId: intern.id,
@@ -618,6 +638,11 @@ describe('Engagement e2e', () => {
   });
 
   it('lists both language engagements and internship engagements', async () => {
+    project = await createProject(app);
+    internshipProject = await createProject(app, {
+      type: ProjectType.Internship,
+    });
+
     await createLanguageEngagement(app, {
       languageId: language.id,
       projectId: project.id,
@@ -662,6 +687,9 @@ describe('Engagement e2e', () => {
   });
 
   it('internship engagement creation fails and lets you know why if your ids are bad', async () => {
+    internshipProject = await createProject(app, {
+      type: ProjectType.Internship,
+    });
     const badId = 'badId';
     await expect(
       createInternshipEngagement(app, {
@@ -679,6 +707,11 @@ describe('Engagement e2e', () => {
         mentorId: mentor.id,
       })
     ).rejects.toThrow('countryOfOriginId is invalid');
+
+    internshipProject = await createProject(app, {
+      type: ProjectType.Internship,
+    });
+
     await expect(
       createInternshipEngagement(app, {
         projectId: internshipProject.id,
@@ -687,6 +720,11 @@ describe('Engagement e2e', () => {
         mentorId: mentor.id,
       })
     ).rejects.toThrow('internId is invalid');
+
+    internshipProject = await createProject(app, {
+      type: ProjectType.Internship,
+    });
+
     await expect(
       createInternshipEngagement(app, {
         projectId: internshipProject.id,
@@ -714,6 +752,9 @@ describe('Engagement e2e', () => {
   });
 
   it('should return empty methodologies array even if it is null', async () => {
+    internshipProject = await createProject(app, {
+      type: ProjectType.Internship,
+    });
     // Create InternshipEngagement without methodologies
     const internshipEngagement = await createInternshipEngagement(app, {
       projectId: internshipProject.id,
@@ -741,6 +782,7 @@ describe('Engagement e2e', () => {
   });
 
   it('should throw error if Project type does not match with Engagement type', async () => {
+    project = await createProject(app);
     await expect(
       createInternshipEngagement(app, {
         projectId: project.id,

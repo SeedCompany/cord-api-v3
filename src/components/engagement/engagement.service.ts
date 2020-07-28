@@ -192,7 +192,7 @@ export class EngagementService {
   protected async getIEByProjectAndIntern(
     projectId: string,
     internId: string
-  ): Promise<InternshipEngagement | undefined> {
+  ): Promise<Boolean> {
     const result = await this.db
       .query()
       .match([node('intern', 'User', { active: true, id: internId })])
@@ -207,13 +207,13 @@ export class EngagementService {
       .return('internshipEngagement.id as id')
       .first();
 
-    return (result as unknown) as InternshipEngagement | undefined;
+    return result ? true : false;
   }
 
   protected async getLEByProjectAndLanguage(
     projectId: string,
     languageId: string
-  ): Promise<LanguageEngagement | undefined> {
+  ): Promise<Boolean> {
     const result = await this.db
       .query()
       .match([node('language', 'Language', { active: true, id: languageId })])
@@ -228,7 +228,7 @@ export class EngagementService {
       .return('internshipEngagement.id as id')
       .first();
 
-    return (result as unknown) as LanguageEngagement | undefined;
+    return result ? true : false;
   }
 
   // CREATE /////////////////////////////////////////////////////////
@@ -247,7 +247,7 @@ export class EngagementService {
     if (await this.getLEByProjectAndLanguage(projectId, languageId)) {
       throw new DuplicateException(
         'engagement.languageId',
-        'LanguageEngagement with this projectId and languageId already exists'
+        'Engagement for this project and language already exists'
       );
     }
 
@@ -477,7 +477,7 @@ export class EngagementService {
     if (await this.getIEByProjectAndIntern(projectId, internId)) {
       throw new DuplicateException(
         'engagement.internId',
-        'InternshipEngagement with this projectId and internId already exists'
+        'Engagement for this project and person already exists'
       );
     }
 
