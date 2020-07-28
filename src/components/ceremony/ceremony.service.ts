@@ -176,7 +176,7 @@ export class CeremonyService {
             id: this.config.rootAdmin.id,
           }),
         ])
-        .call(createBaseNode, `Project:${input.type}Project`, secureProps, {
+        .call(createBaseNode, 'Ceremony', secureProps, {
           owningOrgId: session.owningOrgId,
         })
         .return('node.id as id');
@@ -207,7 +207,7 @@ export class CeremonyService {
     const readCeremony = this.db
       .query()
       .call(matchRequestingUser, session)
-      .call(matchUserPermissions, 'Budget', id)
+      .call(matchUserPermissions, 'Ceremony', id)
       .call(addAllSecureProperties, ...secureProps)
       .return(
         `
