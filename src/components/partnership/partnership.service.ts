@@ -411,6 +411,11 @@ export class PartnershipService {
         canRead: canReadMouEnd,
         canEdit: false, // edit the project mou or edit the partnerhsip mou override
       },
+      types: {
+        value: result.types.value ? result.types.value : [],
+        canRead: !!result.types.canRead,
+        canEdit: !!result.types.canEdit,
+      },
       organization: this.orgService.readOne(result.organizationId, session),
     };
 
@@ -552,6 +557,11 @@ export class PartnershipService {
       result.items.map(async (item) => {
         return {
           ...item,
+          types: {
+            value: item.types.value ? item.types.value : [],
+            canRead: !!item.types.canRead,
+            canEdit: !!item.types.canEdit,
+          },
           organization: await this.orgService.readOne(
             (item as any).organizationId,
             session
