@@ -1,24 +1,32 @@
 import {
   BadRequestException,
-  ForbiddenException,
   Injectable,
   NotFoundException,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { inArray, node, regexp, relation } from 'cypher-query-builder';
 import { first, intersection } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
 import {
+  addAllMetaPropertiesOfChildBaseNodes,
+  addAllSecureProperties,
+  addPropertyCoalesceWithClause,
+  addShapeForBaseNodeMetaProperty,
+  addShapeForChildBaseNodeMetaProperty,
+  ChildBaseNodeMetaProperty,
   ConfigService,
   DatabaseService,
   ILogger,
   Logger,
+  matchRequestingUser,
   matchSession,
+  matchUserPermissions,
   OnIndex,
+  runListQuery,
 } from '../../core';
-import { RedactedUser, User, UserService } from '../user';
+import { UserService } from '../user';
 import {
   Country,
   CreateCountry,
@@ -162,231 +170,6 @@ export class LocationService {
     ];
   };
 
-  async readOne(id: string, session: ISession): Promise<Location> {
-    const query = `
-    MATCH (place {id: $id, active: true}) RETURN labels(place) as labels
-    `;
-    const results = await this.db.query().raw(query, { id }).first();
-    // MATCH one of these labels.
-    const label = first(
-      intersection(results?.labels, ['Country', 'Region', 'Zone'])
-    );
-
-    this.logger.info('Looking for ', {
-      label,
-      id,
-      userId: session.userId,
-    });
-    switch (label) {
-      case 'Zone': {
-        return this.readOneZone(id, session);
-      }
-      case 'Region': {
-        return this.readOneRegion(id, session);
-      }
-      case 'Country': {
-        return this.readOneCountry(id, session);
-      }
-      default: {
-        throw new BadRequestException('Not a location');
-      }
-    }
-  }
-
-  // TODO Filter types is irrelevant right now
-  // TODO hasMore is not implemented
-  async list(
-    { page, count, sort, order, filter }: LocationListInput,
-    session: ISession
-  ): Promise<LocationListOutput> {
-    const result = await this.db
-      .query()
-      .raw(
-        `
-          MATCH (name: Property:LocationName)<-[:name]-(location)
-          WHERE name.value CONTAINS $filter
-          RETURN location.id as id, name.value as name
-          ORDER BY ${sort} ${order}
-          SKIP $skip LIMIT $count
-        `,
-        {
-          skip: (page - 1) * count,
-          count,
-          filter: filter.name ?? '',
-        }
-      )
-      .run();
-
-    const items = await Promise.all(
-      result.map((row) => this.readOne(row.id, session))
-    );
-
-    return {
-      items,
-      total: items.length,
-      hasMore: false, // TODO
-    };
-  }
-
-  // private randomLocation() {
-  //   const id = () => faker.random.alphaNumeric(8);
-  //   const inPast = () => DateTime.fromJSDate(faker.date.past());
-  //   const ro = <T>(value: T) => ({
-  //     value,
-  //     canRead: true,
-  //     canEdit: false,
-  //   });
-
-  //   const user = (): User => ({
-  //     id: id(),
-  //     createdAt: inPast(),
-  //     bio: ro(''),
-  //     displayFirstName: ro(faker.name.firstName()),
-  //     displayLastName: ro(faker.name.lastName()),
-  //     realFirstName: ro(faker.name.firstName()),
-  //     realLastName: ro(faker.name.lastName()),
-  //     email: ro(faker.internet.email()),
-  //     phone: ro(faker.phone.phoneNumber()),
-  //     timezone: ro(faker.lorem.words(2)),
-  //   });
-
-  //   const region: Zone = {
-  //     id: id(),
-  //     createdAt: inPast(),
-  //     name: ro(faker.address.country()),
-  //     director: ro(user()),
-  //   };
-
-  //   const area: Region = {
-  //     id: id(),
-  //     createdAt: inPast(),
-  //     name: ro(faker.address.state()),
-  //     zone: ro(region),
-  //     director: ro(user()),
-  //   };
-
-  //   const country: Country = {
-  //     id: id(),
-  //     createdAt: inPast(),
-  //     name: ro(faker.address.city()),
-  //     region: ro(area),
-  //   };
-
-  //   return faker.random.arrayElement([area, region, country]);
-  // }
-
-  async readOneZone(id: string, session: ISession): Promise<Zone> {
-    this.logger.info(`Query readOne Zone`, { id, userId: session.userId });
-
-    const readZone = this.db
-      .query()
-      .match(matchSession(session))
-      .match([node('zone', 'Zone', { active: true, id })])
-
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canEditName', 'Permission', {
-          property: 'name',
-          active: true,
-          edit: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('zone'),
-        relation('out', '', 'name', { active: true }),
-        node('zoneName', 'Property', { active: true }),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canEditDirector', 'Permission', {
-          property: 'director',
-          active: true,
-          edit: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('zone'),
-        relation('out', '', 'director', { active: true }),
-        node('director', 'User', { active: true }),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canReadName', 'Permission', {
-          property: 'name',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('zone'),
-        relation('out', '', 'name', { active: true }),
-        node('zoneName', 'Property', { active: true }),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canReadDirector', 'Permission', {
-          property: 'director',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('zone'),
-        relation('out', '', 'director', { active: true }),
-        node('director', 'User', { active: true }),
-      ])
-      .return({
-        zone: [{ id: 'id', createdAt: 'createdAt' }],
-        zoneName: [{ value: 'name' }],
-        requestingUser: [{ canReadZone: 'canReadZone' }],
-        canReadName: [{ read: 'canReadName' }],
-        canReadDirector: [{ read: 'canReadDirector' }],
-        canEditName: [{ edit: 'canEditName' }],
-        canEditDirector: [{ edit: 'canEditDirector' }],
-        director: [{ id: 'directorId' }],
-      });
-
-    const result = await readZone.first();
-    if (!result || !result.id) {
-      this.logger.error(`Could not find zone`);
-      throw new NotFoundException('Could not find zone');
-    }
-
-    if (!result.canReadZone) {
-      throw new ForbiddenException(
-        'User does not have permission to read this zone'
-      );
-    }
-
-    let director: User = RedactedUser;
-    if (result.canReadDirector) {
-      director = await this.userService.readOne(result.directorId, session);
-    }
-
-    return {
-      id: result.id,
-      name: {
-        value: result.name,
-        canRead: !!result.canReadName,
-        canEdit: !!result.canEditName,
-      },
-      director: {
-        value: { ...director },
-        canEdit: !!result.canEditDirector,
-        canRead: !!result.canReadDirector,
-      },
-      createdAt: result.createdAt,
-    };
-  }
-
   async createZone(
     { directorId, ...input }: CreateZone,
     session: ISession
@@ -498,174 +281,6 @@ export class LocationService {
     } catch (e) {
       throw new ServerException('Could not create zone');
     }
-  }
-
-  async readOneRegion(id: string, session: ISession): Promise<Region> {
-    this.logger.info(`Query readOne Region`, { id, userId: session.userId });
-    if (!id) {
-      throw new BadRequestException('No region id to search for');
-    }
-    const readRegion = this.db
-      .query()
-      .match(matchSession(session))
-      .match([node('region', 'Region', { active: true, id })])
-
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canEditName', 'Permission', {
-          property: 'name',
-          active: true,
-          edit: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('region'),
-        relation('out', '', 'name', { active: true }),
-        node('regionName', 'Property', { active: true }),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canEditDirector', 'Permission', {
-          property: 'director',
-          active: true,
-          edit: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('region'),
-        relation('out', '', 'director', { active: true }),
-        node('director', 'User', { active: true }),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canEditZone', 'Permission', {
-          property: 'zone',
-          active: true,
-          edit: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('region'),
-        relation('out', '', 'zone', { active: true }),
-        node('zone', 'Zone', { active: true }),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canReadName', 'Permission', {
-          property: 'name',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('region'),
-        relation('out', '', 'name', { active: true }),
-        node('regionName', 'Property', { active: true }),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canReadDirector', 'Permission', {
-          property: 'director',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('region'),
-        relation('out', '', 'director', { active: true }),
-        node('director', 'User', { active: true }),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canReadZone', 'Permission', {
-          property: 'zone',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('region'),
-        relation('out', '', 'zone', { active: true }),
-        node('zone', 'Zone', { active: true }),
-      ])
-      .return({
-        region: [{ id: 'id', createdAt: 'createdAt' }],
-        regionName: [{ value: 'name' }],
-        requestingUser: [{ canReadRegion: 'canReadRegion' }],
-        canReadName: [{ read: 'canReadName' }],
-        canReadZone: [{ read: 'canReadZone' }],
-        canReadDirector: [{ read: 'canReadDirector' }],
-        canEditName: [{ edit: 'canEditName' }],
-        canEditZone: [{ edit: 'canEditZone' }],
-        canEditDirector: [{ edit: 'canEditDirector' }],
-        director: [{ id: 'directorId' }],
-        zone: [{ id: 'zoneId' }],
-      });
-
-    const result = await readRegion.first();
-
-    if (!result || !result.id) {
-      this.logger.error(`Could not find region`);
-      throw new NotFoundException('Could not find region');
-    }
-
-    if (!result.canReadRegion) {
-      throw new ForbiddenException(
-        'User does not have permission to read this region'
-      );
-    }
-    // fill in the director info if you can read it
-    let director: User = RedactedUser;
-    if (result.canReadDirector) {
-      director = await this.userService.readOne(result.directorId, session);
-    }
-
-    // fill in the zone id
-    let zone: Zone = {
-      id: '',
-      createdAt: DateTime.fromSeconds(0),
-      name: { value: '', canRead: false, canEdit: false },
-      director: { value: RedactedUser, canRead: false, canEdit: false },
-    };
-    if (result.canReadZone) {
-      zone = await this.readOneZone(result.zoneId, session);
-    }
-
-    return {
-      id: result.id,
-      name: {
-        value: result.name,
-        canRead: !!result.canReadName,
-        canEdit: !!result.canEditName,
-      },
-      director: {
-        value: {
-          ...director,
-        },
-        canEdit: !!result.canEditDirector,
-        canRead: !!result.canReadDirector,
-      },
-      zone: {
-        value: {
-          ...zone,
-        },
-        canRead: !!result.canReadZone,
-        canEdit: !!result.canEditZone,
-      },
-      createdAt: result.createdAt,
-    };
   }
 
   async createRegion(
@@ -799,137 +414,6 @@ export class LocationService {
     }
   }
 
-  async readOneCountry(id: string, session: ISession): Promise<Country> {
-    this.logger.info(`Query readOne Country`, { id, userId: session.userId });
-    if (!id) {
-      throw new BadRequestException('No country id to search for');
-    }
-    const readCountry = this.db
-      .query()
-      .match(matchSession(session))
-      .match([node('country', 'Country', { active: true, id })])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canReadName', 'Permission', {
-          property: 'name',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('country'),
-        relation('out', '', 'name', { active: true }),
-        node('countryName', 'Property', { active: true }),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canReadRegion', 'Permission', {
-          property: 'region',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('country'),
-        relation('out', '', 'region', { active: true }),
-        node('region', 'Region', { active: true }),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canEditName', 'Permission', {
-          property: 'name',
-          active: true,
-          edit: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('country'),
-        relation('out', '', 'name', { active: true }),
-        node('countryName', 'Property', { active: true }),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canEditRegion', 'Permission', {
-          property: 'region',
-          active: true,
-          edit: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('country'),
-        relation('out', '', 'region', { active: true }),
-        node('region', 'Region', { active: true }),
-      ])
-      .return({
-        country: [{ id: 'id', createdAt: 'createdAt' }],
-        countryName: [{ value: 'name' }],
-        requestingUser: [{ canReadCountry: 'canReadCountry' }],
-        canReadName: [{ read: 'canReadName' }],
-        canReadRegion: [{ read: 'canReadRegion' }],
-        canEditName: [{ edit: 'canEditName' }],
-        canEditRegion: [{ edit: 'canEditRegion' }],
-        region: [{ id: 'regionId' }],
-      });
-
-    const result = await readCountry.first();
-
-    if (!result || !result.id) {
-      this.logger.error(`Could not find country`);
-      throw new NotFoundException('Could not find country');
-    }
-
-    if (!result.canReadCountry) {
-      throw new ForbiddenException(
-        'User does not have permission to read this country'
-      );
-    }
-
-    let region: Region = {
-      id: '',
-      createdAt: DateTime.fromSeconds(0),
-      name: { value: '', canRead: false, canEdit: false },
-      director: { value: RedactedUser, canRead: false, canEdit: false },
-      zone: {
-        canRead: false,
-        canEdit: false,
-        value: {
-          id: '',
-          createdAt: DateTime.fromSeconds(0),
-          name: { value: '', canRead: false, canEdit: false },
-          director: { value: RedactedUser, canRead: false, canEdit: false },
-        },
-      },
-    };
-    if (result.canReadRegion) {
-      region = await this.readOneRegion(result.regionId, session);
-    }
-
-    return {
-      id: result.id,
-      name: {
-        value: result.name,
-        canRead: !!result.canReadName,
-        canEdit: !!result.canEditName,
-      },
-      region: {
-        value: {
-          ...region,
-        },
-        canRead: !!result.canReadRegion,
-        canEdit: !!result.canEditRegion,
-      },
-      createdAt: result.createdAt,
-    };
-  }
-
   async createCountry(
     { regionId, ...input }: CreateCountry,
     session: ISession
@@ -1037,6 +521,231 @@ export class LocationService {
     } catch (e) {
       throw new ServerException('Could not create country');
     }
+  }
+
+  async readOne(id: string, session: ISession): Promise<Location> {
+    const query = `
+    MATCH (place {id: $id, active: true}) RETURN labels(place) as labels
+    `;
+    const results = await this.db.query().raw(query, { id }).first();
+    // MATCH one of these labels.
+    const label = first(
+      intersection(results?.labels, ['Country', 'Region', 'Zone'])
+    );
+
+    this.logger.info('Looking for ', {
+      label,
+      id,
+      userId: session.userId,
+    });
+    switch (label) {
+      case 'Zone': {
+        return this.readOneZone(id, session);
+      }
+      case 'Region': {
+        return this.readOneRegion(id, session);
+      }
+      case 'Country': {
+        return this.readOneCountry(id, session);
+      }
+      default: {
+        throw new BadRequestException('Not a location');
+      }
+    }
+  }
+
+  async readOneZone(id: string, session: ISession): Promise<Zone> {
+    this.logger.info(`Query readOne Zone`, { id, userId: session.userId });
+
+    const props = ['name'];
+    const baseNodeMetaProps = ['id', 'createdAt'];
+
+    const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
+      {
+        parentBaseNodePropertyKey: 'director',
+        parentRelationDirection: 'out',
+        childBaseNodeLabel: 'User',
+        childBaseNodeMetaPropertyKey: 'id',
+        returnIdentifier: 'directorId',
+      },
+    ];
+    const query = this.db
+      .query()
+      .call(matchRequestingUser, session)
+      .call(matchUserPermissions, 'Zone', id)
+      .call(addAllSecureProperties, ...props)
+      .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
+      .with([
+        ...props.map(addPropertyCoalesceWithClause),
+        ...childBaseNodeMetaProps.map(addShapeForChildBaseNodeMetaProperty),
+        ...baseNodeMetaProps.map(addShapeForBaseNodeMetaProperty),
+        'node',
+        'directorReadPerm.read as canReadDirector',
+        'directorEditPerm.edit as canEditDirector',
+      ])
+      .returnDistinct([
+        ...props,
+        ...baseNodeMetaProps,
+        ...childBaseNodeMetaProps.map((x) => x.returnIdentifier),
+        'canReadDirector',
+        'canEditDirector',
+        'labels(node) as labels',
+      ]);
+
+    const result = await query.first();
+    if (!result) {
+      this.logger.error(`Could not find zone`);
+      throw new NotFoundException('Could not find zone');
+    }
+
+    const response: any = {
+      ...result,
+      director: {
+        value: await this.userService.readOne(result.directorId, session),
+        canRead: !!result.canReadDirector,
+        canEdit: !!result.canEditDirector,
+      },
+    };
+
+    return (response as unknown) as Zone;
+  }
+
+  async readOneRegion(id: string, session: ISession): Promise<Region> {
+    this.logger.info(`Query readOne Region`, { id, userId: session.userId });
+
+    if (!id) {
+      throw new BadRequestException('No region id to search for');
+    }
+
+    const props = ['name'];
+    const baseNodeMetaProps = ['id', 'createdAt'];
+
+    const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
+      {
+        parentBaseNodePropertyKey: 'zone',
+        parentRelationDirection: 'out',
+        childBaseNodeLabel: 'Zone',
+        childBaseNodeMetaPropertyKey: 'id',
+        returnIdentifier: 'zoneId',
+      },
+      {
+        parentBaseNodePropertyKey: 'director',
+        parentRelationDirection: 'out',
+        childBaseNodeLabel: 'User',
+        childBaseNodeMetaPropertyKey: 'id',
+        returnIdentifier: 'directorId',
+      },
+    ];
+
+    const query = this.db
+      .query()
+      .call(matchRequestingUser, session)
+      .call(matchUserPermissions, 'Region', id)
+      .call(addAllSecureProperties, ...props)
+      .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
+      .with([
+        ...props.map(addPropertyCoalesceWithClause),
+        ...childBaseNodeMetaProps.map(addShapeForChildBaseNodeMetaProperty),
+        ...baseNodeMetaProps.map(addShapeForBaseNodeMetaProperty),
+        'node',
+        'coalesce(directorReadPerm.read, false) as canReadDirector',
+        'coalesce(directorEditPerm.edit, false) as canEditDirector',
+        'coalesce(zoneReadPerm.read, false) as canReadZone',
+        'coalesce(zoneEditPerm.edit, false) as canEditZone',
+      ])
+      .returnDistinct([
+        ...props,
+        ...baseNodeMetaProps,
+        ...childBaseNodeMetaProps.map((x) => x.returnIdentifier),
+        'canReadDirector',
+        'canEditDirector',
+        'canReadZone',
+        'canEditZone',
+        'labels(node) as labels',
+      ]);
+
+    const result = await query.first();
+    if (!result) {
+      this.logger.error(`Could not find region`);
+      throw new NotFoundException('Could not find region');
+    }
+
+    const response: any = {
+      ...result,
+      director: {
+        value: await this.userService.readOne(result.directorId, session),
+        canRead: !!result.canReadDirector,
+        canEdit: !!result.canEditDirector,
+      },
+      zone: {
+        value: await this.readOneZone(result.zoneId, session),
+        canRead: !!result.canReadZone,
+        canEdit: !!result.canEditZone,
+      },
+    };
+
+    return (response as unknown) as Region;
+  }
+
+  async readOneCountry(id: string, session: ISession): Promise<Country> {
+    this.logger.info(`Query readOne Country`, { id, userId: session.userId });
+
+    if (!id) {
+      throw new BadRequestException('No country id to search for');
+    }
+
+    const props = ['name'];
+    const baseNodeMetaProps = ['id', 'createdAt'];
+
+    const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
+      {
+        parentBaseNodePropertyKey: 'region',
+        parentRelationDirection: 'out',
+        childBaseNodeLabel: 'Region',
+        childBaseNodeMetaPropertyKey: 'id',
+        returnIdentifier: 'regionId',
+      },
+    ];
+
+    const query = this.db
+      .query()
+      .call(matchRequestingUser, session)
+      .call(matchUserPermissions, 'Country', id)
+      .call(addAllSecureProperties, ...props)
+      .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
+      .with([
+        ...props.map(addPropertyCoalesceWithClause),
+        ...childBaseNodeMetaProps.map(addShapeForChildBaseNodeMetaProperty),
+        ...baseNodeMetaProps.map(addShapeForBaseNodeMetaProperty),
+        'node',
+        'coalesce(regionReadPerm.read, false) as canReadRegion',
+        'coalesce(regionEditPerm.edit, false) as canEditRegion',
+      ])
+      .returnDistinct([
+        ...props,
+        ...baseNodeMetaProps,
+        ...childBaseNodeMetaProps.map((x) => x.returnIdentifier),
+        'canReadRegion',
+        'canEditRegion',
+        'labels(node) as labels',
+      ]);
+
+    const result = await query.first();
+    if (!result) {
+      this.logger.error(`Could not find country`);
+      throw new NotFoundException('Could not find country');
+    }
+
+    const response: any = {
+      ...result,
+      region: {
+        value: await this.readOneRegion(result.regionId, session),
+        canRead: !!result.canReadRegion,
+        canEdit: !!result.canEditRegion,
+      },
+    };
+
+    return (response as unknown) as Country;
   }
 
   async updateZone(input: UpdateZone, session: ISession): Promise<Zone> {
@@ -1259,6 +968,102 @@ export class LocationService {
       throw new ServerException('Could not delete location');
     }
   }
+
+  async list(
+    { filter, ...input }: LocationListInput,
+    session: ISession
+  ): Promise<LocationListOutput> {
+    const types = filter.types ?? ['Zone', 'Region', 'Country'];
+
+    const query = this.db
+      .query()
+      .call(matchRequestingUser, session)
+      .match([
+        node('requestingUser'),
+        relation('in', '', 'member', {}, [1]),
+        node('', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission'),
+        node('perms', 'Permission', { active: true }),
+        relation('out', '', 'baseNode'),
+        node('location', { active: true }),
+      ])
+      .match([
+        node('name', ['Property', 'LocationName']),
+        relation('in', '', 'name'),
+        node('location'),
+      ])
+      .with(
+        'name, location, head([x IN labels(location) WHERE x <> "BaseNode"]) as label'
+      )
+      .where({
+        name: { value: regexp(`.*${filter.name}.*`, true) },
+        label: inArray(types),
+      }).with(`{ 
+        id: location.id, 
+        createdAt: location.createdAt, 
+        name: name.value 
+      } as node`);
+
+    const result = await runListQuery(query, input, false);
+    if (!result) {
+      throw new BadRequestException('No location');
+    }
+    const items = await Promise.all(
+      result.items.map((row: any) => this.readOne(row.id, session))
+    );
+
+    return {
+      ...(result as LocationListOutput),
+      items,
+    };
+  }
+
+  // private randomLocation() {
+  //   const id = () => faker.random.alphaNumeric(8);
+  //   const inPast = () => DateTime.fromJSDate(faker.date.past());
+  //   const ro = <T>(value: T) => ({
+  //     value,
+  //     canRead: true,
+  //     canEdit: false,
+  //   });
+
+  //   const user = (): User => ({
+  //     id: id(),
+  //     createdAt: inPast(),
+  //     bio: ro(''),
+  //     displayFirstName: ro(faker.name.firstName()),
+  //     displayLastName: ro(faker.name.lastName()),
+  //     realFirstName: ro(faker.name.firstName()),
+  //     realLastName: ro(faker.name.lastName()),
+  //     email: ro(faker.internet.email()),
+  //     phone: ro(faker.phone.phoneNumber()),
+  //     timezone: ro(faker.lorem.words(2)),
+  //   });
+
+  //   const region: Zone = {
+  //     id: id(),
+  //     createdAt: inPast(),
+  //     name: ro(faker.address.country()),
+  //     director: ro(user()),
+  //   };
+
+  //   const area: Region = {
+  //     id: id(),
+  //     createdAt: inPast(),
+  //     name: ro(faker.address.state()),
+  //     zone: ro(region),
+  //     director: ro(user()),
+  //   };
+
+  //   const country: Country = {
+  //     id: id(),
+  //     createdAt: inPast(),
+  //     name: ro(faker.address.city()),
+  //     region: ro(area),
+  //   };
+
+  //   return faker.random.arrayElement([area, region, country]);
+  // }
 
   async checkZoneConsistency(session: ISession): Promise<boolean> {
     const zones = await this.db
