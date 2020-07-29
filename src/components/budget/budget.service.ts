@@ -11,6 +11,7 @@ import { ISession, Order } from '../../common';
 import {
   addAllSecureProperties,
   addBaseNodeMetaPropsWithClause,
+  addUserToSG,
   ConfigService,
   createBaseNode,
   DatabaseService,
@@ -184,6 +185,7 @@ export class BudgetService {
         addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
+        label: 'BudgetStatus',
       },
     ];
 
@@ -192,15 +194,17 @@ export class BudgetService {
         .query()
         .call(matchRequestingUser, session)
         .match([
-          node('root', 'User', {
+          node('rootUser', 'User', {
             active: true,
             id: this.config.rootAdmin.id,
           }),
-        ]);
-      createBudget.call(createBaseNode, 'Budget', secureProps, {
-        owningOrgId: session.owningOrgId,
-      });
-      createBudget.return('node.id as id');
+        ])
+        .call(createBaseNode, 'Budget', secureProps, {
+          owningOrgId: session.owningOrgId,
+        })
+        .call(addUserToSG, 'rootUser', 'adminSG')
+        .call(addUserToSG, 'rootUser', 'readerSG')
+        .return('node.id as id');
 
       const result = await createBudget.first();
 
@@ -481,16 +485,8 @@ export class BudgetService {
         canRead: !!result.budgetRecord.canReadOrganization,
         canEdit: !!result.budgetRecord.canEditOrganization,
       },
-      fiscalYear: {
-        value: result.budgetRecord.fiscalYear.value,
-        canRead: !!result.budgetRecord.fiscalYear.canRead,
-        canEdit: !!result.budgetRecord.fiscalYear.canEdit,
-      },
-      amount: {
-        value: result.budgetRecord.amount.value,
-        canRead: !!result.budgetRecord.amount.canRead,
-        canEdit: !!result.budgetRecord.amount.canEdit,
-      },
+      fiscalYear: result.budgetRecord.fiscalYear,
+      amount: result.budgetRecord.amount,
     };
   }
 

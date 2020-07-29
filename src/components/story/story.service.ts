@@ -6,15 +6,22 @@ import {
 } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { generate } from 'shortid';
 import { DuplicateException, ISession } from '../../common';
 import {
+  addAllSecureProperties,
+  addBaseNodeMetaPropsWithClause,
+  addUserToSG,
   ConfigService,
+  createBaseNode,
   DatabaseService,
+  filterByString,
   ILogger,
+  listWithSecureObject,
   Logger,
-  matchSession,
+  matchRequestingUser,
+  matchUserPermissions,
   OnIndex,
+  runListQuery,
 } from '../../core';
 import {
   CreateStory,
@@ -121,14 +128,8 @@ export class StoryService {
   async create(input: CreateStory, session: ISession): Promise<Story> {
     const checkStory = await this.db
       .query()
-      .raw(
-        `
-        MATCH(story:StoryName {value: $name}) return story
-        `,
-        {
-          name: input.name,
-        }
-      )
+      .match([node('story', 'StoryName', { value: input.name })])
+      .return('story')
       .first();
 
     if (checkStory) {
@@ -137,176 +138,96 @@ export class StoryService {
         'Story with this name already exists.'
       );
     }
-    const id = generate();
-    const createdAt = DateTime.local();
+
+    const secureProps = [
+      {
+        key: 'name',
+        value: input.name,
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+        label: 'StoryName',
+      },
+      {
+        key: 'range',
+        value: input.name,
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+        label: 'ScriptureRange',
+      },
+    ];
     try {
       const query = this.db
         .query()
-        .match(matchSession(session, { withAclEdit: 'canCreateStory' }))
+        .call(matchRequestingUser, session)
         .match([
-          node('rootuser', 'User', {
+          node('rootUser', 'User', {
             active: true,
             id: this.config.rootAdmin.id,
           }),
         ])
-        .create([
-          [
-            node('newStory', ['Story', 'Producible', 'BaseNode'], {
-              active: true,
-              createdAt,
-              id,
-              owningOrgId: session.owningOrgId,
-            }),
-          ],
-          ...this.property('name', input.name, 'newStory'),
-          [
-            node('adminSG', 'SecurityGroup', {
-              id: generate(),
-              active: true,
-              createdAt,
-              name: input.name + ' admin',
-            }),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('requestingUser'),
-          ],
-          [
-            node('readerSG', 'SecurityGroup', {
-              id: generate(),
-              active: true,
-              createdAt,
-              name: input.name + ' users',
-            }),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('requestingUser'),
-          ],
-          [
-            node('adminSG'),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('rootuser'),
-          ],
-          [
-            node('readerSG'),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('rootuser'),
-          ],
-          ...this.permission('name', 'newStory'),
-          ...this.permission('range', 'newStory'),
-          // TODO scriptureReferences
-        ])
-        .return(
-          'newStory.id as id, requestingUser.canCreateStory as canCreateStory'
-        );
-      await query.first();
+        .call(createBaseNode, ['Story', 'Producible'], secureProps, {
+          owningOrgId: session.owningOrgId,
+        })
+        .call(addUserToSG, 'rootUser', 'adminSG')
+        .call(addUserToSG, 'rootUser', 'readerSG')
+        .return('node.id as id');
+      const result = await query.first();
+      if (!result) {
+        throw new ServerException('failed to create a story');
+      }
+
+      this.logger.info(`story created`, { id: result.id });
+      return await this.readOne(result.id, session);
     } catch (err) {
       this.logger.error(`Could not create story for user ${session.userId}`);
       throw new ServerException('Could not create story');
     }
-    this.logger.info(`story created`, { id });
-    return this.readOne(id, session);
   }
 
   async readOne(storyId: string, session: ISession): Promise<Story> {
+    const secureProps = ['name', 'range'];
+    const baseNodeMetaProps = ['id', 'createdAt'];
     const readStory = this.db
       .query()
-      .match(matchSession(session, { withAclEdit: 'canReadStorys' }))
-      .match([node('story', 'Story', { active: true, id: storyId })])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canReadRange', 'Permission', {
-          property: 'range',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('story'),
-        relation('out', '', 'name', { active: true }),
-        node('name', 'Property', { active: true }),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canEditRange', 'Permission', {
-          property: 'range',
-          active: true,
-          edit: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('story'),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canReadName', 'Permission', {
-          property: 'name',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('story'),
-        relation('out', '', 'range', { active: true }),
-        node('rangeNode', 'Property', { active: true }),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canEditName', 'Permission', {
-          property: 'name',
-          active: true,
-          edit: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
-        node('story'),
-      ])
-      .return({
-        story: [{ id: 'id', createdAt: 'createdAt' }],
-        name: [{ value: 'name' }],
-        requestingUser: [
-          { canReadStorys: 'canReadStorys', canCreateStory: 'canCreateStory' },
-        ],
-        canReadName: [{ read: 'canReadName' }],
-        canEditName: [{ edit: 'canEditName' }],
-        rangeNode: [{ value: 'range' }],
-        canReadRange: [{ read: 'canReadRange' }],
-        canEditRange: [{ edit: 'canEditRange' }],
-      });
+      .call(matchRequestingUser, session)
+      .call(matchUserPermissions, 'Story', storyId)
+      .call(addAllSecureProperties, ...secureProps)
+      .return(
+        `
+          {
+            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
+            ${listWithSecureObject(secureProps)},
+            canReadStorys: requestingUser.canReadStorys
+          } as story
+        `
+      );
 
-    let result;
-    try {
-      result = await readStory.first();
-    } catch {
-      throw new ServerException('Read Story Error');
-    }
+    const result = await readStory.first();
+
     if (!result) {
       throw new NotFoundException('Could not find story');
     }
-    if (!result.canReadStorys) {
+
+    if (!result.story.canReadStorys) {
       throw new ForbiddenException(
         'User does not have permission to read a story'
       );
     }
     return {
-      id: result.id,
-      name: {
-        value: result.name,
-        canRead: !!result.canReadName,
-        canEdit: !!result.canEditName,
-      },
+      id: result.story.id,
+      name: result.story.name,
       scriptureReferences: {
-        // TODO
-        canRead: true,
-        canEdit: true,
+        canEdit: !!result.story.range.canEdit,
+        canRead: !!result.story.range.canRead,
         value: [],
       },
-      createdAt: result.createdAt,
+      createdAt: result.story.createdAt,
     };
   }
 
@@ -338,35 +259,39 @@ export class StoryService {
   }
 
   async list(
-    { page, count, sort, order, filter }: StoryListInput,
+    { filter, ...input }: StoryListInput,
     session: ISession
   ): Promise<StoryListOutput> {
-    const result = await this.db.list<Story>({
-      session,
-      nodevar: 'story',
-      aclReadProp: 'canReadStorys',
-      aclEditProp: 'canCreateStory',
-      props: ['name'],
-      input: {
-        page,
-        count,
-        sort,
-        order,
-        filter,
-      },
-    });
-    const items = result.items.length
-      ? await Promise.all(
-          result.items.map(async (r) => {
-            return this.readOne(r.id, session);
-          })
-        )
-      : [];
+    const secureProps = ['name', 'range'];
+    const label = 'Story';
+
+    const query = this.db
+      .query()
+      .call(matchRequestingUser, session)
+      .call(matchUserPermissions, label);
+    if (filter.name) {
+      query.call(filterByString, label, 'name', filter.name);
+    }
+    const listResult: {
+      items: Array<{
+        identity: string;
+        labels: string[];
+        properties: Story;
+      }>;
+      hasMore: boolean;
+      total: number;
+    } = await runListQuery(query, input, secureProps.includes(input.sort));
+
+    const items = await Promise.all(
+      listResult.items.map((item) => {
+        return this.readOne(item.properties.id, session);
+      })
+    );
 
     return {
-      items: (items as unknown) as Story[],
-      hasMore: result.hasMore,
-      total: result.total,
+      items,
+      hasMore: listResult.hasMore,
+      total: listResult.total,
     };
   }
 }

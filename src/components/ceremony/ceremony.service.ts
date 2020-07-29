@@ -11,6 +11,7 @@ import { ISession } from '../../common';
 import {
   addAllSecureProperties,
   addBaseNodeMetaPropsWithClause,
+  addUserToSG,
   ConfigService,
   createBaseNode,
   DatabaseService,
@@ -171,7 +172,7 @@ export class CeremonyService {
         .query()
         .call(matchRequestingUser, session)
         .match([
-          node('root', 'User', {
+          node('rootUser', 'User', {
             active: true,
             id: this.config.rootAdmin.id,
           }),
@@ -179,6 +180,8 @@ export class CeremonyService {
         .call(createBaseNode, 'Ceremony', secureProps, {
           owningOrgId: session.owningOrgId,
         })
+        .call(addUserToSG, 'rootUser', 'adminSG')
+        .call(addUserToSG, 'rootUser', 'readerSG')
         .return('node.id as id');
 
       const result = await query.first();
@@ -228,21 +231,9 @@ export class CeremonyService {
       id: result.ceremony.id,
       createdAt: result.ceremony.createdAt,
       type: result.ceremony.type.value,
-      planned: {
-        value: !!result.ceremony.planned.value,
-        canRead: !!result.ceremony.planned.canRead,
-        canEdit: !!result.ceremony.planned.canEdit,
-      },
-      estimatedDate: {
-        value: result.ceremony.estimatedDate.value,
-        canRead: !!result.ceremony.estimatedDate.canRead,
-        canEdit: !!result.ceremony.estimatedDate.canEdit,
-      },
-      actualDate: {
-        value: result.ceremony.actualDate.value,
-        canRead: !!result.ceremony.actualDate.canRead,
-        canEdit: !!result.ceremony.actualDate.canEdit,
-      },
+      planned: result.ceremony.planned,
+      estimatedDate: result.ceremony.estimatedDate,
+      actualDate: result.ceremony.actualDate,
     };
   }
 
