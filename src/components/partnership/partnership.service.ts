@@ -624,6 +624,7 @@ export class PartnershipService {
             value: item.types.value ? item.types.value : [],
             canRead: !!item.types.canRead,
             canEdit: !!item.types.canEdit,
+          },
           mouStart: {
             value: resultOne.mouStart.value,
             canRead: resultOne.mouStart.canRead,
