@@ -32,7 +32,12 @@ describe('ProjectMember e2e', () => {
 
   it('create projectMember', async () => {
     await login(app, { email: user.email.value, password });
-    const projectMember = await createProjectMember(app, { userId: user.id });
+    const project = await createProject(app);
+    const member = await createUser(app, { password });
+    const projectMember = await createProjectMember(app, {
+      userId: member.id,
+      projectId: project.id,
+    });
     expect(projectMember.id).toBeDefined();
     expect(projectMember.modifiedAt).toBeDefined();
     const difference = Interval.fromDateTimes(
@@ -45,7 +50,13 @@ describe('ProjectMember e2e', () => {
   });
 
   it('read one projectMember by id', async () => {
-    const projectMember = await createProjectMember(app, { userId: user.id });
+    await login(app, { email: user.email.value, password });
+    const project = await createProject(app);
+    const member = await createUser(app, { password });
+    const projectMember = await createProjectMember(app, {
+      userId: member.id,
+      projectId: project.id,
+    });
     const result = await app.graphql.query(
       gql`
         query projectMember($id: ID!) {
@@ -63,25 +74,33 @@ describe('ProjectMember e2e', () => {
     const actual: ProjectMember = result.projectMember;
     expect(actual.id).toBe(projectMember.id);
     expect(isValid(actual.id)).toBe(true);
-    expect(actual.user.value?.id).toBe(user.id);
+    expect(actual.user.value?.id).toBe(member.id);
   });
 
   it('list view of ProjectMember', async () => {
     const numProjectMembers = 2;
-    const userForList = await createUser(app);
-    const projectForList = await createProject(app);
-
+    const userForList = await createUser(app, { password });
     const userId = userForList.id;
-    const projectId = projectForList.id;
+    const projectIds: string[] = [];
 
     await Promise.all(
-      times(numProjectMembers).map(() =>
-        createProjectMember(app, {
-          userId,
-          projectId,
+      times(numProjectMembers).map(async () => {
+        await createUser(app);
+        const project = await createProject(app);
+        projectIds.push(project.id);
+      })
+    );
+
+    await login(app, { email: userForList.email.value, password });
+
+    await Promise.all(
+      times(numProjectMembers, async (index) => {
+        await createProjectMember(app, {
+          userId: userId,
+          projectId: projectIds[index],
           roles: [Role.Consultant],
-        })
-      )
+        });
+      })
     );
 
     const { projectMembers } = await app.graphql.query(
@@ -104,7 +123,12 @@ describe('ProjectMember e2e', () => {
 
   it('delete projectMember', async () => {
     await login(app, { email: user.email.value, password });
-    const projectMember = await createProjectMember(app, { userId: user.id });
+    const project = await createProject(app);
+    const member = await createUser(app, { password });
+    const projectMember = await createProjectMember(app, {
+      userId: member.id,
+      projectId: project.id,
+    });
 
     const result = await app.graphql.mutate(
       gql`
@@ -138,7 +162,13 @@ describe('ProjectMember e2e', () => {
   });
 
   it('update projectMember', async () => {
-    const projectMember = await createProjectMember(app, { userId: user.id });
+    await login(app, { email: user.email.value, password });
+    const project = await createProject(app);
+    const member = await createUser(app, { password });
+    const projectMember = await createProjectMember(app, {
+      userId: member.id,
+      projectId: project.id,
+    });
 
     const result = await app.graphql.query(
       gql`

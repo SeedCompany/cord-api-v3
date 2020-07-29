@@ -9,7 +9,7 @@ import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/rel
 import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
-import { ISession } from '../../../common';
+import { DuplicateException, ISession } from '../../../common';
 import {
   addAllMetaPropertiesOfChildBaseNodes,
   addAllSecureProperties,
@@ -153,12 +153,40 @@ export class ProjectMemberService {
     ]);
   };
 
+  protected async getPMByProjectAndUser(
+    projectId: string,
+    userId: string
+  ): Promise<boolean> {
+    const result = await this.db
+      .query()
+      .match([node('user', 'User', { active: true, id: userId })])
+      .match([node('project', 'Project', { active: true, id: projectId })])
+      .match([
+        node('project'),
+        relation('out', '', 'member'),
+        node('projectMember'),
+        relation('out', '', 'user'),
+        node('user'),
+      ])
+      .return('projectMember.id as id')
+      .first();
+
+    return result ? true : false;
+  }
+
   async create(
     { userId, projectId, ...input }: CreateProjectMember,
     session: ISession
   ): Promise<ProjectMember> {
     const id = generate();
     const createdAt = DateTime.local();
+
+    if (await this.getPMByProjectAndUser(projectId, userId)) {
+      throw new DuplicateException(
+        'projectMember.userId',
+        'ProjectMember for this project and user already exists'
+      );
+    }
 
     try {
       const createProjectMember = this.db
