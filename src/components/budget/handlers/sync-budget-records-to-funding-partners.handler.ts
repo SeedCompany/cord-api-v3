@@ -205,9 +205,14 @@ export class SyncBudgetRecordsToFundingPartners
     });
 
     try {
-      if (
-        event instanceof (PartnershipUpdatedEvent || PartnershipCreatedEvent)
-      ) {
+      if (event instanceof PartnershipUpdatedEvent) {
+        await this.synchronizePartnershipBudgetRecords(
+          event.partnership,
+          event.session
+        );
+      }
+
+      if (event instanceof PartnershipCreatedEvent) {
         await this.synchronizePartnershipBudgetRecords(
           event.partnership,
           event.session
