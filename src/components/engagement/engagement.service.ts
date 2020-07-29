@@ -813,39 +813,39 @@ export class EngagementService {
           end as __typename
         `,
         `
-          {
-            value: ceremony.id,
-            canRead: ceremonyReadPerm.read,
-            canEdit: ceremonyEditPerm.edit
-          } as ceremony
-        `,
-        `
-          {
-            value: language.id,
-            canRead: languageReadPerm.read,
-            canEdit: languageEditPerm.edit
-          } as language
-        `,
-        `
-          {
-            value: intern.id,
-            canRead: internReadPerm.read,
-            canEdit: internEditPerm.edit
-          } as intern
-        `,
-        `
-          {
-            value: countryOfOrigin.id,
-            canRead: countryOfOriginReadPerm.read,
-            canEdit: countryOfOriginEditPerm.edit
-          } as countryOfOrigin
-        `,
-        `
-          {
-            value: mentor.id,
-            canRead: mentorReadPerm.read,
-            canEdit: mentorEditPerm.edit
-          } as mentor
+        {
+          value: ceremony.id,
+          canRead: coalesce(ceremonyReadPerm.read, false),
+          canEdit: coalesce(ceremonyEditPerm.edit, false)
+        } as ceremony
+      `,
+      `
+        {
+          value: language.id,
+          canRead: coalesce(languageReadPerm.read, false),
+          canEdit: coalesce(languageEditPerm.edit, false)
+        } as language
+      `,
+      `
+        {
+          value: intern.id,
+          canRead: coalesce(internReadPerm.read, false),
+          canEdit: coalesce(internEditPerm.edit, false)
+        } as intern
+      `,
+      `
+        {
+          value: countryOfOrigin.id,
+          canRead: coalesce(countryOfOriginReadPerm.read, false),
+          canEdit: coalesce(countryOfOriginEditPerm.edit, false)
+        } as countryOfOrigin
+      `,
+      `
+        {
+          value: mentor.id,
+          canRead: coalesce(mentorReadPerm.read, false),
+          canEdit: coalesce(mentorEditPerm.edit, false)
+        } as mentor
         `,
       ])
       .returnDistinct([
@@ -883,27 +883,7 @@ export class EngagementService {
         value: result.methodologies.value ? result.methodologies.value : [],
         canRead: !!result.canReadMethodologies,
         canEdit: !!result.canEditMethodologies,
-      },
-      intern: {
-        value: result.intern.value ? result.intern.value : null,
-        canRead: !!result.intern.canRead,
-        canEdit: !!result.intern.canEdit,
-      },
-      mentor: {
-        value: result.mentor.value ? result.mentor.value : null,
-        canRead: !!result.mentor.canRead,
-        canEdit: !!result.mentor.canEdit,
-      },
-      countryOfOrigin: {
-        value: result.countryOfOrigin.value ? result.countryOfOrigin.value : null,
-        canRead: !!result.countryOfOrigin.canRead,
-        canEdit: !!result.countryOfOrigin.canEdit,
-      },
-      ceremony: {
-        value: result.ceremony.value ? result.ceremony.value : null,
-        canRead: !!result.ceremony.canRead,
-        canEdit: !!result.ceremony.canEdit,
-      },
+      }
     };
 
     if (result.__typename === 'LanguageEngagement') {
