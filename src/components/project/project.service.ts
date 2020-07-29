@@ -17,6 +17,7 @@ import {
 import {
   addAllSecureProperties,
   addBaseNodeMetaPropsWithClause,
+  addUserToSG,
   ConfigService,
   createBaseNode,
   DatabaseService,
@@ -302,7 +303,7 @@ export class ProjectService {
         .query()
         .call(matchRequestingUser, session)
         .match([
-          node('root', 'User', {
+          node('rootUser', 'User', {
             active: true,
             id: this.config.rootAdmin.id,
           }),
@@ -313,22 +314,25 @@ export class ProjectService {
         ]);
       }
 
-      createProject.call(
-        createBaseNode,
-        `Project:${input.type}Project`,
-        secureProps,
-        {
-          owningOrgId: session.owningOrgId,
-          type: createInput.type,
-        },
-        canEdit ? ['name', 'mouStart', 'mouEnd'] : []
-      );
-      createProject.create([
-        ...this.permission('engagement'),
-        ...this.permission('teamMember'),
-        ...this.permission('partnership'),
-        ...this.permission('location'),
-      ]);
+      createProject
+        .call(
+          createBaseNode,
+          `Project:${input.type}Project`,
+          secureProps,
+          {
+            owningOrgId: session.owningOrgId,
+            type: createInput.type,
+          },
+          canEdit ? ['name', 'mouStart', 'mouEnd'] : []
+        )
+        .create([
+          ...this.permission('engagement'),
+          ...this.permission('teamMember'),
+          ...this.permission('partnership'),
+          ...this.permission('location'),
+        ])
+        .call(addUserToSG, 'rootUser', 'adminSG')
+        .call(addUserToSG, 'rootUser', 'readerSG');
       if (locationId) {
         createProject.create([
           [

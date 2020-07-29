@@ -53,21 +53,32 @@ export interface Property {
 // add baseNodeProps and editableProps
 export function createBaseNode(
   query: Query,
-  label: string,
+  label: string | string[],
   props: Property[],
   baseNodeProps?: { owningOrgId?: string | undefined; type?: string },
   editableProps?: string[]
 ) {
   const createdAt = DateTime.local().toString();
 
-  query.create([
-    node('node', [label, 'BaseNode'], {
-      active: true,
-      createdAt,
-      id: generate(),
-      ...baseNodeProps,
-    }),
-  ]);
+  if (typeof label === 'string') {
+    query.create([
+      node('node', [label, 'BaseNode'], {
+        active: true,
+        createdAt,
+        id: generate(),
+        ...baseNodeProps,
+      }),
+    ]);
+  } else {
+    query.create([
+      node('node', [...label, 'BaseNode'], {
+        active: true,
+        createdAt,
+        id: generate(),
+        ...baseNodeProps,
+      }),
+    ]);
+  }
 
   createSG(query, 'adminSG');
   createSG(query, 'writerSG');
@@ -466,7 +477,7 @@ export function matchUserPermissions(
     query.where({ node: { id } });
   }
 
-  query.with(`collect(perms) as permList, node`);
+  query.with(`collect(perms) as permList, node, requestingUser`);
 }
 
 export function matchUserPermissionsForList(
