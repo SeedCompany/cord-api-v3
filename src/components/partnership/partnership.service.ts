@@ -383,24 +383,51 @@ export class PartnershipService {
       throw new NotFoundException('could not find Partnership');
     }
 
+    //Get Projects mapped with the Partnership
+    const projectQuery = this.db
+      .query()
+      .match(matchSession(session, { withAclRead: 'canReadPartnerships' }))
+      .match([
+        node('partnership', 'Partnership', { active: true, id }),
+        relation('in', '', 'partnership', { active: true }),
+        node('project', 'Project', {
+          active: true,
+        }),
+      ]);
+    projectQuery.return({
+      project: [{ id: 'id' }],
+    });
+
+    const getProject = await projectQuery.first();
+
+    const readProject = await this.projectService.readOne(
+      getProject?.id,
+      session
+    );
+
     let mouStart = null;
     let mouEnd = null;
 
     // if user has access to project mou and there is no partnership override
-    if (result.mouStart.canRead || result.mouStartOverride.canRead) {
-      mouStart = result.mouStartOverride.value ?? result.mouStart.value;
+    if (readProject.mouStart.canRead && result.mouStartOverride.canRead) {
+      mouStart = result.mouStartOverride.value ?? readProject.mouStart.value;
     }
-    if (result.mouEnd.canRead || result.mouEndOverride.canRead) {
-      mouEnd = result.mouEndOverride.value ?? result.mouEnd.value;
+    if (readProject.mouEnd.canRead && result.mouEndOverride.canRead) {
+      mouEnd = result.mouEndOverride.value ?? readProject.mouEnd.value;
     }
 
     const canReadMouStart =
-      result.mouStart.canRead || result.mouStartOverride.canRead;
+      readProject.mouStart.canRead && result.mouStartOverride.canRead;
     const canReadMouEnd =
-      result.mouEnd.canRead || result.mouEndOverride.canRead;
+      readProject.mouEnd.canRead && result.mouEndOverride.canRead;
 
     const response: any = {
       ...result,
+      types: {
+        value: result.types.value ? result.types.value : [],
+        canRead: !!result.types.canRead,
+        canEdit: !!result.types.canEdit,
+      },
       mouStart: {
         value: mouStart,
         canRead: canReadMouStart,
@@ -410,11 +437,6 @@ export class PartnershipService {
         value: mouEnd,
         canRead: canReadMouEnd,
         canEdit: false, // edit the project mou or edit the partnerhsip mou override
-      },
-      types: {
-        value: result.types.value ? result.types.value : [],
-        canRead: !!result.types.canRead,
-        canEdit: !!result.types.canEdit,
       },
       organization: this.orgService.readOne(result.organizationId, session),
     };
@@ -555,12 +577,24 @@ export class PartnershipService {
     );
     const items = await Promise.all(
       result.items.map(async (item) => {
+        const resultOne = await this.readOne(item.id, session);
+
         return {
           ...item,
           types: {
             value: item.types.value ? item.types.value : [],
             canRead: !!item.types.canRead,
             canEdit: !!item.types.canEdit,
+          },
+          mouStart: {
+            value: resultOne.mouStart.value,
+            canRead: resultOne.mouStart.canRead,
+            canEdit: false, // edit the project mou or edit the partnerhsip mou override
+          },
+          mouEnd: {
+            value: resultOne.mouEnd.value,
+            canRead: resultOne.mouEnd.canRead,
+            canEdit: false, // edit the project mou or edit the partnerhsip mou override
           },
           organization: await this.orgService.readOne(
             (item as any).organizationId,
