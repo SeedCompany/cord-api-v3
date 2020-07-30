@@ -772,7 +772,7 @@ export class EngagementService {
     session: ISession
   ): Promise<LanguageEngagement | InternshipEngagement> {
     this.logger.info('readOne', { id, userId: session.userId });
-    
+
     if (!id) {
       throw new NotFoundException('no id given');
     }
@@ -875,28 +875,28 @@ export class EngagementService {
           canEdit: coalesce(ceremonyEditPerm.edit, false)
         } as ceremony
       `,
-      `
+        `
         {
           value: language.id,
           canRead: coalesce(languageReadPerm.read, false),
           canEdit: coalesce(languageEditPerm.edit, false)
         } as language
       `,
-      `
+        `
         {
           value: intern.id,
           canRead: coalesce(internReadPerm.read, false),
           canEdit: coalesce(internEditPerm.edit, false)
         } as intern
       `,
-      `
+        `
         {
           value: countryOfOrigin.id,
           canRead: coalesce(countryOfOriginReadPerm.read, false),
           canEdit: coalesce(countryOfOriginEditPerm.edit, false)
         } as countryOfOrigin
       `,
-      `
+        `
         {
           value: mentor.id,
           canRead: coalesce(mentorReadPerm.read, false),
@@ -939,7 +939,7 @@ export class EngagementService {
         value: result.methodologies.value ? result.methodologies.value : [],
         canRead: !!result.canReadMethodologies,
         canEdit: !!result.canEditMethodologies,
-      }
+      },
     };
 
     if (result.__typename === 'LanguageEngagement') {
