@@ -205,7 +205,7 @@ export class OrganizationService {
     } else if (filter.userId && session.userId) {
       query.call(
         filterByBaseNodeId,
-        session.userId,
+        filter.userId,
         'organization',
         'in',
         'User',
