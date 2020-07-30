@@ -150,16 +150,6 @@ export class StoryService {
         isOrgPublic: false,
         label: 'StoryName',
       },
-      {
-        key: 'range',
-        value: input.name,
-        addToAdminSg: true,
-        addToWriterSg: false,
-        addToReaderSg: true,
-        isPublic: false,
-        isOrgPublic: false,
-        label: 'ScriptureRange',
-      },
     ];
     try {
       const query = this.db
@@ -174,6 +164,7 @@ export class StoryService {
         .call(createBaseNode, ['Story', 'Producible'], secureProps, {
           owningOrgId: session.owningOrgId,
         })
+        .create([...this.permission('range', 'node')])
         .call(addUserToSG, 'rootUser', 'adminSG')
         .call(addUserToSG, 'rootUser', 'readerSG')
         .return('node.id as id');
