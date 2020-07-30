@@ -423,6 +423,11 @@ export class PartnershipService {
 
     const response: any = {
       ...result,
+      types: {
+        value: result.types.value ? result.types.value : [],
+        canRead: !!result.types.canRead,
+        canEdit: !!result.types.canEdit,
+      },
       mouStart: {
         value: mouStart,
         canRead: canReadMouStart,
@@ -432,11 +437,6 @@ export class PartnershipService {
         value: mouEnd,
         canRead: canReadMouEnd,
         canEdit: false, // edit the project mou or edit the partnerhsip mou override
-      },
-      types: {
-        value: result.types.value ? result.types.value : [],
-        canRead: !!result.types.canRead,
-        canEdit: !!result.types.canEdit,
       },
       organization: this.orgService.readOne(result.organizationId, session),
     };
