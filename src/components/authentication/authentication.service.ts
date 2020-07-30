@@ -1,7 +1,6 @@
 import {
   BadRequestException,
   Injectable,
-  NotAcceptableException,
   InternalServerErrorException as ServerException,
   UnauthorizedException as UnauthenticatedException,
 } from '@nestjs/common';
@@ -275,11 +274,6 @@ export class AuthenticationService {
 
     if (!result || !(await argon2.verify(result.passwordHash, oldPassword))) {
       throw new UnauthenticatedException('Invalid credentials');
-    }
-    if (oldPassword === newPassword) {
-      throw new NotAcceptableException(
-        'newPassword could not be same with oldPassword'
-      );
     }
 
     const newPasswordHash = await argon2.hash(newPassword);
