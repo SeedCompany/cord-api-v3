@@ -4,7 +4,6 @@ import { DateTime } from 'luxon';
 import { DuplicateException, ISession, ServerException } from '../../common';
 import {
   addAllSecureProperties,
-  addBaseNodeMetaPropsWithClause,
   addPropertyCoalesceWithClause,
   addUserToSG,
   ConfigService,
@@ -12,7 +11,6 @@ import {
   DatabaseService,
   filterByString,
   ILogger,
-  listWithSecureObject,
   Logger,
   matchRequestingUser,
   matchUserPermissions,
@@ -253,7 +251,6 @@ export class SongService {
     session: ISession
   ): Promise<SongListOutput> {
     const label = 'Song';
-    const baseNodeMetaProps = ['id', 'createdAt'];
     const secureProps = ['name'];
 
     const query = this.db
@@ -265,32 +262,15 @@ export class SongService {
       query.call(filterByString, label, 'name', filter.name);
     }
 
-    // match on the rest of the properties of the object requested
-    query.call(addAllSecureProperties, ...secureProps).with(
-      `
-          {
-            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
-            ${listWithSecureObject(secureProps)}
-          } as node
-        `
-    );
-
     const result: SongListOutput = await runListQuery(
       query,
       input,
       secureProps.includes(input.sort)
     );
-    const items = result.items.map((row: any) => {
-      return {
-        ...row,
-        scriptureReferences: {
-          // TODO
-          canRead: true,
-          canEdit: true,
-          value: [],
-        },
-      };
-    });
+
+    const items = await Promise.all(
+      result.items.map((row: any) => this.readOne(row.properties.id, session))
+    );
 
     return {
       items,

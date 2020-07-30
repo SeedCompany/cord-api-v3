@@ -697,6 +697,22 @@ export const story = gql`
   ${scriptureRange}
 `;
 
+export const song = gql`
+  fragment song on Song {
+    id
+    name {
+      value
+      canRead
+      canEdit
+    }
+    scriptureReferences {
+      ...scriptureRange
+    }
+    createdAt
+  }
+  ${scriptureRange}
+`;
+
 export const workflow = gql`
   fragment workflow on Workflow {
     id
@@ -745,5 +761,6 @@ export const fragments = {
   film,
   literacyMaterial,
   story,
+  song,
   fav,
 };

@@ -29,3 +29,4 @@ export * from './create-region';
 export * from './create-country';
 export * from './create-engagement';
 export * from './create-partnership';
+export * from './create-song';
