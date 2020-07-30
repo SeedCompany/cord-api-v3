@@ -184,7 +184,7 @@ export class ProjectMemberService {
     if (await this.getPMByProjectAndUser(projectId, userId)) {
       throw new DuplicateException(
         'projectMember.userId',
-        'ProjectMember for this project and user already exists'
+        'User is already a member of this project'
       );
     }
 
