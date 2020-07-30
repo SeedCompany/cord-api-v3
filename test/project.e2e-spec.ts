@@ -30,6 +30,7 @@ import {
   expectNotFound,
   fragments,
   getUserFromSession,
+  login,
   TestApp,
 } from './utility';
 
@@ -54,6 +55,13 @@ describe('Project e2e', () => {
     country = await createCountry(app, { regionId: region.id });
     intern = await getUserFromSession(app);
     mentor = await getUserFromSession(app);
+
+    process.env = Object.assign(process.env, {
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      ROOT_ADMIN_EMAIL: 'devops@tsco.org',
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      ROOT_ADMIN_PASSWORD: 'admin',
+    });
   });
   afterAll(async () => {
     await app.close();
@@ -528,15 +536,30 @@ describe('Project e2e', () => {
   it('List view of project members by projectId', async () => {
     //create 2 Project member
     const numProjectMembers = 2;
-    const user = await createUser(app);
+    await login(app, {
+      email: process.env.ROOT_ADMIN_EMAIL,
+      password: process.env.ROOT_ADMIN_PASSWORD,
+    });
     const project = await createProject(app);
-    const userId = user.id;
     const projectId = project.id;
+    const memberIds: string[] = [];
 
     await Promise.all(
-      times(numProjectMembers).map(() =>
+      times(numProjectMembers).map(async () => {
+        const member = await createUser(app);
+        memberIds.push(member.id);
+      })
+    );
+
+    await login(app, {
+      email: process.env.ROOT_ADMIN_EMAIL,
+      password: process.env.ROOT_ADMIN_PASSWORD,
+    });
+
+    await Promise.all(
+      times(numProjectMembers, async (index) =>
         createProjectMember(app, {
-          userId,
+          userId: memberIds[index],
           projectId,
           roles: [Role.Consultant],
         })
