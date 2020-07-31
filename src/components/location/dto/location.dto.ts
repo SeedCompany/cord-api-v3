@@ -5,7 +5,7 @@ import {
   ObjectType,
 } from '@nestjs/graphql';
 import { Resource, SecuredProperty, SecuredString } from '../../../common';
-import { SecuredUser } from '../../user/dto';
+import { SecuredUser } from '../../user/dto/user.dto';
 
 @InterfaceType()
 export abstract class Place {
@@ -17,10 +17,10 @@ export abstract class Place {
   implements: [Resource, Place],
 })
 export class Zone extends Resource implements Place {
-  @Field()
+  @Field(() => SecuredString)
   readonly name: SecuredString;
 
-  @Field()
+  @Field(() => SecuredUser)
   readonly director: SecuredUser;
 }
 
@@ -33,13 +33,13 @@ export class SecuredZone extends SecuredProperty(Zone) {}
   implements: [Resource, Place],
 })
 export class Region extends Resource implements Place {
-  @Field()
+  @Field(() => SecuredString)
   readonly name: SecuredString;
 
-  @Field()
+  @Field(() => SecuredZone)
   readonly zone: SecuredZone;
 
-  @Field()
+  @Field(() => SecuredUser)
   readonly director: SecuredUser;
 }
 
@@ -52,10 +52,10 @@ export class SecuredRegion extends SecuredProperty(Region) {}
   implements: [Resource, Place],
 })
 export class Country extends Resource implements Place {
-  @Field()
+  @Field(() => SecuredString)
   name: SecuredString;
 
-  @Field()
+  @Field(() => SecuredRegion)
   region: SecuredRegion;
 }
 

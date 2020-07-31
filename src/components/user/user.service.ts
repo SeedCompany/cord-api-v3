@@ -261,6 +261,7 @@ export class UserService {
       ...this.property('timezone', input.timezone),
       ...this.property('bio', input.bio),
       ...this.property('status', input.status),
+      ...this.property('roles', input.status),
       [
         node('user'),
         relation('in', '', 'member', { active: true, createdAt }),
@@ -294,6 +295,7 @@ export class UserService {
       ...this.permission('timezone'),
       ...this.permission('bio'),
       ...this.permission('status'),
+      ...this.permission('roles'),
     ]);
 
     query.return({
