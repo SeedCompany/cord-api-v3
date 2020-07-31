@@ -361,7 +361,7 @@
 					"response": []
 				},
 				{
-					"name": "Update User Mandatory Field Validation - Id",
+					"name": "Update User Mandatory Field Blank - Id",
 					"event": [
 						{
 							"listen": "test",
@@ -424,6 +424,9 @@
 							"graphql": {
 								"query": "mutation updateUser($input: UpdateUserInput!) {\r\n  updateUser(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value{\r\n          name\r\n          lat\r\n          long\r\n          countries{\r\n            code\r\n            name\r\n            zones{\r\n              name\r\n              lat\r\n              long\r\n              countries{\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      bio {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"user\": {\r\n      \"id\": \"\",\r\n      \"realFirstName\": \"{{realFirstName}}\",\r\n      \"realLastName\": \"{{realLastName}}\",\r\n      \"displayFirstName\": \"{{displayFirstName}}\",\r\n      \"displayLastName\": \"{{displayLastName}}\",\r\n      \"phone\": \"{{phone}}\",\r\n      \"timezone\": \"{{timezone}}\",\r\n      \"bio\": \"{{bio}}\",\r\n      \"status\": \"{{userStatus}}\"\r\n    }\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -439,7 +442,7 @@
 					"response": []
 				},
 				{
-					"name": "Update User Not Mandatory Field Validations - realFirstName",
+					"name": "Update User Not Mandatory Field Blank - realFirstName",
 					"event": [
 						{
 							"listen": "test",
@@ -502,6 +505,9 @@
 							"graphql": {
 								"query": "mutation updateUser($input: UpdateUserInput!) {\r\n  updateUser(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value{\r\n          name\r\n          lat\r\n          long\r\n          countries{\r\n            code\r\n            name\r\n            zones{\r\n              name\r\n              lat\r\n              long\r\n              countries{\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      bio {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"user\": {\r\n      \"id\": \"{{userid}}\",\r\n      \"realFirstName\": \"\",\r\n      \"realLastName\": \"{{realLastName}}\",\r\n      \"displayFirstName\": \"{{displayFirstName}}\",\r\n      \"displayLastName\": \"{{displayLastName}}\",\r\n      \"phone\": \"{{phone}}\",\r\n      \"timezone\": \"{{timezone}}\",\r\n      \"bio\": \"{{bio}}\",\r\n      \"status\": \"{{userStatus}}\"\r\n    }\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -517,7 +523,7 @@
 					"response": []
 				},
 				{
-					"name": "Update User Not Mandatory Field Validations - realLastName",
+					"name": "Update User Not Mandatory Field Blank - realLastName",
 					"event": [
 						{
 							"listen": "test",
@@ -580,6 +586,9 @@
 							"graphql": {
 								"query": "mutation updateUser($input: UpdateUserInput!) {\r\n  updateUser(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value{\r\n          name\r\n          lat\r\n          long\r\n          countries{\r\n            code\r\n            name\r\n            zones{\r\n              name\r\n              lat\r\n              long\r\n              countries{\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      bio {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"user\": {\r\n      \"id\": \"{{userid}}\",\r\n      \"realFirstName\": \"{{realFirstName}}\",\r\n      \"realLastName\": \"\",\r\n      \"displayFirstName\": \"{{displayFirstName}}\",\r\n      \"displayLastName\": \"{{displayLastName}}\",\r\n      \"phone\": \"{{phone}}\",\r\n      \"timezone\": \"{{timezone}}\",\r\n      \"bio\": \"{{bio}}\",\r\n      \"status\": \"{{userStatus}}\"\r\n    }\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -595,7 +604,7 @@
 					"response": []
 				},
 				{
-					"name": "Update User Not Mandatory Field Validations - displayFirstName",
+					"name": "Update User Not Mandatory Field Blank - displayFirstName",
 					"event": [
 						{
 							"listen": "test",
@@ -658,6 +667,9 @@
 							"graphql": {
 								"query": "mutation updateUser($input: UpdateUserInput!) {\r\n  updateUser(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value{\r\n          name\r\n          lat\r\n          long\r\n          countries{\r\n            code\r\n            name\r\n            zones{\r\n              name\r\n              lat\r\n              long\r\n              countries{\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      bio {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"user\": {\r\n      \"id\": \"{{userid}}\",\r\n      \"realFirstName\": \"{{realFirstName}}\",\r\n      \"realLastName\": \"{{realLastName}}\",\r\n      \"displayFirstName\": \"\",\r\n      \"displayLastName\": \"{{displayLastName}}\",\r\n      \"phone\": \"{{phone}}\",\r\n      \"timezone\": \"{{timezone}}\",\r\n      \"bio\": \"{{bio}}\",\r\n      \"status\": \"{{userStatus}}\"\r\n    }\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -673,7 +685,7 @@
 					"response": []
 				},
 				{
-					"name": "Update User Not Mandatory Field Validations - displayLastName",
+					"name": "Update User Not Mandatory Field Blank - displayLastName",
 					"event": [
 						{
 							"listen": "test",
@@ -736,6 +748,9 @@
 							"graphql": {
 								"query": "mutation updateUser($input: UpdateUserInput!) {\r\n  updateUser(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value{\r\n          name\r\n          lat\r\n          long\r\n          countries{\r\n            code\r\n            name\r\n            zones{\r\n              name\r\n              lat\r\n              long\r\n              countries{\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      bio {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"user\": {\r\n      \"id\": \"{{userid}}\",\r\n      \"realFirstName\": \"{{realFirstName}}\",\r\n      \"realLastName\": \"{{realLastName}}\",\r\n      \"displayFirstName\": \"{{displayFirstName}}\",\r\n      \"displayLastName\": \"\",\r\n      \"phone\": \"{{phone}}\",\r\n      \"timezone\": \"{{timezone}}\",\r\n      \"bio\": \"{{bio}}\",\r\n      \"status\": \"{{userStatus}}\"\r\n    }\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -751,7 +766,7 @@
 					"response": []
 				},
 				{
-					"name": "Update User Not Mandatory Field Validations - timezone",
+					"name": "Update User Not Mandatory Field Blank - timezone",
 					"event": [
 						{
 							"listen": "test",
@@ -814,6 +829,9 @@
 							"graphql": {
 								"query": "mutation updateUser($input: UpdateUserInput!) {\r\n  updateUser(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value{\r\n          name\r\n          lat\r\n          long\r\n          countries{\r\n            code\r\n            name\r\n            zones{\r\n              name\r\n              lat\r\n              long\r\n              countries{\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      bio {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"user\": {\r\n      \"id\": \"{{userid}}\",\r\n      \"realFirstName\": \"{{realFirstName}}\",\r\n      \"realLastName\": \"{{realLastName}}\",\r\n      \"displayFirstName\": \"{{displayFirstName}}\",\r\n      \"displayLastName\": \"{{displayLastName}}\",\r\n      \"phone\": \"{{phone}}\",\r\n      \"timezone\": \"\",\r\n      \"bio\": \"{{bio}}\",\r\n      \"status\": \"{{userStatus}}\"\r\n    }\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -829,7 +847,7 @@
 					"response": []
 				},
 				{
-					"name": "Update User Mandatory Field Validations - status",
+					"name": "Update User Mandatory Field Blank - status",
 					"event": [
 						{
 							"listen": "test",
@@ -886,7 +904,10 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation updateUser($input: UpdateUserInput!) {\r\n  updateUser(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value{\r\n          name\r\n          lat\r\n          long\r\n          countries{\r\n            code\r\n            name\r\n            zones{\r\n              name\r\n              lat\r\n              long\r\n              countries{\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      bio {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"user\": {\r\n      \"id\": \"{{userid}}\",\r\n      \"realFirstName\": \"{{realFirstName}}\",\r\n      \"realLastName\": \"{{realLastName}}\",\r\n      \"displayFirstName\": \"{{displayFirstName}}\",\r\n      \"displayLastName\": \"{{displayLastName}}\",\r\n      \"phone\": \"{{phone}}\",\r\n      \"timezone\": \"{{timezone}}\",\r\n      \"bio\": \"{{bio}}\",\r\n      \"status\": \"! @ # $ rr %%\"\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"user\": {\r\n      \"id\": \"{{userid}}\",\r\n      \"realFirstName\": \"{{realFirstName}}\",\r\n      \"realLastName\": \"{{realLastName}}\",\r\n      \"displayFirstName\": \"{{displayFirstName}}\",\r\n      \"displayLastName\": \"{{displayLastName}}\",\r\n      \"phone\": \"{{phone}}\",\r\n      \"timezone\": \"{{timezone}}\",\r\n      \"bio\": \"{{bio}}\",\r\n      \"status\": \" \"\r\n    }\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -2112,7 +2133,7 @@
 					"response": []
 				},
 				{
-					"name": "Get User By Id Mandatory Field Validation - Id",
+					"name": "Get User By Id Mandatory Field Blank - Id",
 					"event": [
 						{
 							"listen": "test",
@@ -2163,6 +2184,9 @@
 							"graphql": {
 								"query": "query user($id: ID!) {\r\n  user(id: $id) {\r\n    id\r\n    fullName\r\n    firstName\r\n    avatarLetters\r\n    createdAt\r\n    email {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    realFirstName {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    realLastName {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    displayFirstName {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    displayLastName {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    phone {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    timezone {\r\n      canRead\r\n      canEdit\r\n      value {\r\n        name\r\n        lat\r\n        long\r\n        countries {\r\n          code\r\n          name\r\n          zones {\r\n            name\r\n            lat\r\n            long\r\n            countries {\r\n              code\r\n            }\r\n          }\r\n        }\r\n      }\r\n    }\r\n    bio {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    status {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n\r\n    unavailabilities {\r\n      total\r\n      hasMore\r\n      canCreate\r\n      canRead\r\n      items {\r\n        id\r\n        createdAt\r\n        description {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        start\r\n        end\r\n      }\r\n    }\r\n    organizations {\r\n      total\r\n      hasMore\r\n      canCreate\r\n      canRead\r\n      items {\r\n        id\r\n        createdAt\r\n        name {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        avatarLetters\r\n      }\r\n    }\r\n    education {\r\n      total\r\n      hasMore\r\n      canCreate\r\n      canRead\r\n      items {\r\n        id\r\n        createdAt\r\n        degree {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        major {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        institution {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"id\": \"\"\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -2244,7 +2268,7 @@
 					"response": []
 				},
 				{
-					"name": "Get User By Id Parameter Invalid - Id",
+					"name": "Get User By Id Parameter invalid  - Id",
 					"event": [
 						{
 							"listen": "test",
@@ -2296,6 +2320,9 @@
 							"graphql": {
 								"query": "query user($id: ID!) {\r\n  user(id: $id) {\r\n    id\r\n    fullName\r\n    firstName\r\n    avatarLetters\r\n    createdAt\r\n    email {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    realFirstName {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    realLastName {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    displayFirstName {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    displayLastName {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    phone {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    timezone {\r\n      canRead\r\n      canEdit\r\n      value {\r\n        name\r\n        lat\r\n        long\r\n        countries {\r\n          code\r\n          name\r\n          zones {\r\n            name\r\n            lat\r\n            long\r\n            countries {\r\n              code\r\n            }\r\n          }\r\n        }\r\n      }\r\n    }\r\n    bio {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    status {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n\r\n    unavailabilities {\r\n      total\r\n      hasMore\r\n      canCreate\r\n      canRead\r\n      items {\r\n        id\r\n        createdAt\r\n        description {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        start\r\n        end\r\n      }\r\n    }\r\n    organizations {\r\n      total\r\n      hasMore\r\n      canCreate\r\n      canRead\r\n      items {\r\n        id\r\n        createdAt\r\n        name {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        avatarLetters\r\n      }\r\n    }\r\n    education {\r\n      total\r\n      hasMore\r\n      canCreate\r\n      canRead\r\n      items {\r\n        id\r\n        createdAt\r\n        degree {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        major {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        institution {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"id\": \"|| && ^^ << >> <h1>\"\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -2586,7 +2613,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query users($input: UserListInput) {\r\n  users(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value{\r\n          name\r\n          lat\r\n          long\r\n          countries{\r\n            code\r\n            name\r\n            zones{\r\n              name\r\n              lat\r\n              long\r\n              countries{\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      bio {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n\r\n        hasMore\r\n        total\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"id\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"displayFirstName\": \"\",\r\n      \"displayLastName\": \"\"\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"id\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							}
 						},
 						"url": {
@@ -3484,7 +3511,7 @@
 					"response": []
 				},
 				{
-					"name": "Get All Users Not Mandatory Field Validation - sort",
+					"name": "Get All Users Not Mandatory Field Blank - sort",
 					"event": [
 						{
 							"listen": "test",
@@ -3546,6 +3573,9 @@
 							"graphql": {
 								"query": "query users($input: UserListInput) {\r\n  users(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value{\r\n          name\r\n          lat\r\n          long\r\n          countries{\r\n            code\r\n            name\r\n            zones{\r\n              name\r\n              lat\r\n              long\r\n              countries{\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      bio {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n\r\n        hasMore\r\n        total\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"\"\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -3561,7 +3591,7 @@
 					"response": []
 				},
 				{
-					"name": "Get All Users Not Mandatory Field Validation - order",
+					"name": "Get All Users Not Mandatory Field Blank - order",
 					"event": [
 						{
 							"listen": "test",
@@ -3623,6 +3653,9 @@
 							"graphql": {
 								"query": "query users($input: UserListInput) {\r\n  users(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value{\r\n          name\r\n          lat\r\n          long\r\n          countries{\r\n            code\r\n            name\r\n            zones{\r\n              name\r\n              lat\r\n              long\r\n              countries{\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      bio {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n\r\n        hasMore\r\n        total\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"id\",\r\n    \"order\": \"\",\r\n    \"filter\": {\r\n      \"displayFirstName\": \"\",\r\n      \"displayLastName\": \"\"\r\n    }\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -4259,6 +4292,9 @@
 							"graphql": {
 								"query": "query users($input: UserListInput) {\r\n  users(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value{\r\n          name\r\n          lat\r\n          long\r\n          countries{\r\n            code\r\n            name\r\n            zones{\r\n              name\r\n              lat\r\n              long\r\n              countries{\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      bio {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n\r\n        hasMore\r\n        total\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{count}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"dlkjfdlfjdlfk\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -4418,7 +4454,7 @@
 					"response": []
 				},
 				{
-					"name": "Delete User Mandatory Field Validation - Id",
+					"name": "Delete User Mandatory Field Blank - Id",
 					"event": [
 						{
 							"listen": "test",
@@ -4481,6 +4517,9 @@
 							"graphql": {
 								"query": "mutation ($id: ID!) {\r\n  deleteUser(id:$id)\r\n}",
 								"variables": "{\r\n  \"id\": \"\"\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -4699,6 +4738,833 @@
 							"graphql": {
 								"query": "query checkUserConsistency{\r\n  checkUserConsistency\r\n}",
 								"variables": "{\r\n  \"id\": \"  i n valid  $%^ \"\r\n}"
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update User Mandatory Field Removed  - Id",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "84863704-25aa-4fdb-abf2-6a8385cb820f",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 400 Bad Request\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].message;  ",
+									"    pm.expect(error_message).to.include(\"Field \\\"id\\\" of required type \\\"ID!\\\" was not provided.\");",
+									"});",
+									"",
+									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {",
+									"    var error_code = jsonData.errors[0].extensions.code;  ",
+									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "",
+								"type": "text",
+								"value": "",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation updateUser($input: UpdateUserInput!) {\r\n  updateUser(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value{\r\n          name\r\n          lat\r\n          long\r\n          countries{\r\n            code\r\n            name\r\n            zones{\r\n              name\r\n              lat\r\n              long\r\n              countries{\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      bio {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n  \"input\": {\r\n    \"user\": {\r\n      \"realFirstName\": \"{{realFirstName}}\",\r\n      \"realLastName\": \"{{realLastName}}\",\r\n      \"displayFirstName\": \"{{displayFirstName}}\",\r\n      \"displayLastName\": \"{{displayLastName}}\",\r\n      \"phone\": \"{{phone}}\",\r\n      \"timezone\": \"{{timezone}}\",\r\n      \"bio\": \"{{bio}}\",\r\n      \"status\": \"{{userStatus}}\"\r\n    }\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update User Not Mandatory Field Removed - realFirstName",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "feb2727c-1fef-4b14-aaa5-c3b604f84668",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that user ID is not blank or null\", function () {",
+									"    var id = jsonData.data.updateUser.user.id;",
+									"    pm.expect(id).to.not.eql(null);",
+									"    pm.expect(id).to.not.eql(\"\");",
+									"});",
+									"",
+									"pm.test(\"Verify that user realFirstName is equal to previous value\", function () {",
+									"    var realFirstName = jsonData.data.updateUser.user.realFirstName.value;",
+									"    pm.expect(realFirstName).to.eql(pm.globals.get('realFirstName'));",
+									"});",
+									"",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "",
+								"type": "text",
+								"value": "",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation updateUser($input: UpdateUserInput!) {\r\n  updateUser(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value{\r\n          name\r\n          lat\r\n          long\r\n          countries{\r\n            code\r\n            name\r\n            zones{\r\n              name\r\n              lat\r\n              long\r\n              countries{\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      bio {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n  \"input\": {\r\n    \"user\": {\r\n      \"id\": \"{{userid}}\",\r\n      \"realLastName\": \"{{realLastName}}\",\r\n      \"displayFirstName\": \"{{displayFirstName}}\",\r\n      \"displayLastName\": \"{{displayLastName}}\",\r\n      \"phone\": \"{{phone}}\",\r\n      \"timezone\": \"{{timezone}}\",\r\n      \"bio\": \"{{bio}}\",\r\n      \"status\": \"{{userStatus}}\"\r\n    }\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update User Not Mandatory Field Removed  - displayLastName",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "af16a2c6-00b4-4541-bf33-e93bc5160dd3",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].message;  ",
+									"    pm.expect(error_message).to.include(\"Could not find user\");",
+									"});",
+									"",
+									"pm.test(\"Verify that error code is NotFound\", function () {",
+									"    var error_code = jsonData.errors[0].extensions.code;  ",
+									"    pm.expect(error_code).to.eql(\"NotFound\");",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "",
+								"type": "text",
+								"value": "",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation updateUser($input: UpdateUserInput!) {\r\n  updateUser(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value{\r\n          name\r\n          lat\r\n          long\r\n          countries{\r\n            code\r\n            name\r\n            zones{\r\n              name\r\n              lat\r\n              long\r\n              countries{\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      bio {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n  \"input\": {\r\n    \"user\": {\r\n      \"id\": \"{{userid}}\",\r\n      \"realFirstName\": \"{{realFirstName}}\",\r\n      \"realLastName\": \"{{realLastName}}\",\r\n      \"displayFirstName\": \"{{displayFirstName}}\",\r\n      \"phone\": \"{{phone}}\",\r\n      \"timezone\": \"{{timezone}}\",\r\n      \"bio\": \"{{bio}}\",\r\n      \"status\": \"{{userStatus}}\"\r\n    }\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update User Not Mandatory Field Removed - displayFirstName",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "a59f033d-182b-40db-bc64-5c8814ba4ac4",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].message;  ",
+									"    pm.expect(error_message).to.include(\"Could not find user\");",
+									"});",
+									"",
+									"pm.test(\"Verify that error code is NotFound\", function () {",
+									"    var error_code = jsonData.errors[0].extensions.code;  ",
+									"    pm.expect(error_code).to.eql(\"NotFound\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "",
+								"type": "text",
+								"value": "",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation updateUser($input: UpdateUserInput!) {\r\n  updateUser(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value{\r\n          name\r\n          lat\r\n          long\r\n          countries{\r\n            code\r\n            name\r\n            zones{\r\n              name\r\n              lat\r\n              long\r\n              countries{\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      bio {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n  \"input\": {\r\n    \"user\": {\r\n      \"id\": \"{{userid}}\",\r\n      \"realFirstName\": \"{{realFirstName}}\",\r\n      \"realLastName\": \"{{realLastName}}\",\r\n      \"displayLastName\": \"{{displayLastName}}\",\r\n      \"phone\": \"{{phone}}\",\r\n      \"timezone\": \"{{timezone}}\",\r\n      \"bio\": \"{{bio}}\",\r\n      \"status\": \"{{userStatus}}\"\r\n    }\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update User Not Mandatory Field Removed  - realLastName",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "6ca437f6-f606-491c-a25b-f9eac1186897",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].message;  ",
+									"    pm.expect(error_message).to.include(\"Could not find user\");",
+									"});",
+									"",
+									"pm.test(\"Verify that error code is NotFound\", function () {",
+									"    var error_code = jsonData.errors[0].extensions.code;  ",
+									"    pm.expect(error_code).to.eql(\"NotFound\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "",
+								"type": "text",
+								"value": "",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation updateUser($input: UpdateUserInput!) {\r\n  updateUser(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value{\r\n          name\r\n          lat\r\n          long\r\n          countries{\r\n            code\r\n            name\r\n            zones{\r\n              name\r\n              lat\r\n              long\r\n              countries{\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      bio {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n  \"input\": {\r\n    \"user\": {\r\n      \"id\": \"{{userid}}\",\r\n      \"realFirstName\": \"{{realFirstName}}\",\r\n      \"displayFirstName\": \"{{displayFirstName}}\",\r\n      \"displayLastName\": \"{{displayLastName}}\",\r\n      \"phone\": \"{{phone}}\",\r\n      \"timezone\": \"{{timezone}}\",\r\n      \"bio\": \"{{bio}}\",\r\n      \"status\": \"{{userStatus}}\"\r\n    }\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User By Id Mandatory Field Removed  - Id",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "dfea4b3d-6240-46e4-a060-fc68709da96f",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 400 Bad Request\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].message;  ",
+									"    pm.expect(error_message).to.eql(\"Variable \\\"$id\\\" of required type \\\"ID!\\\" was not provided.\");",
+									"});",
+									"",
+									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {",
+									"    var error_message = jsonData.errors[0].extensions.code;  ",
+									"    pm.expect(error_message).to.eql(\"INTERNAL_SERVER_ERROR\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query user($id: ID!) {\r\n  user(id: $id) {\r\n    id\r\n    fullName\r\n    firstName\r\n    avatarLetters\r\n    createdAt\r\n    email {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    realFirstName {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    realLastName {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    displayFirstName {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    displayLastName {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    phone {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    timezone {\r\n      canRead\r\n      canEdit\r\n      value {\r\n        name\r\n        lat\r\n        long\r\n        countries {\r\n          code\r\n          name\r\n          zones {\r\n            name\r\n            lat\r\n            long\r\n            countries {\r\n              code\r\n            }\r\n          }\r\n        }\r\n      }\r\n    }\r\n    bio {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    status {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n\r\n    unavailabilities {\r\n      total\r\n      hasMore\r\n      canCreate\r\n      canRead\r\n      items {\r\n        id\r\n        createdAt\r\n        description {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        start\r\n        end\r\n      }\r\n    }\r\n    organizations {\r\n      total\r\n      hasMore\r\n      canCreate\r\n      canRead\r\n      items {\r\n        id\r\n        createdAt\r\n        name {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        avatarLetters\r\n      }\r\n    }\r\n    education {\r\n      total\r\n      hasMore\r\n      canCreate\r\n      canRead\r\n      items {\r\n        id\r\n        createdAt\r\n        degree {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        major {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        institution {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n  \r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update User Not Mandatory Field Removed  - timezone???????",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "5123edb7-56dc-4c8a-a70e-2fbf8befe876",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that user ID is not blank or null\", function () {",
+									"    var id = jsonData.data.updateUser.user.id;",
+									"    pm.expect(id).to.not.eql(null);",
+									"    pm.expect(id).to.not.eql(\"\");",
+									"});",
+									"",
+									"// pm.test(\"Verify that user timezone is equal to previous value\", function () {",
+									"//     var timezone = jsonData.data.updateUser.user.timezone.name.value;",
+									"//     pm.expect(timezone).to.eql(pm.globals.get('timezone.value.name'));",
+									"// });"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "",
+								"type": "text",
+								"value": "",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation updateUser($input: UpdateUserInput!) {\r\n  updateUser(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value{\r\n          name\r\n          lat\r\n          long\r\n          countries{\r\n            code\r\n            name\r\n            zones{\r\n              name\r\n              lat\r\n              long\r\n              countries{\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      bio {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n  \"input\": {\r\n    \"user\": {\r\n      \"id\": \"{{userid}}\",\r\n      \"realFirstName\": \"{{realFirstName}}\",\r\n      \"realLastName\": \"{{realLastName}}\",\r\n      \"displayFirstName\": \"{{displayFirstName}}\",\r\n      \"displayLastName\": \"{{displayLastName}}\",\r\n      \"phone\": \"{{phone}}\",\r\n      \"bio\": \"{{bio}}\",\r\n      \"status\": \"{{userStatus}}\"\r\n    }\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update User Mandatory Field Removed  - status",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "0383420a-615a-4308-ae23-b8cfc4b23ca5",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that user ID is not blank or null\", function () {",
+									"    var id = jsonData.data.updateUser.user.id;",
+									"    pm.expect(id).to.not.eql(null);",
+									"    pm.expect(id).to.not.eql(\"\");",
+									"});",
+									"",
+									"pm.test(\"Verify that user status is equal to previous value\", function () {",
+									"    var status = jsonData.data.updateUser.user.status.value;",
+									"    pm.expect(status).to.eql(pm.globals.get('userStatus'));",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "",
+								"type": "text",
+								"value": "",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation updateUser($input: UpdateUserInput!) {\r\n  updateUser(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value{\r\n          name\r\n          lat\r\n          long\r\n          countries{\r\n            code\r\n            name\r\n            zones{\r\n              name\r\n              lat\r\n              long\r\n              countries{\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      bio {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n  \"input\": {\r\n    \"user\": {\r\n      \"id\": \"{{userid}}\",\r\n      \"realFirstName\": \"{{realFirstName}}\",\r\n      \"realLastName\": \"{{realLastName}}\",\r\n      \"displayFirstName\": \"{{displayFirstName}}\",\r\n      \"displayLastName\": \"{{displayLastName}}\",\r\n      \"phone\": \"{{phone}}\",\r\n      \"timezone\": \"{{timezone}}\",\r\n      \"bio\": \"{{bio}}\"\r\n    }\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Users Not Mandatory Field Removed - sort Copy??????????",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fa6d675e-fdcf-4f19-ab32-eea68ff59671",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "0de41d5e-9f96-47fb-a3cf-5624c149a096",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query users($input: UserListInput) {\r\n  users(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value{\r\n          name\r\n          lat\r\n          long\r\n          countries{\r\n            code\r\n            name\r\n            zones{\r\n              name\r\n              lat\r\n              long\r\n              countries{\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      bio {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n\r\n        hasMore\r\n        total\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}}\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Users Not Mandatory Field Removed - order Copy??????????",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "3630aced-cb48-4a14-a967-befa17439e9c",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "4f0864a2-5cd0-4e69-8bfc-2ffff0ca7154",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query users($input: UserListInput) {\r\n  users(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value{\r\n          name\r\n          lat\r\n          long\r\n          countries{\r\n            code\r\n            name\r\n            zones{\r\n              name\r\n              lat\r\n              long\r\n              countries{\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      bio {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n\r\n        hasMore\r\n        total\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"id\",\r\n    \"filter\": {\r\n      \"displayFirstName\": \"\",\r\n      \"displayLastName\": \"\"\r\n    }\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete User Mandatory Field Removed - Id",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "7d934c69-a296-485b-95b4-402973ae0bb0",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 400 Bad Request\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].message;  ",
+									"    pm.expect(error_message).to.eql(\"Variable \\\"$id\\\" of required type \\\"ID!\\\" was not provided.\");",
+									"});",
+									"",
+									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {",
+									"    var error_message = jsonData.errors[0].extensions.code;  ",
+									"    pm.expect(error_message).to.eql(\"INTERNAL_SERVER_ERROR\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "",
+								"type": "text",
+								"value": "",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation ($id: ID!) {\r\n  deleteUser(id:$id)\r\n}",
+								"variables": "{\r\n \r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {

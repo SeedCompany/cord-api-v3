@@ -379,7 +379,7 @@
 					"response": []
 				},
 				{
-					"name": "Create Org Mandatory Field Validation - Name",
+					"name": "Create Org Mandatory Field Blank - Name",
 					"event": [
 						{
 							"listen": "test",
@@ -443,6 +443,86 @@
 							"graphql": {
 								"query": "mutation createOrganization($input: CreateOrganizationInput!) {\r\n  createOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\n  \"input\": \n  {\n    \"organization\" :\n    {\n      \"name\":\"\" \n    } \n        \n\t  }\n  }\n\n\n\n"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Org Mandatory Field Removed - Name",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "704c2f9e-744e-47c1-89b1-52a916ee5d94",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 400 Bad Request\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].message;",
+									"    pm.expect(error_message).to.include(\"Field \\\"name\\\" of required type \\\"String!\\\" was not provided.\");",
+									"});",
+									"",
+									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {",
+									"    var error_code = jsonData.errors[0].extensions.code;",
+									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "",
+								"type": "text",
+								"value": "",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation createOrganization($input: CreateOrganizationInput!) {\r\n  createOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\n  \"input\": \n  {\n    \"organization\" :\n    {\n      \n    } \n        \n\t  }\n  }\n\n\n\n"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -934,7 +1014,97 @@
 					"response": []
 				},
 				{
-					"name": "Update Org Mandatory Field Validation - Id",
+					"name": "Update Org Mandatory Field Removed - Id",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "8ba436cc-5248-4093-876a-3d2071fa60c7",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 400 Bad Request\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].message;",
+									"    pm.expect(error_message).to.include(\"Field \\\"id\\\" of required type \\\"ID!\\\" was not provided.\");",
+									"});",
+									"",
+									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {",
+									"    var error_code = jsonData.errors[0].extensions.code;",
+									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "c3ce3423-001c-4498-89f0-ad07106827c4",
+								"exec": [
+									"const moment = require('moment');\r",
+									"// pm.globals.set(\"timestamp\", moment().format(\"DDMYYYYhhmmss\"));\r",
+									"\r",
+									"pm.globals.set(\"orgName\", \"OrganizationName_\" + moment().format(\"DDMMYYYYhhmmss\"));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "",
+								"type": "text",
+								"value": "",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation updateOrganization($input: UpdateOrganizationInput!) {\r\n  updateOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n  \"input\": {\r\n    \"organization\": {\r\n      \"name\": \"{{orgName}}\"\r\n    }\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Org Mandatory Field Blank - Id",
 					"event": [
 						{
 							"listen": "test",
@@ -1006,6 +1176,9 @@
 							"graphql": {
 								"query": "mutation updateOrganization($input: UpdateOrganizationInput!) {\r\n  updateOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"organization\" :\r\n    {\r\n\t\t  \"id\":\"\",\r\n      \"name\": \"{{orgName}}\"\r\n    } \r\n        \r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -1021,7 +1194,96 @@
 					"response": []
 				},
 				{
-					"name": "Update Org Not Mandatory Field Validation - Name",
+					"name": "Update Org Not Mandatory Field Removed - Name",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "041d0c05-f0c3-4608-bbf5-a7e4dd62f480",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that organization ID is not blank or null\", function () {",
+									"    var id = jsonData.data.updateOrganization.organization.id.value;;",
+									"    pm.expect(id).to.not.eql(null);",
+									"    pm.expect(id).to.not.eql(\"\");",
+									"});",
+									"",
+									"pm.test(\"Verify that organizations name is equal to previous value\", function () {",
+									"    var organizationName = jsonData.data.updateOrganization.organization.name.value;",
+									"    pm.expect(organizationName).to.eql(pm.globals.get('orgName'));",
+									"});",
+									"",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "223d6f61-7f46-4207-8587-5fb612d138b9",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "",
+								"type": "text",
+								"value": "",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation updateOrganization($input: UpdateOrganizationInput!) {\r\n  updateOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"organization\" :\r\n    {\r\n\t\t  \"id\":\"{{organizationid}}\"\r\n    } \r\n        \r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Org Not Mandatory Field Blank - Name",
 					"event": [
 						{
 							"listen": "test",
@@ -1095,6 +1357,9 @@
 							"graphql": {
 								"query": "mutation updateOrganization($input: UpdateOrganizationInput!) {\r\n  updateOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"organization\" :\r\n    {\r\n\t\t  \"id\":\"{{organizationid}}\",\r\n      \"name\": \"\"\r\n    } \r\n        \r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -2357,7 +2622,7 @@
 					"response": []
 				},
 				{
-					"name": "Get All Organizations Not Mandatory Field Validation - sort",
+					"name": "Get All Organizations Not Mandatory Field Blank - sort",
 					"event": [
 						{
 							"listen": "test",
@@ -2431,6 +2696,100 @@
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}} ,\r\n    \"page\": {{page}},\r\n    \"sort\": \"\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Organizations Not Mandatory Field Removed - sort",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "88742235-c127-48d2-8db7-b24f8fbd603b",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"",
+									"pm.test(\"Verify that organization ID is not blank or null\", function () {",
+									"    var id = jsonData.data.organizations.items[0].id.value;;",
+									"    pm.expect(id).to.not.eql(null);",
+									"    pm.expect(id).to.not.eql(\"\");",
+									"});",
+									"",
+									"pm.test(\"Verify that organizations name is equal to previous value\", function () {",
+									"    var organizationName = jsonData.data.organizations.items[0].name.value;",
+									"    pm.expect(organizationName).to.eql(pm.globals.get('orgName'));",
+									"});",
+									"",
+									"",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "dee8fb61-7cf1-42c5-bf2d-7ea1f456ba71",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "",
+								"type": "text",
+								"value": "",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}} ,\r\n    \"page\": {{page}},\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -3376,7 +3735,7 @@
 					"response": []
 				},
 				{
-					"name": "Delete Org Mandatory Field Validation - Id",
+					"name": "Delete Org Mandatory Field Blank - Id",
 					"event": [
 						{
 							"listen": "test",
@@ -3439,6 +3798,85 @@
 							"graphql": {
 								"query": "mutation ($id: ID!) {\n  deleteOrganization(id:$id)\n}",
 								"variables": "{\r\n  \"id\": \"\"\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Org Mandatory Field Removed - Id",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "a7c27a20-e5e5-4a55-8fb9-6aa6807dd84d",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 400 Bad Request\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].message;  ",
+									"    pm.expect(error_message).to.eql(\"Variable \\\"$id\\\" of required type \\\"ID!\\\" was not provided.\");",
+									"});",
+									"",
+									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {",
+									"    var error_message = jsonData.errors[0].extensions.code;  ",
+									"    pm.expect(error_message).to.eql(\"INTERNAL_SERVER_ERROR\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "",
+								"type": "text",
+								"value": "",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation ($id: ID!) {\n  deleteOrganization(id:$id)\n}",
+								"variables": "{\r\n  \r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
