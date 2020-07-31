@@ -118,6 +118,34 @@ describe('Authentication e2e', () => {
     return true;
   });
 
+  it('should return true after password changed', async () => {
+    const fakeUser = generateRegisterInput();
+
+    const user = await createUser(app, fakeUser);
+    await login(app, { email: fakeUser.email, password: fakeUser.password });
+
+    const newPassword = faker.internet.password();
+    const result = await app.graphql.mutate(
+      gql`
+        mutation changePassword($oldPassword: String!, $newPassword: String!) {
+          changePassword(oldPassword: $oldPassword, newPassword: $newPassword)
+        }
+      `,
+      {
+        oldPassword: fakeUser.password,
+        newPassword: newPassword,
+      }
+    );
+
+    expect(result.changePassword).toBeTruthy();
+
+    const updatedUser = await login(app, {
+      email: fakeUser.email,
+      password: newPassword,
+    });
+    expect(updatedUser.login.user.id).toBe(user.id);
+  });
+
   afterAll(async () => {
     await app.close();
   });
