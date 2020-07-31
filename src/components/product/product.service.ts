@@ -18,6 +18,7 @@ import {
   createSG,
   DatabaseService,
   filterByString,
+  filterBySubarray,
   ILogger,
   listWithSecureObject,
   Logger,
@@ -29,9 +30,12 @@ import {
 import {
   AnyProduct,
   CreateProduct,
+  MethodologyToApproach,
   Product,
+  ProductApproach,
   ProductListInput,
   ProductListOutput,
+  ProductMethodology,
   UpdateProduct,
 } from './dto';
 
@@ -305,7 +309,12 @@ export class ProductService {
     if (filter.methodology) {
       query.call(filterByString, label, 'methodology', filter.methodology);
     } else if (filter.approach) {
-      query.call(filterByString, label, 'approach', filter.approach);
+      query.call(
+        filterBySubarray,
+        label,
+        'methodology',
+        this.getMethodologiesByApproach(filter.approach)
+      );
     } else if (filter.engagementId) {
       this.filterByEngagement(
         query,
@@ -407,5 +416,13 @@ export class ProductService {
       relation(relationshipDirection, '', relationshipType, { active: true }),
       node('node', label, { active: true }),
     ]);
+  }
+
+  protected getMethodologiesByApproach(
+    approach: ProductApproach
+  ): ProductMethodology[] {
+    return Object.keys(MethodologyToApproach).filter(
+      (key) => MethodologyToApproach[key as ProductMethodology] === approach
+    ) as ProductMethodology[];
   }
 }
