@@ -155,49 +155,49 @@ export class StoryService {
         label: 'StoryName',
       },
     ];
-    // try {
-    const query = this.db
-      .query()
-      .call(matchRequestingUser, session)
-      .match([
-        node('root', 'User', {
-          active: true,
-          id: this.config.rootAdmin.id,
-        }),
-      ])
-      .call(createBaseNode, ['Story', 'Producible'], secureProps, {
-        owningOrgId: session.owningOrgId,
-      })
-      .create([...this.permission('scriptureReferences', 'node')]);
-
-    if (input.scriptureReferences) {
-      for (const sr of input.scriptureReferences) {
-        const verseRange = scriptureToVerseRange(sr);
-        query.create([
-          node('node'),
-          relation('out', '', 'scriptureReferences', { active: true }),
-          node('sr', 'ScriptureRange', {
-            start: verseRange.start,
-            end: verseRange.end,
+    try {
+      const query = this.db
+        .query()
+        .call(matchRequestingUser, session)
+        .match([
+          node('root', 'User', {
             active: true,
-            createdAt: DateTime.local().toString(),
+            id: this.config.rootAdmin.id,
           }),
-        ]);
+        ])
+        .call(createBaseNode, ['Story', 'Producible'], secureProps, {
+          owningOrgId: session.owningOrgId,
+        })
+        .create([...this.permission('scriptureReferences', 'node')]);
+
+      if (input.scriptureReferences) {
+        for (const sr of input.scriptureReferences) {
+          const verseRange = scriptureToVerseRange(sr);
+          query.create([
+            node('node'),
+            relation('out', '', 'scriptureReferences', { active: true }),
+            node('sr', 'ScriptureRange', {
+              start: verseRange.start,
+              end: verseRange.end,
+              active: true,
+              createdAt: DateTime.local().toString(),
+            }),
+          ]);
+        }
       }
-    }
-    query.return('node.id as id');
+      query.return('node.id as id');
 
-    const result = await query.first();
-    if (!result) {
-      throw new ServerException('failed to create a story');
-    }
+      const result = await query.first();
+      if (!result) {
+        throw new ServerException('failed to create a story');
+      }
 
-    this.logger.info(`story created`, { id: result.id });
-    return this.readOne(result.id, session);
-    // } catch (err) {
-    //   this.logger.error(`Could not create story for user ${session.userId}`);
-    //   throw new ServerException('Could not create story');
-    // }
+      this.logger.info(`story created`, { id: result.id });
+      return await this.readOne(result.id, session);
+    } catch (err) {
+      this.logger.error(`Could not create story for user ${session.userId}`);
+      throw new ServerException('Could not create story');
+    }
   }
 
   async readOne(storyId: string, session: ISession): Promise<Story> {
@@ -263,8 +263,8 @@ export class StoryService {
       id: result.story.id,
       name: result.story.name,
       scriptureReferences: {
-        canEdit: !!result.story.canScriptureReferencesRead,
-        canRead: !!result.story.canScriptureReferencesEdit,
+        canRead: !!result.story.canScriptureReferencesRead,
+        canEdit: !!result.story.canScriptureReferencesEdit,
         value: scriptureReferences,
       },
       createdAt: result.story.createdAt,
@@ -341,7 +341,6 @@ export class StoryService {
   ): Promise<ScriptureRange[]> {
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
       .match([
         node('story', 'Story', {
           id: storyId,
