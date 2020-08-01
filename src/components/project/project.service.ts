@@ -17,7 +17,6 @@ import {
 import {
   addAllSecureProperties,
   addBaseNodeMetaPropsWithClause,
-  addUserToSG,
   ConfigService,
   createBaseNode,
   DatabaseService,
@@ -303,7 +302,7 @@ export class ProjectService {
         .query()
         .call(matchRequestingUser, session)
         .match([
-          node('rootUser', 'User', {
+          node('root', 'User', {
             active: true,
             id: this.config.rootAdmin.id,
           }),
@@ -330,9 +329,7 @@ export class ProjectService {
           ...this.permission('teamMember'),
           ...this.permission('partnership'),
           ...this.permission('location'),
-        ])
-        .call(addUserToSG, 'rootUser', 'adminSG')
-        .call(addUserToSG, 'rootUser', 'readerSG');
+        ]);
       if (locationId) {
         createProject.create([
           [

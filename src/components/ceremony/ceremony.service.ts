@@ -11,7 +11,6 @@ import { ISession } from '../../common';
 import {
   addAllSecureProperties,
   addBaseNodeMetaPropsWithClause,
-  addUserToSG,
   ConfigService,
   createBaseNode,
   DatabaseService,
@@ -172,7 +171,7 @@ export class CeremonyService {
         .query()
         .call(matchRequestingUser, session)
         .match([
-          node('rootUser', 'User', {
+          node('root', 'User', {
             active: true,
             id: this.config.rootAdmin.id,
           }),
@@ -180,8 +179,6 @@ export class CeremonyService {
         .call(createBaseNode, 'Ceremony', secureProps, {
           owningOrgId: session.owningOrgId,
         })
-        .call(addUserToSG, 'rootUser', 'adminSG')
-        .call(addUserToSG, 'rootUser', 'readerSG')
         .return('node.id as id');
 
       const result = await query.first();

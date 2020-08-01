@@ -11,7 +11,6 @@ import { ISession, Order } from '../../common';
 import {
   addAllSecureProperties,
   addBaseNodeMetaPropsWithClause,
-  addUserToSG,
   ConfigService,
   createBaseNode,
   DatabaseService,
@@ -194,7 +193,7 @@ export class BudgetService {
         .query()
         .call(matchRequestingUser, session)
         .match([
-          node('rootUser', 'User', {
+          node('root', 'User', {
             active: true,
             id: this.config.rootAdmin.id,
           }),
@@ -202,8 +201,6 @@ export class BudgetService {
         .call(createBaseNode, 'Budget', secureProps, {
           owningOrgId: session.owningOrgId,
         })
-        .call(addUserToSG, 'rootUser', 'adminSG')
-        .call(addUserToSG, 'rootUser', 'readerSG')
         .return('node.id as id');
 
       const result = await createBudget.first();

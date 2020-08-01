@@ -12,10 +12,8 @@ import {
   addBaseNodeMetaPropsWithClause,
   addPropertyCoalesceWithClause,
   addShapeForBaseNodeMetaProperty,
-  addUserToSG,
   ConfigService,
   createBaseNode,
-  createSG,
   DatabaseService,
   filterByString,
   ILogger,
@@ -102,7 +100,7 @@ export class ProductService {
         addToReaderSg: true,
         isPublic: true,
         isOrgPublic: true,
-        label: 'Mediums',
+        label: 'ProductMedium',
       },
       {
         key: 'purposes',
@@ -112,7 +110,7 @@ export class ProductService {
         addToReaderSg: true,
         isPublic: true,
         isOrgPublic: true,
-        label: 'Purposes',
+        label: 'ProductPurpose',
       },
       {
         key: 'methodology',
@@ -122,10 +120,9 @@ export class ProductService {
         addToReaderSg: true,
         isPublic: true,
         isOrgPublic: true,
-        label: 'Methodology',
+        label: 'ProductMethodology',
       },
     ];
-    // const baseMetaProps = [];
 
     const query = this.db
       .query()
@@ -140,44 +137,47 @@ export class ProductService {
     }
 
     query
-      .match([
-        node('publicSG', 'PublicSecurityGroup', {
-          active: true,
-          id: this.config.publicSecurityGroup.id,
-        }),
-      ])
       .call(matchRequestingUser, session)
-      .call(createSG, 'orgSG', 'OrgPublicSecurityGroup')
-      .call(createBaseNode, 'Product', secureProps)
-      .call(addUserToSG, 'requestingUser', 'adminSG'); // must come after base node creation
+      .call(createBaseNode, 'Product', secureProps, {
+        owningOrgId: session.owningOrgId,
+      });
 
     if (engagementId) {
       query.create([
         [
           node('engagement'),
-          relation('in', '', 'engagement', { active: true, createdAt }),
+          relation('in', '', 'product', { active: true, createdAt }),
           node('node'),
         ],
         ...this.permission('product', 'engagement', true),
       ]);
     }
 
-    query.return('node.id as id');
+    if (input.produces) {
+      query
+        .match([
+          node('node'),
+          node('pr', 'Producible', { id: input.produces, active: true }),
+        ])
+        .create([
+          node('node'),
+          relation('out', '', 'produces', {
+            active: true,
+            createdAt: DateTime.local().toString(),
+          }),
+          node('pr'),
+        ]);
+    }
 
-    const result = await query.first();
+    const result = await query.return('node.id as id').first();
 
     if (!result) {
       throw new ServerException('failed to create default product');
     }
 
-    const id = result.id;
+    this.logger.debug(`product created`, { id: result.id });
 
-    // add root admin to new product as an admin
-    await this.db.addRootAdminToBaseNodeAsAdmin(id, 'Product');
-
-    this.logger.debug(`product created`, { id });
-
-    return this.readOne(id, session);
+    return this.readOne(result.id, session);
     // try {
     //   await this.db.createNode({
     //     session,
@@ -221,7 +221,12 @@ export class ProductService {
   }
 
   async readOne(id: string, session: ISession): Promise<AnyProduct> {
-    const props = ['mediums', 'purposes', 'methodology'];
+    const props = [
+      'mediums',
+      'purposes',
+      'methodologies',
+      'scriptureReferences',
+    ];
     const baseNodeMetaProps = ['id', 'createdAt'];
 
     const query = this.db
@@ -245,8 +250,8 @@ export class ProductService {
       ...result,
       scriptureReferences: {
         // TODO
-        canRead: true,
-        canEdit: true,
+        canRead: result.scriptureReferences.canRead,
+        canEdit: result.scriptureReferences.canEdit,
         value: [],
       },
     };
@@ -294,7 +299,6 @@ export class ProductService {
   ): Promise<ProductListOutput> {
     const label = 'Product';
     const baseNodeMetaProps = ['id', 'createdAt'];
-    // const unsecureProps = [''];
     const secureProps = ['mediums', 'purposes', 'methodology'];
 
     const query = this.db
@@ -335,21 +339,21 @@ export class ProductService {
         `
       );
 
-    const result = await runListQuery(
-      query,
-      input,
-      secureProps.includes(input.sort)
-    );
+    const result: {
+      items: Array<{
+        identity: string;
+        labels: string[];
+        properties: Product;
+      }>;
+      hasMore: boolean;
+      total: number;
+    } = await runListQuery(query, input, secureProps.includes(input.sort));
 
-    const items = result.items.map((item) => ({
-      ...(item as Product),
-      scriptureReferences: {
-        // TODO
-        canRead: true,
-        canEdit: true,
-        value: [],
-      },
-    }));
+    const items = await Promise.all(
+      result.items.map((item) => {
+        return this.readOne(item.properties.id, session);
+      })
+    );
 
     // // TODO this is bad, we should at least fetch the the producible IDs in the
     // // list query above. Then we may have to call each service to fully hydrate

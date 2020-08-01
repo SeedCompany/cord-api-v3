@@ -10,7 +10,6 @@ import { DuplicateException, ISession } from '../../common';
 import {
   addAllSecureProperties,
   addBaseNodeMetaPropsWithClause,
-  addUserToSG,
   ConfigService,
   createBaseNode,
   DatabaseService,
@@ -163,7 +162,7 @@ export class FilmService {
         .query()
         .call(matchRequestingUser, session)
         .match([
-          node('rootuser', 'User', {
+          node('root', 'User', {
             active: true,
             id: this.config.rootAdmin.id,
           }),
@@ -172,8 +171,6 @@ export class FilmService {
           owningOrgId: session.owningOrgId,
         })
         .create([...this.permission('range', 'node')])
-        .call(addUserToSG, 'rootuser', 'adminSG')
-        .call(addUserToSG, 'rootuser', 'readerSG')
         .return('node.id as id');
 
       const result = await query.first();
