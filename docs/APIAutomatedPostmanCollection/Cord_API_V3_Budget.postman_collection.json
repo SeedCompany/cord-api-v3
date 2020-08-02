@@ -434,7 +434,7 @@
 					"response": []
 				},
 				{
-					"name": "Create Budget Mandatory Field Validation - projectId",
+					"name": "Create Budget Mandatory Field Blank - projectId",
 					"event": [
 						{
 							"listen": "test",
@@ -500,6 +500,86 @@
 							"graphql": {
 								"query": "mutation createBudget($input: CreateBudgetInput!) {\r\n  createBudget(input: $input) {\r\n    budget {\r\n      id\r\n      createdAt\r\n      status\r\n      total\r\n      records {\r\n        id\r\n        createdAt\r\n        fiscalYear {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        amount {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        organization {\r\n          canRead\r\n          canEdit\r\n          value {\r\n            id\r\n            createdAt\r\n            name {\r\n              canRead\r\n              canEdit\r\n              value\r\n            }\r\n            avatarLetters\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"budget\": {\r\n      \"projectId\": \"\"\r\n    }\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Budget Mandatory Field Removed - projectId",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "181c2c81-c55b-4ad9-86b0-119611bd8405",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 400 Bad Request\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].message;  ",
+									"    pm.expect(error_message).to.include(\"Field \\\"projectId\\\" of required type \\\"ID!\\\" was not provided\");",
+									"});",
+									"",
+									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {",
+									"    var error_code = jsonData.errors[0].extensions.code;  ",
+									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "60eb8e50-4a1f-4439-b75a-b28285a6b840",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation createBudget($input: CreateBudgetInput!) {\r\n  createBudget(input: $input) {\r\n    budget {\r\n      id\r\n      createdAt\r\n      status\r\n      total\r\n      records {\r\n        id\r\n        createdAt\r\n        fiscalYear {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        amount {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        organization {\r\n          canRead\r\n          canEdit\r\n          value {\r\n            id\r\n            createdAt\r\n            name {\r\n              canRead\r\n              canEdit\r\n              value\r\n            }\r\n            avatarLetters\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n  \"input\": {\r\n    \"budget\": {\r\n      \r\n    }\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -1150,7 +1230,77 @@
 					"response": []
 				},
 				{
-					"name": "Update Budget Mandatory Field Validation - id",
+					"name": "Update Budget Mandatory Field Removed - id",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "0e6a8d3f-0e35-4489-b3fa-b59c59917ee8",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 400 Bad Request\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].message;  ",
+									"    pm.expect(error_message).to.include(\"Field \\\"id\\\" of required type \\\"ID!\\\" was not provided\");",
+									"});",
+									"",
+									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {",
+									"    var error_code = jsonData.errors[0].extensions.code;  ",
+									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation updateBudget($input: UpdateBudgetInput!) {\r\n  updateBudget(input: $input) {\r\n    budget {\r\n      id\r\n      createdAt\r\n      status\r\n      total\r\n      records {\r\n        id\r\n        createdAt\r\n        fiscalYear {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        amount {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        organization {\r\n          canRead\r\n          canEdit\r\n          value {\r\n            id\r\n            createdAt\r\n            name {\r\n              canRead\r\n              canEdit\r\n              value\r\n            }\r\n            avatarLetters\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n  \"input\": {\r\n    \"budget\": {\r\n     \r\n      \"status\": \"{{budgetStatus}}\"\r\n    }\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Budget Mandatory Field Blank - id",
 					"event": [
 						{
 							"listen": "test",
@@ -1224,7 +1374,77 @@
 					"response": []
 				},
 				{
-					"name": "Update Budget Mandatory Field Validation - status",
+					"name": "Update Budget Mandatory Field Removed - status",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "b5b838e8-4ddc-4317-aa0a-a6c37971427f",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 400 Bad Request\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].message;  ",
+									"    pm.expect(error_message).to.include(\"Field \\\"status\\\" of required type \\\"BudgetStatus!\\\" was not provided\");",
+									"});",
+									"",
+									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {",
+									"    var error_code = jsonData.errors[0].extensions.code;  ",
+									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation updateBudget($input:UpdateBudgetInput!)\r\n{\r\n  updateBudget(input:$input)\r\n  {\r\n    budget\r\n    {\r\n      id\r\n      createdAt\r\n      status\r\n      records\r\n    {\r\n      id\r\n      createdAt\r\n      fiscalYear\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      amount\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      organization\r\n      {\r\n        canRead\r\n        canEdit\r\n        value\r\n        {\r\n          id\r\n          createdAt\r\n          name\r\n         {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n          avatarLetters\r\n        }\r\n      }\r\n    }\r\n      total\r\n    }\r\n  }\r\n}",
+								"variables": "{\r\n  \"input\": {\r\n    \"budget\": {\r\n      \"id\": \"{{budgetid}}\"\r\n      \r\n    }\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Budget Mandatory Field Blank - status",
 					"event": [
 						{
 							"listen": "test",
@@ -1591,8 +1811,6 @@
 									"const moment = require('moment');",
 									"var lodash = require('lodash');",
 									"",
-									"",
-									"",
 									"//Common Verification",
 									"pm.test(\"Status code is 200\", function () {",
 									"    pm.response.to.have.status(200);",
@@ -1635,6 +1853,21 @@
 									"    }",
 									"});",
 									"",
+									"",
+									"// SORTING AND FILTER TESTS",
+									"pm.test(\"Verify that items are sorted by 'status' and ordered by requested order \", function () {",
+									"",
+									"    var responseBody = jsonData.data.budgets.items;",
+									"    if (pm.globals.get('order') == \"ASC\") {",
+									"        var expectedSortedOrder = lodash.orderBy(responseBody, ['status'], ['asc']);",
+									"        pm.expect(responseBody).to.eql(expectedSortedOrder);",
+									"    } else {",
+									"        var expectedSortedOrder = lodash.orderBy(responseBody, ['status'], ['desc']);",
+									"        pm.expect(responseBody).to.eql(expectedSortedOrder);",
+									"    }",
+									"",
+									"});",
+									"",
 									"// Verifying recently created budget's information with budget object returned within items array",
 									"",
 									"// get Budget object first having same id as recently created Budget's id",
@@ -1664,20 +1897,7 @@
 									"    var total = myBudget.total;",
 									"    pm.expect(total).to.eql(budget_data.total);",
 									"});",
-									"",
-									"// SORTING AND FILTER TESTS",
-									"pm.test(\"Verify that items are sorted by 'status' and orderd by requested order \", function () {",
-									"",
-									"    var responseBody = jsonData.data.budgets.items;",
-									"    if (pm.globals.get('order') == \"ASC\") {",
-									"        var expectedSortedOrder = lodash.orderBy(responseBody, ['status'], ['asc'])",
-									"        pm.expect(responseBody).to.eql(expectedSortedOrder);",
-									"    } else {",
-									"        var expectedSortedOrder = lodash.orderBy(responseBody, ['status'], ['desc'])",
-									"        pm.expect(responseBody).to.eql(expectedSortedOrder);",
-									"    }",
-									"",
-									"});"
+									""
 								],
 								"type": "text/javascript"
 							}
@@ -1687,7 +1907,7 @@
 							"script": {
 								"id": "e43a73dc-3618-43bd-be77-52915e2cf174",
 								"exec": [
-									"pm.globals.set(\"itemCount\",25);\r",
+									"pm.globals.set(\"itemCount\",50);\r",
 									"pm.globals.set(\"page\",1);\r",
 									"pm.globals.set('order', \"ASC\");\r",
 									""
@@ -2087,12 +2307,6 @@
 									"    var responseBody = jsonData.data.budgets.items;",
 									"    var expectedSortedOrder = lodash.orderBy(responseBody,['status'],['asc'])",
 									"    pm.expect(responseBody).to.eql(expectedSortedOrder);",
-									"});",
-									"",
-									"pm.test(\"Verify that budget ID is not blank or null\", function () {",
-									"    var id = jsonData.data.budgets.items[0].id;",
-									"    pm.expect(id).to.not.eql(null);",
-									"    pm.expect(id).to.not.eql(\"\");",
 									"});"
 								],
 								"type": "text/javascript"
@@ -2129,7 +2343,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query($input: BudgetListInput!) {\r\n  budgets(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      status\r\n      total\r\n      records {\r\n        id\r\n        createdAt\r\n        fiscalYear {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        amount {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        organization {\r\n          canRead\r\n          canEdit\r\n          value {\r\n            id\r\n            createdAt\r\n            name {\r\n              canRead\r\n              canEdit\r\n              value\r\n            }\r\n            avatarLetters\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"status\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"projectId\": \"{{projectid}}\"\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"status\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -2172,12 +2386,6 @@
 									"    var responseBody = jsonData.data.budgets.items;",
 									"    var expectedSortedOrder = lodash.orderBy(responseBody,['status'],['desc'])",
 									"    pm.expect(responseBody).to.eql(expectedSortedOrder);",
-									"});",
-									"",
-									"pm.test(\"Verify that budget ID is not blank or null\", function () {",
-									"    var id = jsonData.data.budgets.items[0].id;",
-									"    pm.expect(id).to.not.eql(null);",
-									"    pm.expect(id).to.not.eql(\"\");",
 									"});"
 								],
 								"type": "text/javascript"
@@ -2213,7 +2421,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query($input: BudgetListInput!) {\r\n  budgets(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      status\r\n      total\r\n      records {\r\n        id\r\n        createdAt\r\n        fiscalYear {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        amount {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        organization {\r\n          canRead\r\n          canEdit\r\n          value {\r\n            id\r\n            createdAt\r\n            name {\r\n              canRead\r\n              canEdit\r\n              value\r\n            }\r\n            avatarLetters\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"status\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"projectId\": \"{{projectid}}\"\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"status\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -2413,7 +2621,7 @@
 					"response": []
 				},
 				{
-					"name": "Get all Budgets Not Mandatory Field Validation - sort",
+					"name": "Get all Budgets Not Mandatory Field Blank - sort",
 					"event": [
 						{
 							"listen": "test",
@@ -2434,13 +2642,14 @@
 									"//Test Specific",
 									"pm.test(\"Verify that error message is correct\", function () {",
 									"    var error_message = jsonData.errors[0].message;  ",
-									"    pm.expect(error_message).to.include(\"Variable `DESC` not defined\");",
+									"    pm.expect(error_message).to.include(\"Invalid input\");",
 									"});",
 									"",
 									"pm.test(\"Verify that error status is 500\", function () {",
 									"    var error_status = jsonData.errors[0].extensions.status;  ",
 									"    pm.expect(error_status).to.eql(500);",
 									"});",
+									"",
 									""
 								],
 								"type": "text/javascript"
@@ -2474,7 +2683,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query($input: BudgetListInput!) {\r\n  budgets(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      status\r\n      total\r\n      records {\r\n        id\r\n        createdAt\r\n        fiscalYear {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        amount {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        organization {\r\n          canRead\r\n          canEdit\r\n          value {\r\n            id\r\n            createdAt\r\n            name {\r\n              canRead\r\n              canEdit\r\n              value\r\n            }\r\n            avatarLetters\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"projectId\": \"{{projectid}}\"\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -2653,6 +2862,166 @@
 					"response": []
 				},
 				{
+					"name": "Get all Budgets Parameter Blank - count",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "4d131822-4f50-4e63-950a-29f6b89bbf95",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 400 Bad Request\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].message;  ",
+									"    pm.expect(error_message).to.include(\"Int cannot represent non-integer value\");",
+									"});",
+									"",
+									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {",
+									"    var error_code = jsonData.errors[0].extensions.code;  ",
+									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "c61f1b6f-5159-49ef-ba6f-c9508c116a15",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query($input: BudgetListInput!) {\r\n  budgets(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      status\r\n      total\r\n      records {\r\n        id\r\n        createdAt\r\n        fiscalYear {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        amount {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        organization {\r\n          canRead\r\n          canEdit\r\n          value {\r\n            id\r\n            createdAt\r\n            name {\r\n              canRead\r\n              canEdit\r\n              value\r\n            }\r\n            avatarLetters\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": \"\",\r\n    \"page\": {{page}},\r\n    \"sort\": \"status\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"projectId\": \"{{projectid}}\"\r\n    }\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get all Budgets Parameter Blank - page",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "b974d58f-83e0-473d-815c-fe923c624472",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 400 Bad Request\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].message;  ",
+									"    pm.expect(error_message).to.include(\"Int cannot represent non-integer value\");",
+									"});",
+									"",
+									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {",
+									"    var error_code = jsonData.errors[0].extensions.code;  ",
+									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "7aa0beb9-e44f-45a3-8351-09849ef20375",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query($input: BudgetListInput!) {\r\n  budgets(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      status\r\n      total\r\n      records {\r\n        id\r\n        createdAt\r\n        fiscalYear {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        amount {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        organization {\r\n          canRead\r\n          canEdit\r\n          value {\r\n            id\r\n            createdAt\r\n            name {\r\n              canRead\r\n              canEdit\r\n              value\r\n            }\r\n            avatarLetters\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": \"\",\r\n    \"sort\": \"status\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"projectId\": \"{{projectid}}\"\r\n    }\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Get all Budgets Parameter Mismatch - page",
 					"event": [
 						{
@@ -2813,6 +3182,86 @@
 					"response": []
 				},
 				{
+					"name": "Get all Budgets Parameter Blank - sort",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "cf81a753-5636-4de6-9412-4a57ea211078",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].message;  ",
+									"    pm.expect(error_message).to.include(\"Invalid input\");",
+									"});",
+									"",
+									"pm.test(\"Verify that error code is InternalServerError\", function () {",
+									"    var error_code = jsonData.errors[0].extensions.code;  ",
+									"    pm.expect(error_code).to.eql(\"InternalServerError\");",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "6e644917-07fd-45ac-a0d3-bdbf70c7b1e1",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query($input: BudgetListInput!) {\r\n  budgets(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      status\r\n      total\r\n      records {\r\n        id\r\n        createdAt\r\n        fiscalYear {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        amount {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        organization {\r\n          canRead\r\n          canEdit\r\n          value {\r\n            id\r\n            createdAt\r\n            name {\r\n              canRead\r\n              canEdit\r\n              value\r\n            }\r\n            avatarLetters\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"projectId\": \"{{projectid}}\"\r\n    }\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Get all Budgets Parameter Mismatch - order",
 					"event": [
 						{
@@ -2955,6 +3404,86 @@
 							"graphql": {
 								"query": "query($input: BudgetListInput!) {\r\n  budgets(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      status\r\n      total\r\n      records {\r\n        id\r\n        createdAt\r\n        fiscalYear {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        amount {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        organization {\r\n          canRead\r\n          canEdit\r\n          value {\r\n            id\r\n            createdAt\r\n            name {\r\n              canRead\r\n              canEdit\r\n              value\r\n            }\r\n            avatarLetters\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"status\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter1\": {\r\n      \"projectId\": \"{{projectid}}\"\r\n    }\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get all Budgets Parameter Blank- filter",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "ad9d7921-6229-4948-9e50-fd224a4d605a",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].message;  ",
+									"    pm.expect(error_message).to.include(\"Input validation failed\");",
+									"});",
+									"",
+									"pm.test(\"Verify that errors message is correct\", function () {",
+									"    var errors_message = jsonData.errors[0].extensions.errors['filter.projectId'].IsShortId; ",
+									"     pm.expect(errors_message).to.eql(\"Invalid ID\");",
+									"     });",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "c7de90b0-4366-4633-a39a-e699e28cd08d",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query($input: BudgetListInput!) {\r\n  budgets(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      status\r\n      total\r\n      records {\r\n        id\r\n        createdAt\r\n        fiscalYear {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        amount {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        organization {\r\n          canRead\r\n          canEdit\r\n          value {\r\n            id\r\n            createdAt\r\n            name {\r\n              canRead\r\n              canEdit\r\n              value\r\n            }\r\n            avatarLetters\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"status\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"projectId\": \"\"\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -3161,20 +3690,25 @@
 									"});",
 									"",
 									"//Test Specific",
-									"pm.test(\"Verify that error message is correct\", function () {",
-									"    var error_message = jsonData.errors[0].message;  ",
-									"    pm.expect(error_message).to.include(\"expected whitespace, comment or\");",
+									"pm.test(\"PENDING >> Sort Field should not accept any unusual / Special characters. Backend side Pending\", function () {",
+									"    if (jsonData.data)",
+									"        pm.expect(true).to.eql(false); // forcefully Fail test if results returned",
 									"});",
 									"",
-									"pm.test(\"Verify that error code is InternalServerError\", function () {",
-									"    var error_code = jsonData.errors[0].extensions.code;  ",
-									"    pm.expect(error_code).to.eql(\"InternalServerError\");",
-									"});",
+									"// pm.test(\"Verify that error message is correct\", function () {",
+									"//     var error_message = jsonData.errors[0].message;  ",
+									"//     pm.expect(error_message).to.include(\"expected whitespace, comment or\");",
+									"// });",
 									"",
-									"pm.test(\"Verify that error status is 500\", function () {",
-									"    var error_status = jsonData.errors[0].extensions.status;  ",
-									"    pm.expect(error_status).to.eql(500);",
-									"});",
+									"// pm.test(\"Verify that error code is InternalServerError\", function () {",
+									"//     var error_code = jsonData.errors[0].extensions.code;  ",
+									"//     pm.expect(error_code).to.eql(\"InternalServerError\");",
+									"// });",
+									"",
+									"// pm.test(\"Verify that error status is 500\", function () {",
+									"//     var error_status = jsonData.errors[0].extensions.status;  ",
+									"//     pm.expect(error_status).to.eql(500);",
+									"// });",
 									"",
 									""
 								],
@@ -3209,7 +3743,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query($input: BudgetListInput!) {\r\n  budgets(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      status\r\n      total\r\n      records {\r\n        id\r\n        createdAt\r\n        fiscalYear {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        amount {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        organization {\r\n          canRead\r\n          canEdit\r\n          value {\r\n            id\r\n            createdAt\r\n            name {\r\n              canRead\r\n              canEdit\r\n              value\r\n            }\r\n            avatarLetters\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{count}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"*&^%#\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"projectId\": \"{{projectid}}\"\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{count}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"qqq\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"projectId\": \"{{projectid}}\"\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -3372,7 +3906,7 @@
 					"response": []
 				},
 				{
-					"name": "Delete Budget Mandatory Field Validation - id",
+					"name": "Delete Budget Mandatory Field Blank - id",
 					"event": [
 						{
 							"listen": "test",
@@ -3428,6 +3962,76 @@
 							"graphql": {
 								"query": "mutation deleteBudget($id:ID!)\r\n{\r\n  deleteBudget(id:$id)\r\n}",
 								"variables": "{\r\n  \"id\": \"\"\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Budget Mandatory Field Removed - id",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "54618bf3-d99e-42e2-8485-60480a2a48dc",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 400 Bad Request\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].message;  ",
+									"    pm.expect(error_message).to.include(\"Variable \\\"$id\\\" of required type \\\"ID!\\\" was not provided.\");",
+									"});",
+									"",
+									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {",
+									"    var error_code = jsonData.errors[0].extensions.code;  ",
+									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation deleteBudget($id:ID!)\r\n{\r\n  deleteBudget(id:$id)\r\n}",
+								"variables": "{\r\n  \r\n}"
 							},
 							"options": {
 								"graphql": {}

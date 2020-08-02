@@ -266,7 +266,7 @@
 					"response": []
 				},
 				{
-					"name": "Register Mandatory Field Validations",
+					"name": "Register Mandatory Field Blank",
 					"event": [
 						{
 							"listen": "test",
@@ -337,6 +337,9 @@
 							"graphql": {
 								"query": "mutation register($input: RegisterInput!) {\r\n  register(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value{\r\n          name\r\n          lat\r\n          long\r\n          countries{\r\n            code\r\n            name\r\n            zones{\r\n              name\r\n              lat\r\n              long\r\n              countries{\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      bio {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"realFirstName\": \"\",\r\n    \"realLastName\": \"\",\r\n    \"email\": \"\",\r\n    \"password\": \"\",\r\n    \"displayFirstName\": \"\",\r\n    \"displayLastName\": \"\",\r\n    \"phone\": \"{{phone}}\",\r\n    \"timezone\": \"{{timezone}}\",\r\n    \"bio\": \"{{bio}}\",\r\n    \"status\": \"{{userStatus}}\"\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -352,7 +355,7 @@
 					"response": []
 				},
 				{
-					"name": "Register Not Mandatory Field Validation - timezone",
+					"name": "Register Not Mandatory Field Blank  - timezone",
 					"event": [
 						{
 							"listen": "test",
@@ -408,6 +411,9 @@
 							"graphql": {
 								"query": "mutation register($input: RegisterInput!) {\r\n  register(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value{\r\n          name\r\n          lat\r\n          long\r\n          countries{\r\n            code\r\n            name\r\n            zones{\r\n              name\r\n              lat\r\n              long\r\n              countries{\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      bio {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"realFirstName\": \"{{realFirstName}}\",\r\n    \"realLastName\": \"{{realLastName}}\",\r\n    \"email\" : \"{{email}}\",\r\n    \"password\": \"{{password}}\",\r\n    \"displayFirstName\": \"{{displayFirstName}}\",\r\n    \"displayLastName\": \"{{displayLastName}}\",\r\n    \"phone\": \"{{phone}}\",\r\n    \"timezone\": \"\",\r\n    \"bio\": \"{{bio}}\",\r\n    \"status\": \"{{userStatus}}\"\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -423,7 +429,81 @@
 					"response": []
 				},
 				{
-					"name": "Register Not Mandatory Field Validation - status",
+					"name": "Register Not Mandatory Field Removed  - timezone",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "363718a4-f8e5-4779-b0f7-a4ba1f93e411",
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"\r",
+									"//Common Verification\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
+									"});\r",
+									"\r",
+									"//Test Specific\r",
+									"pm.test(\"Verify that error message is correct\", function () {\r",
+									"    var error_message = jsonData.errors[0].message;  \r",
+									"    pm.expect(error_message).to.eql(\"Email address is already in use\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verify that error status is 400\", function () {\r",
+									"    var error_status = jsonData.errors[0].extensions.status;  \r",
+									"    pm.expect(error_status).to.eql(400);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verify that error code is correct\", function () {\r",
+									"    var error_code = jsonData.errors[0].extensions.code;  \r",
+									"    pm.expect(error_code).to.eql(\"Duplicate\");\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "2e7a9dcf-3522-411b-ade8-3934727e4bb4",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation register($input: RegisterInput!) {\r\n  register(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value{\r\n          name\r\n          lat\r\n          long\r\n          countries{\r\n            code\r\n            name\r\n            zones{\r\n              name\r\n              lat\r\n              long\r\n              countries{\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      bio {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"realFirstName\": \"{{realFirstName}}\",\r\n    \"realLastName\": \"{{realLastName}}\",\r\n    \"email\" : \"{{email}}\",\r\n    \"password\": \"{{password}}\",\r\n    \"displayFirstName\": \"{{displayFirstName}}\",\r\n    \"displayLastName\": \"{{displayLastName}}\",\r\n    \"phone\": \"{{phone}}\",\r\n    \"bio\": \"{{bio}}\",\r\n    \"status\": \"{{userStatus}}\"\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Register Not Mandatory Field Blank - status",
 					"event": [
 						{
 							"listen": "test",
@@ -476,6 +556,85 @@
 							"graphql": {
 								"query": "mutation register($input: RegisterInput!) {\r\n  register(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value{\r\n          name\r\n          lat\r\n          long\r\n          countries{\r\n            code\r\n            name\r\n            zones{\r\n              name\r\n              lat\r\n              long\r\n              countries{\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      bio {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"realFirstName\": \"{{realFirstName}}\",\r\n    \"realLastName\": \"{{realLastName}}\",\r\n    \"email\" : \"{{email}}\",\r\n    \"password\": \"{{password}}\",\r\n    \"displayFirstName\": \"{{displayFirstName}}\",\r\n    \"displayLastName\": \"{{displayLastName}}\",\r\n    \"phone\": \"{{phone}}\",\r\n    \"timezone\": \"{{timezone}}\",\r\n    \"bio\": \"{{bio}}\",\r\n    \"status\": \"\"\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Register Not Mandatory Field Removed  - status",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "57f4a842-85d1-416f-81e1-30ae2d33bc75",
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"\r",
+									"//Common Verification\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
+									"});\r",
+									"\r",
+									"//Test Specific\r",
+									"pm.test(\"Verify that error message is correct\", function () {\r",
+									"    var error_message = jsonData.errors[0].message;  \r",
+									"    pm.expect(error_message).to.eql(\"Email address is already in use\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verify that error status is 400\", function () {\r",
+									"    var error_status = jsonData.errors[0].extensions.status;  \r",
+									"    pm.expect(error_status).to.eql(400);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verify that error code is correct\", function () {\r",
+									"    var error_code = jsonData.errors[0].extensions.code;  \r",
+									"    pm.expect(error_code).to.eql(\"Duplicate\");\r",
+									"});\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "118cdf8a-fad2-4bdf-aa91-0c9067066899",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation register($input: RegisterInput!) {\r\n  register(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value{\r\n          name\r\n          lat\r\n          long\r\n          countries{\r\n            code\r\n            name\r\n            zones{\r\n              name\r\n              lat\r\n              long\r\n              countries{\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      bio {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n  \"input\": {\r\n    \"realFirstName\": \"{{realFirstName}}\",\r\n    \"realLastName\": \"{{realLastName}}\",\r\n    \"email\": \"{{email}}\",\r\n    \"password\": \"{{password}}\",\r\n    \"displayFirstName\": \"{{displayFirstName}}\",\r\n    \"displayLastName\": \"{{displayLastName}}\",\r\n    \"phone\": \"{{phone}}\",\r\n    \"timezone\": \"{{timezone}}\",\r\n    \"bio\": \"{{bio}}\"\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -1966,7 +2125,7 @@
 					"response": []
 				},
 				{
-					"name": "Login Mandatory Field Validation - Email",
+					"name": "Login Mandatory Field Blank - Email",
 					"event": [
 						{
 							"listen": "test",
@@ -2025,6 +2184,9 @@
 							"graphql": {
 								"query": "mutation login($input: LoginInput!) {\r\n  login(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      bio {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": " {\r\n \t\"input\": \r\n  {\r\n     \"email\": \"\",\r\n     \"password\":\"123456\"\r\n  }\r\n}\r\n"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -2040,7 +2202,80 @@
 					"response": []
 				},
 				{
-					"name": "Login Mandatory Field Validation - Password",
+					"name": "Login Mandatory Field Removed  - Email",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "3d264216-8ce8-4193-a2a6-954e4a66f905",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 400 Bad Request\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].message;",
+									"    pm.expect(error_message).to.include(\"Field \\\"email\\\" of required type \\\"String!\\\" was not provided.\");",
+									"});",
+									"",
+									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {",
+									"    var error_code = jsonData.errors[0].extensions.code;",
+									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "3d78215d-9c2a-46c3-96b0-7b2ff4f7903c",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation login($input: LoginInput!) {\r\n  login(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      bio {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": " {\r\n \t\"input\": \r\n  {\r\n     \"password\":\"123456\"\r\n  }\r\n}\r\n"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login Mandatory Field Blank - Password",
 					"event": [
 						{
 							"listen": "test",
@@ -2101,6 +2336,90 @@
 							"graphql": {
 								"query": "mutation login($input: LoginInput!) {\r\n  login(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      bio {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": " {\r\n \t\"input\": \r\n  {\r\n     \"email\": \"piyushpatel1@mail.com\",\r\n     \"password\":\"\"\r\n  }\r\n}\r\n"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login Mandatory Field Removed  - Password",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "e2f9c463-a0af-49e2-8454-e90357adbe85",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 400 Bad Request\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].message;  ",
+									"    pm.expect(error_message).to.include(\"Field \\\"password\\\" of required type \\\"String!\\\" was not provided.\");",
+									"});",
+									"",
+									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {",
+									"    var error_code = jsonData.errors[0].extensions.code;  ",
+									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");",
+									"});",
+									"",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "4652c3d2-6824-4fdd-8ff2-9f755759a5a3",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation login($input: LoginInput!) {\r\n  login(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      bio {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": " {\r\n \t\"input\": \r\n  {\r\n     \"email\": \"piyushpatel1@mail.com\"\r\n  }\r\n}\r\n"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {

@@ -16,6 +16,7 @@ import {
   ForgotPassword,
   ILogger,
   Logger,
+  matchRequestingUser,
 } from '../../core';
 import { User, UserService } from '../user';
 import { LoginInput, ResetPasswordInput } from './authentication.dto';
@@ -256,11 +257,39 @@ export class AuthenticationService {
   }
 
   async changePassword(
-    _oldPassword: string,
-    _newPassword: string,
-    _session: ISession
+    oldPassword: string,
+    newPassword: string,
+    session: ISession
   ): Promise<void> {
-    // TODO
+    const result = await this.db
+      .query()
+      .call(matchRequestingUser, session)
+      .match([
+        node('requestingUser'),
+        relation('out', '', 'password', { active: true }),
+        node('password', 'Property', { active: true }),
+      ])
+      .return('password.value as passwordHash')
+      .first();
+
+    if (!result || !(await argon2.verify(result.passwordHash, oldPassword))) {
+      throw new UnauthenticatedException('Invalid credentials');
+    }
+
+    const newPasswordHash = await argon2.hash(newPassword);
+    await this.db
+      .query()
+      .call(matchRequestingUser, session)
+      .match([
+        node('requestingUser'),
+        relation('out', '', 'password', { active: true }),
+        node('password', 'Property', { active: true }),
+      ])
+      .setValues({
+        'password.value': newPasswordHash,
+      })
+      .return('password.value as passwordHash')
+      .first();
   }
 
   async forgotPassword(email: string): Promise<void> {

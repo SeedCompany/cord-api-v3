@@ -557,7 +557,7 @@ describe('Project e2e', () => {
     });
 
     await Promise.all(
-      times(numProjectMembers, async (index) =>
+      times(numProjectMembers, (index) =>
         createProjectMember(app, {
           userId: memberIds[index],
           projectId,
