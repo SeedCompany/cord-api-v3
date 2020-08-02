@@ -564,27 +564,42 @@ export class LanguageService {
           } as node
         `
       );
-
+      
     const result: LanguageListOutput = await runListQuery(
       query,
       input,
       secureProps.includes(input.sort)
     );
 
-    const items = await Promise.all(
-      result.items.map(async (item) => {
-        const { ethnologue } = await this.ethnologueLanguageService.readOne(
-          (item as any).ethnologueLanguageId,
-          session
-        );
-
-        return {
-          ...item,
-          sensitivity: (item as any).sensitivity.value || Sensitivity.Low,
-          ethnologue: ethnologue,
-        };
-      })
+    const ids = result.items.map(item => (item as any).ethnologueLanguageId);
+    const ethnologueNodes = await this.ethnologueLanguageService.readInList(
+      ids,
+      session,
+      input,
     );
+
+    // const items = await Promise.all(
+    //   result.items.map(async (item) => {
+    //     const { ethnologue } = await this.ethnologueLanguageService.readOne(
+    //       (item as any).ethnologueLanguageId,
+    //       session
+    //     );
+    //     return {
+    //       ...item,
+    //       sensitivity: (item as any).sensitivity.value || Sensitivity.Low,
+    //       ethnologue: ethnologue,
+    //     };
+    //   })
+    // );
+
+    const items = result.items.map(item => {
+      const ethnologue = ethnologueNodes.find((i: any) => i.ethnologueId === (item as any).ethnologueLanguageId)
+      return {
+        ...item,
+        sensitivity: (item as any).sensitivity.value || Sensitivity.Low,
+        ethnologue: ethnologue,
+      }
+    });
 
     return {
       items,

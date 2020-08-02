@@ -20,6 +20,7 @@ import {
   matchRequestingUser,
   matchSession,
   matchUserPermissions,
+  matchUserPermissionsIn,
   Property,
 } from '../../../core';
 import {
@@ -27,6 +28,7 @@ import {
   EthnologueLanguage,
   UpdateEthnologueLanguage,
 } from '../dto';
+import {addAllSecurePropertiesSimple, runListQuery} from "../../../core/database/query.helpers";
 
 @Injectable()
 export class EthnologueLanguageService {
@@ -255,12 +257,49 @@ export class EthnologueLanguageService {
         'labels(node) as labels',
       ]);
 
+    // console.log('readOne', query.toString())
     const result = await query.first();
 
     return {
       ethnologue: result as EthnologueLanguage,
       ethnologueId: result?.ethnologueId,
     };
+  }
+
+  async readInList(
+    ids: string[],
+    session: ISession,
+    input: any,
+  ): Promise<any> {
+    this.logger.info(`Read ethnologueLanguage`, {
+      ids: ids,
+      userId: session.userId,
+    });
+
+    if (!session.userId) {
+      this.logger.info('using anon user id');
+      session.userId = this.config.anonUser.id;
+    }
+
+    const props = ['id', 'code', 'provisionalCode', 'name', 'population'];
+
+    const query = this.db
+      .query()
+      .call(matchRequestingUser, session)
+      .call(matchUserPermissionsIn, 'EthnologueLanguage', ids)
+      .call(addAllSecurePropertiesSimple, ...props)
+      .with([
+        `{${props.map(prop => `${prop}: coalesce(${prop}.value)`).join(', ')},
+         ethnologueId: node.id, createdAt: node.createdAt} as item`,
+      ])
+      .with([
+        'collect(distinct item) as items',
+      ])
+      .return('items')
+
+    const result = await query.run();
+
+    return (result && result[0] && result[0].items) || []
   }
 
   async update(id: string, input: UpdateEthnologueLanguage, session: ISession) {
