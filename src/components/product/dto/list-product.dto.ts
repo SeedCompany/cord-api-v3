@@ -24,10 +24,6 @@ export abstract class ProductFilters {
   })
   readonly methodology?: ProductMethodology;
 
-  @Field({
-    description: 'Only products for this engagement',
-    nullable: true,
-  })
   readonly engagementId?: string; // TODO
 }
 
