@@ -261,7 +261,7 @@ export class FilmService {
     }
 
     const scriptureReferences = await this.listScriptureReferences(
-      result.story.id,
+      result.film.id,
       session
     );
 
@@ -269,8 +269,8 @@ export class FilmService {
       id: result.film.id,
       name: result.film.name,
       scriptureReferences: {
-        canRead: !!result.story.canScriptureReferencesRead,
-        canEdit: !!result.story.canScriptureReferencesEdit,
+        canRead: !!result.film.canScriptureReferencesRead,
+        canEdit: !!result.film.canScriptureReferencesEdit,
         value: scriptureReferences,
       },
       createdAt: result.film.createdAt,
@@ -361,7 +361,7 @@ export class FilmService {
     const result = await query.first();
 
     if (!result) {
-      throw new NotFoundException('Could not find scripture reference');
+      return [];
     }
 
     const items: ScriptureRange[] = await Promise.all(

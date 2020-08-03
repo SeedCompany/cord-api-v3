@@ -229,7 +229,7 @@ export class StoryService {
         relation('out', '', 'baseNode'),
         node('node'),
       ])
-      .where({ scriptureReferencesReadPerm: inArray(['permList'], true) })
+      .where({ scriptureReferencesEditPerm: inArray(['permList'], true) })
       .return(
         `
           {
@@ -355,7 +355,7 @@ export class StoryService {
     const result = await query.first();
 
     if (!result) {
-      throw new NotFoundException('Could not find scripture reference');
+      return [];
     }
 
     const items: ScriptureRange[] = await Promise.all(
