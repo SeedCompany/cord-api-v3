@@ -472,7 +472,7 @@ export class UserService {
       ...result,
       roles: {
         value: result.roles.value || [],
-        canRead: result.roles.canRead,
+        canRead: result.roles.canEdit ?? result.roles.canRead,
         canEdit: result.roles.canEdit,
       },
     };
