@@ -2,7 +2,7 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { IsEmail, IsIanaTimezone, NameField } from '../../../common';
-import { Role } from '../../project';
+import { Role } from '../../project/project-member/dto/role.dto';
 import { UserStatus } from './user-status.enum';
 import { User } from './user.dto';
 
@@ -37,7 +37,7 @@ export abstract class CreatePerson {
   @Field(() => UserStatus, { nullable: true })
   readonly status?: UserStatus;
 
-  @Field({ nullable: true })
+  @Field(() => [Role], { nullable: true })
   readonly roles?: Role[];
 }
 

@@ -2,6 +2,7 @@ import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { generate, isValid } from 'shortid';
 import { RegisterInput } from '../../src/components/authentication';
+import { Role } from '../../src/components/project';
 import { User, UserStatus } from '../../src/components/user';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
@@ -17,6 +18,7 @@ export const generateRegisterInput = (): RegisterInput => ({
   timezone: 'America/Chicago',
   bio: 'bio detail',
   status: UserStatus.Active,
+  roles: [Role.ProjectManager, Role.Consultant],
 });
 
 export const generateRequireFieldsRegisterInput = (): RegisterInput => ({
