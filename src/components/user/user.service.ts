@@ -4,6 +4,7 @@ import {
   UnauthorizedException as UnauthenticatedException,
 } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
+import { difference } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { DuplicateException, ISession, ServerException } from '../../common';
@@ -29,6 +30,7 @@ import {
   OrganizationService,
   SecuredOrganizationList,
 } from '../organization';
+import { Role } from '../project/project-member/dto/role.dto';
 import {
   AssignOrganizationToUser,
   CreatePerson,
@@ -93,6 +95,7 @@ export class UserService {
 
   // helper method for defining properties
   property = (prop: string, value: any | null) => {
+    const propName = prop === 'roles' ? `role${value}` : prop;
     const createdAt = DateTime.local();
     return [
       [
@@ -101,7 +104,7 @@ export class UserService {
           active: true,
           createdAt,
         }),
-        node(prop, 'Property', {
+        node(propName, 'Property', {
           active: true,
           value,
         }),
@@ -172,6 +175,16 @@ export class UserService {
         node('rootuser'),
       ],
     ];
+  };
+
+  roleProperties = (roles?: Role[]) => {
+    let roleProperties: any[] = [];
+    roles?.forEach(
+      (role) =>
+        (roleProperties = roleProperties.concat(this.property('roles', role)))
+    );
+
+    return roleProperties;
   };
 
   async create(input: CreatePerson, session?: ISession): Promise<string> {
@@ -261,6 +274,7 @@ export class UserService {
       ...this.property('timezone', input.timezone),
       ...this.property('bio', input.bio),
       ...this.property('status', input.status),
+      ...this.roleProperties(input.roles),
       [
         node('user'),
         relation('in', '', 'member', { active: true, createdAt }),
@@ -294,6 +308,7 @@ export class UserService {
       ...this.permission('timezone'),
       ...this.permission('bio'),
       ...this.permission('status'),
+      ...this.permission('roles'),
     ]);
 
     query.return({
@@ -433,27 +448,42 @@ export class UserService {
       .query()
       .call(matchRequestingUser, session)
       .call(matchUserPermissions, 'User', id)
-      .call(addAllSecureProperties, ...props)
+      .call(addAllSecureProperties, ...[...props, 'roles'])
       .with([
         ...props.map(addPropertyCoalesceWithClause),
+        `
+        {
+          value: collect(distinct roles.value),
+          canRead: coalesce(rolesReadPerm.read, false),
+          canEdit: coalesce(rolesEditPerm.edit, false)
+        } as roles
+        `,
         'coalesce(node.id) as id',
         'coalesce(node.createdAt) as createdAt',
       ])
-      .returnDistinct([...props, 'id', 'createdAt']);
+      .returnDistinct([...props, 'roles', 'id', 'createdAt']);
 
     const result = (await query.first()) as User | undefined;
     if (!result) {
       throw new NotFoundException('Could not find user');
     }
 
-    return result;
+    const response: any = {
+      ...result,
+      roles: {
+        value: result.roles.value || [],
+        canRead: result.roles.canEdit ?? result.roles.canRead,
+        canEdit: result.roles.canEdit,
+      },
+    };
+    return response;
   }
 
   async update(input: UpdateUser, session: ISession): Promise<User> {
     this.logger.info('mutation update User', { input, session });
     const user = await this.readOne(input.id, session);
 
-    return this.db.sgUpdateProperties({
+    await this.db.sgUpdateProperties({
       session,
       object: user,
       props: [
@@ -469,6 +499,23 @@ export class UserService {
       changes: input,
       nodevar: 'user',
     });
+
+    // Update roles
+    if (input.roles) {
+      const newRoles = difference(input.roles, user.roles.value) as Role[];
+      await this.db
+        .query()
+        .match([
+          node('user', ['User', 'BaseNode'], {
+            active: true,
+            id: input.id,
+          }),
+        ])
+        .create([...this.roleProperties(newRoles)])
+        .run();
+    }
+
+    return this.readOne(input.id, session);
   }
 
   async delete(id: string, session: ISession): Promise<void> {

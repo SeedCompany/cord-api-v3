@@ -1,6 +1,7 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { Resource, SecuredProperty, SecuredString } from '../../../common';
+import { SecuredRoles } from '../../project/project-member/dto/role.dto';
 import { UserStatus } from './user-status.enum';
 
 @ObjectType({
@@ -37,6 +38,9 @@ export class User extends Resource {
 
   @Field(() => SecuredUserStatus)
   status: SecuredUserStatus;
+
+  @Field(() => SecuredRoles)
+  roles: SecuredRoles;
 }
 
 @ObjectType({
@@ -50,7 +54,13 @@ export const RedactedSecuredString: SecuredString = {
   canEdit: false,
 };
 
-export const RedactedUser: User = {
+export const RedactedSecuredRoles: SecuredRoles = {
+  value: [],
+  canRead: false,
+  canEdit: false,
+};
+
+export const RedactedUser: Partial<User> = {
   id: '',
   createdAt: DateTime.fromSeconds(0),
   email: RedactedSecuredString,
@@ -62,4 +72,5 @@ export const RedactedUser: User = {
   timezone: RedactedSecuredString,
   bio: RedactedSecuredString,
   status: RedactedSecuredString,
+  roles: RedactedSecuredRoles,
 };

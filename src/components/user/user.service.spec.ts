@@ -7,6 +7,7 @@ import { AuthenticationService } from '../authentication';
 import { AuthenticationModule } from '../authentication/authentication.module';
 import { OrganizationService } from '../organization';
 import { OrganizationModule } from '../organization/organization.module';
+import { Role } from '../project';
 import { CreatePerson, UpdateUser, User, UserStatus } from './dto';
 import { EducationService } from './education';
 import { EducationModule } from './education/education.module';
@@ -63,6 +64,11 @@ describe('UserService', () => {
     },
     status: {
       value: UserStatus.Active,
+      canRead: true,
+      canEdit: true,
+    },
+    roles: {
+      value: [Role.ProjectManager, Role.Consultant],
       canRead: true,
       canEdit: true,
     },
