@@ -3,19 +3,16 @@ import {
   NotFoundException,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
+import { inArray, node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
+import { difference } from 'lodash';
 import { DateTime } from 'luxon';
 import { ISession } from '../../common';
 import {
   addAllSecureProperties,
   addBaseNodeMetaPropsWithClause,
-  addPropertyCoalesceWithClause,
-  addShapeForBaseNodeMetaProperty,
-  addUserToSG,
   ConfigService,
   createBaseNode,
-  createSG,
   DatabaseService,
   filterByString,
   filterBySubarray,
@@ -27,10 +24,16 @@ import {
   Property,
   runListQuery,
 } from '../../core';
+import { ScriptureRange } from '../scripture';
+import {
+  scriptureToVerseRange,
+  verseToScriptureRange,
+} from '../scripture/reference';
 import {
   AnyProduct,
   CreateProduct,
   MethodologyToApproach,
+  ProducibleType,
   Product,
   ProductApproach,
   ProductListInput,
@@ -95,7 +98,7 @@ export class ProductService {
     { engagementId, ...input }: CreateProduct,
     session: ISession
   ): Promise<AnyProduct> {
-    const createdAt = DateTime.local();
+    const createdAt = DateTime.local().toString();
     // create product
     const secureProps: Property[] = [
       {
@@ -106,7 +109,7 @@ export class ProductService {
         addToReaderSg: true,
         isPublic: true,
         isOrgPublic: true,
-        label: 'Mediums',
+        label: 'ProductMedium',
       },
       {
         key: 'purposes',
@@ -116,7 +119,7 @@ export class ProductService {
         addToReaderSg: true,
         isPublic: true,
         isOrgPublic: true,
-        label: 'Purposes',
+        label: 'ProductPurpose',
       },
       {
         key: 'methodology',
@@ -126,10 +129,9 @@ export class ProductService {
         addToReaderSg: true,
         isPublic: true,
         isOrgPublic: true,
-        label: 'Methodology',
+        label: 'ProductMethodology',
       },
     ];
-    // const baseMetaProps = [];
 
     const query = this.db
       .query()
@@ -143,85 +145,99 @@ export class ProductService {
       ]);
     }
 
+    if (input.produces) {
+      query.match([
+        node('pr', 'Producible', { id: input.produces, active: true }),
+      ]);
+    }
+
     query
-      .match([
-        node('publicSG', 'PublicSecurityGroup', {
-          active: true,
-          id: this.config.publicSecurityGroup.id,
-        }),
-      ])
       .call(matchRequestingUser, session)
-      .call(createSG, 'orgSG', 'OrgPublicSecurityGroup')
-      .call(createBaseNode, 'Product', secureProps)
-      .call(addUserToSG, 'requestingUser', 'adminSG'); // must come after base node creation
+      .call(
+        createBaseNode,
+        [
+          'Product',
+          input.produces
+            ? 'DerivativeScriptureProduct'
+            : 'DirectScriptureProduct',
+        ],
+        secureProps,
+        {
+          owningOrgId: session.owningOrgId,
+        }
+      );
 
     if (engagementId) {
       query.create([
         [
           node('engagement'),
-          relation('in', '', 'engagement', { active: true, createdAt }),
+          relation('out', '', 'product', { active: true, createdAt }),
           node('node'),
         ],
         ...this.permission('product', 'engagement', true),
       ]);
     }
 
-    query.return('node.id as id');
+    if (input.produces) {
+      query.create([
+        [
+          node('pr'),
+          relation('in', '', 'produces', {
+            active: true,
+            createdAt,
+          }),
+          node('node'),
+        ],
+        ...this.permission('produces', 'node', true),
+      ]);
+    }
 
-    const result = await query.first();
+    if (!input.produces && input.scriptureReferences) {
+      for (const sr of input.scriptureReferences) {
+        const verseRange = scriptureToVerseRange(sr);
+        query
+          .create([
+            node('node'),
+            relation('out', '', 'scriptureReferences', { active: true }),
+            node('sr', 'ScriptureRange', {
+              start: verseRange.start,
+              end: verseRange.end,
+              active: true,
+              createdAt: DateTime.local().toString(),
+            }),
+          ])
+          .create([...this.permission('scriptureReferences', 'node')]);
+      }
+    }
+
+    if (input.produces && input.scriptureReferencesOverride) {
+      for (const sr of input.scriptureReferencesOverride) {
+        const verseRange = scriptureToVerseRange(sr);
+        query
+          .create([
+            node('node'),
+            relation('out', '', 'scriptureReferencesOverride', {
+              active: true,
+            }),
+            node('sr', 'ScriptureRange', {
+              start: verseRange.start,
+              end: verseRange.end,
+              active: true,
+              createdAt: DateTime.local().toString(),
+            }),
+          ])
+          .create([...this.permission('scriptureReferencesOverride', 'node')]);
+      }
+    }
+
+    const result = await query.return('node.id as id').first();
 
     if (!result) {
       throw new ServerException('failed to create default product');
     }
 
-    const id = result.id;
-
-    // add root admin to new product as an admin
-    await this.db.addRootAdminToBaseNodeAsAdmin(id, 'Product');
-
-    this.logger.debug(`product created`, { id });
-
-    return this.readOne(id, session);
-    // try {
-    //   await this.db.createNode({
-    //     session,
-    //     type: Product,
-    //     input: {
-    //       id,
-    //       ...input,
-    //       ...(input.methodology
-    //         ? { approach: MethodologyToApproach[input.methodology] }
-    //         : {}),
-    //     },
-    //     acls,
-    //   });
-
-    //   if (input.produces) {
-    //     await this.db
-    //       .query()
-    //       .match([
-    //         [node('product', 'Product', { id, active: true })],
-    //         [node('pr', 'Producible', { id: input.produces, active: true })],
-    //       ])
-    //       .create([
-    //         node('product'),
-    //         relation('out', '', 'produces', {
-    //           active: true,
-    //           createdAt: DateTime.local(),
-    //         }),
-    //         node('pr'),
-    //       ])
-    //       .run();
-    //   }
-    // } catch (e) {
-    //   this.logger.warning('Failed to create product', {
-    //     exception: e,
-    //   });
-
-    //   throw new ServerException('Failed to create product');
-    // }
-
-    // return this.readOne(id, session);
+    this.logger.info(`product created`, { id: result.id });
+    return this.readOne(result.id, session);
   }
 
   async readOne(id: string, session: ISession): Promise<AnyProduct> {
@@ -233,26 +249,129 @@ export class ProductService {
       .call(matchRequestingUser, session)
       .call(matchUserPermissions, 'Product', id)
       .call(addAllSecureProperties, ...props)
-      .with([
-        ...props.map(addPropertyCoalesceWithClause),
-        ...baseNodeMetaProps.map(addShapeForBaseNodeMetaProperty),
+      .optionalMatch([
+        node('scriptureReferencesReadPerm', 'Permission', {
+          property: 'scriptureReferences',
+          read: true,
+          active: true,
+        }),
+        relation('out', '', 'baseNode'),
+        node('node'),
+        relation('out', '', 'scriptureReferences', { active: true }),
+        node('scriptureReferences', 'ScriptureRange', { active: true }),
       ])
-      .returnDistinct([...props, 'id', 'createdAt']);
+      .where({ scriptureReferencesReadPerm: inArray(['permList'], true) })
+      .optionalMatch([
+        node('scriptureReferencesEditPerm', 'Permission', {
+          property: 'scriptureReferences',
+          edit: true,
+          active: true,
+        }),
+        relation('out', '', 'baseNode'),
+        node('node'),
+      ])
+      .where({ scriptureReferencesEditPerm: inArray(['permList'], true) })
+      .optionalMatch([
+        node('producesReadPerm', 'Permission', {
+          property: 'produces',
+          read: true,
+          active: true,
+        }),
+        relation('out', '', 'baseNode'),
+        node('node'),
+        relation('out', '', 'produces', { active: true }),
+        node('pr', 'Producible', { active: true }),
+      ])
+      .where({ producesReadPerm: inArray(['permList'], true) })
+      .optionalMatch([
+        node('producesEditPerm', 'Permission', {
+          property: 'produces',
+          edit: true,
+          active: true,
+        }),
+        relation('out', '', 'baseNode'),
+        node('node'),
+      ])
+      .where({ producesEditPerm: inArray(['permList'], true) })
+      .return(
+        `
+          {
+            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
+            ${listWithSecureObject(props)},
+            canScriptureReferencesRead: scriptureReferencesReadPerm.read,
+            canScriptureReferencesEdit: scriptureReferencesEditPerm.edit,
+            canProducesRead: producesReadPerm.read,
+            canProducesEdit: producesEditPerm.edit
+          } as product
+        `
+      );
 
-    const result = (await query.first()) as Product | undefined;
-    if (!result || !result.id) {
-      this.logger.warning(`Could not find product`, { id: id });
+    const result = await query.first();
+    if (!result) {
+      this.logger.warning(`Could not find product`, { id });
       throw new NotFoundException('Could not find product');
     }
 
+    const produces = await this.db
+      .query()
+      .match([
+        node('product', 'Product', { id, active: true }),
+        relation('out', 'produces', { active: true }),
+        node('p', 'Producible', { active: true }),
+      ])
+      .return('p')
+      .first();
+
+    if (!produces) {
+      const scriptureReferences = await this.listScriptureReferences(
+        result.product.id,
+        'Product',
+        session
+      );
+      return {
+        id: result.product.id,
+        createdAt: result.product.createdAt,
+        mediums: result.product.mediums,
+        purposes: result.product.purposes,
+        methodology: result.product.methodology,
+        scriptureReferences: {
+          canRead: !!result.product.canScriptureReferencesRead,
+          canEdit: !!result.product.canScriptureReferencesEdit,
+          value: scriptureReferences,
+        },
+      };
+    }
+
+    const typeName = difference(produces.p.labels, [
+      'Producible',
+      'BaseNode',
+    ])[0];
+
     return {
-      ...result,
+      id: result.product.id,
+      createdAt: result.product.createdAt,
+      mediums: result.product.mediums,
+      purposes: result.product.purposes,
+      methodology: result.product.methodology,
+      produces: {
+        value: {
+          id: produces.p.properties.id,
+          createdAt: produces.p.properties.createdAt,
+          __typename: (ProducibleType as any)[typeName],
+        },
+        canRead: !!result.product.canProducesRead,
+        canEdit: !!result.product.canProducesEdit,
+      },
       scriptureReferences: {
-        // TODO
-        canRead: true,
-        canEdit: true,
+        canRead: !!result.product.canScriptureReferencesRead,
+        canEdit: !!result.product.canScriptureReferencesEdit,
         value: [],
       },
+      // scriptureReferencesOverride: {
+      //   canRead: !!result.product.canScriptureReferencesRead,
+      //   canEdit: !!result.product.canScriptureReferencesEdit,
+      //   value: []
+      // },
     };
   }
 
@@ -297,14 +416,11 @@ export class ProductService {
     session: ISession
   ): Promise<ProductListOutput> {
     const label = 'Product';
-    const baseNodeMetaProps = ['id', 'createdAt'];
-    // const unsecureProps = [''];
-    const secureProps = ['mediums', 'purposes', 'methodology'];
-
+    const secureProps = ['methodology'];
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .call(matchUserPermissions, 'Product');
+      .call(matchUserPermissions, label);
 
     if (filter.methodology) {
       query.call(filterByString, label, 'methodology', filter.methodology);
@@ -319,87 +435,80 @@ export class ProductService {
       this.filterByEngagement(
         query,
         filter.engagementId,
-        'engagement',
-        'in',
+        'product',
+        'out',
         label
       );
     }
 
-    // match on the rest of the properties of the object requested
-    query
-      .call(
-        addAllSecureProperties,
-        ...secureProps
-        //...unsecureProps
-      )
+    const result: {
+      items: Array<{
+        identity: string;
+        labels: string[];
+        properties: Product;
+      }>;
+      hasMore: boolean;
+      total: number;
+    } = await runListQuery(query, input, secureProps.includes(input.sort));
 
-      // form return object
-      // ${listWithUnsecureObject(unsecureProps)}, // removed from a few lines down
-      .with(
-        `
-          {
-            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
-            ${listWithSecureObject(secureProps)}
-          } as node
-        `
-      );
-
-    const result = await runListQuery(
-      query,
-      input,
-      secureProps.includes(input.sort)
+    const items = await Promise.all(
+      result.items.map((item) => {
+        return this.readOne(item.properties.id, session);
+      })
     );
-
-    const items = result.items.map((item) => ({
-      ...(item as Product),
-      scriptureReferences: {
-        // TODO
-        canRead: true,
-        canEdit: true,
-        value: [],
-      },
-    }));
-
-    // // TODO this is bad, we should at least fetch the the producible IDs in the
-    // // list query above. Then we may have to call each service to fully hydrate
-    // // the object (film, story, song, etc.).
-    // // This logic also needs to be applied to readOne()
-    // items = await Promise.all(
-    //   items.map(async (item) => {
-    //     const produces = await this.db
-    //       .query()
-    //       .match([
-    //         node('product', 'Product', { id: item.id, active: true }),
-    //         relation('out', 'produces', { active: true }),
-    //         node('p', 'Producible', { active: true }),
-    //       ])
-    //       .return('p')
-    //       .asResult<{ p: Node<{ id: string; createdAt: DateTime }> }>()
-    //       .first();
-    //     if (!produces) {
-    //       return item;
-    //     }
-    //     return {
-    //       ...item,
-    //       produces: {
-    //         value: {
-    //           id: produces.p.properties.id,
-    //           createdAt: produces.p.properties.createdAt,
-    //           __typename: difference(produces.p.labels, [
-    //             'Producible',
-    //             'BaseNode',
-    //           ])[0],
-    //         },
-    //       },
-    //     };
-    //   })
-    // );
 
     return {
       items,
       hasMore: result.hasMore,
       total: result.total,
     };
+  }
+
+  async listScriptureReferences(
+    id: string,
+    label: string,
+    session: ISession
+  ): Promise<ScriptureRange[]> {
+    const query = this.db
+      .query()
+      .match([
+        node('node', label, {
+          id,
+          active: true,
+          owningOrgId: session.owningOrgId,
+        }),
+        relation('out', '', 'scriptureReferences'),
+        node('scriptureRanges', 'ScriptureRange', { active: true }),
+      ])
+      .with('collect(scriptureRanges) as items')
+      .return('items');
+    const result = await query.first();
+
+    if (!result) {
+      return [];
+    }
+
+    const items: ScriptureRange[] = await Promise.all(
+      result.items.map(
+        (item: {
+          identity: string;
+          labels: string;
+          properties: {
+            start: number;
+            end: number;
+            createdAt: string;
+            active: boolean;
+          };
+        }) => {
+          return verseToScriptureRange({
+            start: item.properties.start,
+            end: item.properties.end,
+          });
+        }
+      )
+    );
+
+    return items;
   }
 
   // used to search a specific engagement's relationship to the target base node

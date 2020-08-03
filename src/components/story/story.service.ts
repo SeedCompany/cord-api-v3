@@ -4,13 +4,12 @@ import {
   NotFoundException,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { inArray, node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { DuplicateException, ISession } from '../../common';
 import {
   addAllSecureProperties,
   addBaseNodeMetaPropsWithClause,
-  addUserToSG,
   ConfigService,
   createBaseNode,
   DatabaseService,
@@ -23,6 +22,11 @@ import {
   OnIndex,
   runListQuery,
 } from '../../core';
+import { ScriptureRange } from '../scripture';
+import {
+  scriptureToVerseRange,
+  verseToScriptureRange,
+} from '../scripture/reference';
 import {
   CreateStory,
   Story,
@@ -156,7 +160,7 @@ export class StoryService {
         .query()
         .call(matchRequestingUser, session)
         .match([
-          node('rootUser', 'User', {
+          node('root', 'User', {
             active: true,
             id: this.config.rootAdmin.id,
           }),
@@ -164,10 +168,25 @@ export class StoryService {
         .call(createBaseNode, ['Story', 'Producible'], secureProps, {
           owningOrgId: session.owningOrgId,
         })
-        .create([...this.permission('range', 'node')])
-        .call(addUserToSG, 'rootUser', 'adminSG')
-        .call(addUserToSG, 'rootUser', 'readerSG')
-        .return('node.id as id');
+        .create([...this.permission('scriptureReferences', 'node')]);
+
+      if (input.scriptureReferences) {
+        for (const sr of input.scriptureReferences) {
+          const verseRange = scriptureToVerseRange(sr);
+          query.create([
+            node('node'),
+            relation('out', '', 'scriptureReferences', { active: true }),
+            node('sr', 'ScriptureRange', {
+              start: verseRange.start,
+              end: verseRange.end,
+              active: true,
+              createdAt: DateTime.local().toString(),
+            }),
+          ]);
+        }
+      }
+      query.return('node.id as id');
+
       const result = await query.first();
       if (!result) {
         throw new ServerException('failed to create a story');
@@ -182,19 +201,43 @@ export class StoryService {
   }
 
   async readOne(storyId: string, session: ISession): Promise<Story> {
-    const secureProps = ['name', 'range'];
+    const secureProps = ['name'];
     const baseNodeMetaProps = ['id', 'createdAt'];
     const readStory = this.db
       .query()
       .call(matchRequestingUser, session)
       .call(matchUserPermissions, 'Story', storyId)
       .call(addAllSecureProperties, ...secureProps)
+      .optionalMatch([
+        node('scriptureReferencesReadPerm', 'Permission', {
+          property: 'scriptureReferences',
+          read: true,
+          active: true,
+        }),
+        relation('out', '', 'baseNode'),
+        node('node'),
+        relation('out', '', 'scriptureReferences', { active: true }),
+        node('scriptureReferences', 'ScriptureRange', { active: true }),
+      ])
+      .where({ scriptureReferencesReadPerm: inArray(['permList'], true) })
+      .optionalMatch([
+        node('scriptureReferencesEditPerm', 'Permission', {
+          property: 'scriptureReferences',
+          edit: true,
+          active: true,
+        }),
+        relation('out', '', 'baseNode'),
+        node('node'),
+      ])
+      .where({ scriptureReferencesEditPerm: inArray(['permList'], true) })
       .return(
         `
           {
             ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
             ${listWithSecureObject(secureProps)},
-            canReadStorys: requestingUser.canReadStorys
+            canReadStorys: requestingUser.canReadStorys,
+            canScriptureReferencesRead: scriptureReferencesReadPerm.read,
+            canScriptureReferencesEdit: scriptureReferencesEditPerm.edit
           } as story
         `
       );
@@ -210,13 +253,19 @@ export class StoryService {
         'User does not have permission to read a story'
       );
     }
+
+    const scriptureReferences = await this.listScriptureReferences(
+      result.story.id,
+      session
+    );
+
     return {
       id: result.story.id,
       name: result.story.name,
       scriptureReferences: {
-        canEdit: !!result.story.range.canEdit,
-        canRead: !!result.story.range.canRead,
-        value: [],
+        canRead: !!result.story.canScriptureReferencesRead,
+        canEdit: !!result.story.canScriptureReferencesEdit,
+        value: scriptureReferences,
       },
       createdAt: result.story.createdAt,
     };
@@ -253,7 +302,7 @@ export class StoryService {
     { filter, ...input }: StoryListInput,
     session: ISession
   ): Promise<StoryListOutput> {
-    const secureProps = ['name', 'range'];
+    const secureProps = ['name'];
     const label = 'Story';
 
     const query = this.db
@@ -284,5 +333,51 @@ export class StoryService {
       hasMore: listResult.hasMore,
       total: listResult.total,
     };
+  }
+
+  async listScriptureReferences(
+    storyId: string,
+    session: ISession
+  ): Promise<ScriptureRange[]> {
+    const query = this.db
+      .query()
+      .match([
+        node('story', 'Story', {
+          id: storyId,
+          active: true,
+          owningOrgId: session.owningOrgId,
+        }),
+        relation('out', '', 'scriptureReferences'),
+        node('scriptureRanges', 'ScriptureRange', { active: true }),
+      ])
+      .with('collect(scriptureRanges) as items')
+      .return('items');
+    const result = await query.first();
+
+    if (!result) {
+      return [];
+    }
+
+    const items: ScriptureRange[] = await Promise.all(
+      result.items.map(
+        (item: {
+          identity: string;
+          labels: string;
+          properties: {
+            start: number;
+            end: number;
+            createdAt: string;
+            active: boolean;
+          };
+        }) => {
+          return verseToScriptureRange({
+            start: item.properties.start,
+            end: item.properties.end,
+          });
+        }
+      )
+    );
+
+    return items;
   }
 }

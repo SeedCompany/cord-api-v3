@@ -4,13 +4,12 @@ import {
   NotFoundException,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { inArray, node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { DuplicateException, ISession } from '../../common';
 import {
   addAllSecureProperties,
   addBaseNodeMetaPropsWithClause,
-  addUserToSG,
   ConfigService,
   createBaseNode,
   DatabaseService,
@@ -23,6 +22,11 @@ import {
   OnIndex,
   runListQuery,
 } from '../../core';
+import { ScriptureRange } from '../scripture';
+import {
+  scriptureToVerseRange,
+  verseToScriptureRange,
+} from '../scripture/reference';
 import {
   CreateFilm,
   Film,
@@ -163,7 +167,7 @@ export class FilmService {
         .query()
         .call(matchRequestingUser, session)
         .match([
-          node('rootuser', 'User', {
+          node('root', 'User', {
             active: true,
             id: this.config.rootAdmin.id,
           }),
@@ -171,10 +175,24 @@ export class FilmService {
         .call(createBaseNode, ['Film', 'Producible'], secureProps, {
           owningOrgId: session.owningOrgId,
         })
-        .create([...this.permission('range', 'node')])
-        .call(addUserToSG, 'rootuser', 'adminSG')
-        .call(addUserToSG, 'rootuser', 'readerSG')
-        .return('node.id as id');
+        .create([...this.permission('range', 'node')]);
+
+      if (input.scriptureReferences) {
+        for (const sr of input.scriptureReferences) {
+          const verseRange = scriptureToVerseRange(sr);
+          query.create([
+            node('node'),
+            relation('out', '', 'scriptureReferences', { active: true }),
+            node('sr', 'ScriptureRange', {
+              start: verseRange.start,
+              end: verseRange.end,
+              active: true,
+              createdAt: DateTime.local().toString(),
+            }),
+          ]);
+        }
+      }
+      query.return('node.id as id');
 
       const result = await query.first();
       if (!result) {
@@ -190,19 +208,43 @@ export class FilmService {
   }
 
   async readOne(filmId: string, session: ISession): Promise<Film> {
-    const secureProps = ['name', 'range'];
+    const secureProps = ['name'];
     const baseNodeMetaProps = ['id', 'createdAt'];
     const readFilm = this.db
       .query()
       .call(matchRequestingUser, session)
       .call(matchUserPermissions, 'Film', filmId)
       .call(addAllSecureProperties, ...secureProps)
+      .optionalMatch([
+        node('scriptureReferencesReadPerm', 'Permission', {
+          property: 'scriptureReferences',
+          read: true,
+          active: true,
+        }),
+        relation('out', '', 'baseNode'),
+        node('node'),
+        relation('out', '', 'scriptureReferences', { active: true }),
+        node('scriptureReferences', 'ScriptureRange', { active: true }),
+      ])
+      .where({ scriptureReferencesReadPerm: inArray(['permList'], true) })
+      .optionalMatch([
+        node('scriptureReferencesEditPerm', 'Permission', {
+          property: 'scriptureReferences',
+          edit: true,
+          active: true,
+        }),
+        relation('out', '', 'baseNode'),
+        node('node'),
+      ])
+      .where({ scriptureReferencesReadPerm: inArray(['permList'], true) })
       .return(
         `
           {
             ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
             ${listWithSecureObject(secureProps)},
-            canReadFilms: requestingUser.canReadFilms
+            canReadFilms: requestingUser.canReadFilms,
+            canScriptureReferencesRead: scriptureReferencesReadPerm.read,
+            canScriptureReferencesEdit: scriptureReferencesEditPerm.edit
           } as film
         `
       );
@@ -218,14 +260,18 @@ export class FilmService {
       );
     }
 
+    const scriptureReferences = await this.listScriptureReferences(
+      result.film.id,
+      session
+    );
+
     return {
       id: result.film.id,
       name: result.film.name,
       scriptureReferences: {
-        // TODO
-        canRead: !!result.film.range.canRead,
-        canEdit: !!result.film.range.canEdit,
-        value: [],
+        canRead: !!result.film.canScriptureReferencesRead,
+        canEdit: !!result.film.canScriptureReferencesEdit,
+        value: scriptureReferences,
       },
       createdAt: result.film.createdAt,
     };
@@ -293,5 +339,51 @@ export class FilmService {
       hasMore: listResult.hasMore,
       total: listResult.total,
     };
+  }
+
+  async listScriptureReferences(
+    filmId: string,
+    session: ISession
+  ): Promise<ScriptureRange[]> {
+    const query = this.db
+      .query()
+      .match([
+        node('film', 'Film', {
+          id: filmId,
+          active: true,
+          owningOrgId: session.owningOrgId,
+        }),
+        relation('out', '', 'scriptureReferences'),
+        node('scriptureRanges', 'ScriptureRange', { active: true }),
+      ])
+      .with('collect(scriptureRanges) as items')
+      .return('items');
+    const result = await query.first();
+
+    if (!result) {
+      return [];
+    }
+
+    const items: ScriptureRange[] = await Promise.all(
+      result.items.map(
+        (item: {
+          identity: string;
+          labels: string;
+          properties: {
+            start: number;
+            end: number;
+            createdAt: string;
+            active: boolean;
+          };
+        }) => {
+          return verseToScriptureRange({
+            start: item.properties.start,
+            end: item.properties.end,
+          });
+        }
+      )
+    );
+
+    return items;
   }
 }
