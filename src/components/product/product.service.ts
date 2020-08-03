@@ -434,8 +434,8 @@ export class ProductService {
       this.filterByEngagement(
         query,
         filter.engagementId,
-        'engagement',
-        'in',
+        'product',
+        'out',
         label
       );
     }
