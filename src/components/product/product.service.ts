@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { inArray, node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
+import { difference } from 'lodash';
 import { DateTime } from 'luxon';
 import { ISession } from '../../common';
 import {
@@ -324,6 +325,7 @@ export class ProductService {
     if (!produces) {
       const scriptureReferences = await this.listScriptureReferences(
         result.product.id,
+        'Product',
         session
       );
       return {
@@ -340,11 +342,10 @@ export class ProductService {
       };
     }
 
-    // const typeName = difference(produces.p.labels, [
-    //   'Producible',
-    //   'BaseNode',
-    // ])[0];
-    const typeName = 'Film';
+    const typeName = difference(produces.p.labels, [
+      'Producible',
+      'BaseNode',
+    ])[0];
 
     return {
       id: result.product.id,
@@ -356,7 +357,7 @@ export class ProductService {
         value: {
           id: produces.p.properties.id,
           createdAt: produces.p.properties.createdAt,
-          __typename: ProducibleType[typeName],
+          __typename: (ProducibleType as any)[typeName],
         },
         canRead: !!result.product.canProducesRead,
         canEdit: !!result.product.canProducesEdit,
@@ -464,14 +465,15 @@ export class ProductService {
   }
 
   async listScriptureReferences(
-    storyId: string,
+    id: string,
+    label: string,
     session: ISession
   ): Promise<ScriptureRange[]> {
     const query = this.db
       .query()
       .match([
-        node('product', 'Product', {
-          id: storyId,
+        node('node', label, {
+          id,
           active: true,
           owningOrgId: session.owningOrgId,
         }),
