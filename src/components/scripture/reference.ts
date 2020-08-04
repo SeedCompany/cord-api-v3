@@ -114,6 +114,7 @@ const bookNameFromId = (id: number) => {
 };
 // Given a book code 'gen' for Genesis, get the full length book name
 export const bookCodeToName = (code: string) => {
+  code = code.toLowerCase();
   const book = books.find((book) => {
     const bookNames = book.names.map((n) => n.toLowerCase());
     return bookNames.includes(code);
