@@ -305,16 +305,16 @@ export function getSecurePropertySimple(query: Query, property: string) {
       }),
     ])
     .where({ [readPerm]: inArray(['permList'], true) })
-    .optionalMatch([
-      node('node'),
-      relation('in', '', 'baseNode'),
-      node(editPerm, 'Permission', {
-        property,
-        edit: true,
-        active: true,
-      }),
-    ])
-    .where({ [editPerm]: inArray(['permList'], true) });
+    // .optionalMatch([
+    //   node('node'),
+    //   relation('in', '', 'baseNode'),
+    //   node(editPerm, 'Permission', {
+    //     property,
+    //     edit: true,
+    //     active: true,
+    //   }),
+    // ])
+    // .where({ [editPerm]: inArray(['permList'], true) });
 }
 
 export interface ChildBaseNodeProperty {
