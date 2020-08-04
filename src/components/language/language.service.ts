@@ -575,11 +575,14 @@ export class LanguageService {
 
     if (result && result.items) {
       const ids = result.items.map(item => (item as any).ethnologueLanguageId);
-      ethnologueNodes = await this.ethnologueLanguageService.readInList(
-        ids,
-        session,
-        input,
-      );
+
+      if (ids) {
+        ethnologueNodes = await this.ethnologueLanguageService.readInList(
+          ids,
+          session,
+          input,
+        );
+      }
     }
 
     const items = result.items.map(item => {

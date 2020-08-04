@@ -307,7 +307,6 @@ export function getSecurePropertySimple(query: Query, property: string, type?: s
   const readPerm = property + 'ReadPerm';
   const editPerm = property + 'EditPerm';
 
-  console.log('type', type)
   if (!type || type === 'read') {
     query
       .optionalMatch([
