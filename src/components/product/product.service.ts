@@ -381,6 +381,48 @@ export class ProductService {
 
     const object = await this.readOne(input.id, session);
 
+    if (produces) {
+      const produce = await this.db
+        .query()
+        .match([node('pr', 'Producible', { id: produces, active: true })])
+        .return('pr')
+        .first();
+      if (!produce) {
+        this.logger.warning(`Could not find producible node`, { id: produces });
+        throw new NotFoundException('Could not find producible node');
+      }
+
+      if (!object.scriptureReferences.value.length) {
+        await this.db
+          .query()
+          .match([
+            node('product', 'Product', { id: object.id, active: true }),
+            relation('out', 'rel', 'produces', { active: true }),
+            node('p', 'Producible', { active: true }),
+          ])
+          .setValues({
+            'rel.active': false,
+          })
+          .return('rel')
+          .first();
+
+        await this.db
+          .query()
+          .match([node('product', 'Product', { id: object.id, active: true })])
+          .match([node('pr', 'Producible', { id: produces, active: true })])
+          .create([
+            node('product'),
+            relation('out', 'rel', 'produces', {
+              active: true,
+              createdAt: DateTime.local().toString(),
+            }),
+            node('pr'),
+          ])
+          .return('rel')
+          .first();
+      }
+    }
+
     return this.db.updateProperties({
       session,
       object,
