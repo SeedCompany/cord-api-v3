@@ -17,10 +17,10 @@ export abstract class Place {
   implements: [Resource, Place],
 })
 export class Zone extends Resource implements Place {
-  @Field(() => SecuredString)
+  @Field()
   readonly name: SecuredString;
 
-  @Field(() => SecuredUser)
+  @Field()
   readonly director: SecuredUser;
 }
 
@@ -33,13 +33,13 @@ export class SecuredZone extends SecuredProperty(Zone) {}
   implements: [Resource, Place],
 })
 export class Region extends Resource implements Place {
-  @Field(() => SecuredString)
+  @Field()
   readonly name: SecuredString;
 
-  @Field(() => SecuredZone)
+  @Field()
   readonly zone: SecuredZone;
 
-  @Field(() => SecuredUser)
+  @Field()
   readonly director: SecuredUser;
 }
 
@@ -52,10 +52,10 @@ export class SecuredRegion extends SecuredProperty(Region) {}
   implements: [Resource, Place],
 })
 export class Country extends Resource implements Place {
-  @Field(() => SecuredString)
+  @Field()
   name: SecuredString;
 
-  @Field(() => SecuredRegion)
+  @Field()
   region: SecuredRegion;
 }
 

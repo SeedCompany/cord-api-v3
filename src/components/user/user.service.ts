@@ -178,13 +178,7 @@ export class UserService {
   };
 
   roleProperties = (roles?: Role[]) => {
-    let roleProperties: any[] = [];
-    roles?.forEach(
-      (role) =>
-        (roleProperties = roleProperties.concat(this.property('roles', role)))
-    );
-
-    return roleProperties;
+    return (roles || []).flatMap((role) => this.property('roles', role));
   };
 
   async create(input: CreatePerson, session?: ISession): Promise<string> {
@@ -454,7 +448,7 @@ export class UserService {
         `
         {
           value: collect(distinct roles.value),
-          canRead: coalesce(rolesReadPerm.read, false),
+          canRead: coalesce(rolesEditPerm.edit, rolesReadPerm.read, false),
           canEdit: coalesce(rolesEditPerm.edit, false)
         } as roles
         `,
@@ -468,15 +462,7 @@ export class UserService {
       throw new NotFoundException('Could not find user');
     }
 
-    const response: any = {
-      ...result,
-      roles: {
-        value: result.roles.value || [],
-        canRead: result.roles.canEdit ?? result.roles.canRead,
-        canEdit: result.roles.canEdit,
-      },
-    };
-    return response;
+    return result;
   }
 
   async update(input: UpdateUser, session: ISession): Promise<User> {
