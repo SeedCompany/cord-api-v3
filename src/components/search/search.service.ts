@@ -7,10 +7,14 @@ import {
   matchRequestingUser,
   matchUserPermissions,
 } from '../../core';
+import { FilmService } from '../film';
 import { LanguageService } from '../language';
+import { LiteracyMaterialService } from '../literacy-material';
 import { LocationService } from '../location';
 import { OrganizationService } from '../organization';
 import { ProjectService } from '../project';
+import { SongService } from '../song';
+import { StoryService } from '../story';
 import { UserService } from '../user';
 import {
   SearchableMap,
@@ -43,6 +47,10 @@ export class SearchService {
     Language: (...args) => this.language.readOne(...args),
     TranslationProject: (...args) => this.projects.readOneTranslation(...args),
     InternshipProject: (...args) => this.projects.readOneInternship(...args),
+    Film: (...args) => this.film.readOne(...args),
+    Story: (...args) => this.story.readOne(...args),
+    LiteracyMaterial: (...args) => this.literacyMaterial.readOne(...args),
+    Song: (...args) => this.song.readOne(...args),
   };
   /* eslint-enable @typescript-eslint/naming-convention */
 
@@ -52,7 +60,11 @@ export class SearchService {
     private readonly orgs: OrganizationService,
     private readonly location: LocationService,
     private readonly language: LanguageService,
-    private readonly projects: ProjectService
+    private readonly projects: ProjectService,
+    private readonly film: FilmService,
+    private readonly story: StoryService,
+    private readonly literacyMaterial: LiteracyMaterialService,
+    private readonly song: SongService
   ) {}
 
   async search(input: SearchInput, session: ISession): Promise<SearchOutput> {

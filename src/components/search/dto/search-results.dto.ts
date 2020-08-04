@@ -1,7 +1,9 @@
 import { createUnionType, registerEnumType } from '@nestjs/graphql';
 import { mapValues } from 'lodash';
 import { simpleSwitch } from '../../../common';
+import { Film } from '../../film/dto';
 import { Language } from '../../language/dto';
+import { LiteracyMaterial } from '../../literacy-material/dto';
 import { Country, Location, Region, Zone } from '../../location/dto';
 import { Organization } from '../../organization/dto';
 import {
@@ -9,6 +11,8 @@ import {
   IProject as Project,
   TranslationProject,
 } from '../../project/dto';
+import { Song } from '../../song/dto';
+import { Story } from '../../story/dto';
 import { User } from '../../user/dto';
 
 // Expand this to add to searchable types / results
@@ -21,6 +25,10 @@ const searchable = {
   TranslationProject,
   InternshipProject,
   User,
+  Film,
+  Story,
+  LiteracyMaterial,
+  Song,
 } as const;
 
 // Expand this to add more search types, but not result types.
