@@ -294,27 +294,27 @@ export function getSecurePropertySimple(query: Query, property: string) {
   const editPerm = property + 'EditPerm';
   query
     .optionalMatch([
-      // node(readPerm, 'Permission', {
-      //   property,
-      //   read: true,
-      //   active: true,
-      // }),
-      // relation('out', '', 'baseNode'),
-      node('node'),
-      relation('out', '', property, { active: true }),
       node(property, 'Property', { active: true }),
+      relation('in', '', property, { active: true }),
+      node('node'),
+      relation('in', '', 'baseNode'),
+      node(readPerm, 'Permission', {
+        property,
+        read: true,
+        active: true,
+      }),
     ])
-    // .where({ [readPerm]: inArray(['permList'], true) })
-    // .optionalMatch([
-    //   node(editPerm, 'Permission', {
-    //     property,
-    //     edit: true,
-    //     active: true,
-    //   }),
-    //   relation('out', '', 'baseNode'),
-    //   node('node'),
-    // ])
-    // .where({ [editPerm]: inArray(['permList'], true) });
+    .where({ [readPerm]: inArray(['permList'], true) })
+    .optionalMatch([
+      node('node'),
+      relation('in', '', 'baseNode'),
+      node(editPerm, 'Permission', {
+        property,
+        edit: true,
+        active: true,
+      }),
+    ])
+    .where({ [editPerm]: inArray(['permList'], true) });
 }
 
 export interface ChildBaseNodeProperty {
@@ -522,10 +522,10 @@ export function matchUserPermissionsIn(
       : node('node', { active: true }),
   ]);
   if (ids) {
-    query.where({ node: { id: ids }, perms: { read: true, edit: true } });
+    query.where({ node: { id: ids }, perms: { read: true } });
   }
 
-  // query.with(`collect(perms) as permList, node`);
+  query.with(`collect(perms) as permList, node`);
 }
 
 export function matchUserPermissionsForList(

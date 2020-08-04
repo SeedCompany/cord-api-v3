@@ -289,8 +289,9 @@ export class EthnologueLanguageService {
       .call(matchUserPermissionsIn, 'EthnologueLanguage', ids)
       .call(addAllSecurePropertiesSimple, ...props)
       .with([
-        `{${props.map(prop => `${prop}: coalesce(${prop}.value)`).join(', ')},
-         ethnologueId: node.id, createdAt: node.createdAt} as item`,
+        `{${props.map(prop => `${prop}: {value: coalesce(${prop}.value), canRead: coalesce(idReadPerm.read, false), 
+        canEdit: coalesce(idEditPerm.edit, false)}`).join(', ')}, ethnologueId: node.id, createdAt: node.createdAt}
+        as item`,
       ])
       .with([
         'collect(distinct item) as items',
