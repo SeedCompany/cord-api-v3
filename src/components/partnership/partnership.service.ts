@@ -14,9 +14,6 @@ import {
   addAllMetaPropertiesOfChildBaseNodes,
   addAllSecureProperties,
   addBaseNodeMetaPropsWithClause,
-  addPropertyCoalesceWithClause,
-  addShapeForBaseNodeMetaProperty,
-  addShapeForChildBaseNodeMetaProperty,
   ChildBaseNodeMetaProperty,
   ConfigService,
   DatabaseService,
@@ -344,34 +341,44 @@ export class PartnershipService {
 
     const baseNodeMetaProps = ['id', 'createdAt'];
 
-    const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
-      {
-        parentBaseNodePropertyKey: 'organization',
-        parentRelationDirection: 'out',
-        childBaseNodeLabel: 'Organization',
-        childBaseNodeMetaPropertyKey: 'id',
-        returnIdentifier: 'organizationId',
-      },
-    ];
-
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
       .call(matchUserPermissions, 'Partnership', id)
       .call(addAllSecureProperties, ...props)
-      .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
-      .with([
-        ...props.map(addPropertyCoalesceWithClause),
-        ...childBaseNodeMetaProps.map(addShapeForChildBaseNodeMetaProperty),
-        ...baseNodeMetaProps.map(addShapeForBaseNodeMetaProperty),
-        'node',
+      .optionalMatch([
+        node('canReadProject', 'Permission', {
+          property: 'project',
+          read: true,
+          active: true,
+        }),
+        relation('out', '', 'baseNode'),
+        node('node'),
+        relation('in', '', 'partnership', { active: true }),
+        node('project', 'Project', { active: true }),
       ])
-      .returnDistinct([
-        ...props,
-        ...baseNodeMetaProps,
-        ...childBaseNodeMetaProps.map((x) => x.returnIdentifier),
-        'labels(node) as labels',
-      ]);
+      .optionalMatch([
+        node('canReadOrganization', 'Permission', {
+          property: 'organization',
+          read: true,
+          active: true,
+        }),
+        relation('out', '', 'baseNode'),
+        node('node'),
+        relation('out', '', 'organization', { active: true }),
+        node('organization', 'Organization', { active: true }),
+      ])
+      .with(
+        `
+          {
+            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
+            ${listWithSecureObject(props)},
+            projectId: project.id,
+            organizationId: organization.id
+          } as partnership
+        `
+      )
+      .returnDistinct('partnership');
 
     let result;
     try {
@@ -379,29 +386,14 @@ export class PartnershipService {
     } catch (error) {
       this.logger.error('could not read partnership', error);
     }
-    if (!result || !result.id) {
+
+    if (!result || !result.partnership.id) {
       throw new NotFoundException('could not find Partnership');
     }
-
-    //Get Projects mapped with the Partnership
-    const projectQuery = this.db
-      .query()
-      .match(matchSession(session, { withAclRead: 'canReadPartnerships' }))
-      .match([
-        node('partnership', 'Partnership', { active: true, id }),
-        relation('in', '', 'partnership', { active: true }),
-        node('project', 'Project', {
-          active: true,
-        }),
-      ]);
-    projectQuery.return({
-      project: [{ id: 'id' }],
-    });
-
-    const getProject = await projectQuery.first();
+    result = (result as any).partnership;
 
     const readProject = await this.projectService.readOne(
-      getProject?.id,
+      result.projectId,
       session
     );
 
