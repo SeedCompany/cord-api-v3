@@ -103,7 +103,7 @@ describe('Unavailability e2e', () => {
     expect(actual).toBeTruthy();
   });
 
-  it.skip('List view of unavailabilities', async () => {
+  it('List view of unavailabilities', async () => {
     // create 2 unavailabilities
     const numUnavail = 2;
     await Promise.all(
@@ -112,7 +112,7 @@ describe('Unavailability e2e', () => {
       )
     );
 
-    const { unavailabilities } = await app.graphql.query(
+    const result = await app.graphql.query(
       gql`
         query UsersUnavailabilities($id: ID!) {
           user(id: $id) {
@@ -132,7 +132,9 @@ describe('Unavailability e2e', () => {
       }
     );
 
-    expect(unavailabilities.items.length).toBeGreaterThanOrEqual(numUnavail);
+    expect(result.user.unavailabilities.items.length).toBeGreaterThanOrEqual(
+      numUnavail
+    );
   });
 
   it('Check consistency across unavailability nodes', async () => {
