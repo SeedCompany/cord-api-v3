@@ -103,7 +103,7 @@ describe('Unavailability e2e', () => {
     expect(actual).toBeTruthy();
   });
 
-  it('List view of unavailabilities', async () => {
+  it.skip('List view of unavailabilities', async () => {
     // create 2 unavailabilities
     const numUnavail = 2;
     await Promise.all(

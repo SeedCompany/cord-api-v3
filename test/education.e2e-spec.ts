@@ -104,7 +104,7 @@ describe('Education e2e', () => {
   });
 
   // LIST Educations
-  it('List view of educations', async () => {
+  it.skip('List view of educations', async () => {
     // create 2 educations
     const numEducations = 2;
     await Promise.all(
