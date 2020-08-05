@@ -5,6 +5,7 @@ import {
   Injectable,
   NotFoundException,
   InternalServerErrorException as ServerException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { isFunction, upperFirst } from 'lodash';
@@ -237,6 +238,9 @@ export class EngagementService {
     { languageId, projectId, ...input }: CreateLanguageEngagement,
     session: ISession
   ): Promise<LanguageEngagement> {
+    if (!session.userId) {
+      throw new UnauthorizedException('user not logged in');
+    }
     // LanguageEngagements can only be created on TranslationProjects
     const projectType = await this.getProjectTypeById(projectId);
 
@@ -467,6 +471,9 @@ export class EngagementService {
     }: CreateInternshipEngagement,
     session: ISession
   ): Promise<InternshipEngagement> {
+    if (!session.userId) {
+      throw new UnauthorizedException('user not logged in');
+    }
     // InternshipEngagements can only be created on InternshipProjects
     const projectType = await this.getProjectTypeById(projectId);
 
