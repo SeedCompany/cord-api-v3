@@ -112,18 +112,25 @@ describe('Unavailability e2e', () => {
       )
     );
 
-    const { unavailabilities } = await app.graphql.query(gql`
-      query {
-        unavailabilities (input: { filter: { userId : "${user.id}" }}) {
-          items {
-            ...unavailability
+    const { unavailabilities } = await app.graphql.query(
+      gql`
+        query UsersUnavailabilities($id: ID!) {
+          user(id: $id) {
+            unavailabilities {
+              items {
+                ...unavailability
+              }
+              hasMore
+              total
+            }
           }
-          hasMore
-          total
         }
+        ${fragments.unavailability}
+      `,
+      {
+        id: user.id,
       }
-      ${fragments.unavailability}
-    `);
+    );
 
     expect(unavailabilities.items.length).toBeGreaterThanOrEqual(numUnavail);
   });

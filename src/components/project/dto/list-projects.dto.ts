@@ -1,4 +1,4 @@
-import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import {
@@ -45,10 +45,6 @@ export abstract class ProjectFilters {
   })
   readonly step?: ProjectStep[];
 
-  @Field(() => [ID], {
-    description: 'Only projects in ANY of these locations',
-    nullable: true,
-  })
   readonly locationIds?: string[];
 
   @Field({

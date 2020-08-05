@@ -24,7 +24,7 @@ export abstract class ProductFilters {
   })
   readonly methodology?: ProductMethodology;
 
-  readonly engagementId?: string; // TODO
+  readonly engagementId?: string;
 }
 
 const defaultFilters = {};

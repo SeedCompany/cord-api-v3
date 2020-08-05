@@ -2,7 +2,6 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import {
-  IdField,
   PaginatedList,
   SecuredList,
   SortablePaginationInput,
@@ -18,10 +17,6 @@ export abstract class ProjectMemberFilters {
   })
   readonly roles?: Role[];
 
-  @IdField({
-    description: 'Only members of this project',
-    nullable: true,
-  })
   readonly projectId?: string;
 }
 
