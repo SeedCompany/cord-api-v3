@@ -6,6 +6,8 @@ import {
   NotFoundException,
   InternalServerErrorException as ServerException,
   UnauthorizedException,
+  forwardRef,
+  Inject,
 } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { isFunction, upperFirst } from 'lodash';
@@ -55,6 +57,7 @@ import {
   UpdateInternshipEngagement,
   UpdateLanguageEngagement,
 } from './dto';
+import { ProjectService } from '../project/project.service';
 
 @Injectable()
 export class EngagementService {
@@ -64,6 +67,8 @@ export class EngagementService {
     private readonly products: ProductService,
     private readonly config: ConfigService,
     private readonly files: FileService,
+    @Inject(forwardRef(() => ProjectService))
+    private readonly projectService: ProjectService,
     @Logger(`engagement.service`) private readonly logger: ILogger
   ) {}
 
@@ -324,13 +329,13 @@ export class EngagementService {
         'languageEngagement'
       ),
       ...this.property(
-        'startDate',
-        input.startDate || undefined,
+        'startDateOverride',
+        input.startDateOverride || undefined,
         'languageEngagement'
       ),
       ...this.property(
-        'endDate',
-        input.endDate || undefined,
+        'endDateOverride',
+        input.endDateOverride || undefined,
         'languageEngagement'
       ),
       ...this.property(
@@ -415,8 +420,8 @@ export class EngagementService {
         ...this.permission('completeDate', 'languageEngagement'),
         ...this.permission('disbursementCompleteDate', 'languageEngagement'),
         ...this.permission('communicationsCompleteDate', 'languageEngagement'),
-        ...this.permission('startDate', 'languageEngagement'),
-        ...this.permission('endDate', 'languageEngagement'),
+        ...this.permission('startDateOverride', 'languageEngagement'),
+        ...this.permission('endDateOverride', 'languageEngagement'),
         ...this.permission('ceremony', 'languageEngagement'),
         ...this.permission('language', 'languageEngagement'),
         ...this.permission('status', 'languageEngagement'),
@@ -574,13 +579,13 @@ export class EngagementService {
         'internshipEngagement'
       ),
       ...this.property(
-        'startDate',
-        input.startDate || undefined,
+        'startDateOverride',
+        input.startDateOverride || undefined,
         'internshipEngagement'
       ),
       ...this.property(
-        'endDate',
-        input.endDate || undefined,
+        'endDateOverride',
+        input.endDateOverride || undefined,
         'internshipEngagement'
       ),
       ...this.property(
@@ -690,12 +695,11 @@ export class EngagementService {
           'internshipEngagement'
         ),
         ...this.permission('disbursementCompleteDate', 'internshipEngagement'),
-        ...this.permission('endDate', 'internshipEngagement'),
         ...this.permission('methodologies', 'internshipEngagement'),
         ...this.permission('position', 'internshipEngagement'),
-        ...this.permission('endDate', 'internshipEngagement'),
         ...this.permission('modifiedAt', 'internshipEngagement'),
-        ...this.permission('startDate', 'internshipEngagement'),
+        ...this.permission('startDateOverride', 'internshipEngagement'),
+        ...this.permission('endDateOverride', 'internshipEngagement'),
         ...this.permission('language', 'internshipEngagement'),
         ...this.permission('status', 'internshipEngagement'),
         ...this.permission('countryOfOrigin', 'internshipEngagement'),
@@ -799,6 +803,8 @@ export class EngagementService {
       'initialEndDate',
       'startDate',
       'endDate',
+      'startDateOverride',
+      'endDateOverride',
       'modifiedAt',
       'lastSuspendedAt',
       'lastReactivatedAt',
@@ -862,11 +868,17 @@ export class EngagementService {
       .call(matchUserPermissions, 'Engagement', id)
       .call(addAllSecureProperties, ...props)
       .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
+      .optionalMatch([
+        node('project'),
+        relation('out', '', 'engagement', { active: true }),
+        node('node'),
+      ])
       .with([
         ...props.map(addPropertyCoalesceWithClause),
         ...childBaseNodeMetaProps.map(addShapeForChildBaseNodeMetaProperty),
         ...baseNodeMetaProps.map(addShapeForBaseNodeMetaProperty),
         'node',
+        'project.id as projectId',
         `
           case
           when 'InternshipEngagement' IN labels(node)
@@ -915,6 +927,7 @@ export class EngagementService {
         ...props,
         ...baseNodeMetaProps,
         ...childBaseNodeMetaProps.map((x) => x.returnIdentifier),
+        'projectId',
         'ceremony',
         'language',
         'intern',
@@ -937,6 +950,22 @@ export class EngagementService {
       throw new NotFoundException('could not find Engagement');
     }
 
+    const readProject = await this.projectService.readOne(
+      result?.projectId,
+      session
+    );
+
+    const canReadStartDate =
+      readProject.mouStart.canRead && result.startDateOverride.canRead;
+    const startDate = canReadStartDate
+      ? result.startDateOverride.value ?? readProject.mouStart.value
+      : null;
+    const canReadEndDate =
+      readProject.mouEnd.canRead && result.endDateOverride.canRead;
+    const endDate = canReadEndDate
+      ? result.endDateOverride.value ?? readProject.mouEnd.value
+      : null;
+
     // todo: refactor with/return query to remove the need to do mapping
     const response: any = {
       ...result,
@@ -946,6 +975,16 @@ export class EngagementService {
         value: result.methodologies.value ? result.methodologies.value : [],
         canRead: !!result.canReadMethodologies,
         canEdit: !!result.canEditMethodologies,
+      },
+      startDate: {
+        value: startDate,
+        canRead: canReadStartDate,
+        canEdit: false,
+      },
+      endDate: {
+        value: endDate,
+        canRead: canReadEndDate,
+        canEdit: false,
       },
     };
 
@@ -983,8 +1022,8 @@ export class EngagementService {
           'completeDate',
           'disbursementCompleteDate',
           'communicationsCompleteDate',
-          'startDate',
-          'endDate',
+          'startDateOverride',
+          'endDateOverride',
           'paraTextRegistryId',
           'modifiedAt',
         ],
@@ -1082,8 +1121,8 @@ export class EngagementService {
           'completeDate',
           'disbursementCompleteDate',
           'communicationsCompleteDate',
-          'startDate',
-          'endDate',
+          'startDateOverride',
+          'endDateOverride',
           'modifiedAt',
         ],
         changes: {
