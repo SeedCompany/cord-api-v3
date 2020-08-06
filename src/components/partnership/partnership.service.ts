@@ -8,7 +8,6 @@ import { node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { flatMap, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
-import { generate } from 'shortid';
 import { fiscalYears, ISession } from '../../common';
 import {
   addAllMetaPropertiesOfChildBaseNodes,
@@ -19,6 +18,7 @@ import {
   addShapeForChildBaseNodeMetaProperty,
   ChildBaseNodeMetaProperty,
   ConfigService,
+  createBaseNode,
   DatabaseService,
   IEventBus,
   ILogger,
@@ -170,8 +170,7 @@ export class PartnershipService {
     { organizationId, projectId, ...input }: CreatePartnership,
     session: ISession
   ): Promise<Partnership> {
-    const id = generate();
-    const createdAt = DateTime.local();
+    const createdAt = DateTime.local().toString();
 
     if (!(await this.orgService.readOne(organizationId, session))) {
       throw new UnauthorizedException('organization does not exist');
@@ -189,98 +188,130 @@ export class PartnershipService {
         input.agreement
       );
 
+      const secureProps = [
+        {
+          key: 'agreementStatus',
+          value: input.agreementStatus,
+          addToAdminSg: true,
+          addToWriterSg: false,
+          addToReaderSg: true,
+          isPublic: false,
+          isOrgPublic: false,
+        },
+        {
+          key: 'agreement',
+          value: agreement,
+          addToAdminSg: true,
+          addToWriterSg: false,
+          addToReaderSg: true,
+          isPublic: false,
+          isOrgPublic: false,
+        },
+        {
+          key: 'mou',
+          value: mou,
+          addToAdminSg: true,
+          addToWriterSg: false,
+          addToReaderSg: true,
+          isPublic: false,
+          isOrgPublic: false,
+        },
+        {
+          key: 'mouStatus',
+          value: input.mouStatus,
+          addToAdminSg: true,
+          addToWriterSg: false,
+          addToReaderSg: true,
+          isPublic: false,
+          isOrgPublic: false,
+        },
+        {
+          key: 'mouStartOverride',
+          value: input.mouStartOverride,
+          addToAdminSg: true,
+          addToWriterSg: false,
+          addToReaderSg: true,
+          isPublic: false,
+          isOrgPublic: false,
+        },
+        {
+          key: 'mouEndOverride',
+          value: input.mouEndOverride,
+          addToAdminSg: true,
+          addToWriterSg: false,
+          addToReaderSg: true,
+          isPublic: false,
+          isOrgPublic: false,
+        },
+        {
+          key: 'types',
+          value: input.types,
+          addToAdminSg: true,
+          addToWriterSg: false,
+          addToReaderSg: true,
+          isPublic: false,
+          isOrgPublic: false,
+        },
+      ];
+      let result;
       const createPartnership = this.db
         .query()
-        .match(matchSession(session, { withAclEdit: 'canCreatePartnership' }))
+        .call(matchRequestingUser, session)
         .match([
-          node('rootuser', 'User', {
+          node('root', 'User', {
             active: true,
             id: this.config.rootAdmin.id,
           }),
         ])
-        .create([
-          [
-            node('newPartnership', ['Partnership', 'BaseNode'], {
-              active: true,
-              createdAt,
-              id,
-              owningOrgId: session.owningOrgId,
-            }),
-          ],
-          ...this.property('agreementStatus', input.agreementStatus),
-          ...this.property('agreement', agreement),
-          ...this.property('mou', mou),
-          ...this.property('mouStatus', input.mouStatus),
-          ...this.property('mouStartOverride', input.mouStartOverride),
-          ...this.property('mouEndOverride', input.mouEndOverride),
-          ...this.property('types', input.types),
-          [
-            node('adminSG', 'SecurityGroup', {
-              id: generate(),
-              active: true,
-              createdAt,
-              name: `partnership ${id} admin`,
-            }),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('requestingUser'),
-          ],
-          [
-            node('readerSG', 'SecurityGroup', {
-              id: generate(),
-              active: true,
-              createdAt,
-              name: `partnership ${id} users`,
-            }),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('requestingUser'),
-          ],
-          [
-            node('adminSG'),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('rootuser'),
-          ],
-          [
-            node('readerSG'),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('rootuser'),
-          ],
-          ...this.permission('agreementStatus'),
-          ...this.permission('mouStatus'),
-          ...this.permission('types'),
-          ...this.permission('organization'),
-          ...this.permission('mouStartOverride'),
-          ...this.permission('mouEndOverride'),
-          ...this.permission('mou'),
-          ...this.permission('agreement'),
-        ])
-        .return('newPartnership.id as id');
+        .call(
+          createBaseNode,
+          'Partnership',
+          secureProps,
+          {
+            owningOrgId: session.owningOrgId,
+          },
+          [],
+          session.userId === this.config.rootAdmin.id
+        )
+        .create([...this.permission('organization')])
+        .return('node.id as id');
 
       try {
-        await createPartnership.first();
+        result = await createPartnership.first();
       } catch (e) {
         this.logger.error('e :>> ', e);
       }
 
       // connect the Organization to the Partnership
       // and connect Partnership to Project
-      const query = `
-        MATCH (organization:Organization {id: $organizationId, active: true}),
-          (partnership:Partnership {id: $id, active: true}),
-          (project:Project {id: $projectId, active: true})
-        CREATE (project)-[:partnership {active: true, createdAt: datetime()}]->(partnership)
-                  -[:organization {active: true, createdAt: datetime()}]->(organization)
-        RETURN partnership.id as id
-      `;
       await this.db
         .query()
-        .raw(query, {
-          organizationId,
-          id,
-          projectId,
-        })
+        .match([
+          [
+            node('organization', 'Organization', {
+              id: organizationId,
+              active: true,
+            }),
+          ],
+          [
+            node('partnership', 'Partnership', {
+              id: (result as any).id,
+              active: true,
+            }),
+          ],
+          [node('project', 'Project', { id: projectId, active: true })],
+        ])
+        .create([
+          node('project'),
+          relation('out', '', 'partnership', { active: true, createdAt }),
+          node('partnership'),
+          relation('out', '', 'organization', { active: true, createdAt }),
+          node('organization'),
+        ])
+        .return('partnership.id as id')
         .first();
 
-      const partnership = await this.readOne(id, session);
+      const partnership = await this.readOne((result as any).id, session);
 
       if (!input.types) {
         return partnership;
