@@ -13,7 +13,7 @@ export class InputException extends ClientException {
   /**
    * The field name in a.b.c nested notation from the Input DTO.
    */
-  readonly field: string | undefined;
+  field: string | undefined;
 
   /**
    * Create using a default message if you don't want to be more specific
@@ -75,6 +75,11 @@ export class InputException extends ClientException {
     );
     super(message, previous);
     this.field = field;
+  }
+
+  withField(field: string) {
+    this.field = field;
+    return this;
   }
 
   static parseArgs(
