@@ -244,6 +244,36 @@ export function addAllSecureProperties(query: Query, ...properties: string[]) {
     getSecureProperty(query, property);
   }
 }
+// MATCHING - for single properties //////////////////////////////////////////////////////
+// READ/LIST Property-ALL   functions that take a prop array
+export function addAllSecurePropertiesSimple(
+  query: Query,
+  ...properties: string[]
+) {
+  for (const property of properties) {
+    getSecurePropertySimple(query, property);
+  }
+}
+// MATCHING - for single properties //////////////////////////////////////////////////////
+// READ/LIST Property-ALL   functions that take a prop array
+export function addAllSecurePropertiesSimpleRead(
+  query: Query,
+  ...properties: string[]
+) {
+  for (const property of properties) {
+    getSecurePropertySimple(query, property, 'read');
+  }
+}
+// MATCHING - for single properties //////////////////////////////////////////////////////
+// READ/LIST Property-ALL   functions that take a prop array
+export function addAllSecurePropertiesSimpleEdit(
+  query: Query,
+  ...properties: string[]
+) {
+  for (const property of properties) {
+    getSecurePropertySimple(query, property, 'edit');
+  }
+}
 
 export function addAllSecurePropertiesOfChildBaseNodes(
   query: Query,
@@ -292,6 +322,47 @@ export function getSecureProperty(query: Query, property: string) {
     .where({ [editPerm]: inArray(['permList'], true) });
 }
 
+// READ/LIST Secure-Property-SINGLE   functions that add queries for one property
+export function getSecurePropertySimple(
+  query: Query,
+  property: string,
+  type?: string
+) {
+  const readPerm = property + 'ReadPerm';
+  const editPerm = property + 'EditPerm';
+
+  if (!type || type === 'read') {
+    query
+      .optionalMatch([
+        node(property, 'Property', { active: true }),
+        relation('in', '', property, { active: true }),
+        node('node'),
+        relation('in', '', 'baseNode'),
+        node(readPerm, 'Permission', {
+          property,
+          read: true,
+          active: true,
+        }),
+      ])
+      .where({ [readPerm]: inArray(['permList'], true) });
+  }
+  if (!type || type === 'edit') {
+    query
+      .optionalMatch([
+        node(property, 'Property', { active: true }),
+        relation('in', '', property, { active: true }),
+        node('node'),
+        relation('in', '', 'baseNode'),
+        node(editPerm, 'Permission', {
+          property,
+          edit: true,
+          active: true,
+        }),
+      ])
+      .where({ [editPerm]: inArray(['permList'], true) });
+  }
+}
+
 export interface ChildBaseNodeProperty {
   parentBaseNodePropertyKey: string;
   childBaseNodeLabel: string;
@@ -314,8 +385,8 @@ export function getSecurePropertyOfChildBaseNode(
   /*
     To get a child base node's property, we need a bunch of stuff.
     this query is similar to the normal 'getSecureProperty` query
-    except that it adds the extra hops to a child base node and 
-    then to a property. we have to keep track of permissions for 
+    except that it adds the extra hops to a child base node and
+    then to a property. we have to keep track of permissions for
     each hop, and we have to label the nodes using a convention
     so that the values can be extracted in the result query.
     */
@@ -409,8 +480,8 @@ export function getMetaPropertyOfChildBaseNode(
   /*
     To get a child base node's property, we need a bunch of stuff.
     this query is similar to the normal 'getSecureProperty` query
-    except that it adds the extra hops to a child base node and 
-    then to a property. we have to keep track of permissions for 
+    except that it adds the extra hops to a child base node and
+    then to a property. we have to keep track of permissions for
     each hop, and we have to label the nodes using a convention
     so that the values can be extracted in the result query.
     */
@@ -478,6 +549,29 @@ export function matchUserPermissions(
   }
 
   query.with(`collect(perms) as permList, node, requestingUser`);
+}
+
+export function matchUserPermissionsIn(
+  query: Query,
+  label?: string,
+  ids?: string[]
+) {
+  query.match([
+    node('requestingUser'),
+    relation('in', '', 'member', {}, [1]),
+    node('', 'SecurityGroup', { active: true }),
+    relation('out', '', 'permission'),
+    node('perms', 'Permission', { active: true }),
+    relation('out', '', 'baseNode'),
+    label
+      ? node('node', label, { active: true })
+      : node('node', { active: true }),
+  ]);
+  if (ids) {
+    query.where({ node: { id: ids }, perms: { read: true } });
+  }
+
+  query.with(`collect(perms) as permList, node`);
 }
 
 export function matchUserPermissionsForList(

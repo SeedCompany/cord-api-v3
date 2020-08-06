@@ -571,20 +571,31 @@ export class LanguageService {
       secureProps.includes(input.sort)
     );
 
-    const items = await Promise.all(
-      result.items.map(async (item) => {
-        const { ethnologue } = await this.ethnologueLanguageService.readOne(
-          (item as any).ethnologueLanguageId,
+    let ethnologueNodes: any[] = [];
+
+    if (result?.items) {
+      const ids = result.items.map(
+        (item) => (item as any).ethnologueLanguageId
+      );
+
+      if (ids) {
+        ethnologueNodes = await this.ethnologueLanguageService.readInList(
+          ids,
           session
         );
+      }
+    }
 
-        return {
-          ...item,
-          sensitivity: (item as any).sensitivity.value || Sensitivity.Low,
-          ethnologue: ethnologue,
-        };
-      })
-    );
+    const items = result.items.map((item) => {
+      const ethnologue = ethnologueNodes.find(
+        (i: any) => i.ethnologueId === (item as any).ethnologueLanguageId
+      );
+      return {
+        ...item,
+        sensitivity: (item as any).sensitivity.value || Sensitivity.Low,
+        ethnologue: ethnologue,
+      };
+    });
 
     return {
       items,
