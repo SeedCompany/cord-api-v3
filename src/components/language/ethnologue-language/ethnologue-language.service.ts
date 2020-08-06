@@ -21,15 +21,17 @@ import {
   matchSession,
   matchUserPermissions,
   matchUserPermissionsIn,
-
   Property,
 } from '../../../core';
+import {
+  addAllSecurePropertiesSimpleEdit,
+  addAllSecurePropertiesSimpleRead,
+} from '../../../core/database/query.helpers';
 import {
   CreateEthnologueLanguage,
   EthnologueLanguage,
   UpdateEthnologueLanguage,
 } from '../dto';
-import {addAllSecurePropertiesSimpleEdit, addAllSecurePropertiesSimpleRead, runListQuery} from "../../../core/database/query.helpers";
 
 @Injectable()
 export class EthnologueLanguageService {
@@ -267,11 +269,7 @@ export class EthnologueLanguageService {
     };
   }
 
-  async readInList(
-    ids: string[],
-    session: ISession,
-    input: any,
-  ): Promise<any> {
+  async readInList(ids: string[], session: ISession): Promise<any> {
     this.logger.info(`Read ethnologueLanguage`, {
       ids: ids,
       userId: session.userId,
@@ -290,14 +288,18 @@ export class EthnologueLanguageService {
       .call(matchUserPermissionsIn, 'EthnologueLanguage', ids)
       .call(addAllSecurePropertiesSimpleRead, ...props)
       .with([
-        `{${props.map(prop => `${prop}: {value: coalesce(${prop}.value), canRead: coalesce(${prop}ReadPerm.read, false) 
-        }`).join(', ')}, ethnologueId: node.id, createdAt: node.createdAt}
+        `{${props
+          .map(
+            (
+              prop
+            ) => `${prop}: {value: coalesce(${prop}.value), canRead: coalesce(${prop}ReadPerm.read, false) 
+        }`
+          )
+          .join(', ')}, ethnologueId: node.id, createdAt: node.createdAt}
         as item`,
       ])
-      .with([
-        'collect(distinct item) as items',
-      ])
-      .return('items')
+      .with(['collect(distinct item) as items'])
+      .return('items');
 
     const result = await queryRead.run();
 
@@ -307,36 +309,42 @@ export class EthnologueLanguageService {
       .call(matchUserPermissionsIn, 'EthnologueLanguage', ids)
       .call(addAllSecurePropertiesSimpleEdit, ...props)
       .with([
-        `{${props.map(prop => `${prop}: {value: coalesce(${prop}.value), canEdit: coalesce(${prop}EditPerm.edit, false)
-        }`).join(', ')}, ethnologueId: node.id, createdAt: node.createdAt}
+        `{${props
+          .map(
+            (
+              prop
+            ) => `${prop}: {value: coalesce(${prop}.value), canEdit: coalesce(${prop}EditPerm.edit, false)
+        }`
+          )
+          .join(', ')}, ethnologueId: node.id, createdAt: node.createdAt}
         as item`,
       ])
-      .with([
-        'collect(distinct item) as items',
-      ])
-      .return('items')
+      .with(['collect(distinct item) as items'])
+      .return('items');
 
     const resultEdit = await queryEdit.run();
-    let items = result && result[0] && [...result[0].items]
+    let items = result?.[0] && [...result[0].items];
 
-    const itemsEdit = resultEdit && resultEdit[0] && resultEdit[0].items
+    const itemsEdit = resultEdit?.[0]?.items;
 
     items = items.map((item: any) => {
-      let data = {...item}
-      const edit = itemsEdit.find((i: any) => i.ethnologueId === item.ethnologueId)
+      const data = { ...item };
+      const edit = itemsEdit.find(
+        (i: any) => i.ethnologueId === item.ethnologueId
+      );
 
       if (edit) {
-        Object.keys(edit).forEach(key => {
+        Object.keys(edit).forEach((key) => {
           if (edit[key]['canEdit']) {
-            data[key]['canEdit'] = edit[key]['canEdit']
+            data[key]['canEdit'] = edit[key]['canEdit'];
           }
-        })
+        });
       }
 
-      return data
-    })
+      return data;
+    });
 
-    return items || []
+    return items || [];
   }
 
   async update(id: string, input: UpdateEthnologueLanguage, session: ISession) {

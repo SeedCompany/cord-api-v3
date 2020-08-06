@@ -235,21 +235,30 @@ export function addAllSecureProperties(query: Query, ...properties: string[]) {
 }
 // MATCHING - for single properties //////////////////////////////////////////////////////
 // READ/LIST Property-ALL   functions that take a prop array
-export function addAllSecurePropertiesSimple(query: Query, ...properties: string[]) {
+export function addAllSecurePropertiesSimple(
+  query: Query,
+  ...properties: string[]
+) {
   for (const property of properties) {
     getSecurePropertySimple(query, property);
   }
 }
 // MATCHING - for single properties //////////////////////////////////////////////////////
 // READ/LIST Property-ALL   functions that take a prop array
-export function addAllSecurePropertiesSimpleRead(query: Query, ...properties: string[]) {
+export function addAllSecurePropertiesSimpleRead(
+  query: Query,
+  ...properties: string[]
+) {
   for (const property of properties) {
     getSecurePropertySimple(query, property, 'read');
   }
 }
 // MATCHING - for single properties //////////////////////////////////////////////////////
 // READ/LIST Property-ALL   functions that take a prop array
-export function addAllSecurePropertiesSimpleEdit(query: Query, ...properties: string[]) {
+export function addAllSecurePropertiesSimpleEdit(
+  query: Query,
+  ...properties: string[]
+) {
   for (const property of properties) {
     getSecurePropertySimple(query, property, 'edit');
   }
@@ -303,7 +312,11 @@ export function getSecureProperty(query: Query, property: string) {
 }
 
 // READ/LIST Secure-Property-SINGLE   functions that add queries for one property
-export function getSecurePropertySimple(query: Query, property: string, type?: string) {
+export function getSecurePropertySimple(
+  query: Query,
+  property: string,
+  type?: string
+) {
   const readPerm = property + 'ReadPerm';
   const editPerm = property + 'EditPerm';
 
@@ -320,7 +333,7 @@ export function getSecurePropertySimple(query: Query, property: string, type?: s
           active: true,
         }),
       ])
-      .where({ [readPerm]: inArray(['permList'], true) })
+      .where({ [readPerm]: inArray(['permList'], true) });
   }
   if (!type || type === 'edit') {
     query
@@ -335,7 +348,7 @@ export function getSecurePropertySimple(query: Query, property: string, type?: s
           active: true,
         }),
       ])
-      .where({[editPerm]: inArray(['permList'], true)});
+      .where({ [editPerm]: inArray(['permList'], true) });
   }
 }
 

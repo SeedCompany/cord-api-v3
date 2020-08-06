@@ -571,27 +571,30 @@ export class LanguageService {
       secureProps.includes(input.sort)
     );
 
-    let ethnologueNodes: any[] = []
+    let ethnologueNodes: any[] = [];
 
-    if (result && result.items) {
-      const ids = result.items.map(item => (item as any).ethnologueLanguageId);
+    if (result?.items) {
+      const ids = result.items.map(
+        (item) => (item as any).ethnologueLanguageId
+      );
 
       if (ids) {
         ethnologueNodes = await this.ethnologueLanguageService.readInList(
           ids,
-          session,
-          input,
+          session
         );
       }
     }
 
-    const items = result.items.map(item => {
-      const ethnologue = ethnologueNodes.find((i: any) => i.ethnologueId === (item as any).ethnologueLanguageId)
+    const items = result.items.map((item) => {
+      const ethnologue = ethnologueNodes.find(
+        (i: any) => i.ethnologueId === (item as any).ethnologueLanguageId
+      );
       return {
         ...item,
         sensitivity: (item as any).sensitivity.value || Sensitivity.Low,
         ethnologue: ethnologue,
-      }
+      };
     });
 
     return {
