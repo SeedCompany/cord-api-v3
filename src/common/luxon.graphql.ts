@@ -1,10 +1,10 @@
 import { applyDecorators, BadRequestException } from '@nestjs/common';
 import { CustomScalar, Field, FieldOptions, Scalar } from '@nestjs/graphql';
-import { Transform } from 'class-transformer';
 import { stripIndent } from 'common-tags';
 import { Kind, ValueNode } from 'graphql';
 import { DateTime, Settings } from 'luxon';
 import { CalendarDate } from './calendar-date';
+import { Transform } from './transform.decorator';
 import './luxon.neo4j'; // ensure our luxon methods are added
 
 Settings.throwOnInvalid = true;
@@ -14,7 +14,7 @@ export const DateTimeField = (options?: FieldOptions) =>
     Field(() => DateTime, options),
     Transform((value) => DateTime.fromISO(value), {
       toClassOnly: true,
-    }) as PropertyDecorator
+    })
   );
 
 export const DateField = (options?: FieldOptions) =>
@@ -22,7 +22,7 @@ export const DateField = (options?: FieldOptions) =>
     Field(() => CalendarDate, options),
     Transform((value) => CalendarDate.fromISO(value), {
       toClassOnly: true,
-    }) as PropertyDecorator
+    })
   );
 
 @Scalar('DateTime', () => DateTime)
