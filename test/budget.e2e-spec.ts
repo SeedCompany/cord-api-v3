@@ -1,5 +1,4 @@
 import { gql } from 'apollo-server-core';
-import { times } from 'lodash';
 import { isValid } from 'shortid';
 import { CalendarDate, fiscalYears, Secured } from '../src/common';
 import { Budget } from '../src/components/budget';
@@ -143,34 +142,6 @@ describe('Budget e2e', () => {
         }
       )
     ).rejects.toThrowError();
-  });
-
-  it('lists budget for a projectId', async () => {
-    // create budget first
-    // create 2 budget first
-    const numBudget = 2;
-    await Promise.all(
-      times(numBudget).map(() => createBudget(app, { projectId: project.id }))
-    );
-
-    const { budgets } = await app.graphql.query(
-      gql`
-        query budgets($id: ID!) {
-          budgets(input: { filter: { projectId: $id } }) {
-            items {
-              ...budget
-            }
-            hasMore
-            total
-          }
-        }
-        ${fragments.budget}
-      `,
-      {
-        id: project.id,
-      }
-    );
-    expect(budgets.items.length).toBeGreaterThanOrEqual(numBudget);
   });
 
   it.skip('Check consistency across budget nodes', async () => {
