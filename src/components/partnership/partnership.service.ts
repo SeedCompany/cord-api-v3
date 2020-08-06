@@ -250,6 +250,8 @@ export class PartnershipService {
           ...this.permission('organization'),
           ...this.permission('mouStartOverride'),
           ...this.permission('mouEndOverride'),
+          ...this.permission('mou'),
+          ...this.permission('agreement'),
         ])
         .return('newPartnership.id as id');
 
