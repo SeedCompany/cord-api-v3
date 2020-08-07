@@ -282,6 +282,10 @@ export class PartnershipService {
         this.logger.error('e :>> ', e);
       }
 
+      if (!result) {
+        throw new ServerException('failed to create partnership');
+      }
+
       // connect the Organization to the Partnership
       // and connect Partnership to Project
       await this.db
@@ -295,7 +299,7 @@ export class PartnershipService {
           ],
           [
             node('partnership', 'Partnership', {
-              id: (result as any).id,
+              id: result.id,
               active: true,
             }),
           ],
@@ -311,7 +315,7 @@ export class PartnershipService {
         .return('partnership.id as id')
         .first();
 
-      const partnership = await this.readOne((result as any).id, session);
+      const partnership = await this.readOne(result.id, session);
 
       if (!input.types) {
         return partnership;
