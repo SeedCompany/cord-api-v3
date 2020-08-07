@@ -1,4 +1,6 @@
 import {
+  forwardRef,
+  Inject,
   Injectable,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
@@ -50,6 +52,7 @@ export class PartnershipService {
     private readonly config: ConfigService,
     private readonly budgetService: BudgetService,
     private readonly orgService: OrganizationService,
+    @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService,
     private readonly eventBus: IEventBus,
     @Logger('partnership:service') private readonly logger: ILogger
