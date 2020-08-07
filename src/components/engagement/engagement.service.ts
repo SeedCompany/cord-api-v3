@@ -6,6 +6,8 @@ import {
   NotFoundException,
   InternalServerErrorException as ServerException,
   UnauthorizedException,
+  forwardRef,
+  Inject,
 } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { isFunction, upperFirst } from 'lodash';
@@ -55,6 +57,7 @@ import {
   UpdateInternshipEngagement,
   UpdateLanguageEngagement,
 } from './dto';
+import { ProjectService } from '../project/project.service';
 
 @Injectable()
 export class EngagementService {
@@ -64,6 +67,8 @@ export class EngagementService {
     private readonly products: ProductService,
     private readonly config: ConfigService,
     private readonly files: FileService,
+    @Inject(forwardRef(() => ProjectService))
+    private readonly projectService: ProjectService,
     @Logger(`engagement.service`) private readonly logger: ILogger
   ) {}
 
@@ -265,7 +270,7 @@ export class EngagementService {
     // Initial LanguageEngagement
     const id = generate();
     const createdAt = DateTime.local();
-    const pnp = await this.files.createDefinedFile(`PNP`, session, input.pnp);
+    const pnp = await this.files.createDefinedFile(`PNP`, session, input.pnp, 'engagement.pnp');
 
     const ceremony = await this.ceremonyService.create(
       { type: CeremonyType.Dedication },
@@ -324,13 +329,13 @@ export class EngagementService {
         'languageEngagement'
       ),
       ...this.property(
-        'startDate',
-        input.startDate || undefined,
+        'startDateOverride',
+        input.startDateOverride || undefined,
         'languageEngagement'
       ),
       ...this.property(
-        'endDate',
-        input.endDate || undefined,
+        'endDateOverride',
+        input.endDateOverride || undefined,
         'languageEngagement'
       ),
       ...this.property(
@@ -415,8 +420,8 @@ export class EngagementService {
         ...this.permission('completeDate', 'languageEngagement'),
         ...this.permission('disbursementCompleteDate', 'languageEngagement'),
         ...this.permission('communicationsCompleteDate', 'languageEngagement'),
-        ...this.permission('startDate', 'languageEngagement'),
-        ...this.permission('endDate', 'languageEngagement'),
+        ...this.permission('startDateOverride', 'languageEngagement'),
+        ...this.permission('endDateOverride', 'languageEngagement'),
         ...this.permission('ceremony', 'languageEngagement'),
         ...this.permission('language', 'languageEngagement'),
         ...this.permission('status', 'languageEngagement'),
@@ -500,7 +505,8 @@ export class EngagementService {
     const growthPlan = await this.files.createDefinedFile(
       `Growth Plan`,
       session,
-      input.growthPlan
+      input.growthPlan,
+      'engagement.growthPlan'
     );
 
     let ceremony;
@@ -574,13 +580,13 @@ export class EngagementService {
         'internshipEngagement'
       ),
       ...this.property(
-        'startDate',
-        input.startDate || undefined,
+        'startDateOverride',
+        input.startDateOverride || undefined,
         'internshipEngagement'
       ),
       ...this.property(
-        'endDate',
-        input.endDate || undefined,
+        'endDateOverride',
+        input.endDateOverride || undefined,
         'internshipEngagement'
       ),
       ...this.property(
@@ -690,12 +696,11 @@ export class EngagementService {
           'internshipEngagement'
         ),
         ...this.permission('disbursementCompleteDate', 'internshipEngagement'),
-        ...this.permission('endDate', 'internshipEngagement'),
         ...this.permission('methodologies', 'internshipEngagement'),
         ...this.permission('position', 'internshipEngagement'),
-        ...this.permission('endDate', 'internshipEngagement'),
         ...this.permission('modifiedAt', 'internshipEngagement'),
-        ...this.permission('startDate', 'internshipEngagement'),
+        ...this.permission('startDateOverride', 'internshipEngagement'),
+        ...this.permission('endDateOverride', 'internshipEngagement'),
         ...this.permission('language', 'internshipEngagement'),
         ...this.permission('status', 'internshipEngagement'),
         ...this.permission('countryOfOrigin', 'internshipEngagement'),
@@ -799,6 +804,8 @@ export class EngagementService {
       'initialEndDate',
       'startDate',
       'endDate',
+      'startDateOverride',
+      'endDateOverride',
       'modifiedAt',
       'lastSuspendedAt',
       'lastReactivatedAt',
@@ -862,11 +869,17 @@ export class EngagementService {
       .call(matchUserPermissions, 'Engagement', id)
       .call(addAllSecureProperties, ...props)
       .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
+      .optionalMatch([
+        node('project'),
+        relation('out', '', 'engagement', { active: true }),
+        node('node'),
+      ])
       .with([
         ...props.map(addPropertyCoalesceWithClause),
         ...childBaseNodeMetaProps.map(addShapeForChildBaseNodeMetaProperty),
         ...baseNodeMetaProps.map(addShapeForBaseNodeMetaProperty),
         'node',
+        'project.id as projectId',
         `
           case
           when 'InternshipEngagement' IN labels(node)
@@ -915,6 +928,7 @@ export class EngagementService {
         ...props,
         ...baseNodeMetaProps,
         ...childBaseNodeMetaProps.map((x) => x.returnIdentifier),
+        'projectId',
         'ceremony',
         'language',
         'intern',
@@ -937,6 +951,22 @@ export class EngagementService {
       throw new NotFoundException('could not find Engagement');
     }
 
+    const readProject = await this.projectService.readOne(
+      result?.projectId,
+      session
+    );
+
+    const canReadStartDate =
+      readProject.mouStart.canRead && result.startDateOverride.canRead;
+    const startDate = canReadStartDate
+      ? result.startDateOverride.value ?? readProject.mouStart.value
+      : null;
+    const canReadEndDate =
+      readProject.mouEnd.canRead && result.endDateOverride.canRead;
+    const endDate = canReadEndDate
+      ? result.endDateOverride.value ?? readProject.mouEnd.value
+      : null;
+
     // todo: refactor with/return query to remove the need to do mapping
     const response: any = {
       ...result,
@@ -946,6 +976,16 @@ export class EngagementService {
         value: result.methodologies.value ? result.methodologies.value : [],
         canRead: !!result.canReadMethodologies,
         canEdit: !!result.canEditMethodologies,
+      },
+      startDate: {
+        value: startDate,
+        canRead: canReadStartDate,
+        canEdit: false,
+      },
+      endDate: {
+        value: endDate,
+        canRead: canReadEndDate,
+        canEdit: false,
       },
     };
 
@@ -964,16 +1004,19 @@ export class EngagementService {
     input: UpdateLanguageEngagement,
     session: ISession
   ): Promise<LanguageEngagement> {
+    const { pnp, ...rest } = input;
+    const changes = {
+      ...rest,
+      modifiedAt: DateTime.local(),
+    };
+    const object = (await this.readOne(
+      input.id,
+      session
+    )) as LanguageEngagement;
+
+    await this.files.updateDefinedFile(object.pnp, 'engagement.pnp', pnp, session);
+
     try {
-      const { pnp, ...rest } = input;
-      const changes = {
-        ...rest,
-        modifiedAt: DateTime.local(),
-      };
-      const object = (await this.readOne(
-        input.id,
-        session
-      )) as LanguageEngagement;
       await this.db.sgUpdateProperties({
         session,
         object,
@@ -983,21 +1026,20 @@ export class EngagementService {
           'completeDate',
           'disbursementCompleteDate',
           'communicationsCompleteDate',
-          'startDate',
-          'endDate',
+          'startDateOverride',
+          'endDateOverride',
           'paraTextRegistryId',
           'modifiedAt',
         ],
         changes,
         nodevar: 'LanguageEngagement',
       });
-      await this.files.updateDefinedFile(object.pnp, pnp, session);
-
-      return (await this.readOne(input.id, session)) as LanguageEngagement;
     } catch (e) {
       this.logger.error('Error updating language engagement', { exception: e });
       throw new ServerException('Could not update LanguageEngagement');
     }
+
+    return (await this.readOne(input.id, session)) as LanguageEngagement;
   }
 
   async updateInternshipEngagement(
@@ -1010,6 +1052,14 @@ export class EngagementService {
     session: ISession
   ): Promise<InternshipEngagement> {
     const createdAt = DateTime.local();
+
+    const object = (await this.readOne(
+      input.id,
+      session
+    )) as InternshipEngagement;
+
+    await this.files.updateDefinedFile(object.growthPlan, 'engagement.growthPlan', growthPlan, session);
+
     try {
       if (mentorId) {
         const mentorQ = this.db
@@ -1069,10 +1119,7 @@ export class EngagementService {
 
         await countryQ.first();
       }
-      const object = (await this.readOne(
-        input.id,
-        session
-      )) as InternshipEngagement;
+
       await this.db.sgUpdateProperties({
         session,
         object,
@@ -1082,8 +1129,8 @@ export class EngagementService {
           'completeDate',
           'disbursementCompleteDate',
           'communicationsCompleteDate',
-          'startDate',
-          'endDate',
+          'startDateOverride',
+          'endDateOverride',
           'modifiedAt',
         ],
         changes: {
@@ -1105,24 +1152,17 @@ export class EngagementService {
           ]);
         }
       });
-      await this.files.updateDefinedFile(
-        object.growthPlan,
-        growthPlan,
-        session
-      );
-
-      const result = (await this.readOne(
-        input.id,
-        session
-      )) as InternshipEngagement;
-
-      return result;
     } catch (e) {
       this.logger.warning('Failed to update InternshipEngagement', {
         exception: e,
       });
       throw new ServerException('Could not find update InternshipEngagement');
     }
+
+    return (await this.readOne(
+      input.id,
+      session
+    )) as InternshipEngagement;
   }
 
   // DELETE /////////////////////////////////////////////////////////

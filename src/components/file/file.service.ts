@@ -1,14 +1,14 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  Inject,
-  Injectable,
-  NotFoundException,
-  InternalServerErrorException as ServerException,
-} from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import type { AWSError } from 'aws-sdk';
 import { generate } from 'shortid';
-import { DuplicateException, ISession } from '../../common';
+import {
+  DuplicateException,
+  InputException,
+  ISession,
+  NotFoundException,
+  ServerException,
+  UnauthorizedException,
+} from '../../common';
 import { ILogger, Logger } from '../../core';
 import { FileBucket } from './bucket';
 import {
@@ -50,7 +50,7 @@ export class FileService {
   async getDirectory(id: string, session: ISession): Promise<Directory> {
     const node = await this.getFileNode(id, session);
     if (!isDirectory(node)) {
-      throw new BadRequestException('Node is not a directory');
+      throw new InputException('Node is not a directory');
     }
     return node;
   }
@@ -58,7 +58,7 @@ export class FileService {
   async getFile(id: string, session: ISession): Promise<File> {
     const node = await this.getFileNode(id, session);
     if (!isFile(node)) {
-      throw new BadRequestException('Node is not a file');
+      throw new InputException('Node is not a file');
     }
     return node;
   }
@@ -66,7 +66,7 @@ export class FileService {
   async getFileVersion(id: string, session: ISession): Promise<FileVersion> {
     const node = await this.getFileNode(id, session);
     if (!isFileVersion(node)) {
-      throw new BadRequestException('Node is not a file version');
+      throw new InputException('Node is not a file version');
     }
     return node;
   }
@@ -109,7 +109,7 @@ export class FileService {
 
   async getDownloadUrl(node: FileNode): Promise<string> {
     if (isDirectory(node)) {
-      throw new BadRequestException('Directories cannot be downloaded yet');
+      throw new InputException('Directories cannot be downloaded yet');
     }
     const id = isFile(node) ? node.latestVersionId : node.id;
     try {
@@ -118,7 +118,7 @@ export class FileService {
       return await this.bucket.getSignedUrlForGetObject(id);
     } catch (e) {
       this.logger.error('Unable to generate download url', { exception: e });
-      throw new ServerException('Unable to generate download url');
+      throw new ServerException('Unable to generate download url', e);
     }
   }
 
@@ -157,8 +157,9 @@ export class FileService {
       // Enforce parent exists and is a directory
       const parent = await this.getParentNode(parentId, session);
       if (!isDirectoryNode(parent)) {
-        throw new BadRequestException(
-          'Directories can only be created under directories'
+        throw new InputException(
+          'Directories can only be created under directories',
+          'parentId'
         );
       }
       try {
@@ -204,15 +205,16 @@ export class FileService {
         (e as AWSError).code === 'NotFound' ||
         e instanceof NotFoundException
       ) {
-        throw new NotFoundException('Could not find upload');
+        throw new InputException('Could not find upload', 'uploadId');
       }
       throw new ServerException('Unable to create file version');
     }
 
     const parent = await this.getParentNode(parentId, session);
     if (isFileVersionNode(parent)) {
-      throw new BadRequestException(
-        'Only files and directories can be parents of a file version'
+      throw new InputException(
+        'Only files and directories can be parents of a file version',
+        'parentId'
       );
     }
 
@@ -270,24 +272,33 @@ export class FileService {
   async createDefinedFile(
     name: string,
     session: ISession,
-    initialVersion?: CreateDefinedFileVersionInput
+    initialVersion?: CreateDefinedFileVersionInput,
+    field?: string
   ) {
     const fileId = await this.repo.createFile(undefined, name, session);
     if (initialVersion) {
-      await this.createFileVersion(
-        {
-          parentId: fileId,
-          uploadId: initialVersion.uploadId,
-          name: initialVersion.name ?? name,
-        },
-        session
-      );
+      try {
+        await this.createFileVersion(
+          {
+            parentId: fileId,
+            uploadId: initialVersion.uploadId,
+            name: initialVersion.name ?? name,
+          },
+          session
+        );
+      } catch (e) {
+        if (e instanceof InputException && e.field === 'uploadId' && field) {
+          throw e.withField(field + '.uploadId');
+        }
+        throw e;
+      }
     }
     return fileId;
   }
 
   async updateDefinedFile(
     file: DefinedFile,
+    field: string,
     input: CreateDefinedFileVersionInput | undefined,
     session: ISession
   ) {
@@ -295,19 +306,27 @@ export class FileService {
       return;
     }
     if (!file.canRead || !file.canEdit || !file.value) {
-      throw new ForbiddenException(
-        'You do not have permission to update this file'
+      throw new UnauthorizedException(
+        'You do not have permission to update this file',
+        field
       );
     }
     const name = input.name ?? (await this.getFile(file.value, session)).name;
-    await this.createFileVersion(
-      {
-        parentId: file.value,
-        uploadId: input.uploadId,
-        name,
-      },
-      session
-    );
+    try {
+      await this.createFileVersion(
+        {
+          parentId: file.value,
+          uploadId: input.uploadId,
+          name,
+        },
+        session
+      );
+    } catch (e) {
+      if (e instanceof InputException && e.field === 'uploadId' && field) {
+        throw e.withField(field + '.uploadId');
+      }
+      throw e;
+    }
   }
 
   async resolveDefinedFile(
