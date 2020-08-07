@@ -265,7 +265,7 @@ export class EngagementService {
     // Initial LanguageEngagement
     const id = generate();
     const createdAt = DateTime.local();
-    const pnp = await this.files.createDefinedFile(`PNP`, session, input.pnp);
+    const pnp = await this.files.createDefinedFile(`PNP`, session, input.pnp, 'engagement.pnp');
 
     const ceremony = await this.ceremonyService.create(
       { type: CeremonyType.Dedication },
@@ -500,7 +500,8 @@ export class EngagementService {
     const growthPlan = await this.files.createDefinedFile(
       `Growth Plan`,
       session,
-      input.growthPlan
+      input.growthPlan,
+      'engagement.growthPlan'
     );
 
     let ceremony;
@@ -964,16 +965,19 @@ export class EngagementService {
     input: UpdateLanguageEngagement,
     session: ISession
   ): Promise<LanguageEngagement> {
+    const { pnp, ...rest } = input;
+    const changes = {
+      ...rest,
+      modifiedAt: DateTime.local(),
+    };
+    const object = (await this.readOne(
+      input.id,
+      session
+    )) as LanguageEngagement;
+
+    await this.files.updateDefinedFile(object.pnp, 'engagement.pnp', pnp, session);
+
     try {
-      const { pnp, ...rest } = input;
-      const changes = {
-        ...rest,
-        modifiedAt: DateTime.local(),
-      };
-      const object = (await this.readOne(
-        input.id,
-        session
-      )) as LanguageEngagement;
       await this.db.sgUpdateProperties({
         session,
         object,
@@ -991,13 +995,12 @@ export class EngagementService {
         changes,
         nodevar: 'LanguageEngagement',
       });
-      await this.files.updateDefinedFile(object.pnp, pnp, session);
-
-      return (await this.readOne(input.id, session)) as LanguageEngagement;
     } catch (e) {
       this.logger.error('Error updating language engagement', { exception: e });
       throw new ServerException('Could not update LanguageEngagement');
     }
+
+    return (await this.readOne(input.id, session)) as LanguageEngagement;
   }
 
   async updateInternshipEngagement(
@@ -1010,6 +1013,14 @@ export class EngagementService {
     session: ISession
   ): Promise<InternshipEngagement> {
     const createdAt = DateTime.local();
+
+    const object = (await this.readOne(
+      input.id,
+      session
+    )) as InternshipEngagement;
+
+    await this.files.updateDefinedFile(object.growthPlan, 'engagement.growthPlan', growthPlan, session);
+
     try {
       if (mentorId) {
         const mentorQ = this.db
@@ -1069,10 +1080,7 @@ export class EngagementService {
 
         await countryQ.first();
       }
-      const object = (await this.readOne(
-        input.id,
-        session
-      )) as InternshipEngagement;
+
       await this.db.sgUpdateProperties({
         session,
         object,
@@ -1105,24 +1113,17 @@ export class EngagementService {
           ]);
         }
       });
-      await this.files.updateDefinedFile(
-        object.growthPlan,
-        growthPlan,
-        session
-      );
-
-      const result = (await this.readOne(
-        input.id,
-        session
-      )) as InternshipEngagement;
-
-      return result;
     } catch (e) {
       this.logger.warning('Failed to update InternshipEngagement', {
         exception: e,
       });
       throw new ServerException('Could not find update InternshipEngagement');
     }
+
+    return (await this.readOne(
+      input.id,
+      session
+    )) as InternshipEngagement;
   }
 
   // DELETE /////////////////////////////////////////////////////////

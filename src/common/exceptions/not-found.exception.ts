@@ -1,20 +1,18 @@
-import { HttpStatus } from '@nestjs/common';
-import { Mutable } from 'type-fest';
 import { InputException, InputExceptionArgs } from './input.exception';
 
 /**
- * The requester has insufficient permission to do this operation.
+ * Something asked for or referenced has cannot be found.
  */
-export class UnauthorizedException extends InputException {
+export class NotFoundException extends InputException {
   /**
    * Use default message if you don't want to be more specific
    *
    * @example
-   * throw new UnauthorizedException();
+   * throw new NotFoundException();
    *
    * @example
    * catch (e) {
-   *   throw new UnauthorizedException(e);
+   *   throw new NotFoundException(e);
    * }
    *
    * @param previous A previous error if any
@@ -25,11 +23,11 @@ export class UnauthorizedException extends InputException {
    * Create with a custom message
    *
    * @example
-   * throw new UnauthorizedException('You cannot do that');
+   * throw new NotFoundException('Could not find that project');
    *
    * @example
    * catch (e) {
-   *   throw new UnauthorizedException('You cannot do that', e);
+   *   throw new NotFoundException('Could not find that project', e);
    * }
    *
    * @param message A human (dev) readable message
@@ -38,20 +36,19 @@ export class UnauthorizedException extends InputException {
   constructor(message: string, previous?: Error);
 
   /**
-   * Indicate the requester does not have permission to take an action on a
-   * specific field.
+   * Indicate that a field given, like an ID in a mutation, cannot be found.
    *
    * @example
-   * throw new UnauthorizedException(
-   *   `You cannot change the project's name`,
-   *   'project.name'
+   * throw new NotFoundException(
+   *   `Cannot create language engagement because that language could not be found`,
+   *   'engagement.languageId'
    * );
    *
    * @example
    * catch (e) {
-   *   throw new UnauthorizedException(
-   *     `You cannot change the project's name`,
-   *     'project.name',
+   *   throw new NotFoundException(
+   *     `Cannot create language engagement because that language could not be found`,
+   *     'engagement.languageId',
    *     e
    *   );
    * }
@@ -63,7 +60,6 @@ export class UnauthorizedException extends InputException {
   constructor(message: string, field: string, previous?: Error);
 
   constructor(...args: InputExceptionArgs) {
-    super(...InputException.parseArgs(`Insufficient permission`, args));
-    (this as Mutable<this>).status = HttpStatus.FORBIDDEN;
+    super(...InputException.parseArgs(`Not Found`, args));
   }
 }

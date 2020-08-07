@@ -1,15 +1,13 @@
 import {
   Injectable,
-  NotFoundException,
   InternalServerErrorException as ServerException,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { flatMap, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
-import { fiscalYears, ISession } from '../../common';
+import { fiscalYears, ISession, NotFoundException } from '../../common';
 import {
   addAllMetaPropertiesOfChildBaseNodes,
   addAllSecureProperties,
@@ -173,22 +171,38 @@ export class PartnershipService {
     const id = generate();
     const createdAt = DateTime.local();
 
-    if (!(await this.orgService.readOne(organizationId, session))) {
-      throw new UnauthorizedException('organization does not exist');
-    }
-
-    if (!(await this.projectService.readOne(projectId, session))) {
-      throw new UnauthorizedException('project does not exist');
+    try {
+      await this.orgService.readOne(organizationId, session);
+    } catch (e) {
+      if (e instanceof NotFoundException) {
+        throw e.withField('partnership.organizationId');
+      }
+      throw e;
     }
 
     try {
-      const mou = await this.files.createDefinedFile(`MOU`, session, input.mou);
-      const agreement = await this.files.createDefinedFile(
-        `Partner Agreement`,
-        session,
-        input.agreement
-      );
+      await this.projectService.readOne(projectId, session);
+    } catch (e) {
+      if (e instanceof NotFoundException) {
+        throw e.withField('partnership.projectId');
+      }
+      throw e;
+    }
 
+    const mou = await this.files.createDefinedFile(
+      `MOU`,
+      session,
+      input.mou,
+      'partnership.mou'
+    );
+    const agreement = await this.files.createDefinedFile(
+      `Partner Agreement`,
+      session,
+      input.agreement,
+      'partnership.agreement'
+    );
+
+    try {
       const createPartnership = this.db
         .query()
         .match(matchSession(session, { withAclEdit: 'canCreatePartnership' }))
@@ -464,8 +478,18 @@ export class PartnershipService {
       changes: rest,
       nodevar: 'partnership',
     });
-    await this.files.updateDefinedFile(object.mou, mou, session);
-    await this.files.updateDefinedFile(object.agreement, agreement, session);
+    await this.files.updateDefinedFile(
+      object.mou,
+      'partnership.mou',
+      mou,
+      session
+    );
+    await this.files.updateDefinedFile(
+      object.agreement,
+      'partnership.agreement',
+      agreement,
+      session
+    );
 
     const partnership = await this.readOne(input.id, session);
     await this.eventBus.publish(
