@@ -181,14 +181,20 @@ export class PartnershipService {
       throw new UnauthorizedException('project does not exist');
     }
 
-    try {
-      const mou = await this.files.createDefinedFile(`MOU`, session, input.mou);
-      const agreement = await this.files.createDefinedFile(
-        `Partner Agreement`,
-        session,
-        input.agreement
-      );
+    const mou = await this.files.createDefinedFile(
+      `MOU`,
+      session,
+      input.mou,
+      'partnership.mou'
+    );
+    const agreement = await this.files.createDefinedFile(
+      `Partner Agreement`,
+      session,
+      input.agreement,
+      'partnership.agreement'
+    );
 
+    try {
       const createPartnership = this.db
         .query()
         .match(matchSession(session, { withAclEdit: 'canCreatePartnership' }))
@@ -464,8 +470,18 @@ export class PartnershipService {
       changes: rest,
       nodevar: 'partnership',
     });
-    await this.files.updateDefinedFile(object.mou, mou, session);
-    await this.files.updateDefinedFile(object.agreement, agreement, session);
+    await this.files.updateDefinedFile(
+      object.mou,
+      'partnership.mou',
+      mou,
+      session
+    );
+    await this.files.updateDefinedFile(
+      object.agreement,
+      'partnership.agreement',
+      agreement,
+      session
+    );
 
     const partnership = await this.readOne(input.id, session);
     await this.eventBus.publish(

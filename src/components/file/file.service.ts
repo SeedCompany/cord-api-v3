@@ -272,24 +272,33 @@ export class FileService {
   async createDefinedFile(
     name: string,
     session: ISession,
-    initialVersion?: CreateDefinedFileVersionInput
+    initialVersion?: CreateDefinedFileVersionInput,
+    field?: string
   ) {
     const fileId = await this.repo.createFile(undefined, name, session);
     if (initialVersion) {
-      await this.createFileVersion(
-        {
-          parentId: fileId,
-          uploadId: initialVersion.uploadId,
-          name: initialVersion.name ?? name,
-        },
-        session
-      );
+      try {
+        await this.createFileVersion(
+          {
+            parentId: fileId,
+            uploadId: initialVersion.uploadId,
+            name: initialVersion.name ?? name,
+          },
+          session
+        );
+      } catch (e) {
+        if (e instanceof InputException && e.field === 'uploadId' && field) {
+          throw e.withField(field + '.uploadId');
+        }
+        throw e;
+      }
     }
     return fileId;
   }
 
   async updateDefinedFile(
     file: DefinedFile,
+    field: string,
     input: CreateDefinedFileVersionInput | undefined,
     session: ISession
   ) {
@@ -298,18 +307,26 @@ export class FileService {
     }
     if (!file.canRead || !file.canEdit || !file.value) {
       throw new UnauthorizedException(
-        'You do not have permission to update this file'
+        'You do not have permission to update this file',
+        field
       );
     }
     const name = input.name ?? (await this.getFile(file.value, session)).name;
-    await this.createFileVersion(
-      {
-        parentId: file.value,
-        uploadId: input.uploadId,
-        name,
-      },
-      session
-    );
+    try {
+      await this.createFileVersion(
+        {
+          parentId: file.value,
+          uploadId: input.uploadId,
+          name,
+        },
+        session
+      );
+    } catch (e) {
+      if (e instanceof InputException && e.field === 'uploadId' && field) {
+        throw e.withField(field + '.uploadId');
+      }
+      throw e;
+    }
   }
 
   async resolveDefinedFile(
