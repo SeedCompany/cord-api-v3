@@ -1,28 +1,60 @@
 import { applyDecorators, BadRequestException } from '@nestjs/common';
 import { CustomScalar, Field, FieldOptions, Scalar } from '@nestjs/graphql';
-import { Transform } from 'class-transformer';
 import { stripIndent } from 'common-tags';
 import { Kind, ValueNode } from 'graphql';
 import { DateTime, Settings } from 'luxon';
 import { CalendarDate } from './calendar-date';
+import { Transform } from './transform.decorator';
+import { ValidateBy } from './validators/validateBy';
 import './luxon.neo4j'; // ensure our luxon methods are added
 
 Settings.throwOnInvalid = true;
 
+const IsIsoDate = () =>
+  ValidateBy({
+    name: 'isIso8601',
+    validator: {
+      validate: (value) => DateTime.isDateTime(value),
+      defaultMessage: () => 'Invalid ISO-8601 date string',
+    },
+  });
+
 export const DateTimeField = (options?: FieldOptions) =>
   applyDecorators(
     Field(() => DateTime, options),
-    Transform((value) => DateTime.fromISO(value), {
-      toClassOnly: true,
-    }) as PropertyDecorator
+    Transform(
+      (value) => {
+        try {
+          return value == null ? null : DateTime.fromISO(value);
+        } catch (e) {
+          // Let validator below handle the error
+          return value;
+        }
+      },
+      {
+        toClassOnly: true,
+      }
+    ),
+    IsIsoDate()
   );
 
 export const DateField = (options?: FieldOptions) =>
   applyDecorators(
     Field(() => CalendarDate, options),
-    Transform((value) => CalendarDate.fromISO(value), {
-      toClassOnly: true,
-    }) as PropertyDecorator
+    Transform(
+      (value) => {
+        try {
+          return value == null ? null : CalendarDate.fromISO(value);
+        } catch (e) {
+          // Let validator below handle the error
+          return value;
+        }
+      },
+      {
+        toClassOnly: true,
+      }
+    ),
+    IsIsoDate()
   );
 
 @Scalar('DateTime', () => DateTime)
