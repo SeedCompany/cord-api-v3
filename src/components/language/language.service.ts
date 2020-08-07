@@ -7,7 +7,6 @@ import {
 import { node, relation } from 'cypher-query-builder';
 import { first, intersection, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
-import { generate } from 'shortid';
 import {
   DuplicateException,
   ISession,
@@ -23,6 +22,7 @@ import {
   addShapeForChildBaseNodeMetaProperty,
   ChildBaseNodeMetaProperty,
   ConfigService,
+  createBaseNode,
   DatabaseService,
   filterByString,
   ILogger,
@@ -212,8 +212,7 @@ export class LanguageService {
   async create(input: CreateLanguage, session: ISession): Promise<Language> {
     this.logger.info(`Create language`, { input, userId: session.userId });
 
-    const id = generate();
-    const createdAt = DateTime.local();
+    const createdAt = DateTime.local().toString();
 
     try {
       const { ethnologueId } = await this.ethnologueLanguageService.create(
@@ -221,88 +220,127 @@ export class LanguageService {
         session
       );
 
+      const secureProps = [
+        {
+          key: 'name',
+          value: input.name,
+          addToAdminSg: true,
+          addToWriterSg: false,
+          addToReaderSg: true,
+          isPublic: false,
+          isOrgPublic: false,
+          label: 'LanguageName',
+        },
+        {
+          key: 'displayName',
+          value: input.displayName,
+          addToAdminSg: true,
+          addToWriterSg: false,
+          addToReaderSg: true,
+          isPublic: false,
+          isOrgPublic: false,
+          label: 'LanguageDisplayName',
+        },
+        {
+          key: 'sensitivity',
+          value: Sensitivity.Low,
+          addToAdminSg: true,
+          addToWriterSg: false,
+          addToReaderSg: true,
+          isPublic: false,
+          isOrgPublic: false,
+        },
+        {
+          key: 'isDialect',
+          value: input.isDialect,
+          addToAdminSg: true,
+          addToWriterSg: false,
+          addToReaderSg: true,
+          isPublic: false,
+          isOrgPublic: false,
+        },
+        {
+          key: 'populationOverride',
+          value: input.populationOverride,
+          addToAdminSg: true,
+          addToWriterSg: false,
+          addToReaderSg: true,
+          isPublic: false,
+          isOrgPublic: false,
+        },
+        {
+          key: 'registryOfDialectsCode',
+          value: input.registryOfDialectsCode,
+          addToAdminSg: true,
+          addToWriterSg: false,
+          addToReaderSg: true,
+          isPublic: false,
+          isOrgPublic: false,
+        },
+        {
+          key: 'leastOfThese',
+          value: input.leastOfThese,
+          addToAdminSg: true,
+          addToWriterSg: false,
+          addToReaderSg: true,
+          isPublic: false,
+          isOrgPublic: false,
+        },
+        {
+          key: 'leastOfTheseReason',
+          value: input.leastOfTheseReason,
+          addToAdminSg: true,
+          addToWriterSg: false,
+          addToReaderSg: true,
+          isPublic: false,
+          isOrgPublic: false,
+        },
+        {
+          key: 'displayNamePronunciation',
+          value: input.displayNamePronunciation,
+          addToAdminSg: true,
+          addToWriterSg: false,
+          addToReaderSg: true,
+          isPublic: false,
+          isOrgPublic: false,
+        },
+      ];
+
       const createLanguage = this.db
         .query()
-        .match(matchSession(session, { withAclEdit: 'canCreateLanguage' }))
+        .call(matchRequestingUser, session)
         .match([
-          node('rootuser', 'User', {
+          node('root', 'User', {
             active: true,
             id: this.config.rootAdmin.id,
           }),
         ])
-        .create([
-          [
-            node('newLang', ['Language', 'BaseNode'], {
-              active: true,
-              createdAt,
-              id,
-              owningOrgId: session.owningOrgId,
-            }),
-          ],
-          ...this.property('name', input.name),
-          ...this.property('displayName', input.displayName),
-          ...this.property('sensitivity', Sensitivity.Low),
-          ...this.property('isDialect', input.isDialect),
-          ...this.property('populationOverride', input.populationOverride),
-          ...this.property(
-            'registryOfDialectsCode',
-            input.registryOfDialectsCode
-          ),
-          ...this.property('leastOfThese', input.leastOfThese),
-          ...this.property('leastOfTheseReason', input.leastOfTheseReason),
-          ...this.property(
-            'displayNamePronunciation',
-            input.displayNamePronunciation
-          ),
-          [
-            node('adminSG', 'SecurityGroup', {
-              id: generate(),
-              active: true,
-              createdAt,
-              name: input.name + ' admin',
-            }),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('requestingUser'),
-          ],
-          [
-            node('readerSG', 'SecurityGroup', {
-              id: generate(),
-              active: true,
-              createdAt,
-              name: input.name + ' users',
-            }),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('requestingUser'),
-          ],
-          [
-            node('adminSG'),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('rootuser'),
-          ],
-          [
-            node('readerSG'),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('rootuser'),
-          ],
-          ...this.permission('name'),
-          ...this.permission('displayName'),
-          ...this.permission('isDialect'),
-          ...this.permission('populationOverride'),
-          ...this.permission('registryOfDialectsCode'),
-          ...this.permission('leastOfThese'),
-          ...this.permission('leastOfTheseReason'),
-          ...this.permission('sensitivity'),
-          ...this.permission('ethnologue'),
-          ...this.permission('displayNamePronunciation'),
-        ])
-        .return('newLang.id as id');
+        .call(
+          createBaseNode,
+          'Language',
+          secureProps,
+          {
+            owningOrgId: session.owningOrgId,
+          },
+          [],
+          session.userId === this.config.rootAdmin.id
+        )
+        .create([...this.permission('ethnologue')])
+        .return('node.id as id');
 
-      await createLanguage.first();
+      const resultLanguage = await createLanguage.first();
+
+      if (!resultLanguage) {
+        throw new ServerException('failed to create language');
+      }
 
       // connect ethnologueLanguage to language
       await this.db
         .query()
-        .matchNode('language', 'Language', { id: id, active: true })
+        .matchNode('language', 'Language', {
+          id: resultLanguage.id,
+          active: true,
+        })
         .matchNode('ethnologueLanguage', 'EthnologueLanguage', {
           id: ethnologueId,
           active: true,
@@ -311,11 +349,15 @@ export class LanguageService {
           node('language'),
           relation('out', '', 'ethnologue', {
             active: true,
-            createdAt: DateTime.local(),
+            createdAt,
           }),
           node('ethnologueLanguage'),
         ])
         .run();
+
+      const result = await this.readOne(resultLanguage.id, session);
+
+      return result;
     } catch (e) {
       if (e instanceof UniquenessError) {
         const prop =
@@ -333,9 +375,6 @@ export class LanguageService {
       this.logger.error(`Could not create`, { ...input, exception: e });
       throw new ServerException('Could not create language');
     }
-    const result = await this.readOne(id, session);
-
-    return result;
   }
 
   async readOne(langId: string, session: ISession): Promise<Language> {

@@ -10,7 +10,6 @@ import {
   addAllSecureProperties,
   addPropertyCoalesceWithClause,
   addShapeForBaseNodeMetaProperty,
-  addUserToSG,
   ConfigService,
   createBaseNode,
   createSG,
@@ -202,10 +201,16 @@ export class EthnologueLanguageService {
       ])
       .call(matchRequestingUser, session)
       .call(createSG, 'orgSG', 'OrgPublicSecurityGroup')
-      .call(createBaseNode, 'EthnologueLanguage', secureProps, {
-        owningOrgId: session.owningOrgId,
-      })
-      .call(addUserToSG, 'requestingUser', 'adminSG') // must come after base node creation
+      .call(
+        createBaseNode,
+        'EthnologueLanguage',
+        secureProps,
+        {
+          owningOrgId: session.owningOrgId,
+        },
+        [],
+        session.userId === this.config.rootAdmin.id
+      )
       .return('node.id as id');
 
     const result = await query.first();
