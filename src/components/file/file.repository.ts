@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  InternalServerErrorException as ServerException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
   contains,
   hasLabel,
@@ -16,7 +12,7 @@ import { AnyConditions } from 'cypher-query-builder/dist/typings/clauses/where-u
 import { camelCase, isEmpty } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
-import { ISession } from '../../common';
+import { ISession, NotFoundException, ServerException } from '../../common';
 import {
   collect,
   count,
@@ -403,7 +399,7 @@ export class FileRepository {
       });
     } catch (e) {
       this.logger.error('could not rename', { id: fileNode.id, newName });
-      throw new ServerException('could not rename');
+      throw new ServerException('could not rename', e);
     }
   }
 
@@ -436,7 +432,7 @@ export class FileRepository {
         .run();
     } catch (e) {
       this.logger.error('Failed to move', { id, newParentId, exception: e });
-      throw new ServerException('Failed to move');
+      throw new ServerException('Failed to move', e);
     }
   }
 
@@ -449,7 +445,7 @@ export class FileRepository {
       });
     } catch (e) {
       this.logger.error('Failed to delete', { id: fileNode.id, exception: e });
-      throw new ServerException('Failed to delete');
+      throw new ServerException('Failed to delete', e);
     }
   }
 

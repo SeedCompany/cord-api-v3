@@ -60,6 +60,12 @@ class Engagement extends Resource {
   readonly endDate: SecuredDate;
 
   @Field()
+  readonly startDateOverride: SecuredDate;
+
+  @Field()
+  readonly endDateOverride: SecuredDate;
+
+  @Field()
   // this should match project mouEnd, until it becomes active, then this is final.
   readonly initialEndDate: SecuredDate;
 

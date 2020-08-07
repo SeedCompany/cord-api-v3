@@ -1,21 +1,18 @@
 import {
+  forwardRef,
+  Inject,
   Injectable,
-  NotFoundException,
   InternalServerErrorException as ServerException,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { flatMap, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
-import { fiscalYears, ISession } from '../../common';
+import { fiscalYears, ISession, NotFoundException } from '../../common';
 import {
   addAllMetaPropertiesOfChildBaseNodes,
   addAllSecureProperties,
   addBaseNodeMetaPropsWithClause,
-  addPropertyCoalesceWithClause,
-  addShapeForBaseNodeMetaProperty,
-  addShapeForChildBaseNodeMetaProperty,
   ChildBaseNodeMetaProperty,
   ConfigService,
   createBaseNode,
@@ -55,6 +52,7 @@ export class PartnershipService {
     private readonly config: ConfigService,
     private readonly budgetService: BudgetService,
     private readonly orgService: OrganizationService,
+    @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService,
     private readonly eventBus: IEventBus,
     @Logger('partnership:service') private readonly logger: ILogger
@@ -172,88 +170,104 @@ export class PartnershipService {
   ): Promise<Partnership> {
     const createdAt = DateTime.local().toString();
 
-    if (!(await this.orgService.readOne(organizationId, session))) {
-      throw new UnauthorizedException('organization does not exist');
-    }
-
-    if (!(await this.projectService.readOne(projectId, session))) {
-      throw new UnauthorizedException('project does not exist');
+    try {
+      await this.orgService.readOne(organizationId, session);
+    } catch (e) {
+      if (e instanceof NotFoundException) {
+        throw e.withField('partnership.organizationId');
+      }
+      throw e;
     }
 
     try {
-      const mou = await this.files.createDefinedFile(`MOU`, session, input.mou);
-      const agreement = await this.files.createDefinedFile(
-        `Partner Agreement`,
-        session,
-        input.agreement
-      );
+      await this.projectService.readOne(projectId, session);
+    } catch (e) {
+      if (e instanceof NotFoundException) {
+        throw e.withField('partnership.projectId');
+      }
+      throw e;
+    }
 
-      const secureProps = [
-        {
-          key: 'agreementStatus',
-          value: input.agreementStatus,
-          addToAdminSg: true,
-          addToWriterSg: false,
-          addToReaderSg: true,
-          isPublic: false,
-          isOrgPublic: false,
-        },
-        {
-          key: 'agreement',
-          value: agreement,
-          addToAdminSg: true,
-          addToWriterSg: false,
-          addToReaderSg: true,
-          isPublic: false,
-          isOrgPublic: false,
-        },
-        {
-          key: 'mou',
-          value: mou,
-          addToAdminSg: true,
-          addToWriterSg: false,
-          addToReaderSg: true,
-          isPublic: false,
-          isOrgPublic: false,
-        },
-        {
-          key: 'mouStatus',
-          value: input.mouStatus,
-          addToAdminSg: true,
-          addToWriterSg: false,
-          addToReaderSg: true,
-          isPublic: false,
-          isOrgPublic: false,
-        },
-        {
-          key: 'mouStartOverride',
-          value: input.mouStartOverride,
-          addToAdminSg: true,
-          addToWriterSg: false,
-          addToReaderSg: true,
-          isPublic: false,
-          isOrgPublic: false,
-        },
-        {
-          key: 'mouEndOverride',
-          value: input.mouEndOverride,
-          addToAdminSg: true,
-          addToWriterSg: false,
-          addToReaderSg: true,
-          isPublic: false,
-          isOrgPublic: false,
-        },
-        {
-          key: 'types',
-          value: input.types,
-          addToAdminSg: true,
-          addToWriterSg: false,
-          addToReaderSg: true,
-          isPublic: false,
-          isOrgPublic: false,
-        },
-      ];
-      let result;
+    const mou = await this.files.createDefinedFile(
+      `MOU`,
+      session,
+      input.mou,
+      'partnership.mou'
+    );
+    const agreement = await this.files.createDefinedFile(
+      `Partner Agreement`,
+      session,
+      input.agreement,
+      'partnership.agreement'
+    );
+
+    const secureProps = [
+      {
+        key: 'agreementStatus',
+        value: input.agreementStatus,
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'agreement',
+        value: agreement,
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'mou',
+        value: mou,
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'mouStatus',
+        value: input.mouStatus,
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'mouStartOverride',
+        value: input.mouStartOverride,
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'mouEndOverride',
+        value: input.mouEndOverride,
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'types',
+        value: input.types,
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+    ];
+    let result;
+    try {
       const createPartnership = this.db
         .query()
         .call(matchRequestingUser, session)
@@ -381,34 +395,44 @@ export class PartnershipService {
 
     const baseNodeMetaProps = ['id', 'createdAt'];
 
-    const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
-      {
-        parentBaseNodePropertyKey: 'organization',
-        parentRelationDirection: 'out',
-        childBaseNodeLabel: 'Organization',
-        childBaseNodeMetaPropertyKey: 'id',
-        returnIdentifier: 'organizationId',
-      },
-    ];
-
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
       .call(matchUserPermissions, 'Partnership', id)
       .call(addAllSecureProperties, ...props)
-      .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
-      .with([
-        ...props.map(addPropertyCoalesceWithClause),
-        ...childBaseNodeMetaProps.map(addShapeForChildBaseNodeMetaProperty),
-        ...baseNodeMetaProps.map(addShapeForBaseNodeMetaProperty),
-        'node',
+      .optionalMatch([
+        node('canReadProject', 'Permission', {
+          property: 'project',
+          read: true,
+          active: true,
+        }),
+        relation('out', '', 'baseNode'),
+        node('node'),
+        relation('in', '', 'partnership', { active: true }),
+        node('project', 'Project', { active: true }),
       ])
-      .returnDistinct([
-        ...props,
-        ...baseNodeMetaProps,
-        ...childBaseNodeMetaProps.map((x) => x.returnIdentifier),
-        'labels(node) as labels',
-      ]);
+      .optionalMatch([
+        node('canReadOrganization', 'Permission', {
+          property: 'organization',
+          read: true,
+          active: true,
+        }),
+        relation('out', '', 'baseNode'),
+        node('node'),
+        relation('out', '', 'organization', { active: true }),
+        node('organization', 'Organization', { active: true }),
+      ])
+      .with(
+        `
+          {
+            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
+            ${listWithSecureObject(props)},
+            projectId: project.id,
+            organizationId: organization.id
+          } as partnership
+        `
+      )
+      .returnDistinct('partnership');
 
     let result;
     try {
@@ -416,29 +440,14 @@ export class PartnershipService {
     } catch (error) {
       this.logger.error('could not read partnership', error);
     }
-    if (!result || !result.id) {
+
+    if (!result || !result.partnership.id) {
       throw new NotFoundException('could not find Partnership');
     }
-
-    //Get Projects mapped with the Partnership
-    const projectQuery = this.db
-      .query()
-      .match(matchSession(session, { withAclRead: 'canReadPartnerships' }))
-      .match([
-        node('partnership', 'Partnership', { active: true, id }),
-        relation('in', '', 'partnership', { active: true }),
-        node('project', 'Project', {
-          active: true,
-        }),
-      ]);
-    projectQuery.return({
-      project: [{ id: 'id' }],
-    });
-
-    const getProject = await projectQuery.first();
+    result = (result as any).partnership;
 
     const readProject = await this.projectService.readOne(
-      getProject?.id,
+      result.projectId,
       session
     );
 
@@ -499,8 +508,18 @@ export class PartnershipService {
       changes: rest,
       nodevar: 'partnership',
     });
-    await this.files.updateDefinedFile(object.mou, mou, session);
-    await this.files.updateDefinedFile(object.agreement, agreement, session);
+    await this.files.updateDefinedFile(
+      object.mou,
+      'partnership.mou',
+      mou,
+      session
+    );
+    await this.files.updateDefinedFile(
+      object.agreement,
+      'partnership.agreement',
+      agreement,
+      session
+    );
 
     const partnership = await this.readOne(input.id, session);
     await this.eventBus.publish(

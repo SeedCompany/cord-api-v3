@@ -99,7 +99,7 @@ export class AuthenticationService {
     } catch (e) {
       // remap field prop as `email` field is at a different location in register() than createPerson()
       if (e instanceof DuplicateException && e.field === 'person.email') {
-        throw new DuplicateException('email', e.message, e.previous);
+        throw e.withField('email');
       }
       throw e;
     }

@@ -1,10 +1,4 @@
-import {
-  forwardRef,
-  Inject,
-  Injectable,
-  NotFoundException,
-  InternalServerErrorException as ServerException,
-} from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { flatMap, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
@@ -12,7 +6,9 @@ import {
   fiscalYears,
   InputException,
   ISession,
+  NotFoundException,
   Sensitivity,
+  ServerException,
 } from '../../common';
 import {
   addAllSecureProperties,
@@ -90,6 +86,7 @@ export class ProjectService {
     @Inject(forwardRef(() => PartnershipService))
     private readonly partnerships: PartnershipService,
     private readonly fileService: FileService,
+    @Inject(forwardRef(() => EngagementService))
     private readonly engagementService: EngagementService,
     private readonly config: ConfigService,
     private readonly eventBus: IEventBus,
@@ -457,13 +454,11 @@ export class ProjectService {
       result = await readProject.first();
     } catch (e) {
       this.logger.error('e :>> ', e);
-      return await Promise.reject(e);
+      throw e;
     }
 
     if (!result) {
-      throw new NotFoundException(
-        `Could not find project DEBUG: requestingUser ${session.userId} target ProjectId ${id}`
-      );
+      throw new NotFoundException(`Could not find project`);
     }
 
     const location = result.project.countryId
