@@ -138,9 +138,21 @@ export class FileService {
     session: ISession
   ): Promise<FileListOutput> {
     const result = await this.repo.getChildrenById(session, parentId, input);
-    const items = await Promise.all(
-      result.children.map((node) => this.adaptBaseNodeToFileNode(node, session))
-    );
+    const items = (
+      await Promise.all(
+        result.children.map(async (node) => {
+          try {
+            return await this.adaptBaseNodeToFileNode(node, session);
+          } catch (e) {
+            if (e instanceof NotFoundException) {
+              // If no active versions pretend the file doesn't exist.
+              return [];
+            }
+            throw e;
+          }
+        })
+      )
+    ).flatMap((n) => n);
     return {
       items: items,
       total: result.total,

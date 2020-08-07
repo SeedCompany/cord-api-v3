@@ -176,7 +176,7 @@ export class FileRepository {
       .match([
         node('node', 'FileNode', { id: fileId, ...isActive }),
         relation('in', '', 'parent', isActive),
-        node('fv', 'FileVersion'),
+        node('fv', 'FileVersion', isActive),
       ])
       .return('fv')
       .orderBy('fv.createdAt', 'DESC')
