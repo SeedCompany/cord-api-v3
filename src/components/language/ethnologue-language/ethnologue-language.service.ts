@@ -196,7 +196,7 @@ export class EthnologueLanguageService {
         }),
       ])
       .call(matchRequestingUser, session)
-      .call(createSG, 'orgSG', 'OrgPublicSecurityGroup')
+      // .call(createSG, 'orgSG', 'OrgPublicSecurityGroup')
       .call(createBaseNode, 'EthnologueLanguage', secureProps, {
         owningOrgId: session.owningOrgId,
       })

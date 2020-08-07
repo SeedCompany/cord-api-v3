@@ -18,9 +18,6 @@ import {
   addAllMetaPropertiesOfChildBaseNodes,
   addAllSecureProperties,
   addBaseNodeMetaPropsWithClause,
-  addPropertyCoalesceWithClause,
-  addShapeForBaseNodeMetaProperty,
-  addShapeForChildBaseNodeMetaProperty,
   ChildBaseNodeMetaProperty,
   ConfigService,
   DatabaseService,
@@ -138,6 +135,7 @@ export class LanguageService {
         node(prop, [...propLabel, 'Property'], {
           active: true,
           value,
+          property: prop,
         }),
       ],
     ];
@@ -209,7 +207,7 @@ export class LanguageService {
     ];
   };
 
-  async create(input: CreateLanguage, session: ISession): Promise<Language> {
+  async create(input: CreateLanguage, session: ISession): Promise<string> {
     this.logger.info(`Create language`, { input, userId: session.userId });
 
     const id = generate();
@@ -333,9 +331,9 @@ export class LanguageService {
       this.logger.error(`Could not create`, { ...input, exception: e });
       throw new ServerException('Could not create language');
     }
-    const result = await this.readOne(id, session);
+    // const result = await this.readOne(id, session);
 
-    return result;
+    return id;
   }
 
   async readOne(langId: string, session: ISession): Promise<Language> {
@@ -349,66 +347,205 @@ export class LanguageService {
       session.userId = this.config.anonUser.id;
     }
 
-    const props = [
-      'name',
-      'displayName',
-      'isDialect',
-      'populationOverride',
-      'registryOfDialectsCode',
-      'leastOfThese',
-      'leastOfTheseReason',
-      'displayNamePronunciation',
-      'sensitivity',
-      'sponsorDate',
-    ];
-
-    const baseNodeMetaProps = ['id', 'createdAt'];
-
-    const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
-      {
-        parentBaseNodePropertyKey: 'ethnologue',
-        parentRelationDirection: 'out',
-        childBaseNodeLabel: 'EthnologueLanguage',
-        childBaseNodeMetaPropertyKey: 'id',
-        returnIdentifier: 'ethnologueLanguageId',
-      },
-    ];
+    /*
+          MATCH (requestingUser:User { active: true, id: 'rootadminid' })
+          MATCH (node:Language { active: true })
+          WHERE node.id = 'YszZRgDw-'
+          MATCH (requestingUser)<-[:member*1..]-(:SecurityGroup { active: true })-[:permission]->(perms:Permission { active: true })-[:baseNode]->(node)
+          with collect(perms) as permList, node
+          MATCH (node)-[{active: true}]->(props:Property {active: true})
+          with collect(props) as propList, permList, node
+          return permList, propList, labels(node)
+     */
 
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .call(matchUserPermissions, 'Language', langId)
-      .call(addAllSecureProperties, ...props)
-      .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
-      .with([
-        ...props.map(addPropertyCoalesceWithClause),
-        ...childBaseNodeMetaProps.map(addShapeForChildBaseNodeMetaProperty),
-        ...baseNodeMetaProps.map(addShapeForBaseNodeMetaProperty),
-        'node',
+      .match([node('node', 'Language', { active: true, id: langId })])
+      .match([
+        node('requestingUser'),
+        relation('in', '', 'member*1..'),
+        node('', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission'),
+        node('perms', 'Permission', { active: true }),
+        relation('out', '', 'baseNode'),
+        node('node'),
       ])
-      .returnDistinct([
-        ...props,
-        ...baseNodeMetaProps,
-        ...childBaseNodeMetaProps.map((x) => x.returnIdentifier),
-        'labels(node) as labels',
-      ]);
+      .with('collect(distinct perms) as permList, node')
+      .match([
+        node('node'),
+        relation('out', { active: true }),
+        node('props', 'Property', { active: true }),
+      ])
+      .with('collect(distinct props) as propList, permList, node')
+      .match([
+        node('node'),
+        relation('out', '', 'ethnologue', { active: true }),
+        node('eth', 'EthnologueLanguage', { active: true }),
+      ])
+      .return('permList, propList, node, eth.id as ethId');
 
-    const result = await query.first();
-    if (!result) {
-      throw new NotFoundException('Could not find language');
-    }
+    // printActualQuery(this.logger, query);
 
-    const { ethnologue } = await this.ethnologueLanguageService.readOne(
-      result.ethnologueLanguageId,
-      session
-    );
+    const result: any = await query.first();
+
+    // console.log(JSON.stringify(result));
+
     const response: any = {
-      ...result,
-      ethnologue: ethnologue,
-      sensitivity: result.sensitivity.value || Sensitivity.Low,
+      id: result.node.properties.id,
+      createdAt: result.node.properties.createdAt,
+      name: {
+        value: null,
+        canRead: false,
+        canEdit: false,
+      },
+      displayName: {
+        value: null,
+        canRead: false,
+        canEdit: false,
+      },
+      isDialect: {
+        value: null,
+        canRead: false,
+        canEdit: false,
+      },
+      populationOverride: {
+        value: null,
+        canRead: false,
+        canEdit: false,
+      },
+      registryOfDialectsCode: {
+        value: null,
+        canRead: false,
+        canEdit: false,
+      },
+      leastOfThese: {
+        value: null,
+        canRead: false,
+        canEdit: false,
+      },
+      leastOfTheseReason: {
+        value: null,
+        canRead: false,
+        canEdit: false,
+      },
+      displayNamePronunciation: {
+        value: null,
+        canRead: false,
+        canEdit: false,
+      },
+      sensitivity: {
+        value: null,
+        canRead: false,
+        canEdit: false,
+      },
+      sponsorDate: {
+        value: null,
+        canRead: false,
+        canEdit: false,
+      },
+      ethnologue: {
+        value: null,
+        canRead: false,
+        canEdit: false,
+      },
     };
 
-    return (response as unknown) as Language;
+    for (const record of result.permList) {
+      if (record?.properties?.read === true) {
+        response[record.properties.property].canRead = true;
+      }
+
+      if (record?.properties?.edit === true) {
+        response[record.properties.property].canEdit = true;
+      }
+    }
+
+    for (const record of result.propList) {
+      if (response[record?.properties?.property].canRead === true) {
+        response[record.properties.property].value = record.properties.value;
+      }
+    }
+
+    if (response.ethnologue.canRead === true) {
+      response.ethnologue.value = result.ethId;
+    }
+
+    console.log(JSON.stringify(response));
+
+    // for (const record of result.permList) {
+    //   if (record.properties.read === true) {
+    //     response[record.properties.property].read = true;
+    //   }
+    //   if (record.properties.edit === true) {
+    //     response[record.properties.property].edit = true;
+    //   }
+    // }
+
+    return (result as unknown) as Language;
+
+    // const props = [
+    //   'name',
+    //   'displayName',
+    //   'isDialect',
+    //   'populationOverride',
+    //   'registryOfDialectsCode',
+    //   'leastOfThese',
+    //   'leastOfTheseReason',
+    //   'displayNamePronunciation',
+    //   'sensitivity',
+    //   'sponsorDate',
+    // ];
+
+    // const baseNodeMetaProps = ['id', 'createdAt'];
+
+    // const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
+    //   {
+    //     parentBaseNodePropertyKey: 'ethnologue',
+    //     parentRelationDirection: 'out',
+    //     childBaseNodeLabel: 'EthnologueLanguage',
+    //     childBaseNodeMetaPropertyKey: 'id',
+    //     returnIdentifier: 'ethnologueLanguageId',
+    //   },
+    // ];
+
+    // const query = this.db
+    //   .query()
+    //   .call(matchRequestingUser, session)
+    //   .call(matchUserPermissions, 'Language', langId)
+    //   .call(addAllSecureProperties, ...props)
+    //   .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
+    //   .with([
+    //     ...props.map(addPropertyCoalesceWithClause),
+    //     ...childBaseNodeMetaProps.map(addShapeForChildBaseNodeMetaProperty),
+    //     ...baseNodeMetaProps.map(addShapeForBaseNodeMetaProperty),
+    //     'node',
+    //   ])
+    //   .returnDistinct([
+    //     ...props,
+    //     ...baseNodeMetaProps,
+    //     ...childBaseNodeMetaProps.map((x) => x.returnIdentifier),
+    //     'labels(node) as labels',
+    //   ]);
+
+    // printActualQuery(this.logger, query);
+
+    // const result = await query.first();
+    // if (!result) {
+    //   throw new NotFoundException('Could not find language');
+    // }
+
+    // const { ethnologue } = await this.ethnologueLanguageService.readOne(
+    //   result.ethnologueLanguageId,
+    //   session
+    // );
+    // const response: any = {
+    //   ...result,
+    //   ethnologue: ethnologue,
+    //   sensitivity: result.sensitivity.value || Sensitivity.Low,
+    // };
+
+    // return (response as unknown) as Language;
   }
 
   async update(

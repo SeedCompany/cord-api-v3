@@ -134,7 +134,8 @@ export class LanguageResolver {
     @Args('input') { language: input }: CreateLanguageInput
   ): Promise<CreateLanguageOutput> {
     const language = await this.langService.create(input, session);
-    return { language };
+    const response = await this.langService.readOne(language, session);
+    return { language: response };
   }
 
   @Mutation(() => UpdateLanguageOutput, {
