@@ -164,7 +164,7 @@ export class LanguageService {
           active: true,
           createdAt,
         }),
-        node('newLang'),
+        node('node'),
       ],
       [
         node('readerSG'),
@@ -183,7 +183,7 @@ export class LanguageService {
           active: true,
           createdAt,
         }),
-        node('newLang'),
+        node('node'),
       ],
     ];
   };
