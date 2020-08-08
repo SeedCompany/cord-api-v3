@@ -80,13 +80,17 @@ export const formatException = () =>
         const subject = t.getFunctionName();
 
         const absolute: string | null = t.getFileName();
-        const file = absolute
-          ? relative(`${__dirname}/../../..`, absolute)
-          : '';
-        const location =
-          !file || file.startsWith('internal')
-            ? ''
-            : `${file}:${t.getLineNumber()}:${t.getColumnNumber()}`;
+        if (
+          !absolute ||
+          absolute.includes('node_modules') ||
+          absolute.startsWith('internal/') ||
+          absolute.includes('<anonymous>')
+        ) {
+          return null;
+        }
+
+        const file = relative(`${__dirname}/../../..`, absolute);
+        const location = `${file}:${t.getLineNumber()}:${t.getColumnNumber()}`;
 
         return (
           red(`    at`) +
@@ -94,6 +98,7 @@ export const formatException = () =>
           (subject && location ? red(` (${location})`) : red(` ${location}`))
         );
       })
+      .filter(identity)
       .join('\n');
 
     const bad = config.syslog.levels[info.level] > config.syslog.levels.warning;
