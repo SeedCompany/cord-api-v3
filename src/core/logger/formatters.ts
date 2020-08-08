@@ -5,7 +5,7 @@ import { DateTime } from 'luxon';
 import { relative } from 'path';
 import { parse as parseTrace, StackFrame } from 'stack-trace';
 import { MESSAGE } from 'triple-beam';
-import { format } from 'winston';
+import { config, format } from 'winston';
 
 export const metadata = () =>
   format.metadata({
@@ -35,7 +35,15 @@ export const pid = format((info) => {
 });
 
 export const colorize = () =>
-  colorsEnabled ? format.colorize({ message: true }) : format(identity)();
+  colorsEnabled
+    ? format.colorize({
+        message: true,
+        colors: {
+          warning: 'yellow',
+          alert: 'red',
+        },
+      })
+    : format(identity)();
 
 export const exceptionInfo = () =>
   format((info) => {
@@ -88,9 +96,10 @@ export const formatException = () =>
       })
       .join('\n');
 
-    info[MESSAGE] = `${red(
-      `\n${ex.type}: ${ex.message}\n\n`
-    )}${formattedTrace}`;
+    const bad = config.syslog.levels[info.level] > config.syslog.levels.warning;
+    let msg = `${ex.type}: ${ex.message}\n`;
+    msg = bad ? red(`\n${msg}\n`) : yellow(msg);
+    info[MESSAGE] = `${msg}${formattedTrace}`;
 
     return info;
   })();
