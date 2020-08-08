@@ -146,6 +146,17 @@ export class ProductService {
     }
 
     if (input.produces) {
+      const produce = await this.db
+        .query()
+        .match([node('pr', 'Producible', { id: input.produces, active: true })])
+        .return('pr')
+        .first();
+      if (!produce) {
+        this.logger.warning(`Could not find producible node`, {
+          id: input.produces,
+        });
+        throw new NotFoundException('Could not find producible node');
+      }
       query.match([
         node('pr', 'Producible', { id: input.produces, active: true }),
       ]);
