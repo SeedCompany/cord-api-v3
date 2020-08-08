@@ -321,7 +321,7 @@ export class ProductService {
     const result = await query.first();
     if (!result) {
       this.logger.warning(`Could not find product`, { id });
-      throw new NotFoundException('Could not find product');
+      throw new NotFoundException('Could not find product', 'product.id');
     }
 
     const produces = await this.db
@@ -401,7 +401,10 @@ export class ProductService {
         .first();
       if (!produce) {
         this.logger.warning(`Could not find producible node`, { id: produces });
-        throw new NotFoundException('Could not find producible node');
+        throw new NotFoundException(
+          'Could not find producible node',
+          'product.produces'
+        );
       }
 
       if (!object.scriptureReferences.value.length) {
@@ -448,7 +451,7 @@ export class ProductService {
     const object = await this.readOne(id, session);
 
     if (!object) {
-      throw new NotFoundException('Could not find product');
+      throw new NotFoundException('Could not find product', 'product.id');
     }
 
     try {
