@@ -1,13 +1,12 @@
 import {
   Injectable,
-  NotFoundException,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
 import { inArray, node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { difference } from 'lodash';
 import { DateTime } from 'luxon';
-import { ISession } from '../../common';
+import { ISession, NotFoundException } from '../../common';
 import {
   addAllSecureProperties,
   addBaseNodeMetaPropsWithClause,
@@ -98,7 +97,7 @@ export class ProductService {
     { engagementId, ...input }: CreateProduct,
     session: ISession
   ): Promise<AnyProduct> {
-    const createdAt = DateTime.local().toString();
+    const createdAt = DateTime.local();
     // create product
     const secureProps: Property[] = [
       {
@@ -155,28 +154,31 @@ export class ProductService {
         this.logger.warning(`Could not find producible node`, {
           id: input.produces,
         });
-        throw new NotFoundException('Could not find producible node');
+        throw new NotFoundException(
+          'Could not find producible node',
+          'product.produces'
+        );
       }
       query.match([
         node('pr', 'Producible', { id: input.produces, active: true }),
       ]);
     }
 
-    query
-      .call(matchRequestingUser, session)
-      .call(
-        createBaseNode,
-        [
-          'Product',
-          input.produces
-            ? 'DerivativeScriptureProduct'
-            : 'DirectScriptureProduct',
-        ],
-        secureProps,
-        {
-          owningOrgId: session.owningOrgId,
-        }
-      );
+    query.call(matchRequestingUser, session).call(
+      createBaseNode,
+      [
+        'Product',
+        input.produces
+          ? 'DerivativeScriptureProduct'
+          : 'DirectScriptureProduct',
+      ],
+      secureProps,
+      {
+        owningOrgId: session.owningOrgId,
+      },
+      [],
+      session.userId === this.config.rootAdmin.id
+    );
 
     if (engagementId) {
       query.create([
@@ -206,19 +208,18 @@ export class ProductService {
     if (!input.produces && input.scriptureReferences) {
       for (const sr of input.scriptureReferences) {
         const verseRange = scriptureToVerseRange(sr);
-        query
-          .create([
-            node('node'),
-            relation('out', '', 'scriptureReferences', { active: true }),
-            node('sr', 'ScriptureRange', {
-              start: verseRange.start,
-              end: verseRange.end,
-              active: true,
-              createdAt: DateTime.local().toString(),
-            }),
-          ])
-          .create([...this.permission('scriptureReferences', 'node')]);
+        query.create([
+          node('node'),
+          relation('out', '', 'scriptureReferences', { active: true }),
+          node('', 'ScriptureRange', {
+            start: verseRange.start,
+            end: verseRange.end,
+            active: true,
+            createdAt: DateTime.local().toString(),
+          }),
+        ]);
       }
+      query.create([...this.permission('scriptureReferences', 'node')]);
     }
 
     if (input.produces && input.scriptureReferencesOverride) {
