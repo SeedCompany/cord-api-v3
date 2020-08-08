@@ -4,25 +4,55 @@ import {
   Catch,
   ForbiddenException,
   HttpException,
+  Injectable,
   InternalServerErrorException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { GqlArgumentsHost, GqlExceptionFilter } from '@nestjs/graphql';
-import { compact, uniq } from 'lodash';
+import { compact, mapValues, uniq } from 'lodash';
 import { Exception, simpleSwitch } from '../common';
+import { ILogger, Logger, LogLevel } from './logger';
+
+type ExceptionInfo = ReturnType<ExceptionFilter['catchGql']>;
 
 @Catch()
+@Injectable()
 export class ExceptionFilter implements GqlExceptionFilter {
+  constructor(@Logger('nest') private readonly logger?: ILogger) {}
+
   catch(exception: Error, restHost: ArgumentsHost): any {
     const _host = GqlArgumentsHost.create(restHost); // when needed
-    let ex;
+    let ex: ExceptionInfo;
     try {
       ex = this.catchGql(exception);
     } catch (e) {
       throw exception;
     }
+    this.logIt(ex, exception);
     const e: Error = Object.assign(new Error(), ex);
     throw e;
+  }
+
+  private logIt(info: ExceptionInfo, error: Error) {
+    if (!this.logger) {
+      return;
+    }
+    const { codes } = info.extensions;
+
+    if (codes.includes('Validation')) {
+      this.logger.notice(info.message, {
+        inputErrors: mapValues(
+          info.extensions.errors,
+          (constraints) => Object.values(constraints)[0]
+        ),
+      });
+      return;
+    }
+
+    const level = codes.includes('Client') ? LogLevel.WARNING : LogLevel.ERROR;
+    this.logger.log(level, info.message, {
+      exception: error,
+    });
   }
 
   catchGql(ex: Error) {
