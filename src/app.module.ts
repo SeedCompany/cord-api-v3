@@ -17,6 +17,7 @@ import { MarketingLocationModule } from './components/marketing-location/marketi
 import { OrganizationModule } from './components/organization/organization.module';
 import { PartnerModule } from './components/partner/partner.module';
 import { PartnershipModule } from './components/partnership/partnership.module';
+import { PrivateLocationModule } from './components/private-location/private-location.module';
 import { ProductModule } from './components/product/product.module';
 import { ProjectModule } from './components/project/project.module';
 import { RegistryOfGeographyModule } from './components/registry-of-geography/registry-of-geography.module';
@@ -60,6 +61,7 @@ import { CoreModule, LoggerModule } from './core';
     FundingAccountModule,
     MarketingLocationModule,
     RegistryOfGeographyModule,
+    PrivateLocationModule,
   ],
   controllers: [],
   providers: [DateTimeScalar, DateScalar],

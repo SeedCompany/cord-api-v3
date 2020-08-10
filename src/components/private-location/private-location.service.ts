@@ -1,7 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { DuplicateException, ISession, ServerException } from '../../common';
+import {
+  DuplicateException,
+  ISession,
+  Sensitivity,
+  ServerException,
+} from '../../common';
 import {
   addAllSecureProperties,
   addPropertyCoalesceWithClause,
@@ -18,17 +23,17 @@ import {
   runListQuery,
 } from '../../core';
 import {
-  CreateRegistryOfGeography,
-  RegistryOfGeography,
-  RegistryOfGeographyListInput,
-  RegistryOfGeographyListOutput,
-  UpdateRegistryOfGeography,
+  CreatePrivateLocation,
+  PrivateLocation,
+  PrivateLocationListInput,
+  PrivateLocationListOutput,
+  UpdatePrivateLocation,
 } from './dto';
 
 @Injectable()
-export class RegistryOfGeographyService {
+export class PrivateLocationService {
   constructor(
-    @Logger('registryOfGeography:service') private readonly logger: ILogger,
+    @Logger('privateLocation:service') private readonly logger: ILogger,
     private readonly db: DatabaseService,
     private readonly config: ConfigService
   ) {}
@@ -36,23 +41,14 @@ export class RegistryOfGeographyService {
   @OnIndex()
   async createIndexes() {
     const constraints = [
-      'CREATE CONSTRAINT ON (n:RegistryOfGeography) ASSERT EXISTS(n.id)',
-      'CREATE CONSTRAINT ON (n:RegistryOfGeography) ASSERT n.id IS UNIQUE',
-      'CREATE CONSTRAINT ON (n:RegistryOfGeography) ASSERT EXISTS(n.active)',
-      'CREATE CONSTRAINT ON (n:RegistryOfGeography) ASSERT EXISTS(n.createdAt)',
-      'CREATE CONSTRAINT ON (n:RegistryOfGeography) ASSERT EXISTS(n.owningOrgId)',
+      'CREATE CONSTRAINT ON (n:PrivateLocation) ASSERT EXISTS(n.id)',
+      'CREATE CONSTRAINT ON (n:PrivateLocation) ASSERT n.id IS UNIQUE',
+      'CREATE CONSTRAINT ON (n:PrivateLocation) ASSERT EXISTS(n.active)',
+      'CREATE CONSTRAINT ON (n:PrivateLocation) ASSERT EXISTS(n.createdAt)',
+      'CREATE CONSTRAINT ON (n:PrivateLocation) ASSERT EXISTS(n.owningOrgId)',
 
-      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.active)',
-      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
-
-      'CREATE CONSTRAINT ON ()-[r:registryId]-() ASSERT EXISTS(r.active)',
-      'CREATE CONSTRAINT ON ()-[r:registryId]-() ASSERT EXISTS(r.createdAt)',
-
-      'CREATE CONSTRAINT ON (n:RegistryOfGeographyName) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:RegistryOfGeographyName) ASSERT n.value IS UNIQUE',
-
-      'CREATE CONSTRAINT ON (n:RegistryOfGeographyId) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:RegistryOfGeographyId) ASSERT n.value IS UNIQUE',
+      'CREATE CONSTRAINT ON ()-[r:publicName]-() ASSERT EXISTS(r.active)',
+      'CREATE CONSTRAINT ON ()-[r:publicName]-() ASSERT EXISTS(r.createdAt)',
     ];
     for (const query of constraints) {
       await this.db.query().raw(query).run();
@@ -104,35 +100,22 @@ export class RegistryOfGeographyService {
     ];
   };
 
-  protected async checkUnique(field: string, value: string, nodeName: string) {
-    const checkRegistryOfGeography = await this.db
+  async create(
+    input: CreatePrivateLocation,
+    session: ISession
+  ): Promise<PrivateLocation> {
+    const checkPrivateLocation = await this.db
       .query()
-      .match([
-        node(field, nodeName, {
-          value: value,
-        }),
-      ])
-      .return([field])
+      .match([node('PrivateLocation', 'LanguageName', { value: input.name })])
+      .return('PrivateLocation')
       .first();
 
-    if (checkRegistryOfGeography) {
+    if (checkPrivateLocation) {
       throw new DuplicateException(
-        `registryOfGeography.${field}`,
-        `RegistryOfGeography with this ${field} already exists.`
+        'privateLocation.name',
+        'PrivateLocation with this name already exists.'
       );
     }
-  }
-
-  async create(
-    input: CreateRegistryOfGeography,
-    session: ISession
-  ): Promise<RegistryOfGeography> {
-    await this.checkUnique('name', input.name, 'RegistryOfGeographyName');
-    await this.checkUnique(
-      'registryId',
-      input.registryId,
-      'RegistryOfGeographyId'
-    );
 
     const secureProps = [
       {
@@ -143,17 +126,36 @@ export class RegistryOfGeographyService {
         addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
-        label: 'RegistryOfGeographyName',
+        label: 'LanguageName',
       },
       {
-        key: 'registryId',
-        value: input.registryId,
+        key: 'publicName',
+        value: input.publicName,
         addToAdminSg: true,
         addToWriterSg: false,
         addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
-        label: 'RegistryOfGeographyId',
+        label: 'LanguagePublicName',
+      },
+      {
+        key: 'type',
+        value: input.type,
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+        label: 'PrivateLocationType',
+      },
+      {
+        key: 'sensitivity',
+        value: input.sensitivity,
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
       },
     ];
 
@@ -167,50 +169,45 @@ export class RegistryOfGeographyService {
             id: this.config.rootAdmin.id,
           }),
         ])
-        .call(
-          createBaseNode,
-          ['RegistryOfGeography', 'BaseNode'],
-          secureProps,
-          {
-            owningOrgId: session.owningOrgId,
-          }
-        )
+        .call(createBaseNode, ['PrivateLocation', 'BaseNode'], secureProps, {
+          owningOrgId: session.owningOrgId,
+        })
         .call(addUserToSG, 'rootUser', 'adminSG')
         .call(addUserToSG, 'rootUser', 'readerSG')
         .return('node.id as id');
 
       const result = await query.first();
       if (!result) {
-        throw new ServerException('failed to create a registry of geography');
+        throw new ServerException('failed to create a private location');
       }
 
       const id = result.id;
 
-      // add root admin to new registry of geography as an admin
-      await this.db.addRootAdminToBaseNodeAsAdmin(id, 'RegistryOfGeography');
+      // add root admin to new private location as an admin
+      await this.db.addRootAdminToBaseNodeAsAdmin(id, 'PrivateLocation');
 
-      this.logger.info(`registry of geography created`, { id: result.id });
+      this.logger.info(`private location created`, { id: result.id });
 
       return await this.readOne(result.id, session);
     } catch (err) {
       this.logger.error(
-        `Could not create registry of geography for user ${session.userId}`
+        `Could not create private location for user ${session.userId}`
       );
-      throw new ServerException('Could not create registry of geography');
+      throw new ServerException('Could not create private location');
     }
   }
 
-  async readOne(id: string, session: ISession): Promise<RegistryOfGeography> {
+  async readOne(id: string, session: ISession): Promise<PrivateLocation> {
     if (!session.userId) {
       session.userId = this.config.anonUser.id;
     }
 
-    const secureProps = ['name', 'registryId'];
+    const secureProps = ['name', 'publicName', 'type', 'sensitivity'];
 
-    const readRegistryOfGeography = this.db
+    const readPrivateLocation = this.db
       .query()
       .call(matchRequestingUser, session)
-      .call(matchUserPermissions, 'RegistryOfGeography', id)
+      .call(matchUserPermissions, 'PrivateLocation', id)
       .call(addAllSecureProperties, ...secureProps)
       .with([
         ...secureProps.map(addPropertyCoalesceWithClause),
@@ -219,37 +216,41 @@ export class RegistryOfGeographyService {
       ])
       .returnDistinct([...secureProps, 'id', 'createdAt']);
 
-    const result = (await readRegistryOfGeography.first()) as
-      | RegistryOfGeography
-      | undefined;
+    const result = await readPrivateLocation.first();
     if (!result) {
-      throw new NotFoundException('Could not find registry of geography');
+      throw new NotFoundException('Could not find private location');
     }
 
-    return result;
+    const response: any = {
+      ...result,
+      sensitivity: result.sensitivity.value || Sensitivity.Low,
+      type: result.type.value,
+    };
+
+    return (response as unknown) as PrivateLocation;
   }
 
   async update(
-    input: UpdateRegistryOfGeography,
+    input: UpdatePrivateLocation,
     session: ISession
-  ): Promise<RegistryOfGeography> {
-    const RegistryOfGeography = await this.readOne(input.id, session);
+  ): Promise<PrivateLocation> {
+    const PrivateLocation = await this.readOne(input.id, session);
 
     return this.db.sgUpdateProperties({
       session,
-      object: RegistryOfGeography,
-      props: ['name', 'registryId'],
+      object: PrivateLocation,
+      props: ['name', 'publicName'],
       changes: input,
-      nodevar: 'registryOfGeography',
+      nodevar: 'PrivateLocation',
     });
   }
 
   async delete(id: string, session: ISession): Promise<void> {
-    const RegistryOfGeography = await this.readOne(id, session);
+    const PrivateLocation = await this.readOne(id, session);
     try {
       await this.db.deleteNode({
         session,
-        object: RegistryOfGeography,
+        object: PrivateLocation,
         aclEditProp: 'canDeleteOwnUser',
       });
     } catch (e) {
@@ -257,15 +258,15 @@ export class RegistryOfGeographyService {
       throw new ServerException('Failed to delete');
     }
 
-    this.logger.info(`deleted registry of geography with id`, { id });
+    this.logger.info(`deleted private location with id`, { id });
   }
 
   async list(
-    { filter, ...input }: RegistryOfGeographyListInput,
+    { filter, ...input }: PrivateLocationListInput,
     session: ISession
-  ): Promise<RegistryOfGeographyListOutput> {
-    const label = 'RegistryOfGeography';
-    const secureProps = ['name', 'registryId'];
+  ): Promise<PrivateLocationListOutput> {
+    const label = 'PrivateLocation';
+    const secureProps = ['name', 'publicName'];
 
     const query = this.db
       .query()
@@ -274,9 +275,11 @@ export class RegistryOfGeographyService {
 
     if (filter.name) {
       query.call(filterByString, label, 'name', filter.name);
+    } else if (filter.publicName) {
+      query.call(filterByString, label, 'publicName', filter.publicName);
     }
 
-    const result: RegistryOfGeographyListOutput = await runListQuery(
+    const result: PrivateLocationListOutput = await runListQuery(
       query,
       input,
       secureProps.includes(input.sort)
