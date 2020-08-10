@@ -3,6 +3,7 @@ import { node, relation } from 'cypher-query-builder';
 import { flatMap, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import {
+  DuplicateException,
   fiscalYears,
   InputException,
   ISession,
@@ -29,6 +30,7 @@ import {
   OnIndex,
   Property,
   runListQuery,
+  UniquenessError,
 } from '../../core';
 import {
   Budget,
@@ -375,6 +377,12 @@ export class ProjectService {
 
       return project;
     } catch (e) {
+      if (e instanceof UniquenessError && e.label === 'ProjectName') {
+        throw new DuplicateException(
+          'project.name',
+          'Project with this name already exists'
+        );
+      }
       this.logger.warning(`Could not create project`, {
         exception: e,
       });

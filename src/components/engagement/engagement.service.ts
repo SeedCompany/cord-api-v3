@@ -270,7 +270,12 @@ export class EngagementService {
     // Initial LanguageEngagement
     const id = generate();
     const createdAt = DateTime.local();
-    const pnp = await this.files.createDefinedFile(`PNP`, session, input.pnp, 'engagement.pnp');
+    const pnp = await this.files.createDefinedFile(
+      `PNP`,
+      session,
+      input.pnp,
+      'engagement.pnp'
+    );
 
     const ceremony = await this.ceremonyService.create(
       { type: CeremonyType.Dedication },
@@ -1016,7 +1021,12 @@ export class EngagementService {
       session
     )) as LanguageEngagement;
 
-    await this.files.updateDefinedFile(object.pnp, 'engagement.pnp', pnp, session);
+    await this.files.updateDefinedFile(
+      object.pnp,
+      'engagement.pnp',
+      pnp,
+      session
+    );
 
     try {
       await this.db.sgUpdateProperties({
@@ -1060,7 +1070,12 @@ export class EngagementService {
       session
     )) as InternshipEngagement;
 
-    await this.files.updateDefinedFile(object.growthPlan, 'engagement.growthPlan', growthPlan, session);
+    await this.files.updateDefinedFile(
+      object.growthPlan,
+      'engagement.growthPlan',
+      growthPlan,
+      session
+    );
 
     try {
       if (mentorId) {
@@ -1161,10 +1176,7 @@ export class EngagementService {
       throw new ServerException('Could not find update InternshipEngagement');
     }
 
-    return (await this.readOne(
-      input.id,
-      session
-    )) as InternshipEngagement;
+    return (await this.readOne(input.id, session)) as InternshipEngagement;
   }
 
   // DELETE /////////////////////////////////////////////////////////
