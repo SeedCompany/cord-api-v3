@@ -405,16 +405,6 @@ export class EngagementService {
           relation('out', '', 'member', { active: true, createdAt }),
           node('requestingUser'),
         ],
-        [
-          node('adminSG'),
-          relation('out', '', 'member', { active: true, createdAt }),
-          node('rootuser'),
-        ],
-        [
-          node('readerSG'),
-          relation('out', '', 'member', { active: true, createdAt }),
-          node('rootuser'),
-        ],
         ...this.permission('firstScripture', 'languageEngagement'),
         ...this.permission('lukePartnership', 'languageEngagement'),
         ...this.permission('completeDate', 'languageEngagement'),
@@ -428,8 +418,22 @@ export class EngagementService {
         ...this.permission('paraTextRegistryId', 'languageEngagement'),
         ...this.permission('pnp', 'languageEngagement'),
         ...this.permission('modifiedAt', 'languageEngagement'),
+      ]);
+    if (session.userId !== this.config.rootAdmin.id) {
+      createLE.create([
+        [
+          node('adminSG'),
+          relation('out', '', 'member', { active: true, createdAt }),
+          node('rootuser'),
+        ],
+        [
+          node('readerSG'),
+          relation('out', '', 'member', { active: true, createdAt }),
+          node('rootuser'),
+        ]
       ])
-      .return('languageEngagement');
+    }
+    createLE.return('languageEngagement');
     let le;
     try {
       le = await createLE.first();
@@ -674,22 +678,6 @@ export class EngagementService {
           }),
           node('requestingUser'),
         ],
-        [
-          node('adminSG'),
-          relation('out', '', 'member', {
-            active: true,
-            createdAt,
-          }),
-          node('rootuser'),
-        ],
-        [
-          node('readerSG'),
-          relation('out', '', 'member', {
-            active: true,
-            createdAt,
-          }),
-          node('rootuser'),
-        ],
         ...this.permission('completeDate', 'internshipEngagement'),
         ...this.permission(
           'communicationsCompleteDate',
@@ -708,8 +696,22 @@ export class EngagementService {
         ...this.permission('intern', 'internshipEngagement'),
         ...this.permission('mentor', 'internshipEngagement'),
         ...this.permission('growthPlan', 'internshipEngagement'),
+      ]);
+    if (session.userId !== this.config.rootAdmin.id) {
+      createIE.create([
+        [
+          node('adminSG'),
+          relation('out', '', 'member', { active: true, createdAt }),
+          node('rootuser'),
+        ],
+        [
+          node('readerSG'),
+          relation('out', '', 'member', { active: true, createdAt }),
+          node('rootuser'),
+        ]
       ])
-      .return('internshipEngagement');
+    }
+    createIE.return('internshipEngagement');
     let IE;
     try {
       IE = await createIE.first();
