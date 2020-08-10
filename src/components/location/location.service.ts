@@ -71,32 +71,32 @@ export class LocationService {
   async createIndexes() {
     return [
       // ZONE NODE
-      'CREATE CONSTRAINT ON (n:Zone) ASSERT EXISTS(n.id)',
-      'CREATE CONSTRAINT ON (n:Zone) ASSERT n.id IS UNIQUE',
+      'CREATE CONSTRAINT ON (n:FieldZone) ASSERT EXISTS(n.id)',
+      'CREATE CONSTRAINT ON (n:FieldZone) ASSERT n.id IS UNIQUE',
 
-      'CREATE CONSTRAINT ON (n:Zone) ASSERT EXISTS(n.createdAt)',
+      'CREATE CONSTRAINT ON (n:FieldZone) ASSERT EXISTS(n.createdAt)',
 
       // ZONE NAME REL
       'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.active)',
       'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
 
       // ZONE NAME NODE
-      'CREATE CONSTRAINT ON (n:LocationName) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:LocationName) ASSERT n.value IS UNIQUE',
+      'CREATE CONSTRAINT ON (n:FieldZoneName) ASSERT EXISTS(n.value)',
+      'CREATE CONSTRAINT ON (n:FieldZoneName) ASSERT n.value IS UNIQUE',
 
       // REGION NODE
-      'CREATE CONSTRAINT ON (n:Region) ASSERT EXISTS(n.id)',
-      'CREATE CONSTRAINT ON (n:Region) ASSERT n.id IS UNIQUE',
+      'CREATE CONSTRAINT ON (n:FieldRegion) ASSERT EXISTS(n.id)',
+      'CREATE CONSTRAINT ON (n:FieldRegion) ASSERT n.id IS UNIQUE',
 
-      'CREATE CONSTRAINT ON (n:Region) ASSERT EXISTS(n.createdAt)',
+      'CREATE CONSTRAINT ON (n:FieldRegion) ASSERT EXISTS(n.createdAt)',
 
       // REGION NAME REL
       'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.active)',
       'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
 
       // REGION NAME NODE
-      'CREATE CONSTRAINT ON (n:LocationName) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:LocationName) ASSERT n.value IS UNIQUE',
+      'CREATE CONSTRAINT ON (n:FieldRegionName) ASSERT EXISTS(n.value)',
+      'CREATE CONSTRAINT ON (n:FieldRegionName) ASSERT n.value IS UNIQUE',
 
       // COUNTRY NODE
       'CREATE CONSTRAINT ON (n:Country) ASSERT EXISTS(n.id)',
@@ -119,7 +119,20 @@ export class LocationService {
       return [];
     }
     const createdAt = DateTime.local();
-    const propLabel = prop === 'name' ? 'Property:LocationName' : 'Property';
+    let propLabel;
+
+    if (prop === 'name') {
+      if (baseNode === 'newZone') {
+        propLabel = 'Property:FieldZoneName';
+      } else if (baseNode === 'newRegion') {
+        propLabel = 'Property:FieldRegionName';
+      } else {
+        propLabel = 'Property:LocationName';
+      }
+    } else {
+      propLabel = 'Property';
+    }
+
     return [
       [
         node(baseNode),
@@ -154,7 +167,7 @@ export class LocationService {
         ])
         .create([
           [
-            node('newZone', ['Zone', 'BaseNode'], {
+            node('newZone', ['FieldZone', 'BaseNode'], {
               createdAt,
               id,
             }),
@@ -191,7 +204,7 @@ export class LocationService {
       if (directorId) {
         const query = `
       MATCH (director:User {id: $directorId}),
-        (zone:Zone {id: $id})
+        (zone:FieldZone {id: $id})
       CREATE (director)<-[:director {active: true, createdAt: datetime()}]-(zone)
       RETURN  zone.id as id
       `;
@@ -212,7 +225,7 @@ export class LocationService {
       const lookup = this.db
         .query()
         .match([
-          node('zone', 'Zone'),
+          node('zone', 'FieldZone'),
           relation('out', 'name', 'name', { active: true }),
           node('zoneName', 'Property', { value: input.name }),
         ])
@@ -254,7 +267,7 @@ export class LocationService {
         ])
         .create([
           [
-            node('newRegion', ['Region', 'BaseNode'], {
+            node('newRegion', ['FieldRegion', 'BaseNode'], {
               createdAt,
               id,
             }),
@@ -294,8 +307,8 @@ export class LocationService {
 
       if (zoneId) {
         const query = `
-          MATCH (zone:Zone {id: $zoneId}),
-            (region:Region {id: $id})
+          MATCH (zone:FieldZone {id: $zoneId}),
+            (region:FieldRegion {id: $id})
           CREATE (zone)<-[:zone { active: true, createdAt: datetime() }]-(region)
           RETURN region.id as id
         `;
@@ -313,7 +326,7 @@ export class LocationService {
       if (directorId) {
         const query = `
           MATCH
-            (region:Region {id: $id}),
+            (region:FieldRegion {id: $id}),
             (director:User {id: $directorId})
           CREATE (director)<-[:director { active: true, createdAt: datetime() }]-(region)
           RETURN region.id as id
@@ -332,7 +345,7 @@ export class LocationService {
       const lookup = this.db
         .query()
         .match([
-          node('region', 'Region'),
+          node('region', 'FieldRegion'),
           relation('out', 'name', 'name', { active: true }),
           node('regionName', 'Property', { value: input.name }),
         ])
@@ -409,7 +422,7 @@ export class LocationService {
       // connect the Region to Country
       if (regionId) {
         const query = `
-          MATCH (region:Region {id: $regionId}),
+          MATCH (region:FieldRegion {id: $regionId}),
             (country:Country {id: $id})
           CREATE (country)-[:region { active: true, createdAt: datetime()}]->(region)
           RETURN country.id as id
@@ -457,7 +470,7 @@ export class LocationService {
     const results = await this.db.query().raw(query, { id }).first();
     // MATCH one of these labels.
     const label = first(
-      intersection(results?.labels, ['Country', 'Region', 'Zone'])
+      intersection(results?.labels, ['Country', 'FieldRegion', 'FieldZone'])
     );
 
     this.logger.debug('Looking for ', {
@@ -466,11 +479,11 @@ export class LocationService {
       userId: session.userId,
     });
     switch (label) {
-      case 'Zone': {
-        return await this.readOneZone(id, session);
+      case 'FieldZone': {
+        return this.readOneZone(id, session);
       }
-      case 'Region': {
-        return await this.readOneRegion(id, session);
+      case 'FieldRegion': {
+        return this.readOneRegion(id, session);
       }
       case 'Country': {
         return await this.readOneCountry(id, session);
@@ -608,7 +621,7 @@ export class LocationService {
       {
         parentBaseNodePropertyKey: 'region',
         parentRelationDirection: 'out',
-        childBaseNodeLabel: 'Region',
+        childBaseNodeLabel: 'FieldRegion',
         childBaseNodeMetaPropertyKey: 'id',
         returnIdentifier: 'regionId',
       },
@@ -671,7 +684,7 @@ export class LocationService {
             id: $requestingUserId
           }),
           (newDirector:User {id: $directorId}),
-          (zone:Zone {id: $id})-[rel:director {active: true}]->(oldDirector:User)
+          (zone:FieldZone {id: $id})-[rel:director {active: true}]->(oldDirector:User)
         DELETE rel
         CREATE (newDirector)<-[:director {active: true, createdAt: datetime()}]-(zone)
         RETURN  zone.id as id
@@ -695,7 +708,7 @@ export class LocationService {
       object: zone,
       props: ['name'],
       changes: input,
-      nodevar: 'zone',
+      nodevar: 'fieldZone',
     });
 
     return await this.readOneZone(input.id, session);
@@ -717,7 +730,7 @@ export class LocationService {
               id: $requestingUserId
             }),
             (newDirector:User {id: $directorId}),
-            (region:Region {id: $id})-[rel:director {active: true}]->(oldDirector:User)
+            (region:FieldRegion {id: $id})-[rel:director {active: true}]->(oldDirector:User)
           DELETE rel
           CREATE (newDirector)<-[:director {active: true, createdAt: datetime()}]-(region)
           RETURN  region.id as id
@@ -748,8 +761,8 @@ export class LocationService {
 
               id: $requestingUserId
             }),
-            (newZone:Zone {id: $zoneId}),
-            (region:Region {id: $id})-[rel:zone {active: true}]->(oldZone:Zone)
+            (newZone:FieldZone {id: $zoneId}),
+            (region:FieldRegion {id: $id})-[rel:zone {active: true}]->(oldZone:Zone)
           DELETE rel
           CREATE (newZone)<-[:zone {active: true, createdAt: datetime()}]-(region)
           RETURN  region.id as id
@@ -774,7 +787,7 @@ export class LocationService {
       object: region,
       props: ['name'],
       changes: input,
-      nodevar: 'region',
+      nodevar: 'fieldRegion',
     });
     return await this.readOneRegion(input.id, session);
   }
@@ -797,7 +810,7 @@ export class LocationService {
 
               id: $requestingUserId
             }),
-            (newRegion:Region {id: $regionId}),
+            (newRegion:FieldRegion {id: $regionId}),
             (country:Country {id: $id})-[rel:region {active: true}]->(oldZone:Region)
           DELETE rel
           CREATE (newRegion)<-[:region {active: true, createdAt: datetime()}]-(country)

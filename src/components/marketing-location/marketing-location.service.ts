@@ -44,9 +44,6 @@ export class MarketingLocationService {
 
       'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.active)',
       'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
-
-      'CREATE CONSTRAINT ON (n:MarketingLocationName) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:MarketingLocationName) ASSERT n.value IS UNIQUE',
     ];
     for (const query of constraints) {
       await this.db.query().raw(query).run();
@@ -105,7 +102,7 @@ export class MarketingLocationService {
     const checkMarketingLocation = await this.db
       .query()
       .match([
-        node('marketingLocation', 'MarketingLocationName', {
+        node('marketingLocation', 'FieldZoneName', {
           value: input.name,
         }),
       ])
@@ -128,7 +125,7 @@ export class MarketingLocationService {
         addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
-        label: 'MarketingLocationName',
+        label: 'FieldZoneName',
       },
     ];
 

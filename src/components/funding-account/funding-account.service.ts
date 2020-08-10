@@ -44,9 +44,6 @@ export class FundingAccountService {
 
       'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.active)',
       'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
-
-      'CREATE CONSTRAINT ON (n:FundingAccountName) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:FundingAccountName) ASSERT n.value IS UNIQUE',
     ];
     for (const query of constraints) {
       await this.db.query().raw(query).run();
@@ -104,9 +101,7 @@ export class FundingAccountService {
   ): Promise<FundingAccount> {
     const checkFundingAccount = await this.db
       .query()
-      .match([
-        node('fundingAccount', 'FundingAccountName', { value: input.name }),
-      ])
+      .match([node('fundingAccount', 'FieldZoneName', { value: input.name })])
       .return('fundingAccount')
       .first();
 
@@ -126,7 +121,7 @@ export class FundingAccountService {
         addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
-        label: 'FundingAccountName',
+        label: 'FieldZoneName',
       },
     ];
 

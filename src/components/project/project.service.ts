@@ -291,7 +291,9 @@ export class ProjectService {
           }),
         ]);
       if (locationId) {
-        createProject.match([node('country', 'Country', { id: locationId })]);
+        createProject.match([
+          node('region', 'FieldRegion', { id: locationId }),
+        ]);
       }
 
       createProject
@@ -313,8 +315,8 @@ export class ProjectService {
       if (locationId) {
         createProject.create([
           [
-            node('country'),
-            relation('in', '', 'location', { active: true, createdAt }),
+            node('region'),
+            relation('in', '', 'region', { active: true, createdAt }),
             node('node'),
           ],
         ]);
@@ -329,8 +331,8 @@ export class ProjectService {
       if (locationId) {
         location = await this.db
           .query()
-          .match([node('country', 'Country', { id: locationId })])
-          .return('country.id')
+          .match([node('region', 'FieldRegion', { id: locationId })])
+          .return('region.id')
           .first();
       }
 

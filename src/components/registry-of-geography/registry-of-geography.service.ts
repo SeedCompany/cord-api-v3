@@ -48,9 +48,6 @@ export class RegistryOfGeographyService {
       'CREATE CONSTRAINT ON ()-[r:registryId]-() ASSERT EXISTS(r.active)',
       'CREATE CONSTRAINT ON ()-[r:registryId]-() ASSERT EXISTS(r.createdAt)',
 
-      'CREATE CONSTRAINT ON (n:RegistryOfGeographyName) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:RegistryOfGeographyName) ASSERT n.value IS UNIQUE',
-
       'CREATE CONSTRAINT ON (n:RegistryOfGeographyId) ASSERT EXISTS(n.value)',
       'CREATE CONSTRAINT ON (n:RegistryOfGeographyId) ASSERT n.value IS UNIQUE',
     ];
@@ -127,7 +124,7 @@ export class RegistryOfGeographyService {
     input: CreateRegistryOfGeography,
     session: ISession
   ): Promise<RegistryOfGeography> {
-    await this.checkUnique('name', input.name, 'RegistryOfGeographyName');
+    await this.checkUnique('name', input.name, 'FieldZoneName');
     await this.checkUnique(
       'registryId',
       input.registryId,
@@ -143,7 +140,7 @@ export class RegistryOfGeographyService {
         addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
-        label: 'RegistryOfGeographyName',
+        label: 'FieldZoneName',
       },
       {
         key: 'registryId',
