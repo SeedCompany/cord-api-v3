@@ -374,22 +374,35 @@ export class LanguageService {
       .with('collect(distinct perms) as permList, node')
       .match([
         node('node'),
-        relation('out', { active: true }),
+        relation('out', 'r', { active: true }),
         node('props', 'Property', { active: true }),
       ])
-      .with('collect(distinct props) as propList, permList, node')
-      .match([
-        node('node'),
-        relation('out', '', 'ethnologue', { active: true }),
-        node('eth', 'EthnologueLanguage', { active: true }),
-      ])
-      .return('permList, propList, node, eth.id as ethId');
+      .with('{value: props.value, property: type(r)} as prop, permList, node')
+      .with('collect(prop) as propList, permList, node')
+      .return('propList, permList, node')
+      // .with('collect(distinct props) as propList, permList, node')
+      // .match([
+      //   node('node'),
+      //   relation('out', '', 'ethnologue', { active: true }),
+      //   node('eth', 'EthnologueLanguage', { active: true }),
+      // ])
+      // .return('permList, propList, node, eth.id as ethId');
+
+    /*
+    MATCH (node)-[r {active: true}]->(props:Property {active: true})
+    with {value: props.value, property: type(r)} as property, permList, node
+    with {id: node.id, properties: collect(property)} as item, permList
+    with collect(item) as items, permList
+    return items, permList
+    */
+
+
 
     // printActualQuery(this.logger, query);
-
+    // console.log('query', query.toString());
     const result: any = await query.first();
 
-    // console.log(JSON.stringify(result));
+    // console.log('result', JSON.stringify(result));
 
     const response: any = {
       id: result.node.properties.id,
@@ -450,7 +463,7 @@ export class LanguageService {
         canEdit: false,
       },
     };
-
+    // console.log('propList', result.propList)
     for (const record of result.permList) {
       if (record?.properties?.read === true) {
         response[record.properties.property].canRead = true;
@@ -462,8 +475,9 @@ export class LanguageService {
     }
 
     for (const record of result.propList) {
-      if (response[record?.properties?.property].canRead === true) {
-        response[record.properties.property].value = record.properties.value;
+
+      if (response[record?.property] && response[record?.property].canRead === true) {
+        response[record.property].value = record.value;
       }
     }
 
@@ -471,7 +485,7 @@ export class LanguageService {
       response.ethnologue.value = result.ethId;
     }
 
-    console.log(JSON.stringify(response));
+    // console.log(JSON.stringify(response));
 
     // for (const record of result.permList) {
     //   if (record.properties.read === true) {
@@ -482,7 +496,7 @@ export class LanguageService {
     //   }
     // }
 
-    return (result as unknown) as Language;
+    return (response as unknown) as Language;
 
     // const props = [
     //   'name',
@@ -671,54 +685,60 @@ export class LanguageService {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .call(matchUserPermissions, 'Language');
+      // .call(matchUserPermissions, 'Language');
 
     if (filter.name) {
       query.call(filterByString, label, 'name', filter.name);
     }
 
     // match on the rest of the properties of the object requested
+    // query
+    //   .call(
+    //     addAllSecureProperties,
+    //     ...secureProps
+    //     //...unsecureProps
+    //   )
+    //   .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
+    //   // form return object
+    //   // ${listWithUnsecureObject(unsecureProps)}, // removed from a few lines down
+    //   .with(
+    //     `
+    //       {
+    //         ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
+    //         ${listWithSecureObject(secureProps)},
+    //         ${childBaseNodeMetaProps
+    //           .map(
+    //             (x) =>
+    //               `${x.returnIdentifier}: ${x.parentBaseNodePropertyKey}.${x.childBaseNodeMetaPropertyKey}`
+    //           )
+    //           .join(', ')}
+    //       } as node
+    //     `
+    //   );
+
     query
-      .call(
-        addAllSecureProperties,
-        ...secureProps
-        //...unsecureProps
-      )
-      .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
-      // form return object
-      // ${listWithUnsecureObject(unsecureProps)}, // removed from a few lines down
-      .with(
-        `
-          {
-            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
-            ${listWithSecureObject(secureProps)},
-            ${childBaseNodeMetaProps
-              .map(
-                (x) =>
-                  `${x.returnIdentifier}: ${x.parentBaseNodePropertyKey}.${x.childBaseNodeMetaPropertyKey}`
-              )
-              .join(', ')}
-          } as node
-        `
-      );
+      .match([node('node', 'Language', { active: true })])
 
     const result: LanguageListOutput = await runListQuery(
       query,
       input,
       secureProps.includes(input.sort)
     );
-
+    // console.log('result',  result.items)
     const items = await Promise.all(
       result.items.map(async (item) => {
-        const { ethnologue } = await this.ethnologueLanguageService.readOne(
-          (item as any).ethnologueLanguageId,
-          session
-        );
+        // const { ethnologue } = await this.ethnologueLanguageService.readOne(
+        //   (item as any).ethnologueLanguageId,
+        //   session
+        // );
+        const language = await this.readOne((item as any).properties.id, session);
 
+        // console.log('language', language)
         return {
-          ...item,
-          sensitivity: (item as any).sensitivity.value || Sensitivity.Low,
-          ethnologue: ethnologue,
+          ...(item as any).properties,
+          ...language,
+          // sensitivity: (item as any).sensitivity.value || Sensitivity.Low,
+          // ethnologue: ethnologue,
         };
       })
     );
