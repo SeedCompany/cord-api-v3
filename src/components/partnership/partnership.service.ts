@@ -168,7 +168,7 @@ export class PartnershipService {
     { organizationId, projectId, ...input }: CreatePartnership,
     session: ISession
   ): Promise<Partnership> {
-    const createdAt = DateTime.local().toString();
+    const createdAt = DateTime.local();
 
     try {
       await this.orgService.readOne(organizationId, session);

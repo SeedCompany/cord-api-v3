@@ -1,7 +1,6 @@
 import {
   BadRequestException,
   Injectable,
-  NotFoundException,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
@@ -10,6 +9,7 @@ import { DateTime } from 'luxon';
 import {
   DuplicateException,
   ISession,
+  NotFoundException,
   Sensitivity,
   simpleSwitch,
 } from '../../common';
@@ -434,7 +434,7 @@ export class LanguageService {
 
     const result = await query.first();
     if (!result) {
-      throw new NotFoundException('Could not find language');
+      throw new NotFoundException('Could not find language', 'language.id');
     }
 
     const { ethnologue } = await this.ethnologueLanguageService.readOne(
