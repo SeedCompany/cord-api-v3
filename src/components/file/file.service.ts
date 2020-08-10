@@ -138,9 +138,21 @@ export class FileService {
     session: ISession
   ): Promise<FileListOutput> {
     const result = await this.repo.getChildrenById(session, parentId, input);
-    const items = await Promise.all(
-      result.children.map((node) => this.adaptBaseNodeToFileNode(node, session))
-    );
+    const items = (
+      await Promise.all(
+        result.children.map(async (node) => {
+          try {
+            return await this.adaptBaseNodeToFileNode(node, session);
+          } catch (e) {
+            if (e instanceof NotFoundException) {
+              // If no active versions pretend the file doesn't exist.
+              return [];
+            }
+            throw e;
+          }
+        })
+      )
+    ).flatMap((n) => n);
     return {
       items: items,
       total: result.total,
@@ -221,6 +233,11 @@ export class FileService {
     const fileId = isFileNode(parent)
       ? parent.id
       : await this.getOrCreateFileByName(parent.id, name, session);
+    this.logger.debug('Creating file version', {
+      parentId: fileId,
+      fileName: name,
+      uploadId,
+    });
 
     const mimeType = upload.ContentType ?? 'application/octet-stream';
     const category = getCategoryFromMimeType(mimeType);
@@ -259,6 +276,11 @@ export class FileService {
   ) {
     try {
       const node = await this.repo.getBaseNodeByName(parentId, name, session);
+      this.logger.debug('Using existing file matching given name', {
+        parentId,
+        fileName: name,
+        fileId: node.id,
+      });
       return node.id;
     } catch (e) {
       if (!(e instanceof NotFoundException)) {
@@ -266,7 +288,16 @@ export class FileService {
       }
     }
 
-    return this.repo.createFile(parentId, name, session);
+    const fileId = await this.repo.createFile(parentId, name, session);
+    this.logger.debug(
+      'File matching given name not found, creating a new one',
+      {
+        parentId,
+        fileName: name,
+        fileId: fileId,
+      }
+    );
+    return fileId;
   }
 
   async createDefinedFile(

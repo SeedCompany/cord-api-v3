@@ -56,7 +56,7 @@ export class FileRepository {
   ): Promise<BaseNode> {
     return this.getBaseNodeBy(session, [
       [
-        node('parent', 'FileNode', isActive),
+        node('parent', 'FileNode', { id: parentId, ...isActive }),
         relation('in', '', 'parent', isActive),
         node('node', 'FileNode', isActive),
         relation('out', '', 'name', isActive),
@@ -176,7 +176,7 @@ export class FileRepository {
       .match([
         node('node', 'FileNode', { id: fileId, ...isActive }),
         relation('in', '', 'parent', isActive),
-        node('fv', 'FileVersion'),
+        node('fv', 'FileVersion', isActive),
       ])
       .return('fv')
       .orderBy('fv.createdAt', 'DESC')
