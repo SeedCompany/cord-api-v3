@@ -56,7 +56,8 @@ export function createBaseNode(
   label: string | string[],
   props: Property[],
   baseNodeProps?: { owningOrgId?: string | undefined; type?: string },
-  editableProps?: string[]
+  editableProps?: string[],
+  isRootuser?: boolean
 ) {
   const createdAt = DateTime.local().toString();
 
@@ -83,9 +84,11 @@ export function createBaseNode(
   createSG(query, 'adminSG');
   createSG(query, 'writerSG');
   createSG(query, 'readerSG');
-  addUserToSG(query, 'requestingUser', 'adminSG');
-  addUserToSG(query, 'requestingUser', 'writerSG');
-  addUserToSG(query, 'requestingUser', 'readerSG');
+  if (!isRootuser) {
+    addUserToSG(query, 'requestingUser', 'adminSG');
+    addUserToSG(query, 'requestingUser', 'writerSG');
+    addUserToSG(query, 'requestingUser', 'readerSG');
+  }
 
   for (const prop of props) {
     const labels = ['Property'];
