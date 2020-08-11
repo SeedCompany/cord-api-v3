@@ -1,5 +1,5 @@
 import { Field, ObjectType } from '@nestjs/graphql';
-import { Resource, SecuredString } from '../../../common';
+import { Resource, SecuredProperty, SecuredString } from '../../../common';
 
 @ObjectType({
   implements: [Resource],
@@ -11,3 +11,10 @@ export class RegistryOfGeography extends Resource {
   @Field()
   readonly registryId: SecuredString;
 }
+
+@ObjectType({
+  description: SecuredProperty.descriptionFor('a registry of geography'),
+})
+export class SecuredRegistryOfGeography extends SecuredProperty(
+  RegistryOfGeography
+) {}
