@@ -263,6 +263,88 @@ export class EthnologueLanguageService {
     };
   }
 
+  async readOneSimple(
+    id: string,
+    session: ISession
+  ): Promise<{ ethnologue: EthnologueLanguage; ethnologueId: string }> {
+    this.logger.info(`Read ethnologueLanguage`, {
+      id: id,
+      userId: session.userId,
+    });
+
+    if (!session.userId) {
+      this.logger.info('using anon user id');
+      session.userId = this.config.anonUser.id;
+    }
+
+    // const props = ['id', 'code', 'provisionalCode', 'name', 'population'];
+    // const baseNodeMetaProps = ['createdAt'];
+
+    const query = this.db
+      .query()
+      .call(matchRequestingUser, session)
+      .match([node('node', 'EthnologueLanguage', { active: true, id: id })])
+      .match([
+        node('requestingUser'),
+        relation('in', '', 'member*1..'),
+        node('', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission'),
+        node('perms', 'Permission', { active: true }),
+        relation('out', '', 'baseNode'),
+        node('node'),
+      ])
+      .with('collect(distinct perms) as permList, node')
+      .match([
+        node('node'),
+        relation('out', 'r', { active: true }),
+        node('props', 'Property', { active: true }),
+      ])
+      .with('{value: props.value, property: type(r)} as prop, permList, node')
+      .with('collect(prop) as propList, permList, node')
+      .return('propList, permList, node')
+
+    const result = await query.first();
+
+    const response: any = {
+      createdAt: result?.node?.properties?.createdAt,
+    };
+
+    for (const record of result?.permList) {
+      if (!response[record.properties.property]) {
+        response[record.properties.property] = {}
+      }
+      if (record?.properties && record?.properties?.read === true && response[record?.properties?.property]) {
+        response[record?.properties?.property].canRead = true
+      } else {
+        response[record?.properties?.property].canRead = false
+      }
+
+      if (record?.properties && record?.properties?.edit === true && response[record.properties.property]) {
+        response[record.properties.property].canEdit = true
+      } else {
+        response[record.properties.property].canEdit = false
+      }
+    }
+
+    for (const record of result?.propList) {
+      if (!response[record.property]) {
+        response[record.property] = {}
+      }
+      if (record?.property === 'sensitivity') {
+        response[record.property] = record.value;
+      } else if (response[record?.property] && response[record?.property].canRead === true) {
+        response[record.property].value = record.value
+      } else {
+        response[record.property].value = false
+      }
+    }
+
+    return {
+      ethnologue: response,
+      ethnologueId: response?.id?.value,
+    };
+  }
+
   async update(id: string, input: UpdateEthnologueLanguage, session: ISession) {
     if (!input) return;
 

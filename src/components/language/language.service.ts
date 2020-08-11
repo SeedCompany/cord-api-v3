@@ -379,7 +379,12 @@ export class LanguageService {
       ])
       .with('{value: props.value, property: type(r)} as prop, permList, node')
       .with('collect(prop) as propList, permList, node')
-      .return('propList, permList, node')
+      .match([
+        node('node'),
+        relation('out', '', 'ethnologue'),
+        node('eth', 'EthnologueLanguage', { active: true }),
+      ])
+      .return('propList, permList, node, eth.id as ethnologueLanguageId')
       // .with('collect(distinct props) as propList, permList, node')
       // .match([
       //   node('node'),
@@ -407,84 +412,95 @@ export class LanguageService {
     const response: any = {
       id: result.node.properties.id,
       createdAt: result.node.properties.createdAt,
-      name: {
-        value: null,
-        canRead: false,
-        canEdit: false,
-      },
-      displayName: {
-        value: null,
-        canRead: false,
-        canEdit: false,
-      },
-      isDialect: {
-        value: null,
-        canRead: false,
-        canEdit: false,
-      },
-      populationOverride: {
-        value: null,
-        canRead: false,
-        canEdit: false,
-      },
-      registryOfDialectsCode: {
-        value: null,
-        canRead: false,
-        canEdit: false,
-      },
-      leastOfThese: {
-        value: null,
-        canRead: false,
-        canEdit: false,
-      },
-      leastOfTheseReason: {
-        value: null,
-        canRead: false,
-        canEdit: false,
-      },
-      displayNamePronunciation: {
-        value: null,
-        canRead: false,
-        canEdit: false,
-      },
-      sensitivity: {
-        value: null,
-        canRead: false,
-        canEdit: false,
-      },
-      sponsorDate: {
-        value: null,
-        canRead: false,
-        canEdit: false,
-      },
-      ethnologue: {
-        value: null,
-        canRead: false,
-        canEdit: false,
-      },
+      // name: {
+      //   value: null,
+      //   canRead: false,
+      //   canEdit: false,
+      // },
+      // displayName: {
+      //   value: null,
+      //   canRead: false,
+      //   canEdit: false,
+      // },
+      // isDialect: {
+      //   value: null,
+      //   canRead: false,
+      //   canEdit: false,
+      // },
+      // populationOverride: {
+      //   value: null,
+      //   canRead: false,
+      //   canEdit: false,
+      // },
+      // registryOfDialectsCode: {
+      //   value: null,
+      //   canRead: false,
+      //   canEdit: false,
+      // },
+      // leastOfThese: {
+      //   value: null,
+      //   canRead: false,
+      //   canEdit: false,
+      // },
+      // leastOfTheseReason: {
+      //   value: null,
+      //   canRead: false,
+      //   canEdit: false,
+      // },
+      // displayNamePronunciation: {
+      //   value: null,
+      //   canRead: false,
+      //   canEdit: false,
+      // },
+      // sensitivity: '',
+      // sponsorDate: {
+      //   value: null,
+      //   canRead: false,
+      //   canEdit: false,
+      // },
+      // ethnologue: {
+      //   value: null,
+      //   canRead: false,
+      //   canEdit: false,
+      // },
     };
+
     // console.log('propList', result.propList)
     for (const record of result.permList) {
-      if (record?.properties?.read === true) {
-        response[record.properties.property].canRead = true;
+      if (!response[record.properties.property]) {
+        response[record.properties.property] = {}
+      }
+      if (record?.properties && record?.properties?.read === true && response[record.properties.property]) {
+        response[record.properties.property].canRead = true
+      } else {
+        response[record.properties.property].canRead = false
       }
 
-      if (record?.properties?.edit === true) {
-        response[record.properties.property].canEdit = true;
+      if (record?.properties && record?.properties?.edit === true && response[record.properties.property]) {
+        response[record.properties.property].canEdit = true
+      } else {
+        response[record.properties.property].canEdit = false
       }
     }
 
     for (const record of result.propList) {
-
-      if (response[record?.property] && response[record?.property].canRead === true) {
-        response[record.property].value = record.value;
+      if (!response[record.property]) {
+        response[record.property] = {}
+      }
+      if (record?.property === 'sensitivity') {
+        response[record.property] = record.value;
+      } else if (response[record?.property] && response[record?.property].canRead === true) {
+        response[record.property].value = record.value
+      } else {
+        response[record.property].value = false
       }
     }
 
-    if (response.ethnologue.canRead === true) {
-      response.ethnologue.value = result.ethId;
+    if (response.ethnologue && response.ethnologue.canRead === true) {
+      response.ethnologueLanguageId = result.ethnologueLanguageId;
     }
 
+    // console.log('response', response);
     // console.log(JSON.stringify(response));
 
     // for (const record of result.permList) {
@@ -727,18 +743,18 @@ export class LanguageService {
     // console.log('result',  result.items)
     const items = await Promise.all(
       result.items.map(async (item) => {
-        // const { ethnologue } = await this.ethnologueLanguageService.readOne(
-        //   (item as any).ethnologueLanguageId,
-        //   session
-        // );
         const language = await this.readOne((item as any).properties.id, session);
+        const { ethnologue } = await this.ethnologueLanguageService.readOneSimple(
+          (language as any).ethnologueLanguageId,
+          session
+        );
 
         // console.log('language', language)
         return {
           ...(item as any).properties,
           ...language,
           // sensitivity: (item as any).sensitivity.value || Sensitivity.Low,
-          // ethnologue: ethnologue,
+          ethnologue: ethnologue,
         };
       })
     );
