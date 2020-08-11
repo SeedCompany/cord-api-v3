@@ -39,7 +39,7 @@
     "apollo-server-express": "^2.15.1",
     "argon2": "^0.26.2",
     "aws-sdk": "^2.713.0",
-    "class-transformer": "^0.2.3",
+    "class-transformer": "^0.3.1",
     "class-validator": "^0.12.2",
     "common-tags": "^1.8.0",
     "cookie-parser": "^1.4.5",
