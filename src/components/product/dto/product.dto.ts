@@ -48,7 +48,6 @@ export class DerivativeScriptureProduct extends Product {
   readonly produces: SecuredProducible;
 
   @Field({
-    nullable: true,
     description: stripIndent`
       The \`Producible\` defines a \`scriptureReferences\` list, and this is
       used by default in this product's \`scriptureReferences\` list.
