@@ -45,3 +45,11 @@ export abstract class ScriptureRange {
 export class SecuredScriptureRanges extends SecuredPropertyList(
   ScriptureRange
 ) {}
+
+@ObjectType({
+  description: SecuredPropertyList.descriptionFor('scripture ranges override'),
+})
+export class SecuredScriptureRangesOverride extends SecuredPropertyList(
+  ScriptureRange,
+  { isOverride: true }
+) {}
