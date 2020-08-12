@@ -491,12 +491,6 @@ export function getMetaPropertyOfChildBaseNode(
 
   query
     .optionalMatch([
-      node(parentReadPerm, 'Permission', {
-        property: childBaseNodeProperty.parentBaseNodePropertyKey,
-        read: true,
-        active: true,
-      }),
-      relation('out', '', 'baseNode'),
       node('node'),
       relation(
         childBaseNodeProperty.parentRelationDirection,
@@ -513,6 +507,15 @@ export function getMetaPropertyOfChildBaseNode(
           active: true,
         }
       ),
+    ])
+    .optionalMatch([
+      node(parentReadPerm, 'Permission', {
+        property: childBaseNodeProperty.parentBaseNodePropertyKey,
+        read: true,
+        active: true,
+      }),
+      relation('out', '', 'baseNode'),
+      node('node'),
     ])
     .where({
       [parentReadPerm]: inArray(['permList'], true),
