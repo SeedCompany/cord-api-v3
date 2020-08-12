@@ -50,13 +50,20 @@ SecuredProperty.descriptionFor = (value: string) => stripIndent`
   These \`can*\` authorization properties are specific to the user making the request.
 `;
 
+export interface SecuredPropertyListOptions {
+  isOverride?: boolean;
+}
+
 export function SecuredPropertyList<T>(
-  valueClass: Class<T> | AbstractClassType<T> | GraphQLScalarType | object
+  valueClass: Class<T> | AbstractClassType<T> | GraphQLScalarType | object,
+  options: SecuredPropertyListOptions = {}
 ) {
   @ObjectType({ isAbstract: true, implements: [Readable, Editable] })
   abstract class SecuredPropertyListClass
     implements Readable, Editable, Secured<T[]> {
-    @Field(() => [valueClass])
+    @Field(() => [valueClass], {
+      nullable: options.isOverride,
+    })
     readonly value: T[];
     @Field()
     readonly canRead: boolean;
