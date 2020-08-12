@@ -94,9 +94,7 @@ export class SyncBudgetRecordsToFundingPartners
       !partnership.mouStart?.value ||
       !partnership.mouEnd?.value ||
       // TODO: decide whether to move the following funding and type checks to an earlier step.
-
-      (partnership.types.value &&
-        !partnership.types.value.includes(PartnershipType.Funding)) || // Partnership is not funding, so do nothing
+      !partnership.types.value.includes(PartnershipType.Funding) || // Partnership is not funding, so do nothing
       !partnership.types?.value // Partnership Type is not provided, so do nothing.
     ) {
       expectedBudgetRecordYears = [];

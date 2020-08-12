@@ -55,7 +55,7 @@ export class DerivativeScriptureProduct extends Product {
       this property can be set (and read) to "override" the \`producible\`'s list.
     `,
   })
-  readonly scriptureReferencesOverride: SecuredScriptureRangesOverride;
+  readonly scriptureReferencesOverride?: SecuredScriptureRangesOverride;
 }
 
 export type AnyProduct = MergeExclusive<

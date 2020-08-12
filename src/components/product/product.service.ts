@@ -520,7 +520,7 @@ export class ProductService {
     label: string,
     session: ISession,
     options: { isOverride?: boolean } = {}
-  ): Promise<ScriptureRange[] | null> {
+  ): Promise<ScriptureRange[]> {
     const query = this.db
       .query()
       .match([
@@ -543,7 +543,7 @@ export class ProductService {
     const result = await query.first();
 
     if (!result) {
-      return options.isOverride ? null : [];
+      return [];
     }
 
     const items: ScriptureRange[] = await Promise.all(
