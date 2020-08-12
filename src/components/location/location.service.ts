@@ -114,24 +114,17 @@ export class LocationService {
     ];
   }
   // helper method for defining properties
-  property = (prop: string, value: any, baseNode: string) => {
+  property = (
+    prop: string,
+    value: any,
+    baseNode: string,
+    extraLabels?: string[]
+  ) => {
     if (!value) {
       return [];
     }
     const createdAt = DateTime.local();
-    let propLabel;
-
-    if (prop === 'name') {
-      if (baseNode === 'newZone') {
-        propLabel = 'Property:FieldZoneName';
-      } else if (baseNode === 'newRegion') {
-        propLabel = 'Property:FieldRegionName';
-      } else {
-        propLabel = 'Property:LocationName';
-      }
-    } else {
-      propLabel = 'Property';
-    }
+    const propLabel = ['Property', ...(extraLabels || [])];
 
     return [
       [
@@ -172,7 +165,7 @@ export class LocationService {
               id,
             }),
           ],
-          ...this.property('name', input.name, 'newZone'),
+          ...this.property('name', input.name, 'newZone', ['FieldZoneName']),
           [
             node('adminSG', 'SecurityGroup', {
               id: generate(),
@@ -272,7 +265,9 @@ export class LocationService {
               id,
             }),
           ],
-          ...this.property('name', input.name, 'newRegion'),
+          ...this.property('name', input.name, 'newRegion', [
+            'FieldRegionName',
+          ]),
           [
             node('adminSG', 'SecurityGroup', {
               id: generate(),
@@ -390,7 +385,7 @@ export class LocationService {
               id,
             }),
           ],
-          ...this.property('name', input.name, 'newCountry'),
+          ...this.property('name', input.name, 'newCountry', ['LocationName']),
           [
             node('adminSG', 'SecurityGroup', {
               id: generate(),

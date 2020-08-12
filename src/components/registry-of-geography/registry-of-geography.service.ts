@@ -1,6 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
-import { DateTime } from 'luxon';
+import { node } from 'cypher-query-builder';
 import { DuplicateException, ISession, ServerException } from '../../common';
 import {
   addAllSecureProperties,
@@ -9,7 +8,6 @@ import {
   ConfigService,
   createBaseNode,
   DatabaseService,
-  filterByString,
   ILogger,
   Logger,
   matchRequestingUser,
@@ -55,51 +53,6 @@ export class RegistryOfGeographyService {
       await this.db.query().raw(query).run();
     }
   }
-
-  // helper method for defining permissions
-  permission = (property: string, baseNode: string) => {
-    const createdAt = DateTime.local();
-    return [
-      [
-        node('adminSG'),
-        relation('out', '', 'permission', {
-          active: true,
-          createdAt,
-        }),
-        node('', 'Permission', {
-          property,
-          active: true,
-          read: true,
-          edit: true,
-          admin: true,
-        }),
-        relation('out', '', 'baseNode', {
-          active: true,
-          createdAt,
-        }),
-        node(baseNode),
-      ],
-      [
-        node('readerSG'),
-        relation('out', '', 'permission', {
-          active: true,
-          createdAt,
-        }),
-        node('', 'Permission', {
-          property,
-          active: true,
-          read: true,
-          edit: false,
-          admin: false,
-        }),
-        relation('out', '', 'baseNode', {
-          active: true,
-          createdAt,
-        }),
-        node(baseNode),
-      ],
-    ];
-  };
 
   protected async checkUnique(field: string, value: string, nodeName: string) {
     const checkRegistryOfGeography = await this.db
@@ -258,7 +211,7 @@ export class RegistryOfGeographyService {
   }
 
   async list(
-    { filter, ...input }: RegistryOfGeographyListInput,
+    input: RegistryOfGeographyListInput,
     session: ISession
   ): Promise<RegistryOfGeographyListOutput> {
     const label = 'RegistryOfGeography';
@@ -268,10 +221,6 @@ export class RegistryOfGeographyService {
       .query()
       .call(matchRequestingUser, session)
       .call(matchUserPermissions, label);
-
-    if (filter.name) {
-      query.call(filterByString, label, 'name', filter.name);
-    }
 
     const result: RegistryOfGeographyListOutput = await runListQuery(
       query,

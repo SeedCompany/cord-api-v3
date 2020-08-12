@@ -410,7 +410,7 @@ export class PublicLocationService {
   }
 
   async list(
-    { filter, ...input }: PublicLocationListInput,
+    input: PublicLocationListInput,
     session: ISession
   ): Promise<PublicLocationListOutput> {
     const label = 'PublicLocation';
