@@ -214,7 +214,6 @@ export class ProductService {
           }),
           node('node'),
         ],
-        ...this.permission('produces', 'node', true),
       ]);
     }
 
@@ -232,28 +231,31 @@ export class ProductService {
           }),
         ]);
       }
-      query.create([...this.permission('scriptureReferences', 'node')]);
     }
 
     if (input.produces && input.scriptureReferencesOverride) {
       for (const sr of input.scriptureReferencesOverride) {
         const verseRange = scriptureToVerseRange(sr);
-        query
-          .create([
-            node('node'),
-            relation('out', '', 'scriptureReferencesOverride', {
-              active: true,
-            }),
-            node('sr', ['ScriptureRange', 'BaseNode'], {
-              start: verseRange.start,
-              end: verseRange.end,
-              active: true,
-              createdAt: DateTime.local(),
-            }),
-          ])
-          .create([...this.permission('scriptureReferencesOverride', 'node')]);
+        query.create([
+          node('node'),
+          relation('out', '', 'scriptureReferencesOverride', {
+            active: true,
+          }),
+          node('sr', ['ScriptureRange', 'BaseNode'], {
+            start: verseRange.start,
+            end: verseRange.end,
+            active: true,
+            createdAt: DateTime.local(),
+          }),
+        ]);
       }
     }
+
+    query.create([
+      ...this.permission('scriptureReferences', 'node'),
+      ...this.permission('scriptureReferencesOverride', 'node'),
+      ...this.permission('produces', 'node'),
+    ]);
 
     const result = await query.return('node.id as id').first();
 
