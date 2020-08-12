@@ -762,7 +762,7 @@ export class LocationService {
               id: $requestingUserId
             }),
             (newZone:FieldZone {id: $zoneId}),
-            (region:FieldRegion {id: $id})-[rel:zone {active: true}]->(oldZone:Zone)
+            (region:FieldRegion {id: $id})-[rel:zone {active: true}]->(oldZone:FieldZone)
           DELETE rel
           CREATE (newZone)<-[:zone {active: true, createdAt: datetime()}]-(region)
           RETURN  region.id as id
@@ -811,7 +811,7 @@ export class LocationService {
               id: $requestingUserId
             }),
             (newRegion:FieldRegion {id: $regionId}),
-            (country:Country {id: $id})-[rel:region {active: true}]->(oldZone:Region)
+            (country:Country {id: $id})-[rel:region {active: true}]->(oldZone:FieldRegion)
           DELETE rel
           CREATE (newRegion)<-[:region {active: true, createdAt: datetime()}]-(country)
           RETURN  country.id as id

@@ -315,8 +315,8 @@ export class ProjectService {
       if (locationId) {
         createProject.create([
           [
-            node('region'),
-            relation('in', '', 'region', { active: true, createdAt }),
+            node('country'),
+            relation('in', '', 'location', { active: true, createdAt }),
             node('node'),
           ],
         ]);
