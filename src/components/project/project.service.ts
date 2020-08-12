@@ -600,7 +600,13 @@ export class ProjectService {
     { filter, ...input }: ProjectListInput,
     session: ISession
   ): Promise<ProjectListOutput> {
-    const label = 'Project';
+    let label = 'Project';
+    if (filter.type === 'Internship') {
+      label = 'InternshipProject';
+    } else if (filter.type === 'Translation') {
+      label = 'TranslationProject';
+    }
+
     const baseNodeMetaProps = ['id', 'createdAt', 'type'];
     const unsecureProps = ['status', 'sensitivity'];
     const secureProps = [
