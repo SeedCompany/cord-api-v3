@@ -361,6 +361,12 @@ export class ProductService {
       'BaseNode',
     ])[0];
 
+    const producible = await this.getProducibleByType(
+      produces.p.properties.id,
+      typeName,
+      session
+    );
+
     return {
       id: result.product.id,
       createdAt: result.product.createdAt,
@@ -372,11 +378,15 @@ export class ProductService {
           id: produces.p.properties.id,
           createdAt: produces.p.properties.createdAt,
           __typename: (ProducibleType as any)[typeName],
-          ...(await this.getProducibleByType(
-            produces.p.properties.id,
-            typeName,
-            session
-          )),
+          // scriptureReferencesOverride is not null or an empty array.
+          scriptureReferences:
+            scriptureReferencesOverride.length === 0
+              ? producible?.scriptureReferences
+              : {
+                  canRead: !!result.product.canScriptureReferencesOverrideRead,
+                  canEdit: !!result.product.canScriptureReferencesOverrideEdit,
+                  value: scriptureReferencesOverride,
+                },
         },
         canRead: !!result.product.canProducesRead,
         canEdit: !!result.product.canProducesEdit,
