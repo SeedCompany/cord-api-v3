@@ -25,11 +25,18 @@ import {
   Property,
   runListQuery,
 } from '../../core';
+import { Film, FilmService } from '../film';
+import {
+  LiteracyMaterial,
+  LiteracyMaterialService,
+} from '../literacy-material';
 import { ScriptureRange } from '../scripture';
 import {
   scriptureToVerseRange,
   verseToScriptureRange,
 } from '../scripture/reference';
+import { Song, SongService } from '../song';
+import { Story, StoryService } from '../story';
 import {
   AnyProduct,
   CreateProduct,
@@ -48,6 +55,10 @@ export class ProductService {
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
+    private readonly film: FilmService,
+    private readonly story: StoryService,
+    private readonly song: SongService,
+    private readonly literacyMaterial: LiteracyMaterialService,
     @Logger('product:service') private readonly logger: ILogger
   ) {}
 
@@ -361,6 +372,11 @@ export class ProductService {
           id: produces.p.properties.id,
           createdAt: produces.p.properties.createdAt,
           __typename: (ProducibleType as any)[typeName],
+          ...(await this.getProducibleByType(
+            produces.p.properties.id,
+            typeName,
+            session
+          )),
         },
         canRead: !!result.product.canProducesRead,
         canEdit: !!result.product.canProducesEdit,
@@ -591,5 +607,23 @@ export class ProductService {
     return Object.keys(MethodologyToApproach).filter(
       (key) => MethodologyToApproach[key as ProductMethodology] === approach
     ) as ProductMethodology[];
+  }
+
+  protected async getProducibleByType(
+    id: string,
+    type: string,
+    session: ISession
+  ): Promise<Film | Story | Song | LiteracyMaterial | undefined> {
+    if (type === 'Film') {
+      return this.film.readOne(id, session);
+    } else if (type === 'Story') {
+      return this.story.readOne(id, session);
+    } else if (type === 'Song') {
+      return this.song.readOne(id, session);
+    } else if (type === 'LiteracyMaterial') {
+      return this.literacyMaterial.readOne(id, session);
+    }
+
+    return undefined;
   }
 }
