@@ -2,14 +2,16 @@ import {
   Injectable,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
-import { inArray, node, Query, relation } from 'cypher-query-builder';
+import { node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { difference } from 'lodash';
 import { DateTime } from 'luxon';
 import { ISession, NotFoundException } from '../../common';
 import {
+  addAllMetaPropertiesOfChildBaseNodes,
   addAllSecureProperties,
   addBaseNodeMetaPropsWithClause,
+  ChildBaseNodeMetaProperty,
   ConfigService,
   createBaseNode,
   DatabaseService,
@@ -50,7 +52,7 @@ export class ProductService {
   ) {}
 
   permission = (property: string, nodeName: string, canEdit = false) => {
-    const createdAt = DateTime.local().toString();
+    const createdAt = DateTime.local();
     return [
       [
         node('adminSG'),
@@ -211,11 +213,11 @@ export class ProductService {
         query.create([
           node('node'),
           relation('out', '', 'scriptureReferences', { active: true }),
-          node('', 'ScriptureRange', {
+          node('', ['ScriptureRange', 'BaseNode'], {
             start: verseRange.start,
             end: verseRange.end,
             active: true,
-            createdAt: DateTime.local().toString(),
+            createdAt: DateTime.local(),
           }),
         ]);
       }
@@ -231,11 +233,11 @@ export class ProductService {
             relation('out', '', 'scriptureReferencesOverride', {
               active: true,
             }),
-            node('sr', 'ScriptureRange', {
+            node('sr', ['ScriptureRange', 'BaseNode'], {
               start: verseRange.start,
               end: verseRange.end,
               active: true,
-              createdAt: DateTime.local().toString(),
+              createdAt: DateTime.local(),
             }),
           ])
           .create([...this.permission('scriptureReferencesOverride', 'node')]);
@@ -255,56 +257,36 @@ export class ProductService {
   async readOne(id: string, session: ISession): Promise<AnyProduct> {
     const props = ['mediums', 'purposes', 'methodology'];
     const baseNodeMetaProps = ['id', 'createdAt'];
+    const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
+      {
+        parentBaseNodePropertyKey: 'scriptureReferences',
+        parentRelationDirection: 'out',
+        childBaseNodeLabel: 'ScriptureRange',
+        childBaseNodeMetaPropertyKey: '',
+        returnIdentifier: '',
+      },
+      {
+        parentBaseNodePropertyKey: 'scriptureReferencesOverride',
+        parentRelationDirection: 'out',
+        childBaseNodeLabel: 'ScriptureRange',
+        childBaseNodeMetaPropertyKey: '',
+        returnIdentifier: '',
+      },
+      {
+        parentBaseNodePropertyKey: 'produces',
+        parentRelationDirection: 'out',
+        childBaseNodeLabel: 'Producible',
+        childBaseNodeMetaPropertyKey: '',
+        returnIdentifier: '',
+      },
+    ];
 
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
       .call(matchUserPermissions, 'Product', id)
       .call(addAllSecureProperties, ...props)
-      .optionalMatch([
-        node('scriptureReferencesReadPerm', 'Permission', {
-          property: 'scriptureReferences',
-          read: true,
-          active: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('node'),
-        relation('out', '', 'scriptureReferences', { active: true }),
-        node('scriptureReferences', 'ScriptureRange', { active: true }),
-      ])
-      .where({ scriptureReferencesReadPerm: inArray(['permList'], true) })
-      .optionalMatch([
-        node('scriptureReferencesEditPerm', 'Permission', {
-          property: 'scriptureReferences',
-          edit: true,
-          active: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('node'),
-      ])
-      .where({ scriptureReferencesEditPerm: inArray(['permList'], true) })
-      .optionalMatch([
-        node('producesReadPerm', 'Permission', {
-          property: 'produces',
-          read: true,
-          active: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('node'),
-        relation('out', '', 'produces', { active: true }),
-        node('pr', 'Producible', { active: true }),
-      ])
-      .where({ producesReadPerm: inArray(['permList'], true) })
-      .optionalMatch([
-        node('producesEditPerm', 'Permission', {
-          property: 'produces',
-          edit: true,
-          active: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('node'),
-      ])
-      .where({ producesEditPerm: inArray(['permList'], true) })
+      .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
       .return(
         `
           {
@@ -312,6 +294,8 @@ export class ProductService {
             ${listWithSecureObject(props)},
             canScriptureReferencesRead: scriptureReferencesReadPerm.read,
             canScriptureReferencesEdit: scriptureReferencesEditPerm.edit,
+            canScriptureReferencesOverrideRead: scriptureReferencesOverrideReadPerm.read,
+            canScriptureReferencesOverrideEdit: scriptureReferencesOverrideEditPerm.edit,
             canProducesRead: producesReadPerm.read,
             canProducesEdit: producesEditPerm.edit
           } as product
@@ -354,6 +338,13 @@ export class ProductService {
       };
     }
 
+    const scriptureReferencesOverride = await this.listScriptureReferences(
+      result.product.id,
+      'Product',
+      session,
+      { isOverride: true }
+    );
+
     const typeName = difference(produces.p.labels, [
       'Producible',
       'BaseNode',
@@ -379,11 +370,11 @@ export class ProductService {
         canEdit: !!result.product.canScriptureReferencesEdit,
         value: [],
       },
-      // scriptureReferencesOverride: {
-      //   canRead: !!result.product.canScriptureReferencesRead,
-      //   canEdit: !!result.product.canScriptureReferencesEdit,
-      //   value: []
-      // },
+      scriptureReferencesOverride: {
+        canRead: !!result.product.canScriptureReferencesOverrideRead,
+        canEdit: !!result.product.canScriptureReferencesOverrideEdit,
+        value: scriptureReferencesOverride,
+      },
     };
   }
 
@@ -407,7 +398,10 @@ export class ProductService {
         );
       }
 
-      if (!object.scriptureReferences.value.length) {
+      if (
+        object.scriptureReferences.value &&
+        !object.scriptureReferences.value.length
+      ) {
         await this.db
           .query()
           .match([
@@ -429,7 +423,7 @@ export class ProductService {
             node('product'),
             relation('out', 'rel', 'produces', {
               active: true,
-              createdAt: DateTime.local().toString(),
+              createdAt: DateTime.local(),
             }),
             node('pr'),
           ])
@@ -524,8 +518,9 @@ export class ProductService {
   async listScriptureReferences(
     id: string,
     label: string,
-    session: ISession
-  ): Promise<ScriptureRange[]> {
+    session: ISession,
+    options: { isOverride?: boolean } = {}
+  ): Promise<ScriptureRange[] | null> {
     const query = this.db
       .query()
       .match([
@@ -534,7 +529,13 @@ export class ProductService {
           active: true,
           owningOrgId: session.owningOrgId,
         }),
-        relation('out', '', 'scriptureReferences'),
+        relation(
+          'out',
+          '',
+          options.isOverride
+            ? 'scriptureReferencesOverride'
+            : 'scriptureReferences'
+        ),
         node('scriptureRanges', 'ScriptureRange', { active: true }),
       ])
       .with('collect(scriptureRanges) as items')
@@ -542,7 +543,7 @@ export class ProductService {
     const result = await query.first();
 
     if (!result) {
-      return [];
+      return options.isOverride ? null : [];
     }
 
     const items: ScriptureRange[] = await Promise.all(

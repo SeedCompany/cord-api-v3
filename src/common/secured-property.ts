@@ -60,11 +60,11 @@ export function SecuredPropertyList<T>(
 ) {
   @ObjectType({ isAbstract: true, implements: [Readable, Editable] })
   abstract class SecuredPropertyListClass
-    implements Readable, Editable, Secured<T[]> {
+    implements Readable, Editable, Secured<T[] | null> {
     @Field(() => [valueClass], {
       nullable: options.isOverride,
     })
-    readonly value: T[];
+    readonly value: T[] | null;
     @Field()
     readonly canRead: boolean;
     @Field()
