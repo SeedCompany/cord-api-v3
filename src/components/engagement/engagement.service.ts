@@ -388,42 +388,41 @@ export class EngagementService {
         node('languageEngagement'),
       ]);
     }
-    createLE
-      .create([
-        [
-          node('adminSG', 'SecurityGroup', {
-            id: generate(),
-            active: true,
-            createdAt,
-            name: 'languageEngagement admin',
-          }),
-          relation('out', '', 'member', { active: true, createdAt }),
-          node('requestingUser'),
-        ],
-        [
-          node('readerSG', 'SecurityGroup', {
-            id: generate(),
-            active: true,
-            createdAt,
-            name: 'languageEngagement users',
-          }),
-          relation('out', '', 'member', { active: true, createdAt }),
-          node('requestingUser'),
-        ],
-        ...this.permission('firstScripture', 'languageEngagement'),
-        ...this.permission('lukePartnership', 'languageEngagement'),
-        ...this.permission('completeDate', 'languageEngagement'),
-        ...this.permission('disbursementCompleteDate', 'languageEngagement'),
-        ...this.permission('communicationsCompleteDate', 'languageEngagement'),
-        ...this.permission('startDateOverride', 'languageEngagement'),
-        ...this.permission('endDateOverride', 'languageEngagement'),
-        ...this.permission('ceremony', 'languageEngagement'),
-        ...this.permission('language', 'languageEngagement'),
-        ...this.permission('status', 'languageEngagement'),
-        ...this.permission('paraTextRegistryId', 'languageEngagement'),
-        ...this.permission('pnp', 'languageEngagement'),
-        ...this.permission('modifiedAt', 'languageEngagement'),
-      ]);
+    createLE.create([
+      [
+        node('adminSG', 'SecurityGroup', {
+          id: generate(),
+          active: true,
+          createdAt,
+          name: 'languageEngagement admin',
+        }),
+        relation('out', '', 'member', { active: true, createdAt }),
+        node('requestingUser'),
+      ],
+      [
+        node('readerSG', 'SecurityGroup', {
+          id: generate(),
+          active: true,
+          createdAt,
+          name: 'languageEngagement users',
+        }),
+        relation('out', '', 'member', { active: true, createdAt }),
+        node('requestingUser'),
+      ],
+      ...this.permission('firstScripture', 'languageEngagement'),
+      ...this.permission('lukePartnership', 'languageEngagement'),
+      ...this.permission('completeDate', 'languageEngagement'),
+      ...this.permission('disbursementCompleteDate', 'languageEngagement'),
+      ...this.permission('communicationsCompleteDate', 'languageEngagement'),
+      ...this.permission('startDateOverride', 'languageEngagement'),
+      ...this.permission('endDateOverride', 'languageEngagement'),
+      ...this.permission('ceremony', 'languageEngagement'),
+      ...this.permission('language', 'languageEngagement'),
+      ...this.permission('status', 'languageEngagement'),
+      ...this.permission('paraTextRegistryId', 'languageEngagement'),
+      ...this.permission('pnp', 'languageEngagement'),
+      ...this.permission('modifiedAt', 'languageEngagement'),
+    ]);
     if (session.userId !== this.config.rootAdmin.id) {
       createLE.create([
         [
@@ -435,8 +434,8 @@ export class EngagementService {
           node('readerSG'),
           relation('out', '', 'member', { active: true, createdAt }),
           node('rootuser'),
-        ]
-      ])
+        ],
+      ]);
     }
     createLE.return('languageEngagement');
     let le;
@@ -658,50 +657,46 @@ export class EngagementService {
         node('internshipEngagement'),
       ]);
     }
-    createIE
-      .create([
-        [
-          node('adminSG', 'SecurityGroup', {
-            active: true,
-            createdAt,
-            name: 'internEngagement admin',
-            id: generate(),
-          }),
-          relation('out', '', 'member', { active: true, createdAt }),
-          node('requestingUser'),
-        ],
-        [
-          node('readerSG', 'SecurityGroup', {
-            active: true,
-            createdAt,
-            name: 'internEngagement users',
-            id: generate(),
-          }),
-          relation('out', '', 'member', {
-            active: true,
-            createdAt,
-          }),
-          node('requestingUser'),
-        ],
-        ...this.permission('completeDate', 'internshipEngagement'),
-        ...this.permission(
-          'communicationsCompleteDate',
-          'internshipEngagement'
-        ),
-        ...this.permission('disbursementCompleteDate', 'internshipEngagement'),
-        ...this.permission('methodologies', 'internshipEngagement'),
-        ...this.permission('position', 'internshipEngagement'),
-        ...this.permission('modifiedAt', 'internshipEngagement'),
-        ...this.permission('startDateOverride', 'internshipEngagement'),
-        ...this.permission('endDateOverride', 'internshipEngagement'),
-        ...this.permission('language', 'internshipEngagement'),
-        ...this.permission('status', 'internshipEngagement'),
-        ...this.permission('countryOfOrigin', 'internshipEngagement'),
-        ...this.permission('ceremony', 'internshipEngagement'),
-        ...this.permission('intern', 'internshipEngagement'),
-        ...this.permission('mentor', 'internshipEngagement'),
-        ...this.permission('growthPlan', 'internshipEngagement'),
-      ]);
+    createIE.create([
+      [
+        node('adminSG', 'SecurityGroup', {
+          active: true,
+          createdAt,
+          name: 'internEngagement admin',
+          id: generate(),
+        }),
+        relation('out', '', 'member', { active: true, createdAt }),
+        node('requestingUser'),
+      ],
+      [
+        node('readerSG', 'SecurityGroup', {
+          active: true,
+          createdAt,
+          name: 'internEngagement users',
+          id: generate(),
+        }),
+        relation('out', '', 'member', {
+          active: true,
+          createdAt,
+        }),
+        node('requestingUser'),
+      ],
+      ...this.permission('completeDate', 'internshipEngagement'),
+      ...this.permission('communicationsCompleteDate', 'internshipEngagement'),
+      ...this.permission('disbursementCompleteDate', 'internshipEngagement'),
+      ...this.permission('methodologies', 'internshipEngagement'),
+      ...this.permission('position', 'internshipEngagement'),
+      ...this.permission('modifiedAt', 'internshipEngagement'),
+      ...this.permission('startDateOverride', 'internshipEngagement'),
+      ...this.permission('endDateOverride', 'internshipEngagement'),
+      ...this.permission('language', 'internshipEngagement'),
+      ...this.permission('status', 'internshipEngagement'),
+      ...this.permission('countryOfOrigin', 'internshipEngagement'),
+      ...this.permission('ceremony', 'internshipEngagement'),
+      ...this.permission('intern', 'internshipEngagement'),
+      ...this.permission('mentor', 'internshipEngagement'),
+      ...this.permission('growthPlan', 'internshipEngagement'),
+    ]);
     if (session.userId !== this.config.rootAdmin.id) {
       createIE.create([
         [
@@ -713,8 +708,8 @@ export class EngagementService {
           node('readerSG'),
           relation('out', '', 'member', { active: true, createdAt }),
           node('rootuser'),
-        ]
-      ])
+        ],
+      ]);
     }
     createIE.return('internshipEngagement');
     let IE;
