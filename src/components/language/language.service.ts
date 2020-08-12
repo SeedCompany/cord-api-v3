@@ -879,7 +879,7 @@ export class LanguageService {
 
     result.items = await Promise.all(
       readProject.map(async (project) =>
-        this.projectService.readOne(project.id, session)
+        this.projectService.readOneSimple(project.id, session)
       )
     );
 
