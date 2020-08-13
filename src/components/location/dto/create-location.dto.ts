@@ -1,8 +1,15 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { IdField, NameField } from '../../../common';
-import { Country, Region, Zone } from './location.dto';
+import { IdField, NameField, Sensitivity } from '../../../common';
+import {
+  Country,
+  PrivateLocation,
+  PublicLocation,
+  Region,
+  Zone,
+} from './location.dto';
+import { PrivateLocationType } from './private-location-type.enum';
 
 @InputType()
 export abstract class CreateZone {
@@ -41,6 +48,39 @@ export abstract class CreateCountry {
 }
 
 @InputType()
+export abstract class CreatePrivateLocation {
+  @NameField()
+  readonly name: string;
+
+  @NameField()
+  readonly publicName: string;
+
+  @Field(() => Sensitivity, { nullable: true })
+  readonly sensitivity?: Sensitivity;
+
+  @Field(() => PrivateLocationType)
+  readonly type: PrivateLocationType;
+}
+
+@InputType()
+export abstract class CreatePublicLocation {
+  @IdField()
+  readonly fieldRegionId: string;
+
+  @IdField()
+  readonly marketingLocationId: string;
+
+  @IdField()
+  readonly privateLocationId: string;
+
+  @IdField({ nullable: true })
+  readonly registryOfGeographyId?: string;
+
+  @IdField({ nullable: true })
+  readonly fundingAccountId?: string;
+}
+
+@InputType()
 export abstract class CreateZoneInput {
   @Field()
   @Type(() => CreateZone)
@@ -64,6 +104,22 @@ export abstract class CreateCountryInput {
   readonly country: CreateCountry;
 }
 
+@InputType()
+export abstract class CreatePrivateLocationInput {
+  @Field()
+  @Type(() => CreatePrivateLocation)
+  @ValidateNested()
+  readonly privateLocation: CreatePrivateLocation;
+}
+
+@InputType()
+export abstract class CreatePublicLocationInput {
+  @Field()
+  @Type(() => CreatePublicLocation)
+  @ValidateNested()
+  readonly publicLocation: CreatePublicLocation;
+}
+
 @ObjectType()
 export abstract class CreateZoneOutput {
   @Field()
@@ -80,4 +136,16 @@ export abstract class CreateRegionOutput {
 export abstract class CreateCountryOutput {
   @Field()
   readonly country: Country;
+}
+
+@ObjectType()
+export abstract class CreatePrivateLocationOutput {
+  @Field()
+  readonly privateLocation: PrivateLocation;
+}
+
+@ObjectType()
+export abstract class CreatePublicLocationOutput {
+  @Field()
+  readonly publicLocation: PublicLocation;
 }

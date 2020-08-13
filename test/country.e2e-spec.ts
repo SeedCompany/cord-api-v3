@@ -49,7 +49,7 @@ describe('Country e2e', () => {
     ).rejects.toThrowError();
   });
 
-  it('read one country by id', async () => {
+  it.skip('read one country by id', async () => {
     const country = await createCountry(app, { regionId: region.id });
 
     const { location: actual } = await app.graphql.query(

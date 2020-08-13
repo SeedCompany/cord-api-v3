@@ -6,10 +6,15 @@ import {
 } from '@nestjs/graphql';
 import {
   Resource,
-  Secured,
   SecuredProperty,
   SecuredString,
+  Sensitivity,
 } from '../../../common';
+import { SecuredFundingAccount } from '../../funding-account';
+import { SecuredMarketingLocation } from '../../marketing-location';
+import { SecuredRegistryOfGeography } from '../../registry-of-geography';
+import { SecuredUser } from '../../user/dto/user.dto';
+import { PrivateLocationType } from './private-location-type.enum';
 
 @InterfaceType()
 export abstract class Place {
@@ -78,4 +83,46 @@ export const Location = createUnionType({
     return Zone;
   },
 });
-export type Location = Country | Region | Zone;
+export type Location = Region | Zone;
+
+@ObjectType({
+  implements: [Resource],
+})
+export class PrivateLocation extends Resource {
+  @Field()
+  readonly name: SecuredString;
+
+  @Field()
+  readonly publicName: SecuredString;
+
+  @Field(() => Sensitivity)
+  readonly sensitivity: Sensitivity;
+
+  @Field(() => PrivateLocationType)
+  readonly type: PrivateLocationType;
+}
+
+@ObjectType({
+  description: SecuredProperty.descriptionFor('a private location'),
+})
+export class SecuredPrivateLocation extends SecuredProperty(PrivateLocation) {}
+
+@ObjectType({
+  implements: [Resource],
+})
+export class PublicLocation extends Resource {
+  @Field()
+  readonly fieldRegion: SecuredRegion;
+
+  @Field()
+  readonly marketingLocation: SecuredMarketingLocation;
+
+  @Field()
+  readonly privateLocation: SecuredPrivateLocation;
+
+  @Field()
+  readonly registryOfGeography: SecuredRegistryOfGeography;
+
+  @Field()
+  readonly fundingAccount: SecuredFundingAccount;
+}

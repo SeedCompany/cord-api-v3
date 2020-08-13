@@ -13,7 +13,7 @@ export abstract class LocationFilters {
   @Field(() => [String], {
     description: 'Filter to only these types of locations',
   })
-  readonly types?: Array<'country' | 'region' | 'zone'>;
+  readonly types?: Array<'region' | 'zone'>;
 
   // User IDs ANY of which must be directors of the locations
   readonly userIds?: string[];

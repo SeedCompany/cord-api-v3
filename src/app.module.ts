@@ -17,10 +17,8 @@ import { MarketingLocationModule } from './components/marketing-location/marketi
 import { OrganizationModule } from './components/organization/organization.module';
 import { PartnerModule } from './components/partner/partner.module';
 import { PartnershipModule } from './components/partnership/partnership.module';
-import { PrivateLocationModule } from './components/private-location/private-location.module';
 import { ProductModule } from './components/product/product.module';
 import { ProjectModule } from './components/project/project.module';
-import { PublicLocationModule } from './components/public-location/public-location.module';
 import { RegistryOfGeographyModule } from './components/registry-of-geography/registry-of-geography.module';
 import { ScriptureModule } from './components/scripture/scripture.module';
 import { SearchModule } from './components/search/search.module';
@@ -62,8 +60,6 @@ import { CoreModule, LoggerModule } from './core';
     FundingAccountModule,
     MarketingLocationModule,
     RegistryOfGeographyModule,
-    PrivateLocationModule,
-    PublicLocationModule,
   ],
   controllers: [],
   providers: [DateTimeScalar, DateScalar],

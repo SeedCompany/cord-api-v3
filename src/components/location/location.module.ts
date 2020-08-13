@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { MarketingLocationModule } from '../marketing-location/marketing-location.module';
 import { UserModule } from '../user/user.module';
 import { LocationResolver } from './location.resolver';
 import { LocationService } from './location.service';

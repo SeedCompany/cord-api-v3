@@ -3,6 +3,10 @@ import { IdArg, ISession, Session } from '../../common';
 import {
   CreateCountryInput,
   CreateCountryOutput,
+  CreatePrivateLocationInput,
+  CreatePrivateLocationOutput,
+  CreatePublicLocationInput,
+  CreatePublicLocationOutput,
   CreateRegionInput,
   CreateRegionOutput,
   CreateZoneInput,
@@ -10,8 +14,12 @@ import {
   Location,
   LocationListInput,
   LocationListOutput,
+  PrivateLocation,
+  PublicLocation,
   UpdateCountryInput,
   UpdateCountryOutput,
+  UpdatePrivateLocationInput,
+  UpdatePrivateLocationOutput,
   UpdateRegionInput,
   UpdateRegionOutput,
   UpdateZoneInput,
@@ -132,5 +140,67 @@ export class LocationResolver {
     @Session() session: ISession
   ): Promise<boolean> {
     return await this.locationService.checkLocationConsistency(session);
+  }
+
+  @Query(() => PrivateLocation, {
+    description: 'Look up a private location by its ID',
+  })
+  async privateLocation(
+    @Session() session: ISession,
+    @IdArg() id: string
+  ): Promise<PrivateLocation> {
+    return this.locationService.readOnePrivateLocation(id, session);
+  }
+
+  @Mutation(() => CreatePrivateLocationOutput, {
+    description: 'Create a private location',
+  })
+  async createPrivateLocation(
+    @Session() session: ISession,
+    @Args('input') { privateLocation: input }: CreatePrivateLocationInput
+  ): Promise<CreatePrivateLocationOutput> {
+    const privateLocation = await this.locationService.createPrivateLocation(
+      input,
+      session
+    );
+    return { privateLocation };
+  }
+
+  @Mutation(() => UpdatePrivateLocationOutput, {
+    description: 'Update a private location',
+  })
+  async updatePrivateLocation(
+    @Session() session: ISession,
+    @Args('input') { privateLocation: input }: UpdatePrivateLocationInput
+  ): Promise<UpdatePrivateLocationOutput> {
+    const privateLocation = await this.locationService.updatePrivateLocation(
+      input,
+      session
+    );
+    return { privateLocation };
+  }
+
+  @Query(() => PublicLocation, {
+    description: 'Look up a public location by its ID',
+  })
+  async publicLocation(
+    @Session() session: ISession,
+    @IdArg() id: string
+  ): Promise<PublicLocation> {
+    return this.locationService.readOnePublicLocation(id, session);
+  }
+
+  @Mutation(() => CreatePublicLocationOutput, {
+    description: 'Create a public location',
+  })
+  async createPublicLocation(
+    @Session() session: ISession,
+    @Args('input') { publicLocation: input }: CreatePublicLocationInput
+  ): Promise<CreatePublicLocationOutput> {
+    const publicLocation = await this.locationService.createPublicLocation(
+      input,
+      session
+    );
+    return { publicLocation };
   }
 }
