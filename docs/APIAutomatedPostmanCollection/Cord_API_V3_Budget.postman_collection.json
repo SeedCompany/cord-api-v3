@@ -34,6 +34,9 @@
 							"graphql": {
 								"query": "# Write your query or mutation here\r\nquery {\r\n  session(browser: false) {\r\n    user {\r\n      id,\r\n      email\r\n      {\r\n        value\r\n      }\r\n      realFirstName\r\n      {\r\n        value\r\n      }\r\n      createdAt\r\n      displayLastName\r\n      {\r\n         value\r\n      }\r\n      \r\n      \r\n      \r\n    },\r\n    token\r\n  }\r\n}",
 								"variables": ""
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -298,6 +301,9 @@
 							"graphql": {
 								"query": "mutation createProject($input: CreateProjectInput!) {\r\n  createProject(input: $input) {\r\n    project {\r\n      id\r\n      createdAt\r\n      type\r\n      sensitivity\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      deptId {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      step {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      status\r\n      location {\r\n        value {\r\n          id\r\n          name {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          region {\r\n            value {\r\n              id\r\n              name {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              zone {\r\n                value {\r\n                  id\r\n                  name {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  director {\r\n                    value {\r\n                      id\r\n                      email {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      realFirstName {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      realLastName {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      displayFirstName {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      displayLastName {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      phone {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      timezone {\r\n                        canRead\r\n                        canEdit\r\n                        value {\r\n                          name\r\n                          lat\r\n                          long\r\n                          countries {\r\n                            code\r\n                            name\r\n                            zones {\r\n                              name\r\n                              lat\r\n                              long\r\n                              countries {\r\n                                code\r\n                              }\r\n                            }\r\n                          }\r\n                        }\r\n                      }\r\n                      bio {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      status {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      fullName\r\n                      firstName\r\n                      avatarLetters\r\n                      unavailabilities {\r\n                        items {\r\n                          id\r\n                          description {\r\n                            value\r\n                            canRead\r\n                            canEdit\r\n                          }\r\n                          start\r\n                          end\r\n                          createdAt\r\n                        }\r\n                        total\r\n                        hasMore\r\n                        canCreate\r\n                        canRead\r\n                      }\r\n                      organizations {\r\n                        items {\r\n                          id\r\n                          name {\r\n                            value\r\n                            canRead\r\n                            canEdit\r\n                          }\r\n                          avatarLetters\r\n                          createdAt\r\n                        }\r\n                        total\r\n                        hasMore\r\n                        canCreate\r\n                        canRead\r\n                      }\r\n                      education {\r\n                        items {\r\n                          id\r\n                          degree {\r\n                            value\r\n                            canRead\r\n                            canEdit\r\n                          }\r\n                          major {\r\n                            value\r\n                            canRead\r\n                            canEdit\r\n                          }\r\n                          institution {\r\n                            value\r\n                            canRead\r\n                            canEdit\r\n                          }\r\n                          createdAt\r\n                        }\r\n                        total\r\n                        hasMore\r\n                        canCreate\r\n                        canRead\r\n                      }\r\n                    }\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  createdAt\r\n                }\r\n                canRead\r\n                canEdit\r\n              }\r\n              director {\r\n                value {\r\n                  id\r\n                  email {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  realFirstName {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  realLastName {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  displayFirstName {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  displayLastName {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  phone {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  timezone {\r\n                    value {\r\n                      name\r\n                      lat\r\n                      long\r\n                      countries {\r\n                        code\r\n                        name\r\n                        zones {\r\n                          name\r\n                          lat\r\n                          long\r\n                          countries {\r\n                            code\r\n                          }\r\n                        }\r\n                      }\r\n                    }\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  bio {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  status {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  fullName\r\n                  firstName\r\n                  avatarLetters\r\n                  unavailabilities {\r\n                    items {\r\n                      id\r\n                      description {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      start\r\n                      end\r\n                    }\r\n                    total\r\n                    hasMore\r\n                    canCreate\r\n                    canRead\r\n                  }\r\n                  organizations {\r\n                    items {\r\n                      id\r\n                      name {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      avatarLetters\r\n                      createdAt\r\n                    }\r\n                    total\r\n                    hasMore\r\n                    canCreate\r\n                    canRead\r\n                  }\r\n                  education {\r\n                    items {\r\n                      id\r\n                      degree {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      major {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      institution {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      createdAt\r\n                    }\r\n                    total\r\n                    hasMore\r\n                    canCreate\r\n                    canRead\r\n                  }\r\n                  createdAt\r\n                }\r\n                canRead\r\n                canEdit\r\n              }\r\n              createdAt\r\n            }\r\n            canRead\r\n            canEdit\r\n          }\r\n          createdAt\r\n        }\r\n        canRead\r\n        canEdit\r\n      }\r\n      mouStart {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      mouEnd {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      estimatedSubmission {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      modifiedAt\r\n      avatarLetters\r\n      team {\r\n        total\r\n        hasMore\r\n        canCreate\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          #modifiedAt\r\n          user {\r\n            value {\r\n              id\r\n              createdAt\r\n              email {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              realFirstName {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              realLastName {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              displayFirstName {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              displayLastName {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              phone {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              timezone {\r\n                value {\r\n                  name\r\n                  lat\r\n                  long\r\n                  countries {\r\n                    code\r\n                    name\r\n                    zones {\r\n                      name\r\n                      lat\r\n                      long\r\n                      countries {\r\n                        code\r\n                      }\r\n                    }\r\n                  }\r\n                }\r\n                canRead\r\n                canEdit\r\n              }\r\n              bio {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              status {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              fullName\r\n              firstName\r\n              avatarLetters\r\n              unavailabilities {\r\n                total\r\n                hasMore\r\n                canCreate\r\n                canRead\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  start\r\n                  end\r\n                  description {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                }\r\n              }\r\n              organizations {\r\n                items {\r\n                  id\r\n                  name {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  avatarLetters\r\n                  createdAt\r\n                }\r\n                total\r\n                hasMore\r\n                canCreate\r\n                canRead\r\n              }\r\n              education {\r\n                canRead\r\n                hasMore\r\n                canCreate\r\n                total\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  degree {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  major {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  institution {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                }\r\n              }\r\n            }\r\n            canRead\r\n            canEdit\r\n          }\r\n          roles {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n        }\r\n      }\r\n      engagements {\r\n        total\r\n        hasMore\r\n        canCreate\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          status\r\n          ceremony {\r\n            value {\r\n              id\r\n              createdAt\r\n              type\r\n              planned {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              estimatedDate {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              actualDate {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n            }\r\n            canRead\r\n            canEdit\r\n          }\r\n          completeDate {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          disbursementCompleteDate {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          communicationsCompleteDate {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          startDate {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          endDate {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          initialEndDate {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          lastSuspendedAt {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          lastReactivatedAt {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          statusModifiedAt {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          modifiedAt\r\n        }\r\n      }\r\n      budget {\r\n        value {\r\n          id\r\n          createdAt\r\n          status\r\n          records {\r\n            id\r\n            createdAt\r\n            fiscalYear {\r\n              value\r\n              canRead\r\n              canEdit\r\n            }\r\n            amount {\r\n              value\r\n              canRead\r\n              canEdit\r\n            }\r\n            organization {\r\n              value {\r\n                id\r\n                createdAt\r\n                name {\r\n                  value\r\n                  canRead\r\n                  canEdit\r\n                }\r\n                avatarLetters\r\n              }\r\n              canRead\r\n              canEdit\r\n            }\r\n          }\r\n          total\r\n        }\r\n        canRead\r\n        canEdit\r\n      }\r\n      partnerships {\r\n        canRead\r\n        hasMore\r\n        canCreate\r\n        total\r\n        items {\r\n          id\r\n          createdAt\r\n          agreementStatus {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          mouStatus {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          mouStart {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          mouEnd {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          organization {\r\n            id\r\n            name {\r\n              value\r\n              canRead\r\n              canEdit\r\n            }\r\n            avatarLetters\r\n            createdAt\r\n          }\r\n          types {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          mou {\r\n            value {\r\n              id\r\n              createdAt\r\n              type\r\n              category\r\n              mimeType\r\n              name\r\n              size\r\n              modifiedAt\r\n              downloadUrl\r\n              createdBy {\r\n                id\r\n                createdAt\r\n                email {\r\n                  value\r\n                  canRead\r\n                  canEdit\r\n                }\r\n                realFirstName {\r\n                  value\r\n                  canRead\r\n                  canEdit\r\n                }\r\n                realLastName {\r\n                  value\r\n                  canRead\r\n                  canEdit\r\n                }\r\n                displayFirstName {\r\n                  value\r\n                  canRead\r\n                  canEdit\r\n                }\r\n                displayLastName {\r\n                  value\r\n                  canRead\r\n                  canEdit\r\n                }\r\n                phone {\r\n                  value\r\n                  canRead\r\n                  canEdit\r\n                }\r\n                timezone {\r\n                  value {\r\n                    name\r\n                    lat\r\n                    long\r\n                    countries {\r\n                      code\r\n                      name\r\n                      zones {\r\n                        name\r\n                        lat\r\n                        long\r\n                        countries {\r\n                          code\r\n                        }\r\n                      }\r\n                    }\r\n                  }\r\n                  canRead\r\n                  canEdit\r\n                }\r\n                bio {\r\n                  value\r\n                  canRead\r\n                  canEdit\r\n                }\r\n                status {\r\n                  value\r\n                  canRead\r\n                  canEdit\r\n                }\r\n                fullName\r\n                firstName\r\n                avatarLetters\r\n                unavailabilities {\r\n                  canRead\r\n                  hasMore\r\n                  canCreate\r\n                  total\r\n                  items {\r\n                    id\r\n                    createdAt\r\n                    description {\r\n                      value\r\n                      canRead\r\n                      canEdit\r\n                    }\r\n                    start\r\n                    end\r\n                  }\r\n                }\r\n                organizations {\r\n                  canRead\r\n                  hasMore\r\n                  canCreate\r\n                  total\r\n                  items {\r\n                    id\r\n                    createdAt\r\n                    name {\r\n                      value\r\n                      canRead\r\n                      canEdit\r\n                    }\r\n                    avatarLetters\r\n                  }\r\n                }\r\n                education {\r\n                  canRead\r\n                  hasMore\r\n                  canCreate\r\n                  total\r\n                  items {\r\n                    id\r\n                    createdAt\r\n                    degree {\r\n                      value\r\n                      canRead\r\n                      canEdit\r\n                    }\r\n                    major {\r\n                      value\r\n                      canRead\r\n                      canEdit\r\n                    }\r\n                    institution {\r\n                      value\r\n                      canRead\r\n                      canEdit\r\n                    }\r\n                  }\r\n                }\r\n              }\r\n              modifiedBy {\r\n                id\r\n                createdAt\r\n                email {\r\n                  value\r\n                  canRead\r\n                  canEdit\r\n                }\r\n                realFirstName {\r\n                  value\r\n                  canRead\r\n                  canEdit\r\n                }\r\n                realLastName {\r\n                  value\r\n                  canRead\r\n                  canEdit\r\n                }\r\n                displayFirstName {\r\n                  value\r\n                  canRead\r\n                  canEdit\r\n                }\r\n                displayLastName {\r\n                  value\r\n                  canRead\r\n                  canEdit\r\n                }\r\n                phone {\r\n                  value\r\n                  canRead\r\n                  canEdit\r\n                }\r\n                timezone {\r\n                  value {\r\n                    name\r\n                    lat\r\n                    long\r\n                    countries {\r\n                      code\r\n                      name\r\n                      zones {\r\n                        name\r\n                        lat\r\n                        long\r\n                        countries {\r\n                          code\r\n                        }\r\n                      }\r\n                    }\r\n                  }\r\n                  canRead\r\n                  canEdit\r\n                }\r\n                bio {\r\n                  value\r\n                  canRead\r\n                  canEdit\r\n                }\r\n                status {\r\n                  value\r\n                  canRead\r\n                  canEdit\r\n                }\r\n                fullName\r\n                firstName\r\n                avatarLetters\r\n                unavailabilities {\r\n                  canRead\r\n                  hasMore\r\n                  canCreate\r\n                  total\r\n                  items {\r\n                    id\r\n                    createdAt\r\n                    description {\r\n                      value\r\n                      canRead\r\n                      canEdit\r\n                    }\r\n                    start\r\n                    end\r\n                  }\r\n                }\r\n                organizations {\r\n                  canRead\r\n                  hasMore\r\n                  canCreate\r\n                  total\r\n                  items {\r\n                    id\r\n                    createdAt\r\n                    name {\r\n                      value\r\n                      canRead\r\n                      canEdit\r\n                    }\r\n                    avatarLetters\r\n                  }\r\n                }\r\n                education {\r\n                  canRead\r\n                  hasMore\r\n                  canCreate\r\n                  total\r\n                  items {\r\n                    id\r\n                    createdAt\r\n                    degree {\r\n                      value\r\n                      canRead\r\n                      canEdit\r\n                    }\r\n                    major {\r\n                      value\r\n                      canRead\r\n                      canEdit\r\n                    }\r\n                    institution {\r\n                      value\r\n                      canRead\r\n                      canEdit\r\n                    }\r\n                  }\r\n                }\r\n              }\r\n              children {\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  type\r\n                  category\r\n                  name\r\n                  createdBy {\r\n                    id\r\n                    createdAt\r\n                    email {\r\n                      value\r\n                      canRead\r\n                      canEdit\r\n                    }\r\n                    realFirstName {\r\n                      value\r\n                      canRead\r\n                      canEdit\r\n                    }\r\n                    realLastName {\r\n                      value\r\n                      canRead\r\n                      canEdit\r\n                    }\r\n                    displayFirstName {\r\n                      value\r\n                      canRead\r\n                      canEdit\r\n                    }\r\n                    displayLastName {\r\n                      value\r\n                      canRead\r\n                      canEdit\r\n                    }\r\n                    phone {\r\n                      value\r\n                      canRead\r\n                      canEdit\r\n                    }\r\n                    timezone {\r\n                      value {\r\n                        name\r\n                        lat\r\n                        long\r\n                        countries {\r\n                          code\r\n                          name\r\n                          zones {\r\n                            name\r\n                            lat\r\n                            long\r\n                            countries {\r\n                              code\r\n                            }\r\n                          }\r\n                        }\r\n                      }\r\n                      canRead\r\n                      canEdit\r\n                    }\r\n                    bio {\r\n                      value\r\n                      canRead\r\n                      canEdit\r\n                    }\r\n                    status {\r\n                      value\r\n                      canRead\r\n                      canEdit\r\n                    }\r\n                    fullName\r\n                    firstName\r\n                    avatarLetters\r\n                    unavailabilities {\r\n                      canRead\r\n                      hasMore\r\n                      canCreate\r\n                      total\r\n                      items {\r\n                        id\r\n                        createdAt\r\n                        description {\r\n                          value\r\n                          canRead\r\n                          canEdit\r\n                        }\r\n                        start\r\n                        end\r\n                      }\r\n                    }\r\n                    organizations {\r\n                      canRead\r\n                      hasMore\r\n                      canCreate\r\n                      total\r\n                      items {\r\n                        id\r\n                        createdAt\r\n                        name {\r\n                          value\r\n                          canRead\r\n                          canEdit\r\n                        }\r\n                        avatarLetters\r\n                      }\r\n                    }\r\n                    education {\r\n                      canRead\r\n                      hasMore\r\n                      canCreate\r\n                      total\r\n                      items {\r\n                        id\r\n                        createdAt\r\n                        degree {\r\n                          value\r\n                          canRead\r\n                          canEdit\r\n                        }\r\n                        major {\r\n                          value\r\n                          canRead\r\n                          canEdit\r\n                        }\r\n                        institution {\r\n                          value\r\n                          canRead\r\n                          canEdit\r\n                        }\r\n                      }\r\n                    }\r\n                  }\r\n                  parents {\r\n                    id\r\n                    createdAt\r\n                    type\r\n                    category\r\n                    name\r\n                    parents {\r\n                      id\r\n                      type\r\n                    }\r\n                    createdBy {\r\n                      id\r\n                      createdAt\r\n                      email {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      realFirstName {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      realLastName {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      displayFirstName {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      displayLastName {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      phone {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      timezone {\r\n                        value {\r\n                          name\r\n                          lat\r\n                          long\r\n                          countries {\r\n                            code\r\n                            name\r\n                            zones {\r\n                              name\r\n                              lat\r\n                              long\r\n                              countries {\r\n                                code\r\n                              }\r\n                            }\r\n                          }\r\n                        }\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      bio {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      status {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      fullName\r\n                      firstName\r\n                      avatarLetters\r\n                      unavailabilities {\r\n                        canRead\r\n                        hasMore\r\n                        canCreate\r\n                        total\r\n                        items {\r\n                          id\r\n                          createdAt\r\n                          description {\r\n                            value\r\n                            canRead\r\n                            canEdit\r\n                          }\r\n                          start\r\n                          end\r\n                        }\r\n                      }\r\n                      organizations {\r\n                        canRead\r\n                        hasMore\r\n                        canCreate\r\n                        total\r\n                        items {\r\n                          id\r\n                          createdAt\r\n                          name {\r\n                            value\r\n                            canRead\r\n                            canEdit\r\n                          }\r\n                          avatarLetters\r\n                        }\r\n                      }\r\n                      education {\r\n                        canRead\r\n                        hasMore\r\n                        canCreate\r\n                        total\r\n                        items {\r\n                          id\r\n                          createdAt\r\n                          degree {\r\n                            value\r\n                            canRead\r\n                            canEdit\r\n                          }\r\n                          major {\r\n                            value\r\n                            canRead\r\n                            canEdit\r\n                          }\r\n                          institution {\r\n                            value\r\n                            canRead\r\n                            canEdit\r\n                          }\r\n                        }\r\n                      }\r\n                    }\r\n                  }\r\n                }\r\n                total\r\n                hasMore\r\n              }\r\n              parents {\r\n                id\r\n                createdAt\r\n                type\r\n                category\r\n                name\r\n                parents {\r\n                  id\r\n                  type\r\n                  # also contains other fields as parent 'Parents'\r\n                }\r\n                createdBy {\r\n                  id\r\n                  createdAt\r\n                  email {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  realFirstName {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  realLastName {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  displayFirstName {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  displayLastName {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  phone {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  timezone {\r\n                    value {\r\n                      name\r\n                      lat\r\n                      long\r\n                      countries {\r\n                        code\r\n                        name\r\n                        zones {\r\n                          name\r\n                          lat\r\n                          long\r\n                          countries {\r\n                            code\r\n                          }\r\n                        }\r\n                      }\r\n                    }\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  bio {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  status {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  fullName\r\n                  firstName\r\n                  avatarLetters\r\n                  unavailabilities {\r\n                    canRead\r\n                    hasMore\r\n                    canCreate\r\n                    total\r\n                    items {\r\n                      id\r\n                      createdAt\r\n                      description {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      start\r\n                      end\r\n                    }\r\n                  }\r\n                  organizations {\r\n                    canRead\r\n                    hasMore\r\n                    canCreate\r\n                    total\r\n                    items {\r\n                      id\r\n                      createdAt\r\n                      name {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      avatarLetters\r\n                    }\r\n                  }\r\n                  education {\r\n                    canRead\r\n                    hasMore\r\n                    canCreate\r\n                    total\r\n                    items {\r\n                      id\r\n                      createdAt\r\n                      degree {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      major {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      institution {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                    }\r\n                  }\r\n                }\r\n              }\r\n            }\r\n            canRead\r\n            canEdit\r\n          }\r\n          agreement {\r\n            value {\r\n              id\r\n              createdAt\r\n              type\r\n              category\r\n              name\r\n              parents {\r\n                id\r\n                createdAt\r\n                type\r\n                category\r\n                name\r\n                createdBy {\r\n                  id\r\n                  createdAt\r\n                  email {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  realFirstName {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  realLastName {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  displayFirstName {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  displayLastName {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  phone {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  timezone {\r\n                    value {\r\n                      name\r\n                      lat\r\n                      long\r\n                      countries {\r\n                        code\r\n                        name\r\n                        zones {\r\n                          name\r\n                          lat\r\n                          long\r\n                          countries {\r\n                            code\r\n                          }\r\n                        }\r\n                      }\r\n                    }\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  bio {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  status {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  fullName\r\n                  firstName\r\n                  avatarLetters\r\n                  unavailabilities {\r\n                    canRead\r\n                    hasMore\r\n                    canCreate\r\n                    total\r\n                    items {\r\n                      id\r\n                      createdAt\r\n                      description {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      start\r\n                      end\r\n                    }\r\n                  }\r\n                  organizations {\r\n                    canRead\r\n                    hasMore\r\n                    canCreate\r\n                    total\r\n                    items {\r\n                      id\r\n                      createdAt\r\n                      name {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      avatarLetters\r\n                    }\r\n                  }\r\n                  education {\r\n                    canRead\r\n                    hasMore\r\n                    canCreate\r\n                    total\r\n                    items {\r\n                      id\r\n                      createdAt\r\n                      degree {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      major {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      institution {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                    }\r\n                  }\r\n                }\r\n                parents {\r\n                  id\r\n                  type\r\n                  # also contains other fields as parent 'Parents'\r\n                }\r\n              }\r\n              createdBy {\r\n                id\r\n                createdAt\r\n                email {\r\n                  value\r\n                  canRead\r\n                  canEdit\r\n                }\r\n                realFirstName {\r\n                  value\r\n                  canRead\r\n                  canEdit\r\n                }\r\n                realLastName {\r\n                  value\r\n                  canRead\r\n                  canEdit\r\n                }\r\n                displayFirstName {\r\n                  value\r\n                  canRead\r\n                  canEdit\r\n                }\r\n                displayLastName {\r\n                  value\r\n                  canRead\r\n                  canEdit\r\n                }\r\n                phone {\r\n                  value\r\n                  canRead\r\n                  canEdit\r\n                }\r\n                timezone {\r\n                  value {\r\n                    name\r\n                    lat\r\n                    long\r\n                    countries {\r\n                      code\r\n                      name\r\n                      zones {\r\n                        name\r\n                        lat\r\n                        long\r\n                        countries {\r\n                          code\r\n                        }\r\n                      }\r\n                    }\r\n                  }\r\n                  canRead\r\n                  canEdit\r\n                }\r\n                bio {\r\n                  value\r\n                  canRead\r\n                  canEdit\r\n                }\r\n                status {\r\n                  value\r\n                  canRead\r\n                  canEdit\r\n                }\r\n                fullName\r\n                firstName\r\n                avatarLetters\r\n                unavailabilities {\r\n                  canRead\r\n                  hasMore\r\n                  canCreate\r\n                  total\r\n                  items {\r\n                    id\r\n                    createdAt\r\n                    description {\r\n                      value\r\n                      canRead\r\n                      canEdit\r\n                    }\r\n                    start\r\n                    end\r\n                  }\r\n                }\r\n                organizations {\r\n                  canRead\r\n                  hasMore\r\n                  canCreate\r\n                  total\r\n                  items {\r\n                    id\r\n                    createdAt\r\n                    name {\r\n                      value\r\n                      canRead\r\n                      canEdit\r\n                    }\r\n                    avatarLetters\r\n                  }\r\n                }\r\n                education {\r\n                  canRead\r\n                  hasMore\r\n                  canCreate\r\n                  total\r\n                  items {\r\n                    id\r\n                    createdAt\r\n                    degree {\r\n                      value\r\n                      canRead\r\n                      canEdit\r\n                    }\r\n                    major {\r\n                      value\r\n                      canRead\r\n                      canEdit\r\n                    }\r\n                    institution {\r\n                      value\r\n                      canRead\r\n                      canEdit\r\n                    }\r\n                  }\r\n                }\r\n              }\r\n              mimeType\r\n              size\r\n              modifiedAt\r\n              modifiedBy {\r\n                id\r\n                createdAt\r\n                email {\r\n                  value\r\n                  canRead\r\n                  canEdit\r\n                }\r\n                realFirstName {\r\n                  value\r\n                  canRead\r\n                  canEdit\r\n                }\r\n                realLastName {\r\n                  value\r\n                  canRead\r\n                  canEdit\r\n                }\r\n                displayFirstName {\r\n                  value\r\n                  canRead\r\n                  canEdit\r\n                }\r\n                displayLastName {\r\n                  value\r\n                  canRead\r\n                  canEdit\r\n                }\r\n                phone {\r\n                  value\r\n                  canRead\r\n                  canEdit\r\n                }\r\n                timezone {\r\n                  value {\r\n                    name\r\n                    lat\r\n                    long\r\n                    countries {\r\n                      code\r\n                      name\r\n                      zones {\r\n                        name\r\n                        lat\r\n                        long\r\n                        countries {\r\n                          code\r\n                        }\r\n                      }\r\n                    }\r\n                  }\r\n                  canRead\r\n                  canEdit\r\n                }\r\n                bio {\r\n                  value\r\n                  canRead\r\n                  canEdit\r\n                }\r\n                status {\r\n                  value\r\n                  canRead\r\n                  canEdit\r\n                }\r\n                fullName\r\n                firstName\r\n                avatarLetters\r\n                unavailabilities {\r\n                  canRead\r\n                  hasMore\r\n                  canCreate\r\n                  total\r\n                  items {\r\n                    id\r\n                    createdAt\r\n                    description {\r\n                      value\r\n                      canRead\r\n                      canEdit\r\n                    }\r\n                    start\r\n                    end\r\n                  }\r\n                }\r\n                organizations {\r\n                  canRead\r\n                  hasMore\r\n                  canCreate\r\n                  total\r\n                  items {\r\n                    id\r\n                    createdAt\r\n                    name {\r\n                      value\r\n                      canRead\r\n                      canEdit\r\n                    }\r\n                    avatarLetters\r\n                  }\r\n                }\r\n                education {\r\n                  canRead\r\n                  hasMore\r\n                  canCreate\r\n                  total\r\n                  items {\r\n                    id\r\n                    createdAt\r\n                    degree {\r\n                      value\r\n                      canRead\r\n                      canEdit\r\n                    }\r\n                    major {\r\n                      value\r\n                      canRead\r\n                      canEdit\r\n                    }\r\n                    institution {\r\n                      value\r\n                      canRead\r\n                      canEdit\r\n                    }\r\n                  }\r\n                }\r\n              }\r\n              children {\r\n                total\r\n                hasMore\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  type\r\n                  category\r\n                  name\r\n                  createdBy {\r\n                    id\r\n                    createdAt\r\n                    email {\r\n                      value\r\n                      canRead\r\n                      canEdit\r\n                    }\r\n                    realFirstName {\r\n                      value\r\n                      canRead\r\n                      canEdit\r\n                    }\r\n                    realLastName {\r\n                      value\r\n                      canRead\r\n                      canEdit\r\n                    }\r\n                    displayFirstName {\r\n                      value\r\n                      canRead\r\n                      canEdit\r\n                    }\r\n                    displayLastName {\r\n                      value\r\n                      canRead\r\n                      canEdit\r\n                    }\r\n                    phone {\r\n                      value\r\n                      canRead\r\n                      canEdit\r\n                    }\r\n                    timezone {\r\n                      value {\r\n                        name\r\n                        lat\r\n                        long\r\n                        countries {\r\n                          code\r\n                          name\r\n                          zones {\r\n                            name\r\n                            lat\r\n                            long\r\n                            countries {\r\n                              code\r\n                            }\r\n                          }\r\n                        }\r\n                      }\r\n                      canRead\r\n                      canEdit\r\n                    }\r\n                    bio {\r\n                      value\r\n                      canRead\r\n                      canEdit\r\n                    }\r\n                    status {\r\n                      value\r\n                      canRead\r\n                      canEdit\r\n                    }\r\n                    fullName\r\n                    firstName\r\n                    avatarLetters\r\n                    unavailabilities {\r\n                      canRead\r\n                      hasMore\r\n                      canCreate\r\n                      total\r\n                      items {\r\n                        id\r\n                        createdAt\r\n                        description {\r\n                          value\r\n                          canRead\r\n                          canEdit\r\n                        }\r\n                        start\r\n                        end\r\n                      }\r\n                    }\r\n                    organizations {\r\n                      canRead\r\n                      hasMore\r\n                      canCreate\r\n                      total\r\n                      items {\r\n                        id\r\n                        createdAt\r\n                        name {\r\n                          value\r\n                          canRead\r\n                          canEdit\r\n                        }\r\n                        avatarLetters\r\n                      }\r\n                    }\r\n                    education {\r\n                      canRead\r\n                      hasMore\r\n                      canCreate\r\n                      total\r\n                      items {\r\n                        id\r\n                        createdAt\r\n                        degree {\r\n                          value\r\n                          canRead\r\n                          canEdit\r\n                        }\r\n                        major {\r\n                          value\r\n                          canRead\r\n                          canEdit\r\n                        }\r\n                        institution {\r\n                          value\r\n                          canRead\r\n                          canEdit\r\n                        }\r\n                      }\r\n                    }\r\n                  }\r\n                  parents {\r\n                    id\r\n                    createdAt\r\n                    type\r\n                    category\r\n                    name\r\n                    createdBy {\r\n                      id\r\n                      createdAt\r\n                      email {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      realFirstName {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      realLastName {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      displayFirstName {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      displayLastName {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      phone {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      timezone {\r\n                        value {\r\n                          name\r\n                          lat\r\n                          long\r\n                          countries {\r\n                            code\r\n                            name\r\n                            zones {\r\n                              name\r\n                              lat\r\n                              long\r\n                              countries {\r\n                                code\r\n                              }\r\n                            }\r\n                          }\r\n                        }\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      bio {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      status {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      fullName\r\n                      firstName\r\n                      avatarLetters\r\n                      unavailabilities {\r\n                        canRead\r\n                        hasMore\r\n                        canCreate\r\n                        total\r\n                        items {\r\n                          id\r\n                          createdAt\r\n                          description {\r\n                            value\r\n                            canRead\r\n                            canEdit\r\n                          }\r\n                          start\r\n                          end\r\n                        }\r\n                      }\r\n                      organizations {\r\n                        canRead\r\n                        hasMore\r\n                        canCreate\r\n                        total\r\n                        items {\r\n                          id\r\n                          createdAt\r\n                          name {\r\n                            value\r\n                            canRead\r\n                            canEdit\r\n                          }\r\n                          avatarLetters\r\n                        }\r\n                      }\r\n                      education {\r\n                        canRead\r\n                        hasMore\r\n                        canCreate\r\n                        total\r\n                        items {\r\n                          id\r\n                          createdAt\r\n                          degree {\r\n                            value\r\n                            canRead\r\n                            canEdit\r\n                          }\r\n                          major {\r\n                            value\r\n                            canRead\r\n                            canEdit\r\n                          }\r\n                          institution {\r\n                            value\r\n                            canRead\r\n                            canEdit\r\n                          }\r\n                        }\r\n                      }\r\n                    }\r\n                    parents {\r\n                      id\r\n                      type\r\n                      # also contains other fields as parent 'Parents'\r\n                    }\r\n                  }\r\n                }\r\n              }\r\n\r\n              downloadUrl\r\n            }\r\n            canRead\r\n            canEdit\r\n          }\r\n        }\r\n      }\r\n      rootDirectory {\r\n        id\r\n        createdAt\r\n        type\r\n        category\r\n        name\r\n        parents {\r\n          id\r\n          createdAt\r\n          type\r\n          category\r\n          name\r\n          parents {\r\n            id\r\n            name\r\n            type\r\n            # also contains other fields as parent 'parents'\r\n          }\r\n          createdBy {\r\n            id\r\n            createdAt\r\n            email {\r\n              value\r\n              canRead\r\n              canEdit\r\n            }\r\n            realFirstName {\r\n              value\r\n              canRead\r\n              canEdit\r\n            }\r\n            realLastName {\r\n              value\r\n              canRead\r\n              canEdit\r\n            }\r\n            displayFirstName {\r\n              value\r\n              canRead\r\n              canEdit\r\n            }\r\n            displayLastName {\r\n              value\r\n              canRead\r\n              canEdit\r\n            }\r\n            phone {\r\n              value\r\n              canRead\r\n              canEdit\r\n            }\r\n            timezone {\r\n              value {\r\n                name\r\n                lat\r\n                long\r\n                countries {\r\n                  code\r\n                  name\r\n                  zones {\r\n                    name\r\n                    lat\r\n                    long\r\n                    countries {\r\n                      code\r\n                    }\r\n                  }\r\n                }\r\n              }\r\n              canRead\r\n              canEdit\r\n            }\r\n            bio {\r\n              value\r\n              canRead\r\n              canEdit\r\n            }\r\n            status {\r\n              value\r\n              canRead\r\n              canEdit\r\n            }\r\n            fullName\r\n            firstName\r\n            avatarLetters\r\n            unavailabilities {\r\n              canRead\r\n              hasMore\r\n              canCreate\r\n              total\r\n              items {\r\n                id\r\n                createdAt\r\n                description {\r\n                  value\r\n                  canRead\r\n                  canEdit\r\n                }\r\n                start\r\n                end\r\n              }\r\n            }\r\n            organizations {\r\n              canRead\r\n              hasMore\r\n              canCreate\r\n              total\r\n              items {\r\n                id\r\n                createdAt\r\n                name {\r\n                  value\r\n                  canRead\r\n                  canEdit\r\n                }\r\n                avatarLetters\r\n              }\r\n            }\r\n            education {\r\n              canRead\r\n              hasMore\r\n              canCreate\r\n              total\r\n              items {\r\n                id\r\n                createdAt\r\n                degree {\r\n                  value\r\n                  canRead\r\n                  canEdit\r\n                }\r\n                major {\r\n                  value\r\n                  canRead\r\n                  canEdit\r\n                }\r\n                institution {\r\n                  value\r\n                  canRead\r\n                  canEdit\r\n                }\r\n              }\r\n            }\r\n          }\r\n        }\r\n        createdBy {\r\n          id\r\n          createdAt\r\n          email {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          realFirstName {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          realLastName {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          displayFirstName {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          displayLastName {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          phone {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          timezone {\r\n            value {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n                name\r\n                zones {\r\n                  name\r\n                  lat\r\n                  long\r\n                  countries {\r\n                    code\r\n                  }\r\n                }\r\n              }\r\n            }\r\n            canRead\r\n            canEdit\r\n          }\r\n          bio {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          status {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          fullName\r\n          firstName\r\n          avatarLetters\r\n          unavailabilities {\r\n            canRead\r\n            hasMore\r\n            canCreate\r\n            total\r\n            items {\r\n              id\r\n              createdAt\r\n              description {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              start\r\n              end\r\n            }\r\n          }\r\n          organizations {\r\n            canRead\r\n            hasMore\r\n            canCreate\r\n            total\r\n            items {\r\n              id\r\n              createdAt\r\n              name {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              avatarLetters\r\n            }\r\n          }\r\n          education {\r\n            canRead\r\n            hasMore\r\n            canCreate\r\n            total\r\n            items {\r\n              id\r\n              createdAt\r\n              degree {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              major {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              institution {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n            }\r\n          }\r\n        }\r\n        children {\r\n          total\r\n          hasMore\r\n          items {\r\n            id\r\n            createdAt\r\n            type\r\n            category\r\n            name\r\n            createdBy {\r\n              id\r\n              createdAt\r\n              email {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              realFirstName {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              realLastName {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              displayFirstName {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              displayLastName {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              phone {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              timezone {\r\n                value {\r\n                  name\r\n                  lat\r\n                  long\r\n                  countries {\r\n                    code\r\n                    name\r\n                    zones {\r\n                      name\r\n                      lat\r\n                      long\r\n                      countries {\r\n                        code\r\n                      }\r\n                    }\r\n                  }\r\n                }\r\n                canRead\r\n                canEdit\r\n              }\r\n              bio {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              status {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              fullName\r\n              firstName\r\n              avatarLetters\r\n              unavailabilities {\r\n                canRead\r\n                hasMore\r\n                canCreate\r\n                total\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  description {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  start\r\n                  end\r\n                }\r\n              }\r\n              organizations {\r\n                canRead\r\n                hasMore\r\n                canCreate\r\n                total\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  name {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  avatarLetters\r\n                }\r\n              }\r\n              education {\r\n                canRead\r\n                hasMore\r\n                canCreate\r\n                total\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  degree {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  major {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  institution {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                }\r\n              }\r\n            }\r\n            parents {\r\n              id\r\n              type\r\n            }\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"project\": {\r\n      \"name\": \"{{projectName}}\",\r\n      \"type\": \"{{projectType}}\",\r\n      \"mouStart\": \"{{mouStart}}\",\r\n      \"mouEnd\": \"{{mouEnd}}\",\r\n      \"estimatedSubmission\": \"{{estimatedSubmission}}\"\r\n    }\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -865,7 +871,7 @@
 					"response": []
 				},
 				{
-					"name": "Get Budget by ID Mandatory Field Validation - id",
+					"name": "Get Budget by ID Mandatory Field Blank- id",
 					"event": [
 						{
 							"listen": "test",
@@ -2010,7 +2016,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query($input: BudgetListInput!) {\r\n  budgets(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      status\r\n      total\r\n      records {\r\n        id\r\n        createdAt\r\n        fiscalYear {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        amount {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        organization {\r\n          canRead\r\n          canEdit\r\n          value {\r\n            id\r\n            createdAt\r\n            name {\r\n              canRead\r\n              canEdit\r\n              value\r\n            }\r\n            avatarLetters\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"status\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"projectId\": \"{{projectid}}\"\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"status\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -2067,7 +2073,7 @@
 							"script": {
 								"id": "fd1461fb-9e04-49a3-b461-0ea18d107222",
 								"exec": [
-									"pm.globals.set(\"itemCount\",1);\r",
+									"pm.globals.set(\"itemCount\",2);\r",
 									"pm.globals.set(\"page\",1);\r",
 									"pm.globals.set('order', \"ASC\");\r",
 									""
@@ -2093,7 +2099,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query($input: BudgetListInput!) {\r\n  budgets(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      status\r\n      total\r\n      records {\r\n        id\r\n        createdAt\r\n        fiscalYear {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        amount {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        organization {\r\n          canRead\r\n          canEdit\r\n          value {\r\n            id\r\n            createdAt\r\n            name {\r\n              canRead\r\n              canEdit\r\n              value\r\n            }\r\n            avatarLetters\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"status\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"projectId\": \"{{projectid}}\"\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"status\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -2175,7 +2181,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query($input: BudgetListInput!) {\r\n  budgets(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      status\r\n      total\r\n      records {\r\n        id\r\n        createdAt\r\n        fiscalYear {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        amount {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        organization {\r\n          canRead\r\n          canEdit\r\n          value {\r\n            id\r\n            createdAt\r\n            name {\r\n              canRead\r\n              canEdit\r\n              value\r\n            }\r\n            avatarLetters\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"status\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"projectId\": \"{{projectid}}\"\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"status\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -2264,7 +2270,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query($input: BudgetListInput!) {\r\n  budgets(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      status\r\n      total\r\n      records {\r\n        id\r\n        createdAt\r\n        fiscalYear {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        amount {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        organization {\r\n          canRead\r\n          canEdit\r\n          value {\r\n            id\r\n            createdAt\r\n            name {\r\n              canRead\r\n              canEdit\r\n              value\r\n            }\r\n            avatarLetters\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"status\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"projectId\": \"{{projectid}}\"\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"status\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -2440,103 +2446,6 @@
 					"response": []
 				},
 				{
-					"name": "Get All Budgets Success - Filter by projectId",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"id": "d3849f5b-af44-4a32-90f6-c5f533b429f1",
-								"exec": [
-									"var jsonData = pm.response.json();",
-									"var lodash = require('lodash');",
-									"var budget_data = JSON.parse(pm.globals.get(\"budget_data\"));",
-									"",
-									"//Common Verification",
-									"pm.test(\"Status code is 200\", function () {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test(\"Response time is less than 1000ms\", function () {",
-									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
-									"});",
-									"",
-									"//Test Specific",
-									"// var myBudget = jsonData.data.budgets.items[0];",
-									"var myBudget = lodash.find(jsonData.data.budgets.items, ['id', budget_data.id]);;",
-									"",
-									"pm.test(\"Verifying budget ID\", function () {",
-									"    var id = myBudget.id;",
-									"    pm.expect(id).to.eql(budget_data.id);",
-									"});",
-									"",
-									"pm.test(\"Verifying createdAt\", function () {",
-									"    var createdAt = myBudget.createdAt;",
-									"    pm.expect(createdAt).to.eql(budget_data.createdAt);",
-									"});",
-									"",
-									"pm.test(\"Verifying status\", function () {",
-									"    var status = myBudget.status;",
-									"    pm.expect(status).to.eql(budget_data.status);",
-									"});",
-									"",
-									"pm.test(\"Verifying total\", function () {",
-									"    var total = myBudget.total;",
-									"    pm.expect(total).to.eql(budget_data.total);",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						},
-						{
-							"listen": "prerequest",
-							"script": {
-								"id": "f5d02a34-429f-4eb7-89da-5b1579449161",
-								"exec": [
-									"pm.globals.set(\"itemCount\",10);\r",
-									"pm.globals.set(\"page\",1);\r",
-									"pm.globals.set('order', \"DESC\");\r",
-									""
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "graphql",
-							"graphql": {
-								"query": "query($input: BudgetListInput!) {\r\n  budgets(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      status\r\n      total\r\n      records {\r\n        id\r\n        createdAt\r\n        fiscalYear {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        amount {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        organization {\r\n          canRead\r\n          canEdit\r\n          value {\r\n            id\r\n            createdAt\r\n            name {\r\n              canRead\r\n              canEdit\r\n              value\r\n            }\r\n            avatarLetters\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"status\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"projectId\": \"{{projectid}}\"\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
-							}
-						},
-						"url": {
-							"raw": "{{env}}/graphql",
-							"host": [
-								"{{env}}"
-							],
-							"path": [
-								"graphql"
-							]
-						}
-					},
-					"response": []
-				},
-				{
 					"name": "Get all Budgets Success - Only Required Inputs",
 					"event": [
 						{
@@ -2621,6 +2530,82 @@
 					"response": []
 				},
 				{
+					"name": "Get all Budgets Not Mandatory Field Removed - count",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "bdc9486e-0e44-4a04-8895-6aa1bef169ea",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that number of items returned is equal to total\", function () {",
+									"    var total = jsonData.data.budgets.total;",
+									"    var items = jsonData.data.budgets.items.length;",
+									"    if (total <= 25)    // 25 is maximum db items limit returned per page when count is not specified",
+									"        pm.expect(items).to.eql(total);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "ae113ce4-4fed-4b63-a0bc-058d80ca91b0",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query($input: BudgetListInput!) {\r\n  budgets(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      status\r\n      total\r\n      records {\r\n        id\r\n        createdAt\r\n        fiscalYear {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        amount {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        organization {\r\n          canRead\r\n          canEdit\r\n          value {\r\n            id\r\n            createdAt\r\n            name {\r\n              canRead\r\n              canEdit\r\n              value\r\n            }\r\n            avatarLetters\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n  \"input\": {\r\n    \"page\": {{page}},\r\n    \"sort\": \"status\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Get all Budgets Not Mandatory Field Blank - sort",
 					"event": [
 						{
@@ -2640,15 +2625,24 @@
 									"});",
 									"",
 									"//Test Specific",
-									"pm.test(\"Verify that error message is correct\", function () {",
-									"    var error_message = jsonData.errors[0].message;  ",
-									"    pm.expect(error_message).to.include(\"Invalid input\");",
+									"pm.test(\"PENDING >> Similar to BUG #776 for Users (Sort Field allows empty value/unusual characters)\", function () {",
+									"",
+									"    if (jsonData.data) {",
+									"        pm.expect(\"BACKEND\").to.eql(\"PENDING\"); // fail forcefully",
+									"    } else {",
+									"        pm.expect(\"WRITE TEST CASES\").to.eql(\"ERRORS >>> \" + jsonData.errors[0].message);",
+									"    }",
 									"});",
 									"",
-									"pm.test(\"Verify that error status is 500\", function () {",
-									"    var error_status = jsonData.errors[0].extensions.status;  ",
-									"    pm.expect(error_status).to.eql(500);",
-									"});",
+									"// pm.test(\"Verify that error message is correct\", function () {",
+									"//     var error_message = jsonData.errors[0].message;  ",
+									"//     pm.expect(error_message).to.include(\"Invalid input\");",
+									"// });",
+									"",
+									"// pm.test(\"Verify that error status is 500\", function () {",
+									"//     var error_status = jsonData.errors[0].extensions.status;  ",
+									"//     pm.expect(error_status).to.eql(500);",
+									"// });",
 									"",
 									""
 								],
@@ -2702,7 +2696,7 @@
 					"response": []
 				},
 				{
-					"name": "Get all Budgets Not Mandatory Field Validation - order",
+					"name": "Get all Budgets Not Mandatory Field Blank - order",
 					"event": [
 						{
 							"listen": "test",
@@ -2844,166 +2838,6 @@
 							"graphql": {
 								"query": "query($input: BudgetListInput!) {\r\n  budgets(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      status\r\n      total\r\n      records {\r\n        id\r\n        createdAt\r\n        fiscalYear {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        amount {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        organization {\r\n          canRead\r\n          canEdit\r\n          value {\r\n            id\r\n            createdAt\r\n            name {\r\n              canRead\r\n              canEdit\r\n              value\r\n            }\r\n            avatarLetters\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count1\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"status\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"projectId\": \"{{projectid}}\"\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
-							}
-						},
-						"url": {
-							"raw": "{{env}}/graphql",
-							"host": [
-								"{{env}}"
-							],
-							"path": [
-								"graphql"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get all Budgets Parameter Blank - count",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"id": "4d131822-4f50-4e63-950a-29f6b89bbf95",
-								"exec": [
-									"var jsonData = pm.response.json();",
-									"",
-									"//Common Verification",
-									"pm.test(\"Status code is 400 Bad Request\", function () {",
-									"    pm.response.to.have.status(400);",
-									"});",
-									"",
-									"pm.test(\"Response time is less than 1000ms\", function () {",
-									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
-									"});",
-									"",
-									"//Test Specific",
-									"pm.test(\"Verify that error message is correct\", function () {",
-									"    var error_message = jsonData.errors[0].message;  ",
-									"    pm.expect(error_message).to.include(\"Int cannot represent non-integer value\");",
-									"});",
-									"",
-									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {",
-									"    var error_code = jsonData.errors[0].extensions.code;  ",
-									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");",
-									"});",
-									""
-								],
-								"type": "text/javascript"
-							}
-						},
-						{
-							"listen": "prerequest",
-							"script": {
-								"id": "c61f1b6f-5159-49ef-ba6f-c9508c116a15",
-								"exec": [
-									""
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "graphql",
-							"graphql": {
-								"query": "query($input: BudgetListInput!) {\r\n  budgets(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      status\r\n      total\r\n      records {\r\n        id\r\n        createdAt\r\n        fiscalYear {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        amount {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        organization {\r\n          canRead\r\n          canEdit\r\n          value {\r\n            id\r\n            createdAt\r\n            name {\r\n              canRead\r\n              canEdit\r\n              value\r\n            }\r\n            avatarLetters\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": \"\",\r\n    \"page\": {{page}},\r\n    \"sort\": \"status\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"projectId\": \"{{projectid}}\"\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
-							}
-						},
-						"url": {
-							"raw": "{{env}}/graphql",
-							"host": [
-								"{{env}}"
-							],
-							"path": [
-								"graphql"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get all Budgets Parameter Blank - page",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"id": "b974d58f-83e0-473d-815c-fe923c624472",
-								"exec": [
-									"var jsonData = pm.response.json();",
-									"",
-									"//Common Verification",
-									"pm.test(\"Status code is 400 Bad Request\", function () {",
-									"    pm.response.to.have.status(400);",
-									"});",
-									"",
-									"pm.test(\"Response time is less than 1000ms\", function () {",
-									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
-									"});",
-									"",
-									"//Test Specific",
-									"pm.test(\"Verify that error message is correct\", function () {",
-									"    var error_message = jsonData.errors[0].message;  ",
-									"    pm.expect(error_message).to.include(\"Int cannot represent non-integer value\");",
-									"});",
-									"",
-									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {",
-									"    var error_code = jsonData.errors[0].extensions.code;  ",
-									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");",
-									"});",
-									""
-								],
-								"type": "text/javascript"
-							}
-						},
-						{
-							"listen": "prerequest",
-							"script": {
-								"id": "7aa0beb9-e44f-45a3-8351-09849ef20375",
-								"exec": [
-									""
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "graphql",
-							"graphql": {
-								"query": "query($input: BudgetListInput!) {\r\n  budgets(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      status\r\n      total\r\n      records {\r\n        id\r\n        createdAt\r\n        fiscalYear {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        amount {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        organization {\r\n          canRead\r\n          canEdit\r\n          value {\r\n            id\r\n            createdAt\r\n            name {\r\n              canRead\r\n              canEdit\r\n              value\r\n            }\r\n            avatarLetters\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": \"\",\r\n    \"sort\": \"status\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"projectId\": \"{{projectid}}\"\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -3182,86 +3016,6 @@
 					"response": []
 				},
 				{
-					"name": "Get all Budgets Parameter Blank - sort",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"id": "cf81a753-5636-4de6-9412-4a57ea211078",
-								"exec": [
-									"var jsonData = pm.response.json();",
-									"",
-									"//Common Verification",
-									"pm.test(\"Status code is 200\", function () {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test(\"Response time is less than 1000ms\", function () {",
-									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
-									"});",
-									"",
-									"//Test Specific",
-									"pm.test(\"Verify that error message is correct\", function () {",
-									"    var error_message = jsonData.errors[0].message;  ",
-									"    pm.expect(error_message).to.include(\"Invalid input\");",
-									"});",
-									"",
-									"pm.test(\"Verify that error code is InternalServerError\", function () {",
-									"    var error_code = jsonData.errors[0].extensions.code;  ",
-									"    pm.expect(error_code).to.eql(\"InternalServerError\");",
-									"});",
-									""
-								],
-								"type": "text/javascript"
-							}
-						},
-						{
-							"listen": "prerequest",
-							"script": {
-								"id": "6e644917-07fd-45ac-a0d3-bdbf70c7b1e1",
-								"exec": [
-									""
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "graphql",
-							"graphql": {
-								"query": "query($input: BudgetListInput!) {\r\n  budgets(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      status\r\n      total\r\n      records {\r\n        id\r\n        createdAt\r\n        fiscalYear {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        amount {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        organization {\r\n          canRead\r\n          canEdit\r\n          value {\r\n            id\r\n            createdAt\r\n            name {\r\n              canRead\r\n              canEdit\r\n              value\r\n            }\r\n            avatarLetters\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"projectId\": \"{{projectid}}\"\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
-							}
-						},
-						"url": {
-							"raw": "{{env}}/graphql",
-							"host": [
-								"{{env}}"
-							],
-							"path": [
-								"graphql"
-							]
-						}
-					},
-					"response": []
-				},
-				{
 					"name": "Get all Budgets Parameter Mismatch - order",
 					"event": [
 						{
@@ -3324,166 +3078,6 @@
 							"graphql": {
 								"query": "query($input: BudgetListInput!) {\r\n  budgets(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      status\r\n      total\r\n      records {\r\n        id\r\n        createdAt\r\n        fiscalYear {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        amount {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        organization {\r\n          canRead\r\n          canEdit\r\n          value {\r\n            id\r\n            createdAt\r\n            name {\r\n              canRead\r\n              canEdit\r\n              value\r\n            }\r\n            avatarLetters\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"status\",\r\n    \"order1\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"projectId\": \"{{projectid}}\"\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
-							}
-						},
-						"url": {
-							"raw": "{{env}}/graphql",
-							"host": [
-								"{{env}}"
-							],
-							"path": [
-								"graphql"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get all Budgets Parameter Mismatch - filter",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"id": "85a7348b-4814-4392-8db1-1b983f0bfe7f",
-								"exec": [
-									"var jsonData = pm.response.json();",
-									"",
-									"//Common Verification",
-									"pm.test(\"Status code is 400 Bad Request\", function () {",
-									"    pm.response.to.have.status(400);",
-									"});",
-									"",
-									"pm.test(\"Response time is less than 1000ms\", function () {",
-									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
-									"});",
-									"",
-									"//Test Specific",
-									"pm.test(\"Verify that error message is correct\", function () {",
-									"    var error_message = jsonData.errors[0].message;  ",
-									"    pm.expect(error_message).to.include(\"is not defined by type \\\"BudgetListInput\\\". Did you mean \\\"filter\\\"?\");",
-									"});",
-									"",
-									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {",
-									"    var error_code = jsonData.errors[0].extensions.code;  ",
-									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");",
-									"});",
-									""
-								],
-								"type": "text/javascript"
-							}
-						},
-						{
-							"listen": "prerequest",
-							"script": {
-								"id": "bc3f179e-e6f6-4ae6-8852-8ae48b3e94a7",
-								"exec": [
-									""
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "graphql",
-							"graphql": {
-								"query": "query($input: BudgetListInput!) {\r\n  budgets(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      status\r\n      total\r\n      records {\r\n        id\r\n        createdAt\r\n        fiscalYear {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        amount {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        organization {\r\n          canRead\r\n          canEdit\r\n          value {\r\n            id\r\n            createdAt\r\n            name {\r\n              canRead\r\n              canEdit\r\n              value\r\n            }\r\n            avatarLetters\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"status\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter1\": {\r\n      \"projectId\": \"{{projectid}}\"\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
-							}
-						},
-						"url": {
-							"raw": "{{env}}/graphql",
-							"host": [
-								"{{env}}"
-							],
-							"path": [
-								"graphql"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get all Budgets Parameter Blank- filter",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"id": "ad9d7921-6229-4948-9e50-fd224a4d605a",
-								"exec": [
-									"var jsonData = pm.response.json();",
-									"",
-									"//Common Verification",
-									"pm.test(\"Status code is 200\", function () {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test(\"Response time is less than 1000ms\", function () {",
-									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
-									"});",
-									"",
-									"//Test Specific",
-									"pm.test(\"Verify that error message is correct\", function () {",
-									"    var error_message = jsonData.errors[0].message;  ",
-									"    pm.expect(error_message).to.include(\"Input validation failed\");",
-									"});",
-									"",
-									"pm.test(\"Verify that errors message is correct\", function () {",
-									"    var errors_message = jsonData.errors[0].extensions.errors['filter.projectId'].IsShortId; ",
-									"     pm.expect(errors_message).to.eql(\"Invalid ID\");",
-									"     });",
-									""
-								],
-								"type": "text/javascript"
-							}
-						},
-						{
-							"listen": "prerequest",
-							"script": {
-								"id": "c7de90b0-4366-4633-a39a-e699e28cd08d",
-								"exec": [
-									""
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "graphql",
-							"graphql": {
-								"query": "query($input: BudgetListInput!) {\r\n  budgets(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      status\r\n      total\r\n      records {\r\n        id\r\n        createdAt\r\n        fiscalYear {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        amount {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        organization {\r\n          canRead\r\n          canEdit\r\n          value {\r\n            id\r\n            createdAt\r\n            name {\r\n              canRead\r\n              canEdit\r\n              value\r\n            }\r\n            avatarLetters\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"status\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"projectId\": \"\"\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -3567,7 +3161,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query($input: BudgetListInput!) {\r\n  budgets(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      status\r\n      total\r\n      records {\r\n        id\r\n        createdAt\r\n        fiscalYear {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        amount {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        organization {\r\n          canRead\r\n          canEdit\r\n          value {\r\n            id\r\n            createdAt\r\n            name {\r\n              canRead\r\n              canEdit\r\n              value\r\n            }\r\n            avatarLetters\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": 0,\r\n    \"page\": {{page}},\r\n    \"sort\": \"status\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"projectId\": \"{{projectid}}\"\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": 0,\r\n    \"page\": {{page}},\r\n    \"sort\": \"status\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -3652,7 +3246,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query($input: BudgetListInput!) {\r\n  budgets(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      status\r\n      total\r\n      records {\r\n        id\r\n        createdAt\r\n        fiscalYear {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        amount {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        organization {\r\n          canRead\r\n          canEdit\r\n          value {\r\n            id\r\n            createdAt\r\n            name {\r\n              canRead\r\n              canEdit\r\n              value\r\n            }\r\n            avatarLetters\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{count}},\r\n    \"page\": 0,\r\n    \"sort\": \"status\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"projectId\": \"{{projectid}}\"\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{count}},\r\n    \"page\": 0,\r\n    \"sort\": \"status\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -3690,9 +3284,13 @@
 									"});",
 									"",
 									"//Test Specific",
-									"pm.test(\"PENDING >> Sort Field should not accept any unusual / Special characters. Backend side Pending\", function () {",
-									"    if (jsonData.data)",
-									"        pm.expect(true).to.eql(false); // forcefully Fail test if results returned",
+									"pm.test(\"PENDING >> Similar to BUG #776 for Users (Sort Field allows empty value/unusual characters)\", function () {",
+									"",
+									"    if (jsonData.data) {",
+									"        pm.expect(\"BACKEND\").to.eql(\"PENDING\"); // fail forcefully",
+									"    } else {",
+									"        pm.expect(\"WRITE TEST CASES\").to.eql(\"ERRORS >>> \" + jsonData.errors[0].message);",
+									"    }",
 									"});",
 									"",
 									"// pm.test(\"Verify that error message is correct\", function () {",
@@ -3743,7 +3341,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query($input: BudgetListInput!) {\r\n  budgets(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      status\r\n      total\r\n      records {\r\n        id\r\n        createdAt\r\n        fiscalYear {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        amount {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        organization {\r\n          canRead\r\n          canEdit\r\n          value {\r\n            id\r\n            createdAt\r\n            name {\r\n              canRead\r\n              canEdit\r\n              value\r\n            }\r\n            avatarLetters\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{count}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"qqq\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"projectId\": \"{{projectid}}\"\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{count}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"qqq\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
