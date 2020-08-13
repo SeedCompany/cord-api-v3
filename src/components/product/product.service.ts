@@ -381,14 +381,13 @@ export class ProductService {
           createdAt: produces.p.properties.createdAt,
           __typename: (ProducibleType as any)[typeName],
           // scriptureReferencesOverride is not null or an empty array.
-          scriptureReferences:
-            scriptureReferencesOverride.length === 0
-              ? producible?.scriptureReferences
-              : {
-                  canRead: !!result.product.canScriptureReferencesOverrideRead,
-                  canEdit: !!result.product.canScriptureReferencesOverrideEdit,
-                  value: scriptureReferencesOverride,
-                },
+          scriptureReferences: !scriptureReferencesOverride
+            ? producible?.scriptureReferences
+            : {
+                canRead: !!result.product.canScriptureReferencesOverrideRead,
+                canEdit: !!result.product.canScriptureReferencesOverrideEdit,
+                value: scriptureReferencesOverride,
+              },
         },
         canRead: !!result.product.canProducesRead,
         canEdit: !!result.product.canProducesEdit,
@@ -401,7 +400,9 @@ export class ProductService {
       scriptureReferencesOverride: {
         canRead: !!result.product.canScriptureReferencesOverrideRead,
         canEdit: !!result.product.canScriptureReferencesOverrideEdit,
-        value: scriptureReferencesOverride,
+        value: !scriptureReferencesOverride.length
+          ? null
+          : scriptureReferencesOverride,
       },
     };
   }
