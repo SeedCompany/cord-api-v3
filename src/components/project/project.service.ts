@@ -512,7 +512,7 @@ export class ProjectService {
   async readOneSimple(id: string, session: ISession): Promise<Project> {
     this.logger.info('query readone project', { id, userId: session.userId });
     const label = 'Project';
-    const baseNodeMetaProps = ['id', 'createdAt', 'type'];
+    const baseNodeMetaProps = ['id', 'createdAt', 'type', 'InDevelopment', 'status', 'sensitivity'];
     const unsecureProps = ['status', 'sensitivity'];
     const secureProps = [
       'name',
@@ -544,48 +544,99 @@ export class ProjectService {
       ])
       .with('{value: props.value, property: type(r)} as prop, permList, node')
       .with('collect(prop) as propList, permList, node')
-      .return('propList, permList, node')
+      .optionalMatch([
+        node('canReadLocation', 'Permission', {
+          property: 'location',
+          read: true,
+          active: true,
+        }),
+        relation('out', '', 'baseNode'),
+        node('node'),
+        relation('out', '', 'location', { active: true }),
+        node('country', 'Country', { active: true }),
+      ])
+      .return('propList, permList, node, country, canReadLocation')
 
     const result = await query.first();
 
+    console.log('query', query.toString())
     console.log('result', result)
     const response: any = {
       createdAt: result?.node?.properties?.createdAt,
-      type: result?.node?.type,
-  };
+      type: result?.node?.properties?.type,
+      id: result?.node?.properties?.id,
+    };
 
     for (const record of result?.permList) {
-      if (!response[record.properties.property]) {
+      if (!response[record.properties.property] && baseNodeMetaProps.indexOf(record.properties.property) === -1) {
         response[record.properties.property] = {}
-      }
-      if (record?.properties && record?.properties?.read === true && response[record?.properties?.property]) {
-        response[record?.properties?.property].canRead = true
-      } else {
-        response[record?.properties?.property].canRead = false
+
+        if (record?.properties && record?.properties?.read === true && response[record?.properties?.property]) {
+          response[record?.properties?.property].canRead = true
+        } else {
+          response[record?.properties?.property].canRead = false
+        }
+
+        if (record?.properties && record?.properties?.edit === true && response[record.properties.property]) {
+          response[record.properties.property].canEdit = true
+        } else {
+          response[record.properties.property].canEdit = false
+        }
       }
 
-      if (record?.properties && record?.properties?.edit === true && response[record.properties.property]) {
-        response[record.properties.property].canEdit = true
-      } else {
-        response[record.properties.property].canEdit = false
-      }
     }
 
     for (const record of result?.propList) {
-      if (!response[record.property]) {
+      if (!response[record.property] && baseNodeMetaProps.indexOf(record.property) === -1) {
         response[record.property] = {}
-      }
-      if (record?.property === 'sensitivity') {
-        response[record.property] = record.value;
-      } else if (response[record?.property] && response[record?.property].canRead === true) {
-        response[record.property].value = record.value
-      } else {
-        response[record.property].value = false
+
+        if (record?.property === 'sensitivity') {
+          response[record.property] = record.value;
+        } else if (response[record?.property] && response[record?.property].canRead === true) {
+          response[record.property].value = record.value
+        } else {
+          response[record.property].value = false
+        }
+      } else if (!response[record.property]){
+        response[record.property] = record.value
       }
     }
 
+    let location
+
+    if (result?.country?.id) {
+      location = result.project.countryId
+        ? await this.locationService
+          .readOneCountry(result.project.countryId, session)
+          .then((country) => {
+            return {
+              value: {
+                id: country.id,
+                name: { ...country.name },
+                region: { ...country.region },
+                createdAt: country.createdAt,
+              },
+            };
+          })
+          .catch(() => {
+            return {
+              value: undefined,
+            };
+          })
+        : {
+          value: undefined,
+        };
+    }
+
+
+    console.log('response', response)
     return {
       ...response,
+      location: {
+        ...location,
+        canRead: !!result?.project?.canReadLocationRead,
+        canEdit: !!result?.project?.canReadLocationEdit,
+      },
       projectId: response?.id?.value
     };
 
