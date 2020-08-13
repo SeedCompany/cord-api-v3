@@ -381,7 +381,7 @@ export class ProductService {
           createdAt: produces.p.properties.createdAt,
           __typename: (ProducibleType as any)[typeName],
           // scriptureReferencesOverride is not null or an empty array.
-          scriptureReferences: !scriptureReferencesOverride
+          scriptureReferences: !scriptureReferencesOverride.length
             ? producible?.scriptureReferences
             : {
                 canRead: !!result.product.canScriptureReferencesOverrideRead,
