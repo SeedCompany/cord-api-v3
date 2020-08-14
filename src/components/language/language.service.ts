@@ -659,7 +659,7 @@ export class LanguageService {
     const items = await Promise.all(
       result.items.map(async (item) => {
         const language = await this.readOne((item as any).properties.id, session);
-        const { ethnologue } = await this.ethnologueLanguageService.readOneSimple(
+        const { ethnologue } = await this.ethnologueLanguageService.readOne(
           (language as any).ethnologueLanguageId,
           session
         );
@@ -793,7 +793,7 @@ export class LanguageService {
 
     result.items = await Promise.all(
       readProject.map(async (project) =>
-        this.projectService.readOneSimple(project.id, session)
+        this.projectService.readOne(project.id, session)
       )
     );
 

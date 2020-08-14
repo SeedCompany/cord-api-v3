@@ -417,104 +417,6 @@ export class ProjectService {
   async readOne(id: string, session: ISession): Promise<Project> {
     this.logger.info('query readone project', { id, userId: session.userId });
     const label = 'Project';
-    const baseNodeMetaProps = ['id', 'createdAt', 'type'];
-    const unsecureProps = ['status', 'sensitivity'];
-    const secureProps = [
-      'name',
-      'deptId',
-      'step',
-      'mouStart',
-      'mouEnd',
-      'estimatedSubmission',
-      'modifiedAt',
-    ];
-    const readProject = this.db
-      .query()
-      .call(matchRequestingUser, session)
-      .call(matchUserPermissions, label, id)
-      .call(addAllSecureProperties, ...secureProps, ...unsecureProps)
-      .optionalMatch([
-        node('canReadLocation', 'Permission', {
-          property: 'location',
-          read: true,
-          active: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('node'),
-        relation('out', '', 'location', { active: true }),
-        node('country', 'Country', { active: true }),
-      ])
-      .return(
-        `
-          {
-            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
-            ${listWithUnsecureObject(unsecureProps)},
-            ${listWithSecureObject(secureProps)},
-            countryId: country.id,
-            canReadLocationRead: canReadLocation.read,
-            canReadLocationEdit: canReadLocation.edit
-          } as project
-        `
-      );
-
-    let result;
-    try {
-      result = await readProject.first();
-    } catch (e) {
-      this.logger.error('e :>> ', e);
-      throw e;
-    }
-
-    if (!result) {
-      throw new NotFoundException(`Could not find project`);
-    }
-
-    const location = result.project.countryId
-      ? await this.locationService
-          .readOneCountry(result.project.countryId, session)
-          .then((country) => {
-            return {
-              value: {
-                id: country.id,
-                name: { ...country.name },
-                region: { ...country.region },
-                createdAt: country.createdAt,
-              },
-            };
-          })
-          .catch(() => {
-            return {
-              value: undefined,
-            };
-          })
-      : {
-          value: undefined,
-        };
-
-    return {
-      id,
-      createdAt: result.project.createdAt,
-      modifiedAt: result.project.modifiedAt.value,
-      type: result.project.type,
-      sensitivity: result.project.sensitivity,
-      name: result.project.name,
-      deptId: result.project.deptId,
-      step: result.project.step,
-      status: result.project.status,
-      location: {
-        ...location,
-        canRead: !!result.project.canReadLocationRead,
-        canEdit: !!result.project.canReadLocationEdit,
-      },
-      mouStart: result.project.mouStart,
-      mouEnd: result.project.mouEnd,
-      estimatedSubmission: result.project.estimatedSubmission,
-    };
-  }
-
-  async readOneSimple(id: string, session: ISession): Promise<Project> {
-    this.logger.info('query readone project', { id, userId: session.userId });
-    const label = 'Project';
     const baseNodeMetaProps = ['id', 'createdAt', 'type', 'InDevelopment', 'status', 'sensitivity', 'modifiedAt'];
     const unsecureProps = ['status', 'sensitivity'];
     const secureProps = [
@@ -561,8 +463,6 @@ export class ProjectService {
 
     const result = await query.first();
 
-    console.log('query', query.toString())
-    console.log('result', result)
     const response: any = {
       createdAt: result?.node?.properties?.createdAt,
       type: result?.node?.properties?.type,
@@ -630,8 +530,6 @@ export class ProjectService {
         };
     }
 
-
-    console.log('response', response)
     return {
       ...response,
       location: {
@@ -641,7 +539,6 @@ export class ProjectService {
       },
       projectId: response?.id?.value
     };
-
   }
 
   async update(input: UpdateProject, session: ISession): Promise<Project> {

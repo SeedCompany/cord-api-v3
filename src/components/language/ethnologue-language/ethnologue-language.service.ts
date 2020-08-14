@@ -243,51 +243,6 @@ export class EthnologueLanguageService {
       session.userId = this.config.anonUser.id;
     }
 
-    const props = ['id', 'code', 'provisionalCode', 'name', 'population'];
-
-    const baseNodeMetaProps = ['createdAt'];
-
-    const query = this.db
-      .query()
-      .call(matchRequestingUser, session)
-      .call(matchUserPermissions, 'EthnologueLanguage', id)
-      .call(addAllSecureProperties, ...props)
-      .with([
-        ...props.map(addPropertyCoalesceWithClause),
-        ...baseNodeMetaProps.map(addShapeForBaseNodeMetaProperty),
-        'node.id as ethnologueId',
-        'node',
-      ])
-      .returnDistinct([
-        ...props,
-        ...baseNodeMetaProps,
-        'ethnologueId',
-        'labels(node) as labels',
-      ]);
-
-    // console.log('readOne', query.toString())
-    const result = await query.first();
-
-    return {
-      ethnologue: result as EthnologueLanguage,
-      ethnologueId: result?.ethnologueId,
-    };
-  }
-
-  async readOneSimple(
-    id: string,
-    session: ISession
-  ): Promise<{ ethnologue: EthnologueLanguage; ethnologueId: string }> {
-    this.logger.info(`Read ethnologueLanguage`, {
-      id: id,
-      userId: session.userId,
-    });
-
-    if (!session.userId) {
-      this.logger.info('using anon user id');
-      session.userId = this.config.anonUser.id;
-    }
-
     // const props = ['id', 'code', 'provisionalCode', 'name', 'population'];
     // const baseNodeMetaProps = ['createdAt'];
 
