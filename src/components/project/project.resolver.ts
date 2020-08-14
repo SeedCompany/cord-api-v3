@@ -6,7 +6,13 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { firstLettersOfWords, IdArg, ISession, Session } from '../../common';
+import {
+  firstLettersOfWords,
+  IdArg,
+  ISession,
+  SecuredString,
+  Session,
+} from '../../common';
 import { SecuredBudget } from '../budget';
 import { EngagementListInput, SecuredEngagementList } from '../engagement';
 import { Directory } from '../file';
@@ -62,6 +68,13 @@ export class ProjectResolver {
     return project.name.canRead && project.name.value
       ? firstLettersOfWords(project.name.value)
       : undefined;
+  }
+
+  @ResolveField(() => SecuredString, {
+    description: 'The legacy department ID',
+  })
+  departmentId(@Parent() project: Project): SecuredString {
+    return project.deptId;
   }
 
   @ResolveField(() => SecuredBudget, {
