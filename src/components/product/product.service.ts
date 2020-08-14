@@ -415,8 +415,6 @@ export class ProductService {
       ...rest
     } = input;
 
-    const object = await this.readOne(input.id, session);
-
     if (produces) {
       const produce = await this.db
         .query()
@@ -433,7 +431,7 @@ export class ProductService {
       await this.db
         .query()
         .match([
-          node('product', 'Product', { id: object.id, active: true }),
+          node('product', 'Product', { id: input.id, active: true }),
           relation('out', 'rel', 'produces', { active: true }),
           node('p', 'Producible', { active: true }),
         ])
@@ -445,7 +443,7 @@ export class ProductService {
 
       await this.db
         .query()
-        .match([node('product', 'Product', { id: object.id, active: true })])
+        .match([node('product', 'Product', { id: input.id, active: true })])
         .match([node('pr', 'Producible', { id: produces, active: true })])
         .create([
           node('product'),
@@ -460,16 +458,18 @@ export class ProductService {
     }
 
     if (!produces && scriptureReferences) {
-      await this.updateScriptureReferences(object.id, scriptureReferences);
+      await this.updateScriptureReferences(input.id, scriptureReferences);
     }
 
     if (scriptureReferencesOverride) {
       await this.updateScriptureReferences(
-        object.id,
+        input.id,
         scriptureReferencesOverride,
         true
       );
     }
+
+    const object = await this.readOne(input.id, session);
 
     return this.db.updateProperties({
       session,
@@ -497,8 +497,9 @@ export class ProductService {
       ])
       .setValues({
         'rel.active': false,
+        'sr.active': false,
       })
-      .return('rel')
+      .return('sr')
       .first();
 
     for (const sr of scriptureReferences) {
@@ -614,7 +615,10 @@ export class ProductService {
           '',
           options.isOverride
             ? 'scriptureReferencesOverride'
-            : 'scriptureReferences'
+            : 'scriptureReferences',
+          {
+            active: true,
+          }
         ),
         node('scriptureRanges', 'ScriptureRange', { active: true }),
       ])
