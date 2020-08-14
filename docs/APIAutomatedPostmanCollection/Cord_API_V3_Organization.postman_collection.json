@@ -34,6 +34,9 @@
 							"graphql": {
 								"query": "# Write your query or mutation here\r\nquery {\r\n  session(browser: false) {\r\n    user {\r\n      id,\r\n      email\r\n      {\r\n        value\r\n      }\r\n      realFirstName\r\n      {\r\n        value\r\n      }\r\n      createdAt\r\n      displayLastName\r\n      {\r\n         value\r\n      }\r\n      \r\n      \r\n      \r\n    },\r\n    token\r\n  }\r\n}",
 								"variables": ""
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -281,6 +284,7 @@
 									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
 									"});",
 									"",
+									"",
 									"//Test Specific",
 									"pm.test(\"Verify that ID is not blank or null\", function () {",
 									"    var id = jsonData.data.createOrganization.organization.id;",
@@ -399,18 +403,18 @@
 									"",
 									"//Test Specific",
 									"pm.test(\"Verify that error message is correct\", function () {",
-									"    var error_message = jsonData.errors[0].message;  ",
+									"    var error_message = jsonData.errors[0].message;",
 									"    pm.expect(error_message).to.eql(\"Input validation failed\");",
 									"});",
 									"",
 									"pm.test(\"Verify that error status is 400\", function () {",
-									"    var error_status = jsonData.errors[0].extensions.status;  ",
+									"    var error_status = jsonData.errors[0].extensions.status;",
 									"    pm.expect(error_status).to.eql(400);",
 									"});",
 									"",
 									"pm.test(\"Verify that minLength message is correct\", function () {",
-									"    var minLength_message = jsonData.errors[0].extensions.errors['organization.name'].minLength;  ",
-									"    pm.expect(minLength_message).to.eql(\"name must be longer than or equal to 2 characters\");",
+									"    var minLength_message = jsonData.errors[0].extensions.errors['organization.name'].minLength;",
+									"    pm.expect(minLength_message).to.eql(\"name must be longer than or equal to 1 characters\");",
 									"});",
 									""
 								],
@@ -597,6 +601,9 @@
 							"graphql": {
 								"query": "mutation createOrganization($input: CreateOrganizationInput!) {\r\n  createOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\n  \"input\": \n  {\n    \"organization\" :\n    {\n      \"name1\":\"\" \n    } \n        \n\t  }\n  }\n\n\n\n"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -688,6 +695,9 @@
 							"graphql": {
 								"query": "query organization($id : ID!) {\r\n  organization(id: $id) {\r\n    id\r\n    name {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    avatarLetters\r\n    createdAt\r\n  }\r\n}\r\n    \r\n# {\r\n#   \"id\": \"lKEsNY9FS\"\r\n# }\r\n\r\n# {\r\n#   organization(id: \"{{organizationid}}\") {\r\n#     id\r\n#     name {\r\n#       value\r\n#       canRead\r\n#       canEdit\r\n#     }\r\n#     avatarLetters\r\n#     createdAt\r\n#   }\r\n# }\r\n",
 								"variables": " {\r\n   \"id\": \"{{organizationid}}\"\r\n }"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -703,7 +713,7 @@
 					"response": []
 				},
 				{
-					"name": "Get Org by Id  Mandatory Field Validation - Id",
+					"name": "Get Org by Id  Mandatory Field Blank - Id",
 					"event": [
 						{
 							"listen": "test",
@@ -754,6 +764,9 @@
 							"graphql": {
 								"query": "query organization($id : ID!) {\r\n  organization(id: $id) {\r\n    id\r\n    name {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    avatarLetters\r\n    createdAt\r\n  }\r\n}",
 								"variables": " {\r\n   \"id\": \"\"\r\n }"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -820,6 +833,9 @@
 							"graphql": {
 								"query": "query organization($id : ID!) {\r\n  organization(id: $id) {\r\n    id\r\n    name {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    avatarLetters\r\n    createdAt\r\n  }\r\n}\r\n    \r\n# {\r\n#   \"id\": \"lKEsNY9FS\"\r\n# }\r\n\r\n# {\r\n#   organization(id: \"{{organizationid}}\") {\r\n#     id\r\n#     name {\r\n#       value\r\n#       canRead\r\n#       canEdit\r\n#     }\r\n#     avatarLetters\r\n#     createdAt\r\n#   }\r\n# }\r\n",
 								"variables": " {\r\n   \"id2\": \"lKEsNY9FS\"\r\n }"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -886,6 +902,9 @@
 							"graphql": {
 								"query": "query organization($id : ID!) {\r\n  organization(id: $id) {\r\n    id\r\n    name {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    avatarLetters\r\n    createdAt\r\n  }\r\n}\r\n    \r\n# {\r\n#   \"id\": \"lKEsNY9FS\"\r\n# }\r\n\r\n# {\r\n#   organization(id: \"{{organizationid}}\") {\r\n#     id\r\n#     name {\r\n#       value\r\n#       canRead\r\n#       canEdit\r\n#     }\r\n#     avatarLetters\r\n#     createdAt\r\n#   }\r\n# }\r\n",
 								"variables": " {\r\n   \"id\": \"!@#$%^&*(\"\r\n }"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -966,9 +985,7 @@
 							"script": {
 								"id": "d8cc9e70-a120-4d74-afae-e8ec25ce7a8c",
 								"exec": [
-									"const moment = require('moment');\r",
-									"\r",
-									"pm.globals.set(\"orgName\", \"OrganizationName_\" + moment().format(\"DDMMYYYYhhmmss\"));"
+									""
 								],
 								"type": "text/javascript"
 							}
@@ -999,183 +1016,6 @@
 							"graphql": {
 								"query": "mutation updateOrganization($input: UpdateOrganizationInput!) {\r\n  updateOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"organization\": {\r\n      \"id\": \"{{organizationid}}\",\r\n      \"name\": \"{{orgName}}\"\r\n    }\r\n  }\r\n}"
-							}
-						},
-						"url": {
-							"raw": "{{env}}/graphql",
-							"host": [
-								"{{env}}"
-							],
-							"path": [
-								"graphql"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Update Org Mandatory Field Removed - Id",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"id": "8ba436cc-5248-4093-876a-3d2071fa60c7",
-								"exec": [
-									"var jsonData = pm.response.json();",
-									"",
-									"//Common Verification",
-									"pm.test(\"Status code is 400 Bad Request\", function () {",
-									"    pm.response.to.have.status(400);",
-									"});",
-									"",
-									"pm.test(\"Response time is less than 1000ms\", function () {",
-									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
-									"});",
-									"",
-									"//Test Specific",
-									"pm.test(\"Verify that error message is correct\", function () {",
-									"    var error_message = jsonData.errors[0].message;",
-									"    pm.expect(error_message).to.include(\"Field \\\"id\\\" of required type \\\"ID!\\\" was not provided.\");",
-									"});",
-									"",
-									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {",
-									"    var error_code = jsonData.errors[0].extensions.code;",
-									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");",
-									"});",
-									""
-								],
-								"type": "text/javascript"
-							}
-						},
-						{
-							"listen": "prerequest",
-							"script": {
-								"id": "c3ce3423-001c-4498-89f0-ad07106827c4",
-								"exec": [
-									"const moment = require('moment');\r",
-									"// pm.globals.set(\"timestamp\", moment().format(\"DDMYYYYhhmmss\"));\r",
-									"\r",
-									"pm.globals.set(\"orgName\", \"OrganizationName_\" + moment().format(\"DDMMYYYYhhmmss\"));"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "",
-								"type": "text",
-								"value": "",
-								"disabled": true
-							}
-						],
-						"body": {
-							"mode": "graphql",
-							"graphql": {
-								"query": "mutation updateOrganization($input: UpdateOrganizationInput!) {\r\n  updateOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"organization\": {\r\n      \"name\": \"{{orgName}}\"\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
-							}
-						},
-						"url": {
-							"raw": "{{env}}/graphql",
-							"host": [
-								"{{env}}"
-							],
-							"path": [
-								"graphql"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Update Org Mandatory Field Blank - Id",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"id": "9b3576ca-abb8-4a87-885c-4053d8b442ef",
-								"exec": [
-									"var jsonData = pm.response.json();",
-									"",
-									"//Common Verification",
-									"pm.test(\"Status code is 200\", function () {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test(\"Response time is less than 1000ms\", function () {",
-									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
-									"});",
-									"",
-									"//Test Specific",
-									"pm.test(\"Verify that  organization id error message is correct\", function () {",
-									"    var error_message = jsonData.errors[0].extensions.errors['organization.id'].IsShortId;  ",
-									"    pm.expect(error_message).to.eql(\"Invalid ID\");",
-									"});",
-									"",
-									"pm.test(\"Verify that error status is 400\", function () {",
-									"    var error_status = jsonData.errors[0].extensions.status;  ",
-									"    pm.expect(error_status).to.eql(400);",
-									"});",
-									""
-								],
-								"type": "text/javascript"
-							}
-						},
-						{
-							"listen": "prerequest",
-							"script": {
-								"id": "4de8bbe2-f582-41c0-9e52-0543becc32cd",
-								"exec": [
-									"const moment = require('moment');\r",
-									"// pm.globals.set(\"timestamp\", moment().format(\"DDMYYYYhhmmss\"));\r",
-									"\r",
-									"pm.globals.set(\"orgName\", \"OrganizationName_\" + moment().format(\"DDMMYYYYhhmmss\"));"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "",
-								"type": "text",
-								"value": "",
-								"disabled": true
-							}
-						],
-						"body": {
-							"mode": "graphql",
-							"graphql": {
-								"query": "mutation updateOrganization($input: UpdateOrganizationInput!) {\r\n  updateOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"organization\" :\r\n    {\r\n\t\t  \"id\":\"\",\r\n      \"name\": \"{{orgName}}\"\r\n    } \r\n        \r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -1264,7 +1104,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation updateOrganization($input: UpdateOrganizationInput!) {\r\n  updateOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"organization\" :\r\n    {\r\n\t\t  \"id\":\"{{organizationid}}\"\r\n    } \r\n        \r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"organization\": {\r\n      \"id\": \"{{organizationid}}\"\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -1303,18 +1143,18 @@
 									"",
 									"//Test Specific",
 									"pm.test(\"Verify that error message is correct\", function () {",
-									"    var error_message = jsonData.errors[0].message;  ",
+									"    var error_message = jsonData.errors[0].message;",
 									"    pm.expect(error_message).to.eql(\"Input validation failed\");",
 									"});",
 									"",
 									"pm.test(\"Verify that error status is 400\", function () {",
-									"    var error_status = jsonData.errors[0].extensions.status;  ",
+									"    var error_status = jsonData.errors[0].extensions.status;",
 									"    pm.expect(error_status).to.eql(400);",
 									"});",
 									"",
 									"pm.test(\"Verify that minLength message is correct\", function () {",
-									"    var minLength_message = jsonData.errors[0].extensions.errors['organization.name'].minLength;  ",
-									"    pm.expect(minLength_message).to.eql(\"name must be longer than or equal to 2 characters\");",
+									"    var minLength_message = jsonData.errors[0].extensions.errors['organization.name'].minLength;",
+									"    pm.expect(minLength_message).to.eql(\"name must be longer than or equal to 1 characters\");",
 									"});",
 									""
 								],
@@ -1357,6 +1197,180 @@
 							"graphql": {
 								"query": "mutation updateOrganization($input: UpdateOrganizationInput!) {\r\n  updateOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"organization\" :\r\n    {\r\n\t\t  \"id\":\"{{organizationid}}\",\r\n      \"name\": \"\"\r\n    } \r\n        \r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Org Mandatory Field Removed - Id",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "8ba436cc-5248-4093-876a-3d2071fa60c7",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 400 Bad Request\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].message;",
+									"    pm.expect(error_message).to.include(\"Field \\\"id\\\" of required type \\\"ID!\\\" was not provided.\");",
+									"});",
+									"",
+									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {",
+									"    var error_code = jsonData.errors[0].extensions.code;",
+									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "c3ce3423-001c-4498-89f0-ad07106827c4",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "",
+								"type": "text",
+								"value": "",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation updateOrganization($input: UpdateOrganizationInput!) {\r\n  updateOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n  \"input\": {\r\n    \"organization\": {\r\n      \"name\": \"{{orgName}}\"\r\n    }\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Org Mandatory Field Blank - Id",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "9b3576ca-abb8-4a87-885c-4053d8b442ef",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that  organization id error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].extensions.errors['organization.id'].IsShortId;  ",
+									"    pm.expect(error_message).to.eql(\"Invalid ID\");",
+									"});",
+									"",
+									"pm.test(\"Verify that error status is 400\", function () {",
+									"    var error_status = jsonData.errors[0].extensions.status;  ",
+									"    pm.expect(error_status).to.eql(400);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "4de8bbe2-f582-41c0-9e52-0543becc32cd",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "",
+								"type": "text",
+								"value": "",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation updateOrganization($input: UpdateOrganizationInput!) {\r\n  updateOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"organization\" :\r\n    {\r\n\t\t  \"id\":\"\",\r\n      \"name\": \"{{orgName}}\"\r\n    } \r\n        \r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -1433,6 +1447,9 @@
 							"graphql": {
 								"query": "mutation updateOrganization($input: UpdateOrganizationInput!) {\r\n  updateOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"organization\" :\r\n    {\r\n\t\t  \"id5\":\"{{organizationid}}\",\r\n      \"name\": \"{{orgName}}\"\r\n    } \r\n        \r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -1507,6 +1524,9 @@
 							"graphql": {
 								"query": "mutation updateOrganization($input: UpdateOrganizationInput!) {\r\n  updateOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"organization\" :\r\n    {\r\n\t\t  \"id\":\"{{organizationid}}\",\r\n      \"name11\": \"{{orgName}}\"\r\n    } \r\n        \r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -1581,6 +1601,9 @@
 							"graphql": {
 								"query": "mutation updateOrganization($input: UpdateOrganizationInput!) {\r\n  updateOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"organization\" :\r\n    {\r\n\t\t  \"id\":\"!@#$%^\",\r\n      \"name\": \"{{orgName}}\"\r\n    } \r\n        \r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -1713,6 +1736,9 @@
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}} ,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -1794,6 +1820,9 @@
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}} ,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -1880,6 +1909,9 @@
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}} ,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -1965,6 +1997,9 @@
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}} ,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -2049,6 +2084,9 @@
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}} ,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -2132,7 +2170,7 @@
 					"response": []
 				},
 				{
-					"name": "Pre-req for FilterSort Orgs by name & userid ( Create Org )",
+					"name": "Pre-req for FilterSort Orgs by name ( Create Org 2 )",
 					"event": [
 						{
 							"listen": "test",
@@ -2200,7 +2238,7 @@
 					"response": []
 				},
 				{
-					"name": "Pre-req for sort Orgs by name ( Create Org 2 )",
+					"name": "Pre-req for sort Orgs by name ( Create Org 3 )",
 					"event": [
 						{
 							"listen": "test",
@@ -2336,6 +2374,9 @@
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}} ,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -2419,6 +2460,9 @@
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}} ,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -2434,7 +2478,7 @@
 					"response": []
 				},
 				{
-					"name": "Get All Organizations Success - filter by name ( filter MAY removed )",
+					"name": "Get All Organizations Success - filter by name",
 					"event": [
 						{
 							"listen": "test",
@@ -2503,6 +2547,9 @@
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}} ,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"FilterSortOrgName\"\r\n    }\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -2518,16 +2565,14 @@
 					"response": []
 				},
 				{
-					"name": "Get All Organizations Success - filter by userId ( filter MAY removed )",
+					"name": "Get all Organizations Not Mandatory Field Removed - count",
 					"event": [
 						{
 							"listen": "test",
 							"script": {
-								"id": "a3077b7a-5de0-4e24-9b47-7251b6404aae",
+								"id": "cffed86e-5eb4-46ca-b8da-6c18b64e92e7",
 								"exec": [
 									"var jsonData = pm.response.json();",
-									"var lodash = require('lodash');",
-									"var organization_data = JSON.parse(pm.globals.get(\"organization_data\"));",
 									"",
 									"//Common Verification",
 									"pm.test(\"Status code is 200\", function () {",
@@ -2538,33 +2583,13 @@
 									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
 									"});",
 									"",
-									"//Test Specific - Filter by userId",
-									"",
-									"// var myOrganization = jsonData.data.organizations.items[0];",
-									"var myOrganization = lodash.find(jsonData.data.organizations.items, ['id', organization_data.id]);;",
-									"",
-									"pm.test(\"Verifying organization ID\", function () {",
-									"    var id = myOrganization.id;",
-									"    pm.expect(id).to.eql(organization_data.id);",
-									"});",
-									"",
-									"pm.test(\"Verifying organization name\", function () {",
-									"    var name = myOrganization.name.value;",
-									"    pm.expect(name).to.eql(organization_data.name.value);",
-									"});",
-									"",
-									"pm.test(\"Verifying organization avatarLetters\", function () {",
-									"    var avatarLetters = myOrganization.avatarLetters;",
-									"    pm.expect(avatarLetters).to.eql(organization_data.avatarLetters);",
-									"});",
-									"",
-									"pm.test(\"Verifying organization's createdAt\", function () {",
-									"    var createdAt = myOrganization.createdAt;",
-									"    pm.expect(createdAt).to.eql(organization_data.createdAt);",
-									"});",
-									"",
-									"",
-									""
+									"//Test Specific",
+									"pm.test(\"Verify that number of items returned is equal to total\", function () {",
+									"    var total = jsonData.data.organizations.total;",
+									"    var items = jsonData.data.organizations.items.length;",
+									"    if (total <= 25)    // 25 is maximum db items limit returned per page when count is not specified",
+									"        pm.expect(items).to.eql(total);",
+									"});"
 								],
 								"type": "text/javascript"
 							}
@@ -2572,11 +2597,9 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "4e2c3d10-7f42-4f8f-8f48-b0b56fc6305f",
+								"id": "5dd07290-218c-46d6-8a86-befb0f08a4c2",
 								"exec": [
-									"pm.globals.set(\"itemCount\",100);\r",
-									"pm.globals.set(\"page\",1);\r",
-									"pm.globals.set('order', \"DESC\");"
+									""
 								],
 								"type": "text/javascript"
 							}
@@ -2606,7 +2629,10 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}} ,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"userId\": \"{{userid}}\"\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -2641,9 +2667,13 @@
 									"});",
 									"",
 									"//Test Specific",
-									"pm.test(\"PENDING >> Sort Field should not accept any unusual characters. Backend side Pending\", function () {",
-									"    if (jsonData.data)",
-									"        pm.expect(true).to.eql(false); // forcefully Fail test if results returned",
+									"pm.test(\"PENDING >> Similar to BUG #776 for Users (Sort Field allows empty value/unusual characters)\", function () {",
+									"",
+									"    if (jsonData.data) {",
+									"        pm.expect(\"BACKEND\").to.eql(\"PENDING\"); // fail forcefully",
+									"    } else {",
+									"        pm.expect(\"WRITE TEST CASES\").to.eql(\"ERRORS >>> \" + jsonData.errors[0].message);",
+									"    }",
 									"});",
 									"",
 									"// pm.test(\"Verify that error message is correct\", function () {",
@@ -2714,98 +2744,7 @@
 					"response": []
 				},
 				{
-					"name": "Get All Organizations Not Mandatory Field Removed - sort",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"id": "88742235-c127-48d2-8db7-b24f8fbd603b",
-								"exec": [
-									"var jsonData = pm.response.json();",
-									"",
-									"//Common Verification",
-									"pm.test(\"Status code is 200\", function () {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test(\"Response time is less than 1000ms\", function () {",
-									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
-									"});",
-									"",
-									"//Test Specific",
-									"",
-									"pm.test(\"Verify that organization ID is not blank or null\", function () {",
-									"    var id = jsonData.data.organizations.items[0].id.value;;",
-									"    pm.expect(id).to.not.eql(null);",
-									"    pm.expect(id).to.not.eql(\"\");",
-									"});",
-									"",
-									"pm.test(\"Verify that organizations name is equal to previous value\", function () {",
-									"    var organizationName = jsonData.data.organizations.items[0].name.value;",
-									"    pm.expect(organizationName).to.eql(pm.globals.get('orgName'));",
-									"});",
-									"",
-									"",
-									""
-								],
-								"type": "text/javascript"
-							}
-						},
-						{
-							"listen": "prerequest",
-							"script": {
-								"id": "dee8fb61-7cf1-42c5-bf2d-7ea1f456ba71",
-								"exec": [
-									""
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "",
-								"type": "text",
-								"value": "",
-								"disabled": true
-							}
-						],
-						"body": {
-							"mode": "graphql",
-							"graphql": {
-								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}} ,\r\n    \"page\": {{page}},\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
-							}
-						},
-						"url": {
-							"raw": "{{env}}/graphql",
-							"host": [
-								"{{env}}"
-							],
-							"path": [
-								"graphql"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get All Organizations Not Mandatory Field Validation - order",
+					"name": "Get All Organizations Not Mandatory Field Blank - order",
 					"event": [
 						{
 							"listen": "test",
@@ -2874,6 +2813,9 @@
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}} ,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"\"\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -2957,7 +2899,10 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count1\": {{itemCount}} ,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"\",\r\n      \"userId\" : \"\"\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"count1\": {{itemCount}} ,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"\"\r\n    }\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -3041,7 +2986,10 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}} ,\r\n    \"page1\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"\",\r\n      \"userId\" : \"\"\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page1\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"\"\r\n    }\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -3125,7 +3073,10 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}} ,\r\n    \"page\": {{page}},\r\n    \"sort1\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"\",\r\n      \"userId\" : \"\"\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort1\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"\"\r\n    }\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -3209,7 +3160,10 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}} ,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order1\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"\",\r\n      \"userId\" : \"\"\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order1\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"\"\r\n    }\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -3293,7 +3247,10 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}} ,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter1\": {\r\n      \"name\": \"\",\r\n      \"userId\" : \"\"\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}} ,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter1\": {\r\n      \"name\": \"\"\r\n    }\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -3309,7 +3266,94 @@
 					"response": []
 				},
 				{
-					"name": "Get All Organizations Parameter Invalid - count",
+					"name": "Get All Organizations Parameter Mismatch - filter name",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "95219d4d-3e05-4593-acb7-7b2402500c4b",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 400 Bad Request\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].message;",
+									"    pm.expect(error_message).to.include(\"is not defined by type \\\"OrganizationFilters\\\". Did you mean \\\"name\\\"?\");",
+									"});",
+									"",
+									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {",
+									"    var error_code = jsonData.errors[0].extensions.code;",
+									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "b28fd268-c0c3-445f-8739-d60a60b2c5a5",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "",
+								"type": "text",
+								"value": "",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}} ,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name1\": \"\"\r\n    }\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Organizations Parameter Invalid - count min",
 					"event": [
 						{
 							"listen": "test",
@@ -3329,20 +3373,19 @@
 									"",
 									"//Test Specific",
 									"pm.test(\"Verify that error message is correct\", function () {",
-									"    var error_message = jsonData.errors[0].message;  ",
+									"    var error_message = jsonData.errors[0].message;",
 									"    pm.expect(error_message).to.eql(\"Input validation failed\");",
 									"});",
 									"",
 									"pm.test(\"Verify that error status is 400\", function () {",
-									"    var error_status = jsonData.errors[0].extensions.status;  ",
+									"    var error_status = jsonData.errors[0].extensions.status;",
 									"    pm.expect(error_status).to.eql(400);",
 									"});",
 									"",
 									"pm.test(\"Verify that count error message is correct\", function () {",
-									"    var error_message = jsonData.errors[0].extensions.errors.count.min;  ",
+									"    var error_message = jsonData.errors[0].extensions.errors.count.min;",
 									"    pm.expect(error_message).to.eql(\"count must not be less than 1\");",
-									"});",
-									""
+									"});"
 								],
 								"type": "text/javascript"
 							}
@@ -3382,7 +3425,101 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": 0 ,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"\",\r\n      \"userId\" : \"\"\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": 0,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"\"\r\n    }\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Organizations Parameter Invalid - count max",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "2ed6513b-e75e-463a-a437-6134fe566e56",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].message;",
+									"    pm.expect(error_message).to.eql(\"Input validation failed\");",
+									"});",
+									"",
+									"pm.test(\"Verify that error status is 400\", function () {",
+									"    var error_status = jsonData.errors[0].extensions.status;",
+									"    pm.expect(error_status).to.eql(400);",
+									"});",
+									"",
+									"pm.test(\"Verify that count error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].extensions.errors.count.max;",
+									"    pm.expect(error_message).to.eql(\"count must not be greater than 100\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "5db7a9c1-3085-49e1-bc8f-33a9d7f8ea90",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "",
+								"type": "text",
+								"value": "",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": 580,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"\"\r\n    }\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -3471,7 +3608,10 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{count}} ,\r\n    \"page\": 0,\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"\",\r\n      \"userId\" : \"\"\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{count}},\r\n    \"page\": 0,\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"\"\r\n    }\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -3506,9 +3646,13 @@
 									"});",
 									"",
 									"//Test Specific",
-									"pm.test(\"PENDING >> Sort Field should not accept any unusual characters. Backend side Pending\", function () {",
-									"    if (jsonData.data)",
-									"        pm.expect(true).to.eql(false); // forcefully Fail test if results returned",
+									"pm.test(\"PENDING >> Similar to BUG #776 for Users (Sort Field allows empty value/unusual characters)\", function () {",
+									"",
+									"    if (jsonData.data) {",
+									"        pm.expect(\"BACKEND\").to.eql(\"PENDING\"); // fail forcefully",
+									"    } else {",
+									"        pm.expect(\"WRITE TEST CASES\").to.eql(\"ERRORS >>> \" + jsonData.errors[0].message);",
+									"    }",
 									"});",
 									"",
 									"// pm.test(\"Verify that error message is correct\", function () {",
@@ -3565,6 +3709,9 @@
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{count}} ,\r\n    \"page\": {{page}},\r\n    \"sort\": \"abcd\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -3649,6 +3796,9 @@
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{count}} ,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"ASCENDING\",\r\n    \"filter\": {\r\n      \"name\": \"\",\r\n      \"userId\" : \"\"\r\n    }\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -3718,8 +3868,11 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation ($id: ID!) {\n  deleteOrganization(id:$id)\n}",
+								"query": "mutation deleteOrganization($id: ID!) {\n  deleteOrganization(id:$id)\n}",
 								"variables": "{\r\n  \"id\": \"{{organizationid}}\"\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -3950,6 +4103,9 @@
 							"graphql": {
 								"query": "mutation ($id: ID!) {\n  deleteOrganization(id:$id)\n}",
 								"variables": "{\r\n  \"id5\": \"{{organizationid}}\"\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -4028,6 +4184,9 @@
 							"graphql": {
 								"query": "mutation ($id: ID!) {\n  deleteOrganization(id:$id)\n}",
 								"variables": "{\r\n  \"id\":\"!@#$%\"\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -4067,9 +4226,9 @@
 									"    pm.expect(error_message).to.eql(\"Could not find org\");",
 									"});",
 									"",
-									"pm.test(\"Verify that error status is 404\", function () {",
+									"pm.test(\"Verify that error status is 400\", function () {",
 									"    var error_status = jsonData.errors[0].extensions.status;  ",
-									"    pm.expect(error_status).to.eql(404);",
+									"    pm.expect(error_status).to.eql(400);",
 									"});"
 								],
 								"type": "text/javascript"
@@ -4101,6 +4260,9 @@
 							"graphql": {
 								"query": "mutation ($id: ID!) {\n  deleteOrganization(id:$id)\n}",
 								"variables": "{\r\n  \"id\":\"{{organizationid}}\"\r\n}"
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {

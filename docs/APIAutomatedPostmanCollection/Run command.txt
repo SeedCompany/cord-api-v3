@@ -22,3 +22,13 @@ newman run Cord_API_V3_Language.postman_collection.json -e local.postman_environ
 >> Education
 newman run Cord_API_V3_Education.postman_collection.json -e local.postman_environment.json -g MyWorkspace.postman_globals.json -r htmlextra --delay-request 1000
 
+>> Product
+newman run Cord_API_V3_Product.postman_collection.json -e local.postman_environment.json -g MyWorkspace.postman_globals.json -r htmlextra --delay-request 1000
+
+>> LiteracyMaterial
+newman run Cord_API_V3_LiteracyMaterial.postman_collection.json -e local.postman_environment.json -g MyWorkspace.postman_globals.json -r htmlextra --delay-request 1000
+
+>> Film
+newman run Cord_API_V3_Film.postman_collection.json -e local.postman_environment.json -g MyWorkspace.postman_globals.json -r htmlextra --delay-request 1000
+
+
