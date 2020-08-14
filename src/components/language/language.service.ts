@@ -412,57 +412,6 @@ export class LanguageService {
     const response: any = {
       id: result.node.properties.id,
       createdAt: result.node.properties.createdAt,
-      // name: {
-      //   value: null,
-      //   canRead: false,
-      //   canEdit: false,
-      // },
-      // displayName: {
-      //   value: null,
-      //   canRead: false,
-      //   canEdit: false,
-      // },
-      // isDialect: {
-      //   value: null,
-      //   canRead: false,
-      //   canEdit: false,
-      // },
-      // populationOverride: {
-      //   value: null,
-      //   canRead: false,
-      //   canEdit: false,
-      // },
-      // registryOfDialectsCode: {
-      //   value: null,
-      //   canRead: false,
-      //   canEdit: false,
-      // },
-      // leastOfThese: {
-      //   value: null,
-      //   canRead: false,
-      //   canEdit: false,
-      // },
-      // leastOfTheseReason: {
-      //   value: null,
-      //   canRead: false,
-      //   canEdit: false,
-      // },
-      // displayNamePronunciation: {
-      //   value: null,
-      //   canRead: false,
-      //   canEdit: false,
-      // },
-      // sensitivity: '',
-      // sponsorDate: {
-      //   value: null,
-      //   canRead: false,
-      //   canEdit: false,
-      // },
-      // ethnologue: {
-      //   value: null,
-      //   canRead: false,
-      //   canEdit: false,
-      // },
     };
 
     // console.log('propList', result.propList)
@@ -500,82 +449,7 @@ export class LanguageService {
       response.ethnologueLanguageId = result.ethnologueLanguageId;
     }
 
-    // console.log('response', response);
-    // console.log(JSON.stringify(response));
-
-    // for (const record of result.permList) {
-    //   if (record.properties.read === true) {
-    //     response[record.properties.property].read = true;
-    //   }
-    //   if (record.properties.edit === true) {
-    //     response[record.properties.property].edit = true;
-    //   }
-    // }
-
     return (response as unknown) as Language;
-
-    // const props = [
-    //   'name',
-    //   'displayName',
-    //   'isDialect',
-    //   'populationOverride',
-    //   'registryOfDialectsCode',
-    //   'leastOfThese',
-    //   'leastOfTheseReason',
-    //   'displayNamePronunciation',
-    //   'sensitivity',
-    //   'sponsorDate',
-    // ];
-
-    // const baseNodeMetaProps = ['id', 'createdAt'];
-
-    // const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
-    //   {
-    //     parentBaseNodePropertyKey: 'ethnologue',
-    //     parentRelationDirection: 'out',
-    //     childBaseNodeLabel: 'EthnologueLanguage',
-    //     childBaseNodeMetaPropertyKey: 'id',
-    //     returnIdentifier: 'ethnologueLanguageId',
-    //   },
-    // ];
-
-    // const query = this.db
-    //   .query()
-    //   .call(matchRequestingUser, session)
-    //   .call(matchUserPermissions, 'Language', langId)
-    //   .call(addAllSecureProperties, ...props)
-    //   .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
-    //   .with([
-    //     ...props.map(addPropertyCoalesceWithClause),
-    //     ...childBaseNodeMetaProps.map(addShapeForChildBaseNodeMetaProperty),
-    //     ...baseNodeMetaProps.map(addShapeForBaseNodeMetaProperty),
-    //     'node',
-    //   ])
-    //   .returnDistinct([
-    //     ...props,
-    //     ...baseNodeMetaProps,
-    //     ...childBaseNodeMetaProps.map((x) => x.returnIdentifier),
-    //     'labels(node) as labels',
-    //   ]);
-
-    // printActualQuery(this.logger, query);
-
-    // const result = await query.first();
-    // if (!result) {
-    //   throw new NotFoundException('Could not find language');
-    // }
-
-    // const { ethnologue } = await this.ethnologueLanguageService.readOne(
-    //   result.ethnologueLanguageId,
-    //   session
-    // );
-    // const response: any = {
-    //   ...result,
-    //   ethnologue: ethnologue,
-    //   sensitivity: result.sensitivity.value || Sensitivity.Low,
-    // };
-
-    // return (response as unknown) as Language;
   }
 
   async update(

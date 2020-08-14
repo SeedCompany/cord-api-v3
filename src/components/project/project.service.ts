@@ -512,7 +512,7 @@ export class ProjectService {
   async readOneSimple(id: string, session: ISession): Promise<Project> {
     this.logger.info('query readone project', { id, userId: session.userId });
     const label = 'Project';
-    const baseNodeMetaProps = ['id', 'createdAt', 'type', 'InDevelopment', 'status', 'sensitivity'];
+    const baseNodeMetaProps = ['id', 'createdAt', 'type', 'InDevelopment', 'status', 'sensitivity', 'modifiedAt'];
     const unsecureProps = ['status', 'sensitivity'];
     const secureProps = [
       'name',
@@ -521,7 +521,6 @@ export class ProjectService {
       'mouStart',
       'mouEnd',
       'estimatedSubmission',
-      'modifiedAt',
     ];
     const query = this.db
       .query()
