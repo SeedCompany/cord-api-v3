@@ -1,5 +1,5 @@
 import { ObjectType, registerEnumType } from '@nestjs/graphql';
-import { SecuredPropertyList } from '../../../../common';
+import { SecuredEnumList } from '../../../../common';
 
 export enum Role {
   BibleTranslationLiaison = 'BibleTranslationLiaison',
@@ -28,6 +28,6 @@ export enum Role {
 registerEnumType(Role, { name: 'Role' });
 
 @ObjectType({
-  description: SecuredPropertyList.descriptionFor('roles'),
+  description: SecuredEnumList.descriptionFor('roles'),
 })
-export abstract class SecuredRoles extends SecuredPropertyList(Role) {}
+export abstract class SecuredRoles extends SecuredEnumList(Role) {}

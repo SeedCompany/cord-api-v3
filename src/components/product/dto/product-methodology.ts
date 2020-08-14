@@ -1,5 +1,5 @@
 import { ObjectType, registerEnumType } from '@nestjs/graphql';
-import { SecuredProperty, SecuredPropertyList } from '../../../common';
+import { SecuredEnumList, SecuredProperty } from '../../../common';
 import { ProductApproach } from './product-approach';
 
 /**
@@ -64,8 +64,6 @@ export class SecuredMethodology extends SecuredProperty<
 >(ProductMethodology) {}
 
 @ObjectType({
-  description: SecuredPropertyList.descriptionFor('methodologies'),
+  description: SecuredEnumList.descriptionFor('methodologies'),
 })
-export class SecuredMethodologies extends SecuredPropertyList(
-  ProductMethodology
-) {}
+export class SecuredMethodologies extends SecuredEnumList(ProductMethodology) {}

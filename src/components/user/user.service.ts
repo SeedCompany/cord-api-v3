@@ -488,7 +488,7 @@ export class UserService {
 
     // Update roles
     if (input.roles) {
-      const newRoles = difference(input.roles, user.roles.value) as Role[];
+      const newRoles = difference(input.roles, user.roles.value);
       await this.db
         .query()
         .match([

@@ -1,5 +1,5 @@
 import { ObjectType, registerEnumType } from '@nestjs/graphql';
-import { SecuredPropertyList } from '../../../common';
+import { SecuredEnumList } from '../../../common';
 
 /**
  * How the product is delivered.
@@ -23,6 +23,6 @@ registerEnumType(ProductMedium, {
 });
 
 @ObjectType({
-  description: SecuredPropertyList.descriptionFor('product mediums'),
+  description: SecuredEnumList.descriptionFor('product mediums'),
 })
-export class SecuredProductMediums extends SecuredPropertyList(ProductMedium) {}
+export class SecuredProductMediums extends SecuredEnumList(ProductMedium) {}
