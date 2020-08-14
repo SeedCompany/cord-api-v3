@@ -10,7 +10,6 @@ import {
   addAllSecureProperties,
   addPropertyCoalesceWithClause,
   addShapeForBaseNodeMetaProperty,
-  addUserToSG,
   ConfigService,
   createBaseNode,
   createSG,
@@ -20,8 +19,13 @@ import {
   matchRequestingUser,
   matchSession,
   matchUserPermissions,
+  matchUserPermissionsIn,
   Property,
 } from '../../../core';
+import {
+  addAllSecurePropertiesSimpleEdit,
+  addAllSecurePropertiesSimpleRead,
+} from '../../../core/database/query.helpers';
 import {
   CreateEthnologueLanguage,
   EthnologueLanguage,
@@ -196,11 +200,17 @@ export class EthnologueLanguageService {
         }),
       ])
       .call(matchRequestingUser, session)
-      // .call(createSG, 'orgSG', 'OrgPublicSecurityGroup')
-      .call(createBaseNode, 'EthnologueLanguage', secureProps, {
-        owningOrgId: session.owningOrgId,
-      })
-      .call(addUserToSG, 'requestingUser', 'adminSG') // must come after base node creation
+      .call(createSG, 'orgSG', 'OrgPublicSecurityGroup')
+      .call(
+        createBaseNode,
+        'EthnologueLanguage',
+        secureProps,
+        {
+          owningOrgId: session.owningOrgId,
+        },
+        [],
+        session.userId === this.config.rootAdmin.id
+      )
       .return('node.id as id');
 
     const result = await query.first();
@@ -255,6 +265,7 @@ export class EthnologueLanguageService {
         'labels(node) as labels',
       ]);
 
+    // console.log('readOne', query.toString())
     const result = await query.first();
 
     return {

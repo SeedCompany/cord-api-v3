@@ -1,24 +1,21 @@
 import {
+  forwardRef,
+  Inject,
   Injectable,
-  NotFoundException,
   InternalServerErrorException as ServerException,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { flatMap, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
-import { generate } from 'shortid';
-import { fiscalYears, ISession } from '../../common';
+import { fiscalYears, ISession, NotFoundException } from '../../common';
 import {
   addAllMetaPropertiesOfChildBaseNodes,
   addAllSecureProperties,
   addBaseNodeMetaPropsWithClause,
-  addPropertyCoalesceWithClause,
-  addShapeForBaseNodeMetaProperty,
-  addShapeForChildBaseNodeMetaProperty,
   ChildBaseNodeMetaProperty,
   ConfigService,
+  createBaseNode,
   DatabaseService,
   IEventBus,
   ILogger,
@@ -55,6 +52,7 @@ export class PartnershipService {
     private readonly config: ConfigService,
     private readonly budgetService: BudgetService,
     private readonly orgService: OrganizationService,
+    @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService,
     private readonly eventBus: IEventBus,
     @Logger('partnership:service') private readonly logger: ILogger
@@ -170,115 +168,168 @@ export class PartnershipService {
     { organizationId, projectId, ...input }: CreatePartnership,
     session: ISession
   ): Promise<Partnership> {
-    const id = generate();
     const createdAt = DateTime.local();
 
-    if (!(await this.orgService.readOne(organizationId, session))) {
-      throw new UnauthorizedException('organization does not exist');
-    }
-
-    if (!(await this.projectService.readOne(projectId, session))) {
-      throw new UnauthorizedException('project does not exist');
+    try {
+      await this.orgService.readOne(organizationId, session);
+    } catch (e) {
+      if (e instanceof NotFoundException) {
+        throw e.withField('partnership.organizationId');
+      }
+      throw e;
     }
 
     try {
-      const mou = await this.files.createDefinedFile(`MOU`, session, input.mou);
-      const agreement = await this.files.createDefinedFile(
-        `Partner Agreement`,
-        session,
-        input.agreement
-      );
+      await this.projectService.readOne(projectId, session);
+    } catch (e) {
+      if (e instanceof NotFoundException) {
+        throw e.withField('partnership.projectId');
+      }
+      throw e;
+    }
 
+    const mou = await this.files.createDefinedFile(
+      `MOU`,
+      session,
+      input.mou,
+      'partnership.mou'
+    );
+    const agreement = await this.files.createDefinedFile(
+      `Partner Agreement`,
+      session,
+      input.agreement,
+      'partnership.agreement'
+    );
+
+    const secureProps = [
+      {
+        key: 'agreementStatus',
+        value: input.agreementStatus,
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'agreement',
+        value: agreement,
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'mou',
+        value: mou,
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'mouStatus',
+        value: input.mouStatus,
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'mouStartOverride',
+        value: input.mouStartOverride,
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'mouEndOverride',
+        value: input.mouEndOverride,
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'types',
+        value: input.types,
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+    ];
+    let result;
+    try {
       const createPartnership = this.db
         .query()
-        .match(matchSession(session, { withAclEdit: 'canCreatePartnership' }))
+        .call(matchRequestingUser, session)
         .match([
-          node('rootuser', 'User', {
+          node('root', 'User', {
             active: true,
             id: this.config.rootAdmin.id,
           }),
         ])
-        .create([
-          [
-            node('newPartnership', ['Partnership', 'BaseNode'], {
-              active: true,
-              createdAt,
-              id,
-              owningOrgId: session.owningOrgId,
-            }),
-          ],
-          ...this.property('agreementStatus', input.agreementStatus),
-          ...this.property('agreement', agreement),
-          ...this.property('mou', mou),
-          ...this.property('mouStatus', input.mouStatus),
-          ...this.property('mouStartOverride', input.mouStartOverride),
-          ...this.property('mouEndOverride', input.mouEndOverride),
-          ...this.property('types', input.types),
-          [
-            node('adminSG', 'SecurityGroup', {
-              id: generate(),
-              active: true,
-              createdAt,
-              name: `partnership ${id} admin`,
-            }),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('requestingUser'),
-          ],
-          [
-            node('readerSG', 'SecurityGroup', {
-              id: generate(),
-              active: true,
-              createdAt,
-              name: `partnership ${id} users`,
-            }),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('requestingUser'),
-          ],
-          [
-            node('adminSG'),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('rootuser'),
-          ],
-          [
-            node('readerSG'),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('rootuser'),
-          ],
-          ...this.permission('agreementStatus'),
-          ...this.permission('mouStatus'),
-          ...this.permission('types'),
-          ...this.permission('organization'),
-          ...this.permission('mouStartOverride'),
-          ...this.permission('mouEndOverride'),
-        ])
-        .return('newPartnership.id as id');
+        .call(
+          createBaseNode,
+          'Partnership',
+          secureProps,
+          {
+            owningOrgId: session.owningOrgId,
+          },
+          [],
+          session.userId === this.config.rootAdmin.id
+        )
+        .create([...this.permission('organization')])
+        .return('node.id as id');
 
       try {
-        await createPartnership.first();
+        result = await createPartnership.first();
       } catch (e) {
         this.logger.error('e :>> ', e);
       }
 
+      if (!result) {
+        throw new ServerException('failed to create partnership');
+      }
+
       // connect the Organization to the Partnership
       // and connect Partnership to Project
-      const query = `
-        MATCH (organization:Organization {id: $organizationId, active: true}),
-          (partnership:Partnership {id: $id, active: true}),
-          (project:Project {id: $projectId, active: true})
-        CREATE (project)-[:partnership {active: true, createdAt: datetime()}]->(partnership)
-                  -[:organization {active: true, createdAt: datetime()}]->(organization)
-        RETURN partnership.id as id
-      `;
       await this.db
         .query()
-        .raw(query, {
-          organizationId,
-          id,
-          projectId,
-        })
+        .match([
+          [
+            node('organization', 'Organization', {
+              id: organizationId,
+              active: true,
+            }),
+          ],
+          [
+            node('partnership', 'Partnership', {
+              id: result.id,
+              active: true,
+            }),
+          ],
+          [node('project', 'Project', { id: projectId, active: true })],
+        ])
+        .create([
+          node('project'),
+          relation('out', '', 'partnership', { active: true, createdAt }),
+          node('partnership'),
+          relation('out', '', 'organization', { active: true, createdAt }),
+          node('organization'),
+        ])
+        .return('partnership.id as id')
         .first();
 
-      const partnership = await this.readOne(id, session);
+      const partnership = await this.readOne(result.id, session);
 
       if (!input.types) {
         return partnership;
@@ -344,34 +395,44 @@ export class PartnershipService {
 
     const baseNodeMetaProps = ['id', 'createdAt'];
 
-    const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
-      {
-        parentBaseNodePropertyKey: 'organization',
-        parentRelationDirection: 'out',
-        childBaseNodeLabel: 'Organization',
-        childBaseNodeMetaPropertyKey: 'id',
-        returnIdentifier: 'organizationId',
-      },
-    ];
-
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
       .call(matchUserPermissions, 'Partnership', id)
       .call(addAllSecureProperties, ...props)
-      .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
-      .with([
-        ...props.map(addPropertyCoalesceWithClause),
-        ...childBaseNodeMetaProps.map(addShapeForChildBaseNodeMetaProperty),
-        ...baseNodeMetaProps.map(addShapeForBaseNodeMetaProperty),
-        'node',
+      .optionalMatch([
+        node('canReadProject', 'Permission', {
+          property: 'project',
+          read: true,
+          active: true,
+        }),
+        relation('out', '', 'baseNode'),
+        node('node'),
+        relation('in', '', 'partnership', { active: true }),
+        node('project', 'Project', { active: true }),
       ])
-      .returnDistinct([
-        ...props,
-        ...baseNodeMetaProps,
-        ...childBaseNodeMetaProps.map((x) => x.returnIdentifier),
-        'labels(node) as labels',
-      ]);
+      .optionalMatch([
+        node('canReadOrganization', 'Permission', {
+          property: 'organization',
+          read: true,
+          active: true,
+        }),
+        relation('out', '', 'baseNode'),
+        node('node'),
+        relation('out', '', 'organization', { active: true }),
+        node('organization', 'Organization', { active: true }),
+      ])
+      .with(
+        `
+          {
+            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
+            ${listWithSecureObject(props)},
+            projectId: project.id,
+            organizationId: organization.id
+          } as partnership
+        `
+      )
+      .returnDistinct('partnership');
 
     let result;
     try {
@@ -379,29 +440,14 @@ export class PartnershipService {
     } catch (error) {
       this.logger.error('could not read partnership', error);
     }
-    if (!result || !result.id) {
+
+    if (!result || !result.partnership.id) {
       throw new NotFoundException('could not find Partnership');
     }
-
-    //Get Projects mapped with the Partnership
-    const projectQuery = this.db
-      .query()
-      .match(matchSession(session, { withAclRead: 'canReadPartnerships' }))
-      .match([
-        node('partnership', 'Partnership', { active: true, id }),
-        relation('in', '', 'partnership', { active: true }),
-        node('project', 'Project', {
-          active: true,
-        }),
-      ]);
-    projectQuery.return({
-      project: [{ id: 'id' }],
-    });
-
-    const getProject = await projectQuery.first();
+    result = (result as any).partnership;
 
     const readProject = await this.projectService.readOne(
-      getProject?.id,
+      result.projectId,
       session
     );
 
@@ -462,8 +508,18 @@ export class PartnershipService {
       changes: rest,
       nodevar: 'partnership',
     });
-    await this.files.updateDefinedFile(object.mou, mou, session);
-    await this.files.updateDefinedFile(object.agreement, agreement, session);
+    await this.files.updateDefinedFile(
+      object.mou,
+      'partnership.mou',
+      mou,
+      session
+    );
+    await this.files.updateDefinedFile(
+      object.agreement,
+      'partnership.agreement',
+      agreement,
+      session
+    );
 
     const partnership = await this.readOne(input.id, session);
     await this.eventBus.publish(

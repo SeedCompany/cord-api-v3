@@ -1,8 +1,7 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import {
-  IdField,
   PaginatedList,
   SecuredList,
   SortablePaginationInput,
@@ -11,10 +10,6 @@ import { Education } from './education.dto';
 
 @InputType()
 export abstract class EducationFilters {
-  @IdField({
-    description: 'Educations for UserId',
-    nullable: true,
-  })
   readonly userId?: string;
 }
 
@@ -28,7 +23,6 @@ export class EducationListInput extends SortablePaginationInput<
 }) {
   static defaultVal = new EducationListInput();
 
-  @Field({ nullable: true })
   @Type(() => EducationFilters)
   @ValidateNested()
   readonly filter: EducationFilters = defaultFilters;

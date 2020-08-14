@@ -111,20 +111,29 @@ describe('Education e2e', () => {
       times(numEducations).map(() => createEducation(app, { userId: user.id }))
     );
 
-    const { educations } = await app.graphql.query(gql`
-      query {
-        educations (input: { filter: { userId : "${user.id}" }}) {
-          items {
-            ...education
+    const result = await app.graphql.query(
+      gql`
+        query UserEducation($id: ID!) {
+          user(id: $id) {
+            education {
+              items {
+                ...education
+              }
+              hasMore
+              total
+            }
           }
-          hasMore
-          total
         }
+        ${fragments.education}
+      `,
+      {
+        id: user.id,
       }
-      ${fragments.education}
-    `);
+    );
 
-    expect(educations.items.length).toBeGreaterThanOrEqual(numEducations);
+    expect(result.user.education.items.length).toBeGreaterThanOrEqual(
+      numEducations
+    );
   });
 
   it('Check consistency across education nodes', async () => {

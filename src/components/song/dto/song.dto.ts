@@ -1,12 +1,14 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { Resource, SecuredString } from '../../../common';
-import { Producible } from '../../product/dto';
+import { Producible, ProducibleType } from '../../product/dto';
 
 declare module '../../product/dto' {
   enum ProducibleType {
     Song = 'Song',
   }
 }
+
+Object.assign(ProducibleType, { Song: 'Song' });
 
 @ObjectType({
   implements: [Producible, Resource],

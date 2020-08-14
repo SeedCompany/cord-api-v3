@@ -249,7 +249,7 @@ export class BudgetService {
 
     this.logger.info('Creating BudgetRecord', input);
     // on Init, create a budget will create a budget record for each org and each fiscal year in the project input.projectId
-    const createdAt = DateTime.local().toString();
+    const createdAt = DateTime.local();
 
     const secureProps: Property[] = [
       {

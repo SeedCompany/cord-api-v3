@@ -2,7 +2,7 @@ import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { MergeExclusive } from 'type-fest';
 import { Resource } from '../../../common';
-import { SecuredScriptureRanges } from '../../scripture';
+import { SecuredScriptureRangesOverride } from '../../scripture';
 import { Producible, SecuredProducible } from './producible.dto';
 import { SecuredProductMediums } from './product-medium';
 import { SecuredMethodology } from './product-methodology';
@@ -48,7 +48,6 @@ export class DerivativeScriptureProduct extends Product {
   readonly produces: SecuredProducible;
 
   @Field({
-    nullable: true,
     description: stripIndent`
       The \`Producible\` defines a \`scriptureReferences\` list, and this is
       used by default in this product's \`scriptureReferences\` list.
@@ -56,7 +55,7 @@ export class DerivativeScriptureProduct extends Product {
       this property can be set (and read) to "override" the \`producible\`'s list.
     `,
   })
-  readonly scriptureReferencesOverride?: SecuredScriptureRanges;
+  readonly scriptureReferencesOverride: SecuredScriptureRangesOverride;
 }
 
 export type AnyProduct = MergeExclusive<

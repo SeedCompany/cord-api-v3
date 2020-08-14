@@ -210,7 +210,7 @@ describe('Partnership e2e', () => {
     const { partnerships } = await app.graphql.query(
       gql`
         query {
-          partnerships(input: { filter: {} }) {
+          partnerships {
             items {
               id
               agreementStatus {
@@ -239,18 +239,20 @@ describe('Partnership e2e', () => {
       )
     );
 
-    const { partnerships } = await app.graphql.query(
+    const result = await app.graphql.query(
       gql`
         query partnerships($projectId: ID!) {
-          partnerships(input: { filter: { projectId: $projectId } }) {
-            items {
-              id
-              agreementStatus {
-                value
+          project(id: $projectId) {
+            partnerships {
+              items {
+                id
+                agreementStatus {
+                  value
+                }
               }
+              hasMore
+              total
             }
-            hasMore
-            total
           }
         }
       `,
@@ -259,7 +261,9 @@ describe('Partnership e2e', () => {
       }
     );
 
-    expect(partnerships.items.length).toBeGreaterThanOrEqual(numPartnerships);
+    expect(result.project.partnerships.items.length).toBeGreaterThanOrEqual(
+      numPartnerships
+    );
   });
 
   // skipping until we refactor consistency checks

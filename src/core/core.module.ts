@@ -8,6 +8,7 @@ import { DatabaseModule } from './database/database.module';
 import { EmailModule } from './email';
 import { EventsModule } from './events';
 import { ExceptionFilter } from './exception.filter';
+import { GraphqlLoggingPlugin } from './graphql-logging.plugin';
 import { GraphQLConfig } from './graphql.config';
 import { ValidationPipe } from './validation.pipe';
 
@@ -22,6 +23,7 @@ import { ValidationPipe } from './validation.pipe';
   ],
   providers: [
     AwsS3Factory,
+    GraphqlLoggingPlugin,
     { provide: APP_FILTER, useClass: ExceptionFilter },
     { provide: APP_PIPE, useClass: ValidationPipe },
   ],

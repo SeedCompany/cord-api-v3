@@ -24,10 +24,10 @@ export abstract class UpdateEngagement {
   readonly communicationsCompleteDate?: CalendarDate;
 
   @DateField({ nullable: true })
-  readonly startDate?: CalendarDate;
+  readonly startDateOverride?: CalendarDate;
 
   @DateField({ nullable: true })
-  readonly endDate?: CalendarDate;
+  readonly endDateOverride?: CalendarDate;
 }
 
 @InputType()

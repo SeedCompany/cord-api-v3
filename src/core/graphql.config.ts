@@ -9,9 +9,14 @@ import {
 } from 'apollo-server-errors';
 import { Request, Response } from 'express';
 import { GraphQLError, GraphQLFormattedError } from 'graphql';
+import { intersection } from 'lodash';
+import { sep } from 'path';
 import { GqlContextType } from '../common';
 import { ConfigService } from './config/config.service';
 import { VersionService } from './config/version.service';
+
+const escapedSep = sep === '/' ? '\\/' : '\\\\';
+const matchSrcPathInTrace = RegExp(` \\(.+${escapedSep}src${escapedSep}`);
 
 @Injectable()
 export class GraphQLConfig implements GqlOptionsFactory {
@@ -59,12 +64,34 @@ export class GraphQLConfig implements GqlOptionsFactory {
   formatError = (error: GraphQLError): GraphQLFormattedError => {
     const extensions = { ...error.extensions };
 
-    if (!this.debug) {
-      delete extensions.exception;
-    }
-
     if (!extensions.codes) {
       extensions.codes = this.resolveCodes(error, extensions.code);
+    }
+
+    // Schema & validation errors don't have meaningful stack traces, so remove them
+    const worthlessTrace =
+      intersection(extensions.codes, ['Validation', 'GraphQL']).length > 0;
+
+    if (!this.debug || worthlessTrace) {
+      delete extensions.exception;
+    } else {
+      extensions.exception.stacktrace = extensions.exception.stacktrace
+        // remove non src frames
+        .filter(
+          (frame: string) =>
+            frame.startsWith('    at') &&
+            !frame.includes('node_modules') &&
+            !frame.includes('(internal/') &&
+            !frame.includes('(<anonymous>)')
+        )
+        .map((frame: string) =>
+          frame
+            // Convert absolute path to path relative to src dir
+            .replace(matchSrcPathInTrace, ' (')
+            // Convert windows paths to unix for consistency
+            .replace(/\\\\/, '/')
+            .trim()
+        );
     }
 
     return {

@@ -1,18 +1,15 @@
-import {
-  forwardRef,
-  Inject,
-  Injectable,
-  NotFoundException,
-  InternalServerErrorException as ServerException,
-} from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { flatMap, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import {
+  DuplicateException,
   fiscalYears,
   InputException,
   ISession,
+  NotFoundException,
   Sensitivity,
+  ServerException,
 } from '../../common';
 import {
   addAllSecureProperties,
@@ -33,6 +30,7 @@ import {
   OnIndex,
   Property,
   runListQuery,
+  UniquenessError,
 } from '../../core';
 import {
   Budget,
@@ -90,6 +88,7 @@ export class ProjectService {
     @Inject(forwardRef(() => PartnershipService))
     private readonly partnerships: PartnershipService,
     private readonly fileService: FileService,
+    @Inject(forwardRef(() => EngagementService))
     private readonly engagementService: EngagementService,
     private readonly config: ConfigService,
     private readonly eventBus: IEventBus,
@@ -143,7 +142,7 @@ export class ProjectService {
 
   // helper method for defining properties
   permission = (property: string, canEdit = false) => {
-    const createdAt = DateTime.local().toString();
+    const createdAt = DateTime.local();
     return [
       [
         node('adminSG'),
@@ -378,6 +377,12 @@ export class ProjectService {
 
       return project;
     } catch (e) {
+      if (e instanceof UniquenessError && e.label === 'ProjectName') {
+        throw new DuplicateException(
+          'project.name',
+          'Project with this name already exists'
+        );
+      }
       this.logger.warning(`Could not create project`, {
         exception: e,
       });
@@ -457,13 +462,11 @@ export class ProjectService {
       result = await readProject.first();
     } catch (e) {
       this.logger.error('e :>> ', e);
-      return await Promise.reject(e);
+      throw e;
     }
 
     if (!result) {
-      throw new NotFoundException(
-        `Could not find project DEBUG: requestingUser ${session.userId} target ProjectId ${id}`
-      );
+      throw new NotFoundException(`Could not find project`);
     }
 
     const location = result.project.countryId
@@ -729,7 +732,13 @@ export class ProjectService {
     { filter, ...input }: ProjectListInput,
     session: ISession
   ): Promise<ProjectListOutput> {
-    const label = 'Project';
+    let label = 'Project';
+    if (filter.type === 'Internship') {
+      label = 'InternshipProject';
+    } else if (filter.type === 'Translation') {
+      label = 'TranslationProject';
+    }
+
     const baseNodeMetaProps = ['id', 'createdAt', 'type'];
     const unsecureProps = ['status', 'sensitivity'];
     const secureProps = [

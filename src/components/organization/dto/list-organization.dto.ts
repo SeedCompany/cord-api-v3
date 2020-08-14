@@ -2,7 +2,6 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import {
-  IdField,
   PaginatedList,
   SecuredList,
   SortablePaginationInput,
@@ -17,10 +16,6 @@ export abstract class OrganizationFilters {
   })
   readonly name?: string;
 
-  @IdField({
-    description: 'User IDs ANY of which must belong to the organizations',
-    nullable: true,
-  })
   readonly userId?: string;
 }
 
