@@ -388,6 +388,7 @@ export class ProductService {
                 canEdit: !!result.product.canScriptureReferencesOverrideEdit,
                 value: scriptureReferencesOverride,
               },
+          ...producible,
         },
         canRead: !!result.product.canProducesRead,
         canEdit: !!result.product.canProducesEdit,
