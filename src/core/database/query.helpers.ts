@@ -574,7 +574,7 @@ export function matchUserPermissionsIn(
       : node('node', { active: true }),
   ]);
   if (ids) {
-    query.where({ node: { id: ids }, perms: { read: true } });
+    query.where({ node: { id: inArray(ids) }, perms: { read: true } });
   }
 
   query.with(`collect(perms) as permList, node`);
