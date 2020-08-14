@@ -8,7 +8,12 @@ import { node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { flatMap, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
-import { fiscalYears, ISession, NotFoundException } from '../../common';
+import {
+  fiscalYears,
+  InputException,
+  ISession,
+  NotFoundException,
+} from '../../common';
 import {
   addAllMetaPropertiesOfChildBaseNodes,
   addAllSecureProperties,
@@ -33,6 +38,7 @@ import { ProjectService } from '../project/project.service';
 import {
   CreatePartnership,
   Partnership,
+  PartnershipFundingType,
   PartnershipListInput,
   PartnershipListOutput,
   PartnershipType,
@@ -188,9 +194,7 @@ export class PartnershipService {
       throw e;
     }
 
-    if (input.fundingType && !this.canAddFundingType(input.types)) {
-      throw new ServerException('cannot add funding type');
-    }
+    this.verifyFundingType(input.fundingType, input.types);
 
     const mou = await this.files.createDefinedFile(
       `MOU`,
@@ -505,11 +509,13 @@ export class PartnershipService {
   }
 
   async update(input: UpdatePartnership, session: ISession) {
-    if (input.fundingType && !this.canAddFundingType(input.types)) {
-      throw new ServerException('cannot add funding type');
-    }
     // mou start and end are now computed fields and do not get updated directly
     const object = await this.readOne(input.id, session);
+
+    this.verifyFundingType(
+      input.fundingType ?? (object.fundingType.value as PartnershipFundingType),
+      input.types ?? (object.types.value as PartnershipType[])
+    );
 
     const { mou, agreement, ...rest } = input;
     await this.db.sgUpdateProperties({
@@ -754,7 +760,15 @@ export class PartnershipService {
     ]);
   }
 
-  protected canAddFundingType(types: PartnershipType[] | undefined): boolean {
-    return (types || []).includes(PartnershipType.Managing) ? true : false;
+  protected verifyFundingType(
+    fundingType: PartnershipFundingType | undefined,
+    types: PartnershipType[] | undefined
+  ) {
+    if (fundingType && !types?.includes(PartnershipType.Managing)) {
+      throw new InputException(
+        'Funding type can only be applied to managing partners',
+        'partnership.fundingType'
+      );
+    }
   }
 }
