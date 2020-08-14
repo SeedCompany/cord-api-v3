@@ -188,6 +188,10 @@ export class PartnershipService {
       throw e;
     }
 
+    if (input.fundingType && !this.canAddFundingType(input.types)) {
+      throw new ServerException('cannot add funding type');
+    }
+
     const mou = await this.files.createDefinedFile(
       `MOU`,
       session,
@@ -259,6 +263,15 @@ export class PartnershipService {
       {
         key: 'types',
         value: input.types,
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'fundingType',
+        value: input.fundingType,
         addToAdminSg: true,
         addToWriterSg: false,
         addToReaderSg: true,
@@ -389,6 +402,7 @@ export class PartnershipService {
       'mouStartOverride',
       'mouEndOverride',
       'types',
+      'fundingType',
       'mou',
       'agreement',
     ];
@@ -491,6 +505,9 @@ export class PartnershipService {
   }
 
   async update(input: UpdatePartnership, session: ISession) {
+    if (input.fundingType && !this.canAddFundingType(input.types)) {
+      throw new ServerException('cannot add funding type');
+    }
     // mou start and end are now computed fields and do not get updated directly
     const object = await this.readOne(input.id, session);
 
@@ -502,6 +519,7 @@ export class PartnershipService {
         'agreementStatus',
         'mouStatus',
         'types',
+        'fundingType',
         'mouStartOverride',
         'mouEndOverride',
       ],
@@ -572,6 +590,7 @@ export class PartnershipService {
       'mouStartOverride',
       'mouEndOverride',
       'types',
+      'fundingType',
       'mou',
       'agreement',
     ];
@@ -733,5 +752,9 @@ export class PartnershipService {
       relation(relationshipDirection, '', relationshipType, { active: true }),
       node('node', label, { active: true }),
     ]);
+  }
+
+  protected canAddFundingType(types: PartnershipType[] | undefined): boolean {
+    return (types || []).includes(PartnershipType.Managing) ? true : false;
   }
 }
