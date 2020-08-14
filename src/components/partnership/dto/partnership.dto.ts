@@ -2,8 +2,8 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import {
   Resource,
   SecuredDate,
+  SecuredEnum,
   SecuredEnumList,
-  SecuredProperty,
 } from '../../../common';
 import { DefinedFile } from '../../file/dto';
 import { Organization } from '../../organization';
@@ -11,9 +11,9 @@ import { PartnershipAgreementStatus } from './partnership-agreement-status.enum'
 import { PartnershipType } from './partnership-type.enum';
 
 @ObjectType({
-  description: SecuredProperty.descriptionFor('a partnership agreement status'),
+  description: SecuredEnum.descriptionFor('a partnership agreement status'),
 })
-export abstract class SecuredPartnershipAgreementStatus extends SecuredProperty(
+export abstract class SecuredPartnershipAgreementStatus extends SecuredEnum(
   PartnershipAgreementStatus
 ) {}
 

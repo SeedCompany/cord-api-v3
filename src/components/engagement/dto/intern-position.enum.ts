@@ -1,5 +1,5 @@
 import { ObjectType, registerEnumType } from '@nestjs/graphql';
-import { SecuredProperty } from '../../../common';
+import { SecuredEnum } from '../../../common';
 
 export enum InternPosition {
   ExegeticalFacilitator = 'ExegeticalFacilitator',
@@ -28,6 +28,6 @@ registerEnumType(InternPosition, {
 });
 
 @ObjectType({
-  description: SecuredProperty.descriptionFor('an intern position'),
+  description: SecuredEnum.descriptionFor('an intern position'),
 })
-export class SecuredInternPosition extends SecuredProperty(InternPosition) {}
+export class SecuredInternPosition extends SecuredEnum(InternPosition) {}

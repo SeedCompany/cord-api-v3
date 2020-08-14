@@ -1,5 +1,5 @@
-import { Field, ObjectType, registerEnumType } from '@nestjs/graphql';
-import { Editable, Readable, Secured, SecuredProperty } from '../../../common';
+import { ObjectType, registerEnumType } from '@nestjs/graphql';
+import { SecuredEnum } from '../../../common';
 
 export enum ProjectStep {
   EarlyConversations = 'EarlyConversations',
@@ -33,14 +33,6 @@ registerEnumType(ProjectStep, {
 });
 
 @ObjectType({
-  description: SecuredProperty.descriptionFor('a project step'),
-  implements: [Readable, Editable],
+  description: SecuredEnum.descriptionFor('a project step'),
 })
-export abstract class SecuredProjectStep implements Secured<ProjectStep> {
-  @Field(() => ProjectStep, { nullable: true })
-  readonly value?: ProjectStep;
-  @Field()
-  readonly canRead: boolean;
-  @Field()
-  readonly canEdit: boolean;
-}
+export class SecuredProjectStep extends SecuredEnum(ProjectStep) {}
