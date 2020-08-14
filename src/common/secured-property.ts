@@ -61,20 +61,41 @@ type SecuredList<
   Override extends boolean | undefined
 > = Override extends true ? T[] | null | undefined : T[];
 
+export function SecuredEnumList<
+  T extends string,
+  EnumValue extends string,
+  Override extends boolean | undefined = false
+>(
+  valueClass: { [key in T]: EnumValue },
+  options: SecuredPropertyListOptions<Override> = {}
+) {
+  return SecuredList<EnumValue, EnumValue, Override>(
+    valueClass as any,
+    options
+  );
+}
+
 export function SecuredPropertyList<
   T,
   Override extends boolean | undefined = false
 >(
-  valueClass: Class<T> | AbstractClassType<T> | GraphQLScalarType | object,
+  valueClass: Class<T> | AbstractClassType<T> | GraphQLScalarType,
+  options: SecuredPropertyListOptions<Override> = {}
+) {
+  return SecuredList<typeof valueClass, T, Override>(valueClass, options);
+}
+
+function SecuredList<GQL, TS, Override extends boolean | undefined = false>(
+  valueClass: GQL,
   options: SecuredPropertyListOptions<Override> = {}
 ) {
   @ObjectType({ isAbstract: true, implements: [Readable, Editable] })
   abstract class SecuredPropertyListClass
-    implements Readable, Editable, Secured<SecuredList<T, Override>> {
+    implements Readable, Editable, Secured<SecuredList<TS, Override>> {
     @Field(() => [valueClass], {
       nullable: options.isOverride,
     })
-    readonly value: SecuredList<T, Override>;
+    readonly value: SecuredList<TS, Override>;
     @Field()
     readonly canRead: boolean;
     @Field()
@@ -84,7 +105,9 @@ export function SecuredPropertyList<
   return SecuredPropertyListClass;
 }
 
-SecuredPropertyList.descriptionFor = (value: string) => stripIndent`
+SecuredEnumList.descriptionFor = SecuredPropertyList.descriptionFor = (
+  value: string
+) => stripIndent`
   An object whose \`value\` is a list of ${value} and has additional authorization information.
   The value is only given if \`canRead\` is \`true\` otherwise it is empty: \`[]\`.
   These \`can*\` authorization properties are specific to the user making the request.

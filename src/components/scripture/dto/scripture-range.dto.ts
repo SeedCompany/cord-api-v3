@@ -49,7 +49,7 @@ export class SecuredScriptureRanges extends SecuredPropertyList(
 @ObjectType({
   description: SecuredPropertyList.descriptionFor('scripture ranges override'),
 })
-export class SecuredScriptureRangesOverride extends SecuredPropertyList<
+export class SecuredScriptureRangesOverride extends SecuredPropertyList(
   ScriptureRange,
-  true
->(ScriptureRange, { isOverride: true }) {}
+  { isOverride: true }
+) {}

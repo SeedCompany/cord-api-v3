@@ -1,5 +1,5 @@
 import { ObjectType, registerEnumType } from '@nestjs/graphql';
-import { SecuredPropertyList } from '../../../common';
+import { SecuredEnumList } from '../../../common';
 
 /**
  * Why is this translation happening?
@@ -17,8 +17,6 @@ registerEnumType(ProductPurpose, {
 });
 
 @ObjectType({
-  description: SecuredPropertyList.descriptionFor('product purposes'),
+  description: SecuredEnumList.descriptionFor('product purposes'),
 })
-export class SecuredProductPurposes extends SecuredPropertyList(
-  ProductPurpose
-) {}
+export class SecuredProductPurposes extends SecuredEnumList(ProductPurpose) {}
