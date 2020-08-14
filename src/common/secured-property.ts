@@ -1,4 +1,10 @@
-import { Field, Float, Int, ObjectType } from '@nestjs/graphql';
+import {
+  Field,
+  Float,
+  GqlTypeReference,
+  Int,
+  ObjectType,
+} from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { GraphQLBoolean, GraphQLScalarType, GraphQLString } from 'graphql';
 import { isObject } from 'lodash';
@@ -23,13 +29,22 @@ export const isSecured = <T>(value: T | Secured<T>): value is Secured<T> =>
 export const unwrapSecured = <T>(value: T | Secured<T>): T | undefined =>
   isSecured(value) ? value.value : value;
 
-export function SecuredProperty<GqlType, TsType = GqlType>(
-  valueClass:
-    | Class<GqlType>
-    | AbstractClassType<GqlType>
-    | GraphQLScalarType
-    | object
+export function SecuredEnum<T extends string, EnumValue extends string>(
+  valueClass: { [key in T]: EnumValue }
 ) {
+  return InnerSecuredProperty<any, EnumValue>(valueClass);
+}
+
+export function SecuredProperty<GqlType, TsType = GqlType>(
+  valueClass: Class<GqlType> | AbstractClassType<GqlType> | GraphQLScalarType
+) {
+  return InnerSecuredProperty<typeof valueClass, TsType>(valueClass);
+}
+
+function InnerSecuredProperty<
+  GqlType extends GqlTypeReference,
+  TsType = GqlType
+>(valueClass: GqlType) {
   @ObjectType({ isAbstract: true, implements: [Readable, Editable] })
   abstract class SecuredPropertyClass
     implements Readable, Editable, Secured<TsType> {
@@ -44,7 +59,9 @@ export function SecuredProperty<GqlType, TsType = GqlType>(
   return SecuredPropertyClass;
 }
 
-SecuredProperty.descriptionFor = (value: string) => stripIndent`
+SecuredEnum.descriptionFor = SecuredProperty.descriptionFor = (
+  value: string
+) => stripIndent`
   An object with ${value} \`value\` and additional authorization information.
   The value is only given if \`canRead\` is \`true\` otherwise it is \`null\`.
   These \`can*\` authorization properties are specific to the user making the request.

@@ -1,6 +1,10 @@
 import { Field, ObjectType, registerEnumType } from '@nestjs/graphql';
-import { GraphQLString } from 'graphql';
-import { Resource, SecuredProperty, SecuredString } from '../../../../common';
+import {
+  Resource,
+  SecuredEnum,
+  SecuredProperty,
+  SecuredString,
+} from '../../../../common';
 
 export enum Degree {
   Primary = 'Primary',
@@ -14,11 +18,9 @@ export enum Degree {
 registerEnumType(Degree, { name: 'Degree' });
 
 @ObjectType({
-  description: SecuredProperty.descriptionFor('a string'),
+  description: SecuredProperty.descriptionFor('a degree'),
 })
-export abstract class SecuredDegree extends SecuredProperty<string>(
-  GraphQLString
-) {}
+export abstract class SecuredDegree extends SecuredEnum(Degree) {}
 
 @ObjectType({
   implements: [Resource],
