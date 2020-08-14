@@ -7,9 +7,6 @@ import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { ISession } from '../../../common';
 import {
-  addAllSecureProperties,
-  addPropertyCoalesceWithClause,
-  addShapeForBaseNodeMetaProperty,
   ConfigService,
   createBaseNode,
   createSG,
@@ -18,14 +15,8 @@ import {
   Logger,
   matchRequestingUser,
   matchSession,
-  matchUserPermissions,
-  matchUserPermissionsIn,
   Property,
 } from '../../../core';
-import {
-  addAllSecurePropertiesSimpleEdit,
-  addAllSecurePropertiesSimpleRead,
-} from '../../../core/database/query.helpers';
 import {
   CreateEthnologueLanguage,
   EthnologueLanguage,
@@ -267,7 +258,7 @@ export class EthnologueLanguageService {
       ])
       .with('{value: props.value, property: type(r)} as prop, permList, node')
       .with('collect(prop) as propList, permList, node')
-      .return('propList, permList, node')
+      .return('propList, permList, node');
 
     const result = await query.first();
 
@@ -277,31 +268,42 @@ export class EthnologueLanguageService {
 
     for (const record of result?.permList) {
       if (!response[record.properties.property]) {
-        response[record.properties.property] = {}
+        response[record.properties.property] = {};
       }
-      if (record?.properties && record?.properties?.read === true && response[record?.properties?.property]) {
-        response[record?.properties?.property].canRead = true
+      if (
+        record?.properties &&
+        record?.properties?.read === true &&
+        response[record?.properties?.property]
+      ) {
+        response[record?.properties?.property].canRead = true;
       } else {
-        response[record?.properties?.property].canRead = false
+        response[record?.properties?.property].canRead = false;
       }
 
-      if (record?.properties && record?.properties?.edit === true && response[record.properties.property]) {
-        response[record.properties.property].canEdit = true
+      if (
+        record?.properties &&
+        record?.properties?.edit === true &&
+        response[record.properties.property]
+      ) {
+        response[record.properties.property].canEdit = true;
       } else {
-        response[record.properties.property].canEdit = false
+        response[record.properties.property].canEdit = false;
       }
     }
 
     for (const record of result?.propList) {
       if (!response[record.property]) {
-        response[record.property] = {}
+        response[record.property] = {};
       }
       if (record?.property === 'sensitivity') {
         response[record.property] = record.value;
-      } else if (response[record?.property] && response[record?.property].canRead === true) {
-        response[record.property].value = record.value
+      } else if (
+        response[record?.property] &&
+        response[record?.property].canRead === true
+      ) {
+        response[record.property].value = record.value;
       } else {
-        response[record.property].value = false
+        response[record.property].value = false;
       }
     }
 
