@@ -291,13 +291,52 @@ export class LiteracyMaterialService {
     input: UpdateLiteracyMaterial,
     session: ISession
   ): Promise<LiteracyMaterial> {
+    const { scriptureReferences, ...rest } = input;
+
+    if (scriptureReferences) {
+      const rel = 'scriptureReferences';
+      await this.db
+        .query()
+        .match([
+          node('lm', 'LiteracyMaterial', { id: input.id, active: true }),
+          relation('out', 'rel', rel, { active: true }),
+          node('sr', 'ScriptureRange', { active: true }),
+        ])
+        .setValues({
+          'rel.active': false,
+          'sr.active': false,
+        })
+        .return('sr')
+        .first();
+
+      for (const sr of scriptureReferences) {
+        const verseRange = scriptureToVerseRange(sr);
+        await this.db
+          .query()
+          .match([
+            node('lm', 'LiteracyMaterial', { id: input.id, active: true }),
+          ])
+          .create([
+            node('lm'),
+            relation('out', '', rel, { active: true }),
+            node('', ['ScriptureRange', 'BaseNode'], {
+              start: verseRange.start,
+              end: verseRange.end,
+              active: true,
+              createdAt: DateTime.local(),
+            }),
+          ])
+          .return('lm')
+          .first();
+      }
+    }
     const literacyMaterial = await this.readOne(input.id, session);
 
     return this.db.sgUpdateProperties({
       session,
       object: literacyMaterial,
-      props: ['name'], // TODO scriptureReferences
-      changes: input,
+      props: ['name'],
+      changes: rest,
       nodevar: 'literacyMaterial',
     });
   }
