@@ -1,19 +1,17 @@
 import {
+  ForbiddenException,
   Injectable,
   NotFoundException,
   InternalServerErrorException as ServerException,
 } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { inArray, node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { DuplicateException, ISession } from '../../common';
 import {
   addAllSecureProperties,
   addBaseNodeMetaPropsWithClause,
-  addPropertyCoalesceWithClause,
-  addUserToSG,
   ConfigService,
   createBaseNode,
-  createSG,
   DatabaseService,
   filterByString,
   ILogger,
@@ -25,6 +23,11 @@ import {
   Property,
   runListQuery,
 } from '../../core';
+import { ScriptureRange } from '../scripture';
+import {
+  scriptureToVerseRange,
+  verseToScriptureRange,
+} from '../scripture/reference';
 import {
   CreateLiteracyMaterial,
   LiteracyMaterial,
@@ -134,14 +137,8 @@ export class LiteracyMaterialService {
   ): Promise<LiteracyMaterial> {
     const checkLiteracy = await this.db
       .query()
-      .raw(
-        `
-        MATCH(literacyMaterial:LiteracyName {value: $name}) return literacyMaterial
-        `,
-        {
-          name: input.name,
-        }
-      )
+      .match([node('literacyMaterial', 'LiteracyName', { value: input.name })])
+      .return('literacyMaterial')
       .first();
 
     if (checkLiteracy) {
@@ -165,39 +162,51 @@ export class LiteracyMaterialService {
       },
     ];
 
-    const query = this.db
-      .query()
-      .match([
-        node('root', 'User', { active: true, id: this.config.rootAdmin.id }),
-      ])
-      .match([
-        node('publicSG', 'PublicSecurityGroup', {
-          active: true,
-          id: this.config.publicSecurityGroup.id,
-        }),
-      ])
-      .call(matchRequestingUser, session)
-      .call(createSG, 'orgSG', 'OrgPublicSecurityGroup')
-      .call(createBaseNode, 'LiteracyMaterial:Producible', secureProps, {
-        owningOrgId: session.owningOrgId,
-      })
-      // TODO scriptureReferences
-      .call(addUserToSG, 'requestingUser', 'adminSG') // must come after base node creation
-      .return('node.id as id');
+    try {
+      const query = this.db
+        .query()
+        .call(matchRequestingUser, session)
+        .match([
+          node('root', 'User', {
+            active: true,
+            id: this.config.rootAdmin.id,
+          }),
+        ])
+        .call(createBaseNode, ['LiteracyMaterial', 'Producible'], secureProps, {
+          owningOrgId: session.owningOrgId,
+        })
+        .create([...this.permission('scriptureReferences', 'node')]);
 
-    const result = await query.first();
-    if (!result) {
-      throw new ServerException('failed to create default literacyMaterial');
+      if (input.scriptureReferences) {
+        for (const sr of input.scriptureReferences) {
+          const verseRange = scriptureToVerseRange(sr);
+          query.create([
+            node('node'),
+            relation('out', '', 'scriptureReferences', { active: true }),
+            node('sr', 'ScriptureRange', {
+              start: verseRange.start,
+              end: verseRange.end,
+              active: true,
+              createdAt: DateTime.local().toString(),
+            }),
+          ]);
+        }
+      }
+      query.return('node.id as id');
+
+      const result = await query.first();
+      if (!result) {
+        throw new ServerException('failed to create a literacy material');
+      }
+
+      this.logger.info(`literacy material created`, { id: result.id });
+      return await this.readOne(result.id, session);
+    } catch (err) {
+      this.logger.error(
+        `Could not create literacy material for user ${session.userId}`
+      );
+      throw new ServerException('Could not create literacy material');
     }
-
-    const id = result.id;
-
-    // add root admin to new literacyMaterial as an admin
-    await this.db.addRootAdminToBaseNodeAsAdmin(id, 'LiteracyMaterial');
-
-    this.logger.debug(`literacyMaterial created`, { id });
-
-    return this.readOne(id, session);
   }
 
   async readOne(
@@ -208,32 +217,73 @@ export class LiteracyMaterialService {
       session.userId = this.config.anonUser.id;
     }
 
-    const props = ['name', 'range'];
-    const query = this.db
+    const secureProps = ['name'];
+    const baseNodeMetaProps = ['id', 'createdAt'];
+    const readLiteracyMaterial = this.db
       .query()
       .call(matchRequestingUser, session)
       .call(matchUserPermissions, 'LiteracyMaterial', literacyMaterialId)
-      .call(addAllSecureProperties, ...props)
-      .with([
-        ...props.map(addPropertyCoalesceWithClause),
-        'coalesce(node.id) as id',
-        'coalesce(node.createdAt) as createdAt',
+      .call(addAllSecureProperties, ...secureProps)
+      .optionalMatch([
+        node('scriptureReferencesReadPerm', 'Permission', {
+          property: 'scriptureReferences',
+          read: true,
+          active: true,
+        }),
+        relation('out', '', 'baseNode'),
+        node('node'),
+        relation('out', '', 'scriptureReferences', { active: true }),
+        node('scriptureReferences', 'ScriptureRange', { active: true }),
       ])
-      .returnDistinct([...props, 'id', 'createdAt']);
+      .where({ scriptureReferencesReadPerm: inArray(['permList'], true) })
+      .optionalMatch([
+        node('scriptureReferencesEditPerm', 'Permission', {
+          property: 'scriptureReferences',
+          edit: true,
+          active: true,
+        }),
+        relation('out', '', 'baseNode'),
+        node('node'),
+      ])
+      .where({ scriptureReferencesEditPerm: inArray(['permList'], true) })
+      .return(
+        `
+          {
+            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
+            ${listWithSecureObject(secureProps)},
+            canReadLiteracyMaterials: requestingUser.canReadLiteracyMaterials,
+            canScriptureReferencesRead: scriptureReferencesReadPerm.read,
+            canScriptureReferencesEdit: scriptureReferencesEditPerm.edit
+          } as litMaterial
+        `
+      );
 
-    const result = (await query.first()) as LiteracyMaterial | undefined;
+    const result = await readLiteracyMaterial.first();
+
     if (!result) {
-      throw new NotFoundException('Could not find org');
+      throw new NotFoundException('Could not find literacy material');
     }
 
+    if (!result.litMaterial.canReadLiteracyMaterials) {
+      throw new ForbiddenException(
+        'User does not have permission to read a literacy material'
+      );
+    }
+
+    const scriptureReferences = await this.listScriptureReferences(
+      result.litMaterial.id,
+      session
+    );
+
     return {
-      ...result,
+      id: result.litMaterial.id,
+      name: result.litMaterial.name,
       scriptureReferences: {
-        // TODO
-        canRead: true,
-        canEdit: true,
-        value: [],
+        canRead: !!result.litMaterial.canScriptureReferencesRead,
+        canEdit: !!result.litMaterial.canScriptureReferencesEdit,
+        value: scriptureReferences,
       },
+      createdAt: result.litMaterial.createdAt,
     };
   }
 
@@ -317,5 +367,51 @@ export class LiteracyMaterialService {
       hasMore: result.hasMore,
       total: result.total,
     };
+  }
+
+  async listScriptureReferences(
+    litMaterialId: string,
+    session: ISession
+  ): Promise<ScriptureRange[]> {
+    const query = this.db
+      .query()
+      .match([
+        node('lt', 'LiteracyMaterial', {
+          id: litMaterialId,
+          active: true,
+          owningOrgId: session.owningOrgId,
+        }),
+        relation('out', '', 'scriptureReferences'),
+        node('scriptureRanges', 'ScriptureRange', { active: true }),
+      ])
+      .with('collect(scriptureRanges) as items')
+      .return('items');
+    const result = await query.first();
+
+    if (!result) {
+      return [];
+    }
+
+    const items: ScriptureRange[] = await Promise.all(
+      result.items.map(
+        (item: {
+          identity: string;
+          labels: string;
+          properties: {
+            start: number;
+            end: number;
+            createdAt: string;
+            active: boolean;
+          };
+        }) => {
+          return verseToScriptureRange({
+            start: item.properties.start,
+            end: item.properties.end,
+          });
+        }
+      )
+    );
+
+    return items;
   }
 }
