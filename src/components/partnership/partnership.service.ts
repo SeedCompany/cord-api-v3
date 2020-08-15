@@ -513,8 +513,8 @@ export class PartnershipService {
     const object = await this.readOne(input.id, session);
 
     this.verifyFundingType(
-      input.fundingType ?? (object.fundingType.value as PartnershipFundingType),
-      input.types ?? (object.types.value as PartnershipType[])
+      input.fundingType ?? object.fundingType.value,
+      input.types ?? object.types.value
     );
 
     const { mou, agreement, ...rest } = input;
