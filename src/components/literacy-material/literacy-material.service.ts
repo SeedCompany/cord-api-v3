@@ -389,17 +389,12 @@ export class LiteracyMaterialService {
       input,
       secureProps.includes(input.sort)
     );
-    const items = result.items.map((row: any) => {
-      return {
-        ...row,
-        scriptureReferences: {
-          // TODO
-          canRead: true,
-          canEdit: true,
-          value: [],
-        },
-      };
-    });
+
+    const items = await Promise.all(
+      result.items.map((item) => {
+        return this.readOne(item.id, session);
+      })
+    );
 
     return {
       items,

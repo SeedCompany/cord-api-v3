@@ -278,11 +278,48 @@ export class FilmService {
   }
 
   async update(input: UpdateFilm, session: ISession): Promise<Film> {
+    const { scriptureReferences } = input;
+
+    if (scriptureReferences) {
+      const rel = 'scriptureReferences';
+      await this.db
+        .query()
+        .match([
+          node('film', 'Film', { id: input.id, active: true }),
+          relation('out', 'rel', rel, { active: true }),
+          node('sr', 'ScriptureRange', { active: true }),
+        ])
+        .setValues({
+          'rel.active': false,
+          'sr.active': false,
+        })
+        .return('sr')
+        .first();
+
+      for (const sr of scriptureReferences) {
+        const verseRange = scriptureToVerseRange(sr);
+        await this.db
+          .query()
+          .match([node('film', 'Film', { id: input.id, active: true })])
+          .create([
+            node('film'),
+            relation('out', '', rel, { active: true }),
+            node('', ['ScriptureRange', 'BaseNode'], {
+              start: verseRange.start,
+              end: verseRange.end,
+              active: true,
+              createdAt: DateTime.local(),
+            }),
+          ])
+          .return('film')
+          .first();
+      }
+    }
     const film = await this.readOne(input.id, session);
     return this.db.sgUpdateProperties({
       session,
       object: film,
-      props: ['name'], // TODO scriptureReferences
+      props: ['name'],
       changes: input,
       nodevar: 'film',
     });
@@ -308,7 +345,8 @@ export class FilmService {
     { filter, ...input }: FilmListInput,
     session: ISession
   ): Promise<FilmListOutput> {
-    const secureProps = ['name', 'range'];
+    const baseNodeMetaProps = ['id', 'createdAt'];
+    const secureProps = ['name'];
     const label = 'Film';
 
     const query = this.db
@@ -318,19 +356,23 @@ export class FilmService {
     if (filter.name) {
       query.call(filterByString, label, 'name', filter.name);
     }
-    const listResult: {
-      items: Array<{
-        identity: string;
-        labels: string[];
-        properties: Film;
-      }>;
-      hasMore: boolean;
-      total: number;
-    } = await runListQuery(query, input, secureProps.includes(input.sort));
+    query.call(addAllSecureProperties, ...secureProps).with(
+      `
+          {
+            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
+            ${listWithSecureObject(secureProps)}
+          } as node
+        `
+    );
+    const listResult: FilmListOutput = await runListQuery(
+      query,
+      input,
+      secureProps.includes(input.sort)
+    );
 
     const items = await Promise.all(
       listResult.items.map((item) => {
-        return this.readOne(item.properties.id, session);
+        return this.readOne(item.id, session);
       })
     );
 
