@@ -175,7 +175,7 @@ export class FilmService {
         .call(createBaseNode, ['Film', 'Producible'], secureProps, {
           owningOrgId: session.owningOrgId,
         })
-        .create([...this.permission('range', 'node')]);
+        .create([...this.permission('scriptureReferences', 'node')]);
 
       if (input.scriptureReferences) {
         for (const sr of input.scriptureReferences) {
@@ -187,7 +187,7 @@ export class FilmService {
               start: verseRange.start,
               end: verseRange.end,
               active: true,
-              createdAt: DateTime.local().toString(),
+              createdAt: DateTime.local(),
             }),
           ]);
         }

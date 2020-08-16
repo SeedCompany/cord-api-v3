@@ -187,7 +187,7 @@ export class LiteracyMaterialService {
               start: verseRange.start,
               end: verseRange.end,
               active: true,
-              createdAt: DateTime.local().toString(),
+              createdAt: DateTime.local(),
             }),
           ]);
         }
