@@ -77,7 +77,7 @@ describe('ProjectMember e2e', () => {
     expect(actual.user.value?.id).toBe(member.id);
   });
 
-  it('list view of ProjectMember', async () => {
+  it.skip('list view of ProjectMember', async () => {
     const numProjectMembers = 2;
     const userForList = await createUser(app, { password });
     const userId = userForList.id;
