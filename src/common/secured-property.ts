@@ -93,26 +93,20 @@ SecuredEnum.descriptionFor = SecuredProperty.descriptionFor = (
   These \`can*\` authorization properties are specific to the user making the request.
 `;
 
-export interface SecuredPropertyListOptions<
-  Override extends boolean | undefined = false
-> {
-  isOverride?: Override;
-}
-
-type SecuredList<
-  T,
-  Override extends boolean | undefined
-> = Override extends true ? T[] | null | undefined : T[];
+type SecuredList<T, Nullable extends boolean | undefined> = SecuredValue<
+  T[],
+  Nullable
+>;
 
 export function SecuredEnumList<
   T extends string,
   EnumValue extends string,
-  Override extends boolean | undefined = false
+  Nullable extends boolean | undefined = false
 >(
   valueClass: { [key in T]: EnumValue },
-  options: SecuredPropertyListOptions<Override> = {}
+  options: SecuredPropertyOptions<Nullable> = {}
 ) {
-  return SecuredList<EnumValue, EnumValue, Override>(
+  return SecuredList<EnumValue, EnumValue, Nullable>(
     valueClass as any,
     options
   );
@@ -120,25 +114,25 @@ export function SecuredEnumList<
 
 export function SecuredPropertyList<
   T,
-  Override extends boolean | undefined = false
+  Nullable extends boolean | undefined = false
 >(
   valueClass: Class<T> | AbstractClassType<T> | GraphQLScalarType,
-  options: SecuredPropertyListOptions<Override> = {}
+  options: SecuredPropertyOptions<Nullable> = {}
 ) {
-  return SecuredList<typeof valueClass, T, Override>(valueClass, options);
+  return SecuredList<typeof valueClass, T, Nullable>(valueClass, options);
 }
 
-function SecuredList<GQL, TS, Override extends boolean | undefined = false>(
+function SecuredList<GQL, TS, Nullable extends boolean | undefined = false>(
   valueClass: GQL,
-  options: SecuredPropertyListOptions<Override> = {}
+  options: SecuredPropertyOptions<Nullable> = {}
 ) {
   @ObjectType({ isAbstract: true, implements: [Readable, Editable] })
   abstract class SecuredPropertyListClass
-    implements Readable, Editable, Secured<SecuredList<TS, Override>> {
+    implements Readable, Editable, Secured<SecuredList<TS, Nullable>> {
     @Field(() => [valueClass], {
-      nullable: options.isOverride,
+      nullable: options.nullable,
     })
-    readonly value: SecuredList<TS, Override>;
+    readonly value: SecuredList<TS, Nullable>;
     @Field()
     readonly canRead: boolean;
     @Field()
