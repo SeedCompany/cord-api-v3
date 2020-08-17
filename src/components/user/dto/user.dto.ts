@@ -1,5 +1,4 @@
 import { Field, ObjectType } from '@nestjs/graphql';
-import { DateTime } from 'luxon';
 import {
   Resource,
   SecuredEnum,
@@ -55,30 +54,3 @@ export class User extends Resource {
   description: SecuredProperty.descriptionFor('a user'),
 })
 export class SecuredUser extends SecuredProperty(User) {}
-
-export const RedactedSecuredString: SecuredString = {
-  value: undefined,
-  canRead: false,
-  canEdit: false,
-};
-
-export const RedactedSecuredRoles: SecuredRoles = {
-  value: [],
-  canRead: false,
-  canEdit: false,
-};
-
-export const RedactedUser: Partial<User> = {
-  id: '',
-  createdAt: DateTime.fromSeconds(0),
-  email: RedactedSecuredString,
-  realFirstName: RedactedSecuredString,
-  realLastName: RedactedSecuredString,
-  displayFirstName: RedactedSecuredString,
-  displayLastName: RedactedSecuredString,
-  phone: RedactedSecuredString,
-  timezone: RedactedSecuredString,
-  bio: RedactedSecuredString,
-  roles: RedactedSecuredRoles,
-  title: RedactedSecuredString,
-};
