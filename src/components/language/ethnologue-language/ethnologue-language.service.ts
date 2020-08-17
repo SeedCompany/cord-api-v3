@@ -7,9 +7,6 @@ import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { ISession } from '../../../common';
 import {
-  addAllSecureProperties,
-  addPropertyCoalesceWithClause,
-  addShapeForBaseNodeMetaProperty,
   ConfigService,
   createBaseNode,
   createSG,
@@ -18,7 +15,6 @@ import {
   Logger,
   matchRequestingUser,
   matchSession,
-  matchUserPermissions,
   matchUserPermissionsIn,
   Property,
 } from '../../../core';
@@ -243,9 +239,9 @@ export class EthnologueLanguageService {
       session.userId = this.config.anonUser.id;
     }
 
-    const props = ['id', 'code', 'provisionalCode', 'name', 'population'];
+    // const props = ['id', 'code', 'provisionalCode', 'name', 'population'];
 
-    const baseNodeMetaProps = ['createdAt'];
+    // const baseNodeMetaProps = ['createdAt'];
 
     const query = this.db
       .query()
@@ -277,18 +273,18 @@ export class EthnologueLanguageService {
     };
 
     const perms: any = {};
-    const permList = result && result.permList
+    const permList = result?.permList;
 
     if (permList) {
       for (const record of permList) {
         perms[record.properties.property] = {
           canRead: record?.properties?.read === true,
-          canEdit: record?.properties?.edit === true
+          canEdit: record?.properties?.edit === true,
         };
       }
     }
 
-    const propList = result && result.propList
+    const propList = result?.propList;
     // console.log('perms', perms)
     if (propList) {
       for (const record of propList) {
@@ -298,9 +294,13 @@ export class EthnologueLanguageService {
         if (record?.property) {
           response[record.property] = {
             value: record.value,
-            canRead: perms[record.property] ? perms[record.property].canRead : false,
-            canEdit: perms[record.property] ? perms[record.property].canEdit : false,
-          }
+            canRead: perms[record.property]
+              ? perms[record.property].canRead
+              : false,
+            canEdit: perms[record.property]
+              ? perms[record.property].canEdit
+              : false,
+          };
         }
       }
     }

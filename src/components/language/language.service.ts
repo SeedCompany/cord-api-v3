@@ -14,23 +14,14 @@ import {
   simpleSwitch,
 } from '../../common';
 import {
-  addAllMetaPropertiesOfChildBaseNodes,
-  addAllSecureProperties,
-  addBaseNodeMetaPropsWithClause,
-  addPropertyCoalesceWithClause,
-  addShapeForBaseNodeMetaProperty,
-  addShapeForChildBaseNodeMetaProperty,
-  ChildBaseNodeMetaProperty,
   ConfigService,
   createBaseNode,
   DatabaseService,
   filterByString,
   ILogger,
-  listWithSecureObject,
   Logger,
   matchRequestingUser,
   matchSession,
-  matchUserPermissions,
   OnIndex,
   runListQuery,
   UniquenessError,
@@ -401,17 +392,7 @@ export class LanguageService {
       'sponsorDate',
     ];
 
-    const baseNodeMetaProps = ['id', 'createdAt'];
-
-    const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
-      {
-        parentBaseNodePropertyKey: 'ethnologue',
-        parentRelationDirection: 'out',
-        childBaseNodeLabel: 'EthnologueLanguage',
-        childBaseNodeMetaPropertyKey: 'id',
-        returnIdentifier: 'ethnologueLanguageId',
-      },
-    ];
+    // const baseNodeMetaProps = ['id', 'createdAt'];
 
     const query = this.db
       .query()
@@ -456,7 +437,7 @@ export class LanguageService {
     for (const record of result.permList) {
       perms[record.properties.property] = {
         canRead: record?.properties?.read === true,
-        canEdit: record?.properties?.edit === true
+        canEdit: record?.properties?.edit === true,
       };
     }
 
@@ -470,9 +451,13 @@ export class LanguageService {
       } else {
         response[record.property] = {
           value: record.value || null,
-          canRead: perms[record.property] ? perms[record.property].canRead : false,
-          canEdit: perms[record.property] ? perms[record.property].canEdit : false,
-        }
+          canRead: perms[record.property]
+            ? perms[record.property].canRead
+            : false,
+          canEdit: perms[record.property]
+            ? perms[record.property].canEdit
+            : false,
+        };
       }
     }
 
@@ -495,7 +480,7 @@ export class LanguageService {
 
     return ({
       ...response,
-      ethnologue: ethnologue
+      ethnologue: ethnologue,
     } as unknown) as Language;
   }
 
@@ -594,7 +579,7 @@ export class LanguageService {
     session: ISession
   ): Promise<LanguageListOutput> {
     const label = 'Language';
-    const baseNodeMetaProps = ['id', 'createdAt'];
+    // const baseNodeMetaProps = ['id', 'createdAt'];
     // const unsecureProps = [''];
     const secureProps = [
       'name',
@@ -607,16 +592,6 @@ export class LanguageService {
       'displayNamePronunciation',
       'sensitivity',
       'sponsorDate',
-    ];
-
-    const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
-      {
-        parentBaseNodePropertyKey: 'ethnologue',
-        parentRelationDirection: 'out',
-        childBaseNodeLabel: 'EthnologueLanguage',
-        childBaseNodeMetaPropertyKey: 'id',
-        returnIdentifier: 'ethnologueLanguageId',
-      },
     ];
 
     const query = this.db.query().call(matchRequestingUser, session);
