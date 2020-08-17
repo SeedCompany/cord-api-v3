@@ -80,34 +80,23 @@ var cypher_query_builder_1 = require("cypher-query-builder");
 var lodash_1 = require("lodash");
 var luxon_1 = require("luxon");
 var shortid_1 = require("shortid");
+var common_2 = require("../../common");
 var core_1 = require("../../core");
 var results_1 = require("../../core/database/results");
 var LocationService = /** @class */ (function () {
-    function LocationService(logger, config, db) {
+    function LocationService(logger, config, db, userService, marketingLocationService) {
         this.logger = logger;
         this.config = config;
         this.db = db;
+        this.userService = userService;
+        this.marketingLocationService = marketingLocationService;
         // helper method for defining properties
-        this.property = function (prop, value, baseNode) {
+        this.property = function (prop, value, baseNode, extraLabels) {
             if (!value) {
                 return [];
             }
             var createdAt = luxon_1.DateTime.local();
-            var propLabel;
-            if (prop === 'name') {
-                if (baseNode === 'newZone') {
-                    propLabel = 'Property:FieldZoneName';
-                }
-                else if (baseNode === 'newRegion') {
-                    propLabel = 'Property:FieldRegionName';
-                }
-                else {
-                    propLabel = 'Property:LocationName';
-                }
-            }
-            else {
-                propLabel = 'Property';
-            }
+            var propLabel = __spreadArrays(['Property'], (extraLabels || []));
             return [
                 [
                     cypher_query_builder_1.node(baseNode),
@@ -210,6 +199,20 @@ var LocationService = /** @class */ (function () {
                             // COUNTRY NAME NODE
                             'CREATE CONSTRAINT ON (n:LocationName) ASSERT EXISTS(n.value)',
                             'CREATE CONSTRAINT ON (n:LocationName) ASSERT n.value IS UNIQUE',
+                            // PUBLICLOCATION NODE
+                            'CREATE CONSTRAINT ON (n:PublicLocation) ASSERT EXISTS(n.id)',
+                            'CREATE CONSTRAINT ON (n:PublicLocation) ASSERT n.id IS UNIQUE',
+                            'CREATE CONSTRAINT ON (n:PublicLocation) ASSERT EXISTS(n.active)',
+                            'CREATE CONSTRAINT ON (n:PublicLocation) ASSERT EXISTS(n.createdAt)',
+                            'CREATE CONSTRAINT ON (n:PublicLocation) ASSERT EXISTS(n.owningOrgId)',
+                            //PRIVATELOCATION NODE
+                            'CREATE CONSTRAINT ON (n:PrivateLocation) ASSERT EXISTS(n.id)',
+                            'CREATE CONSTRAINT ON (n:PrivateLocation) ASSERT n.id IS UNIQUE',
+                            'CREATE CONSTRAINT ON (n:PrivateLocation) ASSERT EXISTS(n.active)',
+                            'CREATE CONSTRAINT ON (n:PrivateLocation) ASSERT EXISTS(n.createdAt)',
+                            'CREATE CONSTRAINT ON (n:PrivateLocation) ASSERT EXISTS(n.owningOrgId)',
+                            'CREATE CONSTRAINT ON ()-[r:publicName]-() ASSERT EXISTS(r.active)',
+                            'CREATE CONSTRAINT ON ()-[r:publicName]-() ASSERT EXISTS(r.createdAt)',
                         ];
                         _i = 0, constraints_1 = constraints;
                         _a.label = 1;
@@ -258,7 +261,7 @@ var LocationService = /** @class */ (function () {
                                     owningOrgId: session.owningOrgId
                                 }),
                             ]
-                        ], this.property('name', input.name, 'newZone'), [
+                        ], this.property('name', input.name, 'newZone', ['FieldZoneName']), [
                             [
                                 cypher_query_builder_1.node('adminSG', 'SecurityGroup', {
                                     id: shortid_1.generate(),
@@ -373,7 +376,9 @@ var LocationService = /** @class */ (function () {
                                     owningOrgId: session.owningOrgId
                                 }),
                             ]
-                        ], this.property('name', input.name, 'newRegion'), [
+                        ], this.property('name', input.name, 'newRegion', [
+                            'FieldRegionName',
+                        ]), [
                             [
                                 cypher_query_builder_1.node('adminSG', 'SecurityGroup', {
                                     id: shortid_1.generate(),
@@ -499,7 +504,7 @@ var LocationService = /** @class */ (function () {
                                     owningOrgId: session.owningOrgId
                                 }),
                             ]
-                        ], this.property('name', input.name, 'newCountry'), [
+                        ], this.property('name', input.name, 'newCountry', ['LocationName']), [
                             [
                                 cypher_query_builder_1.node('adminSG', 'SecurityGroup', {
                                     id: shortid_1.generate(),
@@ -582,47 +587,260 @@ var LocationService = /** @class */ (function () {
             });
         });
     };
+    LocationService.prototype.createPublicLocation = function (input, session) {
+        return __awaiter(this, void 0, Promise, function () {
+            var createdAt, query, result, id, err_1;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        createdAt = luxon_1.DateTime.local();
+                        _a.label = 1;
+                    case 1:
+                        _a.trys.push([1, 5, , 6]);
+                        query = this.db
+                            .query()
+                            .call(core_1.matchRequestingUser, session)
+                            .match([
+                            cypher_query_builder_1.node('rootUser', 'User', {
+                                active: true,
+                                id: this.config.rootAdmin.id
+                            }),
+                        ])
+                            .match([
+                            cypher_query_builder_1.node('fieldRegion', 'FieldRegion', {
+                                active: true,
+                                id: input.fieldRegionId
+                            }),
+                        ])
+                            .match([
+                            cypher_query_builder_1.node('marketingLocation', 'MarketingLocation', {
+                                active: true,
+                                id: input.marketingLocationId
+                            }),
+                        ])
+                            .match([
+                            cypher_query_builder_1.node('privateLocation', 'PrivateLocation', {
+                                active: true,
+                                id: input.privateLocationId
+                            }),
+                        ]);
+                        if (input.fundingAccountId) {
+                            query.match([
+                                cypher_query_builder_1.node('fundingAccount', 'FundingAccount', {
+                                    active: true,
+                                    id: input.fundingAccountId
+                                }),
+                            ]);
+                        }
+                        if (input.registryOfGeographyId) {
+                            query.match([
+                                cypher_query_builder_1.node('registryOfGeography', 'RegistryOfGeography', {
+                                    active: true,
+                                    id: input.registryOfGeographyId
+                                }),
+                            ]);
+                        }
+                        query
+                            .call(core_1.createBaseNode, ['PublicLocation'], [], {
+                            owningOrgId: session.owningOrgId
+                        })
+                            .create([
+                            [
+                                cypher_query_builder_1.node('node'),
+                                cypher_query_builder_1.relation('out', '', 'fieldRegion', { active: true, createdAt: createdAt }),
+                                cypher_query_builder_1.node('fieldRegion'),
+                            ],
+                        ])
+                            .create([
+                            [
+                                cypher_query_builder_1.node('node'),
+                                cypher_query_builder_1.relation('out', '', 'marketingLocation', {
+                                    active: true,
+                                    createdAt: createdAt
+                                }),
+                                cypher_query_builder_1.node('marketingLocation'),
+                            ],
+                        ])
+                            .create([
+                            [
+                                cypher_query_builder_1.node('node'),
+                                cypher_query_builder_1.relation('out', '', 'privateLocation', { active: true, createdAt: createdAt }),
+                                cypher_query_builder_1.node('privateLocation'),
+                            ],
+                        ]);
+                        if (input.fundingAccountId) {
+                            query.create([
+                                [
+                                    cypher_query_builder_1.node('node'),
+                                    cypher_query_builder_1.relation('out', '', 'fundingAccount', { active: true, createdAt: createdAt }),
+                                    cypher_query_builder_1.node('fundingAccount'),
+                                ],
+                            ]);
+                        }
+                        if (input.registryOfGeographyId) {
+                            query.create([
+                                [
+                                    cypher_query_builder_1.node('node'),
+                                    cypher_query_builder_1.relation('out', '', 'registryOfGeography', {
+                                        active: true,
+                                        createdAt: createdAt
+                                    }),
+                                    cypher_query_builder_1.node('registryOfGeography'),
+                                ],
+                            ]);
+                        }
+                        query
+                            .create(__spreadArrays(this.permission('fieldRegion', 'node'), this.permission('marketingLocation', 'node'), this.permission('privateLocation', 'node'), this.permission('fundingAccount', 'node'), this.permission('registryOfGeography', 'node')))
+                            .call(core_1.addUserToSG, 'rootUser', 'adminSG')
+                            .call(core_1.addUserToSG, 'rootUser', 'readerSG')["return"]('node.id as id');
+                        return [4 /*yield*/, query.first()];
+                    case 2:
+                        result = _a.sent();
+                        if (!result) {
+                            throw new common_1.InternalServerErrorException('failed to create a public location');
+                        }
+                        id = result.id;
+                        // add root admin to new public location as an admin
+                        return [4 /*yield*/, this.db.addRootAdminToBaseNodeAsAdmin(id, 'PublicLocation')];
+                    case 3:
+                        // add root admin to new public location as an admin
+                        _a.sent();
+                        this.logger.info("public location created", { id: result.id });
+                        return [4 /*yield*/, this.readOnePublicLocation(result.id, session)];
+                    case 4: return [2 /*return*/, _a.sent()];
+                    case 5:
+                        err_1 = _a.sent();
+                        this.logger.error("Could not create public location for user " + session.userId);
+                        throw new common_1.InternalServerErrorException('Could not create public location');
+                    case 6: return [2 /*return*/];
+                }
+            });
+        });
+    };
+    LocationService.prototype.createPrivateLocation = function (input, session) {
+        return __awaiter(this, void 0, Promise, function () {
+            var checkPrivateLocation, secureProps, query, result, id, err_2;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.db
+                            .query()
+                            .match([cypher_query_builder_1.node('PrivateLocation', 'LanguageName', { value: input.name })])["return"]('PrivateLocation')
+                            .first()];
+                    case 1:
+                        checkPrivateLocation = _a.sent();
+                        if (checkPrivateLocation) {
+                            throw new common_2.DuplicateException('privateLocation.name', 'PrivateLocation with this name already exists.');
+                        }
+                        secureProps = [
+                            {
+                                key: 'name',
+                                value: input.name,
+                                addToAdminSg: true,
+                                addToWriterSg: false,
+                                addToReaderSg: true,
+                                isPublic: false,
+                                isOrgPublic: false,
+                                label: 'LanguageName'
+                            },
+                            {
+                                key: 'publicName',
+                                value: input.publicName,
+                                addToAdminSg: true,
+                                addToWriterSg: false,
+                                addToReaderSg: true,
+                                isPublic: false,
+                                isOrgPublic: false,
+                                label: 'LanguagePublicName'
+                            },
+                            {
+                                key: 'type',
+                                value: input.type,
+                                addToAdminSg: true,
+                                addToWriterSg: false,
+                                addToReaderSg: true,
+                                isPublic: false,
+                                isOrgPublic: false,
+                                label: 'PrivateLocationType'
+                            },
+                            {
+                                key: 'sensitivity',
+                                value: input.sensitivity,
+                                addToAdminSg: true,
+                                addToWriterSg: false,
+                                addToReaderSg: true,
+                                isPublic: false,
+                                isOrgPublic: false
+                            },
+                        ];
+                        _a.label = 2;
+                    case 2:
+                        _a.trys.push([2, 6, , 7]);
+                        query = this.db
+                            .query()
+                            .call(core_1.matchRequestingUser, session)
+                            .match([
+                            cypher_query_builder_1.node('rootUser', 'User', {
+                                active: true,
+                                id: this.config.rootAdmin.id
+                            }),
+                        ])
+                            .call(core_1.createBaseNode, ['PrivateLocation', 'BaseNode'], secureProps, {
+                            owningOrgId: session.owningOrgId
+                        })
+                            .call(core_1.addUserToSG, 'rootUser', 'adminSG')
+                            .call(core_1.addUserToSG, 'rootUser', 'readerSG')["return"]('node.id as id');
+                        return [4 /*yield*/, query.first()];
+                    case 3:
+                        result = _a.sent();
+                        if (!result) {
+                            throw new common_1.InternalServerErrorException('failed to create a private location');
+                        }
+                        id = result.id;
+                        // add root admin to new private location as an admin
+                        return [4 /*yield*/, this.db.addRootAdminToBaseNodeAsAdmin(id, 'PrivateLocation')];
+                    case 4:
+                        // add root admin to new private location as an admin
+                        _a.sent();
+                        this.logger.info("private location created", { id: result.id });
+                        return [4 /*yield*/, this.readOnePrivateLocation(result.id, session)];
+                    case 5: return [2 /*return*/, _a.sent()];
+                    case 6:
+                        err_2 = _a.sent();
+                        this.logger.error("Could not create private location for user " + session.userId);
+                        throw new common_1.InternalServerErrorException('Could not create private location');
+                    case 7: return [2 /*return*/];
+                }
+            });
+        });
+    };
     LocationService.prototype.readOne = function (id, session) {
         return __awaiter(this, void 0, Promise, function () {
-            var query, results, label, _a;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
+            var query, results, label;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
                     case 0:
                         query = "\n    MATCH (place {id: $id, active: true}) RETURN labels(place) as labels\n    ";
                         return [4 /*yield*/, this.db.query().raw(query, { id: id }).first()];
                     case 1:
-                        results = _b.sent();
-                        label = lodash_1.first(lodash_1.intersection(results === null || results === void 0 ? void 0 : results.labels, ['Country', 'FieldRegion', 'FieldZone']));
+                        results = _a.sent();
+                        label = lodash_1.first(lodash_1.intersection(results === null || results === void 0 ? void 0 : results.labels, ['FieldRegion', 'FieldZone']));
                         this.logger.info('Looking for ', {
                             label: label,
                             id: id,
                             userId: session.userId
                         });
-                        _a = label;
-                        switch (_a) {
-                            case 'FieldZone': return [3 /*break*/, 2];
-                            case 'FieldRegion': return [3 /*break*/, 3];
-                            case 'Country': return [3 /*break*/, 4];
+                        switch (label) {
+                            case 'FieldZone': {
+                                return [2 /*return*/, this.readOneZone(id, session)];
+                            }
+                            case 'FieldRegion': {
+                                return [2 /*return*/, this.readOneRegion(id, session)];
+                            }
+                            default: {
+                                throw new common_1.BadRequestException('Not a location');
+                            }
                         }
-                        return [3 /*break*/, 6];
-                    case 2:
-                        {
-                            return [2 /*return*/, this.readOneZone(id, session)];
-                        }
-                        _b.label = 3;
-                    case 3:
-                        {
-                            return [2 /*return*/, this.readOneRegion(id, session)];
-                        }
-                        _b.label = 4;
-                    case 4: return [4 /*yield*/, this.readOneCountry(id, session)];
-                    case 5: return [2 /*return*/, _b.sent()];
-                    case 6:
-                        {
-                            throw new common_1.BadRequestException('Not a location');
-                        }
-                        _b.label = 7;
-                    case 7: return [2 /*return*/];
+                        return [2 /*return*/];
                 }
             });
         });
@@ -799,6 +1017,151 @@ var LocationService = /** @class */ (function () {
             });
         });
     };
+    LocationService.prototype.readOnePublicLocation = function (id, session) {
+        return __awaiter(this, void 0, Promise, function () {
+            var baseNodeMetaProps, childBaseNodeMetaProps, query, result, response, _a, _b, _c, _d, _e;
+            var _f;
+            return __generator(this, function (_g) {
+                switch (_g.label) {
+                    case 0:
+                        this.logger.info("Query readOne PublicLocation", {
+                            id: id,
+                            userId: session.userId
+                        });
+                        baseNodeMetaProps = ['id', 'createdAt'];
+                        childBaseNodeMetaProps = [
+                            {
+                                parentBaseNodePropertyKey: 'fundingAccount',
+                                parentRelationDirection: 'out',
+                                childBaseNodeLabel: 'FundingAccount',
+                                childBaseNodeMetaPropertyKey: 'id',
+                                returnIdentifier: 'fundingAccountId'
+                            },
+                            {
+                                parentBaseNodePropertyKey: 'fieldRegion',
+                                parentRelationDirection: 'out',
+                                childBaseNodeLabel: 'FieldRegion',
+                                childBaseNodeMetaPropertyKey: 'id',
+                                returnIdentifier: 'fieldRegionId'
+                            },
+                            {
+                                parentBaseNodePropertyKey: 'marketingLocation',
+                                parentRelationDirection: 'out',
+                                childBaseNodeLabel: 'MarketingLocation',
+                                childBaseNodeMetaPropertyKey: 'id',
+                                returnIdentifier: 'marketingLocationId'
+                            },
+                            {
+                                parentBaseNodePropertyKey: 'privateLocation',
+                                parentRelationDirection: 'out',
+                                childBaseNodeLabel: 'PrivateLocation',
+                                childBaseNodeMetaPropertyKey: 'id',
+                                returnIdentifier: 'privateLocationId'
+                            },
+                            {
+                                parentBaseNodePropertyKey: 'registryOfGeography',
+                                parentRelationDirection: 'out',
+                                childBaseNodeLabel: 'RegistryOfGeography',
+                                childBaseNodeMetaPropertyKey: 'id',
+                                returnIdentifier: 'registryOfGeographyId'
+                            },
+                        ];
+                        query = (_f = this.db
+                            .query()
+                            .call(core_1.matchRequestingUser, session)
+                            .call(core_1.matchUserPermissions, 'PublicLocation', id)).call.apply(_f, __spreadArrays([core_1.addAllMetaPropertiesOfChildBaseNodes], childBaseNodeMetaProps))["with"](__spreadArrays(childBaseNodeMetaProps.map(core_1.addShapeForChildBaseNodeMetaProperty), baseNodeMetaProps.map(core_1.addShapeForBaseNodeMetaProperty), [
+                            "\n        {\n          value: fundingAccount.id,\n          canRead: coalesce(fundingAccountReadPerm.read, false),\n          canEdit: coalesce(fundingAccountReadPerm.edit, false)\n        } as fundingAccount\n        ",
+                            "\n        {\n          value: fieldRegion.id,\n          canRead: coalesce(fieldRegionReadPerm.read, false),\n          canEdit: coalesce(fieldRegionEditPerm.edit, false)\n        } as fieldRegion\n        ",
+                            "\n        {\n          value: marketingLocation.id,\n          canRead: coalesce(marketingLocationReadPerm.read, false),\n          canEdit: coalesce(marketingLocationEditPerm.edit, false)\n        } as marketingLocation\n        ",
+                            "\n        {\n          value: registryOfGeography.id,\n          canRead: coalesce(registryOfGeographyReadPerm.read, false),\n          canEdit: coalesce(registryOfGeographyEditPerm.edit, false)\n        } as registryOfGeography\n        ",
+                            "\n        {\n          value: privateLocation.id,\n          canRead: coalesce(privateLocationReadPerm.read, false),\n          canEdit: coalesce(privateLocationEditPerm.edit, false)\n        } as privateLocation\n        ",
+                            'node',
+                        ]))
+                            .returnDistinct(__spreadArrays(baseNodeMetaProps, childBaseNodeMetaProps.map(function (x) { return x.returnIdentifier; }), [
+                            'fundingAccount',
+                            'fieldRegion',
+                            'marketingLocation',
+                            'registryOfGeography',
+                            'privateLocation',
+                            'labels(node) as labels',
+                        ]));
+                        return [4 /*yield*/, query.first()];
+                    case 1:
+                        result = _g.sent();
+                        if (!result) {
+                            this.logger.error("Could not public location");
+                            throw new common_1.NotFoundException('Could not public location');
+                        }
+                        _a = [__assign({}, result)];
+                        _b = { fundingAccount: {
+                                canRead: !!result.fundingAccount.canRead,
+                                canEdit: !!result.fundingAccount.canEdit,
+                                value: null
+                            } };
+                        _c = {
+                            canRead: !!result.fieldRegion.canRead,
+                            canEdit: !!result.fieldRegion.canEdit
+                        };
+                        return [4 /*yield*/, this.readOneRegion(result.fieldRegion.value, session)];
+                    case 2:
+                        _b.fieldRegion = (_c.value = _g.sent(),
+                            _c);
+                        _d = {
+                            canRead: !!result.marketingLocation.canRead,
+                            canEdit: !!result.marketingLocation.canEdit
+                        };
+                        return [4 /*yield*/, this.marketingLocationService.readOne(result.marketingLocation.value, session)];
+                    case 3:
+                        _b.marketingLocation = (_d.value = _g.sent(),
+                            _d), _b.registryOfGeography = {
+                            canRead: !!result.registryOfGeography.canRead,
+                            canEdit: !!result.registryOfGeography.canEdit,
+                            value: null
+                        };
+                        _e = {
+                            canRead: !!result.privateLocation.canRead,
+                            canEdit: !!result.privateLocation.canEdit
+                        };
+                        return [4 /*yield*/, this.readOnePrivateLocation(result.privateLocation.value, session)];
+                    case 4:
+                        response = __assign.apply(void 0, _a.concat([(_b.privateLocation = (_e.value = _g.sent(),
+                                _e), _b)]));
+                        return [2 /*return*/, response];
+                }
+            });
+        });
+    };
+    LocationService.prototype.readOnePrivateLocation = function (id, session) {
+        return __awaiter(this, void 0, Promise, function () {
+            var secureProps, readPrivateLocation, result, response;
+            var _a;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        if (!session.userId) {
+                            session.userId = this.config.anonUser.id;
+                        }
+                        secureProps = ['name', 'publicName', 'type', 'sensitivity'];
+                        readPrivateLocation = (_a = this.db
+                            .query()
+                            .call(core_1.matchRequestingUser, session)
+                            .call(core_1.matchUserPermissions, 'PrivateLocation', id)).call.apply(_a, __spreadArrays([core_1.addAllSecureProperties], secureProps))["with"](__spreadArrays(secureProps.map(core_1.addPropertyCoalesceWithClause), [
+                            'coalesce(node.id) as id',
+                            'coalesce(node.createdAt) as createdAt',
+                        ]))
+                            .returnDistinct(__spreadArrays(secureProps, ['id', 'createdAt']));
+                        return [4 /*yield*/, readPrivateLocation.first()];
+                    case 1:
+                        result = _b.sent();
+                        if (!result) {
+                            throw new common_1.NotFoundException('Could not find private location');
+                        }
+                        response = __assign(__assign({}, result), { sensitivity: result.sensitivity.value || common_2.Sensitivity.Low, type: result.type.value });
+                        return [2 /*return*/, response];
+                }
+            });
+        });
+    };
     LocationService.prototype.updateZone = function (input, session) {
         return __awaiter(this, void 0, Promise, function () {
             var zone, query;
@@ -864,7 +1227,7 @@ var LocationService = /** @class */ (function () {
                         _a.label = 3;
                     case 3:
                         if (!(input.zoneId && input.zoneId !== region.zone.value)) return [3 /*break*/, 5];
-                        query = "\n          MATCH\n            (token:Token {\n              active: true,\n              value: $token\n            })<-[:token {active: true}]-\n            (requestingUser:User {\n              active: true,\n              id: $requestingUserId,\n              owningOrgId: $owningOrgId\n            }),\n            (newZone:FieldZone {id: $zoneId, active: true}),\n            (region:FieldRegion {id: $id, active: true})-[rel:zone {active: true}]->(oldZone:Zone)\n          DELETE rel\n          CREATE (newZone)<-[:zone {active: true, createdAt: datetime()}]-(region)\n          RETURN  region.id as id\n        ";
+                        query = "\n          MATCH\n            (token:Token {\n              active: true,\n              value: $token\n            })<-[:token {active: true}]-\n            (requestingUser:User {\n              active: true,\n              id: $requestingUserId,\n              owningOrgId: $owningOrgId\n            }),\n            (newZone:FieldZone {id: $zoneId, active: true}),\n            (region:FieldRegion {id: $id, active: true})-[rel:zone {active: true}]->(oldZone:FieldZone)\n          DELETE rel\n          CREATE (newZone)<-[:zone {active: true, createdAt: datetime()}]-(region)\n          RETURN  region.id as id\n        ";
                         return [4 /*yield*/, this.db
                                 .query()
                                 .raw(query, {
@@ -905,7 +1268,7 @@ var LocationService = /** @class */ (function () {
                     case 1:
                         country = _b.sent();
                         if (!(input.regionId && input.regionId !== ((_a = country.region.value) === null || _a === void 0 ? void 0 : _a.id))) return [3 /*break*/, 3];
-                        query = "\n          MATCH\n            (token:Token {\n              active: true,\n              value: $token\n            })<-[:token {active: true}]-\n            (requestingUser:User {\n              active: true,\n              id: $requestingUserId,\n              owningOrgId: $owningOrgId\n            }),\n            (newRegion:FieldRegion {id: $regionId, active: true}),\n            (country:Country {id: $id, active: true})-[rel:region {active: true}]->(oldZone:Region)\n          DELETE rel\n          CREATE (newRegion)<-[:region {active: true, createdAt: datetime()}]-(country)\n          RETURN  country.id as id\n        ";
+                        query = "\n          MATCH\n            (token:Token {\n              active: true,\n              value: $token\n            })<-[:token {active: true}]-\n            (requestingUser:User {\n              active: true,\n              id: $requestingUserId,\n              owningOrgId: $owningOrgId\n            }),\n            (newRegion:FieldRegion {id: $regionId, active: true}),\n            (country:Country {id: $id, active: true})-[rel:region {active: true}]->(oldZone:FieldRegion)\n          DELETE rel\n          CREATE (newRegion)<-[:region {active: true, createdAt: datetime()}]-(country)\n          RETURN  country.id as id\n        ";
                         return [4 /*yield*/, this.db
                                 .query()
                                 .raw(query, {
@@ -931,6 +1294,25 @@ var LocationService = /** @class */ (function () {
                         _b.sent();
                         return [4 /*yield*/, this.readOneCountry(input.id, session)];
                     case 5: return [2 /*return*/, _b.sent()];
+                }
+            });
+        });
+    };
+    LocationService.prototype.updatePrivateLocation = function (input, session) {
+        return __awaiter(this, void 0, Promise, function () {
+            var PrivateLocation;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.readOnePrivateLocation(input.id, session)];
+                    case 1:
+                        PrivateLocation = _a.sent();
+                        return [2 /*return*/, this.db.sgUpdateProperties({
+                                session: session,
+                                object: PrivateLocation,
+                                props: ['name', 'publicName'],
+                                changes: input,
+                                nodevar: 'PrivateLocation'
+                            })];
                 }
             });
         });
@@ -972,7 +1354,7 @@ var LocationService = /** @class */ (function () {
             return __generator(this, function (_c) {
                 switch (_c.label) {
                     case 0:
-                        types = (_b = filter.types) !== null && _b !== void 0 ? _b : ['Zone', 'Region', 'Country'];
+                        types = (_b = filter.types) !== null && _b !== void 0 ? _b : ['Zone', 'Region'];
                         query = this.db
                             .query()
                             .call(core_1.matchRequestingUser, session)

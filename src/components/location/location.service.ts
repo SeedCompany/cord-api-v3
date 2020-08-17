@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { inArray, node, relation } from 'cypher-query-builder';
 import { first, intersection } from 'lodash';
 import { DateTime } from 'luxon';
@@ -75,7 +75,11 @@ export class LocationService {
     private readonly config: ConfigService,
     private readonly db: DatabaseService,
     private readonly userService: UserService,
-    private readonly marketingLocationService: MarketingLocationService
+    private readonly marketingLocationService: MarketingLocationService,
+    @Inject(forwardRef(() => ProjectService))
+    private readonly projectService: ProjectService,
+    private readonly fundingAccountService: FundingAccountService,
+    private readonly registryOfGeographyService: RegistryOfGeographyService
   ) {}
 
   @OnIndex()
@@ -531,6 +535,14 @@ export class LocationService {
           }),
         ]);
       }
+      if (input.projectId) {
+        query.match([
+          node('project', 'Project', {
+            active: true,
+            id: input.projectId,
+          }),
+        ]);
+      }
 
       query
         .call(createBaseNode, ['PublicLocation'], [], {
@@ -582,6 +594,15 @@ export class LocationService {
           ],
         ]);
       }
+      if (input.projectId) {
+        query.create([
+          [
+            node('node'),
+            relation('in', '', 'locations', { active: true, createdAt }),
+            node('project'),
+          ],
+        ]);
+      }
 
       query
         .create([
@@ -589,6 +610,7 @@ export class LocationService {
           ...this.permission('privateLocation', 'node'),
           ...this.permission('fundingAccount', 'node'),
           ...this.permission('registryOfGeography', 'node'),
+          ...this.permission('project', 'node'),
         ])
         .call(addUserToSG, 'rootUser', 'adminSG')
         .call(addUserToSG, 'rootUser', 'readerSG')
@@ -954,6 +976,13 @@ export class LocationService {
         childBaseNodeMetaPropertyKey: 'id',
         returnIdentifier: 'registryOfGeographyId',
       },
+      {
+        parentBaseNodePropertyKey: 'project',
+        parentRelationDirection: 'in',
+        childBaseNodeLabel: 'Project',
+        childBaseNodeMetaPropertyKey: 'id',
+        returnIdentifier: 'projectId',
+      },
     ];
     const query = this.db
       .query()
@@ -991,6 +1020,13 @@ export class LocationService {
           canEdit: coalesce(privateLocationEditPerm.edit, false)
         } as privateLocation
         `,
+        `
+        {
+          value: project.id,
+          canRead: coalesce(projectReadPerm.read, false),
+          canEdit: coalesce(projectEditPerm.edit, false)
+        } as project
+        `,
         'node',
       ])
       .returnDistinct([
@@ -1000,6 +1036,7 @@ export class LocationService {
         'marketingLocation',
         'registryOfGeography',
         'privateLocation',
+        'project',
         'labels(node) as labels',
       ]);
 
@@ -1014,7 +1051,12 @@ export class LocationService {
       fundingAccount: {
         canRead: !!result.fundingAccount.canRead,
         canEdit: !!result.fundingAccount.canEdit,
-        value: null,
+        value: result.fundingAccount.value
+          ? await this.fundingAccountService.readOne(
+              result.fundingAccount.value,
+              session
+            )
+          : null,
       },
       marketingLocation: {
         canRead: !!result.marketingLocation.canRead,
@@ -1027,7 +1069,12 @@ export class LocationService {
       registryOfGeography: {
         canRead: !!result.registryOfGeography.canRead,
         canEdit: !!result.registryOfGeography.canEdit,
-        value: null,
+        value: result.registryOfGeography.value
+          ? await this.registryOfGeographyService.readOne(
+              result.registryOfGeography.value,
+              session
+            )
+          : null,
       },
       privateLocation: {
         canRead: !!result.privateLocation.canRead,
@@ -1036,6 +1083,13 @@ export class LocationService {
           result.privateLocation.value,
           session
         ),
+      },
+      project: {
+        canRead: !!result.project.canRead,
+        canEdit: !!result.project.canEdit,
+        value: result.project.value
+          ? await this.projectService.readOne(result.project.value, session)
+          : null,
       },
     };
 

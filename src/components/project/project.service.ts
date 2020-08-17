@@ -84,6 +84,7 @@ export class ProjectService {
   constructor(
     private readonly db: DatabaseService,
     private readonly projectMembers: ProjectMemberService,
+    @Inject(forwardRef(() => LocationService))
     private readonly locationService: LocationService,
     @Inject(forwardRef(() => BudgetService))
     private readonly budgetService: BudgetService,

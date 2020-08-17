@@ -75,6 +75,9 @@ export abstract class CreatePublicLocation {
 
   @IdField({ nullable: true })
   readonly fundingAccountId?: string;
+
+  @IdField({ nullable: true })
+  readonly projectId?: string;
 }
 
 @InputType()
