@@ -269,6 +269,7 @@ export class UserService {
       ...this.property('bio', input.bio),
       ...this.property('status', input.status),
       ...this.roleProperties(input.roles),
+      ...this.property('title', input.title),
       [
         node('user'),
         relation('in', '', 'member', { active: true, createdAt }),
@@ -303,6 +304,7 @@ export class UserService {
       ...this.permission('bio'),
       ...this.permission('status'),
       ...this.permission('roles'),
+      ...this.permission('title'),
     ]);
 
     query.return({
@@ -437,6 +439,7 @@ export class UserService {
       'timezone',
       'bio',
       'status',
+      'title',
     ];
     const query = this.db
       .query()
@@ -481,6 +484,7 @@ export class UserService {
         'timezone',
         'bio',
         'status',
+        'title',
       ],
       changes: input,
       nodevar: 'user',
@@ -534,6 +538,7 @@ export class UserService {
       'timezone',
       'bio',
       'status',
+      'title',
     ];
 
     const query = this.db

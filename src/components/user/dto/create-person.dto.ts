@@ -39,6 +39,9 @@ export abstract class CreatePerson {
 
   @Field(() => [Role], { nullable: true })
   readonly roles?: Role[];
+
+  @Field({ nullable: true })
+  readonly title?: string;
 }
 
 @InputType()

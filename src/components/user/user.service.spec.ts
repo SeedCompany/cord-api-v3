@@ -72,6 +72,11 @@ describe('UserService', () => {
       canRead: true,
       canEdit: true,
     },
+    title: {
+      value: 'title',
+      canRead: true,
+      canEdit: true,
+    },
   };
 
   // beforeEach(async () => {
@@ -140,6 +145,7 @@ describe('UserService', () => {
     expect(user.phone).toEqual(createTestUser.phone);
     expect(user.timezone).toEqual(createTestUser.timezone);
     expect(user.bio).toEqual(createTestUser.bio);
+    expect(user.title).toEqual(createTestUser.title);
   });
 
   it('should update a user', async () => {
@@ -160,6 +166,7 @@ describe('UserService', () => {
     expect(user.phone).toEqual(createTestUser.phone);
     expect(user.timezone).toEqual(createTestUser.timezone);
     expect(user.bio).toEqual(createTestUser.bio);
+    expect(user.title).toEqual(createTestUser.title);
   });
 
   it('should delete a user', async () => {
