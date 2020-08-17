@@ -1,5 +1,5 @@
 # GLOBALS
-* @michaelmarshall
+* @michaelmarshall @CarsonF
 
 # OPS
 /.github/workflows/ @CarsonF
@@ -18,7 +18,7 @@ tsconfig* @CarsonF
 *.resolver.ts @CarsonF
 
 # Foundation
-/src/common/ @michaelmarshall
-/src/core/ @michaelmarshall
+/src/common/ @CarsonF
+/src/core/ @michaelmarshall @CarsonF
 
 /src/core/database/database.service.ts @michaelmarshall
