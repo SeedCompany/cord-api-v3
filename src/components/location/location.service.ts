@@ -503,12 +503,6 @@ export class LocationService {
           }),
         ])
         .match([
-          node('fieldRegion', 'FieldRegion', {
-            active: true,
-            id: input.fieldRegionId,
-          }),
-        ])
-        .match([
           node('marketingLocation', 'MarketingLocation', {
             active: true,
             id: input.marketingLocationId,
@@ -591,7 +585,6 @@ export class LocationService {
 
       query
         .create([
-          ...this.permission('fieldRegion', 'node'),
           ...this.permission('marketingLocation', 'node'),
           ...this.permission('privateLocation', 'node'),
           ...this.permission('fundingAccount', 'node'),
@@ -934,13 +927,6 @@ export class LocationService {
 
     const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
       {
-        parentBaseNodePropertyKey: 'fundingAccount',
-        parentRelationDirection: 'out',
-        childBaseNodeLabel: 'FundingAccount',
-        childBaseNodeMetaPropertyKey: 'id',
-        returnIdentifier: 'fundingAccountId',
-      },
-      {
         parentBaseNodePropertyKey: 'fieldRegion',
         parentRelationDirection: 'out',
         childBaseNodeLabel: 'FieldRegion',
@@ -979,13 +965,6 @@ export class LocationService {
         ...baseNodeMetaProps.map(addShapeForBaseNodeMetaProperty),
         `
         {
-          value: fundingAccount.id,
-          canRead: coalesce(fundingAccountReadPerm.read, false),
-          canEdit: coalesce(fundingAccountReadPerm.edit, false)
-        } as fundingAccount
-        `,
-        `
-        {
           value: fieldRegion.id,
           canRead: coalesce(fieldRegionReadPerm.read, false),
           canEdit: coalesce(fieldRegionEditPerm.edit, false)
@@ -1018,7 +997,6 @@ export class LocationService {
         ...baseNodeMetaProps,
         ...childBaseNodeMetaProps.map((x) => x.returnIdentifier),
         'fundingAccount',
-        'fieldRegion',
         'marketingLocation',
         'registryOfGeography',
         'privateLocation',
@@ -1037,11 +1015,6 @@ export class LocationService {
         canRead: !!result.fundingAccount.canRead,
         canEdit: !!result.fundingAccount.canEdit,
         value: null,
-      },
-      fieldRegion: {
-        canRead: !!result.fieldRegion.canRead,
-        canEdit: !!result.fieldRegion.canEdit,
-        value: await this.readOneRegion(result.fieldRegion.value, session),
       },
       marketingLocation: {
         canRead: !!result.marketingLocation.canRead,

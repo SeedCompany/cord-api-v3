@@ -112,9 +112,6 @@ export class SecuredPrivateLocation extends SecuredProperty(PrivateLocation) {}
 })
 export class PublicLocation extends Resource {
   @Field()
-  readonly fieldRegion: SecuredRegion;
-
-  @Field()
   readonly marketingLocation: SecuredMarketingLocation;
 
   @Field()

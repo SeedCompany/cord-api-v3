@@ -76,9 +76,6 @@ export abstract class UpdatePublicLocation {
   readonly id: string;
 
   @IdField({ nullable: true })
-  readonly fieldRegionId?: string;
-
-  @IdField({ nullable: true })
   readonly marketingLocationId?: string;
 
   @IdField({ nullable: true })

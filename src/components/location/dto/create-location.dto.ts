@@ -65,9 +65,6 @@ export abstract class CreatePrivateLocation {
 @InputType()
 export abstract class CreatePublicLocation {
   @IdField()
-  readonly fieldRegionId: string;
-
-  @IdField()
   readonly marketingLocationId: string;
 
   @IdField()
