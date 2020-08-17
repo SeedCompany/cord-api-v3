@@ -14,23 +14,14 @@ import {
   simpleSwitch,
 } from '../../common';
 import {
-  addAllMetaPropertiesOfChildBaseNodes,
-  addAllSecureProperties,
-  addBaseNodeMetaPropsWithClause,
-  addPropertyCoalesceWithClause,
-  addShapeForBaseNodeMetaProperty,
-  addShapeForChildBaseNodeMetaProperty,
-  ChildBaseNodeMetaProperty,
   ConfigService,
   createBaseNode,
   DatabaseService,
   filterByString,
   ILogger,
-  listWithSecureObject,
   Logger,
   matchRequestingUser,
   matchSession,
-  matchUserPermissions,
   OnIndex,
   runListQuery,
   UniquenessError,
@@ -401,53 +392,96 @@ export class LanguageService {
       'sponsorDate',
     ];
 
-    const baseNodeMetaProps = ['id', 'createdAt'];
-
-    const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
-      {
-        parentBaseNodePropertyKey: 'ethnologue',
-        parentRelationDirection: 'out',
-        childBaseNodeLabel: 'EthnologueLanguage',
-        childBaseNodeMetaPropertyKey: 'id',
-        returnIdentifier: 'ethnologueLanguageId',
-      },
-    ];
+    // const baseNodeMetaProps = ['id', 'createdAt'];
 
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .call(matchUserPermissions, 'Language', langId)
-      .call(addAllSecureProperties, ...props)
-      .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
-      .with([
-        ...props.map(addPropertyCoalesceWithClause),
-        ...childBaseNodeMetaProps.map(addShapeForChildBaseNodeMetaProperty),
-        ...baseNodeMetaProps.map(addShapeForBaseNodeMetaProperty),
-        'node',
+      .match([node('node', 'Language', { active: true, id: langId })])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member*1..'),
+        node('', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission'),
+        node('perms', 'Permission', { active: true }),
+        relation('out', '', 'baseNode'),
+        node('node'),
       ])
-      .returnDistinct([
-        ...props,
-        ...baseNodeMetaProps,
-        ...childBaseNodeMetaProps.map((x) => x.returnIdentifier),
-        'labels(node) as labels',
-      ]);
+      .with('collect(distinct perms) as permList, node')
+      .match([
+        node('node'),
+        relation('out', 'r', { active: true }),
+        node('props', 'Property', { active: true }),
+      ])
+      .with('{value: props.value, property: type(r)} as prop, permList, node')
+      .with('collect(prop) as propList, permList, node')
+      .match([
+        node('node'),
+        relation('out', '', 'ethnologue'),
+        node('eth', 'EthnologueLanguage', { active: true }),
+      ])
+      .return('propList, permList, node, eth.id as ethnologueLanguageId');
 
     const result = await query.first();
     if (!result) {
       throw new NotFoundException('Could not find language', 'language.id');
     }
 
+    const response: any = {
+      id: result.node.properties.id,
+      createdAt: result.node.properties.createdAt,
+    };
+
+    const perms: any = {};
+
+    for (const record of result.permList) {
+      perms[record.properties.property] = {
+        canRead: record?.properties?.read === true,
+        canEdit: record?.properties?.edit === true,
+      };
+    }
+
+    // console.log('perms', perms)
+    for (const record of result.propList) {
+      if (!response[record.property]) {
+        response[record.property] = {};
+      }
+      if (record?.property === 'sensitivity') {
+        response[record.property] = record.value;
+      } else {
+        response[record.property] = {
+          value: record.value || null,
+          canRead: perms[record.property]
+            ? perms[record.property].canRead
+            : false,
+          canEdit: perms[record.property]
+            ? perms[record.property].canEdit
+            : false,
+        };
+      }
+    }
+
+    for (const prop of props) {
+      if (!response[prop]) {
+        response[prop] = {
+          value: null,
+          canRead: false,
+          canEdit: false,
+        };
+      }
+    }
+
+    response.ethnologueLanguageId = result.ethnologueLanguageId;
+
     const { ethnologue } = await this.ethnologueLanguageService.readOne(
       result.ethnologueLanguageId,
       session
     );
-    const response: any = {
-      ...result,
-      ethnologue: ethnologue,
-      sensitivity: result.sensitivity.value || Sensitivity.Low,
-    };
 
-    return (response as unknown) as Language;
+    return ({
+      ...response,
+      ethnologue: ethnologue,
+    } as unknown) as Language;
   }
 
   async update(
@@ -545,7 +579,7 @@ export class LanguageService {
     session: ISession
   ): Promise<LanguageListOutput> {
     const label = 'Language';
-    const baseNodeMetaProps = ['id', 'createdAt'];
+    // const baseNodeMetaProps = ['id', 'createdAt'];
     // const unsecureProps = [''];
     const secureProps = [
       'name',
@@ -560,81 +594,39 @@ export class LanguageService {
       'sponsorDate',
     ];
 
-    const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
-      {
-        parentBaseNodePropertyKey: 'ethnologue',
-        parentRelationDirection: 'out',
-        childBaseNodeLabel: 'EthnologueLanguage',
-        childBaseNodeMetaPropertyKey: 'id',
-        returnIdentifier: 'ethnologueLanguageId',
-      },
-    ];
-
-    const query = this.db
-      .query()
-      .call(matchRequestingUser, session)
-      .call(matchUserPermissions, 'Language');
+    const query = this.db.query().call(matchRequestingUser, session);
+    // .call(matchUserPermissions, 'Language');
 
     if (filter.name) {
       query.call(filterByString, label, 'name', filter.name);
     }
 
-    // match on the rest of the properties of the object requested
-    query
-      .call(
-        addAllSecureProperties,
-        ...secureProps
-        //...unsecureProps
-      )
-      .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
-      // form return object
-      // ${listWithUnsecureObject(unsecureProps)}, // removed from a few lines down
-      .with(
-        `
-          {
-            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
-            ${listWithSecureObject(secureProps)},
-            ${childBaseNodeMetaProps
-              .map(
-                (x) =>
-                  `${x.returnIdentifier}: ${x.parentBaseNodePropertyKey}.${x.childBaseNodeMetaPropertyKey}`
-              )
-              .join(', ')}
-          } as node
-        `
-      );
+    query.match([node('node', 'Language', { active: true })]);
 
     const result: LanguageListOutput = await runListQuery(
       query,
       input,
       secureProps.includes(input.sort)
     );
-
-    let ethnologueNodes: any[] = [];
-
-    if (result?.items) {
-      const ids = result.items.map(
-        (item) => (item as any).ethnologueLanguageId
-      );
-
-      if (ids) {
-        ethnologueNodes = await this.ethnologueLanguageService.readInList(
-          ids,
+    const items = await Promise.all(
+      result.items.map(async (item) => {
+        const language = await this.readOne(
+          (item as any).properties.id,
           session
         );
-      }
-    }
+        const { ethnologue } = await this.ethnologueLanguageService.readOne(
+          (language as any).ethnologueLanguageId,
+          session
+        );
 
-    const items = result.items.map((item) => {
-      const ethnologue = ethnologueNodes.find(
-        (i: any) => i.ethnologueId === (item as any).ethnologueLanguageId
-      );
-      return {
-        ...item,
-        sensitivity: (item as any).sensitivity.value || Sensitivity.Low,
-        ethnologue: ethnologue,
-      };
-    });
+        return {
+          ...(item as any).properties,
+          ...language,
+          // sensitivity: (item as any).sensitivity.value || Sensitivity.Low,
+          ethnologue: ethnologue,
+        };
+      })
+    );
 
     return {
       items,

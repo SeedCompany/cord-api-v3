@@ -7,9 +7,6 @@ import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { ISession } from '../../../common';
 import {
-  addAllSecureProperties,
-  addPropertyCoalesceWithClause,
-  addShapeForBaseNodeMetaProperty,
   ConfigService,
   createBaseNode,
   createSG,
@@ -18,7 +15,6 @@ import {
   Logger,
   matchRequestingUser,
   matchSession,
-  matchUserPermissions,
   matchUserPermissionsIn,
   Property,
 } from '../../../core';
@@ -243,34 +239,75 @@ export class EthnologueLanguageService {
       session.userId = this.config.anonUser.id;
     }
 
-    const props = ['id', 'code', 'provisionalCode', 'name', 'population'];
+    // const props = ['id', 'code', 'provisionalCode', 'name', 'population'];
 
-    const baseNodeMetaProps = ['createdAt'];
+    // const baseNodeMetaProps = ['createdAt'];
 
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .call(matchUserPermissions, 'EthnologueLanguage', id)
-      .call(addAllSecureProperties, ...props)
-      .with([
-        ...props.map(addPropertyCoalesceWithClause),
-        ...baseNodeMetaProps.map(addShapeForBaseNodeMetaProperty),
-        'node.id as ethnologueId',
-        'node',
+      .match([node('node', 'EthnologueLanguage', { active: true, id: id })])
+      .match([
+        node('requestingUser'),
+        relation('in', '', 'member*1..'),
+        node('', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission'),
+        node('perms', 'Permission', { active: true }),
+        relation('out', '', 'baseNode'),
+        node('node'),
       ])
-      .returnDistinct([
-        ...props,
-        ...baseNodeMetaProps,
-        'ethnologueId',
-        'labels(node) as labels',
-      ]);
+      .with('collect(distinct perms) as permList, node')
+      .match([
+        node('node'),
+        relation('out', 'r', { active: true }),
+        node('props', 'Property', { active: true }),
+      ])
+      .with('{value: props.value, property: type(r)} as prop, permList, node')
+      .with('collect(prop) as propList, permList, node')
+      .return('propList, permList, node');
 
-    // console.log('readOne', query.toString())
     const result = await query.first();
 
+    const response: any = {
+      createdAt: result?.node?.properties?.createdAt,
+    };
+
+    const perms: any = {};
+    const permList = result?.permList;
+
+    if (permList) {
+      for (const record of permList) {
+        perms[record.properties.property] = {
+          canRead: record?.properties?.read === true,
+          canEdit: record?.properties?.edit === true,
+        };
+      }
+    }
+
+    const propList = result?.propList;
+    // console.log('perms', perms)
+    if (propList) {
+      for (const record of propList) {
+        if (!response[record.property]) {
+          response[record.property] = {};
+        }
+        if (record?.property) {
+          response[record.property] = {
+            value: record.value,
+            canRead: perms[record.property]
+              ? perms[record.property].canRead
+              : false,
+            canEdit: perms[record.property]
+              ? perms[record.property].canEdit
+              : false,
+          };
+        }
+      }
+    }
+
     return {
-      ethnologue: result as EthnologueLanguage,
-      ethnologueId: result?.ethnologueId,
+      ethnologue: response,
+      ethnologueId: result?.node?.properties?.id,
     };
   }
 
