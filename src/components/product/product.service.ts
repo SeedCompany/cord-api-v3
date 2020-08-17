@@ -6,7 +6,7 @@ import { node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { difference } from 'lodash';
 import { DateTime } from 'luxon';
-import { ISession, NotFoundException } from '../../common';
+import { DuplicateException, ISession, NotFoundException } from '../../common';
 import {
   addAllMetaPropertiesOfChildBaseNodes,
   addAllSecureProperties,
@@ -112,6 +112,20 @@ export class ProductService {
   ): Promise<AnyProduct> {
     const createdAt = DateTime.local();
     // create product
+    const mediums_set = new Set(input.mediums);
+    if (input.mediums?.length !== mediums_set.size) {
+      throw new DuplicateException(
+        'product.mediums',
+        'Mediums has duplicate values'
+      );
+    }
+    const purposes_set = new Set(input.purposes);
+    if (input.purposes?.length !== purposes_set.size) {
+      throw new DuplicateException(
+        'product.purposes',
+        'Purposes has duplicate values'
+      );
+    }
     const secureProps: Property[] = [
       {
         key: 'mediums',
@@ -152,6 +166,22 @@ export class ProductService {
       ]);
 
     if (engagementId) {
+      const engagement = await this.db
+        .query()
+        .match([
+          node('engagement', 'Engagement', { active: true, id: engagementId }),
+        ])
+        .return('engagement')
+        .first();
+      if (!engagement) {
+        this.logger.warning(`Could not find engagement`, {
+          id: engagementId,
+        });
+        throw new NotFoundException(
+          'Could not find engagement',
+          'product.engagementId'
+        );
+      }
       query.match([
         node('engagement', 'Engagement', { active: true, id: engagementId }),
       ]);

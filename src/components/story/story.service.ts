@@ -9,14 +9,15 @@ import { DateTime } from 'luxon';
 import { DuplicateException, ISession } from '../../common';
 import {
   addAllSecureProperties,
-  addBaseNodeMetaPropsWithClause,
+  addBaseNodeMetaPropsWithClauseAsObject,
   ConfigService,
   createBaseNode,
   DatabaseService,
   filterByString,
   ILogger,
-  listWithSecureObject,
+  listWithSecureObjectAsObject,
   Logger,
+  mapping,
   matchRequestingUser,
   matchUserPermissions,
   OnIndex,
@@ -231,15 +232,13 @@ export class StoryService {
       ])
       .where({ scriptureReferencesEditPerm: inArray(['permList'], true) })
       .return(
-        `
-          {
-            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
-            ${listWithSecureObject(secureProps)},
-            canReadStorys: requestingUser.canReadStorys,
-            canScriptureReferencesRead: scriptureReferencesReadPerm.read,
-            canScriptureReferencesEdit: scriptureReferencesEditPerm.edit
-          } as story
-        `
+        mapping('story', {
+          ...addBaseNodeMetaPropsWithClauseAsObject(baseNodeMetaProps),
+          ...listWithSecureObjectAsObject(secureProps),
+          canReadStorys: 'requestingUser.canReadStorys',
+          canScriptureReferencesRead: 'scriptureReferencesReadPerm.read',
+          canScriptureReferencesEdit: 'scriptureReferencesEditPerm.edit',
+        })
       );
 
     const result = await readStory.first();
@@ -351,12 +350,10 @@ export class StoryService {
       query.call(filterByString, label, 'name', filter.name);
     }
     query.call(addAllSecureProperties, ...secureProps).with(
-      `
-          {
-            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
-            ${listWithSecureObject(secureProps)}
-          } as node
-        `
+      mapping('node', {
+        ...addBaseNodeMetaPropsWithClauseAsObject(baseNodeMetaProps),
+        ...listWithSecureObjectAsObject(secureProps),
+      })
     );
 
     const listResult: StoryListOutput = await runListQuery(

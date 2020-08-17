@@ -995,8 +995,29 @@ export function listWithSecureObject(props: string[]) {
   return props.map((x) => returnWithSecurePropertyClauseForList(x)).join(', ');
 }
 
+export function listWithSecureObjectAsObject(props: string[]) {
+  const result: any = {};
+  props.map((x) => {
+    result[x] = `{
+        value: coalesce(${x}.value, null),
+        canRead: coalesce(${x}ReadPerm.read, false),
+        canEdit: coalesce(${x}EditPerm.edit, false)
+      }
+    `;
+  });
+  return result;
+}
+
 export function addBaseNodeMetaPropsWithClause(props: string[]) {
   return props.map((x) => `${x}: node.${x}`).join(', ');
+}
+
+export function addBaseNodeMetaPropsWithClauseAsObject(props: string[]) {
+  const result: any = {};
+  props.map((x) => {
+    result[x] = `node.${x}`;
+  });
+  return result;
 }
 
 // RETURN clauses //////////////////////////////////////////////////////
