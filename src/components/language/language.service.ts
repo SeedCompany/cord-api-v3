@@ -398,7 +398,7 @@ export class LanguageService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Language', { active: true, id: langId })])
-      .match([
+      .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member*1..'),
         node('', 'SecurityGroup', { active: true }),
