@@ -29,27 +29,53 @@ export const isSecured = <T>(value: T | Secured<T>): value is Secured<T> =>
 export const unwrapSecured = <T>(value: T | Secured<T>): T | undefined =>
   isSecured(value) ? value.value : value;
 
-export function SecuredEnum<T extends string, EnumValue extends string>(
-  valueClass: { [key in T]: EnumValue }
+export function SecuredEnum<
+  T extends string,
+  EnumValue extends string,
+  Nullable extends boolean | undefined = false
+>(
+  valueClass: { [key in T]: EnumValue },
+  options: SecuredPropertyOptions<Nullable> = {}
 ) {
-  return InnerSecuredProperty<any, EnumValue>(valueClass);
+  return InnerSecuredProperty<any, EnumValue, Nullable>(valueClass, options);
 }
 
-export function SecuredProperty<GqlType, TsType = GqlType>(
-  valueClass: Class<GqlType> | AbstractClassType<GqlType> | GraphQLScalarType
+export function SecuredProperty<
+  GqlType,
+  TsType = GqlType,
+  Nullable extends boolean | undefined = false
+>(
+  valueClass: Class<GqlType> | AbstractClassType<GqlType> | GraphQLScalarType,
+  options: SecuredPropertyOptions<Nullable> = {}
 ) {
-  return InnerSecuredProperty<typeof valueClass, TsType>(valueClass);
+  return InnerSecuredProperty<typeof valueClass, TsType, Nullable>(
+    valueClass,
+    options
+  );
 }
+
+export interface SecuredPropertyOptions<
+  Nullable extends boolean | undefined = false
+> {
+  /** Whether the property can be null (when the requester can read) */
+  nullable?: Nullable;
+}
+
+type SecuredValue<
+  T,
+  Nullable extends boolean | undefined
+> = Nullable extends true ? T | null : T;
 
 function InnerSecuredProperty<
   GqlType extends GqlTypeReference,
-  TsType = GqlType
->(valueClass: GqlType) {
+  TsType = GqlType,
+  Nullable extends boolean | undefined = false
+>(valueClass: GqlType, _options: SecuredPropertyOptions<Nullable> = {}) {
   @ObjectType({ isAbstract: true, implements: [Readable, Editable] })
   abstract class SecuredPropertyClass
-    implements Readable, Editable, Secured<TsType> {
+    implements Readable, Editable, Secured<SecuredValue<TsType, Nullable>> {
     @Field(() => valueClass, { nullable: true })
-    readonly value?: TsType;
+    readonly value?: SecuredValue<TsType, Nullable>;
     @Field()
     readonly canRead: boolean;
     @Field()
