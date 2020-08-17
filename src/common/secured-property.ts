@@ -29,27 +29,53 @@ export const isSecured = <T>(value: T | Secured<T>): value is Secured<T> =>
 export const unwrapSecured = <T>(value: T | Secured<T>): T | undefined =>
   isSecured(value) ? value.value : value;
 
-export function SecuredEnum<T extends string, EnumValue extends string>(
-  valueClass: { [key in T]: EnumValue }
+export function SecuredEnum<
+  T extends string,
+  EnumValue extends string,
+  Nullable extends boolean | undefined = false
+>(
+  valueClass: { [key in T]: EnumValue },
+  options: SecuredPropertyOptions<Nullable> = {}
 ) {
-  return InnerSecuredProperty<any, EnumValue>(valueClass);
+  return InnerSecuredProperty<any, EnumValue, Nullable>(valueClass, options);
 }
 
-export function SecuredProperty<GqlType, TsType = GqlType>(
-  valueClass: Class<GqlType> | AbstractClassType<GqlType> | GraphQLScalarType
+export function SecuredProperty<
+  GqlType,
+  TsType = GqlType,
+  Nullable extends boolean | undefined = false
+>(
+  valueClass: Class<GqlType> | AbstractClassType<GqlType> | GraphQLScalarType,
+  options: SecuredPropertyOptions<Nullable> = {}
 ) {
-  return InnerSecuredProperty<typeof valueClass, TsType>(valueClass);
+  return InnerSecuredProperty<typeof valueClass, TsType, Nullable>(
+    valueClass,
+    options
+  );
 }
+
+export interface SecuredPropertyOptions<
+  Nullable extends boolean | undefined = false
+> {
+  /** Whether the property can be null (when the requester can read) */
+  nullable?: Nullable;
+}
+
+type SecuredValue<
+  T,
+  Nullable extends boolean | undefined
+> = Nullable extends true ? T | null : T;
 
 function InnerSecuredProperty<
   GqlType extends GqlTypeReference,
-  TsType = GqlType
->(valueClass: GqlType) {
+  TsType = GqlType,
+  Nullable extends boolean | undefined = false
+>(valueClass: GqlType, _options: SecuredPropertyOptions<Nullable> = {}) {
   @ObjectType({ isAbstract: true, implements: [Readable, Editable] })
   abstract class SecuredPropertyClass
-    implements Readable, Editable, Secured<TsType> {
+    implements Readable, Editable, Secured<SecuredValue<TsType, Nullable>> {
     @Field(() => valueClass, { nullable: true })
-    readonly value?: TsType;
+    readonly value?: SecuredValue<TsType, Nullable>;
     @Field()
     readonly canRead: boolean;
     @Field()
@@ -67,26 +93,20 @@ SecuredEnum.descriptionFor = SecuredProperty.descriptionFor = (
   These \`can*\` authorization properties are specific to the user making the request.
 `;
 
-export interface SecuredPropertyListOptions<
-  Override extends boolean | undefined = false
-> {
-  isOverride?: Override;
-}
-
-type SecuredList<
-  T,
-  Override extends boolean | undefined
-> = Override extends true ? T[] | null | undefined : T[];
+type SecuredList<T, Nullable extends boolean | undefined> = SecuredValue<
+  T[],
+  Nullable
+>;
 
 export function SecuredEnumList<
   T extends string,
   EnumValue extends string,
-  Override extends boolean | undefined = false
+  Nullable extends boolean | undefined = false
 >(
   valueClass: { [key in T]: EnumValue },
-  options: SecuredPropertyListOptions<Override> = {}
+  options: SecuredPropertyOptions<Nullable> = {}
 ) {
-  return SecuredList<EnumValue, EnumValue, Override>(
+  return SecuredList<EnumValue, EnumValue, Nullable>(
     valueClass as any,
     options
   );
@@ -94,25 +114,25 @@ export function SecuredEnumList<
 
 export function SecuredPropertyList<
   T,
-  Override extends boolean | undefined = false
+  Nullable extends boolean | undefined = false
 >(
   valueClass: Class<T> | AbstractClassType<T> | GraphQLScalarType,
-  options: SecuredPropertyListOptions<Override> = {}
+  options: SecuredPropertyOptions<Nullable> = {}
 ) {
-  return SecuredList<typeof valueClass, T, Override>(valueClass, options);
+  return SecuredList<typeof valueClass, T, Nullable>(valueClass, options);
 }
 
-function SecuredList<GQL, TS, Override extends boolean | undefined = false>(
+function SecuredList<GQL, TS, Nullable extends boolean | undefined = false>(
   valueClass: GQL,
-  options: SecuredPropertyListOptions<Override> = {}
+  options: SecuredPropertyOptions<Nullable> = {}
 ) {
   @ObjectType({ isAbstract: true, implements: [Readable, Editable] })
   abstract class SecuredPropertyListClass
-    implements Readable, Editable, Secured<SecuredList<TS, Override>> {
+    implements Readable, Editable, Secured<SecuredList<TS, Nullable>> {
     @Field(() => [valueClass], {
-      nullable: options.isOverride,
+      nullable: options.nullable,
     })
-    readonly value: SecuredList<TS, Override>;
+    readonly value: SecuredList<TS, Nullable>;
     @Field()
     readonly canRead: boolean;
     @Field()
@@ -131,6 +151,17 @@ SecuredEnumList.descriptionFor = SecuredPropertyList.descriptionFor = (
 `;
 
 @ObjectType({
+  description: SecuredProperty.descriptionFor('a string or null'),
+})
+export abstract class SecuredStringNullable extends SecuredProperty<
+  string,
+  string,
+  true
+>(GraphQLString, {
+  nullable: true,
+}) {}
+
+@ObjectType({
   description: SecuredProperty.descriptionFor('a string'),
 })
 export abstract class SecuredString extends SecuredProperty<string>(
@@ -141,6 +172,17 @@ export abstract class SecuredString extends SecuredProperty<string>(
   description: SecuredProperty.descriptionFor('an integer'),
 })
 export abstract class SecuredInt extends SecuredProperty<number>(Int) {}
+
+@ObjectType({
+  description: SecuredProperty.descriptionFor('an integer or null'),
+})
+export abstract class SecuredIntNullable extends SecuredProperty<
+  number,
+  number,
+  true
+>(Int, {
+  nullable: true,
+}) {}
 
 @ObjectType({
   description: SecuredProperty.descriptionFor('a float'),
@@ -168,10 +210,36 @@ export abstract class SecuredDateTime
 }
 
 @ObjectType({ implements: [Readable, Editable] })
+export abstract class SecuredDateTimeNullable
+  implements Readable, Editable, Secured<DateTime | null> {
+  @DateTimeField({ nullable: true })
+  readonly value?: DateTime | null;
+
+  @Field()
+  readonly canRead: boolean;
+
+  @Field()
+  readonly canEdit: boolean;
+}
+
+@ObjectType({ implements: [Readable, Editable] })
 export abstract class SecuredDate
   implements Readable, Editable, Secured<CalendarDate> {
   @DateField({ nullable: true })
   readonly value?: CalendarDate;
+
+  @Field()
+  readonly canRead: boolean;
+
+  @Field()
+  readonly canEdit: boolean;
+}
+
+@ObjectType({ implements: [Readable, Editable] })
+export abstract class SecuredDateNullable
+  implements Readable, Editable, Secured<CalendarDate | null> {
+  @DateTimeField({ nullable: true })
+  readonly value?: CalendarDate | null;
 
   @Field()
   readonly canRead: boolean;

@@ -51,5 +51,5 @@ export class SecuredScriptureRanges extends SecuredPropertyList(
 })
 export class SecuredScriptureRangesOverride extends SecuredPropertyList(
   ScriptureRange,
-  { isOverride: true }
+  { nullable: true }
 ) {}
