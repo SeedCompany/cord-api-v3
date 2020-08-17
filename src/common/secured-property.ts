@@ -151,6 +151,17 @@ SecuredEnumList.descriptionFor = SecuredPropertyList.descriptionFor = (
 `;
 
 @ObjectType({
+  description: SecuredProperty.descriptionFor('a string or null'),
+})
+export abstract class SecuredStringNullable extends SecuredProperty<
+  string,
+  string,
+  true
+>(GraphQLString, {
+  nullable: true,
+}) {}
+
+@ObjectType({
   description: SecuredProperty.descriptionFor('a string'),
 })
 export abstract class SecuredString extends SecuredProperty<string>(
@@ -161,6 +172,17 @@ export abstract class SecuredString extends SecuredProperty<string>(
   description: SecuredProperty.descriptionFor('an integer'),
 })
 export abstract class SecuredInt extends SecuredProperty<number>(Int) {}
+
+@ObjectType({
+  description: SecuredProperty.descriptionFor('an integer or null'),
+})
+export abstract class SecuredIntNullable extends SecuredProperty<
+  number,
+  number,
+  true
+>(Int, {
+  nullable: true,
+}) {}
 
 @ObjectType({
   description: SecuredProperty.descriptionFor('a float'),
@@ -188,10 +210,36 @@ export abstract class SecuredDateTime
 }
 
 @ObjectType({ implements: [Readable, Editable] })
+export abstract class SecuredDateTimeNullable
+  implements Readable, Editable, Secured<DateTime | null> {
+  @DateTimeField({ nullable: true })
+  readonly value?: DateTime | null;
+
+  @Field()
+  readonly canRead: boolean;
+
+  @Field()
+  readonly canEdit: boolean;
+}
+
+@ObjectType({ implements: [Readable, Editable] })
 export abstract class SecuredDate
   implements Readable, Editable, Secured<CalendarDate> {
   @DateField({ nullable: true })
   readonly value?: CalendarDate;
+
+  @Field()
+  readonly canRead: boolean;
+
+  @Field()
+  readonly canEdit: boolean;
+}
+
+@ObjectType({ implements: [Readable, Editable] })
+export abstract class SecuredDateNullable
+  implements Readable, Editable, Secured<CalendarDate | null> {
+  @DateTimeField({ nullable: true })
+  readonly value?: CalendarDate | null;
 
   @Field()
   readonly canRead: boolean;
