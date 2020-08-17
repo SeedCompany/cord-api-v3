@@ -41,6 +41,9 @@ export abstract class UpdateUser {
 
   @Field(() => [Role], { nullable: true })
   readonly roles?: Role[];
+
+  @Field({ nullable: true })
+  readonly title?: string;
 }
 
 @InputType()

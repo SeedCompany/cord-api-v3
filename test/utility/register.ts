@@ -19,6 +19,7 @@ export const generateRegisterInput = (): RegisterInput => ({
   bio: 'bio detail',
   status: UserStatus.Active,
   roles: [Role.ProjectManager, Role.Consultant],
+  title: faker.name.title(),
 });
 
 export const generateRequireFieldsRegisterInput = (): RegisterInput => ({

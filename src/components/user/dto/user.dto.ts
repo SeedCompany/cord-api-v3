@@ -46,6 +46,9 @@ export class User extends Resource {
 
   @Field()
   roles: SecuredRoles;
+
+  @Field()
+  title: SecuredString;
 }
 
 @ObjectType({
@@ -77,4 +80,5 @@ export const RedactedUser: Partial<User> = {
   timezone: RedactedSecuredString,
   bio: RedactedSecuredString,
   roles: RedactedSecuredRoles,
+  title: RedactedSecuredString,
 };
