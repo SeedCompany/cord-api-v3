@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { node } from 'cypher-query-builder';
+import { node, relation } from 'cypher-query-builder';
 import {
   DuplicateException,
   ISession,
@@ -9,7 +9,6 @@ import {
 import {
   addAllSecureProperties,
   addBaseNodeMetaPropsWithClause,
-  addPropertyCoalesceWithClause,
   addUserToSG,
   ConfigService,
   createBaseNode,
@@ -138,23 +137,79 @@ export class OrganizationService {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .call(matchUserPermissions, 'Organization', orgId)
-      .call(addAllSecureProperties, ...props)
-      .with([
-        ...props.map(addPropertyCoalesceWithClause),
-        'coalesce(node.id) as id',
-        'coalesce(node.createdAt) as createdAt',
+      .match([node('node', 'Organization', { active: true, id: orgId })])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member*1..'),
+        node('', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission'),
+        node('perms', 'Permission', { active: true }),
+        relation('out', '', 'baseNode'),
+        node('node'),
       ])
-      .returnDistinct([...props, 'id', 'createdAt']);
+      .with('collect(distinct perms) as permList, node')
+      .match([
+        node('node'),
+        relation('out', 'r', { active: true }),
+        node('props', 'Property', { active: true }),
+      ])
+      .with('{value: props.value, property: type(r)} as prop, permList, node')
+      .with('collect(prop) as propList, permList, node')
+      .return('propList, permList, node');
 
-    // printActualQuery(this.logger, query);
+    const result = await query.first();
 
-    const result = (await query.first()) as Organization | undefined;
     if (!result) {
-      throw new NotFoundException('Could not find org');
+      throw new NotFoundException(
+        'Could not find organization',
+        'organization.id'
+      );
     }
 
-    return result;
+    const organization: any = {
+      id: result.node.properties.id,
+      createdAt: result.node.properties.createdAt,
+    };
+
+    const perms: any = {};
+
+    for (const {
+      properties: { property, read, edit },
+    } of result.permList) {
+      const currentPermission = perms[property];
+      if (!currentPermission) {
+        perms[property] = {
+          canRead: Boolean(read),
+          canEdit: Boolean(edit),
+        };
+      } else {
+        currentPermission.canRead = currentPermission.canRead || read;
+        currentPermission.canEdit = currentPermission.canEdit || edit;
+      }
+    }
+
+    for (const propertyObj of result.propList) {
+      const canRead = Boolean(perms[propertyObj.property]?.canRead);
+      const canEdit = Boolean(perms[propertyObj.property]?.canEdit);
+      const value = (canRead && propertyObj.value) || null;
+      organization[propertyObj.property] = {
+        value,
+        canRead,
+        canEdit,
+      };
+    }
+
+    for (const prop of props) {
+      if (!organization[prop]) {
+        organization[prop] = {
+          value: null,
+          canRead: false,
+          canEdit: false,
+        };
+      }
+    }
+
+    return organization;
   }
 
   async update(
