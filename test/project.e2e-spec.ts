@@ -587,6 +587,12 @@ describe('Project e2e', () => {
         id: project.id,
       }
     );
+
+    // tech debt: this prevents an intermittant bug
+    setTimeout(() => {
+      //
+    });
+
     // Remember the project Owner is also a team member so that should be +1
     expect(queryProject.project.team.items.length).toBe(numProjectMembers + 1);
     expect(queryProject.project.team.total).toBe(numProjectMembers + 1);
