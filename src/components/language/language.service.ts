@@ -417,7 +417,7 @@ export class LanguageService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Language', { active: true, id: langId })])
-      .optionalMatch([
+      .match([
         node('requestingUser'),
         relation('in', '', 'member*1..'),
         node('', 'SecurityGroup', { active: true }),
@@ -427,14 +427,14 @@ export class LanguageService {
         node('node'),
       ])
       .with('collect(distinct perms) as permList, node')
-      .optionalMatch([
+      .match([
         node('node'),
         relation('out', 'r', { active: true }),
         node('props', 'Property', { active: true }),
       ])
       .with('{value: props.value, property: type(r)} as prop, permList, node')
       .with('collect(prop) as propList, permList, node')
-      .optionalMatch([
+      .match([
         node('node'),
         relation('out', '', 'ethnologue'),
         node('eth', 'EthnologueLanguage', { active: true }),
@@ -451,7 +451,7 @@ export class LanguageService {
       createdAt: result.node.properties.createdAt,
     };
 
-    let perms: any = {};
+    const perms: any = {};
 
     for (const record of result.permList) {
       perms[record.properties.property] = {

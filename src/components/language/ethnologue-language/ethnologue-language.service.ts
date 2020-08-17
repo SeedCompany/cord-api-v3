@@ -251,7 +251,7 @@ export class EthnologueLanguageService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'EthnologueLanguage', { active: true, id: id })])
-      .optionalMatch([
+      .match([
         node('requestingUser'),
         relation('in', '', 'member*1..'),
         node('', 'SecurityGroup', { active: true }),
@@ -261,7 +261,7 @@ export class EthnologueLanguageService {
         node('node'),
       ])
       .with('collect(distinct perms) as permList, node')
-      .optionalMatch([
+      .match([
         node('node'),
         relation('out', 'r', { active: true }),
         node('props', 'Property', { active: true }),
@@ -276,7 +276,7 @@ export class EthnologueLanguageService {
       createdAt: result?.node?.properties?.createdAt,
     };
 
-    let perms: any = {};
+    const perms: any = {};
     const permList = result && result.permList
 
     if (permList) {
