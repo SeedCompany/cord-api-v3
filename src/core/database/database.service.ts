@@ -565,8 +565,8 @@ export class DatabaseService {
     const aclEditPropName = `canEdit${upperFirst(aclReadProp)}`;
 
     const aclReadNodeName = aclReadNode || `canRead${upperFirst(nodevar)}s`;
-    let content: string,
-      type: string = nodevar;
+    let content: string;
+    let type = nodevar;
 
     if (nodevar === 'lang') {
       type = 'language';
@@ -805,16 +805,14 @@ export class DatabaseService {
           } else {
             item[propName] = value;
           }
+        } else if (secure) {
+          item[propName] = {
+            value: row[propName],
+            canRead: Boolean(row[aclReadPropName]) || false,
+            canEdit: Boolean(row[aclEditPropName]) || false,
+          };
         } else {
-          if (secure) {
-            item[propName] = {
-              value: row[propName],
-              canRead: Boolean(row[aclReadPropName]) || false,
-              canEdit: Boolean(row[aclEditPropName]) || false,
-            };
-          } else {
-            item[propName] = row[propName];
-          }
+          item[propName] = row[propName];
         }
       }
 

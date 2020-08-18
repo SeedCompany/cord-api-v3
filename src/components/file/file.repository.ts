@@ -102,7 +102,7 @@ export class FileRepository {
           conditions['name.value'] = contains(options.filter.name);
         }
         if (options?.filter?.type) {
-          conditions['node'] = hasLabel(options.filter.type);
+          conditions.node = hasLabel(options.filter.type);
         }
         return isEmpty(conditions) ? q : q.where(conditions);
       })

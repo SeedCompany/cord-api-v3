@@ -333,7 +333,7 @@ export class EthnologueLanguageService {
           .map(
             (
               prop
-            ) => `${prop}: {value: coalesce(${prop}.value), canRead: coalesce(${prop}ReadPerm.read, false) 
+            ) => `${prop}: {value: coalesce(${prop}.value), canRead: coalesce(${prop}ReadPerm.read, false)
         }`
           )
           .join(', ')}, ethnologueId: node.id, createdAt: node.createdAt}
@@ -376,8 +376,8 @@ export class EthnologueLanguageService {
 
       if (edit) {
         Object.keys(edit).forEach((key) => {
-          if (edit[key]['canEdit']) {
-            data[key]['canEdit'] = edit[key]['canEdit'];
+          if (edit[key].canEdit) {
+            data[key].canEdit = edit[key].canEdit;
           }
         });
       }
