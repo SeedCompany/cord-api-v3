@@ -35,3 +35,6 @@ rules:
     - paths:
         - name: '@nestjs/cqrs'
           message: Import from our core module instead
+
+  # TODO Enable this and fix errors (both types & logic changes will be needed)
+  '@typescript-eslint/no-unnecessary-condition': off
