@@ -35,7 +35,7 @@ export abstract class UpdatePartnership {
   readonly types?: PartnershipType[];
 
   @Field(() => PartnershipFundingType, { nullable: true })
-  readonly fundingType?: PartnershipFundingType;
+  readonly fundingType?: PartnershipFundingType | null;
 }
 
 @InputType()

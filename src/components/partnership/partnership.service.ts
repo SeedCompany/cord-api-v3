@@ -511,13 +511,26 @@ export class PartnershipService {
   async update(input: UpdatePartnership, session: ISession) {
     // mou start and end are now computed fields and do not get updated directly
     const object = await this.readOne(input.id, session);
+    let changes = input;
+    if (
+      !this.validateFundingType(
+        input.fundingType ?? object.fundingType.value,
+        input.types ?? object.types.value
+      )
+    ) {
+      if (input.fundingType && input.types) {
+        throw new InputException(
+          'Funding type can only be applied to managing partners',
+          'partnership.fundingType'
+        );
+      }
+      changes = {
+        ...input,
+        fundingType: null,
+      };
+    }
 
-    this.verifyFundingType(
-      input.fundingType ?? object.fundingType.value,
-      input.types ?? object.types.value
-    );
-
-    const { mou, agreement, ...rest } = input;
+    const { mou, agreement, ...rest } = changes;
     await this.db.sgUpdateProperties({
       session,
       object,
@@ -761,14 +774,23 @@ export class PartnershipService {
   }
 
   protected verifyFundingType(
-    fundingType: PartnershipFundingType | undefined,
+    fundingType: PartnershipFundingType | null | undefined,
     types: PartnershipType[] | undefined
   ) {
-    if (fundingType && !types?.includes(PartnershipType.Managing)) {
+    if (!this.validateFundingType(fundingType, types)) {
       throw new InputException(
         'Funding type can only be applied to managing partners',
         'partnership.fundingType'
       );
     }
+  }
+
+  protected validateFundingType(
+    fundingType: PartnershipFundingType | null | undefined,
+    types: PartnershipType[] | undefined
+  ) {
+    return fundingType && !types?.includes(PartnershipType.Managing)
+      ? false
+      : true;
   }
 }

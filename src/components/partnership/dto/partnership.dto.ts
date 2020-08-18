@@ -29,7 +29,8 @@ export abstract class SecuredPartnershipTypes extends SecuredEnumList(
   description: SecuredEnum.descriptionFor('partnership funding type'),
 })
 export abstract class SecuredPartnershipFundingType extends SecuredEnum(
-  PartnershipFundingType
+  PartnershipFundingType,
+  { nullable: true }
 ) {}
 
 @ObjectType({
