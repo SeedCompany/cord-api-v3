@@ -13,7 +13,7 @@ import {
   relation,
 } from 'cypher-query-builder';
 import type { Pattern } from 'cypher-query-builder/dist/typings/clauses/pattern';
-import { cloneDeep, Dictionary, Many, upperFirst } from 'lodash';
+import { cloneDeep, Dictionary, Many, pull, upperFirst } from 'lodash';
 import { DateTime, Duration } from 'luxon';
 import { generate } from 'shortid';
 import { assert } from 'ts-essentials';
@@ -30,8 +30,6 @@ import {
 import { ILogger, Logger } from '..';
 import { ConfigService } from '../config/config.service';
 import { hasMore } from './query.helpers';
-
-import _ = require('lodash');
 
 interface ReadPropertyResult {
   value: any;
@@ -378,7 +376,7 @@ export class DatabaseService {
       ]);
     }
     const permNodes: string[] = [];
-    _.pull(props, 'id', 'createdAt');
+    pull(props, 'id', 'createdAt');
     props.map((property: string) => {
       const permName = 'perm' + property;
 

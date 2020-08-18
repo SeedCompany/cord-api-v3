@@ -4,6 +4,8 @@ plugins:
 extends:
   - plugin:@seedcompany/nestjs
 rules:
+  '@typescript-eslint/no-require-imports': error
+
   no-console: error
   '@typescript-eslint/naming-convention':
     - warn
