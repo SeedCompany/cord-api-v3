@@ -221,7 +221,7 @@ export class SongService {
   async update(input: UpdateSong, session: ISession): Promise<Song> {
     const song = await this.readOne(input.id, session);
 
-    return this.db.sgUpdateProperties({
+    return await this.db.sgUpdateProperties({
       session,
       object: song,
       props: ['name'], // TODO scriptureReferences

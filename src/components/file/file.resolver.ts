@@ -32,7 +32,7 @@ export class FileResolver {
 
   @Query(() => File)
   async file(@IdArg() id: string, @Session() session: ISession): Promise<File> {
-    return this.service.getFile(id, session);
+    return await this.service.getFile(id, session);
   }
 
   @Query(() => IFileNode)
@@ -40,7 +40,7 @@ export class FileResolver {
     @IdArg() id: string,
     @Session() session: ISession
   ): Promise<FileNode> {
-    return this.service.getFileNode(id, session);
+    return await this.service.getFileNode(id, session);
   }
 
   @ResolveField(() => User, {
@@ -50,7 +50,7 @@ export class FileResolver {
     @Parent() node: File,
     @Session() session: ISession
   ): Promise<User> {
-    return this.users.readOne(node.modifiedById, session);
+    return await this.users.readOne(node.modifiedById, session);
   }
 
   @ResolveField(() => FileListOutput, {
@@ -93,7 +93,7 @@ export class FileResolver {
   async requestFileUpload(
     @Session() _session: ISession // require authorized
   ): Promise<RequestUploadOutput> {
-    return this.service.requestUpload();
+    return await this.service.requestUpload();
   }
 
   @Mutation(() => File, {
@@ -120,7 +120,7 @@ export class FileResolver {
     @Session() session: ISession
   ): Promise<FileNode> {
     await this.service.rename(input, session);
-    return this.service.getFileNode(input.id, session);
+    return await this.service.getFileNode(input.id, session);
   }
 
   @Mutation(() => IFileNode, {

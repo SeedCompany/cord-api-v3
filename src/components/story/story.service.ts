@@ -309,7 +309,7 @@ export class StoryService {
       }
     }
     const story = await this.readOne(input.id, session);
-    return this.db.sgUpdateProperties({
+    return await this.db.sgUpdateProperties({
       session,
       object: story,
       props: ['name'],

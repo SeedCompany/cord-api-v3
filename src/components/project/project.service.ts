@@ -654,7 +654,7 @@ export class ProjectService {
           as node
         `
       );
-    return runListQuery<Project>(
+    return await runListQuery<Project>(
       listQuery,
       input,
       secureProps.includes(input.sort)
@@ -864,7 +864,7 @@ export class ProjectService {
         'Could not find root directory associated to this project'
       );
     }
-    return this.fileService.getDirectory(rootRef.id, session);
+    return await this.fileService.getDirectory(rootRef.id, session);
   }
 
   async attachBudgetRecords(
@@ -919,7 +919,7 @@ export class ProjectService {
       (
         await Promise.all(
           projects.map(async (project) => {
-            return this.db.isRelationshipUnique({
+            return await this.db.isRelationshipUnique({
               session,
               id: project.id,
               relName: 'location',
@@ -931,7 +931,7 @@ export class ProjectService {
       (
         await Promise.all(
           projects.map(async (project) => {
-            return this.db.hasProperties({
+            return await this.db.hasProperties({
               session,
               id: project.id,
               // props: ['type', 'status', 'name', 'step'],

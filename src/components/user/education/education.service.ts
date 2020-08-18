@@ -310,7 +310,7 @@ export class EducationService {
   async update(input: UpdateEducation, session: ISession): Promise<Education> {
     const ed = await this.readOne(input.id, session);
 
-    return this.db.sgUpdateProperties({
+    return await this.db.sgUpdateProperties({
       session,
       object: ed,
       props: ['degree', 'major', 'institution'],
@@ -351,7 +351,7 @@ export class EducationService {
       (
         await Promise.all(
           educations.map(async (education) => {
-            return this.db.hasProperties({
+            return await this.db.hasProperties({
               session,
               id: education.id,
               props: ['degree', 'major', 'institution'],
@@ -363,7 +363,7 @@ export class EducationService {
       (
         await Promise.all(
           educations.map(async (education) => {
-            return this.db.isUniqueProperties({
+            return await this.db.isUniqueProperties({
               session,
               id: education.id,
               props: ['degree', 'major', 'institution'],

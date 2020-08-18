@@ -332,7 +332,7 @@ export class LiteracyMaterialService {
     }
     const literacyMaterial = await this.readOne(input.id, session);
 
-    return this.db.sgUpdateProperties({
+    return await this.db.sgUpdateProperties({
       session,
       object: literacyMaterial,
       props: ['name'],

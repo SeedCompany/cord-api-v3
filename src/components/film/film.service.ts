@@ -316,7 +316,7 @@ export class FilmService {
       }
     }
     const film = await this.readOne(input.id, session);
-    return this.db.sgUpdateProperties({
+    return await this.db.sgUpdateProperties({
       session,
       object: film,
       props: ['name'],

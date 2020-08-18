@@ -214,7 +214,7 @@ export class EthnologueLanguageService {
 
     this.logger.debug(`ethnologue language created`, { id });
 
-    return this.readOne(id, session);
+    return await this.readOne(id, session);
   }
 
   async readOne(

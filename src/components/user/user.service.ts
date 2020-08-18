@@ -505,7 +505,7 @@ export class UserService {
         .run();
     }
 
-    return this.readOne(input.id, session);
+    return await this.readOne(input.id, session);
   }
 
   async delete(id: string, session: ISession): Promise<void> {
@@ -581,7 +581,7 @@ export class UserService {
         `
       );
 
-    return runListQuery(query, input, secureProps.includes(input.sort));
+    return await runListQuery(query, input, secureProps.includes(input.sort));
   }
 
   async listEducations(
@@ -959,7 +959,7 @@ export class UserService {
       (
         await Promise.all(
           users.map(async (user) => {
-            return this.db.hasProperties({
+            return await this.db.hasProperties({
               session,
               id: user.id,
               props: [
@@ -980,7 +980,7 @@ export class UserService {
       (
         await Promise.all(
           users.map(async (user) => {
-            return this.db.isUniqueProperties({
+            return await this.db.isUniqueProperties({
               session,
               id: user.id,
               props: [

@@ -22,7 +22,7 @@ export class StoryResolver {
     @Session() session: ISession,
     @IdArg() id: string
   ): Promise<Story> {
-    return this.storyService.readOne(id, session);
+    return await this.storyService.readOne(id, session);
   }
 
   @Query(() => StoryListOutput, {

@@ -43,7 +43,7 @@ export class FileRepository {
   ) {}
 
   async getBaseNodeById(id: string, session: ISession): Promise<BaseNode> {
-    return this.getBaseNodeBy(session, [
+    return await this.getBaseNodeBy(session, [
       [node('node', 'FileNode', { id, ...isActive })],
       matchName(),
     ]);
@@ -54,7 +54,7 @@ export class FileRepository {
     name: string,
     session: ISession
   ): Promise<BaseNode> {
-    return this.getBaseNodeBy(session, [
+    return await this.getBaseNodeBy(session, [
       [
         node('parent', 'FileNode', { id: parentId, ...isActive }),
         relation('in', '', 'parent', isActive),
@@ -75,7 +75,7 @@ export class FileRepository {
       matchName(),
     ]);
     query.orderBy('size(parent)');
-    return query.run();
+    return await query.run();
   }
 
   async getChildrenById(

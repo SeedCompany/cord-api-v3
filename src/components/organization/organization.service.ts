@@ -126,7 +126,7 @@ export class OrganizationService {
 
     this.logger.debug(`organization created, id ${id}`);
 
-    return this.readOne(id, session);
+    return await this.readOne(id, session);
   }
 
   async readOne(orgId: string, session: ISession): Promise<Organization> {
@@ -218,7 +218,7 @@ export class OrganizationService {
     session: ISession
   ): Promise<Organization> {
     const organization = await this.readOne(input.id, session);
-    return this.db.sgUpdateProperties({
+    return await this.db.sgUpdateProperties({
       session,
       object: organization,
       props: ['name'],
@@ -289,7 +289,7 @@ export class OrganizationService {
         `
       );
 
-    return runListQuery(query, input, secureProps.includes(input.sort));
+    return await runListQuery(query, input, secureProps.includes(input.sort));
   }
 
   async checkAllOrgs(session: ISession): Promise<boolean> {
@@ -407,7 +407,7 @@ export class OrganizationService {
       (
         await Promise.all(
           organizations.map(async (organization) => {
-            return this.db.hasProperties({
+            return await this.db.hasProperties({
               session,
               id: organization.id,
               props: ['name'],
@@ -419,7 +419,7 @@ export class OrganizationService {
       (
         await Promise.all(
           organizations.map(async (organization) => {
-            return this.db.isUniqueProperties({
+            return await this.db.isUniqueProperties({
               session,
               id: organization.id,
               props: ['name'],

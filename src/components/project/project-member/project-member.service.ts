@@ -359,7 +359,7 @@ export class ProjectMemberService {
       },
       nodevar: 'projectMember',
     });
-    return this.readOne(input.id, session);
+    return await this.readOne(input.id, session);
   }
 
   async delete(id: string, session: ISession): Promise<void> {

@@ -490,7 +490,7 @@ export class BudgetService {
   async update(input: UpdateBudget, session: ISession): Promise<Budget> {
     const budget = await this.readOne(input.id, session);
 
-    return this.db.sgUpdateProperties({
+    return await this.db.sgUpdateProperties({
       session,
       object: budget,
       props: ['status'],
@@ -700,7 +700,7 @@ export class BudgetService {
       (
         await Promise.all(
           budgets.map(async (budget) => {
-            return this.db.hasProperties({
+            return await this.db.hasProperties({
               session,
               id: budget.id,
               props: ['status'],
@@ -712,7 +712,7 @@ export class BudgetService {
       (
         await Promise.all(
           budgets.map(async (budget) => {
-            return this.db.isUniqueProperties({
+            return await this.db.isUniqueProperties({
               session,
               id: budget.id,
               props: ['status'],

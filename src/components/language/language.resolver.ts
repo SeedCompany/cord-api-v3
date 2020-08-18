@@ -40,7 +40,7 @@ export class LanguageResolver {
     @Session() session: ISession,
     @IdArg() id: string
   ): Promise<Language> {
-    return this.langService.readOne(id, session);
+    return await this.langService.readOne(id, session);
   }
 
   @ResolveField(() => String, { nullable: true })
@@ -189,6 +189,6 @@ export class LanguageResolver {
   async checkLanguageConsistency(
     @Session() session: ISession
   ): Promise<boolean> {
-    return this.langService.checkLanguageConsistency(session);
+    return await this.langService.checkLanguageConsistency(session);
   }
 }
