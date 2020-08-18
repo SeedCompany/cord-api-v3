@@ -9,7 +9,6 @@ import {
   SecuredProperty,
   simpleSwitch,
 } from '../../../common';
-import { FileNodeCategory } from './category';
 import { FileNodeType } from './type';
 
 /**
@@ -36,9 +35,6 @@ abstract class FileNode extends Resource {
   @Field(() => FileNodeType)
   readonly type: FileNodeType;
 
-  @Field(() => FileNodeCategory)
-  readonly category: FileNodeCategory;
-
   @Field({
     description: stripIndent`
       The name of the node.
@@ -54,7 +50,7 @@ abstract class FileNode extends Resource {
 // export as different names to maintain compatibility with our codebase.
 export { FileNode as IFileNode, AnyFileNode as FileNode };
 
-export type BaseNode = ConditionalExcept<FileNode, never | FileNodeCategory>;
+export type BaseNode = ConditionalExcept<FileNode, never>;
 
 @ObjectType({
   isAbstract: true,

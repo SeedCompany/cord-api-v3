@@ -26,13 +26,7 @@ import {
   matchSession,
   Property,
 } from '../../core';
-import {
-  BaseNode,
-  FileListInput,
-  FileNodeCategory,
-  FileNodeType,
-  FileVersion,
-} from './dto';
+import { BaseNode, FileListInput, FileNodeType, FileVersion } from './dto';
 
 const isActive = { active: true };
 
@@ -224,14 +218,12 @@ export class FileRepository {
       ])
       .call(matchLatestVersionProp, 'size')
       .call(matchLatestVersionProp, 'mimeType')
-      .call(matchLatestVersionProp, 'category')
       .return([
         'fv',
         {
           name: [{ value: 'name' }],
           size: [{ value: 'size' }],
           mimeType: [{ value: 'mimeType' }],
-          category: [{ value: 'category' }],
           createdBy: [{ id: 'createdById' }],
         },
       ])
@@ -248,7 +240,6 @@ export class FileRepository {
       name: result.name,
       size: result.size as number,
       mimeType: result.mimeType as string,
-      category: result.category as FileNodeCategory,
       createdAt: fv.properties.createdAt,
       createdById: result.createdById as string,
     };
@@ -350,7 +341,7 @@ export class FileRepository {
 
   async createFileVersion(
     fileId: string,
-    input: Pick<FileVersion, 'id' | 'name' | 'mimeType' | 'size' | 'category'>,
+    input: Pick<FileVersion, 'id' | 'name' | 'mimeType' | 'size'>,
     session: ISession
   ) {
     const props: Property[] = [
@@ -375,15 +366,6 @@ export class FileRepository {
       {
         key: 'size',
         value: input.size,
-        addToAdminSg: true,
-        addToWriterSg: true,
-        addToReaderSg: true,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'category',
-        value: input.category,
         addToAdminSg: true,
         addToWriterSg: true,
         addToReaderSg: true,
@@ -531,9 +513,7 @@ export class FileRepository {
       .run();
 
     const requiredProperties =
-      type === FileNodeType.FileVersion
-        ? ['size', 'mimeType', 'category']
-        : ['name'];
+      type === FileNodeType.FileVersion ? ['size', 'mimeType'] : ['name'];
     const uniqueRelationships = ['createdBy', 'parent'];
 
     for (const fn of fileNodes) {
