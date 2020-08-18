@@ -203,7 +203,7 @@ export class LanguageService {
   async create(input: CreateLanguage, session: ISession): Promise<Language> {
     this.logger.info(`Create language`, { input, userId: session.userId });
 
-    const createdAt = DateTime.local().toString();
+    const createdAt = DateTime.local();
 
     try {
       const { ethnologueId } = await this.ethnologueLanguageService.create(

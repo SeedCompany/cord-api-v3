@@ -218,7 +218,7 @@ export class BudgetService {
           node('project'),
           relation('out', '', 'budget', {
             active: true,
-            createdAt: DateTime.local().toString(),
+            createdAt: DateTime.local(),
           }),
           node('budget'),
         ])

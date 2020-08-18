@@ -473,7 +473,7 @@ export class DatabaseService {
     aclEditProp?: string;
     nodevar: string;
   }): Promise<TObject> {
-    const createdAt = DateTime.local().toString();
+    const createdAt = DateTime.local();
     const update = this.db
       .query()
       .match([matchSession(session)])
