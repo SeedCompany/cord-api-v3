@@ -121,13 +121,9 @@ export class EthnologueLanguageService {
   };
 
   async create(
-    input: CreateEthnologueLanguage | undefined,
+    input: CreateEthnologueLanguage,
     session: ISession
   ): Promise<{ ethnologue: EthnologueLanguage; ethnologueId: string }> {
-    if (!input) {
-      input = Object.assign({}) as CreateEthnologueLanguage;
-    }
-
     // create org
     const secureProps: Property[] = [
       {
