@@ -561,7 +561,10 @@ export class LanguageService {
   }
 
   async delete(id: string, session: ISession): Promise<void> {
-    this.logger.info(`mutation delete language: ${id} by ${session.userId}`);
+    this.logger.info(`Deleting language`, {
+      id,
+      userId: session.userId,
+    });
     const object = await this.readOne(id, session);
 
     if (!object) {

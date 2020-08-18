@@ -732,6 +732,10 @@ export class DatabaseService {
       const where: Record<string, any> = {};
       for (const [k, val] of Object.entries(input.filter)) {
         if (k !== 'id' && k !== 'userId' && k !== 'mine') {
+          assert(
+            typeof val === 'string',
+            `Filter "${k}" must have a string value`
+          );
           if (!Array.isArray(val)) {
             where[k + '.value'] = regexp(`.*${val}.*`, true);
           } else {
@@ -1043,7 +1047,7 @@ export class DatabaseService {
 
       // If the user doesn't have permission to perform the create action...
       if (!aclResult || !aclResult.editProp) {
-        throw new ForbiddenException(`Cannot create ${type}`);
+        throw new ForbiddenException(`Cannot create ${type.name}`);
       }
 
       this.logger.error(`createNode error`, {
@@ -1387,10 +1391,10 @@ export class DatabaseService {
       }
       return result.id;
     } catch (err) {
-      this.logger.error(
-        `Could not create node for user ${session.userId}`,
-        err
-      );
+      this.logger.error(`Could not create node`, {
+        exception: err,
+        userId: session.userId,
+      });
       throw new ServerException('Could not create node');
     }
   }
@@ -1602,7 +1606,10 @@ export class DatabaseService {
     try {
       result = await query.first();
     } catch (e) {
-      this.logger.error(`Could not find node for user ${session.userId}`);
+      this.logger.error(`Could not find node`, {
+        exception: e,
+        userId: session.userId,
+      });
       throw new ServerException('Could not find node');
     }
 

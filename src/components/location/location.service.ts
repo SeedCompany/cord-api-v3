@@ -996,12 +996,14 @@ export class LocationService {
         'name, location, head([x IN labels(location) WHERE x <> "BaseNode"]) as label'
       )
       .where({
-        name: { value: regexp(`.*${filter.name}.*`, true) },
+        ...(filter.name
+          ? { name: { value: regexp(`.*${filter.name}.*`, true) } }
+          : {}),
         label: inArray(types),
-      }).with(`{ 
-        id: location.id, 
-        createdAt: location.createdAt, 
-        name: name.value 
+      }).with(`{
+        id: location.id,
+        createdAt: location.createdAt,
+        name: name.value
       } as node`);
 
     const result = await runListQuery(query, input, false);

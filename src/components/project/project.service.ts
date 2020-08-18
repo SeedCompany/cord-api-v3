@@ -386,9 +386,7 @@ export class ProjectService {
       this.logger.warning(`Could not create project`, {
         exception: e,
       });
-      throw new ServerException(
-        `Could not create project ${e.name} ${e.value}`
-      );
+      throw new ServerException(`Could not create project`, e);
     }
   }
 

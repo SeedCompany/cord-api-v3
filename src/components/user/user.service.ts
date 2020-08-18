@@ -94,8 +94,7 @@ export class UserService {
   }
 
   // helper method for defining properties
-  property = (prop: string, value: any | null) => {
-    const propName = prop === 'roles' ? `role${value}` : prop;
+  property = (prop: string, value: any | null, propVar = prop) => {
     const createdAt = DateTime.local();
     return [
       [
@@ -104,7 +103,7 @@ export class UserService {
           active: true,
           createdAt,
         }),
-        node(propName, 'Property', {
+        node(propVar, 'Property', {
           active: true,
           value,
         }),
@@ -178,7 +177,9 @@ export class UserService {
   };
 
   roleProperties = (roles?: Role[]) => {
-    return (roles || []).flatMap((role) => this.property('roles', role));
+    return (roles || []).flatMap((role) =>
+      this.property('roles', role, `role${role}`)
+    );
   };
 
   async create(input: CreatePerson, session?: ISession): Promise<string> {
@@ -613,8 +614,11 @@ export class UserService {
     try {
       user = await query.first();
     } catch (e) {
-      this.logger.error(`Could not find education for user ${session.userId}`);
-      throw new ServerException('Could not find education');
+      this.logger.error(`Could not find education`, {
+        exception: e,
+        userId: session.userId,
+      });
+      throw new ServerException('Could not find education', e);
     }
     if (!user) {
       throw new NotFoundException('Could not find user');
@@ -669,19 +673,20 @@ export class UserService {
     try {
       user = await query.first();
     } catch (e) {
-      this.logger.error(
-        `Could not find organizations for user ${session.userId}`
-      );
-      throw new ServerException('Could not find organization');
+      this.logger.error(`Could not find organizations`, {
+        exception: e,
+        userId: session.userId,
+      });
+      throw new ServerException('Could not find organization', e);
     }
     if (!user) {
       throw new NotFoundException('Could not find user');
     }
     if (!user.canRead) {
-      throw new UnauthenticatedException(
-        'cannot read organization list' +
-          `DEBUG: {requestingUser, ${session} target UserId ${userId}}`
-      );
+      this.logger.warning('Cannot read organization list', {
+        userId,
+      });
+      throw new UnauthenticatedException('cannot read organization list');
     }
     const result = await this.organizations.list(
       {
@@ -731,16 +736,17 @@ export class UserService {
     try {
       user = await query.first();
     } catch (e) {
-      this.logger.error(
-        `Could not find unavailablity for user ${session.userId}`
-      );
-      throw new ServerException('Could not find unavailablity');
+      this.logger.error(`Could not find unavailability`, {
+        exception: e,
+        userId: session.userId,
+      });
+      throw new ServerException('Could not find unavailability', e);
     }
     if (!user) {
       throw new NotFoundException('Could not find user');
     }
     if (!user.canRead) {
-      throw new UnauthenticatedException('cannot read unavailablity list');
+      throw new UnauthenticatedException('cannot read unavailability list');
     }
     const result = await this.unavailabilities.list(
       {

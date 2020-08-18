@@ -179,8 +179,11 @@ export class SongService {
 
       return await this.readOne(result.id, session);
     } catch (err) {
-      this.logger.error(`Could not create song for user ${session.userId}`);
-      throw new ServerException('Could not create song');
+      this.logger.error(`Could not create song`, {
+        exception: err,
+        userId: session.userId,
+      });
+      throw new ServerException('Could not create song', err);
     }
   }
 

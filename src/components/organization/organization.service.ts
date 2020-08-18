@@ -124,7 +124,7 @@ export class OrganizationService {
     // add root admin to new org as an admin
     await this.db.addRootAdminToBaseNodeAsAdmin(id, 'Organization');
 
-    this.logger.debug(`organization created, id ${id}`);
+    this.logger.debug(`organization created`, { id });
 
     return await this.readOne(id, session);
   }

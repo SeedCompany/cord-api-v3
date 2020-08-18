@@ -17,7 +17,7 @@ export class VersionService implements OnModuleInit {
 
   async onModuleInit() {
     const version = await this.version;
-    this.logger.debug(`${version}`);
+    this.logger.debug(version.toString());
   }
 
   @LazyGetter() get version(): Promise<Version> {

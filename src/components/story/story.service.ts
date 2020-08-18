@@ -2,11 +2,10 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
-  InternalServerErrorException as ServerException,
 } from '@nestjs/common';
 import { inArray, node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { DuplicateException, ISession } from '../../common';
+import { DuplicateException, ISession, ServerException } from '../../common';
 import {
   addAllSecureProperties,
   addBaseNodeMetaPropsWithClauseAsObject,
@@ -196,8 +195,11 @@ export class StoryService {
       this.logger.info(`story created`, { id: result.id });
       return await this.readOne(result.id, session);
     } catch (err) {
-      this.logger.error(`Could not create story for user ${session.userId}`);
-      throw new ServerException('Could not create story');
+      this.logger.error(`Could not create story`, {
+        exception: err,
+        userId: session.userId,
+      });
+      throw new ServerException('Could not create story', err);
     }
   }
 
