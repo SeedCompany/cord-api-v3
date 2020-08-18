@@ -449,9 +449,7 @@ export class LanguageService {
       if (record?.property === 'sensitivity') {
         response[record.property] = record.value;
       } else {
-        const canRead = perms[record.property]
-          ? perms[record.property].canRead
-          : false;
+        const canRead = perms[record.property]?.canRead ?? false;
         response[record.property] = {
           value: canRead ? record.value : null,
           canRead: canRead,

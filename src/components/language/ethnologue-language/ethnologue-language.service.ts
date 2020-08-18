@@ -9,7 +9,6 @@ import { ISession } from '../../../common';
 import {
   ConfigService,
   createBaseNode,
-  createSG,
   DatabaseService,
   ILogger,
   Logger,
@@ -135,50 +134,50 @@ export class EthnologueLanguageService {
         key: 'id',
         value: input.id,
         addToAdminSg: true,
-        addToWriterSg: true,
+        addToWriterSg: false,
         addToReaderSg: true,
-        isPublic: true,
-        isOrgPublic: true,
+        isPublic: false,
+        isOrgPublic: false,
         label: 'Id',
       },
       {
         key: 'code',
         value: input.code,
         addToAdminSg: true,
-        addToWriterSg: true,
+        addToWriterSg: false,
         addToReaderSg: true,
-        isPublic: true,
-        isOrgPublic: true,
+        isPublic: false,
+        isOrgPublic: false,
         label: 'Code',
       },
       {
         key: 'provisionalCode',
         value: input.provisionalCode,
         addToAdminSg: true,
-        addToWriterSg: true,
+        addToWriterSg: false,
         addToReaderSg: true,
-        isPublic: true,
-        isOrgPublic: true,
+        isPublic: false,
+        isOrgPublic: false,
         label: 'ProvisionalCode',
       },
       {
         key: 'name',
         value: input.name,
         addToAdminSg: true,
-        addToWriterSg: true,
+        addToWriterSg: false,
         addToReaderSg: true,
-        isPublic: true,
-        isOrgPublic: true,
+        isPublic: false,
+        isOrgPublic: false,
         label: 'Name',
       },
       {
         key: 'population',
         value: input.population,
         addToAdminSg: true,
-        addToWriterSg: true,
+        addToWriterSg: false,
         addToReaderSg: true,
-        isPublic: true,
-        isOrgPublic: true,
+        isPublic: false,
+        isOrgPublic: false,
         label: 'Population',
       },
     ];
@@ -186,17 +185,10 @@ export class EthnologueLanguageService {
 
     const query = this.db
       .query()
+      .call(matchRequestingUser, session)
       .match([
         node('root', 'User', { active: true, id: this.config.rootAdmin.id }),
       ])
-      .match([
-        node('publicSG', 'PublicSecurityGroup', {
-          active: true,
-          id: this.config.publicSecurityGroup.id,
-        }),
-      ])
-      .call(matchRequestingUser, session)
-      .call(createSG, 'orgSG', 'OrgPublicSecurityGroup')
       .call(
         createBaseNode,
         'EthnologueLanguage',
@@ -247,7 +239,7 @@ export class EthnologueLanguageService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'EthnologueLanguage', { active: true, id: id })])
-      .match([
+      .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member*1..'),
         node('', 'SecurityGroup', { active: true }),
@@ -292,11 +284,10 @@ export class EthnologueLanguageService {
           response[record.property] = {};
         }
         if (record?.property) {
+          const canRead = perms[record.property]?.canRead ?? false;
           response[record.property] = {
-            value: record.value,
-            canRead: perms[record.property]
-              ? perms[record.property].canRead
-              : false,
+            value: canRead ? record.value : null,
+            canRead: canRead,
             canEdit: perms[record.property]
               ? perms[record.property].canEdit
               : false,
