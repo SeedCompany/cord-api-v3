@@ -9,14 +9,15 @@ import { DateTime } from 'luxon';
 import { DuplicateException, ISession } from '../../common';
 import {
   addAllSecureProperties,
-  addBaseNodeMetaPropsWithClause,
+  addBaseNodeMetaPropsWithClauseAsObject,
   ConfigService,
   createBaseNode,
   DatabaseService,
   filterByString,
   ILogger,
-  listWithSecureObject,
+  listWithSecureObjectAsObject,
   Logger,
+  mapping,
   matchRequestingUser,
   matchUserPermissions,
   OnIndex,
@@ -180,7 +181,7 @@ export class StoryService {
               start: verseRange.start,
               end: verseRange.end,
               active: true,
-              createdAt: DateTime.local().toString(),
+              createdAt: DateTime.local(),
             }),
           ]);
         }
@@ -231,15 +232,13 @@ export class StoryService {
       ])
       .where({ scriptureReferencesEditPerm: inArray(['permList'], true) })
       .return(
-        `
-          {
-            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
-            ${listWithSecureObject(secureProps)},
-            canReadStorys: requestingUser.canReadStorys,
-            canScriptureReferencesRead: scriptureReferencesReadPerm.read,
-            canScriptureReferencesEdit: scriptureReferencesEditPerm.edit
-          } as story
-        `
+        mapping('story', {
+          ...addBaseNodeMetaPropsWithClauseAsObject(baseNodeMetaProps),
+          ...listWithSecureObjectAsObject(secureProps),
+          canReadStorys: 'requestingUser.canReadStorys',
+          canScriptureReferencesRead: 'scriptureReferencesReadPerm.read',
+          canScriptureReferencesEdit: 'scriptureReferencesEditPerm.edit',
+        })
       );
 
     const result = await readStory.first();
@@ -272,12 +271,49 @@ export class StoryService {
   }
 
   async update(input: UpdateStory, session: ISession): Promise<Story> {
+    const { scriptureReferences } = input;
+
+    if (scriptureReferences) {
+      const rel = 'scriptureReferences';
+      await this.db
+        .query()
+        .match([
+          node('story', 'Story', { id: input.id, active: true }),
+          relation('out', 'rel', rel, { active: true }),
+          node('sr', 'ScriptureRange', { active: true }),
+        ])
+        .setValues({
+          'rel.active': false,
+          'sr.active': false,
+        })
+        .return('sr')
+        .first();
+
+      for (const sr of scriptureReferences) {
+        const verseRange = scriptureToVerseRange(sr);
+        await this.db
+          .query()
+          .match([node('story', 'Story', { id: input.id, active: true })])
+          .create([
+            node('story'),
+            relation('out', '', rel, { active: true }),
+            node('', ['ScriptureRange', 'BaseNode'], {
+              start: verseRange.start,
+              end: verseRange.end,
+              active: true,
+              createdAt: DateTime.local(),
+            }),
+          ])
+          .return('story')
+          .first();
+      }
+    }
     const story = await this.readOne(input.id, session);
     return this.db.sgUpdateProperties({
       session,
       object: story,
       props: ['name'],
-      changes: input, // TODO scriptureReferences
+      changes: input,
       nodevar: 'story',
     });
   }
@@ -302,6 +338,7 @@ export class StoryService {
     { filter, ...input }: StoryListInput,
     session: ISession
   ): Promise<StoryListOutput> {
+    const baseNodeMetaProps = ['id', 'createdAt'];
     const secureProps = ['name'];
     const label = 'Story';
 
@@ -312,19 +349,22 @@ export class StoryService {
     if (filter.name) {
       query.call(filterByString, label, 'name', filter.name);
     }
-    const listResult: {
-      items: Array<{
-        identity: string;
-        labels: string[];
-        properties: Story;
-      }>;
-      hasMore: boolean;
-      total: number;
-    } = await runListQuery(query, input, secureProps.includes(input.sort));
+    query.call(addAllSecureProperties, ...secureProps).with(
+      mapping('node', {
+        ...addBaseNodeMetaPropsWithClauseAsObject(baseNodeMetaProps),
+        ...listWithSecureObjectAsObject(secureProps),
+      })
+    );
+
+    const listResult: StoryListOutput = await runListQuery(
+      query,
+      input,
+      secureProps.includes(input.sort)
+    );
 
     const items = await Promise.all(
       listResult.items.map((item) => {
-        return this.readOne(item.properties.id, session);
+        return this.readOne(item.id, session);
       })
     );
 

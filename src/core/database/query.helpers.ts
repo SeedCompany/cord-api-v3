@@ -14,6 +14,7 @@ import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import {
   ISession,
+  mapFromList,
   PaginationInput,
   SortablePaginationInput,
 } from '../../common';
@@ -995,8 +996,16 @@ export function listWithSecureObject(props: string[]) {
   return props.map((x) => returnWithSecurePropertyClauseForList(x)).join(', ');
 }
 
+export function listWithSecureObjectAsObject(props: string[]) {
+  return mapFromList(props, (prop) => [prop, mapping(securedProperty(prop))]);
+}
+
 export function addBaseNodeMetaPropsWithClause(props: string[]) {
   return props.map((x) => `${x}: node.${x}`).join(', ');
+}
+
+export function addBaseNodeMetaPropsWithClauseAsObject(props: string[]) {
+  return mapFromList(props, (prop) => [prop, `node.${prop}`]);
 }
 
 // RETURN clauses //////////////////////////////////////////////////////
