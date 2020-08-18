@@ -730,12 +730,12 @@ export class DatabaseService {
 
     if (input.filter && Object.keys(input.filter).length) {
       const where: Record<string, any> = {};
-      for (const k in input.filter) {
+      for (const [k, val] of Object.entries(input.filter)) {
         if (k !== 'id' && k !== 'userId' && k !== 'mine') {
-          if (!Array.isArray(input.filter[k])) {
-            where[k + '.value'] = regexp(`.*${input.filter[k]}.*`, true);
+          if (!Array.isArray(val)) {
+            where[k + '.value'] = regexp(`.*${val}.*`, true);
           } else {
-            where[k + '.value'] = equals(input.filter[k]);
+            where[k + '.value'] = equals(val);
           }
         }
       }
@@ -1301,19 +1301,15 @@ export class DatabaseService {
     const nodeName = upperFirst(nodevar);
     const aclEditPropName = aclEditProp || `canEdit${nodeName}`;
     const baseNode = nodeName + ':BaseNode';
-    const properties = [];
-    const permissions = [];
     const isRootSGMember = await this.isRootSecurityGroupMember(session);
+    const properties = Object.entries(input).flatMap(([key, val]) => {
+      const propLabel = propLabels[key as keyof TObject];
+      return this.sgProperty(key, val, propLabel);
+    });
+    const permissions = Object.keys(input).flatMap((key) =>
+      isRootSGMember ? this.rootSGPermission(key) : this.sgPermission(key)
+    );
     try {
-      for (const key in input) {
-        const propLabel = propLabels[key];
-        properties.push(...this.sgProperty(key, input[key], propLabel));
-      }
-      for (const key in input) {
-        isRootSGMember
-          ? permissions.push(...this.rootSGPermission(key))
-          : permissions.push(...this.sgPermission(key));
-      }
       const permissionQueries = isRootSGMember
         ? [
             [

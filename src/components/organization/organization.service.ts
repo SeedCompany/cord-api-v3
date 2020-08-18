@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
+import { range } from 'lodash';
 import {
   DuplicateException,
   ISession,
@@ -317,7 +318,7 @@ export class OrganizationService {
 
       const orgCount = result?.orgCount;
 
-      for (let i = 0; i < orgCount; i++) {
+      for (const i of range(orgCount)) {
         const isGood = await this.pullOrg(i);
         if (!isGood) {
           return false;
@@ -330,7 +331,7 @@ export class OrganizationService {
     return true;
   }
 
-  private async pullOrg(id: number): Promise<boolean> {
+  private async pullOrg(index: number): Promise<boolean> {
     const result = await this.db
       .query()
       .raw(
@@ -348,13 +349,10 @@ export class OrganizationService {
         ORDER BY
           createdAt
         SKIP
-          ${id}
+          ${index}
         LIMIT
           1
-        `,
-        {
-          id,
-        }
+        `
       )
       .first();
 
