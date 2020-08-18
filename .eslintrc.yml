@@ -5,6 +5,7 @@ extends:
   - plugin:@seedcompany/nestjs
 rules:
   '@typescript-eslint/no-require-imports': error
+  array-callback-return: error
 
   no-console: error
   '@typescript-eslint/naming-convention':
