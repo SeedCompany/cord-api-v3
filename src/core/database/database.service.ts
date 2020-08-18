@@ -447,7 +447,7 @@ export class DatabaseService {
     let updated = object;
     for (const prop of props) {
       if (
-        changes[prop] == null ||
+        changes[prop] === undefined ||
         unwrapSecured(object[prop]) === changes[prop]
       ) {
         continue;

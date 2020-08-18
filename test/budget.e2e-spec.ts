@@ -28,6 +28,7 @@ describe('Budget e2e', () => {
     await createPartnership(app, {
       projectId: project.id,
       types: [PartnershipType.Funding],
+      fundingType: undefined,
     });
   });
 

@@ -8,7 +8,12 @@ import { node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { flatMap, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
-import { fiscalYears, ISession, NotFoundException } from '../../common';
+import {
+  fiscalYears,
+  InputException,
+  ISession,
+  NotFoundException,
+} from '../../common';
 import {
   addAllMetaPropertiesOfChildBaseNodes,
   addAllSecureProperties,
@@ -33,6 +38,7 @@ import { ProjectService } from '../project/project.service';
 import {
   CreatePartnership,
   Partnership,
+  PartnershipFundingType,
   PartnershipListInput,
   PartnershipListOutput,
   PartnershipType,
@@ -188,6 +194,8 @@ export class PartnershipService {
       throw e;
     }
 
+    this.verifyFundingType(input.fundingType, input.types);
+
     const mou = await this.files.createDefinedFile(
       `MOU`,
       session,
@@ -259,6 +267,15 @@ export class PartnershipService {
       {
         key: 'types',
         value: input.types,
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'fundingType',
+        value: input.fundingType,
         addToAdminSg: true,
         addToWriterSg: false,
         addToReaderSg: true,
@@ -389,6 +406,7 @@ export class PartnershipService {
       'mouStartOverride',
       'mouEndOverride',
       'types',
+      'fundingType',
       'mou',
       'agreement',
     ];
@@ -493,8 +511,26 @@ export class PartnershipService {
   async update(input: UpdatePartnership, session: ISession) {
     // mou start and end are now computed fields and do not get updated directly
     const object = await this.readOne(input.id, session);
+    let changes = input;
+    if (
+      !this.validateFundingType(
+        input.fundingType ?? object.fundingType.value,
+        input.types ?? object.types.value
+      )
+    ) {
+      if (input.fundingType && input.types) {
+        throw new InputException(
+          'Funding type can only be applied to managing partners',
+          'partnership.fundingType'
+        );
+      }
+      changes = {
+        ...input,
+        fundingType: null,
+      };
+    }
 
-    const { mou, agreement, ...rest } = input;
+    const { mou, agreement, ...rest } = changes;
     await this.db.sgUpdateProperties({
       session,
       object,
@@ -502,6 +538,7 @@ export class PartnershipService {
         'agreementStatus',
         'mouStatus',
         'types',
+        'fundingType',
         'mouStartOverride',
         'mouEndOverride',
       ],
@@ -572,6 +609,7 @@ export class PartnershipService {
       'mouStartOverride',
       'mouEndOverride',
       'types',
+      'fundingType',
       'mou',
       'agreement',
     ];
@@ -733,5 +771,26 @@ export class PartnershipService {
       relation(relationshipDirection, '', relationshipType, { active: true }),
       node('node', label, { active: true }),
     ]);
+  }
+
+  protected verifyFundingType(
+    fundingType: PartnershipFundingType | null | undefined,
+    types: PartnershipType[] | undefined
+  ) {
+    if (!this.validateFundingType(fundingType, types)) {
+      throw new InputException(
+        'Funding type can only be applied to managing partners',
+        'partnership.fundingType'
+      );
+    }
+  }
+
+  protected validateFundingType(
+    fundingType: PartnershipFundingType | null | undefined,
+    types: PartnershipType[] | undefined
+  ) {
+    return fundingType && !types?.includes(PartnershipType.Managing)
+      ? false
+      : true;
   }
 }

@@ -5,6 +5,7 @@ import {
   CreatePartnership,
   Partnership,
   PartnershipAgreementStatus,
+  PartnershipFundingType,
   PartnershipType,
 } from '../../src/components/partnership';
 import { TestApp } from './create-app';
@@ -21,6 +22,7 @@ export async function createPartnership(
     agreementStatus: PartnershipAgreementStatus.AwaitingSignature,
     mouStatus: PartnershipAgreementStatus.AwaitingSignature,
     types: [PartnershipType.Managing],
+    fundingType: PartnershipFundingType.Funded,
     organizationId: input.organizationId || (await createOrganization(app)).id,
     mouStartOverride: CalendarDate.local(),
     mouEndOverride: CalendarDate.local(),

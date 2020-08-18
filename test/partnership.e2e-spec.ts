@@ -77,7 +77,10 @@ describe('Partnership e2e', () => {
       Object.values(PartnershipAgreementStatus)
     );
     const newMouStatus = sample(Object.values(PartnershipAgreementStatus));
-    const newTypes = [sample(Object.values(PartnershipType))];
+    const newTypes = [
+      sample(Object.values(PartnershipType)),
+      PartnershipType.Managing,
+    ];
 
     const result = await app.graphql.query(
       gql`
