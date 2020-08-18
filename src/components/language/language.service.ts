@@ -434,14 +434,21 @@ export class LanguageService {
 
     const perms: any = {};
 
-    for (const record of result.permList) {
-      perms[record.properties.property] = {
-        canRead: record?.properties?.read === true,
-        canEdit: record?.properties?.edit === true,
-      };
+    for (const {
+      properties: { property, read, edit },
+    } of result.permList) {
+      const currentPermission = perms[property];
+      if (!currentPermission) {
+        perms[property] = {
+          canRead: Boolean(read),
+          canEdit: Boolean(edit),
+        };
+      } else {
+        currentPermission.canRead = currentPermission.canRead || read;
+        currentPermission.canEdit = currentPermission.canEdit || edit;
+      }
     }
 
-    // console.log('perms', perms)
     for (const record of result.propList) {
       if (!response[record.property]) {
         response[record.property] = {};
