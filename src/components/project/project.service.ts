@@ -428,56 +428,103 @@ export class ProjectService {
       'estimatedSubmission',
       'modifiedAt',
     ];
-    const readProject = this.db
+    const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .call(matchUserPermissions, label, id)
-      .call(addAllSecureProperties, ...secureProps, ...unsecureProps)
+      .match([node('node', 'Project', { active: true, id })])
       .optionalMatch([
-        node('canReadLocation', 'Permission', {
-          property: 'location',
-          read: true,
-          active: true,
-        }),
+        node('requestingUser'),
+        relation('in', '', 'member*1..'),
+        node('', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission'),
+        node('perms', 'Permission', { active: true }),
         relation('out', '', 'baseNode'),
         node('node'),
-        relation('out', '', 'location', { active: true }),
+      ])
+      .with('collect(distinct perms) as permList, node')
+      .match([
+        node('node'),
+        relation('out', 'r', { active: true }),
+        node('props', 'Property', { active: true }),
+      ])
+      .with('{value: props.value, property: type(r)} as prop, permList, node')
+      .with('collect(prop) as propList, permList, node')
+      .optionalMatch([
+        node('node'),
+        relation('out', '', 'location'),
         node('country', 'Country', { active: true }),
       ])
-      .return(
-        `
-          {
-            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
-            ${listWithUnsecureObject(unsecureProps)},
-            ${listWithSecureObject(secureProps)},
-            countryId: country.id,
-            canReadLocationRead: canReadLocation.read,
-            canReadLocationEdit: canReadLocation.edit
-          } as project
-        `
-      );
+      .return('propList, permList, node, country');
 
-    let result;
-    try {
-      result = await readProject.first();
-    } catch (e) {
-      this.logger.error('e :>> ', e);
-      throw e;
-    }
+    const result = await query.first();
 
     if (!result) {
-      throw new NotFoundException(`Could not find project`);
+      throw new NotFoundException('Could not find Project');
     }
 
-    const location = result.project.countryId
-      ? await this.locationService
-          .readOneCountry(result.project.countryId, session)
+    const response: any = {
+      id: result.node.properties.id,
+      createdAt: result.node.properties.createdAt,
+      type: result.node.properties.type,
+    };
+
+    const perms: any = {};
+
+    for (const {
+      properties: { property, read, edit },
+    } of result.permList) {
+      const currentPermission = perms[property];
+      if (!currentPermission) {
+        perms[property] = {
+          canRead: Boolean(read),
+          canEdit: Boolean(edit),
+        };
+      } else {
+        currentPermission.canRead = currentPermission.canRead || read;
+        currentPermission.canEdit = currentPermission.canEdit || edit;
+      }
+    }
+
+    for (const record of result.propList) {
+      if (!response[record.property]) {
+        response[record.property] = {};
+      }
+      if (unsecureProps.includes(record?.property)) {
+        response[record.property] = record.value;
+      } else {
+        const canRead = perms[record.property]?.canRead ?? false;
+        response[record.property] = {
+          value: canRead ? record.value : null,
+          canRead: canRead,
+          canEdit: perms[record.property]
+            ? perms[record.property].canEdit
+            : false,
+        };
+      }
+    }
+
+    for (const prop of secureProps) {
+      if (!response[prop]) {
+        response[prop] = {
+          value: null,
+          canRead: false,
+          canEdit: false,
+        };
+      }
+    }
+
+    let location
+
+    if (result.country) {
+      location = result?.country?.properties?.id
+        ? await this.locationService
+          .readOneCountry(result?.country?.properties?.id, session)
           .then((country) => {
             return {
               value: {
                 id: country.id,
-                name: { ...country.name },
-                region: { ...country.region },
+                name: {...country.name},
+                region: {...country.region},
                 createdAt: country.createdAt,
               },
             };
@@ -487,29 +534,20 @@ export class ProjectService {
               value: undefined,
             };
           })
-      : {
+        : {
           value: undefined,
         };
+    }
 
     return {
-      id,
-      createdAt: result.project.createdAt,
-      modifiedAt: result.project.modifiedAt.value,
-      type: result.project.type,
-      sensitivity: result.project.sensitivity,
-      name: result.project.name,
-      deptId: result.project.deptId,
-      step: result.project.step,
-      status: result.project.status,
+      ...response,
       location: {
         ...location,
-        canRead: !!result.project.canReadLocationRead,
-        canEdit: !!result.project.canReadLocationEdit,
+        // canRead: !!result.project.canReadLocationRead,
+        // canEdit: !!result.project.canReadLocationEdit,
       },
-      mouStart: result.project.mouStart,
-      mouEnd: result.project.mouEnd,
-      estimatedSubmission: result.project.estimatedSubmission,
-    };
+      projectId: response?.id?.value
+    }
   }
 
   async update(input: UpdateProject, session: ISession): Promise<Project> {
