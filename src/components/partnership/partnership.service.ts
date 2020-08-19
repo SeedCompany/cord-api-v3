@@ -6,14 +6,9 @@ import {
 } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
-import { flatMap, upperFirst } from 'lodash';
+import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
-import {
-  fiscalYears,
-  InputException,
-  ISession,
-  NotFoundException,
-} from '../../common';
+import { InputException, ISession, NotFoundException } from '../../common';
 import {
   addAllMetaPropertiesOfChildBaseNodes,
   addAllSecureProperties,
@@ -326,37 +321,9 @@ export class PartnershipService {
 
       const partnership = await this.readOne(result.id, session);
 
-      if (!input.types) {
-        return partnership;
-      }
-
       await this.eventBus.publish(
         new PartnershipCreatedEvent(partnership, session)
       );
-
-      // TODO move to event handler
-      const fiscalRange = fiscalYears(
-        partnership.mouStart.value,
-        partnership.mouEnd.value
-      ); // calculate the fiscalYears covered by this date range
-      if (
-        input.types?.includes(PartnershipType.Funding) &&
-        fiscalRange.length > 0
-      ) {
-        const budget = await this.budgetService.create({ projectId }, session);
-
-        const inputRecords = flatMap(fiscalRange, (fiscalYear) => ({
-          budgetId: budget.id,
-          organizationId,
-          fiscalYear,
-        }));
-
-        await Promise.all(
-          inputRecords.map((record) =>
-            this.budgetService.createRecord(record, session)
-          )
-        );
-      }
 
       return partnership;
     } catch (e) {
@@ -397,12 +364,6 @@ export class PartnershipService {
       .call(matchUserPermissions, 'Partnership', id)
       .call(addAllSecureProperties, ...props)
       .optionalMatch([
-        node('canReadProject', 'Permission', {
-          property: 'project',
-          read: true,
-          active: true,
-        }),
-        relation('out', '', 'baseNode'),
         node('node'),
         relation('in', '', 'partnership', { active: true }),
         node('project', 'Project', { active: true }),
