@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  InternalServerErrorException as ServerException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { first, intersection, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
@@ -11,6 +7,7 @@ import {
   ISession,
   NotFoundException,
   Sensitivity,
+  ServerException,
   simpleSwitch,
 } from '../../common';
 import {
@@ -213,7 +210,7 @@ export class LanguageService {
     const createdAt = DateTime.local();
 
     try {
-      const { ethnologueId } = await this.ethnologueLanguageService.create(
+      const ethnologueId = await this.ethnologueLanguageService.create(
         input?.ethnologue,
         session
       );
@@ -371,7 +368,7 @@ export class LanguageService {
         );
       }
       this.logger.error(`Could not create`, { ...input, exception: e });
-      throw new ServerException('Could not create language');
+      throw new ServerException('Could not create language', e);
     }
   }
 
@@ -424,7 +421,7 @@ export class LanguageService {
       throw new NotFoundException('Could not find language', 'language.id');
     }
 
-    const { ethnologue } = await this.ethnologueLanguageService.readOne(
+    const ethnologue = await this.ethnologueLanguageService.readOne(
       result.ethnologueLanguageId,
       session
     );
@@ -583,7 +580,7 @@ export class LanguageService {
           (item as any).properties.id,
           session
         );
-        const { ethnologue } = await this.ethnologueLanguageService.readOne(
+        const ethnologue = await this.ethnologueLanguageService.readOne(
           (language as any).ethnologueLanguageId,
           session
         );
