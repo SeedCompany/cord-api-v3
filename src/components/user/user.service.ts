@@ -510,6 +510,18 @@ export class UserService {
 
   async delete(id: string, session: ISession): Promise<void> {
     const user = await this.readOne(id, session);
+    // remove EmailAddress label so uniqueness constraint works only for exisiting users
+    await this.db
+      .query()
+      .match([
+        node('user', 'User', { id, active: true }),
+        relation('out', '', 'email', { active: true }),
+        node('email', 'EmailAddress', { active: true }),
+      ])
+      .removeLabels({
+        email: 'EmailAddress',
+      })
+      .first();
     try {
       await this.db.deleteNode({
         session,

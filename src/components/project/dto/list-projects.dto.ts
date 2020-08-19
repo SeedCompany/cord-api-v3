@@ -70,7 +70,8 @@ export abstract class ProjectFilters {
 
   @Field({
     nullable: true,
-    description: 'Cluster project',
+    description:
+      'When a project works on more than one language it is a "cluster" project. It has more than one engagement',
   })
   readonly clusters?: boolean;
 }
