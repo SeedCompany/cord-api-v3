@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { Node, node, relation } from 'cypher-query-builder';
 import { first, intersection, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import {
@@ -24,6 +24,7 @@ import {
   UniquenessError,
 } from '../../core';
 import {
+  BaseNode,
   DbPropsOfDto,
   parseBaseNodeProperties,
   parsePropList,
@@ -569,28 +570,14 @@ export class LanguageService {
 
     query.match([node('node', 'Language', { active: true })]);
 
-    const result: LanguageListOutput = await runListQuery(
+    const result = await runListQuery<Node<BaseNode>>(
       query,
       input,
       secureProps.includes(input.sort)
     );
     const items = await Promise.all(
       result.items.map(async (item) => {
-        const language = await this.readOne(
-          (item as any).properties.id,
-          session
-        );
-        const ethnologue = await this.ethnologueLanguageService.readOne(
-          (language as any).ethnologueLanguageId,
-          session
-        );
-
-        return {
-          ...(item as any).properties,
-          ...language,
-          // sensitivity: (item as any).sensitivity.value || Sensitivity.Low,
-          ethnologue: ethnologue,
-        };
+        return await this.readOne(item.properties.id, session);
       })
     );
 
