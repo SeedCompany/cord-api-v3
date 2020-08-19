@@ -19,7 +19,7 @@ export class InternshipEngagementResolver {
     @Parent() engagement: InternshipEngagement,
     @Session() session: ISession
   ): Promise<SecuredFile> {
-    return this.files.resolveDefinedFile(engagement.growthPlan, session);
+    return await this.files.resolveDefinedFile(engagement.growthPlan, session);
   }
 
   @ResolveField(() => SecuredUser)

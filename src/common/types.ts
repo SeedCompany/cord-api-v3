@@ -12,6 +12,7 @@ import { ClassDecoratorFactory } from '@nestjs/graphql/dist/interfaces/class-dec
  */
 export type AbstractClassType<T> = {
   prototype: T;
+  // eslint-disable-next-line @typescript-eslint/ban-types
 } & Function;
 
 /**

@@ -1,19 +1,17 @@
-/* eslint-disable */
-
 import {
   BadRequestException,
+  forwardRef,
+  Inject,
   Injectable,
   NotFoundException,
   InternalServerErrorException as ServerException,
   UnauthorizedException,
-  forwardRef,
-  Inject,
 } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
-import { isFunction, upperFirst } from 'lodash';
+import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
-import { ISession, DuplicateException } from '../../common';
+import { DuplicateException, ISession } from '../../common';
 import {
   addAllMetaPropertiesOfChildBaseNodes,
   addAllSecureProperties,
@@ -23,19 +21,14 @@ import {
   ChildBaseNodeMetaProperty,
   ConfigService,
   DatabaseService,
+  filterByBaseNodeId,
   ILogger,
   Logger,
   matchRequestingUser,
   matchSession,
   matchUserPermissions,
-  listWithSecureObject,
-  listWithUnsecureObject,
-  printActualQuery,
-  addBaseNodeMetaPropsWithClause,
-  runListQuery,
-  filterByString,
-  filterByBaseNodeId,
   matchUserPermissionsForList,
+  runListQuery,
 } from '../../core';
 import { CeremonyService } from '../ceremony';
 import { CeremonyType } from '../ceremony/dto/type.enum';
@@ -46,6 +39,7 @@ import {
   SecuredProductList,
 } from '../product';
 import { ProjectType } from '../project/dto/type.enum';
+import { ProjectService } from '../project/project.service';
 import {
   CreateInternshipEngagement,
   CreateLanguageEngagement,
@@ -57,7 +51,6 @@ import {
   UpdateInternshipEngagement,
   UpdateLanguageEngagement,
 } from './dto';
-import { ProjectService } from '../project/project.service';
 
 @Injectable()
 export class EngagementService {
@@ -198,7 +191,7 @@ export class EngagementService {
   protected async getIEByProjectAndIntern(
     projectId: string,
     internId: string
-  ): Promise<Boolean> {
+  ): Promise<boolean> {
     const result = await this.db
       .query()
       .match([node('intern', 'User', { active: true, id: internId })])
@@ -219,7 +212,7 @@ export class EngagementService {
   protected async getLEByProjectAndLanguage(
     projectId: string,
     languageId: string
-  ): Promise<Boolean> {
+  ): Promise<boolean> {
     const result = await this.db
       .query()
       .match([node('language', 'Language', { active: true, id: languageId })])
@@ -1328,10 +1321,18 @@ export class EngagementService {
       .return('eng.id as id')
       .run();
     if (baseNode === 'InternshipEngagement') {
-      return this.isInternshipEngagementConsistent(nodes, baseNode, session);
+      return await this.isInternshipEngagementConsistent(
+        nodes,
+        baseNode,
+        session
+      );
     }
     if (baseNode === 'LanguageEngagement') {
-      return this.isLanguageEngagementConsistent(nodes, baseNode, session);
+      return await this.isLanguageEngagementConsistent(
+        nodes,
+        baseNode,
+        session
+      );
     }
     return false;
   }
@@ -1361,13 +1362,14 @@ export class EngagementService {
       ).every((n) => n) &&
       (
         await Promise.all(
-          nodes.map(async (ie: { id: any }) =>
-            this.db.hasProperties({
-              session,
-              id: ie.id,
-              props: requiredProperties,
-              nodevar: 'LanguageEngagement',
-            })
+          nodes.map(
+            async (ie: { id: any }) =>
+              await this.db.hasProperties({
+                session,
+                id: ie.id,
+                props: requiredProperties,
+                nodevar: 'LanguageEngagement',
+              })
           )
         )
       ).every((n) => n)
@@ -1400,13 +1402,14 @@ export class EngagementService {
       ).every((n) => n) &&
       (
         await Promise.all(
-          nodes.map(async (ie: { id: any }) =>
-            this.db.hasProperties({
-              session,
-              id: ie.id,
-              props: requiredProperties,
-              nodevar: 'InternshipEngagement',
-            })
+          nodes.map(
+            async (ie: { id: any }) =>
+              await this.db.hasProperties({
+                session,
+                id: ie.id,
+                props: requiredProperties,
+                nodevar: 'InternshipEngagement',
+              })
           )
         )
       ).every((n) => n)

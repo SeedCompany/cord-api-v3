@@ -44,7 +44,7 @@ export class PartnershipResolver {
     @Session() session: ISession,
     @IdArg() id: string
   ): Promise<Partnership> {
-    return this.service.readOne(id, session);
+    return await this.service.readOne(id, session);
   }
 
   @ResolveField(() => SecuredFile, {
@@ -54,7 +54,7 @@ export class PartnershipResolver {
     @Parent() partnership: Partnership,
     @Session() session: ISession
   ): Promise<SecuredFile> {
-    return this.files.resolveDefinedFile(partnership.mou, session);
+    return await this.files.resolveDefinedFile(partnership.mou, session);
   }
 
   @ResolveField(() => SecuredFile, {
@@ -64,7 +64,7 @@ export class PartnershipResolver {
     @Parent() partnership: Partnership,
     @Session() session: ISession
   ): Promise<SecuredFile> {
-    return this.files.resolveDefinedFile(partnership.agreement, session);
+    return await this.files.resolveDefinedFile(partnership.agreement, session);
   }
 
   @Query(() => PartnershipListOutput, {
@@ -110,6 +110,6 @@ export class PartnershipResolver {
   async checkPartnershipConsistency(
     @Session() session: ISession
   ): Promise<boolean> {
-    return this.service.checkPartnershipConsistency(session);
+    return await this.service.checkPartnershipConsistency(session);
   }
 }

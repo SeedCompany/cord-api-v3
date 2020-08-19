@@ -8,13 +8,10 @@ import {
 } from 'neo4j-driver/types/v1';
 import { CalendarDate } from '../../common';
 
-// Convert private to protected, and ignore TS complaints about that
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
+// @ts-expect-error Convert private methods to protected
 class PatchedTransformer extends Transformer {
   protected transformValue(value: unknown): any {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
+    // @ts-expect-error ignore the fact that it's private
     return super.transformValue(value);
   }
 }

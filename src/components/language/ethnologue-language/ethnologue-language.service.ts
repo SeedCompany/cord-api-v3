@@ -121,13 +121,9 @@ export class EthnologueLanguageService {
   };
 
   async create(
-    input: CreateEthnologueLanguage | undefined,
+    input: CreateEthnologueLanguage,
     session: ISession
   ): Promise<{ ethnologue: EthnologueLanguage; ethnologueId: string }> {
-    if (!input) {
-      input = Object.assign({}) as CreateEthnologueLanguage;
-    }
-
     // create org
     const secureProps: Property[] = [
       {
@@ -214,7 +210,7 @@ export class EthnologueLanguageService {
 
     this.logger.debug(`ethnologue language created`, { id });
 
-    return this.readOne(id, session);
+    return await this.readOne(id, session);
   }
 
   async readOne(
@@ -333,7 +329,7 @@ export class EthnologueLanguageService {
           .map(
             (
               prop
-            ) => `${prop}: {value: coalesce(${prop}.value), canRead: coalesce(${prop}ReadPerm.read, false) 
+            ) => `${prop}: {value: coalesce(${prop}.value), canRead: coalesce(${prop}ReadPerm.read, false)
         }`
           )
           .join(', ')}, ethnologueId: node.id, createdAt: node.createdAt}
@@ -376,8 +372,8 @@ export class EthnologueLanguageService {
 
       if (edit) {
         Object.keys(edit).forEach((key) => {
-          if (edit[key]['canEdit']) {
-            data[key]['canEdit'] = edit[key]['canEdit'];
+          if (edit[key].canEdit) {
+            data[key].canEdit = edit[key].canEdit;
           }
         });
       }

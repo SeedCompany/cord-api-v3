@@ -34,7 +34,7 @@ export class ProductResolver {
     @Session() session: ISession,
     @IdArg() id: string
   ): Promise<AnyProduct> {
-    return this.productService.readOne(id, session);
+    return await this.productService.readOne(id, session);
   }
 
   @Query(() => ProductListOutput, {

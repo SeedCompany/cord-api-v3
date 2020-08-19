@@ -1,29 +1,28 @@
-/* eslint-disable */
 import {
   Injectable,
-  InternalServerErrorException as ServerException,
-  NotFoundException,
   InternalServerErrorException,
+  NotFoundException,
+  InternalServerErrorException as ServerException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { generate } from 'shortid';
 import { node, relation } from 'cypher-query-builder';
+import { generate } from 'shortid';
 import { ISession } from '../../common';
+import { DatabaseService, ILogger, Logger, matchSession } from '../../core';
 import {
-  CreateWorkflow,
-  Workflow,
   AddState,
-  State,
-  UpdateState,
-  StateListOutput,
-  GroupState,
   ChangeCurrentState,
+  CreateWorkflow,
+  FieldObject,
+  GroupState,
   PossibleState,
   RequiredField,
   RequiredFieldListOutput,
-  FieldObject,
+  State,
+  StateListOutput,
+  UpdateState,
+  Workflow,
 } from './dto';
-import { Logger, ILogger, DatabaseService, matchSession } from '../../core';
 
 @Injectable()
 export class WorkflowService {
@@ -252,6 +251,7 @@ export class WorkflowService {
         .return({
           workflow: [{ stateIdentifier: 'stateIdentifier' }],
         })
+        .asResult<{ stateIdentifier: string }>()
         .first();
 
       if (!workflow) {
@@ -705,6 +705,7 @@ export class WorkflowService {
         .return({
           workflow: [{ stateIdentifier: 'stateIdentifier' }],
         })
+        .asResult<{ stateIdentifier: string }>()
         .first();
 
       if (!workflow) {

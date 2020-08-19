@@ -1,5 +1,6 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
+import { some } from 'lodash';
 import { DateTime, Interval } from 'luxon';
 import {
   CreateInternshipEngagement,
@@ -33,8 +34,6 @@ import {
   TestApp,
   uploadFileContents,
 } from './utility';
-
-import _ = require('lodash');
 
 describe('Engagement e2e', () => {
   let app: TestApp;
@@ -673,13 +672,13 @@ describe('Engagement e2e', () => {
     );
 
     expect(
-      _.some(engagements.items, {
+      some(engagements.items, {
         // eslint-disable-next-line @typescript-eslint/naming-convention
         __typename: 'InternshipEngagement',
       })
     ).toBeTruthy();
     expect(
-      _.some(engagements.items, {
+      some(engagements.items, {
         // eslint-disable-next-line @typescript-eslint/naming-convention
         __typename: 'LanguageEngagement',
       })

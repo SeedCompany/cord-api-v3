@@ -39,7 +39,7 @@ export class EngagementResolver {
     @IdArg() id: string,
     @Session() session: ISession
   ): Promise<Engagement> {
-    return this.service.readOne(id, session);
+    return await this.service.readOne(id, session);
   }
 
   @Query(() => EngagementListOutput, {
@@ -145,6 +145,9 @@ export class EngagementResolver {
     @Args('input') input: EngagementConsistencyInput,
     @Session() session: ISession
   ): Promise<boolean> {
-    return this.service.checkEngagementConsistency(input.baseNode, session);
+    return await this.service.checkEngagementConsistency(
+      input.baseNode,
+      session
+    );
   }
 }

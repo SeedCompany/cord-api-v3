@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
+import { range } from 'lodash';
 import {
   DuplicateException,
   ISession,
@@ -123,9 +124,9 @@ export class OrganizationService {
     // add root admin to new org as an admin
     await this.db.addRootAdminToBaseNodeAsAdmin(id, 'Organization');
 
-    this.logger.debug(`organization created, id ${id}`);
+    this.logger.debug(`organization created`, { id });
 
-    return this.readOne(id, session);
+    return await this.readOne(id, session);
   }
 
   async readOne(orgId: string, session: ISession): Promise<Organization> {
@@ -217,7 +218,7 @@ export class OrganizationService {
     session: ISession
   ): Promise<Organization> {
     const organization = await this.readOne(input.id, session);
-    return this.db.sgUpdateProperties({
+    return await this.db.sgUpdateProperties({
       session,
       object: organization,
       props: ['name'],
@@ -288,7 +289,7 @@ export class OrganizationService {
         `
       );
 
-    return runListQuery(query, input, secureProps.includes(input.sort));
+    return await runListQuery(query, input, secureProps.includes(input.sort));
   }
 
   async checkAllOrgs(session: ISession): Promise<boolean> {
@@ -317,7 +318,7 @@ export class OrganizationService {
 
       const orgCount = result?.orgCount;
 
-      for (let i = 0; i < orgCount; i++) {
+      for (const i of range(orgCount)) {
         const isGood = await this.pullOrg(i);
         if (!isGood) {
           return false;
@@ -330,7 +331,7 @@ export class OrganizationService {
     return true;
   }
 
-  private async pullOrg(id: number): Promise<boolean> {
+  private async pullOrg(index: number): Promise<boolean> {
     const result = await this.db
       .query()
       .raw(
@@ -348,13 +349,10 @@ export class OrganizationService {
         ORDER BY
           createdAt
         SKIP
-          ${id}
+          ${index}
         LIMIT
           1
-        `,
-        {
-          id,
-        }
+        `
       )
       .first();
 
@@ -409,7 +407,7 @@ export class OrganizationService {
       (
         await Promise.all(
           organizations.map(async (organization) => {
-            return this.db.hasProperties({
+            return await this.db.hasProperties({
               session,
               id: organization.id,
               props: ['name'],
@@ -421,7 +419,7 @@ export class OrganizationService {
       (
         await Promise.all(
           organizations.map(async (organization) => {
-            return this.db.isUniqueProperties({
+            return await this.db.isUniqueProperties({
               session,
               id: organization.id,
               props: ['name'],

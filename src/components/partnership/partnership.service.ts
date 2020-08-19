@@ -701,7 +701,7 @@ export class PartnershipService {
       (
         await Promise.all(
           partnerships.map(async (partnership) => {
-            return this.db.hasProperties({
+            return await this.db.hasProperties({
               session,
               id: partnership.id,
               props: [
@@ -719,7 +719,7 @@ export class PartnershipService {
       (
         await Promise.all(
           partnerships.map(async (partnership) => {
-            return this.db.isUniqueProperties({
+            return await this.db.isUniqueProperties({
               session,
               id: partnership.id,
               props: [

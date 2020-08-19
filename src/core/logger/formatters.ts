@@ -160,7 +160,7 @@ export const printForCli = () =>
     let msg = '';
     // msg += green(`[Nest] ${info.pid}   - `);
     // msg += `${info.timestamp}   `;
-    msg += info.name ? yellow(`[${info.name}] `) : '';
+    msg += typeof info.name === 'string' ? yellow(`[${info.name}] `) : '';
     msg += info.message;
     msg += ` ${yellow(info.ms)}`;
     msg +=

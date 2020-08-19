@@ -30,7 +30,7 @@ export class LocationResolver {
     @Session() session: ISession,
     @IdArg() id: string
   ): Promise<Location> {
-    return this.locationService.readOne(id, session);
+    return await this.locationService.readOne(id, session);
   }
 
   @Query(() => LocationListOutput, {
@@ -131,6 +131,6 @@ export class LocationResolver {
   async checkLocationConsistency(
     @Session() session: ISession
   ): Promise<boolean> {
-    return this.locationService.checkLocationConsistency(session);
+    return await this.locationService.checkLocationConsistency(session);
   }
 }

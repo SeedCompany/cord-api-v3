@@ -22,7 +22,7 @@ export class UnavailabilityResolver {
     @Session() session: ISession,
     @IdArg() id: string
   ): Promise<Unavailability> {
-    return this.service.readOne(id, session);
+    return await this.service.readOne(id, session);
   }
 
   @Query(() => UnavailabilityListOutput, {
@@ -79,6 +79,6 @@ export class UnavailabilityResolver {
   async checkUnavailabilityConsistency(
     @Session() session: ISession
   ): Promise<boolean> {
-    return this.service.checkUnavailabilityConsistency(session);
+    return await this.service.checkUnavailabilityConsistency(session);
   }
 }

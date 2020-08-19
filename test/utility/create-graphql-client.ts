@@ -101,7 +101,7 @@ const reportError = (
       ? JSON.stringify(e.message, undefined, 2)
       : e.message;
   if (e.path) {
-    msg += `\nPath: ${e.path}`;
+    msg += `\nPath: ${e.path.join('.')}`;
   }
   const location = (e.locations || [])
     .map((l) => `  - line ${l.line}, column ${l.column}`)

@@ -60,7 +60,7 @@ export function createBaseNode(
   editableProps?: string[],
   isRootuser?: boolean
 ) {
-  const createdAt = DateTime.local().toString();
+  const createdAt = DateTime.local();
 
   if (typeof label === 'string') {
     query.create([
@@ -204,7 +204,7 @@ export function createSG(
   if (label) {
     labels.push(label);
   }
-  const createdAt = DateTime.local().toString();
+  const createdAt = DateTime.local();
 
   query.create([
     node('root'),
@@ -218,7 +218,7 @@ export function addUserToSG(
   userCypherIdentifier: string,
   sGcypherIdentifier: string
 ) {
-  const createdAt = DateTime.local().toString();
+  const createdAt = DateTime.local();
 
   query.create([
     node(userCypherIdentifier),

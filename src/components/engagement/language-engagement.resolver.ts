@@ -51,6 +51,6 @@ export class LanguageEngagementResolver {
     @Parent() engagement: LanguageEngagement,
     @Session() session: ISession
   ): Promise<SecuredFile> {
-    return this.files.resolveDefinedFile(engagement.pnp, session);
+    return await this.files.resolveDefinedFile(engagement.pnp, session);
   }
 }
