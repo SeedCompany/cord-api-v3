@@ -65,7 +65,7 @@ describe('Partnership e2e', () => {
       expect.arrayContaining(partnership.types.value)
     );
     expect(actual.organization).toBeTruthy();
-    expect(actual.organization?.id).toBe(partnership.organization?.id);
+    expect(actual.organization).toEqual(partnership.organization);
     expect(actual.agreementStatus.canEdit).toBe(true);
   });
 
