@@ -53,6 +53,7 @@ export class ParameterTransformer {
       return mapValues(value, (v) => this.transformValue(v));
     }
 
+    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
     throw new Error(`Could not determine how to transform value: ${value}`);
   }
 

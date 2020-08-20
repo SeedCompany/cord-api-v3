@@ -43,7 +43,7 @@ export class UserResolver {
     description: 'Look up a user by its ID',
   })
   async user(@Session() session: ISession, @IdArg() id: string): Promise<User> {
-    return this.userService.readOne(id, session);
+    return await this.userService.readOne(id, session);
   }
 
   @ResolveField(() => String, { nullable: true })
@@ -106,7 +106,7 @@ export class UserResolver {
     description: 'Checks whether a provided email already exists',
   })
   async checkEmail(@Args() { email }: CheckEmailArgs): Promise<boolean> {
-    return this.userService.checkEmail(email);
+    return await this.userService.checkEmail(email);
   }
 
   @ResolveField(() => SecuredUnavailabilityList)
@@ -186,7 +186,7 @@ export class UserResolver {
     description: 'Check Consistency across User Nodes',
   })
   async checkUserConsistency(@Session() session: ISession): Promise<boolean> {
-    return this.userService.checkUserConsistency(session);
+    return await this.userService.checkUserConsistency(session);
   }
 
   @Mutation(() => Boolean, {
@@ -196,7 +196,10 @@ export class UserResolver {
     @Session() session: ISession,
     @Args('input') input: AssignOrganizationToUserInput
   ): Promise<boolean> {
-    return this.userService.assignOrganizationToUser(input.request, session);
+    return await this.userService.assignOrganizationToUser(
+      input.request,
+      session
+    );
   }
 
   @Mutation(() => Boolean, {
@@ -206,6 +209,9 @@ export class UserResolver {
     @Session() session: ISession,
     @Args('input') input: RemoveOrganizationFromUserInput
   ): Promise<boolean> {
-    return this.userService.removeOrganizationFromUser(input.request, session);
+    return await this.userService.removeOrganizationFromUser(
+      input.request,
+      session
+    );
   }
 }

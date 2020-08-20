@@ -129,7 +129,7 @@ export class ExceptionFilter implements GqlExceptionFilter {
     );
   }
 
-  private getProtoChain<T = object>(obj: T, chain: T[] = []): T[] {
+  private getProtoChain<T>(obj: T, chain: T[] = []): T[] {
     if (!obj || typeof obj !== 'object') {
       return chain;
     }
@@ -140,7 +140,7 @@ export class ExceptionFilter implements GqlExceptionFilter {
     return this.getProtoChain(ex, [...chain, ex]);
   }
 
-  private errorToCode(obj: object, ex: Error) {
+  private errorToCode(obj: Error, ex: Error) {
     const type = obj.constructor;
 
     if (type === InternalServerErrorException) {

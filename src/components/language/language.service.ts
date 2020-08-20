@@ -203,7 +203,7 @@ export class LanguageService {
   async create(input: CreateLanguage, session: ISession): Promise<Language> {
     this.logger.info(`Create language`, { input, userId: session.userId });
 
-    const createdAt = DateTime.local().toString();
+    const createdAt = DateTime.local();
 
     try {
       const { ethnologueId } = await this.ethnologueLanguageService.create(
@@ -557,11 +557,14 @@ export class LanguageService {
       );
     }
 
-    return this.readOne(input.id, session);
+    return await this.readOne(input.id, session);
   }
 
   async delete(id: string, session: ISession): Promise<void> {
-    this.logger.info(`mutation delete language: ${id} by ${session.userId}`);
+    this.logger.info(`Deleting language`, {
+      id,
+      userId: session.userId,
+    });
     const object = await this.readOne(id, session);
 
     if (!object) {
@@ -689,7 +692,7 @@ export class LanguageService {
     const items = await Promise.all(
       result.map(
         async (location): Promise<Location> => {
-          return this.locationService.readOne(location.id, session);
+          return await this.locationService.readOne(location.id, session);
         }
       )
     );
@@ -753,8 +756,9 @@ export class LanguageService {
     readProject = readProject.splice((page - 1) * count, count);
 
     result.items = await Promise.all(
-      readProject.map(async (project) =>
-        this.projectService.readOne(project.id, session)
+      readProject.map(
+        async (project) =>
+          await this.projectService.readOne(project.id, session)
       )
     );
 
@@ -844,7 +848,7 @@ export class LanguageService {
 
     const yayNay = await Promise.all(
       languages.map(async (lang) => {
-        return this.db.hasProperties({
+        return await this.db.hasProperties({
           session,
           id: lang.id,
           props: ['name', 'displayName'],

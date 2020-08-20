@@ -20,7 +20,7 @@ export class CeremonyResolver {
     @Session() session: ISession,
     @IdArg() id: string
   ): Promise<Ceremony> {
-    return this.service.readOne(id, session);
+    return await this.service.readOne(id, session);
   }
 
   @Query(() => CeremonyListOutput, {
@@ -61,6 +61,6 @@ export class CeremonyResolver {
   async checkCeremonyConsistency(
     @Session() session: ISession
   ): Promise<boolean> {
-    return this.service.checkCeremonyConsistency(session);
+    return await this.service.checkCeremonyConsistency(session);
   }
 }

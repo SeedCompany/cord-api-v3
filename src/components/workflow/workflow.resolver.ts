@@ -81,7 +81,7 @@ export class WorkflowResolver {
     @Session() session: ISession,
     @IdArg() baseNodeId: string
   ): Promise<StateListOutput> {
-    return this.service.listStates(session, baseNodeId);
+    return await this.service.listStates(session, baseNodeId);
   }
 
   @Query(() => StateListOutput, {
@@ -91,7 +91,7 @@ export class WorkflowResolver {
     @Session() session: ISession,
     @IdArg() stateId: string
   ): Promise<StateListOutput> {
-    return this.service.listNextStates(session, stateId);
+    return await this.service.listNextStates(session, stateId);
   }
 
   @Mutation(() => Boolean, {

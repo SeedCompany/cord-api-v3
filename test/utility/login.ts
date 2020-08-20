@@ -3,7 +3,7 @@ import { LoginInput } from '../../src/components/authentication/authentication.d
 import { TestApp } from './create-app';
 
 export async function login(app: TestApp, input: Partial<LoginInput> = {}) {
-  return app.graphql.mutate(
+  return await app.graphql.mutate(
     gql`
       mutation login($input: LoginInput!) {
         login(input: $input) {

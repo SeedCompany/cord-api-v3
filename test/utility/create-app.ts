@@ -28,8 +28,7 @@ export const createTestApp = async () => {
     .compile();
 
   // Remove ValidationPipe for tests because of failures
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
+  // @ts-expect-error ignore the fact that it's private
   const appConfig: ApplicationConfig = moduleFixture.applicationConfig;
   remove(appConfig.getGlobalPipes(), (p) => p instanceof ValidationPipe);
 

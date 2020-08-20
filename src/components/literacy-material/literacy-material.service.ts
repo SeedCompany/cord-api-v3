@@ -2,11 +2,10 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
-  InternalServerErrorException as ServerException,
 } from '@nestjs/common';
 import { inArray, node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { DuplicateException, ISession } from '../../common';
+import { DuplicateException, ISession, ServerException } from '../../common';
 import {
   addAllSecureProperties,
   addBaseNodeMetaPropsWithClause,
@@ -202,10 +201,11 @@ export class LiteracyMaterialService {
       this.logger.info(`literacy material created`, { id: result.id });
       return await this.readOne(result.id, session);
     } catch (err) {
-      this.logger.error(
-        `Could not create literacy material for user ${session.userId}`
-      );
-      throw new ServerException('Could not create literacy material');
+      this.logger.error(`Could not create literacy material`, {
+        exception: err,
+        userId: session.userId,
+      });
+      throw new ServerException('Could not create literacy material', err);
     }
   }
 
@@ -332,7 +332,7 @@ export class LiteracyMaterialService {
     }
     const literacyMaterial = await this.readOne(input.id, session);
 
-    return this.db.sgUpdateProperties({
+    return await this.db.sgUpdateProperties({
       session,
       object: literacyMaterial,
       props: ['name'],

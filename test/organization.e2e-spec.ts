@@ -12,8 +12,6 @@ import {
   TestApp,
 } from './utility';
 
-import _ = require('lodash');
-
 describe('Organization e2e', () => {
   let app: TestApp;
 

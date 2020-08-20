@@ -294,7 +294,7 @@ export class ProductService {
     }
 
     this.logger.info(`product created`, { id: result.id });
-    return this.readOne(result.id, session);
+    return await this.readOne(result.id, session);
   }
 
   async readOne(id: string, session: ISession): Promise<AnyProduct> {
@@ -501,7 +501,7 @@ export class ProductService {
 
     const object = await this.readOne(input.id, session);
 
-    return this.db.updateProperties({
+    return await this.db.updateProperties({
       session,
       object,
       props: ['mediums', 'purposes', 'methodology'],
@@ -713,13 +713,13 @@ export class ProductService {
     session: ISession
   ): Promise<Film | Story | Song | LiteracyMaterial | undefined> {
     if (type === 'Film') {
-      return this.film.readOne(id, session);
+      return await this.film.readOne(id, session);
     } else if (type === 'Story') {
-      return this.story.readOne(id, session);
+      return await this.story.readOne(id, session);
     } else if (type === 'Song') {
-      return this.song.readOne(id, session);
+      return await this.song.readOne(id, session);
     } else if (type === 'LiteracyMaterial') {
-      return this.literacyMaterial.readOne(id, session);
+      return await this.literacyMaterial.readOne(id, session);
     }
 
     return undefined;

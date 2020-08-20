@@ -24,7 +24,7 @@ export class LiteracyMaterialResolver {
     @Session() session: ISession,
     @IdArg() id: string
   ): Promise<LiteracyMaterial> {
-    return this.literacyMaterialService.readOne(id, session);
+    return await this.literacyMaterialService.readOne(id, session);
   }
 
   @Query(() => LiteracyMaterialListOutput, {

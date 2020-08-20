@@ -19,7 +19,7 @@ export class FilmResolver {
     description: 'Look up a film by its ID',
   })
   async film(@Session() session: ISession, @IdArg() id: string): Promise<Film> {
-    return this.filmService.readOne(id, session);
+    return await this.filmService.readOne(id, session);
   }
 
   @Query(() => FilmListOutput, {

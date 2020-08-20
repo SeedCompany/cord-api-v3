@@ -3,18 +3,22 @@ import {
   ValidationOptions,
   ValidatorConstraintInterface,
 } from 'class-validator';
+import { AnyFn } from '../types';
 
 export interface ValidateByOptions {
   name: string;
   constraints?: any[];
-  validator: ValidatorConstraintInterface | Function;
+  validator: ValidatorConstraintInterface | AnyFn;
   async?: boolean;
 }
 
 export const ValidateBy = (
   options: ValidateByOptions,
   validationOptions?: ValidationOptions
-): PropertyDecorator => (object: object, propertyName: string | symbol) => {
+): PropertyDecorator => (
+  object: Record<string, any>,
+  propertyName: string | symbol
+) => {
   registerDecorator({
     name: options.name,
     target: object.constructor,

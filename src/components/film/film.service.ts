@@ -2,11 +2,10 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
-  InternalServerErrorException as ServerException,
 } from '@nestjs/common';
 import { inArray, node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { DuplicateException, ISession } from '../../common';
+import { DuplicateException, ISession, ServerException } from '../../common';
 import {
   addAllSecureProperties,
   addBaseNodeMetaPropsWithClause,
@@ -202,8 +201,11 @@ export class FilmService {
       this.logger.info(`flim created`, { id: result.id });
       return await this.readOne(result.id, session);
     } catch (err) {
-      this.logger.error(`Could not create film for user ${session.userId}`);
-      throw new ServerException('Could not create film');
+      this.logger.error(`Could not create film`, {
+        exception: err,
+        userId: session.userId,
+      });
+      throw new ServerException('Could not create film', err);
     }
   }
 
@@ -316,7 +318,7 @@ export class FilmService {
       }
     }
     const film = await this.readOne(input.id, session);
-    return this.db.sgUpdateProperties({
+    return await this.db.sgUpdateProperties({
       session,
       object: film,
       props: ['name'],

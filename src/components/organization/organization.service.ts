@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { node } from 'cypher-query-builder';
+import { node, relation } from 'cypher-query-builder';
+import { range } from 'lodash';
 import {
   DuplicateException,
   ISession,
@@ -9,7 +10,6 @@ import {
 import {
   addAllSecureProperties,
   addBaseNodeMetaPropsWithClause,
-  addPropertyCoalesceWithClause,
   addUserToSG,
   ConfigService,
   createBaseNode,
@@ -124,9 +124,9 @@ export class OrganizationService {
     // add root admin to new org as an admin
     await this.db.addRootAdminToBaseNodeAsAdmin(id, 'Organization');
 
-    this.logger.debug(`organization created, id ${id}`);
+    this.logger.debug(`organization created`, { id });
 
-    return this.readOne(id, session);
+    return await this.readOne(id, session);
   }
 
   async readOne(orgId: string, session: ISession): Promise<Organization> {
@@ -138,23 +138,79 @@ export class OrganizationService {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .call(matchUserPermissions, 'Organization', orgId)
-      .call(addAllSecureProperties, ...props)
-      .with([
-        ...props.map(addPropertyCoalesceWithClause),
-        'coalesce(node.id) as id',
-        'coalesce(node.createdAt) as createdAt',
+      .match([node('node', 'Organization', { active: true, id: orgId })])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member*1..'),
+        node('', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission'),
+        node('perms', 'Permission', { active: true }),
+        relation('out', '', 'baseNode'),
+        node('node'),
       ])
-      .returnDistinct([...props, 'id', 'createdAt']);
+      .with('collect(distinct perms) as permList, node')
+      .match([
+        node('node'),
+        relation('out', 'r', { active: true }),
+        node('props', 'Property', { active: true }),
+      ])
+      .with('{value: props.value, property: type(r)} as prop, permList, node')
+      .with('collect(prop) as propList, permList, node')
+      .return('propList, permList, node');
 
-    // printActualQuery(this.logger, query);
+    const result = await query.first();
 
-    const result = (await query.first()) as Organization | undefined;
     if (!result) {
-      throw new NotFoundException('Could not find org');
+      throw new NotFoundException(
+        'Could not find organization',
+        'organization.id'
+      );
     }
 
-    return result;
+    const organization: any = {
+      id: result.node.properties.id,
+      createdAt: result.node.properties.createdAt,
+    };
+
+    const perms: any = {};
+
+    for (const {
+      properties: { property, read, edit },
+    } of result.permList) {
+      const currentPermission = perms[property];
+      if (!currentPermission) {
+        perms[property] = {
+          canRead: Boolean(read),
+          canEdit: Boolean(edit),
+        };
+      } else {
+        currentPermission.canRead = currentPermission.canRead || read;
+        currentPermission.canEdit = currentPermission.canEdit || edit;
+      }
+    }
+
+    for (const propertyObj of result.propList) {
+      const canRead = Boolean(perms[propertyObj.property]?.canRead);
+      const canEdit = Boolean(perms[propertyObj.property]?.canEdit);
+      const value = (canRead && propertyObj.value) || null;
+      organization[propertyObj.property] = {
+        value,
+        canRead,
+        canEdit,
+      };
+    }
+
+    for (const prop of props) {
+      if (!organization[prop]) {
+        organization[prop] = {
+          value: null,
+          canRead: false,
+          canEdit: false,
+        };
+      }
+    }
+
+    return organization;
   }
 
   async update(
@@ -162,7 +218,7 @@ export class OrganizationService {
     session: ISession
   ): Promise<Organization> {
     const organization = await this.readOne(input.id, session);
-    return this.db.sgUpdateProperties({
+    return await this.db.sgUpdateProperties({
       session,
       object: organization,
       props: ['name'],
@@ -233,7 +289,7 @@ export class OrganizationService {
         `
       );
 
-    return runListQuery(query, input, secureProps.includes(input.sort));
+    return await runListQuery(query, input, secureProps.includes(input.sort));
   }
 
   async checkAllOrgs(session: ISession): Promise<boolean> {
@@ -262,7 +318,7 @@ export class OrganizationService {
 
       const orgCount = result?.orgCount;
 
-      for (let i = 0; i < orgCount; i++) {
+      for (const i of range(orgCount)) {
         const isGood = await this.pullOrg(i);
         if (!isGood) {
           return false;
@@ -275,7 +331,7 @@ export class OrganizationService {
     return true;
   }
 
-  private async pullOrg(id: number): Promise<boolean> {
+  private async pullOrg(index: number): Promise<boolean> {
     const result = await this.db
       .query()
       .raw(
@@ -293,13 +349,10 @@ export class OrganizationService {
         ORDER BY
           createdAt
         SKIP
-          ${id}
+          ${index}
         LIMIT
           1
-        `,
-        {
-          id,
-        }
+        `
       )
       .first();
 
@@ -354,7 +407,7 @@ export class OrganizationService {
       (
         await Promise.all(
           organizations.map(async (organization) => {
-            return this.db.hasProperties({
+            return await this.db.hasProperties({
               session,
               id: organization.id,
               props: ['name'],
@@ -366,7 +419,7 @@ export class OrganizationService {
       (
         await Promise.all(
           organizations.map(async (organization) => {
-            return this.db.isUniqueProperties({
+            return await this.db.isUniqueProperties({
               session,
               id: organization.id,
               props: ['name'],

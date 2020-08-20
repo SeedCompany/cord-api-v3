@@ -53,7 +53,7 @@ export abstract class CreateLanguage {
   @Field({ nullable: true })
   @Type(() => CreateEthnologueLanguage)
   @ValidateNested()
-  readonly ethnologue?: CreateEthnologueLanguage;
+  readonly ethnologue: CreateEthnologueLanguage = {};
 
   @Field(() => Int, { nullable: true })
   @IsPositive()

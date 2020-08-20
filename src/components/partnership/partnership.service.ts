@@ -65,28 +65,6 @@ export class PartnershipService {
   ) {}
 
   // helper method for defining properties
-  property = (prop: string, value: any) => {
-    if (!value) {
-      value = null;
-    }
-    const createdAt = DateTime.local();
-    const propLabel = 'Property';
-    return [
-      [
-        node('newPartnership'),
-        relation('out', '', prop, {
-          active: true,
-          createdAt,
-        }),
-        node(prop, propLabel, {
-          active: true,
-          value,
-        }),
-      ],
-    ];
-  };
-
-  // helper method for defining properties
   permission = (property: string) => {
     const createdAt = DateTime.local();
     return [
@@ -107,7 +85,7 @@ export class PartnershipService {
           active: true,
           createdAt,
         }),
-        node('newPartnership'),
+        node('node'),
       ],
       [
         node('readerSG'),
@@ -126,7 +104,7 @@ export class PartnershipService {
           active: true,
           createdAt,
         }),
-        node('newPartnership'),
+        node('node'),
       ],
     ];
   };
@@ -723,7 +701,7 @@ export class PartnershipService {
       (
         await Promise.all(
           partnerships.map(async (partnership) => {
-            return this.db.hasProperties({
+            return await this.db.hasProperties({
               session,
               id: partnership.id,
               props: [
@@ -741,7 +719,7 @@ export class PartnershipService {
       (
         await Promise.all(
           partnerships.map(async (partnership) => {
-            return this.db.isUniqueProperties({
+            return await this.db.isUniqueProperties({
               session,
               id: partnership.id,
               props: [
