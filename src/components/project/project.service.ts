@@ -414,8 +414,8 @@ export class ProjectService {
 
   async readOne(id: string, session: ISession): Promise<Project> {
     this.logger.info('query readone project', { id, userId: session.userId });
-    const label = 'Project';
-    const baseNodeMetaProps = ['id', 'createdAt', 'type'];
+    // const label = 'Project';
+    // const baseNodeMetaProps = ['id', 'createdAt', 'type'];
     const unsecureProps = ['status', 'sensitivity'];
     const secureProps = [
       'name',
@@ -511,41 +511,41 @@ export class ProjectService {
       }
     }
 
-    let location
+    let location;
 
     if (result.country) {
       location = result?.country?.properties?.id
         ? await this.locationService
-          .readOneCountry(result?.country?.properties?.id, session)
-          .then((country) => {
-            return {
-              value: {
-                id: country.id,
-                name: {...country.name},
-                region: {...country.region},
-                createdAt: country.createdAt,
-              },
-            };
-          })
-          .catch(() => {
-            return {
-              value: undefined,
-            };
-          })
+            .readOneCountry(result?.country?.properties?.id, session)
+            .then((country) => {
+              return {
+                value: {
+                  id: country.id,
+                  name: { ...country.name },
+                  region: { ...country.region },
+                  createdAt: country.createdAt,
+                },
+              };
+            })
+            .catch(() => {
+              return {
+                value: undefined,
+              };
+            })
         : {
-          value: undefined,
-        };
+            value: undefined,
+          };
     }
 
     return {
       ...response,
       location: {
         ...location,
-        // canRead: !!result.project.canReadLocationRead,
-        // canEdit: !!result.project.canReadLocationEdit,
+        canRead: !!perms.location.canRead,
+        canEdit: !!perms.location.canEdit,
       },
-      projectId: response?.id?.value
-    }
+      projectId: response?.id?.value,
+    };
   }
 
   async update(input: UpdateProject, session: ISession): Promise<Project> {
