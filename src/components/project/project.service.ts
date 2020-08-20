@@ -878,7 +878,7 @@ export class ProjectService {
     );
     const fundingOrgIds = partners.items
       .filter((p) => p.types.value.includes(PartnershipType.Funding))
-      .map((p) => p.organization.id);
+      .map((p) => p.organization);
 
     // calculate the fiscalYears covered by this date range
     const fiscalRange = fiscalYears(
