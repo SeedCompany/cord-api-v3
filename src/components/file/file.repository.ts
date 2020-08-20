@@ -43,7 +43,7 @@ export class FileRepository {
   ) {}
 
   async getBaseNodeById(id: string, session: ISession): Promise<BaseNode> {
-    return this.getBaseNodeBy(session, [
+    return await this.getBaseNodeBy(session, [
       [node('node', 'FileNode', { id, ...isActive })],
       matchName(),
     ]);
@@ -54,7 +54,7 @@ export class FileRepository {
     name: string,
     session: ISession
   ): Promise<BaseNode> {
-    return this.getBaseNodeBy(session, [
+    return await this.getBaseNodeBy(session, [
       [
         node('parent', 'FileNode', { id: parentId, ...isActive }),
         relation('in', '', 'parent', isActive),
@@ -75,7 +75,7 @@ export class FileRepository {
       matchName(),
     ]);
     query.orderBy('size(parent)');
-    return query.run();
+    return await query.run();
   }
 
   async getChildrenById(
@@ -102,7 +102,7 @@ export class FileRepository {
           conditions['name.value'] = contains(options.filter.name);
         }
         if (options?.filter?.type) {
-          conditions['node'] = hasLabel(options.filter.type);
+          conditions.node = hasLabel(options.filter.type);
         }
         return isEmpty(conditions) ? q : q.where(conditions);
       })
@@ -463,26 +463,27 @@ export class FileRepository {
     const uniqueRelationships = ['createdBy', 'parent'];
 
     for (const fn of fileNodes) {
+      const id = fn.id as string;
       for (const rel of uniqueRelationships) {
         const unique = await this.db.isRelationshipUnique({
           session,
-          id: fn.id,
+          id,
           relName: rel,
           srcNodeLabel: type,
         });
         if (!unique) {
-          throw new Error(`Node ${fn.id} has multiple ${rel} relationships`);
+          throw new Error(`Node ${id} has multiple ${rel} relationships`);
         }
       }
       for (const prop of requiredProperties) {
         const hasIt = await this.db.hasProperty({
           session,
-          id: fn.id,
+          id,
           prop,
           nodevar: type,
         });
         if (!hasIt) {
-          throw new Error(`Node ${fn.id} is missing ${prop}`);
+          throw new Error(`Node ${id} is missing ${prop}`);
         }
       }
     }

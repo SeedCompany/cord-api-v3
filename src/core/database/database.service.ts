@@ -13,7 +13,7 @@ import {
   relation,
 } from 'cypher-query-builder';
 import type { Pattern } from 'cypher-query-builder/dist/typings/clauses/pattern';
-import { cloneDeep, Dictionary, Many, upperFirst } from 'lodash';
+import { cloneDeep, Many, upperFirst, without } from 'lodash';
 import { DateTime, Duration } from 'luxon';
 import { generate } from 'shortid';
 import { assert } from 'ts-essentials';
@@ -22,6 +22,7 @@ import {
   ISession,
   isSecured,
   many,
+  mapFromList,
   Order,
   Resource,
   UnwrapSecured,
@@ -30,8 +31,6 @@ import {
 import { ILogger, Logger } from '..';
 import { ConfigService } from '../config/config.service';
 import { hasMore } from './query.helpers';
-
-import _ = require('lodash');
 
 interface ReadPropertyResult {
   value: any;
@@ -377,18 +376,15 @@ export class DatabaseService {
         node('sg', 'SecurityGroup', { active: true }),
       ]);
     }
-    const permNodes: string[] = [];
-    _.pull(props, 'id', 'createdAt');
-    props.map((property: string) => {
-      const permName = 'perm' + property;
+    const nonMetaProps = without(props, 'id', 'createdAt');
+    const permNodes = nonMetaProps.map((p) => `perm${p}`);
 
-      permNodes.push(permName);
-
+    for (const property of nonMetaProps) {
       query.match([
         [
           node('sg', 'SecurityGroup', { active: true }),
           relation('out', '', 'permission'),
-          node(permName, 'Permission', {
+          node(`perm${property}`, 'Permission', {
             property,
             read: true,
             active: true,
@@ -399,8 +395,8 @@ export class DatabaseService {
           node(property, 'Property', { active: true }),
         ],
       ]);
-    });
-    query.return(['sg', 'n', ...props, ...permNodes]);
+    }
+    query.return(['sg', 'n', ...nonMetaProps, ...permNodes]);
 
     let result: { sg: any; perm: any; p: any; n: any } | any | undefined;
     try {
@@ -413,22 +409,22 @@ export class DatabaseService {
       return undefined;
     }
 
-    const returnVal: Dictionary<any> = {};
-    returnVal.id = { value: id, canRead: true, canEdit: true };
-    returnVal.createdAt = {
-      value: result.n.properties.createdat,
-      canRead: true,
-      canEdit: true,
+    return {
+      id: { value: id, canRead: true, canEdit: true },
+      createdAt: {
+        value: result.n.properties.createdat,
+        canRead: true,
+        canEdit: true,
+      },
+      ...mapFromList(nonMetaProps, (property) => {
+        const val = {
+          value: result[property].properties.value,
+          canRead: result['perm' + property].properties.read,
+          canEdit: result['perm' + property].properties.edit,
+        };
+        return [property, val];
+      }),
     };
-    props.map((property) => {
-      returnVal[property] = {
-        value: result[property].properties.value,
-        canRead: result['perm' + property].properties.read,
-        canEdit: result['perm' + property].properties.edit,
-      };
-    });
-
-    return returnVal;
   }
 
   async sgUpdateProperties<TObject extends Resource>({
@@ -477,7 +473,7 @@ export class DatabaseService {
     aclEditProp?: string;
     nodevar: string;
   }): Promise<TObject> {
-    const createdAt = DateTime.local().toString();
+    const createdAt = DateTime.local();
     const update = this.db
       .query()
       .match([matchSession(session)])
@@ -565,8 +561,8 @@ export class DatabaseService {
     const aclEditPropName = `canEdit${upperFirst(aclReadProp)}`;
 
     const aclReadNodeName = aclReadNode || `canRead${upperFirst(nodevar)}s`;
-    let content: string,
-      type: string = nodevar;
+    let content: string;
+    let type = nodevar;
 
     if (nodevar === 'lang') {
       type = 'language';
@@ -730,12 +726,16 @@ export class DatabaseService {
 
     if (input.filter && Object.keys(input.filter).length) {
       const where: Record<string, any> = {};
-      for (const k in input.filter) {
+      for (const [k, val] of Object.entries(input.filter)) {
         if (k !== 'id' && k !== 'userId' && k !== 'mine') {
-          if (!Array.isArray(input.filter[k])) {
-            where[k + '.value'] = regexp(`.*${input.filter[k]}.*`, true);
+          assert(
+            typeof val === 'string',
+            `Filter "${k}" must have a string value`
+          );
+          if (!Array.isArray(val)) {
+            where[k + '.value'] = regexp(`.*${val}.*`, true);
           } else {
-            where[k + '.value'] = equals(input.filter[k]);
+            where[k + '.value'] = equals(val);
           }
         }
       }
@@ -805,16 +805,14 @@ export class DatabaseService {
           } else {
             item[propName] = value;
           }
+        } else if (secure) {
+          item[propName] = {
+            value: row[propName],
+            canRead: Boolean(row[aclReadPropName]) || false,
+            canEdit: Boolean(row[aclEditPropName]) || false,
+          };
         } else {
-          if (secure) {
-            item[propName] = {
-              value: row[propName],
-              canRead: Boolean(row[aclReadPropName]) || false,
-              canEdit: Boolean(row[aclEditPropName]) || false,
-            };
-          } else {
-            item[propName] = row[propName];
-          }
+          item[propName] = row[propName];
         }
       }
 
@@ -1045,7 +1043,7 @@ export class DatabaseService {
 
       // If the user doesn't have permission to perform the create action...
       if (!aclResult || !aclResult.editProp) {
-        throw new ForbiddenException(`Cannot create ${type}`);
+        throw new ForbiddenException(`Cannot create ${type.name}`);
       }
 
       this.logger.error(`createNode error`, {
@@ -1303,19 +1301,15 @@ export class DatabaseService {
     const nodeName = upperFirst(nodevar);
     const aclEditPropName = aclEditProp || `canEdit${nodeName}`;
     const baseNode = nodeName + ':BaseNode';
-    const properties = [];
-    const permissions = [];
     const isRootSGMember = await this.isRootSecurityGroupMember(session);
+    const properties = Object.entries(input).flatMap(([key, val]) => {
+      const propLabel = propLabels[key as keyof TObject];
+      return this.sgProperty(key, val, propLabel);
+    });
+    const permissions = Object.keys(input).flatMap((key) =>
+      isRootSGMember ? this.rootSGPermission(key) : this.sgPermission(key)
+    );
     try {
-      for (const key in input) {
-        const propLabel = propLabels[key];
-        properties.push(...this.sgProperty(key, input[key], propLabel));
-      }
-      for (const key in input) {
-        isRootSGMember
-          ? permissions.push(...this.rootSGPermission(key))
-          : permissions.push(...this.sgPermission(key));
-      }
       const permissionQueries = isRootSGMember
         ? [
             [
@@ -1393,10 +1387,10 @@ export class DatabaseService {
       }
       return result.id;
     } catch (err) {
-      this.logger.error(
-        `Could not create node for user ${session.userId}`,
-        err
-      );
+      this.logger.error(`Could not create node`, {
+        exception: err,
+        userId: session.userId,
+      });
       throw new ServerException('Could not create node');
     }
   }
@@ -1522,7 +1516,6 @@ export class DatabaseService {
         },
       ],
     };
-    const returnVal: Dictionary<any> = {};
 
     if (await this.isRootSecurityGroupMember(session)) {
       const rootOutput = {
@@ -1531,34 +1524,35 @@ export class DatabaseService {
       const qry = this.db
         .query()
         .match([node('baseNode', nodeName, { active: true, id: id })]);
-      props.map((prop) => {
+      for (const prop of props) {
         qry.optionalMatch([
           node('baseNode'),
           relation('out', 'rel', prop, { active: true }),
           node(prop, 'Property', { active: true }),
         ]);
         Object.assign(rootOutput, { [prop]: [{ value: prop }] });
-      });
+      }
 
       const rootResult = await qry.return(rootOutput).first();
-      returnVal.id = rootResult!.id;
-      returnVal.createdAt = rootResult!.createdAt;
-      props.map((prop) => {
-        returnVal[prop] = {
-          value: rootResult![prop],
-          canRead: true,
-          canEdit: true,
-        };
-      });
-
-      return returnVal;
+      return {
+        id: rootResult!.id,
+        createdAt: rootResult!.createdAt,
+        ...mapFromList(props, (prop) => {
+          const val = {
+            value: rootResult![prop],
+            canRead: true,
+            canEdit: true,
+          };
+          return [prop, val];
+        }),
+      };
     }
     const query = this.db
       .query()
       .match(matchSession(session, { withAclEdit: aclReadPropName }))
       .match([node('node', nodeName, { active: true, id: id })]);
 
-    props.map((property) => {
+    for (const property of props) {
       const readPerm = 'canRead' + upperFirst(property);
       const editPerm = 'canEdit' + upperFirst(property);
       query.optionalMatch([
@@ -1601,14 +1595,17 @@ export class DatabaseService {
         [editPerm]: [{ edit: editPerm }],
       });
       Object.assign(output, { [property]: [{ value: property }] });
-    });
+    }
 
     query.return(output);
     let result: any;
     try {
       result = await query.first();
     } catch (e) {
-      this.logger.error(`Could not find node for user ${session.userId}`);
+      this.logger.error(`Could not find node`, {
+        exception: e,
+        userId: session.userId,
+      });
       throw new ServerException('Could not find node');
     }
 
@@ -1621,17 +1618,18 @@ export class DatabaseService {
       );
     }
 
-    returnVal.id = result.id;
-    returnVal.createdAt = result.createdAt;
-    props.map((property) => {
-      returnVal[property] = {
-        value: result[property],
-        canRead: !!result['canRead' + upperFirst(property)],
-        canEdit: !!result['canEdit' + upperFirst(property)],
-      };
-    });
-
-    return returnVal;
+    return {
+      id: result.id,
+      createdAt: result.createdAt,
+      ...mapFromList(props, (property) => {
+        const val = {
+          value: result[property],
+          canRead: !!result['canRead' + upperFirst(property)],
+          canEdit: !!result['canEdit' + upperFirst(property)],
+        };
+        return [property, val];
+      }),
+    };
   }
 
   async isRootSecurityGroupMember(session: ISession): Promise<boolean> {

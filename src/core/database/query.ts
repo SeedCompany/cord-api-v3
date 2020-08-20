@@ -4,7 +4,7 @@ import { Except } from 'type-fest';
 // Work around `Dictionary` return type
 export type QueryWithResult<R> = Except<Query, 'run' | 'first'> & {
   run: () => Promise<R[]>;
-  first: () => Promise<R>;
+  first: () => Promise<R | undefined>;
 };
 
 declare module 'cypher-query-builder/dist/typings/query' {

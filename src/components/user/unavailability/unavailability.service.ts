@@ -71,7 +71,7 @@ export class UnavailabilityService {
       })
       .run();
 
-    return this.readOne(id, session);
+    return await this.readOne(id, session);
   }
 
   async readOne(id: string, session: ISession): Promise<Unavailability> {
@@ -155,7 +155,7 @@ export class UnavailabilityService {
   ): Promise<Unavailability> {
     const unavailability = await this.readOne(input.id, session);
 
-    return this.db.updateProperties({
+    return await this.db.updateProperties({
       session,
       object: unavailability,
       props: ['description', 'start', 'end'],
@@ -220,7 +220,7 @@ export class UnavailabilityService {
       (
         await Promise.all(
           unavailabilities.map(async (unavailability) => {
-            return this.db.hasProperties({
+            return await this.db.hasProperties({
               session,
               id: unavailability.id,
               props: ['description', 'start', 'end'],
@@ -232,7 +232,7 @@ export class UnavailabilityService {
       (
         await Promise.all(
           unavailabilities.map(async (unavailability) => {
-            return this.db.isUniqueProperties({
+            return await this.db.isUniqueProperties({
               session,
               id: unavailability.id,
               props: ['description', 'start', 'end'],

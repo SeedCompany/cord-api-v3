@@ -44,7 +44,7 @@ export class ProjectResolver {
     @IdArg() id: string,
     @Session() session: ISession
   ): Promise<Project> {
-    return this.projectService.readOne(id, session);
+    return await this.projectService.readOne(id, session);
   }
 
   @Query(() => ProjectListOutput, {
@@ -84,7 +84,7 @@ export class ProjectResolver {
     @Parent() project: Project,
     @Session() session: ISession
   ): Promise<SecuredBudget> {
-    return this.projectService.currentBudget(project, session);
+    return await this.projectService.currentBudget(project, session);
   }
 
   @ResolveField(() => SecuredEngagementList)
@@ -139,7 +139,7 @@ export class ProjectResolver {
     @Session() session: ISession,
     @Parent() { id }: Project
   ): Promise<Directory> {
-    return this.projectService.getRootDirectory(id, session);
+    return await this.projectService.getRootDirectory(id, session);
   }
 
   @Mutation(() => CreateProjectOutput, {
@@ -181,6 +181,6 @@ export class ProjectResolver {
   async checkProjectConsistency(
     @Session() session: ISession
   ): Promise<boolean> {
-    return this.projectService.consistencyChecker(session);
+    return await this.projectService.consistencyChecker(session);
   }
 }

@@ -237,7 +237,7 @@ export class CeremonyService {
   async update(input: UpdateCeremony, session: ISession): Promise<Ceremony> {
     const object = await this.readOne(input.id, session);
 
-    return this.db.sgUpdateProperties({
+    return await this.db.sgUpdateProperties({
       session,
       object,
       props: ['planned', 'estimatedDate', 'actualDate'],
@@ -316,7 +316,7 @@ export class CeremonyService {
     return (
       await Promise.all(
         ceremonies.map(async (ceremony) => {
-          return this.db.hasProperties({
+          return await this.db.hasProperties({
             session,
             id: ceremony.id,
             props: ['type'],

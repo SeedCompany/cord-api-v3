@@ -40,7 +40,7 @@ export class OrganizationResolver {
     @Session() session: ISession,
     @IdArg() id: string
   ): Promise<Organization> {
-    return this.orgs.readOne(id, session);
+    return await this.orgs.readOne(id, session);
   }
 
   @ResolveField(() => String, { nullable: true })
@@ -91,7 +91,7 @@ export class OrganizationResolver {
     description: 'Check all organization nodes for consistency',
   })
   async checkOrganizations(@Session() session: ISession): Promise<boolean> {
-    return this.orgs.checkAllOrgs(session);
+    return await this.orgs.checkAllOrgs(session);
   }
 
   @Query(() => Boolean, {
@@ -100,6 +100,6 @@ export class OrganizationResolver {
   async checkOrganizationConsistency(
     @Session() session: ISession
   ): Promise<boolean> {
-    return this.orgs.checkOrganizationConsistency(session);
+    return await this.orgs.checkOrganizationConsistency(session);
   }
 }

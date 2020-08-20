@@ -65,7 +65,7 @@ export class FilesystemBucket extends LocalBucket {
   }
 
   private async readFile(key: string) {
-    return fs.readFile(this.getPath(key));
+    return await fs.readFile(this.getPath(key));
   }
 
   private async writeFile(key: string, data: any) {

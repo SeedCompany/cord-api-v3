@@ -4,6 +4,9 @@ plugins:
 extends:
   - plugin:@seedcompany/nestjs
 rules:
+  '@typescript-eslint/no-require-imports': error
+  array-callback-return: error
+
   no-console: error
   '@typescript-eslint/naming-convention':
     - warn
@@ -35,3 +38,29 @@ rules:
     - paths:
         - name: '@nestjs/cqrs'
           message: Import from our core module instead
+# TODO Enable and fix errors
+#        - name: '@nestjs/common'
+#          importNames:
+#            - BadRequestException
+#            - HttpException
+#            - UnauthorizedException
+#            - MethodNotAllowedException
+#            - NotFoundException
+#            - ForbiddenException
+#            - NotAcceptableException
+#            - RequestTimeoutException
+#            - ConflictException
+#            - GoneException
+#            - PayloadTooLargeException
+#            - UnsupportedMediaTypeException
+#            - UnprocessableEntityException
+#            - InternalServerErrorException
+#            - NotImplementedException
+#            - HttpVersionNotSupportedException
+#            - BadGatewayException
+#            - ServiceUnavailableException
+#            - GatewayTimeoutException
+#          message: Use our exceptions in common folder instead
+
+  # TODO Enable this and fix errors (both types & logic changes will be needed)
+  '@typescript-eslint/no-unnecessary-condition': off

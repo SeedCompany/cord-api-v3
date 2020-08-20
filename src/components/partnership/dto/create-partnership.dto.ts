@@ -35,7 +35,7 @@ export class CreatePartnership {
   readonly mouEndOverride?: CalendarDate;
 
   @Field(() => [PartnershipType], { nullable: true })
-  readonly types?: PartnershipType[];
+  readonly types?: PartnershipType[] = [];
 
   @Field(() => PartnershipFundingType, { nullable: true })
   readonly fundingType?: PartnershipFundingType;

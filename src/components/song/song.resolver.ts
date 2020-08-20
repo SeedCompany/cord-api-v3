@@ -19,7 +19,7 @@ export class SongResolver {
     description: 'Look up a song by its ID',
   })
   async song(@Session() session: ISession, @IdArg() id: string): Promise<Song> {
-    return this.storyService.readOne(id, session);
+    return await this.storyService.readOne(id, session);
   }
 
   @Query(() => SongListOutput, {

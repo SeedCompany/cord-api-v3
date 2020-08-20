@@ -288,10 +288,11 @@ describe('Project e2e', () => {
     const numProjects = 2;
     const type = ProjectType.Translation;
     await Promise.all(
-      times(numProjects).map(async () =>
-        createProject(app, {
-          type,
-        })
+      times(numProjects).map(
+        async () =>
+          await createProject(app, {
+            type,
+          })
       )
     );
 
@@ -317,7 +318,7 @@ describe('Project e2e', () => {
     //delete all projects
     await Promise.all(
       projects.items.map(async (item: { id: any }) => {
-        return app.graphql.mutate(
+        return await app.graphql.mutate(
           gql`
             mutation deleteProject($id: ID!) {
               deleteProject(id: $id)
@@ -335,10 +336,11 @@ describe('Project e2e', () => {
     const numProjects = 2;
     const type = ProjectType.Translation;
     await Promise.all(
-      times(numProjects).map(async () =>
-        createProject(app, {
-          type,
-        })
+      times(numProjects).map(
+        async () =>
+          await createProject(app, {
+            type,
+          })
       )
     );
 
@@ -361,7 +363,7 @@ describe('Project e2e', () => {
     //delete all projects
     await Promise.all(
       projects.items.map(async (item: { id: any }) => {
-        return app.graphql.mutate(
+        return await app.graphql.mutate(
           gql`
             mutation deleteProject($id: ID!) {
               deleteProject(id: $id)

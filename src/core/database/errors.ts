@@ -7,7 +7,7 @@ declare module 'neo4j-driver/types/v1' {
   }
 }
 
-const defineLogEntry = (obj: object, logEntry: LogEntry) => {
+const defineLogEntry = (obj: unknown, logEntry: LogEntry) => {
   Object.defineProperty(obj, 'logProps', {
     value: logEntry,
     writable: true,

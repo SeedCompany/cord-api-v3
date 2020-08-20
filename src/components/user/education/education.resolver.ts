@@ -34,7 +34,7 @@ export class EducationResolver {
     @Session() session: ISession,
     @IdArg() id: string
   ): Promise<Education> {
-    return this.service.readOne(id, session);
+    return await this.service.readOne(id, session);
   }
 
   @Query(() => EducationListOutput, {
@@ -80,6 +80,6 @@ export class EducationResolver {
   async checkEducationConsistency(
     @Session() session: ISession
   ): Promise<boolean> {
-    return this.service.checkEducationConsistency(session);
+    return await this.service.checkEducationConsistency(session);
   }
 }

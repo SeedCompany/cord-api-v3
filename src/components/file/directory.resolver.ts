@@ -24,7 +24,7 @@ export class DirectoryResolver {
     @IdArg() id: string,
     @Session() session: ISession
   ): Promise<Directory> {
-    return this.service.getDirectory(id, session);
+    return await this.service.getDirectory(id, session);
   }
 
   @ResolveField(() => FileListOutput, {
@@ -48,6 +48,6 @@ export class DirectoryResolver {
     @Session() session: ISession,
     @Args('input') { parentId, name }: CreateDirectoryInput
   ): Promise<Directory> {
-    return this.service.createDirectory(parentId, name, session);
+    return await this.service.createDirectory(parentId, name, session);
   }
 }

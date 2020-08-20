@@ -33,7 +33,7 @@ export class ProjectMemberResolver {
     @Session() session: ISession,
     @IdArg() id: string
   ): Promise<ProjectMember> {
-    return this.service.readOne(id, session);
+    return await this.service.readOne(id, session);
   }
 
   @Query(() => ProjectMemberListOutput, {

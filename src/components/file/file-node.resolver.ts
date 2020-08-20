@@ -22,7 +22,7 @@ export class FileNodeResolver {
     @Parent() node: FileNode,
     @Session() session: ISession
   ): Promise<User> {
-    return this.users.readOne(node.createdById, session);
+    return await this.users.readOne(node.createdById, session);
   }
 
   @ResolveField(() => [IFileNode], {
@@ -36,6 +36,6 @@ export class FileNodeResolver {
     @Parent() node: FileNode,
     @Session() session: ISession
   ): Promise<readonly FileNode[]> {
-    return this.service.getParents(node.id, session);
+    return await this.service.getParents(node.id, session);
   }
 }

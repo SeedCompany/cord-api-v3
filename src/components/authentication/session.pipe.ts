@@ -49,7 +49,7 @@ export class SessionPipe implements PipeTransform<Request, Promise<ISession>> {
       return;
     }
 
-    return this.auth.createSession(token);
+    return await this.auth.createSession(token);
   }
 
   getTokenFromAuthHeader(req: Request): string | null {

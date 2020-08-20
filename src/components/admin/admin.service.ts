@@ -241,7 +241,7 @@ export class AdminService implements OnApplicationBootstrap {
       .onCreate.setValues({
         publicSg: {
           id: this.config.publicSecurityGroup.id,
-          createdAt: createdAt.toString(),
+          createdAt,
           active: true,
         },
       })
@@ -309,7 +309,7 @@ export class AdminService implements OnApplicationBootstrap {
       } else {
         // create org
         const orgSgId = generate();
-        const createdAt = DateTime.local().toString();
+        const createdAt = DateTime.local();
         const createOrgResult = await this.db
           .query()
           .match(

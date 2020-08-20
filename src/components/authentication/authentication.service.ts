@@ -84,7 +84,7 @@ export class AuthenticationService {
       return null;
     }
 
-    return this.userService.readOne(userRes.id, session);
+    return await this.userService.readOne(userRes.id, session);
   }
 
   async register(input: RegisterInput, session?: ISession): Promise<string> {

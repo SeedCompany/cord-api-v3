@@ -75,7 +75,7 @@ export class FileService {
     this.logger.info(`getNode`, { id, userId: session.userId });
 
     const base = await this.repo.getBaseNodeById(id, session);
-    return this.adaptBaseNodeToFileNode(base, session);
+    return await this.adaptBaseNodeToFileNode(base, session);
   }
 
   private async adaptBaseNodeToFileNode(
@@ -127,7 +127,7 @@ export class FileService {
     session: ISession
   ): Promise<readonly FileNode[]> {
     const parents = await this.repo.getParentsById(nodeId, session);
-    return Promise.all(
+    return await Promise.all(
       parents.map((node) => this.adaptBaseNodeToFileNode(node, session))
     );
   }
@@ -189,7 +189,7 @@ export class FileService {
 
     const id = await this.repo.createDirectory(parentId, name, session);
 
-    return this.getDirectory(id, session);
+    return await this.getDirectory(id, session);
   }
 
   async requestUpload(): Promise<RequestUploadOutput> {
@@ -255,7 +255,7 @@ export class FileService {
 
     await this.bucket.moveObject(`temp/${uploadId}`, uploadId);
 
-    return this.getFile(fileId, session);
+    return await this.getFile(fileId, session);
   }
 
   private async getParentNode(id: string, session: ISession) {
@@ -398,7 +398,7 @@ export class FileService {
 
     await this.repo.move(input.id, input.parentId, session);
 
-    return this.getFileNode(input.id, session);
+    return await this.getFileNode(input.id, session);
   }
 
   async delete(id: string, session: ISession): Promise<void> {
@@ -407,6 +407,6 @@ export class FileService {
   }
 
   async checkConsistency(type: FileNodeType, session: ISession): Promise<void> {
-    return this.repo.checkConsistency(type, session);
+    return await this.repo.checkConsistency(type, session);
   }
 }

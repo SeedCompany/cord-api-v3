@@ -24,7 +24,7 @@ export abstract class LocalBucket extends FileBucket {
 
   async download(signed: string) {
     const key = this.validateSignedUrl('getObject', signed);
-    return this.getObject(key);
+    return await this.getObject(key);
   }
 
   async upload(signed: string, file: FakeAwsFile) {

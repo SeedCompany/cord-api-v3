@@ -31,7 +31,7 @@ export class BudgetResolver {
     @Session() session: ISession,
     @IdArg() id: string
   ): Promise<Budget> {
-    return this.service.readOne(id, session);
+    return await this.service.readOne(id, session);
   }
 
   @Query(() => BudgetListOutput, {
@@ -91,6 +91,6 @@ export class BudgetResolver {
     description: 'Check Consistency in Budget Nodes',
   })
   async checkBudgetConsistency(@Session() session: ISession): Promise<boolean> {
-    return this.service.checkBudgetConsistency(session);
+    return await this.service.checkBudgetConsistency(session);
   }
 }

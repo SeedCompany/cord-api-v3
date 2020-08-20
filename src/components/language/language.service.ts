@@ -1,9 +1,5 @@
-import {
-  BadRequestException,
-  Injectable,
-  InternalServerErrorException as ServerException,
-} from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { Node, node, relation } from 'cypher-query-builder';
 import { first, intersection, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import {
@@ -11,6 +7,7 @@ import {
   ISession,
   NotFoundException,
   Sensitivity,
+  ServerException,
   simpleSwitch,
 } from '../../common';
 import {
@@ -26,6 +23,14 @@ import {
   runListQuery,
   UniquenessError,
 } from '../../core';
+import {
+  BaseNode,
+  DbPropsOfDto,
+  parseBaseNodeProperties,
+  parsePropList,
+  parseSecuredProperties,
+  StandardReadResult,
+} from '../../core/database/results';
 import {
   Location,
   LocationListInput,
@@ -203,10 +208,10 @@ export class LanguageService {
   async create(input: CreateLanguage, session: ISession): Promise<Language> {
     this.logger.info(`Create language`, { input, userId: session.userId });
 
-    const createdAt = DateTime.local().toString();
+    const createdAt = DateTime.local();
 
     try {
-      const { ethnologueId } = await this.ethnologueLanguageService.create(
+      const ethnologueId = await this.ethnologueLanguageService.create(
         input?.ethnologue,
         session
       );
@@ -364,7 +369,7 @@ export class LanguageService {
         );
       }
       this.logger.error(`Could not create`, { ...input, exception: e });
-      throw new ServerException('Could not create language');
+      throw new ServerException('Could not create language', e);
     }
   }
 
@@ -378,21 +383,6 @@ export class LanguageService {
       this.logger.info('using anon user id');
       session.userId = this.config.anonUser.id;
     }
-
-    const props = [
-      'name',
-      'displayName',
-      'isDialect',
-      'populationOverride',
-      'registryOfDialectsCode',
-      'leastOfThese',
-      'leastOfTheseReason',
-      'displayNamePronunciation',
-      'sensitivity',
-      'sponsorDate',
-    ];
-
-    // const baseNodeMetaProps = ['id', 'createdAt'];
 
     const query = this.db
       .query()
@@ -420,69 +410,42 @@ export class LanguageService {
         relation('out', '', 'ethnologue'),
         node('eth', 'EthnologueLanguage', { active: true }),
       ])
-      .return('propList, permList, node, eth.id as ethnologueLanguageId');
+      .return('propList, permList, node, eth.id as ethnologueLanguageId')
+      .asResult<
+        StandardReadResult<DbPropsOfDto<Language>> & {
+          ethnologueLanguageId: string;
+        }
+      >();
 
     const result = await query.first();
     if (!result) {
       throw new NotFoundException('Could not find language', 'language.id');
     }
 
-    const response: any = {
-      id: result.node.properties.id,
-      createdAt: result.node.properties.createdAt,
-    };
-
-    const perms: any = {};
-
-    for (const record of result.permList) {
-      perms[record.properties.property] = {
-        canRead: record?.properties?.read === true,
-        canEdit: record?.properties?.edit === true,
-      };
-    }
-
-    // console.log('perms', perms)
-    for (const record of result.propList) {
-      if (!response[record.property]) {
-        response[record.property] = {};
-      }
-      if (record?.property === 'sensitivity') {
-        response[record.property] = record.value;
-      } else {
-        const canRead = perms[record.property]
-          ? perms[record.property].canRead
-          : false;
-        response[record.property] = {
-          value: canRead ? record.value : null,
-          canRead: canRead,
-          canEdit: perms[record.property]
-            ? perms[record.property].canEdit
-            : false,
-        };
-      }
-    }
-
-    for (const prop of props) {
-      if (!response[prop]) {
-        response[prop] = {
-          value: null,
-          canRead: false,
-          canEdit: false,
-        };
-      }
-    }
-
-    response.ethnologueLanguageId = result.ethnologueLanguageId;
-
-    const { ethnologue } = await this.ethnologueLanguageService.readOne(
+    const ethnologue = await this.ethnologueLanguageService.readOne(
       result.ethnologueLanguageId,
       session
     );
 
-    return ({
-      ...response,
-      ethnologue: ethnologue,
-    } as unknown) as Language;
+    const props = parsePropList(result.propList);
+    const securedProps = parseSecuredProperties(props, result.permList, {
+      name: true,
+      displayName: true,
+      isDialect: true,
+      populationOverride: true,
+      registryOfDialectsCode: true,
+      leastOfThese: true,
+      leastOfTheseReason: true,
+      displayNamePronunciation: true,
+      sponsorDate: true,
+    });
+
+    return {
+      ...parseBaseNodeProperties(result.node),
+      ...securedProps,
+      sensitivity: props.sensitivity,
+      ethnologue,
+    };
   }
 
   async update(
@@ -552,11 +515,14 @@ export class LanguageService {
       );
     }
 
-    return this.readOne(input.id, session);
+    return await this.readOne(input.id, session);
   }
 
   async delete(id: string, session: ISession): Promise<void> {
-    this.logger.info(`mutation delete language: ${id} by ${session.userId}`);
+    this.logger.info(`Deleting language`, {
+      id,
+      userId: session.userId,
+    });
     const object = await this.readOne(id, session);
 
     if (!object) {
@@ -604,28 +570,14 @@ export class LanguageService {
 
     query.match([node('node', 'Language', { active: true })]);
 
-    const result: LanguageListOutput = await runListQuery(
+    const result = await runListQuery<Node<BaseNode>>(
       query,
       input,
       secureProps.includes(input.sort)
     );
     const items = await Promise.all(
       result.items.map(async (item) => {
-        const language = await this.readOne(
-          (item as any).properties.id,
-          session
-        );
-        const { ethnologue } = await this.ethnologueLanguageService.readOne(
-          (language as any).ethnologueLanguageId,
-          session
-        );
-
-        return {
-          ...(item as any).properties,
-          ...language,
-          // sensitivity: (item as any).sensitivity.value || Sensitivity.Low,
-          ethnologue: ethnologue,
-        };
+        return await this.readOne(item.properties.id, session);
       })
     );
 
@@ -684,7 +636,7 @@ export class LanguageService {
     const items = await Promise.all(
       result.map(
         async (location): Promise<Location> => {
-          return this.locationService.readOne(location.id, session);
+          return await this.locationService.readOne(location.id, session);
         }
       )
     );
@@ -748,8 +700,9 @@ export class LanguageService {
     readProject = readProject.splice((page - 1) * count, count);
 
     result.items = await Promise.all(
-      readProject.map(async (project) =>
-        this.projectService.readOne(project.id, session)
+      readProject.map(
+        async (project) =>
+          await this.projectService.readOne(project.id, session)
       )
     );
 
@@ -839,7 +792,7 @@ export class LanguageService {
 
     const yayNay = await Promise.all(
       languages.map(async (lang) => {
-        return this.db.hasProperties({
+        return await this.db.hasProperties({
           session,
           id: lang.id,
           props: ['name', 'displayName'],

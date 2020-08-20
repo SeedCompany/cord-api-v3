@@ -28,7 +28,7 @@ export class S3Bucket extends FileBucket {
   }
 
   async getObject(key: string): Promise<GetObjectOutput> {
-    return this.s3
+    return await this.s3
       .getObject({
         Bucket: this.bucket,
         Key: key,
@@ -37,7 +37,7 @@ export class S3Bucket extends FileBucket {
   }
 
   async headObject(key: string): Promise<HeadObjectOutput> {
-    return this.s3
+    return await this.s3
       .headObject({
         Bucket: this.bucket,
         Key: key,
