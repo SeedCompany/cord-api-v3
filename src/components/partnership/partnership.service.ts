@@ -17,6 +17,8 @@ import {
   ConfigService,
   createBaseNode,
   DatabaseService,
+  getPermList,
+  getPropList,
   IEventBus,
   ILogger,
   listWithSecureObject,
@@ -353,23 +355,8 @@ export class PartnershipService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Partnership', { active: true, id })])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member*1..'),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission'),
-        node('perms', 'Permission', { active: true }),
-        relation('out', '', 'baseNode'),
-        node('node'),
-      ])
-      .with('collect(distinct perms) as permList, node')
-      .match([
-        node('node'),
-        relation('out', 'r', { active: true }),
-        node('props', 'Property', { active: true }),
-      ])
-      .with('{value: props.value, property: type(r)} as prop, permList, node')
-      .with('collect(prop) as propList, permList, node')
+      .call(getPermList, 'requestingUser')
+      .call(getPropList, 'permList')
       .match([
         node('node'),
         relation('in', '', 'partnership'),
