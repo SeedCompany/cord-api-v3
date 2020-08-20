@@ -50,9 +50,6 @@ export class ProjectMemberService {
 
   // helper method for defining properties
   property = (prop: string, value: any) => {
-    if (!value) {
-      return [];
-    }
     const createdAt = DateTime.local();
     return [
       [
