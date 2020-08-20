@@ -21,6 +21,27 @@ export interface Secured<T> {
   readonly canEdit: boolean;
 }
 
+/**
+ * Converts a DTO to unwrap its secured properties.
+ * Non-secured properties are left as is.
+ *
+ * So:
+ * ```tsx
+ * {
+ *   foo: SecuredString;
+ *   bar: DateTime;
+ * }
+ * ```
+ * Becomes:
+ * ```tsx
+ * {
+ *   foo: string;
+ *   bar: DateTime;
+ * }
+ * ```
+ */
+export type UnsecuredDto<Dto> = { [K in keyof Dto]: UnwrapSecured<Dto[K]> };
+
 export type UnwrapSecured<T> = T extends Secured<infer P> ? P : T;
 
 export const isSecured = <T>(value: T | Secured<T>): value is Secured<T> =>

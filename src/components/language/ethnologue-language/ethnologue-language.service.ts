@@ -5,7 +5,7 @@ import {
 import { node, relation } from 'cypher-query-builder';
 import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
-import { ISession } from '../../../common';
+import { ISession, NotFoundException } from '../../../common';
 import {
   ConfigService,
   createBaseNode,
@@ -22,10 +22,17 @@ import {
   addAllSecurePropertiesSimpleRead,
 } from '../../../core/database/query.helpers';
 import {
+  DbPropsOfDto,
+  parseSecuredProperties,
+  StandardReadResult,
+} from '../../../core/database/results';
+import {
   CreateEthnologueLanguage,
   EthnologueLanguage,
   UpdateEthnologueLanguage,
 } from '../dto';
+
+type EthLangDbProps = DbPropsOfDto<EthnologueLanguage> & { id: string };
 
 @Injectable()
 export class EthnologueLanguageService {
@@ -123,8 +130,7 @@ export class EthnologueLanguageService {
   async create(
     input: CreateEthnologueLanguage,
     session: ISession
-  ): Promise<{ ethnologue: EthnologueLanguage; ethnologueId: string }> {
-    // create org
+  ): Promise<string> {
     const secureProps: Property[] = [
       {
         key: 'id',
@@ -177,7 +183,6 @@ export class EthnologueLanguageService {
         label: 'Population',
       },
     ];
-    // const baseMetaProps = [];
 
     const query = this.db
       .query()
@@ -198,9 +203,8 @@ export class EthnologueLanguageService {
       .return('node.id as id');
 
     const result = await query.first();
-
     if (!result) {
-      throw new ServerException('failed to create ethnologuelanguage');
+      throw new ServerException('Failed to create ethnologue language');
     }
 
     const id = result.id;
@@ -210,13 +214,10 @@ export class EthnologueLanguageService {
 
     this.logger.debug(`ethnologue language created`, { id });
 
-    return await this.readOne(id, session);
+    return id;
   }
 
-  async readOne(
-    id: string,
-    session: ISession
-  ): Promise<{ ethnologue: EthnologueLanguage; ethnologueId: string }> {
+  async readOne(id: string, session: ISession): Promise<EthnologueLanguage> {
     this.logger.info(`Read ethnologueLanguage`, {
       id: id,
       userId: session.userId,
@@ -226,10 +227,6 @@ export class EthnologueLanguageService {
       this.logger.info('using anon user id');
       session.userId = this.config.anonUser.id;
     }
-
-    // const props = ['id', 'code', 'provisionalCode', 'name', 'population'];
-
-    // const baseNodeMetaProps = ['createdAt'];
 
     const query = this.db
       .query()
@@ -252,58 +249,27 @@ export class EthnologueLanguageService {
       ])
       .with('{value: props.value, property: type(r)} as prop, permList, node')
       .with('collect(prop) as propList, permList, node')
-      .return('propList, permList, node');
+      .return('propList, permList, node')
+      .asResult<StandardReadResult<EthLangDbProps>>();
 
     const result = await query.first();
-
-    const response: any = {
-      createdAt: result?.node?.properties?.createdAt,
-    };
-
-    const perms: any = {};
-    const permList = result?.permList;
-
-    if (permList) {
-      for (const {
-        properties: { property, read, edit },
-      } of permList) {
-        const currentPermission = perms[property];
-        if (!currentPermission) {
-          perms[property] = {
-            canRead: Boolean(read),
-            canEdit: Boolean(edit),
-          };
-        } else {
-          currentPermission.canRead = currentPermission.canRead || read;
-          currentPermission.canEdit = currentPermission.canEdit || edit;
-        }
-      }
+    if (!result) {
+      throw new NotFoundException('Could not find ethnologue language');
     }
 
-    const propList = result?.propList;
-    // console.log('perms', perms)
-    if (propList) {
-      for (const record of propList) {
-        if (!response[record.property]) {
-          response[record.property] = {};
-        }
-        if (record?.property) {
-          const canRead = perms[record.property]?.canRead ?? false;
-          response[record.property] = {
-            value: canRead ? record.value : null,
-            canRead: canRead,
-            canEdit: perms[record.property]
-              ? perms[record.property].canEdit
-              : false,
-          };
-        }
+    const ethnologue = parseSecuredProperties(
+      result.propList,
+      result.permList,
+      {
+        id: true,
+        code: true,
+        provisionalCode: true,
+        name: true,
+        population: true,
       }
-    }
+    );
 
-    return {
-      ethnologue: response,
-      ethnologueId: result?.node?.properties?.id,
-    };
+    return ethnologue;
   }
 
   async readInList(ids: string[], session: ISession): Promise<any> {
