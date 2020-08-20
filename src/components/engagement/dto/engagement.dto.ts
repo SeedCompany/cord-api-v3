@@ -6,7 +6,7 @@ import {
   Resource,
   Secured,
   SecuredBoolean,
-  SecuredDate,
+  SecuredDateNullable,
   SecuredDateTime,
   SecuredString,
 } from '../../../common';
@@ -41,33 +41,33 @@ class Engagement extends Resource {
   @Field({
     description: 'Translation / Growth Plan complete date',
   })
-  readonly completeDate: SecuredDate;
+  readonly completeDate: SecuredDateNullable;
 
   @Field()
-  readonly disbursementCompleteDate: SecuredDate;
+  readonly disbursementCompleteDate: SecuredDateNullable;
 
   @Field()
-  readonly communicationsCompleteDate: SecuredDate;
+  readonly communicationsCompleteDate: SecuredDateNullable;
 
   @Field()
   // Match the project mouStart. Could need to manually set for an extension.
   // formally stage_begin.
-  readonly startDate: SecuredDate;
+  readonly startDate: SecuredDateNullable;
 
   @Field()
   // Match the project mouEnd. Could need to manually set for an extension.
   // formally revised_end.
-  readonly endDate: SecuredDate;
+  readonly endDate: SecuredDateNullable;
 
   @Field()
-  readonly startDateOverride: SecuredDate;
+  readonly startDateOverride: SecuredDateNullable;
 
   @Field()
-  readonly endDateOverride: SecuredDate;
+  readonly endDateOverride: SecuredDateNullable;
 
   @Field()
   // this should match project mouEnd, until it becomes active, then this is final.
-  readonly initialEndDate: SecuredDate;
+  readonly initialEndDate: SecuredDateNullable;
 
   @Field()
   // Convert from date to datetime at migration
@@ -106,7 +106,7 @@ export class LanguageEngagement extends Engagement {
   @Field({
     description: 'Not used anymore, but exposing for legacy data.',
   })
-  readonly sentPrintingDate: SecuredDate;
+  readonly sentPrintingDate: SecuredDateNullable;
 
   @Field()
   readonly paraTextRegistryId: SecuredString;
