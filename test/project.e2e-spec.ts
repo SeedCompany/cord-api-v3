@@ -383,7 +383,7 @@ describe('Project e2e', () => {
     const region = await createRegion(app, {
       name: 'asia' + generate(),
       zoneId: zone.id,
-      directorId: zone.director.value?.id,
+      directorId: zone.director.value,
     });
 
     const country = await createCountry(app, {

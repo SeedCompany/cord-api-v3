@@ -26,7 +26,12 @@ import {
   OnIndex,
   runListQuery,
 } from '../../core';
-import { UserService } from '../user';
+import {
+  DbPropsOfDto,
+  parseBaseNodeProperties,
+  parseSecuredProperties,
+  StandardReadResult,
+} from '../../core/database/results';
 import {
   Country,
   CreateCountry,
@@ -47,8 +52,7 @@ export class LocationService {
   constructor(
     @Logger('location:service') private readonly logger: ILogger,
     private readonly config: ConfigService,
-    private readonly db: DatabaseService,
-    private readonly userService: UserService
+    private readonly db: DatabaseService
   ) {}
 
   @OnIndex()
@@ -555,136 +559,146 @@ export class LocationService {
   }
 
   async readOneZone(id: string, session: ISession): Promise<Zone> {
-    this.logger.info(`Query readOne Zone`, { id, userId: session.userId });
+    this.logger.info(`Read Zone`, { id, userId: session.userId });
 
-    const props = ['name'];
-    const baseNodeMetaProps = ['id', 'createdAt'];
+    if (!id) {
+      throw new NotFoundException('no id given');
+    }
 
-    const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
-      {
-        parentBaseNodePropertyKey: 'director',
-        parentRelationDirection: 'out',
-        childBaseNodeLabel: 'User',
-        childBaseNodeMetaPropertyKey: 'id',
-        returnIdentifier: 'directorId',
-      },
-    ];
+    if (!session.userId) {
+      session.userId = this.config.anonUser.id;
+    }
+
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .call(matchUserPermissions, 'Zone', id)
-      .call(addAllSecureProperties, ...props)
-      .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
-      .with([
-        ...props.map(addPropertyCoalesceWithClause),
-        ...childBaseNodeMetaProps.map(addShapeForChildBaseNodeMetaProperty),
-        ...baseNodeMetaProps.map(addShapeForBaseNodeMetaProperty),
-        'node',
-        'directorReadPerm.read as canReadDirector',
-        'directorEditPerm.edit as canEditDirector',
+      .match([node('node', 'Zone', { active: true, id: id })])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member*1..'),
+        node('', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission'),
+        node('perms', 'Permission', { active: true }),
+        relation('out', '', 'baseNode'),
+        node('node'),
       ])
-      .returnDistinct([
-        ...props,
-        ...baseNodeMetaProps,
-        ...childBaseNodeMetaProps.map((x) => x.returnIdentifier),
-        'canReadDirector',
-        'canEditDirector',
-        'labels(node) as labels',
-      ]);
+      .with('collect(distinct perms) as permList, node')
+      .match([
+        node('node'),
+        relation('out', 'r', { active: true }),
+        node('props', 'Property', { active: true }),
+      ])
+      .with('{value: props.value, property: type(r)} as prop, permList, node')
+      .with('collect(prop) as propList, permList, node')
+      .optionalMatch([
+        node('node'),
+        relation('out', '', 'director', { active: true }),
+        node('director', 'User', { active: true }),
+      ])
+      .return('propList, permList, node, director.id as directorId')
+      .asResult<
+        StandardReadResult<DbPropsOfDto<Zone>> & { directorId: string }
+      >();
 
     const result = await query.first();
     if (!result) {
       this.logger.error(`Could not find zone`);
-      throw new NotFoundException('Could not find zone');
+      throw new NotFoundException('Could not find zone', 'zone.id');
     }
 
-    const response: any = {
-      ...result,
+    const secured = parseSecuredProperties(result.propList, result.permList, {
+      name: true,
+      director: true,
+    });
+
+    return {
+      ...parseBaseNodeProperties(result.node),
+      ...secured,
       director: {
-        value: await this.userService.readOne(result.directorId, session),
-        canRead: !!result.canReadDirector,
-        canEdit: !!result.canEditDirector,
+        ...secured.director,
+        value: result.directorId,
       },
     };
-
-    return (response as unknown) as Zone;
   }
 
   async readOneRegion(id: string, session: ISession): Promise<Region> {
-    this.logger.info(`Query readOne Region`, { id, userId: session.userId });
+    this.logger.info(`Read Region`, { id, userId: session.userId });
 
     if (!id) {
-      throw new BadRequestException('No region id to search for');
+      throw new NotFoundException('no id given');
     }
 
-    const props = ['name'];
-    const baseNodeMetaProps = ['id', 'createdAt'];
-
-    const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
-      {
-        parentBaseNodePropertyKey: 'zone',
-        parentRelationDirection: 'out',
-        childBaseNodeLabel: 'Zone',
-        childBaseNodeMetaPropertyKey: 'id',
-        returnIdentifier: 'zoneId',
-      },
-      {
-        parentBaseNodePropertyKey: 'director',
-        parentRelationDirection: 'out',
-        childBaseNodeLabel: 'User',
-        childBaseNodeMetaPropertyKey: 'id',
-        returnIdentifier: 'directorId',
-      },
-    ];
+    if (!session.userId) {
+      session.userId = this.config.anonUser.id;
+    }
 
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .call(matchUserPermissions, 'Region', id)
-      .call(addAllSecureProperties, ...props)
-      .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
-      .with([
-        ...props.map(addPropertyCoalesceWithClause),
-        ...childBaseNodeMetaProps.map(addShapeForChildBaseNodeMetaProperty),
-        ...baseNodeMetaProps.map(addShapeForBaseNodeMetaProperty),
-        'node',
-        'coalesce(directorReadPerm.read, false) as canReadDirector',
-        'coalesce(directorEditPerm.edit, false) as canEditDirector',
-        'coalesce(zoneReadPerm.read, false) as canReadZone',
-        'coalesce(zoneEditPerm.edit, false) as canEditZone',
+      .match([node('node', 'Region', { active: true, id: id })])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member*1..'),
+        node('', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission'),
+        node('perms', 'Permission', { active: true }),
+        relation('out', '', 'baseNode'),
+        node('node'),
       ])
-      .returnDistinct([
-        ...props,
-        ...baseNodeMetaProps,
-        ...childBaseNodeMetaProps.map((x) => x.returnIdentifier),
-        'canReadDirector',
-        'canEditDirector',
-        'canReadZone',
-        'canEditZone',
-        'labels(node) as labels',
-      ]);
+      .with('collect(distinct perms) as permList, node')
+      .match([
+        node('node'),
+        relation('out', 'r', { active: true }),
+        node('props', 'Property', { active: true }),
+      ])
+      .with('{value: props.value, property: type(r)} as prop, permList, node')
+      .with('collect(prop) as propList, permList, node')
+      .optionalMatch([
+        node('node'),
+        relation('out', '', 'director', { active: true }),
+        node('director', 'User', { active: true }),
+      ])
+      .optionalMatch([
+        node('node'),
+        relation('out', '', 'zone', { active: true }),
+        node('zone', 'Zone', { active: true }),
+      ])
+      .return([
+        'propList, permList, node',
+        'director.id as directorId',
+        'zone.id as zoneId',
+      ])
+      .asResult<
+        StandardReadResult<DbPropsOfDto<Region>> & {
+          directorId: string;
+          zoneId: string;
+        }
+      >();
 
     const result = await query.first();
     if (!result) {
       this.logger.error(`Could not find region`);
-      throw new NotFoundException('Could not find region');
+      throw new NotFoundException('Could not find region', 'region.id');
     }
 
-    const response: any = {
-      ...result,
+    const secured = parseSecuredProperties(result.propList, result.permList, {
+      name: true,
+      director: true,
+      zone: true,
+    });
+
+    return {
+      ...parseBaseNodeProperties(result.node),
+      ...secured,
       director: {
-        value: await this.userService.readOne(result.directorId, session),
-        canRead: !!result.canReadDirector,
-        canEdit: !!result.canEditDirector,
+        ...secured.director,
+        value: result.directorId,
       },
       zone: {
-        value: await this.readOneZone(result.zoneId, session),
-        canRead: !!result.canReadZone,
-        canEdit: !!result.canEditZone,
+        ...secured.zone,
+        value: result.zoneId,
       },
     };
-
-    return (response as unknown) as Region;
   }
 
   async readOneCountry(id: string, session: ISession): Promise<Country> {
@@ -752,7 +766,7 @@ export class LocationService {
     const zone = await this.readOneZone(input.id, session);
 
     // update director
-    if (input.directorId && input.directorId !== zone.director.value?.id) {
+    if (input.directorId && input.directorId !== zone.director.value) {
       const query = `
         MATCH
           (token:Token {
@@ -799,7 +813,7 @@ export class LocationService {
     const region = await this.readOneRegion(input.id, session);
 
     // update director
-    if (input.directorId && input.directorId !== region.director.value?.id) {
+    if (input.directorId && input.directorId !== region.director.value) {
       const query = `
           MATCH
             (token:Token {
@@ -832,7 +846,7 @@ export class LocationService {
     }
 
     // update zone
-    if (input.zoneId && input.zoneId !== region.zone.value?.id) {
+    if (input.zoneId && input.zoneId !== region.zone.value) {
       const query = `
           MATCH
             (token:Token {

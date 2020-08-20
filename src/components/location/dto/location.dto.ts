@@ -4,8 +4,12 @@ import {
   InterfaceType,
   ObjectType,
 } from '@nestjs/graphql';
-import { Resource, SecuredProperty, SecuredString } from '../../../common';
-import { SecuredUser } from '../../user/dto/user.dto';
+import {
+  Resource,
+  Secured,
+  SecuredProperty,
+  SecuredString,
+} from '../../../common';
 
 @InterfaceType()
 export abstract class Place {
@@ -20,8 +24,7 @@ export class Zone extends Resource implements Place {
   @Field()
   readonly name: SecuredString;
 
-  @Field()
-  readonly director: SecuredUser;
+  readonly director: Secured<string>;
 }
 
 @ObjectType({
@@ -36,11 +39,9 @@ export class Region extends Resource implements Place {
   @Field()
   readonly name: SecuredString;
 
-  @Field()
-  readonly zone: SecuredZone;
+  readonly zone: Secured<string>;
 
-  @Field()
-  readonly director: SecuredUser;
+  readonly director: Secured<string>;
 }
 
 @ObjectType({
@@ -53,10 +54,10 @@ export class SecuredRegion extends SecuredProperty(Region) {}
 })
 export class Country extends Resource implements Place {
   @Field()
-  name: SecuredString;
+  readonly name: SecuredString;
 
   @Field()
-  region: SecuredRegion;
+  readonly region: SecuredRegion;
 }
 
 @ObjectType({
