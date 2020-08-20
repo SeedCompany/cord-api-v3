@@ -28,6 +28,12 @@ import {
   runListQuery,
 } from '../../core';
 import {
+  DbPropsOfDto,
+  parseBaseNodeProperties,
+  parseSecuredProperties,
+  StandardReadResult,
+} from '../../core/database/results';
+import {
   CreateOrganization,
   Organization,
   OrganizationListInput,
@@ -130,11 +136,15 @@ export class OrganizationService {
   }
 
   async readOne(orgId: string, session: ISession): Promise<Organization> {
+    this.logger.info(`Read Organization`, {
+      id: orgId,
+      userId: session.userId,
+    });
+
     if (!session.userId) {
       session.userId = this.config.anonUser.id;
     }
 
-    const props = ['name'];
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
@@ -156,7 +166,8 @@ export class OrganizationService {
       ])
       .with('{value: props.value, property: type(r)} as prop, permList, node')
       .with('collect(prop) as propList, permList, node')
-      .return('propList, permList, node');
+      .return('propList, permList, node')
+      .asResult<StandardReadResult<DbPropsOfDto<Organization>>>();
 
     const result = await query.first();
 
@@ -167,50 +178,14 @@ export class OrganizationService {
       );
     }
 
-    const organization: any = {
-      id: result.node.properties.id,
-      createdAt: result.node.properties.createdAt,
+    const secured = parseSecuredProperties(result.propList, result.permList, {
+      name: true,
+    });
+
+    return {
+      ...parseBaseNodeProperties(result.node),
+      ...secured,
     };
-
-    const perms: any = {};
-
-    for (const {
-      properties: { property, read, edit },
-    } of result.permList) {
-      const currentPermission = perms[property];
-      if (!currentPermission) {
-        perms[property] = {
-          canRead: Boolean(read),
-          canEdit: Boolean(edit),
-        };
-      } else {
-        currentPermission.canRead = currentPermission.canRead || read;
-        currentPermission.canEdit = currentPermission.canEdit || edit;
-      }
-    }
-
-    for (const propertyObj of result.propList) {
-      const canRead = Boolean(perms[propertyObj.property]?.canRead);
-      const canEdit = Boolean(perms[propertyObj.property]?.canEdit);
-      const value = (canRead && propertyObj.value) || null;
-      organization[propertyObj.property] = {
-        value,
-        canRead,
-        canEdit,
-      };
-    }
-
-    for (const prop of props) {
-      if (!organization[prop]) {
-        organization[prop] = {
-          value: null,
-          canRead: false,
-          canEdit: false,
-        };
-      }
-    }
-
-    return organization;
   }
 
   async update(
