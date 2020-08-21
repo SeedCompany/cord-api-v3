@@ -447,7 +447,7 @@ export class ProjectService {
       ])
       .with('{value: props.value, property: type(r)} as prop, permList, node')
       .with('collect(prop) as propList, permList, node')
-      .match([
+      .optionalMatch([
         node('node'),
         relation('out', '', 'location'),
         node('country', 'Country', { active: true }),
@@ -495,6 +495,7 @@ export class ProjectService {
       mouStart: true,
       mouEnd: true,
       estimatedSubmission: true,
+      type: true,
     });
 
     const locationPerms: any = find(
@@ -506,7 +507,7 @@ export class ProjectService {
       ...parseBaseNodeProperties(result.node),
       ...securedProps,
       sensitivity: props.sensitivity,
-      type: props.type,
+      type: (result as any)?.node?.properties?.type,
       status: props.status,
       modifiedAt: props.modifiedAt,
       location: {
