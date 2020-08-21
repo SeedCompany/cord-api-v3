@@ -1,6 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { flatMap, upperFirst } from 'lodash';
+import { find, flatMap, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
@@ -32,6 +32,13 @@ import {
   runListQuery,
   UniquenessError,
 } from '../../core';
+import {
+  DbPropsOfDto,
+  parseBaseNodeProperties,
+  parsePropList,
+  parseSecuredProperties,
+  StandardReadResult,
+} from '../../core/database/results';
 import {
   Budget,
   BudgetService,
@@ -414,62 +421,53 @@ export class ProjectService {
 
   async readOne(id: string, session: ISession): Promise<Project> {
     this.logger.info('query readone project', { id, userId: session.userId });
-    const label = 'Project';
-    const baseNodeMetaProps = ['id', 'createdAt', 'type'];
-    const unsecureProps = ['status', 'sensitivity'];
-    const secureProps = [
-      'name',
-      'deptId',
-      'step',
-      'mouStart',
-      'mouEnd',
-      'estimatedSubmission',
-      'modifiedAt',
-    ];
-    const readProject = this.db
+
+    if (!session.userId) {
+      this.logger.info('using anon user id');
+      session.userId = this.config.anonUser.id;
+    }
+    const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .call(matchUserPermissions, label, id)
-      .call(addAllSecureProperties, ...secureProps, ...unsecureProps)
+      .match([node('node', 'Project', { active: true, id })])
       .optionalMatch([
-        node('canReadLocation', 'Permission', {
-          property: 'location',
-          read: true,
-          active: true,
-        }),
+        node('requestingUser'),
+        relation('in', '', 'member*1..'),
+        node('', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission'),
+        node('perms', 'Permission', { active: true }),
         relation('out', '', 'baseNode'),
         node('node'),
-        relation('out', '', 'location', { active: true }),
+      ])
+      .with('collect(distinct perms) as permList, node')
+      .match([
+        node('node'),
+        relation('out', 'r', { active: true }),
+        node('props', 'Property', { active: true }),
+      ])
+      .with('{value: props.value, property: type(r)} as prop, permList, node')
+      .with('collect(prop) as propList, permList, node')
+      .optionalMatch([
+        node('node'),
+        relation('out', '', 'location'),
         node('country', 'Country', { active: true }),
       ])
-      .return(
-        `
-          {
-            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
-            ${listWithUnsecureObject(unsecureProps)},
-            ${listWithSecureObject(secureProps)},
-            countryId: country.id,
-            canReadLocationRead: canReadLocation.read,
-            canReadLocationEdit: canReadLocation.edit
-          } as project
-        `
-      );
+      .return('propList, permList, node, country.id as countryId')
+      .asResult<
+        StandardReadResult<DbPropsOfDto<Project>> & {
+          countryId: string;
+        }
+      >();
 
-    let result;
-    try {
-      result = await readProject.first();
-    } catch (e) {
-      this.logger.error('e :>> ', e);
-      throw e;
-    }
+    const result = await query.first();
 
     if (!result) {
-      throw new NotFoundException(`Could not find project`);
+      throw new NotFoundException('Could not find Project');
     }
 
-    const location = result.project.countryId
+    const location = result?.countryId
       ? await this.locationService
-          .readOneCountry(result.project.countryId, session)
+          .readOneCountry(result?.countryId, session)
           .then((country) => {
             return {
               value: {
@@ -489,24 +487,34 @@ export class ProjectService {
           value: undefined,
         };
 
+    const props = parsePropList(result.propList);
+    const securedProps = parseSecuredProperties(props, result.permList, {
+      name: true,
+      deptId: true,
+      step: true,
+      mouStart: true,
+      mouEnd: true,
+      estimatedSubmission: true,
+      type: true,
+    });
+
+    const locationPerms: any = find(
+      result.permList,
+      (item) => (item as any).properties.property === 'location'
+    );
+
     return {
-      id,
-      createdAt: result.project.createdAt,
-      modifiedAt: result.project.modifiedAt.value,
-      type: result.project.type,
-      sensitivity: result.project.sensitivity,
-      name: result.project.name,
-      deptId: result.project.deptId,
-      step: result.project.step,
-      status: result.project.status,
+      ...parseBaseNodeProperties(result.node),
+      ...securedProps,
+      sensitivity: props.sensitivity,
+      type: (result as any)?.node?.properties?.type,
+      status: props.status,
+      modifiedAt: props.modifiedAt,
       location: {
         ...location,
-        canRead: !!result.project.canReadLocationRead,
-        canEdit: !!result.project.canReadLocationEdit,
+        canRead: !!locationPerms?.properties?.read,
+        canEdit: !!locationPerms?.properties?.edit,
       },
-      mouStart: result.project.mouStart,
-      mouEnd: result.project.mouEnd,
-      estimatedSubmission: result.project.estimatedSubmission,
     };
   }
 
