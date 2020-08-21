@@ -7,6 +7,7 @@ import { parse as parseTrace, StackFrame } from 'stack-trace';
 import { MESSAGE } from 'triple-beam';
 import { config, format } from 'winston';
 import { Exception } from '../../common/exceptions';
+import { getNameFromEntry } from './logger.interface';
 
 type Color = (str: string) => string;
 
@@ -19,7 +20,7 @@ interface ParsedError {
 
 export const metadata = () =>
   format.metadata({
-    fillExcept: ['level', 'message', 'name', 'exceptions'],
+    fillExcept: ['level', 'message', 'exceptions'],
   });
 
 export const maskSecrets = () =>
@@ -157,10 +158,12 @@ export const printForCli = () =>
       return info[MESSAGE];
     }
 
+    const name = getNameFromEntry(info);
+
     let msg = '';
     // msg += green(`[Nest] ${info.pid}   - `);
     // msg += `${info.timestamp}   `;
-    msg += typeof info.name === 'string' ? yellow(`[${info.name}] `) : '';
+    msg += typeof name === 'string' ? yellow(`[${name}] `) : '';
     msg += info.message;
     msg += ` ${yellow(info.ms)}`;
     msg +=

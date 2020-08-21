@@ -4,7 +4,7 @@ import { config, createLogger, Logger as WinstonLogger } from 'winston';
 import * as Transport from 'winston-transport';
 import { AbstractLogger } from './abstract-logger';
 import { LevelMatcher } from './level-matcher';
-import { LogEntry, LogLevel } from './logger.interface';
+import { getNameFromEntry, LogEntry, LogLevel } from './logger.interface';
 
 export class LoggerOptions {
   format: Format;
@@ -32,10 +32,12 @@ export class WinstonLoggerService extends AbstractLogger
     });
   }
 
-  logEntry({ level, message, name = 'unknown', ...context }: LogEntry): void {
+  logEntry({ level, message, ...context }: LogEntry): void {
     if (this.closing) {
       return;
     }
+
+    const name = getNameFromEntry(context) ?? 'unknown';
 
     // Skip logging exceptions as Jest will display them properly.
     if (name === 'nest:exception' && (global as any).jasmine) {
@@ -45,7 +47,7 @@ export class WinstonLoggerService extends AbstractLogger
     if (!this.matcher.isEnabled(name, level)) {
       return;
     }
-    this.logger.log(level, message, { name, ...context });
+    this.logger.log(level, message, context);
   }
 
   async onModuleDestroy() {
