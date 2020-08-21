@@ -1,14 +1,12 @@
-import {
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { inArray, node, relation } from 'cypher-query-builder';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { DuplicateException, ISession, ServerException } from '../../common';
 import {
+  addAllMetaPropertiesOfChildBaseNodes,
   addAllSecureProperties,
   addBaseNodeMetaPropsWithClause,
+  ChildBaseNodeMetaProperty,
   ConfigService,
   createBaseNode,
   DatabaseService,
@@ -21,6 +19,12 @@ import {
   OnIndex,
   runListQuery,
 } from '../../core';
+import {
+  DbPropsOfDto,
+  parseBaseNodeProperties,
+  parseSecuredProperties,
+  StandardReadResult,
+} from '../../core/database/results';
 import { ScriptureRange } from '../scripture';
 import {
   scriptureToVerseRange,
@@ -210,72 +214,86 @@ export class FilmService {
   }
 
   async readOne(filmId: string, session: ISession): Promise<Film> {
-    const secureProps = ['name'];
-    const baseNodeMetaProps = ['id', 'createdAt'];
+    this.logger.info(`Read film`, {
+      id: filmId,
+      userId: session.userId,
+    });
+
+    if (!session.userId) {
+      session.userId = this.config.anonUser.id;
+    }
+
+    const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
+      {
+        parentBaseNodePropertyKey: 'scriptureReferences',
+        parentRelationDirection: 'out',
+        childBaseNodeLabel: 'ScriptureRange',
+        childBaseNodeMetaPropertyKey: '',
+        returnIdentifier: '',
+      },
+    ];
     const readFilm = this.db
       .query()
       .call(matchRequestingUser, session)
-      .call(matchUserPermissions, 'Film', filmId)
-      .call(addAllSecureProperties, ...secureProps)
-      .optionalMatch([
-        node('scriptureReferencesReadPerm', 'Permission', {
-          property: 'scriptureReferences',
-          read: true,
+      .match([
+        node('node', 'Film', {
           active: true,
+          id: filmId,
         }),
-        relation('out', '', 'baseNode'),
-        node('node'),
-        relation('out', '', 'scriptureReferences', { active: true }),
-        node('scriptureReferences', 'ScriptureRange', { active: true }),
       ])
-      .where({ scriptureReferencesReadPerm: inArray(['permList'], true) })
       .optionalMatch([
-        node('scriptureReferencesEditPerm', 'Permission', {
-          property: 'scriptureReferences',
-          edit: true,
-          active: true,
-        }),
+        node('requestingUser'),
+        relation('in', '', 'member*1..'),
+        node('', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission'),
+        node('perms', 'Permission', { active: true }),
         relation('out', '', 'baseNode'),
         node('node'),
       ])
-      .where({ scriptureReferencesReadPerm: inArray(['permList'], true) })
-      .return(
-        `
-          {
-            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
-            ${listWithSecureObject(secureProps)},
-            canReadFilms: requestingUser.canReadFilms,
-            canScriptureReferencesRead: scriptureReferencesReadPerm.read,
-            canScriptureReferencesEdit: scriptureReferencesEditPerm.edit
-          } as film
-        `
-      );
+      .with('collect(distinct perms) as permList, node')
+      .match([
+        node('node'),
+        relation('out', 'r', { active: true }),
+        node('props', 'Property', { active: true }),
+      ])
+      .with('{value: props.value, property: type(r)} as prop, permList, node')
+      .with('collect(prop) as propList, permList, node')
+      .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
+      .return([
+        'propList, permList, node',
+        'coalesce(scriptureReferencesReadPerm.read, false) as canScriptureReferencesRead',
+        'coalesce(scriptureReferencesEditPerm.edit, false) as canScriptureReferencesEdit',
+      ])
+      .asResult<
+        StandardReadResult<DbPropsOfDto<Film>> & {
+          canScriptureReferencesRead: boolean;
+          canScriptureReferencesEdit: boolean;
+        }
+      >();
 
     const result = await readFilm.first();
+
     if (!result) {
-      throw new NotFoundException('Could not find film');
+      throw new NotFoundException('Could not find film', 'film.id');
     }
 
-    if (!result.film.canReadFilms) {
-      throw new ForbiddenException(
-        'User does not have permission to read a film'
-      );
-    }
+    const secured = parseSecuredProperties(result.propList, result.permList, {
+      name: true,
+    });
 
     const scriptureReferences = await this.listScriptureReferences(
-      result.film.id,
+      filmId,
       session
     );
 
     return {
-      id: result.film.id,
-      name: result.film.name,
+      ...parseBaseNodeProperties(result.node),
+      ...secured,
       scriptureReferences: {
-        canRead: !!result.film.canScriptureReferencesRead,
-        canEdit: !!result.film.canScriptureReferencesEdit,
+        canRead: result.canScriptureReferencesRead,
+        canEdit: result.canScriptureReferencesEdit,
         value: scriptureReferences,
       },
-      createdAt: result.film.createdAt,
     };
   }
 
