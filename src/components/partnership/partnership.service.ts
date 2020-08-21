@@ -1,14 +1,14 @@
-import {
-  forwardRef,
-  Inject,
-  Injectable,
-  InternalServerErrorException as ServerException,
-} from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
-import { InputException, ISession, NotFoundException } from '../../common';
+import {
+  InputException,
+  ISession,
+  NotFoundException,
+  ServerException,
+} from '../../common';
 import {
   addAllMetaPropertiesOfChildBaseNodes,
   addAllSecureProperties,

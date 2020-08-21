@@ -1,14 +1,14 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-  InternalServerErrorException as ServerException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { inArray, node, regexp, relation } from 'cypher-query-builder';
 import { first, intersection } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
-import { ISession } from '../../common';
+import {
+  InputException,
+  ISession,
+  NotFoundException,
+  ServerException,
+} from '../../common';
 import {
   addAllMetaPropertiesOfChildBaseNodes,
   addAllSecureProperties,
@@ -553,7 +553,7 @@ export class LocationService {
         return await this.readOneCountry(id, session);
       }
       default: {
-        throw new BadRequestException('Not a location');
+        throw new InputException('Not a location');
       }
     }
   }
@@ -705,7 +705,7 @@ export class LocationService {
     this.logger.info(`Query readOne Country`, { id, userId: session.userId });
 
     if (!id) {
-      throw new BadRequestException('No country id to search for');
+      throw new InputException('No country id to search for');
     }
 
     const props = ['name'];
@@ -1022,7 +1022,7 @@ export class LocationService {
 
     const result = await runListQuery(query, input, false);
     if (!result) {
-      throw new BadRequestException('No location');
+      throw new InputException('No location');
     }
     const items = await Promise.all(
       result.items.map((row: any) => this.readOne(row.id, session))

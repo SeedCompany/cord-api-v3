@@ -1,9 +1,11 @@
+/* eslint-disable no-restricted-imports */
 import {
   BadRequestException,
   ForbiddenException,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
+/* eslint-enable no-restricted-imports */
 import { InputException, ServerException } from '../common/exceptions';
 import { ConstraintError } from './database';
 import { ExceptionFilter } from './exception.filter';

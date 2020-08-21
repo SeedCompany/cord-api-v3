@@ -1,10 +1,8 @@
 import {
-  BadRequestException,
   Controller,
   Get,
   Headers,
   Inject,
-  InternalServerErrorException,
   Put,
   Query,
   Request,
@@ -14,6 +12,7 @@ import {
 import { BaseExceptionFilter } from '@nestjs/core';
 import { Request as IRequest, Response as IResponse } from 'express';
 import * as rawBody from 'raw-body';
+import { InputException, ServerException } from '../../common';
 import { FileBucket, LocalBucket } from './bucket';
 import { FilesBucketToken } from './files-bucket.factory';
 
@@ -32,13 +31,13 @@ export class LocalBucketController {
     @Request() req: IRequest
   ) {
     if (!this.bucket) {
-      throw new InternalServerErrorException('Cannot upload file here');
+      throw new ServerException('Cannot upload file here');
     }
     // Chokes on json files because they are parsed with body-parser.
     // Need to disable it for this path or create a workaround.
     const contents = await rawBody(req);
     if (!contents) {
-      throw new BadRequestException();
+      throw new InputException();
     }
 
     await this.bucket.upload(signed, {
@@ -51,7 +50,7 @@ export class LocalBucketController {
   @Get()
   async download(@Query('signed') signed: string, @Response() res: IResponse) {
     if (!this.bucket) {
-      throw new InternalServerErrorException('Cannot download file here');
+      throw new ServerException('Cannot download file here');
     }
 
     const out = await this.bucket.download(signed);

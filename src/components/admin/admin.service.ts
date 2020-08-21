@@ -1,13 +1,9 @@
-import {
-  Injectable,
-  OnApplicationBootstrap,
-  InternalServerErrorException as ServerException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
 import * as argon2 from 'argon2';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
+import { ServerException, UnauthorizedException } from '../../common';
 import { ConfigService, DatabaseService } from '../../core';
 import { AuthenticationService } from '../authentication';
 import { RootSecurityGroup } from './root-security-group';

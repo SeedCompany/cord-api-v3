@@ -1,11 +1,7 @@
-import {
-  Injectable,
-  PipeTransform,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, PipeTransform } from '@nestjs/common';
 import { Request } from 'express';
 import type * as core from 'express-serve-static-core';
-import { ISession } from '../../common';
+import { ISession, UnauthorizedException } from '../../common';
 import { ConfigService } from '../../core';
 import { AuthenticationService } from './authentication.service';
 

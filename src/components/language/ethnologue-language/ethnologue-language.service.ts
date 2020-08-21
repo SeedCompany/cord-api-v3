@@ -1,11 +1,8 @@
-import {
-  Injectable,
-  InternalServerErrorException as ServerException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
-import { ISession, NotFoundException } from '../../../common';
+import { ISession, NotFoundException, ServerException } from '../../../common';
 import {
   ConfigService,
   createBaseNode,

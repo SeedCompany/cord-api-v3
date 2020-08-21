@@ -1,5 +1,5 @@
-import { NotFoundException } from '@nestjs/common';
 import { HeadObjectOutput } from 'aws-sdk/clients/s3';
+import { NotFoundException } from '../../../common';
 import { FakeAwsFile, LocalBucket } from './local-bucket';
 
 /**

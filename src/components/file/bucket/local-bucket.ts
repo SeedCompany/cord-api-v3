@@ -1,7 +1,7 @@
-import { BadRequestException } from '@nestjs/common';
 import { GetObjectOutput } from 'aws-sdk/clients/s3';
 import { DateTime } from 'luxon';
 import { assert } from 'ts-essentials';
+import { InputException } from '../../../common';
 import { BucketOptions, FileBucket } from './file-bucket';
 
 export interface LocalBucketOptions extends BucketOptions {
@@ -69,10 +69,10 @@ export abstract class LocalBucket extends FileBucket {
       assert(typeof parsed.key === 'string');
       assert(typeof parsed.expires === 'number');
     } catch (e) {
-      throw new BadRequestException();
+      throw new InputException();
     }
     if (DateTime.local() > DateTime.fromMillis(parsed.expires)) {
-      throw new BadRequestException('url expired');
+      throw new InputException('url expired');
     }
     return parsed.key as string;
   }

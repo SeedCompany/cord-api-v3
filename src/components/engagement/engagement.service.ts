@@ -1,17 +1,16 @@
-import {
-  BadRequestException,
-  forwardRef,
-  Inject,
-  Injectable,
-  NotFoundException,
-  InternalServerErrorException as ServerException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
-import { DuplicateException, ISession } from '../../common';
+import {
+  DuplicateException,
+  InputException,
+  ISession,
+  NotFoundException,
+  ServerException,
+  UnauthorizedException,
+} from '../../common';
 import {
   ConfigService,
   DatabaseService,
@@ -243,7 +242,7 @@ export class EngagementService {
     const projectType = await this.getProjectTypeById(projectId);
 
     if (projectType && projectType !== ProjectType.Translation) {
-      throw new BadRequestException('That Project type is not Translation');
+      throw new InputException('That Project type is not Translation');
     }
 
     if (await this.getLEByProjectAndLanguage(projectId, languageId)) {
@@ -447,7 +446,7 @@ export class EngagementService {
           .return('project.id')
           .first())
       ) {
-        throw new BadRequestException('projectId is invalid');
+        throw new InputException('projectId is invalid');
       }
       if (
         languageId &&
@@ -459,7 +458,7 @@ export class EngagementService {
           .return('language.id')
           .first())
       ) {
-        throw new BadRequestException('languageId is invalid');
+        throw new InputException('languageId is invalid');
       }
       throw new ServerException('Could not create Language Engagement');
     }
@@ -484,7 +483,7 @@ export class EngagementService {
     const projectType = await this.getProjectTypeById(projectId);
 
     if (projectType && projectType !== ProjectType.Internship) {
-      throw new BadRequestException('That Project type is not Intership');
+      throw new InputException('That Project type is not Intership');
     }
 
     if (await this.getIEByProjectAndIntern(projectId, internId)) {
@@ -724,7 +723,7 @@ export class EngagementService {
           .return('intern.id')
           .first())
       ) {
-        throw new BadRequestException('internId is invalid');
+        throw new InputException('internId is invalid');
       }
       if (
         mentorId &&
@@ -734,7 +733,7 @@ export class EngagementService {
           .return('mentor.id')
           .first())
       ) {
-        throw new BadRequestException('mentorId is invalid');
+        throw new InputException('mentorId is invalid');
       }
       if (
         projectId &&
@@ -744,7 +743,7 @@ export class EngagementService {
           .return('project.id')
           .first())
       ) {
-        throw new BadRequestException('projectId is invalid');
+        throw new InputException('projectId is invalid');
       }
       if (
         countryOfOriginId &&
@@ -759,7 +758,7 @@ export class EngagementService {
           .return('country.id')
           .first())
       ) {
-        throw new BadRequestException('countryOfOriginId is invalid');
+        throw new InputException('countryOfOriginId is invalid');
       }
       throw new ServerException('Could not create Internship Engagement');
     }

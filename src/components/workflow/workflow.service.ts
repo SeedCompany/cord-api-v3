@@ -1,13 +1,12 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-  InternalServerErrorException as ServerException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { generate } from 'shortid';
-import { ISession } from '../../common';
+import {
+  ISession,
+  NotFoundException,
+  ServerException,
+  UnauthorizedException,
+} from '../../common';
 import { DatabaseService, ILogger, Logger, matchSession } from '../../core';
 import {
   AddState,
@@ -119,7 +118,7 @@ export class WorkflowService {
         exception: e,
       });
 
-      throw new InternalServerErrorException('Could not create workflow');
+      throw new ServerException('Could not create workflow');
     }
   }
 

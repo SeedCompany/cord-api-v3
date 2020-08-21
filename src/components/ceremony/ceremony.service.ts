@@ -1,13 +1,13 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-  InternalServerErrorException as ServerException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
-import { ISession } from '../../common';
+import {
+  InputException,
+  ISession,
+  NotFoundException,
+  ServerException,
+} from '../../common';
 import {
   ConfigService,
   createBaseNode,
@@ -204,7 +204,7 @@ export class CeremonyService {
   async readOne(id: string, session: ISession): Promise<Ceremony> {
     this.logger.info(`Query readOne Ceremony`, { id, userId: session.userId });
     if (!id) {
-      throw new BadRequestException('No ceremony id to search for');
+      throw new InputException('No ceremony id to search for');
     }
     const readCeremony = this.db
       .query()

@@ -1,13 +1,14 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-  InternalServerErrorException as ServerException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
-import { ISession, Order } from '../../common';
+import {
+  InputException,
+  ISession,
+  NotFoundException,
+  Order,
+  ServerException,
+} from '../../common';
 import {
   ConfigService,
   createBaseNode,
@@ -247,7 +248,7 @@ export class BudgetService {
     session: ISession
   ): Promise<BudgetRecord> {
     if (!input.fiscalYear || !organizationId) {
-      throw new BadRequestException();
+      throw new InputException();
     }
 
     this.logger.info('Creating BudgetRecord', input);
@@ -505,7 +506,7 @@ export class BudgetService {
 
     const readBudget = await budgetStatusQuery.first();
     if (!readBudget?.status.includes(BudgetStatus.Pending)) {
-      throw new BadRequestException('budget records can not be modified');
+      throw new InputException('budget records can not be modified');
     }
 
     const br = await this.readOneRecord(id, session);

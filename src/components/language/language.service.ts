@@ -1,9 +1,10 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Node, node, relation } from 'cypher-query-builder';
 import { first, intersection, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
+  InputException,
   ISession,
   NotFoundException,
   Sensitivity,
@@ -710,7 +711,7 @@ export class LanguageService {
     const locationLabel = await this.getLocationLabelById(locationId);
 
     if (!locationLabel) {
-      throw new BadRequestException('Cannot find location');
+      throw new InputException('Cannot find location');
     }
 
     await this.removeLocation(languageId, locationId, session);
@@ -740,7 +741,7 @@ export class LanguageService {
     const locationLabel = await this.getLocationLabelById(locationId);
 
     if (!locationLabel) {
-      throw new BadRequestException('Cannot find location');
+      throw new InputException('Cannot find location');
     }
 
     await this.db

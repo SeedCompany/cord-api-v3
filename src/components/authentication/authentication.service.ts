@@ -1,14 +1,15 @@
-import {
-  BadRequestException,
-  Injectable,
-  InternalServerErrorException as ServerException,
-  UnauthorizedException as UnauthenticatedException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import * as argon2 from 'argon2';
 import { node, relation } from 'cypher-query-builder';
 import { sign, verify } from 'jsonwebtoken';
 import { DateTime } from 'luxon';
-import { DuplicateException, ISession } from '../../common';
+import {
+  DuplicateException,
+  InputException,
+  ISession,
+  ServerException,
+  UnauthenticatedException,
+} from '../../common';
 import {
   ConfigService,
   DatabaseService,
@@ -21,6 +22,7 @@ import {
 import { User, UserService } from '../user';
 import { LoginInput, ResetPasswordInput } from './authentication.dto';
 import { RegisterInput } from './dto';
+import { NoSessionException } from './no-session.exception';
 
 interface JwtPayload {
   iat: number;
@@ -240,7 +242,7 @@ export class AuthenticationService {
 
     if (!result) {
       this.logger.info('Failed to find active token in database', { token });
-      throw new UnauthenticatedException(
+      throw new NoSessionException(
         'Session has not been established',
         'NoSession'
       );
@@ -348,12 +350,12 @@ export class AuthenticationService {
       )
       .first();
     if (!result) {
-      throw new BadRequestException('Token is invalid', 'TokenInvalid');
+      throw new InputException('Token is invalid', 'TokenInvalid');
     }
     const createdOn: DateTime = result.createdOn;
 
     if (createdOn.diffNow().as('days') > 1) {
-      throw new BadRequestException('Token has expired', 'TokenExpired');
+      throw new InputException('Token has expired', 'TokenExpired');
     }
 
     const pash = await argon2.hash(password);

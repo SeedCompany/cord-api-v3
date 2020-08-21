@@ -1,5 +1,4 @@
-import { InternalServerErrorException as ServerException } from '@nestjs/common';
-import { ISession } from '../../../common';
+import { ISession, ServerException } from '../../../common';
 import {
   DatabaseService,
   EventsHandler,

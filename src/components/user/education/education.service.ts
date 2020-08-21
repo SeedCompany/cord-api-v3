@@ -1,14 +1,9 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-  InternalServerErrorException as ServerException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
-import { ISession } from '../../../common';
+import { ISession, NotFoundException, ServerException } from '../../../common';
 import {
   ConfigService,
   DatabaseService,
@@ -238,7 +233,7 @@ export class EducationService {
         id,
         userId,
       });
-      throw new InternalServerErrorException('Could not create education');
+      throw new ServerException('Could not create education');
     }
   }
 

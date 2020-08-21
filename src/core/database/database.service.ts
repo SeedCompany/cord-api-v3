@@ -1,9 +1,4 @@
-import {
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-  InternalServerErrorException as ServerException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
   Connection,
   equals,
@@ -19,12 +14,15 @@ import { generate } from 'shortid';
 import { assert } from 'ts-essentials';
 import {
   AbstractClassType,
+  InputException,
   ISession,
   isSecured,
   many,
   mapFromList,
   Order,
   Resource,
+  ServerException,
+  UnauthorizedException,
   UnwrapSecured,
   unwrapSecured,
 } from '../../common';
@@ -217,7 +215,7 @@ export class DatabaseService {
     const result = await update.first();
 
     if (!result) {
-      throw new NotFoundException('Could not find object');
+      throw new InputException('Could not find object');
     }
 
     return {
@@ -526,7 +524,7 @@ export class DatabaseService {
     }
 
     if (!result) {
-      throw new NotFoundException('Could not find object');
+      throw new InputException('Could not find object');
     }
 
     return {
@@ -934,7 +932,7 @@ export class DatabaseService {
       .first();
 
     if (!result) {
-      throw new NotFoundException('Could not find object');
+      throw new InputException('Could not find object');
     }
   }
 
@@ -1043,7 +1041,7 @@ export class DatabaseService {
 
       // If the user doesn't have permission to perform the create action...
       if (!aclResult || !aclResult.editProp) {
-        throw new ForbiddenException(`Cannot create ${type.name}`);
+        throw new UnauthorizedException(`Cannot create ${type.name}`);
       }
 
       this.logger.error(`createNode error`, {
@@ -1610,10 +1608,10 @@ export class DatabaseService {
     }
 
     if (!result) {
-      throw new NotFoundException('Could not find node');
+      throw new InputException('Could not find node');
     }
     if (!result[aclCreatePropName]) {
-      throw new ForbiddenException(
+      throw new UnauthorizedException(
         'User does not have permission to create an node'
       );
     }
