@@ -10,12 +10,19 @@ import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { ISession } from '../../common';
 import {
+  addAllMetaPropertiesOfChildBaseNodes,
+  addAllSecureProperties,
+  addPropertyCoalesceWithClause,
+  addShapeForBaseNodeMetaProperty,
+  addShapeForChildBaseNodeMetaProperty,
+  ChildBaseNodeMetaProperty,
   ConfigService,
   DatabaseService,
   ILogger,
   Logger,
   matchRequestingUser,
   matchSession,
+  matchUserPermissions,
   OnIndex,
   runListQuery,
 } from '../../core';
@@ -550,96 +557,57 @@ export class LocationService {
   async readOneZone(id: string, session: ISession): Promise<Zone> {
     this.logger.info(`Query readOne Zone`, { id, userId: session.userId });
 
+    const props = ['name'];
+    const baseNodeMetaProps = ['id', 'createdAt'];
+
+    const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
+      {
+        parentBaseNodePropertyKey: 'director',
+        parentRelationDirection: 'out',
+        childBaseNodeLabel: 'User',
+        childBaseNodeMetaPropertyKey: 'id',
+        returnIdentifier: 'directorId',
+      },
+    ];
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([node('node', 'Zone', { active: true, id: id })])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member*1..'),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission'),
-        node('perms', 'Permission', { active: true }),
-        relation('out', '', 'baseNode'),
-        node('node'),
+      .call(matchUserPermissions, 'Zone', id)
+      .call(addAllSecureProperties, ...props)
+      .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
+      .with([
+        ...props.map(addPropertyCoalesceWithClause),
+        ...childBaseNodeMetaProps.map(addShapeForChildBaseNodeMetaProperty),
+        ...baseNodeMetaProps.map(addShapeForBaseNodeMetaProperty),
+        'node',
+        'directorReadPerm.read as canReadDirector',
+        'directorEditPerm.edit as canEditDirector',
       ])
-      .with('collect(distinct perms) as permList, node')
-      .match([
-        node('node'),
-        relation('out', 'r', { active: true }),
-        node('props', 'Property', { active: true }),
-      ])
-      .with('{value: props.value, property: type(r)} as prop, permList, node')
-      .with('collect(prop) as propList, permList, node')
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'director'),
-        node('director', 'User', { active: true }),
-      ])
-      .return('propList, permList, node, director.id as directorId');
+      .returnDistinct([
+        ...props,
+        ...baseNodeMetaProps,
+        ...childBaseNodeMetaProps.map((x) => x.returnIdentifier),
+        'canReadDirector',
+        'canEditDirector',
+        'labels(node) as labels',
+      ]);
 
     const result = await query.first();
-
     if (!result) {
       this.logger.error(`Could not find zone`);
       throw new NotFoundException('Could not find zone');
     }
 
     const response: any = {
-      id: result?.node?.properties?.id,
-      createdAt: result?.node?.properties?.createdAt,
-    };
-
-    const perms: any = {};
-    const permList = result?.permList;
-
-    if (permList) {
-      for (const {
-        properties: { property, read, edit },
-      } of permList) {
-        const currentPermission = perms[property];
-        if (!currentPermission) {
-          perms[property] = {
-            canRead: Boolean(read),
-            canEdit: Boolean(edit),
-          };
-        } else {
-          currentPermission.canRead = currentPermission.canRead || read;
-          currentPermission.canEdit = currentPermission.canEdit || edit;
-        }
-      }
-    }
-
-    const propList = result?.propList;
-
-    if (propList) {
-      for (const record of propList) {
-        if (!response[record.property]) {
-          response[record.property] = {};
-        }
-        if (record?.property) {
-          const canRead = perms[record.property]?.canRead ?? false;
-          response[record.property] = {
-            value: canRead ? record.value : null,
-            canRead: canRead,
-            canEdit: perms[record.property]
-              ? perms[record.property].canEdit
-              : false,
-          };
-        }
-      }
-    }
-
-    const finalResponse: any = {
-      ...response,
+      ...result,
       director: {
         value: await this.userService.readOne(result.directorId, session),
-        canRead: !!perms.director.canRead,
-        canEdit: !!perms.director.canEdit,
+        canRead: !!result.canReadDirector,
+        canEdit: !!result.canEditDirector,
       },
     };
 
-    return (finalResponse as unknown) as Zone;
+    return (response as unknown) as Zone;
   }
 
   async readOneRegion(id: string, session: ISession): Promise<Region> {
@@ -649,108 +617,74 @@ export class LocationService {
       throw new BadRequestException('No region id to search for');
     }
 
+    const props = ['name'];
+    const baseNodeMetaProps = ['id', 'createdAt'];
+
+    const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
+      {
+        parentBaseNodePropertyKey: 'zone',
+        parentRelationDirection: 'out',
+        childBaseNodeLabel: 'Zone',
+        childBaseNodeMetaPropertyKey: 'id',
+        returnIdentifier: 'zoneId',
+      },
+      {
+        parentBaseNodePropertyKey: 'director',
+        parentRelationDirection: 'out',
+        childBaseNodeLabel: 'User',
+        childBaseNodeMetaPropertyKey: 'id',
+        returnIdentifier: 'directorId',
+      },
+    ];
+
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([node('node', 'Region', { active: true, id: id })])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member*1..'),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission'),
-        node('perms', 'Permission', { active: true }),
-        relation('out', '', 'baseNode'),
-        node('node'),
+      .call(matchUserPermissions, 'Region', id)
+      .call(addAllSecureProperties, ...props)
+      .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
+      .with([
+        ...props.map(addPropertyCoalesceWithClause),
+        ...childBaseNodeMetaProps.map(addShapeForChildBaseNodeMetaProperty),
+        ...baseNodeMetaProps.map(addShapeForBaseNodeMetaProperty),
+        'node',
+        'coalesce(directorReadPerm.read, false) as canReadDirector',
+        'coalesce(directorEditPerm.edit, false) as canEditDirector',
+        'coalesce(zoneReadPerm.read, false) as canReadZone',
+        'coalesce(zoneEditPerm.edit, false) as canEditZone',
       ])
-      .with('collect(distinct perms) as permList, node')
-      .match([
-        node('node'),
-        relation('out', 'r', { active: true }),
-        node('props', 'Property', { active: true }),
-      ])
-      .with('{value: props.value, property: type(r)} as prop, permList, node')
-      .with('collect(prop) as propList, permList, node')
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'zone'),
-        node('zone', 'Zone', { active: true }),
-      ])
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'director'),
-        node('director', 'User', { active: true }),
-      ])
-      .return(
-        'propList, permList, node, zone.id as zoneId, director.id as directorId'
-      );
+      .returnDistinct([
+        ...props,
+        ...baseNodeMetaProps,
+        ...childBaseNodeMetaProps.map((x) => x.returnIdentifier),
+        'canReadDirector',
+        'canEditDirector',
+        'canReadZone',
+        'canEditZone',
+        'labels(node) as labels',
+      ]);
 
     const result = await query.first();
-
     if (!result) {
       this.logger.error(`Could not find region`);
       throw new NotFoundException('Could not find region');
     }
 
     const response: any = {
-      id: result?.node?.properties?.id,
-      createdAt: result?.node?.properties?.createdAt,
-    };
-
-    const perms: any = {};
-    const permList = result?.permList;
-
-    if (permList) {
-      for (const {
-        properties: { property, read, edit },
-      } of permList) {
-        const currentPermission = perms[property];
-        if (!currentPermission) {
-          perms[property] = {
-            canRead: Boolean(read),
-            canEdit: Boolean(edit),
-          };
-        } else {
-          currentPermission.canRead = currentPermission.canRead || read;
-          currentPermission.canEdit = currentPermission.canEdit || edit;
-        }
-      }
-    }
-
-    const propList = result?.propList;
-
-    if (propList) {
-      for (const record of propList) {
-        if (!response[record.property]) {
-          response[record.property] = {};
-        }
-        if (record?.property) {
-          const canRead = perms[record.property]?.canRead ?? false;
-          response[record.property] = {
-            value: canRead ? record.value : null,
-            canRead: canRead,
-            canEdit: perms[record.property]
-              ? perms[record.property].canEdit
-              : false,
-          };
-        }
-      }
-    }
-    const finalResponse: any = {
-      ...response,
+      ...result,
       director: {
         value: await this.userService.readOne(result.directorId, session),
-        canRead: !!perms.director.canRead,
-        canEdit: !!perms.director.canEdit,
+        canRead: !!result.canReadDirector,
+        canEdit: !!result.canEditDirector,
       },
       zone: {
         value: await this.readOneZone(result.zoneId, session),
-        canRead: !!perms.zone.canRead,
-        canEdit: !!perms.zone.canEdit,
+        canRead: !!result.canReadZone,
+        canEdit: !!result.canEditZone,
       },
-      regionId: response?.id?.value,
     };
 
-    return (finalResponse as unknown) as Region;
+    return (response as unknown) as Region;
   }
 
   async readOneCountry(id: string, session: ISession): Promise<Country> {
@@ -760,97 +694,58 @@ export class LocationService {
       throw new BadRequestException('No country id to search for');
     }
 
+    const props = ['name'];
+    const baseNodeMetaProps = ['id', 'createdAt'];
+
+    const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
+      {
+        parentBaseNodePropertyKey: 'region',
+        parentRelationDirection: 'out',
+        childBaseNodeLabel: 'Region',
+        childBaseNodeMetaPropertyKey: 'id',
+        returnIdentifier: 'regionId',
+      },
+    ];
+
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([node('node', 'Country', { active: true, id: id })])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member*1..'),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission'),
-        node('perms', 'Permission', { active: true }),
-        relation('out', '', 'baseNode'),
-        node('node'),
+      .call(matchUserPermissions, 'Country', id)
+      .call(addAllSecureProperties, ...props)
+      .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
+      .with([
+        ...props.map(addPropertyCoalesceWithClause),
+        ...childBaseNodeMetaProps.map(addShapeForChildBaseNodeMetaProperty),
+        ...baseNodeMetaProps.map(addShapeForBaseNodeMetaProperty),
+        'node',
+        'coalesce(regionReadPerm.read, false) as canReadRegion',
+        'coalesce(regionEditPerm.edit, false) as canEditRegion',
       ])
-      .with('collect(distinct perms) as permList, node')
-      .match([
-        node('node'),
-        relation('out', 'r', { active: true }),
-        node('props', 'Property', { active: true }),
-      ])
-      .with('{value: props.value, property: type(r)} as prop, permList, node')
-      .with('collect(prop) as propList, permList, node')
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'region'),
-        node('region', 'Region', { active: true }),
-      ])
-      .return('propList, permList, node, region.id as regionId');
+      .returnDistinct([
+        ...props,
+        ...baseNodeMetaProps,
+        ...childBaseNodeMetaProps.map((x) => x.returnIdentifier),
+        'canReadRegion',
+        'canEditRegion',
+        'labels(node) as labels',
+      ]);
 
     const result = await query.first();
-
     if (!result) {
       this.logger.error(`Could not find country`);
       throw new NotFoundException('Could not find country');
     }
 
     const response: any = {
-      id: result?.node?.properties?.id,
-      createdAt: result?.node?.properties?.createdAt,
-    };
-
-    const perms: any = {};
-    const permList = result?.permList;
-
-    if (permList) {
-      for (const {
-        properties: { property, read, edit },
-      } of permList) {
-        const currentPermission = perms[property];
-        if (!currentPermission) {
-          perms[property] = {
-            canRead: Boolean(read),
-            canEdit: Boolean(edit),
-          };
-        } else {
-          currentPermission.canRead = currentPermission.canRead || read;
-          currentPermission.canEdit = currentPermission.canEdit || edit;
-        }
-      }
-    }
-
-    const propList = result?.propList;
-
-    if (propList) {
-      for (const record of propList) {
-        if (!response[record.property]) {
-          response[record.property] = {};
-        }
-        if (record?.property) {
-          const canRead = perms[record.property]?.canRead ?? false;
-          response[record.property] = {
-            value: canRead ? record.value : null,
-            canRead: canRead,
-            canEdit: perms[record.property]
-              ? perms[record.property].canEdit
-              : false,
-          };
-        }
-      }
-    }
-
-    const finalResponse: any = {
-      ...response,
+      ...result,
       region: {
         value: await this.readOneRegion(result.regionId, session),
-        canRead: !!perms.region.canRead,
-        canEdit: !!perms.region.canEdit,
+        canRead: !!result.canReadRegion,
+        canEdit: !!result.canEditRegion,
       },
-      countryId: response?.id?.value,
     };
 
-    return (finalResponse as unknown) as Country;
+    return (response as unknown) as Country;
   }
 
   async updateZone(input: UpdateZone, session: ISession): Promise<Zone> {
