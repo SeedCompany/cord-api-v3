@@ -9,8 +9,6 @@ import { DateTime } from 'luxon';
 import { DuplicateException, ISession, NotFoundException } from '../../common';
 import {
   addAllMetaPropertiesOfChildBaseNodes,
-  addAllSecureProperties,
-  addBaseNodeMetaPropsWithClause,
   ChildBaseNodeMetaProperty,
   ConfigService,
   createBaseNode,
@@ -18,13 +16,19 @@ import {
   filterByString,
   filterBySubarray,
   ILogger,
-  listWithSecureObject,
   Logger,
   matchRequestingUser,
   matchUserPermissions,
   Property,
   runListQuery,
 } from '../../core';
+import {
+  DbPropsOfDto,
+  parseBaseNodeProperties,
+  parsePropList,
+  parseSecuredProperties,
+  StandardReadResult,
+} from '../../core/database/results';
 import { Film, FilmService } from '../film';
 import {
   LiteracyMaterial,
@@ -298,8 +302,6 @@ export class ProductService {
   }
 
   async readOne(id: string, session: ISession): Promise<AnyProduct> {
-    const props = ['mediums', 'purposes', 'methodology'];
-    const baseNodeMetaProps = ['id', 'createdAt'];
     const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
       {
         parentBaseNodePropertyKey: 'scriptureReferences',
@@ -327,29 +329,58 @@ export class ProductService {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .call(matchUserPermissions, 'Product', id)
-      .call(addAllSecureProperties, ...props)
+      .match([node('node', 'Product', { active: true, id })])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member*1..'),
+        node('', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission'),
+        node('perms', 'Permission', { active: true }),
+        relation('out', '', 'baseNode'),
+        node('node'),
+      ])
+      .with('collect(distinct perms) as permList, node')
+      .match([
+        node('node'),
+        relation('out', 'r', { active: true }),
+        node('props', 'Property', { active: true }),
+      ])
+      .with('{value: props.value, property: type(r)} as prop, permList, node')
+      .with(['collect(prop) as propList', 'permList', 'node'])
       .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
-      .return(
-        `
-          {
-            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
-            ${listWithSecureObject(props)},
-            canScriptureReferencesRead: scriptureReferencesReadPerm.read,
-            canScriptureReferencesEdit: scriptureReferencesEditPerm.edit,
-            canScriptureReferencesOverrideRead: scriptureReferencesOverrideReadPerm.read,
-            canScriptureReferencesOverrideEdit: scriptureReferencesOverrideEditPerm.edit,
-            canProducesRead: producesReadPerm.read,
-            canProducesEdit: producesEditPerm.edit
-          } as product
-        `
-      );
-
+      .return([
+        'propList, permList, node',
+        'scriptureReferencesReadPerm.read as canScriptureReferencesRead',
+        'scriptureReferencesEditPerm.edit as canScriptureReferencesEdit',
+        'scriptureReferencesOverrideReadPerm.read as canScriptureReferencesOverrideRead',
+        'scriptureReferencesOverrideEditPerm.edit as canScriptureReferencesOverrideEdit',
+        'producesReadPerm.read as canProducesRead',
+        'producesEditPerm.edit as canProducesEdit',
+      ])
+      .asResult<
+        StandardReadResult<DbPropsOfDto<AnyProduct>> & {
+          canScriptureReferencesRead: boolean;
+          canScriptureReferencesEdit: boolean;
+          canScriptureReferencesOverrideRead: boolean;
+          canScriptureReferencesOverrideEdit: boolean;
+          canProducesRead: boolean;
+          canProducesEdit: boolean;
+        }
+      >();
     const result = await query.first();
+
     if (!result) {
       this.logger.warning(`Could not find product`, { id });
       throw new NotFoundException('Could not find product', 'product.id');
     }
+
+    const props = parsePropList(result.propList);
+    const securedProperties = parseSecuredProperties(props, result.permList, {
+      mediums: true,
+      purposes: true,
+      methodology: true,
+    });
+    const baseNodeProps = parseBaseNodeProperties(result.node);
 
     const produces = await this.db
       .query()
@@ -363,26 +394,31 @@ export class ProductService {
 
     if (!produces) {
       const scriptureReferences = await this.listScriptureReferences(
-        result.product.id,
+        baseNodeProps.id,
         'Product',
         session
       );
       return {
-        id: result.product.id,
-        createdAt: result.product.createdAt,
-        mediums: result.product.mediums,
-        purposes: result.product.purposes,
-        methodology: result.product.methodology,
+        ...baseNodeProps,
+        ...securedProperties,
         scriptureReferences: {
-          canRead: !!result.product.canScriptureReferencesRead,
-          canEdit: !!result.product.canScriptureReferencesEdit,
+          canRead: result.canScriptureReferencesRead,
+          canEdit: result.canScriptureReferencesEdit,
           value: scriptureReferences,
+        },
+        mediums: {
+          ...securedProperties.mediums,
+          value: securedProperties.mediums.value ?? [],
+        },
+        purposes: {
+          ...securedProperties.purposes,
+          value: securedProperties.purposes.value ?? [],
         },
       };
     }
 
     const scriptureReferencesOverride = await this.listScriptureReferences(
-      result.product.id,
+      baseNodeProps.id,
       'Product',
       session,
       { isOverride: true }
@@ -400,11 +436,21 @@ export class ProductService {
     );
 
     return {
-      id: result.product.id,
-      createdAt: result.product.createdAt,
-      mediums: result.product.mediums,
-      purposes: result.product.purposes,
-      methodology: result.product.methodology,
+      ...baseNodeProps,
+      ...securedProperties,
+      scriptureReferences: {
+        canRead: result.canScriptureReferencesRead,
+        canEdit: result.canScriptureReferencesEdit,
+        value: [],
+      },
+      mediums: {
+        ...securedProperties.mediums,
+        value: securedProperties.mediums.value ?? [],
+      },
+      purposes: {
+        ...securedProperties.purposes,
+        value: securedProperties.purposes.value ?? [],
+      },
       produces: {
         value: {
           id: produces.p.properties.id,
@@ -413,23 +459,18 @@ export class ProductService {
           scriptureReferences: !scriptureReferencesOverride.length
             ? producible?.scriptureReferences
             : {
-                canRead: !!result.product.canScriptureReferencesOverrideRead,
-                canEdit: !!result.product.canScriptureReferencesOverrideEdit,
+                canRead: result.canScriptureReferencesOverrideRead,
+                canEdit: result.canScriptureReferencesOverrideEdit,
                 value: scriptureReferencesOverride,
               },
           ...producible,
         },
-        canRead: !!result.product.canProducesRead,
-        canEdit: !!result.product.canProducesEdit,
-      },
-      scriptureReferences: {
-        canRead: !!result.product.canScriptureReferencesRead,
-        canEdit: !!result.product.canScriptureReferencesEdit,
-        value: [],
+        canRead: result.canProducesRead,
+        canEdit: result.canProducesEdit,
       },
       scriptureReferencesOverride: {
-        canRead: !!result.product.canScriptureReferencesOverrideRead,
-        canEdit: !!result.product.canScriptureReferencesOverrideEdit,
+        canRead: result.canScriptureReferencesOverrideRead,
+        canEdit: result.canScriptureReferencesOverrideEdit,
         value: !scriptureReferencesOverride.length
           ? null
           : scriptureReferencesOverride,
