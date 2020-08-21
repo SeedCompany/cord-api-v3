@@ -4,7 +4,7 @@ import {
   Logger as NestLogger,
   OnModuleInit,
 } from '@nestjs/common';
-import { ILogger } from './logger.interface';
+import { ILogger, LoggerName } from './logger.interface';
 
 /**
  * Adapts/wraps our Logger into a Nest Logger interface.
@@ -27,35 +27,36 @@ export class NestLoggerAdapterService implements INestLogger, OnModuleInit {
 
   debug(message: any, context?: string) {
     const name = this.mapName(context);
-    this.logger.debug(message, { name });
+    this.logger.debug(message, name);
   }
 
   error(message: any, trace?: string, context?: string) {
     const name = this.mapName(context);
     this.logger.error(message, {
-      name,
+      ...name,
       ...(trace ? { stack: trace, exception: true } : {}),
     });
   }
 
   log(message: any, context?: string) {
     const name = this.mapName(context);
-    this.logger.info(message, { name });
+    this.logger.info(message, name);
   }
 
   verbose(message: any, context?: string) {
     const name = this.mapName(context);
-    this.logger.debug(message, { name });
+    this.logger.debug(message, name);
   }
 
   warn(message: any, context?: string) {
     const name = this.mapName(context);
-    this.logger.warning(message, { name });
+    this.logger.warning(message, name);
   }
 
   private mapName(context?: string) {
-    return context
+    const name = context
       ? NestLoggerAdapterService.nameMap[context] || context
       : 'nest';
+    return { [LoggerName]: name };
   }
 }
