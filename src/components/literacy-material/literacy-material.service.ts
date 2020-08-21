@@ -1,14 +1,12 @@
-import {
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { inArray, node, relation } from 'cypher-query-builder';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { DuplicateException, ISession, ServerException } from '../../common';
 import {
+  addAllMetaPropertiesOfChildBaseNodes,
   addAllSecureProperties,
   addBaseNodeMetaPropsWithClause,
+  ChildBaseNodeMetaProperty,
   ConfigService,
   createBaseNode,
   DatabaseService,
@@ -22,6 +20,12 @@ import {
   Property,
   runListQuery,
 } from '../../core';
+import {
+  DbPropsOfDto,
+  parseBaseNodeProperties,
+  parseSecuredProperties,
+  StandardReadResult,
+} from '../../core/database/results';
 import { ScriptureRange } from '../scripture';
 import {
   scriptureToVerseRange,
@@ -213,77 +217,89 @@ export class LiteracyMaterialService {
     literacyMaterialId: string,
     session: ISession
   ): Promise<LiteracyMaterial> {
+    this.logger.info(`Read literacyMaterial`, {
+      id: literacyMaterialId,
+      userId: session.userId,
+    });
+
     if (!session.userId) {
       session.userId = this.config.anonUser.id;
     }
 
-    const secureProps = ['name'];
-    const baseNodeMetaProps = ['id', 'createdAt'];
+    const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
+      {
+        parentBaseNodePropertyKey: 'scriptureReferences',
+        parentRelationDirection: 'out',
+        childBaseNodeLabel: 'ScriptureRange',
+        childBaseNodeMetaPropertyKey: '',
+        returnIdentifier: '',
+      },
+    ];
     const readLiteracyMaterial = this.db
       .query()
       .call(matchRequestingUser, session)
-      .call(matchUserPermissions, 'LiteracyMaterial', literacyMaterialId)
-      .call(addAllSecureProperties, ...secureProps)
-      .optionalMatch([
-        node('scriptureReferencesReadPerm', 'Permission', {
-          property: 'scriptureReferences',
-          read: true,
+      .match([
+        node('node', 'LiteracyMaterial', {
           active: true,
+          id: literacyMaterialId,
         }),
-        relation('out', '', 'baseNode'),
-        node('node'),
-        relation('out', '', 'scriptureReferences', { active: true }),
-        node('scriptureReferences', 'ScriptureRange', { active: true }),
       ])
-      .where({ scriptureReferencesReadPerm: inArray(['permList'], true) })
       .optionalMatch([
-        node('scriptureReferencesEditPerm', 'Permission', {
-          property: 'scriptureReferences',
-          edit: true,
-          active: true,
-        }),
+        node('requestingUser'),
+        relation('in', '', 'member*1..'),
+        node('', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission'),
+        node('perms', 'Permission', { active: true }),
         relation('out', '', 'baseNode'),
         node('node'),
       ])
-      .where({ scriptureReferencesEditPerm: inArray(['permList'], true) })
-      .return(
-        `
-          {
-            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
-            ${listWithSecureObject(secureProps)},
-            canReadLiteracyMaterials: requestingUser.canReadLiteracyMaterials,
-            canScriptureReferencesRead: scriptureReferencesReadPerm.read,
-            canScriptureReferencesEdit: scriptureReferencesEditPerm.edit
-          } as litMaterial
-        `
-      );
+      .with('collect(distinct perms) as permList, node')
+      .match([
+        node('node'),
+        relation('out', 'r', { active: true }),
+        node('props', 'Property', { active: true }),
+      ])
+      .with('{value: props.value, property: type(r)} as prop, permList, node')
+      .with('collect(prop) as propList, permList, node')
+      .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
+      .return([
+        'propList, permList, node',
+        'coalesce(scriptureReferencesReadPerm.read, false) as canScriptureReferencesRead',
+        'coalesce(scriptureReferencesEditPerm.edit, false) as canScriptureReferencesEdit',
+      ])
+      .asResult<
+        StandardReadResult<DbPropsOfDto<LiteracyMaterial>> & {
+          canScriptureReferencesRead: boolean;
+          canScriptureReferencesEdit: boolean;
+        }
+      >();
 
     const result = await readLiteracyMaterial.first();
 
     if (!result) {
-      throw new NotFoundException('Could not find literacy material');
-    }
-
-    if (!result.litMaterial.canReadLiteracyMaterials) {
-      throw new ForbiddenException(
-        'User does not have permission to read a literacy material'
+      throw new NotFoundException(
+        'Could not find literacy material',
+        'literacyMaterial.id'
       );
     }
 
+    const secured = parseSecuredProperties(result.propList, result.permList, {
+      name: true,
+    });
+
     const scriptureReferences = await this.listScriptureReferences(
-      result.litMaterial.id,
+      literacyMaterialId,
       session
     );
 
     return {
-      id: result.litMaterial.id,
-      name: result.litMaterial.name,
+      ...parseBaseNodeProperties(result.node),
+      ...secured,
       scriptureReferences: {
-        canRead: !!result.litMaterial.canScriptureReferencesRead,
-        canEdit: !!result.litMaterial.canScriptureReferencesEdit,
+        canRead: result.canScriptureReferencesRead,
+        canEdit: result.canScriptureReferencesEdit,
         value: scriptureReferences,
       },
-      createdAt: result.litMaterial.createdAt,
     };
   }
 
