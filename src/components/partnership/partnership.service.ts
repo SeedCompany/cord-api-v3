@@ -17,6 +17,8 @@ import {
   ConfigService,
   createBaseNode,
   DatabaseService,
+  getPermList,
+  getPropList,
   IEventBus,
   ILogger,
   listWithSecureObject,
@@ -26,6 +28,12 @@ import {
   matchUserPermissions,
   runListQuery,
 } from '../../core';
+import {
+  DbPropsOfDto,
+  parseBaseNodeProperties,
+  parseSecuredProperties,
+  StandardReadResult,
+} from '../../core/database/results';
 import { BudgetService } from '../budget';
 import { FileService } from '../file';
 import { OrganizationService } from '../organization';
@@ -343,94 +351,71 @@ export class PartnershipService {
       session.userId = this.config.anonUser.id;
     }
 
-    const props = [
-      'agreementStatus',
-      'mouStatus',
-      'mouStart',
-      'mouEnd',
-      'mouStartOverride',
-      'mouEndOverride',
-      'types',
-      'fundingType',
-      'mou',
-      'agreement',
-    ];
-
-    const baseNodeMetaProps = ['id', 'createdAt'];
-
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .call(matchUserPermissions, 'Partnership', id)
-      .call(addAllSecureProperties, ...props)
-      .optionalMatch([
+      .match([node('node', 'Partnership', { active: true, id })])
+      .call(getPermList, 'requestingUser')
+      .call(getPropList, 'permList')
+      .match([
         node('node'),
-        relation('in', '', 'partnership', { active: true }),
+        relation('in', '', 'partnership'),
         node('project', 'Project', { active: true }),
       ])
-      .optionalMatch([
-        node('canReadOrganization', 'Permission', {
-          property: 'organization',
-          read: true,
-          active: true,
-        }),
-        relation('out', '', 'baseNode'),
+      .match([
         node('node'),
-        relation('out', '', 'organization', { active: true }),
+        relation('out', '', 'organization'),
         node('organization', 'Organization', { active: true }),
       ])
-      .with(
-        `
-          {
-            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
-            ${listWithSecureObject(props)},
-            projectId: project.id,
-            organizationId: organization.id
-          } as partnership
-        `
+      .return(
+        'propList, permList, node, project.id as projectId, organization.id as organizationId'
       )
-      .returnDistinct('partnership');
+      .asResult<
+        StandardReadResult<DbPropsOfDto<Partnership>> & {
+          projectId: string;
+          organizationId: string;
+        }
+      >();
 
-    let result;
-    try {
-      result = await query.first();
-    } catch (error) {
-      this.logger.error('could not read partnership', error);
-    }
+    const result = await query.first();
 
-    if (!result || !result.partnership.id) {
+    if (!result) {
       throw new NotFoundException('could not find Partnership');
     }
-    result = (result as any).partnership;
 
     const readProject = await this.projectService.readOne(
       result.projectId,
       session
     );
 
-    let mouStart = null;
-    let mouEnd = null;
-
-    // if user has access to project mou and there is no partnership override
-    if (readProject.mouStart.canRead && result.mouStartOverride.canRead) {
-      mouStart = result.mouStartOverride.value ?? readProject.mouStart.value;
-    }
-    if (readProject.mouEnd.canRead && result.mouEndOverride.canRead) {
-      mouEnd = result.mouEndOverride.value ?? readProject.mouEnd.value;
-    }
-
+    const securedProps = parseSecuredProperties(
+      result.propList,
+      result.permList,
+      {
+        agreementStatus: true,
+        mouStatus: true,
+        mouStart: true,
+        mouEnd: true,
+        mouStartOverride: true,
+        mouEndOverride: true,
+        types: true,
+        fundingType: true,
+        mou: true,
+        agreement: true,
+      }
+    );
     const canReadMouStart =
-      readProject.mouStart.canRead && result.mouStartOverride.canRead;
+      readProject.mouStart.canRead && securedProps.mouStartOverride.canRead;
     const canReadMouEnd =
-      readProject.mouEnd.canRead && result.mouEndOverride.canRead;
+      readProject.mouEnd.canRead && securedProps.mouEndOverride.canRead;
 
-    const response: any = {
-      ...result,
-      types: {
-        value: result.types.value ? result.types.value : [],
-        canRead: !!result.types.canRead,
-        canEdit: !!result.types.canEdit,
-      },
+    const mouStart =
+      (canReadMouStart && securedProps.mouStartOverride.value) || null;
+    const mouEnd = (canReadMouEnd && securedProps.mouEndOverride.value) || null;
+
+    return {
+      ...parseBaseNodeProperties(result.node),
+      ...securedProps,
       mouStart: {
         value: mouStart,
         canRead: canReadMouStart,
@@ -441,10 +426,12 @@ export class PartnershipService {
         canRead: canReadMouEnd,
         canEdit: false, // edit the project mou or edit the partnerhsip mou override
       },
-      organization: this.orgService.readOne(result.organizationId, session),
+      types: {
+        ...securedProps.types,
+        value: securedProps.types.value || [],
+      },
+      organization: result.organizationId,
     };
-
-    return (response as unknown) as Partnership;
   }
 
   async update(input: UpdatePartnership, session: ISession) {
@@ -629,10 +616,6 @@ export class PartnershipService {
             canRead: resultOne.mouEnd.canRead,
             canEdit: false, // edit the project mou or edit the partnerhsip mou override
           },
-          organization: await this.orgService.readOne(
-            (item as any).organizationId,
-            session
-          ),
         };
       })
     );

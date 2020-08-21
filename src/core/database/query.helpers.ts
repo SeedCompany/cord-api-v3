@@ -1069,3 +1069,32 @@ export async function runListQuery<T>(
     }
   );
 }
+
+export function getPermList(query: Query, user: string, ...aliases: string[]) {
+  query
+    .optionalMatch([
+      node(user),
+      relation('in', '', 'member*1..'),
+      node('', 'SecurityGroup', { active: true }),
+      relation('out', '', 'permission'),
+      node('perms', 'Permission', { active: true }),
+      relation('out', '', 'baseNode'),
+      node('node'),
+    ])
+    .with(['collect(distinct perms) as permList', 'node', ...aliases]);
+}
+
+export function getPropList(query: Query, ...aliases: string[]) {
+  query
+    .match([
+      node('node'),
+      relation('out', 'r', { active: true }),
+      node('props', 'Property', { active: true }),
+    ])
+    .with([
+      '{value: props.value, property: type(r)} as prop',
+      'node',
+      ...aliases,
+    ])
+    .with(['collect(prop) as propList', 'node', ...aliases]);
+}

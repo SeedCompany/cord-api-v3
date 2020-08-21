@@ -1,12 +1,11 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import {
   Resource,
-  SecuredDate,
+  SecuredDateNullable,
   SecuredEnum,
   SecuredEnumList,
 } from '../../../common';
 import { DefinedFile } from '../../file/dto';
-import { Organization } from '../../organization';
 import { PartnershipAgreementStatus } from './partnership-agreement-status.enum';
 import { PartnershipFundingType } from './partnership-funding-type.enum';
 import { PartnershipType } from './partnership-type.enum';
@@ -46,21 +45,20 @@ export class Partnership extends Resource {
   readonly mouStatus: SecuredPartnershipAgreementStatus;
 
   @Field()
-  readonly mouStart: SecuredDate;
+  readonly mouStart: SecuredDateNullable;
 
   @Field()
-  readonly mouEnd: SecuredDate;
+  readonly mouEnd: SecuredDateNullable;
 
   @Field()
-  readonly mouStartOverride: SecuredDate;
+  readonly mouStartOverride: SecuredDateNullable;
 
   @Field()
-  readonly mouEndOverride: SecuredDate;
+  readonly mouEndOverride: SecuredDateNullable;
 
   readonly agreement: DefinedFile;
 
-  @Field(() => Organization)
-  readonly organization: Organization;
+  readonly organization: string;
 
   @Field()
   readonly types: SecuredPartnershipTypes;

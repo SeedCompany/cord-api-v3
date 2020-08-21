@@ -8,6 +8,7 @@ import {
 } from '@nestjs/graphql';
 import { IdArg, ISession, Session } from '../../common';
 import { FileService, SecuredFile } from '../file';
+import { Organization, OrganizationService } from '../organization';
 import {
   CreatePartnershipInput,
   CreatePartnershipOutput,
@@ -23,7 +24,8 @@ import { PartnershipService } from './partnership.service';
 export class PartnershipResolver {
   constructor(
     private readonly service: PartnershipService,
-    private readonly files: FileService
+    private readonly files: FileService,
+    private readonly organizations: OrganizationService
   ) {}
 
   @Mutation(() => CreatePartnershipOutput, {
@@ -65,6 +67,17 @@ export class PartnershipResolver {
     @Session() session: ISession
   ): Promise<SecuredFile> {
     return await this.files.resolveDefinedFile(partnership.agreement, session);
+  }
+
+  //TODO: implement resolver to read child organization if it won't break the list reads
+  @ResolveField(() => Organization)
+  async organization(
+    @Parent()
+    partnership: Partnership,
+    @Session() session: ISession
+  ): Promise<Organization> {
+    const orgId = partnership.organization;
+    return await this.organizations.readOne(orgId, session);
   }
 
   @Query(() => PartnershipListOutput, {
