@@ -9,20 +9,24 @@ import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { ISession } from '../../common';
 import {
-  addAllSecureProperties,
-  addBaseNodeMetaPropsWithClause,
   ConfigService,
   createBaseNode,
   DatabaseService,
+  getPermList,
+  getPropList,
   ILogger,
-  listWithSecureObject,
   Logger,
   matchRequestingUser,
   matchSession,
-  matchUserPermissions,
   Property,
   runListQuery,
 } from '../../core';
+import {
+  DbPropsOfDto,
+  parseBaseNodeProperties,
+  parseSecuredProperties,
+  StandardReadResult,
+} from '../../core/database/results';
 import {
   Ceremony,
   CeremonyListInput,
@@ -202,21 +206,14 @@ export class CeremonyService {
     if (!id) {
       throw new BadRequestException('No ceremony id to search for');
     }
-    const baseNodeMetaProps = ['id', 'createdAt'];
-    const secureProps = ['type', 'planned', 'estimatedDate', 'actualDate'];
     const readCeremony = this.db
       .query()
       .call(matchRequestingUser, session)
-      .call(matchUserPermissions, 'Ceremony', id)
-      .call(addAllSecureProperties, ...secureProps)
-      .return(
-        `
-          {
-            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
-            ${listWithSecureObject(secureProps)}
-          } as ceremony
-        `
-      );
+      .match([node('node', 'Ceremony', { active: true, id })])
+      .call(getPermList, 'requestingUser')
+      .call(getPropList, 'permList')
+      .return('node, permList, propList')
+      .asResult<StandardReadResult<DbPropsOfDto<Ceremony>>>();
 
     const result = await readCeremony.first();
 
@@ -224,13 +221,21 @@ export class CeremonyService {
       throw new NotFoundException('Could not find ceremony');
     }
 
+    const securedProps = parseSecuredProperties(
+      result.propList,
+      result.permList,
+      {
+        type: true,
+        planned: true,
+        estimatedDate: true,
+        actualDate: true,
+      }
+    );
+
     return {
-      id: result.ceremony.id,
-      createdAt: result.ceremony.createdAt,
-      type: result.ceremony.type.value,
-      planned: result.ceremony.planned,
-      estimatedDate: result.ceremony.estimatedDate,
-      actualDate: result.ceremony.actualDate,
+      ...parseBaseNodeProperties(result.node),
+      ...securedProps,
+      type: securedProps.type.value!,
     };
   }
 
