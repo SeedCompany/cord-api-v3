@@ -11,10 +11,11 @@ import { DuplicateException, ISession, ServerException } from '../../common';
 import {
   addAllSecureProperties,
   addBaseNodeMetaPropsWithClause,
-  addPropertyCoalesceWithClause,
   ConfigService,
   DatabaseService,
   filterByString,
+  getPermList,
+  getPropList,
   ILogger,
   listWithSecureObject,
   Logger,
@@ -25,6 +26,12 @@ import {
   runListQuery,
   UniquenessError,
 } from '../../core';
+import {
+  DbPropsOfDto,
+  parseBaseNodeProperties,
+  parseSecuredProperties,
+  StandardReadResult,
+} from '../../core/database/results';
 import {
   OrganizationListInput,
   OrganizationService,
@@ -429,44 +436,49 @@ export class UserService {
     if (!session.userId) {
       session.userId = this.config.anonUser.id;
     }
-
-    const props = [
-      'email',
-      'realFirstName',
-      'realLastName',
-      'displayFirstName',
-      'displayLastName',
-      'phone',
-      'timezone',
-      'bio',
-      'status',
-      'title',
-    ];
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .call(matchUserPermissions, 'User', id)
-      .call(addAllSecureProperties, ...[...props, 'roles'])
-      .with([
-        ...props.map(addPropertyCoalesceWithClause),
-        `
-        {
-          value: collect(distinct roles.value),
-          canRead: coalesce(rolesEditPerm.edit, rolesReadPerm.read, false),
-          canEdit: coalesce(rolesEditPerm.edit, false)
-        } as roles
-        `,
-        'coalesce(node.id) as id',
-        'coalesce(node.createdAt) as createdAt',
-      ])
-      .returnDistinct([...props, 'roles', 'id', 'createdAt']);
+      .match([node('node', 'User', { active: true, id })])
+      .call(getPermList, 'node')
+      .call(getPropList, 'permList')
+      .return('propList, permList, node')
+      .asResult<StandardReadResult<DbPropsOfDto<User>>>();
 
-    const result = (await query.first()) as User | undefined;
+    const result = await query.first();
     if (!result) {
-      throw new NotFoundException('Could not find user');
+      throw new NotFoundException('Could not find User');
     }
 
-    return result;
+    const rolesValue = result.propList
+      .filter((prop) => prop.property === 'roles')
+      .map((prop) => prop.value as Role);
+
+    const securedProps = parseSecuredProperties(
+      result.propList,
+      result.permList,
+      {
+        email: true,
+        realFirstName: true,
+        realLastName: true,
+        displayFirstName: true,
+        displayLastName: true,
+        phone: true,
+        timezone: true,
+        bio: true,
+        status: true,
+        title: true,
+        roles: true,
+      }
+    );
+    return {
+      ...parseBaseNodeProperties(result.node),
+      ...securedProps,
+      roles: {
+        ...securedProps.roles,
+        value: rolesValue,
+      },
+    };
   }
 
   async update(input: UpdateUser, session: ISession): Promise<User> {
