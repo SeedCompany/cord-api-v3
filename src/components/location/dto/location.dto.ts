@@ -6,16 +6,22 @@ import {
 } from '@nestjs/graphql';
 import {
   Resource,
+  Secured,
+  SecuredEnum,
   SecuredProperty,
   SecuredString,
   Sensitivity,
 } from '../../../common';
-import { SecuredFundingAccount } from '../../funding-account';
-import { SecuredMarketingLocation } from '../../marketing-location';
-import { SecuredRegistryOfGeography } from '../../registry-of-geography';
 import { SecuredUser } from '../../user/dto/user.dto';
 import { PrivateLocationType } from './private-location-type.enum';
 
+@ObjectType({
+  description: SecuredEnum.descriptionFor('partnership funding type'),
+})
+export abstract class SecuredPrivateLocationType extends SecuredEnum(
+  PrivateLocationType,
+  { nullable: true }
+) {}
 @InterfaceType()
 export abstract class Place {
   @Field()
@@ -98,8 +104,8 @@ export class PrivateLocation extends Resource {
   @Field(() => Sensitivity)
   readonly sensitivity: Sensitivity;
 
-  @Field(() => PrivateLocationType)
-  readonly type: PrivateLocationType;
+  @Field(() => SecuredPrivateLocationType)
+  readonly type: SecuredPrivateLocationType;
 }
 
 @ObjectType({
@@ -111,15 +117,11 @@ export class SecuredPrivateLocation extends SecuredProperty(PrivateLocation) {}
   implements: [Resource],
 })
 export class PublicLocation extends Resource {
-  @Field()
-  readonly marketingLocation: SecuredMarketingLocation;
+  readonly marketingLocation: Secured<string>;
 
-  @Field()
-  readonly privateLocation: SecuredPrivateLocation;
+  readonly privateLocation: Secured<string>;
 
-  @Field()
-  readonly registryOfGeography: SecuredRegistryOfGeography;
+  readonly registryOfGeography: Secured<string>;
 
-  @Field()
-  readonly fundingAccount: SecuredFundingAccount;
+  readonly fundingAccount: Secured<string>;
 }

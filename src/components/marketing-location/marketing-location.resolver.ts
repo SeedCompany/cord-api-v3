@@ -24,7 +24,7 @@ export class MarketingLocationResolver {
     @Session() session: ISession,
     @IdArg() id: string
   ): Promise<MarketingLocation> {
-    return this.marketingLocationService.readOne(id, session);
+    return await this.marketingLocationService.readOne(id, session);
   }
 
   @Query(() => MarketingLocationListOutput, {

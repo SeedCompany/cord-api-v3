@@ -84,12 +84,15 @@ var common_2 = require("../../common");
 var core_1 = require("../../core");
 var results_1 = require("../../core/database/results");
 var LocationService = /** @class */ (function () {
-    function LocationService(logger, config, db, userService, marketingLocationService) {
+    function LocationService(logger, config, db, userService, marketingLocationService, projectService, fundingAccountService, registryOfGeographyService) {
         this.logger = logger;
         this.config = config;
         this.db = db;
         this.userService = userService;
         this.marketingLocationService = marketingLocationService;
+        this.projectService = projectService;
+        this.fundingAccountService = fundingAccountService;
+        this.registryOfGeographyService = registryOfGeographyService;
         // helper method for defining properties
         this.property = function (prop, value, baseNode, extraLabels) {
             if (!value) {
@@ -607,12 +610,6 @@ var LocationService = /** @class */ (function () {
                             }),
                         ])
                             .match([
-                            cypher_query_builder_1.node('fieldRegion', 'FieldRegion', {
-                                active: true,
-                                id: input.fieldRegionId
-                            }),
-                        ])
-                            .match([
                             cypher_query_builder_1.node('marketingLocation', 'MarketingLocation', {
                                 active: true,
                                 id: input.marketingLocationId
@@ -637,6 +634,14 @@ var LocationService = /** @class */ (function () {
                                 cypher_query_builder_1.node('registryOfGeography', 'RegistryOfGeography', {
                                     active: true,
                                     id: input.registryOfGeographyId
+                                }),
+                            ]);
+                        }
+                        if (input.projectId) {
+                            query.match([
+                                cypher_query_builder_1.node('project', 'Project', {
+                                    active: true,
+                                    id: input.projectId
                                 }),
                             ]);
                         }
@@ -689,8 +694,17 @@ var LocationService = /** @class */ (function () {
                                 ],
                             ]);
                         }
+                        if (input.projectId) {
+                            query.create([
+                                [
+                                    cypher_query_builder_1.node('node'),
+                                    cypher_query_builder_1.relation('in', '', 'locations', { active: true, createdAt: createdAt }),
+                                    cypher_query_builder_1.node('project'),
+                                ],
+                            ]);
+                        }
                         query
-                            .create(__spreadArrays(this.permission('fieldRegion', 'node'), this.permission('marketingLocation', 'node'), this.permission('privateLocation', 'node'), this.permission('fundingAccount', 'node'), this.permission('registryOfGeography', 'node')))
+                            .create(__spreadArrays(this.permission('marketingLocation', 'node'), this.permission('privateLocation', 'node'), this.permission('fundingAccount', 'node'), this.permission('registryOfGeography', 'node'), this.permission('project', 'node')))
                             .call(core_1.addUserToSG, 'rootUser', 'adminSG')
                             .call(core_1.addUserToSG, 'rootUser', 'readerSG')["return"]('node.id as id');
                         return [4 /*yield*/, query.first()];
@@ -1019,10 +1033,10 @@ var LocationService = /** @class */ (function () {
     };
     LocationService.prototype.readOnePublicLocation = function (id, session) {
         return __awaiter(this, void 0, Promise, function () {
-            var baseNodeMetaProps, childBaseNodeMetaProps, query, result, response, _a, _b, _c, _d, _e;
-            var _f;
-            return __generator(this, function (_g) {
-                switch (_g.label) {
+            var baseNodeMetaProps, childBaseNodeMetaProps, query, result, response, _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+            var _l;
+            return __generator(this, function (_m) {
+                switch (_m.label) {
                     case 0:
                         this.logger.info("Query readOne PublicLocation", {
                             id: id,
@@ -1030,13 +1044,6 @@ var LocationService = /** @class */ (function () {
                         });
                         baseNodeMetaProps = ['id', 'createdAt'];
                         childBaseNodeMetaProps = [
-                            {
-                                parentBaseNodePropertyKey: 'fundingAccount',
-                                parentRelationDirection: 'out',
-                                childBaseNodeLabel: 'FundingAccount',
-                                childBaseNodeMetaPropertyKey: 'id',
-                                returnIdentifier: 'fundingAccountId'
-                            },
                             {
                                 parentBaseNodePropertyKey: 'fieldRegion',
                                 parentRelationDirection: 'out',
@@ -1065,67 +1072,103 @@ var LocationService = /** @class */ (function () {
                                 childBaseNodeMetaPropertyKey: 'id',
                                 returnIdentifier: 'registryOfGeographyId'
                             },
+                            {
+                                parentBaseNodePropertyKey: 'project',
+                                parentRelationDirection: 'in',
+                                childBaseNodeLabel: 'Project',
+                                childBaseNodeMetaPropertyKey: 'id',
+                                returnIdentifier: 'projectId'
+                            },
                         ];
-                        query = (_f = this.db
+                        query = (_l = this.db
                             .query()
                             .call(core_1.matchRequestingUser, session)
-                            .call(core_1.matchUserPermissions, 'PublicLocation', id)).call.apply(_f, __spreadArrays([core_1.addAllMetaPropertiesOfChildBaseNodes], childBaseNodeMetaProps))["with"](__spreadArrays(childBaseNodeMetaProps.map(core_1.addShapeForChildBaseNodeMetaProperty), baseNodeMetaProps.map(core_1.addShapeForBaseNodeMetaProperty), [
-                            "\n        {\n          value: fundingAccount.id,\n          canRead: coalesce(fundingAccountReadPerm.read, false),\n          canEdit: coalesce(fundingAccountReadPerm.edit, false)\n        } as fundingAccount\n        ",
+                            .call(core_1.matchUserPermissions, 'PublicLocation', id)).call.apply(_l, __spreadArrays([core_1.addAllMetaPropertiesOfChildBaseNodes], childBaseNodeMetaProps))["with"](__spreadArrays(childBaseNodeMetaProps.map(core_1.addShapeForChildBaseNodeMetaProperty), baseNodeMetaProps.map(core_1.addShapeForBaseNodeMetaProperty), [
                             "\n        {\n          value: fieldRegion.id,\n          canRead: coalesce(fieldRegionReadPerm.read, false),\n          canEdit: coalesce(fieldRegionEditPerm.edit, false)\n        } as fieldRegion\n        ",
                             "\n        {\n          value: marketingLocation.id,\n          canRead: coalesce(marketingLocationReadPerm.read, false),\n          canEdit: coalesce(marketingLocationEditPerm.edit, false)\n        } as marketingLocation\n        ",
                             "\n        {\n          value: registryOfGeography.id,\n          canRead: coalesce(registryOfGeographyReadPerm.read, false),\n          canEdit: coalesce(registryOfGeographyEditPerm.edit, false)\n        } as registryOfGeography\n        ",
                             "\n        {\n          value: privateLocation.id,\n          canRead: coalesce(privateLocationReadPerm.read, false),\n          canEdit: coalesce(privateLocationEditPerm.edit, false)\n        } as privateLocation\n        ",
+                            "\n        {\n          value: project.id,\n          canRead: coalesce(projectReadPerm.read, false),\n          canEdit: coalesce(projectEditPerm.edit, false)\n        } as project\n        ",
                             'node',
                         ]))
                             .returnDistinct(__spreadArrays(baseNodeMetaProps, childBaseNodeMetaProps.map(function (x) { return x.returnIdentifier; }), [
                             'fundingAccount',
-                            'fieldRegion',
                             'marketingLocation',
                             'registryOfGeography',
                             'privateLocation',
+                            'project',
                             'labels(node) as labels',
                         ]));
                         return [4 /*yield*/, query.first()];
                     case 1:
-                        result = _g.sent();
+                        result = _m.sent();
                         if (!result) {
                             this.logger.error("Could not public location");
                             throw new common_1.NotFoundException('Could not public location');
                         }
                         _a = [__assign({}, result)];
-                        _b = { fundingAccount: {
-                                canRead: !!result.fundingAccount.canRead,
-                                canEdit: !!result.fundingAccount.canEdit,
-                                value: null
-                            } };
+                        _b = {};
                         _c = {
-                            canRead: !!result.fieldRegion.canRead,
-                            canEdit: !!result.fieldRegion.canEdit
+                            canRead: !!result.fundingAccount.canRead,
+                            canEdit: !!result.fundingAccount.canEdit
                         };
-                        return [4 /*yield*/, this.readOneRegion(result.fieldRegion.value, session)];
+                        if (!result.fundingAccount.value) return [3 /*break*/, 3];
+                        return [4 /*yield*/, this.fundingAccountService.readOne(result.fundingAccount.value, session)];
                     case 2:
-                        _b.fieldRegion = (_c.value = _g.sent(),
+                        _d = _m.sent();
+                        return [3 /*break*/, 4];
+                    case 3:
+                        _d = null;
+                        _m.label = 4;
+                    case 4:
+                        _b.fundingAccount = (_c.value = _d,
                             _c);
-                        _d = {
+                        _e = {
                             canRead: !!result.marketingLocation.canRead,
                             canEdit: !!result.marketingLocation.canEdit
                         };
                         return [4 /*yield*/, this.marketingLocationService.readOne(result.marketingLocation.value, session)];
-                    case 3:
-                        _b.marketingLocation = (_d.value = _g.sent(),
-                            _d), _b.registryOfGeography = {
+                    case 5:
+                        _b.marketingLocation = (_e.value = _m.sent(),
+                            _e);
+                        _f = {
                             canRead: !!result.registryOfGeography.canRead,
-                            canEdit: !!result.registryOfGeography.canEdit,
-                            value: null
+                            canEdit: !!result.registryOfGeography.canEdit
                         };
-                        _e = {
+                        if (!result.registryOfGeography.value) return [3 /*break*/, 7];
+                        return [4 /*yield*/, this.registryOfGeographyService.readOne(result.registryOfGeography.value, session)];
+                    case 6:
+                        _g = _m.sent();
+                        return [3 /*break*/, 8];
+                    case 7:
+                        _g = null;
+                        _m.label = 8;
+                    case 8:
+                        _b.registryOfGeography = (_f.value = _g,
+                            _f);
+                        _h = {
                             canRead: !!result.privateLocation.canRead,
                             canEdit: !!result.privateLocation.canEdit
                         };
                         return [4 /*yield*/, this.readOnePrivateLocation(result.privateLocation.value, session)];
-                    case 4:
-                        response = __assign.apply(void 0, _a.concat([(_b.privateLocation = (_e.value = _g.sent(),
-                                _e), _b)]));
+                    case 9:
+                        _b.privateLocation = (_h.value = _m.sent(),
+                            _h);
+                        _j = {
+                            canRead: !!result.project.canRead,
+                            canEdit: !!result.project.canEdit
+                        };
+                        if (!result.project.value) return [3 /*break*/, 11];
+                        return [4 /*yield*/, this.projectService.readOne(result.project.value, session)];
+                    case 10:
+                        _k = _m.sent();
+                        return [3 /*break*/, 12];
+                    case 11:
+                        _k = null;
+                        _m.label = 12;
+                    case 12:
+                        response = __assign.apply(void 0, _a.concat([(_b.project = (_j.value = _k,
+                                _j), _b)]));
                         return [2 /*return*/, response];
                 }
             });
@@ -1628,7 +1671,8 @@ var LocationService = /** @class */ (function () {
     ], LocationService.prototype, "createIndexes");
     LocationService = __decorate([
         common_1.Injectable(),
-        __param(0, core_1.Logger('location:service'))
+        __param(0, core_1.Logger('location:service')),
+        __param(5, common_1.Inject(common_1.forwardRef(function () { return ProjectService; })))
     ], LocationService);
     return LocationService;
 }());

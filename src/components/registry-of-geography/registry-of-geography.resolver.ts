@@ -24,7 +24,7 @@ export class RegistryOfGeographyResolver {
     @Session() session: ISession,
     @IdArg() id: string
   ): Promise<RegistryOfGeography> {
-    return this.registryOfGeographyService.readOne(id, session);
+    return await this.registryOfGeographyService.readOne(id, session);
   }
 
   @Query(() => RegistryOfGeographyListOutput, {

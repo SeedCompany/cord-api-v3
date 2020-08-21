@@ -149,7 +149,7 @@ export class LocationResolver {
     @Session() session: ISession,
     @IdArg() id: string
   ): Promise<PrivateLocation> {
-    return this.locationService.readOnePrivateLocation(id, session);
+    return await this.locationService.readOnePrivateLocation(id, session);
   }
 
   @Mutation(() => CreatePrivateLocationOutput, {
@@ -187,7 +187,7 @@ export class LocationResolver {
     @Session() session: ISession,
     @IdArg() id: string
   ): Promise<PublicLocation> {
-    return this.locationService.readOnePublicLocation(id, session);
+    return await this.locationService.readOnePublicLocation(id, session);
   }
 
   @Mutation(() => CreatePublicLocationOutput, {

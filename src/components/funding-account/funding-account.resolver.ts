@@ -22,7 +22,7 @@ export class FundingAccountResolver {
     @Session() session: ISession,
     @IdArg() id: string
   ): Promise<FundingAccount> {
-    return this.fundingAccountService.readOne(id, session);
+    return await this.fundingAccountService.readOne(id, session);
   }
 
   @Query(() => FundingAccountListOutput, {

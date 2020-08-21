@@ -1,9 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { node } from 'cypher-query-builder';
+import { node, relation } from 'cypher-query-builder';
 import { DuplicateException, ISession, ServerException } from '../../common';
 import {
-  addAllSecureProperties,
-  addPropertyCoalesceWithClause,
   addUserToSG,
   ConfigService,
   createBaseNode,
@@ -15,6 +13,12 @@ import {
   OnIndex,
   runListQuery,
 } from '../../core';
+import {
+  DbPropsOfDto,
+  parseBaseNodeProperties,
+  parseSecuredProperties,
+  StandardReadResult,
+} from '../../core/database/results';
 import {
   CreateRegistryOfGeography,
   RegistryOfGeography,
@@ -143,40 +147,67 @@ export class RegistryOfGeographyService {
 
       return await this.readOne(result.id, session);
     } catch (err) {
-      this.logger.error(
-        `Could not create registry of geography for user ${session.userId}`
-      );
+      this.logger.error('Could not create registry of geography for user', {
+        exception: err,
+        userId: session.userId,
+      });
       throw new ServerException('Could not create registry of geography');
     }
   }
 
   async readOne(id: string, session: ISession): Promise<RegistryOfGeography> {
+    this.logger.info('readOne', { id, userId: session.userId });
+
+    if (!id) {
+      throw new NotFoundException('no id given');
+    }
+
     if (!session.userId) {
       session.userId = this.config.anonUser.id;
     }
 
-    const secureProps = ['name', 'registryId'];
-
     const readRegistryOfGeography = this.db
       .query()
       .call(matchRequestingUser, session)
-      .call(matchUserPermissions, 'RegistryOfGeography', id)
-      .call(addAllSecureProperties, ...secureProps)
-      .with([
-        ...secureProps.map(addPropertyCoalesceWithClause),
-        'coalesce(node.id) as id',
-        'coalesce(node.createdAt) as createdAt',
+      .match([node('node', 'RegistryOfGeography', { active: true, id })])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member*1..'),
+        node('', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission'),
+        node('perms', 'Permission', { active: true }),
+        relation('out', '', 'baseNode'),
+        node('node'),
       ])
-      .returnDistinct([...secureProps, 'id', 'createdAt']);
+      .with('collect(distinct perms) as permList, node')
+      .match([
+        node('node'),
+        relation('out', 'r', { active: true }),
+        node('props', 'Property', { active: true }),
+      ])
+      .with('{value: props.value, property: type(r)} as prop, permList, node')
+      .with('collect(prop) as propList, permList, node')
+      .return('propList, permList, node')
+      .asResult<StandardReadResult<DbPropsOfDto<RegistryOfGeography>>>();
 
-    const result = (await readRegistryOfGeography.first()) as
-      | RegistryOfGeography
-      | undefined;
+    const result = await readRegistryOfGeography.first();
+
     if (!result) {
-      throw new NotFoundException('Could not find registry of geography');
+      throw new NotFoundException(
+        'Could not find registry of geography',
+        'RegistryOfGeography.id'
+      );
     }
 
-    return result;
+    const secured = parseSecuredProperties(result.propList, result.permList, {
+      name: true,
+      registryId: true,
+    });
+
+    return {
+      ...parseBaseNodeProperties(result.node),
+      ...secured,
+    };
   }
 
   async update(
@@ -185,7 +216,7 @@ export class RegistryOfGeographyService {
   ): Promise<RegistryOfGeography> {
     const RegistryOfGeography = await this.readOne(input.id, session);
 
-    return this.db.sgUpdateProperties({
+    return await this.db.sgUpdateProperties({
       session,
       object: RegistryOfGeography,
       props: ['name', 'registryId'],

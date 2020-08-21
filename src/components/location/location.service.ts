@@ -44,6 +44,7 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
+import { UserService } from '../user';
 import {
   Country,
   CreateCountry,
@@ -74,12 +75,7 @@ export class LocationService {
     @Logger('location:service') private readonly logger: ILogger,
     private readonly config: ConfigService,
     private readonly db: DatabaseService,
-    private readonly userService: UserService,
-    private readonly marketingLocationService: MarketingLocationService,
-    @Inject(forwardRef(() => ProjectService))
-    private readonly projectService: ProjectService,
-    private readonly fundingAccountService: FundingAccountService,
-    private readonly registryOfGeographyService: RegistryOfGeographyService
+    private readonly userService: UserService
   ) {}
 
   @OnIndex()
@@ -630,9 +626,10 @@ export class LocationService {
 
       return await this.readOnePublicLocation(result.id, session);
     } catch (err) {
-      this.logger.error(
-        `Could not create public location for user ${session.userId}`
-      );
+      this.logger.error(`Could not create public location for user`, {
+        exception: err,
+        userId: session.userId,
+      });
       throw new ServerException('Could not create public location');
     }
   }
@@ -727,9 +724,10 @@ export class LocationService {
 
       return await this.readOnePrivateLocation(result.id, session);
     } catch (err) {
-      this.logger.error(
-        `Could not create private location for user ${session.userId}`
-      );
+      this.logger.error('Could not create private location for user', {
+        exception: err,
+        userId: session.userId,
+      });
       throw new ServerException('Could not create private location');
     }
   }
@@ -751,10 +749,10 @@ export class LocationService {
     });
     switch (label) {
       case 'FieldZone': {
-        return this.readOneZone(id, session);
+        return await this.readOneZone(id, session);
       }
       case 'FieldRegion': {
-        return this.readOneRegion(id, session);
+        return await this.readOneRegion(id, session);
       }
       default: {
         throw new InputException('Not a location', 'location.id');
@@ -940,196 +938,170 @@ export class LocationService {
     id: string,
     session: ISession
   ): Promise<PublicLocation> {
-    this.logger.info(`Query readOne PublicLocation`, {
+    this.logger.info(`readOne public location`, {
       id,
       userId: session.userId,
     });
 
-    const baseNodeMetaProps = ['id', 'createdAt'];
-
-    const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
-      {
-        parentBaseNodePropertyKey: 'fieldRegion',
-        parentRelationDirection: 'out',
-        childBaseNodeLabel: 'FieldRegion',
-        childBaseNodeMetaPropertyKey: 'id',
-        returnIdentifier: 'fieldRegionId',
-      },
-      {
-        parentBaseNodePropertyKey: 'marketingLocation',
-        parentRelationDirection: 'out',
-        childBaseNodeLabel: 'MarketingLocation',
-        childBaseNodeMetaPropertyKey: 'id',
-        returnIdentifier: 'marketingLocationId',
-      },
-      {
-        parentBaseNodePropertyKey: 'privateLocation',
-        parentRelationDirection: 'out',
-        childBaseNodeLabel: 'PrivateLocation',
-        childBaseNodeMetaPropertyKey: 'id',
-        returnIdentifier: 'privateLocationId',
-      },
-      {
-        parentBaseNodePropertyKey: 'registryOfGeography',
-        parentRelationDirection: 'out',
-        childBaseNodeLabel: 'RegistryOfGeography',
-        childBaseNodeMetaPropertyKey: 'id',
-        returnIdentifier: 'registryOfGeographyId',
-      },
-      {
-        parentBaseNodePropertyKey: 'project',
-        parentRelationDirection: 'in',
-        childBaseNodeLabel: 'Project',
-        childBaseNodeMetaPropertyKey: 'id',
-        returnIdentifier: 'projectId',
-      },
-    ];
-    const query = this.db
-      .query()
-      .call(matchRequestingUser, session)
-      .call(matchUserPermissions, 'PublicLocation', id)
-      .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
-      .with([
-        ...childBaseNodeMetaProps.map(addShapeForChildBaseNodeMetaProperty),
-        ...baseNodeMetaProps.map(addShapeForBaseNodeMetaProperty),
-        `
-        {
-          value: fieldRegion.id,
-          canRead: coalesce(fieldRegionReadPerm.read, false),
-          canEdit: coalesce(fieldRegionEditPerm.edit, false)
-        } as fieldRegion
-        `,
-        `
-        {
-          value: marketingLocation.id,
-          canRead: coalesce(marketingLocationReadPerm.read, false),
-          canEdit: coalesce(marketingLocationEditPerm.edit, false)
-        } as marketingLocation
-        `,
-        `
-        {
-          value: registryOfGeography.id,
-          canRead: coalesce(registryOfGeographyReadPerm.read, false),
-          canEdit: coalesce(registryOfGeographyEditPerm.edit, false)
-        } as registryOfGeography
-        `,
-        `
-        {
-          value: privateLocation.id,
-          canRead: coalesce(privateLocationReadPerm.read, false),
-          canEdit: coalesce(privateLocationEditPerm.edit, false)
-        } as privateLocation
-        `,
-        `
-        {
-          value: project.id,
-          canRead: coalesce(projectReadPerm.read, false),
-          canEdit: coalesce(projectEditPerm.edit, false)
-        } as project
-        `,
-        'node',
-      ])
-      .returnDistinct([
-        ...baseNodeMetaProps,
-        ...childBaseNodeMetaProps.map((x) => x.returnIdentifier),
-        'fundingAccount',
-        'marketingLocation',
-        'registryOfGeography',
-        'privateLocation',
-        'project',
-        'labels(node) as labels',
-      ]);
-
-    const result = await query.first();
-    if (!result) {
-      this.logger.error(`Could not public location`);
-      throw new NotFoundException('Could not public location');
+    if (!id) {
+      throw new NotFoundException('no id given');
     }
 
-    const response: any = {
-      ...result,
-      fundingAccount: {
-        canRead: !!result.fundingAccount.canRead,
-        canEdit: !!result.fundingAccount.canEdit,
-        value: result.fundingAccount.value
-          ? await this.fundingAccountService.readOne(
-              result.fundingAccount.value,
-              session
-            )
-          : null,
-      },
+    if (!session.userId) {
+      session.userId = this.config.anonUser.id;
+    }
+
+    const readPublicLocation = this.db
+      .query()
+      .call(matchRequestingUser, session)
+      .match([node('node', 'PublicLocation', { active: true, id })])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member*1..'),
+        node('', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission'),
+        node('perms', 'Permission', { active: true }),
+        relation('out', '', 'baseNode'),
+        node('node'),
+      ])
+      .with('collect(distinct perms) as permList, node')
+      .optionalMatch([
+        node('node'),
+        relation('out', '', 'marketingLocation', { active: true }),
+        node('marketingLocation', 'MarketingLocation', { active: true }),
+      ])
+      .optionalMatch([
+        node('node'),
+        relation('out', '', 'privateLocation', { active: true }),
+        node('privateLocation', 'PrivateLocation', { active: true }),
+      ])
+      .optionalMatch([
+        node('node'),
+        relation('out', '', 'registryOfGeography', { active: true }),
+        node('registryOfGeography', 'RegistryOfGeography', { active: true }),
+      ])
+      .optionalMatch([
+        node('node'),
+        relation('out', '', 'fundingAccount', { active: true }),
+        node('fundingAccount', 'FundingAccount', { active: true }),
+      ])
+      .return([
+        'permList, node',
+        'marketingLocation.id as marketingLocationId',
+        'privateLocation.id as privateLocationId',
+        'registryOfGeography.id as registryOfGeographyId',
+        'fundingAccount.id as fundingAccountId',
+      ])
+      .asResult<
+        StandardReadResult<DbPropsOfDto<PublicLocation>> & {
+          marketingLocationId: string;
+          privateLocationId: string;
+          registryOfGeographyId: string;
+          fundingAccountId: string;
+        }
+      >();
+
+    const result = await readPublicLocation.first();
+
+    if (!result) {
+      this.logger.error(`Could not find public location`);
+      throw new NotFoundException(
+        'Could not find public location',
+        'PublicLocation.id'
+      );
+    }
+
+    const secured = parseSecuredProperties([], result.permList, {
+      marketingLocation: true,
+      privateLocation: true,
+      registryOfGeography: true,
+      fundingAccount: true,
+    });
+
+    return {
+      ...parseBaseNodeProperties(result.node),
+      ...secured,
       marketingLocation: {
-        canRead: !!result.marketingLocation.canRead,
-        canEdit: !!result.marketingLocation.canEdit,
-        value: await this.marketingLocationService.readOne(
-          result.marketingLocation.value,
-          session
-        ),
-      },
-      registryOfGeography: {
-        canRead: !!result.registryOfGeography.canRead,
-        canEdit: !!result.registryOfGeography.canEdit,
-        value: result.registryOfGeography.value
-          ? await this.registryOfGeographyService.readOne(
-              result.registryOfGeography.value,
-              session
-            )
-          : null,
+        ...secured.marketingLocation,
+        value: result.marketingLocationId,
       },
       privateLocation: {
-        canRead: !!result.privateLocation.canRead,
-        canEdit: !!result.privateLocation.canEdit,
-        value: await this.readOnePrivateLocation(
-          result.privateLocation.value,
-          session
-        ),
+        ...secured.privateLocation,
+        value: result.privateLocationId,
       },
-      project: {
-        canRead: !!result.project.canRead,
-        canEdit: !!result.project.canEdit,
-        value: result.project.value
-          ? await this.projectService.readOne(result.project.value, session)
-          : null,
+      registryOfGeography: {
+        ...secured.registryOfGeography,
+        value: result.registryOfGeographyId,
+      },
+      fundingAccount: {
+        ...secured.fundingAccount,
+        value: result.fundingAccountId,
       },
     };
-
-    return (response as unknown) as PublicLocation;
   }
 
   async readOnePrivateLocation(
     id: string,
     session: ISession
   ): Promise<PrivateLocation> {
+    this.logger.info('readOne private location', {
+      id,
+      userId: session.userId,
+    });
+
+    if (!id) {
+      throw new NotFoundException('no id given');
+    }
+
     if (!session.userId) {
       session.userId = this.config.anonUser.id;
     }
 
-    const secureProps = ['name', 'publicName', 'type', 'sensitivity'];
-
     const readPrivateLocation = this.db
       .query()
       .call(matchRequestingUser, session)
-      .call(matchUserPermissions, 'PrivateLocation', id)
-      .call(addAllSecureProperties, ...secureProps)
-      .with([
-        ...secureProps.map(addPropertyCoalesceWithClause),
-        'coalesce(node.id) as id',
-        'coalesce(node.createdAt) as createdAt',
+      .match([node('node', 'PrivateLocation', { active: true, id })])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member*1..'),
+        node('', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission'),
+        node('perms', 'Permission', { active: true }),
+        relation('out', '', 'baseNode'),
+        node('node'),
       ])
-      .returnDistinct([...secureProps, 'id', 'createdAt']);
+      .with('collect(distinct perms) as permList, node')
+      .match([
+        node('node'),
+        relation('out', 'r', { active: true }),
+        node('props', 'Property', { active: true }),
+      ])
+      .with('{value: props.value, property: type(r)} as prop, permList, node')
+      .with('collect(prop) as propList, permList, node')
+      .return('propList, permList, node')
+      .asResult<StandardReadResult<DbPropsOfDto<PrivateLocation>>>();
 
     const result = await readPrivateLocation.first();
+
     if (!result) {
-      throw new NotFoundException('Could not find private location');
+      throw new NotFoundException(
+        'Could not find private location',
+        'PrivateLocation.id'
+      );
     }
 
-    const response: any = {
-      ...result,
-      sensitivity: result.sensitivity.value || Sensitivity.Low,
-      type: result.type.value,
-    };
+    const secured = parseSecuredProperties(result.propList, result.permList, {
+      name: true,
+      publicName: true,
+      type: true,
+      sensitivity: true,
+    });
 
-    return (response as unknown) as PrivateLocation;
+    return {
+      ...parseBaseNodeProperties(result.node),
+      ...secured,
+      sensitivity: secured.sensitivity.value || Sensitivity.Low,
+    };
   }
 
   async updateZone(input: UpdateZone, session: ISession): Promise<Zone> {
@@ -1314,7 +1286,7 @@ export class LocationService {
       session
     );
 
-    return this.db.sgUpdateProperties({
+    return await this.db.sgUpdateProperties({
       session,
       object: PrivateLocation,
       props: ['name', 'publicName'],

@@ -1,9 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { node } from 'cypher-query-builder';
+import { node, relation } from 'cypher-query-builder';
 import { DuplicateException, ISession, ServerException } from '../../common';
 import {
-  addAllSecureProperties,
-  addPropertyCoalesceWithClause,
   addUserToSG,
   ConfigService,
   createBaseNode,
@@ -15,6 +13,12 @@ import {
   OnIndex,
   runListQuery,
 } from '../../core';
+import {
+  DbPropsOfDto,
+  parseBaseNodeProperties,
+  parseSecuredProperties,
+  StandardReadResult,
+} from '../../core/database/results';
 import {
   CreateFundingAccount,
   FundingAccount,
@@ -109,40 +113,66 @@ export class FundingAccountService {
 
       return await this.readOne(result.id, session);
     } catch (err) {
-      this.logger.error(
-        `Could not create funding account for user ${session.userId}`
-      );
+      this.logger.error('Could not create funding account for user', {
+        exception: err,
+        userId: session.userId,
+      });
       throw new ServerException('Could not create funding account');
     }
   }
 
   async readOne(id: string, session: ISession): Promise<FundingAccount> {
+    this.logger.info('readOne', { id, userId: session.userId });
+
+    if (!id) {
+      throw new NotFoundException('no id given');
+    }
+
     if (!session.userId) {
       session.userId = this.config.anonUser.id;
     }
 
-    const secureProps = ['name'];
-
     const readFundingAccount = this.db
       .query()
       .call(matchRequestingUser, session)
-      .call(matchUserPermissions, 'FundingAccount', id)
-      .call(addAllSecureProperties, ...secureProps)
-      .with([
-        ...secureProps.map(addPropertyCoalesceWithClause),
-        'coalesce(node.id) as id',
-        'coalesce(node.createdAt) as createdAt',
+      .match([node('node', 'FundingAccount', { active: true, id })])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member*1..'),
+        node('', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission'),
+        node('perms', 'Permission', { active: true }),
+        relation('out', '', 'baseNode'),
+        node('node'),
       ])
-      .returnDistinct([...secureProps, 'id', 'createdAt']);
+      .with('collect(distinct perms) as permList, node')
+      .match([
+        node('node'),
+        relation('out', 'r', { active: true }),
+        node('props', 'Property', { active: true }),
+      ])
+      .with('{value: props.value, property: type(r)} as prop, permList, node')
+      .with('collect(prop) as propList, permList, node')
+      .return('propList, permList, node')
+      .asResult<StandardReadResult<DbPropsOfDto<FundingAccount>>>();
 
-    const result = (await readFundingAccount.first()) as
-      | FundingAccount
-      | undefined;
+    const result = await readFundingAccount.first();
+
     if (!result) {
-      throw new NotFoundException('Could not find funding account');
+      throw new NotFoundException(
+        'Could not find funding account',
+        'FundingAccount.id'
+      );
     }
 
-    return result;
+    const secured = parseSecuredProperties(result.propList, result.permList, {
+      name: true,
+    });
+
+    return {
+      ...parseBaseNodeProperties(result.node),
+      ...secured,
+    };
   }
 
   async update(
@@ -151,7 +181,7 @@ export class FundingAccountService {
   ): Promise<FundingAccount> {
     const fundingAccount = await this.readOne(input.id, session);
 
-    return this.db.sgUpdateProperties({
+    return await this.db.sgUpdateProperties({
       session,
       object: fundingAccount,
       props: ['name'],
