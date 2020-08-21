@@ -1070,7 +1070,11 @@ export async function runListQuery<T>(
   );
 }
 
-export function getPermList(query: Query, user: string, ...aliases: string[]) {
+export function getPermList(
+  query: Query,
+  user = 'requestingUser',
+  ...aliases: string[]
+) {
   query
     .optionalMatch([
       node(user),
