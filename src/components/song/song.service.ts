@@ -3,8 +3,6 @@ import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { DuplicateException, ISession, ServerException } from '../../common';
 import {
-  addAllSecureProperties,
-  addPropertyCoalesceWithClause,
   addUserToSG,
   ConfigService,
   createBaseNode,
@@ -17,6 +15,13 @@ import {
   OnIndex,
   runListQuery,
 } from '../../core';
+import {
+  DbPropsOfDto,
+  parseBaseNodeProperties,
+  parsePropList,
+  parseSecuredProperties,
+  StandardReadResult,
+} from '../../core/database/results';
 import {
   CreateSong,
   Song,
@@ -192,27 +197,51 @@ export class SongService {
       session.userId = this.config.anonUser.id;
     }
 
-    const secureProps = ['name', 'range'];
+    if (!session.userId) {
+      this.logger.info('using anon user id');
+      session.userId = this.config.anonUser.id;
+    }
 
-    const readSong = this.db
+    const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .call(matchUserPermissions, 'Song', id)
-      .call(addAllSecureProperties, ...secureProps)
-      .with([
-        ...secureProps.map(addPropertyCoalesceWithClause),
-        'coalesce(node.id) as id',
-        'coalesce(node.createdAt) as createdAt',
+      .match([node('node', 'Song', { active: true, id })])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member*1..'),
+        node('', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission'),
+        node('perms', 'Permission', { active: true }),
+        relation('out', '', 'baseNode'),
+        node('node'),
       ])
-      .returnDistinct([...secureProps, 'id', 'createdAt']);
+      .with('collect(distinct perms) as permList, node')
+      .match([
+        node('node'),
+        relation('out', 'r', { active: true }),
+        node('props', 'Property', { active: true }),
+      ])
+      .with('{value: props.value, property: type(r)} as prop, permList, node')
+      .with('collect(prop) as propList, permList, node')
+      .return('propList, permList, node')
+      .asResult<StandardReadResult<DbPropsOfDto<Song>>>();
 
-    const result = (await readSong.first()) as Song | undefined;
+    const result = await query.first();
+
     if (!result) {
       throw new NotFoundException('Could not find song');
     }
 
+    const props = parsePropList(result.propList);
+    const securedProps = parseSecuredProperties(props, result.permList, {
+      name: true,
+    });
+
     return {
-      ...result,
+      ...parseBaseNodeProperties(result.node),
+      ...securedProps,
+      id: result?.node?.properties?.id,
+      createdAt: result?.node?.properties?.createdAt,
       scriptureReferences: {
         canEdit: true,
         canRead: true,
