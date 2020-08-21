@@ -24,6 +24,13 @@ import {
   runListQuery,
 } from '../../core';
 import {
+  DbPropsOfDto,
+  parseBaseNodeProperties,
+  parsePropList,
+  parseSecuredProperties,
+  StandardReadResult,
+} from '../../core/database/results';
+import {
   Budget,
   BudgetListInput,
   BudgetListOutput,
@@ -349,29 +356,36 @@ export class BudgetService {
       userId: session.userId,
     });
 
-    const baseNodeMetaProps = ['id', 'createdAt', 'type'];
-    const secureProps = ['status'];
-    const readBudget = this.db
-      .query()
-      .call(matchRequestingUser, session)
-      .call(matchUserPermissions, 'Budget', id)
-      .call(addAllSecureProperties, ...secureProps)
-      .return(
-        `
-          {
-            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
-            ${listWithSecureObject(secureProps)}
-          } as budget
-        `
-      );
-
-    let result;
-    try {
-      result = await readBudget.first();
-    } catch (e) {
-      this.logger.error('e :>> ', e);
+    if (!session.userId) {
+      this.logger.info('using anon user id');
+      session.userId = this.config.anonUser.id;
     }
 
+    const query = this.db
+      .query()
+      .call(matchRequestingUser, session)
+      .match([node('node', 'Budget', { active: true, id })])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member*1..'),
+        node('', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission'),
+        node('perms', 'Permission', { active: true }),
+        relation('out', '', 'baseNode'),
+        node('node'),
+      ])
+      .with('collect(distinct perms) as permList, node')
+      .match([
+        node('node'),
+        relation('out', 'r', { active: true }),
+        node('props', 'Property', { active: true }),
+      ])
+      .with('{value: props.value, property: type(r)} as prop, permList, node')
+      .with('collect(prop) as propList, permList, node')
+      .return('propList, permList, node')
+      .asResult<StandardReadResult<DbPropsOfDto<Budget>>>();
+
+    const result = await query.first();
     if (!result) {
       throw new NotFoundException('Could not find budget');
     }
@@ -387,12 +401,15 @@ export class BudgetService {
       session
     );
 
+    const props = parsePropList(result.propList);
+    const securedProps = parseSecuredProperties(props, result.permList, {
+      status: true,
+    });
+
     return {
-      id,
-      createdAt: result.budget.createdAt,
-      status: result.budget.status.canRead
-        ? result.budget.status.value
-        : undefined,
+      ...parseBaseNodeProperties(result.node),
+      ...securedProps,
+      status: props.status,
       records: records.items,
     };
   }
