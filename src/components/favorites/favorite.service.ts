@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { ISession, ServerException, UnauthorizedException } from '../../common';
+import {
+  ISession,
+  ServerException,
+  UnauthenticatedException,
+} from '../../common';
 import {
   DatabaseService,
   ILogger,
@@ -36,7 +40,7 @@ export class FavoriteService {
 
   async add(input: AddFavorite, session: ISession): Promise<string> {
     if (!session.userId) {
-      throw new UnauthorizedException('user not logged in');
+      throw new UnauthenticatedException('user not logged in');
     }
     const createdAt = DateTime.local();
     const query = this.db
@@ -62,7 +66,7 @@ export class FavoriteService {
 
   async remove(baseNodeId: string, session: ISession): Promise<void> {
     if (!session.userId) {
-      throw new UnauthorizedException('user not logged in');
+      throw new UnauthenticatedException('user not logged in');
     }
     const del = this.db
       .query()
@@ -92,7 +96,7 @@ export class FavoriteService {
     session: ISession
   ): Promise<FavoriteListOutput> {
     if (!session.userId) {
-      throw new UnauthorizedException('user not logged in');
+      throw new UnauthenticatedException('user not logged in');
     }
     const baseNode = input.filter.baseNode
       ? input.filter.baseNode + ':BaseNode'

@@ -1,7 +1,7 @@
 import { Injectable, PipeTransform } from '@nestjs/common';
 import { Request } from 'express';
 import type * as core from 'express-serve-static-core';
-import { ISession, UnauthorizedException } from '../../common';
+import { ISession, UnauthenticatedException } from '../../common';
 import { ConfigService } from '../../core';
 import { AuthenticationService } from './authentication.service';
 
@@ -30,7 +30,7 @@ export class SessionPipe implements PipeTransform<Request, Promise<ISession>> {
 
     const session = await this.createSessionFromRequest(request);
     if (!session) {
-      throw new UnauthorizedException();
+      throw new UnauthenticatedException();
     }
     request.session = session;
 

@@ -9,7 +9,7 @@ import {
   ISession,
   NotFoundException,
   ServerException,
-  UnauthorizedException,
+  UnauthenticatedException,
 } from '../../common';
 import {
   ConfigService,
@@ -236,7 +236,7 @@ export class EngagementService {
     session: ISession
   ): Promise<LanguageEngagement> {
     if (!session.userId) {
-      throw new UnauthorizedException('user not logged in');
+      throw new UnauthenticatedException('user not logged in');
     }
     // LanguageEngagements can only be created on TranslationProjects
     const projectType = await this.getProjectTypeById(projectId);
@@ -477,7 +477,7 @@ export class EngagementService {
     session: ISession
   ): Promise<InternshipEngagement> {
     if (!session.userId) {
-      throw new UnauthorizedException('user not logged in');
+      throw new UnauthenticatedException('user not logged in');
     }
     // InternshipEngagements can only be created on InternshipProjects
     const projectType = await this.getProjectTypeById(projectId);

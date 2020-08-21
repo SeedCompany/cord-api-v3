@@ -3,7 +3,7 @@ import * as argon2 from 'argon2';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
-import { ServerException, UnauthorizedException } from '../../common';
+import { ServerException, UnauthenticatedException } from '../../common';
 import { ConfigService, DatabaseService } from '../../core';
 import { AuthenticationService } from '../authentication';
 import { RootSecurityGroup } from './root-security-group';
@@ -183,7 +183,9 @@ export class AdminService implements OnApplicationBootstrap {
     } else {
       // password did not match
 
-      throw new UnauthorizedException('Root Email or Password are incorrect');
+      throw new UnauthenticatedException(
+        'Root Email or Password are incorrect'
+      );
     }
   }
 
