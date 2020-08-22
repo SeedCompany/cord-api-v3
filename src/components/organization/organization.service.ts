@@ -136,7 +136,7 @@ export class OrganizationService {
   }
 
   async readOne(orgId: string, session: ISession): Promise<Organization> {
-    this.logger.info(`Read Organization`, {
+    this.logger.debug(`Read Organization`, {
       id: orgId,
       userId: session.userId,
     });
@@ -215,7 +215,7 @@ export class OrganizationService {
       throw new ServerException('Failed to delete');
     }
 
-    this.logger.info(`deleted organization with id`, { id });
+    this.logger.debug(`deleted organization with id`, { id });
   }
 
   async list(

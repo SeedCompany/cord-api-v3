@@ -206,8 +206,6 @@ export class LanguageService {
   };
 
   async create(input: CreateLanguage, session: ISession): Promise<Language> {
-    this.logger.info(`Create language`, { input, userId: session.userId });
-
     const createdAt = DateTime.local();
 
     try {
@@ -374,13 +372,7 @@ export class LanguageService {
   }
 
   async readOne(langId: string, session: ISession): Promise<Language> {
-    this.logger.info(`Read language`, {
-      id: langId,
-      userId: session.userId,
-    });
-
     if (!session.userId) {
-      this.logger.info('using anon user id');
       session.userId = this.config.anonUser.id;
     }
 
@@ -452,7 +444,6 @@ export class LanguageService {
     { ethnologue: newEthnologue, ...input }: UpdateLanguage,
     session: ISession
   ): Promise<Language> {
-    this.logger.info(`Update language`, { input, userId: session.userId });
     const { ethnologue: oldEthnologue, ...language } = await this.readOne(
       input.id,
       session
@@ -519,10 +510,6 @@ export class LanguageService {
   }
 
   async delete(id: string, session: ISession): Promise<void> {
-    this.logger.info(`Deleting language`, {
-      id,
-      userId: session.userId,
-    });
     const object = await this.readOne(id, session);
 
     if (!object) {
