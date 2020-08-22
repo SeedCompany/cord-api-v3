@@ -9,17 +9,13 @@ import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { ISession, Order } from '../../common';
 import {
-  addAllSecureProperties,
-  addBaseNodeMetaPropsWithClause,
   ConfigService,
   createBaseNode,
   DatabaseService,
   ILogger,
-  listWithSecureObject,
   Logger,
   matchRequestingUser,
   matchSession,
-  matchUserPermissions,
   Property,
   runListQuery,
 } from '../../core';
@@ -447,9 +443,7 @@ export class BudgetService {
       .with('{value: props.value, property: type(r)} as prop, permList, node')
       .with('collect(prop) as propList, permList, node')
       .return('propList, permList, node')
-      .asResult<
-        StandardReadResult<DbPropsOfDto<BudgetRecord>>
-      >();
+      .asResult<StandardReadResult<DbPropsOfDto<BudgetRecord>>>();
 
     const result = await query.first();
 
