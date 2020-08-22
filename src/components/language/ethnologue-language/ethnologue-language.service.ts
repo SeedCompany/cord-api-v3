@@ -218,13 +218,7 @@ export class EthnologueLanguageService {
   }
 
   async readOne(id: string, session: ISession): Promise<EthnologueLanguage> {
-    this.logger.info(`Read ethnologueLanguage`, {
-      id: id,
-      userId: session.userId,
-    });
-
     if (!session.userId) {
-      this.logger.info('using anon user id');
       session.userId = this.config.anonUser.id;
     }
 
@@ -273,13 +267,7 @@ export class EthnologueLanguageService {
   }
 
   async readInList(ids: string[], session: ISession): Promise<any> {
-    this.logger.info(`Read ethnologueLanguage`, {
-      ids: ids,
-      userId: session.userId,
-    });
-
     if (!session.userId) {
-      this.logger.info('using anon user id');
       session.userId = this.config.anonUser.id;
     }
 
@@ -352,12 +340,6 @@ export class EthnologueLanguageService {
 
   async update(id: string, input: UpdateEthnologueLanguage, session: ISession) {
     if (!input) return;
-
-    this.logger.info(`Update ethnologue language`, {
-      id,
-      input,
-      userId: session.userId,
-    });
 
     try {
       const query = this.db
