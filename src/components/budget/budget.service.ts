@@ -9,17 +9,13 @@ import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { ISession, Order } from '../../common';
 import {
-  addAllSecureProperties,
-  addBaseNodeMetaPropsWithClause,
   ConfigService,
   createBaseNode,
   DatabaseService,
   ILogger,
-  listWithSecureObject,
   Logger,
   matchRequestingUser,
   matchSession,
-  matchUserPermissions,
   Property,
   runListQuery,
 } from '../../core';
@@ -420,87 +416,51 @@ export class BudgetService {
       userId: session.userId,
     });
 
-    const baseNodeMetaProps = ['id', 'createdAt'];
-    const secureProps = ['amount', 'fiscalYear'];
-    const readQuery = this.db
+    if (!session.userId) {
+      this.logger.info('using anon user id');
+      session.userId = this.config.anonUser.id;
+    }
+
+    const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .call(matchUserPermissions, 'BudgetRecord', id)
-      .call(addAllSecureProperties, ...secureProps);
-    readQuery.optionalMatch([
-      node('requestingUser'),
-      relation('in', '', 'member', { active: true }),
-      node('', 'SecurityGroup', { active: true }),
-      relation('out', '', 'permission', { active: true }),
-      node('canEditOrganization', 'Permission', {
-        property: 'organization',
-        active: true,
-        edit: true,
-      }),
-      relation('out', '', 'baseNode', { active: true }),
-      node('node'),
-      relation('out', '', 'organization', { active: true }),
-      node('organization', 'Organization', { active: true }),
-      relation('out', '', 'name', { active: true }),
-      node('organizationName', 'Property', { active: true }),
-    ]);
-    readQuery
+      .match([node('node', 'BudgetRecord', { active: true, id })])
       .optionalMatch([
         node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
+        relation('in', '', 'member*1..'),
         node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
-        node('canReadOrganization', 'Permission', {
-          property: 'organization',
-          active: true,
-          read: true,
-        }),
-        relation('out', '', 'baseNode', { active: true }),
+        relation('out', '', 'permission'),
+        node('perms', 'Permission', { active: true }),
+        relation('out', '', 'baseNode'),
         node('node'),
-        relation('out', '', 'organization', { active: true }),
-        node('organization', 'Organization', { active: true }),
-        relation('out', '', 'name', { active: true }),
-        node('organizationName', 'Property', { active: true }),
       ])
-      .return(
-        `
-          {
-            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
-            ${listWithSecureObject(secureProps)},
-            organizationId: organization.id,
-            organizationCreatedAt: organization.createdAt,
-            organizationName: organizationName.value,
-            canReadOrganization: canReadOrganization.read,
-            canEditOrganization: canEditOrganization.edit
-          } as budgetRecord
-        `
-      );
+      .with('collect(distinct perms) as permList, node')
+      .match([
+        node('node'),
+        relation('out', 'r', { active: true }),
+        node('props', 'Property', { active: true }),
+      ])
+      .with('{value: props.value, property: type(r)} as prop, permList, node')
+      .with('collect(prop) as propList, permList, node')
+      .return('propList, permList, node')
+      .asResult<StandardReadResult<DbPropsOfDto<BudgetRecord>>>();
 
-    let result;
-    try {
-      result = await readQuery.first();
-    } catch (e) {
-      this.logger.error('e :>> ', e);
-    }
+    const result = await query.first();
 
     if (!result) {
-      this.logger.error(`Could not find budgetRecord:  `, {
-        id,
-        userId: session.userId,
-      });
-      throw new NotFoundException('Could not find budgetRecord');
+      throw new NotFoundException('Could not find BudgetRecord');
     }
 
+    const props = parsePropList(result.propList);
+    const securedProps = parseSecuredProperties(props, result.permList, {
+      amount: true,
+      fiscalYear: true,
+    });
+
     return {
-      id,
-      createdAt: result.budgetRecord.createdAt,
-      organizationId: {
-        value: result.budgetRecord.organizationId,
-        canRead: !!result.budgetRecord.canReadOrganization,
-        canEdit: !!result.budgetRecord.canEditOrganization,
-      },
-      fiscalYear: result.budgetRecord.fiscalYear,
-      amount: result.budgetRecord.amount,
+      ...parseBaseNodeProperties(result.node),
+      ...securedProps,
+      organizationId: (result.node as any).properties.id,
     };
   }
 
