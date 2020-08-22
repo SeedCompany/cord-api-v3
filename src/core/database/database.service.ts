@@ -1023,7 +1023,7 @@ export class DatabaseService {
           ],
         ])
         .run();
-    } catch (e) {
+    } catch (exception) {
       // If there is no aclEditProp, then this is not an access-related issue
       // and we can move forward with throwing
       if (!aclEdit) {
@@ -1045,10 +1045,10 @@ export class DatabaseService {
       }
 
       this.logger.error(`createNode error`, {
-        exception: e,
+        exception,
       });
 
-      throw new ServerException('createNode error');
+      throw new ServerException('createNode error', exception);
     }
   }
 
@@ -1384,12 +1384,12 @@ export class DatabaseService {
         throw new ServerException('failed to create node');
       }
       return result.id;
-    } catch (err) {
+    } catch (exception) {
       this.logger.error(`Could not create node`, {
-        exception: err,
+        exception,
         userId: session.userId,
       });
-      throw new ServerException('Could not create node');
+      throw new ServerException('Could not create node', exception);
     }
   }
 
@@ -1599,12 +1599,12 @@ export class DatabaseService {
     let result: any;
     try {
       result = await query.first();
-    } catch (e) {
+    } catch (exception) {
       this.logger.error(`Could not find node`, {
-        exception: e,
+        exception,
         userId: session.userId,
       });
-      throw new ServerException('Could not find node');
+      throw new ServerException('Could not find node', exception);
     }
 
     if (!result) {

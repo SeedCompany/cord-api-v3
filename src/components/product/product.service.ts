@@ -594,11 +594,11 @@ export class ProductService {
         object,
         aclEditProp: 'canDeleteOwnUser',
       });
-    } catch (e) {
+    } catch (exception) {
       this.logger.warning('Failed to delete product', {
-        exception: e,
+        exception,
       });
-      throw new ServerException('Failed to delete product');
+      throw new ServerException('Failed to delete product', exception);
     }
   }
 

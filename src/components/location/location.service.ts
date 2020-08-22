@@ -283,7 +283,7 @@ export class LocationService {
     try {
       return await this.readOneZone(id, session);
     } catch (e) {
-      throw new ServerException('Could not create zone');
+      throw new ServerException('Could not create zone', e);
     }
   }
 
@@ -391,7 +391,7 @@ export class LocationService {
           })
           .first();
       }
-    } catch (e) {
+    } catch (exception) {
       // creating this region may have failed because the name already exists.  Looking up the Region
       const lookup = this.db
         .query()
@@ -406,15 +406,15 @@ export class LocationService {
         id = region.regionId;
       } else {
         this.logger.warning(`Could not create region`, {
-          exception: e,
+          exception,
         });
-        throw new ServerException('Could not create region');
+        throw new ServerException('Could not create region', exception);
       }
     }
     try {
       return await this.readOneRegion(id, session);
     } catch (e) {
-      throw new ServerException('Could not create region');
+      throw new ServerException('Could not create region', e);
     }
   }
 
@@ -500,7 +500,7 @@ export class LocationService {
           })
           .first();
       }
-    } catch (e) {
+    } catch (exception) {
       // creating this region may have failed because the name already exists.  Looking up the Region
       const lookup = this.db
         .query()
@@ -515,15 +515,15 @@ export class LocationService {
         id = country.countryId;
       } else {
         this.logger.warning(`Could not create country`, {
-          exception: e,
+          exception,
         });
-        throw new ServerException('Could not create country');
+        throw new ServerException('Could not create country', exception);
       }
     }
     try {
       return await this.readOneCountry(id, session);
     } catch (e) {
-      throw new ServerException('Could not create country');
+      throw new ServerException('Could not create country', e);
     }
   }
 
@@ -553,7 +553,7 @@ export class LocationService {
         return await this.readOneCountry(id, session);
       }
       default: {
-        throw new InputException('Not a location');
+        throw new InputException('Not a location', 'location.id');
       }
     }
   }
@@ -562,7 +562,7 @@ export class LocationService {
     this.logger.info(`Read Zone`, { id, userId: session.userId });
 
     if (!id) {
-      throw new NotFoundException('no id given');
+      throw new NotFoundException('no id given', 'zone.id');
     }
 
     if (!session.userId) {
@@ -625,7 +625,7 @@ export class LocationService {
     this.logger.info(`Read Region`, { id, userId: session.userId });
 
     if (!id) {
-      throw new NotFoundException('no id given');
+      throw new NotFoundException('no id given', 'region.id');
     }
 
     if (!session.userId) {
@@ -705,7 +705,7 @@ export class LocationService {
     this.logger.info(`Query readOne Country`, { id, userId: session.userId });
 
     if (!id) {
-      throw new InputException('No country id to search for');
+      throw new InputException('No country id to search for', 'country.id');
     }
 
     const props = ['name'];
@@ -747,7 +747,7 @@ export class LocationService {
     const result = await query.first();
     if (!result) {
       this.logger.error(`Could not find country`);
-      throw new NotFoundException('Could not find country');
+      throw new NotFoundException('Could not find country', 'country.id');
     }
 
     const response: any = {
@@ -977,9 +977,9 @@ export class LocationService {
       // if (!object) {
       //   throw new NotFoundException('Location not found');
       // }
-    } catch (e) {
-      this.logger.error('Could not delete location', { exception: e });
-      throw new ServerException('Could not delete location');
+    } catch (exception) {
+      this.logger.error('Could not delete location', { exception });
+      throw new ServerException('Could not delete location', exception);
     }
   }
 

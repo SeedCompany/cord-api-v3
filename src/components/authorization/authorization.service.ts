@@ -608,11 +608,11 @@ export class AuthorizationService {
         ])
         .detachDelete('sg')
         .run();
-    } catch (e) {
+    } catch (exception) {
       this.logger.warning('Failed to delete security group', {
-        exception: e,
+        exception,
       });
-      throw new ServerException('Failed to delete security group');
+      throw new ServerException('Failed to delete security group', exception);
     }
   }
 

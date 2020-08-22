@@ -192,19 +192,19 @@ export class CeremonyService {
       }
 
       return await this.readOne(result.id, session);
-    } catch (e) {
+    } catch (exception) {
       this.logger.warning('Failed to create ceremony', {
-        exception: e,
+        exception,
       });
 
-      throw e;
+      throw exception;
     }
   }
 
   async readOne(id: string, session: ISession): Promise<Ceremony> {
     this.logger.info(`Query readOne Ceremony`, { id, userId: session.userId });
     if (!id) {
-      throw new InputException('No ceremony id to search for');
+      throw new InputException('No ceremony id to search for', 'ceremony.id');
     }
     const readCeremony = this.db
       .query()
@@ -218,7 +218,7 @@ export class CeremonyService {
     const result = await readCeremony.first();
 
     if (!result) {
-      throw new NotFoundException('Could not find ceremony');
+      throw new NotFoundException('Could not find ceremony', 'ceremony.id');
     }
 
     const securedProps = parseSecuredProperties(
@@ -255,7 +255,7 @@ export class CeremonyService {
     const object = await this.readOne(id, session);
 
     if (!object) {
-      throw new NotFoundException('Could not find ceremony');
+      throw new NotFoundException('Could not find ceremony', 'ceremony.id');
     }
 
     try {
@@ -264,11 +264,11 @@ export class CeremonyService {
         object,
         aclEditProp: 'canDeleteOwnUser',
       });
-    } catch (e) {
+    } catch (exception) {
       this.logger.warning('Failed to delete ceremony', {
-        exception: e,
+        exception,
       });
-      throw e;
+      throw exception;
     }
   }
 

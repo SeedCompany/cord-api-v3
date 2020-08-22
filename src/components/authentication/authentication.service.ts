@@ -396,11 +396,11 @@ export class AuthenticationService {
 
     try {
       return verify(token, this.config.jwtKey) as JwtPayload;
-    } catch (e) {
+    } catch (exception) {
       this.logger.warning('Failed to validate JWT', {
-        exception: e,
+        exception,
       });
-      throw new UnauthenticatedException();
+      throw new UnauthenticatedException(exception);
     }
   }
 }

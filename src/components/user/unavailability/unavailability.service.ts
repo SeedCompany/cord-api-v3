@@ -115,7 +115,10 @@ export class UnavailabilityService {
       )
       .first();
     if (!result) {
-      throw new NotFoundException('Could not find unavailability');
+      throw new NotFoundException(
+        'Could not find unavailability',
+        'unavailability.id'
+      );
     }
 
     return {
@@ -164,7 +167,10 @@ export class UnavailabilityService {
     this.logger.info(`mutation delete unavailability`);
     const ua = await this.readOne(id, session);
     if (!ua) {
-      throw new NotFoundException('Unavailability not found');
+      throw new NotFoundException(
+        'Unavailability not found',
+        'unavailability.id'
+      );
     }
     await this.db.deleteNode({
       session,

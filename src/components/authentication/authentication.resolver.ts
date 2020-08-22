@@ -49,13 +49,13 @@ export class AuthenticationResolver {
     let session;
     try {
       session = await this.authService.createSession(token);
-    } catch (e) {
+    } catch (exception) {
       // if (!(e instanceof UnauthenticatedException)) {
       //   throw e;
       // }
       this.logger.info(
         'Failed to use existing session token, creating new one.',
-        { exception: e }
+        { exception }
       );
       token = await this.authService.createToken();
       session = await this.authService.createSession(token);

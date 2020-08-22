@@ -233,7 +233,7 @@ export class EducationService {
         id,
         userId,
       });
-      throw new ServerException('Could not create education');
+      throw new ServerException('Could not create education', e);
     }
   }
 
@@ -272,7 +272,7 @@ export class EducationService {
       this.logger.error('e :>> ', e);
     }
     if (!result) {
-      throw new NotFoundException('Could not find education');
+      throw new NotFoundException('Could not find education', 'education.id');
     }
 
     return {
@@ -322,9 +322,9 @@ export class EducationService {
         object: ed,
         aclEditProp: 'canDeleteOwnUser',
       });
-    } catch (e) {
-      this.logger.error('Failed to delete', { id, exception: e });
-      throw new ServerException('Failed to delete');
+    } catch (exception) {
+      this.logger.error('Failed to delete', { id, exception });
+      throw new ServerException('Failed to delete', exception);
     }
   }
 

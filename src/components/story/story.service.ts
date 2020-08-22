@@ -204,12 +204,12 @@ export class StoryService {
 
       this.logger.info(`story created`, { id: result.id });
       return await this.readOne(result.id, session);
-    } catch (err) {
+    } catch (exception) {
       this.logger.error(`Could not create story`, {
-        exception: err,
+        exception,
         userId: session.userId,
       });
-      throw new ServerException('Could not create story', err);
+      throw new ServerException('Could not create story', exception);
     }
   }
 
@@ -236,7 +236,7 @@ export class StoryService {
     const result = await query.first();
 
     if (!result) {
-      throw new NotFoundException('Could not find story');
+      throw new NotFoundException('Could not find story', 'story.id');
     }
 
     const scriptureReferences = await this.listScriptureReferences(
@@ -316,9 +316,9 @@ export class StoryService {
         object: story,
         aclEditProp: 'canDeleteOwnUser',
       });
-    } catch (e) {
-      this.logger.error('Failed to delete', { id, exception: e });
-      throw new ServerException('Failed to delete');
+    } catch (exception) {
+      this.logger.error('Failed to delete', { id, exception });
+      throw new ServerException('Failed to delete', exception);
     }
 
     this.logger.info(`deleted story with id`, { id });

@@ -57,9 +57,9 @@ export class FavoriteService {
       .return('rel');
     try {
       await query.first();
-    } catch (err) {
+    } catch (e) {
       this.logger.error(`Could not add favorite for user ${session.userId}`);
-      throw new ServerException('Could not add favorite');
+      throw new ServerException('Could not add favorite', e);
     }
     return input.baseNodeId;
   }
@@ -87,7 +87,7 @@ export class FavoriteService {
       await del.first();
     } catch (e) {
       this.logger.error(e);
-      throw new ServerException('favorite not removed');
+      throw new ServerException('favorite not removed', e);
     }
   }
 
@@ -130,7 +130,7 @@ export class FavoriteService {
       countResult = await countQuery.run();
     } catch (e) {
       this.logger.error(e);
-      throw new ServerException('favorite not found');
+      throw new ServerException('favorite not found', e);
     }
     if (!result) {
       return { items: [], total: 0, hasMore: false };

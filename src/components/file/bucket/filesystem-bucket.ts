@@ -42,7 +42,7 @@ export class FilesystemBucket extends LocalBucket {
     try {
       await fs.stat(path);
     } catch (e) {
-      throw new NotFoundException();
+      throw new NotFoundException(e);
     }
     const raw = await this.readFile(key + '.info');
     const info = JSON.parse(raw.toString());

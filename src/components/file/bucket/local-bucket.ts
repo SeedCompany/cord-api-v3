@@ -69,7 +69,7 @@ export abstract class LocalBucket extends FileBucket {
       assert(typeof parsed.key === 'string');
       assert(typeof parsed.expires === 'number');
     } catch (e) {
-      throw new InputException();
+      throw new InputException(e);
     }
     if (DateTime.local() > DateTime.fromMillis(parsed.expires)) {
       throw new InputException('url expired');

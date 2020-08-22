@@ -245,7 +245,10 @@ export class EthnologueLanguageService {
 
     const result = await query.first();
     if (!result) {
-      throw new NotFoundException('Could not find ethnologue language');
+      throw new NotFoundException(
+        'Could not find ethnologue language',
+        'ethnologue.id'
+      );
     }
 
     const ethnologue = parseSecuredProperties(
@@ -383,9 +386,12 @@ export class EthnologueLanguageService {
           'population.value': input.population,
         });
       await query.run();
-    } catch (e) {
-      this.logger.error('update failed', { exception: e });
-      throw new ServerException('Failed to update ethnologue language');
+    } catch (exception) {
+      this.logger.error('update failed', { exception });
+      throw new ServerException(
+        'Failed to update ethnologue language',
+        exception
+      );
     }
   }
 }

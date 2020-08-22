@@ -242,7 +242,10 @@ export class EngagementService {
     const projectType = await this.getProjectTypeById(projectId);
 
     if (projectType && projectType !== ProjectType.Translation) {
-      throw new InputException('That Project type is not Translation');
+      throw new InputException(
+        'That Project type is not Translation',
+        'engagement.projectId'
+      );
     }
 
     if (await this.getLEByProjectAndLanguage(projectId, languageId)) {
@@ -435,7 +438,7 @@ export class EngagementService {
       le = await createLE.first();
     } catch (e) {
       this.logger.error('could not create Language Engagement ', e);
-      throw new ServerException('Could not create Langauge Engagement');
+      throw new ServerException('Could not create Langauge Engagement', e);
     }
     if (!le) {
       if (
@@ -446,7 +449,10 @@ export class EngagementService {
           .return('project.id')
           .first())
       ) {
-        throw new InputException('projectId is invalid');
+        throw new InputException(
+          'projectId is invalid',
+          'engagement.projectId'
+        );
       }
       if (
         languageId &&
@@ -458,7 +464,10 @@ export class EngagementService {
           .return('language.id')
           .first())
       ) {
-        throw new InputException('languageId is invalid');
+        throw new InputException(
+          'languageId is invalid',
+          'engagement.languageId'
+        );
       }
       throw new ServerException('Could not create Language Engagement');
     }
@@ -483,7 +492,10 @@ export class EngagementService {
     const projectType = await this.getProjectTypeById(projectId);
 
     if (projectType && projectType !== ProjectType.Internship) {
-      throw new InputException('That Project type is not Intership');
+      throw new InputException(
+        'That Project type is not Intership',
+        'engagement.projectId'
+      );
     }
 
     if (await this.getIEByProjectAndIntern(projectId, internId)) {
@@ -712,7 +724,7 @@ export class EngagementService {
       // check internId
 
       this.logger.error('could not create Internship Engagement ', e);
-      throw new ServerException('Could not create Internship Engagement');
+      throw new ServerException('Could not create Internship Engagement', e);
     }
     if (!IE) {
       if (
@@ -723,7 +735,7 @@ export class EngagementService {
           .return('intern.id')
           .first())
       ) {
-        throw new InputException('internId is invalid');
+        throw new InputException('internId is invalid', 'engagement.internId');
       }
       if (
         mentorId &&
@@ -733,7 +745,7 @@ export class EngagementService {
           .return('mentor.id')
           .first())
       ) {
-        throw new InputException('mentorId is invalid');
+        throw new InputException('mentorId is invalid', 'engagement.mentorId');
       }
       if (
         projectId &&
@@ -743,7 +755,10 @@ export class EngagementService {
           .return('project.id')
           .first())
       ) {
-        throw new InputException('projectId is invalid');
+        throw new InputException(
+          'projectId is invalid',
+          'engagement.projectId'
+        );
       }
       if (
         countryOfOriginId &&
@@ -758,7 +773,10 @@ export class EngagementService {
           .return('country.id')
           .first())
       ) {
-        throw new InputException('countryOfOriginId is invalid');
+        throw new InputException(
+          'countryOfOriginId is invalid',
+          'engagement.countryOfOriginId'
+        );
       }
       throw new ServerException('Could not create Internship Engagement');
     }
@@ -767,7 +785,7 @@ export class EngagementService {
     } catch (e) {
       this.logger.error(e);
 
-      throw new ServerException(`Could not create InternshipEngagement`);
+      throw new ServerException(`Could not create InternshipEngagement`, e);
     }
   }
 
@@ -780,7 +798,7 @@ export class EngagementService {
     this.logger.info('readOne', { id, userId: session.userId });
 
     if (!id) {
-      throw new NotFoundException('no id given');
+      throw new NotFoundException('no id given', 'engagement.id');
     }
 
     if (!session.userId) {
@@ -875,7 +893,7 @@ export class EngagementService {
     const result = await query.first();
 
     if (!result) {
-      throw new NotFoundException('could not find Engagement');
+      throw new NotFoundException('could not find Engagement', 'engagement.id');
     }
 
     const props = parsePropList(result.propList);
@@ -1012,9 +1030,12 @@ export class EngagementService {
         changes,
         nodevar: 'LanguageEngagement',
       });
-    } catch (e) {
-      this.logger.error('Error updating language engagement', { exception: e });
-      throw new ServerException('Could not update LanguageEngagement');
+    } catch (exception) {
+      this.logger.error('Error updating language engagement', { exception });
+      throw new ServerException(
+        'Could not update LanguageEngagement',
+        exception
+      );
     }
 
     return (await this.readOne(input.id, session)) as LanguageEngagement;
@@ -1135,11 +1156,14 @@ export class EngagementService {
           ]);
         }
       });
-    } catch (e) {
+    } catch (exception) {
       this.logger.warning('Failed to update InternshipEngagement', {
-        exception: e,
+        exception,
       });
-      throw new ServerException('Could not find update InternshipEngagement');
+      throw new ServerException(
+        'Could not find update InternshipEngagement',
+        exception
+      );
     }
 
     return (await this.readOne(input.id, session)) as InternshipEngagement;
@@ -1151,7 +1175,7 @@ export class EngagementService {
     const object = await this.readOne(id, session);
 
     if (!object) {
-      throw new NotFoundException('Could not find engagement');
+      throw new NotFoundException('Could not find engagement', 'engagement.id');
     }
 
     try {
@@ -1160,12 +1184,12 @@ export class EngagementService {
         object,
         aclEditProp: 'canDeleteOwnUser',
       });
-    } catch (e) {
+    } catch (exception) {
       this.logger.warning('Failed to delete partnership', {
-        exception: e,
+        exception,
       });
 
-      throw new ServerException('Failed to delete partnership');
+      throw new ServerException('Failed to delete partnership', exception);
     }
   }
 

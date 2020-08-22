@@ -176,7 +176,7 @@ export class BudgetService {
 
     const result = await readProject.first();
     if (!result) {
-      throw new NotFoundException('project does not exist');
+      throw new NotFoundException('project does not exist', 'budget.projectId');
     }
 
     const secureProps: Property[] = [
@@ -234,12 +234,12 @@ export class BudgetService {
       });
 
       return await this.readOne(result.id, session);
-    } catch (e) {
+    } catch (exception) {
       this.logger.error(`Could not create budget`, {
         userId: session.userId,
-        exception: e,
+        exception,
       });
-      throw new ServerException('Could not create budget');
+      throw new ServerException('Could not create budget', exception);
     }
   }
 
@@ -248,7 +248,9 @@ export class BudgetService {
     session: ISession
   ): Promise<BudgetRecord> {
     if (!input.fiscalYear || !organizationId) {
-      throw new InputException();
+      throw new InputException(
+        !input.fiscalYear ? 'budget.fiscalYear' : 'budget.organization'
+      );
     }
 
     this.logger.info('Creating BudgetRecord', input);
@@ -343,7 +345,7 @@ export class BudgetService {
         userId: session.userId,
         exception,
       });
-      throw new ServerException('Could not create Budget Record');
+      throw new ServerException('Could not create Budget Record', exception);
     }
   }
 
@@ -384,7 +386,7 @@ export class BudgetService {
 
     const result = await query.first();
     if (!result) {
-      throw new NotFoundException('Could not find budget');
+      throw new NotFoundException('Could not find budget', 'budget.id');
     }
 
     const records = await this.listRecords(
@@ -449,7 +451,10 @@ export class BudgetService {
     const result = await query.first();
 
     if (!result) {
-      throw new NotFoundException('Could not find BudgetRecord');
+      throw new NotFoundException(
+        'Could not find BudgetRecord',
+        'budgetRecord.id'
+      );
     }
 
     const props = parsePropList(result.propList);
@@ -506,7 +511,10 @@ export class BudgetService {
 
     const readBudget = await budgetStatusQuery.first();
     if (!readBudget?.status.includes(BudgetStatus.Pending)) {
-      throw new InputException('budget records can not be modified');
+      throw new InputException(
+        'budget records can not be modified',
+        'budget.id'
+      );
     }
 
     const br = await this.readOneRecord(id, session);
