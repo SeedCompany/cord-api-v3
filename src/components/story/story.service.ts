@@ -1,9 +1,5 @@
-import {
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { inArray, node, relation } from 'cypher-query-builder';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { DuplicateException, ISession, ServerException } from '../../common';
 import {
@@ -13,6 +9,8 @@ import {
   createBaseNode,
   DatabaseService,
   filterByString,
+  getPermList,
+  getPropList,
   ILogger,
   listWithSecureObjectAsObject,
   Logger,
@@ -22,6 +20,13 @@ import {
   OnIndex,
   runListQuery,
 } from '../../core';
+import {
+  DbPropsOfDto,
+  parseBaseNodeProperties,
+  parsePropList,
+  parseSecuredProperties,
+  StandardReadResult,
+} from '../../core/database/results';
 import { ScriptureRange } from '../scripture';
 import {
   scriptureToVerseRange,
@@ -203,72 +208,50 @@ export class StoryService {
     }
   }
 
-  async readOne(storyId: string, session: ISession): Promise<Story> {
-    const secureProps = ['name'];
-    const baseNodeMetaProps = ['id', 'createdAt'];
-    const readStory = this.db
+  async readOne(id: string, session: ISession): Promise<Story> {
+    this.logger.info(`Read Story`, {
+      id,
+      userId: session.userId,
+    });
+
+    if (!session.userId) {
+      this.logger.info('using anon user id');
+      session.userId = this.config.anonUser.id;
+    }
+
+    const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .call(matchUserPermissions, 'Story', storyId)
-      .call(addAllSecureProperties, ...secureProps)
-      .optionalMatch([
-        node('scriptureReferencesReadPerm', 'Permission', {
-          property: 'scriptureReferences',
-          read: true,
-          active: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('node'),
-        relation('out', '', 'scriptureReferences', { active: true }),
-        node('scriptureReferences', 'ScriptureRange', { active: true }),
-      ])
-      .where({ scriptureReferencesReadPerm: inArray(['permList'], true) })
-      .optionalMatch([
-        node('scriptureReferencesEditPerm', 'Permission', {
-          property: 'scriptureReferences',
-          edit: true,
-          active: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('node'),
-      ])
-      .where({ scriptureReferencesEditPerm: inArray(['permList'], true) })
-      .return(
-        mapping('story', {
-          ...addBaseNodeMetaPropsWithClauseAsObject(baseNodeMetaProps),
-          ...listWithSecureObjectAsObject(secureProps),
-          canReadStorys: 'requestingUser.canReadStorys',
-          canScriptureReferencesRead: 'scriptureReferencesReadPerm.read',
-          canScriptureReferencesEdit: 'scriptureReferencesEditPerm.edit',
-        })
-      );
+      .match([node('node', 'Story', { active: true, id })])
+      .call(getPermList, 'requestingUser')
+      .call(getPropList, 'permList')
+      .return('node, permList, propList')
+      .asResult<StandardReadResult<DbPropsOfDto<Story>>>();
 
-    const result = await readStory.first();
+    const result = await query.first();
 
     if (!result) {
       throw new NotFoundException('Could not find story');
     }
 
-    if (!result.story.canReadStorys) {
-      throw new ForbiddenException(
-        'User does not have permission to read a story'
-      );
-    }
-
     const scriptureReferences = await this.listScriptureReferences(
-      result.story.id,
+      result.node.properties.id,
       session
     );
 
+    const props = parsePropList(result.propList);
+    const securedProps = parseSecuredProperties(props, result.permList, {
+      name: true,
+      scriptureReferences: true,
+    });
+
     return {
-      id: result.story.id,
-      name: result.story.name,
+      ...parseBaseNodeProperties(result.node),
+      ...securedProps,
       scriptureReferences: {
-        canRead: !!result.story.canScriptureReferencesRead,
-        canEdit: !!result.story.canScriptureReferencesEdit,
+        ...securedProps.scriptureReferences,
         value: scriptureReferences,
       },
-      createdAt: result.story.createdAt,
     };
   }
 
