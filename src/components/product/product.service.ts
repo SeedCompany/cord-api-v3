@@ -15,6 +15,8 @@ import {
   DatabaseService,
   filterByString,
   filterBySubarray,
+  getPermList,
+  getPropList,
   ILogger,
   Logger,
   matchRequestingUser,
@@ -330,23 +332,8 @@ export class ProductService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Product', { active: true, id })])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member*1..'),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission'),
-        node('perms', 'Permission', { active: true }),
-        relation('out', '', 'baseNode'),
-        node('node'),
-      ])
-      .with('collect(distinct perms) as permList, node')
-      .match([
-        node('node'),
-        relation('out', 'r', { active: true }),
-        node('props', 'Property', { active: true }),
-      ])
-      .with('{value: props.value, property: type(r)} as prop, permList, node')
-      .with(['collect(prop) as propList', 'permList', 'node'])
+      .call(getPermList, 'requestingUser')
+      .call(getPropList, 'permList')
       .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
       .return([
         'propList, permList, node',
@@ -453,8 +440,8 @@ export class ProductService {
       },
       produces: {
         value: {
+          ...producible,
           id: produces.p.properties.id,
-          createdAt: produces.p.properties.createdAt,
           __typename: (ProducibleType as any)[typeName],
           scriptureReferences: !scriptureReferencesOverride.length
             ? producible?.scriptureReferences
@@ -463,7 +450,6 @@ export class ProductService {
                 canEdit: result.canScriptureReferencesOverrideEdit,
                 value: scriptureReferencesOverride,
               },
-          ...producible,
         },
         canRead: result.canProducesRead,
         canEdit: result.canProducesEdit,

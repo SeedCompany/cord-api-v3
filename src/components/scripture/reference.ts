@@ -1,5 +1,5 @@
 import { books } from './books';
-import { ScriptureRange, ScriptureReference } from './dto';
+import { ScriptureRange, ScriptureRangeInput, ScriptureReference } from './dto';
 
 interface VerseRange {
   start: number;
@@ -123,4 +123,28 @@ export const bookCodeToName = (code: string) => {
     throw new Error('No book exists with that code');
   }
   return book.names[0];
+};
+// return random scriptureRefenence as an array
+export const createRandomScriptureReferences = (): ScriptureRangeInput[] => {
+  //To do
+  // const book = books[Math.floor(Math.random() * books.length)];
+  const book = books[Math.floor(Math.random() * 2)];
+  // const startChapter = book.chapters[Math.floor(Math.random() * book.chapters.length)];
+  const startChapter = book.chapters[Math.floor(Math.random() * 2)];
+  const endChapter =
+    book.chapters[Math.floor(Math.random() * book.chapters.length)];
+  return [
+    {
+      start: {
+        book: book.names[0],
+        chapter: startChapter,
+        verse: 1,
+      },
+      end: {
+        book: book.names[0],
+        chapter: endChapter,
+        verse: 1,
+      },
+    },
+  ];
 };
