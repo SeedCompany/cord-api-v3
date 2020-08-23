@@ -14,14 +14,13 @@ import {
   addAllMetaPropertiesOfChildBaseNodes,
   addAllSecureProperties,
   addBaseNodeMetaPropsWithClause,
-  addPropertyCoalesceWithClause,
-  addShapeForBaseNodeMetaProperty,
-  addShapeForChildBaseNodeMetaProperty,
   ChildBaseNodeMetaProperty,
   ConfigService,
   DatabaseService,
   filterByArray,
   filterByBaseNodeId,
+  getPermList,
+  getPropList,
   ILogger,
   listWithSecureObject,
   Logger,
@@ -30,6 +29,13 @@ import {
   matchUserPermissions,
   runListQuery,
 } from '../../../core';
+import {
+  DbPropsOfDto,
+  parseBaseNodeProperties,
+  parsePropList,
+  parseSecuredProperties,
+  StandardReadResult,
+} from '../../../core/database/results';
 import { UserService } from '../../user';
 import {
   CreateProjectMember,
@@ -279,42 +285,34 @@ export class ProjectMemberService {
   }
 
   async readOne(id: string, session: ISession): Promise<ProjectMember> {
-    if (!session.userId) {
-      session.userId = this.config.anonUser.id;
+    this.logger.info(`read one`, {
+      id,
+      userId: session.userId,
+    });
+    if (!id) {
+      throw new NotFoundException(
+        'No project member id to search for',
+        'projectMember.id'
+      );
     }
-
-    const props = ['roles', 'modifiedAt'];
-
-    const baseNodeMetaProps = ['id', 'createdAt'];
-
-    const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
-      {
-        parentBaseNodePropertyKey: 'user',
-        parentRelationDirection: 'out',
-        childBaseNodeLabel: 'User',
-        childBaseNodeMetaPropertyKey: 'id',
-        returnIdentifier: 'userId',
-      },
-    ];
 
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .call(matchUserPermissions, 'ProjectMember', id)
-      .call(addAllSecureProperties, ...props)
-      .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
-      .with([
-        ...props.map(addPropertyCoalesceWithClause),
-        ...childBaseNodeMetaProps.map(addShapeForChildBaseNodeMetaProperty),
-        ...baseNodeMetaProps.map(addShapeForBaseNodeMetaProperty),
-        'node',
+      .match([node('node', 'ProjectMember', { active: true, id })])
+      .call(getPermList, 'requestingUser')
+      .call(getPropList, 'permList')
+      .match([
+        node('node'),
+        relation('out', '', 'user'),
+        node('user', 'User', { active: true }),
       ])
-      .returnDistinct([
-        ...props,
-        ...baseNodeMetaProps,
-        ...childBaseNodeMetaProps.map((x) => x.returnIdentifier),
-        'labels(node) as labels',
-      ]);
+      .return('node, permList, propList, user.id as userId')
+      .asResult<
+        StandardReadResult<DbPropsOfDto<ProjectMember>> & {
+          userId: string;
+        }
+      >();
 
     const result = await query.first();
     if (!result) {
@@ -324,22 +322,25 @@ export class ProjectMemberService {
       );
     }
 
-    const response: any = {
-      ...result,
-      roles: {
-        value: result.roles.value || [],
-        canRead: result.roles.canRead,
-        canEdit: result.roles.canEdit,
-      },
-      modifiedAt: result.modifiedAt.value,
+    const props = parsePropList(result.propList);
+    const securedProps = parseSecuredProperties(props, result.permList, {
+      user: true,
+      roles: true,
+    });
+
+    return {
+      ...parseBaseNodeProperties(result.node),
+      ...securedProps,
       user: {
+        ...securedProps.user,
         value: await this.userService.readOne(result.userId, session),
-        canRead: !!result.canReadUser,
-        canEdit: !!result.canEditUser,
+      },
+      modifiedAt: props.modifiedAt,
+      roles: {
+        ...securedProps.roles,
+        value: securedProps.roles.value ?? [],
       },
     };
-
-    return (response as unknown) as ProjectMember;
   }
 
   async update(
