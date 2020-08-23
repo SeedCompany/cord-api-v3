@@ -1,3 +1,4 @@
+import { random } from 'lodash';
 import { books } from './books';
 import { ScriptureRange, ScriptureRangeInput, ScriptureReference } from './dto';
 
@@ -128,11 +129,11 @@ export const bookCodeToName = (code: string) => {
 export const createRandomScriptureReferences = (): ScriptureRangeInput[] => {
   //To do
   // const book = books[Math.floor(Math.random() * books.length)];
-  const book = books[Math.floor(Math.random() * 2)];
+  const book = books[random(1)];
   // const startChapter = book.chapters[Math.floor(Math.random() * book.chapters.length)];
-  const startChapter = book.chapters[Math.floor(Math.random() * 2)];
+  const startChapter = book.chapters[random(1)];
   // const endChapter = book.chapters[Math.floor(Math.random() * book.chapters.length)];
-  const endChapter = book.chapters[Math.floor(Math.random() * 2)];
+  const endChapter = book.chapters[random(1)];
   return [
     {
       start: {
