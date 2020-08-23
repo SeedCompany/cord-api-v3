@@ -1092,25 +1092,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@seedcompany/eslint-plugin@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "@seedcompany/eslint-plugin@npm:1.0.0"
+"@seedcompany/eslint-plugin@npm:^1.2.0":
+  version: 1.2.0
+  resolution: "@seedcompany/eslint-plugin@npm:1.2.0"
   dependencies:
-    "@typescript-eslint/eslint-plugin": ^3.9.0
-    "@typescript-eslint/experimental-utils": ^3.9.0
-    "@typescript-eslint/parser": ^3.9.0
+    "@typescript-eslint/eslint-plugin": ^3.9.1
+    "@typescript-eslint/experimental-utils": ^3.9.1
+    "@typescript-eslint/parser": ^3.9.1
     confusing-browser-globals: ^1.0.9
     eslint-config-prettier: ^6.11.0
     eslint-plugin-import: ^2.22.0
     eslint-plugin-import-helpers: ^1.1.0
     eslint-plugin-jsx-a11y: ^6.3.1
     eslint-plugin-prettier: ^3.1.4
-    eslint-plugin-react: ^7.20.5
-    eslint-plugin-react-hooks: ^4.0.8
+    eslint-plugin-react: ^7.20.6
+    eslint-plugin-react-hooks: ^4.1.0
   peerDependencies:
     eslint: ^7.0.0
     prettier: ^2.0.0
-  checksum: 2/59aeb160204e38d8bc6c8aab257677b334192e78e2dbe2aa5053e0f276b028c1972cf7c6531ed0e0614401c6846f92c0bbf9701ecfd3d8f2420133a5a5e5b451
+  checksum: 2/082919fcacc7c325aa013ba492006ce95ceea1398b07b4cc39426592183ca70718815d3dc004549ff88d67230f3f0c95e1f141e10a2a96f2574d51c6ee62c951
   languageName: node
   linkType: hard
 
@@ -1789,7 +1789,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/eslint-plugin@npm:^3.9.0":
+"@typescript-eslint/eslint-plugin@npm:^3.9.1":
   version: 3.9.1
   resolution: "@typescript-eslint/eslint-plugin@npm:3.9.1"
   dependencies:
@@ -1810,7 +1810,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/experimental-utils@npm:3.9.1, @typescript-eslint/experimental-utils@npm:^3.9.0":
+"@typescript-eslint/experimental-utils@npm:3.9.1, @typescript-eslint/experimental-utils@npm:^3.9.1":
   version: 3.9.1
   resolution: "@typescript-eslint/experimental-utils@npm:3.9.1"
   dependencies:
@@ -1825,7 +1825,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/parser@npm:^3.9.0":
+"@typescript-eslint/parser@npm:^3.9.1":
   version: 3.9.1
   resolution: "@typescript-eslint/parser@npm:3.9.1"
   dependencies:
@@ -4146,7 +4146,7 @@ __metadata:
     "@nestjs/schematics": ^7.0.1
     "@nestjs/testing": ^7.3.2
     "@patarapolw/prettyprint": ^1.0.3
-    "@seedcompany/eslint-plugin": ^1.0.0
+    "@seedcompany/eslint-plugin": ^1.2.0
     "@types/common-tags": ^1.8.0
     "@types/cookie-parser": ^1.4.2
     "@types/express": ^4.17.7
@@ -5480,7 +5480,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-plugin-react-hooks@npm:^4.0.8":
+"eslint-plugin-react-hooks@npm:^4.1.0":
   version: 4.1.0
   resolution: "eslint-plugin-react-hooks@npm:4.1.0"
   peerDependencies:
@@ -5489,7 +5489,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-plugin-react@npm:^7.20.5":
+"eslint-plugin-react@npm:^7.20.6":
   version: 7.20.6
   resolution: "eslint-plugin-react@npm:7.20.6"
   dependencies:
