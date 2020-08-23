@@ -1,6 +1,5 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
-import { times } from 'lodash';
 import { isValid } from 'shortid';
 import { RegisterInput } from '../src/components/authentication';
 import { SecuredTimeZone } from '../src/components/timezone';
@@ -209,11 +208,8 @@ describe('User e2e', () => {
 
   // LIST USERS
   it('list view of users', async () => {
-    // create a bunch of users
-    const numUsers = 2;
-    await Promise.all(
-      times(numUsers).map(() => createUser(app, { displayFirstName: 'Tammy' }))
-    );
+    await createUser(app, { displayFirstName: 'Tammy' });
+    await createUser(app, { displayFirstName: 'Tammy' });
 
     await login(app, {
       email: process.env.ROOT_ADMIN_EMAIL,
@@ -238,7 +234,7 @@ describe('User e2e', () => {
       ${fragments.user}
     `);
 
-    expect(users.items.length).toBeGreaterThanOrEqual(numUsers);
+    expect(users.items.length).toBeGreaterThanOrEqual(2);
   });
 
   it.skip('Check consistency across user nodes', async () => {
