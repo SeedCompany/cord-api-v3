@@ -439,9 +439,9 @@ describe('Product e2e', () => {
 
   it('List view of products', async () => {
     // create 2 products
-    const numPartnerships = 2;
+    const numProducts = 2;
     await Promise.all(
-      times(numPartnerships).map(() =>
+      times(numProducts).map(() =>
         createProduct(app, {
           engagementId: engagement.id,
         })
@@ -463,7 +463,106 @@ describe('Product e2e', () => {
       {}
     );
 
-    expect(products.items.length).toBeGreaterThanOrEqual(numPartnerships);
+    expect(products.items.length).toBeGreaterThanOrEqual(numProducts);
+  });
+
+  it('List view of DirectScriptureProducts', async () => {
+    // create 2 products
+    const numProducts = 2;
+    await Promise.all(
+      times(numProducts).map(() =>
+        createProduct(app, {
+          engagementId: engagement.id,
+          scriptureReferences: createRandomScriptureReferences()
+        })
+      )
+    );
+
+    const { products } = await app.graphql.query(
+      gql`
+        query products {
+          products {
+            items {
+              id
+              scriptureReferences {
+                value {
+                  start {
+                    book
+                  }
+                  end {
+                    book
+                  }
+                }
+              }
+            }
+            hasMore
+            total
+          }
+        }
+      `,
+      {}
+    );
+
+    expect(products.items.length).toBeGreaterThanOrEqual(numProducts);
+  });
+
+  it('List view of DerivativeScriptureProducts', async () => {
+    // create 2 products
+    const numProducts = 2;
+    await Promise.all(
+      times(numProducts).map(() =>
+        createProduct(app, {
+          engagementId: engagement.id,
+          produces: story.id,
+          scriptureReferencesOverride: createRandomScriptureReferences()
+        })
+      )
+    );
+
+    const { products } = await app.graphql.query(
+      gql`
+        query products {
+          products {
+            items {
+              id
+              ...on DerivativeScriptureProduct {
+                produces {
+                  value {
+                    __typename
+                    id
+                    scriptureReferences {
+                      value {
+                        start {
+                          book
+                        }
+                        end {
+                          book
+                        }
+                      }
+                    }
+                  }
+                }
+                scriptureReferencesOverride {
+                  value {
+                    start {
+                      book
+                    }
+                    end {
+                      book
+                    }
+                  }
+                }
+              }
+            }
+            hasMore
+            total
+          }
+        }
+      `,
+      {}
+    );
+
+    expect(products.items.length).toBeGreaterThanOrEqual(numProducts);
   });
 
   it('should return list of products filtered by engagementId', async () => {
