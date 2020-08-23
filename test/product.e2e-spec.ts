@@ -1,7 +1,13 @@
 import { gql } from 'apollo-server-core';
 import { times } from 'lodash';
 import { Film } from '../src/components/film';
-import { AnyProduct, ProducibleType, ProductMedium, ProductMethodology, ProductPurpose } from '../src/components/product';
+import {
+  AnyProduct,
+  ProducibleType,
+  ProductMedium,
+  ProductMethodology,
+  ProductPurpose,
+} from '../src/components/product';
 import { createRandomScriptureReferences } from '../src/components/scripture/reference';
 import { Story } from '../src/components/story';
 import {
@@ -16,13 +22,13 @@ import {
   TestApp,
 } from './utility';
 import { createProduct } from './utility/create-product';
-import { RawLanguageEngagement, RawProduct, scriptureReference } from './utility/fragments';
+import { RawLanguageEngagement, RawProduct } from './utility/fragments';
 
 describe('Product e2e', () => {
   let app: TestApp;
   let engagement: RawLanguageEngagement;
   let story: Story;
-  let film: Film
+  let film: Film;
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -66,17 +72,19 @@ describe('Product e2e', () => {
     const randomScriptureReferences = createRandomScriptureReferences();
     const product = await createProduct(app, {
       engagementId: engagement.id,
-      scriptureReferences: randomScriptureReferences
+      scriptureReferences: randomScriptureReferences,
     });
-    
+
     expect(product.scriptureReferences.value).toBeDefined();
-    expect(product.scriptureReferences.value).toEqual(randomScriptureReferences)
+    expect(product.scriptureReferences.value).toEqual(
+      randomScriptureReferences
+    );
   });
 
   it('create DerivativeScriptureProduct with produces', async () => {
     const product = await createProduct(app, {
       engagementId: engagement.id,
-      produces: story.id
+      produces: story.id,
     });
 
     const result = await app.graphql.query(
@@ -84,7 +92,7 @@ describe('Product e2e', () => {
         query product($id: ID!) {
           product(id: $id) {
             ...product
-            ...on DerivativeScriptureProduct {
+            ... on DerivativeScriptureProduct {
               produces {
                 value {
                   id
@@ -123,7 +131,9 @@ describe('Product e2e', () => {
     expect(actual.produces?.value).toBeDefined();
     expect(actual.produces?.value?.id).toBe(story.id);
     expect(actual.produces?.value?.__typename).toBe(ProducibleType.Story);
-    expect(actual.produces?.value?.scriptureReferences).toEqual(story.scriptureReferences);
+    expect(actual.produces?.value?.scriptureReferences).toEqual(
+      story.scriptureReferences
+    );
   });
 
   it('create DerivativeScriptureProduct with scriptureReferencesOverride', async () => {
@@ -131,7 +141,7 @@ describe('Product e2e', () => {
     const product = await createProduct(app, {
       engagementId: engagement.id,
       produces: story.id,
-      scriptureReferencesOverride: randomScriptureReferences
+      scriptureReferencesOverride: randomScriptureReferences,
     });
 
     const result = await app.graphql.query(
@@ -139,7 +149,7 @@ describe('Product e2e', () => {
         query product($id: ID!) {
           product(id: $id) {
             ...product
-            ...on DerivativeScriptureProduct {
+            ... on DerivativeScriptureProduct {
               produces {
                 value {
                   id
@@ -191,7 +201,9 @@ describe('Product e2e', () => {
     );
     const actual: AnyProduct = result.product;
     expect(actual.scriptureReferencesOverride?.value).toBeDefined();
-    expect(actual.scriptureReferencesOverride).toEqual(actual.produces?.value?.scriptureReferences);
+    expect(actual.scriptureReferencesOverride).toEqual(
+      actual.produces?.value?.scriptureReferences
+    );
   });
 
   it('update product', async () => {
@@ -221,15 +233,15 @@ describe('Product e2e', () => {
   it('update DirectScriptureProduct', async () => {
     const product = await createProduct(app, {
       engagementId: engagement.id,
-      scriptureReferences: createRandomScriptureReferences()
+      scriptureReferences: createRandomScriptureReferences(),
     });
 
     const updateProduct = {
       mediums: [ProductMedium.Video],
       purposes: [ProductPurpose.ChurchMaturity],
       methodology: ProductMethodology.OneStory,
-      scriptureReferences: createRandomScriptureReferences()
-    }
+      scriptureReferences: createRandomScriptureReferences(),
+    };
 
     const result = await app.graphql.query(
       gql`
@@ -249,9 +261,9 @@ describe('Product e2e', () => {
             mediums: updateProduct.mediums,
             purposes: updateProduct.purposes,
             methodology: updateProduct.methodology,
-            scriptureReferences: updateProduct.scriptureReferences
-          }
-        }
+            scriptureReferences: updateProduct.scriptureReferences,
+          },
+        },
       }
     );
 
@@ -259,13 +271,15 @@ describe('Product e2e', () => {
     expect(actual.mediums.value).toEqual(updateProduct.mediums);
     expect(actual.purposes.value).toEqual(updateProduct.purposes);
     expect(actual.methodology.value).toEqual(updateProduct.methodology);
-    expect(actual.scriptureReferences.value).toEqual(updateProduct.scriptureReferences);
+    expect(actual.scriptureReferences.value).toEqual(
+      updateProduct.scriptureReferences
+    );
   });
 
   it('update DerivativeScriptureProduct', async () => {
     const product = await createProduct(app, {
       engagementId: engagement.id,
-      produces: story.id
+      produces: story.id,
     });
 
     const updateProduces = film.id;
@@ -276,7 +290,7 @@ describe('Product e2e', () => {
           updateProduct(input: $input) {
             product {
               ...product
-              ...on DerivativeScriptureProduct {
+              ... on DerivativeScriptureProduct {
                 produces {
                   value {
                     id
@@ -311,9 +325,9 @@ describe('Product e2e', () => {
         input: {
           product: {
             id: product.id,
-            produces: updateProduces
-          }
-        }
+            produces: updateProduces,
+          },
+        },
       }
     );
 
@@ -322,14 +336,16 @@ describe('Product e2e', () => {
     expect(actual.produces?.value).toBeDefined();
     expect(actual.produces?.value?.id).toBe(film.id);
     expect(actual.produces?.value?.__typename).toBe(ProducibleType.Film);
-    expect(actual.produces?.value?.scriptureReferences).toEqual(film.scriptureReferences);
+    expect(actual.produces?.value?.scriptureReferences).toEqual(
+      film.scriptureReferences
+    );
   });
 
   it('update DerivativeScriptureProduct with scriptureReferencesOverride', async () => {
     const product = await createProduct(app, {
       engagementId: engagement.id,
       produces: story.id,
-      scriptureReferencesOverride: createRandomScriptureReferences()
+      scriptureReferencesOverride: createRandomScriptureReferences(),
     });
 
     const override = createRandomScriptureReferences();
@@ -340,7 +356,7 @@ describe('Product e2e', () => {
           updateProduct(input: $input) {
             product {
               ...product
-              ...on DerivativeScriptureProduct {
+              ... on DerivativeScriptureProduct {
                 produces {
                   value {
                     id
@@ -391,15 +407,17 @@ describe('Product e2e', () => {
         input: {
           product: {
             id: product.id,
-            scriptureReferencesOverride: override
-          }
-        }
+            scriptureReferencesOverride: override,
+          },
+        },
       }
     );
 
     const actual: AnyProduct = result.updateProduct.product;
     expect(actual.scriptureReferencesOverride?.value).toEqual(override);
-    expect(actual.produces?.value?.scriptureReferences?.value).toEqual(override);
+    expect(actual.produces?.value?.scriptureReferences?.value).toEqual(
+      override
+    );
   });
 
   it('delete product', async () => {
@@ -473,7 +491,7 @@ describe('Product e2e', () => {
       times(numProducts).map(() =>
         createProduct(app, {
           engagementId: engagement.id,
-          scriptureReferences: createRandomScriptureReferences()
+          scriptureReferences: createRandomScriptureReferences(),
         })
       )
     );
@@ -514,7 +532,7 @@ describe('Product e2e', () => {
         createProduct(app, {
           engagementId: engagement.id,
           produces: story.id,
-          scriptureReferencesOverride: createRandomScriptureReferences()
+          scriptureReferencesOverride: createRandomScriptureReferences(),
         })
       )
     );
@@ -525,7 +543,7 @@ describe('Product e2e', () => {
           products {
             items {
               id
-              ...on DerivativeScriptureProduct {
+              ... on DerivativeScriptureProduct {
                 produces {
                   value {
                     __typename
