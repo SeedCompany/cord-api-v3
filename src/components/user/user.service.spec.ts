@@ -48,7 +48,7 @@ describe('UserService', () => {
       canEdit: true,
     },
     phone: {
-      value: '919191919191',
+      value: '8175550100',
       canRead: true,
       canEdit: true,
     },

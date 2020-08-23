@@ -1,6 +1,6 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
-import { ValidateNested } from 'class-validator';
+import { IsPhoneNumber, ValidateNested } from 'class-validator';
 import { IsEmail, IsIanaTimezone, NameField } from '../../../common';
 import { Role } from '../../project/project-member/dto/role.dto';
 import { UserStatus } from './user-status.enum';
@@ -25,6 +25,7 @@ export abstract class CreatePerson {
   readonly displayLastName: string;
 
   @Field({ nullable: true })
+  @IsPhoneNumber('US')
   readonly phone?: string;
 
   @Field({ nullable: true })
