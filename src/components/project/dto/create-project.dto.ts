@@ -30,7 +30,7 @@ export abstract class CreateProject {
   readonly estimatedSubmission?: CalendarDate;
 
   @Field(() => ProjectStep, { nullable: true })
-  readonly step: ProjectStep = ProjectStep.EarlyConversations;
+  readonly step?: ProjectStep;
 }
 
 @InputType()

@@ -58,6 +58,7 @@ import {
   ProjectListInput,
   ProjectListOutput,
   ProjectStatus,
+  ProjectStep,
   ProjectType,
   stepToStatus,
   TranslationProject,
@@ -209,11 +210,13 @@ export class ProjectService {
     session: ISession
   ): Promise<Project> {
     const createdAt = DateTime.local();
+    const step = input.step ?? ProjectStep.EarlyConversations;
     const createInput = {
       sensitivity: Sensitivity.High, // TODO: this needs to be calculated based on language engagement
-      status: stepToStatus(input.step),
-      modifiedAt: DateTime.local(),
       ...input,
+      step,
+      status: stepToStatus(step),
+      modifiedAt: DateTime.local(),
     };
     const canEdit = createInput.status === ProjectStatus.InDevelopment;
     const secureProps: Property[] = [
