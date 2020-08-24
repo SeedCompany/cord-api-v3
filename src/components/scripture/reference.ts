@@ -131,9 +131,9 @@ export const createRandomScriptureReferences = (): ScriptureRangeInput[] => {
   // const book = books[Math.floor(Math.random() * books.length)];
   const book = books[random(1)];
   // const startChapter = book.chapters[Math.floor(Math.random() * book.chapters.length)];
-  const startChapter = book.chapters[random(1)];
+  const startChapter = book.chapters[0];
   // const endChapter = book.chapters[Math.floor(Math.random() * book.chapters.length)];
-  const endChapter = book.chapters[random(1)];
+  const endChapter = book.chapters[1];
   return [
     {
       start: {
