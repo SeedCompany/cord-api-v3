@@ -259,7 +259,7 @@ export abstract class SecuredDate
 @ObjectType({ implements: [Readable, Editable] })
 export abstract class SecuredDateNullable
   implements Readable, Editable, Secured<CalendarDate | null> {
-  @DateTimeField({ nullable: true })
+  @DateField({ nullable: true })
   readonly value?: CalendarDate | null;
 
   @Field()
