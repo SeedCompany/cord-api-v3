@@ -647,7 +647,7 @@ export class UserService {
       throw new ServerException('Could not find education', exception);
     }
     if (!user) {
-      throw new NotFoundException('Could not find user', 'user.id');
+      throw new NotFoundException('Could not find user', 'userId');
     }
     if (!user.canRead) {
       throw new UnauthenticatedException('cannot read education list');
@@ -706,7 +706,7 @@ export class UserService {
       throw new ServerException('Could not find organization', exception);
     }
     if (!user) {
-      throw new NotFoundException('Could not find user', 'user.id');
+      throw new NotFoundException('Could not find user', 'userId');
     }
     if (!user.canRead) {
       this.logger.warning('Cannot read organization list', {
@@ -769,7 +769,7 @@ export class UserService {
       throw new ServerException('Could not find unavailability', exception);
     }
     if (!user) {
-      throw new NotFoundException('Could not find user', 'user.id');
+      throw new NotFoundException('Could not find user', 'userId');
     }
     if (!user.canRead) {
       throw new UnauthenticatedException('cannot read unavailability list');

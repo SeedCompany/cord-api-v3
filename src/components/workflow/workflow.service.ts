@@ -257,7 +257,10 @@ export class WorkflowService {
         .first();
 
       if (!workflow) {
-        throw new NotFoundException('could not find workflow', 'workflow.id');
+        throw new NotFoundException(
+          'could not find workflow',
+          'state.workflowId'
+        );
       }
 
       // validate the new state is a legal nextPossibleState on the current state
@@ -333,7 +336,7 @@ export class WorkflowService {
         .first();
 
       if (!result) {
-        throw new NotFoundException('Could not update state', 'state.id');
+        throw new NotFoundException('Could not update state', 'state.stateId');
       }
 
       return {
@@ -723,7 +726,10 @@ export class WorkflowService {
         .first();
 
       if (!workflow) {
-        throw new NotFoundException('could not find workflow', 'workflow.id');
+        throw new NotFoundException(
+          'could not find workflow',
+          'state.workflowId'
+        );
       }
 
       // validate the new state is a legal nextPossibleState on the current state
@@ -967,7 +973,7 @@ export class WorkflowService {
       if (!field) {
         throw new NotFoundException(
           'could not find such field existing.',
-          'addRequiredField.field'
+          'field.propertyName'
         );
       }
 

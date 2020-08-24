@@ -249,7 +249,7 @@ export class BudgetService {
   ): Promise<BudgetRecord> {
     if (!input.fiscalYear || !organizationId) {
       throw new InputException(
-        !input.fiscalYear ? 'budget.fiscalYear' : 'budget.organization'
+        !input.fiscalYear ? 'budget.fiscalYear' : 'budget.organizationId'
       );
     }
 
@@ -453,7 +453,7 @@ export class BudgetService {
     if (!result) {
       throw new NotFoundException(
         'Could not find BudgetRecord',
-        'budgetRecord.id'
+        'budgetRecord.budgetId'
       );
     }
 
@@ -513,7 +513,7 @@ export class BudgetService {
     if (!readBudget?.status.includes(BudgetStatus.Pending)) {
       throw new InputException(
         'budget records can not be modified',
-        'budget.id'
+        'budgetRecord.id'
       );
     }
 

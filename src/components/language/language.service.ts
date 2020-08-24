@@ -714,7 +714,7 @@ export class LanguageService {
     const locationLabel = await this.getLocationLabelById(locationId);
 
     if (!locationLabel) {
-      throw new InputException('Cannot find location', 'language.locationId');
+      throw new InputException('Cannot find location', 'locationId');
     }
 
     await this.removeLocation(languageId, locationId, session);
@@ -744,7 +744,7 @@ export class LanguageService {
     const locationLabel = await this.getLocationLabelById(locationId);
 
     if (!locationLabel) {
-      throw new InputException('Cannot find location', 'language.locationId');
+      throw new InputException('Cannot find location', 'locationId');
     }
 
     await this.db

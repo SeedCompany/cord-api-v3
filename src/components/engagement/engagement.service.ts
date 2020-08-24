@@ -493,7 +493,7 @@ export class EngagementService {
 
     if (projectType && projectType !== ProjectType.Internship) {
       throw new InputException(
-        'That Project type is not Intership',
+        'That Project type is not Internship',
         'engagement.projectId'
       );
     }
@@ -528,7 +528,7 @@ export class EngagementService {
         session
       );
     } catch (e) {
-      throw new Error('could not create ceremony');
+      throw new ServerException('could not create ceremony', e);
     }
 
     const createIE = this.db
