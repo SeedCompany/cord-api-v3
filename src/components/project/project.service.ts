@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { contains, node, relation } from 'cypher-query-builder';
 import { find, flatMap, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import {
@@ -12,24 +12,16 @@ import {
   ServerException,
 } from '../../common';
 import {
-  addAllSecureProperties,
-  addBaseNodeMetaPropsWithClause,
   ConfigService,
   createBaseNode,
   DatabaseService,
-  filterByChildBaseNodeCount,
-  filterBySubarray,
   IEventBus,
   ILogger,
-  listWithSecureObject,
-  listWithUnsecureObject,
   Logger,
   matchRequestingUser,
   matchSession,
-  matchUserPermissions,
   OnIndex,
   Property,
-  runListQuery,
   UniquenessError,
 } from '../../core';
 import {
@@ -420,8 +412,6 @@ export class ProjectService {
   }
 
   async readOne(id: string, session: ISession): Promise<Project> {
-    this.logger.info('query readone project', { id, userId: session.userId });
-
     if (!session.userId) {
       this.logger.info('using anon user id');
       session.userId = this.config.anonUser.id;
@@ -606,65 +596,91 @@ export class ProjectService {
     { filter, ...input }: ProjectListInput,
     session: ISession
   ): Promise<ProjectListOutput> {
-    let label = 'Project';
-    if (filter.type === 'Internship') {
-      label = 'InternshipProject';
-    } else if (filter.type === 'Translation') {
-      label = 'TranslationProject';
+    const label =
+      filter.type === 'Internship'
+        ? 'InternshipProject'
+        : filter.type === 'Translation'
+        ? 'TranslationProject'
+        : 'Project';
+
+    const skip = (input.page - 1) * input.count;
+
+    const query = this.db.query();
+
+    if (filter.name) {
+      query
+        .match([
+          node('requestingUser', 'User', {
+            active: true,
+            id: session.userId,
+          }),
+          relation('in', '', 'member*1..'),
+          node('', 'SecurityGroup', { active: true }),
+          relation('out', '', 'permission'),
+          node('', 'Permission', { active: true }),
+          relation('out', '', 'baseNode'),
+          node('node', label, { active: true }),
+          relation('out', '', 'name', { active: true }),
+          node('filter', 'Property', { active: true }),
+        ])
+        .where({ filter: [{ value: contains(filter.name) }] });
+    } else {
+      query.match([
+        node('requestingUser', 'User', {
+          active: true,
+          id: session.userId,
+        }),
+        relation('in', '', 'member*1..'),
+        node('', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission'),
+        node('', 'Permission', { active: true }),
+        relation('out', '', 'baseNode'),
+        node('node', label, { active: true }),
+      ]);
     }
 
-    const baseNodeMetaProps = ['id', 'createdAt', 'type'];
-    const unsecureProps = ['status', 'sensitivity'];
-    const secureProps = [
-      'name',
-      'deptId',
-      'step',
-      'location',
-      'mouStart',
-      'mouEnd',
-      'estimatedSubmission',
-      'modifiedAt',
-    ];
+    query
+      .with('collect(distinct node) as nodes, count(distinct node) as total')
+      .raw('unwind nodes as node');
 
-    const listQuery = this.db
-      .query()
-      .call(matchRequestingUser, session)
-      .call(matchUserPermissions, label);
-    // filter by filter options
-    if (filter.status) {
-      listQuery.call(filterBySubarray, label, 'status', filter.status);
+    if (input.sort) {
+      query
+        .match([
+          node('node'),
+          relation('out', '', input.sort),
+          node('prop', 'Property', { active: true }),
+        ])
+        .with('*')
+        .orderBy(`prop.value ${input.order}`);
     }
-    if (filter.sensitivity) {
-      listQuery.call(
-        filterBySubarray,
-        label,
-        'sensitivity',
-        filter.sensitivity
+
+    query
+      .skip(skip)
+      .limit(input.count)
+      .raw(
+        `return collect(node.id) as ids, total, ${
+          skip + input.count
+        } < total as hasMore`
       );
-    }
-    if (filter.clusters) {
-      listQuery.call(filterByChildBaseNodeCount, label, 'engagement');
-    }
-    // match on the rest of the properties of the object requested
-    listQuery
-      .call(addAllSecureProperties, ...secureProps, ...unsecureProps)
+    const result = await query.first();
 
-      // form return object
-      .with(
-        `
-          {
-            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
-            ${listWithUnsecureObject(unsecureProps)},
-            ${listWithSecureObject(secureProps)}
-          }
-          as node
-        `
-      );
-    return await runListQuery<Project>(
-      listQuery,
-      input,
-      secureProps.includes(input.sort)
-    );
+    if (!result) {
+      return {
+        total: 0,
+        hasMore: false,
+        items: [],
+      };
+    }
+
+    return {
+      total: result.total,
+      hasMore: result.hasMore,
+      items: (await Promise.all(
+        result.ids.map(async (projectIds: string) => {
+          return await this.readOne(projectIds, session);
+        })
+      )) as Project[],
+    };
   }
 
   async listEngagements(
