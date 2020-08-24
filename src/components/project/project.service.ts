@@ -596,19 +596,19 @@ export class ProjectService {
     { filter, ...input }: ProjectListInput,
     session: ISession
   ): Promise<ProjectListOutput> {
-    let label = 'Project';
-    if (filter.type === 'Internship') {
-      label = 'InternshipProject';
-    } else if (filter.type === 'Translation') {
-      label = 'TranslationProject';
-    }
+    const label =
+      filter.type === 'Internship'
+        ? 'InternshipProject'
+        : filter.type === 'Translation'
+        ? 'TranslationProject'
+        : 'Project';
 
     const skip = (input.page - 1) * input.count;
 
-    const query2 = this.db.query();
+    const query = this.db.query();
 
     if (filter.name) {
-      query2
+      query
         .match([
           node('requestingUser', 'User', {
             active: true,
@@ -625,7 +625,7 @@ export class ProjectService {
         ])
         .where({ filter: [{ value: contains(filter.name) }] });
     } else {
-      query2.match([
+      query.match([
         node('requestingUser', 'User', {
           active: true,
           id: session.userId,
@@ -639,12 +639,12 @@ export class ProjectService {
       ]);
     }
 
-    query2
+    query
       .with('collect(distinct node) as nodes, count(distinct node) as total')
       .raw('unwind nodes as node');
 
     if (input.sort) {
-      query2
+      query
         .match([
           node('node'),
           relation('out', '', input.sort),
@@ -654,7 +654,7 @@ export class ProjectService {
         .orderBy(`prop.value ${input.order}`);
     }
 
-    query2
+    query
       .skip(skip)
       .limit(input.count)
       .raw(
@@ -662,7 +662,7 @@ export class ProjectService {
           skip + input.count
         } < total as hasMore`
       );
-    const result = await query2.first();
+    const result = await query.first();
 
     if (!result) {
       return {
@@ -676,8 +676,8 @@ export class ProjectService {
       total: result.total,
       hasMore: result.hasMore,
       items: (await Promise.all(
-        result.ids.map(async (item: any) => {
-          return await this.readOne(item, session);
+        result.ids.map(async (projectIds: string) => {
+          return await this.readOne(projectIds, session);
         })
       )) as Project[],
     };
