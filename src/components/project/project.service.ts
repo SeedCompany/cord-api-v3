@@ -512,9 +512,7 @@ export class ProjectService {
     const changes = {
       ...input,
       modifiedAt: DateTime.local(),
-      status: object.step.value
-        ? stepToStatus(object.step.value)
-        : object.status,
+      ...(input.step ? { status: stepToStatus(input.step) } : {}),
     };
 
     // TODO: re-connect the locationId node when locations are hooked up
@@ -529,6 +527,7 @@ export class ProjectService {
         'estimatedSubmission',
         'status',
         'modifiedAt',
+        'step',
       ],
       changes,
       nodevar: 'project',
@@ -551,10 +550,11 @@ export class ProjectService {
       (b) => b.status === BudgetStatus.Pending
     );
     //574 -The pending budget should be set to active i.e Current when the project gets set to active
+    const newStatus = changes.status || object.status;
     if (
-      (changes.status.includes(ProjectStatus.InDevelopment) ||
-        changes.status.includes(ProjectStatus.Pending)) &&
-      pendingBudget?.status.includes(BudgetStatus.Pending)
+      (newStatus === ProjectStatus.InDevelopment ||
+        newStatus === ProjectStatus.Pending) &&
+      pendingBudget?.status === BudgetStatus.Pending
     ) {
       const input: UpdateBudget = {
         id: pendingBudget.id,

@@ -3,6 +3,7 @@ import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { CalendarDate, DateField, IdField, NameField } from '../../../common';
 import { IProject, Project } from './project.dto';
+import { ProjectStep } from './step.enum';
 
 @InputType()
 export abstract class UpdateProject {
@@ -26,6 +27,9 @@ export abstract class UpdateProject {
 
   @DateField({ nullable: true })
   readonly estimatedSubmission?: CalendarDate;
+
+  @Field(() => ProjectStep, { nullable: true })
+  readonly step?: ProjectStep;
 }
 
 @InputType()
