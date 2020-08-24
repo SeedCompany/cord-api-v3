@@ -1,11 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { node } from 'cypher-query-builder';
 import { DuplicateException, ISession, ServerException } from '../../common';
 import {
   addUserToSG,
   ConfigService,
   createBaseNode,
   DatabaseService,
+  getPermList,
+  getPropList,
   ILogger,
   Logger,
   matchRequestingUser,
@@ -136,23 +138,8 @@ export class FundingAccountService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'FundingAccount', { active: true, id })])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member*1..'),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission'),
-        node('perms', 'Permission', { active: true }),
-        relation('out', '', 'baseNode'),
-        node('node'),
-      ])
-      .with('collect(distinct perms) as permList, node')
-      .match([
-        node('node'),
-        relation('out', 'r', { active: true }),
-        node('props', 'Property', { active: true }),
-      ])
-      .with('{value: props.value, property: type(r)} as prop, permList, node')
-      .with('collect(prop) as propList, permList, node')
+      .call(getPermList, 'requestingUser')
+      .call(getPropList, 'permList')
       .return('propList, permList, node')
       .asResult<StandardReadResult<DbPropsOfDto<FundingAccount>>>();
 

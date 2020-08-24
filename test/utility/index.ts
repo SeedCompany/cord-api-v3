@@ -31,3 +31,7 @@ export * from './create-engagement';
 export * from './create-partnership';
 export * from './create-song';
 export * from './create-partner';
+export * from './create-funding-account';
+export * from './create-marketing-location';
+export * from './create-registry-of-geography';
+export * from './create-private-location';

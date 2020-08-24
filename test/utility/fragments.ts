@@ -781,6 +781,70 @@ export const partner = gql`
   ${user}
 `;
 
+export const fundingAccount = gql`
+  fragment fundingAccount on FundingAccount {
+    id
+    name {
+      value
+      canRead
+      canEdit
+    }
+    createdAt
+  }
+`;
+
+export const marketingLocation = gql`
+  fragment marketingLocation on MarketingLocation {
+    id
+    name {
+      value
+      canRead
+      canEdit
+    }
+    createdAt
+  }
+`;
+
+export const registryOfGeography = gql`
+  fragment registryOfGeography on RegistryOfGeography {
+    id
+    name {
+      value
+      canRead
+      canEdit
+    }
+    registryId {
+      value
+      canRead
+      canEdit
+    }
+    createdAt
+  }
+`;
+
+export const privateLocation = gql`
+  fragment privateLocation on PrivateLocation {
+    id
+    name {
+      value
+      canRead
+      canEdit
+    }
+    publicName {
+      value
+      canRead
+      canEdit
+    }
+    type {
+      value
+      canRead
+      canEdit
+    }
+    sensitivity
+    createdAt
+  }
+`;
+
 export const fragments = {
   org,
   user,
@@ -809,4 +873,8 @@ export const fragments = {
   fav,
   ceremony,
   partner,
+  fundingAccount,
+  marketingLocation,
+  registryOfGeography,
+  privateLocation,
 };

@@ -23,6 +23,8 @@ import {
   createBaseNode,
   DatabaseService,
   permission as dbPermission,
+  getPermList,
+  getPropList,
   ILogger,
   Logger,
   matchRequestingUser,
@@ -44,7 +46,6 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
-import { UserService } from '../user';
 import {
   Country,
   CreateCountry,
@@ -74,8 +75,7 @@ export class LocationService {
   constructor(
     @Logger('location:service') private readonly logger: ILogger,
     private readonly config: ConfigService,
-    private readonly db: DatabaseService,
-    private readonly userService: UserService
+    private readonly db: DatabaseService
   ) {}
 
   @OnIndex()
@@ -761,7 +761,7 @@ export class LocationService {
   }
 
   async readOneZone(id: string, session: ISession): Promise<Zone> {
-    this.logger.debug(`Read Zone`, { id, userId: session.userId });
+    this.logger.info(`Read field zone`, { id, userId: session.userId });
 
     if (!id) {
       throw new NotFoundException('no id given', 'zone.id');
@@ -774,7 +774,7 @@ export class LocationService {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([node('node', 'Zone', { id: id })])
+      .match([node('node', 'FieldZone', { id: id })])
       .call(matchPermList, 'requestingUser')
       .call(matchPropList, 'permList')
       .optionalMatch([
@@ -782,7 +782,7 @@ export class LocationService {
         relation('out', '', 'director', { active: true }),
         node('director', 'User'),
       ])
-      .return('propList, permList, node, director.id as directorId')
+      .return(['propList, permList, node', 'director.id as directorId'])
       .asResult<
         StandardReadResult<DbPropsOfDto<Zone>> & { directorId: string }
       >();
@@ -809,7 +809,7 @@ export class LocationService {
   }
 
   async readOneRegion(id: string, session: ISession): Promise<Region> {
-    this.logger.debug(`Read Region`, { id, userId: session.userId });
+    this.logger.info(`Read field region`, { id, userId: session.userId });
 
     if (!id) {
       throw new NotFoundException('no id given', 'region.id');
@@ -822,7 +822,7 @@ export class LocationService {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([node('node', 'Region', { id: id })])
+      .match([node('node', 'FieldRegion', { id: id })])
       .call(matchPermList, 'requestingUser')
       .call(matchPropList, 'permList')
       .optionalMatch([
@@ -833,7 +833,7 @@ export class LocationService {
       .optionalMatch([
         node('node'),
         relation('out', '', 'zone', { active: true }),
-        node('zone', 'Zone'),
+        node('zone', 'FieldZone'),
       ])
       .return([
         'propList, permList, node',
@@ -955,16 +955,7 @@ export class LocationService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'PublicLocation', { active: true, id })])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member*1..'),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission'),
-        node('perms', 'Permission', { active: true }),
-        relation('out', '', 'baseNode'),
-        node('node'),
-      ])
-      .with('collect(distinct perms) as permList, node')
+      .call(getPermList, 'requestingUser')
       .optionalMatch([
         node('node'),
         relation('out', '', 'marketingLocation', { active: true }),
@@ -1061,23 +1052,8 @@ export class LocationService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'PrivateLocation', { active: true, id })])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member*1..'),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission'),
-        node('perms', 'Permission', { active: true }),
-        relation('out', '', 'baseNode'),
-        node('node'),
-      ])
-      .with('collect(distinct perms) as permList, node')
-      .match([
-        node('node'),
-        relation('out', 'r', { active: true }),
-        node('props', 'Property', { active: true }),
-      ])
-      .with('{value: props.value, property: type(r)} as prop, permList, node')
-      .with('collect(prop) as propList, permList, node')
+      .call(getPermList, 'requestingUser')
+      .call(getPropList, 'permList')
       .return('propList, permList, node')
       .asResult<StandardReadResult<DbPropsOfDto<PrivateLocation>>>();
 

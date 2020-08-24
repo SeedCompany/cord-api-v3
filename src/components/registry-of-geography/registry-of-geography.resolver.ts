@@ -30,7 +30,7 @@ export class RegistryOfGeographyResolver {
   @Query(() => RegistryOfGeographyListOutput, {
     description: 'Look up registry of geographies',
   })
-  async registryOfGeographys(
+  async registryOfGeographies(
     @Session() session: ISession,
     @Args({
       name: 'input',

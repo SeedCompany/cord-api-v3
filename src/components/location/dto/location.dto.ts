@@ -12,7 +12,6 @@ import {
   SecuredString,
   Sensitivity,
 } from '../../../common';
-import { SecuredUser } from '../../user/dto/user.dto';
 import { PrivateLocationType } from './private-location-type.enum';
 
 @ObjectType({
