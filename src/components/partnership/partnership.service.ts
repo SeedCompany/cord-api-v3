@@ -600,7 +600,7 @@ export class PartnershipService {
         const resultOne = await this.readOne(item.id, session);
 
         return {
-          ...item,
+          ...resultOne,
           types: {
             value: item.types.value ? item.types.value : [],
             canRead: !!item.types.canRead,
