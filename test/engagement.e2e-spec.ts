@@ -72,6 +72,7 @@ describe('Engagement e2e', () => {
     const languageEngagement = await createLanguageEngagement(app, {
       languageId: language.id,
       projectId: project.id,
+      status: EngagementStatus.AwaitingDedication,
     });
     expect(languageEngagement.modifiedAt).toBeDefined();
     expect(languageEngagement.id).toBeDefined();
@@ -82,7 +83,7 @@ describe('Engagement e2e', () => {
       .toDuration()
       .toFormat('S');
     expect(parseInt(difference)).toBeGreaterThan(0);
-    expect(languageEngagement.status).toBe(EngagementStatus.InDevelopment);
+    expect(languageEngagement.status).toBe(EngagementStatus.AwaitingDedication);
   });
 
   it('create a language engagement with only required fields', async () => {
@@ -312,6 +313,7 @@ describe('Engagement e2e', () => {
     const languageEngagement = await createLanguageEngagement(app, {
       projectId: project.id,
       languageId: language.id,
+      status: EngagementStatus.Rejected,
     });
 
     const updateFirstScripture = false;
@@ -355,6 +357,7 @@ describe('Engagement e2e', () => {
     expect(updated.firstScripture.value).toBe(updateFirstScripture);
     expect(updated.lukePartnership.value).toBe(updateLukePartnership);
     expect(updated.paraTextRegistryId.value).toBe(updateParaTextRegistryId);
+    expect(updated.status).toBe(EngagementStatus.Rejected);
   });
 
   it('updates internship engagement', async () => {
