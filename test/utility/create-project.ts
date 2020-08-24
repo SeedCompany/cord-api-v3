@@ -5,6 +5,7 @@ import { CalendarDate } from '../../src/common';
 import {
   CreateProject,
   Project,
+  ProjectStep,
   ProjectType,
 } from '../../src/components/project';
 import { TestApp } from './create-app';
@@ -20,6 +21,7 @@ export async function createProject(
     type: ProjectType.Translation,
     mouStart: CalendarDate.fromISO('1991-01-01'),
     mouEnd: CalendarDate.fromISO('1992-01-01'),
+    step: ProjectStep.PendingConceptApproval,
     ...input,
   };
 

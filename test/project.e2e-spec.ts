@@ -75,12 +75,12 @@ describe('Project e2e', () => {
 
   it('should have project step', async () => {
     const project = await createProject(app);
-    expect(project.step.value).toBe(ProjectStep.EarlyConversations);
+    expect(project.step.value).toBe(ProjectStep.PendingConceptApproval);
   });
 
   it('should have project status', async () => {
     const project = await createProject(app);
-    expect(project.status).toBe(ProjectStatus.InDevelopment);
+    expect(project.status).toBe(ProjectStatus.Pending);
   });
 
   it('create & read project by id', async () => {
