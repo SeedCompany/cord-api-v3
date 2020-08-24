@@ -58,7 +58,6 @@ import {
   ProjectListInput,
   ProjectListOutput,
   ProjectStatus,
-  ProjectStep,
   ProjectType,
   stepToStatus,
   TranslationProject,
@@ -212,8 +211,7 @@ export class ProjectService {
     const createdAt = DateTime.local();
     const createInput = {
       sensitivity: Sensitivity.High, // TODO: this needs to be calculated based on language engagement
-      step: ProjectStep.EarlyConversations,
-      status: stepToStatus(ProjectStep.EarlyConversations),
+      status: stepToStatus(input.step),
       modifiedAt: DateTime.local(),
       ...input,
     };
