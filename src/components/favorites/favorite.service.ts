@@ -57,9 +57,11 @@ export class FavoriteService {
       .return('rel');
     try {
       await query.first();
-    } catch (e) {
-      this.logger.error(`Could not add favorite for user ${session.userId}`);
-      throw new ServerException('Could not add favorite', e);
+    } catch (exception) {
+      this.logger.error(`Could not add favorite for user ${session.userId}`, {
+        exception,
+      });
+      throw new ServerException('Could not add favorite', exception);
     }
     return input.baseNodeId;
   }

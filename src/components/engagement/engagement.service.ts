@@ -436,9 +436,12 @@ export class EngagementService {
     let le;
     try {
       le = await createLE.first();
-    } catch (e) {
-      this.logger.error('could not create Language Engagement ', e);
-      throw new ServerException('Could not create Langauge Engagement', e);
+    } catch (exception) {
+      this.logger.error('could not create Language Engagement ', { exception });
+      throw new ServerException(
+        'Could not create Langauge Engagement',
+        exception
+      );
     }
     if (!le) {
       if (
@@ -719,12 +722,17 @@ export class EngagementService {
     let IE;
     try {
       IE = await createIE.first();
-    } catch (e) {
+    } catch (exception) {
       // secondary queries to see what ID is bad
       // check internId
 
-      this.logger.error('could not create Internship Engagement ', e);
-      throw new ServerException('Could not create Internship Engagement', e);
+      this.logger.error('could not create Internship Engagement ', {
+        exception,
+      });
+      throw new ServerException(
+        'Could not create Internship Engagement',
+        exception
+      );
     }
     if (!IE) {
       if (
