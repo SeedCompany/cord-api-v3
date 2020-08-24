@@ -1,13 +1,15 @@
-import {
-  Injectable,
-  NotFoundException,
-  UnauthorizedException as UnauthenticatedException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { difference } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
-import { DuplicateException, ISession, ServerException } from '../../common';
+import {
+  DuplicateException,
+  ISession,
+  NotFoundException,
+  ServerException,
+  UnauthenticatedException,
+} from '../../common';
 import {
   addAllSecureProperties,
   addBaseNodeMetaPropsWithClause,
@@ -447,7 +449,7 @@ export class UserService {
 
     const result = await query.first();
     if (!result) {
-      throw new NotFoundException('Could not find User');
+      throw new NotFoundException('Could not find user', 'user.id');
     }
 
     const rolesValue = result.propList
@@ -541,9 +543,9 @@ export class UserService {
         object: user,
         aclEditProp: 'canDeleteOwnUser',
       });
-    } catch (e) {
-      this.logger.error('Could not delete user', { exception: e });
-      throw new ServerException('Could not delete user');
+    } catch (exception) {
+      this.logger.error('Could not delete user', { exception });
+      throw new ServerException('Could not delete user', exception);
     }
   }
 
@@ -637,15 +639,15 @@ export class UserService {
     let user;
     try {
       user = await query.first();
-    } catch (e) {
+    } catch (exception) {
       this.logger.error(`Could not find education`, {
-        exception: e,
+        exception,
         userId: session.userId,
       });
-      throw new ServerException('Could not find education', e);
+      throw new ServerException('Could not find education', exception);
     }
     if (!user) {
-      throw new NotFoundException('Could not find user');
+      throw new NotFoundException('Could not find user', 'userId');
     }
     if (!user.canRead) {
       throw new UnauthenticatedException('cannot read education list');
@@ -696,15 +698,15 @@ export class UserService {
     let user;
     try {
       user = await query.first();
-    } catch (e) {
+    } catch (exception) {
       this.logger.error(`Could not find organizations`, {
-        exception: e,
+        exception,
         userId: session.userId,
       });
-      throw new ServerException('Could not find organization', e);
+      throw new ServerException('Could not find organization', exception);
     }
     if (!user) {
-      throw new NotFoundException('Could not find user');
+      throw new NotFoundException('Could not find user', 'userId');
     }
     if (!user.canRead) {
       this.logger.warning('Cannot read organization list', {
@@ -759,15 +761,15 @@ export class UserService {
     let user;
     try {
       user = await query.first();
-    } catch (e) {
+    } catch (exception) {
       this.logger.error(`Could not find unavailability`, {
-        exception: e,
+        exception,
         userId: session.userId,
       });
-      throw new ServerException('Could not find unavailability', e);
+      throw new ServerException('Could not find unavailability', exception);
     }
     if (!user) {
-      throw new NotFoundException('Could not find user');
+      throw new NotFoundException('Could not find user', 'userId');
     }
     if (!user.canRead) {
       throw new UnauthenticatedException('cannot read unavailability list');

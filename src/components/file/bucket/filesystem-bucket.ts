@@ -1,7 +1,7 @@
-import { NotFoundException } from '@nestjs/common';
 import { GetObjectOutput, HeadObjectOutput } from 'aws-sdk/clients/s3';
 import { promises as fs } from 'fs';
 import { dirname, join, resolve } from 'path';
+import { NotFoundException } from '../../../common';
 import { FakeAwsFile, LocalBucket, LocalBucketOptions } from './local-bucket';
 
 export interface FilesystemBucketOptions extends LocalBucketOptions {
@@ -42,7 +42,7 @@ export class FilesystemBucket extends LocalBucket {
     try {
       await fs.stat(path);
     } catch (e) {
-      throw new NotFoundException();
+      throw new NotFoundException(e);
     }
     const raw = await this.readFile(key + '.info');
     const info = JSON.parse(raw.toString());

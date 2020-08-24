@@ -1,9 +1,4 @@
-import {
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-  InternalServerErrorException as ServerException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
   Connection,
   equals,
@@ -19,12 +14,15 @@ import { generate } from 'shortid';
 import { assert } from 'ts-essentials';
 import {
   AbstractClassType,
+  InputException,
   ISession,
   isSecured,
   many,
   mapFromList,
   Order,
   Resource,
+  ServerException,
+  UnauthorizedException,
   UnwrapSecured,
   unwrapSecured,
 } from '../../common';
@@ -217,7 +215,7 @@ export class DatabaseService {
     const result = await update.first();
 
     if (!result) {
-      throw new NotFoundException('Could not find object');
+      throw new InputException('Could not find object');
     }
 
     return {
@@ -526,7 +524,7 @@ export class DatabaseService {
     }
 
     if (!result) {
-      throw new NotFoundException('Could not find object');
+      throw new InputException('Could not find object');
     }
 
     return {
@@ -934,7 +932,7 @@ export class DatabaseService {
       .first();
 
     if (!result) {
-      throw new NotFoundException('Could not find object');
+      throw new InputException('Could not find object');
     }
   }
 
@@ -1025,7 +1023,7 @@ export class DatabaseService {
           ],
         ])
         .run();
-    } catch (e) {
+    } catch (exception) {
       // If there is no aclEditProp, then this is not an access-related issue
       // and we can move forward with throwing
       if (!aclEdit) {
@@ -1043,14 +1041,14 @@ export class DatabaseService {
 
       // If the user doesn't have permission to perform the create action...
       if (!aclResult || !aclResult.editProp) {
-        throw new ForbiddenException(`Cannot create ${type.name}`);
+        throw new UnauthorizedException(`Cannot create ${type.name}`);
       }
 
       this.logger.error(`createNode error`, {
-        exception: e,
+        exception,
       });
 
-      throw new ServerException('createNode error');
+      throw new ServerException('createNode error', exception);
     }
   }
 
@@ -1386,12 +1384,12 @@ export class DatabaseService {
         throw new ServerException('failed to create node');
       }
       return result.id;
-    } catch (err) {
+    } catch (exception) {
       this.logger.error(`Could not create node`, {
-        exception: err,
+        exception,
         userId: session.userId,
       });
-      throw new ServerException('Could not create node');
+      throw new ServerException('Could not create node', exception);
     }
   }
 
@@ -1601,19 +1599,19 @@ export class DatabaseService {
     let result: any;
     try {
       result = await query.first();
-    } catch (e) {
+    } catch (exception) {
       this.logger.error(`Could not find node`, {
-        exception: e,
+        exception,
         userId: session.userId,
       });
-      throw new ServerException('Could not find node');
+      throw new ServerException('Could not find node', exception);
     }
 
     if (!result) {
-      throw new NotFoundException('Could not find node');
+      throw new InputException('Could not find node');
     }
     if (!result[aclCreatePropName]) {
-      throw new ForbiddenException(
+      throw new UnauthorizedException(
         'User does not have permission to create an node'
       );
     }

@@ -1,7 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { DuplicateException, ISession, ServerException } from '../../common';
+import {
+  DuplicateException,
+  ISession,
+  NotFoundException,
+  ServerException,
+} from '../../common';
 import {
   addAllMetaPropertiesOfChildBaseNodes,
   addAllSecureProperties,
@@ -204,12 +209,12 @@ export class FilmService {
 
       this.logger.info(`flim created`, { id: result.id });
       return await this.readOne(result.id, session);
-    } catch (err) {
+    } catch (exception) {
       this.logger.error(`Could not create film`, {
-        exception: err,
+        exception,
         userId: session.userId,
       });
-      throw new ServerException('Could not create film', err);
+      throw new ServerException('Could not create film', exception);
     }
   }
 
@@ -353,9 +358,9 @@ export class FilmService {
         object: film,
         aclEditProp: 'canDeleteOwnUser',
       });
-    } catch (e) {
-      this.logger.error('Failed to delete', { id, exception: e });
-      throw new ServerException('Failed to delete');
+    } catch (exception) {
+      this.logger.error('Failed to delete', { id, exception });
+      throw new ServerException('Failed to delete', exception);
     }
 
     this.logger.info(`deleted film with id`, { id });

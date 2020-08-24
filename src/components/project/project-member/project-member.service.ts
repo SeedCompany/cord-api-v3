@@ -1,15 +1,15 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-  InternalServerErrorException as ServerException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
-import { DuplicateException, ISession } from '../../../common';
+import {
+  DuplicateException,
+  ISession,
+  NotFoundException,
+  ServerException,
+} from '../../../common';
 import {
   addAllMetaPropertiesOfChildBaseNodes,
   addAllSecureProperties,
@@ -269,12 +269,12 @@ export class ProjectMemberService {
         .first();
 
       return await this.readOne(id, session);
-    } catch (e) {
+    } catch (exception) {
       this.logger.warning('Failed to create project member', {
-        exception: e,
+        exception,
       });
 
-      throw new InternalServerErrorException('Could not create project member');
+      throw new ServerException('Could not create project member', exception);
     }
   }
 
@@ -318,7 +318,10 @@ export class ProjectMemberService {
 
     const result = await query.first();
     if (!result) {
-      throw new NotFoundException('Could not find project memeber');
+      throw new NotFoundException(
+        'Could not find project member',
+        'projectMember.id'
+      );
     }
 
     const response: any = {
@@ -363,7 +366,10 @@ export class ProjectMemberService {
     const object = await this.readOne(id, session);
 
     if (!object) {
-      throw new NotFoundException('Could not find project member');
+      throw new NotFoundException(
+        'Could not find project member',
+        'projectMember.id'
+      );
     }
 
     try {
@@ -372,12 +378,12 @@ export class ProjectMemberService {
         object,
         aclEditProp: 'canDeleteOwnUser',
       });
-    } catch (e) {
+    } catch (exception) {
       this.logger.warning('Failed to delete project member', {
-        exception: e,
+        exception,
       });
 
-      throw new ServerException('Failed to delete project member');
+      throw new ServerException('Failed to delete project member', exception);
     }
   }
 

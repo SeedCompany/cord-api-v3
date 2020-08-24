@@ -1,9 +1,10 @@
-import { applyDecorators, BadRequestException } from '@nestjs/common';
+import { applyDecorators } from '@nestjs/common';
 import { CustomScalar, Field, FieldOptions, Scalar } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { Kind, ValueNode } from 'graphql';
 import { DateTime, Settings } from 'luxon';
 import { CalendarDate } from './calendar-date';
+import { InputException } from './exceptions';
 import { Transform } from './transform.decorator';
 import { ValidateBy } from './validators/validateBy';
 import './luxon.neo4j'; // ensure our luxon methods are added
@@ -71,7 +72,7 @@ export class DateTimeScalar
       return value.toISO();
     }
     if (!value) {
-      throw new BadRequestException('No DateTime to serialize');
+      throw new InputException('No DateTime to serialize');
     }
     return value;
   }

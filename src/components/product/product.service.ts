@@ -1,12 +1,14 @@
-import {
-  Injectable,
-  InternalServerErrorException as ServerException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { difference } from 'lodash';
 import { DateTime } from 'luxon';
-import { DuplicateException, ISession, NotFoundException } from '../../common';
+import {
+  DuplicateException,
+  ISession,
+  NotFoundException,
+  ServerException,
+} from '../../common';
 import {
   addAllMetaPropertiesOfChildBaseNodes,
   ChildBaseNodeMetaProperty,
@@ -592,11 +594,11 @@ export class ProductService {
         object,
         aclEditProp: 'canDeleteOwnUser',
       });
-    } catch (e) {
+    } catch (exception) {
       this.logger.warning('Failed to delete product', {
-        exception: e,
+        exception,
       });
-      throw new ServerException('Failed to delete product');
+      throw new ServerException('Failed to delete product', exception);
     }
   }
 

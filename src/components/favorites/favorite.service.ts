@@ -1,11 +1,11 @@
-import {
-  Injectable,
-  InternalServerErrorException as ServerException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { ISession } from '../../common';
+import {
+  ISession,
+  ServerException,
+  UnauthenticatedException,
+} from '../../common';
 import {
   DatabaseService,
   ILogger,
@@ -40,7 +40,7 @@ export class FavoriteService {
 
   async add(input: AddFavorite, session: ISession): Promise<string> {
     if (!session.userId) {
-      throw new UnauthorizedException('user not logged in');
+      throw new UnauthenticatedException('user not logged in');
     }
     const createdAt = DateTime.local();
     const query = this.db
@@ -57,16 +57,18 @@ export class FavoriteService {
       .return('rel');
     try {
       await query.first();
-    } catch (err) {
-      this.logger.error(`Could not add favorite for user ${session.userId}`);
-      throw new ServerException('Could not add favorite');
+    } catch (exception) {
+      this.logger.error(`Could not add favorite for user ${session.userId}`, {
+        exception,
+      });
+      throw new ServerException('Could not add favorite', exception);
     }
     return input.baseNodeId;
   }
 
   async remove(baseNodeId: string, session: ISession): Promise<void> {
     if (!session.userId) {
-      throw new UnauthorizedException('user not logged in');
+      throw new UnauthenticatedException('user not logged in');
     }
     const del = this.db
       .query()
@@ -87,7 +89,7 @@ export class FavoriteService {
       await del.first();
     } catch (e) {
       this.logger.error(e);
-      throw new ServerException('favorite not removed');
+      throw new ServerException('favorite not removed', e);
     }
   }
 
@@ -96,7 +98,7 @@ export class FavoriteService {
     session: ISession
   ): Promise<FavoriteListOutput> {
     if (!session.userId) {
-      throw new UnauthorizedException('user not logged in');
+      throw new UnauthenticatedException('user not logged in');
     }
     const baseNode = input.filter.baseNode
       ? input.filter.baseNode + ':BaseNode'
@@ -130,7 +132,7 @@ export class FavoriteService {
       countResult = await countQuery.run();
     } catch (e) {
       this.logger.error(e);
-      throw new ServerException('favorite not found');
+      throw new ServerException('favorite not found', e);
     }
     if (!result) {
       return { items: [], total: 0, hasMore: false };

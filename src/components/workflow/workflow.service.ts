@@ -1,13 +1,12 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-  InternalServerErrorException as ServerException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { generate } from 'shortid';
-import { ISession } from '../../common';
+import {
+  ISession,
+  NotFoundException,
+  ServerException,
+  UnauthorizedException,
+} from '../../common';
 import { DatabaseService, ILogger, Logger, matchSession } from '../../core';
 import {
   AddState,
@@ -114,12 +113,12 @@ export class WorkflowService {
           value: result.startingStateValue,
         },
       };
-    } catch (e) {
+    } catch (exception) {
       this.logger.warning('Failed to create workflow', {
-        exception: e,
+        exception,
       });
 
-      throw new InternalServerErrorException('Could not create workflow');
+      throw new ServerException('Could not create workflow', exception);
     }
   }
 
@@ -151,12 +150,12 @@ export class WorkflowService {
         ])
         .detachDelete('workflow')
         .run();
-    } catch (e) {
+    } catch (exception) {
       this.logger.warning('Failed to delete workflow', {
-        exception: e,
+        exception,
       });
 
-      throw new ServerException('Failed to delete workflow');
+      throw new ServerException('Failed to delete workflow', exception);
     }
   }
 
@@ -214,11 +213,14 @@ export class WorkflowService {
         id: result.id,
         value: result.value,
       };
-    } catch (e) {
+    } catch (exception) {
       this.logger.warning('could not add new state to a workflow', {
-        exception: e,
+        exception,
       });
-      throw new ServerException('could not add new state to a workflow');
+      throw new ServerException(
+        'could not add new state to a workflow',
+        exception
+      );
     }
   }
 
@@ -255,7 +257,10 @@ export class WorkflowService {
         .first();
 
       if (!workflow) {
-        throw new NotFoundException('could not find workflow');
+        throw new NotFoundException(
+          'could not find workflow',
+          'state.workflowId'
+        );
       }
 
       // validate the new state is a legal nextPossibleState on the current state
@@ -307,7 +312,7 @@ export class WorkflowService {
 
       if (!possibleState) {
         throw new NotFoundException(
-          'new state provided is not a nextpossiblstate of current state'
+          'new state provided is not a nextpossiblestate of current state'
         );
       }
 
@@ -331,18 +336,18 @@ export class WorkflowService {
         .first();
 
       if (!result) {
-        throw new NotFoundException('Could not update state');
+        throw new NotFoundException('Could not update state', 'state.stateId');
       }
 
       return {
         id: result.id,
         value: result.value,
       };
-    } catch (e) {
+    } catch (exception) {
       this.logger.warning('could not update state', {
-        exception: e,
+        exception,
       });
-      throw new ServerException('could not update state');
+      throw new ServerException('could not update state', exception);
     }
   }
 
@@ -379,12 +384,12 @@ export class WorkflowService {
         ])
         .detachDelete('state')
         .first();
-    } catch (e) {
+    } catch (exception) {
       this.logger.warning('Failed to delete state', {
-        exception: e,
+        exception,
       });
 
-      throw new ServerException('Failed to delete state');
+      throw new ServerException('Failed to delete state', exception);
     }
   }
 
@@ -428,12 +433,12 @@ export class WorkflowService {
         .run()) as State[];
 
       return { items: result.filter((item) => item.id && item.value) };
-    } catch (e) {
+    } catch (exception) {
       this.logger.warning('Failed to delete state', {
-        exception: e,
+        exception,
       });
 
-      throw new ServerException('Failed to delete state');
+      throw new ServerException('Failed to delete state', exception);
     }
   }
 
@@ -475,12 +480,12 @@ export class WorkflowService {
         .run()) as State[];
 
       return { items: result.filter((item) => item.id && item.value) };
-    } catch (e) {
+    } catch (exception) {
       this.logger.warning('Failed to delete state', {
-        exception: e,
+        exception,
       });
 
-      throw new ServerException('Failed to delete state');
+      throw new ServerException('Failed to delete state', exception);
     }
   }
 
@@ -527,11 +532,14 @@ export class WorkflowService {
           ],
         ])
         .first();
-    } catch (e) {
+    } catch (exception) {
       this.logger.warning('could not attach security group to state', {
-        exception: e,
+        exception,
       });
-      throw new ServerException('could not attach security group to state');
+      throw new ServerException(
+        'could not attach security group to state',
+        exception
+      );
     }
   }
 
@@ -572,11 +580,14 @@ export class WorkflowService {
         ])
         .detachDelete('rel')
         .first();
-    } catch (e) {
+    } catch (exception) {
       this.logger.warning('could not remove security group from state', {
-        exception: e,
+        exception,
       });
-      throw new ServerException('could not remove security group from state');
+      throw new ServerException(
+        'could not remove security group from state',
+        exception
+      );
     }
   }
 
@@ -623,11 +634,14 @@ export class WorkflowService {
           ],
         ])
         .first();
-    } catch (e) {
+    } catch (exception) {
       this.logger.warning('could not attach security group to state', {
-        exception: e,
+        exception,
       });
-      throw new ServerException('could not attach security group to state');
+      throw new ServerException(
+        'could not attach security group to state',
+        exception
+      );
     }
   }
 
@@ -666,11 +680,14 @@ export class WorkflowService {
         ])
         .detachDelete('rel')
         .first();
-    } catch (e) {
+    } catch (exception) {
       this.logger.warning('could not remove security group from state', {
-        exception: e,
+        exception,
       });
-      throw new ServerException('could not remove security group from state');
+      throw new ServerException(
+        'could not remove security group from state',
+        exception
+      );
     }
   }
 
@@ -709,7 +726,10 @@ export class WorkflowService {
         .first();
 
       if (!workflow) {
-        throw new NotFoundException('could not find workflow');
+        throw new NotFoundException(
+          'could not find workflow',
+          'state.workflowId'
+        );
       }
 
       // validate the new state is a legal nextPossibleState on the current state
@@ -759,7 +779,7 @@ export class WorkflowService {
 
       if (!possibleState) {
         throw new NotFoundException(
-          'new state provided is not a nextpossiblstate of current state'
+          'new state provided is not a nextpossiblestate of current state'
         );
       }
 
@@ -802,11 +822,11 @@ export class WorkflowService {
           ],
         ])
         .run();
-    } catch (e) {
+    } catch (exception) {
       this.logger.warning('could not change current state', {
-        exception: e,
+        exception,
       });
-      throw new ServerException('could not change current state');
+      throw new ServerException('could not change current state', exception);
     }
   }
 
@@ -863,11 +883,14 @@ export class WorkflowService {
       if (!result) {
         throw new NotFoundException('could not make correct query result');
       }
-    } catch (e) {
+    } catch (exception) {
       this.logger.warning('failed to add possible state to state', {
-        exception: e,
+        exception,
       });
-      throw new ServerException('failed to add possible state to state');
+      throw new ServerException(
+        'failed to add possible state to state',
+        exception
+      );
     }
   }
 
@@ -906,11 +929,11 @@ export class WorkflowService {
         ])
         .detachDelete('rel')
         .run();
-    } catch (e) {
+    } catch (exception) {
       this.logger.warning('failed to remove possible state', {
-        exception: e,
+        exception,
       });
-      throw new ServerException('failed to remove possible state');
+      throw new ServerException('failed to remove possible state', exception);
     }
   }
 
@@ -948,7 +971,10 @@ export class WorkflowService {
         .first();
 
       if (!field) {
-        throw new NotFoundException('could not find such field existing.');
+        throw new NotFoundException(
+          'could not find such field existing.',
+          'field.propertyName'
+        );
       }
 
       await this.db
@@ -982,11 +1008,11 @@ export class WorkflowService {
           node('state'),
         ])
         .first();
-    } catch (e) {
+    } catch (exception) {
       this.logger.warning('could not add field to state', {
-        exception: e,
+        exception,
       });
-      throw new ServerException('could not add field to state');
+      throw new ServerException('could not add field to state', exception);
     }
   }
 
@@ -1026,11 +1052,11 @@ export class WorkflowService {
       return {
         items: result.filter((item) => item.value),
       };
-    } catch (e) {
+    } catch (exception) {
       this.logger.warning('could not list fields', {
-        exception: e,
+        exception,
       });
-      throw new ServerException('could not list fields');
+      throw new ServerException('could not list fields', exception);
     }
   }
 
@@ -1066,11 +1092,11 @@ export class WorkflowService {
         ])
         .detachDelete('rel')
         .run();
-    } catch (e) {
+    } catch (exception) {
       this.logger.warning('could not remove field from state', {
-        exception: e,
+        exception,
       });
-      throw new ServerException('could not remove field from state');
+      throw new ServerException('could not remove field from state', exception);
     }
   }
 }

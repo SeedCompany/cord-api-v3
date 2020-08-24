@@ -1,7 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { DuplicateException, ISession, ServerException } from '../../common';
+import {
+  DuplicateException,
+  ISession,
+  NotFoundException,
+  ServerException,
+} from '../../common';
 import {
   addUserToSG,
   ConfigService,
@@ -183,12 +188,12 @@ export class SongService {
       this.logger.info(`song created`, { id: result.id });
 
       return await this.readOne(result.id, session);
-    } catch (err) {
+    } catch (exception) {
       this.logger.error(`Could not create song`, {
-        exception: err,
+        exception,
         userId: session.userId,
       });
-      throw new ServerException('Could not create song', err);
+      throw new ServerException('Could not create song', exception);
     }
   }
 
@@ -229,7 +234,7 @@ export class SongService {
     const result = await query.first();
 
     if (!result) {
-      throw new NotFoundException('Could not find song');
+      throw new NotFoundException('Could not find song', 'song.id');
     }
 
     const props = parsePropList(result.propList);
@@ -270,9 +275,9 @@ export class SongService {
         object: song,
         aclEditProp: 'canDeleteOwnUser',
       });
-    } catch (e) {
-      this.logger.error('Failed to delete', { id, exception: e });
-      throw new ServerException('Failed to delete');
+    } catch (exception) {
+      this.logger.error('Failed to delete', { id, exception });
+      throw new ServerException('Failed to delete', exception);
     }
 
     this.logger.info(`deleted song with id`, { id });

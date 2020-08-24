@@ -1,5 +1,4 @@
-import { InternalServerErrorException as ServerException } from '@nestjs/common';
-import { ISession } from '../../../common';
+import { ISession, ServerException } from '../../../common';
 import {
   DatabaseService,
   EventsHandler,
@@ -249,7 +248,10 @@ export class SyncBudgetRecordsToFundingPartners
         userId: event.session.userId,
         exception,
       });
-      throw new ServerException('Could not synchronize budget records');
+      throw new ServerException(
+        'Could not synchronize budget records',
+        exception
+      );
     }
 
     // TODO: only continue if budget is pending

@@ -1,9 +1,10 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Node, node, relation } from 'cypher-query-builder';
 import { first, intersection, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
+  InputException,
   ISession,
   NotFoundException,
   Sensitivity,
@@ -496,7 +497,10 @@ export class LanguageService {
         this.logger.warning(`Could not find ethnologue language`, {
           id: input.id,
         });
-        throw new NotFoundException('Could not find ethnologue language');
+        throw new NotFoundException(
+          'Could not find ethnologue language',
+          'language.id'
+        );
       }
 
       await this.ethnologueLanguageService.update(
@@ -513,7 +517,7 @@ export class LanguageService {
     const object = await this.readOne(id, session);
 
     if (!object) {
-      throw new NotFoundException('Could not find language');
+      throw new NotFoundException('Could not find language', 'language.id');
     }
 
     try {
@@ -522,9 +526,9 @@ export class LanguageService {
         object,
         aclEditProp: 'canDeleteOwnUser',
       });
-    } catch (e) {
-      this.logger.error('Failed to delete', { id, exception: e });
-      throw new ServerException('Failed to delete');
+    } catch (exception) {
+      this.logger.error('Failed to delete', { id, exception });
+      throw new ServerException('Failed to delete', exception);
     }
   }
 
@@ -710,7 +714,7 @@ export class LanguageService {
     const locationLabel = await this.getLocationLabelById(locationId);
 
     if (!locationLabel) {
-      throw new BadRequestException('Cannot find location');
+      throw new InputException('Cannot find location', 'locationId');
     }
 
     await this.removeLocation(languageId, locationId, session);
@@ -740,7 +744,7 @@ export class LanguageService {
     const locationLabel = await this.getLocationLabelById(locationId);
 
     if (!locationLabel) {
-      throw new BadRequestException('Cannot find location');
+      throw new InputException('Cannot find location', 'locationId');
     }
 
     await this.db

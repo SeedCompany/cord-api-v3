@@ -1,14 +1,14 @@
-import {
-  forwardRef,
-  Inject,
-  Injectable,
-  InternalServerErrorException as ServerException,
-} from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
-import { InputException, ISession, NotFoundException } from '../../common';
+import {
+  InputException,
+  ISession,
+  NotFoundException,
+  ServerException,
+} from '../../common';
 import {
   addAllMetaPropertiesOfChildBaseNodes,
   addAllSecureProperties,
@@ -334,12 +334,12 @@ export class PartnershipService {
       );
 
       return partnership;
-    } catch (e) {
+    } catch (exception) {
       this.logger.warning('Failed to create partnership', {
-        exception: e,
+        exception,
       });
 
-      throw new ServerException('Failed to create partnership');
+      throw new ServerException('Failed to create partnership', exception);
     }
   }
 
@@ -380,7 +380,10 @@ export class PartnershipService {
     const result = await query.first();
 
     if (!result) {
-      throw new NotFoundException('could not find Partnership');
+      throw new NotFoundException(
+        'could not find Partnership',
+        'partnership.id'
+      );
     }
 
     const readProject = await this.projectService.readOne(
@@ -495,7 +498,10 @@ export class PartnershipService {
     const object = await this.readOne(id, session);
 
     if (!object) {
-      throw new NotFoundException('Could not find partnership');
+      throw new NotFoundException(
+        'Could not find partnership',
+        'partnership.id'
+      );
     }
 
     try {
@@ -504,12 +510,12 @@ export class PartnershipService {
         object,
         aclEditProp: 'canDeleteOwnUser',
       });
-    } catch (e) {
+    } catch (exception) {
       this.logger.warning('Failed to delete partnership', {
-        exception: e,
+        exception,
       });
 
-      throw new ServerException('Failed to delete partnership');
+      throw new ServerException('Failed to delete partnership', exception);
     }
 
     await this.eventBus.publish(new PartnershipDeletedEvent(object, session));

@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-imports */
 import {
   ArgumentsHost,
   BadRequestException,
@@ -8,6 +9,7 @@ import {
   InternalServerErrorException,
   UnauthorizedException,
 } from '@nestjs/common';
+/* eslint-enable no-restricted-imports */
 import { GqlArgumentsHost, GqlExceptionFilter } from '@nestjs/graphql';
 import { compact, mapValues, uniq } from 'lodash';
 import { Exception, simpleSwitch } from '../common';
