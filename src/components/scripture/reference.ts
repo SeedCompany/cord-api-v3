@@ -141,7 +141,7 @@ export const bookCodeToName = (code: string) => {
 };
 // return random scriptureRefenence as an array
 export const createRandomScriptureReferences = (): ScriptureRangeInput[] => {
-  const book = books[random(books.length)];
+  const book = books[random(books.length - 1)];
   const startChapter = book.chapters[random(book.chapters.length - 1)];
   const endChapter = book.chapters[random(book.chapters.length - 1)];
   return [
