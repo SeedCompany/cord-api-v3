@@ -1,40 +1,43 @@
 import { EventsHandler, IEventHandler } from '../../../core';
-import { ProjectStatus } from '../../project';
+import { ProjectStatus, stepToStatus } from '../../project';
 import { ProjectUpdatedEvent } from '../../project/events';
 import { BudgetService } from '../budget.service';
-import { BudgetStatus, UpdateBudget } from '../dto';
+import { BudgetStatus } from '../dto';
 
 @EventsHandler(ProjectUpdatedEvent)
 export class UpdateProjectBudgetStatusHandler
   implements IEventHandler<ProjectUpdatedEvent> {
   constructor(private readonly budgets: BudgetService) {}
 
-  async handle({ project, updates: input, session }: ProjectUpdatedEvent) {
+  async handle({ project, updates, session }: ProjectUpdatedEvent) {
+    // Continue if project just became active
+    if (
+      !updates.step ||
+      stepToStatus(updates.step) !== ProjectStatus.Active ||
+      project.status === ProjectStatus.Active
+    ) {
+      return;
+    }
+
     const budgets = await this.budgets.list(
       {
         filter: {
-          projectId: input.id,
+          projectId: project.id,
         },
       },
       session
     );
 
-    const pendingBudget = budgets.items.find(
-      (b) => b.status === BudgetStatus.Pending
-    );
-    //574 -The pending budget should be set to active i.e Current when the project gets set to active
-    const newStatus = project.status;
-    if (
-      (newStatus === ProjectStatus.InDevelopment ||
-        newStatus === ProjectStatus.Pending) &&
-      pendingBudget?.status === BudgetStatus.Pending
-    ) {
-      const input: UpdateBudget = {
-        id: pendingBudget.id,
-        status: BudgetStatus.Current,
-      };
-
-      await this.budgets.update(input, session);
+    const budget = budgets.items.find((b) => b.status === BudgetStatus.Pending);
+    if (!budget) {
+      // no pending budget, nothing to do
+      return;
     }
+
+    // Set pending budget to current, now that the project is active
+    await this.budgets.update(
+      { id: budget.id, status: BudgetStatus.Current },
+      session
+    );
   }
 }
