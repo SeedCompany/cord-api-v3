@@ -19,6 +19,7 @@ import {
   createInternshipEngagement,
   createLanguage,
   createLanguageEngagement,
+  createPerson,
   createProject,
   createRegion,
   createSession,
@@ -790,5 +791,45 @@ describe('Engagement e2e', () => {
         projectId: project.id,
       })
     ).rejects.toThrowError();
+  });
+
+  it('should throw error if language engagement already exists with same project and language', async () => {
+    const project = await createProject(app);
+    const language = await createLanguage(app);
+
+    await createLanguageEngagement(app, {
+      projectId: project.id,
+      languageId: language.id,
+    });
+
+    await expect(
+      createLanguageEngagement(app, {
+        projectId: project.id,
+        languageId: language.id,
+      })
+    ).rejects.toThrowError(
+      'Engagement for this project and language already exists'
+    );
+  });
+
+  it('should throw error if internship engagement already exists with same project and intern', async () => {
+    const project = await createProject(app, {
+      type: ProjectType.Internship,
+    });
+    const intern = await createPerson(app);
+
+    await createInternshipEngagement(app, {
+      projectId: project.id,
+      internId: intern.id,
+    });
+
+    await expect(
+      createInternshipEngagement(app, {
+        projectId: project.id,
+        internId: intern.id,
+      })
+    ).rejects.toThrowError(
+      'Engagement for this project and person already exists'
+    );
   });
 });
