@@ -356,7 +356,7 @@ export class EngagementService {
       ...this.property('pnp', pnp || undefined, 'languageEngagement'),
       ...this.property(
         'status',
-        EngagementStatus.InDevelopment,
+        input.status || EngagementStatus.InDevelopment,
         'languageEngagement'
       ),
       ...this.property('modifiedAt', createdAt, 'languageEngagement'),
@@ -621,7 +621,7 @@ export class EngagementService {
       ),
       ...this.property(
         'status',
-        EngagementStatus.InDevelopment,
+        input.status || EngagementStatus.InDevelopment,
         'internshipEngagement'
       ),
     ]);
@@ -1034,6 +1034,7 @@ export class EngagementService {
           'endDateOverride',
           'paraTextRegistryId',
           'modifiedAt',
+          'status',
         ],
         changes,
         nodevar: 'LanguageEngagement',
@@ -1144,6 +1145,7 @@ export class EngagementService {
           'startDateOverride',
           'endDateOverride',
           'modifiedAt',
+          'status',
         ],
         changes: {
           ...input,

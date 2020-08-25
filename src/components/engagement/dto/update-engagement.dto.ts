@@ -6,6 +6,7 @@ import { CreateDefinedFileVersionInput } from '../../file/dto';
 import { ProductMethodology } from '../../product/dto';
 import { InternshipEngagement, LanguageEngagement } from './engagement.dto';
 import { InternPosition } from './intern-position.enum';
+import { EngagementStatus } from './status.enum';
 
 @InputType({
   isAbstract: true,
@@ -28,6 +29,9 @@ export abstract class UpdateEngagement {
 
   @DateField({ nullable: true })
   readonly endDateOverride?: CalendarDate;
+
+  @Field(() => EngagementStatus, { nullable: true })
+  readonly status?: EngagementStatus;
 }
 
 @InputType()
