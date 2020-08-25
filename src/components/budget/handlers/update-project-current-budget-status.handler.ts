@@ -9,12 +9,12 @@ export class UpdateProjectBudgetStatusHandler
   implements IEventHandler<ProjectUpdatedEvent> {
   constructor(private readonly budgets: BudgetService) {}
 
-  async handle({ project, updates, session }: ProjectUpdatedEvent) {
+  async handle({ previous, updates, session }: ProjectUpdatedEvent) {
     // Continue if project just became active
     if (
       !updates.step ||
       stepToStatus(updates.step) !== ProjectStatus.Active ||
-      project.status === ProjectStatus.Active
+      previous.status === ProjectStatus.Active
     ) {
       return;
     }
@@ -22,7 +22,7 @@ export class UpdateProjectBudgetStatusHandler
     const budgets = await this.budgets.list(
       {
         filter: {
-          projectId: project.id,
+          projectId: previous.id,
         },
       },
       session

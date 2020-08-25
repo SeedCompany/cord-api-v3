@@ -531,7 +531,7 @@ export class ProjectService {
     });
 
     await this.eventBus.publish(
-      new ProjectUpdatedEvent(result, input, session)
+      new ProjectUpdatedEvent(result, object, input, session)
     );
 
     return result;
