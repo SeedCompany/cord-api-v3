@@ -343,8 +343,8 @@
 									"    pm.expect(filmName).to.eql(pm.globals.get('filmName'));\r",
 									"});\r",
 									"\r",
-									"pm.test(\"Verifying that scriptureReferences is not blank or null or empty BUG ADDED to Google Sheet #3\", function () {\r",
-									"    var scriptureReferences = jsonData.data.createLiteracyMaterial.literacyMaterial.scriptureReferences.value;\r",
+									"pm.test(\"Verifying that scriptureReferences is not blank or null or empty Similar to BUG #949(closed-Sprint 15)\", function () {\r",
+									"    var scriptureReferences = jsonData.data.createFilm.film.scriptureReferences.value;\r",
 									"    pm.expect(scriptureReferences).to.not.eql(null);\r",
 									"    pm.expect(scriptureReferences).to.not.eql(\"\");\r",
 									"    pm.expect(scriptureReferences).to.not.eql([]); // This will pass once value back to this Object\r",
@@ -374,7 +374,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation createFilm($input: CreateFilmInput!) {\r\n  createFilm(input: $input) {\r\n    film {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          totalVerses\r\n          label\r\n          start {\r\n            book\r\n            bookName\r\n            label\r\n            chapter\r\n            verse\r\n          }\r\n          end {\r\n            book\r\n            bookName\r\n            label\r\n            chapter\r\n            verse\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"film\": {\r\n      \"name\": \"{{filmName}}\"\r\n  \r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"film\": {\r\n      \"name\": \"{{filmName}}\"\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -393,12 +393,12 @@
 					"response": []
 				},
 				{
-					"name": "Create Film Success Bug",
+					"name": "Create Film Success - bug #949",
 					"event": [
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "4b17b7db-8409-4415-a73f-73848184e88c",
+								"id": "6ba35cf5-460f-438a-ad2b-51f5350376d1",
 								"exec": [
 									"const moment = require('moment');\r",
 									"\r",
@@ -432,15 +432,17 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "505091d9-2b83-4152-9284-23095b6c2904",
+								"id": "69c9973f-3203-405e-aef5-2117553b28f7",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
-									"pm.test(\"scriptureReferences are not empty\", function () {\r",
-									"    if (jsonData.errors)\r",
-									"        pm.expect(\"Script Ref empty\").to.eql(\"pending\");\r",
-									"    else\r",
-									"        pm.expect(\"WRITE TEST CASE\").to.eql(\"pending\");\r",
+									"pm.test(\"PENDING >> BUG ADDED #949(closed-Sprint 15) (createFilm > Request is not working with 'scriptureReferences' values)\", function () {\r",
+									"\r",
+									"    if (jsonData.errors) {\r",
+									"        pm.expect(\"BACKEND\").to.eql(\"PENDING\"); // fail forcefully\r",
+									"    } else {\r",
+									"        pm.expect(\"WRITE TEST CASES\").to.eql(\"ERRORS >>> \" + jsonData.errors[0].message);\r",
+									"    }\r",
 									"});"
 								],
 								"type": "text/javascript"
@@ -464,7 +466,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation createFilm($input: CreateFilmInput!) {\r\n  createFilm(input: $input) {\r\n    film {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          totalVerses\r\n          label\r\n          start {\r\n            book\r\n            bookName\r\n            label\r\n            chapter\r\n            verse\r\n          }\r\n          end {\r\n            book\r\n            bookName\r\n            label\r\n            chapter\r\n            verse\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"film\": {\r\n      \"name\": \"{{filmName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{filmScriptRefBookStart}}\",\r\n          \"chapter\":{{filmScriptRefChapterStart}},\r\n          \"verse\": {{filmScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{filmScriptRefBookEnd}}\",\r\n          \"chapter\": {{filmScriptRefChapterEnd}},\r\n          \"verse\": {{filmScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"film\": {\r\n      \"name\": \"{{filmName}}\",\r\n       \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{filmScriptRefBookStart}}\",\r\n          \"chapter\": {{filmScriptRefChapterStart}},\r\n          \"verse\": {{filmScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{filmScriptRefBookEnd}}\",\r\n          \"chapter\": {{filmScriptRefChapterEnd}},\r\n          \"verse\": {{filmScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -628,7 +630,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation createFilm($input: CreateFilmInput!) {\r\n  createFilm(input: $input) {\r\n    film {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          totalVerses\r\n          label\r\n          start {\r\n            book\r\n            bookName\r\n            label\r\n            chapter\r\n            verse\r\n          }\r\n          end {\r\n            book\r\n            bookName\r\n            label\r\n            chapter\r\n            verse\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"film\": {\r\n      \r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"film\": {}\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -871,7 +873,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation createFilm($input: CreateFilmInput!) {\r\n  createFilm(input: $input) {\r\n    film {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          totalVerses\r\n          label\r\n          start {\r\n            book\r\n            bookName\r\n            label\r\n            chapter\r\n            verse\r\n          }\r\n          end {\r\n            book\r\n            bookName\r\n            label\r\n            chapter\r\n            verse\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"film\": {\r\n      \"name\": \"{{filmName}}\",\r\n      \"scriptureReferences1\": {\r\n        \"start\": {\r\n          \"book\": \"{{filmScriptRefBookStart}}\",\r\n          \"chapter\":{{filmScriptRefChapterStart}},\r\n          \"verse\": {{filmScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{filmScriptRefBookEnd}}\",\r\n          \"chapter\": {{filmScriptRefChapterEnd}},\r\n          \"verse\": {{filmScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"film\": {\r\n      \"name\": \"{{filmName}}\",\r\n      \"scriptureReferences1\": {\r\n        \"start\": {\r\n          \"book\": \"{{filmScriptRefBookStart}}\",\r\n          \"chapter\": {{filmScriptRefChapterStart}},\r\n          \"verse\": {{filmScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{filmScriptRefBookEnd}}\",\r\n          \"chapter\": {{filmScriptRefChapterEnd}},\r\n          \"verse\": {{filmScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -951,7 +953,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation createFilm($input: CreateFilmInput!) {\r\n  createFilm(input: $input) {\r\n    film {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          totalVerses\r\n          label\r\n          start {\r\n            book\r\n            bookName\r\n            label\r\n            chapter\r\n            verse\r\n          }\r\n          end {\r\n            book\r\n            bookName\r\n            label\r\n            chapter\r\n            verse\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"film\": {\r\n      \"name\": \"{{filmName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start1\": {\r\n          \"book\": \"{{filmScriptRefBookStart}}\",\r\n          \"chapter\":{{filmScriptRefChapterStart}},\r\n          \"verse\": {{filmScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{filmScriptRefBookEnd}}\",\r\n          \"chapter\": {{filmScriptRefChapterEnd}},\r\n          \"verse\": {{filmScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"film\": {\r\n      \"name\": \"{{filmName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start1\": {\r\n          \"book\": \"{{filmScriptRefBookStart}}\",\r\n          \"chapter\": {{filmScriptRefChapterStart}},\r\n          \"verse\": {{filmScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{filmScriptRefBookEnd}}\",\r\n          \"chapter\": {{filmScriptRefChapterEnd}},\r\n          \"verse\": {{filmScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -1271,7 +1273,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation createFilm($input: CreateFilmInput!) {\r\n  createFilm(input: $input) {\r\n    film {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          totalVerses\r\n          label\r\n          start {\r\n            book\r\n            bookName\r\n            label\r\n            chapter\r\n            verse\r\n          }\r\n          end {\r\n            book\r\n            bookName\r\n            label\r\n            chapter\r\n            verse\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"film\": {\r\n      \"name\": \"{{filmName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{filmScriptRefBookStart}}\",\r\n          \"chapter\":{{filmScriptRefChapterStart}},\r\n          \"verse\": {{filmScriptRefVerseStart}}\r\n        },\r\n        \"end1\": {\r\n          \"book\": \"{{filmScriptRefBookEnd}}\",\r\n          \"chapter\": {{filmScriptRefChapterEnd}},\r\n          \"verse\": {{filmScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"film\": {\r\n      \"name\": \"{{filmName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{filmScriptRefBookStart}}\",\r\n          \"chapter\": {{filmScriptRefChapterStart}},\r\n          \"verse\": {{filmScriptRefVerseStart}}\r\n        },\r\n        \"end1\": {\r\n          \"book\": \"{{filmScriptRefBookEnd}}\",\r\n          \"chapter\": {{filmScriptRefChapterEnd}},\r\n          \"verse\": {{filmScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -1550,41 +1552,15 @@
 								"id": "bc3e1a67-bab5-426a-84fc-7f79363eec51",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
-									"const moment = require('moment');\r",
 									"\r",
-									"//Common Verification\r",
-									"pm.test(\"Status code is 200\", function () {\r",
-									"    pm.response.to.have.status(200);\r",
-									"});\r",
-									"\r",
-									"pm.test(\"Response time is less than 1000ms\", function () {\r",
-									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
-									"});\r",
 									"\r",
 									"//Test Specific\r",
-									"pm.test(\"Verify that Film ID is not blank or null\", function () {\r",
-									"    var id = jsonData.data.createFilm.film.id;\r",
-									"    pm.expect(id).to.not.eql(null);\r",
-									"    pm.expect(id).to.not.eql(\"\");\r",
-									"\r",
-									"    // Saving data for future use\r",
-									"    pm.globals.set(\"filmId\", id);\r",
-									"});\r",
+									"var id = jsonData.data.createFilm.film.id;\r",
+									"pm.globals.set(\"filmId\", id);\r",
 									"\r",
 									"// Saving whole Film Object to globals for future use\r",
 									"var film = JSON.stringify(jsonData.data.createFilm.film);\r",
 									"pm.globals.set(\"film_data\", film);\r",
-									"\r",
-									"pm.test(\"Verify that film's createdAt is in Specific time format\", function () {\r",
-									"    var time = jsonData.data.createFilm.film.createdAt;\r",
-									"    var isValidTime = moment(time, \"YYYY-MM-DDTHH:mm:ss.SSSZ\", true).isValid();\r",
-									"    pm.expect(isValidTime).to.eql(true);\r",
-									"});\r",
-									"\r",
-									"pm.test(\"Verify that film Name is same as requested\", function () {\r",
-									"    var filmName = jsonData.data.createFilm.film.name.value;\r",
-									"    pm.expect(filmName).to.eql(pm.globals.get('filmName'));\r",
-									"});\r",
 									""
 								],
 								"type": "text/javascript"
@@ -1744,17 +1720,17 @@
 									"\r",
 									"//Test Specific\r",
 									"pm.test(\"Verify that error message is 400\", function () {\r",
-									"    var error_message = jsonData.errors[0].message;  \r",
+									"    var error_message = jsonData.errors[0].message;\r",
 									"    pm.expect(error_message).to.eql(\"Input validation failed\");\r",
 									"});\r",
 									"\r",
 									"pm.test(\"Verify that error status is 400\", function () {\r",
-									"    var error_status = jsonData.errors[0].extensions.status;  \r",
+									"    var error_status = jsonData.errors[0].extensions.status;\r",
 									"    pm.expect(error_status).to.eql(400);\r",
 									"});\r",
 									"\r",
 									"pm.test(\"Verify that language error message is correct\", function () {\r",
-									"    var error_language_message = jsonData.errors[0].extensions.errors.id.IsShortId;  \r",
+									"    var error_language_message = jsonData.errors[0].extensions.errors.id.IsShortId;\r",
 									"    pm.expect(error_language_message).to.eql(\"Invalid ID\");\r",
 									"});"
 								],
@@ -1828,12 +1804,12 @@
 									"\r",
 									"//Test Specific\r",
 									"pm.test(\"Verify that error message is correct\", function () {\r",
-									"    var error_message = jsonData.errors[0].message;  \r",
+									"    var error_message = jsonData.errors[0].message;\r",
 									"    pm.expect(error_message).to.eql(\"Variable \\\"$id\\\" of required type \\\"ID!\\\" was not provided.\");\r",
 									"});\r",
 									"\r",
 									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {\r",
-									"    var error_code = jsonData.errors[0].extensions.code;  \r",
+									"    var error_code = jsonData.errors[0].extensions.code;\r",
 									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");\r",
 									"});\r",
 									""
@@ -1859,7 +1835,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query film($id: ID!) {\r\n  film(id: $id) {\r\n    id\r\n    createdAt\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          bookName\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          bookName\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n    name {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \r\n}"
+								"variables": "{}"
 							},
 							"options": {
 								"graphql": {}
@@ -2639,6 +2615,86 @@
 					"response": []
 				},
 				{
+					"name": "Update Film Parameter Mismatch- Name",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "13008aa8-23cf-4365-9733-cef9f34de249",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "3fa09084-fc7e-413c-b8c2-385c617a931b",
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"\r",
+									"//Common Verification\r",
+									"pm.test(\"Status code is 400 Bad Request\", function () {\r",
+									"    pm.response.to.have.status(400);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
+									"});\r",
+									"\r",
+									"//Test Specific\r",
+									"pm.test(\"Verify that error message is correct\", function () {\r",
+									"    var error_message = jsonData.errors[0].message;  \r",
+									"     pm.expect(error_message).to.include(\"is not defined by type \\\"UpdateFilm\\\". Did you mean \\\"name\\\"?\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {\r",
+									"    var error_code = jsonData.errors[0].extensions.code;  \r",
+									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation updateFilm($input: UpdateFilmInput!) {\r\n  updateFilm(input: $input) {\r\n    film {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"film\": {\r\n            \"id\": \"{{filmId}}\",\r\n            \"name1\": \"{{filmName}}\"\r\n        }\r\n    }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Update Film Parameter Invalid - id",
 					"event": [
 						{
@@ -2724,92 +2780,12 @@
 					"response": []
 				},
 				{
-					"name": "Update Film Parameter Mismatch- Name",
+					"name": "Pre-req for Get All Film ( Create Film)",
 					"event": [
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "13008aa8-23cf-4365-9733-cef9f34de249",
-								"exec": [
-									""
-								],
-								"type": "text/javascript"
-							}
-						},
-						{
-							"listen": "test",
-							"script": {
-								"id": "3fa09084-fc7e-413c-b8c2-385c617a931b",
-								"exec": [
-									"var jsonData = pm.response.json();\r",
-									"\r",
-									"//Common Verification\r",
-									"pm.test(\"Status code is 400 Bad Request\", function () {\r",
-									"    pm.response.to.have.status(400);\r",
-									"});\r",
-									"\r",
-									"pm.test(\"Response time is less than 1000ms\", function () {\r",
-									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
-									"});\r",
-									"\r",
-									"//Test Specific\r",
-									"pm.test(\"Verify that error message is correct\", function () {\r",
-									"    var error_message = jsonData.errors[0].message;  \r",
-									"     pm.expect(error_message).to.include(\"is not defined by type \\\"UpdateFilm\\\". Did you mean \\\"name\\\"?\");\r",
-									"});\r",
-									"\r",
-									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {\r",
-									"    var error_code = jsonData.errors[0].extensions.code;  \r",
-									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");\r",
-									"});\r",
-									""
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "graphql",
-							"graphql": {
-								"query": "mutation updateFilm($input: UpdateFilmInput!) {\r\n  updateFilm(input: $input) {\r\n    film {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n    \"input\": {\r\n        \"film\": {\r\n            \"id\": \"{{filmId}}\",\r\n            \"name1\": \"{{filmName}}\"\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
-							}
-						},
-						"url": {
-							"raw": "{{env}}/graphql",
-							"host": [
-								"{{env}}"
-							],
-							"path": [
-								"graphql"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Pre-req for Get Film by Id ( Create Film)",
-					"event": [
-						{
-							"listen": "prerequest",
-							"script": {
-								"id": "c3b798da-6ca4-487c-951f-66d71a136d8c",
+								"id": "b9a8e51a-0c6b-4bef-9472-9c6a5589aad5",
 								"exec": [
 									"const moment = require('moment');\r",
 									"\r",
@@ -2821,8 +2797,18 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "879fbb14-15b9-4561-8f1c-63a7355a3e34",
+								"id": "5efe7ad8-e1bb-443e-8b29-b3113d3bd365",
 								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"\r",
+									"\r",
+									"//Test Specific\r",
+									"var id = jsonData.data.createFilm.film.id;\r",
+									"pm.globals.set(\"filmId\", id);\r",
+									"\r",
+									"// Saving whole Film Object to globals for future use\r",
+									"var film = JSON.stringify(jsonData.data.createFilm.film);\r",
+									"pm.globals.set(\"film_data\", film);\r",
 									""
 								],
 								"type": "text/javascript"
@@ -2865,7 +2851,7 @@
 					"response": []
 				},
 				{
-					"name": "Get all Films Success",
+					"name": "Get All Films Success",
 					"event": [
 						{
 							"listen": "prerequest",
@@ -2885,8 +2871,6 @@
 								"id": "653ac8a6-7526-404c-ae78-d1a86e1c6bdf",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
-									"var film_data = JSON.parse(pm.variables.get(\"film_data\")); // Get stored film object\r",
-									"const moment = require('moment');\r",
 									"var lodash = require('lodash');\r",
 									"\r",
 									"//Common Verification\r",
@@ -2896,6 +2880,20 @@
 									"\r",
 									"pm.test(\"Response time is less than 1000ms\", function () {\r",
 									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
+									"});\r",
+									"\r",
+									"// SORTING AND FILTER TESTS\r",
+									"pm.test(\"Verify that items are sorted by 'name' and orderd by requested order\", function () {\r",
+									"\r",
+									"    var responseBody = jsonData.data.films.items;\r",
+									"    if (pm.globals.get('order') == \"ASC\") {\r",
+									"        var expectedSortedOrder = lodash.orderBy(responseBody, ['name.value'], ['asc'])\r",
+									"        pm.expect(responseBody).to.eql(expectedSortedOrder);\r",
+									"    } else {\r",
+									"        var expectedSortedOrder = lodash.orderBy(responseBody, ['name.value'], ['desc'])\r",
+									"        pm.expect(responseBody).to.eql(expectedSortedOrder);\r",
+									"    }\r",
+									"\r",
 									"});\r",
 									"\r",
 									"//Test Specific - Pagination\r",
@@ -2932,49 +2930,29 @@
 									"});\r",
 									"\r",
 									"/**\r",
-									" * Verifying recently created films's information with films object returned within items array\r",
+									" * Setting up 'page' number to be used in next request\r",
+									" * For locating recently created Object position on Specific page\r",
 									" */\r",
+									"var total = jsonData.data.films.total;\r",
+									"var itemCount = Number(pm.globals.get('itemCount'));\r",
 									"\r",
-									"// get films object first having same id as recently created films's id\r",
-									"var myFilm = lodash.find(jsonData.data.films.items, ['id', film_data.id]);\r",
+									"if (total > itemCount) {\r",
 									"\r",
-									"pm.test(\"Verify that recently created films ID is not blank or null\", function () {\r",
-									"    var id = myFilm.id;\r",
-									"    pm.expect(id).to.not.eql(null);\r",
-									"    pm.expect(id).to.not.eql(\"\");\r",
-									"});\r",
-									"\r",
-									"pm.test(\"Verifying recently created films's createdAt is in Specific time format\", function () {\r",
-									"    var time = myFilm.createdAt;\r",
-									"    var isValidTime = moment(time, \"YYYY-MM-DDTHH:mm:ss.SSSZ\", true).isValid();\r",
-									"    pm.expect(isValidTime).to.eql(true);\r",
-									"\r",
-									"});\r",
-									"\r",
-									"pm.test(\"Verifying recently created films's id\", function () {\r",
-									"    var id = myFilm.id;\r",
-									"    pm.expect(id).to.eql(film_data.id);\r",
-									"});\r",
-									"\r",
-									"pm.test(\"Verifying recently created films's name\", function () {\r",
-									"    var name = myFilm.name.value;\r",
-									"    pm.expect(name).to.eql(film_data.name.value);\r",
-									"});\r",
-									"\r",
-									"\r",
-									"// SORTING AND FILTER TESTS\r",
-									"pm.test(\"Verify that items are sorted by 'name' and orderd by requested order \", function () {\r",
-									"\r",
-									"    var responseBody = jsonData.data.films.items;\r",
-									"    if (pm.globals.get('order') == \"ASC\") {\r",
-									"        var expectedSortedOrder = lodash.orderBy(responseBody, ['name.value'], ['asc'])\r",
-									"        pm.expect(responseBody).to.eql(expectedSortedOrder);\r",
+									"    if ((total % itemCount) == 0) {\r",
+									"        var pageToset = total / itemCount;\r",
+									"        pm.globals.set(\"page\", pageToset);\r",
 									"    } else {\r",
-									"        var expectedSortedOrder = lodash.orderBy(responseBody, ['name.value'], ['desc'])\r",
-									"        pm.expect(responseBody).to.eql(expectedSortedOrder);\r",
+									"        var pageToset = Math.floor(total / itemCount) + 1;\r",
+									"        pm.globals.set(\"page\", pageToset);\r",
 									"    }\r",
 									"\r",
-									"});"
+									"} else {\r",
+									"    pm.globals.set(\"page\", 1);  // Set page to 1 if total <= itemCount\r",
+									"}\r",
+									"\r",
+									"\r",
+									"\r",
+									""
 								],
 								"type": "text/javascript"
 							}
@@ -3016,7 +2994,119 @@
 					"response": []
 				},
 				{
-					"name": "Get all Films Success - total",
+					"name": "Get All Films Success - item Object",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "1085db6a-88ca-4a37-a820-c09dbf872844",
+								"exec": [
+									"pm.globals.set(\"itemCount\", 25);\r",
+									"// Page is set from previous request test script based on total\r",
+									"pm.globals.set('order', \"ASC\");"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "90fb5606-572b-475b-86b9-9f73665b2f01",
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"var film_data = JSON.parse(pm.variables.get(\"film_data\")); // Get stored film object\r",
+									"const moment = require('moment');\r",
+									"var lodash = require('lodash');\r",
+									"\r",
+									"//Common Verification\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
+									"});\r",
+									"\r",
+									"//Test Specific - Pagination\r",
+									"pm.test(\"Verify that total is greater than Zero\", function () {\r",
+									"    var total = jsonData.data.films.total;\r",
+									"    pm.expect(total).to.be.above(0);\r",
+									"});\r",
+									"\r",
+									"/**\r",
+									" * Verifying recently created films's information with films object returned within items array\r",
+									" */\r",
+									"\r",
+									"// get films object first having same id as recently created films's id\r",
+									"var myFilm = lodash.find(jsonData.data.films.items, ['id', film_data.id]);\r",
+									"\r",
+									"pm.test(\"Verify that recently created films ID is not blank or null\", function () {\r",
+									"    var id = myFilm.id;\r",
+									"    pm.expect(id).to.not.eql(null);\r",
+									"    pm.expect(id).to.not.eql(\"\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verifying recently created films's createdAt is in Specific time format\", function () {\r",
+									"    var time = myFilm.createdAt;\r",
+									"    var isValidTime = moment(time, \"YYYY-MM-DDTHH:mm:ss.SSSZ\", true).isValid();\r",
+									"    pm.expect(isValidTime).to.eql(true);\r",
+									"\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verifying recently created films's id\", function () {\r",
+									"    var id = myFilm.id;\r",
+									"    pm.expect(id).to.eql(film_data.id);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verifying recently created films's name\", function () {\r",
+									"    var name = myFilm.name.value;\r",
+									"    pm.expect(name).to.eql(film_data.name.value);\r",
+									"});\r",
+									"\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query films($input: FilmListInput!) {\r\n  films(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Films Success - total",
 					"event": [
 						{
 							"listen": "prerequest",
@@ -3092,7 +3182,7 @@
 					"response": []
 				},
 				{
-					"name": "Get all Films Success - hashmore - True",
+					"name": "Get All Films Success - hasmore - True",
 					"event": [
 						{
 							"listen": "prerequest",
@@ -3174,7 +3264,7 @@
 					"response": []
 				},
 				{
-					"name": "Get all Films Success - hashmore - False",
+					"name": "Get All Films Success - hasmore - False",
 					"event": [
 						{
 							"listen": "prerequest",
@@ -3261,15 +3351,15 @@
 					"response": []
 				},
 				{
-					"name": "Get all Films Success - Items",
+					"name": "Get All Films Success - Items",
 					"event": [
 						{
 							"listen": "prerequest",
 							"script": {
 								"id": "a73ce5d0-275e-4417-97d0-1a769b7c19c9",
 								"exec": [
-									"pm.globals.set(\"itemCount\", 2);\r",
-									"pm.globals.set(\"page\", 5);\r",
+									"pm.globals.set(\"itemCount\", 25);\r",
+									"pm.globals.set(\"page\", 1);\r",
 									"pm.globals.set('order', \"ASC\");"
 								],
 								"type": "text/javascript"
@@ -3421,6 +3511,7 @@
 								"exec": [
 									"const moment = require('moment');\r",
 									"\r",
+									"// Changed for sorting and Filter purpose\r",
 									"pm.globals.set(\"filmName\", \"FilterSortFilmName\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
 									""
 								],
@@ -3483,10 +3574,8 @@
 								"exec": [
 									"const moment = require('moment');\r",
 									"\r",
-									"pm.globals.set(\"filmName\", \"Automation_Filmsort\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
-									"\r",
-									"\r",
-									""
+									"// Changed for sorting purpose\r",
+									"pm.globals.set(\"filmName\", \"Automation_Filmsort\" + moment().format(\"DDMMYYYYhhmmss\"));"
 								],
 								"type": "text/javascript"
 							}
@@ -3538,7 +3627,7 @@
 					"response": []
 				},
 				{
-					"name": "Get all Films Success -  name sorting ASC",
+					"name": "Get All Films Success -  name sorting ASC",
 					"event": [
 						{
 							"listen": "prerequest",
@@ -3569,11 +3658,16 @@
 									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
 									"});\r",
 									"\r",
+									"pm.test(\"Verify that total is greater than Zero\", function () {\r",
+									"    var total = jsonData.data.films.total;\r",
+									"    pm.expect(total).to.be.above(0);\r",
+									"});\r",
+									"\r",
 									"//Test Specific - Name sorting ASC\r",
 									"pm.test(\"Verify that items are sorted by 'NAME' and orderd by 'ASC' order \", function () {\r",
 									"\r",
 									"    var responseBody = jsonData.data.films.items;\r",
-									"    var expectedSortedOrder = lodash.orderBy(responseBody, item => item.name.value.toLowerCase(),['asc']);\r",
+									"    var expectedSortedOrder = lodash.orderBy(responseBody, item => item.name.value.toLowerCase(), ['asc']);\r",
 									"    pm.expect(responseBody).to.eql(expectedSortedOrder);\r",
 									"\r",
 									"});"
@@ -3618,7 +3712,7 @@
 					"response": []
 				},
 				{
-					"name": "Get all Films Success -  name sorting DESC",
+					"name": "Get All Films Success -  name sorting DESC",
 					"event": [
 						{
 							"listen": "prerequest",
@@ -3647,6 +3741,11 @@
 									"\r",
 									"pm.test(\"Response time is less than 1000ms\", function () {\r",
 									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verify that total is greater than Zero\", function () {\r",
+									"    var total = jsonData.data.films.total;\r",
+									"    pm.expect(total).to.be.above(0);\r",
 									"});\r",
 									"\r",
 									"//Test Specific - Name sorting DESC\r",
@@ -3698,14 +3797,14 @@
 					"response": []
 				},
 				{
-					"name": "Get all Films Success -  filter by Name",
+					"name": "Get All Films Success -  filter by Name",
 					"event": [
 						{
 							"listen": "prerequest",
 							"script": {
 								"id": "4c2f414d-23e5-42d8-ae2b-3b6ca3d956a2",
 								"exec": [
-									"pm.globals.set(\"itemCount\", 10);\r",
+									"pm.globals.set(\"itemCount\", 25);\r",
 									"pm.globals.set(\"page\", 1);\r",
 									"pm.globals.set('order', \"DESC\");"
 								],
@@ -3779,7 +3878,7 @@
 					"response": []
 				},
 				{
-					"name": "Get all Films  Parameter Removed - count",
+					"name": "Get All Films  Not Mandatory Field Removed - count",
 					"event": [
 						{
 							"listen": "prerequest",
@@ -3836,7 +3935,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query films($input: FilmListInput!) {\r\n  films(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n    \"input\": {\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\",\r\n        \"filter\": {\r\n            \"name\": \"{{filmName}}\"\r\n        }\r\n    }\r\n}"
+								"variables": "{\r\n    \"input\": {\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -3855,7 +3954,7 @@
 					"response": []
 				},
 				{
-					"name": "Get all Films  Parameter Blank - sort d",
+					"name": "Get All Films  Not Mandatory Field Blank - sort",
 					"event": [
 						{
 							"listen": "prerequest",
@@ -3884,14 +3983,32 @@
 									"});\r",
 									"\r",
 									"//Test Specific\r",
-									"pm.test(\"PENDING >> (Sort Field allows empty value/unusual characters)\", function () {\r",
+									"pm.test(\"PENDING >> Similar to BUG #776(closed-Sprint 13) for Users (Sort Field allows empty value/unusual characters)\", function () {\r",
 									"\r",
 									"    if (jsonData.data) {\r",
 									"        pm.expect(\"BACKEND\").to.eql(\"PENDING\"); // fail forcefully\r",
 									"    } else {\r",
 									"        pm.expect(\"WRITE TEST CASES\").to.eql(\"ERRORS >>> \" + jsonData.errors[0].message);\r",
 									"    }\r",
-									"});"
+									"});\r",
+									"\r",
+									"\r",
+									"// pm.test(\"Verify that error message is correct\", function () {\r",
+									"//     var error_message = jsonData.errors[0].message;  \r",
+									"//     pm.expect(error_message).to.include(\"Variable `DESC` not defined\");\r",
+									"// });\r",
+									"\r",
+									"// pm.test(\"Verify that error code is InternalServerError\", function () {\r",
+									"//     var error_code = jsonData.errors[0].extensions.code;  \r",
+									"//     pm.expect(error_code).to.eql(\"InternalServerError\");\r",
+									"// });\r",
+									"\r",
+									"// pm.test(\"Verify that error status is 500\", function () {\r",
+									"//     var error_status = jsonData.errors[0].extensions.status;  \r",
+									"//     pm.expect(error_status).to.eql(500);\r",
+									"// });\r",
+									"\r",
+									""
 								],
 								"type": "text/javascript"
 							}
@@ -3933,7 +4050,7 @@
 					"response": []
 				},
 				{
-					"name": "Get all Films  Parameter Blank - order",
+					"name": "Get All Films  Not Mandatory Field  Blank - order",
 					"event": [
 						{
 							"listen": "prerequest",
@@ -4013,7 +4130,7 @@
 					"response": []
 				},
 				{
-					"name": "Get all Films Parameter Mismatch - count",
+					"name": "Get All Films Parameter Mismatch - count",
 					"event": [
 						{
 							"listen": "prerequest",
@@ -4093,7 +4210,7 @@
 					"response": []
 				},
 				{
-					"name": "Get all Films Parameter Mismatch - page",
+					"name": "Get All Films Parameter Mismatch - page",
 					"event": [
 						{
 							"listen": "prerequest",
@@ -4173,7 +4290,7 @@
 					"response": []
 				},
 				{
-					"name": "Get all Films Parameter Mismatch - sort",
+					"name": "Get All Films Parameter Mismatch - sort",
 					"event": [
 						{
 							"listen": "prerequest",
@@ -4253,7 +4370,7 @@
 					"response": []
 				},
 				{
-					"name": "Get all Films Parameter Mismatch - order",
+					"name": "Get All Films Parameter Mismatch - order",
 					"event": [
 						{
 							"listen": "prerequest",
@@ -4333,7 +4450,7 @@
 					"response": []
 				},
 				{
-					"name": "Get all Films Parameter Mismatch - filter",
+					"name": "Get All Films Parameter Mismatch - filter",
 					"event": [
 						{
 							"listen": "prerequest",
@@ -4413,7 +4530,87 @@
 					"response": []
 				},
 				{
-					"name": "Get all Films Parameter Invalid - count min",
+					"name": "Get All Films Parameter Mismatch - filter  by name",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "e5b36b1b-2f5c-408b-8743-e1dec2f8dfb0",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "ba1be936-16c3-461e-aa5b-e0696a361207",
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"\r",
+									"//Common Verification\r",
+									"pm.test(\"Status code is 400 Bad Request\", function () {\r",
+									"    pm.response.to.have.status(400);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
+									"});\r",
+									"\r",
+									"//Test Specific\r",
+									"pm.test(\"Verify that error message is correct\", function () {\r",
+									"    var error_message = jsonData.errors[0].message;  \r",
+									"    pm.expect(error_message).to.include(\"is not defined by type \\\"FilmFilters\\\". Did you mean \\\"name\\\"?\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {\r",
+									"    var error_code = jsonData.errors[0].extensions.code;  \r",
+									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query films($input: FilmListInput!) {\r\n  films(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\",\r\n        \"filter\": {\r\n            \"name1\": \"{{filmName}}\"\r\n        }\r\n    }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Films Parameter Invalid - count min",
 					"event": [
 						{
 							"listen": "prerequest",
@@ -4497,7 +4694,7 @@
 					"response": []
 				},
 				{
-					"name": "Get all Films Parameter Invalid - count max",
+					"name": "Get All Films Parameter Invalid - count max",
 					"event": [
 						{
 							"listen": "prerequest",
@@ -4581,7 +4778,7 @@
 					"response": []
 				},
 				{
-					"name": "Get all Films Parameter Invalid  - page",
+					"name": "Get All Films Parameter Invalid  - page",
 					"event": [
 						{
 							"listen": "prerequest",
@@ -4665,7 +4862,7 @@
 					"response": []
 				},
 				{
-					"name": "Get all Films Parameter Invalid - sort",
+					"name": "Get All Films Parameter Invalid - sort",
 					"event": [
 						{
 							"listen": "prerequest",
@@ -4694,9 +4891,13 @@
 									"});\r",
 									"\r",
 									"//Test Specific\r",
-									"pm.test(\"PENDING >> Sort Field should not accept any unusual characters/Empty String. Backend side Pending\", function () {\r",
-									"    if (jsonData.data)\r",
-									"        pm.expect(true).to.eql(false); // forcefully Fail test if results returned\r",
+									"pm.test(\"PENDING >> Similar to BUG #776(closed-Sprint 13) for Users (Sort Field allows empty value/unusual characters)\", function () {\r",
+									"\r",
+									"    if (jsonData.data) {\r",
+									"        pm.expect(\"BACKEND\").to.eql(\"PENDING\"); // fail forcefully\r",
+									"    } else {\r",
+									"        pm.expect(\"WRITE TEST CASES\").to.eql(\"ERRORS >>> \" + jsonData.errors[0].message);\r",
+									"    }\r",
 									"});\r",
 									"\r",
 									"// pm.test(\"Verify that error message is correct\", function () {\r",
@@ -4756,7 +4957,7 @@
 					"response": []
 				},
 				{
-					"name": "Get all Films Parameter Invalid - order",
+					"name": "Get All Films Parameter Invalid - order",
 					"event": [
 						{
 							"listen": "prerequest",
@@ -4853,6 +5054,21 @@
 							"script": {
 								"id": "9aa57509-2cf1-4850-8f6e-e5ef094b72b9",
 								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"\r",
+									"//Common Verification\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
+									"});\r",
+									"\r",
+									"//Test Specific\r",
+									"pm.test(\"Verify that Film is deleted\", function () {\r",
+									"    pm.expect(jsonData.data.deleteFilm).to.eql(true);\r",
+									"});\r",
 									""
 								],
 								"type": "text/javascript"
@@ -4979,6 +5195,86 @@
 					"response": []
 				},
 				{
+					"name": "Delete Film  Mandatory Field Removed  - Id",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "c994b313-ba04-4a78-a1cb-2358f879bbcb",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "1c1ca450-b842-4871-b134-ae168c3dbb37",
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"\r",
+									"//Common Verification\r",
+									"pm.test(\"Status code is 400 Bad Request\", function () {\r",
+									"    pm.response.to.have.status(400);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
+									"});\r",
+									"\r",
+									"//Test Specific\r",
+									"pm.test(\"Verify that error message is correct\", function () {\r",
+									"    var error_message = jsonData.errors[0].message;  \r",
+									"    pm.expect(error_message).to.include(\"Variable \\\"$id\\\" of required type \\\"ID!\\\" was not provided\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {\r",
+									"    var error_code = jsonData.errors[0].extensions.code;  \r",
+									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation deleteFilm($id:ID!) {\r\n  deleteFilm(id: $id)\r\n}\r\n",
+								"variables": "{\r\n   \r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Delete Film Parameter Mismatch - Id",
 					"event": [
 						{
@@ -5059,7 +5355,7 @@
 					"response": []
 				},
 				{
-					"name": "Delete Film Parameter - Invalid - Id",
+					"name": "Delete Film Parameter Invalid - Id",
 					"event": [
 						{
 							"listen": "prerequest",
@@ -5121,86 +5417,6 @@
 							"graphql": {
 								"query": "mutation deleteFilm($id:ID!) {\r\n  deleteFilm(id: $id)\r\n}\r\n",
 								"variables": "{\r\n    \"id1\": \"!@#$%^&*\"\r\n}"
-							},
-							"options": {
-								"graphql": {}
-							}
-						},
-						"url": {
-							"raw": "{{env}}/graphql",
-							"host": [
-								"{{env}}"
-							],
-							"path": [
-								"graphql"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Delete Film  Parameter Removed  - Id",
-					"event": [
-						{
-							"listen": "prerequest",
-							"script": {
-								"id": "c994b313-ba04-4a78-a1cb-2358f879bbcb",
-								"exec": [
-									""
-								],
-								"type": "text/javascript"
-							}
-						},
-						{
-							"listen": "test",
-							"script": {
-								"id": "1c1ca450-b842-4871-b134-ae168c3dbb37",
-								"exec": [
-									"var jsonData = pm.response.json();\r",
-									"\r",
-									"//Common Verification\r",
-									"pm.test(\"Status code is 400 Bad Request\", function () {\r",
-									"    pm.response.to.have.status(400);\r",
-									"});\r",
-									"\r",
-									"pm.test(\"Response time is less than 1000ms\", function () {\r",
-									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
-									"});\r",
-									"\r",
-									"//Test Specific\r",
-									"pm.test(\"Verify that error message is correct\", function () {\r",
-									"    var error_message = jsonData.errors[0].message;  \r",
-									"    pm.expect(error_message).to.include(\"Variable \\\"$id\\\" of required type \\\"ID!\\\" was not provided\");\r",
-									"});\r",
-									"\r",
-									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {\r",
-									"    var error_code = jsonData.errors[0].extensions.code;  \r",
-									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");\r",
-									"});\r",
-									""
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "graphql",
-							"graphql": {
-								"query": "mutation deleteFilm($id:ID!) {\r\n  deleteFilm(id: $id)\r\n}\r\n",
-								"variables": "{\r\n   \r\n}"
 							},
 							"options": {
 								"graphql": {}

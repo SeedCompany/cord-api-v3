@@ -331,13 +331,13 @@
 									"    pm.expect(name).to.eql(pm.globals.get('literacyMaterialName'));\r",
 									"});\r",
 									"\r",
-									"pm.test(\"Verifying that scriptureReferences is not blank or null or empty BUG ADDED to Google Sheet #3\", function () {\r",
+									"pm.test(\"Verifying that scriptureReferences is not blank or null or empty BUG ADDED #943(closed-Sprint 15)\", function () {\r",
 									"    var scriptureReferences = jsonData.data.createLiteracyMaterial.literacyMaterial.scriptureReferences.value;\r",
 									"    pm.expect(scriptureReferences).to.not.eql(null);\r",
 									"    pm.expect(scriptureReferences).to.not.eql(\"\");\r",
-									"    pm.expect(scriptureReferences).to.not.eql([]); // This will pass once value back to this Object\r",
+									"    pm.expect(scriptureReferences).to.not.eql([]); // This will pass once value back to this Object and test faiiled in below if\r",
 									"    if (typeof scriptureReferences !== typeof [])\r",
-									"        pm.expect(\"WRITE TEST CASE\").to.eql(\"PENDING\");\r",
+									"        pm.expect(\"WRITE TEST CASES\").to.eql(\"PENDING >>> \" + scriptureReferences);\r",
 									"});\r",
 									"\r",
 									"\r",
@@ -597,27 +597,27 @@
 							"script": {
 								"id": "fc47edb2-b552-4bae-9473-f427c1a862b6",
 								"exec": [
-									"var jsonData = pm.response.json();\r",
+									"// var jsonData = pm.response.json();\r",
 									"\r",
-									"//Common Verification\r",
-									"pm.test(\"Status code is 200\", function () {\r",
-									"    pm.response.to.have.status(200);\r",
-									"});\r",
+									"// //Common Verification\r",
+									"// pm.test(\"Status code is 200\", function () {\r",
+									"//     pm.response.to.have.status(200);\r",
+									"// });\r",
 									"\r",
-									"pm.test(\"Response time is less than 1000ms\", function () {\r",
-									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
-									"});\r",
+									"// pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"//     pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
+									"// });\r",
 									"\r",
-									"//Test Specific\r",
-									"pm.test(\"Verify that error message is correct\", function () {\r",
-									"    var error_message = jsonData.errors[0].message;\r",
-									"    pm.expect(error_message).to.eql(\"Input validation failed\");\r",
-									"});\r",
+									"// //Test Specific\r",
+									"// pm.test(\"Verify that error message is correct\", function () {\r",
+									"//     var error_message = jsonData.errors[0].message;\r",
+									"//     pm.expect(error_message).to.eql(\"Input validation failed\");\r",
+									"// });\r",
 									"\r",
-									"pm.test(\"Verify that error status is 400\", function () {\r",
-									"    var error_status = jsonData.errors[0].extensions.status;\r",
-									"    pm.expect(error_status).to.eql(400);\r",
-									"});"
+									"// pm.test(\"Verify that error status is 400\", function () {\r",
+									"//     var error_status = jsonData.errors[0].extensions.status;\r",
+									"//     pm.expect(error_status).to.eql(400);\r",
+									"// });"
 								],
 								"type": "text/javascript"
 							}
@@ -778,27 +778,27 @@
 							"script": {
 								"id": "4f6ae666-f972-41f1-97ac-e39029f33a37",
 								"exec": [
-									"var jsonData = pm.response.json();\r",
+									"// var jsonData = pm.response.json();\r",
 									"\r",
-									"//Common Verification\r",
-									"pm.test(\"Status code is 400 Bad Request\", function () {\r",
-									"    pm.response.to.have.status(400);\r",
-									"});\r",
+									"// //Common Verification\r",
+									"// pm.test(\"Status code is 200 Bad Request\", function () {\r",
+									"//     pm.response.to.have.status(200);\r",
+									"// });\r",
 									"\r",
-									"pm.test(\"Response time is less than 1000ms\", function () {\r",
-									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
-									"});\r",
+									"// pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"//     pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
+									"// });\r",
 									"\r",
-									"//Test Specific\r",
-									"pm.test(\"Verify that error message is correct\", function () {\r",
-									"    var error_message = jsonData.errors[0].message;  \r",
-									"    pm.expect(error_message).to.include(\"Int cannot represent non-integer value\");\r",
-									"});\r",
+									"// //Test Specific\r",
+									"// pm.test(\"Verify that error message is correct\", function () {\r",
+									"//     var error_message = jsonData.errors[0].message;  \r",
+									"//     pm.expect(error_message).to.include(\"Int cannot represent non-integer value\");\r",
+									"// });\r",
 									"\r",
-									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {\r",
-									"    var error_code = jsonData.errors[0].extensions.code;  \r",
-									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");\r",
-									"});\r",
+									"// pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {\r",
+									"//     var error_code = jsonData.errors[0].extensions.code;  \r",
+									"//     pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");\r",
+									"// });\r",
 									""
 								],
 								"type": "text/javascript"
@@ -933,7 +933,7 @@
 					"response": []
 				},
 				{
-					"name": "Create LiteracyMaterial - Only Required Inputs ??",
+					"name": "Create LiteracyMaterial - Only Required Inputs",
 					"event": [
 						{
 							"listen": "prerequest",
@@ -942,17 +942,7 @@
 								"exec": [
 									"const moment = require('moment');\r",
 									"\r",
-									"pm.globals.set(\"literacyMaterialName\", \"LiteracyMaterialName\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
-									"\r",
-									"// // ScriptureReferences variables\r",
-									"// pm.globals.set(\"literacyMaterialScriptRefBookStart\", \"LiteracyMaterialScriptureReferencesBookStart\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
-									"// pm.globals.set(\"literacyMaterialScriptRefChapterStart\", _.random(1, 25));\r",
-									"// pm.globals.set(\"literacyMaterialScriptRefVerseStart\", _.random(100, 200));\r",
-									"\r",
-									"// pm.globals.set(\"literacyMaterialScriptRefBookEnd\", \"LiteracyMaterialScriptureReferencesBookEnd\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
-									"// pm.globals.set(\"literacyMaterialScriptRefChapterEnd\", _.random(26, 50));\r",
-									"// pm.globals.set(\"literacyMaterialScriptRefVerseEnd\", _.random(201, 300));\r",
-									""
+									"pm.globals.set(\"literacyMaterialName\", \"LiteracyMaterialName\" + moment().format(\"DDMMYYYYhhmmss\"));"
 								],
 								"type": "text/javascript"
 							}
@@ -979,13 +969,18 @@
 									"    var id = jsonData.data.createLiteracyMaterial.literacyMaterial.id;\r",
 									"    pm.expect(id).to.not.eql(null);\r",
 									"    pm.expect(id).to.not.eql(\"\");\r",
+									"\r",
+									"    pm.globals.set(\"literacyMaterialId\", id); //will be overwrriten once Create Litmat with ScriptRef start working\r",
 									"});\r",
+									"\r",
+									"//will be overwrriten once Create Litmat with ScriptRef start working\r",
+									"var literacyMaterial = JSON.stringify(jsonData.data.createLiteracyMaterial.literacyMaterial);\r",
+									"pm.globals.set(\"literacyMaterial_data\", literacyMaterial);\r",
 									"\r",
 									"pm.test(\"Verifying that scriptureReferences are empty\", function () {\r",
 									"    var scriptureReferences = jsonData.data.createLiteracyMaterial.literacyMaterial.scriptureReferences.value;\r",
-									"    var what = _.isEmpty(scriptureReferences);\r",
-									"    console.log('type of scriptureReferences what=', what)\r",
-									"    pm.expect(scriptureReferences).to.eql(0);\r",
+									"    var isEmpty = _.isEmpty(scriptureReferences);\r",
+									"    pm.expect(isEmpty).to.eql(true);\r",
 									"});\r",
 									""
 								],
@@ -1538,7 +1533,16 @@
 							"script": {
 								"id": "74074dd0-a769-48ef-a6f3-37b359fffc2a",
 								"exec": [
-									""
+									"var jsonData = pm.response.json();\r",
+									"const moment = require('moment');\r",
+									"\r",
+									"// Saving data for future use\r",
+									"var id = jsonData.data.createLiteracyMaterial.literacyMaterial.id;\r",
+									"pm.globals.set(\"literacyMaterialId\", id);\r",
+									"\r",
+									"// Saving whole literacyMaterial Object to globals for future use\r",
+									"var literacyMaterial = JSON.stringify(jsonData.data.createLiteracyMaterial.literacyMaterial);\r",
+									"pm.globals.set(\"literacyMaterial_data\", literacyMaterial);"
 								],
 								"type": "text/javascript"
 							}
@@ -2079,7 +2083,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateLiteracyMaterial($input: UpdateLiteracyMaterialInput!) {\r\n  updateLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateLiteracyMaterial($input: UpdateLiteracyMaterialInput!) {\r\n  updateLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"literacyMaterial\": {\r\n      \"id\": \"{{literacyMaterialId}}\",\r\n      \"name\": \"{{literacyMaterialName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -2507,7 +2511,7 @@
 					"response": []
 				},
 				{
-					"name": "Update  LiteracyMaterial Not Mandatory Field Blank -  startBook",
+					"name": "Update  LiteracyMaterial Not Mandatory Field Blank -  startBook ??",
 					"event": [
 						{
 							"listen": "prerequest",
@@ -2542,10 +2546,20 @@
 									"    pm.expect(id).to.not.eql(\"\");\r",
 									"});\r",
 									"\r",
-									"pm.test(\"Verify that updated literacyMaterial startBook is null\", function () {\r",
+									"pm.test(\"PENDING >> BUG ADDED #944(closed-Sprint 15) scriptureReferences returned empty\", function () {\r",
+									"\r",
 									"    var startBook = jsonData.data.updateLiteracyMaterial.literacyMaterial.scriptureReferences.value;\r",
-									"    pm.expect(startBook).to.eql(\"\");\r",
-									"});"
+									"    if (_.isEmpty(startBook)) {\r",
+									"        pm.expect(\"BACKEND\").to.eql(\"PENDING\"); // fail forcefully\r",
+									"    } else {\r",
+									"        pm.expect(\"WRITE TEST CASES\").to.eql(\"ERRORS >>> \" + jsonData.errors[0].message);\r",
+									"    }\r",
+									"});\r",
+									"\r",
+									"// pm.test(\"Verify that updated literacyMaterial startBook is null\", function () {\r",
+									"//     var startBook = jsonData.data.updateLiteracyMaterial.literacyMaterial.scriptureReferences.value;\r",
+									"//     pm.expect(startBook).to.eql(\"\");\r",
+									"// });"
 								],
 								"type": "text/javascript"
 							}
@@ -2702,10 +2716,20 @@
 									"    pm.expect(id).to.not.eql(\"\");\r",
 									"});\r",
 									"\r",
-									"pm.test(\"Verify that updated literacyMaterial endBook is null\", function () {\r",
-									"    var startBook = jsonData.data.updateLiteracyMaterial.literacyMaterial.scriptureReferences.value;\r",
-									"    pm.expect(startBook).to.eql(\"\");\r",
-									"});"
+									"pm.test(\"PENDING >> BUG ADDED #944(closed-Sprint 15) scriptureReferences returned empty\", function () {\r",
+									"\r",
+									"    var endBook = jsonData.data.updateLiteracyMaterial.literacyMaterial.scriptureReferences.value;\r",
+									"    if (_.isEmpty(endBook)) {\r",
+									"        pm.expect(\"BACKEND\").to.eql(\"PENDING\"); // fail forcefully\r",
+									"    } else {\r",
+									"        pm.expect(\"WRITE TEST CASES\").to.eql(\"ERRORS >>> \" + jsonData.errors[0].message);\r",
+									"    }\r",
+									"});\r",
+									"\r",
+									"// pm.test(\"Verify that updated literacyMaterial endBook is null\", function () {\r",
+									"//     var endBook = jsonData.data.updateLiteracyMaterial.literacyMaterial.scriptureReferences.value;\r",
+									"//     pm.expect(endBook).to.eql(\"\");\r",
+									"// });"
 								],
 								"type": "text/javascript"
 							}
@@ -2776,7 +2800,14 @@
 							"script": {
 								"id": "82221289-9ae5-4e5a-b2e1-bf432ac42b15",
 								"exec": [
-									""
+									"var jsonData = pm.response.json();\r",
+									"\r",
+									"var id = jsonData.data.createLiteracyMaterial.literacyMaterial.id;\r",
+									"pm.globals.set(\"literacyMaterialId\", id);\r",
+									"\r",
+									"// Saving whole literacyMaterial Object to globals for future use\r",
+									"var literacyMaterial = JSON.stringify(jsonData.data.createLiteracyMaterial.literacyMaterial);\r",
+									"pm.globals.set(\"literacyMaterial_data\", literacyMaterial);"
 								],
 								"type": "text/javascript"
 							}
@@ -2825,11 +2856,9 @@
 							"script": {
 								"id": "38e75132-d7a7-4dda-a4ee-3ec0f95d0eb5",
 								"exec": [
-									"pm.globals.set(\"itemCount\", 10);\r",
+									"pm.globals.set(\"itemCount\", 25);\r",
 									"pm.globals.set(\"page\", 1);\r",
-									"pm.globals.set('order', \"ASC\");\r",
-									"\r",
-									""
+									"pm.globals.set('order', \"ASC\");"
 								],
 								"type": "text/javascript"
 							}
@@ -2886,6 +2915,120 @@
 									"    }\r",
 									"});\r",
 									"\r",
+									"// SORTING AND FILTER TESTS\r",
+									"pm.test(\"Verify that items are sorted by 'name' and orderd by requested order \", function () {\r",
+									"\r",
+									"    var responseBody = jsonData.data.literacyMaterials.items;\r",
+									"    if (pm.globals.get('order') == \"ASC\") {\r",
+									"        var expectedSortedOrder = lodash.orderBy(responseBody, ['name.value'], ['asc'])\r",
+									"        pm.expect(responseBody).to.eql(expectedSortedOrder);\r",
+									"    } else {\r",
+									"        var expectedSortedOrder = lodash.orderBy(responseBody, ['name.value'], ['desc'])\r",
+									"        pm.expect(responseBody).to.eql(expectedSortedOrder);\r",
+									"    }\r",
+									"\r",
+									"});\r",
+									"\r",
+									"/**\r",
+									" * Setting up 'page' number to be used in next request\r",
+									" * For locating recently created Object position on Specific page\r",
+									" */\r",
+									"var total = jsonData.data.literacyMaterials.total;\r",
+									"var itemCount = Number(pm.globals.get('itemCount'));\r",
+									"\r",
+									"if (total > itemCount) {\r",
+									"\r",
+									"    if ((total % itemCount) == 0) {\r",
+									"        var pageToset = total / itemCount;\r",
+									"        pm.globals.set(\"page\", pageToset);\r",
+									"    } else {\r",
+									"        var pageToset = Math.floor(total / itemCount) + 1;\r",
+									"        pm.globals.set(\"page\", pageToset);\r",
+									"    }\r",
+									"\r",
+									"} else {\r",
+									"    pm.globals.set(\"page\", 1);  // Set page to 1 if total <= itemCount\r",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All LiteracyMaterials Success - item Object",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "55943e6b-21be-4ad0-9ee1-ea550c4b1c31",
+								"exec": [
+									"pm.globals.set(\"itemCount\", 25);\r",
+									"// Page is set from previous request test script based on total\r",
+									"pm.globals.set('order', \"ASC\");"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "a0a8c43b-36a8-45a9-9f85-9cc1657070b9",
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"var literacyMaterial_data = JSON.parse(pm.variables.get(\"literacyMaterial_data\")); // Get stored literacyMaterial object\r",
+									"const moment = require('moment');\r",
+									"var lodash = require('lodash');\r",
+									"\r",
+									"//Common Verification\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
+									"});\r",
+									"\r",
+									"//Test Specific - Pagination\r",
+									"pm.test(\"Verify that total is greater than Zero\", function () {\r",
+									"    var total = jsonData.data.literacyMaterials.total;\r",
+									"    pm.expect(total).to.be.above(0);\r",
+									"});\r",
+									"\r",
 									"/**\r",
 									" * Verifying recently created literacyMaterials's information with LiteracyMaterials object returned within items array\r",
 									" */\r",
@@ -2915,21 +3058,7 @@
 									"    var name = myliteracyMaterial.name.value;\r",
 									"    pm.expect(name).to.eql(literacyMaterial_data.name.value);\r",
 									"});\r",
-									"\r",
-									"\r",
-									"// SORTING AND FILTER TESTS\r",
-									"pm.test(\"Verify that items are sorted by 'name' and orderd by requested order \", function () {\r",
-									"\r",
-									"    var responseBody = jsonData.data.literacyMaterials.items;\r",
-									"    if (pm.globals.get('order') == \"ASC\") {\r",
-									"        var expectedSortedOrder = lodash.orderBy(responseBody, ['name.value'], ['asc'])\r",
-									"        pm.expect(responseBody).to.eql(expectedSortedOrder);\r",
-									"    } else {\r",
-									"        var expectedSortedOrder = lodash.orderBy(responseBody, ['name.value'], ['desc'])\r",
-									"        pm.expect(responseBody).to.eql(expectedSortedOrder);\r",
-									"    }\r",
-									"\r",
-									"});"
+									""
 								],
 								"type": "text/javascript"
 							}
@@ -2952,7 +3081,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"{{literacyMaterialName}}\"\r\n    }\r\n    \r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -3030,7 +3159,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"{{literacyMaterialName}}\"\r\n    }\r\n    \r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -3114,7 +3243,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"{{literacyMaterialName}}\"\r\n    }\r\n    \r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -3203,7 +3332,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"{{literacyMaterialName}}\"\r\n    }\r\n    \r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -3293,7 +3422,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"{{literacyMaterialName}}\"\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -3535,7 +3664,7 @@
 							"script": {
 								"id": "58bad551-987b-4dd9-acba-12092558b771",
 								"exec": [
-									"pm.globals.set(\"itemCount\", 10);\r",
+									"pm.globals.set(\"itemCount\", 100);\r",
 									"pm.globals.set(\"page\", 1);\r",
 									"pm.globals.set('order', \"ASC\");\r",
 									"\r",
@@ -3559,6 +3688,11 @@
 									"\r",
 									"pm.test(\"Response time is less than 1000ms\", function () {\r",
 									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verify that total is greater than Zero\", function () {\r",
+									"    var total = jsonData.data.literacyMaterials.total;  \r",
+									"    pm.expect(total).to.be.above(0);\r",
 									"});\r",
 									"\r",
 									"//Test Specific - Name sorting ASC\r",
@@ -3617,7 +3751,7 @@
 							"script": {
 								"id": "795825fd-b3c7-47d9-8204-7352d3c34673",
 								"exec": [
-									"pm.globals.set(\"itemCount\", 10);\r",
+									"pm.globals.set(\"itemCount\", 100);\r",
 									"pm.globals.set(\"page\", 1);\r",
 									"pm.globals.set('order', \"DESC\");\r",
 									"\r",
@@ -3643,13 +3777,17 @@
 									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
 									"});\r",
 									"\r",
+									"pm.test(\"Verify that total is greater than Zero\", function () {\r",
+									"    var total = jsonData.data.literacyMaterials.total;  \r",
+									"    pm.expect(total).to.be.above(0);\r",
+									"});\r",
+									"\r",
 									"//Test Specific - Name sorting DESC\r",
 									"pm.test(\"Verify that items are sorted by 'name' and orderd by 'DESC' order \", function () {\r",
 									"\r",
 									"    var responseBody = jsonData.data.literacyMaterials.items;\r",
 									"    var expectedSortedOrder = lodash.orderBy(responseBody, item => item.name.value.toLowerCase(), ['desc']);\r",
 									"    pm.expect(responseBody).to.eql(expectedSortedOrder);\r",
-									"\r",
 									"});"
 								],
 								"type": "text/javascript"
@@ -3832,7 +3970,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"{{literacyMaterialName}}\"\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -3879,21 +4017,31 @@
 									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
 									"});\r",
 									"\r",
+									"// Test Specific\r",
+									"pm.test(\"PENDING >> Similar to BUG #776(closed-Sprint 13) for Users (Sort Field allows empty value/unusual characters)\", function () {\r",
+									"\r",
+									"    if (jsonData.data) {\r",
+									"        pm.expect(\"BACKEND\").to.eql(\"PENDING\"); // fail forcefully\r",
+									"    } else {\r",
+									"        pm.expect(\"WRITE TEST CASES\").to.eql(\"ERRORS >>> \" + jsonData.errors[0].message);\r",
+									"    }\r",
+									"});\r",
+									"\r",
 									"//Test Specific\r",
-									"pm.test(\"Verify that error message is correct\", function () {\r",
-									"    var error_message = jsonData.errors[0].message;  \r",
-									"    pm.expect(error_message).to.include(\"Variable `DESC` not defined\");\r",
-									"});\r",
+									"// pm.test(\"Verify that error message is correct\", function () {\r",
+									"//     var error_message = jsonData.errors[0].message;  \r",
+									"//     pm.expect(error_message).to.include(\"Variable `DESC` not defined\");\r",
+									"// });\r",
 									"\r",
-									"pm.test(\"Verify that error code is InternalServerError\", function () {\r",
-									"    var error_code = jsonData.errors[0].extensions.code;  \r",
-									"    pm.expect(error_code).to.eql(\"InternalServerError\");\r",
-									"});\r",
+									"// pm.test(\"Verify that error code is InternalServerError\", function () {\r",
+									"//     var error_code = jsonData.errors[0].extensions.code;  \r",
+									"//     pm.expect(error_code).to.eql(\"InternalServerError\");\r",
+									"// });\r",
 									"\r",
-									"pm.test(\"Verify that error status is 500\", function () {\r",
-									"    var error_status = jsonData.errors[0].extensions.status;  \r",
-									"    pm.expect(error_status).to.eql(500);\r",
-									"});\r",
+									"// pm.test(\"Verify that error status is 500\", function () {\r",
+									"//     var error_status = jsonData.errors[0].extensions.status;  \r",
+									"//     pm.expect(error_status).to.eql(500);\r",
+									"// });\r",
 									""
 								],
 								"type": "text/javascript"
@@ -3917,7 +4065,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"page\": {{page}},\r\n    \"sort\": \"\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"{{literacyMaterialName}}\"\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -4496,7 +4644,7 @@
 					"response": []
 				},
 				{
-					"name": "Get all LiteracyMaterials Parameter  Invalid - count min",
+					"name": "Get All LiteracyMaterials Parameter  Invalid - count min",
 					"event": [
 						{
 							"listen": "prerequest",
@@ -4580,7 +4728,7 @@
 					"response": []
 				},
 				{
-					"name": "Get all LiteracyMaterials Parameter  Invalid - count max",
+					"name": "Get All LiteracyMaterials Parameter  Invalid - count max",
 					"event": [
 						{
 							"listen": "prerequest",
@@ -4664,7 +4812,7 @@
 					"response": []
 				},
 				{
-					"name": "Get all LiteracyMaterials Parameter Invalid - page",
+					"name": "Get All LiteracyMaterials Parameter Invalid - page",
 					"event": [
 						{
 							"listen": "prerequest",
@@ -4749,7 +4897,7 @@
 					"response": []
 				},
 				{
-					"name": "Get all LiteracyMaterials Parameter Invalid - sort",
+					"name": "Get All LiteracyMaterials Parameter Invalid - sort",
 					"event": [
 						{
 							"listen": "prerequest",
@@ -4778,7 +4926,7 @@
 									"});\r",
 									"\r",
 									"//Test Specific\r",
-									"pm.test(\"PENDING >> Similar to BUG #776 for Users (Sort Field allows empty value/unusual characters)\", function () {\r",
+									"pm.test(\"PENDING >> Similar to BUG #776(closed-Sprint 13) for Users (Sort Field allows empty value/unusual characters)\", function () {\r",
 									"\r",
 									"    if (jsonData.data) {\r",
 									"        pm.expect(\"BACKEND\").to.eql(\"PENDING\"); // fail forcefully\r",
@@ -5225,17 +5373,13 @@
 					"response": []
 				},
 				{
-					"name": "BUG LiteracyMaterials  SORT asc + desc",
+					"name": "Delete LiteracyMaterial Parameter - Invalid - Id",
 					"event": [
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "2b9e3eb4-86ed-4758-81ef-da410cc1cced",
+								"id": "1af08c76-0738-46dc-8598-e98f42c1d1cd",
 								"exec": [
-									"pm.globals.set(\"itemCount\", 10);\r",
-									"pm.globals.set(\"page\", 1);\r",
-									"pm.globals.set('order', \"DESC\");\r",
-									"\r",
 									""
 								],
 								"type": "text/javascript"
@@ -5244,9 +5388,34 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "423247cc-dfd9-4b5f-8576-dcd50b3575b2",
+								"id": "d9828a1b-0563-4ce3-95de-b1f82c6424a0",
 								"exec": [
-									""
+									"var jsonData = pm.response.json();\r",
+									"\r",
+									"//Common Verification\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
+									"});\r",
+									"\r",
+									"//Test Specific\r",
+									"pm.test(\"Verify that error message is correct\", function () {\r",
+									"    var error_message = jsonData.errors[0].message;\r",
+									"    pm.expect(error_message).to.eql(\"Input validation failed\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verify that partnership ID error message is correct\", function () {\r",
+									"    var error_partnershipId = jsonData.errors[0].extensions.errors.id.IsShortId;\r",
+									"    pm.expect(error_partnershipId).to.eql(\"Invalid ID\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verify that error status is 400\", function () {\r",
+									"    var error_status = jsonData.errors[0].extensions.status;\r",
+									"    pm.expect(error_status).to.eql(400);\r",
+									"});"
 								],
 								"type": "text/javascript"
 							}
@@ -5268,8 +5437,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      \r\n      name {\r\n        value\r\n      }\r\n      \r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": 10,\r\n    \"page\": 1,\r\n    \"sort\": \"name\",\r\n    \"order\": \"ASC\",\r\n    \"filter\": {\r\n      \"name\": \"\"\r\n    }\r\n  }\r\n}"
+								"query": "mutation deleteLiteracyMaterial($id: ID!) {\r\n  deleteLiteracyMaterial(id: $id)\r\n}\r\n",
+								"variables": "{\r\n  \"id\": \"---- @@@ hhkjh 2323\"\r\n}"
 							},
 							"options": {
 								"graphql": {}

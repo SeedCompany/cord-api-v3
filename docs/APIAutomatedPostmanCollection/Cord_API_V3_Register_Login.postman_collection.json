@@ -25,7 +25,14 @@
 					],
 					"request": {
 						"auth": {
-							"type": "noauth"
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
 						},
 						"method": "POST",
 						"header": [],
@@ -1506,7 +1513,7 @@
 									"\r",
 									"//Common Verification\r",
 									"// pm.test(\"PENDING >> Write Test cases once validation done from backend side BUG ADDED #683 (Phone accepting characters)\", function () {\r",
-									"pm.test(\"PENDING >> BUG ADDED #683 ( Phone field accepting characters )  \", function () {\r",
+									"pm.test(\"PENDING >> BUG ADDED #683(open-Sprint 13) ( Phone field accepting characters )  \", function () {\r",
 									"\r",
 									"    if (jsonData.data) {\r",
 									"        pm.expect(\"BACKEND\").to.eql(\"PENDING\"); // fail forcefully\r",
@@ -2523,12 +2530,7 @@
 									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {",
 									"    var error_message = jsonData.errors[0].extensions.code;  ",
 									"    pm.expect(error_message).to.eql(\"INTERNAL_SERVER_ERROR\");",
-									"});",
-									"",
-									"pm.test(\"Response time is less than 200ms\", function () {",
-									"    pm.expect(pm.response.responseTime).to.be.below(200);",
-									"});",
-									""
+									"});"
 								],
 								"type": "text/javascript"
 							}

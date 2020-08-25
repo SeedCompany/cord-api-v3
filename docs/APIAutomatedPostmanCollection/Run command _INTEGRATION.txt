@@ -1,0 +1,35 @@
+>> Register_Login
+newman run Cord_API_V3_Register_Login.postman_collection.json -e integration.postman_environment.json -g MyWorkspace.postman_globals.json -r htmlextra --delay-request 1000
+
+>> User
+newman run Cord_API_V3_User.postman_collection.json -e integration.postman_environment.json -g MyWorkspace.postman_globals.json -r htmlextra --delay-request 1000
+
+>> Organization
+newman run Cord_API_V3_Organization.postman_collection.json -e integration.postman_environment.json -g MyWorkspace.postman_globals.json -r htmlextra --delay-request 1000
+
+>> Project
+newman run Cord_API_V3_Project.postman_collection.json -e integration.postman_environment.json -g MyWorkspace.postman_globals.json -r htmlextra --delay-request 1000
+
+>> Partnership
+newman run Cord_API_V3_Partnership.postman_collection.json -e integration.postman_environment.json -g MyWorkspace.postman_globals.json -r htmlextra --delay-request 1000
+
+>> Budget
+newman run Cord_API_V3_Budget.postman_collection.json -e integration.postman_environment.json -g MyWorkspace.postman_globals.json -r htmlextra --delay-request 1000
+
+>> Language
+newman run Cord_API_V3_Language.postman_collection.json -e integration.postman_environment.json -g MyWorkspace.postman_globals.json -r htmlextra --delay-request 1000
+
+>> Education
+newman run Cord_API_V3_Education.postman_collection.json -e integration.postman_environment.json -g MyWorkspace.postman_globals.json -r htmlextra --delay-request 1000
+
+>> Product
+newman run Cord_API_V3_Product.postman_collection.json -e integration.postman_environment.json -g MyWorkspace.postman_globals.json -r htmlextra --delay-request 1000
+
+>> LiteracyMaterial
+newman run Cord_API_V3_LiteracyMaterial.postman_collection.json -e integration.postman_environment.json -g MyWorkspace.postman_globals.json -r htmlextra --delay-request 1000
+
+>> Fim
+newman run Cord_API_V3_Film.postman_collection.json -e integration.postman_environment.json -g MyWorkspace.postman_globals.json -r htmlextra --delay-request 1000
+
+>> Story
+newman run Cord_API_V3_Story.postman_collection.json -e integration.postman_environment.json -g MyWorkspace.postman_globals.json -r htmlextra --delay-request 1000
