@@ -8,7 +8,6 @@ import {
 } from '../../src/components/language';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
-import { isNull } from 'lodash';
 
 export async function createLanguage(
   app: TestApp,
@@ -67,12 +66,8 @@ export async function createLanguage(
   return actual;
 }
 
-
-export async function createLanguageMinimal(
-  app: TestApp,
-  input: Partial<CreateLanguage> = {}
-) {
-  const languageName = faker.address.country() + '' + generate()
+export async function createLanguageMinimal(app: TestApp) {
+  const languageName = faker.address.country() + '' + generate();
   const result = await app.graphql.mutate(
     gql`
       mutation createLanguage($input: CreateLanguageInput!) {
@@ -88,7 +83,7 @@ export async function createLanguageMinimal(
       input: {
         language: {
           name: languageName,
-          displayName: faker.company.companyName() + '' + generate()
+          displayName: faker.company.companyName() + '' + generate(),
         },
       },
     }
@@ -103,4 +98,3 @@ export async function createLanguageMinimal(
 
   return actual;
 }
-

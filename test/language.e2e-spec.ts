@@ -1,11 +1,11 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
-import { isValid } from 'shortid';
+import { generate, isValid } from 'shortid';
 import {
   createLanguage,
-  createLanguageMinimal,
   createLanguageEngagement,
+  createLanguageMinimal,
   createProject,
   createSession,
   createTestApp,
@@ -14,7 +14,6 @@ import {
   TestApp,
 } from './utility';
 import { fragments } from './utility/fragments';
-import { generate } from 'shortid';
 
 describe('Language e2e', () => {
   let app: TestApp;
@@ -96,40 +95,38 @@ describe('Language e2e', () => {
     expect(updated.name.value).toBe(newName);
   });
 
-
   // UPDATE LANGUAGE: update a language ethnologue when language is minimally defined.
   it('update a single language ethnologue property when language is minimally defined', async () => {
     const languageMinimal = await createLanguageMinimal(app);
     const newEthnologueCode = faker.random.word() + '' + generate();
-    
+
     const result = await app.graphql.mutate(
       gql`
-      mutation UpdateLanguageEthnologue($input: UpdateLanguageInput!) {
-        updateLanguage(input: $input)
-        {
-          language {
-            ...language
+        mutation UpdateLanguageEthnologue($input: UpdateLanguageInput!) {
+          updateLanguage(input: $input) {
+            language {
+              ...language
+            }
           }
         }
-      }
-      ${fragments.language}
+        ${fragments.language}
       `,
       {
-        input: { 
+        input: {
           language: {
-            id: languageMinimal.id, 
+            id: languageMinimal.id,
             ethnologue: {
-                code: newEthnologueCode
-                }
-            } 
-        }
+              code: newEthnologueCode,
+            },
+          },
+        },
       }
-    )
+    );
 
     const updated = result.updateLanguage.language;
     expect(updated).toBeTruthy();
     expect(updated.id).toBe(languageMinimal.id);
-    expect(updated.ethnologue.code.value).toBe(newEthnologueCode)
+    expect(updated.ethnologue.code.value).toBe(newEthnologueCode);
   });
 
   // DELETE LANGUAGE
