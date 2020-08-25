@@ -4,7 +4,6 @@ import { times } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { CalendarDate } from '../src/common';
-import { BudgetStatus } from '../src/components/budget/dto';
 import { Country, Region, Zone } from '../src/components/location';
 import {
   CreateProject,
@@ -666,19 +665,42 @@ describe('Project e2e', () => {
     expect(queryProject.project.budget.value.status).toBe('Pending');
   });
 
-  it('Should have a current budget when made active', async () => {
+  it('Should have status as Current for budget with project update to active', async () => {
     const project = await createProject(app);
+    const namenew = faker.random.word() + ' Project';
 
-    const result = await app.graphql.mutate(
+    const result = await app.graphql.query(
       gql`
-        mutation updateProject($id: ID!) {
-          updateProject(input: { project: { id: $id, step: Active } }) {
+        mutation updateProject($id: ID!, $name: String!) {
+          updateProject(input: { project: { id: $id, name: $name } }) {
             project {
-              budget {
-                value {
-                  status
-                }
+              ...project
+            }
+          }
+        }
+        ${fragments.project}
+      `,
+      {
+        id: project.id,
+        name: namenew,
+      }
+    );
+
+    expect(result.updateProject.project.id).toBe(project.id);
+    expect(result.updateProject.project.name.value).toBe(namenew);
+
+    const queryProject = await app.graphql.query(
+      gql`
+        query project($id: ID!) {
+          project(id: $id) {
+            ...project
+            budget {
+              value {
+                id
+                status
               }
+              canRead
+              canEdit
             }
           }
         }
@@ -688,8 +710,7 @@ describe('Project e2e', () => {
         id: project.id,
       }
     );
-
-    expect(result.project.budget.value.status).toBe(BudgetStatus.Current);
+    expect(queryProject.project.budget.value.status).toBe('Current');
   });
 
   // #727 create without mouStart, mouEnd, estimatedSubmission
