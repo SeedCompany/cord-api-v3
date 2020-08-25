@@ -31,13 +31,7 @@ import {
   parseSecuredProperties,
   StandardReadResult,
 } from '../../core/database/results';
-import {
-  Budget,
-  BudgetService,
-  BudgetStatus,
-  SecuredBudget,
-  UpdateBudget,
-} from '../budget';
+import { Budget, BudgetService, BudgetStatus, SecuredBudget } from '../budget';
 import {
   EngagementListInput,
   EngagementService,
@@ -537,35 +531,8 @@ export class ProjectService {
     });
 
     await this.eventBus.publish(
-      new ProjectUpdatedEvent(result, input, session)
+      new ProjectUpdatedEvent(result, object, input, session)
     );
-
-    const budgets = await this.budgetService.list(
-      {
-        filter: {
-          projectId: input.id,
-        },
-      },
-      session
-    );
-
-    const pendingBudget = budgets.items.find(
-      (b) => b.status === BudgetStatus.Pending
-    );
-    //574 -The pending budget should be set to active i.e Current when the project gets set to active
-    const newStatus = changes.status || object.status;
-    if (
-      (newStatus === ProjectStatus.InDevelopment ||
-        newStatus === ProjectStatus.Pending) &&
-      pendingBudget?.status === BudgetStatus.Pending
-    ) {
-      const input: UpdateBudget = {
-        id: pendingBudget.id,
-        status: BudgetStatus.Current,
-      };
-
-      await this.budgetService.update(input, session);
-    }
 
     return result;
   }

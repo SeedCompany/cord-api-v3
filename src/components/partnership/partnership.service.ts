@@ -412,9 +412,12 @@ export class PartnershipService {
     const canReadMouEnd =
       readProject.mouEnd.canRead && securedProps.mouEndOverride.canRead;
 
-    const mouStart =
-      (canReadMouStart && securedProps.mouStartOverride.value) || null;
-    const mouEnd = (canReadMouEnd && securedProps.mouEndOverride.value) || null;
+    const mouStart = canReadMouStart
+      ? securedProps.mouStartOverride.value ?? readProject.mouStart.value
+      : null;
+    const mouEnd = canReadMouEnd
+      ? securedProps.mouEndOverride.value ?? readProject.mouEnd.value
+      : null;
 
     return {
       ...parseBaseNodeProperties(result.node),

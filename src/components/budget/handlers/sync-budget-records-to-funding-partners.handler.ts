@@ -233,7 +233,7 @@ export class SyncBudgetRecordsToFundingPartners
 
       if (event instanceof ProjectUpdatedEvent) {
         const partnerships = await this.getPartnershipsForProject(
-          event.project,
+          event.updated,
           event.session
         );
 
