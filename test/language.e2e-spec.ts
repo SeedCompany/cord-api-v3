@@ -1,10 +1,11 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
-import { isValid } from 'shortid';
+import { generate, isValid } from 'shortid';
 import {
   createLanguage,
   createLanguageEngagement,
+  createLanguageMinimal,
   createProject,
   createSession,
   createTestApp,
@@ -92,6 +93,40 @@ describe('Language e2e', () => {
     expect(updated).toBeTruthy();
     expect(updated.id).toBe(language.id);
     expect(updated.name.value).toBe(newName);
+  });
+
+  // UPDATE LANGUAGE: update a language ethnologue when language is minimally defined.
+  it('update a single language ethnologue property when language is minimally defined', async () => {
+    const languageMinimal = await createLanguageMinimal(app);
+    const newEthnologueCode = faker.random.word() + '' + generate();
+
+    const result = await app.graphql.mutate(
+      gql`
+        mutation UpdateLanguageEthnologue($input: UpdateLanguageInput!) {
+          updateLanguage(input: $input) {
+            language {
+              ...language
+            }
+          }
+        }
+        ${fragments.language}
+      `,
+      {
+        input: {
+          language: {
+            id: languageMinimal.id,
+            ethnologue: {
+              code: newEthnologueCode,
+            },
+          },
+        },
+      }
+    );
+
+    const updated = result.updateLanguage.language;
+    expect(updated).toBeTruthy();
+    expect(updated.id).toBe(languageMinimal.id);
+    expect(updated.ethnologue.code.value).toBe(newEthnologueCode);
   });
 
   // DELETE LANGUAGE

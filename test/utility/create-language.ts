@@ -65,3 +65,36 @@ export async function createLanguage(
 
   return actual;
 }
+
+export async function createLanguageMinimal(app: TestApp) {
+  const languageName = faker.address.country() + '' + generate();
+  const result = await app.graphql.mutate(
+    gql`
+      mutation createLanguage($input: CreateLanguageInput!) {
+        createLanguage(input: $input) {
+          language {
+            ...language
+          }
+        }
+      }
+      ${fragments.language}
+    `,
+    {
+      input: {
+        language: {
+          name: languageName,
+          displayName: faker.company.companyName() + '' + generate(),
+        },
+      },
+    }
+  );
+
+  const actual: Language = result.createLanguage.language;
+
+  expect(actual).toBeTruthy();
+
+  expect(isValid(actual.id)).toBe(true);
+  expect(actual.name.value).toBe(languageName);
+
+  return actual;
+}

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { upperFirst } from 'lodash';
+import { pickBy, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { ISession, NotFoundException, ServerException } from '../../../common';
 import {
@@ -341,6 +341,18 @@ export class EthnologueLanguageService {
   async update(id: string, input: UpdateEthnologueLanguage, session: ISession) {
     if (!input) return;
 
+    // Make a mapping of the fields that we want to set in the db to the inputs
+    const valueSet = {
+      'id.value': input.id,
+      'code.value': input.code,
+      'provisionalCode.value': input.provisionalCode,
+      'name.value': input.name,
+      'population.value': input.population,
+    };
+
+    // filter out all of the undefined values so we only have a mapping of entries that the user wanted to edit
+    const valueSetCleaned = pickBy(valueSet, (v) => v !== undefined);
+
     try {
       const query = this.db
         .query()
@@ -378,13 +390,7 @@ export class EthnologueLanguageService {
             node('population', 'Property', { active: true }),
           ],
         ])
-        .setValues({
-          'id.value': input.id,
-          'code.value': input.code,
-          'provisionalCode.value': input.provisionalCode,
-          'name.value': input.name,
-          'population.value': input.population,
-        });
+        .setValues(valueSetCleaned);
       await query.run();
     } catch (exception) {
       this.logger.error('update failed', { exception });
