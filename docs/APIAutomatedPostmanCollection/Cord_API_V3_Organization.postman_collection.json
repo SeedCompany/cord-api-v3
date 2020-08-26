@@ -363,7 +363,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createOrganization($input: CreateOrganizationInput!) {\r\n  createOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createOrganization($input: CreateOrganizationInput!) {\r\n  createOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}",
 								"variables": "{\n  \"input\": {\n    \"organization\": {\n      \"name\": \"{{orgName}}\"\n    }\n  }\n}"
 							},
 							"options": {
@@ -985,7 +985,9 @@
 							"script": {
 								"id": "d8cc9e70-a120-4d74-afae-e8ec25ce7a8c",
 								"exec": [
-									""
+									"const moment = require('moment');\r",
+									"\r",
+									"pm.globals.set(\"orgName\", \"OrganizationName_\" + moment().format(\"DDMMYYYYhhmmss\"));"
 								],
 								"type": "text/javascript"
 							}
@@ -1016,6 +1018,97 @@
 							"graphql": {
 								"query": "mutation updateOrganization($input: UpdateOrganizationInput!) {\r\n  updateOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"organization\": {\r\n      \"id\": \"{{organizationid}}\",\r\n      \"name\": \"{{orgName}}\"\r\n    }\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Org Success - Only Required Inputs",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "9c42ab39-5ae3-43c5-bb75-f73fa2dd48f7",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that ID is not blank or null\", function () {",
+									"    var id = jsonData.data.updateOrganization.organization.id;  ",
+									"    pm.expect(id).to.not.eql(null);",
+									"    pm.expect(id).to.not.eql(\"\");",
+									"});",
+									"",
+									"pm.test(\"Verify that organization data is updated exactly for requested organization ID\", function () {",
+									"    var id = jsonData.data.updateOrganization.organization.id;",
+									"    pm.expect(id).to.eql(pm.variables.get(\"organizationid\"));",
+									"});",
+									"",
+									"pm.test(\"Verify updated organization name is same as previous value\", function () {",
+									"    pm.expect(jsonData.data.updateOrganization.organization.name.value).to.eql(pm.globals.get(\"orgName\"));",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "1c1315fd-28b4-44de-a68f-46ae0835c626",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "",
+								"type": "text",
+								"value": "",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation updateOrganization($input: UpdateOrganizationInput!) {\r\n  updateOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n  \"input\": {\r\n    \"organization\": {\r\n      \"id\": \"{{organizationid}}\"\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -1629,7 +1722,6 @@
 									"var lodash = require('lodash');",
 									"",
 									"var jsonData = pm.response.json();",
-									"var organization_data = JSON.parse(pm.globals.get('organization_data'));",
 									"",
 									"//Common Verification",
 									"pm.test(\"Status code is 200\", function () {",
@@ -1655,45 +1747,44 @@
 									"        pm.expect(hasMore).to.eql(false);",
 									"    }",
 									"});",
-									"",
+									"//Test Specific - no. of items are exact",
 									"pm.test(\"Verify that number of items returned are exact\", function () {",
-									"    var total = jsonData.data.organizations.total;",
-									"    var noOfitems = jsonData.data.organizations.items.length;",
-									"    if (pm.globals.get('itemCount') <= total)",
-									"        pm.expect(noOfitems).to.eql(pm.globals.get('itemCount'));",
-									"    else",
-									"        pm.expect(noOfitems).to.eql(total);",
+									"    var total = jsonData.data.organizations.total;                  // total returned in response",
+									"    var returneditems = jsonData.data.organizations.items.length;   // no. of items returned in response array",
+									"    var itemCount = Number(pm.globals.get('itemCount'));    // no. of items per page",
+									"    var page = Number(pm.globals.get('page'));              // page number",
+									"    var expectedItems = itemCount * page;                   // items we are expecting",
+									"",
+									"    if (expectedItems <= total) {",
+									"        pm.expect(returneditems).to.eql(itemCount);",
+									"    } else {",
+									"        if ((expectedItems - total) < itemCount) {",
+									"            var lastItems = total - ((itemCount * (page - 1)));   // items in last page",
+									"            pm.expect(returneditems).to.eql(lastItems);",
+									"        }",
+									"    }",
 									"});",
 									"",
-									"// Verifying recently created Organization's information with Organization object returned within items array",
+									"/**",
+									" * Setting up 'page' number to be used in next request",
+									" * For locating recently created Object position on Specific page",
+									" */",
+									"var total = jsonData.data.organizations.total;",
+									"var itemCount = Number(pm.globals.get('itemCount'));",
 									"",
-									"// get Organization object first having same id as recently created Organization's id",
-									"var myOrganization = lodash.find(jsonData.data.organizations.items, ['id', organization_data.id]);",
-									"if(myOrganization==undefined) return; // if recent Organization is not within 100 items,return from here",
+									"if (total > itemCount) {",
 									"",
-									"// console.log(\"myOrganization =>\", myOrganization);",
-									"// console.log(\"organization_data =>\", organization_data);",
+									"    if ((total % itemCount) == 0) {",
+									"        var pageToset = total / itemCount;",
+									"        pm.globals.set(\"page\", pageToset);",
+									"    } else {",
+									"        var pageToset = Math.floor(total / itemCount) + 1;",
+									"        pm.globals.set(\"page\", pageToset);",
+									"    }",
 									"",
-									"pm.test(\"Verifying organization ID\", function () {",
-									"    var id = myOrganization.id;",
-									"    pm.expect(id).to.eql(organization_data.id);",
-									"});",
-									"",
-									"pm.test(\"Verifying organization name\", function () {",
-									"    var name = myOrganization.name.value;",
-									"    pm.expect(name).to.eql(organization_data.name.value);",
-									"});",
-									"",
-									"pm.test(\"Verifying organization avatarLetters\", function () {",
-									"    var avatarLetters = myOrganization.avatarLetters;",
-									"    pm.expect(avatarLetters).to.eql(organization_data.avatarLetters);",
-									"});",
-									"",
-									"pm.test(\"Verifying organization's createdAt\", function () {",
-									"    var createdAt = myOrganization.createdAt;",
-									"    pm.expect(createdAt).to.eql(organization_data.createdAt);",
-									"});",
-									""
+									"} else {",
+									"    pm.globals.set(\"page\", 1);  // Set page to 1 if total <= itemCount",
+									"}"
 								],
 								"type": "text/javascript"
 							}
@@ -1728,6 +1819,120 @@
 								"key": "",
 								"value": "",
 								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}} ,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Organizations Success - item Object",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "31a00fb1-7595-4d9b-a1c2-5f343f1f7087",
+								"exec": [
+									"var lodash = require('lodash');",
+									"",
+									"var jsonData = pm.response.json();",
+									"var organization_data = JSON.parse(pm.globals.get('organization_data'));",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific - Pagination",
+									"pm.test(\"Verify that total is greater than Zero\", function () {",
+									"    var total = jsonData.data.organizations.total;",
+									"    pm.expect(total).to.be.above(0);",
+									"});",
+									"",
+									"// Verifying recently created Organization's information with Organization object returned within items array",
+									"",
+									"// get Organization object first having same id as recently created Organization's id",
+									"var myOrganization = lodash.find(jsonData.data.organizations.items, ['id', organization_data.id]);",
+									"if (myOrganization == undefined) return; // if recent Organization is not within 100 items,return from here",
+									"",
+									"",
+									"pm.test(\"Verifying organization ID\", function () {",
+									"    var id = myOrganization.id;",
+									"    pm.expect(id).to.eql(organization_data.id);",
+									"});",
+									"",
+									"pm.test(\"Verifying organization name\", function () {",
+									"    var name = myOrganization.name.value;",
+									"    pm.expect(name).to.eql(organization_data.name.value);",
+									"});",
+									"",
+									"pm.test(\"Verifying organization avatarLetters\", function () {",
+									"    var avatarLetters = myOrganization.avatarLetters;",
+									"    pm.expect(avatarLetters).to.eql(organization_data.avatarLetters);",
+									"});",
+									"",
+									"pm.test(\"Verifying organization's createdAt\", function () {",
+									"    var createdAt = myOrganization.createdAt;",
+									"    pm.expect(createdAt).to.eql(organization_data.createdAt);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "d8f404b2-0340-4047-9d03-67ca77123ec3",
+								"exec": [
+									"pm.globals.set(\"itemCount\",25);\r",
+									"// Page is set from previous request test script based on total\r",
+									"pm.globals.set('order', \"DESC\");"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "",
+								"type": "text",
+								"value": "",
 								"disabled": true
 							}
 						],
@@ -2034,13 +2239,22 @@
 									"});",
 									"",
 									"//Test Specific - no. of items are exact",
+									"//Test Specific - no. of items are exact",
 									"pm.test(\"Verify that number of items returned are exact\", function () {",
-									"    var total = jsonData.data.organizations.total;",
-									"    var noOfitems = jsonData.data.organizations.items.length;",
-									"    if (pm.globals.get('itemCount') <= total)",
-									"        pm.expect(noOfitems).to.eql(pm.globals.get('itemCount'));",
-									"    else",
-									"        pm.expect(noOfitems).to.eql(total);",
+									"    var total = jsonData.data.organizations.total;                  // total returned in response",
+									"    var returneditems = jsonData.data.organizations.items.length;   // no. of items returned in response array",
+									"    var itemCount = Number(pm.globals.get('itemCount'));    // no. of items per page",
+									"    var page = Number(pm.globals.get('page'));              // page number",
+									"    var expectedItems = itemCount * page;                   // items we are expecting",
+									"",
+									"    if (expectedItems <= total) {",
+									"        pm.expect(returneditems).to.eql(itemCount);",
+									"    } else {",
+									"        if ((expectedItems - total) < itemCount) {",
+									"            var lastItems = total - ((itemCount * (page - 1)));   // items in last page",
+									"            pm.expect(returneditems).to.eql(lastItems);",
+									"        }",
+									"    }",
 									"});"
 								],
 								"type": "text/javascript"
@@ -2667,7 +2881,7 @@
 									"});",
 									"",
 									"//Test Specific",
-									"pm.test(\"PENDING >> Similar to BUG #776 for Users (Sort Field allows empty value/unusual characters)\", function () {",
+									"pm.test(\"PENDING >> Similar to BUG #776(closed-Sprint 13) for Users (Sort Field allows empty value/unusual characters)\", function () {",
 									"",
 									"    if (jsonData.data) {",
 									"        pm.expect(\"BACKEND\").to.eql(\"PENDING\"); // fail forcefully",
@@ -3646,7 +3860,7 @@
 									"});",
 									"",
 									"//Test Specific",
-									"pm.test(\"PENDING >> Similar to BUG #776 for Users (Sort Field allows empty value/unusual characters)\", function () {",
+									"pm.test(\"PENDING >> Similar to BUG #776(closed-Sprint 13) for Users (Sort Field allows empty value/unusual characters)\", function () {",
 									"",
 									"    if (jsonData.data) {",
 									"        pm.expect(\"BACKEND\").to.eql(\"PENDING\"); // fail forcefully",
@@ -3835,10 +4049,6 @@
 									"//Test Specific",
 									"pm.test(\"Verify that organization is deleted\", function () {",
 									"    pm.expect(jsonData.data.deleteOrganization).to.eql(true);",
-									"});",
-									"",
-									"pm.test(\"Response time is less than 200ms\", function () {",
-									"    pm.expect(pm.response.responseTime).to.be.below(200);",
 									"});"
 								],
 								"type": "text/javascript"
@@ -4222,12 +4432,12 @@
 									"",
 									"//Test Specific",
 									"pm.test(\"Verify that error message is correct\", function () {",
-									"    var error_message = jsonData.errors[0].message;  ",
-									"    pm.expect(error_message).to.eql(\"Could not find org\");",
+									"    var error_message = jsonData.errors[0].message;",
+									"    pm.expect(error_message).to.eql(\"Could not find organization\");",
 									"});",
 									"",
 									"pm.test(\"Verify that error status is 400\", function () {",
-									"    var error_status = jsonData.errors[0].extensions.status;  ",
+									"    var error_status = jsonData.errors[0].extensions.status;",
 									"    pm.expect(error_status).to.eql(400);",
 									"});"
 								],

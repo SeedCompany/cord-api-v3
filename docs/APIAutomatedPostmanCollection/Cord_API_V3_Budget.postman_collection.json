@@ -1805,7 +1805,7 @@
 					"response": []
 				},
 				{
-					"name": "Get all Budgets Success",
+					"name": "Get All Budgets Success",
 					"event": [
 						{
 							"listen": "test",
@@ -1874,15 +1874,114 @@
 									"",
 									"});",
 									"",
+									"/**",
+									" * Setting up 'page' number to be used in next request",
+									" * For locating recently created Object position on Specific page",
+									" */",
+									"var total = jsonData.data.budgets.total;",
+									"var itemCount = Number(pm.globals.get('itemCount'));",
+									"",
+									"if (total > itemCount) {",
+									"",
+									"    if ((total % itemCount) == 0) {",
+									"        var pageToset = total / itemCount;",
+									"        pm.globals.set(\"page\", pageToset);",
+									"    } else {",
+									"        var pageToset = Math.floor(total / itemCount) + 1;",
+									"        pm.globals.set(\"page\", pageToset);",
+									"    }",
+									"",
+									"} else {",
+									"    pm.globals.set(\"page\", 1);  // Set page to 1 if total <= itemCount",
+									"}",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "e43a73dc-3618-43bd-be77-52915e2cf174",
+								"exec": [
+									"pm.globals.set(\"itemCount\",25);\r",
+									"pm.globals.set(\"page\",1);\r",
+									"pm.globals.set('order', \"ASC\");\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query budgets($input: BudgetListInput!) {\r\n  budgets(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      status\r\n      total\r\n      records {\r\n        id\r\n        createdAt\r\n        fiscalYear {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        amount {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        organization {\r\n          canRead\r\n          canEdit\r\n          value {\r\n            id\r\n            createdAt\r\n            name {\r\n              canRead\r\n              canEdit\r\n              value\r\n            }\r\n            avatarLetters\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"status\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Budgets Success - item Object",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "92a26e5e-146c-411d-a469-1978fd5eb80e",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"var budget_data = JSON.parse(pm.variables.get(\"budget_data\")); // Get stored budget object",
+									"const moment = require('moment');",
+									"var lodash = require('lodash');",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific - Pagination",
+									"pm.test(\"Verify that total is greater than Zero\", function () {",
+									"    var total = jsonData.data.budgets.total;",
+									"    pm.expect(total).to.be.above(0);",
+									"});",
+									"",
 									"// Verifying recently created budget's information with budget object returned within items array",
 									"",
 									"// get Budget object first having same id as recently created Budget's id",
 									"var myBudget = lodash.find(jsonData.data.budgets.items, ['id', budget_data.id]);",
 									"",
-									"if (myBudget == undefined) return; // Safe to return if recent budget is not within first page",
-									"",
-									"console.log(\"myBudget =>\", myBudget);",
-									"console.log(\"budget_data =>\", budget_data);",
+									"// if (myBudget == undefined) return; // Safe to return if recent budget is not within first page",
 									"",
 									"pm.test(\"Verifying budget ID\", function () {",
 									"    var id = myBudget.id;",
@@ -1911,10 +2010,10 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "e43a73dc-3618-43bd-be77-52915e2cf174",
+								"id": "18673c51-c12e-4a4c-a8e2-08232ad142ce",
 								"exec": [
-									"pm.globals.set(\"itemCount\",50);\r",
-									"pm.globals.set(\"page\",1);\r",
+									"pm.globals.set(\"itemCount\",25);\r",
+									"// Page is set from previous request test script based on total\r",
 									"pm.globals.set('order', \"ASC\");\r",
 									""
 								],
@@ -2625,7 +2724,7 @@
 									"});",
 									"",
 									"//Test Specific",
-									"pm.test(\"PENDING >> Similar to BUG #776 for Users (Sort Field allows empty value/unusual characters)\", function () {",
+									"pm.test(\"PENDING >> Similar to BUG #776(closed-Sprint 13) for Users (Sort Field allows empty value/unusual characters)\", function () {",
 									"",
 									"    if (jsonData.data) {",
 									"        pm.expect(\"BACKEND\").to.eql(\"PENDING\"); // fail forcefully",
@@ -2633,7 +2732,6 @@
 									"        pm.expect(\"WRITE TEST CASES\").to.eql(\"ERRORS >>> \" + jsonData.errors[0].message);",
 									"    }",
 									"});",
-									"",
 									"// pm.test(\"Verify that error message is correct\", function () {",
 									"//     var error_message = jsonData.errors[0].message;  ",
 									"//     pm.expect(error_message).to.include(\"Invalid input\");",
@@ -3096,7 +3194,7 @@
 					"response": []
 				},
 				{
-					"name": "Get all Budgets Parameter Invalid - count",
+					"name": "Get all Budgets Parameter Invalid - count min",
 					"event": [
 						{
 							"listen": "test",
@@ -3162,6 +3260,91 @@
 							"graphql": {
 								"query": "query($input: BudgetListInput!) {\r\n  budgets(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      status\r\n      total\r\n      records {\r\n        id\r\n        createdAt\r\n        fiscalYear {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        amount {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        organization {\r\n          canRead\r\n          canEdit\r\n          value {\r\n            id\r\n            createdAt\r\n            name {\r\n              canRead\r\n              canEdit\r\n              value\r\n            }\r\n            avatarLetters\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": 0,\r\n    \"page\": {{page}},\r\n    \"sort\": \"status\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get all Budgets Parameter Invalid - count max",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "ab3d195b-64b4-4bf7-b755-be6d0acdd95f",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].message;  ",
+									"    pm.expect(error_message).to.eql(\"Input validation failed\");",
+									"});",
+									"",
+									"pm.test(\"Verify that error status is 400\", function () {",
+									"    var error_status = jsonData.errors[0].extensions.status;  ",
+									"    pm.expect(error_status).to.eql(400);",
+									"});",
+									"",
+									"pm.test(\"Verify that count error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].extensions.errors.count.max;  ",
+									"    pm.expect(error_message).to.eql(\"count must not be greater than 100\");",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "e967ff93-943b-49a4-a5dc-513e0bde74e7",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query($input: BudgetListInput!) {\r\n  budgets(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      status\r\n      total\r\n      records {\r\n        id\r\n        createdAt\r\n        fiscalYear {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        amount {\r\n          canRead\r\n          canEdit\r\n          value\r\n        }\r\n        organization {\r\n          canRead\r\n          canEdit\r\n          value {\r\n            id\r\n            createdAt\r\n            name {\r\n              canRead\r\n              canEdit\r\n              value\r\n            }\r\n            avatarLetters\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": 159,\r\n    \"page\": {{page}},\r\n    \"sort\": \"status\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -3284,7 +3467,7 @@
 									"});",
 									"",
 									"//Test Specific",
-									"pm.test(\"PENDING >> Similar to BUG #776 for Users (Sort Field allows empty value/unusual characters)\", function () {",
+									"pm.test(\"PENDING >> Similar to BUG #776(closed-Sprint 13) for Users (Sort Field allows empty value/unusual characters)\", function () {",
 									"",
 									"    if (jsonData.data) {",
 									"        pm.expect(\"BACKEND\").to.eql(\"PENDING\"); // fail forcefully",

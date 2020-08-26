@@ -3609,9 +3609,6 @@
 								"id": "104ef43a-b5d0-47ee-ada7-7175ee389d2c",
 								"exec": [
 									"var jsonData = pm.response.json();",
-									"var education_data = JSON.parse(pm.variables.get(\"education_data\")); // Get stored language object",
-									"const moment = require('moment');",
-									"var lodash = require('lodash');",
 									"",
 									"//Common Verification",
 									"pm.test(\"Status code is 200\", function () {",
@@ -3655,6 +3652,108 @@
 									"    }",
 									"});",
 									"",
+									"",
+									"/**",
+									" * Setting up 'page' number to be used in next request",
+									" * For locating recently created Object position on Specific page",
+									" */",
+									"var total = jsonData.data.educations.total;",
+									"var itemCount = Number(pm.globals.get('itemCount'));",
+									"",
+									"if (total > itemCount) {",
+									"",
+									"    if ((total % itemCount) == 0) {",
+									"        var pageToset = total / itemCount;",
+									"        pm.globals.set(\"page\", pageToset);",
+									"    } else {",
+									"        var pageToset = Math.floor(total / itemCount) + 1;",
+									"        pm.globals.set(\"page\", pageToset);",
+									"    }",
+									"",
+									"} else {",
+									"    pm.globals.set(\"page\", 1);  // Set page to 1 if total <= itemCount",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "400ceba0-848d-46d7-b1c7-1b772c74a84c",
+								"exec": [
+									"pm.globals.set(\"itemCount\", 25);\r",
+									"pm.globals.set(\"page\", 1);\r",
+									"pm.globals.set('order', \"ASC\");\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query($input: EducationListInput!) {\r\n  educations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      degree {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      major {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      institution {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"institution\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Educations Success - item Object",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fd8eea2e-0b12-421c-ab8b-06d5fcf957ce",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"var education_data = JSON.parse(pm.variables.get(\"education_data\")); // Get stored language object",
+									"var lodash = require('lodash');",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific - Pagination",
+									"pm.test(\"Verify that total is greater than Zero\", function () {",
+									"    var total = jsonData.data.educations.total;",
+									"    pm.expect(total).to.be.above(0);",
+									"});",
+									"",
 									"/**",
 									" * Verifying recently created educations's information with Education object returned within items array",
 									" */",
@@ -3668,11 +3767,9 @@
 									"    pm.expect(id).to.not.eql(\"\");",
 									"});",
 									"",
-									"pm.test(\"Verifying recently created education's createdAt is in Specific time format\", function () {",
-									"    var time = myEducation.createdAt;",
-									"    var isValidTime = moment(time, \"YYYY-MM-DDTHH:mm:ss.SSSZ\", true).isValid();",
-									"    pm.expect(isValidTime).to.eql(true);",
-									"",
+									"pm.test(\"Verifying recently created education's createdAt\", function () {",
+									"    var createdAt = myEducation.createdAt;",
+									"    pm.expect(createdAt).to.eql(education_data.createdAt);",
 									"});",
 									"",
 									"pm.test(\"Verifying recently created education's id\", function () {",
@@ -3715,10 +3812,10 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "400ceba0-848d-46d7-b1c7-1b772c74a84c",
+								"id": "86e6f830-6521-4969-a3c8-914b30a08009",
 								"exec": [
-									"pm.globals.set(\"itemCount\", 10);\r",
-									"pm.globals.set(\"page\", 1);\r",
+									"pm.globals.set(\"itemCount\", 25);\r",
+									"// Page is set from previous request test script based on total\r",
 									"pm.globals.set('order', \"ASC\");\r",
 									"\r",
 									""
@@ -4513,7 +4610,7 @@
 					"response": []
 				},
 				{
-					"name": "Get all Educations Not Mandatory Field Removed - count",
+					"name": "Get All Educations Not Mandatory Field Removed - count",
 					"event": [
 						{
 							"listen": "test",
@@ -4589,7 +4686,7 @@
 					"response": []
 				},
 				{
-					"name": "Get all Educations Not Mandatory Field Blank - sort",
+					"name": "Get All Educations Not Mandatory Field Blank - sort",
 					"event": [
 						{
 							"listen": "test",
@@ -4674,7 +4771,7 @@
 					"response": []
 				},
 				{
-					"name": "Get all Educations Not Mandatory Field Blank - order",
+					"name": "Get All Educations Not Mandatory Field Blank - order",
 					"event": [
 						{
 							"listen": "test",
@@ -4754,7 +4851,7 @@
 					"response": []
 				},
 				{
-					"name": "Get all Educations Parameter Mismatch - count",
+					"name": "Get All Educations Parameter Mismatch - count",
 					"event": [
 						{
 							"listen": "test",
@@ -4834,7 +4931,7 @@
 					"response": []
 				},
 				{
-					"name": "Get all Educations Parameter Mismatch - page",
+					"name": "Get All Educations Parameter Mismatch - page",
 					"event": [
 						{
 							"listen": "test",
@@ -4914,7 +5011,7 @@
 					"response": []
 				},
 				{
-					"name": "Get all Educations Parameter Mismatch - sort",
+					"name": "Get All Educations Parameter Mismatch - sort",
 					"event": [
 						{
 							"listen": "test",
@@ -4994,7 +5091,7 @@
 					"response": []
 				},
 				{
-					"name": "Get all Educations Parameter Mismatch - order",
+					"name": "Get All Educations Parameter Mismatch - order",
 					"event": [
 						{
 							"listen": "test",
@@ -5074,7 +5171,7 @@
 					"response": []
 				},
 				{
-					"name": "Get all Educations Parameter  Invalid - count min",
+					"name": "Get All Educations Parameter  Invalid - count min",
 					"event": [
 						{
 							"listen": "test",
@@ -5158,7 +5255,7 @@
 					"response": []
 				},
 				{
-					"name": "Get all Educations Parameter  Invalid - count max",
+					"name": "Get All Educations Parameter  Invalid - count max",
 					"event": [
 						{
 							"listen": "test",
@@ -5242,7 +5339,7 @@
 					"response": []
 				},
 				{
-					"name": "Get all Educations Parameter Invalid - page",
+					"name": "Get All Educations Parameter Invalid - page",
 					"event": [
 						{
 							"listen": "test",
@@ -5327,7 +5424,7 @@
 					"response": []
 				},
 				{
-					"name": "Get all Educations Parameter Invalid - sort",
+					"name": "Get All Educations Parameter Invalid - sort",
 					"event": [
 						{
 							"listen": "test",
@@ -5412,7 +5509,7 @@
 					"response": []
 				},
 				{
-					"name": "Get all Educations Parameter Invalid - order",
+					"name": "Get All Educations Parameter Invalid - order",
 					"event": [
 						{
 							"listen": "test",
