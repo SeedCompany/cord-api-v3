@@ -118,9 +118,6 @@ describe('File e2e', () => {
   });
 
   beforeEach(async () => {
-    const db = app.get(DatabaseService);
-    // remove old data to ensure consistency check
-    await db.query().matchNode('n', 'FileNode').detachDelete('n').run();
     await bucket.clear();
     root = await createRootDirectory(app);
     // reset logged in user
@@ -421,6 +418,57 @@ describe('File e2e', () => {
     let file: RawFile;
     const expectedVersionIds: string[] = [];
     let expectedTotalVersions: number;
+
+    afterAll(async () => {
+      // revert the changes so consistency check will be passed for remaining file nodes.
+      await app
+        .get(DatabaseService)
+        .query()
+        .raw(
+          `
+          MATCH
+            (file: File {active: true}),
+            (file)-[rel:name {active: false}]->(nm: Property {active: true})
+          SET rel.active = true
+          RETURN
+            file, rel
+          `
+        )
+        .run();
+
+      await app
+        .get(DatabaseService)
+        .query()
+        .raw(
+          `
+          MATCH
+            (dir: Directory {active: true}),
+            (dir)-[rel:name {active: false}]->(nm: Property {active: true})
+          SET rel.active = true
+          RETURN
+          dir, rel
+          `
+        )
+        .run();
+
+      await app
+        .get(DatabaseService)
+        .query()
+        .raw(
+          `
+        MATCH
+          (file: FileNode {active: true}),
+          (file)<-[:parent {active: true}]-(fv: FileVersion {active: true}),
+          (fv)-[:mimeType {active: true}]->(mt: Property {active: false})
+        SET
+          mt.active = true
+        RETURN
+          fv, mt
+        `
+        )
+        .run();
+    });
+
     beforeEach(async () => {
       const uploadRequest = await requestFileUpload(app);
       file = await uploadFile(app, root.id, {}, uploadRequest);
