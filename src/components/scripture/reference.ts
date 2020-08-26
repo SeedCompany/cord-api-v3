@@ -1,4 +1,5 @@
 import { random } from 'lodash';
+import { InputException } from '../../common';
 import { books } from './books';
 import { ScriptureRange, ScriptureRangeInput, ScriptureReference } from './dto';
 
@@ -32,10 +33,12 @@ const toVerseId = (
     verseCount += versesInBookId(bookIndex - 1);
     bookIndex -= 1;
   }
-
-  const chapterIndex = scriptureRangePart.chapter - 1;
   // reset bookIndex to the current book (needed because of the above while loop)
   bookIndex = bookIndexFromName(bookName);
+  const chapterIndex = chapterIndexFromChapterNumber(
+    bookIndex,
+    scriptureRangePart.chapter
+  );
   // add all verses from previous chapters, but not the current one since we only add through the verse, not the whole chapter
   let i = 0;
   while (i < chapterIndex) {
@@ -74,7 +77,7 @@ const verseIdToReference = (verseId: number): ScriptureReference => {
         if (versesRemaining - versesInThisChapter <= 0) {
           return {
             book: bookNameFromId(bookIndex),
-            chapter: chapterIndex + 1,
+            chapter: books[bookIndex].chapters[chapterIndex],
             verse: versesRemaining,
           };
         }
@@ -98,6 +101,18 @@ const bookIndexFromName = (name: string) => {
     return books.indexOf(book);
   }
   throw new Error('No book matched "' + name + '"');
+};
+const chapterIndexFromChapterNumber = (
+  bookIndex: number,
+  chapterNumber: number
+) => {
+  const chapterIndex = books[bookIndex].chapters.indexOf(chapterNumber);
+  if (chapterIndex === -1) {
+    throw new InputException(
+      'No chapter matched "' + chapterNumber.toString() + '"'
+    );
+  }
+  return chapterIndex;
 };
 const versesInBookId = (bookIndex: number) => {
   const total = books[bookIndex].chapters.reduce(function sum(a, b) {
@@ -127,13 +142,9 @@ export const bookCodeToName = (code: string) => {
 };
 // return random scriptureRefenence as an array
 export const createRandomScriptureReferences = (): ScriptureRangeInput[] => {
-  //To do
-  // const book = books[Math.floor(Math.random() * books.length)];
-  const book = books[random(1)];
-  // const startChapter = book.chapters[Math.floor(Math.random() * book.chapters.length)];
-  const startChapter = book.chapters[0];
-  // const endChapter = book.chapters[Math.floor(Math.random() * book.chapters.length)];
-  const endChapter = book.chapters[1];
+  const book = books[random(books.length - 1)];
+  const startChapter = book.chapters[random(book.chapters.length - 1)];
+  const endChapter = book.chapters[random(book.chapters.length - 1)];
   return [
     {
       start: {
