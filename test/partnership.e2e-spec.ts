@@ -325,4 +325,77 @@ describe('Partnership e2e', () => {
       )
     ).rejects.toThrowError();
   });
+
+  it('should create partnership without mou dates but returns project mou dates if exists', async () => {
+    const partnership = await createPartnership(app, {
+      mouStartOverride: undefined,
+      mouEndOverride: undefined,
+      projectId: project.id,
+    });
+
+    const result = await app.graphql.query(
+      gql`
+        query partnership($id: ID!) {
+          partnership(id: $id) {
+            ...partnership
+          }
+        }
+        ${fragments.partnership}
+      `,
+      {
+        id: partnership.id,
+      }
+    );
+
+    const actual: Partnership = result.partnership;
+
+    expect(actual.id).toBe(partnership.id);
+    expect(actual.agreementStatus.value).toBe(
+      partnership.agreementStatus.value
+    );
+    expect(actual.mouStatus.value).toBe(partnership.mouStatus.value);
+    expect(actual.mouStart.value).toBe(project.mouStart.value);
+    expect(actual.mouEnd.value).toBe(project.mouEnd.value);
+    expect(actual.types.value).toEqual(
+      expect.arrayContaining(partnership.types.value)
+    );
+    expect(actual.organization).toBeTruthy();
+    expect(actual.organization).toEqual(partnership.organization);
+    expect(actual.agreementStatus.canEdit).toBe(true);
+  });
+
+  it('should create budget records if types field contains Funding', async () => {
+    await createPartnership(app, {
+      mouStartOverride: CalendarDate.fromISO('2020-08-01'),
+      mouEndOverride: CalendarDate.fromISO('2022-08-01'),
+      types: [PartnershipType.Funding, PartnershipType.Managing],
+      projectId: project.id,
+    });
+
+    const result = await app.graphql.query(
+      gql`
+        query project($id: ID!) {
+          project(id: $id) {
+            ...project
+            budget {
+              value {
+                id
+                records {
+                  id
+                }
+              }
+            }
+          }
+        }
+        ${fragments.project}
+      `,
+      {
+        id: project.id,
+      }
+    );
+
+    const actual = result.project;
+    expect(actual.id).toBe(project.id);
+    expect(actual.budget.value.records.length).toBe(2);
+  });
 });

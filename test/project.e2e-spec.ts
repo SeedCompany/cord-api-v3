@@ -7,6 +7,10 @@ import { CalendarDate } from '../src/common';
 import { BudgetStatus } from '../src/components/budget/dto';
 import { Country, Region, Zone } from '../src/components/location';
 import {
+  CreatePartnership,
+  PartnershipType,
+} from '../src/components/partnership';
+import {
   CreateProject,
   Project,
   ProjectStatus,
@@ -147,6 +151,16 @@ describe('Project e2e', () => {
     expect(actual.mouStart.value).toBeNull();
     expect(actual.mouEnd.value).toBeNull();
     expect(actual.estimatedSubmission.value).toBeNull();
+  });
+
+  it('should throw error if the location id is not valid', async () => {
+    await expect(
+      createProject(app, {
+        name: faker.random.uuid(),
+        type: ProjectType.Translation,
+        locationId: 'invalid-location-id',
+      })
+    ).rejects.toThrowError();
   });
 
   it('create & read project with budget and location by id', async () => {
@@ -776,5 +790,77 @@ describe('Project e2e', () => {
       }
     );
     expect(createProject.project.id).toBeDefined();
+  });
+
+  /**
+   * It should create Partnership with Funding type before creating Project
+   * Update Project's mou dates and check if the budget records are created.
+   */
+  it('should create budget records after updating project with mou dates', async () => {
+    const proj = await createProject(app, {
+      name: faker.random.uuid() + ' project',
+      mouStart: undefined,
+      mouEnd: undefined,
+    });
+
+    const partnership: CreatePartnership = {
+      projectId: proj.id,
+      organizationId: 'seedcompanyid',
+      types: [PartnershipType.Funding],
+    };
+
+    // Create Partnership with Funding type
+    await app.graphql.mutate(
+      gql`
+        mutation createPartnership($input: CreatePartnershipInput!) {
+          createPartnership(input: $input) {
+            partnership {
+              ...partnership
+            }
+          }
+        }
+        ${fragments.partnership}
+      `,
+      {
+        input: {
+          partnership,
+        },
+      }
+    );
+
+    // Update Project with mou dates
+    const result = await app.graphql.mutate(
+      gql`
+        mutation updateProject($id: ID!, $mouStart: Date!, $mouEnd: Date!) {
+          updateProject(
+            input: {
+              project: { id: $id, mouStart: $mouStart, mouEnd: $mouEnd }
+            }
+          ) {
+            project {
+              ...project
+              budget {
+                value {
+                  id
+                  records {
+                    id
+                  }
+                }
+              }
+            }
+          }
+        }
+        ${fragments.project}
+      `,
+      {
+        id: proj.id,
+        mouStart: CalendarDate.fromISO('2020-08-23'),
+        mouEnd: CalendarDate.fromISO('2021-08-22'),
+      }
+    );
+
+    const actual = result.updateProject.project;
+    expect(actual.id).toBe(proj.id);
+    expect(actual.budget.value.records.length).toBe(1);
   });
 });
