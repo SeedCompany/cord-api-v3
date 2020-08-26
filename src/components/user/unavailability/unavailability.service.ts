@@ -46,7 +46,7 @@ export class UnavailabilityService {
       throw new ServerException('Could not create unavailability');
     }
 
-    this.logger.info(`Created user unavailability`, {
+    this.logger.debug(`Created user unavailability`, {
       id,
       userId,
     });
@@ -164,7 +164,7 @@ export class UnavailabilityService {
   }
 
   async delete(id: string, session: ISession): Promise<void> {
-    this.logger.info(`mutation delete unavailability`);
+    this.logger.debug(`mutation delete unavailability`);
     const ua = await this.readOne(id, session);
     if (!ua) {
       throw new NotFoundException(

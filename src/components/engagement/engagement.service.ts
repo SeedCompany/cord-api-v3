@@ -255,7 +255,7 @@ export class EngagementService {
       );
     }
 
-    this.logger.info('Mutation create language engagement ', {
+    this.logger.debug('Mutation create language engagement ', {
       input,
       projectId,
       languageId,
@@ -277,7 +277,7 @@ export class EngagementService {
       session
     );
 
-    this.logger.info('ceremony created: ', ceremony);
+    this.logger.debug('ceremony created: ', ceremony);
     const createLE = this.db
       .query()
       .match(matchSession(session, { withAclEdit: 'canCreateEngagement' }))
@@ -508,7 +508,7 @@ export class EngagementService {
       );
     }
 
-    this.logger.info('Mutation create internship engagement ', {
+    this.logger.debug('Mutation create internship engagement ', {
       input,
       projectId,
       mentorId,
@@ -803,14 +803,14 @@ export class EngagementService {
     id: string,
     session: ISession
   ): Promise<LanguageEngagement | InternshipEngagement> {
-    this.logger.info('readOne', { id, userId: session.userId });
+    this.logger.debug('readOne', { id, userId: session.userId });
 
     if (!id) {
       throw new NotFoundException('no id given', 'engagement.id');
     }
 
     if (!session.userId) {
-      this.logger.info('using anon user id');
+      this.logger.debug('using anon user id');
       session.userId = this.config.anonUser.id;
     }
 

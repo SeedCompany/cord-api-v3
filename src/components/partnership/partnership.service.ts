@@ -347,7 +347,7 @@ export class PartnershipService {
     this.logger.debug('readOne', { id, userId: session.userId });
 
     if (!session.userId) {
-      this.logger.info('using anon user id');
+      this.logger.debug('using anon user id');
       session.userId = this.config.anonUser.id;
     }
 

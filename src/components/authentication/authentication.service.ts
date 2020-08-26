@@ -241,7 +241,7 @@ export class AuthenticationService {
       .first();
 
     if (!result) {
-      this.logger.info('Failed to find active token in database', { token });
+      this.logger.debug('Failed to find active token in database', { token });
       throw new NoSessionException(
         'Session has not been established',
         'NoSession'

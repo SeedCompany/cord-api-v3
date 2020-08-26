@@ -285,7 +285,7 @@ export class ProjectMemberService {
   }
 
   async readOne(id: string, session: ISession): Promise<ProjectMember> {
-    this.logger.info(`read one`, {
+    this.logger.debug(`read one`, {
       id,
       userId: session.userId,
     });

@@ -33,9 +33,9 @@ export type LogEntryContext = Record<string, any>;
  *
  * For example:
  *   Don't do this:
- *   logger.info(`Doing the thing with ${object}`);
+ *   logger.debug(`Doing the thing with ${object}`);
  *   Instead do this instead:
- *   logger.info(`Doing the thing`, { object });
+ *   logger.debug(`Doing the thing`, { object });
  *
  *
  * Note: this is just a class for dependency injection.

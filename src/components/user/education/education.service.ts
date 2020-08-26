@@ -209,7 +209,7 @@ export class EducationService {
       } catch (e) {
         this.logger.error('e :>> ', e);
       }
-      this.logger.info(`Created user education`, { id, userId });
+      this.logger.debug(`Created user education`, { id, userId });
 
       // connect the Education to the User.
       const query = `

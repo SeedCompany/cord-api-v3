@@ -185,7 +185,7 @@ export class SongService {
       // add root admin to new song as an admin
       await this.db.addRootAdminToBaseNodeAsAdmin(id, 'Song');
 
-      this.logger.info(`song created`, { id: result.id });
+      this.logger.debug(`song created`, { id: result.id });
 
       return await this.readOne(result.id, session);
     } catch (exception) {
@@ -203,7 +203,7 @@ export class SongService {
     }
 
     if (!session.userId) {
-      this.logger.info('using anon user id');
+      this.logger.debug('using anon user id');
       session.userId = this.config.anonUser.id;
     }
 
@@ -280,7 +280,7 @@ export class SongService {
       throw new ServerException('Failed to delete', exception);
     }
 
-    this.logger.info(`deleted song with id`, { id });
+    this.logger.debug(`deleted song with id`, { id });
   }
 
   async list(

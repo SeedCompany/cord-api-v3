@@ -352,7 +352,7 @@ export class LocationService {
 
       await createRegion.first();
 
-      this.logger.info(`Region created`, { input, userId: session.userId });
+      this.logger.debug(`Region created`, { input, userId: session.userId });
 
       // connect the Zone to Region
 
@@ -481,7 +481,7 @@ export class LocationService {
         .return('newCountry.id as id');
       await createCountry.first();
 
-      this.logger.info(`country created`);
+      this.logger.debug(`country created`);
 
       // connect the Region to Country
       if (regionId) {
@@ -537,7 +537,7 @@ export class LocationService {
       intersection(results?.labels, ['Country', 'Region', 'Zone'])
     );
 
-    this.logger.info('Looking for ', {
+    this.logger.debug('Looking for ', {
       label,
       id,
       userId: session.userId,
@@ -559,7 +559,7 @@ export class LocationService {
   }
 
   async readOneZone(id: string, session: ISession): Promise<Zone> {
-    this.logger.info(`Read Zone`, { id, userId: session.userId });
+    this.logger.debug(`Read Zone`, { id, userId: session.userId });
 
     if (!id) {
       throw new NotFoundException('no id given', 'zone.id');
@@ -622,7 +622,7 @@ export class LocationService {
   }
 
   async readOneRegion(id: string, session: ISession): Promise<Region> {
-    this.logger.info(`Read Region`, { id, userId: session.userId });
+    this.logger.debug(`Read Region`, { id, userId: session.userId });
 
     if (!id) {
       throw new NotFoundException('no id given', 'region.id');
@@ -702,7 +702,7 @@ export class LocationService {
   }
 
   async readOneCountry(id: string, session: ISession): Promise<Country> {
-    this.logger.info(`Query readOne Country`, { id, userId: session.userId });
+    this.logger.debug(`Query readOne Country`, { id, userId: session.userId });
 
     if (!id) {
       throw new InputException('No country id to search for', 'country.id');

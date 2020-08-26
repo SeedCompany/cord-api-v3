@@ -301,7 +301,7 @@ export class ProductService {
       throw new ServerException('failed to create default product');
     }
 
-    this.logger.info(`product created`, { id: result.id });
+    this.logger.debug(`product created`, { id: result.id });
     return await this.readOne(result.id, session);
   }
 

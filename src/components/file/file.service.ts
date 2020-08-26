@@ -72,7 +72,7 @@ export class FileService {
   }
 
   async getFileNode(id: string, session: ISession): Promise<FileNode> {
-    this.logger.info(`getNode`, { id, userId: session.userId });
+    this.logger.debug(`getNode`, { id, userId: session.userId });
 
     const base = await this.repo.getBaseNodeById(id, session);
     return await this.adaptBaseNodeToFileNode(base, session);

@@ -27,7 +27,7 @@ export * from './mapping.helper';
 
 export function printActualQuery(logger: ILogger, query: Query) {
   const printMe = query;
-  logger.info(printMe.interpolate());
+  logger.debug(printMe.interpolate());
 }
 
 // eslint-disable-next-line @seedcompany/no-unused-vars
