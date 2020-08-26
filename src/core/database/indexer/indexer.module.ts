@@ -24,7 +24,7 @@ export class IndexerModule implements OnModuleInit {
     const discovered = await this.discover.providerMethodsWithMetaAtKey(
       DB_INDEX_KEY
     );
-    this.logger.info('Discovered indexers', { count: discovered.length });
+    this.logger.debug('Discovered indexers', { count: discovered.length });
 
     const indexers = discovered.map((h) => h.discoveredMethod);
     for (const { handler, methodName, parentClass } of indexers) {
@@ -46,6 +46,6 @@ export class IndexerModule implements OnModuleInit {
       }
     }
 
-    this.logger.info('Finished indexing');
+    this.logger.debug('Finished indexing');
   }
 }

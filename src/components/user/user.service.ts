@@ -484,7 +484,7 @@ export class UserService {
   }
 
   async update(input: UpdateUser, session: ISession): Promise<User> {
-    this.logger.info('mutation update User', { input, session });
+    this.logger.debug('mutation update User', { input, session });
     const user = await this.readOne(input.id, session);
 
     await this.db.sgUpdateProperties({
@@ -963,7 +963,7 @@ export class UserService {
       try {
         await removePrimary.first();
       } catch {
-        this.logger.info('not primary');
+        this.logger.debug('not primary');
       }
     }
 

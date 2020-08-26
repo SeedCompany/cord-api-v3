@@ -45,7 +45,7 @@ export class EmailService {
 
     if (send) {
       await this.sesSend(to, subject, html, text);
-      this.logger.info('Sent email', logProps);
+      this.logger.debug('Sent email', logProps);
       return;
     }
 

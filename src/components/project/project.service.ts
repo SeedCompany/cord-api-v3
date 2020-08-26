@@ -408,7 +408,7 @@ export class ProjectService {
 
   async readOne(id: string, session: ISession): Promise<Project> {
     if (!session.userId) {
-      this.logger.info('using anon user id');
+      this.logger.debug('using anon user id');
       session.userId = this.config.anonUser.id;
     }
     const query = this.db
@@ -656,7 +656,7 @@ export class ProjectService {
     input: EngagementListInput,
     session: ISession
   ): Promise<SecuredEngagementList> {
-    this.logger.info('list engagements ', {
+    this.logger.debug('list engagements ', {
       projectId: project.id,
       input,
       userId: session.userId,

@@ -207,7 +207,7 @@ export class FilmService {
         throw new ServerException('failed to create a film');
       }
 
-      this.logger.info(`flim created`, { id: result.id });
+      this.logger.debug(`flim created`, { id: result.id });
       return await this.readOne(result.id, session);
     } catch (exception) {
       this.logger.error(`Could not create film`, {
@@ -219,7 +219,7 @@ export class FilmService {
   }
 
   async readOne(filmId: string, session: ISession): Promise<Film> {
-    this.logger.info(`Read film`, {
+    this.logger.debug(`Read film`, {
       id: filmId,
       userId: session.userId,
     });
@@ -363,7 +363,7 @@ export class FilmService {
       throw new ServerException('Failed to delete', exception);
     }
 
-    this.logger.info(`deleted film with id`, { id });
+    this.logger.debug(`deleted film with id`, { id });
   }
 
   async list(

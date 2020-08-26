@@ -202,7 +202,7 @@ export class StoryService {
         throw new ServerException('failed to create a story');
       }
 
-      this.logger.info(`story created`, { id: result.id });
+      this.logger.debug(`story created`, { id: result.id });
       return await this.readOne(result.id, session);
     } catch (exception) {
       this.logger.error(`Could not create story`, {
@@ -214,13 +214,13 @@ export class StoryService {
   }
 
   async readOne(id: string, session: ISession): Promise<Story> {
-    this.logger.info(`Read Story`, {
+    this.logger.debug(`Read Story`, {
       id,
       userId: session.userId,
     });
 
     if (!session.userId) {
-      this.logger.info('using anon user id');
+      this.logger.debug('using anon user id');
       session.userId = this.config.anonUser.id;
     }
 
@@ -321,7 +321,7 @@ export class StoryService {
       throw new ServerException('Failed to delete', exception);
     }
 
-    this.logger.info(`deleted story with id`, { id });
+    this.logger.debug(`deleted story with id`, { id });
   }
 
   async list(

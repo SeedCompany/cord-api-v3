@@ -202,7 +202,7 @@ export class CeremonyService {
   }
 
   async readOne(id: string, session: ISession): Promise<Ceremony> {
-    this.logger.info(`Query readOne Ceremony`, { id, userId: session.userId });
+    this.logger.debug(`Query readOne Ceremony`, { id, userId: session.userId });
     if (!id) {
       throw new InputException('No ceremony id to search for', 'ceremony.id');
     }

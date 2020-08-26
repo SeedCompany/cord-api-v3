@@ -207,7 +207,7 @@ export class LiteracyMaterialService {
         throw new ServerException('failed to create a literacy material');
       }
 
-      this.logger.info(`literacy material created`, { id: result.id });
+      this.logger.debug(`literacy material created`, { id: result.id });
       return await this.readOne(result.id, session);
     } catch (exception) {
       this.logger.error(`Could not create literacy material`, {
@@ -225,7 +225,7 @@ export class LiteracyMaterialService {
     literacyMaterialId: string,
     session: ISession
   ): Promise<LiteracyMaterial> {
-    this.logger.info(`Read literacyMaterial`, {
+    this.logger.debug(`Read literacyMaterial`, {
       id: literacyMaterialId,
       userId: session.userId,
     });
@@ -378,7 +378,7 @@ export class LiteracyMaterialService {
       throw new ServerException('Failed to delete', exception);
     }
 
-    this.logger.info(`deleted literacyMaterial with id`, { id });
+    this.logger.debug(`deleted literacyMaterial with id`, { id });
   }
 
   async list(

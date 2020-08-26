@@ -33,7 +33,7 @@ export class EnvironmentService {
         this.logger.debug(`Skipping file`, { file });
         continue;
       }
-      this.logger.info(`Loading file`, { file });
+      this.logger.debug(`Loading file`, { file });
 
       const parsed = parseEnv(fs.readFileSync(file));
 

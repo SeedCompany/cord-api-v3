@@ -359,7 +359,7 @@ export class DatabaseService {
     props: string[];
     nodevar: string;
   }): Promise<any | undefined> {
-    // this.logger.info('sgReadProperties', { id, session, props, nodevar });
+    // this.logger.debug('sgReadProperties', { id, session, props, nodevar });
     let type: string = upperFirst(nodevar);
 
     if (nodevar === 'Lang') {

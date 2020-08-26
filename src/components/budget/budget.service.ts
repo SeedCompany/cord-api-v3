@@ -158,7 +158,7 @@ export class BudgetService {
     { projectId }: CreateBudget,
     session: ISession
   ): Promise<Budget> {
-    this.logger.info('Creating budget', { projectId });
+    this.logger.debug('Creating budget', { projectId });
 
     const readProject = this.db
       .query()
@@ -228,7 +228,7 @@ export class BudgetService {
         ])
         .run();
 
-      this.logger.info(`Created Budget`, {
+      this.logger.debug(`Created Budget`, {
         id: result.id,
         userId: session.userId,
       });
@@ -253,7 +253,7 @@ export class BudgetService {
       );
     }
 
-    this.logger.info('Creating BudgetRecord', input);
+    this.logger.debug('Creating BudgetRecord', input);
     // on Init, create a budget will create a budget record for each org and each fiscal year in the project input.projectId
     const createdAt = DateTime.local();
 
@@ -301,7 +301,7 @@ export class BudgetService {
         throw new ServerException('failed to create a budget record');
       }
 
-      this.logger.info(`Created Budget Record`, {
+      this.logger.debug(`Created Budget Record`, {
         id: result.id,
         userId: session.userId,
       });
@@ -350,13 +350,13 @@ export class BudgetService {
   }
 
   async readOne(id: string, session: ISession): Promise<Budget> {
-    this.logger.info(`Query readOne Budget: `, {
+    this.logger.debug(`Query readOne Budget: `, {
       id,
       userId: session.userId,
     });
 
     if (!session.userId) {
-      this.logger.info('using anon user id');
+      this.logger.debug('using anon user id');
       session.userId = this.config.anonUser.id;
     }
 
@@ -414,13 +414,13 @@ export class BudgetService {
   }
 
   async readOneRecord(id: string, session: ISession): Promise<BudgetRecord> {
-    this.logger.info(`Query readOne Budget Record: `, {
+    this.logger.debug(`Query readOne Budget Record: `, {
       id,
       userId: session.userId,
     });
 
     if (!session.userId) {
-      this.logger.info('using anon user id');
+      this.logger.debug('using anon user id');
       session.userId = this.config.anonUser.id;
     }
 
@@ -486,7 +486,7 @@ export class BudgetService {
     { id, ...input }: UpdateBudgetRecord,
     session: ISession
   ): Promise<BudgetRecord> {
-    this.logger.info('Update budget Record, ', { id, userId: session.userId });
+    this.logger.debug('Update budget Record, ', { id, userId: session.userId });
 
     // 574 - Budget records are only editable if the budget is pending
     // Get budget status
@@ -570,7 +570,7 @@ export class BudgetService {
     };
 
     const { projectId } = filter;
-    this.logger.info('Listing budgets on projectId ', {
+    this.logger.debug('Listing budgets on projectId ', {
       projectId,
       userId: session.userId,
     });
@@ -627,7 +627,7 @@ export class BudgetService {
     session: ISession
   ): Promise<BudgetRecordListOutput> {
     const { budgetId } = filter;
-    this.logger.info('Listing budget records on budgetId ', {
+    this.logger.debug('Listing budget records on budgetId ', {
       budgetId,
       userId: session.userId,
     });
