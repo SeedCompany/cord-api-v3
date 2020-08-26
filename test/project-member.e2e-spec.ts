@@ -161,6 +161,34 @@ describe('ProjectMember e2e', () => {
     ).rejects.toThrowError();
   });
 
+  it('Can create the same projectMember after deletion', async () => {
+    await login(app, { email: user.email.value, password });
+    const project = await createProject(app);
+    const member = await createUser(app, { password });
+    const projectMember = await createProjectMember(app, {
+      userId: member.id,
+      projectId: project.id,
+    });
+
+    await app.graphql.mutate(
+      gql`
+        mutation deleteProjectMember($id: ID!) {
+          deleteProjectMember(id: $id)
+        }
+      `,
+      {
+        id: projectMember.id,
+      }
+    );
+
+    const newProjectMember = await createProjectMember(app, {
+      userId: member.id,
+      projectId: project.id,
+    });
+
+    expect(newProjectMember.id).toBeTruthy();
+  });
+
   it('update projectMember', async () => {
     await login(app, { email: user.email.value, password });
     const project = await createProject(app);
