@@ -25,6 +25,7 @@ describe('firstLettersOfWords', () => {
     [`fa d'ambu nt`, 'fdan'],
     [`aramaic m-south ot`, 'amso'],
     [`ḛramaic 2 ḛouth`, 'ḛ2ḛ'],
+    [`orgName`, 'o'],
   ])('%s -> %s', (words, letters) => {
     expect(firstLettersOfWords(words, Infinity)).toEqual(letters);
   });

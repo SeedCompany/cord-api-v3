@@ -21,6 +21,9 @@ const lowercasePattern = RegExp(
   'ug'
 );
 
+const matchAndMerge = (pattern: RegExp, str: string, group = 1) =>
+  Array.from(str.matchAll(pattern), (m) => m[group]).join('');
+
 export function firstLettersOfWords(
   words: string,
   limit: number | null = 3
@@ -33,7 +36,9 @@ export function firstLettersOfWords(
   const pattern = words.match(hasUppercaseLettersPattern)
     ? uppercasePattern
     : lowercasePattern;
-  const letters = Array.from(words.matchAll(pattern), (m) => m[1]).join('');
+  const letters =
+    matchAndMerge(pattern, words) || matchAndMerge(lowercasePattern, words);
+
   return limit === Infinity || limit == null
     ? letters
     : letters.substr(0, limit);
