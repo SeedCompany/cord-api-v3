@@ -6,6 +6,7 @@ import {
   ISession,
   NotFoundException,
   ServerException,
+  UnauthenticatedException,
 } from '../../common';
 import {
   addAllSecureProperties,
@@ -203,6 +204,9 @@ export class OrganizationService {
   }
 
   async delete(id: string, session: ISession): Promise<void> {
+    if (!session.userId) {
+      throw new UnauthenticatedException('user not logged in');
+    }
     const ed = await this.readOne(id, session);
     try {
       await this.db.deleteNode({
