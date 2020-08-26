@@ -10,6 +10,7 @@ import {
   NotFoundException,
   Sensitivity,
   ServerException,
+  UnauthenticatedException,
 } from '../../common';
 import {
   ConfigService,
@@ -203,6 +204,10 @@ export class ProjectService {
     { locationId, ...input }: CreateProject,
     session: ISession
   ): Promise<Project> {
+    if (!session.userId) {
+      throw new UnauthenticatedException('user not logged in');
+    }
+
     const createdAt = DateTime.local();
     const step = input.step ?? ProjectStep.EarlyConversations;
     const createInput = {
@@ -358,7 +363,7 @@ export class ProjectService {
 
       await this.projectMembers.create(
         {
-          userId: session.userId!,
+          userId: session.userId,
           projectId: result.id,
           roles: [Role.ProjectManager],
         },
