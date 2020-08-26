@@ -3,6 +3,7 @@ import { contains, node, relation } from 'cypher-query-builder';
 import { find, flatMap, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import {
+  CalendarDate,
   DuplicateException,
   fiscalYears,
   InputException,
@@ -255,7 +256,7 @@ export class ProjectService {
       },
       {
         key: 'mouStart',
-        value: createInput.mouStart,
+        value: createInput.mouStart ?? CalendarDate.fromDateTime(createdAt),
         addToAdminSg: true,
         addToWriterSg: false,
         addToReaderSg: true,

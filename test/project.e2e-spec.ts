@@ -144,7 +144,7 @@ describe('Project e2e', () => {
     expect(actual.id).toBeDefined();
     expect(actual.deptId.value).toBeNull();
     expect(actual.location.value).toBeNull();
-    expect(actual.mouStart.value).toBeNull();
+    expect(actual.mouStart.value).toEqual(CalendarDate.local().toString());
     expect(actual.mouEnd.value).toBeNull();
     expect(actual.estimatedSubmission.value).toBeNull();
   });
