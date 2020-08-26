@@ -1,4 +1,5 @@
 import { random } from 'lodash';
+import { InputException } from '../../common';
 import { books } from './books';
 import { ScriptureRange, ScriptureRangeInput, ScriptureReference } from './dto';
 
@@ -105,13 +106,13 @@ const chapterIndexFromChapterNumber = (
   bookIndex: number,
   chapterNumber: number
 ) => {
-  const chapter = books[bookIndex].chapters.find((c) => {
-    return c === chapterNumber;
-  });
-  if (chapter) {
-    return books[bookIndex].chapters.indexOf(chapter);
+  const chapterIndex = books[bookIndex].chapters.indexOf(chapterNumber);
+  if (chapterIndex === -1) {
+    throw new InputException(
+      'No chapter matched "' + chapterNumber.toString() + '"'
+    );
   }
-  throw new Error('No chapter matched "' + chapterNumber.toString() + '"');
+  return chapterIndex;
 };
 const versesInBookId = (bookIndex: number) => {
   const total = books[bookIndex].chapters.reduce(function sum(a, b) {
