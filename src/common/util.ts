@@ -26,3 +26,17 @@ export const mapFromList = <T, S = T, K extends string = string>(
     return acc;
   }, out as Record<K, S>);
 };
+
+/**
+ * Just like Object.entries except keys are strict
+ */
+export const entries: <K extends string, V>(
+  o: Record<K, V>
+) => Array<[K, V]> = Object.entries as any;
+
+/**
+ * Just like Object.keys except keys are strict
+ */
+export const keys: <K extends string>(
+  o: Record<K, unknown>
+) => K[] = Object.keys as any;
