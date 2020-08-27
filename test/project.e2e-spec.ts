@@ -298,6 +298,170 @@ describe('Project e2e', () => {
     );
   });
 
+  it('List of projects sorted by name to be alphabetical, ignoring case sensitivity. Order: ASCENDING', async () => {
+    await createUser(app, { displayFirstName: 'Tammy' });
+    //Create three projects with mixed cases.
+    await createProject(app, {
+      name: 'a project 2' + faker.random.uuid(),
+      type: ProjectType.Translation,
+    });
+    await createProject(app, {
+      name: 'Another project 2' + faker.random.uuid(),
+      type: ProjectType.Translation,
+    });
+    await createProject(app, {
+      name: 'Big project 2' + faker.random.uuid(),
+      type: ProjectType.Translation,
+    });
+    await createProject(app, {
+      name: 'big project also 2' + faker.random.uuid(),
+      type: ProjectType.Translation,
+    });
+    const sortBy = 'name';
+    const ascOrder = 'ASC';
+    const { projects } = await app.graphql.query(
+      gql`
+        query projects($input: ProjectListInput!) {
+          projects(input: $input) {
+            hasMore
+            total
+            items {
+              id
+              name {
+                value
+              }
+            }
+          }
+        }
+      `,
+      {
+        input: {
+          sort: sortBy,
+          order: ascOrder,
+          filter: {
+            mine: true,
+          },
+        },
+      }
+    );
+    // Set a flag that's going to indicate if the projects are in order
+    let isAscending = true;
+    const items = projects.items;
+    let index = 0;
+    for (const i of items) {
+      if (index < projects.items.length - 1) {
+        const currName = i.name.value;
+        const nextName = items[index + 1].name.value;
+        const areEqual = currName.toUpperCase() < nextName.toUpperCase();
+        if (!areEqual) isAscending = false;
+        index++;
+      }
+    }
+    expect(isAscending).toBe(true);
+
+    //delete all projects
+    await Promise.all(
+      projects.items.map(async (item: { id: any }) => {
+        return await app.graphql.mutate(
+          gql`
+            mutation deleteProject($id: ID!) {
+              deleteProject(id: $id)
+            }
+          `,
+          {
+            id: item.id,
+          }
+        );
+      })
+    );
+    // log back into the admin account. Not sure if being logged in as 'Tammy' will mess other tests up.
+    await login(app, {
+      email: process.env.ROOT_ADMIN_EMAIL,
+      password: process.env.ROOT_ADMIN_PASSWORD,
+    });
+  });
+
+  it('List of projects sorted by name to be alphabetical, ignoring case sensitivity. Order: DESCENDING', async () => {
+    await createUser(app, { displayFirstName: 'Tammy' });
+    //Create three projects, each beginning with lower or upper-cases.
+    await createProject(app, {
+      name: 'a project 2' + faker.random.uuid(),
+      type: ProjectType.Translation,
+    });
+    await createProject(app, {
+      name: 'Another project 2' + faker.random.uuid(),
+      type: ProjectType.Translation,
+    });
+    await createProject(app, {
+      name: 'Big project 2' + faker.random.uuid(),
+      type: ProjectType.Translation,
+    });
+    await createProject(app, {
+      name: 'big project also 2' + faker.random.uuid(),
+      type: ProjectType.Translation,
+    });
+    const sortBy = 'name';
+    const ascOrder = 'DESC';
+    const { projects } = await app.graphql.query(
+      gql`
+        query projects($input: ProjectListInput!) {
+          projects(input: $input) {
+            hasMore
+            total
+            items {
+              id
+              name {
+                value
+              }
+            }
+          }
+        }
+      `,
+      {
+        input: {
+          sort: sortBy,
+          order: ascOrder,
+          filter: {
+            mine: true,
+          },
+        },
+      }
+    );
+    // Set a flag that's going to indicate if the projects are in order
+    let isDescending = true;
+    const items = projects.items;
+    let index = 0;
+    for (const i of items) {
+      if (index < projects.items.length - 1) {
+        const currName = i.name.value;
+        const nextName = items[index + 1].name.value;
+        const areEqual = currName.toUpperCase() > nextName.toUpperCase();
+        if (!areEqual) isDescending = false;
+        index++;
+      }
+    }
+    expect(isDescending).toBe(true);
+    //delete all projects
+    await Promise.all(
+      projects.items.map(async (item: { id: any }) => {
+        return await app.graphql.mutate(
+          gql`
+            mutation deleteProject($id: ID!) {
+              deleteProject(id: $id)
+            }
+          `,
+          {
+            id: item.id,
+          }
+        );
+      })
+    );
+    // log back into the admin account. Not sure if being logged in as 'Tammy' will mess other tests up.
+    await login(app, {
+      email: process.env.ROOT_ADMIN_EMAIL,
+      password: process.env.ROOT_ADMIN_PASSWORD,
+    });
+  });
   it('List view of projects', async () => {
     // create 2 projects
     const numProjects = 2;

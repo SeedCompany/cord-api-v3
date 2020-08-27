@@ -17,7 +17,7 @@ export async function createProject(
   input: Partial<CreateProject> = {}
 ) {
   const project: CreateProject = {
-    name: faker.random.uuid(),
+    name: faker.random.word() + faker.random.uuid(),
     type: ProjectType.Translation,
     mouStart: CalendarDate.fromISO('1991-01-01'),
     mouEnd: CalendarDate.fromISO('1992-01-01'),

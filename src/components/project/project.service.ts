@@ -602,7 +602,7 @@ export class ProjectService {
             node('prop', 'Property', { active: true }),
           ])
           .with('*')
-          .orderBy('prop.value', order)
+          .orderBy('LOWER(prop.value)', order)
       );
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
