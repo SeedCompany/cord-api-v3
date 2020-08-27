@@ -573,7 +573,7 @@ export class BudgetService {
     input: Partial<BudgetListInput>,
     session: ISession
   ): Promise<BudgetListOutput> {
-    const { sort, filter } = {
+    const { sort, filter, page, count, order } = {
       ...BudgetListInput.defaultVal,
       ...input,
     };
@@ -583,51 +583,86 @@ export class BudgetService {
       projectId,
       userId: session.userId,
     });
-    const secureProps = ['status'];
 
-    const query = this.db.query().call(matchRequestingUser, session);
+    const skip = (page - 1) * count;
+
+    const query = this.db.query();
+
     if (projectId) {
       query.match([
+        node('requestingUser', 'User', {
+          active: true,
+          id: session.userId,
+        }),
+        relation('in', '', 'member*1..'),
+        node('', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission'),
+        node('', 'Permission', { active: true }),
+        relation('out', '', 'baseNode'),
+        node('node', 'Budget', { active: true }),
+        relation('in', '', 'budget'),
         node('project', 'Project', {
           id: projectId,
           active: true,
           owningOrgId: session.owningOrgId,
         }),
-        relation('out', '', 'budget'),
-        node('node', 'Budget', { active: true }),
       ]);
     } else {
-      query.match([node('node', 'Budget', { active: true })]);
+      query.match([
+        node('requestingUser', 'User', {
+          active: true,
+          id: session.userId,
+        }),
+        relation('in', '', 'member*1..'),
+        node('', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission'),
+        node('', 'Permission', { active: true }),
+        relation('out', '', 'baseNode'),
+        node('node', 'Budget', { active: true }),
+      ]);
     }
-    this.propMatch(query, 'status', 'node');
 
-    const listResult: {
-      items: Array<{
-        identity: string;
-        labels: string[];
-        properties: Budget;
-      }>;
-      hasMore: boolean;
-      total: number;
-    } = await runListQuery(
-      query,
-      {
-        ...BudgetListInput.defaultVal,
-        ...input,
-      },
-      secureProps.includes(sort)
-    );
+    query
+      .with('collect(distinct node) as nodes, count(distinct node) as total')
+      .raw('unwind nodes as node');
 
-    const items = await Promise.all(
-      listResult.items.map((item) => {
-        return this.readOne(item.properties.id, session);
-      })
-    );
+    if (sort) {
+      query
+        .match([
+          node('node'),
+          relation('out', '', sort),
+          node('prop', 'Property', { active: true }),
+        ])
+        .with('*')
+        .orderBy(`prop.value ${order}`);
+    }
+
+    query
+      .skip(skip)
+      .limit(count)
+      .raw(
+        `return collect(node.id) as ids, total, ${
+          skip + count
+        } < total as hasMore`
+      );
+    const result = await query.first();
+
+    if (!result) {
+      return {
+        total: 0,
+        hasMore: false,
+        items: [],
+      };
+    }
 
     return {
-      items,
-      hasMore: listResult.hasMore,
-      total: listResult.total,
+      total: result.total,
+      hasMore: result.hasMore,
+      items: (await Promise.all(
+        result.ids.map(async (budgetId: string) => {
+          return await this.readOne(budgetId, session);
+        })
+      )) as Budget[],
     };
   }
 
