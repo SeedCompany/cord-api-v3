@@ -1,5 +1,4 @@
 import { random } from 'lodash';
-import { InputException } from '../../common';
 import { books } from './books';
 import { ScriptureRange, ScriptureRangeInput, ScriptureReference } from './dto';
 
@@ -33,12 +32,10 @@ const toVerseId = (
     verseCount += versesInBookId(bookIndex - 1);
     bookIndex -= 1;
   }
+
+  const chapterIndex = scriptureRangePart.chapter - 1;
   // reset bookIndex to the current book (needed because of the above while loop)
   bookIndex = bookIndexFromName(bookName);
-  const chapterIndex = chapterIndexFromChapterNumber(
-    bookIndex,
-    scriptureRangePart.chapter
-  );
   // add all verses from previous chapters, but not the current one since we only add through the verse, not the whole chapter
   let i = 0;
   while (i < chapterIndex) {
@@ -77,7 +74,7 @@ const verseIdToReference = (verseId: number): ScriptureReference => {
         if (versesRemaining - versesInThisChapter <= 0) {
           return {
             book: bookNameFromId(bookIndex),
-            chapter: books[bookIndex].chapters[chapterIndex],
+            chapter: chapterIndex + 1,
             verse: versesRemaining,
           };
         }
@@ -91,7 +88,7 @@ const verseIdToReference = (verseId: number): ScriptureReference => {
   throw new Error('Invalid verse number');
 };
 // Given a string of a book name (shortened or full length), get the book id
-const bookIndexFromName = (name: string) => {
+export const bookIndexFromName = (name: string) => {
   name = name.toLowerCase();
   const book = books.find((book) => {
     const bookNames = book.names.map((n) => n.toLowerCase());
@@ -101,18 +98,6 @@ const bookIndexFromName = (name: string) => {
     return books.indexOf(book);
   }
   throw new Error('No book matched "' + name + '"');
-};
-const chapterIndexFromChapterNumber = (
-  bookIndex: number,
-  chapterNumber: number
-) => {
-  const chapterIndex = books[bookIndex].chapters.indexOf(chapterNumber);
-  if (chapterIndex === -1) {
-    throw new InputException(
-      'No chapter matched "' + chapterNumber.toString() + '"'
-    );
-  }
-  return chapterIndex;
 };
 const versesInBookId = (bookIndex: number) => {
   const total = books[bookIndex].chapters.reduce(function sum(a, b) {
@@ -143,19 +128,21 @@ export const bookCodeToName = (code: string) => {
 // return random scriptureRefenence as an array
 export const createRandomScriptureReferences = (): ScriptureRangeInput[] => {
   const book = books[random(books.length - 1)];
-  const startChapter = book.chapters[random(book.chapters.length - 1)];
-  const endChapter = book.chapters[random(book.chapters.length - 1)];
+  const startChapter = random(book.chapters.length - 1);
+  const startVerse = random(book.chapters[startChapter] - 1);
+  const endChapter = random(book.chapters.length - 1);
+  const endVerse = random(book.chapters[endChapter] - 1);
   return [
     {
       start: {
         book: book.names[0],
-        chapter: startChapter,
-        verse: 1,
+        chapter: startChapter + 1,
+        verse: startVerse + 1,
       },
       end: {
         book: book.names[0],
-        chapter: endChapter,
-        verse: 1,
+        chapter: endChapter + 1,
+        verse: endVerse + 1,
       },
     },
   ];
