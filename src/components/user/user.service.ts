@@ -1,5 +1,6 @@
+/* eslint-disable no-console */
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { contains, node, relation } from 'cypher-query-builder';
 import { difference } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
@@ -11,21 +12,15 @@ import {
   UnauthenticatedException,
 } from '../../common';
 import {
-  addAllSecureProperties,
-  addBaseNodeMetaPropsWithClause,
   ConfigService,
   DatabaseService,
-  filterByString,
   getPermList,
   getPropList,
   ILogger,
-  listWithSecureObject,
   Logger,
   matchRequestingUser,
   matchSession,
-  matchUserPermissions,
   OnIndex,
-  runListQuery,
   UniquenessError,
 } from '../../core';
 import {
@@ -554,61 +549,106 @@ export class UserService {
     session: ISession
   ): Promise<UserListOutput> {
     const label = 'User';
-    const baseNodeMetaProps = ['id', 'createdAt'];
-    const secureProps = [
-      'email',
-      'realFirstName',
-      'realLastName',
-      'displayFirstName',
-      'displayLastName',
-      'phone',
-      'timezone',
-      'bio',
-      'status',
-      'title',
-    ];
 
-    const query = this.db
-      .query()
-      .call(matchRequestingUser, session)
-      .call(matchUserPermissions, 'User');
+    const skip = (input.page - 1) * input.count;
+
+    const query = this.db.query();
 
     if (filter.displayFirstName) {
-      query.call(
-        filterByString,
-        label,
-        'displayFirstName',
-        filter.displayFirstName
-      );
+      query
+        .match([
+          node('requestingUser', 'User', {
+            active: true,
+            id: session.userId,
+          }),
+          relation('in', '', 'member*1..'),
+          node('', 'SecurityGroup', { active: true }),
+          relation('out', '', 'permission'),
+          node('', 'Permission', { active: true }),
+          relation('out', '', 'baseNode'),
+          node('node', label, { active: true }),
+          relation('out', '', 'displayFirstName', { active: true }),
+          node('filter', 'Property', { active: true }),
+        ])
+        .where({ filter: [{ value: contains(filter.displayFirstName) }] });
     } else if (filter.displayLastName) {
-      query.call(
-        filterByString,
-        label,
-        'displayLastName',
-        filter.displayLastName
-      );
+      query
+        .match([
+          node('requestingUser', 'User', {
+            active: true,
+            id: session.userId,
+          }),
+          relation('in', '', 'member*1..'),
+          node('', 'SecurityGroup', { active: true }),
+          relation('out', '', 'permission'),
+          node('', 'Permission', { active: true }),
+          relation('out', '', 'baseNode'),
+          node('node', label, { active: true }),
+          relation('out', '', 'displayLastName', { active: true }),
+          node('filter', 'Property', { active: true }),
+        ])
+        .where({ filter: [{ value: contains(filter.displayLastName) }] });
+    } else {
+      query.match([
+        node('requestingUser', 'User', {
+          active: true,
+          id: session.userId,
+        }),
+        relation('in', '', 'member*1..'),
+        node('', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission'),
+        node('', 'Permission', { active: true }),
+        relation('out', '', 'baseNode'),
+        node('node', label, { active: true }),
+      ]);
     }
 
-    // match on the rest of the properties of the object requested
     query
-      .call(
-        addAllSecureProperties,
-        ...secureProps
-        //...unsecureProps
-      )
+      .with('collect(distinct node) as nodes, count(distinct node) as total')
+      .raw('unwind nodes as node');
 
-      // form return object
-      // ${listWithUnsecureObject(unsecureProps)}, // removed from a few lines down
-      .with(
-        `
-          {
-            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
-            ${listWithSecureObject(secureProps)}
-          } as node
-        `
+    //default sort order is on id
+    if (input.sort === 'id') {
+      query.with('*').orderBy(`node.id ${input.order}`);
+    } else {
+      query
+        .match([
+          node('node'),
+          relation('out', '', input.sort),
+          node('prop', 'Property', { active: true }),
+        ])
+        .with('*')
+        .orderBy(`prop.value ${input.order}`);
+    }
+
+    query
+      .skip(skip)
+      .limit(input.count)
+      .raw(
+        `return collect(node.id) as ids, total, ${
+          skip + input.count
+        } < total as hasMore`
       );
 
-    return await runListQuery(query, input, secureProps.includes(input.sort));
+    const result = await query.first();
+
+    if (!result) {
+      return {
+        total: 0,
+        hasMore: false,
+        items: [],
+      };
+    }
+
+    return {
+      total: result.total,
+      hasMore: true,
+      items: (await Promise.all(
+        result.ids.map(async (userId: string) => {
+          return await this.readOne(userId, session);
+        })
+      )) as User[],
+    };
   }
 
   async listEducations(
