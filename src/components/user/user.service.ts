@@ -1,6 +1,5 @@
-/* eslint-disable no-console */
 import { Injectable } from '@nestjs/common';
-import { contains, node, relation } from 'cypher-query-builder';
+import { node, relation } from 'cypher-query-builder';
 import { difference } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
@@ -548,60 +547,22 @@ export class UserService {
     { filter, ...input }: UserListInput,
     session: ISession
   ): Promise<UserListOutput> {
-    const label = 'User';
-
     const skip = (input.page - 1) * input.count;
 
     const query = this.db.query();
 
-    if (filter.displayFirstName) {
-      query
-        .match([
-          node('requestingUser', 'User', {
-            active: true,
-            id: session.userId,
-          }),
-          relation('in', '', 'member*1..'),
-          node('', 'SecurityGroup', { active: true }),
-          relation('out', '', 'permission'),
-          node('', 'Permission', { active: true }),
-          relation('out', '', 'baseNode'),
-          node('node', label, { active: true }),
-          relation('out', '', 'displayFirstName', { active: true }),
-          node('filter', 'Property', { active: true }),
-        ])
-        .where({ filter: [{ value: contains(filter.displayFirstName) }] });
-    } else if (filter.displayLastName) {
-      query
-        .match([
-          node('requestingUser', 'User', {
-            active: true,
-            id: session.userId,
-          }),
-          relation('in', '', 'member*1..'),
-          node('', 'SecurityGroup', { active: true }),
-          relation('out', '', 'permission'),
-          node('', 'Permission', { active: true }),
-          relation('out', '', 'baseNode'),
-          node('node', label, { active: true }),
-          relation('out', '', 'displayLastName', { active: true }),
-          node('filter', 'Property', { active: true }),
-        ])
-        .where({ filter: [{ value: contains(filter.displayLastName) }] });
-    } else {
-      query.match([
-        node('requestingUser', 'User', {
-          active: true,
-          id: session.userId,
-        }),
-        relation('in', '', 'member*1..'),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission'),
-        node('', 'Permission', { active: true }),
-        relation('out', '', 'baseNode'),
-        node('node', label, { active: true }),
-      ]);
-    }
+    query.match([
+      node('requestingUser', 'User', {
+        active: true,
+        id: session.userId,
+      }),
+      relation('in', '', 'member*1..'),
+      node('', 'SecurityGroup', { active: true }),
+      relation('out', '', 'permission'),
+      node('', 'Permission', { active: true }),
+      relation('out', '', 'baseNode'),
+      node('node', 'User', { active: true }),
+    ]);
 
     query
       .with('collect(distinct node) as nodes, count(distinct node) as total')
