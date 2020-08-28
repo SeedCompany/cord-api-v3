@@ -125,6 +125,21 @@ export const bookCodeToName = (code: string) => {
   }
   return book.names[0];
 };
+
+export const validateChapter = (book: string, chapter: number): boolean => {
+  const bookIndex = bookIndexFromName(book);
+  return chapter <= books[bookIndex].chapters.length && chapter > 0;
+};
+
+export const validateVerse = (
+  book: string,
+  chapter: number,
+  verse: number
+): boolean => {
+  const bookIndex = bookIndexFromName(book);
+  return verse <= books[bookIndex].chapters[chapter - 1] && verse > 0;
+};
+
 // return random scriptureRefenence as an array
 export const createRandomScriptureReferences = (): ScriptureRangeInput[] => {
   const book = books[random(books.length - 1)];

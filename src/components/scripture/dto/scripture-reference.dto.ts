@@ -1,5 +1,4 @@
 import { Field, InputType, Int, ObjectType } from '@nestjs/graphql';
-import { IsPositive } from 'class-validator';
 import { IsValidChapter, IsValidVerse } from '../../../common';
 
 @InputType({
@@ -13,19 +12,18 @@ export abstract class ScriptureReferenceInput {
   @Field({
     description: 'The code of the Bible book',
   })
+  // TODO validate code against list
   book: string;
 
   @Field(() => Int, {
     description: 'The chapter number',
   })
-  @IsPositive()
   @IsValidChapter('book')
   chapter: number;
 
   @Field(() => Int, {
     description: 'The verse number',
   })
-  @IsPositive()
   @IsValidVerse('book', 'chapter')
   verse: number;
 }

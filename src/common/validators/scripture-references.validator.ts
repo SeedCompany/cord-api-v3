@@ -1,6 +1,8 @@
 import { ValidationArguments, ValidationOptions } from 'class-validator';
-import { books } from '../../components/scripture/books';
-import { bookIndexFromName } from '../../components/scripture/reference';
+import {
+  validateChapter,
+  validateVerse,
+} from '../../components/scripture/reference';
 import { ValidateBy } from './validateBy';
 
 export const IsValidChapter = (
@@ -15,8 +17,7 @@ export const IsValidChapter = (
         validate: (value, args: ValidationArguments) => {
           const [book] = args.constraints;
           const bookName = (args.object as any)[book];
-          const bookIndex = bookIndexFromName(bookName);
-          return value <= books[bookIndex].chapters.length;
+          return validateChapter(bookName, value);
         },
         defaultMessage: () => 'No chapter matched',
       },
@@ -31,19 +32,17 @@ export const IsValidVerse = (
 ) =>
   ValidateBy(
     {
-      name: 'isValidChapter',
+      name: 'isValidVerse',
       constraints: [book, chapter],
       validator: {
         validate: (value, args: ValidationArguments) => {
           const [book, chapter] = args.constraints;
           const bookName = (args.object as any)[book];
           const chapterNumber = (args.object as any)[chapter];
-          const bookIndex = bookIndexFromName(bookName);
-          if (chapterNumber > books[bookIndex].chapters.length) {
-            // chapter is invalid
-            return true;
-          }
-          return value <= books[bookIndex].chapters[chapterNumber - 1];
+          // validateVerse has no meaning if validateChapter is false
+          return validateChapter(bookName, chapterNumber)
+            ? validateVerse(bookName, chapterNumber, value)
+            : true;
         },
         defaultMessage: () => 'No verse matched',
       },
