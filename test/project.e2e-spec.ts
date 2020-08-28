@@ -550,37 +550,29 @@ describe('Project e2e', () => {
     );
   });
 
-  it.skip('List view of project members by projectId', async () => {
+  it('List view of project members by projectId', async () => {
     //create 2 Project member
     const numProjectMembers = 2;
-    await login(app, {
-      email: process.env.ROOT_ADMIN_EMAIL,
-      password: process.env.ROOT_ADMIN_PASSWORD,
-    });
     const project = await createProject(app);
     const projectId = project.id;
-    const memberIds: string[] = [];
+    const password = faker.internet.password();
+    const password2 = faker.internet.password();
+    const userForList = await createUser(app, { password });
+    const userId = userForList.id;
+    const userForList2 = await createUser(app, { password: password2 });
+    const userId2 = userForList2.id;
+    const memberIds: string[] = [userId, userId2];
+
+    await login(app, { email: userForList.email.value, password });
 
     await Promise.all(
-      times(numProjectMembers).map(async () => {
-        const member = await createUser(app);
-        memberIds.push(member.id);
-      })
-    );
-
-    await login(app, {
-      email: process.env.ROOT_ADMIN_EMAIL,
-      password: process.env.ROOT_ADMIN_PASSWORD,
-    });
-
-    await Promise.all(
-      times(numProjectMembers, (index) =>
-        createProjectMember(app, {
+      times(numProjectMembers, async (index) => {
+        await createProjectMember(app, {
           userId: memberIds[index],
           projectId,
           roles: [Role.Consultant],
-        })
-      )
+        });
+      })
     );
 
     const queryProject = await app.graphql.query(
@@ -606,8 +598,8 @@ describe('Project e2e', () => {
     );
 
     // Remember the project Owner is also a team member so that should be +1
-    expect(queryProject.project.team.items.length).toBe(numProjectMembers + 1);
-    expect(queryProject.project.team.total).toBe(numProjectMembers + 1);
+    expect(queryProject.project.team.items.length).toBe(numProjectMembers);
+    expect(queryProject.project.team.total).toBe(numProjectMembers);
   });
 
   it.skip('List view of partnerships by projectId', async () => {
