@@ -99,6 +99,11 @@ export class Directory extends FileNode {
 }
 
 @ObjectType({
+  description: SecuredProperty.descriptionFor('a directory'),
+})
+export abstract class SecuredDirectory extends SecuredProperty(Directory) {}
+
+@ObjectType({
   description: SecuredProperty.descriptionFor('a file'),
 })
 export abstract class SecuredFile extends SecuredProperty(File) {}

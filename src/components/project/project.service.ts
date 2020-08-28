@@ -38,7 +38,7 @@ import {
   EngagementService,
   SecuredEngagementList,
 } from '../engagement';
-import { Directory, FileService } from '../file';
+import { FileService, SecuredDirectory } from '../file';
 import { LocationService } from '../location';
 import {
   PartnershipListInput,
@@ -839,11 +839,11 @@ export class ProjectService {
   async getRootDirectory(
     projectId: string,
     session: ISession
-  ): Promise<Directory> {
+  ): Promise<SecuredDirectory> {
     const rootRef = await this.db
       .query()
       .match(matchSession(session, { withAclRead: 'canReadProjects' }))
-      .match([
+      .optionalMatch([
         [
           node('project', 'Project', { active: true, id: projectId }),
           relation('out', 'rootDirectory', { active: true }),
@@ -854,12 +854,26 @@ export class ProjectService {
         directory: [{ id: 'id' }],
       })
       .first();
+
+    if (!rootRef) {
+      return {
+        canEdit: false,
+        canRead: false,
+        value: undefined,
+      };
+    }
+
     if (!rootRef?.id) {
       throw new NotFoundException(
         'Could not find root directory associated to this project'
       );
     }
-    return await this.fileService.getDirectory(rootRef.id, session);
+
+    return {
+      canEdit: false,
+      canRead: true,
+      value: await this.fileService.getDirectory(rootRef.id, session),
+    };
   }
 
   async attachBudgetRecords(
