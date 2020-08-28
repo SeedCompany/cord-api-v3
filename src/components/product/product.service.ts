@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
+import { contains, node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { difference } from 'lodash';
 import { DateTime } from 'luxon';
@@ -15,16 +15,12 @@ import {
   ConfigService,
   createBaseNode,
   DatabaseService,
-  filterByString,
-  filterBySubarray,
   getPermList,
   getPropList,
   ILogger,
   Logger,
   matchRequestingUser,
-  matchUserPermissions,
   Property,
-  runListQuery,
 } from '../../core';
 import {
   DbPropsOfDto,
@@ -606,52 +602,76 @@ export class ProductService {
     { filter, ...input }: ProductListInput,
     session: ISession
   ): Promise<ProductListOutput> {
-    const label = 'Product';
-    const secureProps = ['methodology'];
-    const query = this.db
-      .query()
-      .call(matchRequestingUser, session)
-      .call(matchUserPermissions, label);
+    const skip = (input.page - 1) * input.count;
 
-    if (filter.methodology) {
-      query.call(filterByString, label, 'methodology', filter.methodology);
-    } else if (filter.approach) {
-      query.call(
-        filterBySubarray,
-        label,
-        'methodology',
-        this.getMethodologiesByApproach(filter.approach)
-      );
-    } else if (filter.engagementId) {
-      this.filterByEngagement(
-        query,
-        filter.engagementId,
-        'product',
-        'out',
-        label
-      );
+    const query = this.db.query();
+
+    query.match([
+      node('requestingUser', 'User', {
+        active: true,
+        id: session.userId,
+      }),
+      relation('in', '', 'member*1..'),
+      node('', 'SecurityGroup', { active: true }),
+      relation('out', '', 'permission'),
+      node('', 'Permission', { active: true }),
+      relation('out', '', 'baseNode'),
+      node('node', 'Product', { active: true }),
+    ]);
+
+    if (filter.engagementId) {
+      query
+        .match([
+          node('node', { active: true }),
+          relation('in', '', 'product', { active: true }),
+          node('filter', 'Engagement', { active: true }),
+        ])
+        .where({ filter: [{ id: contains(filter.engagementId) }] });
     }
 
-    const result: {
-      items: Array<{
-        identity: string;
-        labels: string[];
-        properties: Product;
-      }>;
-      hasMore: boolean;
-      total: number;
-    } = await runListQuery(query, input, secureProps.includes(input.sort));
+    query
+      .with('collect(distinct node) as nodes, count(distinct node) as total')
+      .raw('unwind nodes as node');
 
-    const items = await Promise.all(
-      result.items.map((item) => {
-        return this.readOne(item.properties.id, session);
-      })
-    );
+    if (input.sort === 'id' || input.sort === 'createdAt') {
+      query.with('*').orderBy(`node.${input.sort} ${input.order}`);
+    } else {
+      query
+        .match([
+          node('node'),
+          relation('out', '', input.sort),
+          node('prop', 'Property', { active: true }),
+        ])
+        .with('*')
+        .orderBy(`prop.value ${input.order}`);
+    }
+
+    query
+      .skip(skip)
+      .limit(input.count)
+      .raw(
+        `return collect(node.id) as ids, total, ${
+          skip + input.count
+        } < total as hasMore limit 25`
+      );
+    const result = await query.first();
+
+    if (!result) {
+      return {
+        total: 0,
+        hasMore: false,
+        items: [],
+      };
+    }
 
     return {
-      items,
-      hasMore: result.hasMore,
       total: result.total,
+      hasMore: result.hasMore,
+      items: (await Promise.all(
+        result.ids.map(async (projectIds: string) => {
+          return await this.readOne(projectIds, session);
+        })
+      )) as Product[],
     };
   }
 
