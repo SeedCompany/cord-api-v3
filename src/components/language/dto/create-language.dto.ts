@@ -1,8 +1,6 @@
 import { Field, InputType, Int, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import {
-  IsAlpha,
-  IsLowercase,
   IsNumberString,
   IsPositive,
   Length,
@@ -17,15 +15,15 @@ export abstract class CreateEthnologueLanguage {
   readonly id?: string;
 
   @NameField({ nullable: true })
-  @IsAlpha()
-  @IsLowercase()
-  @Length(3)
+  // @IsAlpha()
+  // @IsLowercase()
+  @Length(1)
   readonly code?: string;
 
   @NameField({ nullable: true })
-  @IsAlpha()
-  @IsLowercase()
-  @Length(3)
+  // @IsAlpha()
+  // @IsLowercase()
+  @Length(1)
   readonly provisionalCode?: string;
 
   @NameField({ nullable: true })
@@ -56,11 +54,11 @@ export abstract class CreateLanguage {
   readonly ethnologue: CreateEthnologueLanguage = {};
 
   @Field(() => Int, { nullable: true })
-  @IsPositive()
+  // @IsPositive()
   readonly populationOverride: number;
 
   @NameField({ nullable: true })
-  @Length(5)
+  @Length(1)
   @IsNumberString()
   readonly registryOfDialectsCode?: string;
 

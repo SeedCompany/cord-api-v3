@@ -167,7 +167,7 @@ export class EthnologueLanguageService {
         addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
-        label: 'Name',
+        label: 'EthnologueName',
       },
       {
         key: 'population',
