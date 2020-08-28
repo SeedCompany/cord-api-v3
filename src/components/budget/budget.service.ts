@@ -445,7 +445,15 @@ export class BudgetService {
       ])
       .with('{value: props.value, property: type(r)} as prop, permList, node')
       .with('collect(prop) as propList, permList, node')
-      .return('propList, permList, node')
+      .match([
+        node('node'),
+        relation('out', '', 'organization', { active: true }),
+        node('organization', 'Organization', { active: true }),
+      ])
+      .with('propList, permList, node, organization.id as organizationId')
+      .return(
+        'propList + [{value: organizationId, property: "organization"}] as propList, permList, node'
+      )
       .asResult<StandardReadResult<DbPropsOfDto<BudgetRecord>>>();
 
     const result = await query.first();
@@ -461,12 +469,12 @@ export class BudgetService {
     const securedProps = parseSecuredProperties(props, result.permList, {
       amount: true,
       fiscalYear: true,
+      organization: true,
     });
 
     return {
       ...parseBaseNodeProperties(result.node),
       ...securedProps,
-      organizationId: (result.node as any).properties.id,
     };
   }
 

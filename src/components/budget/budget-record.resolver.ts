@@ -27,12 +27,12 @@ export class BudgetRecordResolver {
     @Session() session: ISession,
     @Parent() record: BudgetRecord
   ): Promise<SecuredOrganization> {
-    const id = record.organizationId.value;
+    const id = record.organization.value;
     const value = id
       ? await this.organizations.readOne(id, session)
       : undefined;
     return {
-      ...record.organizationId,
+      ...record.organization,
       value,
     };
   }
