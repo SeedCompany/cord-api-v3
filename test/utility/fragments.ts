@@ -492,6 +492,12 @@ export const engagement = gql`
           id
         }
       }
+      products {
+        total
+        items {
+          ...product
+        }
+      }
     }
     ... on InternshipEngagement {
       countryOfOrigin {
@@ -523,6 +529,7 @@ export const engagement = gql`
     }
   }
   ${language}
+  ${product}
 `;
 type RawBaseEngagement = Except<Raw<IEngagement>, 'ceremony'> & {
   ceremony: Secured<{ id: string }>;
