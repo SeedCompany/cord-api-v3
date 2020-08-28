@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
+import { contains, node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
@@ -11,23 +11,14 @@ import {
   ServerException,
 } from '../../../common';
 import {
-  addAllMetaPropertiesOfChildBaseNodes,
-  addAllSecureProperties,
-  addBaseNodeMetaPropsWithClause,
-  ChildBaseNodeMetaProperty,
   ConfigService,
   DatabaseService,
-  filterByArray,
-  filterByBaseNodeId,
   getPermList,
   getPropList,
   ILogger,
-  listWithSecureObject,
   Logger,
   matchRequestingUser,
   matchSession,
-  matchUserPermissions,
-  runListQuery,
 } from '../../../core';
 import {
   DbPropsOfDto,
@@ -392,72 +383,75 @@ export class ProjectMemberService {
     { filter, ...input }: ProjectMemberListInput,
     session: ISession
   ): Promise<ProjectMemberListOutput> {
-    const label = 'ProjectMember';
-    const baseNodeMetaProps = ['id', 'createdAt'];
-    // const unsecureProps = [''];
-    const secureProps = ['roles', 'modifiedAt'];
+    const skip = (input.page - 1) * input.count;
 
-    const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
-      {
-        parentBaseNodePropertyKey: 'user',
-        parentRelationDirection: 'out',
-        childBaseNodeLabel: 'User',
-        childBaseNodeMetaPropertyKey: 'id',
-        returnIdentifier: 'userId',
-      },
-    ];
+    const query = this.db.query();
 
-    const query = this.db
-      .query()
-      .call(matchRequestingUser, session)
-      .call(matchUserPermissions, 'ProjectMember');
+    query.match([
+      node('requestingUser', 'User', {
+        active: true,
+        id: session.userId,
+      }),
+      relation('in', '', 'member*1..'),
+      node('', 'SecurityGroup', { active: true }),
+      relation('out', '', 'permission'),
+      node('', 'Permission', { active: true }),
+      relation('out', '', 'baseNode'),
+      node('node', 'ProjectMember', { active: true }),
+    ]);
 
-    if (filter.roles) {
-      query.call(filterByArray, label, 'roles', filter.roles);
-    } else if (filter.projectId) {
-      query.call(
-        filterByBaseNodeId,
-        filter.projectId,
-        'member',
-        'in',
-        'Project',
-        label
-      );
+    if (filter.projectId) {
+      query
+        .match([
+          node('node', { active: true }),
+          relation('in', '', 'member', { active: true }),
+          node('filter', 'Project', { active: true }),
+        ])
+        .where({ filter: [{ id: contains(filter.projectId) }] });
     }
 
-    // match on the rest of the properties of the object requested
     query
-      .call(
-        addAllSecureProperties,
-        ...secureProps
-        //...unsecureProps
-      )
-      .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
-      // form return object
-      // ${listWithUnsecureObject(unsecureProps)}, // removed from a few lines down
-      .with(
-        `
-          {
-            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
-            ${listWithSecureObject(secureProps)}
-          } as node
-        `
+      .with('collect(distinct node) as nodes, count(distinct node) as total')
+      .raw('unwind nodes as node');
+
+    if (input.sort === 'id' || input.sort === 'createdAt') {
+      query.with('*').orderBy(`node.${input.sort} ${input.order}`);
+    } else {
+      query
+        .match([
+          node('node'),
+          relation('out', '', input.sort),
+          node('prop', 'Property', { active: true }),
+        ])
+        .with('*')
+        .orderBy(`prop.value ${input.order}`);
+    }
+    query
+      .skip(skip)
+      .limit(input.count)
+      .raw(
+        `return collect(node.id) as ids, total, ${
+          skip + input.count
+        } < total as hasMore`
       );
+    const result = await query.first();
 
-    const result: ProjectMemberListOutput = await runListQuery(
-      query,
-      input,
-      secureProps.includes(input.sort)
-    );
-
-    const items = await Promise.all(
-      result.items.map((row: any) => this.readOne(row.id, session))
-    );
+    if (!result) {
+      return {
+        total: 0,
+        hasMore: false,
+        items: [],
+      };
+    }
 
     return {
-      items,
-      hasMore: result.hasMore,
       total: result.total,
+      hasMore: result.hasMore,
+      items: (await Promise.all(
+        result.ids.map(async (projectIds: string) => {
+          return await this.readOne(projectIds, session);
+        })
+      )) as ProjectMember[],
     };
   }
 
