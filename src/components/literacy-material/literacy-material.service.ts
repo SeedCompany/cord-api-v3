@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { contains, node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
@@ -9,21 +9,15 @@ import {
 } from '../../common';
 import {
   addAllMetaPropertiesOfChildBaseNodes,
-  addAllSecureProperties,
-  addBaseNodeMetaPropsWithClause,
   ChildBaseNodeMetaProperty,
   ConfigService,
   createBaseNode,
   DatabaseService,
-  filterByString,
   ILogger,
-  listWithSecureObject,
   Logger,
   matchRequestingUser,
-  matchUserPermissions,
   OnIndex,
   Property,
-  runListQuery,
 } from '../../core';
 import {
   DbPropsOfDto,
@@ -386,44 +380,82 @@ export class LiteracyMaterialService {
     session: ISession
   ): Promise<LiteracyMaterialListOutput> {
     const label = 'LiteracyMaterial';
-    const baseNodeMetaProps = ['id', 'createdAt'];
-    const secureProps = ['name'];
-
-    const query = this.db
-      .query()
-      .call(matchRequestingUser, session)
-      .call(matchUserPermissions, label);
+    const skip = (input.page - 1) * input.count;
+    const query = this.db.query();
 
     if (filter.name) {
-      query.call(filterByString, label, 'name', filter.name);
+      query
+        .match([
+          node('requestingUser', 'User', {
+            active: true,
+            id: session.userId,
+          }),
+          relation('in', '', 'member*1..'),
+          node('', 'SecurityGroup', { active: true }),
+          relation('out', '', 'permission'),
+          node('', 'Permission', { active: true }),
+          relation('out', '', 'baseNode'),
+          node('node', label, { active: true }),
+          relation('out', '', 'name', { active: true }),
+          node('filter', 'Property', { active: true }),
+        ])
+        .where({ filter: [{ value: contains(filter.name) }] });
+    } else {
+      query.match([
+        node('requestingUser', 'User', {
+          active: true,
+          id: session.userId,
+        }),
+        relation('in', '', 'member*1..'),
+        node('', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission'),
+        node('', 'Permission', { active: true }),
+        relation('out', '', 'baseNode'),
+        node('node', label, { active: true }),
+      ]);
     }
 
-    // match on the rest of the properties of the object requested
-    query.call(addAllSecureProperties, ...secureProps).with(
-      `
-          {
-            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
-            ${listWithSecureObject(secureProps)}
-          } as node
-        `
-    );
+    query
+      .with('collect(distinct node) as nodes, count(distinct node) as total')
+      .raw('unwind nodes as node');
 
-    const result: LiteracyMaterialListOutput = await runListQuery(
-      query,
-      input,
-      secureProps.includes(input.sort)
-    );
+    if (input.sort) {
+      query
+        .match([
+          node('node'),
+          relation('out', '', input.sort),
+          node('prop', 'Property', { active: true }),
+        ])
+        .with('*')
+        .orderBy(`prop.value ${input.order}`);
+    }
 
-    const items = await Promise.all(
-      result.items.map((item) => {
-        return this.readOne(item.id, session);
-      })
-    );
+    query
+      .skip(skip)
+      .limit(input.count)
+      .raw(
+        `return collect(node.id) as ids, total, ${
+          skip + input.count
+        } < total as hasMore`
+      );
+    const result = await query.first();
+
+    if (!result) {
+      return {
+        total: 0,
+        hasMore: false,
+        items: [],
+      };
+    }
 
     return {
-      items,
-      hasMore: result.hasMore,
       total: result.total,
+      hasMore: result.hasMore,
+      items: (await Promise.all(
+        result.ids.map(async (lmId: string) => {
+          return await this.readOne(lmId, session);
+        })
+      )) as LiteracyMaterial[],
     };
   }
 
