@@ -10,8 +10,6 @@ import {
   ServerException,
 } from '../../common';
 import {
-  addAllMetaPropertiesOfChildBaseNodes,
-  ChildBaseNodeMetaProperty,
   ConfigService,
   createBaseNode,
   DatabaseService,
@@ -306,56 +304,14 @@ export class ProductService {
   }
 
   async readOne(id: string, session: ISession): Promise<AnyProduct> {
-    const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
-      {
-        parentBaseNodePropertyKey: 'scriptureReferences',
-        parentRelationDirection: 'out',
-        childBaseNodeLabel: 'ScriptureRange',
-        childBaseNodeMetaPropertyKey: '',
-        returnIdentifier: '',
-      },
-      {
-        parentBaseNodePropertyKey: 'scriptureReferencesOverride',
-        parentRelationDirection: 'out',
-        childBaseNodeLabel: 'ScriptureRange',
-        childBaseNodeMetaPropertyKey: '',
-        returnIdentifier: '',
-      },
-      {
-        parentBaseNodePropertyKey: 'produces',
-        parentRelationDirection: 'out',
-        childBaseNodeLabel: 'Producible',
-        childBaseNodeMetaPropertyKey: '',
-        returnIdentifier: '',
-      },
-    ];
-
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Product', { active: true, id })])
       .call(getPermList, 'requestingUser')
       .call(getPropList, 'permList')
-      .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
-      .return([
-        'propList, permList, node',
-        'scriptureReferencesReadPerm.read as canScriptureReferencesRead',
-        'scriptureReferencesEditPerm.edit as canScriptureReferencesEdit',
-        'scriptureReferencesOverrideReadPerm.read as canScriptureReferencesOverrideRead',
-        'scriptureReferencesOverrideEditPerm.edit as canScriptureReferencesOverrideEdit',
-        'producesReadPerm.read as canProducesRead',
-        'producesEditPerm.edit as canProducesEdit',
-      ])
-      .asResult<
-        StandardReadResult<DbPropsOfDto<AnyProduct>> & {
-          canScriptureReferencesRead: boolean;
-          canScriptureReferencesEdit: boolean;
-          canScriptureReferencesOverrideRead: boolean;
-          canScriptureReferencesOverrideEdit: boolean;
-          canProducesRead: boolean;
-          canProducesEdit: boolean;
-        }
-      >();
+      .return(['propList, permList, node'])
+      .asResult<StandardReadResult<DbPropsOfDto<AnyProduct>>>();
     const result = await query.first();
 
     if (!result) {
@@ -368,10 +324,18 @@ export class ProductService {
       mediums: true,
       purposes: true,
       methodology: true,
+      scriptureReferences: true,
+      scriptureReferencesOverride: true,
+      produces: true,
     });
-    const baseNodeProps = parseBaseNodeProperties(result.node);
 
-    const produces = await this.db
+    const {
+      produces,
+      scriptureReferencesOverride,
+      ...rest
+    } = securedProperties;
+
+    const pr = await this.db
       .query()
       .match([
         node('product', 'Product', { id, active: true }),
@@ -381,18 +345,18 @@ export class ProductService {
       .return('p')
       .first();
 
-    if (!produces) {
+    if (!pr) {
       const scriptureReferences = await this.listScriptureReferences(
-        baseNodeProps.id,
+        id,
         'Product',
         session
       );
+
       return {
-        ...baseNodeProps,
-        ...securedProperties,
+        ...parseBaseNodeProperties(result.node),
+        ...rest,
         scriptureReferences: {
-          canRead: result.canScriptureReferencesRead,
-          canEdit: result.canScriptureReferencesEdit,
+          ...securedProperties.scriptureReferences,
           value: scriptureReferences,
         },
         mediums: {
@@ -406,30 +370,26 @@ export class ProductService {
       };
     }
 
-    const scriptureReferencesOverride = await this.listScriptureReferences(
-      baseNodeProps.id,
+    const scriptureReferencesOverrideValue = await this.listScriptureReferences(
+      id,
       'Product',
       session,
       { isOverride: true }
     );
 
-    const typeName = difference(produces.p.labels, [
-      'Producible',
-      'BaseNode',
-    ])[0];
+    const typeName = difference(pr.p.labels, ['Producible', 'BaseNode'])[0];
 
     const producible = await this.getProducibleByType(
-      produces.p.properties.id,
+      pr.p.properties.id,
       typeName,
       session
     );
 
     return {
-      ...baseNodeProps,
+      ...parseBaseNodeProperties(result.node),
       ...securedProperties,
       scriptureReferences: {
-        canRead: result.canScriptureReferencesRead,
-        canEdit: result.canScriptureReferencesEdit,
+        ...securedProperties.scriptureReferences,
         value: [],
       },
       mediums: {
@@ -441,27 +401,39 @@ export class ProductService {
         value: securedProperties.purposes.value ?? [],
       },
       produces: {
+        ...(securedProperties.scriptureReferencesOverride
+          ? securedProperties.scriptureReferencesOverride
+          : {
+              canRead: false,
+              canEdit: false,
+            }),
         value: {
           ...producible,
-          id: produces.p.properties.id,
+          id: pr.p.properties.id,
           __typename: (ProducibleType as any)[typeName],
-          scriptureReferences: !scriptureReferencesOverride.length
+          scriptureReferences: !scriptureReferencesOverrideValue.length
             ? producible?.scriptureReferences
             : {
-                canRead: result.canScriptureReferencesOverrideRead,
-                canEdit: result.canScriptureReferencesOverrideEdit,
-                value: scriptureReferencesOverride,
+                ...(securedProperties.scriptureReferencesOverride
+                  ? securedProperties.scriptureReferencesOverride
+                  : {
+                      canRead: false,
+                      canEdit: false,
+                    }),
+                value: scriptureReferencesOverrideValue,
               },
         },
-        canRead: result.canProducesRead,
-        canEdit: result.canProducesEdit,
       },
       scriptureReferencesOverride: {
-        canRead: result.canScriptureReferencesOverrideRead,
-        canEdit: result.canScriptureReferencesOverrideEdit,
-        value: !scriptureReferencesOverride.length
+        ...(securedProperties.scriptureReferencesOverride
+          ? securedProperties.scriptureReferencesOverride
+          : {
+              canRead: false,
+              canEdit: false,
+            }),
+        value: !scriptureReferencesOverrideValue.length
           ? null
-          : scriptureReferencesOverride,
+          : scriptureReferencesOverrideValue,
       },
     };
   }
