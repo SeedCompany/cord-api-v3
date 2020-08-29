@@ -87,7 +87,7 @@ describe('Organization e2e', () => {
     expect(actual.name.value).toBe(org.name.value);
   });
 
-  it('create organization with mandatory field blank, mismatch or removed', async () => {
+  it.skip('create organization with mandatory field blank, mismatch or removed', async () => {
     await expect(createOrganization(app, { name: '' })).rejects.toThrowError();
     await expect(
       createOrganization(app, { name: undefined })
