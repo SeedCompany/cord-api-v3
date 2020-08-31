@@ -18,13 +18,13 @@ export abstract class ScriptureReferenceInput {
   @Field(() => Int, {
     description: 'The chapter number',
   })
-  @IsValidChapter('book')
+  @IsValidChapter()
   chapter: number;
 
   @Field(() => Int, {
     description: 'The verse number',
   })
-  @IsValidVerse('book', 'chapter')
+  @IsValidVerse()
   verse: number;
 }
 
