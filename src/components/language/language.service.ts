@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Node, node, relation } from 'cypher-query-builder';
+import { contains, node, relation } from 'cypher-query-builder';
 import { first, intersection, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import {
@@ -15,17 +15,14 @@ import {
   ConfigService,
   createBaseNode,
   DatabaseService,
-  filterByString,
   ILogger,
   Logger,
   matchRequestingUser,
   matchSession,
   OnIndex,
-  runListQuery,
   UniquenessError,
 } from '../../core';
 import {
-  BaseNode,
   DbPropsOfDto,
   parseBaseNodeProperties,
   parsePropList,
@@ -537,45 +534,84 @@ export class LanguageService {
     session: ISession
   ): Promise<LanguageListOutput> {
     const label = 'Language';
-    // const baseNodeMetaProps = ['id', 'createdAt'];
-    // const unsecureProps = [''];
-    const secureProps = [
-      'name',
-      'displayName',
-      'isDialect',
-      'populationOverride',
-      'registryOfDialectsCode',
-      'leastOfThese',
-      'leastOfTheseReason',
-      'displayNamePronunciation',
-      'sensitivity',
-      'sponsorDate',
-    ];
 
-    const query = this.db.query().call(matchRequestingUser, session);
-    // .call(matchUserPermissions, 'Language');
+    const skip = (input.page - 1) * input.count;
+
+    const query = this.db.query();
 
     if (filter.name) {
-      query.call(filterByString, label, 'name', filter.name);
+      query
+        .match([
+          node('requestingUser', 'User', {
+            active: true,
+            id: session.userId,
+          }),
+          relation('in', '', 'member*1..'),
+          node('', 'SecurityGroup', { active: true }),
+          relation('out', '', 'permission'),
+          node('', 'Permission', { active: true }),
+          relation('out', '', 'baseNode'),
+          node('node', label, { active: true }),
+          relation('out', '', 'name', { active: true }),
+          node('filter', 'Property', { active: true }),
+        ])
+        .where({ filter: [{ value: contains(filter.name) }] });
+    } else {
+      query.match([
+        node('requestingUser', 'User', {
+          active: true,
+          id: session.userId,
+        }),
+        relation('in', '', 'member*1..'),
+        node('', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission'),
+        node('', 'Permission', { active: true }),
+        relation('out', '', 'baseNode'),
+        node('node', label, { active: true }),
+      ]);
     }
 
-    query.match([node('node', 'Language', { active: true })]);
+    query
+      .with('collect(distinct node) as nodes, count(distinct node) as total')
+      .raw('unwind nodes as node');
 
-    const result = await runListQuery<Node<BaseNode>>(
-      query,
-      input,
-      secureProps.includes(input.sort)
-    );
-    const items = await Promise.all(
-      result.items.map(async (item) => {
-        return await this.readOne(item.properties.id, session);
-      })
-    );
+    if (input.sort) {
+      query
+        .match([
+          node('node'),
+          relation('out', '', input.sort),
+          node('prop', 'Property', { active: true }),
+        ])
+        .with('*')
+        .orderBy(`prop.value ${input.order}`);
+    }
+
+    query
+      .skip(skip)
+      .limit(input.count)
+      .raw(
+        `return collect(node.id) as ids, total, ${
+          skip + input.count
+        } < total as hasMore`
+      );
+    const result = await query.first();
+
+    if (!result) {
+      return {
+        total: 0,
+        hasMore: false,
+        items: [],
+      };
+    }
 
     return {
-      items,
-      hasMore: result.hasMore,
       total: result.total,
+      hasMore: result.hasMore,
+      items: (await Promise.all(
+        result.ids.map(async (id: string) => {
+          return await this.readOne(id, session);
+        })
+      )) as Language[],
     };
   }
 
