@@ -14,13 +14,10 @@ import {
 import {
   ConfigService,
   DatabaseService,
-  filterByBaseNodeId,
   ILogger,
   Logger,
   matchRequestingUser,
   matchSession,
-  matchUserPermissionsForList,
-  runListQuery,
 } from '../../core';
 import {
   DbPropsOfDto,
@@ -42,6 +39,7 @@ import { ProjectService } from '../project/project.service';
 import {
   CreateInternshipEngagement,
   CreateLanguageEngagement,
+  Engagement,
   EngagementListInput,
   EngagementListOutput,
   EngagementStatus,
@@ -1240,36 +1238,85 @@ export class EngagementService {
       'growthPlan',
     ];
 
-    const query = this.db
-      .query()
-      .call(matchRequestingUser, session)
-      .call(matchUserPermissionsForList, label, input.page, input.count);
+    const skip = (input.page - 1) * input.count;
+
+    const query = this.db.query();
 
     if (filter.projectId) {
-      query.call(
-        filterByBaseNodeId,
-        filter.projectId,
-        'engagement',
-        'in',
-        'Project',
-        label
-      );
+      query.match([
+        node('requestingUser', 'User', {
+          active: true,
+          id: session.userId,
+        }),
+        relation('in', '', 'member*1..'),
+        node('', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission'),
+        node('', 'Permission', { active: true }),
+        relation('out', '', 'baseNode'),
+        node('node', label, { active: true }),
+        relation('in', '', 'engagement', { active: true }),
+        node('project', 'Project', { active: true }),
+      ]);
+    } else {
+      query.match([
+        node('requestingUser', 'User', {
+          active: true,
+          id: session.userId,
+        }),
+        relation('in', '', 'member*1..'),
+        node('', 'SecurityGroup', { active: true }),
+        relation('out', '', 'permission'),
+        node('', 'Permission', { active: true }),
+        relation('out', '', 'baseNode'),
+        node('node', label, { active: true }),
+      ]);
     }
 
-    const result = await runListQuery(
-      query,
-      input,
-      secureProps.includes(input.sort)
-    );
+    query
+      .with('collect(distinct node) as nodes, count(distinct node) as total')
+      .raw('unwind nodes as node');
 
-    const items = await Promise.all(
-      result.items.map((row: any) => this.readOne(row.properties.id, session))
-    );
+    if (input.sort) {
+      if (secureProps.includes(input.sort)) {
+        query
+          .match([
+            node('node'),
+            relation('out', '', input.sort),
+            node('prop', 'Property', { active: true }),
+          ])
+          .with('*')
+          .orderBy(`prop.value ${input.order}`);
+      } else {
+        query.with('*').orderBy(`node.${input.sort} ${input.order}`);
+      }
+    }
+
+    query
+      .skip(skip)
+      .limit(input.count)
+      .raw(
+        `return collect(node.id) as ids, total, ${
+          skip + input.count
+        } < total as hasMore`
+      );
+    const result = await query.first();
+
+    if (!result) {
+      return {
+        total: 0,
+        hasMore: false,
+        items: [],
+      };
+    }
 
     return {
-      items,
-      hasMore: result.hasMore,
       total: result.total,
+      hasMore: result.hasMore,
+      items: (await Promise.all(
+        result.ids.map(async (id: string) => {
+          return await this.readOne(id, session);
+        })
+      )) as Engagement[],
     };
   }
 
