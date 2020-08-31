@@ -535,6 +535,17 @@ export class LanguageService {
   ): Promise<LanguageListOutput> {
     const label = 'Language';
 
+    const secureProps = [
+      'name',
+      'displayName',
+      'isDialect',
+      'populationOverride',
+      'registryOfDialectsCode',
+      'leastOfThese',
+      'leastOfTheseReason',
+      'displayNamePronunciation',
+    ];
+
     const skip = (input.page - 1) * input.count;
 
     const query = this.db.query();
@@ -576,14 +587,18 @@ export class LanguageService {
       .raw('unwind nodes as node');
 
     if (input.sort) {
-      query
-        .match([
-          node('node'),
-          relation('out', '', input.sort),
-          node('prop', 'Property', { active: true }),
-        ])
-        .with('*')
-        .orderBy(`prop.value ${input.order}`);
+      if (secureProps.includes(input.sort)) {
+        query
+          .match([
+            node('node'),
+            relation('out', '', input.sort),
+            node('prop', 'Property', { active: true }),
+          ])
+          .with('*')
+          .orderBy(`prop.value ${input.order}`);
+      } else {
+        query.with('*').orderBy(`node.${input.sort} ${input.order}`);
+      }
     }
 
     query
