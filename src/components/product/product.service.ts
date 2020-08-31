@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
+import type { Node } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { difference } from 'lodash';
 import { DateTime } from 'luxon';
@@ -24,10 +25,10 @@ import {
   Property,
   runListQuery,
 } from '../../core';
+import type { BaseNode } from '../../core/database/results';
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
-  parsePropList,
   parseSecuredProperties,
   StandardReadResult,
 } from '../../core/database/results';
@@ -319,8 +320,11 @@ export class ProductService {
       throw new NotFoundException('Could not find product', 'product.id');
     }
 
-    const props = parsePropList(result.propList);
-    const securedProperties = parseSecuredProperties(props, result.permList, {
+    const {
+      produces,
+      scriptureReferencesOverride,
+      ...rest
+    } = parseSecuredProperties(result.propList, result.permList, {
       mediums: true,
       purposes: true,
       methodology: true,
@@ -328,12 +332,6 @@ export class ProductService {
       scriptureReferencesOverride: true,
       produces: true,
     });
-
-    const {
-      produces,
-      scriptureReferencesOverride,
-      ...rest
-    } = securedProperties;
 
     const pr = await this.db
       .query()
@@ -343,39 +341,34 @@ export class ProductService {
         node('p', 'Producible', { active: true }),
       ])
       .return('p')
+      .asResult<{ p: Node<BaseNode> }>()
       .first();
 
-    if (!pr) {
-      const scriptureReferences = await this.listScriptureReferences(
-        id,
-        'Product',
-        session
-      );
+    const scriptureReferencesValue = await this.listScriptureReferences(
+      id,
+      'Product',
+      session,
+      { isOverride: pr ? true : false }
+    );
 
+    if (!pr) {
       return {
         ...parseBaseNodeProperties(result.node),
         ...rest,
         scriptureReferences: {
-          ...securedProperties.scriptureReferences,
-          value: scriptureReferences,
+          ...rest.scriptureReferences,
+          value: scriptureReferencesValue,
         },
         mediums: {
-          ...securedProperties.mediums,
-          value: securedProperties.mediums.value ?? [],
+          ...rest.mediums,
+          value: rest.mediums.value ?? [],
         },
         purposes: {
-          ...securedProperties.purposes,
-          value: securedProperties.purposes.value ?? [],
+          ...rest.purposes,
+          value: rest.purposes.value ?? [],
         },
       };
     }
-
-    const scriptureReferencesOverrideValue = await this.listScriptureReferences(
-      id,
-      'Product',
-      session,
-      { isOverride: true }
-    );
 
     const typeName = difference(pr.p.labels, ['Producible', 'BaseNode'])[0];
 
@@ -387,22 +380,26 @@ export class ProductService {
 
     return {
       ...parseBaseNodeProperties(result.node),
-      ...securedProperties,
+      ...rest,
       scriptureReferences: {
-        ...securedProperties.scriptureReferences,
-        value: [],
+        ...rest.scriptureReferences,
+        value: !scriptureReferencesValue.length
+          ? producible?.scriptureReferences.value
+            ? producible?.scriptureReferences.value
+            : []
+          : scriptureReferencesValue,
       },
       mediums: {
-        ...securedProperties.mediums,
-        value: securedProperties.mediums.value ?? [],
+        ...rest.mediums,
+        value: rest.mediums.value ?? [],
       },
       purposes: {
-        ...securedProperties.purposes,
-        value: securedProperties.purposes.value ?? [],
+        ...rest.purposes,
+        value: rest.purposes.value ?? [],
       },
       produces: {
-        ...(securedProperties.scriptureReferencesOverride
-          ? securedProperties.scriptureReferencesOverride
+        ...(produces
+          ? produces
           : {
               canRead: false,
               canEdit: false,
@@ -411,29 +408,29 @@ export class ProductService {
           ...producible,
           id: pr.p.properties.id,
           __typename: (ProducibleType as any)[typeName],
-          scriptureReferences: !scriptureReferencesOverrideValue.length
+          scriptureReferences: !scriptureReferencesValue.length
             ? producible?.scriptureReferences
             : {
-                ...(securedProperties.scriptureReferencesOverride
-                  ? securedProperties.scriptureReferencesOverride
+                ...(scriptureReferencesOverride
+                  ? scriptureReferencesOverride
                   : {
                       canRead: false,
                       canEdit: false,
                     }),
-                value: scriptureReferencesOverrideValue,
+                value: scriptureReferencesValue,
               },
         },
       },
       scriptureReferencesOverride: {
-        ...(securedProperties.scriptureReferencesOverride
-          ? securedProperties.scriptureReferencesOverride
+        ...(scriptureReferencesOverride
+          ? scriptureReferencesOverride
           : {
               canRead: false,
               canEdit: false,
             }),
-        value: !scriptureReferencesOverrideValue.length
+        value: !scriptureReferencesValue.length
           ? null
-          : scriptureReferencesOverrideValue,
+          : scriptureReferencesValue,
       },
     };
   }
