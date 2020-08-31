@@ -19,9 +19,22 @@ import {
   SortablePaginationInput,
 } from '../../common';
 import { ILogger } from '../logger';
-import { mapping } from './mapping.helper';
+import { coalesce, collect, count, mapping } from './query';
 
-export * from './mapping.helper';
+/** @deprecated */
+const oldMapping = mapping;
+/** @deprecated */
+const oldCollect = collect;
+/** @deprecated */
+const oldCount = count;
+/** @deprecated */
+const oldCoalesce = coalesce;
+export {
+  oldMapping as mapping,
+  oldCollect as collect,
+  oldCount as count,
+  oldCoalesce as coalesce,
+};
 
 // UTILITY //////////////////////////////////////////////////////
 
@@ -930,45 +943,6 @@ export const securedProperty = (property: string) => ({
   canRead: coalesce(`${property}ReadPerm.read`, false),
   canEdit: coalesce(`${property}EditPerm.edit`, false),
 });
-
-/**
- * Returns a list containing the values returned by an expression.
- * Using this function aggregates data by amalgamating multiple records or
- * values into a single list.
- *
- * @param expression An expression returning a set of values.
- * @param as         Output as this variable
- * @see https://neo4j.com/docs/cypher-manual/current/functions/aggregating/#functions-collect
- */
-export const collect = (expression: string, as?: string) =>
-  `collect(${expression})` + (as ? ' as ' + as : '');
-
-/**
- * Returns the number of values or rows
- *
- * @param expression       The expression
- * @param options          Function options
- * @param options.distinct Whether the expression should be distinct
- * @param options.as       Output as this variable
- * @see https://neo4j.com/docs/cypher-manual/current/functions/aggregating/#functions-count
- */
-export const count = (
-  expression: string,
-  options: { distinct?: boolean; as?: string }
-) =>
-  `count(${options.distinct ? 'DISTINCT ' : ''}${expression})` +
-  (options.as ? ' as ' + options.as : '');
-
-/**
- * Returns the first non-null value in the given list of expressions.
- *
- * `null` will be returned if all the arguments are `null`.
- *
- * @param expressions An expression which may return null.
- * @see https://neo4j.com/docs/cypher-manual/current/functions/aggregating/#functions-coalesce
- */
-export const coalesce = (...expressions: any[]) =>
-  `coalesce(${expressions.join(', ')})`;
 
 export function returnWithSecurePropertyClauseForList(property: string) {
   return `
