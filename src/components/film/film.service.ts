@@ -8,11 +8,11 @@ import {
   ServerException,
 } from '../../common';
 import {
-  addAllMetaPropertiesOfChildBaseNodes,
-  ChildBaseNodeMetaProperty,
   ConfigService,
   createBaseNode,
   DatabaseService,
+  getPermList,
+  getPropList,
   ILogger,
   Logger,
   matchRequestingUser,
@@ -218,9 +218,9 @@ export class FilmService {
     }
   }
 
-  async readOne(filmId: string, session: ISession): Promise<Film> {
+  async readOne(id: string, session: ISession): Promise<Film> {
     this.logger.debug(`Read film`, {
-      id: filmId,
+      id,
       userId: session.userId,
     });
 
@@ -228,53 +228,14 @@ export class FilmService {
       session.userId = this.config.anonUser.id;
     }
 
-    const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
-      {
-        parentBaseNodePropertyKey: 'scriptureReferences',
-        parentRelationDirection: 'out',
-        childBaseNodeLabel: 'ScriptureRange',
-        childBaseNodeMetaPropertyKey: '',
-        returnIdentifier: '',
-      },
-    ];
     const readFilm = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([
-        node('node', 'Film', {
-          active: true,
-          id: filmId,
-        }),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member*1..'),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission'),
-        node('perms', 'Permission', { active: true }),
-        relation('out', '', 'baseNode'),
-        node('node'),
-      ])
-      .with('collect(distinct perms) as permList, node')
-      .match([
-        node('node'),
-        relation('out', 'r', { active: true }),
-        node('props', 'Property', { active: true }),
-      ])
-      .with('{value: props.value, property: type(r)} as prop, permList, node')
-      .with('collect(prop) as propList, permList, node')
-      .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
-      .return([
-        'propList, permList, node',
-        'coalesce(scriptureReferencesReadPerm.read, false) as canScriptureReferencesRead',
-        'coalesce(scriptureReferencesEditPerm.edit, false) as canScriptureReferencesEdit',
-      ])
-      .asResult<
-        StandardReadResult<DbPropsOfDto<Film>> & {
-          canScriptureReferencesRead: boolean;
-          canScriptureReferencesEdit: boolean;
-        }
-      >();
+      .match([node('node', 'Film', { active: true, id })])
+      .call(getPermList, 'requestingUser')
+      .call(getPropList, 'permList')
+      .return('node, permList, propList')
+      .asResult<StandardReadResult<DbPropsOfDto<Film>>>();
 
     const result = await readFilm.first();
 
@@ -282,21 +243,22 @@ export class FilmService {
       throw new NotFoundException('Could not find film', 'film.id');
     }
 
-    const secured = parseSecuredProperties(result.propList, result.permList, {
-      name: true,
-    });
+    const scriptureReferences = await this.listScriptureReferences(id, session);
 
-    const scriptureReferences = await this.listScriptureReferences(
-      filmId,
-      session
+    const securedProps = parseSecuredProperties(
+      result.propList,
+      result.permList,
+      {
+        name: true,
+        scriptureReferences: true,
+      }
     );
 
     return {
       ...parseBaseNodeProperties(result.node),
-      ...secured,
+      ...securedProps,
       scriptureReferences: {
-        canRead: result.canScriptureReferencesRead,
-        canEdit: result.canScriptureReferencesEdit,
+        ...securedProps.scriptureReferences,
         value: scriptureReferences,
       },
     };

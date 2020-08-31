@@ -8,10 +8,11 @@ import {
   ServerException,
 } from '../../common';
 import {
-  addUserToSG,
   ConfigService,
   createBaseNode,
   DatabaseService,
+  getPermList,
+  getPropList,
   ILogger,
   Logger,
   matchRequestingUser,
@@ -25,11 +26,15 @@ import {
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
-  parsePropList,
   parseSecuredProperties,
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
+import { ScriptureRange } from '../scripture';
+import {
+  scriptureToVerseRange,
+  verseToScriptureRange,
+} from '../scripture/reference';
 import {
   CreateSong,
   Song,
@@ -165,7 +170,7 @@ export class SongService {
         .query()
         .call(matchRequestingUser, session)
         .match([
-          node('rootUser', 'User', {
+          node('root', 'User', {
             active: true,
             id: this.config.rootAdmin.id,
           }),
@@ -173,23 +178,31 @@ export class SongService {
         .call(createBaseNode, ['Song', 'Producible'], secureProps, {
           owningOrgId: session.owningOrgId,
         })
-        .create([...this.permission('range', 'node')])
-        .call(addUserToSG, 'rootUser', 'adminSG')
-        .call(addUserToSG, 'rootUser', 'readerSG')
-        .return('node.id as id');
+        .create([...this.permission('scriptureReferences', 'node')]);
+
+      if (input.scriptureReferences) {
+        for (const sr of input.scriptureReferences) {
+          const verseRange = scriptureToVerseRange(sr);
+          query.create([
+            node('node'),
+            relation('out', '', 'scriptureReferences', { active: true }),
+            node('sr', 'ScriptureRange', {
+              start: verseRange.start,
+              end: verseRange.end,
+              active: true,
+              createdAt: DateTime.local(),
+            }),
+          ]);
+        }
+      }
+      query.return('node.id as id');
 
       const result = await query.first();
       if (!result) {
         throw new ServerException('failed to create a song');
       }
 
-      const id = result.id;
-
-      // add root admin to new song as an admin
-      await this.db.addRootAdminToBaseNodeAsAdmin(id, 'Song');
-
       this.logger.debug(`song created`, { id: result.id });
-
       return await this.readOne(result.id, session);
     } catch (exception) {
       this.logger.error(`Could not create song`, {
@@ -214,23 +227,8 @@ export class SongService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Song', { active: true, id })])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member*1..'),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission'),
-        node('perms', 'Permission', { active: true }),
-        relation('out', '', 'baseNode'),
-        node('node'),
-      ])
-      .with('collect(distinct perms) as permList, node')
-      .match([
-        node('node'),
-        relation('out', 'r', { active: true }),
-        node('props', 'Property', { active: true }),
-      ])
-      .with('{value: props.value, property: type(r)} as prop, permList, node')
-      .with('collect(prop) as propList, permList, node')
+      .call(getPermList, 'requestingUser')
+      .call(getPropList, 'permList')
       .return('propList, permList, node')
       .asResult<StandardReadResult<DbPropsOfDto<Song>>>();
 
@@ -240,31 +238,71 @@ export class SongService {
       throw new NotFoundException('Could not find song', 'song.id');
     }
 
-    const props = parsePropList(result.propList);
-    const securedProps = parseSecuredProperties(props, result.permList, {
-      name: true,
-    });
+    const scriptureReferences = await this.listScriptureReferences(id, session);
+
+    const securedProps = parseSecuredProperties(
+      result.propList,
+      result.permList,
+      {
+        name: true,
+        scriptureReferences: true,
+      }
+    );
 
     return {
       ...parseBaseNodeProperties(result.node),
       ...securedProps,
-      id: result?.node?.properties?.id,
-      createdAt: result?.node?.properties?.createdAt,
       scriptureReferences: {
-        canEdit: true,
-        canRead: true,
-        value: [],
+        ...securedProps.scriptureReferences,
+        value: scriptureReferences,
       },
     };
   }
 
   async update(input: UpdateSong, session: ISession): Promise<Song> {
+    const { scriptureReferences } = input;
+
+    if (scriptureReferences) {
+      const rel = 'scriptureReferences';
+      await this.db
+        .query()
+        .match([
+          node('song', 'Song', { id: input.id, active: true }),
+          relation('out', 'rel', rel, { active: true }),
+          node('sr', 'ScriptureRange', { active: true }),
+        ])
+        .setValues({
+          'rel.active': false,
+          'sr.active': false,
+        })
+        .return('sr')
+        .first();
+
+      for (const sr of scriptureReferences) {
+        const verseRange = scriptureToVerseRange(sr);
+        await this.db
+          .query()
+          .match([node('song', 'Song', { id: input.id, active: true })])
+          .create([
+            node('song'),
+            relation('out', '', rel, { active: true }),
+            node('', ['ScriptureRange', 'BaseNode'], {
+              start: verseRange.start,
+              end: verseRange.end,
+              active: true,
+              createdAt: DateTime.local(),
+            }),
+          ])
+          .return('song')
+          .first();
+      }
+    }
     const song = await this.readOne(input.id, session);
 
     return await this.db.sgUpdateProperties({
       session,
       object: song,
-      props: ['name'], // TODO scriptureReferences
+      props: ['name'],
       changes: input,
       nodevar: 'song',
     });
@@ -318,5 +356,51 @@ export class SongService {
       );
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
+  }
+
+  async listScriptureReferences(
+    songId: string,
+    session: ISession
+  ): Promise<ScriptureRange[]> {
+    const query = this.db
+      .query()
+      .match([
+        node('song', 'Song', {
+          id: songId,
+          active: true,
+          owningOrgId: session.owningOrgId,
+        }),
+        relation('out', '', 'scriptureReferences'),
+        node('scriptureRanges', 'ScriptureRange', { active: true }),
+      ])
+      .with('collect(scriptureRanges) as items')
+      .return('items');
+    const result = await query.first();
+
+    if (!result) {
+      return [];
+    }
+
+    const items: ScriptureRange[] = await Promise.all(
+      result.items.map(
+        (item: {
+          identity: string;
+          labels: string;
+          properties: {
+            start: number;
+            end: number;
+            createdAt: string;
+            active: boolean;
+          };
+        }) => {
+          return verseToScriptureRange({
+            start: item.properties.start,
+            end: item.properties.end,
+          });
+        }
+      )
+    );
+
+    return items;
   }
 }

@@ -8,11 +8,11 @@ import {
   ServerException,
 } from '../../common';
 import {
-  addAllMetaPropertiesOfChildBaseNodes,
-  ChildBaseNodeMetaProperty,
   ConfigService,
   createBaseNode,
   DatabaseService,
+  getPermList,
+  getPropList,
   ILogger,
   Logger,
   matchRequestingUser,
@@ -221,12 +221,9 @@ export class LiteracyMaterialService {
     }
   }
 
-  async readOne(
-    literacyMaterialId: string,
-    session: ISession
-  ): Promise<LiteracyMaterial> {
+  async readOne(id: string, session: ISession): Promise<LiteracyMaterial> {
     this.logger.debug(`Read literacyMaterial`, {
-      id: literacyMaterialId,
+      id,
       userId: session.userId,
     });
 
@@ -234,53 +231,14 @@ export class LiteracyMaterialService {
       session.userId = this.config.anonUser.id;
     }
 
-    const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
-      {
-        parentBaseNodePropertyKey: 'scriptureReferences',
-        parentRelationDirection: 'out',
-        childBaseNodeLabel: 'ScriptureRange',
-        childBaseNodeMetaPropertyKey: '',
-        returnIdentifier: '',
-      },
-    ];
     const readLiteracyMaterial = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([
-        node('node', 'LiteracyMaterial', {
-          active: true,
-          id: literacyMaterialId,
-        }),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member*1..'),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission'),
-        node('perms', 'Permission', { active: true }),
-        relation('out', '', 'baseNode'),
-        node('node'),
-      ])
-      .with('collect(distinct perms) as permList, node')
-      .match([
-        node('node'),
-        relation('out', 'r', { active: true }),
-        node('props', 'Property', { active: true }),
-      ])
-      .with('{value: props.value, property: type(r)} as prop, permList, node')
-      .with('collect(prop) as propList, permList, node')
-      .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
-      .return([
-        'propList, permList, node',
-        'coalesce(scriptureReferencesReadPerm.read, false) as canScriptureReferencesRead',
-        'coalesce(scriptureReferencesEditPerm.edit, false) as canScriptureReferencesEdit',
-      ])
-      .asResult<
-        StandardReadResult<DbPropsOfDto<LiteracyMaterial>> & {
-          canScriptureReferencesRead: boolean;
-          canScriptureReferencesEdit: boolean;
-        }
-      >();
+      .match([node('node', 'LiteracyMaterial', { active: true, id })])
+      .call(getPermList, 'requestingUser')
+      .call(getPropList, 'permList')
+      .return('node, permList, propList')
+      .asResult<StandardReadResult<DbPropsOfDto<LiteracyMaterial>>>();
 
     const result = await readLiteracyMaterial.first();
 
@@ -291,21 +249,22 @@ export class LiteracyMaterialService {
       );
     }
 
-    const secured = parseSecuredProperties(result.propList, result.permList, {
-      name: true,
-    });
+    const scriptureReferences = await this.listScriptureReferences(id, session);
 
-    const scriptureReferences = await this.listScriptureReferences(
-      literacyMaterialId,
-      session
+    const securedProps = parseSecuredProperties(
+      result.propList,
+      result.permList,
+      {
+        name: true,
+        scriptureReferences: true,
+      }
     );
 
     return {
       ...parseBaseNodeProperties(result.node),
-      ...secured,
+      ...securedProps,
       scriptureReferences: {
-        canRead: result.canScriptureReferencesRead,
-        canEdit: result.canScriptureReferencesEdit,
+        ...securedProps.scriptureReferences,
         value: scriptureReferences,
       },
     };

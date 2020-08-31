@@ -26,7 +26,6 @@ import {
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
-  parsePropList,
   parseSecuredProperties,
   runListQuery,
   StandardReadResult,
@@ -238,16 +237,16 @@ export class StoryService {
       throw new NotFoundException('Could not find story', 'story.id');
     }
 
-    const scriptureReferences = await this.listScriptureReferences(
-      result.node.properties.id,
-      session
-    );
+    const scriptureReferences = await this.listScriptureReferences(id, session);
 
-    const props = parsePropList(result.propList);
-    const securedProps = parseSecuredProperties(props, result.permList, {
-      name: true,
-      scriptureReferences: true,
-    });
+    const securedProps = parseSecuredProperties(
+      result.propList,
+      result.permList,
+      {
+        name: true,
+        scriptureReferences: true,
+      }
+    );
 
     return {
       ...parseBaseNodeProperties(result.node),
