@@ -12,12 +12,7 @@ import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/rel
 import { isFunction } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
-import {
-  ISession,
-  mapFromList,
-  PaginationInput,
-  SortablePaginationInput,
-} from '../../common';
+import { ISession, mapFromList, SortablePaginationInput } from '../../common';
 import { ILogger } from '../logger';
 import {
   coalesce,
@@ -27,6 +22,7 @@ import {
   matchPermList,
   matchPropList,
 } from './query';
+import { hasMore as newHasMore } from './results';
 
 /** @deprecated */
 const oldMapping = mapping;
@@ -991,10 +987,10 @@ export function addBaseNodeMetaPropsWithClauseAsObject(props: string[]) {
 
 // RETURN clauses //////////////////////////////////////////////////////
 
-export const hasMore = (input: PaginationInput, total: number) =>
-  // if skip + count is less than total, there is more
-  (input.page - 1) * input.count + input.count < total;
+/** @deprecated */
+export const hasMore = newHasMore;
 
+/** @deprecated */
 export function listReturnBlock<T = any>(
   query: Query,
   { page, count, sort: sortInput, order }: SortablePaginationInput,
@@ -1030,6 +1026,7 @@ export function listReturnBlock<T = any>(
 
 // RUN functions //////////////////////////////////////////////////////
 
+/** @deprecated */
 export async function runListQuery<T>(
   query: Query,
   input: SortablePaginationInput,
