@@ -10,10 +10,6 @@ import {
   ServerException,
 } from '../../common';
 import {
-  addAllMetaPropertiesOfChildBaseNodes,
-  addAllSecureProperties,
-  addBaseNodeMetaPropsWithClause,
-  ChildBaseNodeMetaProperty,
   ConfigService,
   createBaseNode,
   DatabaseService,
@@ -21,17 +17,20 @@ import {
   getPropList,
   IEventBus,
   ILogger,
-  listWithSecureObject,
   Logger,
   matchRequestingUser,
   matchSession,
-  matchUserPermissions,
-  runListQuery,
 } from '../../core';
+import {
+  calculateTotalAndPaginateList,
+  permissionsOfNode,
+  requestingUser,
+} from '../../core/database/query';
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
   parseSecuredProperties,
+  runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
 import { BudgetService } from '../budget';
@@ -55,6 +54,19 @@ import {
 
 @Injectable()
 export class PartnershipService {
+  private readonly securedProperties = {
+    agreementStatus: true,
+    mouStatus: true,
+    mouStart: true,
+    mouEnd: true,
+    mouStartOverride: true,
+    mouEndOverride: true,
+    types: true,
+    fundingType: true,
+    mou: true,
+    agreement: true,
+  };
+
   constructor(
     private readonly files: FileService,
     private readonly db: DatabaseService,
@@ -394,18 +406,7 @@ export class PartnershipService {
     const securedProps = parseSecuredProperties(
       result.propList,
       result.permList,
-      {
-        agreementStatus: true,
-        mouStatus: true,
-        mouStart: true,
-        mouEnd: true,
-        mouStartOverride: true,
-        mouEndOverride: true,
-        types: true,
-        fundingType: true,
-        mou: true,
-        agreement: true,
-      }
+      this.securedProperties
     );
     const canReadMouStart =
       readProject.mouStart.canRead && securedProps.mouStartOverride.canRead;
@@ -532,93 +533,44 @@ export class PartnershipService {
     input: Partial<PartnershipListInput>,
     session: ISession
   ): Promise<PartnershipListOutput> {
-    const { sort, filter } = {
+    const { filter, ...listInput } = {
       ...PartnershipListInput.defaultVal,
       ...input,
     };
 
     const label = 'Partnership';
-    const baseNodeMetaProps = ['id', 'createdAt'];
-    // const unsecureProps = [''];
-    const secureProps = [
-      'agreementStatus',
-      'mouStatus',
-      'mouStart',
-      'mouEnd',
-      'mouStartOverride',
-      'mouEndOverride',
-      'types',
-      'fundingType',
-      'mou',
-      'agreement',
-    ];
-
-    const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
-      {
-        parentBaseNodePropertyKey: 'organization',
-        parentRelationDirection: 'out',
-        childBaseNodeLabel: 'Organization',
-        childBaseNodeMetaPropertyKey: 'id',
-        returnIdentifier: 'organizationId',
-      },
-    ];
 
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
-      .call(matchUserPermissions, 'Partnership');
-
-    if (filter.projectId) {
-      this.filterByProject(
-        query,
-        filter.projectId,
-        'partnership',
-        'out',
-        label
-      );
-    }
-
-    // match on the rest of the properties of the object requested
-    query
-      .call(
-        addAllSecureProperties,
-        ...secureProps
-        //...unsecureProps
-      )
-      .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
-      // form return object
-      // ${listWithUnsecureObject(unsecureProps)}, // removed from a few lines down
-      .with(
-        `
-          {
-            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
-            ${listWithSecureObject(secureProps)},
-            ${childBaseNodeMetaProps
-              .map(
-                (x) =>
-                  `${x.returnIdentifier}: ${x.parentBaseNodePropertyKey}.${x.childBaseNodeMetaPropertyKey}`
-              )
-              .join(', ')}
-          } as node
-        `
+      .match([
+        requestingUser(session),
+        ...permissionsOfNode(label),
+        ...(filter.projectId
+          ? [
+              relation('in', '', 'partnership', { active: true }),
+              node('project', 'Project', {
+                active: true,
+                id: filter.projectId,
+              }),
+            ]
+          : []),
+      ])
+      .call(calculateTotalAndPaginateList, listInput, (q, sort, order) =>
+        sort in this.securedProperties
+          ? q
+              .match([
+                node('node'),
+                relation('out', '', sort),
+                node('prop', 'Property', { active: true }),
+              ])
+              .with('*')
+              .orderBy('prop.value', order)
+          : q.with('*').orderBy(`node.${sort}`, order)
       );
 
-    const result: PartnershipListOutput = await runListQuery(
-      query,
-      input as PartnershipListInput,
-      secureProps.includes(sort)
+    return await runListQuery(query, listInput, (id) =>
+      this.readOne(id, session)
     );
-    const items = await Promise.all(
-      result.items.map(async (item) => {
-        return await this.readOne(item.id, session);
-      })
-    );
-
-    return {
-      items,
-      hasMore: result.hasMore,
-      total: result.total,
-    };
   }
 
   async checkPartnershipConsistency(session: ISession): Promise<boolean> {
