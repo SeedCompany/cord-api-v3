@@ -863,4 +863,66 @@ describe('Project e2e', () => {
     expect(actual.id).toBe(proj.id);
     expect(actual.budget.value.records.length).toBe(1);
   });
+
+  /**
+   * After creating a partnership, should be able to query project and get organization
+   */
+  it('after creating a partnership, should be able to query project and get organization', async () => {
+    const defaultOrganizationId = 'seedcompanyid';
+    const project = await createProject(app, {
+      name: faker.random.uuid() + ' project',
+    });
+    const partnership: CreatePartnership = {
+      projectId: project.id,
+      organizationId: defaultOrganizationId,
+      types: [PartnershipType.Funding],
+    };
+
+    await app.graphql.mutate(
+      gql`
+        mutation createPartnership($input: CreatePartnershipInput!) {
+          createPartnership(input: $input) {
+            partnership {
+              ...partnership
+            }
+          }
+        }
+        ${fragments.partnership}
+      `,
+      {
+        input: {
+          partnership,
+        },
+      }
+    );
+
+    const projectQueryResult = await app.graphql.query(
+      gql`
+        query project($id: ID!) {
+          project(id: $id) {
+            budget {
+              value {
+                records {
+                  organization {
+                    value {
+                      id
+                      name {
+                        value
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      `,
+      {
+        id: project.id,
+      }
+    );
+    const firstBudgetRecordOrganizationId =
+      projectQueryResult.project.budget.value.records[0].organization.value.id;
+    expect(firstBudgetRecordOrganizationId).toBe(partnership.organizationId);
+  });
 });
