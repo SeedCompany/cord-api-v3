@@ -1,7 +1,7 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
-import { upperFirst } from 'lodash';
+import { uniq, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   InputException,
@@ -247,7 +247,7 @@ export class PartnershipService {
       },
       {
         key: 'types',
-        value: input.types,
+        value: uniq(input.types),
         addToAdminSg: true,
         addToWriterSg: false,
         addToReaderSg: true,
