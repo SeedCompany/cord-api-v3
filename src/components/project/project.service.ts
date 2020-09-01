@@ -30,6 +30,7 @@ import {
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
+import { getOrderBy } from '../../core/database/query/order';
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
@@ -579,6 +580,7 @@ export class ProjectService {
         ? 'TranslationProject'
         : 'Project';
 
+    const orderBy = await getOrderBy(input.sort, this.db);
     const query = this.db
       .query()
       .match([
@@ -602,7 +604,7 @@ export class ProjectService {
             node('prop', 'Property', { active: true }),
           ])
           .with('*')
-          .orderBy('LOWER(prop.value)', order)
+          .orderBy(orderBy, order)
       );
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
