@@ -1,13 +1,13 @@
-import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { NameField } from '../../../common';
+import { IdField, NameField } from '../../../common';
 import { ScriptureRangeInput } from '../../scripture';
 import { Song } from './song.dto';
 
 @InputType()
 export abstract class UpdateSong {
-  @Field(() => ID)
+  @IdField()
   readonly id: string;
 
   @NameField({ nullable: true })
