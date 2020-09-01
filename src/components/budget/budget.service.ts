@@ -450,10 +450,11 @@ export class BudgetService {
         relation('out', '', 'organization', { active: true }),
         node('organization', 'Organization', { active: true }),
       ])
-      .with('propList, permList, node, organization.id as organizationId')
-      .return(
-        'propList + [{value: organizationId, property: "organization"}] as propList, permList, node'
-      )
+      .return([
+        'propList + [{value: organization.id, property: "organization"}] as propList',
+        'permList',
+        'node',
+      ])
       .asResult<StandardReadResult<DbPropsOfDto<BudgetRecord>>>();
 
     const result = await query.first();
