@@ -20,9 +20,15 @@ import {
   Property,
 } from '../../core';
 import {
+  calculateTotalAndPaginateList,
+  permissionsOfNode,
+  requestingUser,
+} from '../../core/database/query';
+import {
   DbPropsOfDto,
   parseBaseNodeProperties,
   parseSecuredProperties,
+  runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
 import { ScriptureRange } from '../scripture';
@@ -380,83 +386,33 @@ export class LiteracyMaterialService {
     session: ISession
   ): Promise<LiteracyMaterialListOutput> {
     const label = 'LiteracyMaterial';
-    const skip = (input.page - 1) * input.count;
-    const query = this.db.query();
-
-    if (filter.name) {
-      query
-        .match([
-          node('requestingUser', 'User', {
-            active: true,
-            id: session.userId,
-          }),
-          relation('in', '', 'member*1..'),
-          node('', 'SecurityGroup', { active: true }),
-          relation('out', '', 'permission'),
-          node('', 'Permission', { active: true }),
-          relation('out', '', 'baseNode'),
-          node('node', label, { active: true }),
-          relation('out', '', 'name', { active: true }),
-          node('filter', 'Property', { active: true }),
-        ])
-        .where({ filter: [{ value: contains(filter.name) }] });
-    } else {
-      query.match([
-        node('requestingUser', 'User', {
-          active: true,
-          id: session.userId,
-        }),
-        relation('in', '', 'member*1..'),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission'),
-        node('', 'Permission', { active: true }),
-        relation('out', '', 'baseNode'),
-        node('node', label, { active: true }),
-      ]);
-    }
-
-    query
-      .with('collect(distinct node) as nodes, count(distinct node) as total')
-      .raw('unwind nodes as node');
-
-    if (input.sort) {
-      query
-        .match([
-          node('node'),
-          relation('out', '', input.sort),
-          node('prop', 'Property', { active: true }),
-        ])
-        .with('*')
-        .orderBy(`prop.value ${input.order}`);
-    }
-
-    query
-      .skip(skip)
-      .limit(input.count)
-      .raw(
-        `return collect(node.id) as ids, total, ${
-          skip + input.count
-        } < total as hasMore`
+    const query = this.db
+      .query()
+      .match([
+        requestingUser(session),
+        ...permissionsOfNode(label),
+        ...(filter.name
+          ? [
+              relation('out', '', 'name', { active: true }),
+              node('name', 'Property', { active: true }),
+            ]
+          : []),
+      ])
+      .call((q) =>
+        filter.name ? q.where({ name: { value: contains(filter.name) } }) : q
+      )
+      .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
+        q
+          .match([
+            node('node'),
+            relation('out', '', sort),
+            node('prop', 'Property', { active: true }),
+          ])
+          .with('*')
+          .orderBy('prop.value', order)
       );
-    const result = await query.first();
 
-    if (!result) {
-      return {
-        total: 0,
-        hasMore: false,
-        items: [],
-      };
-    }
-
-    return {
-      total: result.total,
-      hasMore: result.hasMore,
-      items: (await Promise.all(
-        result.ids.map(async (lmId: string) => {
-          return await this.readOne(lmId, session);
-        })
-      )) as LiteracyMaterial[],
-    };
+    return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
 
   async listScriptureReferences(
