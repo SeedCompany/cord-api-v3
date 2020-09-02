@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { contains, node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
@@ -9,25 +9,25 @@ import {
 } from '../../common';
 import {
   addAllMetaPropertiesOfChildBaseNodes,
-  addAllSecureProperties,
-  addBaseNodeMetaPropsWithClause,
   ChildBaseNodeMetaProperty,
   ConfigService,
   createBaseNode,
   DatabaseService,
-  filterByString,
   ILogger,
-  listWithSecureObject,
   Logger,
   matchRequestingUser,
-  matchUserPermissions,
   OnIndex,
-  runListQuery,
 } from '../../core';
+import {
+  calculateTotalAndPaginateList,
+  permissionsOfNode,
+  requestingUser,
+} from '../../core/database/query';
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
   parseSecuredProperties,
+  runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
 import { ScriptureRange } from '../scripture';
@@ -370,42 +370,34 @@ export class FilmService {
     { filter, ...input }: FilmListInput,
     session: ISession
   ): Promise<FilmListOutput> {
-    const baseNodeMetaProps = ['id', 'createdAt'];
-    const secureProps = ['name'];
     const label = 'Film';
-
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
-      .call(matchUserPermissions, label);
-    if (filter.name) {
-      query.call(filterByString, label, 'name', filter.name);
-    }
-    query.call(addAllSecureProperties, ...secureProps).with(
-      `
-          {
-            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
-            ${listWithSecureObject(secureProps)}
-          } as node
-        `
-    );
-    const listResult: FilmListOutput = await runListQuery(
-      query,
-      input,
-      secureProps.includes(input.sort)
-    );
+      .match([
+        requestingUser(session),
+        ...permissionsOfNode(label),
+        ...(filter.name
+          ? [
+              relation('out', '', 'name', { active: true }),
+              node('name', 'Property', { active: true }),
+            ]
+          : []),
+      ])
+      .call((q) =>
+        filter.name ? q.where({ name: { value: contains(filter.name) } }) : q
+      )
+      .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
+        q
+          .match([
+            node('node'),
+            relation('out', '', sort),
+            node('prop', 'Property', { active: true }),
+          ])
+          .with('*')
+          .orderBy('prop.value', order)
+      );
 
-    const items = await Promise.all(
-      listResult.items.map((item) => {
-        return this.readOne(item.id, session);
-      })
-    );
-
-    return {
-      items,
-      hasMore: listResult.hasMore,
-      total: listResult.total,
-    };
+    return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
 
   async listScriptureReferences(

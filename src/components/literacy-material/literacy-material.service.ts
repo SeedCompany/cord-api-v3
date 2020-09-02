@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { contains, node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
@@ -9,26 +9,26 @@ import {
 } from '../../common';
 import {
   addAllMetaPropertiesOfChildBaseNodes,
-  addAllSecureProperties,
-  addBaseNodeMetaPropsWithClause,
   ChildBaseNodeMetaProperty,
   ConfigService,
   createBaseNode,
   DatabaseService,
-  filterByString,
   ILogger,
-  listWithSecureObject,
   Logger,
   matchRequestingUser,
-  matchUserPermissions,
   OnIndex,
   Property,
-  runListQuery,
 } from '../../core';
+import {
+  calculateTotalAndPaginateList,
+  permissionsOfNode,
+  requestingUser,
+} from '../../core/database/query';
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
   parseSecuredProperties,
+  runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
 import { ScriptureRange } from '../scripture';
@@ -386,45 +386,33 @@ export class LiteracyMaterialService {
     session: ISession
   ): Promise<LiteracyMaterialListOutput> {
     const label = 'LiteracyMaterial';
-    const baseNodeMetaProps = ['id', 'createdAt'];
-    const secureProps = ['name'];
-
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
-      .call(matchUserPermissions, label);
+      .match([
+        requestingUser(session),
+        ...permissionsOfNode(label),
+        ...(filter.name
+          ? [
+              relation('out', '', 'name', { active: true }),
+              node('name', 'Property', { active: true }),
+            ]
+          : []),
+      ])
+      .call((q) =>
+        filter.name ? q.where({ name: { value: contains(filter.name) } }) : q
+      )
+      .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
+        q
+          .match([
+            node('node'),
+            relation('out', '', sort),
+            node('prop', 'Property', { active: true }),
+          ])
+          .with('*')
+          .orderBy('prop.value', order)
+      );
 
-    if (filter.name) {
-      query.call(filterByString, label, 'name', filter.name);
-    }
-
-    // match on the rest of the properties of the object requested
-    query.call(addAllSecureProperties, ...secureProps).with(
-      `
-          {
-            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
-            ${listWithSecureObject(secureProps)}
-          } as node
-        `
-    );
-
-    const result: LiteracyMaterialListOutput = await runListQuery(
-      query,
-      input,
-      secureProps.includes(input.sort)
-    );
-
-    const items = await Promise.all(
-      result.items.map((item) => {
-        return this.readOne(item.id, session);
-      })
-    );
-
-    return {
-      items,
-      hasMore: result.hasMore,
-      total: result.total,
-    };
+    return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
 
   async listScriptureReferences(
