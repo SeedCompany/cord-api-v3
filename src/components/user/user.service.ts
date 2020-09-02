@@ -23,9 +23,15 @@ import {
   UniquenessError,
 } from '../../core';
 import {
+  calculateTotalAndPaginateList,
+  permissionsOfNode,
+  requestingUser,
+} from '../../core/database/query';
+import {
   DbPropsOfDto,
   parseBaseNodeProperties,
   parseSecuredProperties,
+  runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
 import {
@@ -56,6 +62,20 @@ import {
 
 @Injectable()
 export class UserService {
+  private readonly securedProperties = {
+    email: true,
+    realFirstName: true,
+    realLastName: true,
+    displayFirstName: true,
+    displayLastName: true,
+    phone: true,
+    timezone: true,
+    bio: true,
+    status: true,
+    title: true,
+    roles: true,
+  };
+
   constructor(
     private readonly educations: EducationService,
     private readonly organizations: OrganizationService,
@@ -453,19 +473,7 @@ export class UserService {
     const securedProps = parseSecuredProperties(
       result.propList,
       result.permList,
-      {
-        email: true,
-        realFirstName: true,
-        realLastName: true,
-        displayFirstName: true,
-        displayLastName: true,
-        phone: true,
-        timezone: true,
-        bio: true,
-        status: true,
-        title: true,
-        roles: true,
-      }
+      this.securedProperties
     );
     return {
       ...parseBaseNodeProperties(result.node),
@@ -547,69 +555,24 @@ export class UserService {
     { filter, ...input }: UserListInput,
     session: ISession
   ): Promise<UserListOutput> {
-    const skip = (input.page - 1) * input.count;
-
-    const query = this.db.query();
-
-    query.match([
-      node('requestingUser', 'User', {
-        active: true,
-        id: session.userId,
-      }),
-      relation('in', '', 'member*1..'),
-      node('', 'SecurityGroup', { active: true }),
-      relation('out', '', 'permission'),
-      node('', 'Permission', { active: true }),
-      relation('out', '', 'baseNode'),
-      node('node', 'User', { active: true }),
-    ]);
-
-    query
-      .with('collect(distinct node) as nodes, count(distinct node) as total')
-      .raw('unwind nodes as node');
-
-    //default sort order is on id
-    if (input.sort === 'id') {
-      query.with('*').orderBy(`node.id ${input.order}`);
-    } else {
-      query
-        .match([
-          node('node'),
-          relation('out', '', input.sort),
-          node('prop', 'Property', { active: true }),
-        ])
-        .with('*')
-        .orderBy(`prop.value ${input.order}`);
-    }
-
-    query
-      .skip(skip)
-      .limit(input.count)
-      .raw(
-        `return collect(node.id) as ids, total, ${
-          skip + input.count
-        } < total as hasMore`
+    const label = 'User';
+    const query = this.db
+      .query()
+      .match([requestingUser(session), ...permissionsOfNode(label)])
+      .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
+        sort in this.securedProperties
+          ? q
+              .match([
+                node('node'),
+                relation('out', '', sort),
+                node('prop', 'Property', { active: true }),
+              ])
+              .with('*')
+              .orderBy('prop.value', order)
+          : q.with('*').orderBy(`node.${sort}`, order)
       );
 
-    const result = await query.first();
-
-    if (!result) {
-      return {
-        total: 0,
-        hasMore: false,
-        items: [],
-      };
-    }
-
-    return {
-      total: result.total,
-      hasMore: true,
-      items: (await Promise.all(
-        result.ids.map(async (userId: string) => {
-          return await this.readOne(userId, session);
-        })
-      )) as User[],
-    };
+    return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
 
   async listEducations(
