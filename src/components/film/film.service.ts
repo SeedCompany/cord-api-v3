@@ -188,14 +188,11 @@ export class FilmService {
         throw new ServerException('failed to create a film');
       }
 
-      if (input.scriptureReferences) {
-        await this.scriptureRefService.create(
-          result.id,
-          'Film',
-          session,
-          input.scriptureReferences
-        );
-      }
+      await this.scriptureRefService.create(
+        result.id,
+        session.owningOrgId,
+        input.scriptureReferences
+      );
 
       this.logger.debug(`flim created`, { id: result.id });
       return await this.readOne(result.id, session);
@@ -235,8 +232,7 @@ export class FilmService {
 
     const scriptureReferences = await this.scriptureRefService.list(
       id,
-      'Film',
-      session
+      session.owningOrgId
     );
 
     const securedProps = parseSecuredProperties(
@@ -259,13 +255,7 @@ export class FilmService {
   }
 
   async update(input: UpdateFilm, session: ISession): Promise<Film> {
-    if (input.scriptureReferences) {
-      await this.scriptureRefService.update(
-        input.id,
-        'Film',
-        input.scriptureReferences
-      );
-    }
+    await this.scriptureRefService.update(input.id, input.scriptureReferences);
 
     const film = await this.readOne(input.id, session);
     return await this.db.sgUpdateProperties({

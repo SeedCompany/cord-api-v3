@@ -183,14 +183,11 @@ export class SongService {
         throw new ServerException('failed to create a song');
       }
 
-      if (input.scriptureReferences) {
-        await this.scriptureRefService.create(
-          result.id,
-          'Song',
-          session,
-          input.scriptureReferences
-        );
-      }
+      await this.scriptureRefService.create(
+        result.id,
+        session.owningOrgId,
+        input.scriptureReferences
+      );
 
       this.logger.debug(`song created`, { id: result.id });
       return await this.readOne(result.id, session);
@@ -230,8 +227,7 @@ export class SongService {
 
     const scriptureReferences = await this.scriptureRefService.list(
       id,
-      'Song',
-      session
+      session.owningOrgId
     );
 
     const securedProps = parseSecuredProperties(
@@ -254,13 +250,7 @@ export class SongService {
   }
 
   async update(input: UpdateSong, session: ISession): Promise<Song> {
-    if (input.scriptureReferences) {
-      await this.scriptureRefService.update(
-        input.id,
-        'Song',
-        input.scriptureReferences
-      );
-    }
+    await this.scriptureRefService.update(input.id, input.scriptureReferences);
 
     const song = await this.readOne(input.id, session);
 

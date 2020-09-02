@@ -181,14 +181,11 @@ export class StoryService {
         throw new ServerException('failed to create a story');
       }
 
-      if (input.scriptureReferences) {
-        await this.scriptureRefService.create(
-          result.id,
-          'Story',
-          session,
-          input.scriptureReferences
-        );
-      }
+      await this.scriptureRefService.create(
+        result.id,
+        session.owningOrgId,
+        input.scriptureReferences
+      );
 
       this.logger.debug(`story created`, { id: result.id });
       return await this.readOne(result.id, session);
@@ -229,8 +226,7 @@ export class StoryService {
 
     const scriptureReferences = await this.scriptureRefService.list(
       id,
-      'Story',
-      session
+      session.owningOrgId
     );
 
     const securedProps = parseSecuredProperties(
@@ -253,13 +249,7 @@ export class StoryService {
   }
 
   async update(input: UpdateStory, session: ISession): Promise<Story> {
-    if (input.scriptureReferences) {
-      await this.scriptureRefService.update(
-        input.id,
-        'Story',
-        input.scriptureReferences
-      );
-    }
+    await this.scriptureRefService.update(input.id, input.scriptureReferences);
 
     const story = await this.readOne(input.id, session);
     return await this.db.sgUpdateProperties({

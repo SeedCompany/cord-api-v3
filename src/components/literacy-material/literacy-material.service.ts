@@ -188,14 +188,11 @@ export class LiteracyMaterialService {
         throw new ServerException('failed to create a literacy material');
       }
 
-      if (input.scriptureReferences) {
-        await this.scriptureRefService.create(
-          result.id,
-          'LiteracyMaterial',
-          session,
-          input.scriptureReferences
-        );
-      }
+      await this.scriptureRefService.create(
+        result.id,
+        session.owningOrgId,
+        input.scriptureReferences
+      );
 
       this.logger.debug(`literacy material created`, { id: result.id });
       return await this.readOne(result.id, session);
@@ -241,8 +238,7 @@ export class LiteracyMaterialService {
 
     const scriptureReferences = await this.scriptureRefService.list(
       id,
-      'LiteracyMaterial',
-      session
+      session.owningOrgId
     );
 
     const securedProps = parseSecuredProperties(
@@ -268,13 +264,7 @@ export class LiteracyMaterialService {
     input: UpdateLiteracyMaterial,
     session: ISession
   ): Promise<LiteracyMaterial> {
-    if (input.scriptureReferences) {
-      await this.scriptureRefService.update(
-        input.id,
-        'LiteracyMaterial',
-        input.scriptureReferences
-      );
-    }
+    await this.scriptureRefService.update(input.id, input.scriptureReferences);
 
     const literacyMaterial = await this.readOne(input.id, session);
 
