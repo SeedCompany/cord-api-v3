@@ -6,7 +6,7 @@ import { scriptureToVerseRange, verseToScriptureRange } from './reference';
 
 export class ScriptureReferenceService {
   constructor(
-    @Logger('scriptureReference:service') private readonly logger: ILogger,
+    @Logger('scripture-reference:service') private readonly logger: ILogger,
     private readonly db: DatabaseService
   ) {}
 
@@ -15,30 +15,31 @@ export class ScriptureReferenceService {
     owningOrgId: string | undefined,
     scriptureRefs: ScriptureRangeInput[] | undefined
   ): Promise<void> {
-    if (scriptureRefs) {
-      const rel = 'scriptureReferences';
-      for (const sr of scriptureRefs) {
-        await this.db
-          .query()
-          .match([
-            node('node', 'BaseNode', {
-              id: producibleId,
-              active: true,
-              owningOrgId,
-            }),
-          ])
-          .create([
-            node('node'),
-            relation('out', '', rel, { active: true }),
-            node('sr', ['ScriptureRange', 'BaseNode'], {
-              ...scriptureToVerseRange(sr),
-              active: true,
-              createdAt: DateTime.local(),
-            }),
-          ])
-          .return('node')
-          .run();
-      }
+    if (!scriptureRefs) {
+      return;
+    }
+
+    for (const sr of scriptureRefs) {
+      await this.db
+        .query()
+        .match([
+          node('node', 'BaseNode', {
+            id: producibleId,
+            active: true,
+            owningOrgId,
+          }),
+        ])
+        .create([
+          node('node'),
+          relation('out', '', 'scriptureReferences', { active: true }),
+          node('sr', ['ScriptureRange', 'BaseNode'], {
+            ...scriptureToVerseRange(sr),
+            active: true,
+            createdAt: DateTime.local(),
+          }),
+        ])
+        .return('node')
+        .run();
     }
   }
 
@@ -46,38 +47,40 @@ export class ScriptureReferenceService {
     producibleId: string,
     scriptureRefs: ScriptureRangeInput[] | undefined
   ): Promise<void> {
-    if (scriptureRefs) {
-      const rel = 'scriptureReferences';
+    if (!scriptureRefs) {
+      return;
+    }
+
+    const rel = 'scriptureReferences';
+    await this.db
+      .query()
+      .match([
+        node('node', 'BaseNode', { id: producibleId, active: true }),
+        relation('out', 'rel', rel, { active: true }),
+        node('sr', 'ScriptureRange', { active: true }),
+      ])
+      .setValues({
+        'rel.active': false,
+        'sr.active': false,
+      })
+      .return('sr')
+      .run();
+
+    for (const sr of scriptureRefs) {
       await this.db
         .query()
-        .match([
-          node('node', 'BaseNode', { id: producibleId, active: true }),
-          relation('out', 'rel', rel, { active: true }),
-          node('sr', 'ScriptureRange', { active: true }),
+        .match([node('node', 'BaseNode', { id: producibleId, active: true })])
+        .create([
+          node('node'),
+          relation('out', '', rel, { active: true }),
+          node('', ['ScriptureRange', 'BaseNode'], {
+            ...scriptureToVerseRange(sr),
+            active: true,
+            createdAt: DateTime.local(),
+          }),
         ])
-        .setValues({
-          'rel.active': false,
-          'sr.active': false,
-        })
-        .return('sr')
+        .return('node')
         .run();
-
-      for (const sr of scriptureRefs) {
-        await this.db
-          .query()
-          .match([node('node', 'BaseNode', { id: producibleId, active: true })])
-          .create([
-            node('node'),
-            relation('out', '', rel, { active: true }),
-            node('', ['ScriptureRange', 'BaseNode'], {
-              ...scriptureToVerseRange(sr),
-              active: true,
-              createdAt: DateTime.local(),
-            }),
-          ])
-          .return('node')
-          .run();
-      }
     }
   }
 
