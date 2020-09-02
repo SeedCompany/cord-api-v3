@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { contains, node, Query, relation } from 'cypher-query-builder';
+import { node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
@@ -21,10 +21,16 @@ import {
   matchSession,
 } from '../../../core';
 import {
+  calculateTotalAndPaginateList,
+  permissionsOfNode,
+  requestingUser,
+} from '../../../core/database/query';
+import {
   DbPropsOfDto,
   parseBaseNodeProperties,
   parsePropList,
   parseSecuredProperties,
+  runListQuery,
   StandardReadResult,
 } from '../../../core/database/results';
 import { UserService } from '../../user';
@@ -38,6 +44,11 @@ import {
 
 @Injectable()
 export class ProjectMemberService {
+  private readonly securedProperties = {
+    user: true,
+    roles: true,
+  };
+
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
@@ -314,10 +325,11 @@ export class ProjectMemberService {
     }
 
     const props = parsePropList(result.propList);
-    const securedProps = parseSecuredProperties(props, result.permList, {
-      user: true,
-      roles: true,
-    });
+    const securedProps = parseSecuredProperties(
+      props,
+      result.permList,
+      this.securedProperties
+    );
 
     return {
       ...parseBaseNodeProperties(result.node),
@@ -383,76 +395,37 @@ export class ProjectMemberService {
     { filter, ...input }: ProjectMemberListInput,
     session: ISession
   ): Promise<ProjectMemberListOutput> {
-    const skip = (input.page - 1) * input.count;
+    const label = 'ProjectMember';
 
-    const query = this.db.query();
-
-    query.match([
-      node('requestingUser', 'User', {
-        active: true,
-        id: session.userId,
-      }),
-      relation('in', '', 'member*1..'),
-      node('', 'SecurityGroup', { active: true }),
-      relation('out', '', 'permission'),
-      node('', 'Permission', { active: true }),
-      relation('out', '', 'baseNode'),
-      node('node', 'ProjectMember', { active: true }),
-    ]);
-
-    if (filter.projectId) {
-      query
-        .match([
-          node('node', { active: true }),
-          relation('in', '', 'member', { active: true }),
-          node('filter', 'Project', { active: true }),
-        ])
-        .where({ filter: [{ id: contains(filter.projectId) }] });
-    }
-
-    query
-      .with('collect(distinct node) as nodes, count(distinct node) as total')
-      .raw('unwind nodes as node');
-
-    if (input.sort === 'id' || input.sort === 'createdAt') {
-      query.with('*').orderBy(`node.${input.sort} ${input.order}`);
-    } else {
-      query
-        .match([
-          node('node'),
-          relation('out', '', input.sort),
-          node('prop', 'Property', { active: true }),
-        ])
-        .with('*')
-        .orderBy(`prop.value ${input.order}`);
-    }
-    query
-      .skip(skip)
-      .limit(input.count)
-      .raw(
-        `return collect(node.id) as ids, total, ${
-          skip + input.count
-        } < total as hasMore`
+    const query = this.db
+      .query()
+      .match([
+        requestingUser(session),
+        ...permissionsOfNode(label),
+        ...(filter.projectId
+          ? [
+              relation('in', '', 'member', { active: true }),
+              node('project', 'Project', {
+                active: true,
+                id: filter.projectId,
+              }),
+            ]
+          : []),
+      ])
+      .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
+        sort in this.securedProperties
+          ? q
+              .match([
+                node('node'),
+                relation('out', '', sort),
+                node('prop', 'Property', { active: true }),
+              ])
+              .with('*')
+              .orderBy('prop.value', order)
+          : q.with('*').orderBy(`node.${sort}`, order)
       );
-    const result = await query.first();
 
-    if (!result) {
-      return {
-        total: 0,
-        hasMore: false,
-        items: [],
-      };
-    }
-
-    return {
-      total: result.total,
-      hasMore: result.hasMore,
-      items: (await Promise.all(
-        result.ids.map(async (projectIds: string) => {
-          return await this.readOne(projectIds, session);
-        })
-      )) as ProjectMember[],
-    };
+    return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
 
   protected filterByProject(
