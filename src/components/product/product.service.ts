@@ -15,22 +15,24 @@ import {
   ConfigService,
   createBaseNode,
   DatabaseService,
-  filterByString,
-  filterBySubarray,
   getPermList,
   getPropList,
   ILogger,
   Logger,
   matchRequestingUser,
-  matchUserPermissions,
   Property,
-  runListQuery,
 } from '../../core';
+import {
+  calculateTotalAndPaginateList,
+  permissionsOfNode,
+  requestingUser,
+} from '../../core/database/query';
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
   parsePropList,
   parseSecuredProperties,
+  runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
 import { Film, FilmService } from '../film';
@@ -50,7 +52,6 @@ import {
   CreateProduct,
   MethodologyToApproach,
   ProducibleType,
-  Product,
   ProductApproach,
   ProductListInput,
   ProductListOutput,
@@ -60,6 +61,12 @@ import {
 
 @Injectable()
 export class ProductService {
+  private readonly securedProperties = {
+    mediums: true,
+    purposes: true,
+    methodology: true,
+  };
+
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
@@ -364,11 +371,11 @@ export class ProductService {
     }
 
     const props = parsePropList(result.propList);
-    const securedProperties = parseSecuredProperties(props, result.permList, {
-      mediums: true,
-      purposes: true,
-      methodology: true,
-    });
+    const securedProperties = parseSecuredProperties(
+      props,
+      result.permList,
+      this.securedProperties
+    );
     const baseNodeProps = parseBaseNodeProperties(result.node);
 
     const produces = await this.db
@@ -607,52 +614,36 @@ export class ProductService {
     session: ISession
   ): Promise<ProductListOutput> {
     const label = 'Product';
-    const secureProps = ['methodology'];
+
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
-      .call(matchUserPermissions, label);
-
-    if (filter.methodology) {
-      query.call(filterByString, label, 'methodology', filter.methodology);
-    } else if (filter.approach) {
-      query.call(
-        filterBySubarray,
-        label,
-        'methodology',
-        this.getMethodologiesByApproach(filter.approach)
+      .match([
+        requestingUser(session),
+        ...permissionsOfNode(label),
+        ...(filter.engagementId
+          ? [
+              relation('in', '', 'product', { active: true }),
+              node('engagement', 'Engagement', {
+                active: true,
+                id: filter.engagementId,
+              }),
+            ]
+          : []),
+      ])
+      .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
+        sort in this.securedProperties
+          ? q
+              .match([
+                node('node'),
+                relation('out', '', sort),
+                node('prop', 'Property', { active: true }),
+              ])
+              .with('*')
+              .orderBy('prop.value', order)
+          : q.with('*').orderBy(`node.${sort}`, order)
       );
-    } else if (filter.engagementId) {
-      this.filterByEngagement(
-        query,
-        filter.engagementId,
-        'product',
-        'out',
-        label
-      );
-    }
 
-    const result: {
-      items: Array<{
-        identity: string;
-        labels: string[];
-        properties: Product;
-      }>;
-      hasMore: boolean;
-      total: number;
-    } = await runListQuery(query, input, secureProps.includes(input.sort));
-
-    const items = await Promise.all(
-      result.items.map((item) => {
-        return this.readOne(item.properties.id, session);
-      })
-    );
-
-    return {
-      items,
-      hasMore: result.hasMore,
-      total: result.total,
-    };
+    return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
 
   protected async listScriptureReferences(
