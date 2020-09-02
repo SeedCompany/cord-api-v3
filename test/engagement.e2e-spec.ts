@@ -499,7 +499,7 @@ describe('Engagement e2e', () => {
     expect(result.checkEngagementConsistency).toBeTruthy();
   });
 
-  it.only('returns the correct products in language engagement', async () => {
+  it('returns the correct products in language engagement', async () => {
     project = await createProject(app);
     language = await createLanguage(app);
     const languageEngagement = await createLanguageEngagement(app, {

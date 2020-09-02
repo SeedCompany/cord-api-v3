@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { contains, node, Query, relation } from 'cypher-query-builder';
+import { node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { difference } from 'lodash';
 import { DateTime } from 'luxon';
@@ -23,10 +23,16 @@ import {
   Property,
 } from '../../core';
 import {
+  calculateTotalAndPaginateList,
+  permissionsOfNode,
+  requestingUser,
+} from '../../core/database/query';
+import {
   DbPropsOfDto,
   parseBaseNodeProperties,
   parsePropList,
   parseSecuredProperties,
+  runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
 import { Film, FilmService } from '../film';
@@ -46,7 +52,6 @@ import {
   CreateProduct,
   MethodologyToApproach,
   ProducibleType,
-  Product,
   ProductApproach,
   ProductListInput,
   ProductListOutput,
@@ -56,6 +61,12 @@ import {
 
 @Injectable()
 export class ProductService {
+  private readonly securedProperties = {
+    mediums: true,
+    purposes: true,
+    methodology: true,
+  };
+
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
@@ -360,11 +371,11 @@ export class ProductService {
     }
 
     const props = parsePropList(result.propList);
-    const securedProperties = parseSecuredProperties(props, result.permList, {
-      mediums: true,
-      purposes: true,
-      methodology: true,
-    });
+    const securedProperties = parseSecuredProperties(
+      props,
+      result.permList,
+      this.securedProperties
+    );
     const baseNodeProps = parseBaseNodeProperties(result.node);
 
     const produces = await this.db
@@ -602,77 +613,37 @@ export class ProductService {
     { filter, ...input }: ProductListInput,
     session: ISession
   ): Promise<ProductListOutput> {
-    const skip = (input.page - 1) * input.count;
+    const label = 'Product';
 
-    const query = this.db.query();
-
-    query.match([
-      node('requestingUser', 'User', {
-        active: true,
-        id: session.userId,
-      }),
-      relation('in', '', 'member*1..'),
-      node('', 'SecurityGroup', { active: true }),
-      relation('out', '', 'permission'),
-      node('', 'Permission', { active: true }),
-      relation('out', '', 'baseNode'),
-      node('node', 'Product', { active: true }),
-    ]);
-
-    if (filter.engagementId) {
-      query
-        .match([
-          node('node', { active: true }),
-          relation('in', '', 'product', { active: true }),
-          node('filter', 'Engagement', { active: true }),
-        ])
-        .where({ filter: [{ id: contains(filter.engagementId) }] });
-    }
-
-    query
-      .with('collect(distinct node) as nodes, count(distinct node) as total')
-      .raw('unwind nodes as node');
-
-    if (input.sort === 'id' || input.sort === 'createdAt') {
-      query.with('*').orderBy(`node.${input.sort} ${input.order}`);
-    } else {
-      query
-        .match([
-          node('node'),
-          relation('out', '', input.sort),
-          node('prop', 'Property', { active: true }),
-        ])
-        .with('*')
-        .orderBy(`prop.value ${input.order}`);
-    }
-
-    query
-      .skip(skip)
-      .limit(input.count)
-      .raw(
-        `return collect(node.id) as ids, total, ${
-          skip + input.count
-        } < total as hasMore limit 25`
+    const query = this.db
+      .query()
+      .match([
+        requestingUser(session),
+        ...permissionsOfNode(label),
+        ...(filter.engagementId
+          ? [
+              relation('in', '', 'product', { active: true }),
+              node('engagement', 'Engagement', {
+                active: true,
+                id: filter.engagementId,
+              }),
+            ]
+          : []),
+      ])
+      .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
+        sort in this.securedProperties
+          ? q
+              .match([
+                node('node'),
+                relation('out', '', sort),
+                node('prop', 'Property', { active: true }),
+              ])
+              .with('*')
+              .orderBy('prop.value', order)
+          : q.with('*').orderBy(`node.${sort}`, order)
       );
-    const result = await query.first();
 
-    if (!result) {
-      return {
-        total: 0,
-        hasMore: false,
-        items: [],
-      };
-    }
-
-    return {
-      total: result.total,
-      hasMore: result.hasMore,
-      items: (await Promise.all(
-        result.ids.map(async (projectIds: string) => {
-          return await this.readOne(projectIds, session);
-        })
-      )) as Product[],
-    };
+    return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
 
   protected async listScriptureReferences(
