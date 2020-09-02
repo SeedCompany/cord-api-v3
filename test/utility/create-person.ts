@@ -10,7 +10,7 @@ export async function createPerson(
   input: Partial<CreatePerson> = {}
 ) {
   const person: CreatePerson = {
-    email: `${Date.now()}${faker.internet.email()}`,
+    email: faker.internet.email(),
     realFirstName: faker.name.firstName(),
     realLastName: faker.name.lastName(),
     displayFirstName: faker.name.firstName() + generate(),

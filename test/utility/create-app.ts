@@ -2,6 +2,7 @@ import { INestApplication } from '@nestjs/common';
 import { ApplicationConfig } from '@nestjs/core';
 import { GRAPHQL_MODULE_OPTIONS } from '@nestjs/graphql/dist/graphql.constants';
 import { Test } from '@nestjs/testing';
+import * as faker from 'faker';
 import { remove } from 'lodash';
 import { AppModule } from '../../src/app.module';
 import { LogLevel } from '../../src/core/logger';
@@ -12,6 +13,12 @@ import {
   getGraphQLOptions,
   GraphQLTestClient,
 } from './create-graphql-client';
+
+// Patch faker email to be more unique
+// eslint-disable-next-line @typescript-eslint/unbound-method -- we call with correct this scope
+const origEmail = faker.internet.email;
+faker.internet.email = (...args) =>
+  origEmail.apply(faker.internet, args).replace('@', `.${Date.now()}@`);
 
 export interface TestApp extends INestApplication {
   graphql: GraphQLTestClient;

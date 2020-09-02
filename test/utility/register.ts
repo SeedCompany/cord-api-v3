@@ -8,7 +8,7 @@ import { TestApp } from './create-app';
 import { fragments } from './fragments';
 
 export const generateRegisterInput = (): RegisterInput => ({
-  email: `${faker.internet.email()} ${Date.now()}`,
+  email: faker.internet.email(),
   realFirstName: faker.name.firstName(),
   realLastName: faker.name.lastName(),
   displayFirstName: faker.name.firstName() + generate(),
@@ -23,7 +23,7 @@ export const generateRegisterInput = (): RegisterInput => ({
 });
 
 export const generateRequireFieldsRegisterInput = (): RegisterInput => ({
-  email: `${faker.internet.email()} ${Date.now()}`,
+  email: faker.internet.email(),
   realFirstName: faker.name.firstName(),
   realLastName: faker.name.lastName(),
   displayFirstName: faker.name.firstName() + generate(),
