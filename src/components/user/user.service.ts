@@ -551,14 +551,10 @@ export class UserService {
     }
   }
 
-  async list(
-    { filter, ...input }: UserListInput,
-    session: ISession
-  ): Promise<UserListOutput> {
-    const label = 'User';
+  async list(input: UserListInput, session: ISession): Promise<UserListOutput> {
     const query = this.db
       .query()
-      .match([requestingUser(session), ...permissionsOfNode(label)])
+      .match([requestingUser(session), ...permissionsOfNode('User')])
       .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
         sort in this.securedProperties
           ? q

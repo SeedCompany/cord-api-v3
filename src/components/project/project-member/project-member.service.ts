@@ -11,29 +11,26 @@ import {
   ServerException,
 } from '../../../common';
 import {
-  addAllMetaPropertiesOfChildBaseNodes,
-  addAllSecureProperties,
-  addBaseNodeMetaPropsWithClause,
-  ChildBaseNodeMetaProperty,
   ConfigService,
   DatabaseService,
-  filterByArray,
-  filterByBaseNodeId,
   getPermList,
   getPropList,
   ILogger,
-  listWithSecureObject,
   Logger,
   matchRequestingUser,
   matchSession,
-  matchUserPermissions,
-  runListQuery,
 } from '../../../core';
+import {
+  calculateTotalAndPaginateList,
+  permissionsOfNode,
+  requestingUser,
+} from '../../../core/database/query';
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
   parsePropList,
   parseSecuredProperties,
+  runListQuery,
   StandardReadResult,
 } from '../../../core/database/results';
 import { UserService } from '../../user';
@@ -47,6 +44,11 @@ import {
 
 @Injectable()
 export class ProjectMemberService {
+  private readonly securedProperties = {
+    user: true,
+    roles: true,
+  };
+
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
@@ -323,10 +325,11 @@ export class ProjectMemberService {
     }
 
     const props = parsePropList(result.propList);
-    const securedProps = parseSecuredProperties(props, result.permList, {
-      user: true,
-      roles: true,
-    });
+    const securedProps = parseSecuredProperties(
+      props,
+      result.permList,
+      this.securedProperties
+    );
 
     return {
       ...parseBaseNodeProperties(result.node),
@@ -393,72 +396,36 @@ export class ProjectMemberService {
     session: ISession
   ): Promise<ProjectMemberListOutput> {
     const label = 'ProjectMember';
-    const baseNodeMetaProps = ['id', 'createdAt'];
-    // const unsecureProps = [''];
-    const secureProps = ['roles', 'modifiedAt'];
-
-    const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
-      {
-        parentBaseNodePropertyKey: 'user',
-        parentRelationDirection: 'out',
-        childBaseNodeLabel: 'User',
-        childBaseNodeMetaPropertyKey: 'id',
-        returnIdentifier: 'userId',
-      },
-    ];
 
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
-      .call(matchUserPermissions, 'ProjectMember');
-
-    if (filter.roles) {
-      query.call(filterByArray, label, 'roles', filter.roles);
-    } else if (filter.projectId) {
-      query.call(
-        filterByBaseNodeId,
-        filter.projectId,
-        'member',
-        'in',
-        'Project',
-        label
-      );
-    }
-
-    // match on the rest of the properties of the object requested
-    query
-      .call(
-        addAllSecureProperties,
-        ...secureProps
-        //...unsecureProps
-      )
-      .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
-      // form return object
-      // ${listWithUnsecureObject(unsecureProps)}, // removed from a few lines down
-      .with(
-        `
-          {
-            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
-            ${listWithSecureObject(secureProps)}
-          } as node
-        `
+      .match([
+        requestingUser(session),
+        ...permissionsOfNode(label),
+        ...(filter.projectId
+          ? [
+              relation('in', '', 'member', { active: true }),
+              node('project', 'Project', {
+                active: true,
+                id: filter.projectId,
+              }),
+            ]
+          : []),
+      ])
+      .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
+        sort in this.securedProperties
+          ? q
+              .match([
+                node('node'),
+                relation('out', '', sort),
+                node('prop', 'Property', { active: true }),
+              ])
+              .with('*')
+              .orderBy('prop.value', order)
+          : q.with('*').orderBy(`node.${sort}`, order)
       );
 
-    const result: ProjectMemberListOutput = await runListQuery(
-      query,
-      input,
-      secureProps.includes(input.sort)
-    );
-
-    const items = await Promise.all(
-      result.items.map((row: any) => this.readOne(row.id, session))
-    );
-
-    return {
-      items,
-      hasMore: result.hasMore,
-      total: result.total,
-    };
+    return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
 
   protected filterByProject(

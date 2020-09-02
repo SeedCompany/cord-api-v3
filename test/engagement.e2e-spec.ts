@@ -35,6 +35,7 @@ import {
   TestApp,
   uploadFileContents,
 } from './utility';
+import { createProduct } from './utility/create-product';
 
 describe('Engagement e2e', () => {
   let app: TestApp;
@@ -498,15 +499,56 @@ describe('Engagement e2e', () => {
     expect(result.checkEngagementConsistency).toBeTruthy();
   });
 
-  it('has consistency in internship engagement nodes', async () => {
-    internshipProject = await createProject(app, {
-      type: ProjectType.Internship,
+  it('returns the correct products in language engagement', async () => {
+    project = await createProject(app);
+    language = await createLanguage(app);
+    const languageEngagement = await createLanguageEngagement(app, {
+      languageId: language.id,
+      projectId: project.id,
     });
-    await createInternshipEngagement(app, {
-      projectId: internshipProject.id,
-      countryOfOriginId: country.id,
-      internId: intern.id,
-      mentorId: mentor.id,
+
+    const product1 = await createProduct(app, {
+      engagementId: languageEngagement.id,
+    });
+    const product2 = await createProduct(app, {
+      engagementId: languageEngagement.id,
+    });
+    const result = await app.graphql.query(
+      gql`
+        query engagement($id: ID!) {
+          engagement(id: $id) {
+            ...languageEngagement
+          }
+        }
+        ${fragments.languageEngagement}
+      `,
+      {
+        id: languageEngagement.id,
+      }
+    );
+    expect(result.engagement.products.total).toEqual(2);
+    expect(result.engagement.products.items).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: product1.id,
+        }),
+      ])
+    );
+    expect(result.engagement.products.items).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: product2.id,
+        }),
+      ])
+    );
+  });
+
+  it('has consistency in language engagement nodes', async () => {
+    project = await createProject(app);
+    language = await createLanguage(app);
+    await createLanguageEngagement(app, {
+      languageId: language.id,
+      projectId: project.id,
     });
     const result = await app.graphql.query(
       gql`
@@ -515,7 +557,7 @@ describe('Engagement e2e', () => {
         }
       `,
       {
-        input: { baseNode: 'InternshipEngagement' },
+        input: { baseNode: 'LanguageEngagement' },
       }
     );
     expect(result.checkEngagementConsistency).toBeTruthy();
@@ -638,6 +680,45 @@ describe('Engagement e2e', () => {
     );
     expect(result.ceremony.planned.value).toBeTruthy();
     expect(result.ceremony.estimatedDate.value).toBe(date);
+  });
+
+  it('delete ceremony upon engagement deletion', async () => {
+    project = await createProject(app);
+    language = await createLanguage(app);
+    const languageEngagement = await createLanguageEngagement(app, {
+      languageId: language.id,
+      projectId: project.id,
+    });
+    expect(languageEngagement.ceremony.value?.id).toBeDefined();
+
+    const ceremonyId = languageEngagement.ceremony.value?.id;
+
+    await app.graphql.mutate(
+      gql`
+        mutation deleteEngagement($id: ID!) {
+          deleteEngagement(id: $id)
+        }
+      `,
+      {
+        id: languageEngagement.id,
+      }
+    );
+
+    await expectNotFound(
+      app.graphql.query(
+        gql`
+          query ceremony($id: ID!) {
+            ceremony(id: $id) {
+              ...ceremony
+            }
+          }
+          ${fragments.ceremony}
+        `,
+        {
+          id: ceremonyId,
+        }
+      )
+    );
   });
 
   it('lists both language engagements and internship engagements', async () => {

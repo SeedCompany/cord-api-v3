@@ -1203,6 +1203,23 @@ export class EngagementService {
         object,
         aclEditProp: 'canDeleteOwnUser',
       });
+
+      const ceremonyId = object.ceremony?.value;
+
+      if (ceremonyId) {
+        const ceremony = await this.ceremonyService.readOne(
+          ceremonyId,
+          session
+        );
+
+        if (ceremony) {
+          await this.db.deleteNode({
+            session,
+            object: ceremony,
+            aclEditProp: 'canDeleteOwnUser',
+          });
+        }
+      }
     } catch (exception) {
       this.logger.warning('Failed to delete partnership', {
         exception,
