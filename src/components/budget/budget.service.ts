@@ -18,13 +18,19 @@ import {
   matchRequestingUser,
   matchSession,
   Property,
-  runListQuery,
+  runListQuery as runListQueryDeprecated,
 } from '../../core';
+import {
+  calculateTotalAndPaginateList,
+  permissionsOfNode,
+  requestingUser,
+} from '../../core/database/query';
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
   parsePropList,
   parseSecuredProperties,
+  runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
 import {
@@ -43,6 +49,10 @@ import {
 
 @Injectable()
 export class BudgetService {
+  private readonly securedProperties = {
+    status: true,
+  };
+
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
@@ -573,97 +583,44 @@ export class BudgetService {
     input: Partial<BudgetListInput>,
     session: ISession
   ): Promise<BudgetListOutput> {
-    const { sort, filter, page, count, order } = {
+    const { filter, ...listInput } = {
       ...BudgetListInput.defaultVal,
       ...input,
     };
 
-    const { projectId } = filter;
-    this.logger.debug('Listing budgets on projectId ', {
-      projectId,
-      userId: session.userId,
-    });
+    const label = 'Budget';
 
-    const skip = (page - 1) * count;
-
-    const query = this.db.query();
-
-    if (projectId) {
-      query.match([
-        node('requestingUser', 'User', {
-          active: true,
-          id: session.userId,
-        }),
-        relation('in', '', 'member*1..'),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission'),
-        node('', 'Permission', { active: true }),
-        relation('out', '', 'baseNode'),
-        node('node', 'Budget', { active: true }),
-        relation('in', '', 'budget'),
-        node('project', 'Project', {
-          id: projectId,
-          active: true,
-          owningOrgId: session.owningOrgId,
-        }),
-      ]);
-    } else {
-      query.match([
-        node('requestingUser', 'User', {
-          active: true,
-          id: session.userId,
-        }),
-        relation('in', '', 'member*1..'),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission'),
-        node('', 'Permission', { active: true }),
-        relation('out', '', 'baseNode'),
-        node('node', 'Budget', { active: true }),
-      ]);
-    }
-
-    query
-      .with('collect(distinct node) as nodes, count(distinct node) as total')
-      .raw('unwind nodes as node');
-
-    if (sort) {
-      query
-        .match([
-          node('node'),
-          relation('out', '', sort),
-          node('prop', 'Property', { active: true }),
-        ])
-        .with('*')
-        .orderBy(`prop.value ${order}`);
-    }
-
-    query
-      .skip(skip)
-      .limit(count)
-      .raw(
-        `return collect(node.id) as ids, total, ${
-          skip + count
-        } < total as hasMore`
+    const query = this.db
+      .query()
+      .match([
+        requestingUser(session),
+        ...permissionsOfNode(label),
+        ...(filter.projectId
+          ? [
+              relation('in', '', 'budget', { active: true }),
+              node('project', 'Project', {
+                active: true,
+                id: filter.projectId,
+              }),
+            ]
+          : []),
+      ])
+      .call(calculateTotalAndPaginateList, listInput, (q, sort, order) =>
+        sort in this.securedProperties
+          ? q
+              .match([
+                node('node'),
+                relation('out', '', sort),
+                node('prop', 'Property', { active: true }),
+              ])
+              .with('*')
+              .orderBy('prop.value', order)
+          : q.with('*').orderBy(`node.${sort}`, order)
       );
-    const result = await query.first();
 
-    if (!result) {
-      return {
-        total: 0,
-        hasMore: false,
-        items: [],
-      };
-    }
-
-    return {
-      total: result.total,
-      hasMore: result.hasMore,
-      items: (await Promise.all(
-        result.ids.map(async (budgetId: string) => {
-          return await this.readOne(budgetId, session);
-        })
-      )) as Budget[],
-    };
+    return await runListQuery(query, listInput, (id) =>
+      this.readOne(id, session)
+    );
   }
 
   async listRecords(
@@ -697,7 +654,7 @@ export class BudgetService {
       }>;
       hasMore: boolean;
       total: number;
-    } = await runListQuery(query, input);
+    } = await runListQueryDeprecated(query, input);
 
     const items = await Promise.all(
       listResult.items.map((item) => {
