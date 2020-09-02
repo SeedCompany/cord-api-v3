@@ -3,6 +3,7 @@ import * as faker from 'faker';
 import { times } from 'lodash';
 import { generate, isValid } from 'shortid';
 import { LiteracyMaterial } from '../src/components/literacy-material';
+import { createRandomScriptureReferences } from '../src/components/scripture/reference';
 import {
   createLiteracyMaterial,
   createSession,
@@ -28,12 +29,17 @@ describe('LiteracyMaterial e2e', () => {
   // Create LiteracyMaterial
   it('create literacyMaterial', async () => {
     const name = faker.company.companyName();
-    await createLiteracyMaterial(app, { name });
+    const scriptureReferences = createRandomScriptureReferences();
+    const lm = await createLiteracyMaterial(app, { name, scriptureReferences });
+    expect(lm.scriptureReferences.value).toBeDefined();
+    expect(lm.scriptureReferences.value).toEqual(scriptureReferences);
   });
 
   // READ LiteracyMaterial
   it('create & read literacyMaterial by id', async () => {
-    const lm = await createLiteracyMaterial(app);
+    const name = faker.company.companyName();
+    const scriptureReferences = createRandomScriptureReferences();
+    const lm = await createLiteracyMaterial(app, { name, scriptureReferences });
     const { literacyMaterial: actual } = await app.graphql.query(
       gql`
         query lm($id: ID!) {
@@ -50,12 +56,16 @@ describe('LiteracyMaterial e2e', () => {
     expect(actual.id).toBe(lm.id);
     expect(isValid(actual.id)).toBe(true);
     expect(actual.name.value).toBe(lm.name.value);
+    expect(actual.scriptureReferences.value).toEqual(
+      lm.scriptureReferences.value
+    );
   });
 
   // UPDATE LiteracyMaterial
   it('update literacyMaterial', async () => {
     const lm = await createLiteracyMaterial(app);
     const newName = faker.company.companyName();
+    const scriptureReferences = createRandomScriptureReferences();
     const result = await app.graphql.mutate(
       gql`
         mutation updateLiteracyMaterial($input: UpdateLiteracyMaterialInput!) {
@@ -72,6 +82,7 @@ describe('LiteracyMaterial e2e', () => {
           literacyMaterial: {
             id: lm.id,
             name: newName,
+            scriptureReferences,
           },
         },
       }
@@ -79,6 +90,8 @@ describe('LiteracyMaterial e2e', () => {
     const updated = result.updateLiteracyMaterial.literacyMaterial;
     expect(updated).toBeTruthy();
     expect(updated.name.value).toBe(newName);
+    expect(updated.scriptureReferences.value).toBeDefined();
+    expect(updated.scriptureReferences.value).toEqual(scriptureReferences);
   });
 
   // DELETE literacyMaterial

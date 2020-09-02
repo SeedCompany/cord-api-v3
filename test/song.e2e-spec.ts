@@ -2,6 +2,7 @@ import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
 import { generate, isValid } from 'shortid';
+import { createRandomScriptureReferences } from '../src/components/scripture/reference';
 import { Song } from '../src/components/song/dto';
 import {
   createSession,
@@ -28,12 +29,17 @@ describe('Song e2e', () => {
   // Create SONG
   it('Create Song', async () => {
     const name = faker.company.companyName();
-    await createSong(app, { name });
+    const scriptureReferences = createRandomScriptureReferences();
+    const song = await createSong(app, { name, scriptureReferences });
+    expect(song.scriptureReferences.value).toBeDefined();
+    expect(song.scriptureReferences.value).toEqual(scriptureReferences);
   });
 
   // READ SONG
   it('create & read song by id', async () => {
-    const st = await createSong(app);
+    const name = faker.company.companyName();
+    const scriptureReferences = createRandomScriptureReferences();
+    const song = await createSong(app, { name, scriptureReferences });
 
     const { song: actual } = await app.graphql.query(
       gql`
@@ -45,18 +51,22 @@ describe('Song e2e', () => {
         ${fragments.song}
       `,
       {
-        id: st.id,
+        id: song.id,
       }
     );
-    expect(actual.id).toBe(st.id);
+    expect(actual.id).toBe(song.id);
     expect(isValid(actual.id)).toBe(true);
-    expect(actual.name.value).toBe(st.name.value);
+    expect(actual.name.value).toBe(song.name.value);
+    expect(actual.scriptureReferences.value).toEqual(
+      song.scriptureReferences.value
+    );
   });
 
   // UPDATE SONG
   it('update song', async () => {
     const st = await createSong(app);
     const newName = faker.company.companyName();
+    const scriptureReferences = createRandomScriptureReferences();
     const result = await app.graphql.mutate(
       gql`
         mutation updateSong($input: UpdateSongInput!) {
@@ -73,6 +83,7 @@ describe('Song e2e', () => {
           song: {
             id: st.id,
             name: newName,
+            scriptureReferences,
           },
         },
       }
@@ -80,6 +91,8 @@ describe('Song e2e', () => {
     const updated = result.updateSong.song;
     expect(updated).toBeTruthy();
     expect(updated.name.value).toBe(newName);
+    expect(updated.scriptureReferences.value).toBeDefined();
+    expect(updated.scriptureReferences.value).toEqual(scriptureReferences);
   });
 
   // DELETE SONG
