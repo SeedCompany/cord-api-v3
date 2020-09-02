@@ -737,6 +737,29 @@ export const fav = gql`
   }
 `;
 
+export const ceremony = gql`
+  fragment ceremony on Ceremony {
+    id
+    createdAt
+    type
+    planned {
+      canRead
+      canEdit
+      value
+    }
+    estimatedDate {
+      canRead
+      canEdit
+      value
+    }
+    actualDate {
+      canRead
+      canEdit
+      value
+    }
+  }
+`;
+
 export const fragments = {
   org,
   user,
@@ -763,4 +786,5 @@ export const fragments = {
   story,
   song,
   fav,
+  ceremony,
 };

@@ -640,6 +640,45 @@ describe('Engagement e2e', () => {
     expect(result.ceremony.estimatedDate.value).toBe(date);
   });
 
+  it('delete ceremony upon engagement deletion', async () => {
+    project = await createProject(app);
+    language = await createLanguage(app);
+    const languageEngagement = await createLanguageEngagement(app, {
+      languageId: language.id,
+      projectId: project.id,
+    });
+    expect(languageEngagement.ceremony.value?.id).toBeDefined();
+
+    const ceremonyId = languageEngagement.ceremony.value?.id;
+
+    await app.graphql.mutate(
+      gql`
+        mutation deleteEngagement($id: ID!) {
+          deleteEngagement(id: $id)
+        }
+      `,
+      {
+        id: languageEngagement.id,
+      }
+    );
+
+    await expectNotFound(
+      app.graphql.query(
+        gql`
+          query ceremony($id: ID!) {
+            ceremony(id: $id) {
+              ...ceremony
+            }
+          }
+          ${fragments.ceremony}
+        `,
+        {
+          id: ceremonyId,
+        }
+      )
+    );
+  });
+
   it('lists both language engagements and internship engagements', async () => {
     project = await createProject(app);
     internshipProject = await createProject(app, {
