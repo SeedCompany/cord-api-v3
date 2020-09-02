@@ -571,8 +571,8 @@ export class LanguageService {
                 node('prop', 'Property', { active: true }),
               ])
               .with('*')
-              .orderBy('prop.value', order)
-          : q.with('*').orderBy(`node.${sort}`, order)
+              .orderBy('toLower(prop.value)', order)
+          : q.with('*').orderBy(`toLower(node.${sort})`, order)
       );
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
