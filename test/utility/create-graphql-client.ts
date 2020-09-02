@@ -38,15 +38,18 @@ export const createGraphqlClient = async (
     }
   };
 
+  // ensure variables are plain JSON as they would be over the wire
+  const toPlain = (obj: unknown) =>
+    obj ? JSON.parse(JSON.stringify(obj)) : obj;
   return {
     query: async (q, variables) => {
-      const result = await query({ query: q, variables });
+      const result = await query({ query: q, variables: toPlain(variables) });
       resetRequest();
       validateResult(result);
       return result.data;
     },
     mutate: async (mutation, variables) => {
-      const result = await mutate({ mutation, variables });
+      const result = await mutate({ mutation, variables: toPlain(variables) });
       resetRequest();
       validateResult(result);
       return result.data;
