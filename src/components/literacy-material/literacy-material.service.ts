@@ -190,8 +190,8 @@ export class LiteracyMaterialService {
 
       await this.scriptureRefService.create(
         result.id,
-        session.owningOrgId,
-        input.scriptureReferences
+        input.scriptureReferences,
+        session
       );
 
       this.logger.debug(`literacy material created`, { id: result.id });
@@ -238,7 +238,7 @@ export class LiteracyMaterialService {
 
     const scriptureReferences = await this.scriptureRefService.list(
       id,
-      session.owningOrgId
+      session
     );
 
     const securedProps = parseSecuredProperties(

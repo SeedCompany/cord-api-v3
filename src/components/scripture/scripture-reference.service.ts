@@ -1,5 +1,6 @@
 import { Node, node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
+import { ISession } from '../../common';
 import { DatabaseService, ILogger, Logger } from '../../core';
 import { ScriptureRange, ScriptureRangeInput } from './dto';
 import { scriptureToVerseRange, verseToScriptureRange } from './reference';
@@ -12,8 +13,8 @@ export class ScriptureReferenceService {
 
   async create(
     producibleId: string,
-    owningOrgId: string | undefined,
-    scriptureRefs: ScriptureRangeInput[] | undefined
+    scriptureRefs: ScriptureRangeInput[] | undefined,
+    session: ISession
   ): Promise<void> {
     if (!scriptureRefs) {
       return;
@@ -26,7 +27,7 @@ export class ScriptureReferenceService {
           node('node', 'BaseNode', {
             id: producibleId,
             active: true,
-            owningOrgId,
+            owningOrgId: session.owningOrgId,
           }),
         ])
         .create([
@@ -86,7 +87,7 @@ export class ScriptureReferenceService {
 
   async list(
     producibleId: string,
-    owningOrgId: string | undefined
+    session: ISession
   ): Promise<ScriptureRange[]> {
     const rel = 'scriptureReferences';
     const results = await this.db
@@ -95,7 +96,7 @@ export class ScriptureReferenceService {
         node('node', 'BaseNode', {
           id: producibleId,
           active: true,
-          owningOrgId,
+          owningOrgId: session.owningOrgId,
         }),
         relation('out', '', rel),
         node('scriptureRanges', 'ScriptureRange', { active: true }),

@@ -190,8 +190,8 @@ export class FilmService {
 
       await this.scriptureRefService.create(
         result.id,
-        session.owningOrgId,
-        input.scriptureReferences
+        input.scriptureReferences,
+        session
       );
 
       this.logger.debug(`flim created`, { id: result.id });
@@ -232,7 +232,7 @@ export class FilmService {
 
     const scriptureReferences = await this.scriptureRefService.list(
       id,
-      session.owningOrgId
+      session
     );
 
     const securedProps = parseSecuredProperties(

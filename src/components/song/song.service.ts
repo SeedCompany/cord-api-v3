@@ -185,8 +185,8 @@ export class SongService {
 
       await this.scriptureRefService.create(
         result.id,
-        session.owningOrgId,
-        input.scriptureReferences
+        input.scriptureReferences,
+        session
       );
 
       this.logger.debug(`song created`, { id: result.id });
@@ -227,7 +227,7 @@ export class SongService {
 
     const scriptureReferences = await this.scriptureRefService.list(
       id,
-      session.owningOrgId
+      session
     );
 
     const securedProps = parseSecuredProperties(
