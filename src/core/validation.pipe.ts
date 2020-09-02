@@ -25,6 +25,16 @@ export class ValidationException extends ClientException {
     super('Input validation failed');
     this.errors = flattenValidationErrors(errors);
     Object.defineProperty(this, 'errorList', { value: errors });
+    const errorsAsString = errors
+      .map((e) => {
+        const constraint = Object.values(e.constraints)[0];
+        const source = `${e.target.constructor.name}.${e.property}`;
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions -- I'm ok with string conversion here
+        const value = `${e.value}`;
+        return ` - ${constraint} for "${source}"\n   Given: \`${value}\``;
+      })
+      .join('\n');
+    this.stack = this.stack!.replace('\n', '\n' + errorsAsString + '\n\n');
   }
 }
 
