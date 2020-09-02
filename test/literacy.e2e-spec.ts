@@ -28,7 +28,33 @@ describe('LiteracyMaterial e2e', () => {
   // Create LiteracyMaterial
   it('create literacyMaterial', async () => {
     const name = faker.company.companyName();
-    await createLiteracyMaterial(app, { name });
+    const lm = await createLiteracyMaterial(app, { name });
+
+    expect(lm.id).toBeDefined();
+  });
+
+  // Create LiteracyMaterial with scriptureReferences
+  it('create literacyMaterial with scriptureReferences', async () => {
+    const name = faker.company.companyName();
+    const lm = await createLiteracyMaterial(app, {
+      name,
+      scriptureReferences: [
+        {
+          start: {
+            book: 'Exodus',
+            chapter: 22,
+            verse: 143,
+          },
+          end: {
+            book: 'Exodus',
+            chapter: 30,
+            verse: 279,
+          },
+        },
+      ],
+    });
+
+    expect(lm.id).toBeDefined();
   });
 
   // READ LiteracyMaterial
