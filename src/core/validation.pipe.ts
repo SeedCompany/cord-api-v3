@@ -6,6 +6,7 @@ import { ValidationError } from 'class-validator';
 import { isEmpty } from 'lodash';
 import { SetRequired } from 'type-fest';
 import { ClientException } from '../common/exceptions';
+import { jestSkipFileInExceptionSource } from './jest-skip-source-file';
 
 @Injectable()
 export class ValidationPipe extends BaseValidationPipe {
@@ -37,6 +38,8 @@ export class ValidationException extends ClientException {
       })
       .join('\n');
     this.stack = this.stack!.replace('\n', '\n' + errorsAsString + '\n\n');
+
+    jestSkipFileInExceptionSource(this, __filename);
   }
 }
 
