@@ -24,7 +24,7 @@ export async function createProject(
     step: ProjectStep.PendingConceptApproval,
     ...input,
   };
-  console.log(project);
+
   const result = await app.graphql.mutate(
     gql`
       mutation createProject($input: CreateProjectInput!) {
@@ -42,7 +42,7 @@ export async function createProject(
       },
     }
   );
-  console.log(project);
+
   const actual: Raw<Project> = result.createProject.project;
   expect(actual).toBeTruthy();
 
