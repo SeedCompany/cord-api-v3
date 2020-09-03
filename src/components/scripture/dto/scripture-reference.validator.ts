@@ -1,16 +1,22 @@
 import { ValidationArguments, ValidationOptions } from 'class-validator';
+import { Merge } from 'type-fest';
 import { ValidateBy } from '../../../common/validators/validateBy';
 import { validateChapter, validateVerse } from '../reference';
 import { ScriptureReference } from './scripture-reference.dto';
 
+// We assume this is only used on the ScriptureReference object
+type ValidationArgs = Merge<
+  ValidationArguments,
+  { object: ScriptureReference }
+>;
+
 export const IsValidChapter = (validationOptions?: ValidationOptions) =>
   ValidateBy(
     {
-      name: 'isValidChapter',
+      name: 'ScriptureChapter',
       validator: {
-        validate: (value, args: ValidationArguments) => {
-          const bookName = (args.object as ScriptureReference).book;
-          return validateChapter(bookName, value);
+        validate: (value, { object: ref }: ValidationArgs) => {
+          return validateChapter(ref.book, value);
         },
         defaultMessage: () => 'No chapter matched',
       },
@@ -21,14 +27,12 @@ export const IsValidChapter = (validationOptions?: ValidationOptions) =>
 export const IsValidVerse = (validationOptions?: ValidationOptions) =>
   ValidateBy(
     {
-      name: 'isValidVerse',
+      name: 'ScriptureVerse',
       validator: {
-        validate: (value, args: ValidationArguments) => {
-          const bookName = (args.object as ScriptureReference).book;
-          const chapterNumber = (args.object as ScriptureReference).chapter;
+        validate: (value, { object: ref }: ValidationArgs) => {
           // validateVerse has no meaning if validateChapter is false
-          return validateChapter(bookName, chapterNumber)
-            ? validateVerse(bookName, chapterNumber, value)
+          return validateChapter(ref.book, ref.chapter)
+            ? validateVerse(ref.book, ref.chapter, value)
             : true;
         },
         defaultMessage: () => 'No verse matched',
