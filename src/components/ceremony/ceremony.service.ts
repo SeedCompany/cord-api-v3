@@ -7,6 +7,7 @@ import {
   ISession,
   NotFoundException,
   ServerException,
+  UnauthenticatedException,
 } from '../../common';
 import {
   ConfigService,
@@ -240,6 +241,9 @@ export class CeremonyService {
   }
 
   async update(input: UpdateCeremony, session: ISession): Promise<Ceremony> {
+    if (!session.userId) {
+      throw new UnauthenticatedException('user not logged in');
+    }
     const object = await this.readOne(input.id, session);
 
     return await this.db.sgUpdateProperties({
