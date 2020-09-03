@@ -1,6 +1,6 @@
-import { ValidationArguments, ValidationOptions } from 'class-validator';
+import { ValidationArguments } from 'class-validator';
 import { Merge } from 'type-fest';
-import { ValidateBy } from '../../../common/validators/validateBy';
+import { createValidationDecorator } from '../../../common/validators/validateBy';
 import { validateChapter, validateVerse } from '../reference';
 import { ScriptureReference } from './scripture-reference.dto';
 
@@ -10,33 +10,25 @@ type ValidationArgs = Merge<
   { object: ScriptureReference }
 >;
 
-export const IsValidChapter = (validationOptions?: ValidationOptions) =>
-  ValidateBy(
-    {
-      name: 'ScriptureChapter',
-      validator: {
-        validate: (value, { object: ref }: ValidationArgs) => {
-          return validateChapter(ref.book, value);
-        },
-        defaultMessage: () => 'No chapter matched',
-      },
+export const IsValidChapter = createValidationDecorator({
+  name: 'ScriptureChapter',
+  validator: {
+    validate: (value, { object: ref }: ValidationArgs) => {
+      return validateChapter(ref.book, value);
     },
-    validationOptions
-  );
+    defaultMessage: () => 'No chapter matched',
+  },
+});
 
-export const IsValidVerse = (validationOptions?: ValidationOptions) =>
-  ValidateBy(
-    {
-      name: 'ScriptureVerse',
-      validator: {
-        validate: (value, { object: ref }: ValidationArgs) => {
-          // validateVerse has no meaning if validateChapter is false
-          return validateChapter(ref.book, ref.chapter)
-            ? validateVerse(ref.book, ref.chapter, value)
-            : true;
-        },
-        defaultMessage: () => 'No verse matched',
-      },
+export const IsValidVerse = createValidationDecorator({
+  name: 'ScriptureVerse',
+  validator: {
+    validate: (value, { object: ref }: ValidationArgs) => {
+      // validateVerse has no meaning if validateChapter is false
+      return validateChapter(ref.book, ref.chapter)
+        ? validateVerse(ref.book, ref.chapter, value)
+        : true;
     },
-    validationOptions
-  );
+    defaultMessage: () => 'No verse matched',
+  },
+});
