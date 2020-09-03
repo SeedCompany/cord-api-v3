@@ -16,7 +16,7 @@ export async function createPerson(
     displayFirstName: faker.name.firstName() + generate(),
     displayLastName: faker.name.lastName() + generate(),
     phone: faker.phone.phoneNumber(),
-    timezone: 'timezone detail' + generate(),
+    timezone: 'America/Chicago',
     bio: 'bio detail' + generate(),
     ...input,
   };
