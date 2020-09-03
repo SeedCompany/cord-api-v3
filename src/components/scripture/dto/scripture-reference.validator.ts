@@ -1,7 +1,12 @@
 import { ValidationArguments } from 'class-validator';
 import { Merge } from 'type-fest';
 import { createValidationDecorator } from '../../../common/validators/validateBy';
-import { validateBook, validateChapter, validateVerse } from '../reference';
+import {
+  bookCodeToName,
+  validateBook,
+  validateChapter,
+  validateVerse,
+} from '../reference';
 import { ScriptureReference } from './scripture-reference.dto';
 
 // We assume this is only used on the ScriptureReference object
@@ -27,7 +32,8 @@ export const IsValidChapter = createValidationDecorator({
       }
       return validateChapter(ref.book, value);
     },
-    defaultMessage: () => 'No chapter matched',
+    defaultMessage: ({ object: ref }: ValidationArgs) =>
+      `${bookCodeToName(ref.book)} does not have chapter ${ref.chapter}`,
   },
 });
 
@@ -40,6 +46,9 @@ export const IsValidVerse = createValidationDecorator({
       }
       return validateVerse(ref.book, ref.chapter, value);
     },
-    defaultMessage: () => 'No verse matched',
+    defaultMessage: ({ object: ref }: ValidationArgs) => {
+      const book = bookCodeToName(ref.book);
+      return `${book} ${ref.chapter} does not have verse ${ref.verse}`;
+    },
   },
 });
