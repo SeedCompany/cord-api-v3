@@ -1,7 +1,7 @@
 import { ValidationArguments } from 'class-validator';
 import { Merge } from 'type-fest';
 import { createValidationDecorator } from '../../../common/validators/validateBy';
-import { validateChapter, validateVerse } from '../reference';
+import { validateBook, validateChapter, validateVerse } from '../reference';
 import { ScriptureReference } from './scripture-reference.dto';
 
 // We assume this is only used on the ScriptureReference object
@@ -9,6 +9,14 @@ type ValidationArgs = Merge<
   ValidationArguments,
   { object: ScriptureReference }
 >;
+
+export const IsValidBook = createValidationDecorator({
+  name: 'ScriptureBook',
+  validator: {
+    validate: (value) => validateBook(value),
+    defaultMessage: () => 'Not a valid Bible book',
+  },
+});
 
 export const IsValidChapter = createValidationDecorator({
   name: 'ScriptureChapter',

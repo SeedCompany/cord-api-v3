@@ -1,5 +1,9 @@
 import { Field, InputType, Int, ObjectType } from '@nestjs/graphql';
-import { IsValidChapter, IsValidVerse } from './scripture-reference.validator';
+import {
+  IsValidBook,
+  IsValidChapter,
+  IsValidVerse,
+} from './scripture-reference.validator';
 
 @InputType({
   description: 'A reference to a scripture verse',
@@ -7,12 +11,11 @@ import { IsValidChapter, IsValidVerse } from './scripture-reference.validator';
 @ObjectType({
   isAbstract: true,
 })
-// TODO Validate reference is known
 export abstract class ScriptureReferenceInput {
   @Field({
     description: 'The code of the Bible book',
   })
-  // TODO validate code against list
+  @IsValidBook()
   book: string;
 
   @Field(() => Int, {

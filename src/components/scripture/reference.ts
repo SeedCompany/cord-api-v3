@@ -126,6 +126,15 @@ export const bookCodeToName = (code: string) => {
   return book.names[0];
 };
 
+export const validateBook = (book: string): boolean => {
+  try {
+    bookIndexFromName(book);
+    return true;
+  } catch (e) {
+    return false;
+  }
+};
+
 export const validateChapter = (book: string, chapter: number): boolean => {
   const bookIndex = bookIndexFromName(book);
   return chapter <= books[bookIndex].chapters.length && chapter > 0;
