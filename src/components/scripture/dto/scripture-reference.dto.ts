@@ -1,5 +1,5 @@
 import { Field, InputType, Int, ObjectType } from '@nestjs/graphql';
-import { IsValidChapter, IsValidVerse } from '../../../common';
+import { IsValidChapter, IsValidVerse } from './scripture-reference.validator';
 
 @InputType({
   description: 'A reference to a scripture verse',

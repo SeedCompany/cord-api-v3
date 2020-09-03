@@ -1,10 +1,7 @@
 import { ValidationArguments, ValidationOptions } from 'class-validator';
-import { ScriptureReference } from '../../components/scripture';
-import {
-  validateChapter,
-  validateVerse,
-} from '../../components/scripture/reference';
-import { ValidateBy } from './validateBy';
+import { ValidateBy } from '../../../common/validators/validateBy';
+import { validateChapter, validateVerse } from '../reference';
+import { ScriptureReference } from './scripture-reference.dto';
 
 export const IsValidChapter = (validationOptions?: ValidationOptions) =>
   ValidateBy(
