@@ -22,6 +22,9 @@ export const IsValidChapter = createValidationDecorator({
   name: 'ScriptureChapter',
   validator: {
     validate: (value, { object: ref }: ValidationArgs) => {
+      if (!validateBook(ref.book)) {
+        return true; // ignore if book has already failed
+      }
       return validateChapter(ref.book, value);
     },
     defaultMessage: () => 'No chapter matched',
@@ -32,10 +35,10 @@ export const IsValidVerse = createValidationDecorator({
   name: 'ScriptureVerse',
   validator: {
     validate: (value, { object: ref }: ValidationArgs) => {
-      // validateVerse has no meaning if validateChapter is false
-      return validateChapter(ref.book, ref.chapter)
-        ? validateVerse(ref.book, ref.chapter, value)
-        : true;
+      if (!validateBook(ref.book) || !validateChapter(ref.book, ref.chapter)) {
+        return true; // ignore if book or chapter have already failed
+      }
+      return validateVerse(ref.book, ref.chapter, value);
     },
     defaultMessage: () => 'No verse matched',
   },
