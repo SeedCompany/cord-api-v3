@@ -1,4 +1,6 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { Type } from 'class-transformer';
+import { ValidateNested } from 'class-validator';
 import { stripIndent } from 'common-tags';
 import { SecuredPropertyList } from '../../../common';
 import {
@@ -16,11 +18,15 @@ export abstract class ScriptureRangeInput {
   @Field({
     description: 'The starting verse',
   })
+  @ValidateNested()
+  @Type(() => ScriptureReferenceInput)
   start: ScriptureReferenceInput;
 
   @Field({
     description: 'The ending verse',
   })
+  @ValidateNested()
+  @Type(() => ScriptureReferenceInput)
   end: ScriptureReferenceInput;
 }
 

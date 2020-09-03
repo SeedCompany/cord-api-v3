@@ -32,6 +32,8 @@ export abstract class CreateProduct {
       Note only \`DirectScriptureProduct\`s can use this field.
     `,
   })
+  @ValidateNested()
+  @Type(() => ScriptureRangeInput)
   readonly scriptureReferences?: ScriptureRangeInput[];
 
   @Field(() => [ScriptureRangeInput], {
@@ -45,6 +47,8 @@ export abstract class CreateProduct {
       Note only \`DerivativeScriptureProduct\`s can use this field.
     `,
   })
+  @ValidateNested()
+  @Type(() => ScriptureRangeInput)
   readonly scriptureReferencesOverride?: ScriptureRangeInput[];
 
   @Field(() => [ProductMedium], { nullable: true })
