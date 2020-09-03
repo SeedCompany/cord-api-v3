@@ -1,4 +1,4 @@
-import { ISession, ServerException } from '../../../common';
+import { CalendarDate, ISession, ServerException } from '../../../common';
 import {
   DatabaseService,
   EventsHandler,
@@ -100,8 +100,16 @@ export class SyncBudgetRecordsToFundingPartners
     } else {
       // TODO: mous starting at midnight on Jan 1st might cause issues with UTC vs local issues here.
       // double check how year should be calculated
-      const mouStartYear = partnership.mouStart.value.year;
-      const mouEndYear = partnership.mouEnd.value.year;
+      let mouStartYear = partnership.mouStart.value.year;
+      let mouEndYear = partnership.mouEnd.value.year;
+
+      if (!mouStartYear || !mouEndYear) {
+        mouStartYear = CalendarDate.fromISO(
+          partnership.mouStart.value.toString()
+        ).year;
+        mouEndYear = CalendarDate.fromISO(partnership.mouEnd.value.toString())
+          .year;
+      }
 
       expectedBudgetRecordYears = Array.from(
         { length: mouEndYear - mouStartYear },
