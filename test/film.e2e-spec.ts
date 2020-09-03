@@ -3,6 +3,7 @@ import * as faker from 'faker';
 import { times } from 'lodash';
 import { generate, isValid } from 'shortid';
 import { Film } from '../src/components/film/dto';
+import { createRandomScriptureReferences } from '../src/components/scripture/reference';
 import {
   createFilm,
   createSession,
@@ -28,13 +29,17 @@ describe('Film e2e', () => {
   // Create FILM
   it('Create Film', async () => {
     const name = faker.company.companyName();
-    await createFilm(app, { name });
+    const scriptureReferences = createRandomScriptureReferences();
+    const film = await createFilm(app, { name, scriptureReferences });
+    expect(film.scriptureReferences.value).toBeDefined();
+    expect(film.scriptureReferences.value).toEqual(scriptureReferences);
   });
 
   // READ FILM
   it('create & read film by id', async () => {
-    const fm = await createFilm(app);
-
+    const name = faker.company.companyName();
+    const scriptureReferences = createRandomScriptureReferences();
+    const fm = await createFilm(app, { name, scriptureReferences });
     const { film: actual } = await app.graphql.query(
       gql`
         query fm($id: ID!) {
@@ -51,12 +56,16 @@ describe('Film e2e', () => {
     expect(actual.id).toBe(fm.id);
     expect(isValid(actual.id)).toBe(true);
     expect(actual.name.value).toBe(fm.name.value);
+    expect(actual.scriptureReferences.value).toEqual(
+      fm.scriptureReferences.value
+    );
   });
 
   // UPDATE FILM
   it('update film', async () => {
     const fm = await createFilm(app);
     const newName = faker.company.companyName();
+    const scriptureReferences = createRandomScriptureReferences();
     const result = await app.graphql.mutate(
       gql`
         mutation updateFilm($input: UpdateFilmInput!) {
@@ -73,6 +82,7 @@ describe('Film e2e', () => {
           film: {
             id: fm.id,
             name: newName,
+            scriptureReferences,
           },
         },
       }
@@ -80,6 +90,8 @@ describe('Film e2e', () => {
     const updated = result.updateFilm.film;
     expect(updated).toBeTruthy();
     expect(updated.name.value).toBe(newName);
+    expect(updated.scriptureReferences.value).toBeDefined();
+    expect(updated.scriptureReferences.value).toEqual(scriptureReferences);
   });
 
   // DELETE FILM

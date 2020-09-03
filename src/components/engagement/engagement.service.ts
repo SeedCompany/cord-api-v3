@@ -14,19 +14,22 @@ import {
 import {
   ConfigService,
   DatabaseService,
-  filterByBaseNodeId,
   ILogger,
   Logger,
   matchRequestingUser,
   matchSession,
-  matchUserPermissionsForList,
-  runListQuery,
 } from '../../core';
+import {
+  calculateTotalAndPaginateList,
+  permissionsOfNode,
+  requestingUser,
+} from '../../core/database/query';
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
   parsePropList,
   parseSecuredProperties,
+  runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
 import { CeremonyService } from '../ceremony';
@@ -53,6 +56,39 @@ import {
 
 @Injectable()
 export class EngagementService {
+  private readonly securedProperties = {
+    status: true,
+    statusModifiedAt: true,
+    completeDate: true,
+    disbursementCompleteDate: true,
+    communicationsCompleteDate: true,
+    initialEndDate: true,
+    startDate: true,
+    endDate: true,
+    startDateOverride: true,
+    endDateOverride: true,
+    modifiedAt: true,
+    lastSuspendedAt: true,
+    lastReactivatedAt: true,
+    ceremony: true,
+
+    //Language Specific
+    firstScripture: true,
+    lukePartnership: true,
+    sentPrintingDate: true,
+    paraTextRegistryId: true,
+    pnp: true,
+    language: true,
+
+    //Internship Specific
+    position: true,
+    growthPlan: true,
+    methodologies: true,
+    intern: true,
+    mentor: true,
+    countryOfOrigin: true,
+  };
+
   constructor(
     private readonly db: DatabaseService,
     private readonly ceremonyService: CeremonyService,
@@ -905,38 +941,11 @@ export class EngagementService {
     }
 
     const props = parsePropList(result.propList);
-    const securedProperties = parseSecuredProperties(props, result.permList, {
-      status: true,
-      statusModifiedAt: true,
-      completeDate: true,
-      disbursementCompleteDate: true,
-      communicationsCompleteDate: true,
-      initialEndDate: true,
-      startDate: true,
-      endDate: true,
-      startDateOverride: true,
-      endDateOverride: true,
-      modifiedAt: true,
-      lastSuspendedAt: true,
-      lastReactivatedAt: true,
-      ceremony: true,
-
-      //Language Specific
-      firstScripture: true,
-      lukePartnership: true,
-      sentPrintingDate: true,
-      paraTextRegistryId: true,
-      pnp: true,
-      language: true,
-
-      //Internship Specific
-      position: true,
-      growthPlan: true,
-      methodologies: true,
-      intern: true,
-      mentor: true,
-      countryOfOrigin: true,
-    });
+    const securedProperties = parseSecuredProperties(
+      props,
+      result.permList,
+      this.securedProperties
+    );
 
     const project = await this.projectService.readOne(
       result.projectId,
@@ -1194,6 +1203,23 @@ export class EngagementService {
         object,
         aclEditProp: 'canDeleteOwnUser',
       });
+
+      const ceremonyId = object.ceremony?.value;
+
+      if (ceremonyId) {
+        const ceremony = await this.ceremonyService.readOne(
+          ceremonyId,
+          session
+        );
+
+        if (ceremony) {
+          await this.db.deleteNode({
+            session,
+            object: ceremony,
+            aclEditProp: 'canDeleteOwnUser',
+          });
+        }
+      }
     } catch (exception) {
       this.logger.warning('Failed to delete partnership', {
         exception,
@@ -1216,61 +1242,35 @@ export class EngagementService {
       label = 'InternshipEngagement';
     }
 
-    const secureProps = [
-      // Engagement
-      'statusModifiedAt',
-      'completeDate',
-      'disbursementCompleteDate',
-      'communicationsCompleteDate',
-      'initialEndDate',
-      'startDate',
-      'endDate',
-      'lastSuspendedAt',
-      'lastReactivatedAt',
-
-      // Language specific
-      'firstScripture',
-      'lukePartnership',
-      'sentPrintingDate',
-      'paraTextRegistryId',
-      'pnp',
-
-      // Internship specific
-      'position',
-      'growthPlan',
-    ];
-
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
-      .call(matchUserPermissionsForList, label, input.page, input.count);
-
-    if (filter.projectId) {
-      query.call(
-        filterByBaseNodeId,
-        filter.projectId,
-        'engagement',
-        'in',
-        'Project',
-        label
+      .match([
+        requestingUser(session),
+        ...permissionsOfNode(label),
+        ...(filter.projectId
+          ? [
+              relation('in', '', 'engagement', { active: true }),
+              node('project', 'Project', {
+                active: true,
+                id: filter.projectId,
+              }),
+            ]
+          : []),
+      ])
+      .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
+        sort in this.securedProperties
+          ? q
+              .match([
+                node('node'),
+                relation('out', '', sort),
+                node('prop', 'Property', { active: true }),
+              ])
+              .with('*')
+              .orderBy('prop.value', order)
+          : q.with('*').orderBy(`node.${sort}`, order)
       );
-    }
 
-    const result = await runListQuery(
-      query,
-      input,
-      secureProps.includes(input.sort)
-    );
-
-    const items = await Promise.all(
-      result.items.map((row: any) => this.readOne(row.properties.id, session))
-    );
-
-    return {
-      items,
-      hasMore: result.hasMore,
-      total: result.total,
-    };
+    return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
 
   async listProducts(

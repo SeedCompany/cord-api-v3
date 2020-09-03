@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { contains, node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
@@ -8,35 +8,29 @@ import {
   ServerException,
 } from '../../common';
 import {
-  addAllSecureProperties,
-  addBaseNodeMetaPropsWithClauseAsObject,
   ConfigService,
   createBaseNode,
   DatabaseService,
-  filterByString,
   getPermList,
   getPropList,
   ILogger,
-  listWithSecureObjectAsObject,
   Logger,
-  mapping,
   matchRequestingUser,
-  matchUserPermissions,
   OnIndex,
-  runListQuery,
 } from '../../core';
+import {
+  calculateTotalAndPaginateList,
+  permissionsOfNode,
+  requestingUser,
+} from '../../core/database/query';
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
-  parsePropList,
   parseSecuredProperties,
+  runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
-import { ScriptureRange } from '../scripture';
-import {
-  scriptureToVerseRange,
-  verseToScriptureRange,
-} from '../scripture/reference';
+import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
 import {
   CreateStory,
   Story,
@@ -49,7 +43,8 @@ export class StoryService {
   constructor(
     @Logger('story:service') private readonly logger: ILogger,
     private readonly db: DatabaseService,
-    private readonly config: ConfigService
+    private readonly config: ConfigService,
+    private readonly scriptureRefService: ScriptureReferenceService
   ) {}
 
   @OnIndex()
@@ -166,7 +161,7 @@ export class StoryService {
       },
     ];
     try {
-      const query = this.db
+      const result = await this.db
         .query()
         .call(matchRequestingUser, session)
         .match([
@@ -178,29 +173,19 @@ export class StoryService {
         .call(createBaseNode, ['Story', 'Producible'], secureProps, {
           owningOrgId: session.owningOrgId,
         })
-        .create([...this.permission('scriptureReferences', 'node')]);
+        .create([...this.permission('scriptureReferences', 'node')])
+        .return('node.id as id')
+        .first();
 
-      if (input.scriptureReferences) {
-        for (const sr of input.scriptureReferences) {
-          const verseRange = scriptureToVerseRange(sr);
-          query.create([
-            node('node'),
-            relation('out', '', 'scriptureReferences', { active: true }),
-            node('sr', 'ScriptureRange', {
-              start: verseRange.start,
-              end: verseRange.end,
-              active: true,
-              createdAt: DateTime.local(),
-            }),
-          ]);
-        }
-      }
-      query.return('node.id as id');
-
-      const result = await query.first();
       if (!result) {
         throw new ServerException('failed to create a story');
       }
+
+      await this.scriptureRefService.create(
+        result.id,
+        input.scriptureReferences,
+        session
+      );
 
       this.logger.debug(`story created`, { id: result.id });
       return await this.readOne(result.id, session);
@@ -239,16 +224,19 @@ export class StoryService {
       throw new NotFoundException('Could not find story', 'story.id');
     }
 
-    const scriptureReferences = await this.listScriptureReferences(
-      result.node.properties.id,
+    const scriptureReferences = await this.scriptureRefService.list(
+      id,
       session
     );
 
-    const props = parsePropList(result.propList);
-    const securedProps = parseSecuredProperties(props, result.permList, {
-      name: true,
-      scriptureReferences: true,
-    });
+    const securedProps = parseSecuredProperties(
+      result.propList,
+      result.permList,
+      {
+        name: true,
+        scriptureReferences: true,
+      }
+    );
 
     return {
       ...parseBaseNodeProperties(result.node),
@@ -261,43 +249,8 @@ export class StoryService {
   }
 
   async update(input: UpdateStory, session: ISession): Promise<Story> {
-    const { scriptureReferences } = input;
+    await this.scriptureRefService.update(input.id, input.scriptureReferences);
 
-    if (scriptureReferences) {
-      const rel = 'scriptureReferences';
-      await this.db
-        .query()
-        .match([
-          node('story', 'Story', { id: input.id, active: true }),
-          relation('out', 'rel', rel, { active: true }),
-          node('sr', 'ScriptureRange', { active: true }),
-        ])
-        .setValues({
-          'rel.active': false,
-          'sr.active': false,
-        })
-        .return('sr')
-        .first();
-
-      for (const sr of scriptureReferences) {
-        const verseRange = scriptureToVerseRange(sr);
-        await this.db
-          .query()
-          .match([node('story', 'Story', { id: input.id, active: true })])
-          .create([
-            node('story'),
-            relation('out', '', rel, { active: true }),
-            node('', ['ScriptureRange', 'BaseNode'], {
-              start: verseRange.start,
-              end: verseRange.end,
-              active: true,
-              createdAt: DateTime.local(),
-            }),
-          ])
-          .return('story')
-          .first();
-      }
-    }
     const story = await this.readOne(input.id, session);
     return await this.db.sgUpdateProperties({
       session,
@@ -328,86 +281,33 @@ export class StoryService {
     { filter, ...input }: StoryListInput,
     session: ISession
   ): Promise<StoryListOutput> {
-    const baseNodeMetaProps = ['id', 'createdAt'];
-    const secureProps = ['name'];
     const label = 'Story';
-
-    const query = this.db
-      .query()
-      .call(matchRequestingUser, session)
-      .call(matchUserPermissions, label);
-    if (filter.name) {
-      query.call(filterByString, label, 'name', filter.name);
-    }
-    query.call(addAllSecureProperties, ...secureProps).with(
-      mapping('node', {
-        ...addBaseNodeMetaPropsWithClauseAsObject(baseNodeMetaProps),
-        ...listWithSecureObjectAsObject(secureProps),
-      })
-    );
-
-    const listResult: StoryListOutput = await runListQuery(
-      query,
-      input,
-      secureProps.includes(input.sort)
-    );
-
-    const items = await Promise.all(
-      listResult.items.map((item) => {
-        return this.readOne(item.id, session);
-      })
-    );
-
-    return {
-      items,
-      hasMore: listResult.hasMore,
-      total: listResult.total,
-    };
-  }
-
-  async listScriptureReferences(
-    storyId: string,
-    session: ISession
-  ): Promise<ScriptureRange[]> {
     const query = this.db
       .query()
       .match([
-        node('story', 'Story', {
-          id: storyId,
-          active: true,
-          owningOrgId: session.owningOrgId,
-        }),
-        relation('out', '', 'scriptureReferences'),
-        node('scriptureRanges', 'ScriptureRange', { active: true }),
+        requestingUser(session),
+        ...permissionsOfNode(label),
+        ...(filter.name
+          ? [
+              relation('out', '', 'name', { active: true }),
+              node('name', 'Property', { active: true }),
+            ]
+          : []),
       ])
-      .with('collect(scriptureRanges) as items')
-      .return('items');
-    const result = await query.first();
-
-    if (!result) {
-      return [];
-    }
-
-    const items: ScriptureRange[] = await Promise.all(
-      result.items.map(
-        (item: {
-          identity: string;
-          labels: string;
-          properties: {
-            start: number;
-            end: number;
-            createdAt: string;
-            active: boolean;
-          };
-        }) => {
-          return verseToScriptureRange({
-            start: item.properties.start,
-            end: item.properties.end,
-          });
-        }
+      .call((q) =>
+        filter.name ? q.where({ name: { value: contains(filter.name) } }) : q
       )
-    );
+      .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
+        q
+          .match([
+            node('node'),
+            relation('out', '', sort),
+            node('prop', 'Property', { active: true }),
+          ])
+          .with('*')
+          .orderBy('prop.value', order)
+      );
 
-    return items;
+    return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
 }

@@ -2,6 +2,7 @@ import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
 import { generate, isValid } from 'shortid';
+import { createRandomScriptureReferences } from '../src/components/scripture/reference';
 import { Story } from '../src/components/story/dto';
 import {
   createSession,
@@ -25,15 +26,19 @@ describe('Story e2e', () => {
     await app.close();
   });
 
-  // Create STORY
   it('Create Story', async () => {
     const name = faker.company.companyName();
-    await createStory(app, { name });
+    const scriptureReferences = createRandomScriptureReferences();
+    const story = await createStory(app, { name, scriptureReferences });
+    expect(story.scriptureReferences.value).toBeDefined();
+    expect(story.scriptureReferences.value).toEqual(scriptureReferences);
   });
 
   // READ STORY
   it('create & read story by id', async () => {
-    const st = await createStory(app);
+    const name = faker.company.companyName();
+    const scriptureReferences = createRandomScriptureReferences();
+    const story = await createStory(app, { name, scriptureReferences });
 
     const { story: actual } = await app.graphql.query(
       gql`
@@ -45,18 +50,22 @@ describe('Story e2e', () => {
         ${fragments.story}
       `,
       {
-        id: st.id,
+        id: story.id,
       }
     );
-    expect(actual.id).toBe(st.id);
+    expect(actual.id).toBe(story.id);
     expect(isValid(actual.id)).toBe(true);
-    expect(actual.name.value).toBe(st.name.value);
+    expect(actual.name.value).toBe(story.name.value);
+    expect(actual.scriptureReferences.value).toEqual(
+      story.scriptureReferences.value
+    );
   });
 
   // UPDATE STORY
   it('update story', async () => {
     const st = await createStory(app);
     const newName = faker.company.companyName();
+    const scriptureReferences = createRandomScriptureReferences();
     const result = await app.graphql.mutate(
       gql`
         mutation updateStory($input: UpdateStoryInput!) {
@@ -73,6 +82,7 @@ describe('Story e2e', () => {
           story: {
             id: st.id,
             name: newName,
+            scriptureReferences,
           },
         },
       }
@@ -80,6 +90,8 @@ describe('Story e2e', () => {
     const updated = result.updateStory.story;
     expect(updated).toBeTruthy();
     expect(updated.name.value).toBe(newName);
+    expect(updated.scriptureReferences.value).toBeDefined();
+    expect(updated.scriptureReferences.value).toEqual(scriptureReferences);
   });
 
   // DELETE STORY

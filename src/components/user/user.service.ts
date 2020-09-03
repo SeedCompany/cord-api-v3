@@ -11,27 +11,27 @@ import {
   UnauthenticatedException,
 } from '../../common';
 import {
-  addAllSecureProperties,
-  addBaseNodeMetaPropsWithClause,
   ConfigService,
   DatabaseService,
-  filterByString,
   getPermList,
   getPropList,
   ILogger,
-  listWithSecureObject,
   Logger,
   matchRequestingUser,
   matchSession,
-  matchUserPermissions,
   OnIndex,
-  runListQuery,
   UniquenessError,
 } from '../../core';
+import {
+  calculateTotalAndPaginateList,
+  permissionsOfNode,
+  requestingUser,
+} from '../../core/database/query';
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
   parseSecuredProperties,
+  runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
 import {
@@ -62,6 +62,20 @@ import {
 
 @Injectable()
 export class UserService {
+  private readonly securedProperties = {
+    email: true,
+    realFirstName: true,
+    realLastName: true,
+    displayFirstName: true,
+    displayLastName: true,
+    phone: true,
+    timezone: true,
+    bio: true,
+    status: true,
+    title: true,
+    roles: true,
+  };
+
   constructor(
     private readonly educations: EducationService,
     private readonly organizations: OrganizationService,
@@ -459,19 +473,7 @@ export class UserService {
     const securedProps = parseSecuredProperties(
       result.propList,
       result.permList,
-      {
-        email: true,
-        realFirstName: true,
-        realLastName: true,
-        displayFirstName: true,
-        displayLastName: true,
-        phone: true,
-        timezone: true,
-        bio: true,
-        status: true,
-        title: true,
-        roles: true,
-      }
+      this.securedProperties
     );
     return {
       ...parseBaseNodeProperties(result.node),
@@ -549,66 +551,24 @@ export class UserService {
     }
   }
 
-  async list(
-    { filter, ...input }: UserListInput,
-    session: ISession
-  ): Promise<UserListOutput> {
-    const label = 'User';
-    const baseNodeMetaProps = ['id', 'createdAt'];
-    const secureProps = [
-      'email',
-      'realFirstName',
-      'realLastName',
-      'displayFirstName',
-      'displayLastName',
-      'phone',
-      'timezone',
-      'bio',
-      'status',
-      'title',
-    ];
-
+  async list(input: UserListInput, session: ISession): Promise<UserListOutput> {
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
-      .call(matchUserPermissions, 'User');
-
-    if (filter.displayFirstName) {
-      query.call(
-        filterByString,
-        label,
-        'displayFirstName',
-        filter.displayFirstName
-      );
-    } else if (filter.displayLastName) {
-      query.call(
-        filterByString,
-        label,
-        'displayLastName',
-        filter.displayLastName
-      );
-    }
-
-    // match on the rest of the properties of the object requested
-    query
-      .call(
-        addAllSecureProperties,
-        ...secureProps
-        //...unsecureProps
-      )
-
-      // form return object
-      // ${listWithUnsecureObject(unsecureProps)}, // removed from a few lines down
-      .with(
-        `
-          {
-            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
-            ${listWithSecureObject(secureProps)}
-          } as node
-        `
+      .match([requestingUser(session), ...permissionsOfNode('User')])
+      .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
+        sort in this.securedProperties
+          ? q
+              .match([
+                node('node'),
+                relation('out', '', sort),
+                node('prop', 'Property', { active: true }),
+              ])
+              .with('*')
+              .orderBy('prop.value', order)
+          : q.with('*').orderBy(`node.${sort}`, order)
       );
 
-    return await runListQuery(query, input, secureProps.includes(input.sort));
+    return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
 
   async listEducations(

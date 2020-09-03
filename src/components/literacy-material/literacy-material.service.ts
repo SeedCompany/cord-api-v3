@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { contains, node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
@@ -8,34 +8,30 @@ import {
   ServerException,
 } from '../../common';
 import {
-  addAllMetaPropertiesOfChildBaseNodes,
-  addAllSecureProperties,
-  addBaseNodeMetaPropsWithClause,
-  ChildBaseNodeMetaProperty,
   ConfigService,
   createBaseNode,
   DatabaseService,
-  filterByString,
+  getPermList,
+  getPropList,
   ILogger,
-  listWithSecureObject,
   Logger,
   matchRequestingUser,
-  matchUserPermissions,
   OnIndex,
   Property,
-  runListQuery,
 } from '../../core';
+import {
+  calculateTotalAndPaginateList,
+  permissionsOfNode,
+  requestingUser,
+} from '../../core/database/query';
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
   parseSecuredProperties,
+  runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
-import { ScriptureRange } from '../scripture';
-import {
-  scriptureToVerseRange,
-  verseToScriptureRange,
-} from '../scripture/reference';
+import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
 import {
   CreateLiteracyMaterial,
   LiteracyMaterial,
@@ -48,7 +44,8 @@ export class LiteracyMaterialService {
   constructor(
     @Logger('literacyMaterial:service') private readonly logger: ILogger,
     private readonly db: DatabaseService,
-    private readonly config: ConfigService
+    private readonly config: ConfigService,
+    private readonly scriptureRefService: ScriptureReferenceService
   ) {}
 
   @OnIndex()
@@ -171,7 +168,7 @@ export class LiteracyMaterialService {
     ];
 
     try {
-      const query = this.db
+      const result = await this.db
         .query()
         .call(matchRequestingUser, session)
         .match([
@@ -183,29 +180,19 @@ export class LiteracyMaterialService {
         .call(createBaseNode, ['LiteracyMaterial', 'Producible'], secureProps, {
           owningOrgId: session.owningOrgId,
         })
-        .create([...this.permission('scriptureReferences', 'node')]);
+        .create([...this.permission('scriptureReferences', 'node')])
+        .return('node.id as id')
+        .first();
 
-      if (input.scriptureReferences) {
-        for (const sr of input.scriptureReferences) {
-          const verseRange = scriptureToVerseRange(sr);
-          query.create([
-            node('node'),
-            relation('out', '', 'scriptureReferences', { active: true }),
-            node('sr', 'ScriptureRange', {
-              start: verseRange.start,
-              end: verseRange.end,
-              active: true,
-              createdAt: DateTime.local(),
-            }),
-          ]);
-        }
-      }
-      query.return('node.id as id');
-
-      const result = await query.first();
       if (!result) {
         throw new ServerException('failed to create a literacy material');
       }
+
+      await this.scriptureRefService.create(
+        result.id,
+        input.scriptureReferences,
+        session
+      );
 
       this.logger.debug(`literacy material created`, { id: result.id });
       return await this.readOne(result.id, session);
@@ -221,12 +208,9 @@ export class LiteracyMaterialService {
     }
   }
 
-  async readOne(
-    literacyMaterialId: string,
-    session: ISession
-  ): Promise<LiteracyMaterial> {
+  async readOne(id: string, session: ISession): Promise<LiteracyMaterial> {
     this.logger.debug(`Read literacyMaterial`, {
-      id: literacyMaterialId,
+      id,
       userId: session.userId,
     });
 
@@ -234,53 +218,14 @@ export class LiteracyMaterialService {
       session.userId = this.config.anonUser.id;
     }
 
-    const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
-      {
-        parentBaseNodePropertyKey: 'scriptureReferences',
-        parentRelationDirection: 'out',
-        childBaseNodeLabel: 'ScriptureRange',
-        childBaseNodeMetaPropertyKey: '',
-        returnIdentifier: '',
-      },
-    ];
     const readLiteracyMaterial = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([
-        node('node', 'LiteracyMaterial', {
-          active: true,
-          id: literacyMaterialId,
-        }),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member*1..'),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission'),
-        node('perms', 'Permission', { active: true }),
-        relation('out', '', 'baseNode'),
-        node('node'),
-      ])
-      .with('collect(distinct perms) as permList, node')
-      .match([
-        node('node'),
-        relation('out', 'r', { active: true }),
-        node('props', 'Property', { active: true }),
-      ])
-      .with('{value: props.value, property: type(r)} as prop, permList, node')
-      .with('collect(prop) as propList, permList, node')
-      .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
-      .return([
-        'propList, permList, node',
-        'coalesce(scriptureReferencesReadPerm.read, false) as canScriptureReferencesRead',
-        'coalesce(scriptureReferencesEditPerm.edit, false) as canScriptureReferencesEdit',
-      ])
-      .asResult<
-        StandardReadResult<DbPropsOfDto<LiteracyMaterial>> & {
-          canScriptureReferencesRead: boolean;
-          canScriptureReferencesEdit: boolean;
-        }
-      >();
+      .match([node('node', 'LiteracyMaterial', { active: true, id })])
+      .call(getPermList, 'requestingUser')
+      .call(getPropList, 'permList')
+      .return('node, permList, propList')
+      .asResult<StandardReadResult<DbPropsOfDto<LiteracyMaterial>>>();
 
     const result = await readLiteracyMaterial.first();
 
@@ -291,21 +236,25 @@ export class LiteracyMaterialService {
       );
     }
 
-    const secured = parseSecuredProperties(result.propList, result.permList, {
-      name: true,
-    });
-
-    const scriptureReferences = await this.listScriptureReferences(
-      literacyMaterialId,
+    const scriptureReferences = await this.scriptureRefService.list(
+      id,
       session
+    );
+
+    const securedProps = parseSecuredProperties(
+      result.propList,
+      result.permList,
+      {
+        name: true,
+        scriptureReferences: true,
+      }
     );
 
     return {
       ...parseBaseNodeProperties(result.node),
-      ...secured,
+      ...securedProps,
       scriptureReferences: {
-        canRead: result.canScriptureReferencesRead,
-        canEdit: result.canScriptureReferencesEdit,
+        ...securedProps.scriptureReferences,
         value: scriptureReferences,
       },
     };
@@ -315,52 +264,15 @@ export class LiteracyMaterialService {
     input: UpdateLiteracyMaterial,
     session: ISession
   ): Promise<LiteracyMaterial> {
-    const { scriptureReferences, ...rest } = input;
+    await this.scriptureRefService.update(input.id, input.scriptureReferences);
 
-    if (scriptureReferences) {
-      const rel = 'scriptureReferences';
-      await this.db
-        .query()
-        .match([
-          node('lm', 'LiteracyMaterial', { id: input.id, active: true }),
-          relation('out', 'rel', rel, { active: true }),
-          node('sr', 'ScriptureRange', { active: true }),
-        ])
-        .setValues({
-          'rel.active': false,
-          'sr.active': false,
-        })
-        .return('sr')
-        .first();
-
-      for (const sr of scriptureReferences) {
-        const verseRange = scriptureToVerseRange(sr);
-        await this.db
-          .query()
-          .match([
-            node('lm', 'LiteracyMaterial', { id: input.id, active: true }),
-          ])
-          .create([
-            node('lm'),
-            relation('out', '', rel, { active: true }),
-            node('', ['ScriptureRange', 'BaseNode'], {
-              start: verseRange.start,
-              end: verseRange.end,
-              active: true,
-              createdAt: DateTime.local(),
-            }),
-          ])
-          .return('lm')
-          .first();
-      }
-    }
     const literacyMaterial = await this.readOne(input.id, session);
 
     return await this.db.sgUpdateProperties({
       session,
       object: literacyMaterial,
       props: ['name'],
-      changes: rest,
+      changes: input,
       nodevar: 'literacyMaterial',
     });
   }
@@ -386,90 +298,32 @@ export class LiteracyMaterialService {
     session: ISession
   ): Promise<LiteracyMaterialListOutput> {
     const label = 'LiteracyMaterial';
-    const baseNodeMetaProps = ['id', 'createdAt'];
-    const secureProps = ['name'];
-
-    const query = this.db
-      .query()
-      .call(matchRequestingUser, session)
-      .call(matchUserPermissions, label);
-
-    if (filter.name) {
-      query.call(filterByString, label, 'name', filter.name);
-    }
-
-    // match on the rest of the properties of the object requested
-    query.call(addAllSecureProperties, ...secureProps).with(
-      `
-          {
-            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
-            ${listWithSecureObject(secureProps)}
-          } as node
-        `
-    );
-
-    const result: LiteracyMaterialListOutput = await runListQuery(
-      query,
-      input,
-      secureProps.includes(input.sort)
-    );
-
-    const items = await Promise.all(
-      result.items.map((item) => {
-        return this.readOne(item.id, session);
-      })
-    );
-
-    return {
-      items,
-      hasMore: result.hasMore,
-      total: result.total,
-    };
-  }
-
-  async listScriptureReferences(
-    litMaterialId: string,
-    session: ISession
-  ): Promise<ScriptureRange[]> {
     const query = this.db
       .query()
       .match([
-        node('lt', 'LiteracyMaterial', {
-          id: litMaterialId,
-          active: true,
-          owningOrgId: session.owningOrgId,
-        }),
-        relation('out', '', 'scriptureReferences'),
-        node('scriptureRanges', 'ScriptureRange', { active: true }),
+        requestingUser(session),
+        ...permissionsOfNode(label),
+        ...(filter.name
+          ? [
+              relation('out', '', 'name', { active: true }),
+              node('name', 'Property', { active: true }),
+            ]
+          : []),
       ])
-      .with('collect(scriptureRanges) as items')
-      .return('items');
-    const result = await query.first();
-
-    if (!result) {
-      return [];
-    }
-
-    const items: ScriptureRange[] = await Promise.all(
-      result.items.map(
-        (item: {
-          identity: string;
-          labels: string;
-          properties: {
-            start: number;
-            end: number;
-            createdAt: string;
-            active: boolean;
-          };
-        }) => {
-          return verseToScriptureRange({
-            start: item.properties.start,
-            end: item.properties.end,
-          });
-        }
+      .call((q) =>
+        filter.name ? q.where({ name: { value: contains(filter.name) } }) : q
       )
-    );
+      .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
+        q
+          .match([
+            node('node'),
+            relation('out', '', sort),
+            node('prop', 'Property', { active: true }),
+          ])
+          .with('*')
+          .orderBy('prop.value', order)
+      );
 
-    return items;
+    return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
 }

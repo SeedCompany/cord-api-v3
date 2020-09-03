@@ -25,10 +25,10 @@ declare module 'cypher-query-builder/dist/typings/query' {
      *   .first();
      * ```
      */
-    call: <A extends any[], R>(
-      fn: (query: this, ...args: A) => this | void | QueryWithResult<R>,
+    call: <A extends any[], R extends this | QueryWithResult<any> | void>(
+      fn: (query: this, ...args: A) => R,
       ...args: A
-    ) => this;
+    ) => R extends void ? this : R;
 
     /**
      * Defines the result type of the query.
@@ -40,12 +40,15 @@ declare module 'cypher-query-builder/dist/typings/query' {
 }
 
 // eslint-disable-next-line @typescript-eslint/unbound-method
-Query.prototype.call = function call<A extends any[], R>(
+Query.prototype.call = function call<
+  A extends any[],
+  R extends Query | QueryWithResult<any> | void
+>(
   this: Query,
-  fn: (q: Query, ...args: A) => Query | void | QueryWithResult<R>,
+  fn: (q: Query, ...args: A) => R,
   ...args: A
-): Query {
-  return (fn(this, ...args) as Query) || this;
+): R extends void ? Query : R {
+  return (fn(this, ...args) || this) as Exclude<R, void>;
 };
 
 Query.prototype.asResult = function asResult<R>(this: Query) {

@@ -10,7 +10,7 @@ import {
   implements: [Resource],
 })
 export class BudgetRecord extends Resource {
-  readonly organizationId: SecuredString;
+  readonly organization: SecuredString;
 
   @Field()
   readonly fiscalYear: SecuredInt;

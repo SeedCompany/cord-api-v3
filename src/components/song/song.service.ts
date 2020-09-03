@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { contains, node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
@@ -8,25 +8,29 @@ import {
   ServerException,
 } from '../../common';
 import {
-  addUserToSG,
   ConfigService,
   createBaseNode,
   DatabaseService,
-  filterByString,
+  getPermList,
+  getPropList,
   ILogger,
   Logger,
   matchRequestingUser,
-  matchUserPermissions,
   OnIndex,
-  runListQuery,
 } from '../../core';
+import {
+  calculateTotalAndPaginateList,
+  permissionsOfNode,
+  requestingUser,
+} from '../../core/database/query';
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
-  parsePropList,
   parseSecuredProperties,
+  runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
+import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
 import {
   CreateSong,
   Song,
@@ -40,7 +44,8 @@ export class SongService {
   constructor(
     @Logger('song:service') private readonly logger: ILogger,
     private readonly db: DatabaseService,
-    private readonly config: ConfigService
+    private readonly config: ConfigService,
+    private readonly scriptureRefService: ScriptureReferenceService
   ) {}
 
   @OnIndex()
@@ -158,11 +163,11 @@ export class SongService {
     ];
 
     try {
-      const query = this.db
+      const result = await this.db
         .query()
         .call(matchRequestingUser, session)
         .match([
-          node('rootUser', 'User', {
+          node('root', 'User', {
             active: true,
             id: this.config.rootAdmin.id,
           }),
@@ -170,23 +175,21 @@ export class SongService {
         .call(createBaseNode, ['Song', 'Producible'], secureProps, {
           owningOrgId: session.owningOrgId,
         })
-        .create([...this.permission('range', 'node')])
-        .call(addUserToSG, 'rootUser', 'adminSG')
-        .call(addUserToSG, 'rootUser', 'readerSG')
-        .return('node.id as id');
+        .create([...this.permission('scriptureReferences', 'node')])
+        .return('node.id as id')
+        .first();
 
-      const result = await query.first();
       if (!result) {
         throw new ServerException('failed to create a song');
       }
 
-      const id = result.id;
-
-      // add root admin to new song as an admin
-      await this.db.addRootAdminToBaseNodeAsAdmin(id, 'Song');
+      await this.scriptureRefService.create(
+        result.id,
+        input.scriptureReferences,
+        session
+      );
 
       this.logger.debug(`song created`, { id: result.id });
-
       return await this.readOne(result.id, session);
     } catch (exception) {
       this.logger.error(`Could not create song`, {
@@ -211,23 +214,8 @@ export class SongService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Song', { active: true, id })])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member*1..'),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission'),
-        node('perms', 'Permission', { active: true }),
-        relation('out', '', 'baseNode'),
-        node('node'),
-      ])
-      .with('collect(distinct perms) as permList, node')
-      .match([
-        node('node'),
-        relation('out', 'r', { active: true }),
-        node('props', 'Property', { active: true }),
-      ])
-      .with('{value: props.value, property: type(r)} as prop, permList, node')
-      .with('collect(prop) as propList, permList, node')
+      .call(getPermList, 'requestingUser')
+      .call(getPropList, 'permList')
       .return('propList, permList, node')
       .asResult<StandardReadResult<DbPropsOfDto<Song>>>();
 
@@ -237,31 +225,39 @@ export class SongService {
       throw new NotFoundException('Could not find song', 'song.id');
     }
 
-    const props = parsePropList(result.propList);
-    const securedProps = parseSecuredProperties(props, result.permList, {
-      name: true,
-    });
+    const scriptureReferences = await this.scriptureRefService.list(
+      id,
+      session
+    );
+
+    const securedProps = parseSecuredProperties(
+      result.propList,
+      result.permList,
+      {
+        name: true,
+        scriptureReferences: true,
+      }
+    );
 
     return {
       ...parseBaseNodeProperties(result.node),
       ...securedProps,
-      id: result?.node?.properties?.id,
-      createdAt: result?.node?.properties?.createdAt,
       scriptureReferences: {
-        canEdit: true,
-        canRead: true,
-        value: [],
+        ...securedProps.scriptureReferences,
+        value: scriptureReferences,
       },
     };
   }
 
   async update(input: UpdateSong, session: ISession): Promise<Song> {
+    await this.scriptureRefService.update(input.id, input.scriptureReferences);
+
     const song = await this.readOne(input.id, session);
 
     return await this.db.sgUpdateProperties({
       session,
       object: song,
-      props: ['name'], // TODO scriptureReferences
+      props: ['name'],
       changes: input,
       nodevar: 'song',
     });
@@ -288,31 +284,32 @@ export class SongService {
     session: ISession
   ): Promise<SongListOutput> {
     const label = 'Song';
-    const secureProps = ['name'];
-
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
-      .call(matchUserPermissions, label);
+      .match([
+        requestingUser(session),
+        ...permissionsOfNode(label),
+        ...(filter.name
+          ? [
+              relation('out', '', 'name', { active: true }),
+              node('name', 'Property', { active: true }),
+            ]
+          : []),
+      ])
+      .call((q) =>
+        filter.name ? q.where({ name: { value: contains(filter.name) } }) : q
+      )
+      .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
+        q
+          .match([
+            node('node'),
+            relation('out', '', sort),
+            node('prop', 'Property', { active: true }),
+          ])
+          .with('*')
+          .orderBy('prop.value', order)
+      );
 
-    if (filter.name) {
-      query.call(filterByString, label, 'name', filter.name);
-    }
-
-    const result: SongListOutput = await runListQuery(
-      query,
-      input,
-      secureProps.includes(input.sort)
-    );
-
-    const items = await Promise.all(
-      result.items.map((row: any) => this.readOne(row.properties.id, session))
-    );
-
-    return {
-      items,
-      hasMore: result.hasMore,
-      total: result.total,
-    };
+    return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
 }

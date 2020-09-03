@@ -9,7 +9,7 @@ import { createBetterError, isNeo4jError } from './errors';
 import { ParameterTransformer } from './parameter-transformer.service';
 import { MyTransformer } from './transformer';
 import './transaction'; // import our transaction augmentation
-import './query'; // import our query augmentation
+import './query.overrides'; // import our query augmentation
 
 export const CypherFactory: FactoryProvider<Connection> = {
   provide: Connection,

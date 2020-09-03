@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Node, node, relation } from 'cypher-query-builder';
+import { contains, node, relation } from 'cypher-query-builder';
 import { first, intersection, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import {
@@ -15,21 +15,24 @@ import {
   ConfigService,
   createBaseNode,
   DatabaseService,
-  filterByString,
   ILogger,
   Logger,
   matchRequestingUser,
   matchSession,
   OnIndex,
-  runListQuery,
   UniquenessError,
 } from '../../core';
 import {
-  BaseNode,
+  calculateTotalAndPaginateList,
+  permissionsOfNode,
+  requestingUser,
+} from '../../core/database/query';
+import {
   DbPropsOfDto,
   parseBaseNodeProperties,
   parsePropList,
   parseSecuredProperties,
+  runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
 import {
@@ -55,6 +58,18 @@ import { EthnologueLanguageService } from './ethnologue-language';
 
 @Injectable()
 export class LanguageService {
+  private readonly securedProperties = {
+    name: true,
+    displayName: true,
+    isDialect: true,
+    populationOverride: true,
+    registryOfDialectsCode: true,
+    leastOfThese: true,
+    leastOfTheseReason: true,
+    displayNamePronunciation: true,
+    sponsorDate: true,
+  };
+
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
@@ -421,17 +436,11 @@ export class LanguageService {
     );
 
     const props = parsePropList(result.propList);
-    const securedProps = parseSecuredProperties(props, result.permList, {
-      name: true,
-      displayName: true,
-      isDialect: true,
-      populationOverride: true,
-      registryOfDialectsCode: true,
-      leastOfThese: true,
-      leastOfTheseReason: true,
-      displayNamePronunciation: true,
-      sponsorDate: true,
-    });
+    const securedProps = parseSecuredProperties(
+      props,
+      result.permList,
+      this.securedProperties
+    );
 
     return {
       ...parseBaseNodeProperties(result.node),
@@ -537,46 +546,36 @@ export class LanguageService {
     session: ISession
   ): Promise<LanguageListOutput> {
     const label = 'Language';
-    // const baseNodeMetaProps = ['id', 'createdAt'];
-    // const unsecureProps = [''];
-    const secureProps = [
-      'name',
-      'displayName',
-      'isDialect',
-      'populationOverride',
-      'registryOfDialectsCode',
-      'leastOfThese',
-      'leastOfTheseReason',
-      'displayNamePronunciation',
-      'sensitivity',
-      'sponsorDate',
-    ];
 
-    const query = this.db.query().call(matchRequestingUser, session);
-    // .call(matchUserPermissions, 'Language');
+    const query = this.db
+      .query()
+      .match([
+        requestingUser(session),
+        ...permissionsOfNode(label),
+        ...(filter.name
+          ? [
+              relation('out', '', 'name', { active: true }),
+              node('name', 'Property', { active: true }),
+            ]
+          : []),
+      ])
+      .call((q) =>
+        filter.name ? q.where({ name: { value: contains(filter.name) } }) : q
+      )
+      .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
+        sort in this.securedProperties
+          ? q
+              .match([
+                node('node'),
+                relation('out', '', sort),
+                node('prop', 'Property', { active: true }),
+              ])
+              .with('*')
+              .orderBy('toLower(prop.value)', order)
+          : q.with('*').orderBy(`toLower(node.${sort})`, order)
+      );
 
-    if (filter.name) {
-      query.call(filterByString, label, 'name', filter.name);
-    }
-
-    query.match([node('node', 'Language', { active: true })]);
-
-    const result = await runListQuery<Node<BaseNode>>(
-      query,
-      input,
-      secureProps.includes(input.sort)
-    );
-    const items = await Promise.all(
-      result.items.map(async (item) => {
-        return await this.readOne(item.properties.id, session);
-      })
-    );
-
-    return {
-      items,
-      hasMore: result.hasMore,
-      total: result.total,
-    };
+    return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
 
   async listLocations(
