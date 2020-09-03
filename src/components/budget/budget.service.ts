@@ -278,7 +278,7 @@ export class BudgetService {
       },
       {
         key: 'amount',
-        value: '0',
+        value: null,
         addToAdminSg: true,
         addToWriterSg: false,
         addToReaderSg: true,
