@@ -14,6 +14,7 @@ import {
 import {
   ConfigService,
   DatabaseService,
+  IEventBus,
   ILogger,
   Logger,
   matchRequestingUser,
@@ -33,7 +34,6 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { CeremonyService } from '../ceremony';
-import { CeremonyType } from '../ceremony/dto/type.enum';
 import { FileService } from '../file';
 import {
   ProductListInput,
@@ -45,6 +45,7 @@ import { ProjectService } from '../project/project.service';
 import {
   CreateInternshipEngagement,
   CreateLanguageEngagement,
+  Engagement,
   EngagementListInput,
   EngagementListOutput,
   EngagementStatus,
@@ -53,6 +54,7 @@ import {
   UpdateInternshipEngagement,
   UpdateLanguageEngagement,
 } from './dto';
+import { EngagementCreatedEvent, EngagementDeletedEvent } from './events';
 
 @Injectable()
 export class EngagementService {
@@ -97,6 +99,7 @@ export class EngagementService {
     private readonly files: FileService,
     @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService,
+    private readonly eventBus: IEventBus,
     @Logger(`engagement.service`) private readonly logger: ILogger
   ) {}
 
@@ -308,24 +311,9 @@ export class EngagementService {
       'engagement.pnp'
     );
 
-    const ceremony = await this.ceremonyService.create(
-      { type: CeremonyType.Dedication },
-      session
-    );
-
-    this.logger.debug('ceremony created: ', ceremony);
     const createLE = this.db
       .query()
-      .match(matchSession(session, { withAclEdit: 'canCreateEngagement' }))
-      .match([
-        [
-          node('rootuser', 'User', {
-            active: true,
-            id: this.config.rootAdmin.id,
-          }),
-        ],
-        [node('ceremony', 'Ceremony', { active: true, id: ceremony.id })],
-      ]);
+      .match(matchSession(session, { withAclEdit: 'canCreateEngagement' }));
     if (projectId) {
       createLE.match([
         node('project', 'Project', { active: true, id: projectId }),
@@ -396,11 +384,6 @@ export class EngagementService {
         'languageEngagement'
       ),
       ...this.property('modifiedAt', createdAt, 'languageEngagement'),
-    ]);
-    createLE.create([
-      node('ceremony'),
-      relation('in', 'ceremonyRel', 'ceremony', { active: true, createdAt }),
-      node('languageEngagement'),
     ]);
     if (projectId) {
       createLE.create([
@@ -510,8 +493,12 @@ export class EngagementService {
       }
       throw new ServerException('Could not create Language Engagement');
     }
-    const res = (await this.readOne(id, session)) as LanguageEngagement;
-    return res;
+    const res = await this.readOne(id, session);
+
+    await this.eventBus.publish(
+      new EngagementCreatedEvent(res as Engagement, session)
+    );
+    return res as LanguageEngagement;
   }
 
   async createInternshipEngagement(
@@ -560,28 +547,9 @@ export class EngagementService {
       'engagement.growthPlan'
     );
 
-    let ceremony;
-    try {
-      ceremony = await this.ceremonyService.create(
-        { type: CeremonyType.Certification },
-        session
-      );
-    } catch (e) {
-      throw new ServerException('could not create ceremony', e);
-    }
-
     const createIE = this.db
       .query()
-      .match(matchSession(session, { withAclEdit: 'canCreateEngagement' }))
-      .match([
-        [
-          node('rootuser', 'User', {
-            active: true,
-            id: this.config.rootAdmin.id,
-          }),
-        ],
-        [node('ceremony', 'Ceremony', { active: true, id: ceremony.id })],
-      ]);
+      .match(matchSession(session, { withAclEdit: 'canCreateEngagement' }));
     if (projectId) {
       createIE.match([
         node('project', 'Project', { active: true, id: projectId }),
@@ -660,11 +628,6 @@ export class EngagementService {
         input.status || EngagementStatus.InDevelopment,
         'internshipEngagement'
       ),
-    ]);
-    createIE.create([
-      node('ceremony'),
-      relation('in', 'ceremonyRel', 'ceremony', { active: true, createdAt }),
-      node('internshipEngagement'),
     ]);
     if (projectId) {
       createIE.create([
@@ -824,13 +787,11 @@ export class EngagementService {
       }
       throw new ServerException('Could not create Internship Engagement');
     }
-    try {
-      return (await this.readOne(id, session)) as InternshipEngagement;
-    } catch (e) {
-      this.logger.error(e);
-
-      throw new ServerException(`Could not create InternshipEngagement`, e);
-    }
+    const res = await this.readOne(id, session);
+    await this.eventBus.publish(
+      new EngagementCreatedEvent(res as Engagement, session)
+    );
+    return res as InternshipEngagement;
   }
 
   // READ ///////////////////////////////////////////////////////////
@@ -1203,23 +1164,6 @@ export class EngagementService {
         object,
         aclEditProp: 'canDeleteOwnUser',
       });
-
-      const ceremonyId = object.ceremony?.value;
-
-      if (ceremonyId) {
-        const ceremony = await this.ceremonyService.readOne(
-          ceremonyId,
-          session
-        );
-
-        if (ceremony) {
-          await this.db.deleteNode({
-            session,
-            object: ceremony,
-            aclEditProp: 'canDeleteOwnUser',
-          });
-        }
-      }
     } catch (exception) {
       this.logger.warning('Failed to delete partnership', {
         exception,
@@ -1227,6 +1171,7 @@ export class EngagementService {
 
       throw new ServerException('Failed to delete partnership', exception);
     }
+    await this.eventBus.publish(new EngagementDeletedEvent(object, session));
   }
 
   // LIST ///////////////////////////////////////////////////////////
