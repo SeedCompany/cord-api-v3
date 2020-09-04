@@ -998,6 +998,12 @@ export function listReturnBlock<T = any>(
   isSecuredSort: boolean,
   sort?: string | ((sortStr: string) => string)
 ) {
+  const securedSortMap: Partial<Record<typeof sortInput, string>> = {
+    name: `lower(node.${sortInput}.value)`,
+  };
+  const insecuredSortMap: Partial<Record<typeof sortInput, string>> = {
+    name: `lower(node.${sortInput})`,
+  };
   query
     .with(['collect(distinct node) as nodes', 'count(distinct node) as total'])
     .raw(`unwind nodes as node`)
@@ -1008,8 +1014,8 @@ export function listReturnBlock<T = any>(
           ? sort(sortInput)
           : sort
         : isSecuredSort
-        ? `node.${sortInput}.value`
-        : `node.${sortInput}`,
+        ? securedSortMap[sortInput] ?? `node.${sortInput}.value`
+        : insecuredSortMap[sortInput] ?? `node.${sortInput}`,
       order
     )
     .with([

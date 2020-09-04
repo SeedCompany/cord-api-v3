@@ -10,6 +10,7 @@ import {
   createUser,
   fragments,
   TestApp,
+  login,
 } from './utility';
 
 describe('Organization e2e', () => {
@@ -422,58 +423,155 @@ describe('Organization e2e', () => {
     expect(actual.items[0].name.value).toBe(name);
   });
 
-  it('list view of organizations ASC', async () => {
-    // create a bunch of orgs
-
-    const numOrgs = 2;
-    await Promise.all(
-      times(numOrgs).map(() => createOrganization(app, { name: generate() }))
-    );
-
-    const { organizations } = await app.graphql.query(gql`
-      query {
-        organizations(input: { sort: "name", order: ASC }) {
-          items {
-            ...org
+  it('List of organizations sorted by name to be alphabetical, ignoring case sensitivity. Order: ASCENDING', async () => {
+    await createUser(app, { displayFirstName: 'Tammy' });
+    //Create three projects, each beginning with lower or upper-cases
+    await createOrganization(app, {
+      name: 'an Organization ' + faker.random.uuid(),
+    });
+    await createOrganization(app, {
+      name: 'Another Organization' + faker.random.uuid(),
+    });
+    await createOrganization(app, {
+      name: 'Big Organization' + faker.random.uuid(),
+    });
+    await createOrganization(app, {
+      name: 'big Organization also' + faker.random.uuid(),
+    });
+    const sortBy = 'name';
+    const ascOrder = 'ASC';
+    const { organizations } = await app.graphql.query(
+      gql`
+        query organizations($input: OrganizationListInput!) {
+          organizations(input: $input) {
+            hasMore
+            total
+            items {
+              id
+              name {
+                value
+              }
+            }
           }
         }
+      `,
+      {
+        input: {
+          sort: sortBy,
+          order: ascOrder,
+        },
       }
-      ${fragments.org}
-    `);
-
-    const names = organizations.items.map(
-      (o: { name: { value: string; canEdit: boolean; canRead: boolean } }) =>
-        o.name.value
     );
+    // Set a flag that's going to indicate if the projects are in order
+    let isAscending = true;
+    const items = organizations.items;
+    let index = 0;
+    for (const i of items) {
+      if (index < organizations.items.length - 1) {
+        const currName = i.name.value;
+        const nextName = items[index + 1].name.value;
+        const areEqual = currName.toUpperCase() < nextName.toUpperCase();
+        if (!areEqual) isAscending = false;
+        index++;
+      }
+    }
+    expect(isAscending).toBe(true);
 
-    expect(names.sort()).toEqual(names);
+    //delete all projects
+    await Promise.all(
+      organizations.items.map(async (item: { id: any }) => {
+        return await app.graphql.mutate(
+          gql`
+            mutation deleteOrganization($id: ID!) {
+              deleteOrganization(id: $id)
+            }
+          `,
+          {
+            id: item.id,
+          }
+        );
+      })
+    );
+    // log back into the admin account. Not sure if being logged in as 'Tammy' will mess other tests up.
+    await login(app, {
+      email: process.env.ROOT_ADMIN_EMAIL,
+      password: process.env.ROOT_ADMIN_PASSWORD,
+    });
   });
 
-  it('list view of organizations desc', async () => {
-    // create a bunch of orgs
-
-    const numOrgs = 2;
-    await Promise.all(
-      times(numOrgs).map(() => createOrganization(app, { name: generate() }))
-    );
-
-    const { organizations } = await app.graphql.query(gql`
-      query {
-        organizations(input: { sort: "name", order: DESC }) {
-          items {
-            ...org
+  it('List of organizations sorted by name to be alphabetical, ignoring case sensitivity. Order: DESCENDING', async () => {
+    await createUser(app, { displayFirstName: 'Tammy' });
+    //Create three projects, each beginning with lower or upper-cases
+    await createOrganization(app, {
+      name: 'an Organization ' + faker.random.uuid(),
+    });
+    await createOrganization(app, {
+      name: 'Another Organization' + faker.random.uuid(),
+    });
+    await createOrganization(app, {
+      name: 'Big Organization' + faker.random.uuid(),
+    });
+    await createOrganization(app, {
+      name: 'big Organization also' + faker.random.uuid(),
+    });
+    const sortBy = 'name';
+    const descOrder = 'DESC';
+    const { organizations } = await app.graphql.query(
+      gql`
+        query organizations($input: OrganizationListInput!) {
+          organizations(input: $input) {
+            hasMore
+            total
+            items {
+              id
+              name {
+                value
+              }
+            }
           }
         }
+      `,
+      {
+        input: {
+          sort: sortBy,
+          order: descOrder,
+        },
       }
-      ${fragments.org}
-    `);
-
-    const names = organizations.items.map(
-      (o: { name: { value: string; canEdit: boolean; canRead: boolean } }) =>
-        o.name.value
     );
-
-    expect(names.sort()).toEqual(names.reverse());
+    // Set a flag that's going to indicate if the projects are in order
+    let isDescending = true;
+    const items = organizations.items;
+    let index = 0;
+    for (const i of items) {
+      if (index < organizations.items.length - 1) {
+        const currName = i.name.value;
+        const nextName = items[index + 1].name.value;
+        const areEqual = currName.toUpperCase() > nextName.toUpperCase();
+        if (!areEqual) isDescending = false;
+        index++;
+      }
+    }
+    expect(isDescending).toBe(true);
+    //delete all projects
+    await Promise.all(
+      organizations.items.map(async (item: { id: any }) => {
+        return await app.graphql.mutate(
+          gql`
+            mutation deleteOrganization($id: ID!) {
+              deleteOrganization(id: $id)
+            }
+          `,
+          {
+            id: item.id,
+          }
+        );
+      })
+    );
+    // log back into the admin account. Not sure if being logged in as 'Tammy' will mess other tests up.
+    await login(app, {
+      email: process.env.ROOT_ADMIN_EMAIL,
+      password: process.env.ROOT_ADMIN_PASSWORD,
+    });
   });
 
   it('list view of organizations filters on partial name', async () => {
