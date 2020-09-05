@@ -173,6 +173,16 @@ export class ProductService {
         isOrgPublic: true,
         label: 'ProductMethodology',
       },
+      {
+        key: 'isOverriding',
+        value: false,
+        addToAdminSg: true,
+        addToWriterSg: true,
+        addToReaderSg: true,
+        isPublic: true,
+        isOrgPublic: true,
+        label: '',
+      },
     ];
 
     const query = this.db
@@ -221,6 +231,9 @@ export class ProductService {
       query.match([
         node('pr', 'Producible', { id: input.produces, active: true }),
       ]);
+      if (input.scriptureReferencesOverride?.length) {
+        secureProps[3].value = true;
+      }
     }
 
     query.call(matchRequestingUser, session).call(
@@ -336,6 +349,7 @@ export class ProductService {
     const {
       produces,
       scriptureReferencesOverride,
+      isOverriding,
       ...rest
     } = parseSecuredProperties(result.propList, result.permList, {
       mediums: true,
@@ -344,6 +358,7 @@ export class ProductService {
       scriptureReferences: true,
       scriptureReferencesOverride: true,
       produces: true,
+      isOverriding: true,
     });
 
     const pr = await this.db
@@ -394,12 +409,11 @@ export class ProductService {
     return {
       ...parseBaseNodeProperties(result.node),
       ...rest,
+      isOverriding,
       scriptureReferences: {
         ...rest.scriptureReferences,
-        value: !scriptureReferencesValue.length
+        value: !isOverriding.value
           ? producible?.scriptureReferences.value
-            ? producible?.scriptureReferences.value
-            : []
           : scriptureReferencesValue,
       },
       mediums: {
@@ -416,7 +430,7 @@ export class ProductService {
           ...producible,
           id: pr.p.properties.id,
           __typename: (ProducibleType as any)[typeName],
-          scriptureReferences: !scriptureReferencesValue.length
+          scriptureReferences: !isOverriding.value
             ? producible?.scriptureReferences
             : {
                 ...scriptureReferencesOverride,
@@ -691,17 +705,15 @@ export class ProductService {
     id: string,
     type: string,
     session: ISession
-  ): Promise<Film | Story | Song | LiteracyMaterial | undefined> {
+  ): Promise<Film | Story | Song | LiteracyMaterial> {
     if (type === 'Film') {
       return await this.film.readOne(id, session);
     } else if (type === 'Story') {
       return await this.story.readOne(id, session);
     } else if (type === 'Song') {
       return await this.song.readOne(id, session);
-    } else if (type === 'LiteracyMaterial') {
+    } else {
       return await this.literacyMaterial.readOne(id, session);
     }
-
-    return undefined;
   }
 }

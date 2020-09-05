@@ -1,7 +1,7 @@
 import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { MergeExclusive } from 'type-fest';
-import { Resource } from '../../../common';
+import { Resource, SecuredBoolean } from '../../../common';
 import { SecuredScriptureRangesOverride } from '../../scripture';
 import { Producible, SecuredProducible } from './producible.dto';
 import { SecuredProductMediums } from './product-medium';
@@ -56,6 +56,9 @@ export class DerivativeScriptureProduct extends Product {
     `,
   })
   readonly scriptureReferencesOverride: SecuredScriptureRangesOverride;
+
+  //This determines whether to "override" or not.
+  readonly isOverriding: SecuredBoolean;
 }
 
 export type AnyProduct = MergeExclusive<
