@@ -39,11 +39,9 @@ import {
   LiteracyMaterial,
   LiteracyMaterialService,
 } from '../literacy-material';
-import { ScriptureRange, ScriptureRangeInput } from '../scripture';
-import {
-  scriptureToVerseRange,
-  verseToScriptureRange,
-} from '../scripture/reference';
+import { ScriptureRangeInput } from '../scripture';
+import { scriptureToVerseRange } from '../scripture/reference';
+import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
 import { Song, SongService } from '../song';
 import { Story, StoryService } from '../story';
 import {
@@ -75,6 +73,7 @@ export class ProductService {
     private readonly story: StoryService,
     private readonly song: SongService,
     private readonly literacyMaterial: LiteracyMaterialService,
+    private readonly scriptureRefService: ScriptureReferenceService,
     @Logger('product:service') private readonly logger: ILogger
   ) {}
 
@@ -372,11 +371,10 @@ export class ProductService {
       .asResult<{ p: Node<BaseNode> }>()
       .first();
 
-    const scriptureReferencesValue = await this.listScriptureReferences(
+    const scriptureReferencesValue = await this.scriptureRefService.list(
       id,
-      'Product',
       session,
-      { isOverride: pr ? true : false }
+      { isOverriding: pr ? true : false }
     );
 
     if (!pr) {
@@ -618,63 +616,6 @@ export class ProductService {
       );
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
-  }
-
-  protected async listScriptureReferences(
-    id: string,
-    label: string,
-    session: ISession,
-    options: { isOverride?: boolean } = {}
-  ): Promise<ScriptureRange[]> {
-    const query = this.db
-      .query()
-      .match([
-        node('node', label, {
-          id,
-          active: true,
-          owningOrgId: session.owningOrgId,
-        }),
-        relation(
-          'out',
-          '',
-          options.isOverride
-            ? 'scriptureReferencesOverride'
-            : 'scriptureReferences',
-          {
-            active: true,
-          }
-        ),
-        node('scriptureRanges', 'ScriptureRange', { active: true }),
-      ])
-      .with('collect(scriptureRanges) as items')
-      .return('items');
-    const result = await query.first();
-
-    if (!result) {
-      return [];
-    }
-
-    const items: ScriptureRange[] = await Promise.all(
-      result.items.map(
-        (item: {
-          identity: string;
-          labels: string;
-          properties: {
-            start: number;
-            end: number;
-            createdAt: string;
-            active: boolean;
-          };
-        }) => {
-          return verseToScriptureRange({
-            start: item.properties.start,
-            end: item.properties.end,
-          });
-        }
-      )
-    );
-
-    return items;
   }
 
   // used to search a specific engagement's relationship to the target base node

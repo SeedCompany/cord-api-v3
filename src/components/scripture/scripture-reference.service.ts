@@ -87,9 +87,9 @@ export class ScriptureReferenceService {
 
   async list(
     producibleId: string,
-    session: ISession
+    session: ISession,
+    options: { isOverriding?: boolean } = {}
   ): Promise<ScriptureRange[]> {
-    const rel = 'scriptureReferences';
     const results = await this.db
       .query()
       .match([
@@ -98,7 +98,16 @@ export class ScriptureReferenceService {
           active: true,
           owningOrgId: session.owningOrgId,
         }),
-        relation('out', '', rel),
+        relation(
+          'out',
+          '',
+          options.isOverriding
+            ? 'scriptureReferencesOverride'
+            : 'scriptureReferences',
+          {
+            active: true,
+          }
+        ),
         node('scriptureRanges', 'ScriptureRange', { active: true }),
       ])
       .return('scriptureRanges')
