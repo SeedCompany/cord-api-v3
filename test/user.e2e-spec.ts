@@ -208,8 +208,8 @@ describe('User e2e', () => {
 
   // LIST USERS
   it('list view of users', async () => {
-    await createUser(app, { displayFirstName: 'Tammy' });
-    await createUser(app, { displayFirstName: 'Tammy' });
+    await createUser(app);
+    await createUser(app);
 
     await login(app, {
       email: process.env.ROOT_ADMIN_EMAIL,
@@ -218,12 +218,7 @@ describe('User e2e', () => {
 
     const { users } = await app.graphql.query(gql`
       query {
-        users(
-          input: {
-            sort: "displayFirstName"
-            filter: { displayFirstName: "Tammy" }
-          }
-        ) {
+        users(input: { count: 25, page: 1 }) {
           items {
             ...user
           }
@@ -538,7 +533,7 @@ describe('User e2e', () => {
 
   // skipping because we will be refactoring how we do search
   it('list users with organizations', async () => {
-    const newUser = await createUser(app, { displayFirstName: 'Tammy' });
+    const newUser = await createUser(app);
     const org = await createOrganization(app);
 
     const result = await app.graphql.mutate(
@@ -563,10 +558,10 @@ describe('User e2e', () => {
     );
     expect(result.assignOrganizationToUser).toBe(true);
 
-    const { users } = await app.graphql.query(gql`
-      query {
-        users(input: { filter: { displayFirstName: "Tammy" } }) {
-          items {
+    const { user } = await app.graphql.query(
+      gql`
+        query user($id: ID!) {
+          user(id: $id) {
             ...user
             organizations {
               items {
@@ -578,13 +573,15 @@ describe('User e2e', () => {
               canCreate
             }
           }
-          hasMore
-          total
         }
+        ${fragments.user}
+        ${fragments.org}
+      `,
+      {
+        id: newUser.id,
       }
-      ${fragments.user}
-      ${fragments.org}
-    `);
-    expect(users.items[0].organizations).toBeTruthy();
+    );
+    expect(user.organizations).toBeTruthy();
+    expect(user.organizations.items.length).toBeGreaterThanOrEqual(1);
   });
 });

@@ -18,13 +18,18 @@ import {
   matchRequestingUser,
   matchSession,
   Property,
-  runListQuery,
 } from '../../core';
+import {
+  calculateTotalAndPaginateList,
+  permissionsOfNode,
+  requestingUser,
+} from '../../core/database/query';
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
   parsePropList,
   parseSecuredProperties,
+  runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
 import {
@@ -43,6 +48,10 @@ import {
 
 @Injectable()
 export class BudgetService {
+  private readonly securedProperties = {
+    status: true,
+  };
+
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
@@ -269,7 +278,7 @@ export class BudgetService {
       },
       {
         key: 'amount',
-        value: '0',
+        value: null,
         addToAdminSg: true,
         addToWriterSg: false,
         addToReaderSg: true,
@@ -573,108 +582,83 @@ export class BudgetService {
     input: Partial<BudgetListInput>,
     session: ISession
   ): Promise<BudgetListOutput> {
-    const { sort, filter } = {
+    const { filter, ...listInput } = {
       ...BudgetListInput.defaultVal,
       ...input,
     };
 
-    const { projectId } = filter;
-    this.logger.debug('Listing budgets on projectId ', {
-      projectId,
-      userId: session.userId,
-    });
-    const secureProps = ['status'];
+    const label = 'Budget';
 
-    const query = this.db.query().call(matchRequestingUser, session);
-    if (projectId) {
-      query.match([
-        node('project', 'Project', {
-          id: projectId,
-          active: true,
-          owningOrgId: session.owningOrgId,
-        }),
-        relation('out', '', 'budget'),
-        node('node', 'Budget', { active: true }),
-      ]);
-    } else {
-      query.match([node('node', 'Budget', { active: true })]);
-    }
-    this.propMatch(query, 'status', 'node');
+    const query = this.db
+      .query()
+      .match([
+        requestingUser(session),
+        ...permissionsOfNode(label),
+        ...(filter.projectId
+          ? [
+              relation('in', '', 'budget', { active: true }),
+              node('project', 'Project', {
+                active: true,
+                id: filter.projectId,
+              }),
+            ]
+          : []),
+      ])
+      .call(calculateTotalAndPaginateList, listInput, (q, sort, order) =>
+        sort in this.securedProperties
+          ? q
+              .match([
+                node('node'),
+                relation('out', '', sort),
+                node('prop', 'Property', { active: true }),
+              ])
+              .with('*')
+              .orderBy('prop.value', order)
+          : q.with('*').orderBy(`node.${sort}`, order)
+      );
 
-    const listResult: {
-      items: Array<{
-        identity: string;
-        labels: string[];
-        properties: Budget;
-      }>;
-      hasMore: boolean;
-      total: number;
-    } = await runListQuery(
-      query,
-      {
-        ...BudgetListInput.defaultVal,
-        ...input,
-      },
-      secureProps.includes(sort)
+    return await runListQuery(query, listInput, (id) =>
+      this.readOne(id, session)
     );
-
-    const items = await Promise.all(
-      listResult.items.map((item) => {
-        return this.readOne(item.properties.id, session);
-      })
-    );
-
-    return {
-      items,
-      hasMore: listResult.hasMore,
-      total: listResult.total,
-    };
   }
 
   async listRecords(
     { filter, ...input }: BudgetRecordListInput,
     session: ISession
   ): Promise<BudgetRecordListOutput> {
-    const { budgetId } = filter;
-    this.logger.debug('Listing budget records on budgetId ', {
-      budgetId,
-      userId: session.userId,
-    });
+    const label = 'BudgetRecord';
 
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
       .match([
-        node('budget', 'Budget', {
-          id: budgetId,
-          active: true,
-          owningOrgId: session.owningOrgId,
-        }),
-        relation('out', '', 'record'),
-        node('node', 'BudgetRecord', { active: true }),
-      ]);
+        requestingUser(session),
+        ...permissionsOfNode(label),
+        ...(filter.budgetId
+          ? [
+              relation('in', '', 'record', { active: true }),
+              node('budget', 'Budget', {
+                active: true,
+                id: filter.budgetId,
+              }),
+            ]
+          : []),
+      ])
+      .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
+        sort in this.securedProperties
+          ? q
+              .match([
+                node('node'),
+                relation('out', '', sort),
+                node('prop', 'Property', { active: true }),
+              ])
+              .with('*')
+              .orderBy('prop.value', order)
+          : q.with('*').orderBy(`node.${sort}`, order)
+      );
 
-    const listResult: {
-      items: Array<{
-        identity: string;
-        labels: string[];
-        properties: BudgetRecord;
-      }>;
-      hasMore: boolean;
-      total: number;
-    } = await runListQuery(query, input);
-
-    const items = await Promise.all(
-      listResult.items.map((item) => {
-        return this.readOneRecord(item.properties.id, session);
-      })
+    return await runListQuery(query, input, (id) =>
+      this.readOneRecord(id, session)
     );
-
-    return {
-      items,
-      hasMore: listResult.hasMore,
-      total: listResult.total,
-    };
   }
 
   async checkBudgetConsistency(session: ISession): Promise<boolean> {

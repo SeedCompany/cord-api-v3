@@ -2,6 +2,7 @@ import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { some } from 'lodash';
 import { DateTime, Interval } from 'luxon';
+import { generate } from 'shortid';
 import {
   CreateInternshipEngagement,
   EngagementStatus,
@@ -774,10 +775,10 @@ describe('Engagement e2e', () => {
     internshipProject = await createProject(app, {
       type: ProjectType.Internship,
     });
-    const badId = 'badId';
+    const invalidId = generate();
     await expect(
       createInternshipEngagement(app, {
-        projectId: badId,
+        projectId: invalidId,
         countryOfOriginId: country.id,
         internId: intern.id,
         mentorId: mentor.id,
@@ -786,7 +787,7 @@ describe('Engagement e2e', () => {
     await expect(
       createInternshipEngagement(app, {
         projectId: internshipProject.id,
-        countryOfOriginId: badId,
+        countryOfOriginId: invalidId,
         internId: intern.id,
         mentorId: mentor.id,
       })
@@ -800,7 +801,7 @@ describe('Engagement e2e', () => {
       createInternshipEngagement(app, {
         projectId: internshipProject.id,
         countryOfOriginId: country.id,
-        internId: badId,
+        internId: invalidId,
         mentorId: mentor.id,
       })
     ).rejects.toThrow('internId is invalid');
@@ -814,23 +815,23 @@ describe('Engagement e2e', () => {
         projectId: internshipProject.id,
         countryOfOriginId: country.id,
         internId: intern.id,
-        mentorId: badId,
+        mentorId: invalidId,
       })
     ).rejects.toThrow('mentorId is invalid');
   });
 
   it('translation engagement creation fails and lets you know why if your ids are bad', async () => {
-    const badId = 'badId';
+    const invalidId = generate();
     await expect(
       createLanguageEngagement(app, {
-        projectId: badId,
+        projectId: invalidId,
         languageId: language.id,
       })
     ).rejects.toThrow('projectId is invalid');
     await expect(
       createLanguageEngagement(app, {
         projectId: project.id,
-        languageId: badId,
+        languageId: invalidId,
       })
     ).rejects.toThrow('languageId is invalid');
   });

@@ -1,7 +1,7 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
-import { generate, isValid } from 'shortid';
+import { isValid } from 'shortid';
 import {
   createLanguage,
   createLanguageEngagement,
@@ -98,7 +98,7 @@ describe('Language e2e', () => {
   // UPDATE LANGUAGE: update a language ethnologue when language is minimally defined.
   it('update a single language ethnologue property when language is minimally defined', async () => {
     const languageMinimal = await createLanguageMinimal(app);
-    const newEthnologueCode = faker.random.word() + '' + generate();
+    const newEthnologueCode = faker.helpers.replaceSymbols('???').toLowerCase();
 
     const result = await app.graphql.mutate(
       gql`
