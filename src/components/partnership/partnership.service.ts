@@ -40,6 +40,7 @@ import { ProjectService } from '../project/project.service';
 import {
   CreatePartnership,
   Partnership,
+  PartnershipAgreementStatus,
   PartnershipFundingType,
   PartnershipListInput,
   PartnershipListOutput,
@@ -205,7 +206,7 @@ export class PartnershipService {
     const secureProps = [
       {
         key: 'agreementStatus',
-        value: input.agreementStatus,
+        value: input.agreementStatus || PartnershipAgreementStatus.NotAttached,
         addToAdminSg: true,
         addToWriterSg: false,
         addToReaderSg: true,
@@ -232,7 +233,7 @@ export class PartnershipService {
       },
       {
         key: 'mouStatus',
-        value: input.mouStatus,
+        value: input.mouStatus || PartnershipAgreementStatus.NotAttached,
         addToAdminSg: true,
         addToWriterSg: false,
         addToReaderSg: true,
