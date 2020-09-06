@@ -225,6 +225,7 @@ export class OrganizationService {
     { filter, ...input }: OrganizationListInput,
     session: ISession
   ): Promise<OrganizationListOutput> {
+    const securedProperties = ['name'];
     const label = 'Organization';
     const query = this.db
       .query()
@@ -247,14 +248,16 @@ export class OrganizationService {
         filter.name ? q.where({ name: { value: contains(filter.name) } }) : q
       )
       .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
-        q
-          .match([
-            node('node'),
-            relation('out', '', sort),
-            node('prop', 'Property', { active: true }),
-          ])
-          .with('*')
-          .orderBy('prop.value', order)
+        sort in securedProperties
+          ? q
+              .match([
+                node('node'),
+                relation('out', '', sort),
+                node('prop', 'Property', { active: true }),
+              ])
+              .with('*')
+              .orderBy('prop.value', order)
+          : q.with('*').orderBy(`node.${sort}`, order)
       );
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
