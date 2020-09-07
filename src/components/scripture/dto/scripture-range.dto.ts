@@ -5,7 +5,8 @@ import { stripIndent } from 'common-tags';
 import { SecuredPropertyList } from '../../../common';
 import {
   ScriptureReference,
-  ScriptureReferenceInput,
+  ScriptureReferenceEndInput,
+  ScriptureReferenceStartInput,
 } from './scripture-reference.dto';
 
 const description = stripIndent`
@@ -19,15 +20,15 @@ export abstract class ScriptureRangeInput {
     description: 'The starting verse',
   })
   @ValidateNested()
-  @Type(() => ScriptureReferenceInput)
-  start: ScriptureReferenceInput;
+  @Type(() => ScriptureReferenceStartInput)
+  start: ScriptureReferenceStartInput;
 
   @Field({
     description: 'The ending verse',
   })
   @ValidateNested()
-  @Type(() => ScriptureReferenceInput)
-  end: ScriptureReferenceInput;
+  @Type(() => ScriptureReferenceEndInput)
+  end: ScriptureReferenceEndInput;
 }
 
 @ObjectType({
