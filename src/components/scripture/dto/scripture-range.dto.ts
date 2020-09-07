@@ -8,6 +8,10 @@ import {
   ScriptureReference,
   ScriptureReferenceInput,
 } from './scripture-reference.dto';
+import {
+  ScriptureEnd,
+  ScriptureStart,
+} from './scripture-reference.transformer';
 
 const description = stripIndent`
   A range of scripture.
@@ -21,6 +25,7 @@ export abstract class ScriptureRangeInput {
   })
   @ValidateNested()
   @Type(() => ScriptureReferenceInput)
+  @ScriptureStart()
   start: ScriptureReferenceInput;
 
   @Field({
@@ -29,6 +34,7 @@ export abstract class ScriptureRangeInput {
   @ValidateNested()
   @IsValidOrder()
   @Type(() => ScriptureReferenceInput)
+  @ScriptureEnd()
   end: ScriptureReferenceInput;
 }
 
