@@ -365,6 +365,7 @@ export class EngagementService {
         input.endDateOverride || undefined,
         'languageEngagement'
       ),
+      ...this.property('initialEndDate', undefined, 'languageEngagement'),
       ...this.property(
         'lukePartnership',
         input.lukePartnership || undefined,
@@ -433,6 +434,7 @@ export class EngagementService {
       ...this.permission('communicationsCompleteDate', 'languageEngagement'),
       ...this.permission('startDateOverride', 'languageEngagement'),
       ...this.permission('endDateOverride', 'languageEngagement'),
+      ...this.permission('initialEndDate', 'languageEngagement'),
       ...this.permission('ceremony', 'languageEngagement'),
       ...this.permission('language', 'languageEngagement'),
       ...this.permission('status', 'languageEngagement'),
@@ -496,11 +498,15 @@ export class EngagementService {
       }
       throw new ServerException('Could not create Language Engagement');
     }
-    const res = (await this.readOne(id, session)) as LanguageEngagement;
+    const languageEngagement = (await this.readOne(
+      id,
+      session
+    )) as LanguageEngagement;
+    await this.eventBus.publish(
+      new EngagementCreatedEvent(languageEngagement, session)
+    );
 
-    await this.eventBus.publish(new EngagementCreatedEvent(res, session));
-
-    return res;
+    return (await this.readOne(id, session)) as LanguageEngagement;
   }
 
   async createInternshipEngagement(
@@ -610,6 +616,7 @@ export class EngagementService {
         input.endDateOverride || undefined,
         'internshipEngagement'
       ),
+      ...this.property('initialEndDate', undefined, 'internshipEngagement'),
       ...this.property(
         'methodologies',
         input.methodologies || undefined,
@@ -697,6 +704,7 @@ export class EngagementService {
       ...this.permission('modifiedAt', 'internshipEngagement'),
       ...this.permission('startDateOverride', 'internshipEngagement'),
       ...this.permission('endDateOverride', 'internshipEngagement'),
+      ...this.permission('initialEndDate', 'internshipEngagement'),
       ...this.permission('language', 'internshipEngagement'),
       ...this.permission('status', 'internshipEngagement'),
       ...this.permission('countryOfOrigin', 'internshipEngagement'),
@@ -789,11 +797,14 @@ export class EngagementService {
       }
       throw new ServerException('Could not create Internship Engagement');
     }
-    const res = (await this.readOne(id, session)) as InternshipEngagement;
-
-    await this.eventBus.publish(new EngagementCreatedEvent(res, session));
-
-    return res;
+    const internshipEngagement = (await this.readOne(
+      id,
+      session
+    )) as InternshipEngagement;
+    await this.eventBus.publish(
+      new EngagementCreatedEvent(internshipEngagement, session)
+    );
+    return (await this.readOne(id, session)) as InternshipEngagement;
   }
 
   // READ ///////////////////////////////////////////////////////////
@@ -1007,6 +1018,7 @@ export class EngagementService {
           'paraTextRegistryId',
           'modifiedAt',
           'status',
+          'initialEndDate',
         ],
         changes,
         nodevar: 'LanguageEngagement',
@@ -1127,6 +1139,7 @@ export class EngagementService {
           'endDateOverride',
           'modifiedAt',
           'status',
+          'initialEndDate',
         ],
         changes: {
           ...input,
