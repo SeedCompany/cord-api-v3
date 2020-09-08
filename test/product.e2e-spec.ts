@@ -218,10 +218,11 @@ describe('Product e2e', () => {
     const actual: AnyProduct = result.product;
     expect(actual.scriptureReferencesOverride?.value).toBeDefined();
     expect(actual.scriptureReferencesOverride?.value).toEqual(
-      actual.produces?.value?.scriptureReferences?.value
+      randomScriptureReferences
     );
-    expect(actual.scriptureReferencesOverride?.value).toEqual(
-      actual.scriptureReferences.value
+    expect(actual.scriptureReferences.value).toEqual(randomScriptureReferences);
+    expect(actual.produces?.value?.scriptureReferences?.value).toEqual(
+      story.scriptureReferences.value
     );
   });
 
@@ -434,8 +435,9 @@ describe('Product e2e', () => {
 
     const actual: AnyProduct = result.updateProduct.product;
     expect(actual.scriptureReferencesOverride?.value).toEqual(override);
+    expect(actual.scriptureReferences?.value).toEqual(override);
     expect(actual.produces?.value?.scriptureReferences?.value).toEqual(
-      override
+      story.scriptureReferences.value
     );
   });
 

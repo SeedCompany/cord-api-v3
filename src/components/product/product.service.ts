@@ -230,7 +230,7 @@ export class ProductService {
       query.match([
         node('pr', 'Producible', { id: input.produces, active: true }),
       ]);
-      if (input.scriptureReferencesOverride?.length) {
+      if (input.scriptureReferencesOverride) {
         secureProps[3].value = true;
       }
     }
@@ -335,7 +335,12 @@ export class ProductService {
       .return(['propList, permList, node'])
       .asResult<
         StandardReadResult<
-          DbPropsOfDto<DirectScriptureProduct & DerivativeScriptureProduct>
+          DbPropsOfDto<
+            DirectScriptureProduct &
+              DerivativeScriptureProduct & {
+                isOverriding: boolean;
+              }
+          >
         >
       >();
     const result = await query.first();
@@ -396,7 +401,10 @@ export class ProductService {
       };
     }
 
-    const typeName = difference(pr.p.labels, ['Producible', 'BaseNode'])[0];
+    const typeName = (difference(pr.p.labels, [
+      'Producible',
+      'BaseNode',
+    ]) as ProducibleType[])[0];
 
     const producible = await this.getProducibleByType(
       pr.p.properties.id,
@@ -407,7 +415,6 @@ export class ProductService {
     return {
       ...parseBaseNodeProperties(result.node),
       ...rest,
-      isOverriding,
       scriptureReferences: {
         ...rest.scriptureReferences,
         value: !isOverriding.value
@@ -426,21 +433,12 @@ export class ProductService {
         ...produces,
         value: {
           ...producible,
-          id: pr.p.properties.id,
-          __typename: (ProducibleType as any)[typeName],
-          scriptureReferences: !isOverriding.value
-            ? producible?.scriptureReferences
-            : {
-                ...scriptureReferencesOverride,
-                value: scriptureReferencesValue,
-              },
+          __typename: typeName,
         },
       },
       scriptureReferencesOverride: {
         ...scriptureReferencesOverride,
-        value: !scriptureReferencesValue.length
-          ? null
-          : scriptureReferencesValue,
+        value: !isOverriding.value ? null : scriptureReferencesValue,
       },
     };
   }
@@ -505,6 +503,17 @@ export class ProductService {
         scriptureReferencesOverride,
         true
       );
+      await this.db
+        .query()
+        .match([
+          node('product', 'Product', { id: input.id, active: true }),
+          relation('out', 'rel', 'isOverriding', { active: true }),
+          node('p', 'Property', { active: true }),
+        ])
+        .setValues({
+          'p.value': true,
+        })
+        .run();
     }
 
     const object = await this.readOne(input.id, session);
