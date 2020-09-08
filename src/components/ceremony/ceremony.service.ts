@@ -20,12 +20,17 @@ import {
   matchRequestingUser,
   matchSession,
   Property,
-  runListQuery,
 } from '../../core';
+import {
+  calculateTotalAndPaginateList,
+  permissionsOfNode,
+  requestingUser,
+} from '../../core/database/query';
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
   parseSecuredProperties,
+  runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
 import {
@@ -38,6 +43,13 @@ import {
 
 @Injectable()
 export class CeremonyService {
+  private readonly securedProperties = {
+    type: true,
+    planned: true,
+    estimatedDate: true,
+    actualDate: true,
+  };
+
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
@@ -225,12 +237,7 @@ export class CeremonyService {
     const securedProps = parseSecuredProperties(
       result.propList,
       result.permList,
-      {
-        type: true,
-        planned: true,
-        estimatedDate: true,
-        actualDate: true,
-      }
+      this.securedProperties
     );
 
     return {
@@ -280,32 +287,33 @@ export class CeremonyService {
     { filter, ...input }: CeremonyListInput,
     session: ISession
   ): Promise<CeremonyListOutput> {
+    const label = 'Ceremony';
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
-      .match([node('node', 'Ceremony', { active: true })]);
+      .match([
+        requestingUser(session),
+        ...permissionsOfNode(label),
+        ...(filter.type
+          ? [
+              relation('out', '', 'type', { active: true }),
+              node('name', 'Property', { active: true, value: filter.type }),
+            ]
+          : []),
+      ])
+      .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
+        sort in this.securedProperties
+          ? q
+              .match([
+                node('node'),
+                relation('out', '', sort),
+                node('prop', 'Property', { active: true }),
+              ])
+              .with('*')
+              .orderBy('prop.value', order)
+          : q.with('*').orderBy(`node.${sort}`, order)
+      );
 
-    const listResult: {
-      items: Array<{
-        identity: string;
-        labels: string[];
-        properties: Ceremony;
-      }>;
-      hasMore: boolean;
-      total: number;
-    } = await runListQuery(query, input);
-
-    const items = await Promise.all(
-      listResult.items.map((item) => {
-        return this.readOne(item.properties.id, session);
-      })
-    );
-
-    return {
-      items,
-      hasMore: listResult.hasMore,
-      total: listResult.total,
-    };
+    return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
 
   async checkCeremonyConsistency(session: ISession): Promise<boolean> {

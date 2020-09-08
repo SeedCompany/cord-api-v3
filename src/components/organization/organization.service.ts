@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { contains, node, relation } from 'cypher-query-builder';
 import { range } from 'lodash';
 import {
   DuplicateException,
@@ -9,29 +9,28 @@ import {
   UnauthenticatedException,
 } from '../../common';
 import {
-  addAllSecureProperties,
-  addBaseNodeMetaPropsWithClause,
   addUserToSG,
   ConfigService,
   createBaseNode,
   createSG,
   DatabaseService,
-  filterByBaseNodeId,
-  filterByString,
   ILogger,
-  listWithSecureObject,
   Logger,
   matchRequestingUser,
   matchSession,
-  matchUserPermissions,
   OnIndex,
   Property,
-  runListQuery,
 } from '../../core';
+import {
+  calculateTotalAndPaginateList,
+  permissionsOfNode,
+  requestingUser,
+} from '../../core/database/query';
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
   parseSecuredProperties,
+  runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
 import {
@@ -44,6 +43,10 @@ import {
 
 @Injectable()
 export class OrganizationService {
+  private readonly securedProperties = {
+    name: true,
+  };
+
   constructor(
     @Logger('org:service') private readonly logger: ILogger,
     private readonly config: ConfigService,
@@ -179,9 +182,11 @@ export class OrganizationService {
       );
     }
 
-    const secured = parseSecuredProperties(result.propList, result.permList, {
-      name: true,
-    });
+    const secured = parseSecuredProperties(
+      result.propList,
+      result.permList,
+      this.securedProperties
+    );
 
     return {
       ...parseBaseNodeProperties(result.node),
@@ -227,48 +232,40 @@ export class OrganizationService {
     session: ISession
   ): Promise<OrganizationListOutput> {
     const label = 'Organization';
-    const baseNodeMetaProps = ['id', 'createdAt'];
-    // const unsecureProps = [''];
-    const secureProps = ['name'];
-
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
-      .call(matchUserPermissions, 'Organization');
-
-    if (filter.name) {
-      query.call(filterByString, label, 'name', filter.name);
-    } else if (filter.userId && session.userId) {
-      query.call(
-        filterByBaseNodeId,
-        filter.userId,
-        'organization',
-        'in',
-        'User',
-        label
-      );
-    }
-
-    // match on the rest of the properties of the object requested
-    query
-      .call(
-        addAllSecureProperties,
-        ...secureProps
-        //...unsecureProps
+      .match([
+        requestingUser(session),
+        ...permissionsOfNode(label),
+        ...(filter.name
+          ? [
+              relation('out', '', 'name', { active: true }),
+              node('name', 'Property', { active: true }),
+            ]
+          : filter.userId && session.userId
+          ? [
+              relation('in', '', 'organization', { active: true }),
+              node('user', 'User', { active: true, id: filter.userId }),
+            ]
+          : []),
+      ])
+      .call((q) =>
+        filter.name ? q.where({ name: { value: contains(filter.name) } }) : q
       )
-
-      // form return object
-      // ${listWithUnsecureObject(unsecureProps)}, // removed from a few lines down
-      .with(
-        `
-          {
-            ${addBaseNodeMetaPropsWithClause(baseNodeMetaProps)},
-            ${listWithSecureObject(secureProps)}
-          } as node
-        `
+      .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
+        sort in this.securedProperties
+          ? q
+              .match([
+                node('node'),
+                relation('out', '', sort),
+                node('prop', 'Property', { active: true }),
+              ])
+              .with('*')
+              .orderBy('prop.value', order)
+          : q.with('*').orderBy(`node.${sort}`, order)
       );
 
-    return await runListQuery(query, input, secureProps.includes(input.sort));
+    return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
 
   async checkAllOrgs(session: ISession): Promise<boolean> {
