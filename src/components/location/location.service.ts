@@ -24,12 +24,19 @@ import {
   matchSession,
   matchUserPermissions,
   OnIndex,
-  runListQuery,
 } from '../../core';
+import {
+  calculateTotalAndPaginateList,
+  matchPermList,
+  matchPropList,
+  permissionsOfNode,
+  requestingUser,
+} from '../../core/database/query';
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
   parseSecuredProperties,
+  runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
 import {
@@ -49,6 +56,10 @@ import {
 
 @Injectable()
 export class LocationService {
+  private readonly securedProperties = {
+    name: true,
+  };
+
   constructor(
     @Logger('location:service') private readonly logger: ILogger,
     private readonly config: ConfigService,
@@ -573,23 +584,8 @@ export class LocationService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Zone', { active: true, id: id })])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member*1..'),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission'),
-        node('perms', 'Permission', { active: true }),
-        relation('out', '', 'baseNode'),
-        node('node'),
-      ])
-      .with('collect(distinct perms) as permList, node')
-      .match([
-        node('node'),
-        relation('out', 'r', { active: true }),
-        node('props', 'Property', { active: true }),
-      ])
-      .with('{value: props.value, property: type(r)} as prop, permList, node')
-      .with('collect(prop) as propList, permList, node')
+      .call(matchPermList, 'requestingUser')
+      .call(matchPropList, 'permList')
       .optionalMatch([
         node('node'),
         relation('out', '', 'director', { active: true }),
@@ -636,23 +632,8 @@ export class LocationService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Region', { active: true, id: id })])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member*1..'),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission'),
-        node('perms', 'Permission', { active: true }),
-        relation('out', '', 'baseNode'),
-        node('node'),
-      ])
-      .with('collect(distinct perms) as permList, node')
-      .match([
-        node('node'),
-        relation('out', 'r', { active: true }),
-        node('props', 'Property', { active: true }),
-      ])
-      .with('{value: props.value, property: type(r)} as prop, permList, node')
-      .with('collect(prop) as propList, permList, node')
+      .call(matchPermList, 'requestingUser')
+      .call(matchPropList, 'permList')
       .optionalMatch([
         node('node'),
         relation('out', '', 'director', { active: true }),
@@ -991,47 +972,35 @@ export class LocationService {
 
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
-      .match([
-        node('requestingUser'),
-        relation('in', '', 'member', {}, [1]),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission'),
-        node('perms', 'Permission', { active: true }),
-        relation('out', '', 'baseNode'),
-        node('location', { active: true }),
-      ])
+      .match([requestingUser(session), ...permissionsOfNode()])
       .match([
         node('name', ['Property', 'LocationName']),
         relation('in', '', 'name'),
-        node('location'),
+        node('node'),
       ])
       .with(
-        'name, location, head([x IN labels(location) WHERE x <> "BaseNode"]) as label'
+        'name, node, head([x IN labels(node) WHERE x <> "BaseNode"]) as label'
       )
       .where({
         ...(filter.name
           ? { name: { value: regexp(`.*${filter.name}.*`, true) } }
           : {}),
         label: inArray(types),
-      }).with(`{
-        id: location.id,
-        createdAt: location.createdAt,
-        name: name.value
-      } as node`);
+      })
+      .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
+        sort in this.securedProperties
+          ? q
+              .match([
+                node('node'),
+                relation('out', '', sort),
+                node('prop', 'Property', { active: true }),
+              ])
+              .with('*')
+              .orderBy('prop.value', order)
+          : q.with('*').orderBy(`node.${sort}`, order)
+      );
 
-    const result = await runListQuery(query, input, false);
-    if (!result) {
-      throw new InputException('No location');
-    }
-    const items = await Promise.all(
-      result.items.map((row: any) => this.readOne(row.id, session))
-    );
-
-    return {
-      ...(result as LocationListOutput),
-      items,
-    };
+    return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
 
   // private randomLocation() {
