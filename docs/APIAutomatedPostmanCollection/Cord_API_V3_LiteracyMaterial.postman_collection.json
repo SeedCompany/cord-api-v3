@@ -383,6 +383,124 @@
 					"response": []
 				},
 				{
+					"name": "Create LiteracyMaterial Success ?? Copy",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "62be654d-85b7-4826-903f-785c5bb54ce5",
+								"exec": [
+									"const moment = require('moment');\r",
+									"\r",
+									"pm.globals.set(\"literacyMaterialName\", \"LiteracyMaterialName\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
+									"\r",
+									"// ScriptureReferences variables\r",
+									"pm.globals.set(\"literacyMaterialScriptRefBookStart\", \"LiteracyMaterialScriptureReferencesBookStart\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
+									"pm.globals.set(\"literacyMaterialScriptRefChapterStart\", _.random(1, 25));\r",
+									"pm.globals.set(\"literacyMaterialScriptRefVerseStart\", _.random(100, 200));\r",
+									"\r",
+									"pm.globals.set(\"literacyMaterialScriptRefBookEnd\", \"LiteracyMaterialScriptureReferencesBookEnd\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
+									"pm.globals.set(\"literacyMaterialScriptRefChapterEnd\", _.random(26, 50));\r",
+									"pm.globals.set(\"literacyMaterialScriptRefVerseEnd\", _.random(201, 300));\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "787e6297-f67d-41c6-b936-1372a2b9d0ce",
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"const moment = require('moment');\r",
+									"\r",
+									"//Common Verification\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
+									"});\r",
+									"\r",
+									"//Test Specific\r",
+									"pm.test(\"Verify that LiteracyMaterial ID is not blank or null\", function () {\r",
+									"    var id = jsonData.data.createLiteracyMaterial.literacyMaterial.id;\r",
+									"    pm.expect(id).to.not.eql(null);\r",
+									"    pm.expect(id).to.not.eql(\"\");\r",
+									"\r",
+									"    // Saving data for future use\r",
+									"    pm.globals.set(\"literacyMaterialId\", id);\r",
+									"});\r",
+									"\r",
+									"// Saving whole literacyMaterial Object to globals for future use\r",
+									"var literacyMaterial = JSON.stringify(jsonData.data.createLiteracyMaterial.literacyMaterial);\r",
+									"pm.globals.set(\"literacyMaterial_data\", literacyMaterial);\r",
+									"\r",
+									"pm.test(\"Verify that literacyMaterial's createdAt is in Specific time format\", function () {\r",
+									"    var time = jsonData.data.createLiteracyMaterial.literacyMaterial.createdAt;\r",
+									"    var isValidTime = moment(time, \"YYYY-MM-DDTHH:mm:ss.SSSZ\", true).isValid();\r",
+									"    pm.expect(isValidTime).to.eql(true);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verify that literacyMaterial Name is same as requested\", function () {\r",
+									"    var name = jsonData.data.createLiteracyMaterial.literacyMaterial.name.value;\r",
+									"    pm.expect(name).to.eql(pm.globals.get('literacyMaterialName'));\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verifying that scriptureReferences is not blank or null or empty BUG ADDED #943(closed-Sprint 15)\", function () {\r",
+									"    var scriptureReferences = jsonData.data.createLiteracyMaterial.literacyMaterial.scriptureReferences.value;\r",
+									"    pm.expect(scriptureReferences).to.not.eql(null);\r",
+									"    pm.expect(scriptureReferences).to.not.eql(\"\");\r",
+									"    pm.expect(scriptureReferences).to.not.eql([]); // This will pass once value back to this Object and test faiiled in below if\r",
+									"    if (typeof scriptureReferences !== typeof [])\r",
+									"        pm.expect(\"WRITE TEST CASES\").to.eql(\"PENDING >>> \" + scriptureReferences);\r",
+									"});\r",
+									"\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"literacyMaterial\": {\r\n            \"name\": \"{{literacyMaterialName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"Leviticus\",\r\n                    \"chapter\": 7,\r\n                    \"verse\": 4\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"Leviticus\",\r\n                    \"chapter\": 3,\r\n                    \"verse\": 4\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Create  LiteracyMaterial Mandatory Field Blank - Name",
 					"event": [
 						{
@@ -2103,6 +2221,110 @@
 					"response": []
 				},
 				{
+					"name": "Update LiteracyMaterial Success Copy",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "9a86b45e-b29e-4ee7-9f47-468947544b74",
+								"exec": [
+									"const moment = require('moment');\r",
+									"\r",
+									"pm.globals.set(\"literacyMaterialName\", \"LiteracyMaterialName\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
+									"\r",
+									"// ScriptureReferences variables\r",
+									"pm.globals.set(\"literacyMaterialScriptRefBookStart\", \"LiteracyMaterialScriptureReferencesBookStart\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
+									"pm.globals.set(\"literacyMaterialScriptRefChapterStart\", _.random(1, 25));\r",
+									"pm.globals.set(\"literacyMaterialScriptRefVerseStart\", _.random(100, 200));\r",
+									"\r",
+									"pm.globals.set(\"literacyMaterialScriptRefBookEnd\", \"LiteracyMaterialScriptureReferencesBookEnd\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
+									"pm.globals.set(\"literacyMaterialScriptRefChapterEnd\", _.random(26, 50));\r",
+									"pm.globals.set(\"literacyMaterialScriptRefVerseEnd\", _.random(201, 300));\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "d4d6d133-90b5-49f9-bf38-23b26eadfef4",
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"var literacyMaterial_data = JSON.parse(pm.variables.get(\"literacyMaterial_data\"));\r",
+									"const moment = require('moment');\r",
+									"var lodash = require('lodash');\r",
+									"\r",
+									"// get literacyMaterial object first having same id as recently updated literacyMaterial's id\r",
+									"var myliteracyMaterial = lodash.find(jsonData.data.updateLiteracyMaterial.literacyMaterial, ['id', literacyMaterial_data.id]);\r",
+									"\r",
+									"//Common Verification\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
+									"});\r",
+									"\r",
+									"//Test Specific\r",
+									"pm.test(\"Verify that literacyMaterial ID is not blank or null\", function () {\r",
+									"    var id = jsonData.data.updateLiteracyMaterial.literacyMaterial.id;\r",
+									"    pm.expect(id).to.not.eql(null);\r",
+									"    pm.expect(id).to.not.eql(\"\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verify that literacyMaterial's createdAt is in Specific time format\", function () {\r",
+									"    var time = jsonData.data.updateLiteracyMaterial.literacyMaterial.createdAt;\r",
+									"    var isValidTime = moment(time, \"YYYY-MM-DDTHH:mm:ss.SSSZ\", true).isValid();\r",
+									"    pm.expect(isValidTime).to.eql(true);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verify that updated literacyMaterial name is same as requested\", function () {\r",
+									"    var name = jsonData.data.updateLiteracyMaterial.literacyMaterial.name.value;\r",
+									"    pm.expect(name).to.eql(pm.globals.get('literacyMaterialName'));\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation updateLiteracyMaterial($input: UpdateLiteracyMaterialInput!) {\r\n  updateLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"literacyMaterial\": {\r\n            \"id\": \"{{literacyMaterialId}}\",\r\n            \"name\": \"{{literacyMaterialName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"Leviticus\",\r\n                    \"chapter\": 7,\r\n                    \"verse\": 4\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"Leviticus\",\r\n                    \"chapter\": 3,\r\n                    \"verse\": 4\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Update LiteracyMaterial Mandatory Field Removed - Id",
 					"event": [
 						{
@@ -2203,8 +2425,8 @@
 									"var jsonData = pm.response.json();\r",
 									"\r",
 									"//Common Verification\r",
-									"pm.test(\"Status code is 400 Bad Request\", function () {\r",
-									"    pm.response.to.have.status(400);\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
 									"});\r",
 									"\r",
 									"pm.test(\"Response time is less than 1000ms\", function () {\r",
@@ -2212,16 +2434,20 @@
 									"});\r",
 									"\r",
 									"//Test Specific\r",
-									"pm.test(\"Verify that error message is correct\", function () {\r",
-									"    var error_message = jsonData.errors[0].message;  \r",
-									"    pm.expect(error_message).to.include(\"Field \\\"id\\\" of required type \\\"ID!\\\" was not provided.\");\r",
+									"pm.test(\"Verify that error message is 400\", function () {\r",
+									"    var error_message = jsonData.errors[0].message;\r",
+									"    pm.expect(error_message).to.eql(\"Input validation failed\");\r",
 									"});\r",
 									"\r",
-									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {\r",
-									"    var error_code = jsonData.errors[0].extensions.code;  \r",
-									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");\r",
+									"pm.test(\"Verify that error status is 400\", function () {\r",
+									"    var error_status = jsonData.errors[0].extensions.status;\r",
+									"    pm.expect(error_status).to.eql(400);\r",
 									"});\r",
-									""
+									"\r",
+									"pm.test(\"Verify that error message is correct\", function () {\r",
+									"    var error_message = jsonData.errors[0].extensions.errors['literacyMaterial.id'].IsShortId;\r",
+									"    pm.expect(error_message).to.eql(\"Invalid ID\");\r",
+									"});"
 								],
 								"type": "text/javascript"
 							}
@@ -2244,7 +2470,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation updateLiteracyMaterial($input: UpdateLiteracyMaterialInput!) {\r\n  updateLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"literacyMaterial\": {\r\n      \"name\": \"{{literacyMaterialName}}\",\r\n      \"scriptureReferences\": {\r\n        \"id\": \"\",\r\n        \"start\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"literacyMaterial\": {\r\n      \"id\": \"\",\r\n      \"name\": \"{{literacyMaterialName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}

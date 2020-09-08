@@ -211,6 +211,15 @@ export abstract class SecuredIntNullable extends SecuredProperty<
 export abstract class SecuredFloat extends SecuredProperty<number>(Float) {}
 
 @ObjectType({
+  description: SecuredProperty.descriptionFor('a float or null'),
+})
+export abstract class SecuredFloatNullable extends SecuredProperty<
+  number,
+  number,
+  true
+>(Float, { nullable: true }) {}
+
+@ObjectType({
   description: SecuredProperty.descriptionFor('a boolean'),
 })
 export abstract class SecuredBoolean extends SecuredProperty<boolean>(

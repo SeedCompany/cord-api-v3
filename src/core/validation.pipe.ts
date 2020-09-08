@@ -1,10 +1,12 @@
 import {
   ValidationPipe as BaseValidationPipe,
   Injectable,
-  ValidationError,
 } from '@nestjs/common';
+import { ValidationError } from 'class-validator';
 import { isEmpty } from 'lodash';
+import { SetRequired } from 'type-fest';
 import { ClientException } from '../common/exceptions';
+import { jestSkipFileInExceptionSource } from './jest-skip-source-file';
 
 @Injectable()
 export class ValidationPipe extends BaseValidationPipe {
@@ -25,18 +27,32 @@ export class ValidationException extends ClientException {
     super('Input validation failed');
     this.errors = flattenValidationErrors(errors);
     Object.defineProperty(this, 'errorList', { value: errors });
-    const errorsAsString = errors
+    const errorsAsString = flattenConstraints(errors)
       .map((e) => {
         const constraint = Object.values(e.constraints)[0];
-        const source = `${e.target.constructor.name}.${e.property}`;
+        const target = e.target?.constructor.name ?? 'Object';
+        const source = `${target}.${e.property}`;
         // eslint-disable-next-line @typescript-eslint/restrict-template-expressions -- I'm ok with string conversion here
         const value = `${e.value}`;
         return ` - ${constraint} for "${source}"\n   Given: \`${value}\``;
       })
       .join('\n');
     this.stack = this.stack!.replace('\n', '\n' + errorsAsString + '\n\n');
+
+    jestSkipFileInExceptionSource(this, __filename);
   }
 }
+
+/** Flatten validation errors keeping only errors with constraint violations */
+const flattenConstraints = (
+  e: ValidationError[]
+): Array<SetRequired<ValidationError, 'constraints'>> =>
+  e.flatMap((er) => [
+    ...(er.constraints
+      ? [er as SetRequired<ValidationError, 'constraints'>]
+      : []),
+    ...flattenConstraints(er.children),
+  ]);
 
 const flattenValidationErrors = (
   e: ValidationError[],

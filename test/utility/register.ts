@@ -8,12 +8,12 @@ import { TestApp } from './create-app';
 import { fragments } from './fragments';
 
 export const generateRegisterInput = (): RegisterInput => ({
-  email: `${faker.internet.email()} ${Date.now()}`,
+  email: faker.internet.email(),
   realFirstName: faker.name.firstName(),
   realLastName: faker.name.lastName(),
   displayFirstName: faker.name.firstName() + generate(),
   displayLastName: faker.name.lastName() + generate(),
-  password: faker.internet.password(),
+  password: faker.internet.password(10),
   phone: faker.phone.phoneNumber(),
   timezone: 'America/Chicago',
   bio: 'bio detail',
@@ -23,12 +23,12 @@ export const generateRegisterInput = (): RegisterInput => ({
 });
 
 export const generateRequireFieldsRegisterInput = (): RegisterInput => ({
-  email: `${faker.internet.email()} ${Date.now()}`,
+  email: faker.internet.email(),
   realFirstName: faker.name.firstName(),
   realLastName: faker.name.lastName(),
   displayFirstName: faker.name.firstName() + generate(),
   displayLastName: faker.name.lastName() + generate(),
-  password: faker.internet.password(),
+  password: faker.internet.password(10),
 });
 
 export async function registerUser(

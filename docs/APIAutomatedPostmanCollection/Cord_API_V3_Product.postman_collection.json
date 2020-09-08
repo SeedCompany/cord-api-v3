@@ -681,25 +681,6 @@
 									"\r",
 									"pm.globals.set(\"productProducesId\", pm.variables.replaceIn('{{$guid}}').slice(0, 7));\r",
 									"\r",
-									"// ScriptureReferences variables\r",
-									"pm.globals.set(\"productScriptRefBookStart\", \"ProductScriptureReferencesBookStart\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
-									"pm.globals.set(\"productScriptRefChapterStart\", _.random(1, 25));\r",
-									"pm.globals.set(\"productScriptRefVerseStart\", _.random(100, 200));\r",
-									"\r",
-									"pm.globals.set(\"productScriptRefBookEnd\", \"ProductScriptureReferencesBookEnd\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
-									"pm.globals.set(\"productScriptRefChapterEnd\", _.random(26, 50));\r",
-									"pm.globals.set(\"productScriptRefVerseEnd\", _.random(201, 300));\r",
-									"\r",
-									"// ScriptureReferencesOverride variables\r",
-									"pm.globals.set(\"productScriptRefOverrideBookStart\", \"ProductScriptureReferencesOverrideBookStart\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
-									"pm.globals.set(\"productScriptRefOverrideChapterStart\", _.random(51, 75));\r",
-									"pm.globals.set(\"productScriptRefOverrideVerseStart\", _.random(301, 400));\r",
-									"\r",
-									"pm.globals.set(\"productScriptRefOverrideBookEnd\", \"ProductScriptureReferencesOverrideBookEnd\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
-									"pm.globals.set(\"productScriptRefOverrideChapterEnd\", _.random(76, 100));\r",
-									"pm.globals.set(\"productScriptRefOverrideVerseEnd\", _.random(401, 500));\r",
-									"\r",
-									"\r",
 									"// Taking random value for the Product mediums from pre-defined possible values\r",
 									"var prodMediumsArray = [\r",
 									"    'Print',\r",
@@ -794,7 +775,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation CreateProduct($input: CreateProductInput!) {\r\n  createProduct(input: $input) {\r\n    product {\r\n      id\r\n      createdAt\r\n      approach\r\n      legacyType\r\n      mediums {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      purposes {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      methodology {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}",
-								"variables": "{\r\n  \"input\": {\r\n    \"product\": {\r\n      \"engagementId\": \"{{languageEngagementId}}\",\r\n      \"produces\": \"{{filmId}}\",\r\n      \"mediums\": \"{{productMediums}}\",\r\n      \"purposes\": \"{{productPurposes}}\",\r\n      \"methodology\": \"{{productMethodology}}\"\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"product\": {\r\n      \"engagementId\": \"{{languageEngagementId}}\",\r\n      \"produces\": \"{{storyId}}\",\r\n      \"mediums\": \"{{productMediums}}\",\r\n      \"purposes\": \"{{productPurposes}}\",\r\n      \"methodology\": \"{{productMethodology}}\"\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -813,12 +794,12 @@
 					"response": []
 				},
 				{
-					"name": "Create Product Success - with scriptRef ??",
+					"name": "Create Product Success - with scriptRef",
 					"event": [
 						{
 							"listen": "test",
 							"script": {
-								"id": "0427bdb8-b935-4a83-ba99-e120bab4f750",
+								"id": "b3ffad49-c1c0-4d7c-b9d1-fc94a5388568",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"const moment = require('moment');\r",
@@ -877,15 +858,77 @@
 									"    pm.expect(methodology).to.eql(pm.globals.get('productMethodology'));\r",
 									"});\r",
 									"\r",
-									"// scriptureReferences - PENDING Cases\r",
-									"pm.test(\"Verify that scriptureReferences is not blank or null or empty BUG ADDED #867(closed-Sprint 14)\", function () {\r",
-									"    var scriptureReferences = jsonData.data.createProduct.product.scriptureReferences.value;\r",
-									"    pm.expect(scriptureReferences).to.not.eql(null);\r",
-									"    pm.expect(scriptureReferences).to.not.eql(\"\");\r",
-									"    pm.expect(scriptureReferences).to.not.eql([]); // This will pass once value back to this Object and test failed in below if\r",
-									"    if (typeof scriptureReferences !== typeof [])\r",
-									"        pm.expect(\"WRITE TEST CASES\").to.eql(\"PENDING >>> \" + scriptureReferences);\r",
+									"pm.test(\"Verify Created product start Book is same as requested\", function () {\r",
+									"    var startBook = jsonData.data.createProduct.product.scriptureReferences.value[0].start.book;\r",
+									"    pm.expect(startBook).to.eql(pm.globals.get('productScriptRefBookStart'));\r",
 									"});\r",
+									"\r",
+									"pm.test(\"Verify Created product start Chapter is same as requested\", function () {\r",
+									"    var startChapter = jsonData.data.createProduct.product.scriptureReferences.value[0].start.chapter;\r",
+									"    pm.expect(startChapter).to.eql(pm.globals.get('productScriptRefChapterStart'));\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verify Created product start Verse is same as requested\", function () {\r",
+									"    var startVerse = jsonData.data.createProduct.product.scriptureReferences.value[0].start.verse;\r",
+									"    pm.expect(startVerse).to.eql(pm.globals.get('productScriptRefVerseStart'));\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verify Created product start BookName is same as requested\", function () {\r",
+									"    var startBookName = jsonData.data.createProduct.product.scriptureReferences.value[0].start.bookName;\r",
+									"    pm.expect(startBookName).to.eql('Genesis');\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verify Created product start Label\", function () {\r",
+									"    var startLabel = jsonData.data.createProduct.product.scriptureReferences.value[0].start.label;\r",
+									"\r",
+									"    pm.expect(startLabel).to.eql(pm.globals.get('productScriptRefLabelStart'));\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verify Created product endBook is same as requested\", function () {\r",
+									"    var startBook = jsonData.data.createProduct.product.scriptureReferences.value[0].end.book;\r",
+									"    pm.expect(startBook).to.eql(pm.globals.get('productScriptRefBookStart'));\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verify Created product endChapter is same as requested\", function () {\r",
+									"    var endChapter = jsonData.data.createProduct.product.scriptureReferences.value[0].end.chapter;\r",
+									"    pm.expect(endChapter).to.eql(pm.globals.get('productScriptRefChapterEnd'));\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verify Created product endVerse is same as requested\", function () {\r",
+									"    var endVerse = jsonData.data.createProduct.product.scriptureReferences.value[0].end.verse;\r",
+									"    pm.expect(endVerse).to.eql(pm.globals.get('productScriptRefVerseEnd'));\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verify Created product endBookName is same as requested\", function () {\r",
+									"    var endBookName = jsonData.data.createProduct.product.scriptureReferences.value[0].end.bookName;\r",
+									"    pm.expect(endBookName).to.eql('Genesis');\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verify Created product endLabel is same as requested\", function () {\r",
+									"    var endLabel = jsonData.data.createProduct.product.scriptureReferences.value[0].end.label;\r",
+									"    pm.expect(endLabel).to.eql(pm.globals.get('productScriptRefLabelEnd'));\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verify Created product label is same as requested\", function () {\r",
+									"    var label = jsonData.data.createProduct.product.scriptureReferences.value[0].label;\r",
+									"    pm.expect(label).to.eql('');\r",
+									"});\r",
+									"\r",
+									"//Static\r",
+									"pm.test(\"Verify Created product totalVerses is same as requested\", function () {\r",
+									"    var totalVerses = jsonData.data.createProduct.product.scriptureReferences.value[0].totalVerses;\r",
+									"    pm.expect(totalVerses).to.eql(0);\r",
+									"});\r",
+									"\r",
+									"// scriptureReferences - PENDING Cases\r",
+									"// pm.test(\"Verify that scriptureReferences is not blank or null or empty BUG ADDED #867(closed-Sprint 14)\", function () {\r",
+									"//     var scriptureReferences = jsonData.data.createProduct.product.scriptureReferences.value;\r",
+									"//     pm.expect(scriptureReferences).to.not.eql(null);\r",
+									"//     pm.expect(scriptureReferences).to.not.eql(\"\");\r",
+									"//     pm.expect(scriptureReferences).to.not.eql([]); // This will pass once value back to this Object and test failed in below if\r",
+									"//     if (typeof scriptureReferences !== typeof [])\r",
+									"//         pm.expect(\"WRITE TEST CASES\").to.eql(\"PENDING >>> \" + scriptureReferences);\r",
+									"// });\r",
 									""
 								],
 								"type": "text/javascript"
@@ -894,102 +937,34 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "8fdb302d-ab55-4f80-a584-72ecbf089aa5",
+								"id": "de68f895-68d2-41c9-a7fa-f2419bea1975",
 								"exec": [
 									"const moment = require('moment');\r",
 									"pm.globals.set(\"timestamp\", moment().format(\"DDMMYYYYhhmmss\"));\r",
 									"\r",
 									"pm.globals.set(\"productProducesId\", pm.variables.replaceIn('{{$guid}}').slice(0, 7));\r",
 									"\r",
-									"// ScriptureReferences variables\r",
-									"pm.globals.set(\"productScriptRefBookStart\", \"ProductScriptureReferencesBookStart\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
-									"pm.globals.set(\"productScriptRefChapterStart\", _.random(1, 25));\r",
-									"pm.globals.set(\"productScriptRefVerseStart\", _.random(100, 200));\r",
+									"// ScriptureReferences Value\r",
+									"// Static values \r",
+									"pm.globals.set('productScriptRefBookStart', \"Genesis\");\r",
 									"\r",
-									"pm.globals.set(\"productScriptRefBookEnd\", \"ProductScriptureReferencesBookEnd\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
-									"pm.globals.set(\"productScriptRefChapterEnd\", _.random(26, 50));\r",
-									"pm.globals.set(\"productScriptRefVerseEnd\", _.random(201, 300));\r",
+									"pm.globals.set('productScriptRefChapterStart', 3);\r",
 									"\r",
-									"// ScriptureReferencesOverride variables\r",
-									"pm.globals.set(\"productScriptRefOverrideBookStart\", \"ProductScriptureReferencesOverrideBookStart\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
-									"pm.globals.set(\"productScriptRefOverrideChapterStart\", _.random(51, 75));\r",
-									"pm.globals.set(\"productScriptRefOverrideVerseStart\", _.random(301, 400));\r",
+									"pm.globals.set('productScriptRefVerseStart', 4);\r",
 									"\r",
-									"pm.globals.set(\"productScriptRefOverrideBookEnd\", \"ProductScriptureReferencesOverrideBookEnd\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
-									"pm.globals.set(\"productScriptRefOverrideChapterEnd\", _.random(76, 100));\r",
-									"pm.globals.set(\"productScriptRefOverrideVerseEnd\", _.random(401, 500));\r",
+									"let expectedLabelStart = `${pm.globals.get('productScriptRefBookStart')} ${pm.globals.get('productScriptRefChapterStart')}:${pm.globals.get('productScriptRefVerseStart')}`;\r",
 									"\r",
+									"pm.globals.set('productScriptRefLabelStart',expectedLabelStart);\r",
 									"\r",
-									"// Taking random value for the Product mediums from pre-defined possible values\r",
-									"var prodMediumsArray = [\r",
-									"    'Print',\r",
-									"    'Web',\r",
-									"    'EBook',\r",
-									"    'App',\r",
-									"    'Audio',\r",
-									"    'OralTranslation',\r",
-									"    'Video',\r",
-									"    'Other'\r",
-									"];\r",
-									"var randomNumber = Math.floor(Math.random() * prodMediumsArray.length);\r",
-									"pm.globals.set('productMediums', prodMediumsArray[randomNumber]);\r",
+									"pm.globals.set('productScriptRefBookEnd', \"Genesis\");\r",
 									"\r",
+									"pm.globals.set('productScriptRefChapterEnd', 3);\r",
 									"\r",
-									"// Taking random value for the Product purposes from pre-defined possible values\r",
-									"var prodPurposesArray = [\r",
-									"    'EvangelismChurchPlanting',\r",
-									"    'ChurchLife',\r",
-									"    // 'EBook',\r",
-									"    'ChurchMaturity',\r",
-									"    'SocialIssues',\r",
-									"    'Discipleship'\r",
+									"pm.globals.set('productScriptRefVerseEnd', 4);\r",
 									"\r",
-									"];\r",
-									"var randomNumber = Math.floor(Math.random() * prodPurposesArray.length);\r",
-									"pm.globals.set('productPurposes', prodPurposesArray[randomNumber]);\r",
+									"let expectedLabelEnd = `${pm.globals.get('productScriptRefBookEnd')} ${pm.globals.get('productScriptRefChapterEnd')}:${pm.globals.get('productScriptRefVerseEnd')}`\r",
 									"\r",
-									"\r",
-									"// Taking random value for the Product methodology from pre-defined possible values\r",
-									"var prodMethodologyArray = [\r",
-									"    'Paratext',\r",
-									"    'OtherWritten',\r",
-									"    'Render',\r",
-									"    'OtherOralTranslation',\r",
-									"    'BibleStories',\r",
-									"    'BibleStorying',\r",
-									"    'OneStory',\r",
-									"    'OtherOralStories',\r",
-									"    'Film',\r",
-									"    'SignLanguage',\r",
-									"    'OtherVisual'\r",
-									"];\r",
-									"var randomNumber = Math.floor(Math.random() * prodMethodologyArray.length);\r",
-									"pm.globals.set('productMethodology', prodMethodologyArray[randomNumber]);\r",
-									"\r",
-									"// Product Output Values to be checked from pre-defined data\r",
-									"var productApproach_array = [\r",
-									"    \"Written\",\r",
-									"    \"OralTranslation\",\r",
-									"    \"OralStories\",\r",
-									"    \"Visual\"\r",
-									"];\r",
-									"pm.globals.set('productApproach_array', JSON.stringify(productApproach_array));\r",
-									"\r",
-									"var productLegacyType_array = [\r",
-									"    \"BibleStories\",\r",
-									"    \"JesusFilm\",\r",
-									"    \"Songs\",\r",
-									"    \"LiteracyMaterials\",\r",
-									"    \"OldTestamentPortions\",\r",
-									"    \"OldTestamentFull\",\r",
-									"    \"Gospel\",\r",
-									"    \"NewTestamentPortions\",\r",
-									"    \"NewTestamentFull\",\r",
-									"    \"FullBible\",\r",
-									"    \"IndividualBooks\",\r",
-									"    \"Genesis\"\r",
-									"];\r",
-									"pm.globals.set('productLegacyType_array', JSON.stringify(productLegacyType_array));\r",
+									"pm.globals.set('productScriptRefLabelEnd', expectedLabelEnd);\r",
 									"\r",
 									""
 								],
@@ -1014,7 +989,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation CreateProduct($input: CreateProductInput!) {\r\n  createProduct(input: $input) {\r\n    product {\r\n      id\r\n      createdAt\r\n      approach\r\n      legacyType\r\n      mediums {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      purposes {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      methodology {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}",
-								"variables": "{\r\n  \"input\": {\r\n    \"product\": {\r\n      \"engagementId\": \"{{languageEngagementId}}\",\r\n      \"mediums\": \"{{productMediums}}\",\r\n      \"purposes\": \"{{productPurposes}}\",\r\n      \"methodology\": \"{{productMethodology}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{productScriptRefBookStart}}\",\r\n          \"chapter\": {{productScriptRefChapterStart}},\r\n          \"verse\": {{productScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{productScriptRefBookEnd}}\",\r\n          \"chapter\": {{productScriptRefChapterEnd}},\r\n          \"verse\": {{productScriptRefOverrideVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n    \"input\": {\r\n        \"product\": {\r\n            \"engagementId\": \"{{languageEngagementId}}\",\r\n            \"mediums\": \"{{productMediums}}\",\r\n            \"purposes\": \"{{productPurposes}}\",\r\n            \"methodology\": \"{{productMethodology}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{productScriptRefBookStart}}\",\r\n                    \"chapter\": {{productScriptRefChapterStart}},\r\n                    \"verse\": {{productScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{productScriptRefBookEnd}}\",\r\n                    \"chapter\": {{productScriptRefChapterEnd}},\r\n                    \"verse\": {{productScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -1033,7 +1008,7 @@
 					"response": []
 				},
 				{
-					"name": "Create Product Success - Array Inputs",
+					"name": "Create Product Success - Array Inputs - unique for medium??",
 					"event": [
 						{
 							"listen": "test",
@@ -1071,12 +1046,12 @@
 									"    pm.expect(areSameArray(mediums, productMediumsArray)).to.eql(true);\r",
 									"});\r",
 									"\r",
-									"pm.test(\"Verify product purposes are same as requested\", function () {\r",
-									"    var purposes = jsonData.data.createProduct.product.purposes.value;\r",
-									"    var productPurposesArray = JSON.parse(pm.globals.get('productPurposesArray'));\r",
+									"// pm.test(\"Verify product purposes are same as requested\", function () {\r",
+									"//     var purposes = jsonData.data.createProduct.product.purposes.value;\r",
+									"//     var productPurposesArray = JSON.parse(pm.globals.get('productPurposesArray'));\r",
 									"\r",
-									"    pm.expect(areSameArray(purposes, productPurposesArray)).to.eql(true);\r",
-									"});\r",
+									"//     pm.expect(areSameArray(purposes, productPurposesArray)).to.eql(true);\r",
+									"// });\r",
 									""
 								],
 								"type": "text/javascript"
@@ -1091,24 +1066,6 @@
 									"pm.globals.set(\"timestamp\", moment().format(\"DDMMYYYYhhmmss\"));\r",
 									"\r",
 									"pm.globals.set(\"productProducesId\", pm.variables.replaceIn('{{$guid}}').slice(0, 7));\r",
-									"\r",
-									"// ScriptureReferences variables\r",
-									"pm.globals.set(\"productScriptRefBookStart\", \"ProductScriptureReferencesBookStart\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
-									"pm.globals.set(\"productScriptRefChapterStart\", _.random(1, 25));\r",
-									"pm.globals.set(\"productScriptRefVerseStart\", _.random(100, 200));\r",
-									"\r",
-									"pm.globals.set(\"productScriptRefBookEnd\", \"ProductScriptureReferencesBookEnd\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
-									"pm.globals.set(\"productScriptRefChapterEnd\", _.random(26, 50));\r",
-									"pm.globals.set(\"productScriptRefVerseEnd\", _.random(201, 300));\r",
-									"\r",
-									"// ScriptureReferencesOverride variables\r",
-									"pm.globals.set(\"productScriptRefOverrideBookStart\", \"ProductScriptureReferencesOverrideBookStart\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
-									"pm.globals.set(\"productScriptRefOverrideChapterStart\", _.random(51, 75));\r",
-									"pm.globals.set(\"productScriptRefOverrideVerseStart\", _.random(301, 400));\r",
-									"\r",
-									"pm.globals.set(\"productScriptRefOverrideBookEnd\", \"ProductScriptureReferencesOverrideBookEnd\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
-									"pm.globals.set(\"productScriptRefOverrideChapterEnd\", _.random(76, 100));\r",
-									"pm.globals.set(\"productScriptRefOverrideVerseEnd\", _.random(401, 500));\r",
 									"\r",
 									"// MEDIUMS ARRAY - generate random array\r",
 									"var prodMediumsArray = [\r",
@@ -1230,6 +1187,381 @@
 					"response": []
 				},
 				{
+					"name": "Create Product - Array Inputs - duplicate - mediums",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "00be86be-7884-40ea-a103-49a563dcdc0e",
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"\r",
+									"//Common Verification\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 10000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
+									"});\r",
+									"\r",
+									"//Test Specific\r",
+									"pm.test(\"Verify that error message is correct\", function () {\r",
+									"    var error_message = jsonData.errors[0].message;\r",
+									"    pm.expect(error_message).to.include(\"Mediums has duplicate values\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verify that error code is Duplicate\", function () {\r",
+									"    var error_code = jsonData.errors[0].extensions.code;\r",
+									"    pm.expect(error_code).to.eql('Duplicate');\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "ebd6a27a-71be-4b9d-9399-38160118f57f",
+								"exec": [
+									"const moment = require('moment');\r",
+									"pm.globals.set(\"timestamp\", moment().format(\"DDMMYYYYhhmmss\"));\r",
+									"\r",
+									"pm.globals.set(\"productProducesId\", pm.variables.replaceIn('{{$guid}}').slice(0, 7));\r",
+									"\r",
+									"// MEDIUMS ARRAY - generate array with duplicate values\r",
+									"var prodMediumsArray = [\r",
+									"    'Print',\r",
+									"    'Web',\r",
+									"    'EBook',\r",
+									"    'App',\r",
+									"    'Audio',\r",
+									"    'OralTranslation',\r",
+									"    'Video',\r",
+									"    'Other'\r",
+									"];\r",
+									"\r",
+									"pm.globals.set('productMediumsArray', JSON.stringify(new Array(2).fill(prodMediumsArray[_.random(0, prodMediumsArray.length - 1)])));\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation CreateProduct($input: CreateProductInput!) {\r\n  createProduct(input: $input) {\r\n    product {\r\n      id\r\n      createdAt\r\n      approach\r\n      legacyType\r\n      mediums {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      purposes {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      methodology {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      \r\n    }\r\n  }\r\n}\r\n\r\n# \"scriptureReferences\": {\r\n#         \"start\": {\r\n#           \"book\": \"{{scriptureReferencesBookStart}}\",\r\n#           \"chapter\": {{chapter}},\r\n#           \"verse\": {{verse}}\r\n#         },\r\n#         \"end\": {\r\n#           \"book\": \"{{scriptureReferencesBookEnd}}\",\r\n#           \"chapter\": {{chapter}},\r\n#           \"verse\": {{verse}}\r\n#         }\r\n#       },\r\n#       \"scriptureReferencesOverride\": {\r\n#         \"start\": {\r\n#           \"book\": \"{{scriptureReferencesOverrideStart}}\",\r\n#           \"chapter\": {{chapter}},\r\n#           \"verse\": {{verse}}\r\n#         },\r\n#         \"end\": {\r\n#           \"book\": \"{{scriptureReferencesOverrideend}}\",\r\n#           \"chapter\": {{chapter}},\r\n#           \"verse\": {{verse}}\r\n#         }\r\n#       },\r\n",
+								"variables": "{\r\n  \"input\": {\r\n    \"product\": {\r\n      \"engagementId\": \"{{languageEngagementId}}\",\r\n      \"produces\": \"{{filmId}}\",\r\n      \"mediums\": {{productMediumsArray}},\r\n      \"purposes\": {{productPurposesArray}},\r\n      \"methodology\": \"{{productMethodology}}\"\r\n    }\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Product Success - Array Inputs - unique for purposes",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "70fe7303-ec1f-4acd-b40b-0b78439c3ab9",
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"const moment = require('moment');\r",
+									"\r",
+									"//Common Verification\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 10000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
+									"});\r",
+									"\r",
+									"//Test specific\r",
+									"pm.test(\"Verify that product ID is not blank or null\", function () {\r",
+									"    var id = jsonData.data.createProduct.product.id;\r",
+									"    pm.expect(id).to.not.eql(null);\r",
+									"    pm.expect(id).to.not.eql(\"\");\r",
+									"});\r",
+									"\r",
+									"// Util function - returns true If both arrays are same\r",
+									"function areSameArray(array1, array2) {\r",
+									"    return array1.length === array2.length && array1.sort().every((value, index) => { return value === array2.sort()[index] });\r",
+									"}\r",
+									"\r",
+									"// pm.test(\"Verify product mediums are same as requested\", function () {\r",
+									"//     var mediums = jsonData.data.createProduct.product.mediums.value;\r",
+									"//     var productMediumsArray = JSON.parse(pm.globals.get('productMediumsArray'));\r",
+									"\r",
+									"//     pm.expect(areSameArray(mediums, productMediumsArray)).to.eql(true);\r",
+									"// });\r",
+									"\r",
+									"pm.test(\"Verify product purposes are same as requested\", function () {\r",
+									"    var purposes = jsonData.data.createProduct.product.purposes.value;\r",
+									"    var productPurposesArray = JSON.parse(pm.globals.get('productPurposesArray'));\r",
+									"\r",
+									"    pm.expect(areSameArray(purposes, productPurposesArray)).to.eql(true);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "10b348e1-a156-4cad-baa4-5211a8b05167",
+								"exec": [
+									"const moment = require('moment');\r",
+									"pm.globals.set(\"timestamp\", moment().format(\"DDMMYYYYhhmmss\"));\r",
+									"\r",
+									"pm.globals.set(\"productProducesId\", pm.variables.replaceIn('{{$guid}}').slice(0, 7));\r",
+									"\r",
+									"// MEDIUMS ARRAY - generate random array\r",
+									"var prodMediumsArray = [\r",
+									"    'Print',\r",
+									"    'Web',\r",
+									"    'EBook',\r",
+									"    'App',\r",
+									"    'Audio',\r",
+									"    'OralTranslation',\r",
+									"    'Video',\r",
+									"    'Other'\r",
+									"];\r",
+									"pm.globals.set('productMediumsArray', JSON.stringify(generateRandomArrayFromArray(5, prodMediumsArray)));\r",
+									"\r",
+									"// PURPOSES ARRAY - generate random array\r",
+									"var prodPurposesArray = [\r",
+									"    'EvangelismChurchPlanting',\r",
+									"    'ChurchLife',\r",
+									"    'ChurchMaturity',\r",
+									"    'SocialIssues',\r",
+									"    'Discipleship'\r",
+									"];\r",
+									"pm.globals.set('productPurposesArray', JSON.stringify(generateRandomArrayFromArray(3, prodPurposesArray)));\r",
+									"\r",
+									"// METHODOLOGY ARRAY - take random value\r",
+									"var prodMethodologyArray = [\r",
+									"    'Paratext',\r",
+									"    'OtherWritten',\r",
+									"    'Render',\r",
+									"    'OtherOralTranslation',\r",
+									"    'BibleStories',\r",
+									"    'BibleStorying',\r",
+									"    'OneStory',\r",
+									"    'OtherOralStories',\r",
+									"    'Film',\r",
+									"    'SignLanguage',\r",
+									"    'OtherVisual'\r",
+									"];\r",
+									"var randomNumber = Math.floor(Math.random() * prodMethodologyArray.length);\r",
+									"pm.globals.set('productMethodology', prodMethodologyArray[randomNumber]);\r",
+									"\r",
+									"// APPROACH ARRAY - approach output to be checked from pre-defined array\r",
+									"var productApproach_array = [\r",
+									"    \"Written\",\r",
+									"    \"OralTranslation\",\r",
+									"    \"OralStories\",\r",
+									"    \"Visual\"\r",
+									"];\r",
+									"pm.globals.set('productApproach_array', JSON.stringify(productApproach_array));\r",
+									"\r",
+									"// LEGACY TYPE ARRAY - legacyType output to be checked from pre-defined array\r",
+									"var productLegacyType_array = [\r",
+									"    \"BibleStories\",\r",
+									"    \"JesusFilm\",\r",
+									"    \"Songs\",\r",
+									"    \"LiteracyMaterials\",\r",
+									"    \"OldTestamentPortions\",\r",
+									"    \"OldTestamentFull\",\r",
+									"    \"Gospel\",\r",
+									"    \"NewTestamentPortions\",\r",
+									"    \"NewTestamentFull\",\r",
+									"    \"FullBible\",\r",
+									"    \"IndividualBooks\",\r",
+									"    \"Genesis\"\r",
+									"];\r",
+									"pm.globals.set('productLegacyType_array', JSON.stringify(productLegacyType_array));\r",
+									"\r",
+									"// Random array generator - Util Function\r",
+									"function generateRandomArrayFromArray(randomArrayLength, possibleArray) {\r",
+									"    let randomArray = [];\r",
+									"    var possible = possibleArray;\r",
+									"    let preDefinedLength = randomArrayLength;\r",
+									"    for (let i = 0; i < preDefinedLength; i++) {\r",
+									"        let choice = Math.floor((Math.random() * possible.length));\r",
+									"        if (randomArray.includes(possible[choice]))\r",
+									"            continue;\r",
+									"        randomArray.push(possible[choice]);\r",
+									"    }\r",
+									"    return randomArray;\r",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation CreateProduct($input: CreateProductInput!) {\r\n  createProduct(input: $input) {\r\n    product {\r\n      id\r\n      createdAt\r\n      approach\r\n      legacyType\r\n      mediums {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      purposes {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      methodology {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      \r\n    }\r\n  }\r\n}\r\n\r\n# \"scriptureReferences\": {\r\n#         \"start\": {\r\n#           \"book\": \"{{scriptureReferencesBookStart}}\",\r\n#           \"chapter\": {{chapter}},\r\n#           \"verse\": {{verse}}\r\n#         },\r\n#         \"end\": {\r\n#           \"book\": \"{{scriptureReferencesBookEnd}}\",\r\n#           \"chapter\": {{chapter}},\r\n#           \"verse\": {{verse}}\r\n#         }\r\n#       },\r\n#       \"scriptureReferencesOverride\": {\r\n#         \"start\": {\r\n#           \"book\": \"{{scriptureReferencesOverrideStart}}\",\r\n#           \"chapter\": {{chapter}},\r\n#           \"verse\": {{verse}}\r\n#         },\r\n#         \"end\": {\r\n#           \"book\": \"{{scriptureReferencesOverrideend}}\",\r\n#           \"chapter\": {{chapter}},\r\n#           \"verse\": {{verse}}\r\n#         }\r\n#       },\r\n",
+								"variables": "{\r\n  \"input\": {\r\n    \"product\": {\r\n      \"engagementId\": \"{{languageEngagementId}}\",\r\n      \"produces\": \"{{filmId}}\",\r\n      \"mediums\": {{productMediumsArray}},\r\n      \"purposes\": {{productPurposesArray}},\r\n      \"methodology\": \"{{productMethodology}}\"\r\n    }\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Product - Array Inputs - duplicate - purposes",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "f5e010c9-d267-4d11-8a6d-e0090ef517c8",
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"\r",
+									"//Common Verification\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 10000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
+									"});\r",
+									"\r",
+									"//Test Specific\r",
+									"pm.test(\"Verify that error message is correct\", function () {\r",
+									"    var error_message = jsonData.errors[0].message;\r",
+									"    pm.expect(error_message).to.include(\"Purposes has duplicate values\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verify that error code is Duplicate\", function () {\r",
+									"    var error_code = jsonData.errors[0].extensions.code;\r",
+									"    pm.expect(error_code).to.eql('Duplicate');\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "a959ff15-6b11-4298-a54a-929f896d2b76",
+								"exec": [
+									"const moment = require('moment');\r",
+									"pm.globals.set(\"timestamp\", moment().format(\"DDMMYYYYhhmmss\"));\r",
+									"\r",
+									"pm.globals.set(\"productProducesId\", pm.variables.replaceIn('{{$guid}}').slice(0, 7));\r",
+									"\r",
+									"// ScriptureReferences variables\r",
+									"\r",
+									"\r",
+									"//PURPOSES ARRAY - generate array with duplicate values\r",
+									"var prodPurposesArray = [\r",
+									"    'EvangelismChurchPlanting',\r",
+									"    'ChurchLife',\r",
+									"    'ChurchMaturity',\r",
+									"    'SocialIssues',\r",
+									"    'Discipleship'\r",
+									"];\r",
+									"\r",
+									"pm.globals.set('productPurposesArray', JSON.stringify(new Array(2).fill(prodPurposesArray[_.random(0, prodPurposesArray.length)])));\r",
+									"\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation CreateProduct($input: CreateProductInput!) {\r\n  createProduct(input: $input) {\r\n    product {\r\n      id\r\n      createdAt\r\n      approach\r\n      legacyType\r\n      mediums {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      purposes {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      methodology {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      \r\n    }\r\n  }\r\n}\r\n\r\n# \"scriptureReferences\": {\r\n#         \"start\": {\r\n#           \"book\": \"{{scriptureReferencesBookStart}}\",\r\n#           \"chapter\": {{chapter}},\r\n#           \"verse\": {{verse}}\r\n#         },\r\n#         \"end\": {\r\n#           \"book\": \"{{scriptureReferencesBookEnd}}\",\r\n#           \"chapter\": {{chapter}},\r\n#           \"verse\": {{verse}}\r\n#         }\r\n#       },\r\n#       \"scriptureReferencesOverride\": {\r\n#         \"start\": {\r\n#           \"book\": \"{{scriptureReferencesOverrideStart}}\",\r\n#           \"chapter\": {{chapter}},\r\n#           \"verse\": {{verse}}\r\n#         },\r\n#         \"end\": {\r\n#           \"book\": \"{{scriptureReferencesOverrideend}}\",\r\n#           \"chapter\": {{chapter}},\r\n#           \"verse\": {{verse}}\r\n#         }\r\n#       },\r\n",
+								"variables": "{\r\n  \"input\": {\r\n    \"product\": {\r\n      \"engagementId\": \"{{languageEngagementId}}\",\r\n      \"produces\": \"{{filmId}}\",\r\n      \"mediums\": {{productMediumsArray}},\r\n      \"purposes\": {{productPurposesArray}},\r\n      \"methodology\": \"{{productMethodology}}\"\r\n    }\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Create Product Success - Only Required Inputs",
 					"event": [
 						{
@@ -1302,107 +1634,6 @@
 							"script": {
 								"id": "d7fe3637-ff93-4a8e-a775-ceb20de276bf",
 								"exec": [
-									"const moment = require('moment');\r",
-									"pm.globals.set(\"timestamp\", moment().format(\"DDMMYYYYhhmmss\"));\r",
-									"\r",
-									"pm.globals.set(\"productProducesId\", pm.variables.replaceIn('{{$guid}}').slice(0, 7));\r",
-									"\r",
-									"// pm.globals.set(\"scriptureReferencesBookStart\", \"ScriptureReferencesBookStart\" + moment().format(\"DDMYYYYhhmmss\"));\r",
-									"pm.globals.set(\"productScriptRefBookStart\", \"ProductScriptureReferencesBookStart\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
-									"pm.globals.set(\"productScriptRefChapterStart\", _.random(1, 25));\r",
-									"pm.globals.set(\"productScriptRefVerseStart\", _.random(100, 200));\r",
-									"\r",
-									"// pm.globals.set(\"scriptureReferencesBookEnd\", \"ScriptureReferencesBookEnd\" + moment().format(\"DDMYYYYhhmmss\"));\r",
-									"pm.globals.set(\"productScriptRefBookEnd\", \"ProductScriptureReferencesBookEnd\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
-									"pm.globals.set(\"productScriptRefChapterEnd\", _.random(26, 50));\r",
-									"pm.globals.set(\"productScriptRefVerseEnd\", _.random(201, 300));\r",
-									"\r",
-									"// pm.globals.set(\"scriptureReferencesOverrideStart\", \"ScriptureReferencesOverrideStart\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
-									"pm.globals.set(\"productScriptRefOverrideBookStart\", \"ProductScriptureReferencesOverrideBookStart\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
-									"pm.globals.set(\"productScriptRefOverrideChapterStart\", _.random(51, 75));\r",
-									"pm.globals.set(\"productScriptRefOverrideVerseStart\", _.random(301, 400));\r",
-									"\r",
-									"// pm.globals.set(\"scriptureReferencesOverrideEnd\", \"ScriptureReferencesOverrideEnd\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
-									"pm.globals.set(\"productScriptRefOverrideBookEnd\", \"ProductScriptureReferencesOverrideBookEnd\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
-									"pm.globals.set(\"productScriptRefOverrideChapterEnd\", _.random(76, 100));\r",
-									"pm.globals.set(\"productScriptRefOverrideVerseEnd\", _.random(401, 500));\r",
-									"\r",
-									"// pm.globals.set(\"produces\", 2);\r",
-									"// pm.globals.set(\"chapter\", 5);\r",
-									"// pm.globals.set(\"verse\", 5);\r",
-									"\r",
-									"// Taking random value for the Product mediums from pre-defined possible values\r",
-									"var prodMediumsArray = [\r",
-									"    'Print',\r",
-									"    'Web',\r",
-									"    'EBook',\r",
-									"    'App',\r",
-									"    'Audio',\r",
-									"    'OralTranslation',\r",
-									"    'Video',\r",
-									"    'Other'\r",
-									"];\r",
-									"var randomNumber = Math.floor(Math.random() * prodMediumsArray.length);\r",
-									"pm.globals.set('productMediums', prodMediumsArray[randomNumber]);\r",
-									"\r",
-									"\r",
-									"// Taking random value for the Product purposes from pre-defined possible values\r",
-									"var prodPurposesArray = [\r",
-									"    'EvangelismChurchPlanting',\r",
-									"    'ChurchLife',\r",
-									"    // 'EBook',\r",
-									"    'ChurchMaturity',\r",
-									"    'SocialIssues',\r",
-									"    'Discipleship'\r",
-									"\r",
-									"];\r",
-									"var randomNumber = Math.floor(Math.random() * prodPurposesArray.length);\r",
-									"pm.globals.set('productPurposes', prodPurposesArray[randomNumber]);\r",
-									"\r",
-									"\r",
-									"// Taking random value for the Product methodology from pre-defined possible values\r",
-									"var prodMethodologyArray = [\r",
-									"    'Paratext',\r",
-									"    'OtherWritten',\r",
-									"    'Render',\r",
-									"    'OtherOralTranslation',\r",
-									"    'BibleStories',\r",
-									"    'BibleStorying',\r",
-									"    'OneStory',\r",
-									"    'OtherOralStories',\r",
-									"    'Film',\r",
-									"    'SignLanguage',\r",
-									"    'OtherVisual'\r",
-									"];\r",
-									"var randomNumber = Math.floor(Math.random() * prodMethodologyArray.length);\r",
-									"pm.globals.set('productMethodology', prodMethodologyArray[randomNumber]);\r",
-									"\r",
-									"// Product Output\r",
-									"\r",
-									"var productApproach_array = [\r",
-									"    \"Written\",\r",
-									"    \"OralTranslation\",\r",
-									"    \"OralStories\",\r",
-									"    \"Visual\"\r",
-									"];\r",
-									"pm.globals.set('productApproach_array', JSON.stringify(productApproach_array));\r",
-									"\r",
-									"var productLegacyType_array = [\r",
-									"    \"BibleStories\",\r",
-									"    \"JesusFilm\",\r",
-									"    \"Songs\",\r",
-									"    \"LiteracyMaterials\",\r",
-									"    \"OldTestamentPortions\",\r",
-									"    \"OldTestamentFull\",\r",
-									"    \"Gospel\",\r",
-									"    \"NewTestamentPortions\",\r",
-									"    \"NewTestamentFull\",\r",
-									"    \"FullBible\",\r",
-									"    \"IndividualBooks\",\r",
-									"    \"Genesis\"\r",
-									"];\r",
-									"pm.globals.set('productLegacyType_array', JSON.stringify(productLegacyType_array));\r",
-									"\r",
 									""
 								],
 								"type": "text/javascript"
@@ -1674,7 +1905,7 @@
 					"response": []
 				},
 				{
-					"name": "Create Product Not Mandatory Field Removed - produces - DOUBT",
+					"name": "Create Product Not Mandatory Field Removed - produces - ??",
 					"event": [
 						{
 							"listen": "test",
@@ -2236,7 +2467,7 @@
 					"response": []
 				},
 				{
-					"name": "Create Product Not Mandatory Field Blank - ScriptRef start book ??",
+					"name": "Create Product Not Mandatory Field Blank - ScriptRef start book",
 					"event": [
 						{
 							"listen": "test",
@@ -2254,37 +2485,33 @@
 									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
 									"});\r",
 									"\r",
-									"//Test specific\r",
-									"pm.test(\"PENDING >> BUG ADDED #867(closed-Sprint 14) ( 'scriptureReferences' returned empty even if the values provided ) \", function () {\r",
+									"//Test Specific\r",
+									"pm.test(\"Verify that error message is correct\", function () {\r",
+									"    var error_message = jsonData.errors[0].message;\r",
+									"    pm.expect(error_message).to.include(\"Input validation failed\");\r",
+									"});\r",
 									"\r",
-									"    if (jsonData.errors) {\r",
-									"        pm.expect(\"BACKEND\").to.eql(\"PENDING\"); // fail forcefully\r",
-									"    } else {\r",
-									"        pm.expect(\"WRITE TEST CASES\").to.eql(\"ERRORS >>> \" + jsonData.errors[0].message);\r",
-									"    }\r",
+									"pm.test(\"Verify that error code is Validation\", function () {\r",
+									"    var error_code = jsonData.errors[0].extensions.code;\r",
+									"    pm.expect(error_code).to.eql('Validation');\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verify that error start book message is correct\", function () {\r",
+									"    var error_book_message = jsonData.errors[0].extensions.errors['product.scriptureReferences.0.start.book'].ScriptureBook;\r",
+									"    pm.expect(error_book_message).to.eql(\"Not a valid Bible book\");\r",
 									"\r",
 									"});\r",
 									"\r",
-									"pm.test(\"PENDING >> BUG ADDED #942(open-Sprint 15) ( Getting 'No book matched' error while 'produces' field is not provided and ScriptRef is input ) \", function () {\r",
-									"\r",
-									"    if (jsonData.errors) {\r",
-									"        pm.expect(\"BACKEND\").to.eql(\"PENDING\"); // fail forcefully\r",
-									"    } else {\r",
-									"        pm.expect(\"WRITE TEST CASES\").to.eql(\"ERRORS >>> \" + jsonData.errors[0].message);\r",
-									"    }\r",
-									"\r",
+									"pm.test(\"Verify that error end book message is correct\", function () {\r",
+									"    var error_book_message = jsonData.errors[0].extensions.errors['product.scriptureReferences.0.end.book'].ScriptureBook;\r",
+									"    pm.expect(error_book_message).to.eql(\"Not a valid Bible book\");\r",
 									"});\r",
 									"\r",
 									"\r",
+									"// pm.test(\"Verify that error start verse message is correct\", function () {\r",
+									"//     var error_verse_message = jsonData.errors[0].extensions.errors['product.scriptureReferences.0.end.verse'].ScriptureVerse;\r",
+									"//     pm.expect(error_verse_message).to.include(\"Genesis 3 does not have verse 449\");\r",
 									"\r",
-									"// pm.test(\"Verify that error message is correct\", function () {\r",
-									"//     var error_message = jsonData.errors[0].message;  \r",
-									"//     pm.expect(error_message).to.eql(\"Input validation failed\");\r",
-									"// });\r",
-									"\r",
-									"// pm.test(\"Verify that error status is 400\", function () {\r",
-									"//     var error_status = jsonData.errors[0].extensions.status;  \r",
-									"//     pm.expect(error_status).to.eql(400);\r",
 									"// });\r",
 									""
 								],
@@ -2319,7 +2546,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation CreateProduct($input: CreateProductInput!) {\r\n  createProduct(input: $input) {\r\n    product {\r\n      id\r\n      createdAt\r\n      approach\r\n      legacyType\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      mediums {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      purposes {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      methodology {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"product\": {\r\n      \"engagementId\": \"{{languageEngagementId}}\",\r\n      \"mediums\": \"{{productMediums}}\",\r\n      \"purposes\": \"{{productPurposes}}\",\r\n      \"methodology\": \"{{productMethodology}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"\",\r\n          \"chapter\": {{productScriptRefChapterStart}},\r\n          \"verse\": {{productScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{productScriptRefBookEnd}}\",\r\n          \"chapter\": {{productScriptRefChapterEnd}},\r\n          \"verse\": {{productScriptRefOverrideVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"product\": {\r\n      \"engagementId\": \"{{languageEngagementId}}\",\r\n      \"mediums\": \"{{productMediums}}\",\r\n      \"purposes\": \"{{productPurposes}}\",\r\n      \"methodology\": \"{{productMethodology}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"\",\r\n          \"chapter\": {{productScriptRefChapterStart}},\r\n          \"verse\": {{productScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{productScriptRefBookEnd}}\",\r\n          \"chapter\": {{productScriptRefChapterEnd}},\r\n          \"verse\": {{productScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -2436,36 +2663,29 @@
 									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
 									"});\r",
 									"\r",
-									"//Test specific\r",
-									"pm.test(\"PENDING >> BUG ADDED #867(closed-Sprint 14) ( 'scriptureReferences' returned empty even if the values provided ) \", function () {\r",
+									"//Test Specific\r",
+									"pm.test(\"Verify that error message is correct\", function () {\r",
+									"    var error_message = jsonData.errors[0].message;\r",
+									"    pm.expect(error_message).to.include(\"Input validation failed\");\r",
+									"});\r",
 									"\r",
-									"    if (jsonData.errors) {\r",
-									"        pm.expect(\"BACKEND\").to.eql(\"PENDING\"); // fail forcefully\r",
-									"    } else {\r",
-									"        pm.expect(\"WRITE TEST CASES\").to.eql(\"ERRORS >>> \" + jsonData.errors[0].message);\r",
-									"    }\r",
+									"pm.test(\"Verify that error code is Validation\", function () {\r",
+									"    var error_code = jsonData.errors[0].extensions.code;\r",
+									"    pm.expect(error_code).to.eql('Validation');\r",
+									"});\r",
+									"\r",
+									"// pm.test(\"Verify that error start book message is correct\", function () {\r",
+									"//     var error_start_book_message = jsonData.errors[0].extensions.errors['product.scriptureReferences.0.start.book'].ScriptureBook;\r",
+									"//     pm.expect(error_start_book_message).to.eql(\"Not a valid Bible book\");\r",
+									"\r",
+									"// });\r",
+									"\r",
+									"pm.test(\"Verify that error end book message is correct\", function () {\r",
+									"    var error_end_book_message = jsonData.errors[0].extensions.errors['product.scriptureReferences.0.end.book'].ScriptureBook;\r",
+									"    pm.expect(error_end_book_message).to.eql(\"Not a valid Bible book\");\r",
 									"\r",
 									"});\r",
 									"\r",
-									"pm.test(\"PENDING >> BUG ADDED #942(open-Sprint 15) ( Getting 'No book matched' error while 'produces' field is not provided and ScriptRef is input ) \", function () {\r",
-									"\r",
-									"    if (jsonData.errors) {\r",
-									"        pm.expect(\"BACKEND\").to.eql(\"PENDING\"); // fail forcefully\r",
-									"    } else {\r",
-									"        pm.expect(\"WRITE TEST CASES\").to.eql(\"ERRORS >>> \" + jsonData.errors[0].message);\r",
-									"    }\r",
-									"\r",
-									"});\r",
-									"\r",
-									"// pm.test(\"Verify that error message is correct\", function () {\r",
-									"//     var error_message = jsonData.errors[0].message;  \r",
-									"//     pm.expect(error_message).to.eql(\"Input validation failed\");\r",
-									"// });\r",
-									"\r",
-									"// pm.test(\"Verify that error status is 400\", function () {\r",
-									"//     var error_status = jsonData.errors[0].extensions.status;  \r",
-									"//     pm.expect(error_status).to.eql(400);\r",
-									"// });\r",
 									""
 								],
 								"type": "text/javascript"
@@ -2579,7 +2799,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation CreateProduct($input: CreateProductInput!) {\r\n  createProduct(input: $input) {\r\n    product {\r\n      id\r\n      createdAt\r\n      approach\r\n      legacyType\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      mediums {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      purposes {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      methodology {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"product\": {\r\n      \"engagementId\": \"{{languageEngagementId}}\",\r\n      \"mediums\": \"{{productMediums}}\",\r\n      \"purposes\": \"{{productPurposes}}\",\r\n      \"methodology\": \"{{productMethodology}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"chapter\": {{productScriptRefChapterStart}},\r\n          \"verse\": {{productScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{productScriptRefBookEnd}}\",\r\n          \"chapter\": {{productScriptRefChapterEnd}},\r\n          \"verse\": {{productScriptRefOverrideVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n    \"input\": {\r\n        \"product\": {\r\n            \"engagementId\": \"{{languageEngagementId}}\",\r\n            \"mediums\": \"{{productMediums}}\",\r\n            \"purposes\": \"{{productPurposes}}\",\r\n            \"methodology\": \"{{productMethodology}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{productScriptRefBookStart}}\",\r\n                    \"chapter\": {{productScriptRefChapterStart}},\r\n                    \"verse\": {{productScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"chapter\": {{productScriptRefChapterEnd}},\r\n                    \"verse\": {{productScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -3160,7 +3380,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation CreateProduct($input: CreateProductInput!) {\r\n  createProduct(input: $input) {\r\n    product {\r\n      id\r\n      createdAt\r\n      approach\r\n      legacyType\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      mediums {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      purposes {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      methodology {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"product\": {\r\n      \"engagementId\": \"{{languageEngagementId}}\",\r\n      \"produces\": \"{{productProducesId}}\",\r\n      \"mediums\": \"{{productMediums}}\",\r\n      \"purposes\": \"{{productPurposes}}\",\r\n      \"methodology\": \"{{productMethodology}}\",\r\n\r\n      \"scriptureReferences\": {\r\n        \"start1\": {\r\n          \"book\": \"{{scriptureReferencesBookStart}}\",\r\n          \"chapter\": {{productScriptRefChapterStart}},\r\n          \"verse\": {{productScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{scriptureReferencesBookEnd}}\",\r\n          \"chapter\": {{productScriptRefChapterEnd}},\r\n          \"verse\": {{productScriptRefOverrideVerseEnd}}\r\n        }\r\n      },\r\n\r\n      \"scriptureReferencesOverride\": {\r\n        \"start\": {\r\n          \"book\": \"{{scriptureReferencesOverrideStart}}\",\r\n          \"chapter\": {{productScriptRefOverrideChapterStart}},\r\n          \"verse\": {{productScriptRefOverrideVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{scriptureReferencesOverrideend}}\",\r\n          \"chapter\": {{productScriptRefOverrideChapterEnd}},\r\n          \"verse\": {{productScriptRefOverrideVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n    \"input\": {\r\n        \"product\": {\r\n            \"engagementId\": \"{{languageEngagementId}}\",\r\n            \"produces\": \"{{productProducesId}}\",\r\n            \"mediums\": \"{{productMediums}}\",\r\n            \"purposes\": \"{{productPurposes}}\",\r\n            \"methodology\": \"{{productMethodology}}\",\r\n            \"scriptureReferences\": {\r\n                \"start1\": {\r\n                    \"book\": \"{{scriptureReferencesBookStart}}\",\r\n                    \"chapter\": {{productScriptRefChapterStart}},\r\n                    \"verse\": {{productScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{scriptureReferencesBookEnd}}\",\r\n                    \"chapter\": {{productScriptRefChapterEnd}},\r\n                    \"verse\": {{productScriptRefOverrideVerseEnd}}\r\n                }\r\n            },\r\n            \"scriptureReferencesOverride\": {\r\n                \"start\": {\r\n                    \"book\": \"{{scriptureReferencesOverrideStart}}\",\r\n                    \"chapter\": {{productScriptRefOverrideChapterStart}},\r\n                    \"verse\": {{productScriptRefOverrideVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{scriptureReferencesOverrideend}}\",\r\n                    \"chapter\": {{productScriptRefOverrideChapterEnd}},\r\n                    \"verse\": {{productScriptRefOverrideVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -3230,7 +3450,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation CreateProduct($input: CreateProductInput!) {\r\n  createProduct(input: $input) {\r\n    product {\r\n      id\r\n      createdAt\r\n      approach\r\n      legacyType\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      mediums {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      purposes {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      methodology {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"product\": {\r\n      \"engagementId\": \"{{languageEngagementId}}\",\r\n      \"produces\": \"{{productProducesId}}\",\r\n      \"mediums\": \"{{productMediums}}\",\r\n      \"purposes\": \"{{productPurposes}}\",\r\n      \"methodology\": \"{{productMethodology}}\",\r\n\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book1\": \"{{scriptureReferencesBookStart}}\",\r\n          \"chapter\": {{productScriptRefChapterStart}},\r\n          \"verse\": {{productScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{scriptureReferencesBookEnd}}\",\r\n          \"chapter\": {{productScriptRefChapterEnd}},\r\n          \"verse\": {{productScriptRefOverrideVerseEnd}}\r\n        }\r\n      },\r\n\r\n      \"scriptureReferencesOverride\": {\r\n        \"start\": {\r\n          \"book\": \"{{scriptureReferencesOverrideStart}}\",\r\n          \"chapter\": {{productScriptRefOverrideChapterStart}},\r\n          \"verse\": {{productScriptRefOverrideVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{scriptureReferencesOverrideend}}\",\r\n          \"chapter\": {{productScriptRefOverrideChapterEnd}},\r\n          \"verse\": {{productScriptRefOverrideVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n    \"input\": {\r\n        \"product\": {\r\n            \"engagementId\": \"{{languageEngagementId}}\",\r\n            \"produces\": \"{{productProducesId}}\",\r\n            \"mediums\": \"{{productMediums}}\",\r\n            \"purposes\": \"{{productPurposes}}\",\r\n            \"methodology\": \"{{productMethodology}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book1\": \"{{scriptureReferencesBookStart}}\",\r\n                    \"chapter\": {{productScriptRefChapterStart}},\r\n                    \"verse\": {{productScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{scriptureReferencesBookEnd}}\",\r\n                    \"chapter\": {{productScriptRefChapterEnd}},\r\n                    \"verse\": {{productScriptRefOverrideVerseEnd}}\r\n                }\r\n            },\r\n            \"scriptureReferencesOverride\": {\r\n                \"start\": {\r\n                    \"book\": \"{{scriptureReferencesOverrideStart}}\",\r\n                    \"chapter\": {{productScriptRefOverrideChapterStart}},\r\n                    \"verse\": {{productScriptRefOverrideVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{scriptureReferencesOverrideend}}\",\r\n                    \"chapter\": {{productScriptRefOverrideChapterEnd}},\r\n                    \"verse\": {{productScriptRefOverrideVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -3720,7 +3940,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation CreateProduct($input: CreateProductInput!) {\r\n  createProduct(input: $input) {\r\n    product {\r\n      id\r\n      createdAt\r\n      approach\r\n      legacyType\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      mediums {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      purposes {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      methodology {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"product\": {\r\n      \"engagementId\": \"{{languageEngagementId}}\",\r\n      \"produces\": \"{{productProducesId}}\",\r\n      \"mediums\": \"{{productMediums}}\",\r\n      \"purposes\": \"{{productPurposes}}\",\r\n      \"methodology\": \"{{productMethodology}}\",\r\n\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{scriptureReferencesBookStart}}\",\r\n          \"chapter\": {{productScriptRefChapterStart}},\r\n          \"verse\": {{productScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{scriptureReferencesBookEnd}}\",\r\n          \"chapter\": {{productScriptRefChapterEnd}},\r\n          \"verse\": {{productScriptRefOverrideVerseEnd}}\r\n        }\r\n      },\r\n\r\n      \"scriptureReferencesOverride1\": {\r\n        \"start\": {\r\n          \"book\": \"{{scriptureReferencesOverrideStart}}\",\r\n          \"chapter\": {{productScriptRefOverrideChapterStart}},\r\n          \"verse\": {{productScriptRefOverrideVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{scriptureReferencesOverrideend}}\",\r\n          \"chapter\": {{productScriptRefOverrideChapterEnd}},\r\n          \"verse\": {{productScriptRefOverrideVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n    \"input\": {\r\n        \"product\": {\r\n            \"engagementId\": \"{{languageEngagementId}}\",\r\n            \"mediums\": \"{{productMediums}}\",\r\n            \"purposes\": \"{{productPurposes}}\",\r\n            \"methodology\": \"{{productMethodology}}\",\r\n            \"scriptureReferencesOverride1\": {\r\n                \"start\": {\r\n                    \"book\": \"{{productScriptRefBookStart}}\",\r\n                    \"chapter\": {{productScriptRefChapterStart}},\r\n                    \"verse\": {{productScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{productScriptRefBookEnd}}\",\r\n                    \"chapter\": {{productScriptRefChapterEnd}},\r\n                    \"verse\": {{productScriptRefOverrideVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -3790,7 +4010,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation CreateProduct($input: CreateProductInput!) {\r\n  createProduct(input: $input) {\r\n    product {\r\n      id\r\n      createdAt\r\n      approach\r\n      legacyType\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      mediums {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      purposes {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      methodology {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"product\": {\r\n      \"engagementId\": \"{{languageEngagementId}}\",\r\n      \"produces\": \"{{productProducesId}}\",\r\n      \"mediums\": \"{{productMediums}}\",\r\n      \"purposes\": \"{{productPurposes}}\",\r\n      \"methodology\": \"{{productMethodology}}\",\r\n\r\n      \"scriptureReferences\": {\r\n        \"start1\": {\r\n          \"book\": \"{{scriptureReferencesBookStart}}\",\r\n          \"chapter\": {{productScriptRefChapterStart}},\r\n          \"verse\": {{productScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{scriptureReferencesBookEnd}}\",\r\n          \"chapter\": {{productScriptRefChapterEnd}},\r\n          \"verse\": {{productScriptRefOverrideVerseEnd}}\r\n        }\r\n      },\r\n\r\n      \"scriptureReferencesOverride\": {\r\n        \"start\": {\r\n          \"book\": \"{{scriptureReferencesOverrideStart}}\",\r\n          \"chapter\": {{productScriptRefOverrideChapterStart}},\r\n          \"verse\": {{productScriptRefOverrideVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{scriptureReferencesOverrideend}}\",\r\n          \"chapter\": {{productScriptRefOverrideChapterEnd}},\r\n          \"verse\": {{productScriptRefOverrideVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"product\": {\r\n      \"engagementId\": \"{{languageEngagementId}}\",\r\n      \"mediums\": \"{{productMediums}}\",\r\n      \"purposes\": \"{{productPurposes}}\",\r\n      \"methodology\": \"{{productMethodology}}\",\r\n      \"scriptureReferencesOverride\": {\r\n        \"start1\": {\r\n          \"book\": \"{{productScriptRefBookStart}}\",\r\n          \"chapter\": {{productScriptRefChapterStart}},\r\n          \"verse\": {{productScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{productScriptRefBookEnd}}\",\r\n          \"chapter\": {{productScriptRefChapterEnd}},\r\n          \"verse\": {{productScriptRefOverrideVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -3860,7 +4080,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation CreateProduct($input: CreateProductInput!) {\r\n  createProduct(input: $input) {\r\n    product {\r\n      id\r\n      createdAt\r\n      approach\r\n      legacyType\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      mediums {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      purposes {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      methodology {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"product\": {\r\n      \"engagementId\": \"{{languageEngagementId}}\",\r\n      \"produces\": \"{{productProducesId}}\",\r\n      \"mediums\": \"{{productMediums}}\",\r\n      \"purposes\": \"{{productPurposes}}\",\r\n      \"methodology\": \"{{productMethodology}}\",\r\n\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{scriptureReferencesBookStart}}\",\r\n          \"chapter\": {{productScriptRefChapterStart}},\r\n          \"verse\": {{productScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{scriptureReferencesBookEnd}}\",\r\n          \"chapter\": {{productScriptRefChapterEnd}},\r\n          \"verse\": {{productScriptRefOverrideVerseEnd}}\r\n        }\r\n      },\r\n\r\n      \"scriptureReferencesOverride\": {\r\n        \"start\": {\r\n          \"book1\": \"{{scriptureReferencesOverrideStart}}\",\r\n          \"chapter\": {{productScriptRefOverrideChapterStart}},\r\n          \"verse\": {{productScriptRefOverrideVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{scriptureReferencesOverrideend}}\",\r\n          \"chapter\": {{productScriptRefOverrideChapterEnd}},\r\n          \"verse\": {{productScriptRefOverrideVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"product\": {\r\n      \"engagementId\": \"{{languageEngagementId}}\",\r\n      \"mediums\": \"{{productMediums}}\",\r\n      \"purposes\": \"{{productPurposes}}\",\r\n      \"methodology\": \"{{productMethodology}}\",\r\n      \"scriptureReferencesOverride\": {\r\n        \"start\": {\r\n          \"book1\": \"{{productScriptRefBookStart}}\",\r\n          \"chapter\": {{productScriptRefChapterStart}},\r\n          \"verse\": {{productScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{productScriptRefBookEnd}}\",\r\n          \"chapter\": {{productScriptRefChapterEnd}},\r\n          \"verse\": {{productScriptRefOverrideVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -3930,7 +4150,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation CreateProduct($input: CreateProductInput!) {\r\n  createProduct(input: $input) {\r\n    product {\r\n      id\r\n      createdAt\r\n      approach\r\n      legacyType\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      mediums {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      purposes {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      methodology {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"product\": {\r\n      \"engagementId\": \"{{languageEngagementId}}\",\r\n      \"produces\": \"{{productProducesId}}\",\r\n      \"mediums\": \"{{productMediums}}\",\r\n      \"purposes\": \"{{productPurposes}}\",\r\n      \"methodology\": \"{{productMethodology}}\",\r\n\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{scriptureReferencesBookStart}}\",\r\n          \"chapter\": {{productScriptRefChapterStart}},\r\n          \"verse\": {{productScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{scriptureReferencesBookEnd}}\",\r\n          \"chapter\": {{productScriptRefChapterEnd}},\r\n          \"verse\": {{productScriptRefOverrideVerseEnd}}\r\n        }\r\n      },\r\n\r\n      \"scriptureReferencesOverride\": {\r\n        \"start\": {\r\n          \"book\": \"{{scriptureReferencesOverrideStart}}\",\r\n          \"chapter1\": {{productScriptRefOverrideChapterStart}},\r\n          \"verse\": {{productScriptRefOverrideVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{scriptureReferencesOverrideend}}\",\r\n          \"chapter\": {{productScriptRefOverrideChapterEnd}},\r\n          \"verse\": {{productScriptRefOverrideVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"product\": {\r\n      \"engagementId\": \"{{languageEngagementId}}\",\r\n      \"mediums\": \"{{productMediums}}\",\r\n      \"purposes\": \"{{productPurposes}}\",\r\n      \"methodology\": \"{{productMethodology}}\",\r\n      \"scriptureReferencesOverride\": {\r\n        \"start\": {\r\n          \"book\": \"{{productScriptRefBookStart}}\",\r\n          \"chapter1\": {{productScriptRefChapterStart}},\r\n          \"verse\": {{productScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{productScriptRefBookEnd}}\",\r\n          \"chapter\": {{productScriptRefChapterEnd}},\r\n          \"verse\": {{productScriptRefOverrideVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -4000,7 +4220,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation CreateProduct($input: CreateProductInput!) {\r\n  createProduct(input: $input) {\r\n    product {\r\n      id\r\n      createdAt\r\n      approach\r\n      legacyType\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      mediums {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      purposes {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      methodology {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"product\": {\r\n      \"engagementId\": \"{{languageEngagementId}}\",\r\n      \"produces\": \"{{productProducesId}}\",\r\n      \"mediums\": \"{{productMediums}}\",\r\n      \"purposes\": \"{{productPurposes}}\",\r\n      \"methodology\": \"{{productMethodology}}\",\r\n\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{scriptureReferencesBookStart}}\",\r\n          \"chapter\": {{productScriptRefChapterStart}},\r\n          \"verse\": {{productScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{scriptureReferencesBookEnd}}\",\r\n          \"chapter\": {{productScriptRefChapterEnd}},\r\n          \"verse\": {{productScriptRefOverrideVerseEnd}}\r\n        }\r\n      },\r\n\r\n      \"scriptureReferencesOverride\": {\r\n        \"start\": {\r\n          \"book\": \"{{scriptureReferencesOverrideStart}}\",\r\n          \"chapter\": {{productScriptRefOverrideChapterStart}},\r\n          \"verse1\": {{productScriptRefOverrideVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{scriptureReferencesOverrideend}}\",\r\n          \"chapter\": {{productScriptRefOverrideChapterEnd}},\r\n          \"verse\": {{productScriptRefOverrideVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"product\": {\r\n      \"engagementId\": \"{{languageEngagementId}}\",\r\n      \"mediums\": \"{{productMediums}}\",\r\n      \"purposes\": \"{{productPurposes}}\",\r\n      \"methodology\": \"{{productMethodology}}\",\r\n      \"scriptureReferencesOverride\": {\r\n        \"start\": {\r\n          \"book\": \"{{productScriptRefBookStart}}\",\r\n          \"chapter\": {{productScriptRefChapterStart}},\r\n          \"verse1\": {{productScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{productScriptRefBookEnd}}\",\r\n          \"chapter\": {{productScriptRefChapterEnd}},\r\n          \"verse\": {{productScriptRefOverrideVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -4070,7 +4290,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation CreateProduct($input: CreateProductInput!) {\r\n  createProduct(input: $input) {\r\n    product {\r\n      id\r\n      createdAt\r\n      approach\r\n      legacyType\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      mediums {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      purposes {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      methodology {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"product\": {\r\n      \"engagementId\": \"{{languageEngagementId}}\",\r\n      \"produces\": \"{{productProducesId}}\",\r\n      \"mediums\": \"{{productMediums}}\",\r\n      \"purposes\": \"{{productPurposes}}\",\r\n      \"methodology\": \"{{productMethodology}}\",\r\n\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{scriptureReferencesBookStart}}\",\r\n          \"chapter\": {{productScriptRefChapterStart}},\r\n          \"verse\": {{productScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{scriptureReferencesBookEnd}}\",\r\n          \"chapter\": {{productScriptRefChapterEnd}},\r\n          \"verse\": {{productScriptRefOverrideVerseEnd}}\r\n        }\r\n      },\r\n\r\n      \"scriptureReferencesOverride\": {\r\n        \"start\": {\r\n          \"book\": \"{{scriptureReferencesOverrideStart}}\",\r\n          \"chapter\": {{productScriptRefOverrideChapterStart}},\r\n          \"verse\": {{productScriptRefOverrideVerseStart}}\r\n        },\r\n        \"end1\": {\r\n          \"book\": \"{{scriptureReferencesOverrideend}}\",\r\n          \"chapter\": {{productScriptRefOverrideChapterEnd}},\r\n          \"verse\": {{productScriptRefOverrideVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"product\": {\r\n      \"engagementId\": \"{{languageEngagementId}}\",\r\n      \"produces\": \"{{productProducesId}}\",\r\n      \"mediums\": \"{{productMediums}}\",\r\n      \"purposes\": \"{{productPurposes}}\",\r\n      \"methodology\": \"{{productMethodology}}\",\r\n\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{scriptureReferencesBookStart}}\",\r\n          \"chapter\": {{productScriptRefChapterStart}},\r\n          \"verse\": {{productScriptRefVerseStart}}\r\n        },\r\n        \"end1\": {\r\n          \"book\": \"{{scriptureReferencesBookEnd}}\",\r\n          \"chapter\": {{productScriptRefChapterEnd}},\r\n          \"verse\": {{productScriptRefOverrideVerseEnd}}\r\n        }\r\n      },\r\n\r\n      \"scriptureReferencesOverride\": {\r\n        \"start\": {\r\n          \"book\": \"{{scriptureReferencesOverrideStart}}\",\r\n          \"chapter\": {{productScriptRefOverrideChapterStart}},\r\n          \"verse\": {{productScriptRefOverrideVerseStart}}\r\n        },\r\n        \"end1\": {\r\n          \"book\": \"{{scriptureReferencesOverrideend}}\",\r\n          \"chapter\": {{productScriptRefOverrideChapterEnd}},\r\n          \"verse\": {{productScriptRefOverrideVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -4140,7 +4360,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation CreateProduct($input: CreateProductInput!) {\r\n  createProduct(input: $input) {\r\n    product {\r\n      id\r\n      createdAt\r\n      approach\r\n      legacyType\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      mediums {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      purposes {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      methodology {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"product\": {\r\n      \"engagementId\": \"{{languageEngagementId}}\",\r\n      \"produces\": \"{{productProducesId}}\",\r\n      \"mediums\": \"{{productMediums}}\",\r\n      \"purposes\": \"{{productPurposes}}\",\r\n      \"methodology\": \"{{productMethodology}}\",\r\n\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{scriptureReferencesBookStart}}\",\r\n          \"chapter\": {{productScriptRefChapterStart}},\r\n          \"verse\": {{productScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{scriptureReferencesBookEnd}}\",\r\n          \"chapter\": {{productScriptRefChapterEnd}},\r\n          \"verse\": {{productScriptRefOverrideVerseEnd}}\r\n        }\r\n      },\r\n\r\n      \"scriptureReferencesOverride\": {\r\n        \"start\": {\r\n          \"book\": \"{{scriptureReferencesOverrideStart}}\",\r\n          \"chapter\": {{productScriptRefOverrideChapterStart}},\r\n          \"verse\": {{productScriptRefOverrideVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book1\": \"{{scriptureReferencesOverrideend}}\",\r\n          \"chapter\": {{productScriptRefOverrideChapterEnd}},\r\n          \"verse\": {{productScriptRefOverrideVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"product\": {\r\n      \"engagementId\": \"{{languageEngagementId}}\",\r\n      \"mediums\": \"{{productMediums}}\",\r\n      \"purposes\": \"{{productPurposes}}\",\r\n      \"methodology\": \"{{productMethodology}}\",\r\n      \"scriptureReferencesOverride\": {\r\n        \"start\": {\r\n          \"book\": \"{{productScriptRefBookStart}}\",\r\n          \"chapter\": {{productScriptRefChapterStart}},\r\n          \"verse\": {{productScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book1\": \"{{productScriptRefBookEnd}}\",\r\n          \"chapter\": {{productScriptRefChapterEnd}},\r\n          \"verse\": {{productScriptRefOverrideVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -4210,7 +4430,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation CreateProduct($input: CreateProductInput!) {\r\n  createProduct(input: $input) {\r\n    product {\r\n      id\r\n      createdAt\r\n      approach\r\n      legacyType\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      mediums {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      purposes {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      methodology {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"product\": {\r\n      \"engagementId\": \"{{languageEngagementId}}\",\r\n      \"produces\": \"{{productProducesId}}\",\r\n      \"mediums\": \"{{productMediums}}\",\r\n      \"purposes\": \"{{productPurposes}}\",\r\n      \"methodology\": \"{{productMethodology}}\",\r\n\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{scriptureReferencesBookStart}}\",\r\n          \"chapter\": {{productScriptRefChapterStart}},\r\n          \"verse\": {{productScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{scriptureReferencesBookEnd}}\",\r\n          \"chapter\": {{productScriptRefChapterEnd}},\r\n          \"verse\": {{productScriptRefOverrideVerseEnd}}\r\n        }\r\n      },\r\n\r\n      \"scriptureReferencesOverride\": {\r\n        \"start\": {\r\n          \"book\": \"{{scriptureReferencesOverrideStart}}\",\r\n          \"chapter\": {{productScriptRefOverrideChapterStart}},\r\n          \"verse\": {{productScriptRefOverrideVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{scriptureReferencesOverrideend}}\",\r\n          \"chapter1\": {{productScriptRefOverrideChapterEnd}},\r\n          \"verse\": {{productScriptRefOverrideVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"product\": {\r\n      \"engagementId\": \"{{languageEngagementId}}\",\r\n      \"mediums\": \"{{productMediums}}\",\r\n      \"purposes\": \"{{productPurposes}}\",\r\n      \"methodology\": \"{{productMethodology}}\",\r\n      \"scriptureReferencesOverride\": {\r\n        \"start\": {\r\n          \"book\": \"{{productScriptRefBookStart}}\",\r\n          \"chapter\": {{productScriptRefChapterStart}},\r\n          \"verse\": {{productScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{productScriptRefBookEnd}}\",\r\n          \"chapter1\": {{productScriptRefChapterEnd}},\r\n          \"verse\": {{productScriptRefOverrideVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -4280,7 +4500,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation CreateProduct($input: CreateProductInput!) {\r\n  createProduct(input: $input) {\r\n    product {\r\n      id\r\n      createdAt\r\n      approach\r\n      legacyType\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      mediums {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      purposes {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      methodology {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"product\": {\r\n      \"engagementId\": \"{{languageEngagementId}}\",\r\n      \"produces\": \"{{productProducesId}}\",\r\n      \"mediums\": \"{{productMediums}}\",\r\n      \"purposes\": \"{{productPurposes}}\",\r\n      \"methodology\": \"{{productMethodology}}\",\r\n\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{scriptureReferencesBookStart}}\",\r\n          \"chapter\": {{productScriptRefChapterStart}},\r\n          \"verse\": {{productScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{scriptureReferencesBookEnd}}\",\r\n          \"chapter\": {{productScriptRefChapterEnd}},\r\n          \"verse\": {{productScriptRefOverrideVerseEnd}}\r\n        }\r\n      },\r\n\r\n      \"scriptureReferencesOverride\": {\r\n        \"start\": {\r\n          \"book\": \"{{scriptureReferencesOverrideStart}}\",\r\n          \"chapter\": {{productScriptRefOverrideChapterStart}},\r\n          \"verse\": {{productScriptRefOverrideVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{scriptureReferencesOverrideend}}\",\r\n          \"chapter\": {{productScriptRefOverrideChapterEnd}},\r\n          \"verse1\": {{productScriptRefOverrideVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"product\": {\r\n      \"engagementId\": \"{{languageEngagementId}}\",\r\n      \"mediums\": \"{{productMediums}}\",\r\n      \"purposes\": \"{{productPurposes}}\",\r\n      \"methodology\": \"{{productMethodology}}\",\r\n      \"scriptureReferencesOverride\": {\r\n        \"start\": {\r\n          \"book\": \"{{productScriptRefBookStart}}\",\r\n          \"chapter\": {{productScriptRefChapterStart}},\r\n          \"verse\": {{productScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{productScriptRefBookEnd}}\",\r\n          \"chapter\": {{productScriptRefChapterEnd}},\r\n          \"verse1\": {{productScriptRefOverrideVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -4737,23 +4957,27 @@
 									"\r",
 									"pm.globals.set(\"productProducesId\", pm.variables.replaceIn('{{$guid}}').slice(0, 7));\r",
 									"\r",
-									"// ScriptureReferences variables\r",
-									"pm.globals.set(\"productScriptRefBookStart\", \"ProductScriptureReferencesBookStart\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
-									"pm.globals.set(\"productScriptRefChapterStart\", _.random(1, 25));\r",
-									"pm.globals.set(\"productScriptRefVerseStart\", _.random(100, 200));\r",
+									"// ScriptureReferences Value\r",
+									"// Static values \r",
+									"pm.globals.set('productScriptRefBookStart', \"Genesis\");\r",
 									"\r",
-									"pm.globals.set(\"productScriptRefBookEnd\", \"ProductScriptureReferencesBookEnd\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
-									"pm.globals.set(\"productScriptRefChapterEnd\", _.random(26, 50));\r",
-									"pm.globals.set(\"productScriptRefVerseEnd\", _.random(201, 300));\r",
+									"pm.globals.set('productScriptRefChapterStart', 3);\r",
 									"\r",
-									"// ScriptureReferencesOverride variables\r",
-									"pm.globals.set(\"productScriptRefOverrideBookStart\", \"ProductScriptureReferencesOverrideBookStart\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
-									"pm.globals.set(\"productScriptRefOverrideChapterStart\", _.random(51, 75));\r",
-									"pm.globals.set(\"productScriptRefOverrideVerseStart\", _.random(301, 400));\r",
+									"pm.globals.set('productScriptRefVerseStart', 4);\r",
 									"\r",
-									"pm.globals.set(\"productScriptRefOverrideBookEnd\", \"ProductScriptureReferencesOverrideBookEnd\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
-									"pm.globals.set(\"productScriptRefOverrideChapterEnd\", _.random(76, 100));\r",
-									"pm.globals.set(\"productScriptRefOverrideVerseEnd\", _.random(401, 500));\r",
+									"let expectedLabelStart = `${pm.globals.get('productScriptRefBookStart')} ${pm.globals.get('productScriptRefChapterStart')}:${pm.globals.get('productScriptRefVerseStart')}`;\r",
+									"\r",
+									"pm.globals.set('productScriptRefLabelStart',expectedLabelStart);\r",
+									"\r",
+									"pm.globals.set('productScriptRefBookEnd', \"Genesis\");\r",
+									"\r",
+									"pm.globals.set('productScriptRefChapterEnd', 3);\r",
+									"\r",
+									"pm.globals.set('productScriptRefVerseEnd', 4);\r",
+									"\r",
+									"let expectedLabelEnd = `${pm.globals.get('productScriptRefBookEnd')} ${pm.globals.get('productScriptRefChapterEnd')}:${pm.globals.get('productScriptRefVerseEnd')}`\r",
+									"\r",
+									"pm.globals.set('productScriptRefLabelEnd', expectedLabelEnd);\r",
 									"\r",
 									"\r",
 									"// Taking random value for the Product mediums from pre-defined possible values\r",
@@ -4850,7 +5074,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation CreateProduct($input: CreateProductInput!) {\r\n  createProduct(input: $input) {\r\n    product {\r\n      id\r\n      createdAt\r\n      approach\r\n      legacyType\r\n      mediums {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      purposes {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      methodology {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}",
-								"variables": "{\r\n  \"input\": {\r\n    \"product\": {\r\n      \"engagementId\": \"{{languageEngagementId}}\",\r\n      \"produces\": \"{{filmId}}\",\r\n      \"mediums\": \"{{productMediums}}\",\r\n      \"purposes\": \"{{productPurposes}}\",\r\n      \"methodology\": \"{{productMethodology}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{productScriptRefBookStart}}\",\r\n          \"chapter\": {{productScriptRefChapterStart}},\r\n          \"verse\": {{productScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{productScriptRefBookEnd}}\",\r\n          \"chapter\": {{productScriptRefChapterEnd}},\r\n          \"verse\": {{productScriptRefOverrideVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"product\": {\r\n      \"engagementId\": \"{{languageEngagementId}}\",\r\n     \r\n      \"mediums\": \"{{productMediums}}\",\r\n      \"purposes\": \"{{productPurposes}}\",\r\n      \"methodology\": \"{{productMethodology}}\",\r\n       \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{productScriptRefBookStart}}\",\r\n                    \"chapter\": {{productScriptRefChapterStart}},\r\n                    \"verse\": {{productScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{productScriptRefBookEnd}}\",\r\n                    \"chapter\": {{productScriptRefChapterEnd}},\r\n                    \"verse\": {{productScriptRefVerseEnd}}\r\n                }\r\n            }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -5312,6 +5536,282 @@
 					"response": []
 				},
 				{
+					"name": "Update Product Success - with scriptRef ??",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "0776b109-8bd6-4ffb-930c-cfba599797de",
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"const moment = require('moment');\r",
+									"var product_data = JSON.parse(pm.variables.get(\"product_data\"));\r",
+									"\r",
+									"//Common Verification\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 10000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
+									"});\r",
+									"\r",
+									"\r",
+									"//Test specific\r",
+									"pm.test(\"Verify that product ID is not blank or null\", function () {\r",
+									"    var id = jsonData.data.updateProduct.product.id;\r",
+									"    pm.expect(id).to.not.eql(null);\r",
+									"    pm.expect(id).to.not.eql(\"\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verify that product's createdAt is in Specific time format\", function () {\r",
+									"    var time = jsonData.data.updateProduct.product.createdAt;\r",
+									"    var isValidTime = moment(time, \"YYYY-MM-DDTHH:mm:ss.SSSZ\", true).isValid();\r",
+									"    pm.expect(isValidTime).to.eql(true);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verify updated product's createdAt\", function () {\r",
+									"    var time = jsonData.data.updateProduct.product.createdAt;\r",
+									"    pm.expect(time).to.eql(product_data.createdAt);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verify updated product's approach\", function () {\r",
+									"    var approach = jsonData.data.updateProduct.product.approach;\r",
+									"    pm.expect(approach).to.eql(product_data.approach);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verify updated product legacyType\", function () {\r",
+									"    var legacyType = jsonData.data.updateProduct.product.legacyType;\r",
+									"    pm.expect(legacyType).to.eql(product_data.legacyType);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verify updated product mediums are same as requested\", function () {\r",
+									"    var mediums = jsonData.data.updateProduct.product.mediums.value[0];\r",
+									"    pm.expect(mediums).to.eql(pm.globals.get('productMediums'));\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verify updated product purposes are same as requested\", function () {\r",
+									"    var purposes = jsonData.data.updateProduct.product.purposes.value[0];\r",
+									"    pm.expect(purposes).to.eql(pm.globals.get('productPurposes'));\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verify updated product methodology is same as requested\", function () {\r",
+									"    var methodology = jsonData.data.updateProduct.product.methodology.value\r",
+									"    pm.expect(methodology).to.eql(pm.globals.get('productMethodology'));\r",
+									"});\r",
+									"\r",
+									"//ScriptureReferences CASES\r",
+									"//Getting scriptureReferences null (Testcases pending)\r",
+									"// pm.test(\"Verify updated product scriptureReferences start book is same as requested\", function () {\r",
+									"//     var startBook = jsonData.data.updateProduct.product.scriptureReferences.value[0].start.book;\r",
+									"//     pm.expect(startBook).to.eql(pm.globals.get('productScriptRefBookStart'));\r",
+									"// });\r",
+									"\r",
+									"// pm.test(\"Verify updated product scriptureReferences start chapter is same as requested\", function () {\r",
+									"//     var startChapter = jsonData.data.updateProduct.product.scriptureReferences.value[0].start.chapter;\r",
+									"//     pm.expect(startChapter).to.eql(pm.globals.get('productScriptRefChapterStart'));\r",
+									"// });\r",
+									"\r",
+									"// pm.test(\"Verify updated product scriptureReferences start verse is same as requested\", function () {\r",
+									"//     var startVerse = jsonData.data.updateProduct.product.scriptureReferences.value[0].start.verse;\r",
+									"//     pm.expect(startVerse).to.eql(pm.globals.get('productScriptRefVerseStart'));\r",
+									"// });\r",
+									"\r",
+									"// pm.test(\"Verify updated product scriptureReferences start book Name is same as requested\", function () {\r",
+									"//     var startBookName = jsonData.data.updateProduct.product.scriptureReferences.value[0].start.bookName;\r",
+									"//     pm.expect(startBookName).to.eql('Genesis');\r",
+									"// });\r",
+									"\r",
+									"// pm.test(\"Verify updated product scriptureReferences start label is same as requested\", function () {\r",
+									"//     var startLabel = jsonData.data.updateProduct.product.scriptureReferences.value[0].start.label;\r",
+									"//     pm.expect(startLabel).to.eql(pm.globals.get('productScriptRefLabelStart'));\r",
+									"// });\r",
+									"\r",
+									"\r",
+									"// pm.test(\"Verify updated product scriptureReferences end book is same as requested\", function () {\r",
+									"//     var endBook = jsonData.data.updateProduct.product.scriptureReferences.value[0].end.book;\r",
+									"//     pm.expect(endBook).to.eql(pm.globals.get('productScriptRefBookEnd'));\r",
+									"// });\r",
+									"\r",
+									"// pm.test(\"Verify updated product scriptureReferences end chapter is same as requested\", function () {\r",
+									"//     var endChapter = jsonData.data.updateProduct.product.scriptureReferences.value[0].end.chapter;\r",
+									"//     pm.expect(endChapter).to.eql(pm.globals.get('productScriptRefChapterEnd'));\r",
+									"// });\r",
+									"\r",
+									"// pm.test(\"Verify updated product scriptureReferences end verse is same as requested\", function () {\r",
+									"//     var endVerse = jsonData.data.updateProduct.product.scriptureReferences.value[0].end.verse;\r",
+									"//     pm.expect(endVerse).to.eql(pm.globals.get('productScriptRefVerseEnd'));\r",
+									"// });\r",
+									"\r",
+									"// pm.test(\"Verify updated product scriptureReferences end book Name is same as requested\", function () {\r",
+									"//     var endBookName = jsonData.data.updateProduct.product.scriptureReferences.value[0].end.bookName;\r",
+									"//     pm.expect(endBookName).to.eql('Genesis');\r",
+									"// });\r",
+									"\r",
+									"// pm.test(\"Verify updated product scriptureReferences end label is same as requested\", function () {\r",
+									"//     var endLabel = jsonData.data.updateProduct.product.scriptureReferences.value[0].end.label;\r",
+									"//     pm.expect(endLabel).to.eql(pm.globals.get('productScriptRefLabelEnd'));\r",
+									"// });\r",
+									"\r",
+									"\r",
+									"\r",
+									"// // ScriptureReferences CASES PENDING\r",
+									"// pm.test(\"PENDING >> ScriptureReferences CASES PENDING + details not updated BUG ADDED #866\", function () {\r",
+									"//     if (jsonData.data) {\r",
+									"//         pm.expect(\"Backend\").to.eql(\"PENDING\"); // fail forcefully until validation done from backend\r",
+									"//     } else {\r",
+									"//         pm.expect(\"WRITE TEST CASE\").to.eql(\"PENDING\");\r",
+									"//     }\r",
+									"// });"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "91d4f3f5-2357-43ec-88d5-192ed74f8cae",
+								"exec": [
+									"const moment = require('moment');\r",
+									"pm.globals.set(\"timestamp\", moment().format(\"DDMMYYYYhhmmss\"));\r",
+									"\r",
+									"pm.globals.set(\"productProducesId\", pm.variables.replaceIn('{{$guid}}').slice(0, 7));\r",
+									"\r",
+									"// ScriptureReferences Value\r",
+									"// Static values \r",
+									"pm.globals.set('productScriptRefBookStart', \"Genesis\");\r",
+									"\r",
+									"pm.globals.set('productScriptRefChapterStart', 3);\r",
+									"\r",
+									"pm.globals.set('productScriptRefVerseStart', 4);\r",
+									"\r",
+									"let expectedLabelStart = `${pm.globals.get('productScriptRefBookStart')} ${pm.globals.get('productScriptRefChapterStart')}:${pm.globals.get('productScriptRefVerseStart')}`\r",
+									"\r",
+									"pm.globals.set('productScriptRefLabelStart',expectedLabelStart);\r",
+									"\r",
+									"pm.globals.set('productScriptRefBookEnd', \"Genesis\");\r",
+									"\r",
+									"pm.globals.set('productScriptRefChapterEnd', 3);\r",
+									"\r",
+									"pm.globals.set('productScriptRefVerseEnd', 4);\r",
+									"\r",
+									"let expectedLabelEnd = `${pm.globals.get('productScriptRefBookEnd')} ${pm.globals.get('productScriptRefChapterEnd')}:${pm.globals.get('productScriptRefVerseEnd')}`\r",
+									"\r",
+									"pm.globals.set('productScriptRefLabelEnd', expectedLabelEnd);\r",
+									"\r",
+									"// Taking random value for the Product mediums from pre-defined possible values\r",
+									"var prodMediumsArray = [\r",
+									"    'Print',\r",
+									"    'Web',\r",
+									"    'EBook',\r",
+									"    'App',\r",
+									"    'Audio',\r",
+									"    'OralTranslation',\r",
+									"    'Video',\r",
+									"    'Other'\r",
+									"];\r",
+									"var randomNumber = Math.floor(Math.random() * prodMediumsArray.length);\r",
+									"pm.globals.set('productMediums', prodMediumsArray[randomNumber]);\r",
+									"\r",
+									"\r",
+									"// Taking random value for the Product purposes from pre-defined possible values\r",
+									"var prodPurposesArray = [\r",
+									"    'EvangelismChurchPlanting',\r",
+									"    'ChurchLife',\r",
+									"    // 'EBook',\r",
+									"    'ChurchMaturity',\r",
+									"    'SocialIssues',\r",
+									"    'Discipleship'\r",
+									"\r",
+									"];\r",
+									"var randomNumber = Math.floor(Math.random() * prodPurposesArray.length);\r",
+									"pm.globals.set('productPurposes', prodPurposesArray[randomNumber]);\r",
+									"\r",
+									"\r",
+									"// Taking random value for the Product methodology from pre-defined possible values\r",
+									"var prodMethodologyArray = [\r",
+									"    'Paratext',\r",
+									"    'OtherWritten',\r",
+									"    'Render',\r",
+									"    'OtherOralTranslation',\r",
+									"    'BibleStories',\r",
+									"    'BibleStorying',\r",
+									"    'OneStory',\r",
+									"    'OtherOralStories',\r",
+									"    'Film',\r",
+									"    'SignLanguage',\r",
+									"    'OtherVisual'\r",
+									"];\r",
+									"var randomNumber = Math.floor(Math.random() * prodMethodologyArray.length);\r",
+									"pm.globals.set('productMethodology', prodMethodologyArray[randomNumber]);\r",
+									"\r",
+									"// Product Output Values to be checked from pre-defined data\r",
+									"var productApproach_array = [\r",
+									"    \"Written\",\r",
+									"    \"OralTranslation\",\r",
+									"    \"OralStories\",\r",
+									"    \"Visual\"\r",
+									"];\r",
+									"pm.globals.set('productApproach_array', JSON.stringify(productApproach_array));\r",
+									"\r",
+									"var productLegacyType_array = [\r",
+									"    \"BibleStories\",\r",
+									"    \"JesusFilm\",\r",
+									"    \"Songs\",\r",
+									"    \"LiteracyMaterials\",\r",
+									"    \"OldTestamentPortions\",\r",
+									"    \"OldTestamentFull\",\r",
+									"    \"Gospel\",\r",
+									"    \"NewTestamentPortions\",\r",
+									"    \"NewTestamentFull\",\r",
+									"    \"FullBible\",\r",
+									"    \"IndividualBooks\",\r",
+									"    \"Genesis\"\r",
+									"];\r",
+									"pm.globals.set('productLegacyType_array', JSON.stringify(productLegacyType_array));\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation updateProduct($input: UpdateProductInput!) {\r\n  updateProduct(input: $input) {\r\n    product {\r\n      id\r\n      createdAt\r\n      approach\r\n      legacyType\r\n      mediums {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      purposes {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      methodology {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n\r\n# {\r\n#   \"input\": {\r\n#     \"product\": {\r\n#       \"id\": \"QOr4ZfTnxk\",\r\n#       \"mediums\": \"EBook\",\r\n#       \"purposes\": \"ChurchLife\",\r\n#       \"methodology\": \"Render\",\r\n#       \"produces\": \"\"\r\n#     }\r\n#   }\r\n# }\r\n\r\n# \"scriptureReferencesOverride\": {\r\n#         \"start\": {\r\n#           \"book\": \"{{scriptureReferencesOverrideStart}}\",\r\n#           \"chapter\": {{productScriptRefOverrideChapterStart}},\r\n#           \"verse\": {{productScriptRefOverrideVerseStart}}\r\n#         },\r\n#         \"end\": {\r\n#           \"book\": \"{{scriptureReferencesOverrideend}}\",\r\n#           \"chapter\": {{productScriptRefOverrideChapterEnd}},\r\n#           \"verse\": {{productScriptRefOverrideVerseEnd}}\r\n#         }\r\n#       }\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"product\": {\r\n            \"id\": \"{{productId}}\",\r\n            \"mediums\": \"{{productMediums}}\",\r\n            \"purposes\": \"{{productPurposes}}\",\r\n            \"methodology\": \"{{productMethodology}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{productScriptRefBookStart}}\",\r\n                    \"chapter\": {{productScriptRefChapterStart}},\r\n                    \"verse\": {{productScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{productScriptRefBookEnd}}\",\r\n                    \"chapter\": {{productScriptRefChapterEnd}},\r\n                    \"verse\": {{productScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Update Product Success - with produces ??",
 					"event": [
 						{
@@ -5395,24 +5895,6 @@
 									"pm.globals.set(\"timestamp\", moment().format(\"DDMMYYYYhhmmss\"));\r",
 									"\r",
 									"pm.globals.set(\"productProducesId\", pm.variables.replaceIn('{{$guid}}').slice(0, 7));\r",
-									"\r",
-									"// ScriptureReferences variables\r",
-									"pm.globals.set(\"productScriptRefBookStart\", \"ProductScriptureReferencesBookStart\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
-									"pm.globals.set(\"productScriptRefChapterStart\", _.random(1, 25));\r",
-									"pm.globals.set(\"productScriptRefVerseStart\", _.random(100, 200));\r",
-									"\r",
-									"pm.globals.set(\"productScriptRefBookEnd\", \"ProductScriptureReferencesBookEnd\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
-									"pm.globals.set(\"productScriptRefChapterEnd\", _.random(26, 50));\r",
-									"pm.globals.set(\"productScriptRefVerseEnd\", _.random(201, 300));\r",
-									"\r",
-									"// ScriptureReferencesOverride variables\r",
-									"pm.globals.set(\"productScriptRefOverrideBookStart\", \"ProductScriptureReferencesOverrideBookStart\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
-									"pm.globals.set(\"productScriptRefOverrideChapterStart\", _.random(51, 75));\r",
-									"pm.globals.set(\"productScriptRefOverrideVerseStart\", _.random(301, 400));\r",
-									"\r",
-									"pm.globals.set(\"productScriptRefOverrideBookEnd\", \"ProductScriptureReferencesOverrideBookEnd\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
-									"pm.globals.set(\"productScriptRefOverrideChapterEnd\", _.random(76, 100));\r",
-									"pm.globals.set(\"productScriptRefOverrideVerseEnd\", _.random(401, 500));\r",
 									"\r",
 									"\r",
 									"// Taking random value for the Product mediums from pre-defined possible values\r",
@@ -5509,7 +5991,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation updateProduct($input: UpdateProductInput!) {\r\n  updateProduct(input: $input) {\r\n    product {\r\n      id\r\n      createdAt\r\n      approach\r\n      legacyType\r\n      mediums {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      purposes {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      methodology {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n\r\n# {\r\n#   \"input\": {\r\n#     \"product\": {\r\n#       \"id\": \"QOr4ZfTnxk\",\r\n#       \"mediums\": \"EBook\",\r\n#       \"purposes\": \"ChurchLife\",\r\n#       \"methodology\": \"Render\",\r\n#       \"produces\": \"\"\r\n#     }\r\n#   }\r\n# }\r\n\r\n# \"scriptureReferencesOverride\": {\r\n#         \"start\": {\r\n#           \"book\": \"{{scriptureReferencesOverrideStart}}\",\r\n#           \"chapter\": {{productScriptRefOverrideChapterStart}},\r\n#           \"verse\": {{productScriptRefOverrideVerseStart}}\r\n#         },\r\n#         \"end\": {\r\n#           \"book\": \"{{scriptureReferencesOverrideend}}\",\r\n#           \"chapter\": {{productScriptRefOverrideChapterEnd}},\r\n#           \"verse\": {{productScriptRefOverrideVerseEnd}}\r\n#         }\r\n#       }\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"product\": {\r\n      \"id\": \"{{productId}}\",\r\n      \"produces\": \"{{filmId}}\",\r\n      \"mediums\": \"{{productMediums}}\",\r\n      \"purposes\": \"{{productPurposes}}\",\r\n      \"methodology\": \"{{productMethodology}}\"\r\n      \r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"product\": {\r\n      \"id\": \"{{productId}}\",\r\n      \"produces\": \"{{storyId}}\",\r\n      \"mediums\": \"{{productMediums}}\",\r\n      \"purposes\": \"{{productPurposes}}\",\r\n      \"methodology\": \"{{productMethodology}}\"\r\n      \r\n    }\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -5635,235 +6117,6 @@
 							"graphql": {
 								"query": "mutation updateProduct($input: UpdateProductInput!) {\r\n  updateProduct(input: $input) {\r\n    product {\r\n      id\r\n      createdAt\r\n      approach\r\n      legacyType\r\n      mediums {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      purposes {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      methodology {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n\r\n# {\r\n#   \"input\": {\r\n#     \"product\": {\r\n#       \"id\": \"QOr4ZfTnxk\",\r\n#       \"mediums\": \"EBook\",\r\n#       \"purposes\": \"ChurchLife\",\r\n#       \"methodology\": \"Render\",\r\n#       \"produces\": \"\"\r\n#     }\r\n#   }\r\n# }\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"product\": {\r\n      \"id\": \"{{productId}}\"\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
-							}
-						},
-						"url": {
-							"raw": "{{env}}/graphql",
-							"host": [
-								"{{env}}"
-							],
-							"path": [
-								"graphql"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Update Product Success - with scriptRef ??",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"id": "0776b109-8bd6-4ffb-930c-cfba599797de",
-								"exec": [
-									"var jsonData = pm.response.json();\r",
-									"const moment = require('moment');\r",
-									"var product_data = JSON.parse(pm.variables.get(\"product_data\"));\r",
-									"\r",
-									"//Common Verification\r",
-									"pm.test(\"Status code is 200\", function () {\r",
-									"    pm.response.to.have.status(200);\r",
-									"});\r",
-									"\r",
-									"pm.test(\"Response time is less than 10000ms\", function () {\r",
-									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
-									"});\r",
-									"\r",
-									"\r",
-									"\r",
-									"//Test specific\r",
-									"pm.test(\"PENDING >> BUG ADDED #966(open) ( Getting 'No book matched' error while 'scriptureReferences' is provided as input instead of 'produces' field for updating product\", function () {\r",
-									"\r",
-									"    if (jsonData.errors) {\r",
-									"        pm.expect(\"BACKEND\").to.eql(\"PENDING\"); // fail forcefully\r",
-									"    } else {\r",
-									"        pm.expect(\"WRITE TEST CASES\").to.eql(\"ERRORS >>> \" + jsonData.errors[0].message);\r",
-									"    }\r",
-									"});\r",
-									"\r",
-									"\r",
-									"// pm.test(\"Verify that product ID is not blank or null\", function () {\r",
-									"//     var id = jsonData.data.updateProduct.product.id;\r",
-									"//     pm.expect(id).to.not.eql(null);\r",
-									"//     pm.expect(id).to.not.eql(\"\");\r",
-									"// });\r",
-									"\r",
-									"// pm.test(\"Verify that product's createdAt is in Specific time format\", function () {\r",
-									"//     var time = jsonData.data.updateProduct.product.createdAt;\r",
-									"//     var isValidTime = moment(time, \"YYYY-MM-DDTHH:mm:ss.SSSZ\", true).isValid();\r",
-									"//     pm.expect(isValidTime).to.eql(true);\r",
-									"// });\r",
-									"\r",
-									"// pm.test(\"Verify updated product's createdAt\", function () {\r",
-									"//     var time = jsonData.data.updateProduct.product.createdAt;\r",
-									"//     pm.expect(time).to.eql(product_data.createdAt);\r",
-									"// });\r",
-									"\r",
-									"// pm.test(\"Verify updated product's approach\", function () {\r",
-									"//     var approach = jsonData.data.updateProduct.product.approach;\r",
-									"//     pm.expect(approach).to.eql(product_data.approach);\r",
-									"// });\r",
-									"\r",
-									"// pm.test(\"Verify updated product legacyType\", function () {\r",
-									"//     var legacyType = jsonData.data.updateProduct.product.legacyType;\r",
-									"//     pm.expect(legacyType).to.eql(product_data.legacyType);\r",
-									"// });\r",
-									"\r",
-									"// pm.test(\"Verify updated product mediums are same as requested\", function () {\r",
-									"//     var mediums = jsonData.data.updateProduct.product.mediums.value[0];\r",
-									"//     pm.expect(mediums).to.eql(pm.globals.get('productMediums'));\r",
-									"// });\r",
-									"\r",
-									"// pm.test(\"Verify updated product purposes are same as requested\", function () {\r",
-									"//     var purposes = jsonData.data.updateProduct.product.purposes.value[0];\r",
-									"//     pm.expect(purposes).to.eql(pm.globals.get('productPurposes'));\r",
-									"// });\r",
-									"\r",
-									"// pm.test(\"Verify updated product methodology is same as requested\", function () {\r",
-									"//     var methodology = jsonData.data.updateProduct.product.methodology.value\r",
-									"//     pm.expect(methodology).to.eql(pm.globals.get('productMethodology'));\r",
-									"// });\r",
-									"\r",
-									"// // ScriptureReferences CASES PENDING\r",
-									"// pm.test(\"PENDING >> ScriptureReferences CASES PENDING + details not updated BUG ADDED #866\", function () {\r",
-									"//     if (jsonData.data) {\r",
-									"//         pm.expect(\"Backend\").to.eql(\"PENDING\"); // fail forcefully until validation done from backend\r",
-									"//     } else {\r",
-									"//         pm.expect(\"WRITE TEST CASE\").to.eql(\"PENDING\");\r",
-									"//     }\r",
-									"// });"
-								],
-								"type": "text/javascript"
-							}
-						},
-						{
-							"listen": "prerequest",
-							"script": {
-								"id": "91d4f3f5-2357-43ec-88d5-192ed74f8cae",
-								"exec": [
-									"const moment = require('moment');\r",
-									"pm.globals.set(\"timestamp\", moment().format(\"DDMMYYYYhhmmss\"));\r",
-									"\r",
-									"pm.globals.set(\"productProducesId\", pm.variables.replaceIn('{{$guid}}').slice(0, 7));\r",
-									"\r",
-									"// ScriptureReferences variables\r",
-									"pm.globals.set(\"productScriptRefBookStart\", \"ProductScriptureReferencesBookStart\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
-									"pm.globals.set(\"productScriptRefChapterStart\", _.random(1, 25));\r",
-									"pm.globals.set(\"productScriptRefVerseStart\", _.random(100, 200));\r",
-									"\r",
-									"pm.globals.set(\"productScriptRefBookEnd\", \"ProductScriptureReferencesBookEnd\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
-									"pm.globals.set(\"productScriptRefChapterEnd\", _.random(26, 50));\r",
-									"pm.globals.set(\"productScriptRefVerseEnd\", _.random(201, 300));\r",
-									"\r",
-									"// ScriptureReferencesOverride variables\r",
-									"pm.globals.set(\"productScriptRefOverrideBookStart\", \"ProductScriptureReferencesOverrideBookStart\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
-									"pm.globals.set(\"productScriptRefOverrideChapterStart\", _.random(51, 75));\r",
-									"pm.globals.set(\"productScriptRefOverrideVerseStart\", _.random(301, 400));\r",
-									"\r",
-									"pm.globals.set(\"productScriptRefOverrideBookEnd\", \"ProductScriptureReferencesOverrideBookEnd\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
-									"pm.globals.set(\"productScriptRefOverrideChapterEnd\", _.random(76, 100));\r",
-									"pm.globals.set(\"productScriptRefOverrideVerseEnd\", _.random(401, 500));\r",
-									"\r",
-									"\r",
-									"// Taking random value for the Product mediums from pre-defined possible values\r",
-									"var prodMediumsArray = [\r",
-									"    'Print',\r",
-									"    'Web',\r",
-									"    'EBook',\r",
-									"    'App',\r",
-									"    'Audio',\r",
-									"    'OralTranslation',\r",
-									"    'Video',\r",
-									"    'Other'\r",
-									"];\r",
-									"var randomNumber = Math.floor(Math.random() * prodMediumsArray.length);\r",
-									"pm.globals.set('productMediums', prodMediumsArray[randomNumber]);\r",
-									"\r",
-									"\r",
-									"// Taking random value for the Product purposes from pre-defined possible values\r",
-									"var prodPurposesArray = [\r",
-									"    'EvangelismChurchPlanting',\r",
-									"    'ChurchLife',\r",
-									"    // 'EBook',\r",
-									"    'ChurchMaturity',\r",
-									"    'SocialIssues',\r",
-									"    'Discipleship'\r",
-									"\r",
-									"];\r",
-									"var randomNumber = Math.floor(Math.random() * prodPurposesArray.length);\r",
-									"pm.globals.set('productPurposes', prodPurposesArray[randomNumber]);\r",
-									"\r",
-									"\r",
-									"// Taking random value for the Product methodology from pre-defined possible values\r",
-									"var prodMethodologyArray = [\r",
-									"    'Paratext',\r",
-									"    'OtherWritten',\r",
-									"    'Render',\r",
-									"    'OtherOralTranslation',\r",
-									"    'BibleStories',\r",
-									"    'BibleStorying',\r",
-									"    'OneStory',\r",
-									"    'OtherOralStories',\r",
-									"    'Film',\r",
-									"    'SignLanguage',\r",
-									"    'OtherVisual'\r",
-									"];\r",
-									"var randomNumber = Math.floor(Math.random() * prodMethodologyArray.length);\r",
-									"pm.globals.set('productMethodology', prodMethodologyArray[randomNumber]);\r",
-									"\r",
-									"// Product Output Values to be checked from pre-defined data\r",
-									"var productApproach_array = [\r",
-									"    \"Written\",\r",
-									"    \"OralTranslation\",\r",
-									"    \"OralStories\",\r",
-									"    \"Visual\"\r",
-									"];\r",
-									"pm.globals.set('productApproach_array', JSON.stringify(productApproach_array));\r",
-									"\r",
-									"var productLegacyType_array = [\r",
-									"    \"BibleStories\",\r",
-									"    \"JesusFilm\",\r",
-									"    \"Songs\",\r",
-									"    \"LiteracyMaterials\",\r",
-									"    \"OldTestamentPortions\",\r",
-									"    \"OldTestamentFull\",\r",
-									"    \"Gospel\",\r",
-									"    \"NewTestamentPortions\",\r",
-									"    \"NewTestamentFull\",\r",
-									"    \"FullBible\",\r",
-									"    \"IndividualBooks\",\r",
-									"    \"Genesis\"\r",
-									"];\r",
-									"pm.globals.set('productLegacyType_array', JSON.stringify(productLegacyType_array));\r",
-									"\r",
-									""
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "graphql",
-							"graphql": {
-								"query": "mutation updateProduct($input: UpdateProductInput!) {\r\n  updateProduct(input: $input) {\r\n    product {\r\n      id\r\n      createdAt\r\n      approach\r\n      legacyType\r\n      mediums {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      purposes {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      methodology {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n\r\n# {\r\n#   \"input\": {\r\n#     \"product\": {\r\n#       \"id\": \"QOr4ZfTnxk\",\r\n#       \"mediums\": \"EBook\",\r\n#       \"purposes\": \"ChurchLife\",\r\n#       \"methodology\": \"Render\",\r\n#       \"produces\": \"\"\r\n#     }\r\n#   }\r\n# }\r\n\r\n# \"scriptureReferencesOverride\": {\r\n#         \"start\": {\r\n#           \"book\": \"{{scriptureReferencesOverrideStart}}\",\r\n#           \"chapter\": {{productScriptRefOverrideChapterStart}},\r\n#           \"verse\": {{productScriptRefOverrideVerseStart}}\r\n#         },\r\n#         \"end\": {\r\n#           \"book\": \"{{scriptureReferencesOverrideend}}\",\r\n#           \"chapter\": {{productScriptRefOverrideChapterEnd}},\r\n#           \"verse\": {{productScriptRefOverrideVerseEnd}}\r\n#         }\r\n#       }\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"product\": {\r\n      \"id\": \"{{productId}}\",\r\n      \"mediums\" : \"{{productMediums}}\",\r\n      \"purposes\" : \"{{productPurposes}}\",\r\n      \"methodology\" : \"{{productMethodology}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{productScriptRefBookStart}}\",\r\n          \"chapter\": {{productScriptRefChapterStart}},\r\n          \"verse\": {{productScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{productScriptRefBookEnd}}\",\r\n          \"chapter\": {{productScriptRefChapterEnd}},\r\n          \"verse\": {{productScriptRefOverrideVerseEnd}}\r\n        }\r\n      }\r\n      \r\n    }\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -6107,22 +6360,34 @@
 									"pm.globals.set(\"productProducesId\", pm.variables.replaceIn('{{$guid}}').slice(0, 7));\r",
 									"\r",
 									"// ScriptureReferences variables\r",
-									"pm.globals.set(\"productScriptRefBookStart\", \"ProductScriptureReferencesBookStart\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
-									"pm.globals.set(\"productScriptRefChapterStart\", _.random(1, 25));\r",
-									"pm.globals.set(\"productScriptRefVerseStart\", _.random(100, 200));\r",
+									"pm.globals.set('productScriptRefBookStart', \"Genesis\");\r",
 									"\r",
-									"pm.globals.set(\"productScriptRefBookEnd\", \"ProductScriptureReferencesBookEnd\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
-									"pm.globals.set(\"productScriptRefChapterEnd\", _.random(26, 50));\r",
-									"pm.globals.set(\"productScriptRefVerseEnd\", _.random(201, 300));\r",
+									"pm.globals.set('productScriptRefChapterStart', 3);\r",
+									"\r",
+									"pm.globals.set('productScriptRefVerseStart', 4);\r",
+									"\r",
+									"let expectedLabelStart = `${pm.globals.get('productScriptRefBookStart')} ${pm.globals.get('productScriptRefChapterStart')}:${pm.globals.get('productScriptRefVerseStart')}`;\r",
+									"\r",
+									"pm.globals.set('productScriptRefLabelStart',expectedLabelStart);\r",
+									"\r",
+									"pm.globals.set('productScriptRefBookEnd', \"Genesis\");\r",
+									"\r",
+									"pm.globals.set('productScriptRefChapterEnd', 3);\r",
+									"\r",
+									"pm.globals.set('productScriptRefVerseEnd', 4);\r",
+									"\r",
+									"let expectedLabelEnd = `${pm.globals.get('productScriptRefBookEnd')} ${pm.globals.get('productScriptRefChapterEnd')}:${pm.globals.get('productScriptRefVerseEnd')}`\r",
+									"\r",
+									"pm.globals.set('productScriptRefLabelEnd', expectedLabelEnd);\r",
 									"\r",
 									"// ScriptureReferencesOverride variables\r",
-									"pm.globals.set(\"productScriptRefOverrideBookStart\", \"ProductScriptureReferencesOverrideBookStart\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
-									"pm.globals.set(\"productScriptRefOverrideChapterStart\", _.random(51, 75));\r",
-									"pm.globals.set(\"productScriptRefOverrideVerseStart\", _.random(301, 400));\r",
+									"// pm.globals.set(\"productScriptRefOverrideBookStart\", \"ProductScriptureReferencesOverrideBookStart\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
+									"// pm.globals.set(\"productScriptRefOverrideChapterStart\", _.random(51, 75));\r",
+									"// pm.globals.set(\"productScriptRefOverrideVerseStart\", _.random(301, 400));\r",
 									"\r",
-									"pm.globals.set(\"productScriptRefOverrideBookEnd\", \"ProductScriptureReferencesOverrideBookEnd\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
-									"pm.globals.set(\"productScriptRefOverrideChapterEnd\", _.random(76, 100));\r",
-									"pm.globals.set(\"productScriptRefOverrideVerseEnd\", _.random(401, 500));\r",
+									"// pm.globals.set(\"productScriptRefOverrideBookEnd\", \"ProductScriptureReferencesOverrideBookEnd\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
+									"// pm.globals.set(\"productScriptRefOverrideChapterEnd\", _.random(76, 100));\r",
+									"// pm.globals.set(\"productScriptRefOverrideVerseEnd\", _.random(401, 500));\r",
 									"\r",
 									"\r",
 									"// Taking random value for the Product mediums from pre-defined possible values\r",
@@ -6219,7 +6484,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation CreateProduct($input: CreateProductInput!) {\r\n  createProduct(input: $input) {\r\n    product {\r\n      id\r\n      createdAt\r\n      approach\r\n      legacyType\r\n      mediums {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      purposes {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      methodology {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}",
-								"variables": "{\r\n  \"input\": {\r\n    \"product\": {\r\n      \"engagementId\": \"{{languageEngagementId}}\",\r\n      \"produces\": \"{{filmId}}\",\r\n      \"mediums\": \"{{productMediums}}\",\r\n      \"purposes\": \"{{productPurposes}}\",\r\n      \"methodology\": \"{{productMethodology}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{productScriptRefBookStart}}\",\r\n          \"chapter\": {{productScriptRefChapterStart}},\r\n          \"verse\": {{productScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{productScriptRefBookEnd}}\",\r\n          \"chapter\": {{productScriptRefChapterEnd}},\r\n          \"verse\": {{productScriptRefOverrideVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"product\": {\r\n      \"engagementId\": \"{{languageEngagementId}}\",\r\n      \"mediums\": \"{{productMediums}}\",\r\n      \"purposes\": \"{{productPurposes}}\",\r\n      \"methodology\": \"{{productMethodology}}\",\r\n       \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{productScriptRefBookStart}}\",\r\n                    \"chapter\": {{productScriptRefChapterStart}},\r\n                    \"verse\": {{productScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{productScriptRefBookEnd}}\",\r\n                    \"chapter\": {{productScriptRefChapterEnd}},\r\n                    \"verse\": {{productScriptRefVerseEnd}}\r\n                }\r\n            }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -6447,15 +6712,56 @@
 									"    pm.expect(methodology).to.eql(product_data.methodology.value);\r",
 									"});\r",
 									"\r",
-									"pm.test(\"Verifying product scriptureReferences - BUG ADDED #867(closed-Sprint 14)\", function () {\r",
-									"    var scriptureReferences = myProduct.scriptureReferences.value\r",
-									"    pm.expect(scriptureReferences).to.not.eql(null);\r",
-									"    pm.expect(scriptureReferences).to.not.eql(\"\");\r",
-									"    pm.expect(scriptureReferences).to.not.eql([]); // This will pass once value back to this Object and test failed in below if\r",
-									"    if (typeof scriptureReferences !== typeof [])\r",
-									"        pm.expect(\"WRITE TEST CASES\").to.eql(\"PENDING >>> \" + scriptureReferences);\r",
+									"// scriptureReferences specific testcases\r",
+									"pm.test(\"Verifying product scriptureReferences start book\", function () {\r",
+									"    var startBook = myProduct.scriptureReferences.value[0].start.book;\r",
+									"    pm.expect(startBook).to.eql(product_data.scriptureReferences.value[0].start.book);\r",
 									"});\r",
-									""
+									"\r",
+									"pm.test(\"Verifying product scriptureReferences start chapter\", function () {\r",
+									"    var startChapter = myProduct.scriptureReferences.value[0].start.chapter;\r",
+									"    pm.expect(startChapter).to.eql(product_data.scriptureReferences.value[0].start.chapter);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verifying product scriptureReferences start verse\", function () {\r",
+									"    var startVerse = myProduct.scriptureReferences.value[0].start.verse;\r",
+									"    pm.expect(startVerse).to.eql(product_data.scriptureReferences.value[0].start.verse);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verifying product scriptureReferences start book name\", function () {\r",
+									"    var startBookName = myProduct.scriptureReferences.value[0].start.bookName;\r",
+									"    pm.expect(startBookName).to.eql(product_data.scriptureReferences.value[0].start.bookName);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verifying product scriptureReferences start label\", function () {\r",
+									"    var startLabel = myProduct.scriptureReferences.value[0].start.label;\r",
+									"    pm.expect(startLabel).to.eql(product_data.scriptureReferences.value[0].start.label);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verifying product scriptureReferences end book\", function () {\r",
+									"    var endBook = myProduct.scriptureReferences.value[0].end.book;\r",
+									"    pm.expect(endBook).to.eql(product_data.scriptureReferences.value[0].end.book);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verifying product scriptureReferences end chapter\", function () {\r",
+									"    var endChapter = myProduct.scriptureReferences.value[0].end.chapter;\r",
+									"    pm.expect(endChapter).to.eql(product_data.scriptureReferences.value[0].end.chapter);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verifying product scriptureReferences end verse\", function () {\r",
+									"    var endVerse = myProduct.scriptureReferences.value[0].end.verse;\r",
+									"    pm.expect(endVerse).to.eql(product_data.scriptureReferences.value[0].end.verse);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verifying product scriptureReferences end book name\", function () {\r",
+									"    var endBookName = myProduct.scriptureReferences.value[0].end.bookName;\r",
+									"    pm.expect(endBookName).to.eql(product_data.scriptureReferences.value[0].end.bookName);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verifying product scriptureReferences end label\", function () {\r",
+									"    var endLabel = myProduct.scriptureReferences.value[0].end.label;\r",
+									"    pm.expect(endLabel).to.eql(product_data.scriptureReferences.value[0].end.label);\r",
+									"});"
 								],
 								"type": "text/javascript"
 							}
