@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { HeadObjectOutput } from 'aws-sdk/clients/s3';
+import { AWSError } from 'aws-sdk';
 import { generate } from 'shortid';
 import {
   DuplicateException,
@@ -218,12 +218,24 @@ export class FileService {
       tempUpload.status === 'rejected' &&
       existingUpload.status === 'rejected'
     ) {
-      throw new NotFoundException('Could not find upload', 'uploadId');
+      if (
+        (tempUpload.reason as AWSError).code === 'NotFound' ||
+        tempUpload.reason instanceof NotFoundException
+      ) {
+        throw new NotFoundException('Could not find upload', 'uploadId');
+      }
+      throw new ServerException('Unable to create file version');
     } else if (
       tempUpload.status === 'fulfilled' &&
       existingUpload.status === 'fulfilled'
     ) {
-      throw new InputException('Upload request has already been used');
+      if (tempUpload.value && existingUpload.value) {
+        throw new InputException(
+          'Upload request has already been used',
+          'uploadId'
+        );
+      }
+      throw new ServerException('Unable to create file version');
     } else if (
       tempUpload.status === 'rejected' &&
       existingUpload.status === 'fulfilled'
@@ -231,7 +243,7 @@ export class FileService {
       const fileNode = await this.getFileNode(uploadId, session);
 
       if (fileNode) {
-        throw new InputException('Already uploaded');
+        throw new InputException('Already uploaded', 'uploadId');
       }
     }
 
@@ -252,9 +264,14 @@ export class FileService {
       uploadId,
     });
 
-    const mimeType =
-      (tempUpload as PromiseFulfilledResult<HeadObjectOutput>).value
-        .ContentType ?? 'application/octet-stream';
+    const upload =
+      tempUpload.status === 'fulfilled'
+        ? tempUpload.value
+        : existingUpload.status === 'fulfilled'
+        ? existingUpload.value
+        : undefined;
+
+    const mimeType = upload?.ContentType ?? 'application/octet-stream';
     const category = getCategoryFromMimeType(mimeType);
     await this.repo.createFileVersion(
       fileId,
@@ -262,15 +279,16 @@ export class FileService {
         id: uploadId,
         name,
         mimeType,
-        size:
-          (tempUpload as PromiseFulfilledResult<HeadObjectOutput>).value
-            .ContentLength ?? 0,
+        size: upload?.ContentLength ?? 0,
         category,
       },
       session
     );
 
-    await this.bucket.moveObject(`temp/${uploadId}`, uploadId);
+    // Skip S3 move if it's not needed
+    if (existingUpload.status === 'rejected') {
+      await this.bucket.moveObject(`temp/${uploadId}`, uploadId);
+    }
 
     return await this.getFile(fileId, session);
   }
