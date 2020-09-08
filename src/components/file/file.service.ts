@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { AWSError } from 'aws-sdk';
+import { HeadObjectOutput } from 'aws-sdk/clients/s3';
 import { generate } from 'shortid';
 import {
   DuplicateException,
@@ -209,26 +209,25 @@ export class FileService {
     { parentId, uploadId, name }: CreateFileVersionInput,
     session: ISession
   ): Promise<File> {
-    let upload;
-    let rootUpload;
-    try {
-      upload = await this.bucket.headObject(`temp/${uploadId}`);
-      rootUpload = await this.bucket.headObject(`${uploadId}`);
-    } catch (e) {
-      if (
-        (e as AWSError).code === 'NotFound' ||
-        e instanceof NotFoundException
-      ) {
-        throw new InputException('Could not find upload', 'uploadId');
-      }
-      throw new ServerException('Unable to create file version');
-    }
+    const [tempUpload, existingUpload] = await Promise.allSettled([
+      this.bucket.headObject(`temp/${uploadId}`),
+      this.bucket.headObject(uploadId),
+    ]);
 
-    if (!upload && !rootUpload) {
+    if (
+      tempUpload.status === 'rejected' &&
+      existingUpload.status === 'rejected'
+    ) {
       throw new NotFoundException('Could not find upload', 'uploadId');
-    } else if (upload && rootUpload) {
+    } else if (
+      tempUpload.status === 'fulfilled' &&
+      existingUpload.status === 'fulfilled'
+    ) {
       throw new InputException('Upload request has already been used');
-    } else if (!upload && rootUpload) {
+    } else if (
+      tempUpload.status === 'rejected' &&
+      existingUpload.status === 'fulfilled'
+    ) {
       const fileNode = await this.getFileNode(uploadId, session);
 
       if (fileNode) {
@@ -253,7 +252,9 @@ export class FileService {
       uploadId,
     });
 
-    const mimeType = upload.ContentType ?? 'application/octet-stream';
+    const mimeType =
+      (tempUpload as PromiseFulfilledResult<HeadObjectOutput>).value
+        .ContentType ?? 'application/octet-stream';
     const category = getCategoryFromMimeType(mimeType);
     await this.repo.createFileVersion(
       fileId,
@@ -261,7 +262,9 @@ export class FileService {
         id: uploadId,
         name,
         mimeType,
-        size: upload.ContentLength ?? 0,
+        size:
+          (tempUpload as PromiseFulfilledResult<HeadObjectOutput>).value
+            .ContentLength ?? 0,
         category,
       },
       session
