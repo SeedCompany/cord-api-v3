@@ -39,7 +39,6 @@ import {
   LiteracyMaterial,
   LiteracyMaterialService,
 } from '../literacy-material';
-import { ScriptureRangeInput } from '../scripture';
 import { scriptureToVerseRange } from '../scripture/reference';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
 import { Song, SongService } from '../song';
@@ -491,18 +490,17 @@ export class ProductService {
         ])
         .return('rel')
         .first();
+    } else {
+      await this.scriptureRefService.update(input.id, scriptureReferences);
     }
 
-    if (!produces && scriptureReferences) {
-      await this.updateScriptureReferences(input.id, scriptureReferences);
-    }
+    await this.scriptureRefService.update(
+      input.id,
+      scriptureReferencesOverride,
+      { isOverriding: true }
+    );
 
     if (scriptureReferencesOverride) {
-      await this.updateScriptureReferences(
-        input.id,
-        scriptureReferencesOverride,
-        true
-      );
       await this.db
         .query()
         .match([
@@ -511,7 +509,7 @@ export class ProductService {
           node('p', 'Property', { active: true }),
         ])
         .setValues({
-          'p.value': true,
+          'p.value': scriptureReferencesOverride !== null,
         })
         .run();
     }
@@ -525,48 +523,6 @@ export class ProductService {
       changes: rest,
       nodevar: 'product',
     });
-  }
-
-  protected async updateScriptureReferences(
-    productId: string,
-    scriptureReferences: ScriptureRangeInput[],
-    isOverride?: boolean
-  ): Promise<void> {
-    const rel = !isOverride
-      ? 'scriptureReferences'
-      : 'scriptureReferencesOverride';
-    await this.db
-      .query()
-      .match([
-        node('product', 'Product', { id: productId, active: true }),
-        relation('out', 'rel', rel, { active: true }),
-        node('sr', 'ScriptureRange', { active: true }),
-      ])
-      .setValues({
-        'rel.active': false,
-        'sr.active': false,
-      })
-      .return('sr')
-      .first();
-
-    for (const sr of scriptureReferences) {
-      const verseRange = scriptureToVerseRange(sr);
-      await this.db
-        .query()
-        .match([node('product', 'Product', { id: productId, active: true })])
-        .create([
-          node('product'),
-          relation('out', '', rel, { active: true }),
-          node('', ['ScriptureRange', 'BaseNode'], {
-            start: verseRange.start,
-            end: verseRange.end,
-            active: true,
-            createdAt: DateTime.local(),
-          }),
-        ])
-        .return('product')
-        .first();
-    }
   }
 
   async delete(id: string, session: ISession): Promise<void> {
