@@ -43,6 +43,13 @@ import {
 
 @Injectable()
 export class CeremonyService {
+  private readonly securedProperties = {
+    type: true,
+    planned: true,
+    estimatedDate: true,
+    actualDate: true,
+  };
+
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
@@ -230,12 +237,7 @@ export class CeremonyService {
     const securedProps = parseSecuredProperties(
       result.propList,
       result.permList,
-      {
-        type: true,
-        planned: true,
-        estimatedDate: true,
-        actualDate: true,
-      }
+      this.securedProperties
     );
 
     return {
@@ -285,12 +287,6 @@ export class CeremonyService {
     { filter, ...input }: CeremonyListInput,
     session: ISession
   ): Promise<CeremonyListOutput> {
-    const securedProperties = [
-      'type',
-      'planned',
-      'estimatedDate',
-      'actualDate',
-    ];
     const label = 'Ceremony';
     const query = this.db
       .query()
@@ -305,7 +301,7 @@ export class CeremonyService {
           : []),
       ])
       .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
-        sort in securedProperties
+        sort in this.securedProperties
           ? q
               .match([
                 node('node'),

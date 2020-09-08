@@ -43,6 +43,10 @@ import {
 
 @Injectable()
 export class OrganizationService {
+  private readonly securedProperties = {
+    name: true,
+  };
+
   constructor(
     @Logger('org:service') private readonly logger: ILogger,
     private readonly config: ConfigService,
@@ -178,9 +182,11 @@ export class OrganizationService {
       );
     }
 
-    const secured = parseSecuredProperties(result.propList, result.permList, {
-      name: true,
-    });
+    const secured = parseSecuredProperties(
+      result.propList,
+      result.permList,
+      this.securedProperties
+    );
 
     return {
       ...parseBaseNodeProperties(result.node),
@@ -225,7 +231,6 @@ export class OrganizationService {
     { filter, ...input }: OrganizationListInput,
     session: ISession
   ): Promise<OrganizationListOutput> {
-    const securedProperties = ['name'];
     const label = 'Organization';
     const query = this.db
       .query()
@@ -248,7 +253,7 @@ export class OrganizationService {
         filter.name ? q.where({ name: { value: contains(filter.name) } }) : q
       )
       .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
-        sort in securedProperties
+        sort in this.securedProperties
           ? q
               .match([
                 node('node'),
