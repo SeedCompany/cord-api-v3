@@ -28,8 +28,11 @@ newman run Cord_API_V3_Product.postman_collection.json -e integration.postman_en
 >> LiteracyMaterial
 newman run Cord_API_V3_LiteracyMaterial.postman_collection.json -e integration.postman_environment.json -g MyWorkspace.postman_globals.json -r htmlextra --delay-request 1000
 
->> Fim
+>> Film
 newman run Cord_API_V3_Film.postman_collection.json -e integration.postman_environment.json -g MyWorkspace.postman_globals.json -r htmlextra --delay-request 1000
 
 >> Story
 newman run Cord_API_V3_Story.postman_collection.json -e integration.postman_environment.json -g MyWorkspace.postman_globals.json -r htmlextra --delay-request 1000
+
+>> FileUpload
+newman run Cord_API_V3_FileUpload.postman_collection.json -e integration.postman_environment.json -g MyWorkspace.postman_globals.json -r htmlextra --delay-request 1000

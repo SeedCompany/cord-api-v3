@@ -779,10 +779,85 @@
 			"key": "createPartnershipMouDownloadUrl",
 			"value": "",
 			"enabled": true
+		},
+		{
+			"key": "mouName",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "prodMethodologyArray",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "typesArray",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "partTypesArray",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "partnershipTypeArray",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "ceremonyid",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "ceremonyId",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "ceremony_data",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "actualDate",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "estimatedDate",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "productScriptRefLabelStart",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "productScriptRefLabelEnd",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "scriptRefArray",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "storyScriptRefLabelEnd",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "storyScriptRefLabelStart",
+			"value": "",
+			"enabled": true
 		}
 	],
 	"name": "MyWorkspace Globals",
 	"_postman_variable_scope": "globals",
-	"_postman_exported_at": "2020-08-25T13:43:09.559Z",
-	"_postman_exported_using": "Postman/7.30.1"
+	"_postman_exported_at": "2020-09-08T14:29:23.155Z",
+	"_postman_exported_using": "Postman/7.31.1"
 }

@@ -349,6 +349,112 @@
 					"response": []
 				},
 				{
+					"name": "Create Song success Copy",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "9c888400-95ec-47b3-9a4b-eb7c3dea1b98",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"const moment = require('moment');",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that Song ID is not blank or null\", function () {",
+									"    var id = jsonData.data.createSong.song.id;",
+									"    pm.expect(id).to.not.eql(null);",
+									"    pm.expect(id).to.not.eql(\"\");",
+									"",
+									"    // Saving data for future use",
+									"    pm.globals.set(\"songId\", id);",
+									"});",
+									"",
+									"// Saving whole Song Object to globals for future use",
+									"var song = JSON.stringify(jsonData.data.createSong.song);",
+									"pm.globals.set(\"song_data\", song);",
+									"",
+									"pm.test(\"Verify that song's createdAt is in Specific time format\", function () {",
+									"    var time = jsonData.data.createSong.song.createdAt;",
+									"    var isValidTime = moment(time, \"YYYY-MM-DDTHH:mm:ss.SSSZ\", true).isValid();",
+									"    pm.expect(isValidTime).to.eql(true);",
+									"});",
+									"",
+									"pm.test(\"Verify that song Name is same as requested\", function () {",
+									"    var songName = jsonData.data.createSong.song.name.value;",
+									"    pm.expect(songName).to.eql(pm.globals.get('songName'));",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "7a168601-4d65-4b82-a5cf-4b1d6ebc4ff6",
+								"exec": [
+									"const moment = require('moment');\r",
+									"\r",
+									"pm.globals.set(\"songName\", \"SongName\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
+									"\r",
+									"// ScriptureReferences variables\r",
+									"pm.globals.set(\"songScriptRefBookStart\", \"SongScriptureReferencesBookStart\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
+									"pm.globals.set(\"songScriptRefChapterStart\", _.random(1, 25));\r",
+									"pm.globals.set(\"songScriptRefVerseStart\", _.random(100, 250));\r",
+									"\r",
+									"pm.globals.set(\"songScriptRefBookEnd\", \"SongScriptureReferencesBookEnd\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
+									"pm.globals.set(\"songScriptRefChapterEnd\", _.random(26, 50));\r",
+									"pm.globals.set(\"songScriptRefVerseEnd\", _.random(251, 500));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"song\": {\r\n            \"name\": \"{{songName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"Leviticus\",\r\n                    \"chapter\": 7,\r\n                    \"verse\": 4\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"Leviticus\",\r\n                    \"chapter\": 3,\r\n                    \"verse\": 4\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Create Song Mandatory Field Blank - Name",
 					"event": [
 						{
@@ -2158,7 +2264,7 @@
 					"response": []
 				},
 				{
-					"name": "Update Song  Mandatory Field Blank  - Id??????",
+					"name": "Update Song  Mandatory Field Blank  - Id",
 					"event": [
 						{
 							"listen": "test",
@@ -2223,7 +2329,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation updateSong($input: UpdateSongInput!) {\r\n  updateSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"song\": {\r\n      \"id\": \"\",\r\n      \"name\": \"{{songName}}\"\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"song\": {\r\n      \"id\": \"\",\r\n      \"name\": \"aaaa\"\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -2569,7 +2675,7 @@
 					"response": []
 				},
 				{
-					"name": "Update Song  Parameter Invalid - id???",
+					"name": "Update Song  Parameter Invalid - id",
 					"event": [
 						{
 							"listen": "test",
@@ -2725,7 +2831,7 @@
 					"response": []
 				},
 				{
-					"name": "Get All Songs Success???",
+					"name": "Get All Songs Success",
 					"event": [
 						{
 							"listen": "test",

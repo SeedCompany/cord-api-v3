@@ -1,0 +1,938 @@
+{
+	"info": {
+		"_postman_id": "57d86d9e-9c11-4905-8676-8c6e738fcc32",
+		"name": "Cord_API_V3_FileUpload",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Pre-req ( Sesion + Register + Login ) for FileUpload",
+			"item": [
+				{
+					"name": "Session",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "72ef4b8b-43ae-46b1-a546-ba66c3d37720",
+								"exec": [
+									"var response = pm.response.json();\r",
+									"pm.globals.set(\"token\", response.data.session.token);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "# Write your query or mutation here\r\nquery {\r\n  session(browser: false) {\r\n    user {\r\n      id,\r\n      email\r\n      {\r\n        value\r\n      }\r\n      realFirstName\r\n      {\r\n        value\r\n      }\r\n      createdAt\r\n      displayLastName\r\n      {\r\n         value\r\n      }\r\n      \r\n      \r\n      \r\n    },\r\n    token\r\n  }\r\n}",
+								"variables": ""
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Root Register",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "5d0e4d31-6de5-4618-b745-2bfdd4d529de",
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"\r",
+									"// This is safe check to prevent failing futher cases If the Root User is already Created\r",
+									"if (jsonData.errors) {\r",
+									"    if (jsonData.errors.length) return;\r",
+									"}\r",
+									"\r",
+									"//Saving data for future use\r",
+									"var id = jsonData.data.register.user.id;\r",
+									"pm.globals.set(\"userid\", id);\r",
+									"\r",
+									"var user = JSON.stringify(jsonData.data.register.user);\r",
+									"pm.globals.set(\"user_data\", user);\r",
+									"\r",
+									"var email = jsonData.data.register.user.email.value;\r",
+									"pm.globals.set(\"email\", email);"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "30caa7b9-facd-4ba6-ae4f-fd9c8c083807",
+								"exec": [
+									"const moment = require('moment');\r",
+									"pm.globals.set(\"timestamp\", moment().format(\"DDMYYYYhhmmss\"));\r",
+									"\r",
+									"pm.globals.set(\"realFirstName\", \"FirstName\" + moment().format(\"DDMYYYYhhmmss\"));\r",
+									"pm.globals.set(\"realLastName\", \"LastName\" + moment().format(\"DDMYYYYhhmmss\"));\r",
+									"pm.globals.set(\"email\", \"email\" + moment().format(\"DDMYYYYhhmmss\") + \"@test.com\");\r",
+									"pm.globals.set(\"password\", moment().format(\"DDMYYYYhhmmss\"));\r",
+									"pm.globals.set(\"displayFirstName\", \"DisplayFirstName\" + moment().format(\"DDMYYYYhhmmss\"));\r",
+									"pm.globals.set(\"displayLastName\", \"DisplayLastName\" + moment().format(\"DDMYYYYhhmmss\"));\r",
+									"pm.globals.set(\"phone\", pm.variables.replaceIn('{{$randomPhoneNumber}}'));\r",
+									"\r",
+									"var timezoneObject = {\r",
+									"    \"name\": \"Europe/Andorra\",\r",
+									"    \"lat\": 42.5,\r",
+									"    \"long\": 1.5167,\r",
+									"    \"countries\": [\r",
+									"        {\r",
+									"            \"code\": \"AD\",\r",
+									"            \"name\": \"Andorra\",\r",
+									"            \"zones\": [\r",
+									"                {\r",
+									"                    \"name\": \"Europe/Andorra\",\r",
+									"                    \"lat\": 42.5,\r",
+									"                    \"long\": 1.5167,\r",
+									"                    \"countries\": [\r",
+									"                        {\r",
+									"                            \"code\": \"AD\",\r",
+									"                            \"name\": \"Andorra\"\r",
+									"                        }\r",
+									"                    ]\r",
+									"                }\r",
+									"            ]\r",
+									"        }\r",
+									"    ]\r",
+									"};\r",
+									"pm.globals.set('timezoneObject', JSON.stringify(timezoneObject));\r",
+									"pm.globals.set(\"timezone\", timezoneObject.name);\r",
+									"\r",
+									"pm.globals.set(\"bio\", \"I'm Tester\");\r",
+									"\r",
+									"// Taking random value for the User status from pre-defined possible values\r",
+									"var userStatusArray = ['Active','Disabled'];\r",
+									"var randomNumber = Math.floor(Math.random()*userStatusArray.length);\r",
+									"// pm.globals.set('userStatus', userStatusArray[randomNumber]);\r",
+									"pm.globals.set(\"userStatus\", \"Active\");\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation register($input: RegisterInput!) {\r\n  register(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value{\r\n          name\r\n          lat\r\n          long\r\n          countries{\r\n            code\r\n            name\r\n            zones{\r\n              name\r\n              lat\r\n              long\r\n              countries{\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      bio {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}",
+								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"realFirstName\": \"Piyush\",\r\n    \"realLastName\": \"Patel\",\r\n    \"email\" : \"{{login_email}}\",\r\n    \"password\": \"{{login_password}}\",\r\n    \"displayFirstName\": \"{{displayFirstName}}\",\r\n    \"displayLastName\": \"{{displayLastName}}\",\r\n    \"phone\": \"{{phone}}\",\r\n    \"timezone\": \"{{timezone}}\",\r\n    \"bio\": \"{{bio}}\",\r\n    \"status\": \"{{userStatus}}\"\r\n  }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Root Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "c44ca49e-3439-4259-81c7-39c817faf7d3",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"var id = jsonData.data.login.user.id;",
+									"pm.globals.set(\"userid\", id);",
+									"",
+									"var email = jsonData.data.login.user.email.value;",
+									"pm.globals.set(\"email\", email);",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "2fb69ddd-3b08-47cb-ba99-a7884d618e53",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation login($input: LoginInput!) {\r\n  login(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      bio {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": " {\r\n \t\"input\": \r\n  {\r\n     \"email\": \"{{login_email}}\",\r\n     \"password\":\"{{login_password}}\"\r\n  }\r\n}\r\n"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "FileUpload",
+			"item": [
+				{
+					"name": "Request File Upload",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "777853d3-17f2-4c25-8b00-21bfd48e318f",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that requestFileUpload ID is not blank or null\", function () {",
+									"    var id = jsonData.data.requestFileUpload.id;",
+									"    pm.expect(id).to.not.eql(null);",
+									"    pm.expect(id).to.not.eql(\"\");",
+									"",
+									"    // Saving data for future use",
+									"    pm.globals.set(\"requestFileUploadId\", id);",
+									"});",
+									"",
+									"pm.test(\"Verify that requestFileUpload url is not blank or null\", function () {",
+									"    var url = jsonData.data.requestFileUpload.url;",
+									"    pm.expect(url).to.not.eql(null);",
+									"    pm.expect(url).to.not.eql(\"\");",
+									"",
+									"    // Saving data for future use",
+									"    pm.globals.set(\"requestFileUploadUrl\", url);",
+									"});",
+									"",
+									"pm.test(\"Verify that requestFileUpload url contains file keyword\", function () {",
+									"    var url = jsonData.data.requestFileUpload.url;",
+									"    pm.expect(url).to.include('/file?signed=');",
+									"});",
+									"",
+									"//Saving data for future use",
+									"var requestFileUpload = JSON.stringify(jsonData.data.requestFileUpload);",
+									"pm.globals.set(\"requestFileUpload_data\", requestFileUpload);"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "8254a7c2-dd4d-437b-95fd-43e44452f785",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation {\r\n  requestFileUpload{\r\n    id\r\n    url\r\n  }\r\n}",
+								"variables": ""
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Upload File Using RequestFileUploadUrl -Row Text",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "9711ba30-4835-47c6-a7ad-c232603d3788",
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"\r",
+									"//Common Verification\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
+									"});\r",
+									"\r",
+									"//Test Specific\r",
+									"pm.test(\"Verify that row text file is uploaded\", function () {\r",
+									"    pm.expect(jsonData.ok).to.eql(true);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"colors\"; [\r\n    {\r\n      \"color\": \"black\",\r\n      \"category\": \"hue\",\r\n      \"type\": \"primary\",\r\n      \"code\": {\r\n        \"rgba\": [\r\n          255,\r\n          255,\r\n          255,\r\n          1\r\n        ],\r\n        \"hex\": \"#000\"\r\n      }\r\n    },\r\n    {\r\n      \"color\": \"white\",\r\n      \"category\": \"value\",\r\n      \"code\": {\r\n        \"rgba\": [\r\n          0,\r\n          0,\r\n          0,\r\n          1\r\n        ],\r\n        \"hex\": \"#FFF\"\r\n      }\r\n    },\r\n    {\r\n      \"color\": \"red\",\r\n      \"category\": \"hue\",\r\n      \"type\": \"primary\",\r\n      \"code\": {\r\n        \"rgba\": [\r\n          255,\r\n          0,\r\n          0,\r\n          1\r\n        ],\r\n        \"hex\": \"#FF0\"\r\n      }\r\n    },\r\n    {\r\n      \"color\": \"blue\",\r\n      \"category\": \"hue\",\r\n      \"type\": \"primary\",\r\n      \"code\": {\r\n        \"rgba\": [\r\n          0,\r\n          0,\r\n          255,\r\n          1\r\n        ],\r\n        \"hex\": \"#00F\"\r\n      }\r\n    },\r\n    {\r\n      \"color\": \"yellow\",\r\n      \"category\": \"hue\",\r\n      \"type\": \"primary\",\r\n      \"code\": {\r\n        \"rgba\": [\r\n          255,\r\n          255,\r\n          0,\r\n          1\r\n        ],\r\n        \"hex\": \"#FF0\"\r\n      }\r\n    },\r\n    {\r\n      \"color\": \"green\",\r\n      \"category\": \"hue\",\r\n      \"type\": \"secondary\",\r\n      \"code\": {\r\n        \"rgba\": [\r\n          0,\r\n          255,\r\n          0,\r\n          1\r\n        ],\r\n        \"hex\": \"#0F0\"\r\n      }\r\n    }\r\n  ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "text"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{requestFileUploadUrl}}",
+							"host": [
+								"{{requestFileUploadUrl}}"
+							],
+							"query": [
+								{
+									"key": "signed",
+									"value": null,
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Upload File Using RequestFileUploadUrl -Row JavaScript",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "aa7a1893-e931-439f-b182-edeeac2aa4b9",
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"\r",
+									"//Common Verification\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
+									"});\r",
+									"\r",
+									"//Test Specific\r",
+									"pm.test(\"Verify that row javascript file is uploaded\", function () {\r",
+									"    pm.expect(jsonData.ok).to.eql(true);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "<!DOCTYPE html>\r\n<html>\r\n<body>\r\n\r\n<h2>What Can JavaScript Do?</h2>\r\n\r\n<p id=\"demo\">JavaScript can change the style of an HTML element.</p>\r\n\r\n<button type=\"button\" onclick=\"document.getElementById('demo').style.fontSize='35px'\">Click Me!</button>\r\n\r\n</body>\r\n</html> \r\n",
+							"options": {
+								"raw": {
+									"language": "javascript"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{requestFileUploadUrl}}",
+							"host": [
+								"{{requestFileUploadUrl}}"
+							],
+							"query": [
+								{
+									"key": "signed",
+									"value": null,
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Upload File Using RequestFileUploadUrl -Row Html",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "2e02af2d-75b8-46ce-9d23-518de7d981b1",
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"\r",
+									"//Common Verification\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
+									"});\r",
+									"\r",
+									"//Test Specific\r",
+									"pm.test(\"Verify that row html file is uploaded\", function () {\r",
+									"    pm.expect(jsonData.ok).to.eql(true);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "<html>\r\n<head>\r\n<title>\r\nA Simple HTML Document\r\n</title>\r\n</head>\r\n<body bgcolor=\"skyblue\">\r\n<h1> Seed Company file upload test</h1>\r\n<p>This is a very simple HTML document</p>\r\n<p>It only has two paragraphs</p>\r\n</body>\r\n</html>",
+							"options": {
+								"raw": {
+									"language": "html"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{requestFileUploadUrl}}",
+							"host": [
+								"{{requestFileUploadUrl}}"
+							],
+							"query": [
+								{
+									"key": "signed",
+									"value": null,
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Upload File Using RequestFileUploadUrl -Row XML",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "63fe5ea1-d3ab-416e-89b0-b5a97ae2b5b9",
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"\r",
+									"//Common Verification\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
+									"});\r",
+									"\r",
+									"//Test Specific\r",
+									"pm.test(\"Verify that row xml file is uploaded\", function () {\r",
+									"    pm.expect(jsonData.ok).to.eql(true);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "<?xml version=\"1.0\"?>\r\n<catalog>\r\n   <book id=\"bk101\">\r\n      <author>Gambardella, Matthew</author>\r\n      <title>XML Developer's Guide</title>\r\n      <genre>Computer</genre>\r\n      <price>44.95</price>\r\n      <publish_date>2000-10-01</publish_date>\r\n      <description>An in-depth look at creating applications \r\n      with XML.</description>\r\n   </book>\r\n   </catalog>",
+							"options": {
+								"raw": {
+									"language": "xml"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{requestFileUploadUrl}}",
+							"host": [
+								"{{requestFileUploadUrl}}"
+							],
+							"query": [
+								{
+									"key": "signed",
+									"value": null,
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Upload File Using RequestFileUploadUrl - Binary Image",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "8ff26301-6213-42f1-a378-fc15b429312a",
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"\r",
+									"//Common Verification\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
+									"});\r",
+									"\r",
+									"//Test Specific\r",
+									"pm.test(\"Verify that bianry image file is uploaded\", function () {\r",
+									"    pm.expect(jsonData.ok).to.eql(true);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "file",
+							"file": {
+								"src": "/C:/Users/shree/Downloads/Sample File_Test_Doc/Test.png"
+							},
+							"options": {
+								"raw": {
+									"language": "text"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{requestFileUploadUrl}}",
+							"host": [
+								"{{requestFileUploadUrl}}"
+							],
+							"query": [
+								{
+									"key": "signed",
+									"value": null,
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Upload File Using RequestFileUploadUrl - Binary  PDF",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "05849199-dae5-4325-b76d-6fab2824f869",
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"\r",
+									"//Common Verification\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
+									"});\r",
+									"\r",
+									"//Test Specific\r",
+									"pm.test(\"Verify that bianry Pdf file is uploaded\", function () {\r",
+									"    pm.expect(jsonData.ok).to.eql(true);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "file",
+							"file": {
+								"src": "/C:/Users/shree/Downloads/Sample File_Test_Doc/Test PDF.pdf"
+							},
+							"options": {
+								"raw": {
+									"language": "text"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{requestFileUploadUrl}}",
+							"host": [
+								"{{requestFileUploadUrl}}"
+							],
+							"query": [
+								{
+									"key": "signed",
+									"value": null,
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Upload File Using RequestFileUploadUrl - Binary  Word",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "8c33cea1-1f5a-46c6-83f2-96fd26ab01bb",
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"\r",
+									"//Common Verification\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
+									"});\r",
+									"\r",
+									"//Test Specific\r",
+									"pm.test(\"Verify that bianry word file is uploaded\", function () {\r",
+									"    pm.expect(jsonData.ok).to.eql(true);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "file",
+							"file": {
+								"src": "/C:/Users/shree/Downloads/Sample File_Test_Doc/Test Word 1 mb.doc"
+							},
+							"options": {
+								"raw": {
+									"language": "text"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{requestFileUploadUrl}}",
+							"host": [
+								"{{requestFileUploadUrl}}"
+							],
+							"query": [
+								{
+									"key": "signed",
+									"value": null,
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Upload File Using RequestFileUploadUrl - Binary Video",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "25be3b19-88c0-4d07-89fb-4c70fec998f3",
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"\r",
+									"//Common Verification\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
+									"});\r",
+									"\r",
+									"//Test Specific\r",
+									"pm.test(\"Verify that bianary video file is uploaded\", function () {\r",
+									"    pm.expect(jsonData.ok).to.eql(true);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "file",
+							"file": {
+								"src": "/C:/Users/shree/Downloads/Sample File_Test_Doc/Test Video.webm"
+							},
+							"options": {
+								"raw": {
+									"language": "text"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{requestFileUploadUrl}}",
+							"host": [
+								"{{requestFileUploadUrl}}"
+							],
+							"query": [
+								{
+									"key": "signed",
+									"value": null,
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Upload File Using RequestFileUploadUrl - Binary Audio",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "1636ba04-a5fa-42e6-b186-77696db77a7b",
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"\r",
+									"//Common Verification\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
+									"});\r",
+									"\r",
+									"//Test Specific\r",
+									"pm.test(\"Verify that bianary audio file is uploaded\", function () {\r",
+									"    pm.expect(jsonData.ok).to.eql(true);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "file",
+							"file": {
+								"src": "/C:/Users/shree/Downloads/Sample File_Test_Doc/Audio Test.mp3"
+							},
+							"options": {
+								"raw": {
+									"language": "text"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{requestFileUploadUrl}}",
+							"host": [
+								"{{requestFileUploadUrl}}"
+							],
+							"query": [
+								{
+									"key": "signed",
+									"value": null,
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Upload File Using RequestFileUploadUrl - Binary Text",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "12726335-6543-4a8b-b062-8ab8abc2c626",
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"\r",
+									"//Common Verification\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
+									"});\r",
+									"\r",
+									"//Test Specific\r",
+									"pm.test(\"Verify that bianary text file is uploaded\", function () {\r",
+									"    pm.expect(jsonData.ok).to.eql(true);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "file",
+							"file": {
+								"src": "/C:/Users/shree/Downloads/Sample File_Test_Doc/Test Text.txt"
+							},
+							"options": {
+								"raw": {
+									"language": "text"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{requestFileUploadUrl}}",
+							"host": [
+								"{{requestFileUploadUrl}}"
+							],
+							"query": [
+								{
+									"key": "signed",
+									"value": null,
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"protocolProfileBehavior": {}
+}

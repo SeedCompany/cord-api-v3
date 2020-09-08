@@ -3736,7 +3736,7 @@
 								"id": "fd8eea2e-0b12-421c-ab8b-06d5fcf957ce",
 								"exec": [
 									"var jsonData = pm.response.json();",
-									"var education_data = JSON.parse(pm.variables.get(\"education_data\")); // Get stored language object",
+									"var education_data = JSON.parse(pm.variables.get(\"education_data\")); // Get stored Education object",
 									"var lodash = require('lodash');",
 									"",
 									"//Common Verification",

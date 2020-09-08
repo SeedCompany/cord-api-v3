@@ -276,27 +276,30 @@
 									"\r",
 									"pm.globals.set(\"storyName\", \"StoryName\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
 									"\r",
-									"// ScriptureReferences variables\r",
-									"pm.globals.set(\"storyScriptRefBookStart\", \"StoryScriptureReferencesBookStart\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
-									"pm.globals.set(\"storyScriptRefChapterStart\", _.random(1, 25));\r",
-									"pm.globals.set(\"storyScriptRefVerseStart\", _.random(100, 250));\r",
 									"\r",
-									"pm.globals.set(\"storyScriptRefBookEnd\", \"StoryScriptureReferencesBookEnd\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
-									"pm.globals.set(\"storyScriptRefChapterEnd\", _.random(26, 50));\r",
-									"pm.globals.set(\"storyScriptRefVerseEnd\", _.random(251, 500));\r",
+									"// ScriptureReferences Value\r",
+									"// Static values \r",
+									"pm.globals.set('storyScriptRefBookStart', \"Genesis\");\r",
 									"\r",
-									"// \"scriptureReferences\": {\r",
-									"//         \"start\": {\r",
-									"//           \"book\": \"{{storyScriptRefBookStart}}\",\r",
-									"//           \"chapter\": {{storyScriptRefChapterStart}},\r",
-									"//           \"verse\": {{storyScriptRefVerseStart}}\r",
-									"//         },\r",
-									"//         \"end\": {\r",
-									"//           \"book\": \"{{storyScriptRefBookEnd}}\",\r",
-									"//           \"chapter\": {{storyScriptRefChapterEnd}},\r",
-									"//           \"verse\": {{storyScriptRefVerseEnd}}\r",
-									"//         }\r",
-									"//       }"
+									"pm.globals.set('storyScriptRefChapterStart', 3);\r",
+									"\r",
+									"pm.globals.set('storyScriptRefVerseStart', 4);\r",
+									"\r",
+									"let concatStringStart = `${pm.globals.get('storyScriptRefBookStart')} ${pm.globals.get('storyScriptRefChapterStart')}:${pm.globals.get('storyScriptRefVerseStart')}`\r",
+									"\r",
+									"pm.globals.set('storyScriptRefLabelStart',concatStringStart);\r",
+									"\r",
+									"pm.globals.set('storyScriptRefBookEnd', \"Genesis\");\r",
+									"\r",
+									"pm.globals.set('storyScriptRefChapterEnd', 3);\r",
+									"\r",
+									"pm.globals.set('storyScriptRefVerseEnd', 4);\r",
+									"\r",
+									"let concatStringEnd = `${pm.globals.get('storyScriptRefBookEnd')} ${pm.globals.get('storyScriptRefChapterEnd')}:${pm.globals.get('storyScriptRefVerseEnd')}`\r",
+									"\r",
+									"pm.globals.set('storyScriptRefLabelEnd', concatStringEnd);\r",
+									"\r",
+									""
 								],
 								"type": "text/javascript"
 							}
@@ -365,7 +368,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"story\": {\r\n      \"name\": \"{{storyName}}\"\r\n\r\n      \r\n\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n    \"input\": {\r\n        \"story\": {\r\n            \"name\": \"{{storyName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{storyScriptRefBookStart}}\",\r\n                    \"chapter\": {{storyScriptRefChapterStart}},\r\n                    \"verse\": {{storyScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{storyScriptRefBookEnd}}\",\r\n                    \"chapter\": {{storyScriptRefChapterEnd}},\r\n                    \"verse\": {{storyScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -384,7 +387,7 @@
 					"response": []
 				},
 				{
-					"name": "Create Story Success - bug #954",
+					"name": "Create Story Success - bug #954---delete",
 					"event": [
 						{
 							"listen": "prerequest",
@@ -2001,6 +2004,100 @@
 					"response": []
 				},
 				{
+					"name": "Update Story Success Copy",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "4272e715-d006-4291-b1e0-bba280e756a2",
+								"exec": [
+									"const moment = require('moment');\r",
+									"\r",
+									"pm.globals.set(\"storyName\", \"StoryName\" + moment().format(\"DDMMYYYYhhmmss\"));"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "2623324a-65c3-468a-987d-d31d6a0776e2",
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"var story_data = JSON.parse(pm.variables.get(\"story_data\"));\r",
+									"const moment = require('moment');\r",
+									"var lodash = require('lodash');\r",
+									"\r",
+									"// get story object first having same id as recently updated story's id\r",
+									"var myStory = lodash.find(jsonData.data.updateStory.story, ['id', story_data.id]);\r",
+									"\r",
+									"//Common Verification\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
+									"});\r",
+									"\r",
+									"//Test Specific\r",
+									"pm.test(\"Verify that story ID is not blank or null\", function () {\r",
+									"    var id = jsonData.data.updateStory.story.id;\r",
+									"    pm.expect(id).to.not.eql(null);\r",
+									"    pm.expect(id).to.not.eql(\"\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verify that story's createdAt is in Specific time format\", function () {\r",
+									"    var time = jsonData.data.updateStory.story.createdAt;\r",
+									"    var isValidTime = moment(time, \"YYYY-MM-DDTHH:mm:ss.SSSZ\", true).isValid();\r",
+									"    pm.expect(isValidTime).to.eql(true);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verify that updated story name is same as requested\", function () {\r",
+									"    var name = jsonData.data.updateStory.story.name.value;\r",
+									"    pm.expect(name).to.eql(pm.globals.get('storyName'));\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation updateStory($input: UpdateStoryInput!) {\r\n  updateStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"story\": {\r\n            \"id\": \"{{storyId}}\",\r\n            \"name\": \"{{storyName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"Leviticus\",\r\n                    \"chapter\": 7,\r\n                    \"verse\": 4\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"Leviticus\",\r\n                    \"chapter\": 3,\r\n                    \"verse\": 4\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Update Story Success - Only Required Inputs",
 					"event": [
 						{
@@ -2204,18 +2301,18 @@
 									"\r",
 									"//Test Specific\r",
 									"pm.test(\"Verify that error message is 400\", function () {\r",
-									"    var error_message = jsonData.errors[0].message;  \r",
+									"    var error_message = jsonData.errors[0].message;\r",
 									"    pm.expect(error_message).to.eql(\"Input validation failed\");\r",
 									"});\r",
 									"\r",
 									"pm.test(\"Verify that error status is 400\", function () {\r",
-									"    var error_status = jsonData.errors[0].extensions.status;  \r",
+									"    var error_status = jsonData.errors[0].extensions.status;\r",
 									"    pm.expect(error_status).to.eql(400);\r",
 									"});\r",
 									"\r",
-									"pm.test(\"Verify that story error message is correct\", function () {\r",
-									"    var error_story_message = jsonData.errors[0].extensions.errors['story.id'].IsShortId;  \r",
-									"    pm.expect(error_story_message).to.eql(\"Invalid ID\");\r",
+									"pm.test(\"Verify that error message is correct\", function () {\r",
+									"    var error_message = jsonData.errors[0].extensions.errors['story.id'].IsShortId;\r",
+									"    pm.expect(error_message).to.eql(\"Invalid ID\");\r",
 									"});"
 								],
 								"type": "text/javascript"
