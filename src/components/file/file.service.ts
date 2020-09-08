@@ -210,8 +210,10 @@ export class FileService {
     session: ISession
   ): Promise<File> {
     let upload;
+    let rootUpload;
     try {
       upload = await this.bucket.headObject(`temp/${uploadId}`);
+      rootUpload = await this.bucket.headObject(`${uploadId}`);
     } catch (e) {
       if (
         (e as AWSError).code === 'NotFound' ||
@@ -220,6 +222,18 @@ export class FileService {
         throw new InputException('Could not find upload', 'uploadId');
       }
       throw new ServerException('Unable to create file version');
+    }
+
+    if (!upload && !rootUpload) {
+      throw new NotFoundException('Could not find upload', 'uploadId');
+    } else if (upload && rootUpload) {
+      throw new InputException('Upload request has already been used');
+    } else if (!upload && rootUpload) {
+      const fileNode = await this.getFileNode(uploadId, session);
+
+      if (fileNode) {
+        throw new InputException('Already uploaded');
+      }
     }
 
     const parent = await this.getParentNode(parentId, session);
