@@ -229,6 +229,10 @@ export class OrganizationService {
     session: ISession
   ): Promise<OrganizationListOutput> {
     const label = 'Organization';
+    const orgSortMap: Partial<Record<typeof input.sort, string>> = {
+      name: 'lower(prop.value)',
+    };
+    const sortBy = orgSortMap[input.sort] ?? 'prop.value';
     const query = this.db
       .query()
       .match([
@@ -250,16 +254,14 @@ export class OrganizationService {
         filter.name ? q.where({ name: { value: contains(filter.name) } }) : q
       )
       .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
-        sort in this.securedProperties
-          ? q
-              .match([
-                node('node'),
-                relation('out', '', sort),
-                node('prop', 'Property', { active: true }),
-              ])
-              .with('*')
-              .orderBy('prop.value', order)
-          : q.with('*').orderBy(`node.${sort}`, order)
+        q
+          .match([
+            node('node'),
+            relation('out', '', sort),
+            node('prop', 'Property', { active: true }),
+          ])
+          .with('*')
+          .orderBy(sortBy, order)
       );
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));

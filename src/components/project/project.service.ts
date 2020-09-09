@@ -580,7 +580,6 @@ export class ProjectService {
         : 'Project';
     const projectSortMap: Partial<Record<typeof input.sort, string>> = {
       name: 'lower(prop.value)',
-      status: 'lower(prop.value)',
     };
     const sortBy = projectSortMap[input.sort] ?? 'prop.value';
     const query = this.db

@@ -345,18 +345,10 @@ describe('Project e2e', () => {
       }
     );
     // Set a flag that's going to indicate if the projects are in order
-    let isAscending = true;
+    const isAscending = true;
     const items = projects.items;
-    let index = 0;
-    for (const i of items) {
-      if (index < projects.items.length - 1) {
-        const currName = i.name.value;
-        const nextName = items[index + 1].name.value;
-        const areEqual = currName.toUpperCase() < nextName.toUpperCase();
-        if (!areEqual) isAscending = false;
-        index++;
-      }
-    }
+    const sorted = orderBy(items, (proj) => proj.name.value.toLowerCase(), ['asc']);
+    expect(sorted).toEqual(items);
     expect(isAscending).toBe(true);
 
     //delete all projects
@@ -374,11 +366,6 @@ describe('Project e2e', () => {
         );
       })
     );
-    // log back into the admin account. Not sure if being logged in as 'Tammy' will mess other tests up.
-    await login(app, {
-      email: process.env.ROOT_ADMIN_EMAIL,
-      password: process.env.ROOT_ADMIN_PASSWORD,
-    });
   });
 
   it('List of projects sorted by name to be alphabetical, ignoring case sensitivity. Order: DESCENDING', async () => {
@@ -430,16 +417,8 @@ describe('Project e2e', () => {
     // Set a flag that's going to indicate if the projects are in order
     let isDescending = true;
     const items = projects.items;
-    let index = 0;
-    for (const i of items) {
-      if (index < projects.items.length - 1) {
-        const currName = i.name.value;
-        const nextName = items[index + 1].name.value;
-        const areEqual = currName.toUpperCase() > nextName.toUpperCase();
-        if (!areEqual) isDescending = false;
-        index++;
-      }
-    }
+    const sorted = orderBy(items, (proj) => proj.name.value.toLowerCase(), ['desc']);
+    expect(sorted).toEqual(items);
     expect(isDescending).toBe(true);
     //delete all projects
     await Promise.all(
@@ -456,11 +435,6 @@ describe('Project e2e', () => {
         );
       })
     );
-    // log back into the admin account. Not sure if being logged in as 'Tammy' will mess other tests up.
-    await login(app, {
-      email: process.env.ROOT_ADMIN_EMAIL,
-      password: process.env.ROOT_ADMIN_PASSWORD,
-    });
   });
   it('List view of projects', async () => {
     // create 2 projects
