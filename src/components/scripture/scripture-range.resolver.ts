@@ -19,8 +19,10 @@ export class ScriptureRangeResolver {
     `,
   })
   label(@Parent() _range: ScriptureRange): string {
-    // TODO
-    return ``;
+    return `${_range.start.book} 
+      ${_range.start.chapter}:${_range.start.verse}
+      -${_range.end.book} 
+      ${_range.end.chapter}:${_range.end.verse}`;
   }
 
   @ResolveField(() => Int, {
