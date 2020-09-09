@@ -15,7 +15,7 @@ export const IsValidOrder = createValidationDecorator({
       return verseRange.start <= verseRange.end;
     },
     defaultMessage: () => {
-      return 'start comes before or equal to the end';
+      return 'Scripture range must end after the starting point';
     },
   },
 });
