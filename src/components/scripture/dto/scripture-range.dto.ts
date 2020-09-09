@@ -3,6 +3,7 @@ import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { stripIndent } from 'common-tags';
 import { SecuredPropertyList } from '../../../common';
+import { IsValidOrder } from './scripture-range.validator';
 import {
   ScriptureReference,
   ScriptureReferenceInput,
@@ -26,6 +27,7 @@ export abstract class ScriptureRangeInput {
     description: 'The ending verse',
   })
   @ValidateNested()
+  @IsValidOrder()
   @Type(() => ScriptureReferenceInput)
   end: ScriptureReferenceInput;
 }
