@@ -41,7 +41,7 @@ class Project extends Resource {
     description: 'The legacy department ID',
     deprecationReason: 'Use `Project.departmentId` instead',
   })
-  readonly deptId: SecuredString;
+  readonly departmentId: SecuredString;
 
   @Field()
   readonly step: SecuredProjectStep;
