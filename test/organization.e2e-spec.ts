@@ -1,6 +1,6 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
-import { times } from 'lodash';
+import { times, orderBy } from 'lodash';
 import { generate, isValid } from 'shortid';
 import { Organization } from '../src/components/organization';
 import {
@@ -463,7 +463,7 @@ describe('Organization e2e', () => {
       }
     );
     // Set a flag that's going to indicate if the projects are in order
-    let isAscending = true;
+    const isAscending = true;
     const items = organizations.items;
     const sorted = orderBy(items, (org) => org.name.value.toLowerCase(), ['asc']);
     expect(sorted).toEqual(items);
@@ -526,7 +526,7 @@ describe('Organization e2e', () => {
       }
     );
     // Set a flag that's going to indicate if the projects are in order
-    let isDescending = true;
+    const isDescending = true;
     const items = organizations.items;
     const sorted = orderBy(items, (org) => org.name.value.toLowerCase(), ['desc']);
     expect(sorted).toEqual(items);

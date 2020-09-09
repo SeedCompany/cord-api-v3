@@ -1,6 +1,6 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
-import { times } from 'lodash';
+import { times, orderBy } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { CalendarDate } from '../src/common';
@@ -415,7 +415,7 @@ describe('Project e2e', () => {
       }
     );
     // Set a flag that's going to indicate if the projects are in order
-    let isDescending = true;
+    const isDescending = true;
     const items = projects.items;
     const sorted = orderBy(items, (proj) => proj.name.value.toLowerCase(), ['desc']);
     expect(sorted).toEqual(items);
