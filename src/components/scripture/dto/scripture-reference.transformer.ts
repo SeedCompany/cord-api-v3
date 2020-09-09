@@ -1,35 +1,31 @@
 import { applyDecorators } from '@nestjs/common';
-import { Field, FieldOptions, Int } from '@nestjs/graphql';
 import { Transform } from '../../../common/transform.decorator';
 import { books } from '../books';
 import { bookIndexFromName } from '../reference';
+import { ScriptureReferenceInput } from './scripture-reference.dto';
 
-export const StartChapter = (options?: FieldOptions) =>
+export const ScriptureStart = () =>
   applyDecorators(
-    Field(() => Int, options),
-    Transform((value) => (value == null ? 1 : value))
+    Transform((value: ScriptureReferenceInput) => {
+      value.chapter = value.chapter == null ? 1 : value.chapter;
+      value.verse = value.verse == null ? 1 : value.verse;
+      return value;
+    })
   );
 
-export const StartVerse = (options?: FieldOptions) =>
+export const ScriptureEnd = () =>
   applyDecorators(
-    Field(() => Int, options),
-    Transform((value) => (value == null ? 1 : value))
-  );
-
-export const EndChapter = (options?: FieldOptions) =>
-  applyDecorators(
-    Field(() => Int, options),
-    Transform((value, obj) =>
-      value == null ? books[bookIndexFromName(obj.book)].chapters.length : value
-    )
-  );
-
-export const EndVerse = (options?: FieldOptions) =>
-  applyDecorators(
-    Field(() => Int, options),
-    Transform((value, obj) => {
-      const bookIndex = bookIndexFromName(obj.book);
+    Transform((value) => {
+      const bookIndex = bookIndexFromName(value.book);
       const lastChapter = books[bookIndex].chapters.length;
-      return value == null ? books[bookIndex].chapters[lastChapter - 1] : value;
+      value.chapter =
+        value.chapter == null
+          ? books[bookIndex].chapters.length
+          : value.chapter;
+      value.verse =
+        value.verse == null
+          ? books[bookIndex].chapters[lastChapter - 1]
+          : value.verse;
+      return value;
     })
   );
