@@ -152,10 +152,11 @@ export const validateVerse = (
 // return random scriptureRefenence as an array
 export const createRandomScriptureReferences = (): ScriptureRangeInput[] => {
   const book = books[random(books.length - 1)];
-  const startChapter = random(book.chapters.length - 1);
-  const startVerse = random(book.chapters[startChapter] - 1);
   const endChapter = random(book.chapters.length - 1);
   const endVerse = random(book.chapters[endChapter] - 1);
+  const startChapter = random(endChapter);
+  const startVerse = random(endVerse);
+
   return [
     {
       start: {
