@@ -347,7 +347,9 @@ describe('Project e2e', () => {
     // Set a flag that's going to indicate if the projects are in order
     const isAscending = true;
     const items = projects.items;
-    const sorted = orderBy(items, (proj) => proj.name.value.toLowerCase(), ['asc']);
+    const sorted = orderBy(items, (proj) => proj.name.value.toLowerCase(), [
+      'asc',
+    ]);
     expect(sorted).toEqual(items);
     expect(isAscending).toBe(true);
 
@@ -417,7 +419,9 @@ describe('Project e2e', () => {
     // Set a flag that's going to indicate if the projects are in order
     const isDescending = true;
     const items = projects.items;
-    const sorted = orderBy(items, (proj) => proj.name.value.toLowerCase(), ['desc']);
+    const sorted = orderBy(items, (proj) => proj.name.value.toLowerCase(), [
+      'desc',
+    ]);
     expect(sorted).toEqual(items);
     expect(isDescending).toBe(true);
     //delete all projects
@@ -636,6 +640,12 @@ describe('Project e2e', () => {
     //create 1 engagements in a project
     const numEngagements = 1;
     const type = ProjectType.Internship;
+
+    await login(app, {
+      email: process.env.ROOT_ADMIN_EMAIL,
+      password: process.env.ROOT_ADMIN_PASSWORD,
+    });
+
     const project = await createProject(app, { type });
 
     await createInternshipEngagement(app, {
