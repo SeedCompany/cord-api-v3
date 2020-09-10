@@ -390,7 +390,7 @@ export class FileRepository {
     session: ISession
   ): Promise<void> {
     try {
-      await this.db.updateProperty({
+      await this.db.sgUpdateProperty({
         session,
         object: fileNode,
         key: 'name',
