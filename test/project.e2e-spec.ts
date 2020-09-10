@@ -1,6 +1,6 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
-import { times, orderBy } from 'lodash';
+import { orderBy, times } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { CalendarDate } from '../src/common';

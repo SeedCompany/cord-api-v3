@@ -1,6 +1,6 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
-import { times, orderBy } from 'lodash';
+import { orderBy, times } from 'lodash';
 import { generate, isValid } from 'shortid';
 import { Organization } from '../src/components/organization';
 import {
@@ -10,7 +10,6 @@ import {
   createUser,
   fragments,
   TestApp,
-  login,
 } from './utility';
 
 describe('Organization e2e', () => {
