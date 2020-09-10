@@ -11,7 +11,6 @@ import type { Pattern } from 'cypher-query-builder/dist/typings/clauses/pattern'
 import { AnyConditions } from 'cypher-query-builder/dist/typings/clauses/where-utils';
 import { camelCase, isEmpty } from 'lodash';
 import { DateTime } from 'luxon';
-import { generate } from 'shortid';
 import { ISession, NotFoundException, ServerException } from '../../common';
 import {
   collect,
@@ -29,7 +28,6 @@ import {
 } from '../../core';
 import {
   BaseNode,
-  Directory,
   FileListInput,
   FileNodeCategory,
   FileNodeType,
@@ -259,30 +257,45 @@ export class FileRepository {
     name: string,
     session: ISession
   ): Promise<string> {
-    const id = generate();
-    await this.db.createNode({
-      session,
-      type: Directory,
-      input: {
-        id,
-        name,
-        createdAt: DateTime.local(),
+    const props: Property[] = [
+      {
+        key: 'name',
+        value: name,
+        addToAdminSg: true,
+        addToWriterSg: true,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
       },
-      acls: {
-        canReadName: true,
-        canEditName: true,
-      },
-      baseNodeLabel: ['Directory', 'FileNode'],
-      aclEditProp: 'canCreateDirectory',
-    });
+    ];
 
-    await this.attachCreator(id, session);
+    const createFile = this.db
+      .query()
+      .call(matchRequestingUser, session)
+      .match([
+        node('root', 'User', {
+          active: true,
+          id: this.config.rootAdmin.id,
+        }),
+      ])
+      .call(createBaseNode, ['Directory', 'FileNode'], props, {
+        owningOrgId: session.owningOrgId,
+      })
+      .return('node.id as id');
 
-    if (parentId) {
-      await this.attachParent(id, parentId);
+    const result = await createFile.first();
+
+    if (!result) {
+      throw new ServerException('failed to create a budget');
     }
 
-    return id;
+    await this.attachCreator(result.id, session);
+
+    if (parentId) {
+      await this.attachParent(result.id, parentId);
+    }
+
+    return result.id;
   }
 
   async createFile(
