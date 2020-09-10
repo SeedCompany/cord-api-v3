@@ -39,7 +39,6 @@ class Project extends Resource {
 
   @Field({
     description: 'The legacy department ID',
-    deprecationReason: 'Use `Project.departmentId` instead',
   })
   readonly departmentId: SecuredString;
 

@@ -70,16 +70,10 @@ export class ProjectResolver {
       : undefined;
   }
 
-  @ResolveField(() => SecuredString, {
-    description: 'The legacy department ID',
-  })
-  departmentId(@Parent() project: Project): SecuredString {
-    return project.departmentId;
-  }
-
   /** @deprecated Moved from field definition in DTO to here */
   @ResolveField(() => SecuredString, {
     description: 'The legacy department ID',
+    deprecationReason: 'Use `Project.departmentId` instead',
   })
   deptId(@Parent() project: Project): SecuredString {
     return project.departmentId;
