@@ -15,7 +15,7 @@ import {
 } from '../../common';
 import { SecuredBudget } from '../budget';
 import { EngagementListInput, SecuredEngagementList } from '../engagement';
-import { Directory } from '../file';
+import { SecuredDirectory } from '../file';
 import { PartnershipListInput, SecuredPartnershipList } from '../partnership';
 import {
   CreateProjectInput,
@@ -134,13 +134,13 @@ export class ProjectResolver {
     return this.projectService.listPartnerships(id, input, session);
   }
 
-  @ResolveField(() => Directory, {
+  @ResolveField(() => SecuredDirectory, {
     description: 'The root filesystem directory of this project',
   })
   async rootDirectory(
     @Session() session: ISession,
     @Parent() { id }: Project
-  ): Promise<Directory> {
+  ): Promise<SecuredDirectory> {
     return await this.projectService.getRootDirectory(id, session);
   }
 
