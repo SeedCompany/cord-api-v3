@@ -1,6 +1,7 @@
 import { Int, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { ScriptureRange } from './dto';
+import { scriptureToVerseRange } from './reference';
 
 @Resolver(ScriptureRange)
 export class ScriptureRangeResolver {
@@ -26,8 +27,8 @@ export class ScriptureRangeResolver {
   @ResolveField(() => Int, {
     description: 'The total number of verses in this scripture range',
   })
-  totalVerses(@Parent() _range: ScriptureRange): number {
-    // TODO
-    return 0;
+  totalVerses(@Parent() range: ScriptureRange): number {
+    const verseRange = scriptureToVerseRange(range);
+    return verseRange.end - verseRange.start + 1;
   }
 }
