@@ -9,7 +9,7 @@ import {
 } from 'cypher-query-builder';
 import type { Pattern } from 'cypher-query-builder/dist/typings/clauses/pattern';
 import { AnyConditions } from 'cypher-query-builder/dist/typings/clauses/where-utils';
-import { camelCase, isEmpty } from 'lodash';
+import { isEmpty } from 'lodash';
 import { DateTime } from 'luxon';
 import { ISession, NotFoundException, ServerException } from '../../common';
 import {
@@ -196,9 +196,11 @@ export class FileRepository {
         .with('*')
         .optionalMatch([
           node('requestingUser'),
-          relation('in', '', 'member'),
-          node('acl', 'ACL', { [camelCase(`canRead-${prop}`)]: true }),
-          relation('out', '', 'toNode'),
+          relation('in', '', 'member*1..'),
+          node('', 'SecurityGroup', { active: true }),
+          relation('out', '', 'permission'),
+          node('perms', 'Permission', { active: true }),
+          relation('out', '', 'baseNode'),
           node('fv'),
           relation('out', '', prop, isActive),
           node(variable, 'Property', isActive),
@@ -286,7 +288,7 @@ export class FileRepository {
     const result = await createFile.first();
 
     if (!result) {
-      throw new ServerException('failed to create a budget');
+      throw new ServerException('failed to create a Directory');
     }
 
     await this.attachCreator(result.id, session);
@@ -332,7 +334,7 @@ export class FileRepository {
     const result = await createFile.first();
 
     if (!result) {
-      throw new ServerException('failed to create a budget');
+      throw new ServerException('failed to create a File');
     }
 
     await this.attachCreator(result.id, session);
@@ -349,31 +351,72 @@ export class FileRepository {
     input: Pick<FileVersion, 'id' | 'name' | 'mimeType' | 'size' | 'category'>,
     session: ISession
   ) {
-    const createdAt = DateTime.local();
+    const props: Property[] = [
+      {
+        key: 'name',
+        value: input.name,
+        addToAdminSg: true,
+        addToWriterSg: true,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'mimeType',
+        value: input.mimeType,
+        addToAdminSg: true,
+        addToWriterSg: true,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'size',
+        value: input.size,
+        addToAdminSg: true,
+        addToWriterSg: true,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'category',
+        value: input.category,
+        addToAdminSg: true,
+        addToWriterSg: true,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+    ];
 
-    await this.db.createNode({
-      session,
-      type: FileVersion,
-      baseNodeLabel: ['FileVersion', 'FileNode'],
-      input: {
-        ...input,
-        createdAt,
-      },
-      acls: {
-        canReadSize: true,
-        canEditSize: true,
-        canReadParent: true,
-        canEditParent: true,
-        canReadMimeType: true,
-        canEditMimeType: true,
-        canReadCategory: true,
-        canEditCategory: true,
-        canReadName: true,
-        canEditName: true,
-        canReadModifiedAt: true,
-        canEditModifiedAt: true,
-      },
-    });
+    const createFile = this.db
+      .query()
+      .call(matchRequestingUser, session)
+      .match([
+        node('root', 'User', {
+          active: true,
+          id: this.config.rootAdmin.id,
+        }),
+      ])
+      .call(
+        createBaseNode,
+        ['FileVersion', 'FileNode'],
+        props,
+        {
+          owningOrgId: session.owningOrgId,
+        },
+        undefined,
+        undefined,
+        input.id
+      )
+      .return('node.id as id');
+
+    const result = await createFile.first();
+
+    if (!result) {
+      throw new ServerException('failed to create a FileVersion');
+    }
 
     await this.attachCreator(input.id, session);
     await this.attachParent(input.id, fileId);
