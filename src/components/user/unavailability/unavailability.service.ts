@@ -1,8 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { node } from 'cypher-query-builder';
-import { generate } from 'shortid';
 import { ISession, NotFoundException, ServerException } from '../../../common';
-import { DatabaseService, ILogger, Logger, matchSession } from '../../../core';
+import {
+  ConfigService,
+  createBaseNode,
+  DatabaseService,
+  ILogger,
+  Logger,
+  matchRequestingUser,
+  matchSession,
+} from '../../../core';
 import {
   CreateUnavailability,
   Unavailability,
@@ -15,59 +22,94 @@ import {
 export class UnavailabilityService {
   constructor(
     @Logger('unavailability:service') private readonly logger: ILogger,
-    private readonly db: DatabaseService
+    private readonly db: DatabaseService,
+    private readonly config: ConfigService
   ) {}
 
   async create(
     { userId, ...input }: CreateUnavailability,
     session: ISession
   ): Promise<Unavailability> {
-    const id = generate();
-    const acls = {
-      canReadDescription: true,
-      canEditDescription: true,
-      canReadStart: true,
-      canEditStart: true,
-      canReadEnd: true,
-      canEditEnd: true,
-    };
+    const secureProps = [
+      {
+        key: 'description',
+        value: input.description,
+        addToAdminSg: true,
+        addToWriterSg: true,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'start',
+        value: input.start,
+        addToAdminSg: true,
+        addToWriterSg: true,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'end',
+        value: input.end,
+        addToAdminSg: true,
+        addToWriterSg: true,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+    ];
+
     try {
-      await this.db.createNode({
-        session,
-        type: Unavailability,
-        input: { id, ...input },
-        acls,
+      const createUnavailability = this.db
+        .query()
+        .call(matchRequestingUser, session)
+        .match([
+          node('root', 'User', {
+            active: true,
+            id: this.config.rootAdmin.id,
+          }),
+        ])
+        .call(
+          createBaseNode,
+          'Unavailability',
+          secureProps,
+          {
+            owningOrgId: session.owningOrgId,
+          },
+          [],
+          session.userId === this.config.rootAdmin.id
+        )
+        .return('node.id as id');
+
+      const unavailabilityId = await createUnavailability.first();
+
+      // connect the Unavailability to the User.
+
+      const query = `
+        MATCH (user: User {id: $userId, active: true}),
+        (unavailability:Unavailability {id: $id, active: true})
+        CREATE (user)-[:unavailability {active: true, createdAt: datetime()}]->(unavailability)
+        RETURN  unavailability.id as id
+        `;
+      await this.db
+        .query()
+        .raw(query, {
+          userId,
+          id: unavailabilityId?.id,
+        })
+        .run();
+      this.logger.debug(`Created user unavailability`, {
+        id: unavailabilityId?.id,
+        userId,
       });
+      return await this.readOne(unavailabilityId?.id, session);
     } catch {
       this.logger.error(`Could not create unavailability`, {
-        id,
         userId,
       });
       throw new ServerException('Could not create unavailability');
     }
-
-    this.logger.debug(`Created user unavailability`, {
-      id,
-      userId,
-    });
-
-    // connect the Unavailability to the User.
-
-    const query = `
-    MATCH (user: User {id: $userId, active: true}),
-      (unavailability:Unavailability {id: $id, active: true})
-    CREATE (user)-[:unavailability {active: true, createdAt: datetime()}]->(unavailability)
-    RETURN  unavailability.id as id
-    `;
-    await this.db
-      .query()
-      .raw(query, {
-        userId,
-        id,
-      })
-      .run();
-
-    return await this.readOne(id, session);
   }
 
   async readOne(id: string, session: ISession): Promise<Unavailability> {
@@ -154,7 +196,7 @@ export class UnavailabilityService {
   ): Promise<Unavailability> {
     const unavailability = await this.readOne(input.id, session);
 
-    return await this.db.updateProperties({
+    return await this.db.sgUpdateProperties({
       session,
       object: unavailability,
       props: ['description', 'start', 'end'],
