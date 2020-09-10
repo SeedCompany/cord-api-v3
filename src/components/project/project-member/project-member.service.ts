@@ -356,11 +356,16 @@ export class ProjectMemberService {
     input: UpdateProjectMember,
     session: ISession
   ): Promise<ProjectMember> {
-    const user = await this.userService.readOne(input.id, session);
-    if (difference(input.roles, user.roles.value).length) {
-      throw new InputException('No roles in the user', 'input.roles');
-    }
     const object = await this.readOne(input.id, session);
+    if (object.user.value) {
+      const user = await this.userService.readOne(
+        object.user.value?.id,
+        session
+      );
+      if (difference(input.roles, user.roles.value).length) {
+        throw new InputException('No roles in the user', 'input.roles');
+      }
+    }
 
     await this.db.sgUpdateProperties({
       session,
