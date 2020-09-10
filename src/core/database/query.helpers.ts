@@ -74,7 +74,8 @@ export function createBaseNode(
   props: Property[],
   baseNodeProps?: { owningOrgId?: string | undefined; type?: string },
   editableProps?: string[],
-  isRootuser?: boolean
+  isRootuser?: boolean,
+  id: string = generate()
 ) {
   const createdAt = DateTime.local();
 
@@ -83,7 +84,7 @@ export function createBaseNode(
       node('node', [label, 'BaseNode'], {
         active: true,
         createdAt,
-        id: generate(),
+        id,
         ...baseNodeProps,
       }),
     ]);
@@ -92,7 +93,7 @@ export function createBaseNode(
       node('node', [...label, 'BaseNode'], {
         active: true,
         createdAt,
-        id: generate(),
+        id,
         ...baseNodeProps,
       }),
     ]);
