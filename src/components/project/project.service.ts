@@ -486,7 +486,7 @@ export class ProjectService {
     const props = parsePropList(result.propList);
     const securedProps = parseSecuredProperties(props, result.permList, {
       name: true,
-      deptId: true,
+      departmentId: true,
       step: true,
       mouStart: true,
       mouEnd: true,

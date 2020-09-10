@@ -70,11 +70,13 @@ export class ProjectResolver {
       : undefined;
   }
 
+  /** @deprecated Moved from field definition in DTO to here */
   @ResolveField(() => SecuredString, {
     description: 'The legacy department ID',
+    deprecationReason: 'Use `Project.departmentId` instead',
   })
-  departmentId(@Parent() project: Project): SecuredString {
-    return project.deptId;
+  deptId(@Parent() project: Project): SecuredString {
+    return project.departmentId;
   }
 
   @ResolveField(() => SecuredBudget, {
