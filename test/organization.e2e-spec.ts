@@ -465,7 +465,9 @@ describe('Organization e2e', () => {
     // Set a flag that's going to indicate if the projects are in order
     const isAscending = true;
     const items = organizations.items;
-    const sorted = orderBy(items, (org) => org.name.value.toLowerCase(), ['asc']);
+    const sorted = orderBy(items, (org) => org.name.value.toLowerCase(), [
+      'asc',
+    ]);
     expect(sorted).toEqual(items);
     expect(isAscending).toBe(true);
 
@@ -528,7 +530,9 @@ describe('Organization e2e', () => {
     // Set a flag that's going to indicate if the projects are in order
     const isDescending = true;
     const items = organizations.items;
-    const sorted = orderBy(items, (org) => org.name.value.toLowerCase(), ['desc']);
+    const sorted = orderBy(items, (org) => org.name.value.toLowerCase(), [
+      'desc',
+    ]);
     expect(sorted).toEqual(items);
     expect(isDescending).toBe(true);
     //delete all projects
