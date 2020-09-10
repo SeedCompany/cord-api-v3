@@ -14,7 +14,9 @@ export function calculateTotalAndPaginateList(
     // .with(['node', 'total']) TODO needed?
     .call(sort, sortInput, order)
     .with([
-      `collect(node.id)[${(page - 1) * count}..${page * count}] as items`,
+      `collect(distinct node.id)[${(page - 1) * count}..${
+        page * count
+      }] as items`,
       'total',
     ])
     .return(['items', 'total']);
