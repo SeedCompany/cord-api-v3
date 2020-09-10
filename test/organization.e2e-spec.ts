@@ -462,29 +462,11 @@ describe('Organization e2e', () => {
       }
     );
     // Set a flag that's going to indicate if the projects are in order
-    const isAscending = true;
     const items = organizations.items;
     const sorted = orderBy(items, (org) => org.name.value.toLowerCase(), [
       'asc',
     ]);
     expect(sorted).toEqual(items);
-    expect(isAscending).toBe(true);
-
-    //delete all projects
-    await Promise.all(
-      organizations.items.map(async (item: { id: any }) => {
-        return await app.graphql.mutate(
-          gql`
-            mutation deleteOrganization($id: ID!) {
-              deleteOrganization(id: $id)
-            }
-          `,
-          {
-            id: item.id,
-          }
-        );
-      })
-    );
   });
 
   it('List of organizations sorted by name to be alphabetical, ignoring case sensitivity. Order: DESCENDING', async () => {
@@ -534,21 +516,6 @@ describe('Organization e2e', () => {
     ]);
     expect(sorted).toEqual(items);
     expect(isDescending).toBe(true);
-    //delete all projects
-    await Promise.all(
-      organizations.items.map(async (item: { id: any }) => {
-        return await app.graphql.mutate(
-          gql`
-            mutation deleteOrganization($id: ID!) {
-              deleteOrganization(id: $id)
-            }
-          `,
-          {
-            id: item.id,
-          }
-        );
-      })
-    );
   });
 
   it('list view of organizations filters on partial name', async () => {
