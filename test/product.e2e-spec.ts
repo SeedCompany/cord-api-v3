@@ -123,9 +123,13 @@ describe('Product e2e', () => {
                 value {
                   start {
                     book
+                    chapter
+                    verse
                   }
                   end {
                     book
+                    chapter
+                    verse
                   }
                 }
               }
@@ -139,7 +143,6 @@ describe('Product e2e', () => {
       }
     );
     const actual: AnyProduct = result.product;
-    expect(actual.scriptureReferencesOverride?.value).toBeNull();
     expect(actual.produces).toBeDefined();
     expect(actual.produces?.value).toBeDefined();
     expect(actual.produces?.value?.id).toBe(story.id);
@@ -150,6 +153,7 @@ describe('Product e2e', () => {
     expect(actual.scriptureReferences.value).toEqual(
       actual.produces?.value?.scriptureReferences?.value
     );
+    expect(actual.scriptureReferencesOverride?.value).toBeNull();
   });
 
   it('create DerivativeScriptureProduct with scriptureReferencesOverride', async () => {
@@ -335,6 +339,22 @@ describe('Product e2e', () => {
                   canRead
                   canEdit
                 }
+                scriptureReferencesOverride {
+                  value {
+                    start {
+                      book
+                      chapter
+                      verse
+                    }
+                    end {
+                      book
+                      chapter
+                      verse
+                    }
+                  }
+                  canRead
+                  canEdit
+                }
               }
             }
           }
@@ -359,6 +379,7 @@ describe('Product e2e', () => {
     expect(actual.produces?.value?.scriptureReferences).toEqual(
       film.scriptureReferences
     );
+    expect(actual.scriptureReferencesOverride?.value).toBeNull();
   });
 
   it('update DerivativeScriptureProduct with scriptureReferencesOverride', async () => {
@@ -438,6 +459,83 @@ describe('Product e2e', () => {
     expect(actual.scriptureReferences?.value).toEqual(override);
     expect(actual.produces?.value?.scriptureReferences?.value).toEqual(
       story.scriptureReferences.value
+    );
+  });
+
+  it('update DerivativeScriptureProduct with scriptureReferencesOverride which is null', async () => {
+    const product = await createProduct(app, {
+      engagementId: engagement.id,
+      produces: story.id,
+      scriptureReferencesOverride: ScriptureRange.randomList(),
+    });
+
+    const result = await app.graphql.query(
+      gql`
+        mutation updateProduct($input: UpdateProductInput!) {
+          updateProduct(input: $input) {
+            product {
+              ...product
+              ... on DerivativeScriptureProduct {
+                produces {
+                  value {
+                    id
+                    __typename
+                    scriptureReferences {
+                      value {
+                        start {
+                          book
+                          chapter
+                          verse
+                        }
+                        end {
+                          book
+                          chapter
+                          verse
+                        }
+                      }
+                      canRead
+                      canEdit
+                    }
+                  }
+                  canRead
+                  canEdit
+                }
+                scriptureReferencesOverride {
+                  value {
+                    start {
+                      book
+                      chapter
+                      verse
+                    }
+                    end {
+                      book
+                      chapter
+                      verse
+                    }
+                  }
+                  canRead
+                  canEdit
+                }
+              }
+            }
+          }
+        }
+        ${fragments.product}
+      `,
+      {
+        input: {
+          product: {
+            id: product.id,
+            scriptureReferencesOverride: null,
+          },
+        },
+      }
+    );
+
+    const actual: AnyProduct = result.updateProduct.product;
+    expect(actual.scriptureReferencesOverride?.value).toBeNull();
+    expect(actual.produces?.value?.scriptureReferences?.value).toEqual(
+      actual.scriptureReferences.value
     );
   });
 
