@@ -15,18 +15,21 @@ import { generate } from 'shortid';
 import { ISession, NotFoundException, ServerException } from '../../common';
 import {
   collect,
+  ConfigService,
   count,
+  createBaseNode,
   DatabaseService,
   hasMore,
   ILogger,
   Logger,
   mapping,
+  matchRequestingUser,
   matchSession,
+  Property,
 } from '../../core';
 import {
   BaseNode,
   Directory,
-  File,
   FileListInput,
   FileNodeCategory,
   FileNodeType,
@@ -39,6 +42,7 @@ const isActive = { active: true };
 export class FileRepository {
   constructor(
     private readonly db: DatabaseService,
+    private readonly config: ConfigService,
     @Logger('file:repository') private readonly logger: ILogger
   ) {}
 
@@ -286,34 +290,45 @@ export class FileRepository {
     name: string,
     session: ISession
   ) {
-    const fileId = generate();
-    await this.db.createNode({
-      session,
-      type: File,
-      baseNodeLabel: ['File', 'FileNode'],
-      input: {
-        id: fileId,
-        name,
-        createdAt: DateTime.local(),
+    const props: Property[] = [
+      {
+        key: 'name',
+        value: name,
+        addToAdminSg: true,
+        addToWriterSg: true,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
       },
-      acls: {
-        canReadParent: true,
-        canEditParent: true,
-        canReadName: true,
-        canEditName: true,
-        canReadType: true,
-        canEditType: true,
-      },
-      aclEditProp: 'canCreateFile',
-    });
+    ];
 
-    await this.attachCreator(fileId, session);
+    const createFile = this.db
+      .query()
+      .call(matchRequestingUser, session)
+      .match([
+        node('root', 'User', {
+          active: true,
+          id: this.config.rootAdmin.id,
+        }),
+      ])
+      .call(createBaseNode, ['File', 'FileNode'], props, {
+        owningOrgId: session.owningOrgId,
+      })
+      .return('node.id as id');
 
-    if (parentId) {
-      await this.attachParent(fileId, parentId);
+    const result = await createFile.first();
+
+    if (!result) {
+      throw new ServerException('failed to create a budget');
     }
 
-    return fileId;
+    await this.attachCreator(result.id, session);
+
+    if (parentId) {
+      await this.attachParent(result.id, parentId);
+    }
+
+    return result.id;
   }
 
   async createFileVersion(
