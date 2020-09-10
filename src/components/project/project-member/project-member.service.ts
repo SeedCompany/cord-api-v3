@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
-import { upperFirst } from 'lodash';
+import { difference, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import {
   DuplicateException,
+  InputException,
   ISession,
   NotFoundException,
   ServerException,
@@ -193,6 +194,11 @@ export class ProjectMemberService {
       );
     }
 
+    const user = await this.userService.readOne(userId, session);
+    if (difference(input.roles, user.roles.value).length) {
+      throw new InputException('No roles in the user', 'input.roles');
+    }
+
     try {
       const createProjectMember = this.db
         .query()
@@ -350,6 +356,10 @@ export class ProjectMemberService {
     input: UpdateProjectMember,
     session: ISession
   ): Promise<ProjectMember> {
+    const user = await this.userService.readOne(input.id, session);
+    if (difference(input.roles, user.roles.value).length) {
+      throw new InputException('No roles in the user', 'input.roles');
+    }
     const object = await this.readOne(input.id, session);
 
     await this.db.sgUpdateProperties({
