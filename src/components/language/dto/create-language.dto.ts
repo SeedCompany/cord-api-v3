@@ -69,6 +69,9 @@ export abstract class CreateLanguage {
   readonly leastOfTheseReason?: string;
 
   @Field({ nullable: true })
+  readonly isSignLanguage?: boolean = false;
+
+  @Field({ nullable: true })
   @Matches(/^[A-Z]{2}\d{2}$/)
   readonly signLanguageCode?: string;
 }

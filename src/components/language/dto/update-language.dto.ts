@@ -72,6 +72,9 @@ export abstract class UpdateLanguage {
   readonly leastOfTheseReason?: string;
 
   @Field({ nullable: true })
+  readonly isSignLanguage?: boolean;
+
+  @Field({ nullable: true })
   @Matches(/^[A-Z]{2}\d{2}$/)
   readonly signLanguageCode?: string;
 }
