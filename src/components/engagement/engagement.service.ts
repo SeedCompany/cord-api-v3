@@ -53,7 +53,11 @@ import {
   UpdateInternshipEngagement,
   UpdateLanguageEngagement,
 } from './dto';
-import { EngagementCreatedEvent, EngagementDeletedEvent } from './events';
+import {
+  EngagementCreatedEvent,
+  EngagementDeletedEvent,
+  EngagementUpdatedEvent,
+} from './events';
 
 @Injectable()
 export class EngagementService {
@@ -1015,7 +1019,16 @@ export class EngagementService {
       );
     }
 
-    return (await this.readOne(input.id, session)) as LanguageEngagement;
+    const updated = (await this.readOne(
+      input.id,
+      session
+    )) as LanguageEngagement;
+
+    await this.eventBus.publish(
+      new EngagementUpdatedEvent(updated, object, input, session)
+    );
+
+    return updated;
   }
 
   async updateInternshipEngagement(
@@ -1144,7 +1157,16 @@ export class EngagementService {
       );
     }
 
-    return (await this.readOne(input.id, session)) as InternshipEngagement;
+    const updated = (await this.readOne(
+      input.id,
+      session
+    )) as InternshipEngagement;
+
+    await this.eventBus.publish(
+      new EngagementUpdatedEvent(updated, object, input, session)
+    );
+
+    return updated;
   }
 
   // DELETE /////////////////////////////////////////////////////////
