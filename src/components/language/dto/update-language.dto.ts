@@ -14,9 +14,6 @@ import { Language } from './language.dto';
 @InputType()
 export abstract class UpdateEthnologueLanguage {
   @NameField({ nullable: true })
-  readonly id?: string;
-
-  @NameField({ nullable: true })
   @IsAlpha()
   @IsLowercase()
   @Length(3)
