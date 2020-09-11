@@ -95,7 +95,7 @@ export class Language extends Resource {
   @Field({
     description: 'The earliest start date from its engagements',
   })
-  readonly sponsorDate: SecuredDate;
+  readonly sponsorStartDate: SecuredDate;
 
   // Calculated. Not settable.
   @Field(() => Sensitivity, {

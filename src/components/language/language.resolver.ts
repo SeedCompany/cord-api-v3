@@ -54,7 +54,7 @@ export class LanguageResolver {
     description: `The fiscal year of the sponsor date`,
   })
   beginFiscalYear(@Parent() language: Language): SecuredInt {
-    const { value, ...rest } = language.sponsorDate;
+    const { value, ...rest } = language.sponsorStartDate;
     return {
       ...rest,
       value: value ? fiscalYear(value) : undefined,
