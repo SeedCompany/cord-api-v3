@@ -67,7 +67,7 @@ export class LanguageService {
     leastOfThese: true,
     leastOfTheseReason: true,
     displayNamePronunciation: true,
-    sponsorDate: true,
+    sponsorStartDate: true,
   };
 
   constructor(

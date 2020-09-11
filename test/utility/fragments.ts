@@ -96,11 +96,6 @@ export const language = gql`
       canEdit
       canRead
     }
-    beginFiscalYear {
-      value
-      canEdit
-      canRead
-    }
     isDialect {
       value
     }
