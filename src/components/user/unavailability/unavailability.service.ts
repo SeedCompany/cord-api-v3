@@ -80,9 +80,15 @@ export class UnavailabilityService {
           [],
           session.userId === this.config.rootAdmin.id
         )
-        .return('node.id as id');
+        .return('node.id as id')
+        .asResult<{ id: string }>();
 
-      const unavailabilityId = await createUnavailability.first();
+      const createUnavailabilityResult = await createUnavailability.first();
+
+      this.logger.debug(`Created user unavailability`, {
+        id: createUnavailabilityResult!.id,
+        userId,
+      });
 
       // connect the Unavailability to the User.
 
@@ -96,14 +102,11 @@ export class UnavailabilityService {
         .query()
         .raw(query, {
           userId,
-          id: unavailabilityId?.id,
+          id: createUnavailabilityResult!.id,
         })
         .run();
-      this.logger.debug(`Created user unavailability`, {
-        id: unavailabilityId?.id,
-        userId,
-      });
-      return await this.readOne(unavailabilityId?.id, session);
+
+      return await this.readOne(createUnavailabilityResult!.id, session);
     } catch {
       this.logger.error(`Could not create unavailability`, {
         userId,
