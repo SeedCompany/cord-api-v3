@@ -47,15 +47,12 @@ export class AuthorizationService {
 
   @OnIndex()
   async createIndexes() {
-    const constraints = [
+    return [
       'CREATE CONSTRAINT ON (n:SecurityGroup) ASSERT EXISTS(n.id)',
       'CREATE CONSTRAINT ON (n:SecurityGroup) ASSERT n.id IS UNIQUE',
       'CREATE CONSTRAINT ON (n:SecurityGroup) ASSERT EXISTS(n.active)',
       'CREATE CONSTRAINT ON (n:SecurityGroup) ASSERT EXISTS(n.createdAt)',
     ];
-    for (const query of constraints) {
-      await this.db.query().raw(query).run();
-    }
   }
 
   async listSecurityGroupsUserIsMemberOf(

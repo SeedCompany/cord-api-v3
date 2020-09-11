@@ -81,7 +81,7 @@ export class LanguageService {
 
   @OnIndex()
   async createIndexes() {
-    const constraints = [
+    return [
       // LANGUAGE NODE
       'CREATE CONSTRAINT ON (n:Language) ASSERT EXISTS(n.id)',
       'CREATE CONSTRAINT ON (n:Language) ASSERT n.id IS UNIQUE',
@@ -127,9 +127,6 @@ export class LanguageService {
       //'CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.value)',
       //'CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.active)',
     ];
-    for (const query of constraints) {
-      await this.db.query().raw(query).run();
-    }
   }
   // helper method for defining properties
   property = (prop: string, value: any) => {

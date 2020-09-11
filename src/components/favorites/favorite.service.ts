@@ -29,13 +29,10 @@ export class FavoriteService {
 
   @OnIndex()
   async createIndexes() {
-    const constraints = [
+    return [
       'CREATE CONSTRAINT ON ()-[r:favorite]-() ASSERT EXISTS(r.active)',
       'CREATE CONSTRAINT ON ()-[r:favorite]-() ASSERT EXISTS(r.createdAt)',
     ];
-    for (const query of constraints) {
-      await this.db.query().raw(query).run();
-    }
   }
 
   async add(input: AddFavorite, session: ISession): Promise<string> {

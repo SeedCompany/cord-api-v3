@@ -97,7 +97,7 @@ export class ProjectService {
 
   @OnIndex()
   async createIndexes() {
-    const constraints = [
+    return [
       'CREATE CONSTRAINT ON (n:Project) ASSERT EXISTS(n.id)',
       'CREATE CONSTRAINT ON (n:Project) ASSERT n.id IS UNIQUE',
       'CREATE CONSTRAINT ON (n:Project) ASSERT EXISTS(n.active)',
@@ -117,9 +117,6 @@ export class ProjectService {
       'CREATE CONSTRAINT ON (n:ProjectName) ASSERT EXISTS(n.value)',
       'CREATE CONSTRAINT ON (n:ProjectName) ASSERT n.value IS UNIQUE',
     ];
-    for (const query of constraints) {
-      await this.db.query().raw(query).run();
-    }
   }
 
   // helper method for defining properties

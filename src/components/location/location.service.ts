@@ -68,7 +68,7 @@ export class LocationService {
 
   @OnIndex()
   async createIndexes() {
-    const constraints = [
+    return [
       // ZONE NODE
       'CREATE CONSTRAINT ON (n:Zone) ASSERT EXISTS(n.id)',
       'CREATE CONSTRAINT ON (n:Zone) ASSERT n.id IS UNIQUE',
@@ -114,9 +114,6 @@ export class LocationService {
       'CREATE CONSTRAINT ON (n:LocationName) ASSERT EXISTS(n.value)',
       'CREATE CONSTRAINT ON (n:LocationName) ASSERT n.value IS UNIQUE',
     ];
-    for (const query of constraints) {
-      await this.db.query().raw(query).run();
-    }
   }
   // helper method for defining properties
   property = (prop: string, value: any, baseNode: string) => {

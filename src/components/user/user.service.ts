@@ -88,7 +88,7 @@ export class UserService {
   @OnIndex()
   async createIndexes() {
     // language=Cypher (for webstorm)
-    const constraints = [
+    return [
       // USER NODE
       'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.id)',
       'CREATE CONSTRAINT ON (n:User) ASSERT n.id IS UNIQUE',
@@ -111,9 +111,6 @@ export class UserService {
       // 'CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.value)',
       // 'CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.active)',
     ];
-    for (const query of constraints) {
-      await this.db.query().raw(query).run();
-    }
   }
 
   // helper method for defining properties
