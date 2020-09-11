@@ -45,7 +45,6 @@ import { ProjectService } from '../project/project.service';
 import {
   CreateInternshipEngagement,
   CreateLanguageEngagement,
-  Engagement,
   EngagementListInput,
   EngagementListOutput,
   EngagementStatus,
@@ -493,12 +492,11 @@ export class EngagementService {
       }
       throw new ServerException('Could not create Language Engagement');
     }
-    const res = await this.readOne(id, session);
+    const res = (await this.readOne(id, session)) as LanguageEngagement;
 
-    await this.eventBus.publish(
-      new EngagementCreatedEvent(res as Engagement, session)
-    );
-    return res as LanguageEngagement;
+    await this.eventBus.publish(new EngagementCreatedEvent(res, session));
+
+    return res;
   }
 
   async createInternshipEngagement(
@@ -787,11 +785,11 @@ export class EngagementService {
       }
       throw new ServerException('Could not create Internship Engagement');
     }
-    const res = await this.readOne(id, session);
-    await this.eventBus.publish(
-      new EngagementCreatedEvent(res as Engagement, session)
-    );
-    return res as InternshipEngagement;
+    const res = (await this.readOne(id, session)) as InternshipEngagement;
+
+    await this.eventBus.publish(new EngagementCreatedEvent(res, session));
+
+    return res;
   }
 
   // READ ///////////////////////////////////////////////////////////
