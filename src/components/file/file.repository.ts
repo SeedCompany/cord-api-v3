@@ -283,7 +283,8 @@ export class FileRepository {
       .call(createBaseNode, ['Directory', 'FileNode'], props, {
         owningOrgId: session.owningOrgId,
       })
-      .return('node.id as id');
+      .return('node.id as id')
+      .asResult<{ id: string }>();
 
     const result = await createFile.first();
 
@@ -329,7 +330,8 @@ export class FileRepository {
       .call(createBaseNode, ['File', 'FileNode'], props, {
         owningOrgId: session.owningOrgId,
       })
-      .return('node.id as id');
+      .return('node.id as id')
+      .asResult<{ id: string }>();
 
     const result = await createFile.first();
 
@@ -410,7 +412,8 @@ export class FileRepository {
         undefined,
         input.id
       )
-      .return('node.id as id');
+      .return('node.id as id')
+      .asResult<{ id: string }>();
 
     const result = await createFile.first();
 
