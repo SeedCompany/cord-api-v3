@@ -117,6 +117,18 @@ describe('Product e2e', () => {
                 canRead
                 canEdit
               }
+              scriptureReferencesOverride {
+                canRead
+                canEdit
+                value {
+                  start {
+                    book
+                  }
+                  end {
+                    book
+                  }
+                }
+              }
             }
           }
         }
@@ -127,12 +139,16 @@ describe('Product e2e', () => {
       }
     );
     const actual: AnyProduct = result.product;
+    expect(actual.scriptureReferencesOverride?.value).toBeNull();
     expect(actual.produces).toBeDefined();
     expect(actual.produces?.value).toBeDefined();
     expect(actual.produces?.value?.id).toBe(story.id);
     expect(actual.produces?.value?.__typename).toBe(ProducibleType.Story);
-    expect(actual.produces?.value?.scriptureReferences).toEqual(
-      story.scriptureReferences
+    expect(actual.produces?.value?.scriptureReferences?.value).toEqual(
+      story.scriptureReferences.value
+    );
+    expect(actual.scriptureReferences.value).toEqual(
+      actual.produces?.value?.scriptureReferences?.value
     );
   });
 
@@ -201,8 +217,12 @@ describe('Product e2e', () => {
     );
     const actual: AnyProduct = result.product;
     expect(actual.scriptureReferencesOverride?.value).toBeDefined();
-    expect(actual.scriptureReferencesOverride).toEqual(
-      actual.produces?.value?.scriptureReferences
+    expect(actual.scriptureReferencesOverride?.value).toEqual(
+      randomScriptureReferences
+    );
+    expect(actual.scriptureReferences.value).toEqual(randomScriptureReferences);
+    expect(actual.produces?.value?.scriptureReferences?.value).toEqual(
+      story.scriptureReferences.value
     );
   });
 
@@ -415,8 +435,9 @@ describe('Product e2e', () => {
 
     const actual: AnyProduct = result.updateProduct.product;
     expect(actual.scriptureReferencesOverride?.value).toEqual(override);
+    expect(actual.scriptureReferences?.value).toEqual(override);
     expect(actual.produces?.value?.scriptureReferences?.value).toEqual(
-      override
+      story.scriptureReferences.value
     );
   });
 

@@ -46,13 +46,17 @@ export class ScriptureReferenceService {
 
   async update(
     producibleId: string,
-    scriptureRefs: ScriptureRangeInput[] | undefined
+    scriptureRefs: ScriptureRangeInput[] | undefined,
+    options: { isOverriding?: boolean } = {}
   ): Promise<void> {
     if (!scriptureRefs) {
       return;
     }
 
-    const rel = 'scriptureReferences';
+    const rel = options.isOverriding
+      ? 'scriptureReferencesOverride'
+      : 'scriptureReferences';
+
     await this.db
       .query()
       .match([
@@ -67,29 +71,31 @@ export class ScriptureReferenceService {
       .return('sr')
       .run();
 
-    for (const sr of scriptureRefs) {
-      await this.db
-        .query()
-        .match([node('node', 'BaseNode', { id: producibleId, active: true })])
-        .create([
-          node('node'),
-          relation('out', '', rel, { active: true }),
-          node('', ['ScriptureRange', 'BaseNode'], {
-            ...scriptureToVerseRange(sr),
-            active: true,
-            createdAt: DateTime.local(),
-          }),
-        ])
-        .return('node')
-        .run();
+    if (scriptureRefs !== null) {
+      for (const sr of scriptureRefs) {
+        await this.db
+          .query()
+          .match([node('node', 'BaseNode', { id: producibleId, active: true })])
+          .create([
+            node('node'),
+            relation('out', '', rel, { active: true }),
+            node('', ['ScriptureRange', 'BaseNode'], {
+              ...scriptureToVerseRange(sr),
+              active: true,
+              createdAt: DateTime.local(),
+            }),
+          ])
+          .return('node')
+          .run();
+      }
     }
   }
 
   async list(
     producibleId: string,
-    session: ISession
+    session: ISession,
+    options: { isOverriding?: boolean } = {}
   ): Promise<ScriptureRange[]> {
-    const rel = 'scriptureReferences';
     const results = await this.db
       .query()
       .match([
@@ -98,7 +104,16 @@ export class ScriptureReferenceService {
           active: true,
           owningOrgId: session.owningOrgId,
         }),
-        relation('out', '', rel),
+        relation(
+          'out',
+          '',
+          options.isOverriding
+            ? 'scriptureReferencesOverride'
+            : 'scriptureReferences',
+          {
+            active: true,
+          }
+        ),
         node('scriptureRanges', 'ScriptureRange', { active: true }),
       ])
       .return('scriptureRanges')

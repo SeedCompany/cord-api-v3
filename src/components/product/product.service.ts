@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
+import type { Node } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { difference } from 'lodash';
 import { DateTime } from 'luxon';
@@ -10,8 +11,6 @@ import {
   ServerException,
 } from '../../common';
 import {
-  addAllMetaPropertiesOfChildBaseNodes,
-  ChildBaseNodeMetaProperty,
   ConfigService,
   createBaseNode,
   DatabaseService,
@@ -27,10 +26,10 @@ import {
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
+import type { BaseNode } from '../../core/database/results';
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
-  parsePropList,
   parseSecuredProperties,
   runListQuery,
   StandardReadResult,
@@ -40,16 +39,15 @@ import {
   LiteracyMaterial,
   LiteracyMaterialService,
 } from '../literacy-material';
-import { ScriptureRange, ScriptureRangeInput } from '../scripture';
-import {
-  scriptureToVerseRange,
-  verseToScriptureRange,
-} from '../scripture/reference';
+import { scriptureToVerseRange } from '../scripture/reference';
+import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
 import { Song, SongService } from '../song';
 import { Story, StoryService } from '../story';
 import {
   AnyProduct,
   CreateProduct,
+  DerivativeScriptureProduct,
+  DirectScriptureProduct,
   MethodologyToApproach,
   ProducibleType,
   ProductApproach,
@@ -74,6 +72,7 @@ export class ProductService {
     private readonly story: StoryService,
     private readonly song: SongService,
     private readonly literacyMaterial: LiteracyMaterialService,
+    private readonly scriptureRefService: ScriptureReferenceService,
     @Logger('product:service') private readonly logger: ILogger
   ) {}
 
@@ -172,6 +171,16 @@ export class ProductService {
         isOrgPublic: true,
         label: 'ProductMethodology',
       },
+      {
+        key: 'isOverriding',
+        value: false,
+        addToAdminSg: true,
+        addToWriterSg: true,
+        addToReaderSg: true,
+        isPublic: true,
+        isOrgPublic: true,
+        label: '',
+      },
     ];
 
     const query = this.db
@@ -220,6 +229,9 @@ export class ProductService {
       query.match([
         node('pr', 'Producible', { id: input.produces, active: true }),
       ]);
+      if (input.scriptureReferencesOverride) {
+        secureProps[3].value = true;
+      }
     }
 
     query.call(matchRequestingUser, session).call(
@@ -313,55 +325,22 @@ export class ProductService {
   }
 
   async readOne(id: string, session: ISession): Promise<AnyProduct> {
-    const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
-      {
-        parentBaseNodePropertyKey: 'scriptureReferences',
-        parentRelationDirection: 'out',
-        childBaseNodeLabel: 'ScriptureRange',
-        childBaseNodeMetaPropertyKey: '',
-        returnIdentifier: '',
-      },
-      {
-        parentBaseNodePropertyKey: 'scriptureReferencesOverride',
-        parentRelationDirection: 'out',
-        childBaseNodeLabel: 'ScriptureRange',
-        childBaseNodeMetaPropertyKey: '',
-        returnIdentifier: '',
-      },
-      {
-        parentBaseNodePropertyKey: 'produces',
-        parentRelationDirection: 'out',
-        childBaseNodeLabel: 'Producible',
-        childBaseNodeMetaPropertyKey: '',
-        returnIdentifier: '',
-      },
-    ];
-
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Product', { active: true, id })])
       .call(getPermList, 'requestingUser')
       .call(getPropList, 'permList')
-      .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
-      .return([
-        'propList, permList, node',
-        'scriptureReferencesReadPerm.read as canScriptureReferencesRead',
-        'scriptureReferencesEditPerm.edit as canScriptureReferencesEdit',
-        'scriptureReferencesOverrideReadPerm.read as canScriptureReferencesOverrideRead',
-        'scriptureReferencesOverrideEditPerm.edit as canScriptureReferencesOverrideEdit',
-        'producesReadPerm.read as canProducesRead',
-        'producesEditPerm.edit as canProducesEdit',
-      ])
+      .return(['propList, permList, node'])
       .asResult<
-        StandardReadResult<DbPropsOfDto<AnyProduct>> & {
-          canScriptureReferencesRead: boolean;
-          canScriptureReferencesEdit: boolean;
-          canScriptureReferencesOverrideRead: boolean;
-          canScriptureReferencesOverrideEdit: boolean;
-          canProducesRead: boolean;
-          canProducesEdit: boolean;
-        }
+        StandardReadResult<
+          DbPropsOfDto<
+            DirectScriptureProduct &
+              DerivativeScriptureProduct & {
+                isOverriding: boolean;
+              }
+          >
+        >
       >();
     const result = await query.first();
 
@@ -370,15 +349,22 @@ export class ProductService {
       throw new NotFoundException('Could not find product', 'product.id');
     }
 
-    const props = parsePropList(result.propList);
-    const securedProperties = parseSecuredProperties(
-      props,
-      result.permList,
-      this.securedProperties
-    );
-    const baseNodeProps = parseBaseNodeProperties(result.node);
+    const {
+      produces,
+      scriptureReferencesOverride,
+      isOverriding,
+      ...rest
+    } = parseSecuredProperties(result.propList, result.permList, {
+      mediums: true,
+      purposes: true,
+      methodology: true,
+      scriptureReferences: true,
+      scriptureReferencesOverride: true,
+      produces: true,
+      isOverriding: true,
+    });
 
-    const produces = await this.db
+    const pr = await this.db
       .query()
       .match([
         node('product', 'Product', { id, active: true }),
@@ -386,89 +372,72 @@ export class ProductService {
         node('p', 'Producible', { active: true }),
       ])
       .return('p')
+      .asResult<{ p: Node<BaseNode> }>()
       .first();
 
-    if (!produces) {
-      const scriptureReferences = await this.listScriptureReferences(
-        baseNodeProps.id,
-        'Product',
-        session
-      );
+    const scriptureReferencesValue = await this.scriptureRefService.list(
+      id,
+      session,
+      { isOverriding: pr ? true : false }
+    );
+
+    if (!pr) {
       return {
-        ...baseNodeProps,
-        ...securedProperties,
+        ...parseBaseNodeProperties(result.node),
+        ...rest,
         scriptureReferences: {
-          canRead: result.canScriptureReferencesRead,
-          canEdit: result.canScriptureReferencesEdit,
-          value: scriptureReferences,
+          ...rest.scriptureReferences,
+          value: scriptureReferencesValue,
         },
         mediums: {
-          ...securedProperties.mediums,
-          value: securedProperties.mediums.value ?? [],
+          ...rest.mediums,
+          value: rest.mediums.value ?? [],
         },
         purposes: {
-          ...securedProperties.purposes,
-          value: securedProperties.purposes.value ?? [],
+          ...rest.purposes,
+          value: rest.purposes.value ?? [],
         },
       };
     }
 
-    const scriptureReferencesOverride = await this.listScriptureReferences(
-      baseNodeProps.id,
-      'Product',
-      session,
-      { isOverride: true }
-    );
-
-    const typeName = difference(produces.p.labels, [
+    const typeName = (difference(pr.p.labels, [
       'Producible',
       'BaseNode',
-    ])[0];
+    ]) as ProducibleType[])[0];
 
     const producible = await this.getProducibleByType(
-      produces.p.properties.id,
+      pr.p.properties.id,
       typeName,
       session
     );
 
     return {
-      ...baseNodeProps,
-      ...securedProperties,
+      ...parseBaseNodeProperties(result.node),
+      ...rest,
       scriptureReferences: {
-        canRead: result.canScriptureReferencesRead,
-        canEdit: result.canScriptureReferencesEdit,
-        value: [],
+        ...rest.scriptureReferences,
+        value: !isOverriding.value
+          ? producible?.scriptureReferences.value
+          : scriptureReferencesValue,
       },
       mediums: {
-        ...securedProperties.mediums,
-        value: securedProperties.mediums.value ?? [],
+        ...rest.mediums,
+        value: rest.mediums.value ?? [],
       },
       purposes: {
-        ...securedProperties.purposes,
-        value: securedProperties.purposes.value ?? [],
+        ...rest.purposes,
+        value: rest.purposes.value ?? [],
       },
       produces: {
+        ...produces,
         value: {
           ...producible,
-          id: produces.p.properties.id,
-          __typename: (ProducibleType as any)[typeName],
-          scriptureReferences: !scriptureReferencesOverride.length
-            ? producible?.scriptureReferences
-            : {
-                canRead: result.canScriptureReferencesOverrideRead,
-                canEdit: result.canScriptureReferencesOverrideEdit,
-                value: scriptureReferencesOverride,
-              },
+          __typename: typeName,
         },
-        canRead: result.canProducesRead,
-        canEdit: result.canProducesEdit,
       },
       scriptureReferencesOverride: {
-        canRead: result.canScriptureReferencesOverrideRead,
-        canEdit: result.canScriptureReferencesOverrideEdit,
-        value: !scriptureReferencesOverride.length
-          ? null
-          : scriptureReferencesOverride,
+        ...scriptureReferencesOverride,
+        value: !isOverriding.value ? null : scriptureReferencesValue,
       },
     };
   }
@@ -521,18 +490,28 @@ export class ProductService {
         ])
         .return('rel')
         .first();
+    } else {
+      await this.scriptureRefService.update(input.id, scriptureReferences);
     }
 
-    if (!produces && scriptureReferences) {
-      await this.updateScriptureReferences(input.id, scriptureReferences);
-    }
+    await this.scriptureRefService.update(
+      input.id,
+      scriptureReferencesOverride,
+      { isOverriding: true }
+    );
 
     if (scriptureReferencesOverride) {
-      await this.updateScriptureReferences(
-        input.id,
-        scriptureReferencesOverride,
-        true
-      );
+      await this.db
+        .query()
+        .match([
+          node('product', 'Product', { id: input.id, active: true }),
+          relation('out', 'rel', 'isOverriding', { active: true }),
+          node('p', 'Property', { active: true }),
+        ])
+        .setValues({
+          'p.value': scriptureReferencesOverride !== null,
+        })
+        .run();
     }
 
     const object = await this.readOne(input.id, session);
@@ -544,48 +523,6 @@ export class ProductService {
       changes: rest,
       nodevar: 'product',
     });
-  }
-
-  protected async updateScriptureReferences(
-    productId: string,
-    scriptureReferences: ScriptureRangeInput[],
-    isOverride?: boolean
-  ): Promise<void> {
-    const rel = !isOverride
-      ? 'scriptureReferences'
-      : 'scriptureReferencesOverride';
-    await this.db
-      .query()
-      .match([
-        node('product', 'Product', { id: productId, active: true }),
-        relation('out', 'rel', rel, { active: true }),
-        node('sr', 'ScriptureRange', { active: true }),
-      ])
-      .setValues({
-        'rel.active': false,
-        'sr.active': false,
-      })
-      .return('sr')
-      .first();
-
-    for (const sr of scriptureReferences) {
-      const verseRange = scriptureToVerseRange(sr);
-      await this.db
-        .query()
-        .match([node('product', 'Product', { id: productId, active: true })])
-        .create([
-          node('product'),
-          relation('out', '', rel, { active: true }),
-          node('', ['ScriptureRange', 'BaseNode'], {
-            start: verseRange.start,
-            end: verseRange.end,
-            active: true,
-            createdAt: DateTime.local(),
-          }),
-        ])
-        .return('product')
-        .first();
-    }
   }
 
   async delete(id: string, session: ISession): Promise<void> {
@@ -646,63 +583,6 @@ export class ProductService {
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
 
-  protected async listScriptureReferences(
-    id: string,
-    label: string,
-    session: ISession,
-    options: { isOverride?: boolean } = {}
-  ): Promise<ScriptureRange[]> {
-    const query = this.db
-      .query()
-      .match([
-        node('node', label, {
-          id,
-          active: true,
-          owningOrgId: session.owningOrgId,
-        }),
-        relation(
-          'out',
-          '',
-          options.isOverride
-            ? 'scriptureReferencesOverride'
-            : 'scriptureReferences',
-          {
-            active: true,
-          }
-        ),
-        node('scriptureRanges', 'ScriptureRange', { active: true }),
-      ])
-      .with('collect(scriptureRanges) as items')
-      .return('items');
-    const result = await query.first();
-
-    if (!result) {
-      return [];
-    }
-
-    const items: ScriptureRange[] = await Promise.all(
-      result.items.map(
-        (item: {
-          identity: string;
-          labels: string;
-          properties: {
-            start: number;
-            end: number;
-            createdAt: string;
-            active: boolean;
-          };
-        }) => {
-          return verseToScriptureRange({
-            start: item.properties.start,
-            end: item.properties.end,
-          });
-        }
-      )
-    );
-
-    return items;
-  }
-
   // used to search a specific engagement's relationship to the target base node
   // for example, searching all products a engagement is a part of
   protected filterByEngagement(
@@ -731,17 +611,15 @@ export class ProductService {
     id: string,
     type: string,
     session: ISession
-  ): Promise<Film | Story | Song | LiteracyMaterial | undefined> {
+  ): Promise<Film | Story | Song | LiteracyMaterial> {
     if (type === 'Film') {
       return await this.film.readOne(id, session);
     } else if (type === 'Story') {
       return await this.story.readOne(id, session);
     } else if (type === 'Song') {
       return await this.song.readOne(id, session);
-    } else if (type === 'LiteracyMaterial') {
+    } else {
       return await this.literacyMaterial.readOne(id, session);
     }
-
-    return undefined;
   }
 }
