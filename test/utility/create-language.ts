@@ -1,6 +1,7 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { generate, isValid } from 'shortid';
+import { CalendarDate } from '../../src/common';
 import {
   CreateEthnologueLanguage,
   CreateLanguage,
@@ -35,6 +36,7 @@ export async function createLanguage(
     signLanguageCode:
       faker.helpers.replaceSymbols('??').toUpperCase() +
       faker.random.number({ min: 10, max: 99 }).toString(),
+    sponsorEstimatedEndDate: CalendarDate.fromISO('1991-01-01'),
     ...input,
   };
 

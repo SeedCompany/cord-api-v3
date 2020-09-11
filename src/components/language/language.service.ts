@@ -69,6 +69,7 @@ export class LanguageService {
     sponsorStartDate: true,
     isSignLanguage: true,
     signLanguageCode: true,
+    sponsorEstimatedEndDate: true,
   };
 
   constructor(
@@ -330,6 +331,15 @@ export class LanguageService {
           isPublic: false,
           isOrgPublic: false,
         },
+        {
+          key: 'sponsorEstimatedEndDate',
+          value: input.sponsorEstimatedEndDate,
+          addToAdminSg: true,
+          addToWriterSg: false,
+          addToReaderSg: true,
+          isPublic: false,
+          isOrgPublic: false,
+        },
       ];
 
       const createLanguage = this.db
@@ -490,6 +500,7 @@ export class LanguageService {
         'isSignLanguage',
         'signLanguageCode',
         'sensitivity',
+        'sponsorEstimatedEndDate',
       ],
       changes: input,
       nodevar: 'language', // not sure if this is right, just trying to get this to compile - michael
