@@ -1,5 +1,6 @@
 import { DiscoveryModule, DiscoveryService } from '@golevelup/nestjs-discovery';
 import { Module, OnModuleInit } from '@nestjs/common';
+import Neo from 'neo4j-driver';
 import { ConfigService } from '../..';
 import { ILogger, Logger } from '../../logger';
 import { DatabaseService } from '../database.service';
@@ -42,7 +43,22 @@ export class IndexerModule implements OnModuleInit {
           : [maybeStatements]
         : [];
       for (const statement of statements) {
-        await this.db.query().raw(statement).run();
+        try {
+          await this.db.query().raw(statement).run();
+        } catch (e) {
+          if (
+            e instanceof Neo.Neo4jError &&
+            e.code === 'Neo.DatabaseError.Schema.ConstraintCreationFailed' &&
+            e.message.includes('constraint requires Neo4j Enterprise Edition')
+          ) {
+            this.logger.debug(
+              'Skipping constraint not supported on Neo4j Community Edition',
+              { constraint: statement }
+            );
+          } else {
+            throw e;
+          }
+        }
       }
     }
 

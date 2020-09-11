@@ -55,7 +55,7 @@ export class OrganizationService {
 
   @OnIndex()
   async createIndexes() {
-    const constraints = [
+    return [
       'CREATE CONSTRAINT ON (n:Organization) ASSERT EXISTS(n.id)',
       'CREATE CONSTRAINT ON (n:Organization) ASSERT n.id IS UNIQUE',
       'CREATE CONSTRAINT ON (n:Organization) ASSERT EXISTS(n.active)',
@@ -68,9 +68,6 @@ export class OrganizationService {
       'CREATE CONSTRAINT ON (n:OrgName) ASSERT EXISTS(n.value)',
       'CREATE CONSTRAINT ON (n:OrgName) ASSERT n.value IS UNIQUE',
     ];
-    for (const query of constraints) {
-      await this.db.query().raw(query).run();
-    }
   }
 
   async create(
