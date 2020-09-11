@@ -85,8 +85,15 @@ export class UnavailabilityService {
 
       const createUnavailabilityResult = await createUnavailability.first();
 
+      if (!createUnavailabilityResult) {
+        this.logger.error(`Could not create unavailability`, {
+          userId,
+        });
+        throw new ServerException('Could not create unavailability');
+      }
+
       this.logger.debug(`Created user unavailability`, {
-        id: createUnavailabilityResult!.id,
+        id: createUnavailabilityResult.id,
         userId,
       });
 
@@ -102,11 +109,11 @@ export class UnavailabilityService {
         .query()
         .raw(query, {
           userId,
-          id: createUnavailabilityResult!.id,
+          id: createUnavailabilityResult.id,
         })
         .run();
 
-      return await this.readOne(createUnavailabilityResult!.id, session);
+      return await this.readOne(createUnavailabilityResult.id, session);
     } catch {
       this.logger.error(`Could not create unavailability`, {
         userId,
