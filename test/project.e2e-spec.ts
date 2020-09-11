@@ -110,7 +110,7 @@ describe('Project e2e', () => {
     expect(actual.type).toBe(project.type);
     expect(actual.sensitivity).toBe(project.sensitivity);
     expect(actual.name.value).toBe(project.name.value);
-    expect(actual.deptId.value).toBe(project.deptId.value);
+    expect(actual.departmentId.value).toBe(project.departmentId.value);
     expect(actual.step.value).toBe(project.step.value);
     expect(actual.status).toBe(project.status);
     expect(actual.mouStart.value).toBe(project.mouStart.value);
@@ -146,7 +146,7 @@ describe('Project e2e', () => {
 
     const actual: Project = result.createProject.project;
     expect(actual.id).toBeDefined();
-    expect(actual.deptId.value).toBeNull();
+    expect(actual.departmentId.value).toBeNull();
     expect(actual.location.value).toBeNull();
     expect(actual.mouStart.value).toBeNull();
     expect(actual.mouEnd.value).toBeNull();

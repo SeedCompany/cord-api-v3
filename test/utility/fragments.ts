@@ -328,7 +328,7 @@ export const project = gql`
       canRead
       canEdit
     }
-    deptId {
+    departmentId {
       value
       canRead
       canEdit

@@ -15,7 +15,7 @@ import {
 } from '../../common';
 import { SecuredBudget } from '../budget';
 import { EngagementListInput, SecuredEngagementList } from '../engagement';
-import { Directory } from '../file';
+import { SecuredDirectory } from '../file';
 import { PartnershipListInput, SecuredPartnershipList } from '../partnership';
 import {
   CreateProjectInput,
@@ -70,11 +70,13 @@ export class ProjectResolver {
       : undefined;
   }
 
+  /** @deprecated Moved from field definition in DTO to here */
   @ResolveField(() => SecuredString, {
     description: 'The legacy department ID',
+    deprecationReason: 'Use `Project.departmentId` instead',
   })
-  departmentId(@Parent() project: Project): SecuredString {
-    return project.deptId;
+  deptId(@Parent() project: Project): SecuredString {
+    return project.departmentId;
   }
 
   @ResolveField(() => SecuredBudget, {
@@ -132,13 +134,13 @@ export class ProjectResolver {
     return this.projectService.listPartnerships(id, input, session);
   }
 
-  @ResolveField(() => Directory, {
+  @ResolveField(() => SecuredDirectory, {
     description: 'The root filesystem directory of this project',
   })
   async rootDirectory(
     @Session() session: ISession,
     @Parent() { id }: Project
-  ): Promise<Directory> {
+  ): Promise<SecuredDirectory> {
     return await this.projectService.getRootDirectory(id, session);
   }
 
