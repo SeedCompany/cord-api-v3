@@ -286,7 +286,7 @@ export class ProductService {
           relation('out', '', 'scriptureReferencesOverride', {
             active: true,
           }),
-          node('sr', ['ScriptureRange', 'BaseNode'], {
+          node('', ['ScriptureRange', 'BaseNode'], {
             start: verseRange.start,
             end: verseRange.end,
             active: true,

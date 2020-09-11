@@ -132,7 +132,7 @@ export class DatabaseService {
     props: ReadonlyArray<keyof TObject>;
     changes: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> };
     nodevar: string;
-  }) {
+  }): Promise<TObject> {
     let updated = object;
     for (const prop of props) {
       if (
