@@ -33,6 +33,9 @@ export async function createLanguage(
     leastOfThese: faker.random.boolean(),
     leastOfTheseReason: faker.lorem.sentence(),
     ethnologue: ethnologueLanguage,
+    signLanguageCode:
+      faker.helpers.replaceSymbols('??').toUpperCase() +
+      faker.random.number({ min: 10, max: 99 }).toString(),
     ...input,
   };
 

@@ -247,4 +247,11 @@ describe('Language e2e', () => {
     expect(queryProject.language.projects.items.length).toBe(numProjects);
     expect(queryProject.language.projects.total).toBe(numProjects);
   });
+
+  it('should throw error if signLanguageCode is not valid', async () => {
+    const signLanguageCode = 'XXX1';
+    await expect(
+      createLanguage(app, { signLanguageCode })
+    ).rejects.toThrowError();
+  });
 });
