@@ -22,7 +22,7 @@ export async function createPartnership(
     agreementStatus: PartnershipAgreementStatus.AwaitingSignature,
     mouStatus: PartnershipAgreementStatus.AwaitingSignature,
     types: [PartnershipType.Managing],
-    fundingType: FinancialReportingType.Funded,
+    financialReportingType: FinancialReportingType.Funded,
     organizationId: input.organizationId || (await createOrganization(app)).id,
     mouStartOverride: CalendarDate.local(),
     mouEndOverride: CalendarDate.local(),

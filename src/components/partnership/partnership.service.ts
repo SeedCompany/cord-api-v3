@@ -63,7 +63,7 @@ export class PartnershipService {
     mouStartOverride: true,
     mouEndOverride: true,
     types: true,
-    fundingType: true,
+    financialReportingType: true,
     mou: true,
     agreement: true,
   };
@@ -188,7 +188,10 @@ export class PartnershipService {
       throw e;
     }
 
-    this.verifyFundingType(input.fundingType, input.types);
+    this.verifyFinancialReportingType(
+      input.financialReportingType,
+      input.types
+    );
 
     const mou = await this.files.createDefinedFile(
       `MOU`,
@@ -268,8 +271,8 @@ export class PartnershipService {
         isOrgPublic: false,
       },
       {
-        key: 'fundingType',
-        value: input.fundingType,
+        key: 'financialReportingType',
+        value: input.financialReportingType,
         addToAdminSg: true,
         addToWriterSg: false,
         addToReaderSg: true,
@@ -451,20 +454,20 @@ export class PartnershipService {
     };
 
     if (
-      !this.validateFundingType(
-        input.fundingType ?? object.fundingType.value,
+      !this.validateFinancialReportingType(
+        input.financialReportingType ?? object.financialReportingType.value,
         input.types ?? object.types.value
       )
     ) {
-      if (input.fundingType && input.types) {
+      if (input.financialReportingType && input.types) {
         throw new InputException(
           'Funding type can only be applied to managing partners',
-          'partnership.fundingType'
+          'partnership.financialReportingType'
         );
       }
       changes = {
         ...changes,
-        fundingType: null,
+        financialReportingType: null,
       };
     }
 
@@ -476,7 +479,7 @@ export class PartnershipService {
         'agreementStatus',
         'mouStatus',
         'types',
-        'fundingType',
+        'financialReportingType',
         'mouStartOverride',
         'mouEndOverride',
       ],
@@ -642,23 +645,23 @@ export class PartnershipService {
     ]);
   }
 
-  protected verifyFundingType(
-    fundingType: FinancialReportingType | null | undefined,
+  protected verifyFinancialReportingType(
+    financialReportingType: FinancialReportingType | null | undefined,
     types: PartnershipType[] | undefined
   ) {
-    if (!this.validateFundingType(fundingType, types)) {
+    if (!this.validateFinancialReportingType(financialReportingType, types)) {
       throw new InputException(
         'Funding type can only be applied to managing partners',
-        'partnership.fundingType'
+        'partnership.financialReportingType'
       );
     }
   }
 
-  protected validateFundingType(
-    fundingType: FinancialReportingType | null | undefined,
+  protected validateFinancialReportingType(
+    financialReportingType: FinancialReportingType | null | undefined,
     types: PartnershipType[] | undefined
   ) {
-    return fundingType && !types?.includes(PartnershipType.Managing)
+    return financialReportingType && !types?.includes(PartnershipType.Managing)
       ? false
       : true;
   }

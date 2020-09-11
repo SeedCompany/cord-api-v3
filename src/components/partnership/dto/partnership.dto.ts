@@ -64,5 +64,5 @@ export class Partnership extends Resource {
   readonly types: SecuredPartnershipTypes;
 
   @Field()
-  readonly fundingType: SecuredFinancialReportingType;
+  readonly financialReportingType: SecuredFinancialReportingType;
 }
