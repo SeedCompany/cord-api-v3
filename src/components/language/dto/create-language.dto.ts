@@ -9,7 +9,7 @@ import {
   Matches,
   ValidateNested,
 } from 'class-validator';
-import { NameField } from '../../../common';
+import { NameField, Sensitivity } from '../../../common';
 import { Language } from './language.dto';
 
 @InputType()
@@ -74,6 +74,9 @@ export abstract class CreateLanguage {
   @Field({ nullable: true })
   @Matches(/^[A-Z]{2}\d{2}$/)
   readonly signLanguageCode?: string;
+
+  @Field(() => Sensitivity, { nullable: true })
+  readonly sensitivity?: Sensitivity = Sensitivity.High;
 }
 
 @InputType()
