@@ -20,12 +20,14 @@ export abstract class ScriptureReferenceInput {
 
   @Field(() => Int, {
     description: 'The chapter number',
+    defaultValue: null,
   })
   @IsValidChapter()
   chapter: number;
 
   @Field(() => Int, {
     description: 'The verse number',
+    defaultValue: null,
   })
   @IsValidVerse()
   verse: number;
