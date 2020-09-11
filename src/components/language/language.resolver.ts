@@ -10,7 +10,6 @@ import {
 import { stripIndent } from 'common-tags';
 import {
   firstLettersOfWords,
-  fiscalYear,
   IdArg,
   ISession,
   SecuredInt,
@@ -48,17 +47,6 @@ export class LanguageResolver {
     return language.name.canRead && language.name.value
       ? firstLettersOfWords(language.name.value)
       : undefined;
-  }
-
-  @ResolveField(() => SecuredInt, {
-    description: `The fiscal year of the sponsor start date`,
-  })
-  beginFiscalYear(@Parent() language: Language): SecuredInt {
-    const { value, ...rest } = language.sponsorStartDate;
-    return {
-      ...rest,
-      value: value ? fiscalYear(value) : undefined,
-    };
   }
 
   @ResolveField(() => SecuredInt, {
