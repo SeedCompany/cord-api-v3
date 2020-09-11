@@ -51,7 +51,7 @@ export class LanguageResolver {
   }
 
   @ResolveField(() => SecuredInt, {
-    description: `The fiscal year of the sponsor date`,
+    description: `The fiscal year of the sponsor start date`,
   })
   beginFiscalYear(@Parent() language: Language): SecuredInt {
     const { value, ...rest } = language.sponsorStartDate;
