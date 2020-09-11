@@ -22,45 +22,45 @@ export class ScriptureRangeResolver {
         - Matthew 1:1-John 2:4
     `,
   })
-  label(@Parent() _range: ScriptureRange): string {
-    const bookIndex = bookIndexFromName(_range.end.book);
+  label(@Parent() { start, end }: ScriptureRange): string {
+    const bookIndex = bookIndexFromName(end.book);
     const lastChapter = books[bookIndex].chapters.length;
-    const lastVerse = books[bookIndex].chapters[_range.end.chapter - 1];
-    if (_range.start.book === _range.end.book) {
-      if (_range.start.verse === 1 && _range.end.verse === lastVerse) {
-        if (_range.start.chapter === 1 && _range.end.chapter === lastChapter) {
+    const lastVerse = books[bookIndex].chapters[end.chapter - 1];
+    if (start.book === end.book) {
+      if (start.verse === 1 && end.verse === lastVerse) {
+        if (start.chapter === 1 && end.chapter === lastChapter) {
           // - Matthew
-          return `${_range.start.book}`;
-        } else if (_range.start.chapter === _range.end.chapter) {
+          return `${start.book}`;
+        } else if (start.chapter === end.chapter) {
           // - Matthew 1
-          return `${_range.start.book} ${_range.start.chapter}`;
+          return `${start.book} ${start.chapter}`;
         } else {
           // - Matthew 1-4
-          return `${_range.start.book} ${_range.start.chapter}-${_range.end.chapter}`;
+          return `${start.book} ${start.chapter}-${end.chapter}`;
         }
-      } else if (_range.start.chapter === _range.end.chapter) {
-        if (_range.start.verse === _range.end.verse) {
+      } else if (start.chapter === end.chapter) {
+        if (start.verse === end.verse) {
           // - Matthew 1:1
-          return `${_range.start.book} ${_range.start.chapter}:${_range.start.verse}`;
+          return `${start.book} ${start.chapter}:${start.verse}`;
         } else {
           // - Matthew 1:1-20
-          return `${_range.start.book} ${_range.start.chapter}:${_range.start.verse}-${_range.end.verse}`;
+          return `${start.book} ${start.chapter}:${start.verse}-${end.verse}`;
         }
       } else {
         // Matthew 1:1-4:21
-        return `${_range.start.book} ${_range.start.chapter}:${_range.start.verse}-${_range.end.chapter}:${_range.end.verse}`;
+        return `${start.book} ${start.chapter}:${start.verse}-${end.chapter}:${end.verse}`;
       }
-    } else if (_range.start.verse === 1 && _range.end.verse === lastVerse) {
-      if (_range.start.chapter === 1 && _range.end.chapter === lastChapter) {
+    } else if (start.verse === 1 && end.verse === lastVerse) {
+      if (start.chapter === 1 && end.chapter === lastChapter) {
         // - Matthew-John
-        return `${_range.start.book}-${_range.end.book}`;
+        return `${start.book}-${end.book}`;
       } else {
         // - Matthew 1-John 2
-        return `${_range.start.book} ${_range.start.chapter}-${_range.end.book} ${_range.end.chapter}`;
+        return `${start.book} ${start.chapter}-${end.book} ${end.chapter}`;
       }
     } else {
       // - Matthew 1:1-John 2:4
-      return `${_range.start.book} ${_range.start.chapter}:${_range.start.verse}-${_range.end.book} ${_range.end.chapter}:${_range.end.verse}`;
+      return `${start.book} ${start.chapter}:${start.verse}-${end.book} ${end.chapter}:${end.verse}`;
     }
   }
 
