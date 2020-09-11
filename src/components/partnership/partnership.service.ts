@@ -39,9 +39,9 @@ import { OrganizationService } from '../organization';
 import { ProjectService } from '../project/project.service';
 import {
   CreatePartnership,
+  FinancialReportingType,
   Partnership,
   PartnershipAgreementStatus,
-  PartnershipFundingType,
   PartnershipListInput,
   PartnershipListOutput,
   PartnershipType,
@@ -643,7 +643,7 @@ export class PartnershipService {
   }
 
   protected verifyFundingType(
-    fundingType: PartnershipFundingType | null | undefined,
+    fundingType: FinancialReportingType | null | undefined,
     types: PartnershipType[] | undefined
   ) {
     if (!this.validateFundingType(fundingType, types)) {
@@ -655,7 +655,7 @@ export class PartnershipService {
   }
 
   protected validateFundingType(
-    fundingType: PartnershipFundingType | null | undefined,
+    fundingType: FinancialReportingType | null | undefined,
     types: PartnershipType[] | undefined
   ) {
     return fundingType && !types?.includes(PartnershipType.Managing)
