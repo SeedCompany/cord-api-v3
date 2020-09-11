@@ -91,6 +91,9 @@ export class Language extends Resource {
   })
   readonly leastOfTheseReason: SecuredString;
 
+  @Field()
+  readonly signLanguageCode: SecuredString;
+
   // Calculated. Not settable.
   @Field({
     description: 'The earliest start date from its engagements',

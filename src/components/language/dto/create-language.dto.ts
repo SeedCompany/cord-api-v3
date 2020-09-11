@@ -6,6 +6,7 @@ import {
   IsNumberString,
   IsPositive,
   Length,
+  Matches,
   ValidateNested,
 } from 'class-validator';
 import { NameField } from '../../../common';
@@ -69,6 +70,10 @@ export abstract class CreateLanguage {
 
   @NameField({ nullable: true })
   readonly leastOfTheseReason?: string;
+
+  @Field({ nullable: true })
+  @Matches(/^[A-Z]{2}\d{2}$/)
+  readonly signLanguageCode?: string;
 }
 
 @InputType()

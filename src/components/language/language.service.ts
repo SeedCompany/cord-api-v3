@@ -68,6 +68,7 @@ export class LanguageService {
     leastOfTheseReason: true,
     displayNamePronunciation: true,
     sponsorStartDate: true,
+    signLanguageCode: true,
   };
 
   constructor(
@@ -311,6 +312,15 @@ export class LanguageService {
           isPublic: false,
           isOrgPublic: false,
         },
+        {
+          key: 'signLanguageCode',
+          value: input.signLanguageCode,
+          addToAdminSg: true,
+          addToWriterSg: false,
+          addToReaderSg: true,
+          isPublic: false,
+          isOrgPublic: false,
+        },
       ];
 
       const createLanguage = this.db
@@ -468,6 +478,7 @@ export class LanguageService {
         'leastOfThese',
         'leastOfTheseReason',
         'displayNamePronunciation',
+        'signLanguageCode',
       ],
       changes: input,
       nodevar: 'language', // not sure if this is right, just trying to get this to compile - michael
