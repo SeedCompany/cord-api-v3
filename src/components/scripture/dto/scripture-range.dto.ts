@@ -1,6 +1,4 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { Type } from 'class-transformer';
-import { ValidateNested } from 'class-validator';
 import { stripIndent } from 'common-tags';
 import { random, times } from 'lodash';
 import { Range, SecuredPropertyList } from '../../../common';
@@ -34,8 +32,6 @@ export abstract class ScriptureRangeInput {
     description: 'The starting point',
   })
   @ScriptureStart()
-  @ValidateNested()
-  @Type(() => ScriptureReferenceInput)
   start: ScriptureReferenceInput;
 
   @Field({
@@ -43,8 +39,6 @@ export abstract class ScriptureRangeInput {
   })
   @IsValidOrder()
   @ScriptureEnd()
-  @ValidateNested()
-  @Type(() => ScriptureReferenceInput)
   end: ScriptureReferenceInput;
 }
 
