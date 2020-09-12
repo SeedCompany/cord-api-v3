@@ -157,21 +157,26 @@ export const createRandomScriptureReferences = (): ScriptureRangeInput[] => [
 
 const createRandomScriptureRange = (): ScriptureRangeInput => {
   const book = books[random(books.length - 1)];
-  const endChapter = random(book.chapters.length - 1);
-  const endVerse = random(book.chapters[endChapter] - 1);
-  const startChapter = random(endChapter);
-  const startVerse = random(endVerse);
+  const endChapter = random(1, book.chapters.length);
+  const endVerse = random(1, book.chapters[endChapter - 1]);
+  const startChapter = random(1, endChapter);
+  let startVerse = 0;
+  if (startChapter === endChapter) {
+    startVerse = random(1, endVerse);
+  } else {
+    startVerse = random(1, book.chapters[startChapter - 1]);
+  }
 
   return {
     start: {
       book: book.names[0],
-      chapter: startChapter + 1,
-      verse: startVerse + 1,
+      chapter: startChapter,
+      verse: startVerse,
     },
     end: {
       book: book.names[0],
-      chapter: endChapter + 1,
-      verse: endVerse + 1,
+      chapter: endChapter,
+      verse: endVerse,
     },
   };
 };
