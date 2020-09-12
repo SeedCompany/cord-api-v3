@@ -33,18 +33,18 @@ export abstract class ScriptureRangeInput {
   @Field({
     description: 'The starting point',
   })
+  @ScriptureStart()
   @ValidateNested()
   @Type(() => ScriptureReferenceInput)
-  @ScriptureStart()
   start: ScriptureReferenceInput;
 
   @Field({
     description: 'The ending point',
   })
-  @ValidateNested()
   @IsValidOrder()
-  @Type(() => ScriptureReferenceInput)
   @ScriptureEnd()
+  @ValidateNested()
+  @Type(() => ScriptureReferenceInput)
   end: ScriptureReferenceInput;
 }
 

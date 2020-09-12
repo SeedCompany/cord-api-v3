@@ -14,6 +14,8 @@ export abstract class UpdateLiteracyMaterial {
   readonly name?: string;
 
   @Field(() => [ScriptureRangeInput], { nullable: true })
+  @ValidateNested()
+  @Type(() => ScriptureRangeInput)
   readonly scriptureReferences?: ScriptureRangeInput[];
 }
 
