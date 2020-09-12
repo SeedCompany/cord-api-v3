@@ -2,7 +2,7 @@ import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
 import { generate, isValid } from 'shortid';
-import { createRandomScriptureReferences } from '../src/components/scripture/reference';
+import { ScriptureRange } from '../src/components/scripture/dto';
 import { Song } from '../src/components/song/dto';
 import {
   createSession,
@@ -29,7 +29,7 @@ describe('Song e2e', () => {
   // Create SONG
   it('Create Song', async () => {
     const name = faker.company.companyName();
-    const scriptureReferences = createRandomScriptureReferences();
+    const scriptureReferences = ScriptureRange.randomList();
     const song = await createSong(app, { name, scriptureReferences });
     expect(song.scriptureReferences.value).toBeDefined();
     expect(song.scriptureReferences.value).toEqual(scriptureReferences);
@@ -38,7 +38,7 @@ describe('Song e2e', () => {
   // READ SONG
   it('create & read song by id', async () => {
     const name = faker.company.companyName();
-    const scriptureReferences = createRandomScriptureReferences();
+    const scriptureReferences = ScriptureRange.randomList();
     const song = await createSong(app, { name, scriptureReferences });
 
     const { song: actual } = await app.graphql.query(
@@ -66,7 +66,7 @@ describe('Song e2e', () => {
   it('update song', async () => {
     const st = await createSong(app);
     const newName = faker.company.companyName();
-    const scriptureReferences = createRandomScriptureReferences();
+    const scriptureReferences = ScriptureRange.randomList();
     const result = await app.graphql.mutate(
       gql`
         mutation updateSong($input: UpdateSongInput!) {

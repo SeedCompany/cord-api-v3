@@ -8,7 +8,7 @@ import {
   ProductMethodology,
   ProductPurpose,
 } from '../src/components/product';
-import { createRandomScriptureReferences } from '../src/components/scripture/reference';
+import { ScriptureRange } from '../src/components/scripture/dto';
 import { Story } from '../src/components/story';
 import {
   createFilm,
@@ -69,7 +69,7 @@ describe('Product e2e', () => {
   });
 
   it('create product with scriptureReferences', async () => {
-    const randomScriptureReferences = createRandomScriptureReferences();
+    const randomScriptureReferences = ScriptureRange.randomList();
     const product = await createProduct(app, {
       engagementId: engagement.id,
       scriptureReferences: randomScriptureReferences,
@@ -153,7 +153,7 @@ describe('Product e2e', () => {
   });
 
   it('create DerivativeScriptureProduct with scriptureReferencesOverride', async () => {
-    const randomScriptureReferences = createRandomScriptureReferences();
+    const randomScriptureReferences = ScriptureRange.randomList();
     const product = await createProduct(app, {
       engagementId: engagement.id,
       produces: story.id,
@@ -253,14 +253,14 @@ describe('Product e2e', () => {
   it('update DirectScriptureProduct', async () => {
     const product = await createProduct(app, {
       engagementId: engagement.id,
-      scriptureReferences: createRandomScriptureReferences(),
+      scriptureReferences: ScriptureRange.randomList(),
     });
 
     const updateProduct = {
       mediums: [ProductMedium.Video],
       purposes: [ProductPurpose.ChurchMaturity],
       methodology: ProductMethodology.OneStory,
-      scriptureReferences: createRandomScriptureReferences(),
+      scriptureReferences: ScriptureRange.randomList(),
     };
 
     const result = await app.graphql.query(
@@ -365,10 +365,10 @@ describe('Product e2e', () => {
     const product = await createProduct(app, {
       engagementId: engagement.id,
       produces: story.id,
-      scriptureReferencesOverride: createRandomScriptureReferences(),
+      scriptureReferencesOverride: ScriptureRange.randomList(),
     });
 
-    const override = createRandomScriptureReferences();
+    const override = ScriptureRange.randomList();
 
     const result = await app.graphql.query(
       gql`
@@ -512,7 +512,7 @@ describe('Product e2e', () => {
       times(numProducts).map(() =>
         createProduct(app, {
           engagementId: engagement.id,
-          scriptureReferences: createRandomScriptureReferences(),
+          scriptureReferences: ScriptureRange.randomList(),
         })
       )
     );
@@ -553,7 +553,7 @@ describe('Product e2e', () => {
         createProduct(app, {
           engagementId: engagement.id,
           produces: story.id,
-          scriptureReferencesOverride: createRandomScriptureReferences(),
+          scriptureReferencesOverride: ScriptureRange.randomList(),
         })
       )
     );

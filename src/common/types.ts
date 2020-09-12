@@ -20,6 +20,13 @@ export type AbstractClassType<T> = {
  */
 export type AnyFn = (...args: any) => any;
 
+export type ArrayItem<T> = T extends ReadonlyArray<infer U> ? U : never;
+
+export interface Range<T> {
+  start: T;
+  end: T;
+}
+
 /**
  * The PartialType() function returns a type (class) with all the properties of
  * the input type set to optional.

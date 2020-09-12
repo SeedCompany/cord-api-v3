@@ -1,8 +1,7 @@
 import { Int, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { books } from './books';
-import { ScriptureRange } from './dto';
-import { bookIndexFromName, scriptureToVerseRange } from './reference';
+import { Verse } from './books';
+import { mapRange, ScriptureRange } from './dto';
 
 @Resolver(ScriptureRange)
 export class ScriptureRangeResolver {
@@ -22,45 +21,43 @@ export class ScriptureRangeResolver {
         - Matthew 1:1-John 2:4
     `,
   })
-  label(@Parent() { start, end }: ScriptureRange): string {
-    const bookIndex = bookIndexFromName(end.book);
-    const lastChapter = books[bookIndex].chapters.length;
-    const lastVerse = books[bookIndex].chapters[end.chapter - 1];
-    if (start.book === end.book) {
-      if (start.verse === 1 && end.verse === lastVerse) {
-        if (start.chapter === 1 && end.chapter === lastChapter) {
-          // - Matthew
-          return `${start.book}`;
-        } else if (start.chapter === end.chapter) {
-          // - Matthew 1
-          return `${start.book} ${start.chapter}`;
+  label(@Parent() range: ScriptureRange): string {
+    const { start, end } = mapRange(range, Verse.fromRef);
+    if (start.book.equals(end.book)) {
+      if (start.isFirst && end.isLast) {
+        if (start.chapter.isFirst && end.chapter.isLast) {
+          // Matthew
+          return start.book.label;
+        } else if (start.chapter.equals(end.chapter)) {
+          // Matthew 1
+          return start.label;
         } else {
-          // - Matthew 1-4
-          return `${start.book} ${start.chapter}-${end.chapter}`;
+          // Matthew 1-4
+          return `${start.label}-${end.chapter.chapter}`;
         }
-      } else if (start.chapter === end.chapter) {
-        if (start.verse === end.verse) {
-          // - Matthew 1:1
-          return `${start.book} ${start.chapter}:${start.verse}`;
+      } else if (start.chapter.equals(end.chapter)) {
+        if (start.equals(end)) {
+          // Matthew 1:1
+          return start.label;
         } else {
-          // - Matthew 1:1-20
-          return `${start.book} ${start.chapter}:${start.verse}-${end.verse}`;
+          // Matthew 1:1-20
+          return `${start.label}-${end.verse}`;
         }
       } else {
         // Matthew 1:1-4:21
-        return `${start.book} ${start.chapter}:${start.verse}-${end.chapter}:${end.verse}`;
+        return `${start.label}-${end.chapter.chapter}:${end.verse}`;
       }
-    } else if (start.verse === 1 && end.verse === lastVerse) {
-      if (start.chapter === 1 && end.chapter === lastChapter) {
-        // - Matthew-John
-        return `${start.book}-${end.book}`;
+    } else if (start.isFirst && end.isLast) {
+      if (start.chapter.isFirst && end.chapter.isLast) {
+        // Matthew-John
+        return `${start.book.label}-${end.book.label}`;
       } else {
-        // - Matthew 1-John 2
-        return `${start.book} ${start.chapter}-${end.book} ${end.chapter}`;
+        // Matthew 1-John 2
+        return `${start.chapter.label}-${end.chapter.label}`;
       }
     } else {
-      // - Matthew 1:1-John 2:4
-      return `${start.book} ${start.chapter}:${start.verse}-${end.book} ${end.chapter}:${end.verse}`;
+      // Matthew 1:1-John 2:4
+      return `${start.label}-${end.label}`;
     }
   }
 
@@ -68,7 +65,7 @@ export class ScriptureRangeResolver {
     description: 'The total number of verses in this scripture range',
   })
   totalVerses(@Parent() range: ScriptureRange): number {
-    const verseRange = scriptureToVerseRange(range);
+    const verseRange = ScriptureRange.fromReferences(range);
     return verseRange.end - verseRange.start + 1;
   }
 }

@@ -1,24 +1,24 @@
 import { Transform } from '../../../common/transform.decorator';
-import { books } from '../books';
-import { bookIndexFromName } from '../reference';
+import { Book } from '../books';
 import { ScriptureReferenceInput } from './scripture-reference.dto';
 
 export const ScriptureStart = () =>
-  Transform((value: ScriptureReferenceInput) => {
-    value.chapter = value.chapter == null ? 1 : value.chapter;
-    value.verse = value.verse == null ? 1 : value.verse;
-    return value;
-  });
+  Transform((ref: ScriptureReferenceInput) => ({
+    book: ref.book,
+    chapter: ref.chapter ?? 1,
+    verse: ref.verse ?? 1,
+  }));
 
 export const ScriptureEnd = () =>
-  Transform((value) => {
-    const bookIndex = bookIndexFromName(value.book);
-    const lastChapter = books[bookIndex].chapters.length;
-    value.chapter =
-      value.chapter == null ? books[bookIndex].chapters.length : value.chapter;
-    value.verse =
-      value.verse == null
-        ? books[bookIndex].chapters[lastChapter - 1]
-        : value.verse;
-    return value;
+  Transform((ref: ScriptureReferenceInput) => {
+    try {
+      const book = Book.find(ref.book);
+      const chapter = ref.chapter
+        ? book.chapter(ref.chapter)
+        : book.lastChapter;
+      const verse = ref.verse ? chapter.verse(ref.verse) : chapter.lastVerse;
+      return verse.reference;
+    } catch (e) {
+      return ref; // if reference isn't valid let validator throw the error
+    }
   });

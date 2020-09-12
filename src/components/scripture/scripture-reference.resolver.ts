@@ -1,17 +1,16 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import { Book, Verse } from './books';
 import { ScriptureReference } from './dto';
-import { bookCodeToName } from './reference';
 
 @Resolver(ScriptureReference)
 export class ScriptureReferenceResolver {
   @ResolveField(() => String)
   bookName(@Parent() ref: ScriptureReference): string {
-    return bookCodeToName(ref.book);
+    return Book.fromRef(ref).name;
   }
 
   @ResolveField(() => String)
   label(@Parent() ref: ScriptureReference): string {
-    const book = bookCodeToName(ref.book);
-    return `${book} ${ref.chapter}:${ref.verse}`;
+    return Verse.fromRef(ref).label;
   }
 }

@@ -39,7 +39,7 @@ import {
   LiteracyMaterial,
   LiteracyMaterialService,
 } from '../literacy-material';
-import { scriptureToVerseRange } from '../scripture/reference';
+import { ScriptureRange } from '../scripture/dto';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
 import { Song, SongService } from '../song';
 import { Story, StoryService } from '../story';
@@ -276,13 +276,11 @@ export class ProductService {
 
     if (!input.produces && input.scriptureReferences) {
       for (const sr of input.scriptureReferences) {
-        const verseRange = scriptureToVerseRange(sr);
         query.create([
           node('node'),
           relation('out', '', 'scriptureReferences', { active: true }),
           node('', ['ScriptureRange', 'BaseNode'], {
-            start: verseRange.start,
-            end: verseRange.end,
+            ...ScriptureRange.fromReferences(sr),
             active: true,
             createdAt: DateTime.local(),
           }),
@@ -292,15 +290,13 @@ export class ProductService {
 
     if (input.produces && input.scriptureReferencesOverride) {
       for (const sr of input.scriptureReferencesOverride) {
-        const verseRange = scriptureToVerseRange(sr);
         query.create([
           node('node'),
           relation('out', '', 'scriptureReferencesOverride', {
             active: true,
           }),
           node('', ['ScriptureRange', 'BaseNode'], {
-            start: verseRange.start,
-            end: verseRange.end,
+            ...ScriptureRange.fromReferences(sr),
             active: true,
             createdAt: DateTime.local(),
           }),
