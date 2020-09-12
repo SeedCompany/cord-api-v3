@@ -496,7 +496,7 @@ export class ProductService {
       { isOverriding: true }
     );
 
-    if (scriptureReferencesOverride) {
+    if (scriptureReferencesOverride !== undefined) {
       await this.db
         .query()
         .match([
