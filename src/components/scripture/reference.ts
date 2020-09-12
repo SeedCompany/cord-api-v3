@@ -160,7 +160,12 @@ const createRandomScriptureRange = (): ScriptureRangeInput => {
   const endChapter = random(book.chapters.length - 1);
   const endVerse = random(book.chapters[endChapter] - 1);
   const startChapter = random(endChapter);
-  const startVerse = random(endVerse);
+  let startVerse = 0;
+  if (startChapter === endChapter) {
+    startVerse = random(endVerse);
+  } else {
+    startVerse = random(book.chapters[startChapter] - 1);
+  }
 
   return {
     start: {
