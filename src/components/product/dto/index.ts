@@ -1,4 +1,3 @@
-export * from './bible-book';
 export * from './product-approach';
 export * from './product-medium';
 export * from './product-methodology';
