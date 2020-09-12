@@ -32,6 +32,7 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
+import { FileService } from '../file';
 import {
   Budget,
   BudgetListInput,
@@ -50,11 +51,13 @@ import {
 export class BudgetService {
   private readonly securedProperties = {
     status: true,
+    universalTemplateFile: true,
   };
 
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
+    private readonly files: FileService,
     @Logger('budget:service') private readonly logger: ILogger
   ) {}
 
@@ -164,7 +167,7 @@ export class BudgetService {
   };
 
   async create(
-    { projectId }: CreateBudget,
+    { projectId, ...input }: CreateBudget,
     session: ISession
   ): Promise<Budget> {
     this.logger.debug('Creating budget', { projectId });
@@ -188,6 +191,13 @@ export class BudgetService {
       throw new NotFoundException('project does not exist', 'budget.projectId');
     }
 
+    const universalTemplateFile = await this.files.createDefinedFile(
+      `Budget universal Template File`,
+      session,
+      input.universalTemplateFile,
+      'budget.universalTemplateFile'
+    );
+
     const secureProps: Property[] = [
       {
         key: 'status',
@@ -198,6 +208,15 @@ export class BudgetService {
         isPublic: false,
         isOrgPublic: false,
         label: 'BudgetStatus',
+      },
+      {
+        key: 'universalTemplateFile',
+        value: universalTemplateFile,
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
       },
     ];
 
@@ -412,6 +431,7 @@ export class BudgetService {
     const props = parsePropList(result.propList);
     const securedProps = parseSecuredProperties(props, result.permList, {
       status: true,
+      universalTemplateFile: true,
     });
 
     return {
@@ -488,8 +508,18 @@ export class BudgetService {
     };
   }
 
-  async update(input: UpdateBudget, session: ISession): Promise<Budget> {
+  async update(
+    { universalTemplateFile, ...input }: UpdateBudget,
+    session: ISession
+  ): Promise<Budget> {
     const budget = await this.readOne(input.id, session);
+
+    await this.files.updateDefinedFile(
+      budget.universalTemplateFile,
+      'budget.universalTemplateFile',
+      universalTemplateFile,
+      session
+    );
 
     return await this.db.sgUpdateProperties({
       session,

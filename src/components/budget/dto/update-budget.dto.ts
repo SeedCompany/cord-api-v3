@@ -3,6 +3,7 @@ import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { Budget, BudgetRecord, BudgetStatus } from '.';
 import { IdField } from '../../../common';
+import { CreateDefinedFileVersionInput } from '../../file/dto';
 
 @InputType()
 export abstract class UpdateBudget {
@@ -11,6 +12,9 @@ export abstract class UpdateBudget {
 
   @Field(() => BudgetStatus)
   readonly status?: BudgetStatus;
+
+  @Field({ description: 'Budget universal Template File', nullable: true })
+  readonly universalTemplateFile?: CreateDefinedFileVersionInput;
 }
 
 @InputType()
