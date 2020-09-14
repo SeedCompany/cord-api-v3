@@ -14,7 +14,6 @@ export async function createLanguage(
   input: Partial<CreateLanguage> = {}
 ) {
   const ethnologueLanguage: CreateEthnologueLanguage = {
-    id: faker.random.word() + '' + generate(),
     code: faker.helpers.replaceSymbols('???').toLowerCase(),
     provisionalCode: faker.helpers.replaceSymbols('???').toLowerCase(),
     name: faker.name.firstName(),

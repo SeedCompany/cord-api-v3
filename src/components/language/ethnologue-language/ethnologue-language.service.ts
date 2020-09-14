@@ -130,16 +130,6 @@ export class EthnologueLanguageService {
   ): Promise<string> {
     const secureProps: Property[] = [
       {
-        key: 'id',
-        value: input.id,
-        addToAdminSg: true,
-        addToWriterSg: false,
-        addToReaderSg: true,
-        isPublic: false,
-        isOrgPublic: false,
-        label: 'Id',
-      },
-      {
         key: 'code',
         value: input.code,
         addToAdminSg: true,
@@ -255,7 +245,6 @@ export class EthnologueLanguageService {
       result.propList,
       result.permList,
       {
-        id: true,
         code: true,
         provisionalCode: true,
         name: true,
@@ -271,7 +260,7 @@ export class EthnologueLanguageService {
       session.userId = this.config.anonUser.id;
     }
 
-    const props = ['id', 'code', 'provisionalCode', 'name', 'population'];
+    const props = ['code', 'provisionalCode', 'name', 'population'];
 
     const queryRead = this.db
       .query()
@@ -343,7 +332,6 @@ export class EthnologueLanguageService {
 
     // Make a mapping of the fields that we want to set in the db to the inputs
     const valueSet = {
-      'id.value': input.id,
       'code.value': input.code,
       'provisionalCode.value': input.provisionalCode,
       'name.value': input.name,
@@ -364,11 +352,6 @@ export class EthnologueLanguageService {
           }),
         ])
         .match([
-          [
-            node('ethnologueLanguage'),
-            relation('out', '', 'id', { active: true }),
-            node('id', 'Property', { active: true }),
-          ],
           [
             node('ethnologueLanguage'),
             relation('out', '', 'code', { active: true }),

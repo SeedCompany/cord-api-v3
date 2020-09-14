@@ -12,9 +12,6 @@ import {
 
 @ObjectType()
 export class EthnologueLanguage {
-  @Field()
-  readonly id: SecuredString;
-
   @Field({
     description: 'ISO 639-3 code',
   })
