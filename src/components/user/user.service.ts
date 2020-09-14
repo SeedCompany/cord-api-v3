@@ -268,6 +268,8 @@ export class UserService {
           canCreateLocation: true,
           canCreateEthnologueLanguage: true,
           canReadEthnologueLanguages: true,
+          canCreatePartner: true,
+          canReadPartners: true,
           owningOrgId: 'Seed Company',
           isAdmin: true,
         }),

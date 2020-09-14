@@ -762,6 +762,21 @@ export const ceremony = gql`
   }
 `;
 
+export const partner = gql`
+  fragment partner on Partner {
+    id
+    createdAt
+    organization {
+      canEdit
+      canRead
+      value {
+        ...org
+      }
+    }
+  }
+  ${org}
+`;
+
 export const fragments = {
   org,
   user,
@@ -789,4 +804,5 @@ export const fragments = {
   song,
   fav,
   ceremony,
+  partner,
 };

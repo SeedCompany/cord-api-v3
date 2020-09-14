@@ -13,6 +13,7 @@ import { LanguageModule } from './components/language/language.module';
 import { LiteracyMaterialModule } from './components/literacy-material/literacy-material.module';
 import { LocationModule } from './components/location/location.module';
 import { OrganizationModule } from './components/organization/organization.module';
+import { PartnerModule } from './components/partner/partner.module';
 import { PartnershipModule } from './components/partnership/partnership.module';
 import { ProductModule } from './components/product/product.module';
 import { ProjectModule } from './components/project/project.module';
@@ -52,6 +53,7 @@ import { CoreModule, LoggerModule } from './core';
     SearchModule,
     WorkflowModule,
     TimeZoneModule,
+    PartnerModule,
   ],
   controllers: [],
   providers: [DateTimeScalar, DateScalar],
