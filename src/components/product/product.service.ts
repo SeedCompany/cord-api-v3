@@ -212,12 +212,17 @@ export class ProductService {
     }
 
     if (input.produces) {
-      const produce = await this.db
+      const producible = await this.db
         .query()
-        .match([node('pr', 'Producible', { id: input.produces, active: true })])
-        .return('pr')
+        .match([
+          node('producible', 'Producible', {
+            id: input.produces,
+            active: true,
+          }),
+        ])
+        .return('producible')
         .first();
-      if (!produce) {
+      if (!producible) {
         this.logger.warning(`Could not find producible node`, {
           id: input.produces,
         });
@@ -227,7 +232,7 @@ export class ProductService {
         );
       }
       query.match([
-        node('pr', 'Producible', { id: input.produces, active: true }),
+        node('producible', 'Producible', { id: input.produces, active: true }),
       ]);
       if (input.scriptureReferencesOverride) {
         secureProps[3].value = true;
@@ -264,7 +269,7 @@ export class ProductService {
     if (input.produces) {
       query.create([
         [
-          node('pr'),
+          node('producible'),
           relation('in', '', 'produces', {
             active: true,
             createdAt,
@@ -360,24 +365,24 @@ export class ProductService {
       isOverriding: true,
     });
 
-    const pr = await this.db
+    const connectedProducible = await this.db
       .query()
       .match([
         node('product', 'Product', { id, active: true }),
         relation('out', 'produces', { active: true }),
-        node('p', 'Producible', { active: true }),
+        node('producible', 'Producible', { active: true }),
       ])
-      .return('p')
-      .asResult<{ p: Node<BaseNode> }>()
+      .return('producible')
+      .asResult<{ producible: Node<BaseNode> }>()
       .first();
 
     const scriptureReferencesValue = await this.scriptureRefService.list(
       id,
       session,
-      { isOverriding: pr ? true : false }
+      { isOverriding: connectedProducible ? true : false }
     );
 
-    if (!pr) {
+    if (!connectedProducible) {
       return {
         ...parseBaseNodeProperties(result.node),
         ...rest,
@@ -396,13 +401,13 @@ export class ProductService {
       };
     }
 
-    const typeName = (difference(pr.p.labels, [
+    const typeName = (difference(connectedProducible.producible.labels, [
       'Producible',
       'BaseNode',
     ]) as ProducibleType[])[0];
 
     const producible = await this.getProducibleByType(
-      pr.p.properties.id,
+      connectedProducible.producible.properties.id,
       typeName,
       session
     );
@@ -440,20 +445,27 @@ export class ProductService {
 
   async update(input: UpdateProduct, session: ISession): Promise<AnyProduct> {
     const {
-      produces,
+      produces: inputProducesId,
       scriptureReferences,
       scriptureReferencesOverride,
       ...rest
     } = input;
 
-    if (produces) {
-      const produce = await this.db
+    if (inputProducesId) {
+      const producible = await this.db
         .query()
-        .match([node('pr', 'Producible', { id: produces, active: true })])
-        .return('pr')
+        .match([
+          node('producible', 'Producible', {
+            id: inputProducesId,
+            active: true,
+          }),
+        ])
+        .return('producible')
         .first();
-      if (!produce) {
-        this.logger.warning(`Could not find producible node`, { id: produces });
+      if (!producible) {
+        this.logger.warning(`Could not find producible node`, {
+          id: inputProducesId,
+        });
         throw new NotFoundException(
           'Could not find producible node',
           'product.produces'
@@ -464,7 +476,7 @@ export class ProductService {
         .match([
           node('product', 'Product', { id: input.id, active: true }),
           relation('out', 'rel', 'produces', { active: true }),
-          node('p', 'Producible', { active: true }),
+          node('', 'Producible', { active: true }),
         ])
         .setValues({
           'rel.active': false,
@@ -475,14 +487,19 @@ export class ProductService {
       await this.db
         .query()
         .match([node('product', 'Product', { id: input.id, active: true })])
-        .match([node('pr', 'Producible', { id: produces, active: true })])
+        .match([
+          node('producible', 'Producible', {
+            id: inputProducesId,
+            active: true,
+          }),
+        ])
         .create([
           node('product'),
           relation('out', 'rel', 'produces', {
             active: true,
             createdAt: DateTime.local(),
           }),
-          node('pr'),
+          node('producible'),
         ])
         .return('rel')
         .first();
@@ -502,10 +519,10 @@ export class ProductService {
         .match([
           node('product', 'Product', { id: input.id, active: true }),
           relation('out', 'rel', 'isOverriding', { active: true }),
-          node('p', 'Property', { active: true }),
+          node('propertyNode', 'Property', { active: true }),
         ])
         .setValues({
-          'p.value': scriptureReferencesOverride !== null,
+          'propertyNode.value': scriptureReferencesOverride !== null,
         })
         .run();
     }
