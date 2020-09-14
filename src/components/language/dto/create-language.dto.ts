@@ -9,7 +9,12 @@ import {
   Matches,
   ValidateNested,
 } from 'class-validator';
-import { NameField, Sensitivity } from '../../../common';
+import {
+  CalendarDate,
+  DateField,
+  NameField,
+  Sensitivity,
+} from '../../../common';
 import { Language } from './language.dto';
 
 @InputType()
@@ -77,6 +82,9 @@ export abstract class CreateLanguage {
 
   @Field(() => Sensitivity, { nullable: true })
   readonly sensitivity?: Sensitivity = Sensitivity.High;
+
+  @DateField({ nullable: true })
+  readonly sponsorEstimatedEndDate?: CalendarDate;
 }
 
 @InputType()

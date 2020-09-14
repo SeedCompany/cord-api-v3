@@ -91,6 +91,9 @@ export class Language extends Resource {
   @Field()
   readonly signLanguageCode: SecuredString;
 
+  @Field()
+  readonly sponsorEstimatedEndDate: SecuredDate;
+
   // Calculated. Not settable.
   @Field({
     description: 'The earliest start date from its engagements',
