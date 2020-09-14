@@ -6,8 +6,8 @@ import {
   SecuredEnumList,
 } from '../../../common';
 import { DefinedFile } from '../../file/dto';
+import { FinancialReportingType } from './financial-reporting-type';
 import { PartnershipAgreementStatus } from './partnership-agreement-status.enum';
-import { PartnershipFundingType } from './partnership-funding-type.enum';
 import { PartnershipType } from './partnership-type.enum';
 
 @ObjectType({
@@ -27,8 +27,8 @@ export abstract class SecuredPartnershipTypes extends SecuredEnumList(
 @ObjectType({
   description: SecuredEnum.descriptionFor('partnership funding type'),
 })
-export abstract class SecuredPartnershipFundingType extends SecuredEnum(
-  PartnershipFundingType,
+export abstract class SecuredFinancialReportingType extends SecuredEnum(
+  FinancialReportingType,
   { nullable: true }
 ) {}
 
@@ -64,5 +64,5 @@ export class Partnership extends Resource {
   readonly types: SecuredPartnershipTypes;
 
   @Field()
-  readonly fundingType: SecuredPartnershipFundingType;
+  readonly financialReportingType: SecuredFinancialReportingType;
 }
