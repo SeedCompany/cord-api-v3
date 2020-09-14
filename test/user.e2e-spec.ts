@@ -1,6 +1,7 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { isValid } from 'shortid';
+import { firstLettersOfWords } from '../src/common';
 import { RegisterInput } from '../src/components/authentication';
 import { SecuredTimeZone } from '../src/components/timezone';
 import { UpdateUser, User, UserStatus } from '../src/components/user';
@@ -515,6 +516,7 @@ describe('User e2e', () => {
           user(id: $id) {
             ...user
             avatarLetters
+            fullName
           }
         }
         ${fragments.user}
@@ -524,11 +526,7 @@ describe('User e2e', () => {
       }
     );
     const actual = result.user;
-    expect(actual.avatarLetters).toBe(
-      `${fakeUser.realFirstName[0]}${fakeUser.realLastName[0]}`
-    );
-    expect(actual).toBeTruthy();
-    return true;
+    expect(actual.avatarLetters).toBe(firstLettersOfWords(actual.fullName));
   });
 
   // skipping because we will be refactoring how we do search
