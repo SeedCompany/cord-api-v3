@@ -1,4 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
+import { FileModule } from '../file/file.module';
 import { LocationModule } from '../location/location.module';
 import { OrganizationModule } from '../organization/organization.module';
 import { PartnershipModule } from '../partnership/partnership.module';
@@ -12,6 +13,7 @@ import * as handlers from './handlers';
 
 @Module({
   imports: [
+    FileModule,
     EducationModule,
     LocationModule,
     forwardRef(() => PartnershipModule),

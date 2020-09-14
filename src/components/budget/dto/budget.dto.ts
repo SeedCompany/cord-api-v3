@@ -1,5 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { Resource, SecuredProperty } from '../../../common';
+import { DefinedFile } from '../../file/dto';
 import { BudgetRecord } from './budget-record.dto';
 import { BudgetStatus } from './budget-status.enum';
 
@@ -12,6 +13,8 @@ export class Budget extends Resource {
 
   @Field(() => [BudgetRecord])
   readonly records: readonly BudgetRecord[];
+
+  readonly universalTemplateFile: DefinedFile;
 }
 
 @ObjectType({
