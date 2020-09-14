@@ -14,7 +14,6 @@ import {
   ILogger,
   Logger,
   matchRequestingUser,
-  matchSession,
   OnIndex,
 } from '../../core';
 import {
@@ -191,44 +190,6 @@ export class PartnerService {
 
   async update(input: UpdatePartner, session: ISession): Promise<Partner> {
     // Update partner
-    if (input.organizationId) {
-      const createdAt = DateTime.local();
-      await this.db
-        .query()
-        .match(matchSession(session, { withAclRead: 'canReadPartners' }))
-        .matchNode('partner', 'Partner', { active: true, id: input.id })
-        .matchNode('newOrg', 'Organization', {
-          id: input.organizationId,
-          active: true,
-        })
-        .optionalMatch([
-          node('requestingUser'),
-          relation('in', '', 'member', { active: true }),
-          node('', 'SecurityGroup', { active: true }),
-          relation('out', '', 'permission', { active: true }),
-          node('canReadOrganization', 'Permission', {
-            property: 'organization',
-            active: true,
-            read: true,
-          }),
-          relation('out', '', 'baseNode', { active: true }),
-          node('partner'),
-          relation('out', 'oldOrgRel', 'organization', {
-            active: true,
-          }),
-          node('oldOrg', 'Organization', { active: true }),
-        ])
-        .create([
-          node('partner'),
-          relation('out', '', 'organization', {
-            active: true,
-            createdAt,
-          }),
-          node('newOrg'),
-        ])
-        .delete('oldOrgRel')
-        .run();
-    }
     return await this.readOne(input.id, session);
   }
 

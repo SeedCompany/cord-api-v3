@@ -26,17 +26,6 @@ export class PartnerResolver {
     private readonly orgService: OrganizationService
   ) {}
 
-  @Mutation(() => CreatePartnerOutput, {
-    description: 'Create a partner',
-  })
-  async createPartner(
-    @Session() session: ISession,
-    @Args('input') { partner: input }: CreatePartnerInput
-  ): Promise<CreatePartnerOutput> {
-    const partner = await this.partnerService.create(input, session);
-    return { partner };
-  }
-
   @Query(() => Partner, {
     description: 'Look up a partner by its ID',
   })
@@ -45,19 +34,6 @@ export class PartnerResolver {
     @IdArg() id: string
   ): Promise<Partner> {
     return await this.partnerService.readOne(id, session);
-  }
-
-  @ResolveField(() => SecuredOrganization)
-  async organization(
-    @Parent() partner: Partner,
-    @Session() session: ISession
-  ): Promise<SecuredOrganization> {
-    const { value: id, ...rest } = partner.organization;
-    const value = id ? await this.orgService.readOne(id, session) : undefined;
-    return {
-      value,
-      ...rest,
-    };
   }
 
   @Query(() => PartnerListOutput, {
@@ -73,6 +49,30 @@ export class PartnerResolver {
     input: PartnerListInput
   ): Promise<PartnerListOutput> {
     return this.partnerService.list(input, session);
+  }
+
+  @ResolveField(() => SecuredOrganization)
+  async organization(
+    @Parent() partner: Partner,
+    @Session() session: ISession
+  ): Promise<SecuredOrganization> {
+    const { value: id, ...rest } = partner.organization;
+    const value = id ? await this.orgService.readOne(id, session) : undefined;
+    return {
+      value,
+      ...rest,
+    };
+  }
+
+  @Mutation(() => CreatePartnerOutput, {
+    description: 'Create a partner',
+  })
+  async createPartner(
+    @Session() session: ISession,
+    @Args('input') { partner: input }: CreatePartnerInput
+  ): Promise<CreatePartnerOutput> {
+    const partner = await this.partnerService.create(input, session);
+    return { partner };
   }
 
   @Mutation(() => UpdatePartnerOutput, {

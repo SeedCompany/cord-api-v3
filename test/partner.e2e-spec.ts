@@ -2,7 +2,6 @@ import { gql } from 'apollo-server-core';
 import { times } from 'lodash';
 import { Partner } from '../src/components/partner';
 import {
-  createOrganization,
   createPartner,
   createSession,
   createTestApp,
@@ -32,7 +31,6 @@ describe('Partner e2e', () => {
 
   it('update partner', async () => {
     const pt = await createPartner(app);
-    const newOrg = await createOrganization(app);
     const result = await app.graphql.mutate(
       gql`
         mutation updatePartner($input: UpdatePartnerInput!) {
@@ -48,14 +46,12 @@ describe('Partner e2e', () => {
         input: {
           partner: {
             id: pt.id,
-            organizationId: newOrg.id,
           },
         },
       }
     );
     const updated = result.updatePartner.partner;
     expect(updated).toBeTruthy();
-    expect(updated.organization.value.id).toBe(newOrg.id);
   });
 
   it('delete partner', async () => {

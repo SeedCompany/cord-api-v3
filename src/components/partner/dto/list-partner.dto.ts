@@ -1,4 +1,4 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import {
@@ -10,7 +10,6 @@ import { Partner } from './partner';
 
 @InputType()
 export abstract class PartnerFilters {
-  @Field({ nullable: true })
   readonly organizationId?: string;
 }
 
@@ -22,7 +21,6 @@ export class PartnerListInput extends SortablePaginationInput<keyof Partner>({
 }) {
   static defaultVal = new PartnerListInput();
 
-  @Field({ nullable: true })
   @Type(() => PartnerFilters)
   @ValidateNested()
   readonly filter: PartnerFilters = defaultFilters;
