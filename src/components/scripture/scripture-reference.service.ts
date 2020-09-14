@@ -1,4 +1,5 @@
 import { Node, node, relation } from 'cypher-query-builder';
+import { sortBy } from 'lodash';
 import { DateTime } from 'luxon';
 import { ISession, Range } from '../../common';
 import { DatabaseService, ILogger, Logger } from '../../core';
@@ -119,12 +120,9 @@ export class ScriptureReferenceService {
       .asResult<{ scriptureRanges: Node<Range<number>> }>()
       .run();
 
-    return results
-      .sort(
-        (a, b) =>
-          a.scriptureRanges.properties.start -
-          b.scriptureRanges.properties.start
-      )
-      .map((item) => ScriptureRange.fromIds(item.scriptureRanges.properties));
+    return sortBy(
+      results.map((row) => row.scriptureRanges.properties),
+      [(range) => range.start, (range) => range.end]
+    ).map(ScriptureRange.fromIds);
   }
 }
