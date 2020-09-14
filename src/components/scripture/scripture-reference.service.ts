@@ -119,8 +119,12 @@ export class ScriptureReferenceService {
       .asResult<{ scriptureRanges: Node<Range<number>> }>()
       .run();
 
-    return results.map((item) =>
-      ScriptureRange.fromIds(item.scriptureRanges.properties)
-    );
+    return results
+      .sort(
+        (a, b) =>
+          a.scriptureRanges.properties.start -
+          b.scriptureRanges.properties.start
+      )
+      .map((item) => ScriptureRange.fromIds(item.scriptureRanges.properties));
   }
 }
