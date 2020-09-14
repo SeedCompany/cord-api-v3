@@ -32,7 +32,9 @@ describe('LiteracyMaterial e2e', () => {
     const scriptureReferences = ScriptureRange.randomList();
     const lm = await createLiteracyMaterial(app, { name, scriptureReferences });
     expect(lm.scriptureReferences.value).toBeDefined();
-    expect(lm.scriptureReferences.value).toEqual(scriptureReferences);
+    expect(lm.scriptureReferences.value).toEqual(
+      expect.arrayContaining(scriptureReferences)
+    );
   });
 
   // READ LiteracyMaterial
@@ -57,7 +59,7 @@ describe('LiteracyMaterial e2e', () => {
     expect(isValid(actual.id)).toBe(true);
     expect(actual.name.value).toBe(lm.name.value);
     expect(actual.scriptureReferences.value).toEqual(
-      lm.scriptureReferences.value
+      expect.arrayContaining(lm.scriptureReferences.value)
     );
   });
 
@@ -91,7 +93,9 @@ describe('LiteracyMaterial e2e', () => {
     expect(updated).toBeTruthy();
     expect(updated.name.value).toBe(newName);
     expect(updated.scriptureReferences.value).toBeDefined();
-    expect(updated.scriptureReferences.value).toEqual(scriptureReferences);
+    expect(updated.scriptureReferences.value).toEqual(
+      expect.arrayContaining(scriptureReferences)
+    );
   });
 
   // DELETE literacyMaterial
