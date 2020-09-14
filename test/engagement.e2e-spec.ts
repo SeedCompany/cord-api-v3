@@ -237,7 +237,7 @@ describe('Engagement e2e', () => {
     expect(actual.firstScripture).toMatchObject(
       languageEngagement.lukePartnership
     );
-    expect(actual.ceremony).toMatchObject(languageEngagement.ceremony);
+    expect(actual.ceremony).toBeDefined();
     expect(actual.completeDate).toMatchObject(languageEngagement.completeDate);
     expect(actual.disbursementCompleteDate).toMatchObject(
       languageEngagement.disbursementCompleteDate
@@ -296,7 +296,7 @@ describe('Engagement e2e', () => {
       internshipEngagement.methodologies
     );
     expect(actual.position).toMatchObject(internshipEngagement.position);
-    expect(actual.ceremony).toMatchObject(internshipEngagement.ceremony);
+    expect(actual.ceremony).toBeDefined();
     expect(actual.completeDate).toMatchObject(
       internshipEngagement.completeDate
     );
@@ -567,11 +567,27 @@ describe('Engagement e2e', () => {
   it('creates ceremony upon engagement creation', async () => {
     project = await createProject(app);
     language = await createLanguage(app);
+
     const languageEngagement = await createLanguageEngagement(app, {
       languageId: language.id,
       projectId: project.id,
     });
-    expect(languageEngagement.ceremony.value?.id).toBeDefined();
+
+    const result = await app.graphql.query(
+      gql`
+        query engagement($id: ID!) {
+          engagement(id: $id) {
+            ...languageEngagement
+          }
+        }
+        ${fragments.languageEngagement}
+      `,
+      {
+        id: languageEngagement.id,
+      }
+    );
+
+    expect(result?.engagement?.ceremony?.value?.id).toBeDefined();
   });
 
   it('updates ceremony for language engagement', async () => {
@@ -581,7 +597,23 @@ describe('Engagement e2e', () => {
       languageId: language.id,
       projectId: project.id,
     });
-    expect(languageEngagement.ceremony.value?.id).toBeDefined();
+
+    const languageEngagementRead = await app.graphql.query(
+      gql`
+        query engagement($id: ID!) {
+          engagement(id: $id) {
+            ...languageEngagement
+          }
+        }
+        ${fragments.languageEngagement}
+      `,
+      {
+        id: languageEngagement.id,
+      }
+    );
+    expect(
+      languageEngagementRead?.engagement?.ceremony?.value?.id
+    ).toBeDefined();
     const date = '2020-05-13';
     await app.graphql.mutate(
       gql`
@@ -596,7 +628,7 @@ describe('Engagement e2e', () => {
       {
         input: {
           ceremony: {
-            id: languageEngagement.ceremony.value?.id,
+            id: languageEngagementRead?.engagement?.ceremony?.value?.id,
             planned: true,
             estimatedDate: date,
           },
@@ -620,7 +652,7 @@ describe('Engagement e2e', () => {
         }
       `,
       {
-        id: languageEngagement.ceremony.value?.id,
+        id: languageEngagementRead?.engagement?.ceremony?.value?.id,
       }
     );
     expect(result.ceremony.planned.value).toBeTruthy();
@@ -637,7 +669,24 @@ describe('Engagement e2e', () => {
       mentorId: mentor.id,
       countryOfOriginId: country.id,
     });
-    expect(ie.ceremony.value?.id).toBeDefined();
+
+    const internshipEngagementRead = await app.graphql.query(
+      gql`
+        query engagement($id: ID!) {
+          engagement(id: $id) {
+            ...internshipEngagement
+          }
+        }
+        ${fragments.internshipEngagement}
+      `,
+      {
+        id: ie.id,
+      }
+    );
+    expect(
+      internshipEngagementRead?.engagement?.ceremony?.value?.id
+    ).toBeDefined();
+
     const date = '2020-05-13';
     await app.graphql.mutate(
       gql`
@@ -652,7 +701,7 @@ describe('Engagement e2e', () => {
       {
         input: {
           ceremony: {
-            id: ie.ceremony.value?.id,
+            id: internshipEngagementRead?.engagement?.ceremony?.value?.id,
             planned: true,
             estimatedDate: date,
           },
@@ -676,7 +725,7 @@ describe('Engagement e2e', () => {
         }
       `,
       {
-        id: ie.ceremony.value?.id,
+        id: internshipEngagementRead?.engagement?.ceremony?.value?.id,
       }
     );
     expect(result.ceremony.planned.value).toBeTruthy();
@@ -690,9 +739,26 @@ describe('Engagement e2e', () => {
       languageId: language.id,
       projectId: project.id,
     });
-    expect(languageEngagement.ceremony.value?.id).toBeDefined();
 
-    const ceremonyId = languageEngagement.ceremony.value?.id;
+    const languageEngagementRead = await app.graphql.query(
+      gql`
+        query engagement($id: ID!) {
+          engagement(id: $id) {
+            ...languageEngagement
+          }
+        }
+        ${fragments.languageEngagement}
+      `,
+      {
+        id: languageEngagement.id,
+      }
+    );
+
+    expect(
+      languageEngagementRead?.engagement?.ceremony?.value?.id
+    ).toBeDefined();
+
+    const ceremonyId = languageEngagementRead?.engagement?.ceremony?.value?.id;
 
     await app.graphql.mutate(
       gql`
