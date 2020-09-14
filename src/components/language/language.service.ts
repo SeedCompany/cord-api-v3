@@ -68,6 +68,7 @@ export class LanguageService {
     leastOfTheseReason: true,
     displayNamePronunciation: true,
     sponsorStartDate: true,
+    isSignLanguage: true,
     signLanguageCode: true,
   };
 
@@ -313,6 +314,15 @@ export class LanguageService {
           isOrgPublic: false,
         },
         {
+          key: 'isSignLanguage',
+          value: input.isSignLanguage,
+          addToAdminSg: true,
+          addToWriterSg: false,
+          addToReaderSg: true,
+          isPublic: false,
+          isOrgPublic: false,
+        },
+        {
           key: 'signLanguageCode',
           value: input.signLanguageCode,
           addToAdminSg: true,
@@ -478,6 +488,7 @@ export class LanguageService {
         'leastOfThese',
         'leastOfTheseReason',
         'displayNamePronunciation',
+        'isSignLanguage',
         'signLanguageCode',
       ],
       changes: input,

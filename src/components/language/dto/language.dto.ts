@@ -105,6 +105,9 @@ export class Language extends Resource {
     `,
   })
   readonly sensitivity: Sensitivity;
+
+  @Field()
+  readonly isSignLanguage: SecuredBoolean;
 }
 
 @ObjectType({
