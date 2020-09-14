@@ -77,7 +77,7 @@ describe('Product e2e', () => {
 
     expect(product.scriptureReferences.value).toBeDefined();
     expect(product.scriptureReferences.value).toEqual(
-      randomScriptureReferences
+      expect.arrayContaining(randomScriptureReferences)
     );
   });
 
@@ -148,10 +148,12 @@ describe('Product e2e', () => {
     expect(actual.produces?.value?.id).toBe(story.id);
     expect(actual.produces?.value?.__typename).toBe(ProducibleType.Story);
     expect(actual.produces?.value?.scriptureReferences?.value).toEqual(
-      story.scriptureReferences.value
+      expect.arrayContaining(story.scriptureReferences.value)
     );
     expect(actual.scriptureReferences.value).toEqual(
-      actual.produces?.value?.scriptureReferences?.value
+      expect.arrayContaining(
+        actual.produces?.value?.scriptureReferences?.value || []
+      )
     );
     expect(actual.scriptureReferencesOverride?.value).toBeNull();
   });
@@ -222,11 +224,13 @@ describe('Product e2e', () => {
     const actual: AnyProduct = result.product;
     expect(actual.scriptureReferencesOverride?.value).toBeDefined();
     expect(actual.scriptureReferencesOverride?.value).toEqual(
-      randomScriptureReferences
+      expect.arrayContaining(randomScriptureReferences)
     );
-    expect(actual.scriptureReferences.value).toEqual(randomScriptureReferences);
+    expect(actual.scriptureReferences.value).toEqual(
+      expect.arrayContaining(randomScriptureReferences)
+    );
     expect(actual.produces?.value?.scriptureReferences?.value).toEqual(
-      story.scriptureReferences.value
+      expect.arrayContaining(story.scriptureReferences.value)
     );
   });
 
@@ -296,7 +300,7 @@ describe('Product e2e', () => {
     expect(actual.purposes.value).toEqual(updateProduct.purposes);
     expect(actual.methodology.value).toEqual(updateProduct.methodology);
     expect(actual.scriptureReferences.value).toEqual(
-      updateProduct.scriptureReferences
+      expect.arrayContaining(updateProduct.scriptureReferences)
     );
   });
 
@@ -377,7 +381,7 @@ describe('Product e2e', () => {
     expect(actual.produces?.value?.id).toBe(film.id);
     expect(actual.produces?.value?.__typename).toBe(ProducibleType.Film);
     expect(actual.produces?.value?.scriptureReferences).toEqual(
-      film.scriptureReferences
+      expect.arrayContaining(film.scriptureReferences.value)
     );
     expect(actual.scriptureReferencesOverride?.value).toBeNull();
   });
@@ -455,10 +459,15 @@ describe('Product e2e', () => {
     );
 
     const actual: AnyProduct = result.updateProduct.product;
-    expect(actual.scriptureReferencesOverride?.value).toEqual(override);
-    expect(actual.scriptureReferences?.value).toEqual(override);
+
+    expect(actual.scriptureReferencesOverride?.value).toEqual(
+      expect.arrayContaining(override)
+    );
+    expect(actual.scriptureReferences?.value).toEqual(
+      expect.arrayContaining(override)
+    );
     expect(actual.produces?.value?.scriptureReferences?.value).toEqual(
-      story.scriptureReferences.value
+      expect.arrayContaining(story.scriptureReferences.value)
     );
   });
 
