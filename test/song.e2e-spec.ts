@@ -32,7 +32,9 @@ describe('Song e2e', () => {
     const scriptureReferences = ScriptureRange.randomList();
     const song = await createSong(app, { name, scriptureReferences });
     expect(song.scriptureReferences.value).toBeDefined();
-    expect(song.scriptureReferences.value).toEqual(scriptureReferences);
+    expect(song.scriptureReferences.value).toEqual(
+      expect.arrayContaining(scriptureReferences)
+    );
   });
 
   // READ SONG
@@ -58,7 +60,7 @@ describe('Song e2e', () => {
     expect(isValid(actual.id)).toBe(true);
     expect(actual.name.value).toBe(song.name.value);
     expect(actual.scriptureReferences.value).toEqual(
-      song.scriptureReferences.value
+      expect.arrayContaining(song.scriptureReferences.value)
     );
   });
 
@@ -92,7 +94,9 @@ describe('Song e2e', () => {
     expect(updated).toBeTruthy();
     expect(updated.name.value).toBe(newName);
     expect(updated.scriptureReferences.value).toBeDefined();
-    expect(updated.scriptureReferences.value).toEqual(scriptureReferences);
+    expect(updated.scriptureReferences.value).toEqual(
+      expect.arrayContaining(scriptureReferences)
+    );
   });
 
   // DELETE SONG
