@@ -59,7 +59,7 @@ export class BudgetResolver {
   }
 
   @ResolveField(() => SecuredFile, {
-    description: 'The budget universal Template File',
+    description: 'The universal budget template',
   })
   async universalTemplateFile(
     @Parent() budget: Budget,

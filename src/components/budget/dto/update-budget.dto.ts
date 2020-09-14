@@ -13,7 +13,10 @@ export abstract class UpdateBudget {
   @Field(() => BudgetStatus)
   readonly status?: BudgetStatus;
 
-  @Field({ description: 'Budget universal Template File', nullable: true })
+  @Field({
+    description: 'New version of the universal budget template',
+    nullable: true,
+  })
   readonly universalTemplateFile?: CreateDefinedFileVersionInput;
 }
 

@@ -192,7 +192,7 @@ export class BudgetService {
     }
 
     const universalTemplateFile = await this.files.createDefinedFile(
-      `Budget universal Template File`,
+      `Universal Budget Template`,
       session,
       input.universalTemplateFile,
       'budget.universalTemplateFile'

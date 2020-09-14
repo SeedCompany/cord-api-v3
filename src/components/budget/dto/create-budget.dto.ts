@@ -10,7 +10,10 @@ export abstract class CreateBudget {
   @IdField()
   readonly projectId: string;
 
-  @Field({ description: 'Budget universal Template File', nullable: true })
+  @Field({
+    description: 'Initial version of the universal budget template',
+    nullable: true,
+  })
   readonly universalTemplateFile?: CreateDefinedFileVersionInput;
 }
 
