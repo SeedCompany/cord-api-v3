@@ -375,7 +375,7 @@ export class BudgetService {
       .match([node('node', 'Budget', { active: true, id })])
       .optionalMatch([
         node('requestingUser'),
-        relation('in', '', 'member*1..'),
+        relation('in', '', 'member'),
         node('', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission'),
         node('perms', 'Permission', { active: true }),
@@ -439,7 +439,7 @@ export class BudgetService {
       .match([node('node', 'BudgetRecord', { active: true, id })])
       .optionalMatch([
         node('requestingUser'),
-        relation('in', '', 'member*1..'),
+        relation('in', '', 'member'),
         node('', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission'),
         node('perms', 'Permission', { active: true }),
