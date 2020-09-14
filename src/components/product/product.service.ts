@@ -512,7 +512,7 @@ export class ProductService {
 
     const object = await this.readOne(input.id, session);
 
-    return await this.db.updateProperties({
+    return await this.db.sgUpdateProperties({
       session,
       object,
       props: ['mediums', 'purposes', 'methodology'],

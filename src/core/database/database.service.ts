@@ -120,119 +120,6 @@ export class DatabaseService {
       .run();
   }
 
-  async updateProperties<TObject extends Resource>({
-    session,
-    object,
-    props,
-    changes,
-    nodevar,
-  }: {
-    session: ISession;
-    object: TObject;
-    props: ReadonlyArray<keyof TObject>;
-    changes: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> };
-    nodevar: string;
-  }): Promise<TObject> {
-    let updated = object;
-    for (const prop of props) {
-      if (
-        changes[prop] == null ||
-        unwrapSecured(object[prop]) === changes[prop]
-      ) {
-        continue;
-      }
-      updated = await this.updateProperty({
-        object: updated,
-        session,
-        key: prop,
-        value: changes[prop],
-        nodevar,
-      });
-    }
-    return updated;
-  }
-
-  async updateProperty<TObject extends Resource, Key extends keyof TObject>({
-    session,
-    object,
-    key,
-    value,
-    aclEditProp,
-    nodevar,
-  }: {
-    session: ISession;
-    object: TObject;
-    key: Key;
-    value?: UnwrapSecured<TObject[Key]>;
-    aclEditProp?: string;
-    nodevar: string;
-  }): Promise<TObject> {
-    const aclEditPropName =
-      aclEditProp || `canEdit${upperFirst(key as string)}`;
-
-    const now = DateTime.local();
-    const update = this.db
-      .query()
-      .match([matchSession(session)])
-      .with('*')
-      .optionalMatch([
-        node(nodevar, upperFirst(nodevar), {
-          active: true,
-          id: object.id,
-          owningOrgId: session.owningOrgId,
-        }),
-      ])
-      .with('*')
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member'),
-        node('acl', 'ACL', { [aclEditPropName]: true }),
-        relation('out', '', 'toNode'),
-        node(nodevar),
-        relation('out', 'oldToProp', key as string, { active: true }),
-        node('oldPropVar', 'Property', { active: true }),
-      ])
-      .setValues({
-        'oldToProp.active': false,
-        'oldPropVar.active': false,
-      })
-      .create([
-        node(nodevar),
-        relation('out', 'toProp', key as string, {
-          active: true,
-          createdAt: now,
-          owningOrgId: session.owningOrgId,
-        }),
-        node('newPropNode', 'Property', {
-          active: true,
-          createdAt: now,
-          value,
-          owningOrgId: session.owningOrgId,
-        }),
-      ])
-      .return('newPropNode');
-
-    const result = await update.first();
-
-    if (!result) {
-      throw new InputException('Could not find object');
-    }
-
-    return {
-      ...object,
-      ...(isSecured(object[key])
-        ? // replace value in secured object keeping can* properties
-          {
-            [key]: {
-              ...object[key],
-              value,
-            },
-          }
-        : // replace value directly
-          { [key]: value }),
-    };
-  }
-
   async readProperties<TObject extends Resource>({
     id,
     session,
@@ -501,6 +388,8 @@ export class DatabaseService {
         'oldToProp.active': false,
         'oldPropVar.active': false,
       })
+      .with('*')
+      .limit(1)
       .create([
         node(nodevar),
         relation('out', 'toProp', key as string, {
