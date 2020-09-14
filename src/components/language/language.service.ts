@@ -405,7 +405,7 @@ export class LanguageService {
       .match([node('node', 'Language', { active: true, id: langId })])
       .optionalMatch([
         node('requestingUser'),
-        relation('in', '', 'member*1..'),
+        relation('in', '', 'member'),
         node('', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission'),
         node('perms', 'Permission', { active: true }),

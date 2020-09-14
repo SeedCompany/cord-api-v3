@@ -425,7 +425,7 @@ export class ProjectService {
       .match([node('node', 'Project', { active: true, id })])
       .optionalMatch([
         node('requestingUser'),
-        relation('in', '', 'member*1..'),
+        relation('in', '', 'member'),
         node('', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission'),
         node('perms', 'Permission', { active: true }),

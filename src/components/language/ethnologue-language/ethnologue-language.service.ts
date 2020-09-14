@@ -225,7 +225,7 @@ export class EthnologueLanguageService {
       .match([node('node', 'EthnologueLanguage', { active: true, id: id })])
       .optionalMatch([
         node('requestingUser'),
-        relation('in', '', 'member*1..'),
+        relation('in', '', 'member'),
         node('', 'SecurityGroup', { active: true }),
         relation('out', '', 'permission'),
         node('perms', 'Permission', { active: true }),
