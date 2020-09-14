@@ -30,3 +30,4 @@ export * from './create-country';
 export * from './create-engagement';
 export * from './create-partnership';
 export * from './create-song';
+export * from './create-partner';
