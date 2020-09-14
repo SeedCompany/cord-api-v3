@@ -3,7 +3,7 @@ import * as faker from 'faker';
 import { times } from 'lodash';
 import { generate, isValid } from 'shortid';
 import { LiteracyMaterial } from '../src/components/literacy-material';
-import { createRandomScriptureReferences } from '../src/components/scripture/reference';
+import { ScriptureRange } from '../src/components/scripture/dto';
 import {
   createLiteracyMaterial,
   createSession,
@@ -29,7 +29,7 @@ describe('LiteracyMaterial e2e', () => {
   // Create LiteracyMaterial
   it('create literacyMaterial', async () => {
     const name = faker.company.companyName();
-    const scriptureReferences = createRandomScriptureReferences();
+    const scriptureReferences = ScriptureRange.randomList();
     const lm = await createLiteracyMaterial(app, { name, scriptureReferences });
     expect(lm.scriptureReferences.value).toBeDefined();
     expect(lm.scriptureReferences.value).toEqual(scriptureReferences);
@@ -38,7 +38,7 @@ describe('LiteracyMaterial e2e', () => {
   // READ LiteracyMaterial
   it('create & read literacyMaterial by id', async () => {
     const name = faker.company.companyName();
-    const scriptureReferences = createRandomScriptureReferences();
+    const scriptureReferences = ScriptureRange.randomList();
     const lm = await createLiteracyMaterial(app, { name, scriptureReferences });
     const { literacyMaterial: actual } = await app.graphql.query(
       gql`
@@ -65,7 +65,7 @@ describe('LiteracyMaterial e2e', () => {
   it('update literacyMaterial', async () => {
     const lm = await createLiteracyMaterial(app);
     const newName = faker.company.companyName();
-    const scriptureReferences = createRandomScriptureReferences();
+    const scriptureReferences = ScriptureRange.randomList();
     const result = await app.graphql.mutate(
       gql`
         mutation updateLiteracyMaterial($input: UpdateLiteracyMaterialInput!) {

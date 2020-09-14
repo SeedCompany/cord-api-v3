@@ -11,6 +11,8 @@ export abstract class CreateLiteracyMaterial {
   readonly name: string;
 
   @Field(() => [ScriptureRangeInput], { nullable: true })
+  @ValidateNested()
+  @Type(() => ScriptureRangeInput)
   readonly scriptureReferences?: ScriptureRangeInput[] = [];
 }
 

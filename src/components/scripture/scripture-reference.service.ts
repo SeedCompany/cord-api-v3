@@ -1,9 +1,8 @@
 import { Node, node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { ISession } from '../../common';
+import { ISession, Range } from '../../common';
 import { DatabaseService, ILogger, Logger } from '../../core';
 import { ScriptureRange, ScriptureRangeInput } from './dto';
-import { scriptureToVerseRange, verseToScriptureRange } from './reference';
 
 export class ScriptureReferenceService {
   constructor(
@@ -34,7 +33,7 @@ export class ScriptureReferenceService {
           node('node'),
           relation('out', '', 'scriptureReferences', { active: true }),
           node('sr', ['ScriptureRange', 'BaseNode'], {
-            ...scriptureToVerseRange(sr),
+            ...ScriptureRange.fromReferences(sr),
             active: true,
             createdAt: DateTime.local(),
           }),
@@ -80,7 +79,7 @@ export class ScriptureReferenceService {
             node('node'),
             relation('out', '', rel, { active: true }),
             node('', ['ScriptureRange', 'BaseNode'], {
-              ...scriptureToVerseRange(sr),
+              ...ScriptureRange.fromReferences(sr),
               active: true,
               createdAt: DateTime.local(),
             }),
@@ -117,14 +116,11 @@ export class ScriptureReferenceService {
         node('scriptureRanges', 'ScriptureRange', { active: true }),
       ])
       .return('scriptureRanges')
-      .asResult<{ scriptureRanges: Node<{ start: number; end: number }> }>()
+      .asResult<{ scriptureRanges: Node<Range<number>> }>()
       .run();
 
     return results.map((item) =>
-      verseToScriptureRange({
-        start: item.scriptureRanges.properties.start,
-        end: item.scriptureRanges.properties.end,
-      })
+      ScriptureRange.fromIds(item.scriptureRanges.properties)
     );
   }
 }
