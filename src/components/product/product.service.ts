@@ -6,6 +6,7 @@ import { difference } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
+  InputException,
   ISession,
   NotFoundException,
   ServerException,
@@ -451,6 +452,30 @@ export class ProductService {
       ...rest
     } = input;
 
+    const currentProduct = await this.readOne(input.id, session);
+    const isDirectScriptureProduct = !currentProduct.produces;
+
+    //If current product is a Direct Scripture Product, cannot update scriptureReferencesOverride or produces
+    if (isDirectScriptureProduct && scriptureReferencesOverride) {
+      throw new InputException(
+        'Cannot update Scripture References Override on a Direct Scripture Product'
+      );
+    }
+
+    if (isDirectScriptureProduct && inputProducesId) {
+      throw new InputException(
+        'Cannot update produces on a Direct Scripture Product'
+      );
+    }
+
+    //If current product is a Derivative Scripture Product, cannot update scriptureReferencesOverride
+    if (!isDirectScriptureProduct && scriptureReferences) {
+      throw new InputException(
+        'Cannot update Scripture References on a Derivative Scripture Product'
+      );
+    }
+
+    // If given an new produces id, update the producible
     if (inputProducesId) {
       const producible = await this.db
         .query()
@@ -503,35 +528,27 @@ export class ProductService {
         ])
         .return('rel')
         .first();
-    } else {
+    }
+
+    // update the scripture references (override)
+    if (isDirectScriptureProduct) {
       await this.scriptureRefService.update(input.id, scriptureReferences);
+    } else {
+      await this.scriptureRefService.update(
+        input.id,
+        scriptureReferencesOverride,
+        { isOverriding: true }
+      );
     }
 
-    await this.scriptureRefService.update(
+    const productUpdatedScriptureReferences = await this.readOne(
       input.id,
-      scriptureReferencesOverride,
-      { isOverriding: true }
+      session
     );
-
-    if (scriptureReferencesOverride !== undefined) {
-      await this.db
-        .query()
-        .match([
-          node('product', 'Product', { id: input.id, active: true }),
-          relation('out', 'rel', 'isOverriding', { active: true }),
-          node('propertyNode', 'Property', { active: true }),
-        ])
-        .setValues({
-          'propertyNode.value': scriptureReferencesOverride !== null,
-        })
-        .run();
-    }
-
-    const object = await this.readOne(input.id, session);
 
     return await this.db.sgUpdateProperties({
       session,
-      object,
+      object: productUpdatedScriptureReferences,
       props: ['mediums', 'purposes', 'methodology'],
       changes: rest,
       nodevar: 'product',
