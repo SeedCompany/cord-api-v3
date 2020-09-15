@@ -854,10 +854,65 @@
 			"key": "storyScriptRefLabelStart",
 			"value": "",
 			"enabled": true
+		},
+		{
+			"key": "filmScriptRefLabelEnd",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "filmScriptRefLabelStart",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "literacyMaterialScriptRefLabelEnd",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "literacyMaterialScriptRefLabelStart",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "songScriptRefLabelEnd",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "songScriptRefLabelStart",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "description",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "unavailabilityId",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "unavailability_data",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "unavailabilityEnd",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "unavailabilityStart",
+			"value": "",
+			"enabled": true
 		}
 	],
 	"name": "MyWorkspace Globals",
 	"_postman_variable_scope": "globals",
-	"_postman_exported_at": "2020-09-08T14:29:23.155Z",
-	"_postman_exported_using": "Postman/7.31.1"
+	"_postman_exported_at": "2020-09-15T14:34:28.999Z",
+	"_postman_exported_using": "Postman/7.32.0"
 }
