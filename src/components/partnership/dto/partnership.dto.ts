@@ -1,6 +1,7 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import {
   Resource,
+  Secured,
   SecuredDateNullable,
   SecuredEnum,
   SecuredEnumList,
@@ -59,7 +60,7 @@ export class Partnership extends Resource {
 
   readonly agreement: DefinedFile;
 
-  readonly partner: string;
+  readonly partner: Secured<string>;
 
   @Field()
   readonly types: SecuredPartnershipTypes;

@@ -34,11 +34,9 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { BudgetService } from '../budget';
 import { FileService } from '../file';
-import { OrganizationService } from '../organization';
-import { InternalRole } from '../project';
 import { PartnerService } from '../partner/partner.service';
+import { InternalRole } from '../project';
 import { ProjectService } from '../project/project.service';
 import {
   CreatePartnership,
@@ -69,14 +67,13 @@ export class PartnershipService {
     financialReportingType: true,
     mou: true,
     agreement: true,
+    partner: true,
   };
 
   constructor(
     private readonly files: FileService,
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
-    private readonly budgetService: BudgetService,
-    private readonly orgService: OrganizationService,
     @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService,
     private readonly partnerService: PartnerService,
@@ -334,7 +331,10 @@ export class PartnershipService {
         ...securedProps.types,
         value: securedProps.types.value || [],
       },
-      partner: result.partnerId,
+      partner: {
+        ...securedProps.partner,
+        value: result.partnerId,
+      },
     };
   }
 

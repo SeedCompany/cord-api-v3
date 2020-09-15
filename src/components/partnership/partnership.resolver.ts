@@ -8,8 +8,7 @@ import {
 } from '@nestjs/graphql';
 import { IdArg, ISession, Session } from '../../common';
 import { FileService, SecuredFile } from '../file';
-import { OrganizationService } from '../organization';
-import { Partner } from '../partner/dto';
+import { SecuredPartner } from '../partner/dto';
 import { PartnerService } from '../partner/partner.service';
 import {
   CreatePartnershipInput,
@@ -27,7 +26,6 @@ export class PartnershipResolver {
   constructor(
     private readonly service: PartnershipService,
     private readonly files: FileService,
-    private readonly organizations: OrganizationService,
     private readonly partners: PartnerService
   ) {}
 
@@ -72,14 +70,18 @@ export class PartnershipResolver {
     return await this.files.resolveDefinedFile(partnership.agreement, session);
   }
 
-  @ResolveField(() => Partner)
+  @ResolveField(() => SecuredPartner)
   async partner(
     @Parent()
     partnership: Partnership,
     @Session() session: ISession
-  ): Promise<Partner> {
-    const partnerId = partnership.partner;
-    return await this.partners.readOne(partnerId, session);
+  ): Promise<SecuredPartner> {
+    const { value: id, ...rest } = partnership.partner;
+    const value = id ? await this.partners.readOne(id, session) : undefined;
+    return {
+      value,
+      ...rest,
+    };
   }
 
   @Query(() => PartnershipListOutput, {

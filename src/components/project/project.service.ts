@@ -847,11 +847,14 @@ export class ProjectService {
     const fundingOrgIds = await Promise.all(
       partners.items
         .filter((p) => p.types.value.includes(PartnershipType.Funding))
-        .map(
-          async (p) =>
-            (await this.partnerService.readOne(p.partner, session)).organization
-              .value as string
-        )
+        .map(async (p) => {
+          return (
+            await this.partnerService.readOne(
+              p.partner.value as string,
+              session
+            )
+          ).organization.value as string;
+        })
     );
 
     // calculate the fiscalYears covered by this date range
