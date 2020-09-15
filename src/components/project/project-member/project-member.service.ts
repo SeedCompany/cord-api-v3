@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
-import { upperFirst } from 'lodash';
+import { difference, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import {
   DuplicateException,
+  InputException,
   ISession,
   NotFoundException,
   ServerException,
@@ -39,6 +40,7 @@ import {
   ProjectMember,
   ProjectMemberListInput,
   ProjectMemberListOutput,
+  Role,
   UpdateProjectMember,
 } from './dto';
 
@@ -192,6 +194,9 @@ export class ProjectMemberService {
         'User is already a member of this project'
       );
     }
+
+    const user = await this.userService.readOne(userId, session);
+    this.assertValidRoles(input.roles, user.roles.value);
 
     try {
       const createProjectMember = this.db
@@ -352,6 +357,8 @@ export class ProjectMemberService {
   ): Promise<ProjectMember> {
     const object = await this.readOne(input.id, session);
 
+    this.assertValidRoles(input.roles, object.user.value?.roles.value);
+
     await this.db.sgUpdateProperties({
       session,
       object,
@@ -364,6 +371,23 @@ export class ProjectMemberService {
       nodevar: 'projectMember',
     });
     return await this.readOne(input.id, session);
+  }
+
+  private assertValidRoles(
+    roles: Role[] | undefined,
+    availableRoles: Role[] | undefined
+  ) {
+    if (!roles) {
+      return;
+    }
+    const forbiddenRoles = difference(roles, availableRoles ?? []);
+    if (forbiddenRoles.length) {
+      const forbiddenRolesStr = forbiddenRoles.join(', ');
+      throw new InputException(
+        `Role(s) ${forbiddenRolesStr} cannot be assigned to this project member`,
+        'input.roles'
+      );
+    }
   }
 
   async delete(id: string, session: ISession): Promise<void> {

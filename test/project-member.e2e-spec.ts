@@ -49,6 +49,21 @@ describe('ProjectMember e2e', () => {
     expect(parseInt(difference)).toBeGreaterThan(0);
   });
 
+  it('should throw error with invalid user roles when create', async () => {
+    await login(app, { email: user.email.value, password });
+    const project = await createProject(app);
+    const member = await createUser(app, { password });
+    await expect(
+      createProjectMember(app, {
+        userId: member.id,
+        projectId: project.id,
+        roles: [Role.Controller],
+      })
+    ).rejects.toThrowError(
+      'Role(s) Controller cannot be assigned to this project member'
+    );
+  });
+
   it('read one projectMember by id', async () => {
     await login(app, { email: user.email.value, password });
     const project = await createProject(app);
@@ -213,14 +228,14 @@ describe('ProjectMember e2e', () => {
         input: {
           projectMember: {
             id: projectMember.id,
-            roles: [Role.Intern],
+            roles: [Role.ProjectManager],
           },
         },
       }
     );
     expect(result.updateProjectMember.projectMember.id).toBe(projectMember.id);
     expect(result.updateProjectMember.projectMember.roles.value).toEqual(
-      expect.arrayContaining([Role.Intern])
+      expect.arrayContaining([Role.ProjectManager])
     );
     const updated = result.updateProjectMember.projectMember;
     const difference = Interval.fromDateTimes(
@@ -231,5 +246,40 @@ describe('ProjectMember e2e', () => {
       .toFormat('S');
     expect(updated).toBeTruthy();
     expect(parseInt(difference)).toBeGreaterThan(0);
+  });
+
+  it('should throw error with invalid roles when update', async () => {
+    await login(app, { email: user.email.value, password });
+    const project = await createProject(app);
+    const member = await createUser(app, { password });
+    const projectMember = await createProjectMember(app, {
+      userId: member.id,
+      projectId: project.id,
+    });
+
+    await expect(
+      app.graphql.query(
+        gql`
+          mutation updateProjectMember($input: UpdateProjectMemberInput!) {
+            updateProjectMember(input: $input) {
+              projectMember {
+                ...projectMember
+              }
+            }
+          }
+          ${fragments.projectMember}
+        `,
+        {
+          input: {
+            projectMember: {
+              id: projectMember.id,
+              roles: [Role.Intern],
+            },
+          },
+        }
+      )
+    ).rejects.toThrowError(
+      'Role(s) Intern cannot be assigned to this project member'
+    );
   });
 });
