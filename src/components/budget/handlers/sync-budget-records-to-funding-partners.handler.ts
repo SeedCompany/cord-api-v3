@@ -118,7 +118,7 @@ export class SyncBudgetRecordsToFundingPartners
     const organization = await this.db
       .query()
       .raw(
-        'MATCH (:Partnership { id: $partnershipId })-[:organization]-(organization:Organization)',
+        'MATCH (:Partnership { id: $partnershipId })-[:partner]->(partner:Partner)-[:organization]->(organization:Organization)',
         { partnershipId: partnership.id }
       )
       .return('organization.id')

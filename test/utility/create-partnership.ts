@@ -9,7 +9,7 @@ import {
   PartnershipType,
 } from '../../src/components/partnership';
 import { TestApp } from './create-app';
-import { createOrganization } from './create-organization';
+import { createPartner } from './create-partner';
 import { createProject } from './create-project';
 import { fragments } from './fragments';
 
@@ -23,7 +23,7 @@ export async function createPartnership(
     mouStatus: PartnershipAgreementStatus.AwaitingSignature,
     types: [PartnershipType.Managing],
     financialReportingType: FinancialReportingType.Funded,
-    organizationId: input.organizationId || (await createOrganization(app)).id,
+    partnerId: input.partnerId || (await createPartner(app)).id,
     mouStartOverride: CalendarDate.local(),
     mouEndOverride: CalendarDate.local(),
     ...input,

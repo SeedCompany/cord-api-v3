@@ -54,6 +54,7 @@ import {
   LocationService,
   SecuredLocationList,
 } from '../location';
+import { PartnerService } from '../partner';
 import {
   PartnershipListInput,
   PartnershipService,
@@ -113,6 +114,7 @@ export class ProjectService {
     private readonly fileService: FileService,
     @Inject(forwardRef(() => EngagementService))
     private readonly engagementService: EngagementService,
+    private readonly partnerService: PartnerService,
     private readonly config: ConfigService,
     private readonly eventBus: IEventBus,
     private readonly authorizationService: AuthorizationService,
@@ -842,9 +844,15 @@ export class ProjectService {
       },
       session
     );
-    const fundingOrgIds = partners.items
-      .filter((p) => p.types.value.includes(PartnershipType.Funding))
-      .map((p) => p.organization);
+    const fundingOrgIds = await Promise.all(
+      partners.items
+        .filter((p) => p.types.value.includes(PartnershipType.Funding))
+        .map(
+          async (p) =>
+            (await this.partnerService.readOne(p.partner, session)).organization
+              .value as string
+        )
+    );
 
     // calculate the fiscalYears covered by this date range
     const fiscalRange = fiscalYears(

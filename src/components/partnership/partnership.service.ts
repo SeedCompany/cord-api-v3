@@ -38,6 +38,7 @@ import { BudgetService } from '../budget';
 import { FileService } from '../file';
 import { OrganizationService } from '../organization';
 import { InternalRole } from '../project';
+import { PartnerService } from '../partner/partner.service';
 import { ProjectService } from '../project/project.service';
 import {
   CreatePartnership,
@@ -78,22 +79,23 @@ export class PartnershipService {
     private readonly orgService: OrganizationService,
     @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService,
+    private readonly partnerService: PartnerService,
     private readonly eventBus: IEventBus,
     private readonly authorizationService: AuthorizationService,
     @Logger('partnership:service') private readonly logger: ILogger
   ) {}
 
   async create(
-    { organizationId, projectId, ...input }: CreatePartnership,
+    { partnerId, projectId, ...input }: CreatePartnership,
     session: ISession
   ): Promise<Partnership> {
     const createdAt = DateTime.local();
 
     try {
-      await this.orgService.readOne(organizationId, session);
+      await this.partnerService.readOne(partnerId, session);
     } catch (e) {
       if (e instanceof NotFoundException) {
-        throw e.withField('partnership.organizationId');
+        throw e.withField('partnership.partnerId');
       }
       throw e;
     }
@@ -207,14 +209,14 @@ export class PartnershipService {
         session.userId as string
       );
 
-      // connect the Organization to the Partnership
+      // connect the Partner to the Partnership
       // and connect Partnership to Project
       await this.db
         .query()
         .match([
           [
-            node('organization', 'Organization', {
-              id: organizationId,
+            node('partner', 'Partner', {
+              id: partnerId,
             }),
           ],
           [
@@ -228,8 +230,8 @@ export class PartnershipService {
           node('project'),
           relation('out', '', 'partnership', { active: true, createdAt }),
           node('partnership'),
-          relation('out', '', 'organization', { active: true, createdAt }),
-          node('organization'),
+          relation('out', '', 'partner', { active: true, createdAt }),
+          node('partner'),
         ])
         .return('partnership.id as id')
         .first();
@@ -271,16 +273,16 @@ export class PartnershipService {
       ])
       .match([
         node('node'),
-        relation('out', '', 'organization'),
-        node('organization', 'Organization'),
+        relation('out', '', 'partner'),
+        node('partner', 'Partner'),
       ])
       .return(
-        'propList, permList, node, project.id as projectId, organization.id as organizationId'
+        'propList, permList, node, project.id as projectId, partner.id as partnerId'
       )
       .asResult<
         StandardReadResult<DbPropsOfDto<Partnership>> & {
           projectId: string;
-          organizationId: string;
+          partnerId: string;
         }
       >();
 
@@ -332,7 +334,7 @@ export class PartnershipService {
         ...securedProps.types,
         value: securedProps.types.value || [],
       },
-      organization: result.organizationId,
+      partner: result.partnerId,
     };
   }
 

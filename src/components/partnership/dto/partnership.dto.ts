@@ -59,7 +59,7 @@ export class Partnership extends Resource {
 
   readonly agreement: DefinedFile;
 
-  readonly organization: string;
+  readonly partner: string;
 
   @Field()
   readonly types: SecuredPartnershipTypes;

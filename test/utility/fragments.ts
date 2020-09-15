@@ -406,13 +406,8 @@ export const partnership = gql`
       canRead
       canEdit
     }
-    organization {
+    partner {
       id
-      name {
-        value
-        canRead
-        canEdit
-      }
     }
   }
 `;
