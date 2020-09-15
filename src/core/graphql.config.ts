@@ -113,6 +113,18 @@ export class GraphQLConfig implements GqlOptionsFactory {
     ) {
       return [code, 'GraphQL', 'Client'];
     }
+    if (
+      error.message.startsWith('Variable ') &&
+      [
+        /^Variable ".+" got invalid value .+ at ".+"; Field ".+" of required type ".+" was not provided\.$/,
+        /^Variable ".+" got invalid value .+ at ".+"; Field ".+" is not defined by type ".+"\..*$/,
+        /^Variable ".+" got invalid value .+; Expected type .+.$/,
+        /^Variable ".+" of type ".+" used in position expecting type ".+"\.$/,
+        /^Variable ".+" of required type ".+" was not provided\.$/,
+      ].some((rgx) => rgx.exec(error.message))
+    ) {
+      return ['GraphQL', 'Client'];
+    }
     if (error.message.includes('Cannot return null for non-nullable field')) {
       return [code, 'GraphQL', 'Server'];
     }
