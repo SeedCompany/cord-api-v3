@@ -1751,6 +1751,7 @@
 									"pm.test(\"Verify that number of items returned are exact\", function () {",
 									"    var total = jsonData.data.organizations.total;                  // total returned in response",
 									"    var returneditems = jsonData.data.organizations.items.length;   // no. of items returned in response array",
+									"    console.log('returneditems=',returneditems)",
 									"    var itemCount = Number(pm.globals.get('itemCount'));    // no. of items per page",
 									"    var page = Number(pm.globals.get('page'));              // page number",
 									"    var expectedItems = itemCount * page;                   // items we are expecting",
