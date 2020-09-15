@@ -214,7 +214,7 @@ export class ProjectService {
     const createdAt = DateTime.local();
     const step = input.step ?? ProjectStep.EarlyConversations;
     const createInput = {
-      sensitivity: Sensitivity.High, // TODO: this needs to be calculated based on language engagement
+      sensitivity: Sensitivity.High, // Default to high on create
       ...input,
       step,
       status: stepToStatus(step),
@@ -512,7 +512,13 @@ export class ProjectService {
   }
 
   async update(input: UpdateProject, session: ISession): Promise<Project> {
-    const object = await this.readOne(input.id, session);
+    const currentProject = await this.readOne(input.id, session);
+
+    if (input.sensitivity && currentProject.type === ProjectType.Translation)
+      throw new InputException(
+        'Cannot update sensitivity on Translation Project',
+        'project.sensitivity'
+      );
 
     const changes = {
       ...input,
@@ -524,7 +530,7 @@ export class ProjectService {
 
     const result = await this.db.sgUpdateProperties({
       session,
-      object,
+      object: currentProject,
       props: [
         'name',
         'mouStart',
@@ -533,13 +539,14 @@ export class ProjectService {
         'status',
         'modifiedAt',
         'step',
+        'sensitivity',
       ],
       changes,
       nodevar: 'project',
     });
 
     await this.eventBus.publish(
-      new ProjectUpdatedEvent(result, object, input, session)
+      new ProjectUpdatedEvent(result, currentProject, input, session)
     );
 
     return result;
