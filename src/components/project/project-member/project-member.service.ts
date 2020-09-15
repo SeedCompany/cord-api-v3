@@ -40,6 +40,7 @@ import {
   ProjectMember,
   ProjectMemberListInput,
   ProjectMemberListOutput,
+  Role,
   UpdateProjectMember,
 } from './dto';
 
@@ -195,9 +196,7 @@ export class ProjectMemberService {
     }
 
     const user = await this.userService.readOne(userId, session);
-    if (difference(input.roles, user.roles.value).length) {
-      throw new InputException('No roles in the user', 'input.roles');
-    }
+    this.assertValidRoles(input.roles, user.roles.value);
 
     try {
       const createProjectMember = this.db
@@ -357,15 +356,8 @@ export class ProjectMemberService {
     session: ISession
   ): Promise<ProjectMember> {
     const object = await this.readOne(input.id, session);
-    if (object.user.value) {
-      const user = await this.userService.readOne(
-        object.user.value?.id,
-        session
-      );
-      if (difference(input.roles, user.roles.value).length) {
-        throw new InputException('No roles in the user', 'input.roles');
-      }
-    }
+
+    this.assertValidRoles(input.roles, object.user.value?.roles.value);
 
     await this.db.sgUpdateProperties({
       session,
@@ -379,6 +371,23 @@ export class ProjectMemberService {
       nodevar: 'projectMember',
     });
     return await this.readOne(input.id, session);
+  }
+
+  private assertValidRoles(
+    roles: Role[] | undefined,
+    availableRoles: Role[] | undefined
+  ) {
+    if (!roles) {
+      return;
+    }
+    const forbiddenRoles = difference(roles, availableRoles ?? []);
+    if (forbiddenRoles.length) {
+      const forbiddenRolesStr = forbiddenRoles.join(', ');
+      throw new InputException(
+        `Role(s) ${forbiddenRolesStr} cannot be assigned to this project member`,
+        'input.roles'
+      );
+    }
   }
 
   async delete(id: string, session: ISession): Promise<void> {

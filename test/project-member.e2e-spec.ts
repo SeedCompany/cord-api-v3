@@ -59,7 +59,9 @@ describe('ProjectMember e2e', () => {
         projectId: project.id,
         roles: [Role.Controller],
       })
-    ).rejects.toThrowError('No roles in the user');
+    ).rejects.toThrowError(
+      'Role(s) Controller cannot be assigned to this project member'
+    );
   });
 
   it('read one projectMember by id', async () => {
@@ -276,6 +278,8 @@ describe('ProjectMember e2e', () => {
           },
         }
       )
-    ).rejects.toThrowError('No roles in the user');
+    ).rejects.toThrowError(
+      'Role(s) Intern cannot be assigned to this project member'
+    );
   });
 });
