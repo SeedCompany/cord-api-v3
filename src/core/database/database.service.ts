@@ -13,11 +13,9 @@ import { DateTime, Duration } from 'luxon';
 import { generate } from 'shortid';
 import { assert } from 'ts-essentials';
 import {
-  AbstractClassType,
   InputException,
   ISession,
   isSecured,
-  many,
   mapFromList,
   Order,
   Resource,
@@ -35,16 +33,6 @@ interface ReadPropertyResult {
   canEdit: boolean;
   canRead: boolean;
 }
-
-type ResourceInput<T extends Resource> = {
-  // id is required
-  id: string;
-} & {
-  // all other props are optional and their raw unsecured value
-  [Key in keyof T]?: UnwrapSecured<T[Key]>;
-} &
-  // Allow other unknown properties as well
-  Record<string, DbValue>;
 
 export type ACLs = Record<string, boolean>;
 
@@ -823,161 +811,6 @@ export class DatabaseService {
     if (!result) {
       throw new InputException('Could not find object');
     }
-  }
-
-  async createNode<TObject extends Resource>({
-    session,
-    type,
-    input: { id, ...props },
-    acls,
-    baseNodeLabel,
-    aclEditProp,
-  }: {
-    session: ISession;
-    type: AbstractClassType<TObject>;
-    input: ResourceInput<TObject>;
-    acls: ACLs;
-    baseNodeLabel?: Many<string>;
-    aclEditProp?: string | false;
-  }): Promise<void> {
-    await this.createBaseNode<TObject>({
-      session,
-      type,
-      input: { id, ...props },
-      acls,
-      baseNodeLabel,
-      aclEditProp,
-    });
-
-    for (const [key, value] of Object.entries(props)) {
-      await this.createProperty({
-        session,
-        key,
-        value,
-        id,
-      });
-    }
-  }
-
-  async createBaseNode<TObject extends Resource>({
-    session,
-    type,
-    input,
-    acls,
-    baseNodeLabel,
-    aclEditProp,
-  }: {
-    session: ISession;
-    type: AbstractClassType<TObject>;
-    input: ResourceInput<TObject>;
-    acls: ACLs;
-    baseNodeLabel?: Many<string>;
-    aclEditProp?: string | false;
-  }): Promise<void> {
-    const labels = (baseNodeLabel ? many(baseNodeLabel) : [type.name]).map(
-      upperFirst
-    );
-    const aclEdit = aclEditProp ?? `canCreate${labels[0]}`;
-
-    try {
-      await this.db
-        .query()
-        .match([
-          matchSession(session, {
-            withAclEdit: aclEdit || undefined,
-          }),
-        ])
-        .create([
-          [
-            node('item', [...labels, 'BaseNode'], {
-              active: true,
-              createdAt: DateTime.local(),
-              id: input.id,
-              owningOrgId: session.owningOrgId,
-            }),
-            relation('in', '', 'toNode'),
-            node('acl', 'ACL', acls),
-            relation('out', '', 'member'),
-            node('requestingUser'),
-          ],
-          [
-            node('item'),
-            relation('out', '', 'admin', {
-              active: true,
-              createdAt: DateTime.local(),
-              hidden: false,
-              owner: true,
-            }),
-            node('requestingUser'),
-          ],
-        ])
-        .run();
-    } catch (exception) {
-      // If there is no aclEditProp, then this is not an access-related issue
-      // and we can move forward with throwing
-      if (!aclEdit) {
-        throw new ServerException('Could not found aclEdit');
-      }
-
-      // Retrieve the user's record of the aclEditProp, if it exists
-      const aclResult = await this.db
-        .query()
-        .match([matchSession(session)])
-        .return({
-          requestingUser: [{ [aclEdit]: 'editProp' }],
-        })
-        .first();
-
-      // If the user doesn't have permission to perform the create action...
-      if (!aclResult || !aclResult.editProp) {
-        throw new UnauthorizedException(`Cannot create ${type.name}`);
-      }
-
-      this.logger.error(`createNode error`, {
-        exception,
-      });
-
-      throw new ServerException('createNode error', exception);
-    }
-  }
-
-  async createProperty({
-    session,
-    key,
-    value,
-    id,
-  }: {
-    session: ISession;
-    key: string;
-    value: DbValue;
-    id: string;
-  }) {
-    await this.db
-      .query()
-      .match([
-        matchSession(session),
-        [
-          node('item', {
-            id,
-            active: true,
-          }),
-        ],
-      ])
-      .create([
-        node('item'),
-        relation('out', 'rel', key, {
-          active: true,
-          createdAt: DateTime.local(),
-          owningOrgId: session.owningOrgId,
-        }),
-        node(key, 'Property', {
-          active: true,
-          value,
-          owningOrgId: session.owningOrgId,
-        }),
-      ])
-      .return([`${key}.value`, 'rel'])
-      .run();
   }
 
   async hasProperties({

@@ -9,24 +9,25 @@ import {
 } from 'cypher-query-builder';
 import type { Pattern } from 'cypher-query-builder/dist/typings/clauses/pattern';
 import { AnyConditions } from 'cypher-query-builder/dist/typings/clauses/where-utils';
-import { camelCase, isEmpty } from 'lodash';
+import { isEmpty } from 'lodash';
 import { DateTime } from 'luxon';
-import { generate } from 'shortid';
 import { ISession, NotFoundException, ServerException } from '../../common';
 import {
   collect,
+  ConfigService,
   count,
+  createBaseNode,
   DatabaseService,
   hasMore,
   ILogger,
   Logger,
   mapping,
+  matchRequestingUser,
   matchSession,
+  Property,
 } from '../../core';
 import {
   BaseNode,
-  Directory,
-  File,
   FileListInput,
   FileNodeCategory,
   FileNodeType,
@@ -39,6 +40,7 @@ const isActive = { active: true };
 export class FileRepository {
   constructor(
     private readonly db: DatabaseService,
+    private readonly config: ConfigService,
     @Logger('file:repository') private readonly logger: ILogger
   ) {}
 
@@ -195,8 +197,10 @@ export class FileRepository {
         .optionalMatch([
           node('requestingUser'),
           relation('in', '', 'member'),
-          node('acl', 'ACL', { [camelCase(`canRead-${prop}`)]: true }),
-          relation('out', '', 'toNode'),
+          node('', 'SecurityGroup', { active: true }),
+          relation('out', '', 'permission'),
+          node('perms', 'Permission', { active: true }),
+          relation('out', '', 'baseNode'),
           node('fv'),
           relation('out', '', prop, isActive),
           node(variable, 'Property', isActive),
@@ -255,30 +259,46 @@ export class FileRepository {
     name: string,
     session: ISession
   ): Promise<string> {
-    const id = generate();
-    await this.db.createNode({
-      session,
-      type: Directory,
-      input: {
-        id,
-        name,
-        createdAt: DateTime.local(),
+    const props: Property[] = [
+      {
+        key: 'name',
+        value: name,
+        addToAdminSg: true,
+        addToWriterSg: true,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
       },
-      acls: {
-        canReadName: true,
-        canEditName: true,
-      },
-      baseNodeLabel: ['Directory', 'FileNode'],
-      aclEditProp: 'canCreateDirectory',
-    });
+    ];
 
-    await this.attachCreator(id, session);
+    const createFile = this.db
+      .query()
+      .call(matchRequestingUser, session)
+      .match([
+        node('root', 'User', {
+          active: true,
+          id: this.config.rootAdmin.id,
+        }),
+      ])
+      .call(createBaseNode, ['Directory', 'FileNode'], props, {
+        owningOrgId: session.owningOrgId,
+      })
+      .return('node.id as id')
+      .asResult<{ id: string }>();
 
-    if (parentId) {
-      await this.attachParent(id, parentId);
+    const result = await createFile.first();
+
+    if (!result) {
+      throw new ServerException('Failed to create directory');
     }
 
-    return id;
+    await this.attachCreator(result.id, session);
+
+    if (parentId) {
+      await this.attachParent(result.id, parentId);
+    }
+
+    return result.id;
   }
 
   async createFile(
@@ -286,34 +306,46 @@ export class FileRepository {
     name: string,
     session: ISession
   ) {
-    const fileId = generate();
-    await this.db.createNode({
-      session,
-      type: File,
-      baseNodeLabel: ['File', 'FileNode'],
-      input: {
-        id: fileId,
-        name,
-        createdAt: DateTime.local(),
+    const props: Property[] = [
+      {
+        key: 'name',
+        value: name,
+        addToAdminSg: true,
+        addToWriterSg: true,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
       },
-      acls: {
-        canReadParent: true,
-        canEditParent: true,
-        canReadName: true,
-        canEditName: true,
-        canReadType: true,
-        canEditType: true,
-      },
-      aclEditProp: 'canCreateFile',
-    });
+    ];
 
-    await this.attachCreator(fileId, session);
+    const createFile = this.db
+      .query()
+      .call(matchRequestingUser, session)
+      .match([
+        node('root', 'User', {
+          active: true,
+          id: this.config.rootAdmin.id,
+        }),
+      ])
+      .call(createBaseNode, ['File', 'FileNode'], props, {
+        owningOrgId: session.owningOrgId,
+      })
+      .return('node.id as id')
+      .asResult<{ id: string }>();
 
-    if (parentId) {
-      await this.attachParent(fileId, parentId);
+    const result = await createFile.first();
+
+    if (!result) {
+      throw new ServerException('Failed to create file');
     }
 
-    return fileId;
+    await this.attachCreator(result.id, session);
+
+    if (parentId) {
+      await this.attachParent(result.id, parentId);
+    }
+
+    return result.id;
   }
 
   async createFileVersion(
@@ -321,31 +353,73 @@ export class FileRepository {
     input: Pick<FileVersion, 'id' | 'name' | 'mimeType' | 'size' | 'category'>,
     session: ISession
   ) {
-    const createdAt = DateTime.local();
+    const props: Property[] = [
+      {
+        key: 'name',
+        value: input.name,
+        addToAdminSg: true,
+        addToWriterSg: true,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'mimeType',
+        value: input.mimeType,
+        addToAdminSg: true,
+        addToWriterSg: true,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'size',
+        value: input.size,
+        addToAdminSg: true,
+        addToWriterSg: true,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'category',
+        value: input.category,
+        addToAdminSg: true,
+        addToWriterSg: true,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+    ];
 
-    await this.db.createNode({
-      session,
-      type: FileVersion,
-      baseNodeLabel: ['FileVersion', 'FileNode'],
-      input: {
-        ...input,
-        createdAt,
-      },
-      acls: {
-        canReadSize: true,
-        canEditSize: true,
-        canReadParent: true,
-        canEditParent: true,
-        canReadMimeType: true,
-        canEditMimeType: true,
-        canReadCategory: true,
-        canEditCategory: true,
-        canReadName: true,
-        canEditName: true,
-        canReadModifiedAt: true,
-        canEditModifiedAt: true,
-      },
-    });
+    const createFile = this.db
+      .query()
+      .call(matchRequestingUser, session)
+      .match([
+        node('root', 'User', {
+          active: true,
+          id: this.config.rootAdmin.id,
+        }),
+      ])
+      .call(
+        createBaseNode,
+        ['FileVersion', 'FileNode'],
+        props,
+        {
+          owningOrgId: session.owningOrgId,
+        },
+        undefined,
+        undefined,
+        input.id
+      )
+      .return('node.id as id')
+      .asResult<{ id: string }>();
+
+    const result = await createFile.first();
+
+    if (!result) {
+      throw new ServerException('Failed to create file version');
+    }
 
     await this.attachCreator(input.id, session);
     await this.attachParent(input.id, fileId);
