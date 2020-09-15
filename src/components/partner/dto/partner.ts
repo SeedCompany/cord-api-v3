@@ -6,6 +6,8 @@ import { Resource, Secured, SecuredProperty } from '../../../common';
 })
 export class Partner extends Resource {
   readonly organization: Secured<string>;
+
+  readonly pointOfContact: Secured<string>;
 }
 
 @ObjectType({

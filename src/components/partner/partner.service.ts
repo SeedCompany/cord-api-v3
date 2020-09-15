@@ -41,6 +41,7 @@ import {
 export class PartnerService {
   private readonly securedProperties = {
     organization: true,
+    pointOfContact: true,
   };
 
   constructor(
@@ -123,7 +124,10 @@ export class PartnerService {
       .call(createBaseNode, 'Partner', [], {
         owningOrgId: session.owningOrgId,
       })
-      .create([...this.permission('organization', 'node')])
+      .create([
+        ...this.permission('organization', 'node'),
+        ...this.permission('pointOfContact', 'node'),
+      ])
       .create([
         node('node'),
         relation('out', '', 'organization', { active: true, createdAt }),
@@ -135,6 +139,28 @@ export class PartnerService {
 
     if (!result) {
       throw new ServerException('failed to create partner');
+    }
+
+    if (input.pointOfContactId) {
+      await this.db
+        .query()
+        .matchNode('partner', 'Partner', {
+          id: result.id,
+          active: true,
+        })
+        .matchNode('pointOfContact', 'User', {
+          id: input.pointOfContactId,
+          active: true,
+        })
+        .create([
+          node('partner'),
+          relation('out', '', 'pointOfContact', {
+            active: true,
+            createdAt,
+          }),
+          node('pointOfContact'),
+        ])
+        .run();
     }
 
     this.logger.debug(`partner created`, { id: result.id });
@@ -161,9 +187,19 @@ export class PartnerService {
         relation('out', '', 'organization', { active: true }),
         node('organization', 'Organization', { active: true }),
       ])
-      .return('permList, node, organization.id as organizationId')
+      .optionalMatch([
+        node('node'),
+        relation('out', '', 'pointOfContact', { active: true }),
+        node('pointOfContact', 'User', { active: true }),
+      ])
+      .return(
+        'permList, node, organization.id as organizationId, pointOfContact.id as pointOfContactId'
+      )
       .asResult<
-        StandardReadResult<DbPropsOfDto<Partner>> & { organizationId: string }
+        StandardReadResult<DbPropsOfDto<Partner>> & {
+          organizationId: string;
+          pointOfContactId: string;
+        }
       >();
 
     const result = await query.first();
@@ -185,11 +221,54 @@ export class PartnerService {
         ...secured.organization,
         value: result.organizationId,
       },
+      pointOfContact: {
+        ...secured.pointOfContact,
+        value: result.pointOfContactId,
+      },
     };
   }
 
   async update(input: UpdatePartner, session: ISession): Promise<Partner> {
     // Update partner
+    if (input.pointOfContactId) {
+      const createdAt = DateTime.local();
+      await this.db
+        .query()
+        .call(matchRequestingUser, session)
+        .matchNode('partner', 'Partner', { active: true, id: input.id })
+        .matchNode('newPointOfContact', 'User', {
+          id: input.pointOfContactId,
+          active: true,
+        })
+        .optionalMatch([
+          node('requestingUser'),
+          relation('in', '', 'member', { active: true }),
+          node('', 'SecurityGroup', { active: true }),
+          relation('out', '', 'permission', { active: true }),
+          node('canReadPointOfContact', 'Permission', {
+            property: 'pointOfContact',
+            active: true,
+            read: true,
+          }),
+          relation('out', '', 'baseNode', { active: true }),
+          node('org'),
+          relation('out', 'oldPointOfContactRel', 'pointOfContact', {
+            active: true,
+          }),
+          node('pointOfContact', 'User', { active: true }),
+        ])
+        .create([
+          node('partner'),
+          relation('out', '', 'pointOfContact', {
+            active: true,
+            createdAt,
+          }),
+          node('newPointOfContact'),
+        ])
+        .delete('oldPointOfContactRel')
+        .run();
+    }
+
     return await this.readOne(input.id, session);
   }
 

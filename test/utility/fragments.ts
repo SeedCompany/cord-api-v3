@@ -773,8 +773,16 @@ export const partner = gql`
         ...org
       }
     }
+    pointOfContact {
+      canEdit
+      canRead
+      value {
+        ...user
+      }
+    }
   }
   ${org}
+  ${user}
 `;
 
 export const fragments = {

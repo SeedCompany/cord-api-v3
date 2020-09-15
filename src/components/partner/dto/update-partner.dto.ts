@@ -8,6 +8,9 @@ import { Partner } from './partner';
 export abstract class UpdatePartner {
   @IdField()
   readonly id: string;
+
+  @IdField({ nullable: true })
+  readonly pointOfContactId?: string;
 }
 
 @InputType()

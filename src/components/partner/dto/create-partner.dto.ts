@@ -8,6 +8,9 @@ import { Partner } from './partner';
 export abstract class CreatePartner {
   @IdField()
   readonly organizationId: string;
+
+  @IdField({ nullable: true })
+  readonly pointOfContactId?: string;
 }
 
 @InputType()

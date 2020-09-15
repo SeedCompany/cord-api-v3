@@ -3,6 +3,7 @@ import { times } from 'lodash';
 import { Partner } from '../src/components/partner';
 import {
   createPartner,
+  createPerson,
   createSession,
   createTestApp,
   createUser,
@@ -27,10 +28,12 @@ describe('Partner e2e', () => {
     const partner = await createPartner(app);
     expect(partner.id).toBeDefined();
     expect(partner.organization).toBeDefined();
+    expect(partner.pointOfContact).toBeDefined();
   });
 
   it('update partner', async () => {
     const pt = await createPartner(app);
+    const person = await createPerson(app);
     const result = await app.graphql.mutate(
       gql`
         mutation updatePartner($input: UpdatePartnerInput!) {
@@ -46,12 +49,14 @@ describe('Partner e2e', () => {
         input: {
           partner: {
             id: pt.id,
+            pointOfContactId: person.id,
           },
         },
       }
     );
     const updated = result.updatePartner.partner;
     expect(updated).toBeTruthy();
+    expect(updated.pointOfContact.value.id).toBe(person.id);
   });
 
   it('delete partner', async () => {

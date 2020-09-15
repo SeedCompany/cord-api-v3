@@ -8,6 +8,7 @@ import {
 } from '@nestjs/graphql';
 import { IdArg, ISession, Session } from '../../common';
 import { OrganizationService, SecuredOrganization } from '../organization';
+import { SecuredUser, UserService } from '../user';
 import {
   CreatePartnerInput,
   CreatePartnerOutput,
@@ -23,7 +24,8 @@ import { PartnerService } from './partner.service';
 export class PartnerResolver {
   constructor(
     private readonly partnerService: PartnerService,
-    private readonly orgService: OrganizationService
+    private readonly orgService: OrganizationService,
+    private readonly userService: UserService
   ) {}
 
   @Query(() => Partner, {
@@ -58,6 +60,19 @@ export class PartnerResolver {
   ): Promise<SecuredOrganization> {
     const { value: id, ...rest } = partner.organization;
     const value = id ? await this.orgService.readOne(id, session) : undefined;
+    return {
+      value,
+      ...rest,
+    };
+  }
+
+  @ResolveField(() => SecuredUser)
+  async pointOfContact(
+    @Parent() partner: Partner,
+    @Session() session: ISession
+  ): Promise<SecuredUser> {
+    const { value: id, ...rest } = partner.pointOfContact;
+    const value = id ? await this.userService.readOne(id, session) : undefined;
     return {
       value,
       ...rest,
