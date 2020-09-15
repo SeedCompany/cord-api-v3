@@ -289,7 +289,7 @@ export class FileRepository {
     const result = await createFile.first();
 
     if (!result) {
-      throw new ServerException('failed to create a Directory');
+      throw new ServerException('Failed to create directory');
     }
 
     await this.attachCreator(result.id, session);
@@ -336,7 +336,7 @@ export class FileRepository {
     const result = await createFile.first();
 
     if (!result) {
-      throw new ServerException('failed to create a File');
+      throw new ServerException('Failed to create file');
     }
 
     await this.attachCreator(result.id, session);
@@ -418,7 +418,7 @@ export class FileRepository {
     const result = await createFile.first();
 
     if (!result) {
-      throw new ServerException('failed to create a FileVersion');
+      throw new ServerException('Failed to create file version');
     }
 
     await this.attachCreator(input.id, session);
