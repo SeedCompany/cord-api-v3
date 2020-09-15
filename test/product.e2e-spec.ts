@@ -304,6 +304,95 @@ describe('Product e2e', () => {
     );
   });
 
+  it('update DirectScriptureProduct with scriptureReferencesOverride errors', async () => {
+    const product = await createProduct(app, {
+      engagementId: engagement.id,
+    });
+
+    await expect(
+      app.graphql.query(
+        gql`
+          mutation updateProduct($input: UpdateProductInput!) {
+            updateProduct(input: $input) {
+              product {
+                ...product
+              }
+            }
+          }
+          ${fragments.product}
+        `,
+        {
+          input: {
+            product: {
+              id: product.id,
+              scriptureReferencesOverride: ScriptureRange.randomList(),
+            },
+          },
+        }
+      )
+    ).rejects.toThrowError();
+  });
+
+  it('update produces on DirectScriptureProduct errors', async () => {
+    const product = await createProduct(app, {
+      engagementId: engagement.id,
+    });
+
+    await expect(
+      app.graphql.query(
+        gql`
+          mutation updateProduct($input: UpdateProductInput!) {
+            updateProduct(input: $input) {
+              product {
+                ...product
+              }
+            }
+          }
+          ${fragments.product}
+        `,
+        {
+          input: {
+            product: {
+              id: product.id,
+              scriptureReferencesOverride: ScriptureRange.randomList(),
+              produces: film.id,
+            },
+          },
+        }
+      )
+    ).rejects.toThrowError();
+  });
+
+  it('update DerivativeScriptureProduct with scriptureReferences errors', async () => {
+    const product = await createProduct(app, {
+      engagementId: engagement.id,
+      produces: film.id,
+    });
+
+    await expect(
+      app.graphql.query(
+        gql`
+          mutation updateProduct($input: UpdateProductInput!) {
+            updateProduct(input: $input) {
+              product {
+                ...product
+              }
+            }
+          }
+          ${fragments.product}
+        `,
+        {
+          input: {
+            product: {
+              id: product.id,
+              scriptureReferences: ScriptureRange.randomList(),
+            },
+          },
+        }
+      )
+    ).rejects.toThrowError();
+  });
+
   it('update DerivativeScriptureProduct', async () => {
     const product = await createProduct(app, {
       engagementId: engagement.id,
