@@ -458,20 +458,23 @@ export class ProductService {
     //If current product is a Direct Scripture Product, cannot update scriptureReferencesOverride or produces
     if (isDirectScriptureProduct && scriptureReferencesOverride) {
       throw new InputException(
-        'Cannot update Scripture References Override on a Direct Scripture Product'
+        'Cannot update Scripture References Override on a Direct Scripture Product',
+        'product.scriptureReferencesOverride'
       );
     }
 
     if (isDirectScriptureProduct && inputProducesId) {
       throw new InputException(
-        'Cannot update produces on a Direct Scripture Product'
+        'Cannot update produces on a Direct Scripture Product',
+        'product.produces'
       );
     }
 
     //If current product is a Derivative Scripture Product, cannot update scriptureReferencesOverride
     if (!isDirectScriptureProduct && scriptureReferences) {
       throw new InputException(
-        'Cannot update Scripture References on a Derivative Scripture Product'
+        'Cannot update Scripture References on a Derivative Scripture Product',
+        'product.scriptureReferences'
       );
     }
 
