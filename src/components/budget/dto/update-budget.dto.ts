@@ -10,8 +10,7 @@ export abstract class UpdateBudget {
   @IdField()
   readonly id: string;
 
-  @Field(() => BudgetStatus)
-  readonly status?: BudgetStatus;
+  readonly status?: BudgetStatus | undefined;
 
   @Field({
     description: 'New version of the universal budget template',

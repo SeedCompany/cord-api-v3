@@ -79,38 +79,6 @@ describe('Budget e2e', () => {
     expect(actual.status).toEqual(budget.status);
   });
 
-  it('update budget', async () => {
-    const budgetStatusNew = 'Current';
-
-    // create budget first
-    const budget = await createBudget(app, { projectId: project.id });
-
-    const result = await app.graphql.mutate(
-      gql`
-        mutation updateBudget($input: UpdateBudgetInput!) {
-          updateBudget(input: $input) {
-            budget {
-              ...budget
-            }
-          }
-        }
-        ${fragments.budget}
-      `,
-      {
-        input: {
-          budget: {
-            id: budget.id,
-            status: budgetStatusNew,
-          },
-        },
-      }
-    );
-    const updated = result.updateBudget.budget;
-    expect(updated).toBeTruthy();
-    expect(updated.id).toBe(budget.id);
-    expect(updated.status).toBe(budgetStatusNew);
-  });
-
   it('delete budget', async () => {
     // create budget first
     const budget = await createBudget(app, { projectId: project.id });
