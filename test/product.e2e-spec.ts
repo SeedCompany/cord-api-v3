@@ -330,7 +330,9 @@ describe('Product e2e', () => {
           },
         }
       )
-    ).rejects.toThrowError();
+    ).rejects.toThrowError(
+      'Cannot update Scripture References Override on a Direct Scripture Product'
+    );
   });
 
   it('update produces on DirectScriptureProduct errors', async () => {
@@ -354,13 +356,14 @@ describe('Product e2e', () => {
           input: {
             product: {
               id: product.id,
-              scriptureReferencesOverride: ScriptureRange.randomList(),
               produces: film.id,
             },
           },
         }
       )
-    ).rejects.toThrowError();
+    ).rejects.toThrowError(
+      'Cannot update produces on a Direct Scripture Product'
+    );
   });
 
   it('update DerivativeScriptureProduct with scriptureReferences errors', async () => {
@@ -390,7 +393,9 @@ describe('Product e2e', () => {
           },
         }
       )
-    ).rejects.toThrowError();
+    ).rejects.toThrowError(
+      'Cannot update Scripture References on a Derivative Scripture Product'
+    );
   });
 
   it('update DerivativeScriptureProduct', async () => {
