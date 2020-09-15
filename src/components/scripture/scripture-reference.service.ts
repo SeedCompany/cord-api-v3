@@ -49,13 +49,27 @@ export class ScriptureReferenceService {
     scriptureRefs: ScriptureRangeInput[] | undefined,
     options: { isOverriding?: boolean } = {}
   ): Promise<void> {
-    if (!scriptureRefs) {
+    if (scriptureRefs === undefined) {
       return;
     }
 
     const rel = options.isOverriding
       ? 'scriptureReferencesOverride'
       : 'scriptureReferences';
+
+    if (options.isOverriding) {
+      await this.db
+        .query()
+        .match([
+          node('product', 'Product', { id: producibleId, active: true }),
+          relation('out', 'rel', 'isOverriding', { active: true }),
+          node('propertyNode', 'Property', { active: true }),
+        ])
+        .setValues({
+          'propertyNode.value': scriptureRefs !== null,
+        })
+        .run();
+    }
 
     await this.db
       .query()
