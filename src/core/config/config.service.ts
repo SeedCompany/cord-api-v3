@@ -32,6 +32,7 @@ export class ConfigService {
       replyTo: this.env.string('EMAIL_REPLY_TO').optional() || undefined, // falsy -> undefined
       send,
       open: this.env.boolean('EMAIL_OPEN').optional(!send),
+      sesRegion: this.env.string('SES_REGION').optional(),
     };
   }
 
