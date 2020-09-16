@@ -91,9 +91,7 @@ export class ConfigService {
     };
   }
 
-  @Lazy() get passwordSecret() {
-    return this.env.string('PASSWORD_SECRET').optional();
-  }
+  passwordSecret = this.env.string('PASSWORD_SECRET').optional();
 
   @Lazy() get rootSecurityGroup() {
     return {

@@ -3,6 +3,7 @@ import * as argon2 from 'argon2';
 import { node, relation } from 'cypher-query-builder';
 import { sign, verify } from 'jsonwebtoken';
 import { DateTime } from 'luxon';
+import { Except } from 'type-fest';
 import {
   DuplicateException,
   InputException,
@@ -419,9 +420,11 @@ export class AuthenticationService {
     }
   }
 
-  private get argon2Options() {
-    return this.config.passwordSecret
-      ? { secret: Buffer.from(this.config.passwordSecret, 'utf-8') }
-      : {};
+  private get argon2Options(): Except<argon2.Options, 'raw'> {
+    return {
+      secret: this.config.passwordSecret
+        ? Buffer.from(this.config.passwordSecret, 'utf-8')
+        : undefined,
+    };
   }
 }
