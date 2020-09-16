@@ -1,7 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
-import { uniq } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   InputException,
@@ -161,7 +160,7 @@ export class PartnershipService {
       },
       {
         key: 'types',
-        value: uniq(input.types),
+        value: input.types,
         isPublic: false,
         isOrgPublic: false,
       },
@@ -339,10 +338,7 @@ export class PartnershipService {
   async update(input: UpdatePartnership, session: ISession) {
     // mou start and end are now computed fields and do not get updated directly
     const object = await this.readOne(input.id, session);
-    let changes = {
-      ...input,
-      types: uniq(input.types),
-    };
+    let changes = input;
 
     if (
       !this.validateFinancialReportingType(

@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { uniq } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   ISession,
@@ -71,7 +70,7 @@ export class PartnerService {
     const secureProps = [
       {
         key: 'types',
-        value: uniq(input.types),
+        value: input.types,
         addToAdminSg: true,
         addToWriterSg: false,
         addToReaderSg: true,
@@ -230,16 +229,12 @@ export class PartnerService {
 
   async update(input: UpdatePartner, session: ISession): Promise<Partner> {
     const object = await this.readOne(input.id, session);
-    const changes = {
-      ...input,
-      types: uniq(input.types),
-    };
 
     await this.db.sgUpdateProperties({
       session,
       object,
       props: ['types'],
-      changes,
+      changes: input,
       nodevar: 'partner',
     });
     // Update partner
