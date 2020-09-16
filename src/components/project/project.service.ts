@@ -5,6 +5,7 @@ import { DateTime } from 'luxon';
 import {
   DuplicateException,
   fiscalYears,
+  getHighestSensitivity,
   InputException,
   ISession,
   NotFoundException,
@@ -211,10 +212,17 @@ export class ProjectService {
       throw new UnauthenticatedException('user not logged in');
     }
 
+    if (input.type === ProjectType.Translation && input.sensitivity) {
+      throw new InputException(
+        'Cannot set sensitivity on tranlation project',
+        'project.sensitivity'
+      );
+    }
+
     const createdAt = DateTime.local();
     const step = input.step ?? ProjectStep.EarlyConversations;
     const createInput = {
-      sensitivity: Sensitivity.High, // TODO: this needs to be calculated based on language engagement
+      sensitivity: Sensitivity.High, // Default to high on create
       ...input,
       step,
       status: stepToStatus(step),
@@ -445,10 +453,26 @@ export class ProjectService {
         relation('out', '', 'location'),
         node('country', 'Country', { active: true }),
       ])
-      .return('propList, permList, node, country.id as countryId')
+      .optionalMatch([
+        node('node'),
+        relation('out', '', 'engagement', { active: true }),
+        node('', 'LanguageEngagement', { active: true }),
+        relation('out', '', 'language', { active: true }),
+        node('', 'Language', { active: true }),
+        relation('out', '', 'sensitivity', { active: true }),
+        node('sensitivity', 'Property', { active: true }),
+      ])
+      .return([
+        'propList',
+        'permList',
+        'node',
+        'country.id as countryId',
+        'collect(distinct sensitivity.value) as languageSensitivityList',
+      ])
       .asResult<
         StandardReadResult<DbPropsOfDto<Project>> & {
           countryId: string;
+          languageSensitivityList: Sensitivity[];
         }
       >();
 
@@ -499,7 +523,12 @@ export class ProjectService {
     return {
       ...parseBaseNodeProperties(result.node),
       ...securedProps,
-      sensitivity: props.sensitivity,
+      // Sensitivity is calulated based on the highest language sensitivity (for Translation Projects).
+      // If project has no langauge engagements (new Translation projects and all Internship projects),
+      // then falls back to the sensitivity prop which defaulted to High on create for all projects.
+      sensitivity:
+        getHighestSensitivity(result.languageSensitivityList) ||
+        props.sensitivity,
       type: (result as any)?.node?.properties?.type,
       status: props.status,
       modifiedAt: props.modifiedAt,
@@ -512,7 +541,13 @@ export class ProjectService {
   }
 
   async update(input: UpdateProject, session: ISession): Promise<Project> {
-    const object = await this.readOne(input.id, session);
+    const currentProject = await this.readOne(input.id, session);
+
+    if (input.sensitivity && currentProject.type === ProjectType.Translation)
+      throw new InputException(
+        'Cannot update sensitivity on Translation Project',
+        'project.sensitivity'
+      );
 
     const changes = {
       ...input,
@@ -524,7 +559,7 @@ export class ProjectService {
 
     const result = await this.db.sgUpdateProperties({
       session,
-      object,
+      object: currentProject,
       props: [
         'name',
         'mouStart',
@@ -533,13 +568,14 @@ export class ProjectService {
         'status',
         'modifiedAt',
         'step',
+        'sensitivity',
       ],
       changes,
       nodevar: 'project',
     });
 
     await this.eventBus.publish(
-      new ProjectUpdatedEvent(result, object, input, session)
+      new ProjectUpdatedEvent(result, currentProject, input, session)
     );
 
     return result;
