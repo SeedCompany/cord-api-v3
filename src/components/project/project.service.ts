@@ -213,12 +213,16 @@ export class ProjectService {
     }
 
     if (input.type === ProjectType.Translation && input.sensitivity) {
-      throw new InputException('Cannot set sensitivity on tranlation project');
+      throw new InputException(
+        'Cannot set sensitivity on tranlation project',
+        'project.sensitivity'
+      );
     }
 
     const createdAt = DateTime.local();
     const step = input.step ?? ProjectStep.EarlyConversations;
     const createInput = {
+      sensitivity: Sensitivity.High, // Default to high on create
       ...input,
       step,
       status: stepToStatus(step),
@@ -458,9 +462,13 @@ export class ProjectService {
         relation('out', '', 'sensitivity', { active: true }),
         node('sensitivity', 'Property', { active: true }),
       ])
-      .return(
-        'propList, permList, node, country.id as countryId, collect(distinct sensitivity.value) as languageSensitivityList'
-      )
+      .return([
+        'propList',
+        'permList',
+        'node',
+        'country.id as countryId',
+        'collect(distinct sensitivity.value) as languageSensitivityList',
+      ])
       .asResult<
         StandardReadResult<DbPropsOfDto<Project>> & {
           countryId: string;
@@ -515,6 +523,9 @@ export class ProjectService {
     return {
       ...parseBaseNodeProperties(result.node),
       ...securedProps,
+      // Sensitivity is calulated based on the highest language sensitivity (for Translation Projects).
+      // If project has no langauge engagements (new Translation projects and all Internship projects),
+      // then falls back to the sensitivity prop which defaulted to High on create for all projects.
       sensitivity:
         getHighestSensitivity(result.languageSensitivityList) ||
         props.sensitivity,

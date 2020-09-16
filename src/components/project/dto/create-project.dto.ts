@@ -38,8 +38,11 @@ export abstract class CreateProject {
   @Field(() => ProjectStep, { nullable: true })
   readonly step?: ProjectStep;
 
-  @Field(() => Sensitivity, { nullable: true })
-  readonly sensitivity?: Sensitivity = Sensitivity.High;
+  @Field(() => Sensitivity, {
+    description: 'Defaults to High, only available on internship projects',
+    nullable: true,
+  })
+  readonly sensitivity?: Sensitivity;
 }
 
 @InputType()

@@ -37,7 +37,10 @@ export abstract class UpdateProject {
   @Field(() => ProjectStep, { nullable: true })
   readonly step?: ProjectStep;
 
-  @Field(() => Sensitivity, { nullable: true })
+  @Field(() => Sensitivity, {
+    description: 'Update only available to internship projects',
+    nullable: true,
+  })
   readonly sensitivity?: Sensitivity;
 }
 
