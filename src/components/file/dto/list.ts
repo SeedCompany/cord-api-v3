@@ -2,7 +2,6 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { PaginatedList, SortablePaginationInput } from '../../../common';
-import { FileNodeCategory } from './category';
 import { Directory, File, FileNode, IFileNode } from './node';
 import { FileNodeType } from './type';
 
@@ -19,12 +18,6 @@ export abstract class FileFilters {
     nullable: true,
   })
   readonly type?: FileNodeType;
-
-  @Field(() => [FileNodeCategory], {
-    description: 'Only file nodes matching these categories',
-    nullable: true,
-  })
-  readonly category?: readonly FileNodeCategory[];
 }
 
 const defaultFilters = {};

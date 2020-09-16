@@ -194,14 +194,11 @@ export const fileNodeChildren = gql`
       id
       type
       name
-      ... on File {
-        category
-      }
     }
   }
 `;
 export type RawFileNodeChildren = Pick<FileListOutput, 'total' | 'hasMore'> & {
-  items: Array<Pick<IFileNode, 'id' | 'type' | 'name' | 'category'>>;
+  items: Array<Pick<IFileNode, 'id' | 'type' | 'name'>>;
 };
 
 export const fileNode = gql`
@@ -209,7 +206,6 @@ export const fileNode = gql`
     id
     type
     name
-    category
     createdAt
     createdBy {
       ...user

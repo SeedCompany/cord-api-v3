@@ -21,7 +21,6 @@ import {
   FileListInput,
   FileListOutput,
   FileNode,
-  FileNodeCategory,
   FileNodeType,
   FileVersion,
   isDirectory,
@@ -37,7 +36,6 @@ import {
 } from './dto';
 import { FileRepository } from './file.repository';
 import { FilesBucketToken } from './files-bucket.factory';
-import { getCategoryFromMimeType } from './mimeTypes';
 
 @Injectable()
 export class FileService {
@@ -86,7 +84,6 @@ export class FileService {
       return {
         ...node,
         type: FileNodeType.Directory,
-        category: FileNodeCategory.Directory,
       };
     }
 
@@ -272,7 +269,6 @@ export class FileService {
         : undefined;
 
     const mimeType = upload?.ContentType ?? 'application/octet-stream';
-    const category = getCategoryFromMimeType(mimeType);
     await this.repo.createFileVersion(
       fileId,
       {
@@ -280,7 +276,6 @@ export class FileService {
         name,
         mimeType,
         size: upload?.ContentLength ?? 0,
-        category,
       },
       session
     );

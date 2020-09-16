@@ -5,14 +5,12 @@ import { DateTime, Duration, DurationObject, Settings } from 'luxon';
 import { AuthenticationService } from '../src/components/authentication';
 import {
   Directory,
-  FileNodeCategory,
   FileNodeType,
   RequestUploadOutput,
 } from '../src/components/file';
 import { LocalBucket } from '../src/components/file/bucket';
 import { FileRepository } from '../src/components/file/file.repository';
 import { FilesBucketToken } from '../src/components/file/files-bucket.factory';
-import { getCategoryFromMimeType } from '../src/components/file/mimeTypes';
 import { User } from '../src/components/user';
 import { DatabaseService } from '../src/core';
 import {
@@ -140,9 +138,6 @@ describe('File e2e', () => {
       expect(file.type).toEqual(FileNodeType.File);
       expect(file.size).toEqual(fakeFile.size);
       expect(file.mimeType).toEqual(fakeFile.mimeType);
-      expect((FileNodeCategory as any)[file.category]).toEqual(
-        getCategoryFromMimeType(fakeFile.mimeType)
-      );
       expect(file.createdBy.id).toEqual(me.id);
       expect(file.modifiedBy.id).toEqual(me.id);
       const modifiedAt = DateTime.fromISO(file.modifiedAt);
@@ -169,9 +164,6 @@ describe('File e2e', () => {
     expect(version.type).toEqual(FileNodeType.FileVersion);
     expect(version.size).toEqual(fakeFile.size);
     expect(version.mimeType).toEqual(fakeFile.mimeType);
-    expect((FileNodeCategory as any)[version.category]).toEqual(
-      getCategoryFromMimeType(fakeFile.mimeType)
-    );
     expect(version.createdBy.id).toEqual(me.id);
     const createdAt = DateTime.fromISO(version.createdAt);
     expect(createdAt.diffNow().as('seconds')).toBeGreaterThan(-30);
@@ -326,11 +318,6 @@ describe('File e2e', () => {
       expect(children.items.map((n) => n.id)).toEqual(
         expect.arrayContaining(expectedChildren.map((n) => n.id))
       );
-      const expectedFile = expectedChildren.find(
-        (n) => n.type === FileNodeType.File
-      )!;
-      const actualFile = children.items.find((n) => n.id === expectedFile.id)!;
-      expect(actualFile.category).toEqual(expectedFile.category);
     });
 
     it('paginated', async () => {
@@ -395,21 +382,6 @@ describe('File e2e', () => {
       expect(children.items.length).toEqual(expectedTotalDirs);
       expect(
         children.items.every((n) => n.type === FileNodeType.Directory)
-      ).toBeTruthy();
-    });
-
-    it.skip('filter category', async () => {
-      const category = 'Video' as FileNodeCategory;
-      const children = await getFileNodeChildren(app, dir.id, {
-        filter: {
-          category: [category],
-        },
-      });
-      expect(children.total).toEqual(expectedTotalVideos);
-      expect(children.hasMore).toBeFalsy();
-      expect(children.items.length).toEqual(expectedTotalVideos);
-      expect(
-        children.items.map((n) => n.category).every((n) => n === category)
       ).toBeTruthy();
     });
   });
@@ -571,7 +543,7 @@ describe('File e2e', () => {
       await expectConsistency(FileNodeType.FileVersion);
 
       // Validate that we correctly check for mimeType
-      // TODO size, category, createdBy, parent, ...?
+      // TODO size, createdBy, parent, ...?
       await app
         .get(DatabaseService)
         .query()
