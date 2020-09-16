@@ -1,12 +1,16 @@
 import { Query } from 'cypher-query-builder';
 import { Order, SortablePaginationInput } from '../../../common';
 
-export type Sorter = (query: Query, sort: string, order: Order) => Query | void;
-
-export function calculateTotalAndPaginateList(
+export type Sorter<SortKey extends string> = (
   query: Query,
-  { page, count, sort: sortInput, order }: SortablePaginationInput,
-  sort: Sorter
+  sort: SortKey,
+  order: Order
+) => Query | void;
+
+export function calculateTotalAndPaginateList<SortKey extends string>(
+  query: Query,
+  { page, count, sort: sortInput, order }: SortablePaginationInput<SortKey>,
+  sort: Sorter<SortKey>
 ) {
   query
     .with(['collect(distinct node) as nodes', 'count(distinct node) as total'])

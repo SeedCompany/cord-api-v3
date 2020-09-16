@@ -7,6 +7,17 @@ export type QueryWithResult<R> = Except<Query, 'run' | 'first'> & {
   first: () => Promise<R | undefined>;
 };
 
+interface CallFn<TThis> {
+  <A extends any[], R extends TThis | QueryWithResult<any> | void>(
+    fn: (query: TThis, ...args: A) => R,
+    ...args: A
+  ): R extends void ? TThis : R;
+  <A extends any[], R extends TThis | QueryWithResult<any> | void, T1>(
+    fn: <T1>(query: TThis, ...args: A) => R,
+    ...args: A
+  ): R extends void ? TThis : R;
+}
+
 declare module 'cypher-query-builder/dist/typings/query' {
   interface Query {
     /**
@@ -25,10 +36,7 @@ declare module 'cypher-query-builder/dist/typings/query' {
      *   .first();
      * ```
      */
-    call: <A extends any[], R extends this | QueryWithResult<any> | void>(
-      fn: (query: this, ...args: A) => R,
-      ...args: A
-    ) => R extends void ? this : R;
+    call: CallFn<this>;
 
     /**
      * Defines the result type of the query.

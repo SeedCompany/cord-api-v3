@@ -27,8 +27,11 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
+  createSortingConfig,
   permissionsOfNode,
   requestingUser,
+  Sorting,
+  sortQueryBy,
 } from '../../core/database/query';
 import {
   DbPropsOfDto,
@@ -79,6 +82,19 @@ import {
 
 @Injectable()
 export class ProjectService {
+  private readonly securedProperties = {
+    name: true,
+    departmentId: true,
+    step: true,
+    mouStart: true,
+    mouEnd: true,
+    estimatedSubmission: true,
+    type: true,
+  };
+  private readonly sorting = createSortingConfig<ProjectListInput['sort']>({
+    name: Sorting.CaseInsensitive,
+  });
+
   constructor(
     private readonly db: DatabaseService,
     private readonly projectMembers: ProjectMemberService,
@@ -481,15 +497,11 @@ export class ProjectService {
         };
 
     const props = parsePropList(result.propList);
-    const securedProps = parseSecuredProperties(props, result.permList, {
-      name: true,
-      departmentId: true,
-      step: true,
-      mouStart: true,
-      mouEnd: true,
-      estimatedSubmission: true,
-      type: true,
-    });
+    const securedProps = parseSecuredProperties(
+      props,
+      result.permList,
+      this.securedProperties
+    );
 
     const locationPerms: any = find(
       result.permList,
@@ -578,10 +590,6 @@ export class ProjectService {
         : filter.type === 'Translation'
         ? 'TranslationProject'
         : 'Project';
-    const projectSortMap: Partial<Record<typeof input.sort, string>> = {
-      name: 'lower(prop.value)',
-    };
-    const sortBy = projectSortMap[input.sort] ?? 'prop.value';
     const query = this.db
       .query()
       .match([
@@ -597,15 +605,10 @@ export class ProjectService {
       .call((q) =>
         filter.name ? q.where({ name: { value: contains(filter.name) } }) : q
       )
-      .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
-        q
-          .match([
-            node('node'),
-            relation('out', '', sort),
-            node('prop', 'Property', { active: true }),
-          ])
-          .with('*')
-          .orderBy(sortBy, order)
+      .call(
+        calculateTotalAndPaginateList,
+        input,
+        sortQueryBy(this.sorting, this.securedProperties)
       );
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));

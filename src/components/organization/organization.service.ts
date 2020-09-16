@@ -23,8 +23,11 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
+  createSortingConfig,
   permissionsOfNode,
   requestingUser,
+  Sorting,
+  sortQueryBy,
 } from '../../core/database/query';
 import {
   DbPropsOfDto,
@@ -46,6 +49,11 @@ export class OrganizationService {
   private readonly securedProperties = {
     name: true,
   };
+  private readonly sorting = createSortingConfig<OrganizationListInput['sort']>(
+    {
+      name: Sorting.CaseInsensitive,
+    }
+  );
 
   constructor(
     @Logger('org:service') private readonly logger: ILogger,
@@ -228,16 +236,11 @@ export class OrganizationService {
     { filter, ...input }: OrganizationListInput,
     session: ISession
   ): Promise<OrganizationListOutput> {
-    const label = 'Organization';
-    const orgSortMap: Partial<Record<typeof input.sort, string>> = {
-      name: 'lower(prop.value)',
-    };
-    const sortBy = orgSortMap[input.sort] ?? 'prop.value';
     const query = this.db
       .query()
       .match([
         requestingUser(session),
-        ...permissionsOfNode(label),
+        ...permissionsOfNode('Organization'),
         ...(filter.name
           ? [
               relation('out', '', 'name', { active: true }),
@@ -253,17 +256,10 @@ export class OrganizationService {
       .call((q) =>
         filter.name ? q.where({ name: { value: contains(filter.name) } }) : q
       )
-      .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
-        sort in this.securedProperties
-          ? q
-              .match([
-                node('node'),
-                relation('out', '', sort),
-                node('prop', 'Property', { active: true }),
-              ])
-              .with('*')
-              .orderBy(sortBy, order)
-          : q.with('*').orderBy(`node.${sort}`, order)
+      .call(
+        calculateTotalAndPaginateList,
+        input,
+        sortQueryBy(this.sorting, this.securedProperties)
       );
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
