@@ -36,6 +36,7 @@ export class CreatePartnership {
 
   @Field(() => [PartnershipType], { nullable: true })
   readonly types?: PartnershipType[] = [];
+
   @Field(() => FinancialReportingType, { nullable: true })
   readonly financialReportingType?: FinancialReportingType;
 }

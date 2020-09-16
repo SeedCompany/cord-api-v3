@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
+import { uniq } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   ISession,
@@ -19,6 +20,7 @@ import {
 import {
   calculateTotalAndPaginateList,
   matchPermList,
+  matchPropList,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
@@ -44,6 +46,7 @@ export class PartnerService {
   private readonly securedProperties = {
     organization: true,
     pointOfContact: true,
+    types: true,
   };
 
   constructor(
@@ -65,6 +68,17 @@ export class PartnerService {
 
   async create(input: CreatePartner, session: ISession): Promise<Partner> {
     const createdAt = DateTime.local();
+    const secureProps = [
+      {
+        key: 'types',
+        value: uniq(input.types),
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+    ];
     // create partner
     const query = this.db
       .query()
@@ -74,7 +88,7 @@ export class PartnerService {
           id: input.organizationId,
         }),
       ])
-      .call(createBaseNode, 'Partner', [])
+      .call(createBaseNode, 'Partner', secureProps)
       .create([
         node('node'),
         relation('out', '', 'organization', { active: true, createdAt }),
@@ -161,6 +175,7 @@ export class PartnerService {
       .call(matchRequestingUser, session)
       .match([node('node', 'Partner', { id: id })])
       .call(matchPermList, 'requestingUser')
+      .call(matchPropList, 'permList')
       .optionalMatch([
         node('node'),
         relation('out', '', 'organization', { active: true }),
@@ -171,9 +186,11 @@ export class PartnerService {
         relation('out', '', 'pointOfContact', { active: true }),
         node('pointOfContact', 'User'),
       ])
-      .return(
-        'permList, node, organization.id as organizationId, pointOfContact.id as pointOfContactId'
-      )
+      .return([
+        'propList, permList, node',
+        'organization.id as organizationId',
+        'pointOfContact.id as pointOfContactId',
+      ])
       .asResult<
         StandardReadResult<DbPropsOfDto<Partner>> & {
           organizationId: string;
@@ -188,7 +205,7 @@ export class PartnerService {
     }
 
     const secured = parseSecuredProperties(
-      [],
+      result.propList,
       result.permList,
       this.securedProperties
     );
@@ -204,10 +221,27 @@ export class PartnerService {
         ...secured.pointOfContact,
         value: result.pointOfContactId,
       },
+      types: {
+        ...secured.types,
+        value: secured.types.value || [],
+      },
     };
   }
 
   async update(input: UpdatePartner, session: ISession): Promise<Partner> {
+    const object = await this.readOne(input.id, session);
+    const changes = {
+      ...input,
+      types: uniq(input.types),
+    };
+
+    await this.db.sgUpdateProperties({
+      session,
+      object,
+      props: ['types'],
+      changes,
+      nodevar: 'partner',
+    });
     // Update partner
     if (input.pointOfContactId) {
       const createdAt = DateTime.local();
