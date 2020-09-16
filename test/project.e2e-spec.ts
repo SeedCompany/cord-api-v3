@@ -3,7 +3,7 @@ import * as faker from 'faker';
 import { times } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
-import { CalendarDate } from '../src/common';
+import { CalendarDate, Sensitivity } from '../src/common';
 import { BudgetStatus } from '../src/components/budget/dto';
 import { Country, Region, Zone } from '../src/components/location';
 import {
@@ -23,6 +23,7 @@ import { DatabaseService } from '../src/core';
 import {
   createCountry,
   createInternshipEngagement,
+  createLanguage,
   createLanguageEngagement,
   createPartnership,
   createProject,
@@ -459,13 +460,17 @@ describe('Project e2e', () => {
     );
   });
 
-  it('List view of language engagement', async () => {
+  it('Project engagement and sensitivity connected to language engagements', async () => {
     // create 1 engagementsin a project
     const numEngagements = 1;
     //const type = ProjectType.Translation;
     const project = await createProject(app);
+    const language = await createLanguage(app, {
+      sensitivity: Sensitivity.Medium,
+    });
     await createLanguageEngagement(app, {
       projectId: project.id,
+      languageId: language.id,
     });
 
     const queryProject = await app.graphql.query(
@@ -492,6 +497,8 @@ describe('Project e2e', () => {
     expect(
       queryProject.project.engagements.items.length
     ).toBeGreaterThanOrEqual(numEngagements);
+
+    expect(queryProject.project.sensitivity).toEqual(language.sensitivity);
   });
 
   it('List view of internship engagement', async () => {
