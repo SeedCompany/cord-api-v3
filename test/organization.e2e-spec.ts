@@ -461,7 +461,6 @@ describe('Organization e2e', () => {
         },
       }
     );
-    // Set a flag that's going to indicate if the projects are in order
     const items = organizations.items;
     const sorted = orderBy(items, (org) => org.name.value.toLowerCase(), [
       'asc',
@@ -508,14 +507,11 @@ describe('Organization e2e', () => {
         },
       }
     );
-    // Set a flag that's going to indicate if the projects are in order
-    const isDescending = true;
     const items = organizations.items;
     const sorted = orderBy(items, (org) => org.name.value.toLowerCase(), [
       'desc',
     ]);
     expect(sorted).toEqual(items);
-    expect(isDescending).toBe(true);
   });
 
   it('list view of organizations filters on partial name', async () => {

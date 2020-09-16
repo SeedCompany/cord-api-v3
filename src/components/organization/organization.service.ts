@@ -254,14 +254,16 @@ export class OrganizationService {
         filter.name ? q.where({ name: { value: contains(filter.name) } }) : q
       )
       .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
-        q
-          .match([
-            node('node'),
-            relation('out', '', sort),
-            node('prop', 'Property', { active: true }),
-          ])
-          .with('*')
-          .orderBy(sortBy, order)
+        sort in this.securedProperties
+          ? q
+              .match([
+                node('node'),
+                relation('out', '', sort),
+                node('prop', 'Property', { active: true }),
+              ])
+              .with('*')
+              .orderBy(sortBy, order)
+          : q.with('*').orderBy(`node.${sort}`, order)
       );
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));

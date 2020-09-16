@@ -344,16 +344,12 @@ describe('Project e2e', () => {
         },
       }
     );
-    // Set a flag that's going to indicate if the projects are in order
-    const isAscending = true;
     const items = projects.items;
     const sorted = orderBy(items, (proj) => proj.name.value.toLowerCase(), [
       'asc',
     ]);
     expect(sorted).toEqual(items);
-    expect(isAscending).toBe(true);
-
-    //delete all projects
+    //delete all projects that Tammy has access to
     await Promise.all(
       projects.items.map(async (item: { id: any }) => {
         return await app.graphql.mutate(
@@ -416,14 +412,11 @@ describe('Project e2e', () => {
         },
       }
     );
-    // Set a flag that's going to indicate if the projects are in order
-    const isDescending = true;
     const items = projects.items;
     const sorted = orderBy(items, (proj) => proj.name.value.toLowerCase(), [
       'desc',
     ]);
     expect(sorted).toEqual(items);
-    expect(isDescending).toBe(true);
     //delete all projects
     await Promise.all(
       projects.items.map(async (item: { id: any }) => {
