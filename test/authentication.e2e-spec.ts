@@ -62,6 +62,7 @@ describe('Authentication e2e', () => {
       .first();
 
     const token = tokenRes ? tokenRes.token : '';
+    const newPassword = faker.internet.password();
     const resetRes = await app.graphql.mutate(
       gql`
         mutation resetPassword($input: ResetPasswordInput!) {
@@ -71,14 +72,20 @@ describe('Authentication e2e', () => {
       {
         input: {
           token: token,
-          password: faker.internet.password(),
+          password: newPassword,
         },
       }
     );
 
+    const { login: newLogin } = await login(app, {
+      email: email,
+      password: newPassword,
+    });
+
     expect(checkRes.forgotPassword).toBe(true);
     expect(resetRes.resetPassword).toBe(true);
     expect(sendEmail).toHaveBeenCalledTimes(1);
+    expect(newLogin.user.id).toBeDefined();
   });
 
   it('login user', async () => {
