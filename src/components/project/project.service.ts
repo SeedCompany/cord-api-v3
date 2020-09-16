@@ -5,6 +5,7 @@ import { DateTime } from 'luxon';
 import {
   DuplicateException,
   fiscalYears,
+  getHighestSensitivity,
   InputException,
   ISession,
   NotFoundException,
@@ -445,10 +446,22 @@ export class ProjectService {
         relation('out', '', 'location'),
         node('country', 'Country', { active: true }),
       ])
-      .return('propList, permList, node, country.id as countryId')
+      .optionalMatch([
+        node('node'),
+        relation('out', '', 'engagement', { active: true }),
+        node('', 'LanguageEngagement', { active: true }),
+        relation('out', '', 'language', { active: true }),
+        node('', 'Language', { active: true }),
+        relation('out', '', 'sensitivity', { active: true }),
+        node('sensitivity', 'Property', { active: true }),
+      ])
+      .return(
+        'propList, permList, node, country.id as countryId, collect(distinct sensitivity.value) as languageSensitivityList'
+      )
       .asResult<
         StandardReadResult<DbPropsOfDto<Project>> & {
           countryId: string;
+          languageSensitivityList: Sensitivity[];
         }
       >();
 
@@ -499,7 +512,9 @@ export class ProjectService {
     return {
       ...parseBaseNodeProperties(result.node),
       ...securedProps,
-      sensitivity: props.sensitivity,
+      sensitivity:
+        getHighestSensitivity(result.languageSensitivityList) ||
+        props.sensitivity,
       type: (result as any)?.node?.properties?.type,
       status: props.status,
       modifiedAt: props.modifiedAt,
