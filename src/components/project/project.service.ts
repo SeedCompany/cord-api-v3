@@ -212,10 +212,13 @@ export class ProjectService {
       throw new UnauthenticatedException('user not logged in');
     }
 
+    if (input.type === ProjectType.Translation && input.sensitivity) {
+      throw new InputException('Cannot set sensitivity on tranlation project');
+    }
+
     const createdAt = DateTime.local();
     const step = input.step ?? ProjectStep.EarlyConversations;
     const createInput = {
-      sensitivity: Sensitivity.High, // Default to high on create
       ...input,
       step,
       status: stepToStatus(step),
