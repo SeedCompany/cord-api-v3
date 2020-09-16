@@ -35,9 +35,8 @@ import {
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { FileService } from '../file';
-import { PartnerService } from '../partner/partner.service';
-import { InternalRole } from '../project';
-import { ProjectService } from '../project/project.service';
+import { PartnerService, PartnerType } from '../partner';
+import { InternalRole, ProjectService } from '../project';
 import {
   CreatePartnership,
   FinancialReportingType,
@@ -45,7 +44,6 @@ import {
   PartnershipAgreementStatus,
   PartnershipListInput,
   PartnershipListOutput,
-  PartnershipType,
   UpdatePartnership,
 } from './dto';
 import {
@@ -532,7 +530,7 @@ export class PartnershipService {
 
   protected verifyFinancialReportingType(
     financialReportingType: FinancialReportingType | null | undefined,
-    types: PartnershipType[] | undefined
+    types: PartnerType[] | undefined
   ) {
     if (!this.validateFinancialReportingType(financialReportingType, types)) {
       throw new InputException(
@@ -544,9 +542,9 @@ export class PartnershipService {
 
   protected validateFinancialReportingType(
     financialReportingType: FinancialReportingType | null | undefined,
-    types: PartnershipType[] | undefined
+    types: PartnerType[] | undefined
   ) {
-    return financialReportingType && !types?.includes(PartnershipType.Managing)
+    return financialReportingType && !types?.includes(PartnerType.Managing)
       ? false
       : true;
   }

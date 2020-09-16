@@ -1,12 +1,12 @@
 import { gql } from 'apollo-server-core';
 import { isValid } from 'shortid';
 import { CalendarDate } from '../../src/common';
+import { PartnerType } from '../../src/components/partner';
 import {
   CreatePartnership,
   FinancialReportingType,
   Partnership,
   PartnershipAgreementStatus,
-  PartnershipType,
 } from '../../src/components/partnership';
 import { TestApp } from './create-app';
 import { createPartner } from './create-partner';
@@ -21,7 +21,7 @@ export async function createPartnership(
     projectId: input.projectId || (await createProject(app)).id,
     agreementStatus: PartnershipAgreementStatus.AwaitingSignature,
     mouStatus: PartnershipAgreementStatus.AwaitingSignature,
-    types: [PartnershipType.Managing],
+    types: [PartnerType.Managing],
     financialReportingType: FinancialReportingType.Funded,
     partnerId: input.partnerId || (await createPartner(app)).id,
     mouStartOverride: CalendarDate.local(),

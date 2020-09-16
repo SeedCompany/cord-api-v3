@@ -7,7 +7,7 @@ import {
   Secured,
 } from '../src/common';
 import { Budget } from '../src/components/budget';
-import { PartnershipType } from '../src/components/partnership';
+import { PartnerType } from '../src/components/partner';
 import { Project } from '../src/components/project';
 import {
   createBudget,
@@ -32,7 +32,7 @@ describe('Budget e2e', () => {
     project = await createProject(app);
     await createPartnership(app, {
       projectId: project.id,
-      types: [PartnershipType.Funding],
+      types: [PartnerType.Funding],
       financialReportingType: undefined,
     });
   });

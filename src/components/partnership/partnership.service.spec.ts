@@ -5,13 +5,13 @@ import { ISession } from '../../common';
 import { CoreModule, DatabaseService, LoggerModule } from '../../core';
 import { AuthenticationModule } from '../authentication/authentication.module';
 import { OrganizationModule } from '../organization/organization.module';
+import { PartnerType } from '../partner/dto';
 import { PartnerModule } from '../partner/partner.module';
 import { UserService } from '../user';
 import { UserModule } from '../user/user.module';
 import {
   Partnership,
   PartnershipAgreementStatus,
-  PartnershipType,
   UpdatePartnership,
 } from './dto';
 import { PartnershipModule } from './partnership.module';
@@ -44,7 +44,7 @@ const createTestPartnership: Partial<Partnership> = {
     canEdit: true,
   },
   types: {
-    value: [PartnershipType.Technical],
+    value: [PartnerType.Technical],
     canRead: true,
     canEdit: true,
   },
@@ -111,7 +111,7 @@ describe('partnership service', () => {
         partnerId,
         agreementStatus: PartnershipAgreementStatus.NotAttached,
         mouStatus: PartnershipAgreementStatus.NotAttached,
-        types: [PartnershipType.Technical],
+        types: [PartnerType.Technical],
         mouStartOverride: DateTime.local(),
         mouEndOverride: DateTime.local(),
         projectId,
