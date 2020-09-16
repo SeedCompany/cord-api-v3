@@ -675,14 +675,16 @@ export class ProjectService {
       .match([
         [
           node('requestingUser'),
-          relation('in', '', 'member', { active: true }),
-          node('', 'SecurityGroup', { active: true }),
-          relation('out', '', 'permission', { active: true }),
+          relation('in', '', 'member'),
+          node('', 'SecurityGroup'),
+          relation('out', '', 'permission'),
           node('canReadEngagement', 'Permission', {
             property: 'engagement',
             active: true,
             read: true,
           }),
+          relation('out', '', 'baseNode'),
+          node('project', 'Project', { id: project.id }),
         ],
       ])
       .return({
