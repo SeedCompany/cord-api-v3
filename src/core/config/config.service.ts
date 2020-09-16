@@ -91,6 +91,8 @@ export class ConfigService {
     };
   }
 
+  passwordSecret = this.env.string('PASSWORD_SECRET').optional();
+
   @Lazy() get rootSecurityGroup() {
     return {
       id: 'rootsgid',
