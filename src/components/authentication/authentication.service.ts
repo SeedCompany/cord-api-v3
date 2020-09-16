@@ -106,9 +106,7 @@ export class AuthenticationService {
       throw e;
     }
 
-    const passwordHash = await argon2.hash(input.password, {
-      secret: this.config.passwordSecret,
-    });
+    const passwordHash = await argon2.hash(input.password, this.argon2Options);
     await this.db
       .query()
       .match([
@@ -163,9 +161,7 @@ export class AuthenticationService {
 
     if (
       !result1 ||
-      !(await argon2.verify(result1.pash, input.password, {
-        secret: this.config.passwordSecret,
-      }))
+      !(await argon2.verify(result1.pash, input.password, this.argon2Options))
     ) {
       throw new UnauthenticatedException('Invalid credentials');
     }
@@ -283,16 +279,16 @@ export class AuthenticationService {
 
     if (
       !result ||
-      !(await argon2.verify(result.passwordHash, oldPassword, {
-        secret: this.config.passwordSecret,
-      }))
+      !(await argon2.verify(
+        result.passwordHash,
+        oldPassword,
+        this.argon2Options
+      ))
     ) {
       throw new UnauthenticatedException('Invalid credentials');
     }
 
-    const newPasswordHash = await argon2.hash(newPassword, {
-      secret: this.config.passwordSecret,
-    });
+    const newPasswordHash = await argon2.hash(newPassword, this.argon2Options);
     await this.db
       .query()
       .call(matchRequestingUser, session)
@@ -372,9 +368,7 @@ export class AuthenticationService {
       throw new InputException('Token has expired', 'TokenExpired');
     }
 
-    const pash = await argon2.hash(password, {
-      secret: this.config.passwordSecret,
-    });
+    const pash = await argon2.hash(password, this.argon2Options);
 
     await this.db
       .query()
@@ -423,5 +417,11 @@ export class AuthenticationService {
       });
       throw new UnauthenticatedException(exception);
     }
+  }
+
+  private get argon2Options() {
+    return this.config.passwordSecret
+      ? { secret: Buffer.from(this.config.passwordSecret, 'utf-8') }
+      : {};
   }
 }

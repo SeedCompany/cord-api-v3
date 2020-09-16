@@ -92,10 +92,7 @@ export class ConfigService {
   }
 
   @Lazy() get passwordSecret() {
-    return Buffer.from(
-      this.env.string('PASSWORD_SECRET').optional('passwordSecret'),
-      'utf-8'
-    );
+    return this.env.string('PASSWORD_SECRET').optional();
   }
 
   @Lazy() get rootSecurityGroup() {
