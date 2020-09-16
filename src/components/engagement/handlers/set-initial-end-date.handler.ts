@@ -1,4 +1,4 @@
-import { ServerException } from '../../../common';
+import { CalendarDate, ISession, ServerException } from '../../../common';
 import {
   DatabaseService,
   EventsHandler,
@@ -6,7 +6,7 @@ import {
   ILogger,
   Logger,
 } from '../../../core';
-import { EngagementStatus } from '../dto';
+import { Engagement, EngagementStatus } from '../dto';
 import { EngagementService } from '../engagement.service';
 import { EngagementCreatedEvent, EngagementUpdatedEvent } from '../events';
 
@@ -19,6 +19,30 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
     private readonly engagementService: EngagementService,
     @Logger('engagement:set-initial-end-date') private readonly logger: ILogger
   ) {}
+  private readonly languageEngagementTypeName = 'LanguageEngagement';
+
+  private async updateEngagementInitialEndDate(
+    engagement: Engagement,
+    initialEndDate: CalendarDate,
+    session: ISession
+  ) {
+    const updateInput = {
+      id: engagement.id,
+      initialEndDate: initialEndDate,
+    };
+    // TODO: Refactor to call repository directly instead of engagementService methods
+    if (engagement.__typename === this.languageEngagementTypeName) {
+      return await this.engagementService.updateLanguageEngagement(
+        updateInput,
+        session
+      );
+    } else {
+      return await this.engagementService.updateInternshipEngagement(
+        updateInput,
+        session
+      );
+    }
+  }
 
   async handle(event: SubscribedEvent) {
     this.logger.debug('Engagement mutation, set initial end date', {
@@ -26,8 +50,6 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
       event: event.constructor.name,
     });
 
-    const languageEngagementTypeName = 'LanguageEngagement';
-    const internshipEngagementTypeName = 'LanguageEngagement';
     const engagement = 'engagement' in event ? event.engagement : event.updated;
 
     const shouldUpdateInitialEndDate =
@@ -37,21 +59,18 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
 
     if (shouldUpdateInitialEndDate) {
       try {
-        const updateInput = {
-          id: engagement.id,
-          initialEndDate: engagement.endDate.value!,
-        };
+        const initialEndDate = engagement.endDate.value!;
 
-        if (engagement.__typename === languageEngagementTypeName) {
-          await this.engagementService.updateLanguageEngagement(
-            updateInput,
-            event.session
-          );
-        } else if (engagement.__typename === internshipEngagementTypeName) {
-          await this.engagementService.updateInternshipEngagement(
-            updateInput,
-            event.session
-          );
+        const updatedEngagement = await this.updateEngagementInitialEndDate(
+          engagement,
+          initialEndDate,
+          event.session
+        );
+
+        if (event instanceof EngagementUpdatedEvent) {
+          event.updated = updatedEngagement;
+        } else {
+          event.engagement = updatedEngagement;
         }
       } catch (exception) {
         this.logger.error(`Could not set initial end date on engagement`, {

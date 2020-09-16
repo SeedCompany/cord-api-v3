@@ -801,10 +801,13 @@ export class EngagementService {
       id,
       session
     )) as InternshipEngagement;
-    await this.eventBus.publish(
-      new EngagementCreatedEvent(internshipEngagement, session)
+    const engagementCreatedEvent = new EngagementCreatedEvent(
+      internshipEngagement,
+      session
     );
-    return (await this.readOne(id, session)) as InternshipEngagement;
+    await this.eventBus.publish(engagementCreatedEvent);
+
+    return engagementCreatedEvent.engagement as InternshipEngagement;
   }
 
   // READ ///////////////////////////////////////////////////////////
@@ -1035,12 +1038,15 @@ export class EngagementService {
       input.id,
       session
     )) as LanguageEngagement;
-
-    await this.eventBus.publish(
-      new EngagementUpdatedEvent(updated, object, input, session)
+    const engagementUpdatedEvent = new EngagementUpdatedEvent(
+      updated,
+      object,
+      input,
+      session
     );
+    await this.eventBus.publish(engagementUpdatedEvent);
 
-    return updated;
+    return engagementUpdatedEvent.updated as LanguageEngagement;
   }
 
   async updateInternshipEngagement(
@@ -1174,12 +1180,15 @@ export class EngagementService {
       input.id,
       session
     )) as InternshipEngagement;
-
-    await this.eventBus.publish(
-      new EngagementUpdatedEvent(updated, object, input, session)
+    const engagementUpdatedEvent = new EngagementUpdatedEvent(
+      updated,
+      object,
+      input,
+      session
     );
+    await this.eventBus.publish(engagementUpdatedEvent);
 
-    return updated;
+    return engagementUpdatedEvent.updated as InternshipEngagement;
   }
 
   // DELETE /////////////////////////////////////////////////////////
