@@ -367,8 +367,12 @@ export class AuthenticationService {
           MATCH(e:EmailToken {token: $token})
           DELETE e
           WITH *
-          OPTIONAL MATCH(:EmailAddress {active: true, value: $email})<-[:email {active: true}]-(user:User {active: true})
-                          -[:password {active: true}]->(password:Property {active: true})
+          MATCH (:EmailAddress {active: true, value: $email})<-[:email {active: true}]-(user:User {active: true})
+          OPTIONAL MATCH (user)-[oldPasswordRel:password]->(oldPassword)
+          SET oldPasswordRel.active = false, oldPassword.active = false
+          WITH user
+          LIMIT 1
+          MERGE (user)-[:password {active: true, createdAt: $createdAt}]->(password:Property {active: true})
           SET password.value = $password
           RETURN password
         `,
@@ -376,6 +380,7 @@ export class AuthenticationService {
           token,
           email: result.email,
           password: pash,
+          createdAt: DateTime.local(),
         }
       )
       .first();
