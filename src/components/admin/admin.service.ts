@@ -6,6 +6,7 @@ import { generate } from 'shortid';
 import { ServerException, UnauthenticatedException } from '../../common';
 import { ConfigService, DatabaseService } from '../../core';
 import { AuthenticationService } from '../authentication';
+import { Role } from '../project';
 import { RootSecurityGroup } from './root-security-group';
 
 @Injectable()
@@ -162,6 +163,7 @@ export class AdminService implements OnApplicationBootstrap {
         phone: 'root',
         timezone: 'root',
         bio: 'root',
+        roles: Object.values(Role),
       });
 
       if (!adminUser) {
