@@ -1,6 +1,6 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
-import { times } from 'lodash';
+import { orderBy, times } from 'lodash';
 import { generate, isValid } from 'shortid';
 import { Organization } from '../src/components/organization';
 import {
@@ -422,58 +422,96 @@ describe('Organization e2e', () => {
     expect(actual.items[0].name.value).toBe(name);
   });
 
-  it('list view of organizations ASC', async () => {
-    // create a bunch of orgs
-
-    const numOrgs = 2;
-    await Promise.all(
-      times(numOrgs).map(() => createOrganization(app, { name: generate() }))
-    );
-
-    const { organizations } = await app.graphql.query(gql`
-      query {
-        organizations(input: { sort: "name", order: ASC }) {
-          items {
-            ...org
+  it('List of organizations sorted by name to be alphabetical, ignoring case sensitivity. Order: ASCENDING', async () => {
+    await createUser(app, { displayFirstName: 'Tammy' });
+    //Create three projects, each beginning with lower or upper-cases
+    await createOrganization(app, {
+      name: 'an Organization ' + faker.random.uuid(),
+    });
+    await createOrganization(app, {
+      name: 'Another Organization' + faker.random.uuid(),
+    });
+    await createOrganization(app, {
+      name: 'Big Organization' + faker.random.uuid(),
+    });
+    await createOrganization(app, {
+      name: 'big Organization also' + faker.random.uuid(),
+    });
+    const sortBy = 'name';
+    const ascOrder = 'ASC';
+    const { organizations } = await app.graphql.query(
+      gql`
+        query organizations($input: OrganizationListInput!) {
+          organizations(input: $input) {
+            hasMore
+            total
+            items {
+              id
+              name {
+                value
+              }
+            }
           }
         }
+      `,
+      {
+        input: {
+          sort: sortBy,
+          order: ascOrder,
+        },
       }
-      ${fragments.org}
-    `);
-
-    const names = organizations.items.map(
-      (o: { name: { value: string; canEdit: boolean; canRead: boolean } }) =>
-        o.name.value
     );
-
-    expect(names.sort()).toEqual(names);
+    const items = organizations.items;
+    const sorted = orderBy(items, (org) => org.name.value.toLowerCase(), [
+      'asc',
+    ]);
+    expect(sorted).toEqual(items);
   });
 
-  it('list view of organizations desc', async () => {
-    // create a bunch of orgs
-
-    const numOrgs = 2;
-    await Promise.all(
-      times(numOrgs).map(() => createOrganization(app, { name: generate() }))
-    );
-
-    const { organizations } = await app.graphql.query(gql`
-      query {
-        organizations(input: { sort: "name", order: DESC }) {
-          items {
-            ...org
+  it('List of organizations sorted by name to be alphabetical, ignoring case sensitivity. Order: DESCENDING', async () => {
+    await createUser(app, { displayFirstName: 'Tammy' });
+    //Create three projects, each beginning with lower or upper-cases
+    await createOrganization(app, {
+      name: 'an Organization ' + faker.random.uuid(),
+    });
+    await createOrganization(app, {
+      name: 'Another Organization' + faker.random.uuid(),
+    });
+    await createOrganization(app, {
+      name: 'Big Organization' + faker.random.uuid(),
+    });
+    await createOrganization(app, {
+      name: 'big Organization also' + faker.random.uuid(),
+    });
+    const sortBy = 'name';
+    const descOrder = 'DESC';
+    const { organizations } = await app.graphql.query(
+      gql`
+        query organizations($input: OrganizationListInput!) {
+          organizations(input: $input) {
+            hasMore
+            total
+            items {
+              id
+              name {
+                value
+              }
+            }
           }
         }
+      `,
+      {
+        input: {
+          sort: sortBy,
+          order: descOrder,
+        },
       }
-      ${fragments.org}
-    `);
-
-    const names = organizations.items.map(
-      (o: { name: { value: string; canEdit: boolean; canRead: boolean } }) =>
-        o.name.value
     );
-
-    expect(names.sort()).toEqual(names.reverse());
+    const items = organizations.items;
+    const sorted = orderBy(items, (org) => org.name.value.toLowerCase(), [
+      'desc',
+    ]);
+    expect(sorted).toEqual(items);
   });
 
   it('list view of organizations filters on partial name', async () => {

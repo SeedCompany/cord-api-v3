@@ -229,6 +229,10 @@ export class OrganizationService {
     session: ISession
   ): Promise<OrganizationListOutput> {
     const label = 'Organization';
+    const orgSortMap: Partial<Record<typeof input.sort, string>> = {
+      name: 'lower(prop.value)',
+    };
+    const sortBy = orgSortMap[input.sort] ?? 'prop.value';
     const query = this.db
       .query()
       .match([
@@ -258,7 +262,7 @@ export class OrganizationService {
                 node('prop', 'Property', { active: true }),
               ])
               .with('*')
-              .orderBy('prop.value', order)
+              .orderBy(sortBy, order)
           : q.with('*').orderBy(`node.${sort}`, order)
       );
 

@@ -1,6 +1,6 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
-import { times } from 'lodash';
+import { orderBy, times } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import { CalendarDate } from '../src/common';
@@ -298,6 +298,141 @@ describe('Project e2e', () => {
     );
   });
 
+  it('List of projects sorted by name to be alphabetical, ignoring case sensitivity. Order: ASCENDING', async () => {
+    await createUser(app, { displayFirstName: 'Tammy' });
+    //Create three projects with mixed cases.
+    await createProject(app, {
+      name: 'a project 2' + faker.random.uuid(),
+      type: ProjectType.Translation,
+    });
+    await createProject(app, {
+      name: 'Another project 2' + faker.random.uuid(),
+      type: ProjectType.Translation,
+    });
+    await createProject(app, {
+      name: 'Big project 2' + faker.random.uuid(),
+      type: ProjectType.Translation,
+    });
+    await createProject(app, {
+      name: 'big project also 2' + faker.random.uuid(),
+      type: ProjectType.Translation,
+    });
+    const sortBy = 'name';
+    const ascOrder = 'ASC';
+    const { projects } = await app.graphql.query(
+      gql`
+        query projects($input: ProjectListInput!) {
+          projects(input: $input) {
+            hasMore
+            total
+            items {
+              id
+              name {
+                value
+              }
+            }
+          }
+        }
+      `,
+      {
+        input: {
+          sort: sortBy,
+          order: ascOrder,
+          filter: {
+            mine: true,
+          },
+        },
+      }
+    );
+    const items = projects.items;
+    const sorted = orderBy(items, (proj) => proj.name.value.toLowerCase(), [
+      'asc',
+    ]);
+    expect(sorted).toEqual(items);
+    //delete all projects that Tammy has access to
+    await Promise.all(
+      projects.items.map(async (item: { id: any }) => {
+        return await app.graphql.mutate(
+          gql`
+            mutation deleteProject($id: ID!) {
+              deleteProject(id: $id)
+            }
+          `,
+          {
+            id: item.id,
+          }
+        );
+      })
+    );
+  });
+
+  it('List of projects sorted by name to be alphabetical, ignoring case sensitivity. Order: DESCENDING', async () => {
+    await createUser(app, { displayFirstName: 'Tammy' });
+    //Create three projects, each beginning with lower or upper-cases.
+    await createProject(app, {
+      name: 'a project 2' + faker.random.uuid(),
+      type: ProjectType.Translation,
+    });
+    await createProject(app, {
+      name: 'Another project 2' + faker.random.uuid(),
+      type: ProjectType.Translation,
+    });
+    await createProject(app, {
+      name: 'Big project 2' + faker.random.uuid(),
+      type: ProjectType.Translation,
+    });
+    await createProject(app, {
+      name: 'big project also 2' + faker.random.uuid(),
+      type: ProjectType.Translation,
+    });
+    const sortBy = 'name';
+    const ascOrder = 'DESC';
+    const { projects } = await app.graphql.query(
+      gql`
+        query projects($input: ProjectListInput!) {
+          projects(input: $input) {
+            hasMore
+            total
+            items {
+              id
+              name {
+                value
+              }
+            }
+          }
+        }
+      `,
+      {
+        input: {
+          sort: sortBy,
+          order: ascOrder,
+          filter: {
+            mine: true,
+          },
+        },
+      }
+    );
+    const items = projects.items;
+    const sorted = orderBy(items, (proj) => proj.name.value.toLowerCase(), [
+      'desc',
+    ]);
+    expect(sorted).toEqual(items);
+    //delete all projects
+    await Promise.all(
+      projects.items.map(async (item: { id: any }) => {
+        return await app.graphql.mutate(
+          gql`
+            mutation deleteProject($id: ID!) {
+              deleteProject(id: $id)
+            }
+          `,
+          {
+            id: item.id,
+          }
+        );
+      })
+    );
+  });
   it('List view of projects', async () => {
     // create 2 projects
     const numProjects = 2;
@@ -498,6 +633,12 @@ describe('Project e2e', () => {
     //create 1 engagements in a project
     const numEngagements = 1;
     const type = ProjectType.Internship;
+
+    await login(app, {
+      email: process.env.ROOT_ADMIN_EMAIL,
+      password: process.env.ROOT_ADMIN_PASSWORD,
+    });
+
     const project = await createProject(app, { type });
 
     await createInternshipEngagement(app, {

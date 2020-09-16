@@ -578,7 +578,10 @@ export class ProjectService {
         : filter.type === 'Translation'
         ? 'TranslationProject'
         : 'Project';
-
+    const projectSortMap: Partial<Record<typeof input.sort, string>> = {
+      name: 'lower(prop.value)',
+    };
+    const sortBy = projectSortMap[input.sort] ?? 'prop.value';
     const query = this.db
       .query()
       .match([
@@ -602,7 +605,7 @@ export class ProjectService {
             node('prop', 'Property', { active: true }),
           ])
           .with('*')
-          .orderBy('prop.value', order)
+          .orderBy(sortBy, order)
       );
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
