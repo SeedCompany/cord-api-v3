@@ -635,6 +635,7 @@ export class ProjectService {
 
     const permission = await this.db
       .query()
+      .match([requestingUser(session)])
       .match([
         [
           node('requestingUser'),
