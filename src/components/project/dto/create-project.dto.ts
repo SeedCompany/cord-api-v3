@@ -1,7 +1,13 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { CalendarDate, DateField, IdField, NameField } from '../../../common';
+import {
+  CalendarDate,
+  DateField,
+  IdField,
+  NameField,
+  Sensitivity,
+} from '../../../common';
 import { IProject, Project } from './project.dto';
 import { ProjectStep } from './step.enum';
 import { ProjectType } from './type.enum';
@@ -31,6 +37,9 @@ export abstract class CreateProject {
 
   @Field(() => ProjectStep, { nullable: true })
   readonly step?: ProjectStep;
+
+  @Field(() => Sensitivity, { nullable: true })
+  readonly sensitivity?: Sensitivity = Sensitivity.High;
 }
 
 @InputType()
