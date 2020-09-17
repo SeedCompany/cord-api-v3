@@ -21,6 +21,48 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
   ) {}
   private readonly languageEngagementTypeName = 'LanguageEngagement';
 
+  async handle(event: SubscribedEvent) {
+    this.logger.debug('Engagement mutation, set initial end date', {
+      ...event,
+      event: event.constructor.name,
+    });
+
+    const engagement = 'engagement' in event ? event.engagement : event.updated;
+
+    const shouldUpdateInitialEndDate =
+      engagement.status === EngagementStatus.Active &&
+      engagement.initialEndDate.value == null &&
+      engagement.endDate.value != null;
+    if (!shouldUpdateInitialEndDate) {
+      return;
+    }
+
+    try {
+      const initialEndDate = engagement.endDate.value!;
+
+      const updatedEngagement = await this.updateEngagementInitialEndDate(
+        engagement,
+        initialEndDate,
+        event.session
+      );
+
+      if (event instanceof EngagementUpdatedEvent) {
+        event.updated = updatedEngagement;
+      } else {
+        event.engagement = updatedEngagement;
+      }
+    } catch (exception) {
+      this.logger.error(`Could not set initial end date on engagement`, {
+        userId: event.session.userId,
+        exception,
+      });
+      throw new ServerException(
+        'Could set initial end date on engagement',
+        exception
+      );
+    }
+  }
+
   private async updateEngagementInitialEndDate(
     engagement: Engagement,
     initialEndDate: CalendarDate,
@@ -41,47 +83,6 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
         updateInput,
         session
       );
-    }
-  }
-
-  async handle(event: SubscribedEvent) {
-    this.logger.debug('Engagement mutation, set initial end date', {
-      ...event,
-      event: event.constructor.name,
-    });
-
-    const engagement = 'engagement' in event ? event.engagement : event.updated;
-
-    const shouldUpdateInitialEndDate =
-      engagement.status === EngagementStatus.Active &&
-      engagement.initialEndDate.value == null &&
-      engagement.endDate.value != null;
-
-    if (shouldUpdateInitialEndDate) {
-      try {
-        const initialEndDate = engagement.endDate.value!;
-
-        const updatedEngagement = await this.updateEngagementInitialEndDate(
-          engagement,
-          initialEndDate,
-          event.session
-        );
-
-        if (event instanceof EngagementUpdatedEvent) {
-          event.updated = updatedEngagement;
-        } else {
-          event.engagement = updatedEngagement;
-        }
-      } catch (exception) {
-        this.logger.error(`Could not set initial end date on engagement`, {
-          userId: event.session.userId,
-          exception,
-        });
-        throw new ServerException(
-          'Could set initial end date on engagement',
-          exception
-        );
-      }
     }
   }
 }
