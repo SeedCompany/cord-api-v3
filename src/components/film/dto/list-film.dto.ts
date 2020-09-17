@@ -1,17 +1,11 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { PaginatedList, SortablePaginationInput } from '../../../common';
 import { Film } from './film.dto';
 
 @InputType()
-export abstract class FilmFilters {
-  @Field({
-    description: 'Only films matching this name',
-    nullable: true,
-  })
-  readonly name?: string;
-}
+export abstract class FilmFilters {}
 
 const defaultFilters = {};
 
@@ -21,7 +15,6 @@ export class FilmListInput extends SortablePaginationInput<keyof Film>({
 }) {
   static defaultVal = new FilmListInput();
 
-  @Field({ nullable: true })
   @Type(() => FilmFilters)
   @ValidateNested()
   readonly filter: FilmFilters = defaultFilters;

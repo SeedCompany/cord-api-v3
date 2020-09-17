@@ -1,7 +1,7 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
-import { generate, isValid } from 'shortid';
+import { isValid } from 'shortid';
 import { ScriptureRange } from '../src/components/scripture/dto';
 import { Story } from '../src/components/story/dto';
 import {
@@ -115,19 +115,13 @@ describe('Story e2e', () => {
     expect(actual).toBeTruthy();
   });
 
-  // LIST STORYs
-  it('list view of storys', async () => {
-    // create a bunch of storys
-    const numStorys = 2;
-    await Promise.all(
-      times(numStorys).map(() =>
-        createStory(app, { name: generate() + ' Story' })
-      )
-    );
+  it('list view of stories', async () => {
+    const numStories = 2;
+    await Promise.all(times(numStories).map(() => createStory(app)));
 
     const { stories } = await app.graphql.query(gql`
       query {
-        stories(input: { count: 15, filter: { name: "Story" } }) {
+        stories(input: { count: 15 }) {
           items {
             ...story
           }
@@ -138,6 +132,6 @@ describe('Story e2e', () => {
       ${fragments.story}
     `);
 
-    expect(stories.items.length).toBeGreaterThanOrEqual(numStorys);
+    expect(stories.items.length).toBeGreaterThanOrEqual(numStories);
   });
 });

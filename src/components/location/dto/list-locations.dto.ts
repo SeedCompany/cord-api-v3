@@ -10,12 +10,6 @@ import { Location } from './location.dto';
 
 @InputType()
 export abstract class LocationFilters {
-  @Field({
-    description: 'Only locations matching this name',
-    nullable: true,
-  })
-  readonly name?: string;
-
   @Field(() => [String], {
     description: 'Filter to only these types of locations',
   })
