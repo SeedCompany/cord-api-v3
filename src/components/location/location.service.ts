@@ -18,6 +18,7 @@ import {
   ChildBaseNodeMetaProperty,
   ConfigService,
   DatabaseService,
+  permission as dbPermission,
   ILogger,
   Logger,
   matchRequestingUser,
@@ -72,9 +73,8 @@ export class LocationService {
       // ZONE NODE
       'CREATE CONSTRAINT ON (n:Zone) ASSERT EXISTS(n.id)',
       'CREATE CONSTRAINT ON (n:Zone) ASSERT n.id IS UNIQUE',
-      'CREATE CONSTRAINT ON (n:Zone) ASSERT EXISTS(n.active)',
+
       'CREATE CONSTRAINT ON (n:Zone) ASSERT EXISTS(n.createdAt)',
-      'CREATE CONSTRAINT ON (n:Zone) ASSERT EXISTS(n.owningOrgId)',
 
       // ZONE NAME REL
       'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.active)',
@@ -87,9 +87,8 @@ export class LocationService {
       // REGION NODE
       'CREATE CONSTRAINT ON (n:Region) ASSERT EXISTS(n.id)',
       'CREATE CONSTRAINT ON (n:Region) ASSERT n.id IS UNIQUE',
-      'CREATE CONSTRAINT ON (n:Region) ASSERT EXISTS(n.active)',
+
       'CREATE CONSTRAINT ON (n:Region) ASSERT EXISTS(n.createdAt)',
-      'CREATE CONSTRAINT ON (n:Region) ASSERT EXISTS(n.owningOrgId)',
 
       // REGION NAME REL
       'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.active)',
@@ -102,9 +101,8 @@ export class LocationService {
       // COUNTRY NODE
       'CREATE CONSTRAINT ON (n:Country) ASSERT EXISTS(n.id)',
       'CREATE CONSTRAINT ON (n:Country) ASSERT n.id IS UNIQUE',
-      'CREATE CONSTRAINT ON (n:Country) ASSERT EXISTS(n.active)',
+
       'CREATE CONSTRAINT ON (n:Country) ASSERT EXISTS(n.createdAt)',
-      'CREATE CONSTRAINT ON (n:Country) ASSERT EXISTS(n.owningOrgId)',
 
       // COUNTRY NAME REL
       'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.active)',
@@ -130,57 +128,13 @@ export class LocationService {
           createdAt,
         }),
         node(prop, propLabel, {
-          active: true,
           value,
         }),
       ],
     ];
   };
 
-  // helper method for defining permissions
-  permission = (property: string, baseNode: string) => {
-    const createdAt = DateTime.local();
-    return [
-      [
-        node('adminSG'),
-        relation('out', '', 'permission', {
-          active: true,
-          createdAt,
-        }),
-        node('', 'Permission', {
-          property,
-          active: true,
-          read: true,
-          edit: true,
-          admin: true,
-        }),
-        relation('out', '', 'baseNode', {
-          active: true,
-          createdAt,
-        }),
-        node(baseNode),
-      ],
-      [
-        node('readerSG'),
-        relation('out', '', 'permission', {
-          active: true,
-          createdAt,
-        }),
-        node('', 'Permission', {
-          property,
-          active: true,
-          read: true,
-          edit: false,
-          admin: false,
-        }),
-        relation('out', '', 'baseNode', {
-          active: true,
-          createdAt,
-        }),
-        node(baseNode),
-      ],
-    ];
-  };
+  permission = dbPermission;
 
   async createZone(
     { directorId, ...input }: CreateZone,
@@ -195,50 +149,37 @@ export class LocationService {
         .match(matchSession(session, { withAclEdit: 'canCreateZone' }))
         .match([
           node('rootuser', 'User', {
-            active: true,
             id: this.config.rootAdmin.id,
           }),
         ])
         .create([
           [
             node('newZone', ['Zone', 'BaseNode'], {
-              active: true,
               createdAt,
               id,
-              owningOrgId: session.owningOrgId,
             }),
           ],
           ...this.property('name', input.name, 'newZone'),
           [
             node('adminSG', 'SecurityGroup', {
               id: generate(),
-              active: true,
-              createdAt,
+
               name: input.name + ' admin',
             }),
-            relation('out', '', 'member', { active: true, createdAt }),
+            relation('out', '', 'member'),
             node('requestingUser'),
           ],
           [
             node('readerSG', 'SecurityGroup', {
               id: generate(),
-              active: true,
-              createdAt,
+
               name: input.name + ' users',
             }),
-            relation('out', '', 'member', { active: true, createdAt }),
+            relation('out', '', 'member'),
             node('requestingUser'),
           ],
-          [
-            node('adminSG'),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('rootuser'),
-          ],
-          [
-            node('readerSG'),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('rootuser'),
-          ],
+          [node('adminSG'), relation('out', '', 'member'), node('rootuser')],
+          [node('readerSG'), relation('out', '', 'member'), node('rootuser')],
           ...this.permission('name', 'newZone'),
           ...this.permission('director', 'newZone'),
         ])
@@ -249,8 +190,8 @@ export class LocationService {
       // connect director User to zone
       if (directorId) {
         const query = `
-      MATCH (director:User {id: $directorId, active: true}),
-        (zone:Zone {id: $id, active: true})
+      MATCH (director:User {id: $directorId}),
+        (zone:Zone {id: $id})
       CREATE (director)<-[:director {active: true, createdAt: datetime()}]-(zone)
       RETURN  zone.id as id
       `;
@@ -271,9 +212,9 @@ export class LocationService {
       const lookup = this.db
         .query()
         .match([
-          node('zone', 'Zone', { active: true }),
+          node('zone', 'Zone'),
           relation('out', 'name', 'name', { active: true }),
-          node('zoneName', 'Property', { active: true, value: input.name }),
+          node('zoneName', 'Property', { value: input.name }),
         ])
         .return({
           zone: [{ id: 'zoneId' }],
@@ -308,50 +249,37 @@ export class LocationService {
         .match(matchSession(session, { withAclEdit: 'canCreateRegion' }))
         .match([
           node('rootuser', 'User', {
-            active: true,
             id: this.config.rootAdmin.id,
           }),
         ])
         .create([
           [
             node('newRegion', ['Region', 'BaseNode'], {
-              active: true,
               createdAt,
               id,
-              owningOrgId: session.owningOrgId,
             }),
           ],
           ...this.property('name', input.name, 'newRegion'),
           [
             node('adminSG', 'SecurityGroup', {
               id: generate(),
-              active: true,
-              createdAt,
+
               name: input.name + ' admin',
             }),
-            relation('out', '', 'member', { active: true, createdAt }),
+            relation('out', '', 'member'),
             node('requestingUser'),
           ],
           [
             node('readerSG', 'SecurityGroup', {
               id: generate(),
-              active: true,
-              createdAt,
+
               name: input.name + ' users',
             }),
-            relation('out', '', 'member', { active: true, createdAt }),
+            relation('out', '', 'member'),
             node('requestingUser'),
           ],
-          [
-            node('adminSG'),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('rootuser'),
-          ],
-          [
-            node('readerSG'),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('rootuser'),
-          ],
+          [node('adminSG'), relation('out', '', 'member'), node('rootuser')],
+          [node('readerSG'), relation('out', '', 'member'), node('rootuser')],
           ...this.permission('name', 'newRegion'),
           ...this.permission('director', 'newRegion'),
           ...this.permission('zone', 'newRegion'),
@@ -366,8 +294,8 @@ export class LocationService {
 
       if (zoneId) {
         const query = `
-          MATCH (zone:Zone {id: $zoneId, active: true}),
-            (region:Region {id: $id, active: true})
+          MATCH (zone:Zone {id: $zoneId}),
+            (region:Region {id: $id})
           CREATE (zone)<-[:zone { active: true, createdAt: datetime() }]-(region)
           RETURN region.id as id
         `;
@@ -385,8 +313,8 @@ export class LocationService {
       if (directorId) {
         const query = `
           MATCH
-            (region:Region {id: $id, active: true}),
-            (director:User {id: $directorId, active: true})
+            (region:Region {id: $id}),
+            (director:User {id: $directorId})
           CREATE (director)<-[:director { active: true, createdAt: datetime() }]-(region)
           RETURN region.id as id
         `;
@@ -404,9 +332,9 @@ export class LocationService {
       const lookup = this.db
         .query()
         .match([
-          node('region', 'Region', { active: true }),
+          node('region', 'Region'),
           relation('out', 'name', 'name', { active: true }),
-          node('regionName', 'Property', { active: true, value: input.name }),
+          node('regionName', 'Property', { value: input.name }),
         ])
         .return({ region: [{ id: 'regionId' }] });
       const region = await lookup.first();
@@ -439,50 +367,37 @@ export class LocationService {
         .match(matchSession(session, { withAclEdit: 'canCreateCountry' }))
         .match([
           node('rootuser', 'User', {
-            active: true,
             id: this.config.rootAdmin.id,
           }),
         ])
         .create([
           [
             node('newCountry', ['Country', 'BaseNode'], {
-              active: true,
               createdAt,
               id,
-              owningOrgId: session.owningOrgId,
             }),
           ],
           ...this.property('name', input.name, 'newCountry'),
           [
             node('adminSG', 'SecurityGroup', {
               id: generate(),
-              active: true,
-              createdAt,
+
               name: input.name + ' admin',
             }),
-            relation('out', '', 'member', { active: true, createdAt }),
+            relation('out', '', 'member'),
             node('requestingUser'),
           ],
           [
             node('readerSG', 'SecurityGroup', {
               id: generate(),
-              active: true,
-              createdAt,
+
               name: input.name + ' users',
             }),
-            relation('out', '', 'member', { active: true, createdAt }),
+            relation('out', '', 'member'),
             node('requestingUser'),
           ],
-          [
-            node('adminSG'),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('rootuser'),
-          ],
-          [
-            node('readerSG'),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('rootuser'),
-          ],
+          [node('adminSG'), relation('out', '', 'member'), node('rootuser')],
+          [node('readerSG'), relation('out', '', 'member'), node('rootuser')],
           ...this.permission('name', 'newCountry'),
           ...this.permission('region', 'newCountry'),
         ])
@@ -494,8 +409,8 @@ export class LocationService {
       // connect the Region to Country
       if (regionId) {
         const query = `
-          MATCH (region:Region {id: $regionId, active: true}),
-            (country:Country {id: $id, active: true})
+          MATCH (region:Region {id: $regionId}),
+            (country:Country {id: $id})
           CREATE (country)-[:region { active: true, createdAt: datetime()}]->(region)
           RETURN country.id as id
         `;
@@ -513,9 +428,9 @@ export class LocationService {
       const lookup = this.db
         .query()
         .match([
-          node('country', 'Country', { active: true }),
+          node('country', 'Country'),
           relation('out', 'name', 'name', { active: true }),
-          node('countryName', 'Property', { active: true, value: input.name }),
+          node('countryName', 'Property', { value: input.name }),
         ])
         .return({ country: [{ id: 'countryId' }] });
       const country = await lookup.first();
@@ -537,7 +452,7 @@ export class LocationService {
 
   async readOne(id: string, session: ISession): Promise<Location> {
     const query = `
-    MATCH (place {id: $id, active: true}) RETURN labels(place) as labels
+    MATCH (place {id: $id}) RETURN labels(place) as labels
     `;
     const results = await this.db.query().raw(query, { id }).first();
     // MATCH one of these labels.
@@ -580,13 +495,13 @@ export class LocationService {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([node('node', 'Zone', { active: true, id: id })])
+      .match([node('node', 'Zone', { id: id })])
       .call(matchPermList, 'requestingUser')
       .call(matchPropList, 'permList')
       .optionalMatch([
         node('node'),
         relation('out', '', 'director', { active: true }),
-        node('director', 'User', { active: true }),
+        node('director', 'User'),
       ])
       .return('propList, permList, node, director.id as directorId')
       .asResult<
@@ -628,18 +543,18 @@ export class LocationService {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([node('node', 'Region', { active: true, id: id })])
+      .match([node('node', 'Region', { id: id })])
       .call(matchPermList, 'requestingUser')
       .call(matchPropList, 'permList')
       .optionalMatch([
         node('node'),
         relation('out', '', 'director', { active: true }),
-        node('director', 'User', { active: true }),
+        node('director', 'User'),
       ])
       .optionalMatch([
         node('node'),
         relation('out', '', 'zone', { active: true }),
-        node('zone', 'Zone', { active: true }),
+        node('zone', 'Zone'),
       ])
       .return([
         'propList, permList, node',
@@ -752,12 +667,11 @@ export class LocationService {
             value: $token
           })<-[:token {active: true}]-
           (requestingUser:User {
-            active: true,
-            id: $requestingUserId,
-            owningOrgId: $owningOrgId
+
+            id: $requestingUserId
           }),
-          (newDirector:User {id: $directorId, active: true}),
-          (zone:Zone {id: $id, active: true})-[rel:director {active: true}]->(oldDirector:User)
+          (newDirector:User {id: $directorId}),
+          (zone:Zone {id: $id})-[rel:director {active: true}]->(oldDirector:User)
         DELETE rel
         CREATE (newDirector)<-[:director {active: true, createdAt: datetime()}]-(zone)
         RETURN  zone.id as id
@@ -768,7 +682,7 @@ export class LocationService {
         .raw(query, {
           directorId: input.directorId,
           id: input.id,
-          owningOrgId: session.owningOrgId,
+
           requestingUserId: session.userId,
           token: session.token,
           userId: session.userId,
@@ -799,12 +713,11 @@ export class LocationService {
               value: $token
             })<-[:token {active: true}]-
             (requestingUser:User {
-              active: true,
-              id: $requestingUserId,
-              owningOrgId: $owningOrgId
+
+              id: $requestingUserId
             }),
-            (newDirector:User {id: $directorId, active: true}),
-            (region:Region {id: $id, active: true})-[rel:director {active: true}]->(oldDirector:User)
+            (newDirector:User {id: $directorId}),
+            (region:Region {id: $id})-[rel:director {active: true}]->(oldDirector:User)
           DELETE rel
           CREATE (newDirector)<-[:director {active: true, createdAt: datetime()}]-(region)
           RETURN  region.id as id
@@ -815,7 +728,7 @@ export class LocationService {
         .raw(query, {
           directorId: input.directorId,
           id: input.id,
-          owningOrgId: session.owningOrgId,
+
           requestingUserId: session.userId,
           token: session.token,
           userId: session.userId,
@@ -832,12 +745,11 @@ export class LocationService {
               value: $token
             })<-[:token {active: true}]-
             (requestingUser:User {
-              active: true,
-              id: $requestingUserId,
-              owningOrgId: $owningOrgId
+
+              id: $requestingUserId
             }),
-            (newZone:Zone {id: $zoneId, active: true}),
-            (region:Region {id: $id, active: true})-[rel:zone {active: true}]->(oldZone:Zone)
+            (newZone:Zone {id: $zoneId}),
+            (region:Region {id: $id})-[rel:zone {active: true}]->(oldZone:Zone)
           DELETE rel
           CREATE (newZone)<-[:zone {active: true, createdAt: datetime()}]-(region)
           RETURN  region.id as id
@@ -848,7 +760,7 @@ export class LocationService {
         .raw(query, {
           directorId: input.directorId,
           id: input.id,
-          owningOrgId: session.owningOrgId,
+
           requestingUserId: session.userId,
           token: session.token,
           userId: session.userId,
@@ -882,12 +794,11 @@ export class LocationService {
               value: $token
             })<-[:token {active: true}]-
             (requestingUser:User {
-              active: true,
-              id: $requestingUserId,
-              owningOrgId: $owningOrgId
+
+              id: $requestingUserId
             }),
-            (newRegion:Region {id: $regionId, active: true}),
-            (country:Country {id: $id, active: true})-[rel:region {active: true}]->(oldZone:Region)
+            (newRegion:Region {id: $regionId}),
+            (country:Country {id: $id})-[rel:region {active: true}]->(oldZone:Region)
           DELETE rel
           CREATE (newRegion)<-[:region {active: true, createdAt: datetime()}]-(country)
           RETURN  country.id as id
@@ -897,7 +808,7 @@ export class LocationService {
         .query()
         .raw(query, {
           id: input.id,
-          owningOrgId: session.owningOrgId,
+
           regionId: input.regionId,
           requestingUserId: session.userId,
           token: session.token,
@@ -930,22 +841,19 @@ export class LocationService {
         })
         <-[:token {active: true}]-
         (requestingUser:User {
-          active: true,
+
           id: $requestingUserId,
           canDeleteLocation: true
         }),
         (place {
-          active: true,
+
           id: $id
         })
-        SET
-          place.active = false
-        RETURN
-          place.id as id
+        DETACH DELETE place
         `,
           {
             id,
-            owningOrgId: session.owningOrgId,
+
             requestingUserId: session.userId,
             token: session.token,
           }
@@ -987,7 +895,7 @@ export class LocationService {
               .match([
                 node('node'),
                 relation('out', '', sort),
-                node('prop', 'Property', { active: true }),
+                node('prop', 'Property'),
               ])
               .with('*')
               .orderBy('prop.value', order)
@@ -1047,14 +955,7 @@ export class LocationService {
   async checkZoneConsistency(session: ISession): Promise<boolean> {
     const zones = await this.db
       .query()
-      .match([
-        matchSession(session),
-        [
-          node('zone', 'Zone', {
-            active: true,
-          }),
-        ],
-      ])
+      .match([matchSession(session), [node('zone', 'Zone')]])
       .return('zone.id as id')
       .run();
 
@@ -1089,14 +990,7 @@ export class LocationService {
   async checkRegionConsistency(session: ISession): Promise<boolean> {
     const regions = await this.db
       .query()
-      .match([
-        matchSession(session),
-        [
-          node('region', 'Region', {
-            active: true,
-          }),
-        ],
-      ])
+      .match([matchSession(session), [node('region', 'Region')]])
       .return('region.id as id')
       .run();
 
@@ -1131,14 +1025,7 @@ export class LocationService {
   async checkCountryConsistency(session: ISession): Promise<boolean> {
     const countries = await this.db
       .query()
-      .match([
-        matchSession(session),
-        [
-          node('country', 'Country', {
-            active: true,
-          }),
-        ],
-      ])
+      .match([matchSession(session), [node('country', 'Country')]])
       .return('country.id as id')
       .run();
 

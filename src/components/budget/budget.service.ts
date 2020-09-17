@@ -75,7 +75,6 @@ export class BudgetService {
           createdAt,
         }),
         node(prop, 'Property', {
-          active: true,
           value,
         }),
       ],
@@ -88,40 +87,26 @@ export class BudgetService {
     return [
       [
         node('adminSG'),
-        relation('out', '', 'permission', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'permission'),
         node('', 'Permission', {
           property,
-          active: true,
           read: true,
           edit: true,
           admin: true,
         }),
-        relation('out', '', 'baseNode', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'baseNode'),
         node(baseNode),
       ],
       [
         node('readerSG'),
-        relation('out', '', 'permission', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'permission'),
         node('', 'Permission', {
           property,
-          active: true,
           read: true,
           edit: false,
           admin: false,
         }),
-        relation('out', '', 'baseNode', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'baseNode'),
         node(baseNode),
       ],
     ];
@@ -133,35 +118,33 @@ export class BudgetService {
     query.optionalMatch([
       [
         node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('g', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
+        relation('in', '', 'member'),
+        node('g', 'SecurityGroup'),
+        relation('out', '', 'permission'),
         node(editPerm, 'Permission', {
           property,
-          active: true,
           edit: true,
         }),
-        relation('out', '', 'baseNode', { active: true }),
+        relation('out', '', 'baseNode'),
         node(baseNode),
         relation('out', '', property, { active: true }),
-        node(property, 'Property', { active: true }),
+        node(property, 'Property'),
       ],
     ]);
     query.optionalMatch([
       [
         node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
+        relation('in', '', 'member'),
+        node('', 'SecurityGroup'),
+        relation('out', '', 'permission'),
         node(readPerm, 'Permission', {
           property,
-          active: true,
           read: true,
         }),
-        relation('out', '', 'baseNode', { active: true }),
+        relation('out', '', 'baseNode'),
         node(baseNode),
         relation('out', '', property, { active: true }),
-        node(property, 'Property', { active: true }),
+        node(property, 'Property'),
       ],
     ]);
   };
@@ -175,7 +158,7 @@ export class BudgetService {
     const readProject = this.db
       .query()
       .match(matchSession(session, { withAclRead: 'canReadProjects' }))
-      .match([node('project', 'Project', { active: true, id: projectId })]);
+      .match([node('project', 'Project', { id: projectId })]);
     readProject.return({
       project: [{ id: 'id', createdAt: 'createdAt' }],
       requestingUser: [
@@ -226,13 +209,10 @@ export class BudgetService {
         .call(matchRequestingUser, session)
         .match([
           node('root', 'User', {
-            active: true,
             id: this.config.rootAdmin.id,
           }),
         ])
-        .call(createBaseNode, 'Budget', secureProps, {
-          owningOrgId: session.owningOrgId,
-        })
+        .call(createBaseNode, 'Budget', secureProps)
         .return('node.id as id');
 
       const result = await createBudget.first();
@@ -244,8 +224,8 @@ export class BudgetService {
       // connect budget to project
       await this.db
         .query()
-        .matchNode('project', 'Project', { id: projectId, active: true })
-        .matchNode('budget', 'Budget', { id: result.id, active: true })
+        .matchNode('project', 'Project', { id: projectId })
+        .matchNode('budget', 'Budget', { id: result.id })
         .create([
           node('project'),
           relation('out', '', 'budget', {
@@ -312,13 +292,10 @@ export class BudgetService {
         .call(matchRequestingUser, session)
         .match([
           node('root', 'User', {
-            active: true,
             id: this.config.rootAdmin.id,
           }),
         ]);
-      createBudgetRecord.call(createBaseNode, 'BudgetRecord', secureProps, {
-        owningOrgId: session.owningOrgId,
-      });
+      createBudgetRecord.call(createBaseNode, 'BudgetRecord', secureProps);
       createBudgetRecord
         .create([...this.permission('organization', 'node')])
         .return('node.id as id');
@@ -337,8 +314,8 @@ export class BudgetService {
       // connect to budget
       const query = this.db
         .query()
-        .match([node('budget', 'Budget', { id: budgetId, active: true })])
-        .match([node('br', 'BudgetRecord', { id: result.id, active: true })])
+        .match([node('budget', 'Budget', { id: budgetId })])
+        .match([node('br', 'BudgetRecord', { id: result.id })])
         .create([
           node('budget'),
           relation('out', '', 'record', { active: true, createdAt }),
@@ -353,10 +330,9 @@ export class BudgetService {
         .match([
           node('organization', 'Organization', {
             id: organizationId,
-            active: true,
           }),
         ])
-        .match([node('br', 'BudgetRecord', { id: result.id, active: true })])
+        .match([node('br', 'BudgetRecord', { id: result.id })])
         .create([
           node('br'),
           relation('out', '', 'organization', { active: true, createdAt }),
@@ -391,13 +367,13 @@ export class BudgetService {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([node('node', 'Budget', { active: true, id })])
+      .match([node('node', 'Budget', { id })])
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member'),
-        node('', 'SecurityGroup', { active: true }),
+        node('', 'SecurityGroup'),
         relation('out', '', 'permission'),
-        node('perms', 'Permission', { active: true }),
+        node('perms', 'Permission'),
         relation('out', '', 'baseNode'),
         node('node'),
       ])
@@ -405,7 +381,7 @@ export class BudgetService {
       .match([
         node('node'),
         relation('out', 'r', { active: true }),
-        node('props', 'Property', { active: true }),
+        node('props', 'Property'),
       ])
       .with('{value: props.value, property: type(r)} as prop, permList, node')
       .with('collect(prop) as propList, permList, node')
@@ -456,13 +432,13 @@ export class BudgetService {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([node('node', 'BudgetRecord', { active: true, id })])
+      .match([node('node', 'BudgetRecord', { id })])
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member'),
-        node('', 'SecurityGroup', { active: true }),
+        node('', 'SecurityGroup'),
         relation('out', '', 'permission'),
-        node('perms', 'Permission', { active: true }),
+        node('perms', 'Permission'),
         relation('out', '', 'baseNode'),
         node('node'),
       ])
@@ -470,14 +446,14 @@ export class BudgetService {
       .match([
         node('node'),
         relation('out', 'r', { active: true }),
-        node('props', 'Property', { active: true }),
+        node('props', 'Property'),
       ])
       .with('{value: props.value, property: type(r)} as prop, permList, node')
       .with('collect(prop) as propList, permList, node')
       .match([
         node('node'),
         relation('out', '', 'organization', { active: true }),
-        node('organization', 'Organization', { active: true }),
+        node('organization', 'Organization'),
       ])
       .return([
         'propList + [{value: organization.id, property: "organization"}] as propList',
@@ -542,13 +518,13 @@ export class BudgetService {
       .query()
       .match(matchSession(session, { withAclRead: 'canReadBudgets' }))
       .match([
-        node('budgetRecord', 'BudgetRecord', { active: true, id }),
+        node('budgetRecord', 'BudgetRecord', { id }),
         relation('in', '', 'record', {
           active: true,
         }),
-        node('budget', 'Budget', { active: true }),
+        node('budget', 'Budget'),
         relation('out', '', 'status', { active: true }),
-        node('status', 'Property', { active: true }),
+        node('status', 'Property'),
       ]);
     budgetStatusQuery.return([
       {
@@ -628,7 +604,6 @@ export class BudgetService {
           ? [
               relation('in', '', 'budget', { active: true }),
               node('project', 'Project', {
-                active: true,
                 id: filter.projectId,
               }),
             ]
@@ -640,7 +615,7 @@ export class BudgetService {
               .match([
                 node('node'),
                 relation('out', '', sort),
-                node('prop', 'Property', { active: true }),
+                node('prop', 'Property'),
               ])
               .with('*')
               .orderBy('prop.value', order)
@@ -667,7 +642,6 @@ export class BudgetService {
           ? [
               relation('in', '', 'record', { active: true }),
               node('budget', 'Budget', {
-                active: true,
                 id: filter.budgetId,
               }),
             ]
@@ -679,7 +653,7 @@ export class BudgetService {
               .match([
                 node('node'),
                 relation('out', '', sort),
-                node('prop', 'Property', { active: true }),
+                node('prop', 'Property'),
               ])
               .with('*')
               .orderBy('prop.value', order)
@@ -694,14 +668,7 @@ export class BudgetService {
   async checkBudgetConsistency(session: ISession): Promise<boolean> {
     const budgets = await this.db
       .query()
-      .match([
-        matchSession(session),
-        [
-          node('budget', 'Budget', {
-            active: true,
-          }),
-        ],
-      ])
+      .match([matchSession(session), [node('budget', 'Budget')]])
       .return('budget.id as id')
       .run();
 

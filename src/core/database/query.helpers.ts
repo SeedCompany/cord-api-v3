@@ -82,7 +82,6 @@ export function createBaseNode(
   if (typeof label === 'string') {
     query.create([
       node('node', [label, 'BaseNode'], {
-        active: true,
         createdAt,
         id,
         ...baseNodeProps,
@@ -91,7 +90,6 @@ export function createBaseNode(
   } else {
     query.create([
       node('node', [...label, 'BaseNode'], {
-        active: true,
         createdAt,
         id,
         ...baseNodeProps,
@@ -116,24 +114,20 @@ export function createBaseNode(
     query.create([
       node('node'),
       relation('out', '', prop.key, { active: true, createdAt }),
-      node('', labels, { active: true, createdAt, value: prop.value }),
+      node('', labels, { createdAt, value: prop.value }),
     ]);
 
     if (prop.addToAdminSg) {
       query.create([
         node('adminSG'),
-        relation('out', '', 'permission', {
-          active: true,
-        }),
+        relation('out', '', 'permission'),
         node('', 'Permission', {
-          active: true,
-          createdAt,
           property: prop.key,
           read: true,
           edit: true,
           admin: true,
         }),
-        relation('out', '', 'baseNode', { active: true }),
+        relation('out', '', 'baseNode'),
         node('node'),
       ]);
     }
@@ -141,17 +135,13 @@ export function createBaseNode(
     if (prop.addToWriterSg) {
       query.create([
         node('writerSG'),
-        relation('out', '', 'permission', {
-          active: true,
-        }),
+        relation('out', '', 'permission'),
         node('', 'Permission', {
-          active: true,
-          createdAt,
           property: prop.key,
           read: true,
           edit: true,
         }),
-        relation('out', '', 'baseNode', { active: true }),
+        relation('out', '', 'baseNode'),
         node('node'),
       ]);
     }
@@ -159,17 +149,13 @@ export function createBaseNode(
     if (prop.addToReaderSg) {
       query.create([
         node('readerSG'),
-        relation('out', '', 'permission', {
-          active: true,
-        }),
+        relation('out', '', 'permission'),
         node('', 'Permission', {
-          active: true,
-          createdAt,
           property: prop.key,
           read: true,
           edit: editableProps?.includes(prop.key) ? true : false,
         }),
-        relation('out', '', 'baseNode', { active: true }),
+        relation('out', '', 'baseNode'),
         node('node'),
       ]);
     }
@@ -177,16 +163,12 @@ export function createBaseNode(
     if (prop.isPublic) {
       query.create([
         node('publicSG'),
-        relation('out', '', 'permission', {
-          active: true,
-        }),
+        relation('out', '', 'permission'),
         node('', 'Permission', {
-          active: true,
-          createdAt,
           property: prop.key,
           read: true,
         }),
-        relation('out', '', 'baseNode', { active: true }),
+        relation('out', '', 'baseNode'),
         node('node'),
       ]);
     }
@@ -195,16 +177,12 @@ export function createBaseNode(
     if (prop.isOrgPublic) {
       query.create([
         node('orgSG'),
-        relation('out', '', 'permission', {
-          active: true,
-        }),
+        relation('out', '', 'permission'),
         node('', 'Permission', {
-          active: true,
-          createdAt,
           property: prop.key,
           read: true,
         }),
-        relation('out', '', 'baseNode', { active: true }),
+        relation('out', '', 'baseNode'),
         node('node'),
       ]);
     }
@@ -225,8 +203,8 @@ export function createSG(
 
   query.create([
     node('root'),
-    relation('in', '', 'member', { active: true }),
-    node(cypherIdentifier, labels, { active: true, createdAt, id: generate() }),
+    relation('in', '', 'member'),
+    node(cypherIdentifier, labels, { createdAt, id: generate() }),
   ]);
 }
 
@@ -239,7 +217,7 @@ export function addUserToSG(
 
   query.create([
     node(userCypherIdentifier),
-    relation('in', '', 'member', { active: true, createdAt }),
+    relation('in', '', 'member'),
     node(sGcypherIdentifier),
   ]);
 }
@@ -323,19 +301,17 @@ export function getSecureProperty(query: Query, property: string) {
       node(readPerm, 'Permission', {
         property,
         read: true,
-        active: true,
       }),
       relation('out', '', 'baseNode'),
       node('node'),
       relation('out', '', property, { active: true }),
-      node(property, 'Property', { active: true }),
+      node(property, 'Property'),
     ])
     .where({ [readPerm]: inArray(['permList'], true) })
     .optionalMatch([
       node(editPerm, 'Permission', {
         property,
         edit: true,
-        active: true,
       }),
       relation('out', '', 'baseNode'),
       node('node'),
@@ -355,14 +331,13 @@ export function getSecurePropertySimple(
   if (!type || type === 'read') {
     query
       .optionalMatch([
-        node(property, 'Property', { active: true }),
+        node(property, 'Property'),
         relation('in', '', property, { active: true }),
         node('node'),
         relation('in', '', 'baseNode'),
         node(readPerm, 'Permission', {
           property,
           read: true,
-          active: true,
         }),
       ])
       .where({ [readPerm]: inArray(['permList'], true) });
@@ -370,14 +345,13 @@ export function getSecurePropertySimple(
   if (!type || type === 'edit') {
     query
       .optionalMatch([
-        node(property, 'Property', { active: true }),
+        node(property, 'Property'),
         relation('in', '', property, { active: true }),
         node('node'),
         relation('in', '', 'baseNode'),
         node(editPerm, 'Permission', {
           property,
           edit: true,
-          active: true,
         }),
       ])
       .where({ [editPerm]: inArray(['permList'], true) });
@@ -418,35 +392,29 @@ export function getSecurePropertyOfChildBaseNode(
         node(parentReadPerm, 'Permission', {
           property: childBaseNodeProperty.parentBaseNodePropertyKey,
           read: true,
-          active: true,
         }),
         relation('out', '', 'baseNode'),
         node('node'),
         relation('out', '', childBaseNodeProperty.parentBaseNodePropertyKey, {
           active: true,
         }),
-        node(
-          childBaseNodeProperty.parentBaseNodePropertyKey,
-          [childBaseNodeProperty.childBaseNodeLabel, 'BaseNode'],
-          {
-            active: true,
-          }
-        ),
+        node(childBaseNodeProperty.parentBaseNodePropertyKey, [
+          childBaseNodeProperty.childBaseNodeLabel,
+          'BaseNode',
+        ]),
         relation('out', '', childBaseNodeProperty.childBaseNodePropertyKey, {
           active: true,
         }),
         node(
           childBaseNodeProperty.parentBaseNodePropertyKey +
             childBaseNodeProperty.childBaseNodePropertyKey,
-          'Property',
-          { active: true }
+          'Property'
         ),
       ],
       [
         node(childReadPerm, 'Permission', {
           property: childBaseNodeProperty.childBaseNodePropertyKey,
           read: true,
-          active: true,
         }),
         relation('out', '', 'baseNode'),
         node(childBaseNodeProperty.parentBaseNodePropertyKey),
@@ -460,7 +428,6 @@ export function getSecurePropertyOfChildBaseNode(
       node(parentEditPerm, 'Permission', {
         property: childBaseNodeProperty.parentBaseNodePropertyKey,
         edit: true,
-        active: true,
       }),
       relation('out', '', 'baseNode'),
       node('node'),
@@ -470,7 +437,6 @@ export function getSecurePropertyOfChildBaseNode(
       node(childEditPerm, 'Permission', {
         property: childBaseNodeProperty.childBaseNodePropertyKey,
         edit: true,
-        active: true,
       }),
       relation('out', '', 'baseNode'),
       node(childBaseNodeProperty.parentBaseNodePropertyKey),
@@ -518,19 +484,15 @@ export function getMetaPropertyOfChildBaseNode(
           active: true,
         }
       ),
-      node(
-        childBaseNodeProperty.parentBaseNodePropertyKey,
-        [childBaseNodeProperty.childBaseNodeLabel, 'BaseNode'],
-        {
-          active: true,
-        }
-      ),
+      node(childBaseNodeProperty.parentBaseNodePropertyKey, [
+        childBaseNodeProperty.childBaseNodeLabel,
+        'BaseNode',
+      ]),
     ])
     .optionalMatch([
       node(parentReadPerm, 'Permission', {
         property: childBaseNodeProperty.parentBaseNodePropertyKey,
         read: true,
-        active: true,
       }),
       relation('out', '', 'baseNode'),
       node('node'),
@@ -542,7 +504,6 @@ export function getMetaPropertyOfChildBaseNode(
       node(parentEditPerm, 'Permission', {
         property: childBaseNodeProperty.parentBaseNodePropertyKey,
         edit: true,
-        active: true,
       }),
       relation('out', '', 'baseNode'),
       node('node'),
@@ -560,13 +521,11 @@ export function matchUserPermissions(
   query.match([
     node('requestingUser'),
     relation('in', '', 'member', {}, [1]),
-    node('', 'SecurityGroup', { active: true }),
+    node('', 'SecurityGroup'),
     relation('out', '', 'permission'),
-    node('perms', 'Permission', { active: true }),
+    node('perms', 'Permission'),
     relation('out', '', 'baseNode'),
-    label
-      ? node('node', label, { active: true })
-      : node('node', { active: true }),
+    label ? node('node', label) : node('node'),
   ]);
   if (id) {
     query.where({ node: { id } });
@@ -583,13 +542,11 @@ export function matchUserPermissionsIn(
   query.match([
     node('requestingUser'),
     relation('in', '', 'member', {}, [1]),
-    node('', 'SecurityGroup', { active: true }),
+    node('', 'SecurityGroup'),
     relation('out', '', 'permission'),
-    node('perms', 'Permission', { active: true }),
+    node('perms', 'Permission'),
     relation('out', '', 'baseNode'),
-    label
-      ? node('node', label, { active: true })
-      : node('node', { active: true }),
+    label ? node('node', label) : node('node'),
   ]);
   if (ids) {
     query.where({ node: { id: inArray(ids) }, perms: { read: true } });
@@ -609,15 +566,15 @@ export function matchUserPermissionsForList(
     .match([
       node('requestingUser'),
       relation('in', '', 'member', {}, [1]),
-      node('sg', 'SecurityGroup', { active: true }),
+      node('sg', 'SecurityGroup'),
     ])
     .with('collect(distinct sg) as sgList')
     .match([
       node('sg'),
       relation('out', '', 'permission'),
-      node('perm', 'Permission', { active: true }),
+      node('perm', 'Permission'),
       relation('out', '', 'baseNode'),
-      node('node', label, { active: true }),
+      node('node', label),
     ]);
   if (id) {
     query.where({
@@ -640,7 +597,6 @@ export function matchUserPermissionsForList(
 export function matchRequestingUser(query: Query, session: ISession) {
   query.match([
     node('requestingUser', 'User', {
-      active: true,
       id: session.userId,
     }),
   ]);
@@ -654,19 +610,16 @@ export function property(
   return [
     node('requestingUser'),
     relation('in', '', 'member'),
-    node('', 'SecurityGroup', {
-      active: true,
-    }),
-    relation('out', '', 'permission', { active: true }),
+    node('', 'SecurityGroup'),
+    relation('out', '', 'permission'),
     node(perm, 'Permission', {
       property,
       read: true,
-      active: true,
     }),
     relation('out', '', 'baseNode'),
     node(cypherIdentifierForBaseNode),
     relation('out', '', property, { active: true }),
-    node(property, 'Property', { active: true }),
+    node(property, 'Property'),
   ];
 }
 
@@ -679,14 +632,11 @@ export function tryGetEditPerm(
     [
       node('requestingUser'),
       relation('in', '', 'member'),
-      node('', 'SecurityGroup', {
-        active: true,
-      }),
+      node('', 'SecurityGroup'),
       relation('out', '', 'permission', { active: true }),
       node(perm, 'Permission', {
         property,
         edit: true,
-        active: true,
       }),
       relation('out', '', 'baseNode'),
       node(cypherIdentifierForBaseNode),
@@ -710,48 +660,37 @@ export function filterQuery(
     query.match([
       node('requestingUser'),
       relation('in', '', 'member'),
-      node('', 'SecurityGroup', {
-        active: true,
-      }),
-      relation('out', '', 'permission', { active: true }),
+      node('', 'SecurityGroup'),
+      relation('out', '', 'permission'),
       node('', 'Permission', {
         property: childNodeIdentifier,
         read: true,
-        active: true,
       }),
       relation('out', '', 'baseNode'),
       node('parentNode', baseNodeLabel, {
-        active: true,
         id: baseNodeId,
       }),
       relation('out', '', childNodeIdentifier, {
         active: true,
       }),
-      node('node', label, {
-        active: true,
-      }),
+      node('node', label),
       relation('out', '', sort, { active: true }),
-      node(sort, 'Property', { active: true }),
+      node(sort, 'Property'),
     ]);
   } else if (filterKey && filterValue) {
     query.match([
       node('requestingUser'),
       relation('in', '', 'member'),
-      node('', 'SecurityGroup', {
-        active: true,
-      }),
-      relation('out', '', 'permission', { active: true }),
+      node('', 'SecurityGroup'),
+      relation('out', '', 'permission'),
       node('', 'Permission', {
         property: filterKey,
         read: true,
-        active: true,
       }),
       relation('out', '', 'baseNode'),
-      node('node', label, {
-        active: true,
-      }),
+      node('node', label),
       relation('out', '', filterKey, { active: true }),
-      node(filterKey, 'Property', { active: true }),
+      node(filterKey, 'Property'),
     ]);
     query.where({
       [filterKey]: { value: contains(filterValue) },
@@ -760,21 +699,16 @@ export function filterQuery(
     query.match([
       node('requestingUser'),
       relation('in', '', 'member'),
-      node('', 'SecurityGroup', {
-        active: true,
-      }),
-      relation('out', '', 'permission', { active: true }),
+      node('', 'SecurityGroup'),
+      relation('out', '', 'permission'),
       node('', 'Permission', {
         property: sort,
         read: true,
-        active: true,
       }),
       relation('out', '', 'baseNode'),
-      node('node', label, {
-        active: true,
-      }),
+      node('node', label),
       relation('out', '', sort, { active: true }),
-      node(sort, 'Property', { active: true }),
+      node(sort, 'Property'),
     ]);
   }
 }
@@ -790,14 +724,11 @@ export function filterByString(
     node('readPerm', 'Permission', {
       property: filterKey,
       read: true,
-      active: true,
     }),
     relation('out', '', 'baseNode'),
-    node('node', label, {
-      active: true,
-    }),
+    node('node', label),
     relation('out', '', filterKey, { active: true }),
-    node(filterKey, 'Property', { active: true }),
+    node(filterKey, 'Property'),
   ]);
   query.where({
     readPerm: inArray(['permList'], true),
@@ -815,14 +746,11 @@ export function filterByArray(
     node('readPerm', 'Permission', {
       property: filterKey,
       read: true,
-      active: true,
     }),
     relation('out', '', 'baseNode'),
-    node('node', label, {
-      active: true,
-    }),
+    node('node', label),
     relation('out', '', filterKey, { active: true }),
-    node(filterKey, 'Property', { active: true }),
+    node(filterKey, 'Property'),
   ]);
   query.where({
     readPerm: inArray(['permList'], true),
@@ -840,14 +768,11 @@ export function filterBySubarray(
     node('readPerm', 'Permission', {
       property: filterKey,
       read: true,
-      active: true,
     }),
     relation('out', '', 'baseNode'),
-    node('node', label, {
-      active: true,
-    }),
+    node('node', label),
     relation('out', '', filterKey, { active: true }),
-    node(filterKey, 'Property', { active: true }),
+    node(filterKey, 'Property'),
   ]);
   query.where({
     readPerm: inArray(['permList'], true),
@@ -866,14 +791,11 @@ export function filterByChildBaseNodeCount(
     node('readPerm', 'Permission', {
       property: filterKey,
       read: true,
-      active: true,
     }),
     relation('out', '', 'baseNode'),
-    node('node', label, {
-      active: true,
-    }),
+    node('node', label),
     relation('out', '', filterKey, { active: true }),
-    node(filterKey, 'BaseNode', { active: true }),
+    node(filterKey, 'BaseNode'),
   ]);
   query
     .with(
@@ -901,9 +823,9 @@ export function filterByBaseNodeId(
   originBaseNodeLabel: string
 ) {
   query.match([
-    node('node', originBaseNodeLabel, { active: true }),
+    node('node', originBaseNodeLabel),
     relation(relationshipDirection, '', relationshipType, { active: true }),
-    node('bn', filterBaseNodelabel, { active: true, id: filterNodeId }),
+    node('bn', filterBaseNodelabel, { id: filterNodeId }),
   ]);
 }
 
@@ -917,9 +839,9 @@ export function filterByUser(
   label: string
 ) {
   query.match([
-    node('user', 'User', { active: true, id: userId }),
+    node('user', 'User', { id: userId }),
     relation(relationshipDirection, '', relationshipType, { active: true }),
-    node('node', label, { active: true }),
+    node('node', label),
   ]);
 }
 

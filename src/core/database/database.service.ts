@@ -41,6 +41,36 @@ export type DbValue = Many<
   string | number | boolean | DateTime | Duration | null | undefined
 >;
 
+// helper method for defining permissions
+export const permission = (property: string, baseNode: string) => {
+  return [
+    [
+      node('adminSG'),
+      relation('out', '', 'permission'),
+      node('', 'Permission', {
+        property,
+        read: true,
+        edit: true,
+        admin: true,
+      }),
+      relation('out', '', 'baseNode'),
+      node(baseNode),
+    ],
+    [
+      node('readerSG'),
+      relation('out', '', 'permission'),
+      node('', 'Permission', {
+        property,
+        read: true,
+        edit: false,
+        admin: false,
+      }),
+      relation('out', '', 'baseNode'),
+      node(baseNode),
+    ],
+  ];
+};
+
 export const matchSession = (
   session: ISession,
   {
@@ -61,10 +91,7 @@ export const matchSession = (
     active: true,
   }),
   node('requestingUser', 'User', {
-    active: true,
     id: session.userId,
-    ...(withAclEdit ? { [withAclEdit]: true } : {}),
-    ...(withAclRead ? { [withAclRead]: true } : {}),
     ...requestingUserConditions,
   }),
 ];
@@ -159,17 +186,16 @@ export class DatabaseService {
       [
         // node('requestingUser'),
         // relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
+        node('sg', 'SecurityGroup'),
         relation('out', '', 'permission'),
         node('perm', 'Permission', {
           property,
           read: true,
-          active: true,
         }),
         relation('out', '', 'baseNode'),
-        node('n', type, { active: true, id }),
+        node('n', type, { id }),
         relation('out', '', property, { active: true }),
-        node([property], 'Property', { active: true }),
+        node([property], 'Property'),
       ],
     ]);
 
@@ -178,44 +204,6 @@ export class DatabaseService {
     let result;
     try {
       result = await query.run();
-    } catch (e) {
-      this.logger.error(e);
-    }
-
-    return !!result;
-  }
-
-  async hasACLReadProperty<TObject extends Resource>({
-    session,
-    nodevar,
-    aclReadProp,
-    aclReadNode,
-  }: {
-    session: ISession;
-    nodevar: string;
-    aclReadProp: string;
-    aclReadNode?: string;
-  }): Promise<boolean> {
-    const aclReadPropName = `canRead${upperFirst(aclReadProp)}`;
-    const aclEditPropName = `canEdit${upperFirst(aclReadProp)}`;
-
-    const aclReadNodeName = aclReadNode || `canRead${upperFirst(nodevar)}s`;
-
-    const query = this.db.query().match([matchSession(session, {})]);
-    query.match([
-      node('requestingUser', 'User', { [aclReadNodeName]: true }),
-      relation('in', '', 'member'),
-      node('acl', 'ACL', { active: true, [aclReadPropName]: true }),
-      relation('out', '', 'toNode', { active: true }),
-      node(nodevar),
-      relation('out', 'rel', aclReadProp, { active: true }),
-      node(aclReadProp, 'Property', { active: true }),
-    ]);
-    query.return(`${aclReadProp}.value as value, acl.${aclReadPropName} as canRead, acl.${aclEditPropName} as canEdit
-    `);
-    let result;
-    try {
-      result = await query.first();
     } catch (e) {
       this.logger.error(e);
     }
@@ -245,8 +233,8 @@ export class DatabaseService {
       query.match([matchSession(session, {})]);
       query.match([
         node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
+        relation('in', '', 'member'),
+        node('sg', 'SecurityGroup'),
       ]);
     }
     const nonMetaProps = without(props, 'id', 'createdAt');
@@ -255,17 +243,16 @@ export class DatabaseService {
     for (const property of nonMetaProps) {
       query.match([
         [
-          node('sg', 'SecurityGroup', { active: true }),
+          node('sg', 'SecurityGroup'),
           relation('out', '', 'permission'),
           node(`perm${property}`, 'Permission', {
             property,
             read: true,
-            active: true,
           }),
           relation('out', '', 'baseNode'),
-          node('n', type, { active: true, id }),
+          node('n', type, { id }),
           relation('out', '', property, { active: true }),
-          node(property, 'Property', { active: true }),
+          node(property, 'Property'),
         ],
       ]);
     }
@@ -353,28 +340,25 @@ export class DatabaseService {
       .match([
         node(nodevar, upperFirst(nodevar), {
           id: object.id,
-          active: true,
         }),
       ])
       .match([
         node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
+        relation('in', '', 'member'),
+        node('', 'SecurityGroup'),
+        relation('out', '', 'permission'),
         node('', 'Permission', {
           property: key as string,
-          active: true,
           // admin: true,
           edit: true,
         }),
-        relation('out', '', 'baseNode', { active: true }),
+        relation('out', '', 'baseNode'),
         node(nodevar),
         relation('out', 'oldToProp', key as string, { active: true }),
-        node('oldPropVar', 'Property', { active: true }),
+        node('oldPropVar', 'Property'),
       ])
       .setValues({
         'oldToProp.active': false,
-        'oldPropVar.active': false,
       })
       .with('*')
       .limit(1)
@@ -383,10 +367,8 @@ export class DatabaseService {
         relation('out', 'toProp', key as string, {
           active: true,
           createdAt,
-          owningOrgId: session.owningOrgId,
         }),
         node('newPropNode', 'Property', {
-          active: true,
           createdAt,
           value,
         }),
@@ -445,14 +427,14 @@ export class DatabaseService {
 
     if (aclReadProp === 'id' || aclReadProp === 'createdAt') {
       content = `
-      (${nodevar}:${upperFirst(type)} { active: true, id: $id })
+      (${nodevar}:${upperFirst(type)} { id: $id })
       return ${nodevar}.${aclReadProp} as value, ${nodevar}.${aclReadNodeName} as canRead, null as canEdit
       `;
     } else {
       content = `
-      (${nodevar}: ${upperFirst(type)} { active: true, id: $id })
+      (${nodevar}: ${upperFirst(type)} { id: $id })
       WITH * OPTIONAL MATCH (user)<-[:member]-(acl:ACL { ${aclReadPropName}: true })
-      -[:toNode]->(${nodevar})-[:${aclReadProp} {active: true}]->(${aclReadProp}:Property {active: true})
+      -[:toNode]->(${nodevar})-[:${aclReadProp} ]->(${aclReadProp}:Property )
       RETURN ${aclReadProp}.value as value, acl.${aclReadPropName} as canRead, acl.${aclEditPropName} as canEdit
       `;
     }
@@ -470,7 +452,7 @@ export class DatabaseService {
       .raw(query, {
         token: session.token,
         userId: session.userId,
-        owningOrgId: session.owningOrgId,
+
         id,
       })
       .first()) as ReadPropertyResult;
@@ -512,9 +494,6 @@ export class DatabaseService {
     const nodeName = upperFirst(nodevar);
     const aclReadPropName = aclReadProp || `canRead${nodeName}`;
     const aclEditPropName = aclEditProp || `canEdit${nodeName}`;
-    const owningOrgFilter = skipOwningOrgCheck
-      ? {}
-      : { owningOrgId: owningOrgId || session.owningOrgId };
     const idFilter = input.filter.id ? { id: input.filter.id } : {};
     const userIdFilter = input.filter.userId ? { id: input.filter.userId } : {};
     const mineFilter = input.filter.mine ? { id: session.userId } : {};
@@ -529,14 +508,12 @@ export class DatabaseService {
       query.match([
         [
           node('user', 'User', {
-            active: true,
             ...userIdFilter,
           }),
           relation('out', '', nodevar, {
             active: true,
           }),
           node('n', nodeName, {
-            active: true,
             ...idFilter,
           }),
         ],
@@ -544,7 +521,6 @@ export class DatabaseService {
     } else {
       query.match([
         node('n', nodeName, {
-          active: true,
           ...idFilter,
         }),
       ]);
@@ -554,10 +530,9 @@ export class DatabaseService {
         [
           node('requestingUser'),
           relation('in', '', 'user', { active: true }),
-          node('projectMember', 'ProjectMember', { active: true }),
+          node('projectMember', 'ProjectMember'),
           relation('out', '', 'roles', { active: true }),
           node('role', 'Property', {
-            active: true,
             value: ['ProjectManager'],
           }),
         ],
@@ -574,12 +549,9 @@ export class DatabaseService {
       const propName = typeof prop === 'object' ? prop.name : prop;
 
       query.optionalMatch([
-        node('n', nodeName, {
-          active: true,
-          ...owningOrgFilter,
-        }),
+        node('n', nodeName),
         relation('out', '', propName as string, { active: true }),
-        node(propName as string, 'Property', { active: true }),
+        node(propName as string, 'Property'),
       ]);
     }
 
@@ -721,18 +693,16 @@ export class DatabaseService {
         })
         <-[:token {active: true}]-
         (requestingUser:User {
-          active: true,
+          
           id: $requestingUserId,
           ${aclEditProp}: true
         }),
         (object {
-          active: true,
+          
           id: $objectId
         })
-        SET
-          object.active = false
-        RETURN
-          object.id as id
+        detach delete object
+        
         `,
         {
           requestingUserId: session.userId,
@@ -786,9 +756,7 @@ export class DatabaseService {
       .with('*')
       .optionalMatch([
         node(nodevar, upperFirst(nodevar), {
-          active: true,
           id: object.id,
-          owningOrgId: session.owningOrgId,
         }),
       ])
       .with('*')
@@ -799,11 +767,10 @@ export class DatabaseService {
         relation('out', '', 'toNode'),
         node(nodevar),
         relation('out', 'oldToProp', key as string, { active: true }),
-        node('oldPropVar', 'Property', { active: true }),
+        node('oldPropVar', 'Property'),
       ])
       .setValues({
         'oldToProp.active': false,
-        'oldPropVar.active': false,
       })
       .return('oldPropNode')
       .first();
@@ -1034,12 +1001,10 @@ export class DatabaseService {
         ? [
             [
               node('rootSG', 'RootSecurityGroup', {
-                active: true,
-                createdAt,
                 name: sgName + ' root',
                 id: generate(),
               }),
-              relation('out', '', 'member', { active: true, createdAt }),
+              relation('out', '', 'member'),
               node('requestingUser'),
             ],
             ...permissions,
@@ -1048,33 +1013,23 @@ export class DatabaseService {
             [
               node('adminSG', 'SecurityGroup', {
                 id: generate(),
-                active: true,
-                createdAt,
+
                 name: sgName + ' admin',
               }),
-              relation('out', '', 'member', { active: true, createdAt }),
+              relation('out', '', 'member'),
               node('requestingUser'),
             ],
             [
               node('readerSG', 'SecurityGroup', {
                 id: generate(),
-                active: true,
-                createdAt,
+
                 name: sgName + ' users',
               }),
-              relation('out', '', 'member', { active: true, createdAt }),
+              relation('out', '', 'member'),
               node('requestingUser'),
             ],
-            [
-              node('adminSG'),
-              relation('out', '', 'member', { active: true, createdAt }),
-              node('rootuser'),
-            ],
-            [
-              node('readerSG'),
-              relation('out', '', 'member', { active: true, createdAt }),
-              node('rootuser'),
-            ],
+            [node('adminSG'), relation('out', '', 'member'), node('rootuser')],
+            [node('readerSG'), relation('out', '', 'member'), node('rootuser')],
             ...permissions,
           ];
 
@@ -1083,17 +1038,14 @@ export class DatabaseService {
         .match(matchSession(session, { withAclEdit: aclEditPropName }))
         .match([
           node('rootuser', 'User', {
-            active: true,
             id: this.config.rootAdmin.id,
           }),
         ])
         .create([
           [
             node('newNode', baseNode, {
-              active: true,
               createdAt,
               id,
-              owningOrgId: session.owningOrgId,
             }),
           ],
           ...properties,
@@ -1243,12 +1195,12 @@ export class DatabaseService {
       };
       const qry = this.db
         .query()
-        .match([node('baseNode', nodeName, { active: true, id: id })]);
+        .match([node('baseNode', nodeName, { id: id })]);
       for (const prop of props) {
         qry.optionalMatch([
           node('baseNode'),
           relation('out', 'rel', prop, { active: true }),
-          node(prop, 'Property', { active: true }),
+          node(prop, 'Property'),
         ]);
         Object.assign(rootOutput, { [prop]: [{ value: prop }] });
       }
@@ -1270,7 +1222,7 @@ export class DatabaseService {
     const query = this.db
       .query()
       .match(matchSession(session, { withAclEdit: aclReadPropName }))
-      .match([node('node', nodeName, { active: true, id: id })]);
+      .match([node('node', nodeName, { id: id })]);
 
     for (const property of props) {
       const readPerm = 'canRead' + upperFirst(property);
@@ -1278,35 +1230,35 @@ export class DatabaseService {
       query.optionalMatch([
         [
           node('requestingUser'),
-          relation('in', '', 'member', { active: true }),
-          node('sg', 'SecurityGroup', { active: true }),
-          relation('out', '', 'permission', { active: true }),
+          relation('in', '', 'member'),
+          node('sg', 'SecurityGroup'),
+          relation('out', '', 'permission'),
           node(editPerm, 'Permission', {
             property,
-            active: true,
+
             edit: true,
           }),
-          relation('out', '', 'baseNode', { active: true }),
+          relation('out', '', 'baseNode'),
           node('node'),
           relation('out', '', property, { active: true }),
-          node(property, 'Property', { active: true }),
+          node(property, 'Property'),
         ],
       ]);
       query.optionalMatch([
         [
           node('requestingUser'),
-          relation('in', '', 'member', { active: true }),
-          node('sg', 'SecurityGroup', { active: true }),
-          relation('out', '', 'permission', { active: true }),
+          relation('in', '', 'member'),
+          node('sg', 'SecurityGroup'),
+          relation('out', '', 'permission'),
           node(readPerm, 'Permission', {
             property,
-            active: true,
+
             read: true,
           }),
-          relation('out', '', 'baseNode', { active: true }),
+          relation('out', '', 'baseNode'),
           node('node'),
           relation('out', '', property, { active: true }),
-          node(property, 'Property', { active: true }),
+          node(property, 'Property'),
         ],
       ]);
 
@@ -1359,8 +1311,8 @@ export class DatabaseService {
         matchSession(session),
         [
           node('user', 'User', { active: true, id: session.userId }),
-          relation('in', '', 'member', { active: true }),
-          node('rSg', 'RootSecurityGroup', { active: true }),
+          relation('in', '', 'member'),
+          node('rSg', 'RootSecurityGroup'),
         ],
       ])
       .return('count(user) as total')

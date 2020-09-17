@@ -41,7 +41,6 @@ export class EducationService {
           createdAt,
         }),
         node(prop, 'Property', {
-          active: true,
           value,
         }),
       ],
@@ -54,40 +53,28 @@ export class EducationService {
     return [
       [
         node('adminSG'),
-        relation('out', '', 'permission', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'permission'),
         node('', 'Permission', {
           property,
-          active: true,
+
           read: true,
           edit: true,
           admin: true,
         }),
-        relation('out', '', 'baseNode', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'baseNode'),
         node('newEducation'),
       ],
       [
         node('readerSG'),
-        relation('out', '', 'permission', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'permission'),
         node('', 'Permission', {
           property,
-          active: true,
+
           read: true,
           edit: false,
           admin: false,
         }),
-        relation('out', '', 'baseNode', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'baseNode'),
         node('newEducation'),
       ],
     ];
@@ -98,18 +85,18 @@ export class EducationService {
     return [
       [
         node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
+        relation('in', '', 'member'),
+        node('', 'SecurityGroup'),
+        relation('out', '', 'permission'),
         node(perm, 'Permission', {
           property,
-          active: true,
+
           read: true,
         }),
-        relation('out', '', 'baseNode', { active: true }),
+        relation('out', '', 'baseNode'),
         node('education'),
         relation('out', '', property, { active: true }),
-        node(property, 'Property', { active: true }),
+        node(property, 'Property'),
       ],
     ];
   };
@@ -152,17 +139,14 @@ export class EducationService {
         .match(matchSession(session, { withAclEdit: 'canCreateEducation' }))
         .match([
           node('rootuser', 'User', {
-            active: true,
             id: this.config.rootAdmin.id,
           }),
         ])
         .create([
           [
             node('newEducation', 'Education:BaseNode', {
-              active: true,
               createdAt,
               id,
-              owningOrgId: session.owningOrgId,
             }),
           ],
           ...this.property('degree', input.degree),
@@ -171,33 +155,23 @@ export class EducationService {
           [
             node('adminSG', 'SecurityGroup', {
               id: generate(),
-              active: true,
-              createdAt,
+
               name: `${input.degree} ${input.institution} admin`,
             }),
-            relation('out', '', 'member', { active: true, createdAt }),
+            relation('out', '', 'member'),
             node('requestingUser'),
           ],
           [
             node('readerSG', 'SecurityGroup', {
               id: generate(),
-              active: true,
-              createdAt,
+
               name: `${input.degree} ${input.institution} users`,
             }),
-            relation('out', '', 'member', { active: true, createdAt }),
+            relation('out', '', 'member'),
             node('requestingUser'),
           ],
-          [
-            node('adminSG'),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('rootuser'),
-          ],
-          [
-            node('readerSG'),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('rootuser'),
-          ],
+          [node('adminSG'), relation('out', '', 'member'), node('rootuser')],
+          [node('readerSG'), relation('out', '', 'member'), node('rootuser')],
           ...this.permission('degree'),
           ...this.permission('major'),
           ...this.permission('institution'),
@@ -213,8 +187,8 @@ export class EducationService {
 
       // connect the Education to the User.
       const query = `
-      MATCH (user: User {id: $userId, active: true}),
-        (education:Education {id: $id, active: true})
+      MATCH (user: User {id: $userId}),
+        (education:Education {id: $id})
       CREATE (user)-[:education {active: true, createdAt: datetime()}]->(education)
       RETURN  education.id as id
       `;
@@ -241,7 +215,7 @@ export class EducationService {
     const readEducation = this.db
       .query()
       .match(matchSession(session, { withAclRead: 'canReadEducationList' }))
-      .match([node('education', 'Education', { active: true, id })])
+      .match([node('education', 'Education', { id })])
       .optionalMatch([...this.propMatch('degree')])
       .optionalMatch([...this.propMatch('major')])
       .optionalMatch([...this.propMatch('institution')])
@@ -331,14 +305,7 @@ export class EducationService {
   async checkEducationConsistency(session: ISession): Promise<boolean> {
     const educations = await this.db
       .query()
-      .match([
-        matchSession(session),
-        [
-          node('education', 'Education', {
-            active: true,
-          }),
-        ],
-      ])
+      .match([matchSession(session), [node('education', 'Education')]])
       .return('education.id as id')
       .run();
 

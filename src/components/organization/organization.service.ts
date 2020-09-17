@@ -58,9 +58,7 @@ export class OrganizationService {
     return [
       'CREATE CONSTRAINT ON (n:Organization) ASSERT EXISTS(n.id)',
       'CREATE CONSTRAINT ON (n:Organization) ASSERT n.id IS UNIQUE',
-      'CREATE CONSTRAINT ON (n:Organization) ASSERT EXISTS(n.active)',
       'CREATE CONSTRAINT ON (n:Organization) ASSERT EXISTS(n.createdAt)',
-      // 'CREATE CONSTRAINT ON (n:Organization) ASSERT EXISTS(n.owningOrgId)',
 
       'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.active)',
       'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
@@ -76,7 +74,7 @@ export class OrganizationService {
   ): Promise<Organization> {
     const checkOrg = await this.db
       .query()
-      .raw(`MATCH(org:OrgName {value: $name, active: true}) return org`, {
+      .raw(`MATCH(org:OrgName {value: $name}) return org`, {
         name: input.name,
       })
       .first();
@@ -105,12 +103,9 @@ export class OrganizationService {
 
     const query = this.db
       .query()
-      .match([
-        node('root', 'User', { active: true, id: this.config.rootAdmin.id }),
-      ])
+      .match([node('root', 'User', { id: this.config.rootAdmin.id })])
       .match([
         node('publicSG', 'PublicSecurityGroup', {
-          active: true,
           id: this.config.publicSecurityGroup.id,
         }),
       ])
@@ -149,13 +144,13 @@ export class OrganizationService {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([node('node', 'Organization', { active: true, id: orgId })])
+      .match([node('node', 'Organization', { id: orgId })])
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member'),
-        node('', 'SecurityGroup', { active: true }),
+        node('', 'SecurityGroup'),
         relation('out', '', 'permission'),
-        node('perms', 'Permission', { active: true }),
+        node('perms', 'Permission'),
         relation('out', '', 'baseNode'),
         node('node'),
       ])
@@ -163,7 +158,7 @@ export class OrganizationService {
       .match([
         node('node'),
         relation('out', 'r', { active: true }),
-        node('props', 'Property', { active: true }),
+        node('props', 'Property'),
       ])
       .with('{value: props.value, property: type(r)} as prop, permList, node')
       .with('collect(prop) as propList, permList, node')
@@ -240,7 +235,7 @@ export class OrganizationService {
         ...(filter.userId && session.userId
           ? [
               relation('in', '', 'organization', { active: true }),
-              node('user', 'User', { active: true, id: filter.userId }),
+              node('user', 'User', { id: filter.userId }),
             ]
           : []),
       ])
@@ -250,7 +245,7 @@ export class OrganizationService {
               .match([
                 node('node'),
                 relation('out', '', sort),
-                node('prop', 'Property', { active: true }),
+                node('prop', 'Property'),
               ])
               .with('*')
               .orderBy(sortBy, order)
@@ -272,9 +267,7 @@ export class OrganizationService {
           (user:User {
             isAdmin: true
           }),
-            (org:Organization {
-              active: true
-            })
+            (org:Organization)
           RETURN
             count(org) as orgCount
           `,
@@ -305,11 +298,9 @@ export class OrganizationService {
       .raw(
         `
         MATCH
-          (org:Organization {
-            active: true
-          })
+          (org:Organization)
           -[:name {active: true}]->
-          (name:Property {active: true})
+          (name:Property)
         RETURN
           org.id as id,
           org.createdAt as createdAt,
@@ -360,14 +351,7 @@ export class OrganizationService {
   async checkOrganizationConsistency(session: ISession): Promise<boolean> {
     const organizations = await this.db
       .query()
-      .match([
-        matchSession(session),
-        [
-          node('organization', 'Organization', {
-            active: true,
-          }),
-        ],
-      ])
+      .match([matchSession(session), [node('organization', 'Organization')]])
       .return('organization.id as id')
       .run();
 

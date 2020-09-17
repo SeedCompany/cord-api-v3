@@ -52,9 +52,8 @@ export class StoryService {
     return [
       'CREATE CONSTRAINT ON (n:Story) ASSERT EXISTS(n.id)',
       'CREATE CONSTRAINT ON (n:Story) ASSERT n.id IS UNIQUE',
-      'CREATE CONSTRAINT ON (n:Story) ASSERT EXISTS(n.active)',
+
       'CREATE CONSTRAINT ON (n:Story) ASSERT EXISTS(n.createdAt)',
-      'CREATE CONSTRAINT ON (n:Story) ASSERT EXISTS(n.owningOrgId)',
 
       'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.active)',
       'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
@@ -92,40 +91,28 @@ export class StoryService {
     return [
       [
         node('adminSG'),
-        relation('out', '', 'permission', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'permission'),
         node('', 'Permission', {
           property,
-          active: true,
+
           read: true,
           edit: true,
           admin: true,
         }),
-        relation('out', '', 'baseNode', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'baseNode'),
         node(baseNode),
       ],
       [
         node('readerSG'),
-        relation('out', '', 'permission', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'permission'),
         node('', 'Permission', {
           property,
-          active: true,
+
           read: true,
           edit: false,
           admin: false,
         }),
-        relation('out', '', 'baseNode', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'baseNode'),
         node(baseNode),
       ],
     ];
@@ -163,13 +150,10 @@ export class StoryService {
         .call(matchRequestingUser, session)
         .match([
           node('root', 'User', {
-            active: true,
             id: this.config.rootAdmin.id,
           }),
         ])
-        .call(createBaseNode, ['Story', 'Producible'], secureProps, {
-          owningOrgId: session.owningOrgId,
-        })
+        .call(createBaseNode, ['Story', 'Producible'], secureProps)
         .create([...this.permission('scriptureReferences', 'node')])
         .return('node.id as id')
         .first();
@@ -209,7 +193,7 @@ export class StoryService {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([node('node', 'Story', { active: true, id })])
+      .match([node('node', 'Story', { id })])
       .call(getPermList, 'requestingUser')
       .call(getPropList, 'permList')
       .return('node, permList, propList')
@@ -286,7 +270,7 @@ export class StoryService {
           .match([
             node('node'),
             relation('out', '', sort),
-            node('prop', 'Property', { active: true }),
+            node('prop', 'Property'),
           ])
           .with('*')
           .orderBy('prop.value', order)

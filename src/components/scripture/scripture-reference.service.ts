@@ -26,8 +26,6 @@ export class ScriptureReferenceService {
         .match([
           node('node', 'BaseNode', {
             id: producibleId,
-            active: true,
-            owningOrgId: session.owningOrgId,
           }),
         ])
         .create([
@@ -35,7 +33,7 @@ export class ScriptureReferenceService {
           relation('out', '', 'scriptureReferences', { active: true }),
           node('sr', ['ScriptureRange', 'BaseNode'], {
             ...ScriptureRange.fromReferences(sr),
-            active: true,
+
             createdAt: DateTime.local(),
           }),
         ])
@@ -61,9 +59,9 @@ export class ScriptureReferenceService {
       await this.db
         .query()
         .match([
-          node('product', 'Product', { id: producibleId, active: true }),
+          node('product', 'Product', { id: producibleId }),
           relation('out', 'rel', 'isOverriding', { active: true }),
-          node('propertyNode', 'Property', { active: true }),
+          node('propertyNode', 'Property'),
         ])
         .setValues({
           'propertyNode.value': scriptureRefs !== null,
@@ -74,9 +72,9 @@ export class ScriptureReferenceService {
     await this.db
       .query()
       .match([
-        node('node', 'BaseNode', { id: producibleId, active: true }),
+        node('node', 'BaseNode', { id: producibleId }),
         relation('out', 'rel', rel, { active: true }),
-        node('sr', 'ScriptureRange', { active: true }),
+        node('sr', 'ScriptureRange'),
       ])
       .setValues({
         'rel.active': false,
@@ -89,13 +87,13 @@ export class ScriptureReferenceService {
       for (const sr of scriptureRefs) {
         await this.db
           .query()
-          .match([node('node', 'BaseNode', { id: producibleId, active: true })])
+          .match([node('node', 'BaseNode', { id: producibleId })])
           .create([
             node('node'),
             relation('out', '', rel, { active: true }),
             node('', ['ScriptureRange', 'BaseNode'], {
               ...ScriptureRange.fromReferences(sr),
-              active: true,
+
               createdAt: DateTime.local(),
             }),
           ])
@@ -115,8 +113,6 @@ export class ScriptureReferenceService {
       .match([
         node('node', 'BaseNode', {
           id: producibleId,
-          active: true,
-          owningOrgId: session.owningOrgId,
         }),
         relation(
           'out',
@@ -128,7 +124,7 @@ export class ScriptureReferenceService {
             active: true,
           }
         ),
-        node('scriptureRanges', 'ScriptureRange', { active: true }),
+        node('scriptureRanges', 'ScriptureRange'),
       ])
       .return('scriptureRanges')
       .asResult<{ scriptureRanges: Node<Range<number>> }>()

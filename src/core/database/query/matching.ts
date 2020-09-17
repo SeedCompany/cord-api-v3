@@ -6,17 +6,16 @@ import { mapping } from './mapping';
 
 export const requestingUser = (session: ISession) =>
   node('requestingUser', 'User', {
-    active: true,
     id: session.userId,
   });
 
 export const permissionsOfNode = (nodeLabel?: string) => [
   relation('in', '', 'member'),
-  node('', 'SecurityGroup', { active: true }),
+  node('', 'SecurityGroup'),
   relation('out', '', 'permission'),
-  node('perms', 'Permission', { active: true }),
+  node('perms', 'Permission'),
   relation('out', '', 'baseNode'),
-  node('node', nodeLabel, { active: true }),
+  node('node', nodeLabel),
 ];
 
 export const matchPermList = (
@@ -33,7 +32,7 @@ export const matchPropList = (query: Query, ...withOther: Term[]) =>
     .match([
       node('node'),
       relation('out', 'r', { active: true }),
-      node('props', 'Property', { active: true }),
+      node('props', 'Property'),
     ])
     .with([
       collect(

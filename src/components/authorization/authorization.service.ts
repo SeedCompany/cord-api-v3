@@ -50,8 +50,6 @@ export class AuthorizationService {
     return [
       'CREATE CONSTRAINT ON (n:SecurityGroup) ASSERT EXISTS(n.id)',
       'CREATE CONSTRAINT ON (n:SecurityGroup) ASSERT n.id IS UNIQUE',
-      'CREATE CONSTRAINT ON (n:SecurityGroup) ASSERT EXISTS(n.active)',
-      'CREATE CONSTRAINT ON (n:SecurityGroup) ASSERT EXISTS(n.createdAt)',
     ];
   }
 
@@ -161,9 +159,7 @@ export class AuthorizationService {
             active: true,
           }),
           node('user', 'User'),
-          relation('in', '', 'admin', {
-            active: true,
-          }),
+          relation('in', '', 'admin'),
           node('baseNode', 'BaseNode', {
             id: request.baseNodeId,
           }),
@@ -206,7 +202,7 @@ export class AuthorizationService {
       .query()
       .match([
         [
-          node('sg', 'SecurityGroup', {}),
+          node('sg', 'SecurityGroup'),
           relation('out', '', 'member'),
           node('user', 'User'),
           relation('out', '', 'token', {
@@ -364,9 +360,7 @@ export class AuthorizationService {
             active: true,
           }),
           node('user', 'User'),
-          relation('in', '', 'admin', {
-            active: true,
-          }),
+          relation('in', '', 'admin'),
           node('baseNode', 'BaseNode', {
             id: request.baseNodeId,
           }),
@@ -527,9 +521,7 @@ export class AuthorizationService {
             active: true,
           }),
           node('requestingUser', 'User'),
-          relation('in', '', 'admin', {
-            active: true,
-          }),
+          relation('in', '', 'admin'),
           node('accessBaseNode', 'BaseNode', {
             id: request.baseNodeId,
           }),

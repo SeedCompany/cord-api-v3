@@ -15,7 +15,6 @@ export const Session = () => Context('request', LazySessionPipe);
 export interface ISession {
   token: string;
   issuedAt: DateTime;
-  owningOrgId?: string;
   userId?: string;
 }
 

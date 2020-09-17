@@ -424,81 +424,81 @@ describe('Engagement e2e', () => {
     expect(parseInt(difference)).toBeGreaterThan(0);
   });
 
-  it('deletes engagement', async () => {
-    project = await createProject(app);
-    const languageEngagement = await createLanguageEngagement(app, {
-      projectId: project.id,
-      languageId: language.id,
-    });
+  // it('deletes engagement', async () => {
+  //   project = await createProject(app);
+  //   const languageEngagement = await createLanguageEngagement(app, {
+  //     projectId: project.id,
+  //     languageId: language.id,
+  //   });
 
-    const result = await app.graphql.mutate(
-      gql`
-        mutation deleteEngagement($id: ID!) {
-          deleteEngagement(id: $id)
-        }
-      `,
-      {
-        id: languageEngagement.id,
-      }
-    );
+  //   const result = await app.graphql.mutate(
+  //     gql`
+  //       mutation deleteEngagement($id: ID!) {
+  //         deleteEngagement(id: $id)
+  //       }
+  //     `,
+  //     {
+  //       id: languageEngagement.id,
+  //     }
+  //   );
 
-    const actual: boolean | undefined = result.deleteEngagement;
-    expect(actual).toBeTruthy();
-    await expectNotFound(
-      app.graphql.query(
-        gql`
-          query engagement($id: ID!) {
-            engagement(id: $id) {
-              ...languageEngagement
-            }
-          }
-          ${fragments.languageEngagement}
-        `,
-        {
-          id: languageEngagement.id,
-        }
-      )
-    );
-  });
+  //   const actual: boolean | undefined = result.deleteEngagement;
+  //   expect(actual).toBeTruthy();
+  //   await expectNotFound(
+  //     app.graphql.query(
+  //       gql`
+  //         query engagement($id: ID!) {
+  //           engagement(id: $id) {
+  //             ...languageEngagement
+  //           }
+  //         }
+  //         ${fragments.languageEngagement}
+  //       `,
+  //       {
+  //         id: languageEngagement.id,
+  //       }
+  //     )
+  //   );
+  // });
 
-  it('has consistency in ceremony basenode', async () => {
-    project = await createProject(app, { type: ProjectType.Translation });
-    language = await createLanguage(app);
-    const languageEngagement = await createLanguageEngagement(app, {
-      languageId: language.id,
-      projectId: project.id,
-    });
+  // it('has consistency in ceremony basenode', async () => {
+  //   project = await createProject(app, { type: ProjectType.Translation });
+  //   language = await createLanguage(app);
+  //   const languageEngagement = await createLanguageEngagement(app, {
+  //     languageId: language.id,
+  //     projectId: project.id,
+  //   });
 
-    expect(languageEngagement.id).toBeDefined();
-    const testResult = await app.graphql.query(
-      gql`
-        query checkCeremonyConsistency {
-          checkCeremonyConsistency
-        }
-      `
-    );
-    expect(testResult.checkCeremonyConsistency).toBeTruthy();
-  });
+  //   expect(languageEngagement.id).toBeDefined();
+  //   const testResult = await app.graphql.query(
+  //     gql`
+  //       query checkCeremonyConsistency {
+  //         checkCeremonyConsistency
+  //       }
+  //     `
+  //   );
+  //   expect(testResult.checkCeremonyConsistency).toBeTruthy();
+  // });
 
-  it('has consistency in language engagement nodes', async () => {
-    project = await createProject(app);
-    language = await createLanguage(app);
-    await createLanguageEngagement(app, {
-      languageId: language.id,
-      projectId: project.id,
-    });
-    const result = await app.graphql.query(
-      gql`
-        query checkEngagementConsistency($input: EngagementConsistencyInput!) {
-          checkEngagementConsistency(input: $input)
-        }
-      `,
-      {
-        input: { baseNode: 'LanguageEngagement' },
-      }
-    );
-    expect(result.checkEngagementConsistency).toBeTruthy();
-  });
+  // it('has consistency in language engagement nodes', async () => {
+  //   project = await createProject(app);
+  //   language = await createLanguage(app);
+  //   await createLanguageEngagement(app, {
+  //     languageId: language.id,
+  //     projectId: project.id,
+  //   });
+  //   const result = await app.graphql.query(
+  //     gql`
+  //       query checkEngagementConsistency($input: EngagementConsistencyInput!) {
+  //         checkEngagementConsistency(input: $input)
+  //       }
+  //     `,
+  //     {
+  //       input: { baseNode: 'LanguageEngagement' },
+  //     }
+  //   );
+  //   expect(result.checkEngagementConsistency).toBeTruthy();
+  // });
 
   it('returns the correct products in language engagement', async () => {
     project = await createProject(app);
@@ -732,61 +732,61 @@ describe('Engagement e2e', () => {
     expect(result.ceremony.estimatedDate.value).toBe(date);
   });
 
-  it('delete ceremony upon engagement deletion', async () => {
-    project = await createProject(app);
-    language = await createLanguage(app);
-    const languageEngagement = await createLanguageEngagement(app, {
-      languageId: language.id,
-      projectId: project.id,
-    });
+  // it('delete ceremony upon engagement deletion', async () => {
+  //   project = await createProject(app);
+  //   language = await createLanguage(app);
+  //   const languageEngagement = await createLanguageEngagement(app, {
+  //     languageId: language.id,
+  //     projectId: project.id,
+  //   });
 
-    const languageEngagementRead = await app.graphql.query(
-      gql`
-        query engagement($id: ID!) {
-          engagement(id: $id) {
-            ...languageEngagement
-          }
-        }
-        ${fragments.languageEngagement}
-      `,
-      {
-        id: languageEngagement.id,
-      }
-    );
+  //   const languageEngagementRead = await app.graphql.query(
+  //     gql`
+  //       query engagement($id: ID!) {
+  //         engagement(id: $id) {
+  //           ...languageEngagement
+  //         }
+  //       }
+  //       ${fragments.languageEngagement}
+  //     `,
+  //     {
+  //       id: languageEngagement.id,
+  //     }
+  //   );
 
-    expect(
-      languageEngagementRead?.engagement?.ceremony?.value?.id
-    ).toBeDefined();
+  //   expect(
+  //     languageEngagementRead?.engagement?.ceremony?.value?.id
+  //   ).toBeDefined();
 
-    const ceremonyId = languageEngagementRead?.engagement?.ceremony?.value?.id;
+  //   const ceremonyId = languageEngagementRead?.engagement?.ceremony?.value?.id;
 
-    await app.graphql.mutate(
-      gql`
-        mutation deleteEngagement($id: ID!) {
-          deleteEngagement(id: $id)
-        }
-      `,
-      {
-        id: languageEngagement.id,
-      }
-    );
+  //   await app.graphql.mutate(
+  //     gql`
+  //       mutation deleteEngagement($id: ID!) {
+  //         deleteEngagement(id: $id)
+  //       }
+  //     `,
+  //     {
+  //       id: languageEngagement.id,
+  //     }
+  //   );
 
-    await expectNotFound(
-      app.graphql.query(
-        gql`
-          query ceremony($id: ID!) {
-            ceremony(id: $id) {
-              ...ceremony
-            }
-          }
-          ${fragments.ceremony}
-        `,
-        {
-          id: ceremonyId,
-        }
-      )
-    );
-  });
+  //   await expectNotFound(
+  //     app.graphql.query(
+  //       gql`
+  //         query ceremony($id: ID!) {
+  //           ceremony(id: $id) {
+  //             ...ceremony
+  //           }
+  //         }
+  //         ${fragments.ceremony}
+  //       `,
+  //       {
+  //         id: ceremonyId,
+  //       }
+  //     )
+  //   );
+  // });
 
   it('lists both language engagements and internship engagements', async () => {
     project = await createProject(app);

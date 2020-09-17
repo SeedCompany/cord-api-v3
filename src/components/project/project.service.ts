@@ -101,21 +101,12 @@ export class ProjectService {
     return [
       'CREATE CONSTRAINT ON (n:Project) ASSERT EXISTS(n.id)',
       'CREATE CONSTRAINT ON (n:Project) ASSERT n.id IS UNIQUE',
-      'CREATE CONSTRAINT ON (n:Project) ASSERT EXISTS(n.active)',
       'CREATE CONSTRAINT ON (n:Project) ASSERT EXISTS(n.createdAt)',
-      'CREATE CONSTRAINT ON (n:Project) ASSERT EXISTS(n.owningOrgId)',
 
-      'CREATE CONSTRAINT ON ()-[r:step]-() ASSERT EXISTS(r.active)',
       'CREATE CONSTRAINT ON ()-[r:step]-() ASSERT EXISTS(r.createdAt)',
-      'CREATE CONSTRAINT ON (n:ProjectStep) ASSERT EXISTS(n.active)',
-      'CREATE CONSTRAINT ON (n:ProjectStep) ASSERT EXISTS(n.value)',
-
       'CREATE CONSTRAINT ON ()-[r:status]-() ASSERT EXISTS(r.active)',
       'CREATE CONSTRAINT ON ()-[r:status]-() ASSERT EXISTS(r.createdAt)',
-      'CREATE CONSTRAINT ON (n:ProjectStatus) ASSERT EXISTS(n.active)',
-      'CREATE CONSTRAINT ON (n:ProjectStatus) ASSERT EXISTS(n.value)',
 
-      'CREATE CONSTRAINT ON (n:ProjectName) ASSERT EXISTS(n.value)',
       'CREATE CONSTRAINT ON (n:ProjectName) ASSERT n.value IS UNIQUE',
     ];
   }
@@ -131,7 +122,6 @@ export class ProjectService {
           createdAt,
         }),
         node(prop, 'Property', {
-          active: true,
           value,
         }),
       ],
@@ -144,40 +134,26 @@ export class ProjectService {
     return [
       [
         node('adminSG'),
-        relation('out', '', 'permission', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'permission'),
         node('', 'Permission', {
           property,
-          active: true,
           read: true,
           edit: true,
           admin: true,
         }),
-        relation('out', '', 'baseNode', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'baseNode'),
         node('newProject'),
       ],
       [
         node('readerSG'),
-        relation('out', '', 'permission', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'permission'),
         node('', 'Permission', {
           property,
-          active: true,
           read: true,
           edit: canEdit,
           admin: false,
         }),
-        relation('out', '', 'baseNode', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'baseNode'),
         node('node'),
       ],
     ];
@@ -188,18 +164,17 @@ export class ProjectService {
     return [
       [
         node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
+        relation('in', '', 'member'),
+        node('sg', 'SecurityGroup'),
+        relation('out', '', 'permission'),
         node(perm, 'Permission', {
           property,
-          active: true,
           read: true,
         }),
-        relation('out', '', 'baseNode', { active: true }),
+        relation('out', '', 'baseNode'),
         node('project'),
         relation('out', '', property, { active: true }),
-        node(property, 'Property', { active: true }),
+        node(property, 'Property'),
       ],
     ];
   };
@@ -312,14 +287,11 @@ export class ProjectService {
         .call(matchRequestingUser, session)
         .match([
           node('root', 'User', {
-            active: true,
             id: this.config.rootAdmin.id,
           }),
         ]);
       if (locationId) {
-        createProject.match([
-          node('country', 'Country', { active: true, id: locationId }),
-        ]);
+        createProject.match([node('country', 'Country', { id: locationId })]);
       }
 
       createProject
@@ -328,7 +300,6 @@ export class ProjectService {
           `Project:${input.type}Project`,
           secureProps,
           {
-            owningOrgId: session.owningOrgId,
             type: createInput.type,
           },
           canEdit ? ['name', 'mouStart', 'mouEnd'] : []
@@ -358,7 +329,7 @@ export class ProjectService {
       if (locationId) {
         location = await this.db
           .query()
-          .match([node('country', 'Country', { active: true, id: locationId })])
+          .match([node('country', 'Country', { id: locationId })])
           .return('country.id')
           .first();
       }
@@ -430,13 +401,13 @@ export class ProjectService {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([node('node', 'Project', { active: true, id })])
+      .match([node('node', 'Project', { id })])
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member'),
-        node('', 'SecurityGroup', { active: true }),
+        node('', 'SecurityGroup'),
         relation('out', '', 'permission'),
-        node('perms', 'Permission', { active: true }),
+        node('perms', 'Permission'),
         relation('out', '', 'baseNode'),
         node('node'),
       ])
@@ -444,23 +415,23 @@ export class ProjectService {
       .match([
         node('node'),
         relation('out', 'r', { active: true }),
-        node('props', 'Property', { active: true }),
+        node('props', 'Property'),
       ])
       .with('{value: props.value, property: type(r)} as prop, permList, node')
       .with('collect(prop) as propList, permList, node')
       .optionalMatch([
         node('node'),
         relation('out', '', 'location'),
-        node('country', 'Country', { active: true }),
+        node('country', 'Country'),
       ])
       .optionalMatch([
         node('node'),
         relation('out', '', 'engagement', { active: true }),
-        node('', 'LanguageEngagement', { active: true }),
+        node('', 'LanguageEngagement'),
         relation('out', '', 'language', { active: true }),
-        node('', 'Language', { active: true }),
+        node('', 'Language'),
         relation('out', '', 'sensitivity', { active: true }),
-        node('sensitivity', 'Property', { active: true }),
+        node('sensitivity', 'Property'),
       ])
       .return([
         'propList',
@@ -621,7 +592,7 @@ export class ProjectService {
           .match([
             node('node'),
             relation('out', '', sort),
-            node('prop', 'Property', { active: true }),
+            node('prop', 'Property'),
           ])
           .with('*')
           .orderBy(sortBy, order)
@@ -663,7 +634,6 @@ export class ProjectService {
           relation('out', '', 'permission'),
           node('canReadEngagement', 'Permission', {
             property: 'engagement',
-            active: true,
             read: true,
           }),
           relation('out', '', 'baseNode'),
@@ -714,7 +684,6 @@ export class ProjectService {
           relation('out', '', 'permission'),
           node('canReadTeamMember', 'Permission', {
             property: 'teamMember',
-            active: true,
             read: true,
           }),
           relation('out', '', 'baseNode'),
@@ -765,7 +734,6 @@ export class ProjectService {
           relation('out', '', 'permission'),
           node('canReadPartnership', 'Permission', {
             property: 'partnership',
-            active: true,
             read: true,
           }),
           relation('out', '', 'baseNode'),
@@ -828,7 +796,7 @@ export class ProjectService {
       .match(matchSession(session, { withAclRead: 'canReadProjects' }))
       .optionalMatch([
         [
-          node('project', 'Project', { active: true, id: projectId }),
+          node('project', 'Project', { id: projectId }),
           relation('out', 'rootDirectory', { active: true }),
           node('directory', 'BaseNode:Directory'),
         ],
@@ -896,14 +864,7 @@ export class ProjectService {
   async consistencyChecker(session: ISession): Promise<boolean> {
     const projects = await this.db
       .query()
-      .match([
-        matchSession(session),
-        [
-          node('project', 'Project', {
-            active: true,
-          }),
-        ],
-      ])
+      .match([matchSession(session), [node('project', 'Project')]])
       .return('project.id as id')
       .run();
 

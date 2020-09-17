@@ -90,7 +90,6 @@ export class WorkflowService {
               active: true,
             }),
             node('currentState', 'CurrentState:Property', {
-              active: true,
               value: input.startingStateName,
             }),
           ],
@@ -799,7 +798,6 @@ export class WorkflowService {
             node('baseNode', 'BaseNode'),
             relation('out', 'oldRel', `${workflow.stateIdentifier}`),
             node('currentState', 'CurrentState:Property', {
-              active: true,
               value: possibleState.value,
             }),
           ],
@@ -816,7 +814,6 @@ export class WorkflowService {
               active: true,
             }),
             node('newCurrentState', 'CurrentState:Property', {
-              active: true,
               value: possibleState.newValue,
             }),
           ],

@@ -36,6 +36,7 @@ import {
   PartnerListOutput,
   UpdatePartner,
 } from './dto';
+import { permission as dbPermission } from '../../core/database/database.service';
 
 @Injectable()
 export class PartnerService {
@@ -55,56 +56,13 @@ export class PartnerService {
     return [
       'CREATE CONSTRAINT ON (n:Partner) ASSERT EXISTS(n.id)',
       'CREATE CONSTRAINT ON (n:Partner) ASSERT n.id IS UNIQUE',
-      'CREATE CONSTRAINT ON (n:Partner) ASSERT EXISTS(n.active)',
+
       'CREATE CONSTRAINT ON (n:Partner) ASSERT EXISTS(n.createdAt)',
-      'CREATE CONSTRAINT ON (n:Partner) ASSERT EXISTS(n.owningOrgId)',
     ];
   }
 
   // helper method for defining permissions
-  permission = (property: string, baseNode: string) => {
-    const createdAt = DateTime.local();
-    return [
-      [
-        node('adminSG'),
-        relation('out', '', 'permission', {
-          active: true,
-          createdAt,
-        }),
-        node('', 'Permission', {
-          property,
-          active: true,
-          read: true,
-          edit: true,
-          admin: true,
-        }),
-        relation('out', '', 'baseNode', {
-          active: true,
-          createdAt,
-        }),
-        node(baseNode),
-      ],
-      [
-        node('readerSG'),
-        relation('out', '', 'permission', {
-          active: true,
-          createdAt,
-        }),
-        node('', 'Permission', {
-          property,
-          active: true,
-          read: true,
-          edit: false,
-          admin: false,
-        }),
-        relation('out', '', 'baseNode', {
-          active: true,
-          createdAt,
-        }),
-        node(baseNode),
-      ],
-    ];
-  };
+  permission = dbPermission;
 
   async create(input: CreatePartner, session: ISession): Promise<Partner> {
     const createdAt = DateTime.local();
@@ -112,18 +70,13 @@ export class PartnerService {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([
-        node('root', 'User', { active: true, id: this.config.rootAdmin.id }),
-      ])
+      .match([node('root', 'User', { id: this.config.rootAdmin.id })])
       .match([
         node('organization', 'Organization', {
-          active: true,
           id: input.organizationId,
         }),
       ])
-      .call(createBaseNode, 'Partner', [], {
-        owningOrgId: session.owningOrgId,
-      })
+      .call(createBaseNode, 'Partner', [])
       .create([
         ...this.permission('organization', 'node'),
         ...this.permission('pointOfContact', 'node'),
@@ -146,11 +99,9 @@ export class PartnerService {
         .query()
         .matchNode('partner', 'Partner', {
           id: result.id,
-          active: true,
         })
         .matchNode('pointOfContact', 'User', {
           id: input.pointOfContactId,
-          active: true,
         })
         .create([
           node('partner'),
@@ -180,17 +131,17 @@ export class PartnerService {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([node('node', 'Partner', { active: true, id: id })])
+      .match([node('node', 'Partner', { id: id })])
       .call(matchPermList, 'requestingUser')
       .optionalMatch([
         node('node'),
         relation('out', '', 'organization', { active: true }),
-        node('organization', 'Organization', { active: true }),
+        node('organization', 'Organization'),
       ])
       .optionalMatch([
         node('node'),
         relation('out', '', 'pointOfContact', { active: true }),
-        node('pointOfContact', 'User', { active: true }),
+        node('pointOfContact', 'User'),
       ])
       .return(
         'permList, node, organization.id as organizationId, pointOfContact.id as pointOfContactId'
@@ -235,27 +186,26 @@ export class PartnerService {
       await this.db
         .query()
         .call(matchRequestingUser, session)
-        .matchNode('partner', 'Partner', { active: true, id: input.id })
+        .matchNode('partner', 'Partner', { id: input.id })
         .matchNode('newPointOfContact', 'User', {
           id: input.pointOfContactId,
-          active: true,
         })
         .optionalMatch([
           node('requestingUser'),
-          relation('in', '', 'member', { active: true }),
-          node('', 'SecurityGroup', { active: true }),
-          relation('out', '', 'permission', { active: true }),
+          relation('in', '', 'member'),
+          node('', 'SecurityGroup'),
+          relation('out', '', 'permission'),
           node('canReadPointOfContact', 'Permission', {
             property: 'pointOfContact',
-            active: true,
+
             read: true,
           }),
-          relation('out', '', 'baseNode', { active: true }),
+          relation('out', '', 'baseNode'),
           node('org'),
           relation('out', 'oldPointOfContactRel', 'pointOfContact', {
             active: true,
           }),
-          node('pointOfContact', 'User', { active: true }),
+          node('pointOfContact', 'User'),
         ])
         .create([
           node('partner'),
@@ -305,7 +255,7 @@ export class PartnerService {
               .match([
                 node('node'),
                 relation('out', '', sort),
-                node('prop', 'Property', { active: true }),
+                node('prop', 'Property'),
               ])
               .with('*')
               .orderBy('prop.value', order)

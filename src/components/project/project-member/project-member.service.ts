@@ -69,7 +69,6 @@ export class ProjectMemberService {
           createdAt,
         }),
         node(prop, 'Property', {
-          active: true,
           value,
         }),
       ],
@@ -82,40 +81,26 @@ export class ProjectMemberService {
     return [
       [
         node('adminSG'),
-        relation('out', '', 'permission', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'permission'),
         node('', 'Permission', {
           property,
-          active: true,
           read: true,
           edit: true,
           admin: true,
         }),
-        relation('out', '', 'baseNode', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'baseNode'),
         node('newProjectMember'),
       ],
       [
         node('readerSG'),
-        relation('out', '', 'permission', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'permission'),
         node('', 'Permission', {
           property,
-          active: true,
           read: true,
           edit: false,
           admin: false,
         }),
-        relation('out', '', 'baseNode', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'baseNode'),
         node('newProjectMember'),
       ],
     ];
@@ -127,35 +112,33 @@ export class ProjectMemberService {
     query.optionalMatch([
       [
         node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
+        relation('in', '', 'member'),
+        node('', 'SecurityGroup'),
+        relation('out', '', 'permission'),
         node(editPerm, 'Permission', {
           property,
-          active: true,
           edit: true,
         }),
-        relation('out', '', 'baseNode', { active: true }),
+        relation('out', '', 'baseNode'),
         node('projectMember'),
         relation('out', '', property, { active: true }),
-        node(property, 'Property', { active: true }),
+        node(property, 'Property'),
       ],
     ]);
     query.optionalMatch([
       [
         node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
+        relation('in', '', 'member'),
+        node('', 'SecurityGroup'),
+        relation('out', '', 'permission'),
         node(readPerm, 'Permission', {
           property,
-          active: true,
           read: true,
         }),
-        relation('out', '', 'baseNode', { active: true }),
+        relation('out', '', 'baseNode'),
         node('projectMember'),
         relation('out', '', property, { active: true }),
-        node(property, 'Property', { active: true }),
+        node(property, 'Property'),
       ],
     ]);
   };
@@ -166,12 +149,12 @@ export class ProjectMemberService {
   ): Promise<boolean> {
     const result = await this.db
       .query()
-      .match([node('user', 'User', { active: true, id: userId })])
-      .match([node('project', 'Project', { active: true, id: projectId })])
+      .match([node('user', 'User', { id: userId })])
+      .match([node('project', 'Project', { id: projectId })])
       .match([
         node('project'),
         relation('out', '', 'member'),
-        node('projectMember', 'ProjectMember', { active: true }),
+        node('projectMember', 'ProjectMember'),
         relation('out', '', 'user'),
         node('user'),
       ])
@@ -204,17 +187,14 @@ export class ProjectMemberService {
         .match(matchSession(session, { withAclEdit: 'canCreateProjectMember' }))
         .match([
           node('rootuser', 'User', {
-            active: true,
             id: this.config.rootAdmin.id,
           }),
         ])
         .create([
           [
             node('newProjectMember', 'ProjectMember:BaseNode', {
-              active: true,
               createdAt,
               id,
-              owningOrgId: session.owningOrgId,
             }),
           ],
           ...this.property('roles', input.roles),
@@ -222,33 +202,21 @@ export class ProjectMemberService {
           [
             node('adminSG', 'SecurityGroup', {
               id: generate(),
-              active: true,
-              createdAt,
               name: `projectmember-SG admin`,
             }),
-            relation('out', '', 'member', { active: true, createdAt }),
+            relation('out', '', 'member'),
             node('requestingUser'),
           ],
           [
             node('readerSG', 'SecurityGroup', {
               id: generate(),
-              active: true,
-              createdAt,
               name: `projectmember-SG users`,
             }),
-            relation('out', '', 'member', { active: true, createdAt }),
+            relation('out', '', 'member'),
             node('requestingUser'),
           ],
-          [
-            node('adminSG'),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('rootuser'),
-          ],
-          [
-            node('readerSG'),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('rootuser'),
-          ],
+          [node('adminSG'), relation('out', '', 'member'), node('rootuser')],
+          [node('readerSG'), relation('out', '', 'member'), node('rootuser')],
           ...this.permission('roles'),
           ...this.permission('modifiedAt'),
           ...this.permission('user'),
@@ -261,9 +229,9 @@ export class ProjectMemberService {
       await this.db
         .query()
         .match([
-          [node('user', 'User', { id: userId, active: true })],
-          [node('project', 'Project', { id: projectId, active: true })],
-          [node('projectMember', 'ProjectMember', { id, active: true })],
+          [node('user', 'User', { id: userId })],
+          [node('project', 'Project', { id: projectId })],
+          [node('projectMember', 'ProjectMember', { id })],
         ])
         .create([
           node('project'),
@@ -306,14 +274,10 @@ export class ProjectMemberService {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([node('node', 'ProjectMember', { active: true, id })])
+      .match([node('node', 'ProjectMember')])
       .call(getPermList, 'requestingUser')
       .call(getPropList, 'permList')
-      .match([
-        node('node'),
-        relation('out', '', 'user'),
-        node('user', 'User', { active: true }),
-      ])
+      .match([node('node'), relation('out', '', 'user'), node('user', 'User')])
       .return('node, permList, propList, user.id as userId')
       .asResult<
         StandardReadResult<DbPropsOfDto<ProjectMember>> & {
@@ -428,9 +392,8 @@ export class ProjectMemberService {
         ...permissionsOfNode(label),
         ...(filter.projectId
           ? [
-              relation('in', '', 'member', { active: true }),
+              relation('in', '', 'member'),
               node('project', 'Project', {
-                active: true,
                 id: filter.projectId,
               }),
             ]
@@ -442,7 +405,7 @@ export class ProjectMemberService {
               .match([
                 node('node'),
                 relation('out', '', sort),
-                node('prop', 'Property', { active: true }),
+                node('prop', 'Property'),
               ])
               .with('*')
               .orderBy('prop.value', order)
@@ -460,9 +423,9 @@ export class ProjectMemberService {
     label: string
   ) {
     query.match([
-      node('project', 'Project', { active: true, id: projectId }),
+      node('project', 'Project', { id: projectId }),
       relation(relationshipDirection, '', relationshipType, { active: true }),
-      node('node', label, { active: true }),
+      node('node', label),
     ]);
   }
 }

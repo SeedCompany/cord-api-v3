@@ -53,9 +53,8 @@ export class LiteracyMaterialService {
     return [
       'CREATE CONSTRAINT ON (n:LiteracyMaterial) ASSERT EXISTS(n.id)',
       'CREATE CONSTRAINT ON (n:LiteracyMaterial) ASSERT n.id IS UNIQUE',
-      'CREATE CONSTRAINT ON (n:LiteracyMaterial) ASSERT EXISTS(n.active)',
+
       'CREATE CONSTRAINT ON (n:LiteracyMaterial) ASSERT EXISTS(n.createdAt)',
-      'CREATE CONSTRAINT ON (n:LiteracyMaterial) ASSERT EXISTS(n.owningOrgId)',
 
       'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.active)',
       'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
@@ -81,7 +80,6 @@ export class LiteracyMaterialService {
           createdAt,
         }),
         node(prop, propLabel, {
-          active: true,
           value,
         }),
       ],
@@ -94,40 +92,28 @@ export class LiteracyMaterialService {
     return [
       [
         node('adminSG'),
-        relation('out', '', 'permission', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'permission'),
         node('', 'Permission', {
           property,
-          active: true,
+
           read: true,
           edit: true,
           admin: true,
         }),
-        relation('out', '', 'baseNode', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'baseNode'),
         node(baseNode),
       ],
       [
         node('readerSG'),
-        relation('out', '', 'permission', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'permission'),
         node('', 'Permission', {
           property,
-          active: true,
+
           read: true,
           edit: false,
           admin: false,
         }),
-        relation('out', '', 'baseNode', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'baseNode'),
         node(baseNode),
       ],
     ];
@@ -170,13 +156,10 @@ export class LiteracyMaterialService {
         .call(matchRequestingUser, session)
         .match([
           node('root', 'User', {
-            active: true,
             id: this.config.rootAdmin.id,
           }),
         ])
-        .call(createBaseNode, ['LiteracyMaterial', 'Producible'], secureProps, {
-          owningOrgId: session.owningOrgId,
-        })
+        .call(createBaseNode, ['LiteracyMaterial', 'Producible'], secureProps)
         .create([...this.permission('scriptureReferences', 'node')])
         .return('node.id as id')
         .first();
@@ -218,7 +201,7 @@ export class LiteracyMaterialService {
     const readLiteracyMaterial = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([node('node', 'LiteracyMaterial', { active: true, id })])
+      .match([node('node', 'LiteracyMaterial', { id })])
       .call(getPermList, 'requestingUser')
       .call(getPropList, 'permList')
       .return('node, permList, propList')
@@ -305,7 +288,7 @@ export class LiteracyMaterialService {
           .match([
             node('node'),
             relation('out', '', sort),
-            node('prop', 'Property', { active: true }),
+            node('prop', 'Property'),
           ])
           .with('*')
           .orderBy('prop.value', order)
