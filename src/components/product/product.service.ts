@@ -280,7 +280,7 @@ export class ProductService {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([node('node', 'Product')])
+      .match([node('node', 'Product', { id })])
       .call(getPermList, 'requestingUser')
       .call(getPropList, 'permList')
       .return(['propList, permList, node'])

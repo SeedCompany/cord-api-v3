@@ -172,7 +172,6 @@ export class EngagementService {
 
   // helper method for defining properties
   permission = (property: string, baseNode: string) => {
-    const createdAt = DateTime.local();
     return [
       [
         node('adminSG'),

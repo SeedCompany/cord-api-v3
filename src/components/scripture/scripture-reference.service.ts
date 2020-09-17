@@ -14,6 +14,7 @@ export class ScriptureReferenceService {
   async create(
     producibleId: string,
     scriptureRefs: ScriptureRangeInput[] | undefined,
+    // eslint-disable-next-line @seedcompany/no-unused-vars
     session: ISession
   ): Promise<void> {
     if (!scriptureRefs) {

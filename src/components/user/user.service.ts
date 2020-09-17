@@ -127,7 +127,6 @@ export class UserService {
 
   // helper method for defining properties
   permission = (property: string) => {
-    const createdAt = DateTime.local();
     return [
       [
         node('adminSG'),
@@ -157,8 +156,6 @@ export class UserService {
   };
 
   rootUserAccess = (session?: ISession) => {
-    const createdAt = DateTime.local();
-
     if (!session) {
       return [];
     }

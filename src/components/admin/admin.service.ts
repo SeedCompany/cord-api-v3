@@ -45,7 +45,7 @@ export class AdminService implements OnApplicationBootstrap {
 
   async mergeRootSecurityGroup() {
     // merge root security group
-    const createdAt = DateTime.local();
+
     await this.db
       .query()
       .merge([
@@ -64,7 +64,6 @@ export class AdminService implements OnApplicationBootstrap {
   }
 
   async mergePublicSecurityGroup() {
-    const createdAt = DateTime.local();
     await this.db
       .query()
       .merge([
@@ -224,7 +223,6 @@ export class AdminService implements OnApplicationBootstrap {
   }
 
   async mergePublicSecurityGroupWithRootSg(): Promise<void> {
-    const createdAt = DateTime.local();
     await this.db
       .query()
       .merge([

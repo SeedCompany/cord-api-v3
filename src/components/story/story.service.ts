@@ -78,7 +78,6 @@ export class StoryService {
           createdAt,
         }),
         node(prop, propLabel, {
-          active: true,
           value,
         }),
       ],
@@ -87,7 +86,6 @@ export class StoryService {
 
   // helper method for defining permissions
   permission = (property: string, baseNode: string) => {
-    const createdAt = DateTime.local();
     return [
       [
         node('adminSG'),

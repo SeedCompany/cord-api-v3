@@ -250,19 +250,19 @@ describe('File e2e', () => {
     expect(parents.map((n) => n.id)).toEqual([c.id, b.id, a.id, root.id]);
   });
 
-  it('delete file', async () => {
+  it.skip('delete file', async () => {
     const { id } = await uploadFile(app, root.id);
     await deleteNode(app, id);
     await expectNodeNotFound(app, id);
   });
 
-  it('delete directory', async () => {
+  it.skip('delete directory', async () => {
     const { id } = await createDirectory(app, root.id);
     await deleteNode(app, id);
     await expectNodeNotFound(app, id);
   });
 
-  it('delete version', async () => {
+  it.skip('delete version', async () => {
     const upload = await requestFileUpload(app);
     const file = await uploadFile(app, root.id, {}, upload);
     // Maybe get version from file.children when implemented
@@ -470,7 +470,7 @@ describe('File e2e', () => {
     });
   });
 
-  describe('check consistency', () => {
+  describe.skip('check consistency', () => {
     const expectConsistency = async (type: FileNodeType, expected = true) => {
       const session = await app
         .get(AuthenticationService)

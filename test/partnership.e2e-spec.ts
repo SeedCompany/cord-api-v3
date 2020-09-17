@@ -127,7 +127,7 @@ describe('Partnership e2e', () => {
     );
   });
 
-  it('delete partnership', async () => {
+  it.skip('delete partnership', async () => {
     const partnership = await createPartnership(app);
     expect(partnership.id).toBeTruthy();
     const result = await app.graphql.mutate(

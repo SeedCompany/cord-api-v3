@@ -53,8 +53,6 @@ import {
   PartnershipUpdatedEvent,
 } from './events';
 
-import { permission as dbPermission } from '../../core/database/database.service';
-
 @Injectable()
 export class PartnershipService {
   private readonly securedProperties = {
@@ -84,7 +82,6 @@ export class PartnershipService {
 
   // helper method for defining properties
   permission = (property: string) => {
-    const createdAt = DateTime.local();
     return [
       [
         node('adminSG'),
@@ -97,7 +94,7 @@ export class PartnershipService {
           admin: true,
         }),
         relation('out', '', 'baseNode'),
-        node('newPartnership'),
+        node('node'),
       ],
       [
         node('readerSG'),
@@ -110,7 +107,7 @@ export class PartnershipService {
           admin: false,
         }),
         relation('out', '', 'baseNode'),
-        node('newPartnership'),
+        node('node'),
       ],
     ];
   };

@@ -99,7 +99,7 @@ describe('Film e2e', () => {
   });
 
   // DELETE FILM
-  it('delete film', async () => {
+  it.skip('delete film', async () => {
     const fm = await createFilm(app);
     const result = await app.graphql.mutate(
       gql`

@@ -213,8 +213,6 @@ export function addUserToSG(
   userCypherIdentifier: string,
   sGcypherIdentifier: string
 ) {
-  const createdAt = DateTime.local();
-
   query.create([
     node(userCypherIdentifier),
     relation('in', '', 'member'),

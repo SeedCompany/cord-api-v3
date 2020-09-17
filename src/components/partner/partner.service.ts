@@ -16,6 +16,7 @@ import {
   matchRequestingUser,
   OnIndex,
 } from '../../core';
+import { permission as dbPermission } from '../../core/database/database.service';
 import {
   calculateTotalAndPaginateList,
   matchPermList,
@@ -36,7 +37,6 @@ import {
   PartnerListOutput,
   UpdatePartner,
 } from './dto';
-import { permission as dbPermission } from '../../core/database/database.service';
 
 @Injectable()
 export class PartnerService {

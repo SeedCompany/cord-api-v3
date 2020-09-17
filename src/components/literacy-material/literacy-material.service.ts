@@ -88,7 +88,6 @@ export class LiteracyMaterialService {
 
   // helper method for defining permissions
   permission = (property: string, baseNode: string) => {
-    const createdAt = DateTime.local();
     return [
       [
         node('adminSG'),

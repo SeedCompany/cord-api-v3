@@ -130,7 +130,6 @@ export class ProjectService {
 
   // helper method for defining properties
   permission = (property: string, canEdit = false) => {
-    const createdAt = DateTime.local();
     return [
       [
         node('adminSG'),

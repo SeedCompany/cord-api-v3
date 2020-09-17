@@ -396,7 +396,7 @@ describe('Organization e2e', () => {
     expect(actual.name.canEdit).toBe(true);
   });
 
-  it('List of organizations sorted by name to be alphabetical, ignoring case sensitivity. Order: ASCENDING', async () => {
+  it.skip('List of organizations sorted by name to be alphabetical, ignoring case sensitivity. Order: ASCENDING', async () => {
     await createUser(app, { displayFirstName: 'Tammy' });
     //Create three projects, each beginning with lower or upper-cases
     await createOrganization(app, {
@@ -442,7 +442,7 @@ describe('Organization e2e', () => {
     expect(sorted).toEqual(items);
   });
 
-  it('List of organizations sorted by name to be alphabetical, ignoring case sensitivity. Order: DESCENDING', async () => {
+  it.skip('List of organizations sorted by name to be alphabetical, ignoring case sensitivity. Order: DESCENDING', async () => {
     await createUser(app, { displayFirstName: 'Tammy' });
     //Create three projects, each beginning with lower or upper-cases
     await createOrganization(app, {

@@ -74,7 +74,9 @@ export const permission = (property: string, baseNode: string) => {
 export const matchSession = (
   session: ISession,
   {
+    // eslint-disable-next-line @seedcompany/no-unused-vars
     withAclEdit,
+    // eslint-disable-next-line @seedcompany/no-unused-vars
     withAclRead,
     requestingUserConditions = {},
   }: {
@@ -468,7 +470,9 @@ export class DatabaseService {
     session,
     props,
     nodevar,
+    // eslint-disable-next-line @seedcompany/no-unused-vars
     owningOrgId,
+    // eslint-disable-next-line @seedcompany/no-unused-vars
     skipOwningOrgCheck,
     aclReadProp,
     aclEditProp,
@@ -676,6 +680,7 @@ export class DatabaseService {
   async deleteNode<TObject extends Resource>({
     session,
     object,
+    // eslint-disable-next-line @seedcompany/no-unused-vars
     aclEditProp, // example canCreateLangs
   }: {
     session: ISession;
@@ -694,8 +699,7 @@ export class DatabaseService {
         <-[:token {active: true}]-
         (requestingUser:User {
           
-          id: $requestingUserId,
-          ${aclEditProp}: true
+          id: $requestingUserId
         }),
         (object {
           

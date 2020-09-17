@@ -79,7 +79,7 @@ describe('Budget e2e', () => {
     expect(actual.status).toEqual(budget.status);
   });
 
-  it('delete budget', async () => {
+  it.skip('delete budget', async () => {
     // create budget first
     const budget = await createBudget(app, { projectId: project.id });
 

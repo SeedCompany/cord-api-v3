@@ -77,7 +77,6 @@ export class ProjectMemberService {
 
   // helper method for defining properties
   permission = (property: string) => {
-    const createdAt = DateTime.local();
     return [
       [
         node('adminSG'),
@@ -274,7 +273,7 @@ export class ProjectMemberService {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([node('node', 'ProjectMember')])
+      .match([node('node', 'ProjectMember', { id })])
       .call(getPermList, 'requestingUser')
       .call(getPropList, 'permList')
       .match([node('node'), relation('out', '', 'user'), node('user', 'User')])

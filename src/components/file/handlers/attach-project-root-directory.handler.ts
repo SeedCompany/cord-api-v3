@@ -25,7 +25,7 @@ export class AttachProjectRootDirectoryHandler
       .query()
       .match([
         [node('project', 'Project', { id })],
-        [node('dir', 'Directory', { id: rootDir.id, active: true })],
+        [node('dir', 'Directory', { id: rootDir.id })],
       ])
       .create([
         node('project'),

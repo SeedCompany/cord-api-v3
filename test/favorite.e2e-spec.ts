@@ -13,7 +13,7 @@ import {
   TestApp,
 } from './utility';
 
-describe('Favorite e2e', () => {
+describe.skip('Favorite e2e', () => {
   let app: TestApp;
 
   beforeAll(async () => {

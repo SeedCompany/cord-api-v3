@@ -86,7 +86,7 @@ describe('Education e2e', () => {
   });
 
   // DELETE EDUCATION
-  it('delete education', async () => {
+  it.skip('delete education', async () => {
     const education = await createEducation(app, { userId: user.id });
 
     const result = await app.graphql.mutate(
@@ -136,7 +136,7 @@ describe('Education e2e', () => {
     );
   });
 
-  it('Check consistency across education nodes', async () => {
+  it.skip('Check consistency across education nodes', async () => {
     // create an education
     const education = await createEducation(app, { userId: user.id });
     // test it has proper schema

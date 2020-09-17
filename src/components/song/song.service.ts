@@ -87,7 +87,6 @@ export class SongService {
 
   // helper method for defining permissions
   permission = (property: string, baseNode: string) => {
-    const createdAt = DateTime.local();
     return [
       [
         node('adminSG'),
@@ -151,7 +150,6 @@ export class SongService {
         .call(matchRequestingUser, session)
         .match([
           node('root', 'User', {
-            active: true,
             id: this.config.rootAdmin.id,
           }),
         ])

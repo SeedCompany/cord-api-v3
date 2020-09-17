@@ -266,38 +266,38 @@ describe('Project e2e', () => {
     expect(result.updateProject.project.name.value).toBe(namenew);
   });
 
-  // it('delete project', async () => {
-  //   const project = await createProject(app);
-  //   expect(project.id).toBeTruthy();
-  //   const result = await app.graphql.mutate(
-  //     gql`
-  //       mutation deleteProject($id: ID!) {
-  //         deleteProject(id: $id)
-  //       }
-  //     `,
-  //     {
-  //       id: project.id,
-  //     }
-  //   );
+  it.skip('delete project', async () => {
+    const project = await createProject(app);
+    expect(project.id).toBeTruthy();
+    const result = await app.graphql.mutate(
+      gql`
+        mutation deleteProject($id: ID!) {
+          deleteProject(id: $id)
+        }
+      `,
+      {
+        id: project.id,
+      }
+    );
 
-  //   const actual: boolean | undefined = result.deleteProject;
-  //   expect(actual).toBeTruthy();
-  //   await expectNotFound(
-  //     app.graphql.query(
-  //       gql`
-  //         query project($id: ID!) {
-  //           project(id: $id) {
-  //             ...project
-  //           }
-  //         }
-  //         ${fragments.project}
-  //       `,
-  //       {
-  //         id: project.id,
-  //       }
-  //     )
-  //   );
-  // });
+    const actual: boolean | undefined = result.deleteProject;
+    expect(actual).toBeTruthy();
+    await expectNotFound(
+      app.graphql.query(
+        gql`
+          query project($id: ID!) {
+            project(id: $id) {
+              ...project
+            }
+          }
+          ${fragments.project}
+        `,
+        {
+          id: project.id,
+        }
+      )
+    );
+  });
 
   it('List of projects sorted by name to be alphabetical, ignoring case sensitivity. Order: ASCENDING', async () => {
     await createUser(app, { displayFirstName: 'Tammy' });

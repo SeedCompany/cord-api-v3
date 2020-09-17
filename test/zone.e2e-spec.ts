@@ -146,7 +146,7 @@ describe('Zone e2e', () => {
     expect(updated.director.value.id).toBe(newDirector.id);
   });
 
-  it('delete zone', async () => {
+  it.skip('delete zone', async () => {
     const zone = await createZone(app, { directorId: director.id });
 
     const result = await app.graphql.mutate(
