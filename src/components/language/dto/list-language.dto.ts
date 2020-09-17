@@ -1,4 +1,4 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import {
@@ -9,13 +9,7 @@ import {
 import { Language } from './language.dto';
 
 @InputType()
-export abstract class LanguageFilters {
-  @Field({
-    description: 'Only languages matching this name',
-    nullable: true,
-  })
-  readonly name?: string;
-}
+export abstract class LanguageFilters {}
 
 const defaultFilters = {};
 
@@ -25,7 +19,6 @@ export class LanguageListInput extends SortablePaginationInput<keyof Language>({
 }) {
   static defaultVal = new LanguageListInput();
 
-  @Field({ nullable: true })
   @Type(() => LanguageFilters)
   @ValidateNested()
   readonly filter: LanguageFilters = defaultFilters;

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { inArray, node, regexp, relation } from 'cypher-query-builder';
+import { inArray, node, relation } from 'cypher-query-builder';
 import { first, intersection } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
@@ -979,9 +979,6 @@ export class LocationService {
         'name, node, head([x IN labels(node) WHERE x <> "BaseNode"]) as label'
       )
       .where({
-        ...(filter.name
-          ? { name: { value: regexp(`.*${filter.name}.*`, true) } }
-          : {}),
         label: inArray(types),
       })
       .call(calculateTotalAndPaginateList, input, (q, sort, order) =>

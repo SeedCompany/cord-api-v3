@@ -1,7 +1,7 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
-import { generate, isValid } from 'shortid';
+import { isValid } from 'shortid';
 import { Film } from '../src/components/film/dto';
 import { ScriptureRange } from '../src/components/scripture/dto';
 import {
@@ -115,17 +115,13 @@ describe('Film e2e', () => {
     expect(actual).toBeTruthy();
   });
 
-  // LIST FILMs
   it('list view of films', async () => {
-    // create a bunch of films
     const numFilms = 2;
-    await Promise.all(
-      times(numFilms).map(() => createFilm(app, { name: generate() + ' Inc' }))
-    );
+    await Promise.all(times(numFilms).map(() => createFilm(app)));
 
     const { films } = await app.graphql.query(gql`
       query {
-        films(input: { count: 15, filter: { name: "Inc" } }) {
+        films(input: { count: 15 }) {
           items {
             ...film
           }

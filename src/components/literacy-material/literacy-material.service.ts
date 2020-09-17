@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { contains, node, relation } from 'cypher-query-builder';
+import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
@@ -294,22 +294,12 @@ export class LiteracyMaterialService {
     { filter, ...input }: LiteracyMaterialListInput,
     session: ISession
   ): Promise<LiteracyMaterialListOutput> {
-    const label = 'LiteracyMaterial';
     const query = this.db
       .query()
       .match([
         requestingUser(session),
-        ...permissionsOfNode(label),
-        ...(filter.name
-          ? [
-              relation('out', '', 'name', { active: true }),
-              node('name', 'Property', { active: true }),
-            ]
-          : []),
+        ...permissionsOfNode('LiteracyMaterial'),
       ])
-      .call((q) =>
-        filter.name ? q.where({ name: { value: contains(filter.name) } }) : q
-      )
       .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
         q
           .match([

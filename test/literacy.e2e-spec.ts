@@ -1,7 +1,7 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
-import { generate, isValid } from 'shortid';
+import { isValid } from 'shortid';
 import { LiteracyMaterial } from '../src/components/literacy-material';
 import { ScriptureRange } from '../src/components/scripture/dto';
 import {
@@ -117,17 +117,12 @@ describe('LiteracyMaterial e2e', () => {
 
   // LIST LiteracyMaterials
   it('list view of LiteracyMaterials', async () => {
-    // create a bunch of LiteracyMaterials
     const numLitMat = 2;
-    await Promise.all(
-      times(numLitMat).map(() =>
-        createLiteracyMaterial(app, { name: generate() + ' Inc' })
-      )
-    );
+    await Promise.all(times(2).map(() => createLiteracyMaterial(app)));
 
     const { literacyMaterials } = await app.graphql.query(gql`
       query {
-        literacyMaterials(input: { count: 15, filter: { name: "Inc" } }) {
+        literacyMaterials(input: { count: 15 }) {
           items {
             ...literacyMaterial
           }

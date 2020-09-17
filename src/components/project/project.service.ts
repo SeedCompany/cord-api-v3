@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { contains, node, relation } from 'cypher-query-builder';
+import { node, relation } from 'cypher-query-builder';
 import { find, flatMap, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import {
@@ -608,31 +608,14 @@ export class ProjectService {
     { filter, ...input }: ProjectListInput,
     session: ISession
   ): Promise<ProjectListOutput> {
-    const label =
-      filter.type === 'Internship'
-        ? 'InternshipProject'
-        : filter.type === 'Translation'
-        ? 'TranslationProject'
-        : 'Project';
+    const label = `${filter.type ?? ''}Project`;
     const projectSortMap: Partial<Record<typeof input.sort, string>> = {
       name: 'lower(prop.value)',
     };
     const sortBy = projectSortMap[input.sort] ?? 'prop.value';
     const query = this.db
       .query()
-      .match([
-        requestingUser(session),
-        ...permissionsOfNode(label),
-        ...(filter.name
-          ? [
-              relation('out', '', 'name', { active: true }),
-              node('name', 'Property', { active: true }),
-            ]
-          : []),
-      ])
-      .call((q) =>
-        filter.name ? q.where({ name: { value: contains(filter.name) } }) : q
-      )
+      .match([requestingUser(session), ...permissionsOfNode(label)])
       .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
         q
           .match([

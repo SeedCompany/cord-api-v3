@@ -396,32 +396,6 @@ describe('Organization e2e', () => {
     expect(actual.name.canEdit).toBe(true);
   });
 
-  // LIST ORGs
-  it('can filter on organization name', async () => {
-    const name = faker.company.companyName();
-    await createOrganization(app, { name });
-
-    const { organizations: actual } = await app.graphql.query(
-      gql`
-        query org($name: String!) {
-          organizations(input: { filter: { name: $name } }) {
-            items {
-              ...org
-            }
-            total
-          }
-        }
-        ${fragments.org}
-      `,
-      {
-        name,
-      }
-    );
-
-    expect(actual.total).toBe(1);
-    expect(actual.items[0].name.value).toBe(name);
-  });
-
   it('List of organizations sorted by name to be alphabetical, ignoring case sensitivity. Order: ASCENDING', async () => {
     await createUser(app, { displayFirstName: 'Tammy' });
     //Create three projects, each beginning with lower or upper-cases
@@ -512,31 +486,6 @@ describe('Organization e2e', () => {
       'desc',
     ]);
     expect(sorted).toEqual(items);
-  });
-
-  it('list view of organizations filters on partial name', async () => {
-    // create a bunch of orgs
-    const numOrgs = 2;
-    await Promise.all(
-      times(numOrgs).map(() =>
-        createOrganization(app, { name: generate() + ' Inc' })
-      )
-    );
-
-    const { organizations } = await app.graphql.query(gql`
-      query {
-        organizations(input: { filter: { name: "Inc" } }) {
-          items {
-            ...org
-          }
-          hasMore
-          total
-        }
-      }
-      ${fragments.org}
-    `);
-
-    expect(organizations.items.length).toBeGreaterThanOrEqual(numOrgs);
   });
 
   it('list view of organizations with mismatch parameters', async () => {

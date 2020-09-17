@@ -15,12 +15,6 @@ import { ProjectType } from './type.enum';
 
 @InputType()
 export abstract class ProjectFilters {
-  @Field({
-    description: 'Only projects matching this name',
-    nullable: true,
-  })
-  readonly name?: string;
-
   @Field(() => ProjectType, {
     description: 'Only projects of this type',
     nullable: true,

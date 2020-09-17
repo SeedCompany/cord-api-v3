@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { contains, node, relation } from 'cypher-query-builder';
+import { node, relation } from 'cypher-query-builder';
 import { range } from 'lodash';
 import {
   DuplicateException,
@@ -228,7 +228,6 @@ export class OrganizationService {
     { filter, ...input }: OrganizationListInput,
     session: ISession
   ): Promise<OrganizationListOutput> {
-    const label = 'Organization';
     const orgSortMap: Partial<Record<typeof input.sort, string>> = {
       name: 'lower(prop.value)',
     };
@@ -237,22 +236,14 @@ export class OrganizationService {
       .query()
       .match([
         requestingUser(session),
-        ...permissionsOfNode(label),
-        ...(filter.name
-          ? [
-              relation('out', '', 'name', { active: true }),
-              node('name', 'Property', { active: true }),
-            ]
-          : filter.userId && session.userId
+        ...permissionsOfNode('Organization'),
+        ...(filter.userId && session.userId
           ? [
               relation('in', '', 'organization', { active: true }),
               node('user', 'User', { active: true, id: filter.userId }),
             ]
           : []),
       ])
-      .call((q) =>
-        filter.name ? q.where({ name: { value: contains(filter.name) } }) : q
-      )
       .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
         sort in this.securedProperties
           ? q

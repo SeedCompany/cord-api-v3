@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { contains, node, relation } from 'cypher-query-builder';
+import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
@@ -280,22 +280,9 @@ export class SongService {
     { filter, ...input }: SongListInput,
     session: ISession
   ): Promise<SongListOutput> {
-    const label = 'Song';
     const query = this.db
       .query()
-      .match([
-        requestingUser(session),
-        ...permissionsOfNode(label),
-        ...(filter.name
-          ? [
-              relation('out', '', 'name', { active: true }),
-              node('name', 'Property', { active: true }),
-            ]
-          : []),
-      ])
-      .call((q) =>
-        filter.name ? q.where({ name: { value: contains(filter.name) } }) : q
-      )
+      .match([requestingUser(session), ...permissionsOfNode('Song')])
       .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
         q
           .match([

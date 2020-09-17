@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { contains, node, relation } from 'cypher-query-builder';
+import { node, relation } from 'cypher-query-builder';
 import { first, intersection, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import {
@@ -575,23 +575,9 @@ export class LanguageService {
     { filter, ...input }: LanguageListInput,
     session: ISession
   ): Promise<LanguageListOutput> {
-    const label = 'Language';
-
     const query = this.db
       .query()
-      .match([
-        requestingUser(session),
-        ...permissionsOfNode(label),
-        ...(filter.name
-          ? [
-              relation('out', '', 'name', { active: true }),
-              node('name', 'Property', { active: true }),
-            ]
-          : []),
-      ])
-      .call((q) =>
-        filter.name ? q.where({ name: { value: contains(filter.name) } }) : q
-      )
+      .match([requestingUser(session), ...permissionsOfNode('Language')])
       .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
         sort in this.securedProperties
           ? q
