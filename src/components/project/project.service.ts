@@ -722,17 +722,20 @@ export class ProjectService {
 
     const permission = await this.db
       .query()
+      .match([requestingUser(session)])
       .match([
         [
           node('requestingUser'),
-          relation('in', '', 'member', { active: true }),
-          node('', 'SecurityGroup', { active: true }),
-          relation('out', '', 'permission', { active: true }),
+          relation('in', '', 'member'),
+          node('', 'SecurityGroup'),
+          relation('out', '', 'permission'),
           node('canReadTeamMember', 'Permission', {
             property: 'teamMember',
             active: true,
             read: true,
           }),
+          relation('out', '', 'baseNode'),
+          node('project', 'Project', { id: projectId }),
         ],
       ])
       .return({
@@ -770,17 +773,20 @@ export class ProjectService {
 
     const permission = await this.db
       .query()
+      .match([requestingUser(session)])
       .match([
         [
           node('requestingUser'),
-          relation('in', '', 'member', { active: true }),
-          node('', 'SecurityGroup', { active: true }),
-          relation('out', '', 'permission', { active: true }),
+          relation('in', '', 'member'),
+          node('', 'SecurityGroup'),
+          relation('out', '', 'permission'),
           node('canReadPartnership', 'Permission', {
             property: 'partnership',
             active: true,
             read: true,
           }),
+          relation('out', '', 'baseNode'),
+          node('project', 'Project', { id: projectId }),
         ],
       ])
       .return({
