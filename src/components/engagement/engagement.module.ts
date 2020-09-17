@@ -8,6 +8,7 @@ import { ProjectModule } from '../project/project.module';
 import { UserModule } from '../user/user.module';
 import { EngagementResolver } from './engagement.resolver';
 import { EngagementService } from './engagement.service';
+import * as handlers from './handlers';
 import { InternshipEngagementResolver } from './internship-engagement.resolver';
 import { LanguageEngagementResolver } from './language-engagement.resolver';
 
@@ -26,6 +27,7 @@ import { LanguageEngagementResolver } from './language-engagement.resolver';
     LanguageEngagementResolver,
     InternshipEngagementResolver,
     EngagementService,
+    ...Object.values(handlers),
   ],
   exports: [EngagementService],
 })
