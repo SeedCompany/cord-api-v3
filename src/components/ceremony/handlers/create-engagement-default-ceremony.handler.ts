@@ -27,9 +27,8 @@ export class CreateEngagementDefaultCeremonyHandler
       .query()
       .matchNode('engagement', 'Engagement', {
         id: engagement.id,
-        active: true,
       })
-      .matchNode('ceremony', 'Ceremony', { id: ceremony.id, active: true })
+      .matchNode('ceremony', 'Ceremony', { id: ceremony.id })
       .create([
         node('ceremony'),
         relation('in', 'ceremonyRel', 'ceremony', {

@@ -45,7 +45,7 @@ export class AdminService implements OnApplicationBootstrap {
 
   async mergeRootSecurityGroup() {
     // merge root security group
-    const createdAt = DateTime.local();
+
     await this.db
       .query()
       .merge([
@@ -56,8 +56,6 @@ export class AdminService implements OnApplicationBootstrap {
       .onCreate.setLabels({ sg: ['RootSecurityGroup', 'SecurityGroup'] })
       .setValues({
         sg: {
-          createdAt,
-          active: true,
           id: this.config.rootSecurityGroup.id,
           ...RootSecurityGroup,
         },
@@ -66,7 +64,6 @@ export class AdminService implements OnApplicationBootstrap {
   }
 
   async mergePublicSecurityGroup() {
-    const createdAt = DateTime.local();
     await this.db
       .query()
       .merge([
@@ -76,8 +73,6 @@ export class AdminService implements OnApplicationBootstrap {
       ])
       .onCreate.setLabels({ sg: ['PublicSecurityGroup', 'SecurityGroup'] })
       .setValues({
-        'sg.createdAt': createdAt,
-        'sg.active': true,
         'sg.id': this.config.publicSecurityGroup.id,
       })
       .run();
@@ -95,7 +90,6 @@ export class AdminService implements OnApplicationBootstrap {
       .onCreate.setLabels({ anon: ['AnonUser', 'User', 'BaseNode'] })
       .setValues({
         'anon.createdAt': createdAt,
-        'anon.active': true,
         'anon.id': this.config.anonUser.id,
       })
       .with('*')
@@ -141,9 +135,9 @@ export class AdminService implements OnApplicationBootstrap {
     const findRoot = await this.db
       .query()
       .match([
-        node('email', 'EmailAddress', { active: true, value: email }),
+        node('email', 'EmailAddress', { value: email }),
         relation('in', '', 'email', { active: true }),
-        node('root', ['User', 'RootAdmin'], { active: true }),
+        node('root', ['User', 'RootAdmin']),
         relation('out', '', 'password', { active: true }),
         node('pw', 'Propety'),
       ])
@@ -229,20 +223,16 @@ export class AdminService implements OnApplicationBootstrap {
   }
 
   async mergePublicSecurityGroupWithRootSg(): Promise<void> {
-    const createdAt = DateTime.local();
     await this.db
       .query()
       .merge([
         node('publicSg', ['PublicSecurityGroup', 'SecurityGroup'], {
-          active: true,
           id: this.config.publicSecurityGroup.id,
         }),
       ])
       .onCreate.setValues({
         publicSg: {
           id: this.config.publicSecurityGroup.id,
-          createdAt,
-          active: true,
         },
       })
       .setLabels({ publicSg: 'SecurityGroup' })
@@ -260,11 +250,7 @@ export class AdminService implements OnApplicationBootstrap {
     // is there a default org
     const isDefaultOrgResult = await this.db
       .query()
-      .match([
-        node('org', 'DefaultOrganization', {
-          active: true,
-        }),
-      ])
+      .match([node('org', 'DefaultOrganization')])
       .return('org.id as id')
       .first();
 
@@ -273,12 +259,9 @@ export class AdminService implements OnApplicationBootstrap {
       const doesOrgExist = await this.db
         .query()
         .match([
-          node('org', 'Organization', {
-            active: true,
-          }),
+          node('org', 'Organization'),
           relation('out', '', 'name'),
           node('name', 'Property', {
-            active: true,
             value: this.config.defaultOrg.name,
           }),
         ])
@@ -290,12 +273,9 @@ export class AdminService implements OnApplicationBootstrap {
         const giveOrgDefaultLabel = await this.db
           .query()
           .match([
-            node('org', 'Organization', {
-              active: true,
-            }),
+            node('org', 'Organization'),
             relation('out', '', 'name'),
             node('name', 'Property', {
-              active: true,
               value: this.config.defaultOrg.name,
             }),
           ])
@@ -314,31 +294,25 @@ export class AdminService implements OnApplicationBootstrap {
           .query()
           .match(
             node('publicSg', 'PublicSecurityGroup', {
-              active: true,
               id: this.config.publicSecurityGroup.id,
             })
           )
           .match(
             node('rootuser', 'User', {
-              active: true,
               id: this.config.rootAdmin.id,
             })
           )
           .create([
             node('orgSg', ['OrgPublicSecurityGroup', 'SecurityGroup'], {
-              active: true,
               id: orgSgId,
-              createdAt,
             }),
             relation('out', '', 'organization'),
             node('org', ['DefaultOrganization', 'Organization'], {
-              active: true,
               id: this.config.defaultOrg.id,
               createdAt,
             }),
             relation('out', '', 'name', { active: true, createdAt }),
             node('name', 'Property', {
-              active: true,
               createdAt,
               value: this.config.defaultOrg.name,
             }),
@@ -346,21 +320,18 @@ export class AdminService implements OnApplicationBootstrap {
           .with('*')
           .create([
             node('publicSg'),
-            relation('out', '', 'permission', {
-              active: true,
-            }),
+            relation('out', '', 'permission'),
             node('perm', 'Permission', {
-              active: true,
               property: 'name',
               read: true,
             }),
-            relation('out', '', 'baseNode', { active: true }),
+            relation('out', '', 'baseNode'),
             node('org'),
           ])
           .with('*')
           .create([
             node('orgSg'),
-            relation('out', '', 'member', { active: true, createdAt }),
+            relation('out', '', 'member'),
             node('rootuser'),
           ])
           .return('org.id as id')

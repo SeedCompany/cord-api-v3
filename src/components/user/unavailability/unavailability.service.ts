@@ -66,7 +66,6 @@ export class UnavailabilityService {
         .call(matchRequestingUser, session)
         .match([
           node('root', 'User', {
-            active: true,
             id: this.config.rootAdmin.id,
           }),
         ])
@@ -74,9 +73,7 @@ export class UnavailabilityService {
           createBaseNode,
           'Unavailability',
           secureProps,
-          {
-            owningOrgId: session.owningOrgId,
-          },
+          {},
           [],
           session.userId === this.config.rootAdmin.id
         )
@@ -100,8 +97,8 @@ export class UnavailabilityService {
       // connect the Unavailability to the User.
 
       const query = `
-        MATCH (user: User {id: $userId, active: true}),
-        (unavailability:Unavailability {id: $id, active: true})
+        MATCH (user: User {id: $userId}),
+        (unavailability:Unavailability {id: $id})
         CREATE (user)-[:unavailability {active: true, createdAt: datetime()}]->(unavailability)
         RETURN  unavailability.id as id
         `;
@@ -134,16 +131,15 @@ export class UnavailabilityService {
         })
           <-[:token {active: true}]-
         (requestingUser:User {
-          active: true,
-          id: $requestingUserId,
-          owningOrgId: $owningOrgId
+          
+          id: $requestingUserId
         }),
-        (unavailability:Unavailability {active: true, id: $id})
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl1:ACL {canReadDescription: true})-[:toNode]->(unavailability)-[:description {active: true}]->(description:Property {active: true})
+        (unavailability:Unavailability { id: $id})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl1:ACL {canReadDescription: true})-[:toNode]->(unavailability)-[:description {active: true}]->(description:Property )
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl2:ACL {canEditDescription: true})-[:toNode]->(unavailability)
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl3:ACL {canReadStart: true})-[:toNode]->(unavailability)-[:start {active: true}]->(start:Property {active: true})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl3:ACL {canReadStart: true})-[:toNode]->(unavailability)-[:start {active: true}]->(start:Property )
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl4:ACL {canEditStart: true})-[:toNode]->(unavailability)
-        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl5:ACL {canReadEnd: true})-[:toNode]->(unavailability)-[:end {active: true}]->(end:Property {active: true})
+        WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl5:ACL {canReadEnd: true})-[:toNode]->(unavailability)-[:end {active: true}]->(end:Property )
         WITH * OPTIONAL MATCH (requestingUser)<-[:member]-(acl6:ACL {canEditEnd: true})-[:toNode]->(unavailability)
         RETURN
           unavailability.id as id,
@@ -161,7 +157,7 @@ export class UnavailabilityService {
         {
           token: session.token,
           requestingUserId: session.userId,
-          owningOrgId: session.owningOrgId,
+
           id,
         }
       )
@@ -261,11 +257,7 @@ export class UnavailabilityService {
       .query()
       .match([
         matchSession(session),
-        [
-          node('unavailability', 'Unavailability', {
-            active: true,
-          }),
-        ],
+        [node('unavailability', 'Unavailability')],
       ])
       .return('unavailability.id as id')
       .run();

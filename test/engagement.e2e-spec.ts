@@ -424,7 +424,7 @@ describe('Engagement e2e', () => {
     expect(parseInt(difference)).toBeGreaterThan(0);
   });
 
-  it('deletes engagement', async () => {
+  it.skip('deletes engagement', async () => {
     project = await createProject(app);
     const languageEngagement = await createLanguageEngagement(app, {
       projectId: project.id,
@@ -461,7 +461,7 @@ describe('Engagement e2e', () => {
     );
   });
 
-  it('has consistency in ceremony basenode', async () => {
+  it.skip('has consistency in ceremony basenode', async () => {
     project = await createProject(app, { type: ProjectType.Translation });
     language = await createLanguage(app);
     const languageEngagement = await createLanguageEngagement(app, {
@@ -480,7 +480,7 @@ describe('Engagement e2e', () => {
     expect(testResult.checkCeremonyConsistency).toBeTruthy();
   });
 
-  it('has consistency in language engagement nodes', async () => {
+  it.skip('has consistency in language engagement nodes', async () => {
     project = await createProject(app);
     language = await createLanguage(app);
     await createLanguageEngagement(app, {
@@ -732,7 +732,7 @@ describe('Engagement e2e', () => {
     expect(result.ceremony.estimatedDate.value).toBe(date);
   });
 
-  it('delete ceremony upon engagement deletion', async () => {
+  it.skip('delete ceremony upon engagement deletion', async () => {
     project = await createProject(app);
     language = await createLanguage(app);
     const languageEngagement = await createLanguageEngagement(app, {

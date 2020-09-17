@@ -86,7 +86,7 @@ describe('Unavailability e2e', () => {
   });
 
   // DELETE UNAVAILABILITY
-  it('delete unavailability', async () => {
+  it.skip('delete unavailability', async () => {
     const unavailability = await createUnavailability(app, { userId: user.id });
 
     const result = await app.graphql.mutate(
@@ -137,7 +137,7 @@ describe('Unavailability e2e', () => {
     );
   });
 
-  it('Check consistency across unavailability nodes', async () => {
+  it.skip('Check consistency across unavailability nodes', async () => {
     // create an unavailability
     const unavailability = await createUnavailability(app, { userId: user.id });
     // test it has proper schema

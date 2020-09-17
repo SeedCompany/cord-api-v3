@@ -168,7 +168,7 @@ describe('Country e2e', () => {
     expect(updated.name.value).toBe(newName);
   });
 
-  it('delete country', async () => {
+  it.skip('delete country', async () => {
     const country = await createCountry(app, { regionId: region.id });
 
     const result = await app.graphql.mutate(

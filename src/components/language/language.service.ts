@@ -87,9 +87,8 @@ export class LanguageService {
       // LANGUAGE NODE
       'CREATE CONSTRAINT ON (n:Language) ASSERT EXISTS(n.id)',
       'CREATE CONSTRAINT ON (n:Language) ASSERT n.id IS UNIQUE',
-      'CREATE CONSTRAINT ON (n:Language) ASSERT EXISTS(n.active)',
+
       'CREATE CONSTRAINT ON (n:Language) ASSERT EXISTS(n.createdAt)',
-      'CREATE CONSTRAINT ON (n:Language) ASSERT EXISTS(n.owningOrgId)',
 
       // NAME REL
       'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.active)',
@@ -121,9 +120,8 @@ export class LanguageService {
 
       // ETHNOLOGUELANGUAGE NODE
       'CREATE CONSTRAINT ON (n:EthnologueLanguage) ASSERT EXISTS(n.id)',
-      'CREATE CONSTRAINT ON (n:EthnologueLanguage) ASSERT EXISTS(n.active)',
+
       'CREATE CONSTRAINT ON (n:EthnologueLanguage) ASSERT EXISTS(n.createdAt)',
-      'CREATE CONSTRAINT ON (n:EthnologueLanguage) ASSERT EXISTS(n.owningOrgId)',
 
       // PROPERTY NODE
       //'CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.value)',
@@ -147,7 +145,6 @@ export class LanguageService {
           createdAt,
         }),
         node(prop, [...propLabel, 'Property'], {
-          active: true,
           value,
         }),
       ],
@@ -156,44 +153,29 @@ export class LanguageService {
 
   // helper method for defining properties
   permission = (property: string) => {
-    const createdAt = DateTime.local();
     return [
       [
         node('adminSG'),
-        relation('out', '', 'permission', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'permission'),
         node('', 'Permission', {
           property,
-          active: true,
           read: true,
           edit: true,
           admin: true,
         }),
-        relation('out', '', 'baseNode', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'baseNode'),
         node('node'),
       ],
       [
         node('readerSG'),
-        relation('out', '', 'permission', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'permission'),
         node('', 'Permission', {
           property,
-          active: true,
           read: true,
           edit: false,
           admin: false,
         }),
-        relation('out', '', 'baseNode', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'baseNode'),
         node('node'),
       ],
     ];
@@ -204,18 +186,17 @@ export class LanguageService {
     return [
       [
         node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
+        relation('in', '', 'member'),
+        node('', 'SecurityGroup'),
+        relation('out', '', 'permission'),
         node(perm, 'Permission', {
           property,
-          active: true,
           read: true,
         }),
-        relation('out', '', 'baseNode', { active: true }),
+        relation('out', '', 'baseNode'),
         node('lang'),
         relation('out', '', property, { active: true }),
-        node(property, 'Property', { active: true }),
+        node(property, 'Property'),
       ],
     ];
   };
@@ -347,7 +328,6 @@ export class LanguageService {
         .call(matchRequestingUser, session)
         .match([
           node('root', 'User', {
-            active: true,
             id: this.config.rootAdmin.id,
           }),
         ])
@@ -355,9 +335,7 @@ export class LanguageService {
           createBaseNode,
           'Language',
           secureProps,
-          {
-            owningOrgId: session.owningOrgId,
-          },
+          {},
           [],
           session.userId === this.config.rootAdmin.id
         )
@@ -375,11 +353,9 @@ export class LanguageService {
         .query()
         .matchNode('language', 'Language', {
           id: resultLanguage.id,
-          active: true,
         })
         .matchNode('ethnologueLanguage', 'EthnologueLanguage', {
           id: ethnologueId,
-          active: true,
         })
         .create([
           node('language'),
@@ -421,13 +397,13 @@ export class LanguageService {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([node('node', 'Language', { active: true, id: langId })])
+      .match([node('node', 'Language', { id: langId })])
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member'),
-        node('', 'SecurityGroup', { active: true }),
+        node('', 'SecurityGroup'),
         relation('out', '', 'permission'),
-        node('perms', 'Permission', { active: true }),
+        node('perms', 'Permission'),
         relation('out', '', 'baseNode'),
         node('node'),
       ])
@@ -435,14 +411,14 @@ export class LanguageService {
       .match([
         node('node'),
         relation('out', 'r', { active: true }),
-        node('props', 'Property', { active: true }),
+        node('props', 'Property'),
       ])
       .with('{value: props.value, property: type(r)} as prop, permList, node')
       .with('collect(prop) as propList, permList, node')
       .match([
         node('node'),
         relation('out', '', 'ethnologue'),
-        node('eth', 'EthnologueLanguage', { active: true }),
+        node('eth', 'EthnologueLanguage'),
       ])
       .return('propList, permList, node, eth.id as ethnologueLanguageId')
       .asResult<
@@ -511,21 +487,20 @@ export class LanguageService {
       const readLanguage = this.db
         .query()
         .match(matchSession(session, { withAclRead: 'canReadLanguages' }))
-        .match([node('lang', 'Language', { active: true, id: input.id })])
+        .match([node('lang', 'Language', { id: input.id })])
         .optionalMatch([
           node('requestingUser'),
-          relation('in', '', 'member', { active: true }),
-          node('', 'SecurityGroup', { active: true }),
-          relation('out', '', 'permission', { active: true }),
+          relation('in', '', 'member'),
+          node('', 'SecurityGroup'),
+          relation('out', '', 'permission'),
           node('canReadEthnologueLanguages', 'Permission', {
             property: 'ethnologue',
-            active: true,
             read: true,
           }),
-          relation('out', '', 'baseNode', { active: true }),
+          relation('out', '', 'baseNode'),
           node('lang'),
           relation('out', '', 'ethnologue', { active: true }),
-          node('ethnologueLanguage', 'EthnologueLanguage', { active: true }),
+          node('ethnologueLanguage', 'EthnologueLanguage'),
         ])
         .return({
           ethnologueLanguage: [{ id: 'ethnologueLanguageId' }],
@@ -584,7 +559,7 @@ export class LanguageService {
               .match([
                 node('node'),
                 relation('out', '', sort),
-                node('prop', 'Property', { active: true }),
+                node('prop', 'Property'),
               ])
               .with('*')
               .orderBy('toLower(prop.value)', order)
@@ -601,13 +576,11 @@ export class LanguageService {
   ): Promise<SecuredLocationList> {
     const result = await this.db
       .query()
-      .matchNode('language', 'Language', { id: language.id, active: true })
+      .matchNode('language', 'Language', { id: language.id })
       .match([
         node('language'),
         relation('out', '', 'location', { active: true }),
-        node('location', {
-          active: true,
-        }),
+        node('location'),
       ])
       .return({
         location: [{ id: 'id' }],
@@ -619,12 +592,11 @@ export class LanguageService {
       .match([
         [
           node('requestingUser'),
-          relation('in', '', 'member', { active: true }),
-          node('', 'SecurityGroup', { active: true }),
-          relation('out', '', 'permission', { active: true }),
+          relation('in', '', 'member'),
+          node('', 'SecurityGroup'),
+          relation('out', '', 'permission'),
           node('canReadLocation', 'Permission', {
             property: 'location',
-            active: true,
             read: true,
           }),
         ],
@@ -675,17 +647,13 @@ export class LanguageService {
     const queryProject = this.db
       .query()
       .match(matchSession(session, { withAclRead: 'canReadProjects' }))
-      .match([node('language', 'Language', { id: language.id, active: true })])
+      .match([node('language', 'Language', { id: language.id })])
       .match([
         node('language'),
         relation('in', '', 'language', { active: true }),
-        node('langEngagement', 'LanguageEngagement', {
-          active: true,
-        }),
+        node('langEngagement', 'LanguageEngagement'),
         relation('in', '', 'engagement', { active: true }),
-        node('project', 'Project', {
-          active: true,
-        }),
+        node('project', 'Project'),
       ]);
     queryProject.return({
       project: [{ id: 'id', createdAt: 'createdAt' }],
@@ -735,10 +703,9 @@ export class LanguageService {
     await this.removeLocation(languageId, locationId, session);
     await this.db
       .query()
-      .matchNode('language', 'Language', { id: languageId, active: true })
+      .matchNode('language', 'Language', { id: languageId })
       .matchNode('location', locationLabel, {
         id: locationId,
-        active: true,
       })
       .create([
         node('language'),
@@ -764,10 +731,9 @@ export class LanguageService {
 
     await this.db
       .query()
-      .matchNode('language', 'Language', { id: languageId, active: true })
+      .matchNode('language', 'Language', { id: languageId })
       .matchNode('location', locationLabel, {
         id: locationId,
-        active: true,
       })
       .match([
         [
@@ -785,14 +751,7 @@ export class LanguageService {
   async checkLanguageConsistency(session: ISession): Promise<boolean> {
     const languages = await this.db
       .query()
-      .match([
-        matchSession(session),
-        [
-          node('lang', 'Language', {
-            active: true,
-          }),
-        ],
-      ])
+      .match([matchSession(session), [node('lang', 'Language')]])
       .return('lang.id as id')
       .run();
 
@@ -812,7 +771,7 @@ export class LanguageService {
 
   async getLocationLabelById(id: string): Promise<string | undefined> {
     const query = `
-    MATCH (place {id: $id, active: true}) RETURN labels(place) as labels
+    MATCH (place {id: $id}) RETURN labels(place) as labels
     `;
     const results = await this.db.query().raw(query, { id }).first();
     // MATCH one of these labels.

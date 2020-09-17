@@ -23,9 +23,8 @@ export class DetachEngagementRootDirectoryHandler
       .query()
       .matchNode('engagement', 'Engagement', {
         id: engagement.id,
-        active: true,
       })
-      .matchNode('ceremony', 'Ceremony', { id: ceremonyId, active: true })
+      .matchNode('ceremony', 'Ceremony', { id: ceremonyId })
       .match([
         node('ceremony'),
         relation('in', 'ceremonyRel', 'ceremony', {

@@ -99,7 +99,7 @@ describe('LiteracyMaterial e2e', () => {
   });
 
   // DELETE literacyMaterial
-  it('delete literacyMaterial', async () => {
+  it.skip('delete literacyMaterial', async () => {
     const fm = await createLiteracyMaterial(app);
     const result = await app.graphql.mutate(
       gql`

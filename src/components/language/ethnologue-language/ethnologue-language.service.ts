@@ -51,7 +51,6 @@ export class EthnologueLanguageService {
           createdAt,
         }),
         node(prop, propLabel, {
-          active: true,
           value,
         }),
       ],
@@ -60,44 +59,31 @@ export class EthnologueLanguageService {
 
   // helper method for defining properties
   permission = (property: string) => {
-    const createdAt = DateTime.local();
     return [
       [
         node('adminSG'),
-        relation('out', '', 'permission', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'permission'),
         node('', 'Permission', {
           property,
-          active: true,
+
           read: true,
           edit: true,
           admin: true,
         }),
-        relation('out', '', 'baseNode', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'baseNode'),
         node('newEthnologueLanguage'),
       ],
       [
         node('readerSG'),
-        relation('out', '', 'permission', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'permission'),
         node('', 'Permission', {
           property,
-          active: true,
+
           read: true,
           edit: false,
           admin: false,
         }),
-        relation('out', '', 'baseNode', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'baseNode'),
         node('newEthnologueLanguage'),
       ],
     ];
@@ -108,18 +94,18 @@ export class EthnologueLanguageService {
     return [
       [
         node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
+        relation('in', '', 'member'),
+        node('', 'SecurityGroup'),
+        relation('out', '', 'permission'),
         node(perm, 'Permission', {
           property,
-          active: true,
+
           read: true,
         }),
-        relation('out', '', 'baseNode', { active: true }),
+        relation('out', '', 'baseNode'),
         node('lang'),
         relation('out', '', property, { active: true }),
-        node(property, 'Property', { active: true }),
+        node(property, 'Property'),
       ],
     ];
   };
@@ -174,16 +160,12 @@ export class EthnologueLanguageService {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([
-        node('root', 'User', { active: true, id: this.config.rootAdmin.id }),
-      ])
+      .match([node('root', 'User', { id: this.config.rootAdmin.id })])
       .call(
         createBaseNode,
         'EthnologueLanguage',
         secureProps,
-        {
-          owningOrgId: session.owningOrgId,
-        },
+        {},
         [],
         session.userId === this.config.rootAdmin.id
       )
@@ -212,13 +194,13 @@ export class EthnologueLanguageService {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([node('node', 'EthnologueLanguage', { active: true, id: id })])
+      .match([node('node', 'EthnologueLanguage', { id: id })])
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member'),
-        node('', 'SecurityGroup', { active: true }),
+        node('', 'SecurityGroup'),
         relation('out', '', 'permission'),
-        node('perms', 'Permission', { active: true }),
+        node('perms', 'Permission'),
         relation('out', '', 'baseNode'),
         node('node'),
       ])
@@ -226,7 +208,7 @@ export class EthnologueLanguageService {
       .match([
         node('node'),
         relation('out', 'r', { active: true }),
-        node('props', 'Property', { active: true }),
+        node('props', 'Property'),
       ])
       .with('{value: props.value, property: type(r)} as prop, permList, node')
       .with('collect(prop) as propList, permList, node')
@@ -347,7 +329,6 @@ export class EthnologueLanguageService {
         .match(matchSession(session, { withAclRead: 'canReadLanguages' }))
         .match([
           node('ethnologueLanguage', 'EthnologueLanguage', {
-            active: true,
             id: id,
           }),
         ])
@@ -355,22 +336,22 @@ export class EthnologueLanguageService {
           [
             node('ethnologueLanguage'),
             relation('out', '', 'code', { active: true }),
-            node('code', 'Property', { active: true }),
+            node('code', 'Property'),
           ],
           [
             node('ethnologueLanguage'),
             relation('out', '', 'provisionalCode', { active: true }),
-            node('provisionalCode', 'Property', { active: true }),
+            node('provisionalCode', 'Property'),
           ],
           [
             node('ethnologueLanguage'),
             relation('out', '', 'name', { active: true }),
-            node('name', 'Property', { active: true }),
+            node('name', 'Property'),
           ],
           [
             node('ethnologueLanguage'),
             relation('out', '', 'population', { active: true }),
-            node('population', 'Property', { active: true }),
+            node('population', 'Property'),
           ],
         ])
         .setValues(valueSetCleaned);

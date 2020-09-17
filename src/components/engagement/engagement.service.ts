@@ -114,35 +114,33 @@ export class EngagementService {
     query.optionalMatch([
       [
         node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
+        relation('in', '', 'member'),
+        node('sg', 'SecurityGroup'),
+        relation('out', '', 'permission'),
         node(editPerm, 'Permission', {
           property,
-          active: true,
           edit: true,
         }),
-        relation('out', '', 'baseNode', { active: true }),
+        relation('out', '', 'baseNode'),
         node(baseNode),
         relation('out', '', property, { active: true }),
-        node(property, 'Property', { active: true }),
+        node(property, 'Property'),
       ],
     ]);
     query.optionalMatch([
       [
         node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('sg', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
+        relation('in', '', 'member'),
+        node('sg', 'SecurityGroup'),
+        relation('out', '', 'permission'),
         node(readPerm, 'Permission', {
           property,
-          active: true,
           read: true,
         }),
-        relation('out', '', 'baseNode', { active: true }),
+        relation('out', '', 'baseNode'),
         node(baseNode),
         relation('out', '', property, { active: true }),
-        node(property, 'Property', { active: true }),
+        node(property, 'Property'),
       ],
     ]);
   };
@@ -166,7 +164,6 @@ export class EngagementService {
           createdAt,
         }),
         node(prop, propLabel, {
-          active: true,
           value,
         }),
       ],
@@ -175,44 +172,29 @@ export class EngagementService {
 
   // helper method for defining properties
   permission = (property: string, baseNode: string) => {
-    const createdAt = DateTime.local();
     return [
       [
         node('adminSG'),
-        relation('out', '', 'permission', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'permission'),
         node('', 'Permission', {
           property,
-          active: true,
           read: true,
           edit: true,
           admin: true,
         }),
-        relation('out', '', 'baseNode', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'baseNode'),
         node(baseNode),
       ],
       [
         node('readerSG'),
-        relation('out', '', 'permission', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'permission'),
         node('', 'Permission', {
           property,
-          active: true,
           read: true,
           edit: false,
           admin: false,
         }),
-        relation('out', '', 'baseNode', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'baseNode'),
         node(baseNode),
       ],
     ];
@@ -222,7 +204,7 @@ export class EngagementService {
     projectId: string
   ): Promise<ProjectType | undefined> {
     const qr = `
-    MATCH (p:Project {id: $projectId, active: true}) RETURN p.type as type
+    MATCH (p:Project {id: $projectId}) RETURN p.type as type
     `;
     const results = await this.db.query().raw(qr, { projectId }).first();
 
@@ -235,8 +217,8 @@ export class EngagementService {
   ): Promise<boolean> {
     const result = await this.db
       .query()
-      .match([node('intern', 'User', { active: true, id: internId })])
-      .match([node('project', 'Project', { active: true, id: projectId })])
+      .match([node('intern', 'User', { id: internId })])
+      .match([node('project', 'Project', { id: projectId })])
       .match([
         node('project'),
         relation('out', '', 'engagement'),
@@ -256,8 +238,8 @@ export class EngagementService {
   ): Promise<boolean> {
     const result = await this.db
       .query()
-      .match([node('language', 'Language', { active: true, id: languageId })])
-      .match([node('project', 'Project', { active: true, id: projectId })])
+      .match([node('language', 'Language', { id: languageId })])
+      .match([node('project', 'Project', { id: projectId })])
       .match([
         node('project'),
         relation('out', '', 'engagement'),
@@ -314,18 +296,12 @@ export class EngagementService {
       'engagement.pnp'
     );
 
-    const createLE = this.db
-      .query()
-      .match(matchSession(session, { withAclEdit: 'canCreateEngagement' }));
+    const createLE = this.db.query().match(matchSession(session));
     if (projectId) {
-      createLE.match([
-        node('project', 'Project', { active: true, id: projectId }),
-      ]);
+      createLE.match([node('project', 'Project', { id: projectId })]);
     }
     if (languageId) {
-      createLE.match([
-        node('language', 'Language', { active: true, id: languageId }),
-      ]);
+      createLE.match([node('language', 'Language', { id: languageId })]);
     }
     createLE.create([
       [
@@ -333,10 +309,8 @@ export class EngagementService {
           'languageEngagement',
           ['LanguageEngagement', 'Engagement', 'BaseNode'],
           {
-            active: true,
             createdAt,
             id,
-            owningOrgId: session.owningOrgId,
           }
         ),
       ],
@@ -410,21 +384,17 @@ export class EngagementService {
       [
         node('adminSG', 'SecurityGroup', {
           id: generate(),
-          active: true,
-          createdAt,
           name: 'languageEngagement admin',
         }),
-        relation('out', '', 'member', { active: true, createdAt }),
+        relation('out', '', 'member'),
         node('requestingUser'),
       ],
       [
         node('readerSG', 'SecurityGroup', {
           id: generate(),
-          active: true,
-          createdAt,
           name: 'languageEngagement users',
         }),
-        relation('out', '', 'member', { active: true, createdAt }),
+        relation('out', '', 'member'),
         node('requestingUser'),
       ],
       ...this.permission('firstScripture', 'languageEngagement'),
@@ -444,16 +414,8 @@ export class EngagementService {
     ]);
     if (session.userId !== this.config.rootAdmin.id) {
       createLE.create([
-        [
-          node('adminSG'),
-          relation('out', '', 'member', { active: true, createdAt }),
-          node('rootuser'),
-        ],
-        [
-          node('readerSG'),
-          relation('out', '', 'member', { active: true, createdAt }),
-          node('rootuser'),
-        ],
+        [node('adminSG'), relation('out', '', 'member'), node('rootuser')],
+        [node('readerSG'), relation('out', '', 'member'), node('rootuser')],
       ]);
     }
     createLE.return('languageEngagement');
@@ -472,7 +434,7 @@ export class EngagementService {
         projectId &&
         !(await this.db
           .query()
-          .match([node('project', 'Project', { active: true, id: projectId })])
+          .match([node('project', 'Project', { id: projectId })])
           .return('project.id')
           .first())
       ) {
@@ -485,9 +447,7 @@ export class EngagementService {
         languageId &&
         !(await this.db
           .query()
-          .match([
-            node('language', 'Language', { active: true, id: languageId }),
-          ])
+          .match([node('language', 'Language', { id: languageId })])
           .return('language.id')
           .first())
       ) {
@@ -554,24 +514,19 @@ export class EngagementService {
       'engagement.growthPlan'
     );
 
-    const createIE = this.db
-      .query()
-      .match(matchSession(session, { withAclEdit: 'canCreateEngagement' }));
+    const createIE = this.db.query().match(matchSession(session));
     if (projectId) {
-      createIE.match([
-        node('project', 'Project', { active: true, id: projectId }),
-      ]);
+      createIE.match([node('project', 'Project', { id: projectId })]);
     }
     if (internId) {
-      createIE.match([node('intern', 'User', { active: true, id: internId })]);
+      createIE.match([node('intern', 'User', { id: internId })]);
     }
     if (mentorId) {
-      createIE.match([node('mentor', 'User', { active: true, id: mentorId })]);
+      createIE.match([node('mentor', 'User', { id: mentorId })]);
     }
     if (countryOfOriginId) {
       createIE.match([
         node('countryOfOrigin', 'Country', {
-          active: true,
           id: countryOfOriginId,
         }),
       ]);
@@ -582,10 +537,8 @@ export class EngagementService {
           'internshipEngagement',
           ['InternshipEngagement', 'Engagement', 'BaseNode'],
           {
-            active: true,
             createdAt,
             id,
-            owningOrgId: session.owningOrgId,
           }
         ),
       ],
@@ -674,25 +627,18 @@ export class EngagementService {
     createIE.create([
       [
         node('adminSG', 'SecurityGroup', {
-          active: true,
-          createdAt,
           name: 'internEngagement admin',
           id: generate(),
         }),
-        relation('out', '', 'member', { active: true, createdAt }),
+        relation('out', '', 'member'),
         node('requestingUser'),
       ],
       [
         node('readerSG', 'SecurityGroup', {
-          active: true,
-          createdAt,
           name: 'internEngagement users',
           id: generate(),
         }),
-        relation('out', '', 'member', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'member'),
         node('requestingUser'),
       ],
       ...this.permission('completeDate', 'internshipEngagement'),
@@ -714,16 +660,8 @@ export class EngagementService {
     ]);
     if (session.userId !== this.config.rootAdmin.id) {
       createIE.create([
-        [
-          node('adminSG'),
-          relation('out', '', 'member', { active: true, createdAt }),
-          node('rootuser'),
-        ],
-        [
-          node('readerSG'),
-          relation('out', '', 'member', { active: true, createdAt }),
-          node('rootuser'),
-        ],
+        [node('adminSG'), relation('out', '', 'member'), node('rootuser')],
+        [node('readerSG'), relation('out', '', 'member'), node('rootuser')],
       ]);
     }
     createIE.return('internshipEngagement');
@@ -747,7 +685,7 @@ export class EngagementService {
         internId &&
         !(await this.db
           .query()
-          .match([node('intern', 'User', { active: true, id: internId })])
+          .match([node('intern', 'User', { id: internId })])
           .return('intern.id')
           .first())
       ) {
@@ -757,7 +695,7 @@ export class EngagementService {
         mentorId &&
         !(await this.db
           .query()
-          .match([node('mentor', 'User', { active: true, id: mentorId })])
+          .match([node('mentor', 'User', { id: mentorId })])
           .return('mentor.id')
           .first())
       ) {
@@ -767,7 +705,7 @@ export class EngagementService {
         projectId &&
         !(await this.db
           .query()
-          .match([node('project', 'Project', { active: true, id: projectId })])
+          .match([node('project', 'Project', { id: projectId })])
           .return('project.id')
           .first())
       ) {
@@ -782,7 +720,6 @@ export class EngagementService {
           .query()
           .match([
             node('country', 'Country', {
-              active: true,
               id: countryOfOriginId,
             }),
           ])
@@ -829,13 +766,13 @@ export class EngagementService {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([node('node', 'Engagement', { active: true, id })])
+      .match([node('node', 'Engagement', { id })])
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member'),
-        node('', 'SecurityGroup', { active: true }),
+        node('', 'SecurityGroup'),
         relation('out', '', 'permission'),
-        node('perms', 'Permission', { active: true }),
+        node('perms', 'Permission'),
         relation('out', '', 'baseNode'),
         node('node'),
       ])
@@ -843,7 +780,7 @@ export class EngagementService {
       .match([
         node('node'),
         relation('out', 'r', { active: true }),
-        node('props', 'Property', { active: true }),
+        node('props', 'Property'),
       ])
       .with('{value: props.value, property: type(r)} as prop, permList, node')
       .with([
@@ -1076,12 +1013,9 @@ export class EngagementService {
         const mentorQ = this.db
           .query()
           .match(matchSession(session))
-          .match([
-            node('newMentorUser', 'User', { active: true, id: mentorId }),
-          ])
+          .match([node('newMentorUser', 'User', { id: mentorId })])
           .match([
             node('internshipEngagement', 'InternshipEngagement', {
-              active: true,
               id: input.id,
             }),
             relation('out', 'rel', 'mentor', { active: true }),
@@ -1105,13 +1039,11 @@ export class EngagementService {
           .query()
           .match([
             node('newCountry', 'Country', {
-              active: true,
               id: countryOfOriginId,
             }),
           ])
           .match([
             node('internshipEngagement', 'InternshipEngagement', {
-              active: true,
               id: input.id,
             }),
             relation('out', 'rel', 'countryOfOrigin', { active: true }),
@@ -1237,7 +1169,6 @@ export class EngagementService {
           ? [
               relation('in', '', 'engagement', { active: true }),
               node('project', 'Project', {
-                active: true,
                 id: filter.projectId,
               }),
             ]
@@ -1249,7 +1180,7 @@ export class EngagementService {
               .match([
                 node('node'),
                 relation('out', '', sort),
-                node('prop', 'Property', { active: true }),
+                node('prop', 'Property'),
               ])
               .with('*')
               .orderBy('prop.value', order)
@@ -1281,12 +1212,11 @@ export class EngagementService {
       .match([
         [
           node('requestingUser'),
-          relation('in', '', 'member', { active: true }),
-          node('', 'SecurityGroup', { active: true }),
-          relation('out', '', 'permission', { active: true }),
+          relation('in', '', 'member'),
+          node('', 'SecurityGroup'),
+          relation('out', '', 'permission'),
           node('canRead', 'Permission', {
             property: 'product',
-            active: true,
             read: true,
           }),
         ],
@@ -1311,11 +1241,7 @@ export class EngagementService {
   ): Promise<boolean> {
     const nodes = await this.db
       .query()
-      .match([
-        node('eng', baseNode, {
-          active: true,
-        }),
-      ])
+      .match([node('eng', baseNode)])
       .return('eng.id as id')
       .run();
     if (baseNode === 'InternshipEngagement') {

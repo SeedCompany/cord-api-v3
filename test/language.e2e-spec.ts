@@ -130,7 +130,7 @@ describe('Language e2e', () => {
   });
 
   // DELETE LANGUAGE
-  it('delete language', async () => {
+  it.skip('delete language', async () => {
     const language = await createLanguage(app);
 
     const result = await app.graphql.mutate(
@@ -184,7 +184,7 @@ describe('Language e2e', () => {
     expect(languages.items.length).toBeGreaterThan(numLanguages);
   });
 
-  it('should check language has all required properties', async () => {
+  it.skip('should check language has all required properties', async () => {
     // create a test language
     const language = await createLanguage(app);
     // test it has proper schema

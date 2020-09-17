@@ -22,6 +22,7 @@ import {
   matchRequestingUser,
   Property,
 } from '../../core';
+import { permission as dbPermission } from '../../core/database/database.service';
 import {
   calculateTotalAndPaginateList,
   permissionsOfNode,
@@ -77,49 +78,7 @@ export class ProductService {
     @Logger('product:service') private readonly logger: ILogger
   ) {}
 
-  permission = (property: string, nodeName: string, canEdit = false) => {
-    const createdAt = DateTime.local();
-    return [
-      [
-        node('adminSG'),
-        relation('out', '', 'permission', {
-          active: true,
-          createdAt,
-        }),
-        node('', 'Permission', {
-          property,
-          active: true,
-          read: true,
-          edit: true,
-          admin: true,
-        }),
-        relation('out', '', 'baseNode', {
-          active: true,
-          createdAt,
-        }),
-        node(nodeName),
-      ],
-      [
-        node('readerSG'),
-        relation('out', '', 'permission', {
-          active: true,
-          createdAt,
-        }),
-        node('', 'Permission', {
-          property,
-          active: true,
-          read: true,
-          edit: canEdit,
-          admin: false,
-        }),
-        relation('out', '', 'baseNode', {
-          active: true,
-          createdAt,
-        }),
-        node(nodeName),
-      ],
-    ];
-  };
+  permission = dbPermission;
 
   async create(
     { engagementId, ...input }: CreateProduct,
@@ -186,16 +145,12 @@ export class ProductService {
 
     const query = this.db
       .query()
-      .match([
-        node('root', 'User', { active: true, id: this.config.rootAdmin.id }),
-      ]);
+      .match([node('root', 'User', { id: this.config.rootAdmin.id })]);
 
     if (engagementId) {
       const engagement = await this.db
         .query()
-        .match([
-          node('engagement', 'Engagement', { active: true, id: engagementId }),
-        ])
+        .match([node('engagement', 'Engagement', { id: engagementId })])
         .return('engagement')
         .first();
       if (!engagement) {
@@ -207,9 +162,7 @@ export class ProductService {
           'product.engagementId'
         );
       }
-      query.match([
-        node('engagement', 'Engagement', { active: true, id: engagementId }),
-      ]);
+      query.match([node('engagement', 'Engagement', { id: engagementId })]);
     }
 
     if (input.produces) {
@@ -218,7 +171,6 @@ export class ProductService {
         .match([
           node('producible', 'Producible', {
             id: input.produces,
-            active: true,
           }),
         ])
         .return('producible')
@@ -232,29 +184,27 @@ export class ProductService {
           'product.produces'
         );
       }
-      query.match([
-        node('producible', 'Producible', { id: input.produces, active: true }),
-      ]);
+      query.match([node('producible', 'Producible', { id: input.produces })]);
       if (input.scriptureReferencesOverride) {
         secureProps[3].value = true;
       }
     }
 
-    query.call(matchRequestingUser, session).call(
-      createBaseNode,
-      [
-        'Product',
-        input.produces
-          ? 'DerivativeScriptureProduct'
-          : 'DirectScriptureProduct',
-      ],
-      secureProps,
-      {
-        owningOrgId: session.owningOrgId,
-      },
-      [],
-      session.userId === this.config.rootAdmin.id
-    );
+    query
+      .call(matchRequestingUser, session)
+      .call(
+        createBaseNode,
+        [
+          'Product',
+          input.produces
+            ? 'DerivativeScriptureProduct'
+            : 'DirectScriptureProduct',
+        ],
+        secureProps,
+        {},
+        [],
+        session.userId === this.config.rootAdmin.id
+      );
 
     if (engagementId) {
       query.create([
@@ -263,7 +213,7 @@ export class ProductService {
           relation('out', '', 'product', { active: true, createdAt }),
           node('node'),
         ],
-        ...this.permission('product', 'engagement', true),
+        ...this.permission('product', 'engagement'),
       ]);
     }
 
@@ -287,7 +237,7 @@ export class ProductService {
           relation('out', '', 'scriptureReferences', { active: true }),
           node('', ['ScriptureRange', 'BaseNode'], {
             ...ScriptureRange.fromReferences(sr),
-            active: true,
+
             createdAt: DateTime.local(),
           }),
         ]);
@@ -303,7 +253,7 @@ export class ProductService {
           }),
           node('', ['ScriptureRange', 'BaseNode'], {
             ...ScriptureRange.fromReferences(sr),
-            active: true,
+
             createdAt: DateTime.local(),
           }),
         ]);
@@ -330,7 +280,7 @@ export class ProductService {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([node('node', 'Product', { active: true, id })])
+      .match([node('node', 'Product', { id })])
       .call(getPermList, 'requestingUser')
       .call(getPropList, 'permList')
       .return(['propList, permList, node'])
@@ -369,9 +319,9 @@ export class ProductService {
     const connectedProducible = await this.db
       .query()
       .match([
-        node('product', 'Product', { id, active: true }),
+        node('product', 'Product', { id }),
         relation('out', 'produces', { active: true }),
-        node('producible', 'Producible', { active: true }),
+        node('producible', 'Producible'),
       ])
       .return('producible')
       .asResult<{ producible: Node<BaseNode> }>()
@@ -485,7 +435,6 @@ export class ProductService {
         .match([
           node('producible', 'Producible', {
             id: inputProducesId,
-            active: true,
           }),
         ])
         .return('producible')
@@ -502,9 +451,9 @@ export class ProductService {
       await this.db
         .query()
         .match([
-          node('product', 'Product', { id: input.id, active: true }),
+          node('product', 'Product', { id: input.id }),
           relation('out', 'rel', 'produces', { active: true }),
-          node('', 'Producible', { active: true }),
+          node('', 'Producible'),
         ])
         .setValues({
           'rel.active': false,
@@ -514,11 +463,10 @@ export class ProductService {
 
       await this.db
         .query()
-        .match([node('product', 'Product', { id: input.id, active: true })])
+        .match([node('product', 'Product', { id: input.id })])
         .match([
           node('producible', 'Producible', {
             id: inputProducesId,
-            active: true,
           }),
         ])
         .create([
@@ -594,7 +542,6 @@ export class ProductService {
           ? [
               relation('in', '', 'product', { active: true }),
               node('engagement', 'Engagement', {
-                active: true,
                 id: filter.engagementId,
               }),
             ]
@@ -606,7 +553,7 @@ export class ProductService {
               .match([
                 node('node'),
                 relation('out', '', sort),
-                node('prop', 'Property', { active: true }),
+                node('prop', 'Property'),
               ])
               .with('*')
               .orderBy('prop.value', order)
@@ -626,9 +573,9 @@ export class ProductService {
     label: string
   ) {
     query.match([
-      node('engagement', 'Engagement', { active: true, id: engagementId }),
+      node('engagement', 'Engagement', { id: engagementId }),
       relation(relationshipDirection, '', relationshipType, { active: true }),
-      node('node', label, { active: true }),
+      node('node', label),
     ]);
   }
 

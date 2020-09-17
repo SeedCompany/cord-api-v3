@@ -113,7 +113,6 @@ export class AuthenticationService {
       .query()
       .match([
         node('user', 'User', {
-          active: true,
           id: userId,
         }),
       ])
@@ -124,7 +123,6 @@ export class AuthenticationService {
           createdAt: DateTime.local(),
         }),
         node('password', 'Property', {
-          active: true,
           value: passwordHash,
         }),
       ])
@@ -144,13 +142,11 @@ export class AuthenticationService {
           value: $token
         })
       MATCH
-        (:EmailAddress {active: true, value: $email})
+        (:EmailAddress {value: $email})
         <-[:email {active: true}]-
-        (user:User {
-          active: true
-        })
+        (user:User)
         -[:password {active: true}]->
-        (password:Property {active: true})
+        (password:Property)
       RETURN
         password.value as pash
       `,
@@ -177,11 +173,9 @@ export class AuthenticationService {
               active: true,
               value: $token
             }),
-            (:EmailAddress {active: true, value: $email})
+            (:EmailAddress {value: $email})
             <-[:email {active: true}]-
-            (user:User {
-              active: true
-            })
+            (user:User)
           OPTIONAL MATCH
             (token)-[r]-()
           DELETE r
@@ -240,9 +234,9 @@ export class AuthenticationService {
       .optionalMatch([
         node('token'),
         relation('in', '', 'token', { active: true }),
-        node('user', 'User', { active: true }),
+        node('user', 'User'),
       ])
-      .return('token, user.owningOrgId AS owningOrgId, user.id AS userId')
+      .return('token, user.id AS userId')
       .first();
 
     if (!result) {
@@ -256,7 +250,6 @@ export class AuthenticationService {
     const session = {
       token,
       issuedAt: DateTime.fromMillis(iat),
-      owningOrgId: result.owningOrgId,
       userId: result.userId,
     };
     this.logger.debug('Created session', session);
@@ -274,7 +267,7 @@ export class AuthenticationService {
       .match([
         node('requestingUser'),
         relation('out', '', 'password', { active: true }),
-        node('password', 'Property', { active: true }),
+        node('password', 'Property'),
       ])
       .return('password.value as passwordHash')
       .first();
@@ -297,7 +290,7 @@ export class AuthenticationService {
       .match([
         node('requestingUser'),
         relation('out', '', 'password', { active: true }),
-        node('password', 'Property', { active: true }),
+        node('password', 'Property'),
       ])
       .setValues({
         'password.value': newPasswordHash,
@@ -379,12 +372,12 @@ export class AuthenticationService {
           MATCH(e:EmailToken {token: $token})
           DELETE e
           WITH *
-          MATCH (:EmailAddress {active: true, value: $email})<-[:email {active: true}]-(user:User {active: true})
+          MATCH (:EmailAddress {value: $email})<-[:email {active: true}]-(user:User)
           OPTIONAL MATCH (user)-[oldPasswordRel:password]->(oldPassword)
-          SET oldPasswordRel.active = false, oldPassword.active = false
+          SET oldPasswordRel.active = false
           WITH user
           LIMIT 1
-          MERGE (user)-[:password {active: true, createdAt: $createdAt}]->(password:Property {active: true})
+          MERGE (user)-[:password {active: true, createdAt: $createdAt}]->(password:Property)
           SET password.value = $password
           RETURN password
         `,

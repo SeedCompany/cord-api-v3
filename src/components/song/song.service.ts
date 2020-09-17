@@ -53,9 +53,8 @@ export class SongService {
     return [
       'CREATE CONSTRAINT ON (n:Song) ASSERT EXISTS(n.id)',
       'CREATE CONSTRAINT ON (n:Song) ASSERT n.id IS UNIQUE',
-      'CREATE CONSTRAINT ON (n:Song) ASSERT EXISTS(n.active)',
+
       'CREATE CONSTRAINT ON (n:Song) ASSERT EXISTS(n.createdAt)',
-      'CREATE CONSTRAINT ON (n:Song) ASSERT EXISTS(n.owningOrgId)',
 
       'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.active)',
       'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
@@ -80,7 +79,6 @@ export class SongService {
           createdAt,
         }),
         node(prop, propLabel, {
-          active: true,
           value,
         }),
       ],
@@ -89,44 +87,31 @@ export class SongService {
 
   // helper method for defining permissions
   permission = (property: string, baseNode: string) => {
-    const createdAt = DateTime.local();
     return [
       [
         node('adminSG'),
-        relation('out', '', 'permission', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'permission'),
         node('', 'Permission', {
           property,
-          active: true,
+
           read: true,
           edit: true,
           admin: true,
         }),
-        relation('out', '', 'baseNode', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'baseNode'),
         node(baseNode),
       ],
       [
         node('readerSG'),
-        relation('out', '', 'permission', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'permission'),
         node('', 'Permission', {
           property,
-          active: true,
+
           read: true,
           edit: false,
           admin: false,
         }),
-        relation('out', '', 'baseNode', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'baseNode'),
         node(baseNode),
       ],
     ];
@@ -165,13 +150,10 @@ export class SongService {
         .call(matchRequestingUser, session)
         .match([
           node('root', 'User', {
-            active: true,
             id: this.config.rootAdmin.id,
           }),
         ])
-        .call(createBaseNode, ['Song', 'Producible'], secureProps, {
-          owningOrgId: session.owningOrgId,
-        })
+        .call(createBaseNode, ['Song', 'Producible'], secureProps)
         .create([...this.permission('scriptureReferences', 'node')])
         .return('node.id as id')
         .first();
@@ -210,7 +192,7 @@ export class SongService {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([node('node', 'Song', { active: true, id })])
+      .match([node('node', 'Song', { id })])
       .call(getPermList, 'requestingUser')
       .call(getPropList, 'permList')
       .return('propList, permList, node')
@@ -288,7 +270,7 @@ export class SongService {
           .match([
             node('node'),
             relation('out', '', sort),
-            node('prop', 'Property', { active: true }),
+            node('prop', 'Property'),
           ])
           .with('*')
           .orderBy('prop.value', order)

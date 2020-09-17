@@ -100,7 +100,7 @@ describe('Song e2e', () => {
   });
 
   // DELETE SONG
-  it('delete song', async () => {
+  it.skip('delete song', async () => {
     const st = await createSong(app);
     const result = await app.graphql.mutate(
       gql`

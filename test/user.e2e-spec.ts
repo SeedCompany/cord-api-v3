@@ -187,7 +187,7 @@ describe('User e2e', () => {
     return true;
   });
 
-  it('delete user', async () => {
+  it.skip('delete user', async () => {
     // create user first
     const user = await createUser(app);
     const result = await app.graphql.query(

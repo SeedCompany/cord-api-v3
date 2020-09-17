@@ -80,7 +80,7 @@ export class SearchService {
       .match([
         node('node'),
         relation('out', 'r', { active: true }),
-        node('property', 'Property', { active: true }),
+        node('property', 'Property'),
       ])
       // reduce to nodes with a label of one of the specified types
       .raw('WHERE size([l in labels(node) where l in $types | 1]) > 0', {

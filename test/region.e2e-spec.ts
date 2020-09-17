@@ -219,7 +219,7 @@ describe('Region e2e', () => {
     expect(updated.director.value.id).toBe(newDirector.id);
   });
 
-  it('delete region', async () => {
+  it.skip('delete region', async () => {
     const region = await createRegion(app, {
       directorId: director.id,
       zoneId: zone.id,

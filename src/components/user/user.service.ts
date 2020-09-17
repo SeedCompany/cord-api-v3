@@ -92,7 +92,6 @@ export class UserService {
       // USER NODE
       'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.id)',
       'CREATE CONSTRAINT ON (n:User) ASSERT n.id IS UNIQUE',
-      'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.active)',
       'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.createdAt)',
 
       // EMAIL REL
@@ -106,10 +105,6 @@ export class UserService {
       // PASSWORD REL
       'CREATE CONSTRAINT ON ()-[r:password]-() ASSERT EXISTS(r.active)',
       'CREATE CONSTRAINT ON ()-[r:password]-() ASSERT EXISTS(r.createdAt)',
-
-      // PROPERTY NODE
-      // 'CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.value)',
-      // 'CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.active)',
     ];
   }
 
@@ -124,7 +119,6 @@ export class UserService {
           createdAt,
         }),
         node(propVar, 'Property', {
-          active: true,
           value,
         }),
       ],
@@ -133,66 +127,41 @@ export class UserService {
 
   // helper method for defining properties
   permission = (property: string) => {
-    const createdAt = DateTime.local();
     return [
       [
         node('adminSG'),
-        relation('out', '', 'permission', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'permission'),
         node('', 'Permission', {
           property,
-          active: true,
           read: true,
           edit: true,
           admin: true,
         }),
-        relation('out', '', 'baseNode', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'baseNode'),
         node('user'),
       ],
       [
         node('readerSG'),
-        relation('out', '', 'permission', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'permission'),
         node('', 'Permission', {
           property,
-          active: true,
           read: true,
           edit: false,
           admin: false,
         }),
-        relation('out', '', 'baseNode', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'baseNode'),
         node('user'),
       ],
     ];
   };
 
   rootUserAccess = (session?: ISession) => {
-    const createdAt = DateTime.local();
-
     if (!session) {
       return [];
     }
     return [
-      [
-        node('adminSG'),
-        relation('out', '', 'member', { active: true, createdAt }),
-        node('rootuser'),
-      ],
-      [
-        node('readerSG'),
-        relation('out', '', 'member', { active: true, createdAt }),
-        node('rootuser'),
-      ],
+      [node('adminSG'), relation('out', '', 'member'), node('rootuser')],
+      [node('readerSG'), relation('out', '', 'member'), node('rootuser')],
     ];
   };
 
@@ -210,7 +179,6 @@ export class UserService {
     if (session) {
       query.match([
         node('rootuser', 'User', {
-          active: true,
           id: this.config.rootAdmin.id,
         }),
       ]);
@@ -219,64 +187,13 @@ export class UserService {
       [
         node('user', ['User', 'BaseNode'], {
           id,
-          active: true,
           createdAt,
-          createdByUserId: 'system',
-          canCreateBudget: true,
-          canReadBudgets: true,
-          canCreateFile: true,
-          canReadFiles: true,
-          canCreateFileVersion: true,
-          canReadFileVersions: true,
-          canCreateDirectory: true,
-          canReadDirectorys: true,
-          canCreateOrg: true,
-          canReadOrgs: true,
-          canCreateFilm: true,
-          canReadFilms: true,
-          canCreateLiteracyMaterial: true,
-          canReadLiteracyMaterials: true,
-          canCreateStory: true,
-          canReadStorys: true,
-          canReadUsers: true,
-          canCreateLanguage: true,
-          canReadLanguages: true,
-          canCreateEducation: true,
-          canReadEducationList: true,
-          canCreateUnavailability: true,
-          canReadUnavailabilityList: true,
-          canCreatePartnership: true,
-          canReadPartnerships: true,
-          canCreateProduct: true,
-          canReadProducts: true,
-          canCreateProject: true,
-          canReadProjects: true,
-          canCreateZone: true,
-          canReadZone: true,
-          canCreateRegion: true,
-          canReadRegion: true,
-          canCreateCountry: true,
-          canReadCountry: true,
-          canCreateCeremony: true,
-          canReadCeremonies: true,
-          canCreateProjectMember: true,
-          canReadProjectMembers: true,
-          canCreateEngagement: true,
-          canReadEngagements: true,
-          canDeleteOwnUser: true,
-          canDeleteLocation: true,
-          canCreateLocation: true,
-          canCreateEthnologueLanguage: true,
-          canReadEthnologueLanguages: true,
-          owningOrgId: 'Seed Company',
-          isAdmin: true,
         }),
         relation('out', '', 'email', {
           active: true,
           createdAt,
         }),
         node('email', 'EmailAddress:Property', {
-          active: true,
           value: input.email,
           createdAt,
         }),
@@ -293,21 +210,17 @@ export class UserService {
       ...this.property('title', input.title),
       [
         node('user'),
-        relation('in', '', 'member', { active: true, createdAt }),
+        relation('in', '', 'member'),
         node('adminSG', 'SecurityGroup', {
           id: generate(),
-          createdAt,
-          active: true,
           name: `${input.realFirstName} ${input.realLastName} admin`,
         }),
       ],
       [
         node('user'),
-        relation('in', '', 'member', { active: true, createdAt }),
+        relation('in', '', 'member'),
         node('readerSG', 'SecurityGroup', {
           id: generate(),
-          createdAt,
-          active: true,
           name: `${input.realFirstName} ${input.realLastName} users`,
         }),
       ],
@@ -355,13 +268,9 @@ export class UserService {
     const attachUserToPublicSg = await this.db
       .query()
       .match(node('user', 'User', { id }))
-      .match(node('publicSg', 'PublicSecurityGroup', { active: true }))
+      .match(node('publicSg', 'PublicSecurityGroup'))
 
-      .create([
-        node('publicSg'),
-        relation('out', '', 'member', { active: true }),
-        node('user'),
-      ])
+      .create([node('publicSg'), relation('out', '', 'member'), node('user')])
       .return('user')
       .first();
 
@@ -377,13 +286,12 @@ export class UserService {
           node('orgPublicSg', 'OrgPublicSecurityGroup'),
           relation('out', '', 'organization'),
           node('defaultOrg', 'Organization', {
-            active: true,
             id: this.config.defaultOrg.id,
           }),
         ])
         .create([
           node('user'),
-          relation('in', '', 'member', { active: true }),
+          relation('in', '', 'member'),
           node('orgPublicSg'),
         ])
         .run();
@@ -399,7 +307,6 @@ export class UserService {
         .match([node('requestingUser', 'User', { id: session.userId })])
         .match([
           node('rootuser', 'User', {
-            active: true,
             id: this.config.rootAdmin.id,
           }),
         ]);
@@ -408,31 +315,19 @@ export class UserService {
           [
             node('adminSG'),
             relation('out', '', 'member', {
-              active: true,
               admin: true,
-              createdAt,
             }),
             node('requestingUser'),
           ],
           [
             node('readerSG'),
             relation('out', '', 'member', {
-              active: true,
               admin: true,
-              createdAt,
             }),
             node('requestingUser'),
           ],
-          [
-            node('adminSG'),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('rootuser'),
-          ],
-          [
-            node('readerSG'),
-            relation('out', '', 'member', { active: true, createdAt }),
-            node('rootuser'),
-          ],
+          [node('adminSG'), relation('out', '', 'member'), node('rootuser')],
+          [node('readerSG'), relation('out', '', 'member'), node('rootuser')],
         ])
         .return({
           requestingUser: [{ id: 'id' }],
@@ -452,7 +347,7 @@ export class UserService {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([node('node', 'User', { active: true, id })])
+      .match([node('node', 'User', { id })])
       .call(getPermList, 'node')
       .call(getPropList, 'permList')
       .return('propList, permList, node')
@@ -511,7 +406,6 @@ export class UserService {
         .query()
         .match([
           node('user', ['User', 'BaseNode'], {
-            active: true,
             id: input.id,
           }),
         ])
@@ -528,9 +422,9 @@ export class UserService {
     await this.db
       .query()
       .match([
-        node('user', 'User', { id, active: true }),
+        node('user', 'User', { id }),
         relation('out', '', 'email', { active: true }),
-        node('email', 'EmailAddress', { active: true }),
+        node('email', 'EmailAddress'),
       ])
       .removeLabels({
         email: 'EmailAddress',
@@ -558,7 +452,7 @@ export class UserService {
               .match([
                 node('node'),
                 relation('out', '', sort),
-                node('prop', 'Property', { active: true }),
+                node('prop', 'Property'),
               ])
               .with('*')
               .orderBy('prop.value', order)
@@ -576,15 +470,14 @@ export class UserService {
     const query = this.db
       .query()
       .match(matchSession(session, { withAclEdit: 'canReadEducationList' })) // Michel Query Refactor Will Fix This
-      .match([node('user', 'User', { active: true, id: userId })])
+      .match([node('user', 'User', { id: userId })])
       .optionalMatch([
         node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
+        relation('in', '', 'member'),
+        node('', 'SecurityGroup'),
+        relation('out', '', 'permission'),
         node('canRead', 'Permission', {
           property: 'education',
-          active: true,
           read: true,
         }),
         // relation('out', '', 'baseNode', { active: true }),
@@ -635,15 +528,14 @@ export class UserService {
     const query = this.db
       .query()
       .match(matchSession(session, { withAclEdit: 'canReadOrgs' }))
-      .match([node('user', 'User', { active: true, id: userId })])
+      .match([node('user', 'User', { id: userId })])
       .optionalMatch([
         node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
+        relation('in', '', 'member'),
+        node('', 'SecurityGroup'),
+        relation('out', '', 'permission'),
         node('canRead', 'Permission', {
           property: 'organization',
-          active: true,
           read: true,
         }),
         // relation('out', '', 'baseNode', { active: true }),
@@ -698,15 +590,14 @@ export class UserService {
       .match(
         matchSession(session, { withAclEdit: 'canReadUnavailabilityList' })
       )
-      .match([node('user', 'User', { active: true, id: userId })])
+      .match([node('user', 'User', { id: userId })])
       .optionalMatch([
         node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
+        relation('in', '', 'member'),
+        node('', 'SecurityGroup'),
+        relation('out', '', 'permission'),
         node('canRead', 'Permission', {
           property: 'unavailablity',
-          active: true,
           read: true,
         }),
         // relation('out', '', 'baseNode', { active: true }),
@@ -792,14 +683,12 @@ export class UserService {
       .query()
       .match([
         node('user', 'User', {
-          active: true,
           id: request.userId,
         }),
         relation('out', 'oldRel', 'organization', {
           active: true,
         }),
         node('primaryOrg', 'Organization', {
-          active: true,
           id: request.orgId,
         }),
       ])
@@ -812,14 +701,12 @@ export class UserService {
         .query()
         .match([
           node('user', 'User', {
-            active: true,
             id: request.userId,
           }),
           relation('out', 'oldRel', 'primaryOrganization', {
             active: true,
           }),
           node('primaryOrg', 'Organization', {
-            active: true,
             id: request.orgId,
           }),
         ])
@@ -832,8 +719,8 @@ export class UserService {
     if (primary) {
       queryCreate = this.db.query().raw(
         `
-        MATCH (primaryOrg:Organization {id: $orgId, active: true}),
-        (user:User {id: $userId, active: true})
+        MATCH (primaryOrg:Organization {id: $orgId}),
+        (user:User {id: $userId})
         CREATE (primaryOrg)<-[:primaryOrganization {active: true, createdAt: datetime()}]-(user),
         (primaryOrg)<-[:organization {active: true, createdAt: datetime()}]-(user)
         RETURN  user.id as id
@@ -846,8 +733,8 @@ export class UserService {
     } else {
       queryCreate = this.db.query().raw(
         `
-        MATCH (org:Organization {id: $orgId, active: true}),
-        (user:User {id: $userId, active: true})
+        MATCH (org:Organization {id: $orgId}),
+        (user:User {id: $userId})
         CREATE (org)<-[:organization {active: true, createdAt: datetime()}]-(user)
         RETURN  user.id as id
       `,
@@ -874,14 +761,12 @@ export class UserService {
       .query()
       .match([
         node('user', 'User', {
-          active: true,
           id: request.userId,
         }),
         relation('out', 'oldRel', 'organization', {
           active: true,
         }),
         node('org', 'Organization', {
-          active: true,
           id: request.orgId,
         }),
       ])
@@ -904,14 +789,12 @@ export class UserService {
         .query()
         .match([
           node('user', 'User', {
-            active: true,
             id: request.userId,
           }),
           relation('out', 'oldRel', 'primaryOrganization', {
             active: true,
           }),
           node('primaryOrg', 'Organization', {
-            active: true,
             id: request.orgId,
           }),
         ])
@@ -933,14 +816,7 @@ export class UserService {
   async checkUserConsistency(session: ISession): Promise<boolean> {
     const users = await this.db
       .query()
-      .match([
-        matchSession(session),
-        [
-          node('user', 'User', {
-            active: true,
-          }),
-        ],
-      ])
+      .match([matchSession(session), [node('user', 'User')]])
       .return('user.id as id')
       .run();
 

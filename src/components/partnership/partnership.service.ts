@@ -82,44 +82,31 @@ export class PartnershipService {
 
   // helper method for defining properties
   permission = (property: string) => {
-    const createdAt = DateTime.local();
     return [
       [
         node('adminSG'),
-        relation('out', '', 'permission', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'permission'),
         node('', 'Permission', {
           property,
-          active: true,
+
           read: true,
           edit: true,
           admin: true,
         }),
-        relation('out', '', 'baseNode', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'baseNode'),
         node('node'),
       ],
       [
         node('readerSG'),
-        relation('out', '', 'permission', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'permission'),
         node('', 'Permission', {
           property,
-          active: true,
+
           read: true,
           edit: false,
           admin: false,
         }),
-        relation('out', '', 'baseNode', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'baseNode'),
         node('node'),
       ],
     ];
@@ -131,35 +118,35 @@ export class PartnershipService {
     query.optionalMatch([
       [
         node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
+        relation('in', '', 'member'),
+        node('', 'SecurityGroup'),
+        relation('out', '', 'permission'),
         node(editPerm, 'Permission', {
           property,
-          active: true,
+
           edit: true,
         }),
-        relation('out', '', 'baseNode', { active: true }),
+        relation('out', '', 'baseNode'),
         node('partnership'),
         relation('out', '', property, { active: true }),
-        node(property, 'Property', { active: true }),
+        node(property, 'Property'),
       ],
     ]);
     query.optionalMatch([
       [
         node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
+        relation('in', '', 'member'),
+        node('', 'SecurityGroup'),
+        relation('out', '', 'permission'),
         node(readPerm, 'Permission', {
           property,
-          active: true,
+
           read: true,
         }),
-        relation('out', '', 'baseNode', { active: true }),
+        relation('out', '', 'baseNode'),
         node('partnership'),
         relation('out', '', property, { active: true }),
-        node(property, 'Property', { active: true }),
+        node(property, 'Property'),
       ],
     ]);
   };
@@ -287,7 +274,6 @@ export class PartnershipService {
         .call(matchRequestingUser, session)
         .match([
           node('root', 'User', {
-            active: true,
             id: this.config.rootAdmin.id,
           }),
         ])
@@ -295,9 +281,7 @@ export class PartnershipService {
           createBaseNode,
           'Partnership',
           secureProps,
-          {
-            owningOrgId: session.owningOrgId,
-          },
+          {},
           [],
           session.userId === this.config.rootAdmin.id
         )
@@ -322,16 +306,14 @@ export class PartnershipService {
           [
             node('organization', 'Organization', {
               id: organizationId,
-              active: true,
             }),
           ],
           [
             node('partnership', 'Partnership', {
               id: result.id,
-              active: true,
             }),
           ],
-          [node('project', 'Project', { id: projectId, active: true })],
+          [node('project', 'Project', { id: projectId })],
         ])
         .create([
           node('project'),
@@ -370,18 +352,18 @@ export class PartnershipService {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([node('node', 'Partnership', { active: true, id })])
+      .match([node('node', 'Partnership', { id })])
       .call(getPermList, 'requestingUser')
       .call(getPropList, 'permList')
       .match([
         node('node'),
         relation('in', '', 'partnership'),
-        node('project', 'Project', { active: true }),
+        node('project', 'Project'),
       ])
       .match([
         node('node'),
         relation('out', '', 'organization'),
-        node('organization', 'Organization', { active: true }),
+        node('organization', 'Organization'),
       ])
       .return(
         'propList, permList, node, project.id as projectId, organization.id as organizationId'
@@ -553,7 +535,6 @@ export class PartnershipService {
           ? [
               relation('in', '', 'partnership', { active: true }),
               node('project', 'Project', {
-                active: true,
                 id: filter.projectId,
               }),
             ]
@@ -565,7 +546,7 @@ export class PartnershipService {
               .match([
                 node('node'),
                 relation('out', '', sort),
-                node('prop', 'Property', { active: true }),
+                node('prop', 'Property'),
               ])
               .with('*')
               .orderBy('prop.value', order)
@@ -580,14 +561,7 @@ export class PartnershipService {
   async checkPartnershipConsistency(session: ISession): Promise<boolean> {
     const partnerships = await this.db
       .query()
-      .match([
-        matchSession(session),
-        [
-          node('partnership', 'Partnership', {
-            active: true,
-          }),
-        ],
-      ])
+      .match([matchSession(session), [node('partnership', 'Partnership')]])
       .return('partnership.id as id')
       .run();
 
@@ -639,9 +613,9 @@ export class PartnershipService {
     label: string
   ) {
     query.match([
-      node('project', 'Project', { active: true, id: projectId }),
+      node('project', 'Project', { id: projectId }),
       relation(relationshipDirection, '', relationshipType, { active: true }),
-      node('node', label, { active: true }),
+      node('node', label),
     ]);
   }
 

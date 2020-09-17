@@ -70,7 +70,6 @@ export class CeremonyService {
           createdAt,
         }),
         node(prop, 'Property', {
-          active: true,
           value,
         }),
       ],
@@ -79,44 +78,29 @@ export class CeremonyService {
 
   // helper method for defining properties
   permission = (property: string) => {
-    const createdAt = DateTime.local();
     return [
       [
         node('adminSG'),
-        relation('out', '', 'permission', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'permission'),
         node('', 'Permission', {
           property,
-          active: true,
           read: true,
           edit: true,
           admin: true,
         }),
-        relation('out', '', 'baseNode', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'baseNode'),
         node('newCeremony'),
       ],
       [
         node('readerSG'),
-        relation('out', '', 'permission', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'permission'),
         node('', 'Permission', {
           property,
-          active: true,
           read: true,
           edit: false,
           admin: false,
         }),
-        relation('out', '', 'baseNode', {
-          active: true,
-          createdAt,
-        }),
+        relation('out', '', 'baseNode'),
         node('newCeremony'),
       ],
     ];
@@ -127,18 +111,17 @@ export class CeremonyService {
     return [
       [
         node('requestingUser'),
-        relation('in', '', 'member', { active: true }),
-        node('', 'SecurityGroup', { active: true }),
-        relation('out', '', 'permission', { active: true }),
+        relation('in', '', 'member'),
+        node('', 'SecurityGroup'),
+        relation('out', '', 'permission'),
         node(perm, 'Permission', {
           property,
-          active: true,
           read: true,
         }),
-        relation('out', '', 'baseNode', { active: true }),
+        relation('out', '', 'baseNode'),
         node('ceremony'),
         relation('out', '', property, { active: true }),
-        node(property, 'Property', { active: true }),
+        node(property, 'Property'),
       ],
     ];
   };
@@ -189,13 +172,10 @@ export class CeremonyService {
         .call(matchRequestingUser, session)
         .match([
           node('root', 'User', {
-            active: true,
             id: this.config.rootAdmin.id,
           }),
         ])
-        .call(createBaseNode, 'Ceremony', secureProps, {
-          owningOrgId: session.owningOrgId,
-        })
+        .call(createBaseNode, 'Ceremony', secureProps)
         .return('node.id as id');
 
       const result = await query.first();
@@ -222,7 +202,7 @@ export class CeremonyService {
     const readCeremony = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([node('node', 'Ceremony', { active: true, id })])
+      .match([node('node', 'Ceremony', { id })])
       .call(getPermList, 'requestingUser')
       .call(getPropList, 'permList')
       .return('node, permList, propList')
@@ -296,7 +276,7 @@ export class CeremonyService {
         ...(filter.type
           ? [
               relation('out', '', 'type', { active: true }),
-              node('name', 'Property', { active: true, value: filter.type }),
+              node('name', 'Property', { value: filter.type }),
             ]
           : []),
       ])
@@ -306,7 +286,7 @@ export class CeremonyService {
               .match([
                 node('node'),
                 relation('out', '', sort),
-                node('prop', 'Property', { active: true }),
+                node('prop', 'Property'),
               ])
               .with('*')
               .orderBy('prop.value', order)
@@ -319,14 +299,7 @@ export class CeremonyService {
   async checkCeremonyConsistency(session: ISession): Promise<boolean> {
     const ceremonies = await this.db
       .query()
-      .match([
-        matchSession(session),
-        [
-          node('ceremony', 'Ceremony', {
-            active: true,
-          }),
-        ],
-      ])
+      .match([matchSession(session), [node('ceremony', 'Ceremony')]])
       .return('ceremony.id as id')
       .run();
 

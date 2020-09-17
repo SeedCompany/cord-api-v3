@@ -43,11 +43,11 @@ export class FavoriteService {
     const query = this.db
       .query()
       .match(matchSession(session))
-      .match([node('node', 'BaseNode', { active: true, id: input.baseNodeId })])
+      .match([node('node', 'BaseNode', { id: input.baseNodeId })])
       .create([
         [
           node('requestingUser'),
-          relation('out', 'rel', 'favorite', { active: true, createdAt }),
+          relation('out', 'rel', 'favorite', { createdAt }),
           node('node'),
         ],
       ])
@@ -70,7 +70,7 @@ export class FavoriteService {
     const del = this.db
       .query()
       .match(matchSession(session))
-      .match([node('node', 'BaseNode', { active: true, id: baseNodeId })])
+      .match([node('node', 'BaseNode', { id: baseNodeId })])
       .match([
         [
           node('requestingUser'),
@@ -106,7 +106,7 @@ export class FavoriteService {
       .match([
         node('requestingUser'),
         relation('out', '', 'favorite', { active: true }),
-        node('node', baseNode, { active: true }),
+        node('node', baseNode),
       ])
       .return('node.id as baseNodeId')
       .orderBy([input.sort], input.order)
@@ -119,7 +119,7 @@ export class FavoriteService {
       .match([
         node('requestingUser'),
         relation('out', '', 'favorite', { active: true }),
-        node('node', baseNode, { active: true }),
+        node('node', baseNode),
       ])
       .return('count(node) as total');
     let result;

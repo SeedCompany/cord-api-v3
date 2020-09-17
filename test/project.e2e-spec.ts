@@ -266,7 +266,7 @@ describe('Project e2e', () => {
     expect(result.updateProject.project.name.value).toBe(namenew);
   });
 
-  it('delete project', async () => {
+  it.skip('delete project', async () => {
     const project = await createProject(app);
     expect(project.id).toBeTruthy();
     const result = await app.graphql.mutate(
