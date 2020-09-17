@@ -1,17 +1,15 @@
-import { contains, inArray, node, Query, relation } from 'cypher-query-builder';
+import { inArray, node, Query, relation } from 'cypher-query-builder';
 import { ProjectFilters } from './dto';
 
 export function projectListFilter(query: Query, filter: ProjectFilters) {
   query
-    .match([...propMatch('name')])
-    .call((q) =>
-      filter.name ? q.where({ name: { value: contains(filter.name) } }) : q
-    )
-    .match([...propMatch('status')])
+    .match([...(filter.status ? propMatch('status') : [[node('node')]])])
     .call((q) =>
       filter.status ? q.where({ status: { value: inArray(filter.status) } }) : q
     )
-    .match([...propMatch('sensitivity')])
+    .match([
+      ...(filter.sensitivity ? propMatch('sensitivity') : [[node('node')]]),
+    ])
     .call((q) =>
       filter.sensitivity
         ? q.where({ sensitivity: { value: inArray(filter.sensitivity) } })
