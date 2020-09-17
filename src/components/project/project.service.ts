@@ -77,6 +77,7 @@ import {
   Role,
   SecuredProjectMemberList,
 } from './project-member';
+import { projectListFilter } from './query.helpers';
 
 @Injectable()
 export class ProjectService {
@@ -616,6 +617,7 @@ export class ProjectService {
     const query = this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode(label)])
+      .call(projectListFilter, filter)
       .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
         q
           .match([
