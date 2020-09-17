@@ -502,11 +502,10 @@ export class EngagementService {
       id,
       session
     )) as LanguageEngagement;
-    await this.eventBus.publish(
-      new EngagementCreatedEvent(languageEngagement, session)
-    );
+    const event = new EngagementCreatedEvent(languageEngagement, session);
+    await this.eventBus.publish(event);
 
-    return (await this.readOne(id, session)) as LanguageEngagement;
+    return event.engagement as LanguageEngagement;
   }
 
   async createInternshipEngagement(
