@@ -20,9 +20,9 @@ export function projectListFilter(query: Query, filter: ProjectFilters) {
     query.match([
       node('node'),
       relation('out', '', 'engagement'),
-      node('engagement', { active: true }),
+      node('engagement'),
       relation('out', '', 'language'),
-      node('language', { active: true }),
+      node('language'),
     ]);
   }
 
@@ -30,7 +30,7 @@ export function projectListFilter(query: Query, filter: ProjectFilters) {
     query.match([
       node('requestingUser'),
       relation('in', '', 'user'),
-      node('projectMember', { active: true }),
+      node('projectMember'),
       relation('in', '', 'member'),
       node('node'),
     ]);
