@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { difference } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import {
@@ -226,7 +225,7 @@ export class UserService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'User', { id })])
-      .call(getPermList, 'requestingUser')
+      .call(getPermList, 'node')
       .call(getPropList, 'permList')
       .return('propList, permList, node')
       .asResult<StandardReadResult<DbPropsOfDto<User>>>();
@@ -279,18 +278,28 @@ export class UserService {
 
     // Update roles
     if (input.roles) {
-      const newRoles = difference(input.roles, user.roles.value);
-      if (newRoles.length) {
-        await this.db
-          .query()
-          .match([
-            node('user', ['User', 'BaseNode'], {
-              id: input.id,
-            }),
-          ])
-          .create([...this.roleProperties(newRoles)])
-          .run();
-      }
+      await this.db
+        .query()
+        .match([
+          node('user', ['User', 'BaseNode'], {
+            id: input.id,
+          }),
+          relation('out', 'oldRoleRel', 'roles'),
+          node('oldRoles', 'Property'),
+        ])
+        .delete('oldRoleRel')
+        .delete('oldRoles')
+        .run();
+
+      await this.db
+        .query()
+        .match([
+          node('user', ['User', 'BaseNode'], {
+            id: input.id,
+          }),
+        ])
+        .create([...this.roleProperties(input.roles)])
+        .run();
     }
 
     return await this.readOne(input.id, session);

@@ -1,6 +1,7 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
+import { uniq } from 'lodash';
 import { IsEmail, IsIanaTimezone, NameField } from '../../../common';
 import { Role } from '../../authorization';
 import { UserStatus } from './user-status.enum';
@@ -38,7 +39,7 @@ export abstract class CreatePerson {
   readonly status?: UserStatus;
 
   @Field(() => [Role], { nullable: true })
-  //TODO: default ProjectManager is a placeholder until the main Role based access control features are done
+  @Transform(uniq)
   readonly roles?: Role[] = [Role.ProjectManager];
 
   @Field({ nullable: true })
