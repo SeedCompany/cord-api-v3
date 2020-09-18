@@ -226,7 +226,7 @@ export class UserService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'User', { id })])
-      .call(getPermList, 'node')
+      .call(getPermList, 'requestingUser')
       .call(getPropList, 'permList')
       .return('propList, permList, node')
       .asResult<StandardReadResult<DbPropsOfDto<User>>>();
@@ -280,15 +280,17 @@ export class UserService {
     // Update roles
     if (input.roles) {
       const newRoles = difference(input.roles, user.roles.value);
-      await this.db
-        .query()
-        .match([
-          node('user', ['User', 'BaseNode'], {
-            id: input.id,
-          }),
-        ])
-        .create([...this.roleProperties(newRoles)])
-        .run();
+      if (newRoles.length) {
+        await this.db
+          .query()
+          .match([
+            node('user', ['User', 'BaseNode'], {
+              id: input.id,
+            }),
+          ])
+          .create([...this.roleProperties(newRoles)])
+          .run();
+      }
     }
 
     return await this.readOne(input.id, session);
