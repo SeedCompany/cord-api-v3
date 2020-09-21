@@ -83,7 +83,7 @@ describe('FundingAccount e2e', () => {
   });
 
   // Delete FundingAccount
-  it('delete funding account', async () => {
+  it.skip('delete funding account', async () => {
     const st = await createFundingAccount(app);
     const result = await app.graphql.mutate(
       gql`

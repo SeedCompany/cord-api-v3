@@ -173,20 +173,8 @@ export class FundingAccountService {
     });
   }
 
-  async delete(id: string, session: ISession): Promise<void> {
-    const fundingAccount = await this.readOne(id, session);
-    try {
-      await this.db.deleteNode({
-        session,
-        object: fundingAccount,
-        aclEditProp: 'canDeleteOwnUser',
-      });
-    } catch (e) {
-      this.logger.error('Failed to delete', { id, exception: e });
-      throw new ServerException('Failed to delete');
-    }
-
-    this.logger.info(`Deleted funding account`, { id });
+  async delete(_id: string, _session: ISession): Promise<void> {
+    // Not implemented
   }
 
   async list(
