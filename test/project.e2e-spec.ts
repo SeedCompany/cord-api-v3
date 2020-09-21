@@ -145,13 +145,23 @@ describe('Project e2e', () => {
       }
     );
 
-    const actual: Project = result.createProject.project;
+    const actual: Project & {
+      engagements: { canRead: boolean; canCreate: boolean };
+      partnerships: { canRead: boolean; canCreate: boolean };
+      team: { canRead: boolean; canCreate: boolean };
+    } = result.createProject.project;
     expect(actual.id).toBeDefined();
     expect(actual.departmentId.value).toBeNull();
     expect(actual.location.value).toBeNull();
     expect(actual.mouStart.value).toBeNull();
     expect(actual.mouEnd.value).toBeNull();
     expect(actual.estimatedSubmission.value).toBeNull();
+    expect(actual.engagements.canRead).toBe(true);
+    expect(actual.engagements.canCreate).toBe(true);
+    expect(actual.partnerships.canRead).toBe(true);
+    expect(actual.partnerships.canCreate).toBe(true);
+    expect(actual.team.canRead).toBe(true);
+    expect(actual.team.canCreate).toBe(true);
   });
 
   it('should throw error if the location id is not valid', async () => {

@@ -353,6 +353,18 @@ export const project = gql`
       canRead
       canEdit
     }
+    engagements {
+      canRead
+      canCreate
+    }
+    partnerships {
+      canRead
+      canCreate
+    }
+    team {
+      canRead
+      canCreate
+    }
   }
 `;
 
