@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { find, flatMap, upperFirst } from 'lodash';
@@ -604,7 +603,6 @@ export class ProjectService {
           relation('out', '', 'permission'),
           node('canReadEngagement', 'Permission', {
             property: 'engagement',
-            read: true,
           }),
           relation('out', '', 'baseNode'),
           node('project', 'Project', { id: project.id }),
