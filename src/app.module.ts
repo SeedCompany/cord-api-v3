@@ -9,6 +9,7 @@ import { EngagementModule } from './components/engagement/engagement.module';
 import { FavoriteModule } from './components/favorites/favorite.module';
 import { FileModule } from './components/file/file.module';
 import { FilmModule } from './components/film/film.module';
+import { FundingAccountModule } from './components/funding-account/funding-account.module';
 import { LanguageModule } from './components/language/language.module';
 import { LiteracyMaterialModule } from './components/literacy-material/literacy-material.module';
 import { LocationModule } from './components/location/location.module';
@@ -54,6 +55,7 @@ import { CoreModule, LoggerModule } from './core';
     WorkflowModule,
     TimeZoneModule,
     PartnerModule,
+    FundingAccountModule,
   ],
   controllers: [],
   providers: [DateTimeScalar, DateScalar],
