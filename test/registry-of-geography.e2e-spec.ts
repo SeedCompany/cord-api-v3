@@ -86,7 +86,7 @@ describe('RegistryOfGeography e2e', () => {
   });
 
   // Delete Registry Of Geography
-  it('delete registry of geography', async () => {
+  it.skip('delete registry of geography', async () => {
     const st = await createRegistryOfGeography(app);
     const result = await app.graphql.mutate(
       gql`

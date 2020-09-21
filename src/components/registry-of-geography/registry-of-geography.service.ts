@@ -203,20 +203,8 @@ export class RegistryOfGeographyService {
     });
   }
 
-  async delete(id: string, session: ISession): Promise<void> {
-    const RegistryOfGeography = await this.readOne(id, session);
-    try {
-      await this.db.deleteNode({
-        session,
-        object: RegistryOfGeography,
-        aclEditProp: 'canDeleteOwnUser',
-      });
-    } catch (e) {
-      this.logger.error('Failed to delete', { id, exception: e });
-      throw new ServerException('Failed to delete');
-    }
-
-    this.logger.info(`Deleted registry of geography with id`, { id });
+  async delete(_id: string, _session: ISession): Promise<void> {
+    // Not implemented
   }
 
   async list(
