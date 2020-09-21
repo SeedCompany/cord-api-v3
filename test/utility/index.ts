@@ -31,3 +31,4 @@ export * from './create-engagement';
 export * from './create-partnership';
 export * from './create-song';
 export * from './create-partner';
+export * from './create-registry-of-geography';

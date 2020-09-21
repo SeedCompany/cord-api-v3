@@ -781,6 +781,23 @@ export const partner = gql`
   ${user}
 `;
 
+export const registryOfGeography = gql`
+  fragment registryOfGeography on RegistryOfGeography {
+    id
+    name {
+      value
+      canRead
+      canEdit
+    }
+    registryId {
+      value
+      canRead
+      canEdit
+    }
+    createdAt
+  }
+`;
+
 export const fragments = {
   org,
   user,
@@ -809,4 +826,5 @@ export const fragments = {
   fav,
   ceremony,
   partner,
+  registryOfGeography,
 };
