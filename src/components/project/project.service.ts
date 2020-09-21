@@ -129,36 +129,6 @@ export class ProjectService {
     ];
   };
 
-  // helper method for defining properties
-  permission = (property: string, canEdit = false) => {
-    return [
-      [
-        node('adminSG'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property,
-          read: true,
-          edit: true,
-          admin: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('newProject'),
-      ],
-      [
-        node('readerSG'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property,
-          read: true,
-          edit: canEdit,
-          admin: false,
-        }),
-        relation('out', '', 'baseNode'),
-        node('node'),
-      ],
-    ];
-  };
-
   propMatch = (property: string) => {
     const perm = 'canRead' + upperFirst(property);
     return [
@@ -294,22 +264,15 @@ export class ProjectService {
         createProject.match([node('country', 'Country', { id: locationId })]);
       }
 
-      createProject
-        .call(
-          createBaseNode,
-          `Project:${input.type}Project`,
-          secureProps,
-          {
-            type: createInput.type,
-          },
-          canEdit ? ['name', 'mouStart', 'mouEnd'] : []
-        )
-        .create([
-          ...this.permission('engagement'),
-          ...this.permission('teamMember'),
-          ...this.permission('partnership'),
-          ...this.permission('location'),
-        ]);
+      createProject.call(
+        createBaseNode,
+        `Project:${input.type}Project`,
+        secureProps,
+        {
+          type: createInput.type,
+        },
+        canEdit ? ['name', 'mouStart', 'mouEnd'] : []
+      );
       if (locationId) {
         createProject.create([
           [
@@ -319,7 +282,7 @@ export class ProjectService {
           ],
         ]);
       }
-      createProject.return('node.id as id');
+      createProject.return('node.id as id').asResult<{ id: string }>();
       const result = await createProject.first();
 
       if (!result) {

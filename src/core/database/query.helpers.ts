@@ -98,12 +98,9 @@ export function createBaseNode(
   }
 
   createSG(query, 'adminSG');
-  createSG(query, 'writerSG');
-  createSG(query, 'readerSG');
+
   if (!isRootuser) {
     addUserToSG(query, 'requestingUser', 'adminSG');
-    addUserToSG(query, 'requestingUser', 'writerSG');
-    addUserToSG(query, 'requestingUser', 'readerSG');
   }
 
   for (const prop of props) {
@@ -126,34 +123,6 @@ export function createBaseNode(
           read: true,
           edit: true,
           admin: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('node'),
-      ]);
-    }
-
-    if (prop.addToWriterSg) {
-      query.create([
-        node('writerSG'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property: prop.key,
-          read: true,
-          edit: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('node'),
-      ]);
-    }
-
-    if (prop.addToReaderSg) {
-      query.create([
-        node('readerSG'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property: prop.key,
-          read: true,
-          edit: editableProps?.includes(prop.key) ? true : false,
         }),
         relation('out', '', 'baseNode'),
         node('node'),
