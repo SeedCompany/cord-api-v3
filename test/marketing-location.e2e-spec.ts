@@ -85,7 +85,7 @@ describe('MarketingLocation e2e', () => {
   });
 
   // Delete Marketing Location
-  it('delete marketing location', async () => {
+  it.skip('delete marketing location', async () => {
     const st = await createMarketingLocation(app);
     const result = await app.graphql.mutate(
       gql`

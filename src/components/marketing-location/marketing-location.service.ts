@@ -177,20 +177,8 @@ export class MarketingLocationService {
     });
   }
 
-  async delete(id: string, session: ISession): Promise<void> {
-    const marketingLocation = await this.readOne(id, session);
-    try {
-      await this.db.deleteNode({
-        session,
-        object: marketingLocation,
-        aclEditProp: 'canDeleteOwnUser',
-      });
-    } catch (e) {
-      this.logger.error('Failed to delete', { id, exception: e });
-      throw new ServerException('Failed to delete');
-    }
-
-    this.logger.info(`Deleted marketing location`, { id });
+  async delete(_id: string, _session: ISession): Promise<void> {
+    // Not implemented
   }
 
   async list(
