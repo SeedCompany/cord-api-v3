@@ -8,7 +8,7 @@ import {
   SecuredString,
   Sensitivity,
 } from '../../../common';
-import { SecuredCountry } from '../../location';
+import { SecuredRegion } from '../../location';
 import { ProjectStatus } from './status.enum';
 import { SecuredProjectStep } from './step.enum';
 import { ProjectType } from './type.enum';
@@ -49,7 +49,7 @@ class Project extends Resource {
   readonly status: ProjectStatus;
 
   @Field()
-  readonly location: SecuredCountry;
+  readonly location: SecuredRegion;
 
   @Field()
   readonly mouStart: SecuredDate;

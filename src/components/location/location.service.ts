@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { inArray, node, relation } from 'cypher-query-builder';
 import { first, intersection } from 'lodash';
 import { DateTime } from 'luxon';
@@ -23,8 +23,6 @@ import {
   createBaseNode,
   DatabaseService,
   permission as dbPermission,
-  getPermList,
-  getPropList,
   ILogger,
   Logger,
   matchRequestingUser,
@@ -84,7 +82,6 @@ export class LocationService {
       // ZONE NODE
       'CREATE CONSTRAINT ON (n:FieldZone) ASSERT EXISTS(n.id)',
       'CREATE CONSTRAINT ON (n:FieldZone) ASSERT n.id IS UNIQUE',
-
       'CREATE CONSTRAINT ON (n:FieldZone) ASSERT EXISTS(n.createdAt)',
 
       // ZONE NAME REL
@@ -98,7 +95,6 @@ export class LocationService {
       // REGION NODE
       'CREATE CONSTRAINT ON (n:FieldRegion) ASSERT EXISTS(n.id)',
       'CREATE CONSTRAINT ON (n:FieldRegion) ASSERT n.id IS UNIQUE',
-
       'CREATE CONSTRAINT ON (n:FieldRegion) ASSERT EXISTS(n.createdAt)',
 
       // REGION NAME REL
@@ -112,7 +108,6 @@ export class LocationService {
       // COUNTRY NODE
       'CREATE CONSTRAINT ON (n:Country) ASSERT EXISTS(n.id)',
       'CREATE CONSTRAINT ON (n:Country) ASSERT n.id IS UNIQUE',
-
       'CREATE CONSTRAINT ON (n:Country) ASSERT EXISTS(n.createdAt)',
 
       // COUNTRY NAME REL
@@ -126,16 +121,12 @@ export class LocationService {
       // PUBLICLOCATION NODE
       'CREATE CONSTRAINT ON (n:PublicLocation) ASSERT EXISTS(n.id)',
       'CREATE CONSTRAINT ON (n:PublicLocation) ASSERT n.id IS UNIQUE',
-      'CREATE CONSTRAINT ON (n:PublicLocation) ASSERT EXISTS(n.active)',
       'CREATE CONSTRAINT ON (n:PublicLocation) ASSERT EXISTS(n.createdAt)',
-      'CREATE CONSTRAINT ON (n:PublicLocation) ASSERT EXISTS(n.owningOrgId)',
 
       //PRIVATELOCATION NODE
       'CREATE CONSTRAINT ON (n:PrivateLocation) ASSERT EXISTS(n.id)',
       'CREATE CONSTRAINT ON (n:PrivateLocation) ASSERT n.id IS UNIQUE',
-      'CREATE CONSTRAINT ON (n:PrivateLocation) ASSERT EXISTS(n.active)',
       'CREATE CONSTRAINT ON (n:PrivateLocation) ASSERT EXISTS(n.createdAt)',
-      'CREATE CONSTRAINT ON (n:PrivateLocation) ASSERT EXISTS(n.owningOrgId)',
 
       'CREATE CONSTRAINT ON ()-[r:publicName]-() ASSERT EXISTS(r.active)',
       'CREATE CONSTRAINT ON ()-[r:publicName]-() ASSERT EXISTS(r.createdAt)',
@@ -498,19 +489,16 @@ export class LocationService {
         .call(matchRequestingUser, session)
         .match([
           node('rootUser', 'User', {
-            active: true,
             id: this.config.rootAdmin.id,
           }),
         ])
         .match([
           node('marketingLocation', 'MarketingLocation', {
-            active: true,
             id: input.marketingLocationId,
           }),
         ])
         .match([
           node('privateLocation', 'PrivateLocation', {
-            active: true,
             id: input.privateLocationId,
           }),
         ]);
@@ -518,7 +506,6 @@ export class LocationService {
       if (input.fundingAccountId) {
         query.match([
           node('fundingAccount', 'FundingAccount', {
-            active: true,
             id: input.fundingAccountId,
           }),
         ]);
@@ -526,7 +513,6 @@ export class LocationService {
       if (input.registryOfGeographyId) {
         query.match([
           node('registryOfGeography', 'RegistryOfGeography', {
-            active: true,
             id: input.registryOfGeographyId,
           }),
         ]);
@@ -534,16 +520,13 @@ export class LocationService {
       if (input.projectId) {
         query.match([
           node('project', 'Project', {
-            active: true,
             id: input.projectId,
           }),
         ]);
       }
 
       query
-        .call(createBaseNode, ['PublicLocation'], [], {
-          owningOrgId: session.owningOrgId,
-        })
+        .call(createBaseNode, 'PublicLocation', [])
         .create([
           [
             node('node'),
@@ -614,13 +597,8 @@ export class LocationService {
 
       const result = await query.first();
       if (!result) {
-        throw new ServerException('failed to create a public location');
+        throw new ServerException('Failed to create public location');
       }
-
-      const id = result.id;
-
-      // add root admin to new public location as an admin
-      await this.db.addRootAdminToBaseNodeAsAdmin(id, 'PublicLocation');
 
       this.logger.info(`public location created`, { id: result.id });
 
@@ -699,26 +677,18 @@ export class LocationService {
         .call(matchRequestingUser, session)
         .match([
           node('rootUser', 'User', {
-            active: true,
             id: this.config.rootAdmin.id,
           }),
         ])
-        .call(createBaseNode, ['PrivateLocation', 'BaseNode'], secureProps, {
-          owningOrgId: session.owningOrgId,
-        })
+        .call(createBaseNode, 'PrivateLocation', secureProps)
         .call(addUserToSG, 'rootUser', 'adminSG')
         .call(addUserToSG, 'rootUser', 'readerSG')
         .return('node.id as id');
 
       const result = await query.first();
       if (!result) {
-        throw new ServerException('failed to create a private location');
+        throw new ServerException('Failed to create private location');
       }
-
-      const id = result.id;
-
-      // add root admin to new private location as an admin
-      await this.db.addRootAdminToBaseNodeAsAdmin(id, 'PrivateLocation');
 
       this.logger.info(`private location created`, { id: result.id });
 
@@ -954,27 +924,27 @@ export class LocationService {
     const readPublicLocation = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([node('node', 'PublicLocation', { active: true, id })])
-      .call(getPermList, 'requestingUser')
+      .match([node('node', 'PublicLocation', { id })])
+      .call(matchPermList, 'requestingUser')
       .optionalMatch([
         node('node'),
         relation('out', '', 'marketingLocation', { active: true }),
-        node('marketingLocation', 'MarketingLocation', { active: true }),
+        node('marketingLocation', 'MarketingLocation'),
       ])
       .optionalMatch([
         node('node'),
         relation('out', '', 'privateLocation', { active: true }),
-        node('privateLocation', 'PrivateLocation', { active: true }),
+        node('privateLocation', 'PrivateLocation'),
       ])
       .optionalMatch([
         node('node'),
         relation('out', '', 'registryOfGeography', { active: true }),
-        node('registryOfGeography', 'RegistryOfGeography', { active: true }),
+        node('registryOfGeography', 'RegistryOfGeography'),
       ])
       .optionalMatch([
         node('node'),
         relation('out', '', 'fundingAccount', { active: true }),
-        node('fundingAccount', 'FundingAccount', { active: true }),
+        node('fundingAccount', 'FundingAccount'),
       ])
       .return([
         'permList, node',
@@ -1051,9 +1021,9 @@ export class LocationService {
     const readPrivateLocation = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([node('node', 'PrivateLocation', { active: true, id })])
-      .call(getPermList, 'requestingUser')
-      .call(getPropList, 'permList')
+      .match([node('node', 'PrivateLocation', { id })])
+      .call(matchPermList, 'requestingUser')
+      .call(matchPropList, 'permList')
       .return('propList, permList, node')
       .asResult<StandardReadResult<DbPropsOfDto<PrivateLocation>>>();
 

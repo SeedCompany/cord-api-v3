@@ -1,24 +1,32 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { node } from 'cypher-query-builder';
-import { DuplicateException, ISession, ServerException } from '../../common';
+import { Injectable } from '@nestjs/common';
+import { node, relation } from 'cypher-query-builder';
 import {
-  addUserToSG,
+  DuplicateException,
+  ISession,
+  NotFoundException,
+  ServerException,
+} from '../../common';
+import {
   ConfigService,
   createBaseNode,
   DatabaseService,
-  getPermList,
-  getPropList,
   ILogger,
   Logger,
   matchRequestingUser,
-  matchUserPermissions,
   OnIndex,
-  runListQuery,
 } from '../../core';
+import {
+  calculateTotalAndPaginateList,
+  matchPermList,
+  matchPropList,
+  permissionsOfNode,
+  requestingUser,
+} from '../../core/database/query';
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
   parseSecuredProperties,
+  runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
 import {
@@ -31,27 +39,26 @@ import {
 
 @Injectable()
 export class FundingAccountService {
+  private readonly securedProperties = {
+    name: true,
+  };
+
   constructor(
-    @Logger('fundingAccount:service') private readonly logger: ILogger,
+    @Logger('funding-account:service') private readonly logger: ILogger,
     private readonly db: DatabaseService,
     private readonly config: ConfigService
   ) {}
 
   @OnIndex()
   async createIndexes() {
-    const constraints = [
+    return [
       'CREATE CONSTRAINT ON (n:FundingAccount) ASSERT EXISTS(n.id)',
       'CREATE CONSTRAINT ON (n:FundingAccount) ASSERT n.id IS UNIQUE',
-      'CREATE CONSTRAINT ON (n:FundingAccount) ASSERT EXISTS(n.active)',
       'CREATE CONSTRAINT ON (n:FundingAccount) ASSERT EXISTS(n.createdAt)',
-      'CREATE CONSTRAINT ON (n:FundingAccount) ASSERT EXISTS(n.owningOrgId)',
 
       'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.active)',
       'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
     ];
-    for (const query of constraints) {
-      await this.db.query().raw(query).run();
-    }
   }
 
   async create(
@@ -89,27 +96,17 @@ export class FundingAccountService {
         .query()
         .call(matchRequestingUser, session)
         .match([
-          node('rootUser', 'User', {
-            active: true,
+          node('root', 'User', {
             id: this.config.rootAdmin.id,
           }),
         ])
-        .call(createBaseNode, ['FundingAccount', 'BaseNode'], secureProps, {
-          owningOrgId: session.owningOrgId,
-        })
-        .call(addUserToSG, 'rootUser', 'adminSG')
-        .call(addUserToSG, 'rootUser', 'readerSG')
+        .call(createBaseNode, 'FundingAccount', secureProps)
         .return('node.id as id');
 
       const result = await query.first();
       if (!result) {
-        throw new ServerException('failed to create a funding account');
+        throw new ServerException('Failed to create funding account');
       }
-
-      const id = result.id;
-
-      // add root admin to new funding account as an admin
-      await this.db.addRootAdminToBaseNodeAsAdmin(id, 'FundingAccount');
 
       this.logger.info(`funding account created`, { id: result.id });
 
@@ -137,24 +134,23 @@ export class FundingAccountService {
     const readFundingAccount = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([node('node', 'FundingAccount', { active: true, id })])
-      .call(getPermList, 'requestingUser')
-      .call(getPropList, 'permList')
+      .match([node('node', 'FundingAccount', { id })])
+      .call(matchPermList, 'requestingUser')
+      .call(matchPropList, 'permList')
       .return('propList, permList, node')
       .asResult<StandardReadResult<DbPropsOfDto<FundingAccount>>>();
 
     const result = await readFundingAccount.first();
 
     if (!result) {
-      throw new NotFoundException(
-        'Could not find funding account',
-        'FundingAccount.id'
-      );
+      throw new NotFoundException('FundingAccount.id', 'id');
     }
 
-    const secured = parseSecuredProperties(result.propList, result.permList, {
-      name: true,
-    });
+    const secured = parseSecuredProperties(
+      result.propList,
+      result.permList,
+      this.securedProperties
+    );
 
     return {
       ...parseBaseNodeProperties(result.node),
@@ -190,7 +186,7 @@ export class FundingAccountService {
       throw new ServerException('Failed to delete');
     }
 
-    this.logger.info(`deleted funding account with id`, { id });
+    this.logger.info(`Deleted funding account`, { id });
   }
 
   async list(
@@ -198,27 +194,23 @@ export class FundingAccountService {
     session: ISession
   ): Promise<FundingAccountListOutput> {
     const label = 'FundingAccount';
-    const secureProps = ['name'];
 
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
-      .call(matchUserPermissions, label);
+      .match([requestingUser(session), ...permissionsOfNode(label)])
+      .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
+        sort in this.securedProperties
+          ? q
+              .match([
+                node('node'),
+                relation('out', '', sort),
+                node('prop', 'Property'),
+              ])
+              .with('*')
+              .orderBy('prop.value', order)
+          : q.with('*').orderBy(`node.${sort}`, order)
+      );
 
-    const result: FundingAccountListOutput = await runListQuery(
-      query,
-      input,
-      secureProps.includes(input.sort)
-    );
-
-    const items = await Promise.all(
-      result.items.map((row: any) => this.readOne(row.properties.id, session))
-    );
-
-    return {
-      items,
-      hasMore: result.hasMore,
-      total: result.total,
-    };
+    return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
 }

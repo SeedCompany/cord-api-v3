@@ -1,24 +1,32 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { node } from 'cypher-query-builder';
-import { DuplicateException, ISession, ServerException } from '../../common';
+import { Injectable } from '@nestjs/common';
+import { node, relation } from 'cypher-query-builder';
 import {
-  addUserToSG,
+  DuplicateException,
+  ISession,
+  NotFoundException,
+  ServerException,
+} from '../../common';
+import {
   ConfigService,
   createBaseNode,
   DatabaseService,
-  getPermList,
-  getPropList,
   ILogger,
   Logger,
   matchRequestingUser,
-  matchUserPermissions,
   OnIndex,
-  runListQuery,
 } from '../../core';
+import {
+  calculateTotalAndPaginateList,
+  matchPermList,
+  matchPropList,
+  permissionsOfNode,
+  requestingUser,
+} from '../../core/database/query';
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
   parseSecuredProperties,
+  runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
 import {
@@ -31,6 +39,11 @@ import {
 
 @Injectable()
 export class RegistryOfGeographyService {
+  private readonly securedProperties = {
+    name: true,
+    registryId: true,
+  };
+
   constructor(
     @Logger('registryOfGeography:service') private readonly logger: ILogger,
     private readonly db: DatabaseService,
@@ -39,12 +52,10 @@ export class RegistryOfGeographyService {
 
   @OnIndex()
   async createIndexes() {
-    const constraints = [
+    return [
       'CREATE CONSTRAINT ON (n:RegistryOfGeography) ASSERT EXISTS(n.id)',
       'CREATE CONSTRAINT ON (n:RegistryOfGeography) ASSERT n.id IS UNIQUE',
-      'CREATE CONSTRAINT ON (n:RegistryOfGeography) ASSERT EXISTS(n.active)',
       'CREATE CONSTRAINT ON (n:RegistryOfGeography) ASSERT EXISTS(n.createdAt)',
-      'CREATE CONSTRAINT ON (n:RegistryOfGeography) ASSERT EXISTS(n.owningOrgId)',
 
       'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.active)',
       'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
@@ -55,9 +66,6 @@ export class RegistryOfGeographyService {
       'CREATE CONSTRAINT ON (n:RegistryOfGeographyId) ASSERT EXISTS(n.value)',
       'CREATE CONSTRAINT ON (n:RegistryOfGeographyId) ASSERT n.value IS UNIQUE',
     ];
-    for (const query of constraints) {
-      await this.db.query().raw(query).run();
-    }
   }
 
   protected async checkUnique(field: string, value: string, nodeName: string) {
@@ -119,31 +127,16 @@ export class RegistryOfGeographyService {
         .call(matchRequestingUser, session)
         .match([
           node('rootUser', 'User', {
-            active: true,
             id: this.config.rootAdmin.id,
           }),
         ])
-        .call(
-          createBaseNode,
-          ['RegistryOfGeography', 'BaseNode'],
-          secureProps,
-          {
-            owningOrgId: session.owningOrgId,
-          }
-        )
-        .call(addUserToSG, 'rootUser', 'adminSG')
-        .call(addUserToSG, 'rootUser', 'readerSG')
+        .call(createBaseNode, 'RegistryOfGeography', secureProps)
         .return('node.id as id');
 
       const result = await query.first();
       if (!result) {
-        throw new ServerException('failed to create a registry of geography');
+        throw new ServerException('Failed to create registry of geography');
       }
-
-      const id = result.id;
-
-      // add root admin to new registry of geography as an admin
-      await this.db.addRootAdminToBaseNodeAsAdmin(id, 'RegistryOfGeography');
 
       this.logger.info(`registry of geography created`, { id: result.id });
 
@@ -171,25 +164,23 @@ export class RegistryOfGeographyService {
     const readRegistryOfGeography = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([node('node', 'RegistryOfGeography', { active: true, id })])
-      .call(getPermList, 'requestingUser')
-      .call(getPropList, 'permList')
+      .match([node('node', 'RegistryOfGeography', { id })])
+      .call(matchPermList, 'requestingUser')
+      .call(matchPropList, 'permList')
       .return('propList, permList, node')
       .asResult<StandardReadResult<DbPropsOfDto<RegistryOfGeography>>>();
 
     const result = await readRegistryOfGeography.first();
 
     if (!result) {
-      throw new NotFoundException(
-        'Could not find registry of geography',
-        'RegistryOfGeography.id'
-      );
+      throw new NotFoundException('RegistryOfGeography.id', 'id');
     }
 
-    const secured = parseSecuredProperties(result.propList, result.permList, {
-      name: true,
-      registryId: true,
-    });
+    const secured = parseSecuredProperties(
+      result.propList,
+      result.permList,
+      this.securedProperties
+    );
 
     return {
       ...parseBaseNodeProperties(result.node),
@@ -225,7 +216,7 @@ export class RegistryOfGeographyService {
       throw new ServerException('Failed to delete');
     }
 
-    this.logger.info(`deleted registry of geography with id`, { id });
+    this.logger.info(`Deleted registry of geography with id`, { id });
   }
 
   async list(
@@ -233,27 +224,23 @@ export class RegistryOfGeographyService {
     session: ISession
   ): Promise<RegistryOfGeographyListOutput> {
     const label = 'RegistryOfGeography';
-    const secureProps = ['name', 'registryId'];
 
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
-      .call(matchUserPermissions, label);
+      .match([requestingUser(session), ...permissionsOfNode(label)])
+      .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
+        sort in this.securedProperties
+          ? q
+              .match([
+                node('node'),
+                relation('out', '', sort),
+                node('prop', 'Property'),
+              ])
+              .with('*')
+              .orderBy('prop.value', order)
+          : q.with('*').orderBy(`node.${sort}`, order)
+      );
 
-    const result: RegistryOfGeographyListOutput = await runListQuery(
-      query,
-      input,
-      secureProps.includes(input.sort)
-    );
-
-    const items = await Promise.all(
-      result.items.map((row: any) => this.readOne(row.properties.id, session))
-    );
-
-    return {
-      items,
-      hasMore: result.hasMore,
-      total: result.total,
-    };
+    return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
 }

@@ -168,7 +168,7 @@ describe('Project e2e', () => {
     const proj: CreateProject = {
       name: faker.random.uuid(),
       type: ProjectType.Translation,
-      locationId: country.id,
+      locationId: region.id,
     };
 
     const res = await app.graphql.mutate(

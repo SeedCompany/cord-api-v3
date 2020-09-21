@@ -316,8 +316,8 @@ export class ProjectService {
       if (locationId) {
         createProject.create([
           [
-            node('country'),
-            relation('in', '', 'location', { active: true, createdAt }),
+            node('region'),
+            relation('in', '', 'fieldRegion', { active: true, createdAt }),
             node('node'),
           ],
         ]);
@@ -424,8 +424,8 @@ export class ProjectService {
       .with('collect(prop) as propList, permList, node')
       .optionalMatch([
         node('node'),
-        relation('out', '', 'location'),
-        node('country', 'Country'),
+        relation('out', '', 'fieldRegion'),
+        node('region', 'FieldRegion'),
       ])
       .optionalMatch([
         node('node'),
@@ -440,12 +440,12 @@ export class ProjectService {
         'propList',
         'permList',
         'node',
-        'country.id as countryId',
+        'region.id as regionId',
         'collect(distinct sensitivity.value) as languageSensitivityList',
       ])
       .asResult<
         StandardReadResult<DbPropsOfDto<Project>> & {
-          countryId: string;
+          regionId: string;
           languageSensitivityList: Sensitivity[];
         }
       >();
@@ -456,16 +456,17 @@ export class ProjectService {
       throw new NotFoundException('Could not find Project');
     }
 
-    const location = result?.countryId
+    const location = result?.regionId
       ? await this.locationService
-          .readOneCountry(result?.countryId, session)
-          .then((country) => {
+          .readOneRegion(result?.regionId, session)
+          .then((region) => {
             return {
               value: {
-                id: country.id,
-                name: { ...country.name },
-                region: { ...country.region },
-                createdAt: country.createdAt,
+                id: region.id,
+                name: { ...region.name },
+                director: { ...region.director },
+                zone: { ...region.zone },
+                createdAt: region.createdAt,
               },
             };
           })
