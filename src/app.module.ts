@@ -17,6 +17,7 @@ import { PartnerModule } from './components/partner/partner.module';
 import { PartnershipModule } from './components/partnership/partnership.module';
 import { ProductModule } from './components/product/product.module';
 import { ProjectModule } from './components/project/project.module';
+import { RoleModule } from './components/role/role.module';
 import { ScriptureModule } from './components/scripture/scripture.module';
 import { SearchModule } from './components/search/search.module';
 import { SongModule } from './components/song/song.module';
@@ -54,6 +55,7 @@ import { CoreModule, LoggerModule } from './core';
     WorkflowModule,
     TimeZoneModule,
     PartnerModule,
+    RoleModule,
   ],
   controllers: [],
   providers: [DateTimeScalar, DateScalar],

@@ -39,7 +39,7 @@ import {
   OrganizationService,
   SecuredOrganizationList,
 } from '../organization';
-import { Role } from '../project/project-member/dto/role.dto';
+import { Role } from '../role';
 import {
   AssignOrganizationToUser,
   CreatePerson,
