@@ -71,6 +71,10 @@ export const permission = (property: string, baseNode: string) => {
   ];
 };
 
+export const permissions = (baseNode: string, properties: string[]) => {
+  return properties.flatMap((property) => permission(property, baseNode));
+};
+
 export const matchSession = (
   session: ISession,
   {

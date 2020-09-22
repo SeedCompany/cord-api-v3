@@ -10,13 +10,13 @@ import {
   ConfigService,
   createBaseNode,
   DatabaseService,
-  permission as dbPermission,
   getPermList,
   getPropList,
   ILogger,
   Logger,
   matchRequestingUser,
   OnIndex,
+  permission,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -64,9 +64,6 @@ export class SongService {
     ];
   }
 
-  // helper method for defining permissions
-  permission = dbPermission;
-
   async create(input: CreateSong, session: ISession): Promise<Song> {
     const checkSong = await this.db
       .query()
@@ -104,7 +101,7 @@ export class SongService {
           }),
         ])
         .call(createBaseNode, ['Song', 'Producible'], secureProps)
-        .create([...this.permission('scriptureReferences', 'node')])
+        .create([...permission('scriptureReferences', 'node')])
         .return('node.id as id')
         .first();
 

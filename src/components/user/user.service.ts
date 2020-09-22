@@ -13,7 +13,6 @@ import {
 import {
   ConfigService,
   DatabaseService,
-  permission as dbPermission,
   getPermList,
   getPropList,
   ILogger,
@@ -21,6 +20,7 @@ import {
   matchRequestingUser,
   matchSession,
   OnIndex,
+  permissions,
   UniquenessError,
 } from '../../core';
 import {
@@ -126,9 +126,6 @@ export class UserService {
     ];
   };
 
-  // helper method for defining properties
-  permission = dbPermission;
-
   rootUserAccess = (session?: ISession) => {
     if (!session) {
       return [];
@@ -199,20 +196,12 @@ export class UserService {
         }),
       ],
       ...this.rootUserAccess(session),
-      ...this.permission('realFirstName', 'user'),
-      ...this.permission('realLastName', 'user'),
-      ...this.permission('displayFirstName', 'user'),
-      ...this.permission('displayLastName', 'user'),
-      ...this.permission('email', 'user'),
-      ...this.permission('education', 'user'),
-      ...this.permission('organization', 'user'),
-      ...this.permission('unavailablity', 'user'),
-      ...this.permission('phone', 'user'),
-      ...this.permission('timezone', 'user'),
-      ...this.permission('bio', 'user'),
-      ...this.permission('status', 'user'),
-      ...this.permission('roles', 'user'),
-      ...this.permission('title', 'user'),
+      ...permissions('user', [
+        ...Object.keys(this.securedProperties),
+        'education',
+        'organization',
+        'unavailablity',
+      ]),
     ]);
 
     query.return({

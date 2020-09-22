@@ -22,7 +22,7 @@ import {
   matchRequestingUser,
   Property,
 } from '../../core';
-import { permission as dbPermission } from '../../core/database/database.service';
+import { permission, permissions } from '../../core/database/database.service';
 import {
   calculateTotalAndPaginateList,
   permissionsOfNode,
@@ -77,8 +77,6 @@ export class ProductService {
     private readonly scriptureRefService: ScriptureReferenceService,
     @Logger('product:service') private readonly logger: ILogger
   ) {}
-
-  permission = dbPermission;
 
   async create(
     { engagementId, ...input }: CreateProduct,
@@ -213,7 +211,7 @@ export class ProductService {
           relation('out', '', 'product', { active: true, createdAt }),
           node('node'),
         ],
-        ...this.permission('product', 'engagement'),
+        ...permission('product', 'engagement'),
       ]);
     }
 
@@ -261,9 +259,11 @@ export class ProductService {
     }
 
     query.create([
-      ...this.permission('scriptureReferences', 'node'),
-      ...this.permission('scriptureReferencesOverride', 'node'),
-      ...this.permission('produces', 'node'),
+      ...permissions('node', [
+        'scriptureReferences',
+        'scriptureReferencesOverride',
+        'produces',
+      ]),
     ]);
 
     const result = await query.return('node.id as id').first();

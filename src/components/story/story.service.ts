@@ -10,13 +10,13 @@ import {
   ConfigService,
   createBaseNode,
   DatabaseService,
-  permission as dbPermission,
   getPermList,
   getPropList,
   ILogger,
   Logger,
   matchRequestingUser,
   OnIndex,
+  permission,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -63,9 +63,6 @@ export class StoryService {
     ];
   }
 
-  // helper method for defining permissions
-  permission = dbPermission;
-
   async create(input: CreateStory, session: ISession): Promise<Story> {
     const checkStory = await this.db
       .query()
@@ -102,7 +99,7 @@ export class StoryService {
           }),
         ])
         .call(createBaseNode, ['Story', 'Producible'], secureProps)
-        .create([...this.permission('scriptureReferences', 'node')])
+        .create([...permission('scriptureReferences', 'node')])
         .return('node.id as id')
         .first();
 

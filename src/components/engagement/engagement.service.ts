@@ -13,12 +13,12 @@ import {
 import {
   ConfigService,
   DatabaseService,
-  permission as dbPermission,
   IEventBus,
   ILogger,
   Logger,
   matchRequestingUser,
   matchSession,
+  permissions,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -130,9 +130,6 @@ export class EngagementService {
       ],
     ];
   };
-
-  // helper method for defining properties
-  permission = dbPermission;
 
   protected async getProjectTypeById(
     projectId: string
@@ -331,20 +328,22 @@ export class EngagementService {
         relation('out', '', 'member'),
         node('requestingUser'),
       ],
-      ...this.permission('firstScripture', 'languageEngagement'),
-      ...this.permission('lukePartnership', 'languageEngagement'),
-      ...this.permission('completeDate', 'languageEngagement'),
-      ...this.permission('disbursementCompleteDate', 'languageEngagement'),
-      ...this.permission('communicationsCompleteDate', 'languageEngagement'),
-      ...this.permission('startDateOverride', 'languageEngagement'),
-      ...this.permission('endDateOverride', 'languageEngagement'),
-      ...this.permission('initialEndDate', 'languageEngagement'),
-      ...this.permission('ceremony', 'languageEngagement'),
-      ...this.permission('language', 'languageEngagement'),
-      ...this.permission('status', 'languageEngagement'),
-      ...this.permission('paraTextRegistryId', 'languageEngagement'),
-      ...this.permission('pnp', 'languageEngagement'),
-      ...this.permission('modifiedAt', 'languageEngagement'),
+      ...permissions('languageEngagement', [
+        'firstScripture',
+        'lukePartnership',
+        'completeDate',
+        'disbursementCompleteDate',
+        'communicationsCompleteDate',
+        'startDateOverride',
+        'endDateOverride',
+        'initialEndDate',
+        'ceremony',
+        'language',
+        'status',
+        'paraTextRegistryId',
+        'pnp',
+        'modifiedAt',
+      ]),
     ]);
     if (session.userId !== this.config.rootAdmin.id) {
       createLE.create([
@@ -575,22 +574,24 @@ export class EngagementService {
         relation('out', '', 'member'),
         node('requestingUser'),
       ],
-      ...this.permission('completeDate', 'internshipEngagement'),
-      ...this.permission('communicationsCompleteDate', 'internshipEngagement'),
-      ...this.permission('disbursementCompleteDate', 'internshipEngagement'),
-      ...this.permission('methodologies', 'internshipEngagement'),
-      ...this.permission('position', 'internshipEngagement'),
-      ...this.permission('modifiedAt', 'internshipEngagement'),
-      ...this.permission('startDateOverride', 'internshipEngagement'),
-      ...this.permission('endDateOverride', 'internshipEngagement'),
-      ...this.permission('initialEndDate', 'internshipEngagement'),
-      ...this.permission('language', 'internshipEngagement'),
-      ...this.permission('status', 'internshipEngagement'),
-      ...this.permission('countryOfOrigin', 'internshipEngagement'),
-      ...this.permission('ceremony', 'internshipEngagement'),
-      ...this.permission('intern', 'internshipEngagement'),
-      ...this.permission('mentor', 'internshipEngagement'),
-      ...this.permission('growthPlan', 'internshipEngagement'),
+      ...permissions('internshipEngagement', [
+        'completeDate',
+        'communicationsCompleteDate',
+        'disbursementCompleteDate',
+        'methodologies',
+        'position',
+        'modifiedAt',
+        'startDateOverride',
+        'endDateOverride',
+        'initialEndDate',
+        'language',
+        'status',
+        'countryOfOrigin',
+        'ceremony',
+        'intern',
+        'mentor',
+        'growthPlan',
+      ]),
     ]);
     if (session.userId !== this.config.rootAdmin.id) {
       createIE.create([

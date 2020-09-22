@@ -12,11 +12,11 @@ import {
   ConfigService,
   createBaseNode,
   DatabaseService,
-  permission as dbPermission,
   ILogger,
   Logger,
   matchRequestingUser,
   matchSession,
+  permission,
   Property,
 } from '../../core';
 import {
@@ -60,9 +60,6 @@ export class BudgetService {
     private readonly files: FileService,
     @Logger('budget:service') private readonly logger: ILogger
   ) {}
-
-  // helper method for defining permissions
-  permission = dbPermission;
 
   async create(
     { projectId, ...input }: CreateBudget,
@@ -212,7 +209,7 @@ export class BudgetService {
         ]);
       createBudgetRecord.call(createBaseNode, 'BudgetRecord', secureProps);
       createBudgetRecord
-        .create([...this.permission('organization', 'node')])
+        .create([...permission('organization', 'node')])
         .return('node.id as id');
 
       const result = await createBudgetRecord.first();

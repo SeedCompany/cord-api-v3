@@ -14,13 +14,13 @@ import {
 import {
   ConfigService,
   DatabaseService,
-  permission as dbPermission,
   getPermList,
   getPropList,
   ILogger,
   Logger,
   matchRequestingUser,
   matchSession,
+  permissions,
 } from '../../../core';
 import {
   calculateTotalAndPaginateList,
@@ -75,9 +75,6 @@ export class ProjectMemberService {
       ],
     ];
   };
-
-  // helper method for defining properties
-  permission = dbPermission;
 
   protected async getPMByProjectAndUser(
     projectId: string,
@@ -153,9 +150,7 @@ export class ProjectMemberService {
           ],
           [node('adminSG'), relation('out', '', 'member'), node('rootuser')],
           [node('readerSG'), relation('out', '', 'member'), node('rootuser')],
-          ...this.permission('roles', 'newProjectMember'),
-          ...this.permission('modifiedAt', 'newProjectMember'),
-          ...this.permission('user', 'newProjectMember'),
+          ...permissions('newProjectMember', ['roles', 'modifiedAt', 'user']),
         ])
         .return('newProjectMember.id as id');
       await createProjectMember.first();

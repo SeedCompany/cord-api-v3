@@ -13,7 +13,6 @@ import {
   ConfigService,
   createBaseNode,
   DatabaseService,
-  permission as dbPermission,
   getPermList,
   getPropList,
   IEventBus,
@@ -21,6 +20,7 @@ import {
   Logger,
   matchRequestingUser,
   matchSession,
+  permission,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -80,9 +80,6 @@ export class PartnershipService {
     private readonly eventBus: IEventBus,
     @Logger('partnership:service') private readonly logger: ILogger
   ) {}
-
-  // helper method for defining properties
-  permission = dbPermission;
 
   async create(
     { organizationId, projectId, ...input }: CreatePartnership,
@@ -218,7 +215,7 @@ export class PartnershipService {
           [],
           session.userId === this.config.rootAdmin.id
         )
-        .create([...this.permission('organization', 'node')])
+        .create([...permission('organization', 'node')])
         .return('node.id as id');
 
       try {

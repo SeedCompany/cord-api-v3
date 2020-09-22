@@ -18,13 +18,13 @@ import {
   ChildBaseNodeMetaProperty,
   ConfigService,
   DatabaseService,
-  permission as dbPermission,
   ILogger,
   Logger,
   matchRequestingUser,
   matchSession,
   matchUserPermissions,
   OnIndex,
+  permission,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -134,8 +134,6 @@ export class LocationService {
     ];
   };
 
-  permission = dbPermission;
-
   async createZone(
     { directorId, ...input }: CreateZone,
     session: ISession
@@ -180,8 +178,8 @@ export class LocationService {
           ],
           [node('adminSG'), relation('out', '', 'member'), node('rootuser')],
           [node('readerSG'), relation('out', '', 'member'), node('rootuser')],
-          ...this.permission('name', 'newZone'),
-          ...this.permission('director', 'newZone'),
+          ...permission('name', 'newZone'),
+          ...permission('director', 'newZone'),
         ])
         .return('newZone.id as id');
 
@@ -280,9 +278,9 @@ export class LocationService {
           ],
           [node('adminSG'), relation('out', '', 'member'), node('rootuser')],
           [node('readerSG'), relation('out', '', 'member'), node('rootuser')],
-          ...this.permission('name', 'newRegion'),
-          ...this.permission('director', 'newRegion'),
-          ...this.permission('zone', 'newRegion'),
+          ...permission('name', 'newRegion'),
+          ...permission('director', 'newRegion'),
+          ...permission('zone', 'newRegion'),
         ])
         .return('newRegion.id as id');
 
@@ -398,8 +396,8 @@ export class LocationService {
           ],
           [node('adminSG'), relation('out', '', 'member'), node('rootuser')],
           [node('readerSG'), relation('out', '', 'member'), node('rootuser')],
-          ...this.permission('name', 'newCountry'),
-          ...this.permission('region', 'newCountry'),
+          ...permission('name', 'newCountry'),
+          ...permission('region', 'newCountry'),
         ])
         .return('newCountry.id as id');
       await createCountry.first();

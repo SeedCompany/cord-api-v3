@@ -14,12 +14,12 @@ import {
   ConfigService,
   createBaseNode,
   DatabaseService,
-  permission as dbPermission,
   ILogger,
   Logger,
   matchRequestingUser,
   matchSession,
   OnIndex,
+  permission,
   UniquenessError,
 } from '../../core';
 import {
@@ -129,9 +129,6 @@ export class LanguageService {
       //'CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.active)',
     ];
   }
-
-  // helper method for defining properties
-  permission = dbPermission;
 
   async create(input: CreateLanguage, session: ISession): Promise<Language> {
     const createdAt = DateTime.local();
@@ -271,7 +268,7 @@ export class LanguageService {
           [],
           session.userId === this.config.rootAdmin.id
         )
-        .create([...this.permission('ethnologue', 'node')])
+        .create([...permission('ethnologue', 'node')])
         .return('node.id as id');
 
       const resultLanguage = await createLanguage.first();
