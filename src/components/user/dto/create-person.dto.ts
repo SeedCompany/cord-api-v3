@@ -38,7 +38,7 @@ export abstract class CreatePerson {
   readonly status?: UserStatus;
 
   @Field(() => [Role], { nullable: true })
-  readonly roles?: Role[];
+  readonly roles?: Role[] = [Role.ProjectManager];
 
   @Field({ nullable: true })
   readonly title?: string;
