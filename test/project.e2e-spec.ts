@@ -3,7 +3,12 @@ import * as faker from 'faker';
 import { orderBy, times } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
-import { CalendarDate, Sensitivity } from '../src/common';
+import {
+  CalendarDate,
+  DuplicateException,
+  Sensitivity,
+  ServerException,
+} from '../src/common';
 import { BudgetStatus } from '../src/components/budget/dto';
 import { Country, Region, Zone } from '../src/components/location';
 import {
@@ -76,7 +81,12 @@ describe('Project e2e', () => {
   it('should have unique name', async () => {
     const name = faker.random.word() + ' testProject';
     await createProject(app, { name });
-    await expect(createProject(app, { name })).rejects.toThrowError();
+    await expect(createProject(app, { name })).rejects.toThrowError(
+      new DuplicateException(
+        `project.name`,
+        `Project with this name already exists`
+      )
+    );
   });
 
   it('should have project step', async () => {
@@ -161,7 +171,7 @@ describe('Project e2e', () => {
         type: ProjectType.Translation,
         locationId: 'invalid-location-id',
       })
-    ).rejects.toThrowError();
+    ).rejects.toThrowError(new ServerException('Could not create project'));
   });
 
   it('create & read project with budget and location by id', async () => {
@@ -683,7 +693,12 @@ describe('Project e2e', () => {
   it('DB constraint for project.name uniqueness', async () => {
     const projName = 'Fix the world ' + DateTime.local().toString();
     const project = await createProject(app, { name: projName });
-    await expect(createProject(app, { name: projName })).rejects.toThrowError();
+    await expect(createProject(app, { name: projName })).rejects.toThrowError(
+      new DuplicateException(
+        `project.name`,
+        `Project with this name already exists`
+      )
+    );
 
     //clean up
     await app.graphql.mutate(

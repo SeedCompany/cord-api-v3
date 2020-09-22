@@ -1,6 +1,6 @@
 import { gql } from 'apollo-server-core';
 import { sample, times } from 'lodash';
-import { CalendarDate } from '../src/common';
+import { CalendarDate, NotFoundException } from '../src/common';
 import {
   CreatePartnership,
   Partnership,
@@ -323,7 +323,9 @@ describe('Partnership e2e', () => {
           },
         }
       )
-    ).rejects.toThrowError();
+    ).rejects.toThrowError(
+      new NotFoundException('Could not find organization')
+    );
   });
 
   it('should create partnership without mou dates but returns project mou dates if exists', async () => {

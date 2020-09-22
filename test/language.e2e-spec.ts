@@ -2,6 +2,7 @@ import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
 import { isValid } from 'shortid';
+import { DuplicateException, InputException } from '../src/common';
 import {
   createLanguage,
   createLanguageEngagement,
@@ -36,7 +37,12 @@ describe('Language e2e', () => {
   it('should have unique name', async () => {
     const name = faker.company.companyName();
     await createLanguage(app, { name });
-    await expect(createLanguage(app, { name })).rejects.toThrowError();
+    await expect(createLanguage(app, { name })).rejects.toThrowError(
+      new DuplicateException(
+        `language.name`,
+        `name with value ${name} already exists`
+      )
+    );
   });
 
   it('read one language by id', async () => {
@@ -252,6 +258,6 @@ describe('Language e2e', () => {
     const signLanguageCode = 'XXX1';
     await expect(
       createLanguage(app, { signLanguageCode })
-    ).rejects.toThrowError();
+    ).rejects.toThrowError(new InputException('Input validation failed'));
   });
 });
