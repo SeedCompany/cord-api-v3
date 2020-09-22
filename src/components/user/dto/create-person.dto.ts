@@ -38,7 +38,8 @@ export abstract class CreatePerson {
   readonly status?: UserStatus;
 
   @Field(() => [Role], { nullable: true })
-  readonly roles?: Role[];
+  //TODO: default ProjectManager is a placeholder until the main Role based access control features are done
+  readonly roles?: Role[] = [Role.ProjectManager];
 
   @Field({ nullable: true })
   readonly title?: string;
