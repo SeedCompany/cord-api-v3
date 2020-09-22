@@ -1,4 +1,10 @@
-import { inArray, node, Query, relation } from 'cypher-query-builder';
+import {
+  greaterThan,
+  inArray,
+  node,
+  Query,
+  relation,
+} from 'cypher-query-builder';
 import { ProjectFilters } from './dto';
 
 export function projectListFilter(query: Query, filter: ProjectFilters) {
@@ -17,13 +23,14 @@ export function projectListFilter(query: Query, filter: ProjectFilters) {
     );
 
   if (filter.clusters) {
-    query.match([
-      node('node'),
-      relation('out', '', 'engagement'),
-      node('engagement'),
-      relation('out', '', 'language'),
-      node('language'),
-    ]);
+    query
+      .match([
+        node('node'),
+        relation('out', '', 'engagement', { active: true }),
+        node('engagement', 'Engagement'),
+      ])
+      .with('node, count(engagement) as engagementCount')
+      .where({ engagementCount: greaterThan(1) });
   }
 
   if (filter.mine) {

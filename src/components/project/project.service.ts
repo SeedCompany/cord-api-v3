@@ -555,6 +555,7 @@ export class ProjectService {
     const query = this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode(label)])
+      .with('distinct(node) as node')
       .call(projectListFilter, filter)
       .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
         q
