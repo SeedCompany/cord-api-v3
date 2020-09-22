@@ -13,6 +13,7 @@ import {
 import {
   ConfigService,
   DatabaseService,
+  permission as dbPermission,
   getPermList,
   getPropList,
   ILogger,
@@ -126,34 +127,7 @@ export class UserService {
   };
 
   // helper method for defining properties
-  permission = (property: string) => {
-    return [
-      [
-        node('adminSG'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property,
-          read: true,
-          edit: true,
-          admin: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('user'),
-      ],
-      [
-        node('readerSG'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property,
-          read: true,
-          edit: false,
-          admin: false,
-        }),
-        relation('out', '', 'baseNode'),
-        node('user'),
-      ],
-    ];
-  };
+  permission = dbPermission;
 
   rootUserAccess = (session?: ISession) => {
     if (!session) {
@@ -225,20 +199,20 @@ export class UserService {
         }),
       ],
       ...this.rootUserAccess(session),
-      ...this.permission('realFirstName'),
-      ...this.permission('realLastName'),
-      ...this.permission('displayFirstName'),
-      ...this.permission('displayLastName'),
-      ...this.permission('email'),
-      ...this.permission('education'),
-      ...this.permission('organization'),
-      ...this.permission('unavailablity'),
-      ...this.permission('phone'),
-      ...this.permission('timezone'),
-      ...this.permission('bio'),
-      ...this.permission('status'),
-      ...this.permission('roles'),
-      ...this.permission('title'),
+      ...this.permission('realFirstName', 'user'),
+      ...this.permission('realLastName', 'user'),
+      ...this.permission('displayFirstName', 'user'),
+      ...this.permission('displayLastName', 'user'),
+      ...this.permission('email', 'user'),
+      ...this.permission('education', 'user'),
+      ...this.permission('organization', 'user'),
+      ...this.permission('unavailablity', 'user'),
+      ...this.permission('phone', 'user'),
+      ...this.permission('timezone', 'user'),
+      ...this.permission('bio', 'user'),
+      ...this.permission('status', 'user'),
+      ...this.permission('roles', 'user'),
+      ...this.permission('title', 'user'),
     ]);
 
     query.return({

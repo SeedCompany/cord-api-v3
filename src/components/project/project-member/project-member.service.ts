@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
-import { difference, upperFirst } from 'lodash';
+import { difference } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import {
@@ -14,6 +14,7 @@ import {
 import {
   ConfigService,
   DatabaseService,
+  permission as dbPermission,
   getPermList,
   getPropList,
   ILogger,
@@ -76,71 +77,7 @@ export class ProjectMemberService {
   };
 
   // helper method for defining properties
-  permission = (property: string) => {
-    return [
-      [
-        node('adminSG'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property,
-          read: true,
-          edit: true,
-          admin: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('newProjectMember'),
-      ],
-      [
-        node('readerSG'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property,
-          read: true,
-          edit: false,
-          admin: false,
-        }),
-        relation('out', '', 'baseNode'),
-        node('newProjectMember'),
-      ],
-    ];
-  };
-
-  propMatch = (query: Query, property: string) => {
-    const readPerm = 'canRead' + upperFirst(property);
-    const editPerm = 'canEdit' + upperFirst(property);
-    query.optionalMatch([
-      [
-        node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
-        node(editPerm, 'Permission', {
-          property,
-          edit: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('projectMember'),
-        relation('out', '', property, { active: true }),
-        node(property, 'Property'),
-      ],
-    ]);
-    query.optionalMatch([
-      [
-        node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
-        node(readPerm, 'Permission', {
-          property,
-          read: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('projectMember'),
-        relation('out', '', property, { active: true }),
-        node(property, 'Property'),
-      ],
-    ]);
-  };
+  permission = dbPermission;
 
   protected async getPMByProjectAndUser(
     projectId: string,
@@ -216,9 +153,9 @@ export class ProjectMemberService {
           ],
           [node('adminSG'), relation('out', '', 'member'), node('rootuser')],
           [node('readerSG'), relation('out', '', 'member'), node('rootuser')],
-          ...this.permission('roles'),
-          ...this.permission('modifiedAt'),
-          ...this.permission('user'),
+          ...this.permission('roles', 'newProjectMember'),
+          ...this.permission('modifiedAt', 'newProjectMember'),
+          ...this.permission('user', 'newProjectMember'),
         ])
         .return('newProjectMember.id as id');
       await createProjectMember.first();

@@ -1,7 +1,7 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
-import { uniq, upperFirst } from 'lodash';
+import { uniq } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   InputException,
@@ -13,6 +13,7 @@ import {
   ConfigService,
   createBaseNode,
   DatabaseService,
+  permission as dbPermission,
   getPermList,
   getPropList,
   IEventBus,
@@ -81,75 +82,7 @@ export class PartnershipService {
   ) {}
 
   // helper method for defining properties
-  permission = (property: string) => {
-    return [
-      [
-        node('adminSG'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property,
-
-          read: true,
-          edit: true,
-          admin: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('node'),
-      ],
-      [
-        node('readerSG'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property,
-
-          read: true,
-          edit: false,
-          admin: false,
-        }),
-        relation('out', '', 'baseNode'),
-        node('node'),
-      ],
-    ];
-  };
-
-  propMatch = (query: Query, property: string) => {
-    const readPerm = 'canRead' + upperFirst(property);
-    const editPerm = 'canEdit' + upperFirst(property);
-    query.optionalMatch([
-      [
-        node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
-        node(editPerm, 'Permission', {
-          property,
-
-          edit: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('partnership'),
-        relation('out', '', property, { active: true }),
-        node(property, 'Property'),
-      ],
-    ]);
-    query.optionalMatch([
-      [
-        node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
-        node(readPerm, 'Permission', {
-          property,
-
-          read: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('partnership'),
-        relation('out', '', property, { active: true }),
-        node(property, 'Property'),
-      ],
-    ]);
-  };
+  permission = dbPermission;
 
   async create(
     { organizationId, projectId, ...input }: CreatePartnership,
@@ -285,7 +218,7 @@ export class PartnershipService {
           [],
           session.userId === this.config.rootAdmin.id
         )
-        .create([...this.permission('organization')])
+        .create([...this.permission('organization', 'node')])
         .return('node.id as id');
 
       try {

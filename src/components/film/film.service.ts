@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { DateTime } from 'luxon';
 import {
   DuplicateException,
   ISession,
@@ -11,6 +10,7 @@ import {
   ConfigService,
   createBaseNode,
   DatabaseService,
+  permission as dbPermission,
   getPermList,
   getPropList,
   ILogger,
@@ -62,63 +62,8 @@ export class FilmService {
     ];
   }
 
-  // helper method for defining properties
-  property = (prop: string, value: any, baseNode: string) => {
-    if (!value) {
-      return [];
-    }
-    const createdAt = DateTime.local();
-    const propLabel =
-      prop === 'name'
-        ? 'Property:FilmName'
-        : prop === 'rangeStart'
-        ? 'Property:RangeStart'
-        : prop === 'rangeEnd'
-        ? 'Property:RangeEnd'
-        : 'Property:Range';
-    return [
-      [
-        node(baseNode),
-        relation('out', '', prop, {
-          active: true,
-          createdAt,
-        }),
-        node(prop, propLabel, {
-          value,
-        }),
-      ],
-    ];
-  };
-
   // helper method for defining permissions
-  permission = (property: string, baseNode: string) => {
-    return [
-      [
-        node('adminSG'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property,
-          read: true,
-          edit: true,
-          admin: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node(baseNode),
-      ],
-      [
-        node('readerSG'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property,
-          read: true,
-          edit: false,
-          admin: false,
-        }),
-        relation('out', '', 'baseNode'),
-        node(baseNode),
-      ],
-    ];
-  };
+  permission = dbPermission;
 
   async create(input: CreateFilm, session: ISession): Promise<Film> {
     const checkFm = await this.db
