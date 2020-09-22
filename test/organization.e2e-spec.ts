@@ -2,6 +2,7 @@ import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { orderBy, times } from 'lodash';
 import { generate, isValid } from 'shortid';
+import { InputException } from '../src/common';
 import { Organization } from '../src/components/organization';
 import {
   createOrganization,
@@ -141,7 +142,7 @@ describe('Organization e2e', () => {
           id: '!@#$%^&*(',
         }
       )
-    ).rejects.toThrowError();
+    ).rejects.toThrowError(new InputException('Input validation failed'));
   });
 
   // UPDATE ORG
@@ -201,7 +202,7 @@ describe('Organization e2e', () => {
           },
         }
       )
-    ).rejects.toThrowError();
+    ).rejects.toThrowError(new InputException('Input validation failed'));
 
     await expect(
       app.graphql.mutate(
@@ -247,7 +248,7 @@ describe('Organization e2e', () => {
           },
         }
       )
-    ).rejects.toThrowError();
+    ).rejects.toThrowError(new InputException('Input validation failed'));
   });
 
   it.skip('update organization with mismatch name', async () => {

@@ -353,6 +353,18 @@ export const project = gql`
       canRead
       canEdit
     }
+    engagements {
+      canRead
+      canCreate
+    }
+    partnerships {
+      canRead
+      canCreate
+    }
+    team {
+      canRead
+      canCreate
+    }
   }
 `;
 
@@ -781,6 +793,18 @@ export const partner = gql`
   ${user}
 `;
 
+export const fundingAccount = gql`
+  fragment fundingAccount on FundingAccount {
+    id
+    name {
+      value
+      canRead
+      canEdit
+    }
+    createdAt
+  }
+`;
+
 export const fragments = {
   org,
   user,
@@ -809,4 +833,5 @@ export const fragments = {
   fav,
   ceremony,
   partner,
+  fundingAccount,
 };

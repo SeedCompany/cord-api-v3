@@ -1,6 +1,11 @@
 import { gql } from 'apollo-server-core';
 import { isValid } from 'shortid';
-import { CalendarDate, fiscalYears, Secured } from '../src/common';
+import {
+  CalendarDate,
+  fiscalYears,
+  NotFoundException,
+  Secured,
+} from '../src/common';
 import { Budget } from '../src/components/budget';
 import { PartnershipType } from '../src/components/partnership';
 import { Project } from '../src/components/project';
@@ -110,7 +115,7 @@ describe('Budget e2e', () => {
           id: budget.id,
         }
       )
-    ).rejects.toThrowError();
+    ).rejects.toThrowError(new NotFoundException('Could not find budget'));
   });
 
   it.skip('Check consistency across budget nodes', async () => {

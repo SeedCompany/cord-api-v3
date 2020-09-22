@@ -274,7 +274,6 @@ export class ProjectService {
         },
         canEdit ? ['name', 'mouStart', 'mouEnd'] : []
       );
-
       if (locationId) {
         createProject.create([
           [
@@ -284,7 +283,7 @@ export class ProjectService {
           ],
         ]);
       }
-      createProject.return('node.id as id');
+      createProject.return('node.id as id').asResult<{ id: string }>();
       const result = await createProject.first();
 
       if (!result) {
@@ -313,6 +312,11 @@ export class ProjectService {
           );
         }
       }
+
+      await this.addPropertiesToSG(
+        ['engagement', 'teamMember', 'partnership', 'location'],
+        result.id
+      );
 
       await this.projectMembers.create(
         {
@@ -558,6 +562,7 @@ export class ProjectService {
     const query = this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode(label)])
+      .with('distinct(node) as node')
       .call(projectListFilter, filter)
       .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
         q
@@ -606,7 +611,6 @@ export class ProjectService {
           relation('out', '', 'permission'),
           node('canReadEngagement', 'Permission', {
             property: 'engagement',
-            read: true,
           }),
           relation('out', '', 'baseNode'),
           node('project', 'Project', { id: project.id }),
@@ -867,5 +871,32 @@ export class ProjectService {
         )
       ).every((n) => n)
     );
+  }
+
+  async addPropertiesToSG(properties: string[], projectId: string) {
+    for (const property of properties) {
+      await this.db
+        .query()
+        .match([
+          node('project', 'Project', { id: projectId }),
+          relation('in', '', 'baseNode'),
+          node('', 'Permission'),
+          relation('in', '', 'permission'),
+          node('sg', 'SecurityGroup'),
+        ])
+        .with('distinct(sg) as sg, project')
+        .merge([
+          node('sg'),
+          relation('out', '', 'permission'),
+          node('', 'Permission', {
+            edit: true,
+            read: true,
+            property,
+          }),
+          relation('out', '', 'baseNode'),
+          node('project'),
+        ])
+        .run();
+    }
   }
 }

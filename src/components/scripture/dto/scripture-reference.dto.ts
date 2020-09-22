@@ -14,7 +14,7 @@ import {
 })
 export abstract class ScriptureReferenceInput {
   @Field({
-    description: 'The code of the Bible book',
+    description: 'The Bible book',
   })
   @IsValidBook()
   book: string;

@@ -3,7 +3,12 @@ import * as faker from 'faker';
 import { orderBy, times } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
-import { CalendarDate, Sensitivity } from '../src/common';
+import {
+  CalendarDate,
+  DuplicateException,
+  Sensitivity,
+  ServerException,
+} from '../src/common';
 import { BudgetStatus } from '../src/components/budget/dto';
 import { Country, Region, Zone } from '../src/components/location';
 import {
@@ -76,7 +81,12 @@ describe('Project e2e', () => {
   it('should have unique name', async () => {
     const name = faker.random.word() + ' testProject';
     await createProject(app, { name });
-    await expect(createProject(app, { name })).rejects.toThrowError();
+    await expect(createProject(app, { name })).rejects.toThrowError(
+      new DuplicateException(
+        `project.name`,
+        `Project with this name already exists`
+      )
+    );
   });
 
   it('should have project step', async () => {
@@ -145,13 +155,23 @@ describe('Project e2e', () => {
       }
     );
 
-    const actual: Project = result.createProject.project;
+    const actual: Project & {
+      engagements: { canRead: boolean; canCreate: boolean };
+      partnerships: { canRead: boolean; canCreate: boolean };
+      team: { canRead: boolean; canCreate: boolean };
+    } = result.createProject.project;
     expect(actual.id).toBeDefined();
     expect(actual.departmentId.value).toBeNull();
     expect(actual.location.value).toBeNull();
     expect(actual.mouStart.value).toBeNull();
     expect(actual.mouEnd.value).toBeNull();
     expect(actual.estimatedSubmission.value).toBeNull();
+    expect(actual.engagements.canRead).toBe(true);
+    expect(actual.engagements.canCreate).toBe(true);
+    expect(actual.partnerships.canRead).toBe(true);
+    expect(actual.partnerships.canCreate).toBe(true);
+    expect(actual.team.canRead).toBe(true);
+    expect(actual.team.canCreate).toBe(true);
   });
 
   it('should throw error if the location id is not valid', async () => {
@@ -161,7 +181,7 @@ describe('Project e2e', () => {
         type: ProjectType.Translation,
         locationId: 'invalid-location-id',
       })
-    ).rejects.toThrowError();
+    ).rejects.toThrowError(new ServerException('Could not create project'));
   });
 
   it('create & read project with budget and location by id', async () => {
@@ -683,7 +703,12 @@ describe('Project e2e', () => {
   it('DB constraint for project.name uniqueness', async () => {
     const projName = 'Fix the world ' + DateTime.local().toString();
     const project = await createProject(app, { name: projName });
-    await expect(createProject(app, { name: projName })).rejects.toThrowError();
+    await expect(createProject(app, { name: projName })).rejects.toThrowError(
+      new DuplicateException(
+        `project.name`,
+        `Project with this name already exists`
+      )
+    );
 
     //clean up
     await app.graphql.mutate(
