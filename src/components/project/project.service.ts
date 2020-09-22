@@ -53,6 +53,7 @@ import {
   PartnershipType,
   SecuredPartnershipList,
 } from '../partnership';
+import { RoleChangeEvent } from '../role/events/role-change.event';
 import {
   CreateProject,
   InternshipProject,
@@ -129,36 +130,6 @@ export class ProjectService {
     ];
   };
 
-  // helper method for defining properties
-  permission = (property: string, canEdit = false) => {
-    return [
-      [
-        node('adminSG'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property,
-          read: true,
-          edit: true,
-          admin: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('newProject'),
-      ],
-      [
-        node('readerSG'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property,
-          read: true,
-          edit: canEdit,
-          admin: false,
-        }),
-        relation('out', '', 'baseNode'),
-        node('node'),
-      ],
-    ];
-  };
-
   propMatch = (property: string) => {
     const perm = 'canRead' + upperFirst(property);
     return [
@@ -208,9 +179,9 @@ export class ProjectService {
       {
         key: 'name',
         value: createInput.name,
-        addToAdminSg: true,
+        addToAdminSg: false,
         addToWriterSg: false,
-        addToReaderSg: true,
+        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
         label: 'ProjectName',
@@ -218,18 +189,18 @@ export class ProjectService {
       {
         key: 'sensitivity',
         value: createInput.sensitivity,
-        addToAdminSg: true,
+        addToAdminSg: false,
         addToWriterSg: false,
-        addToReaderSg: true,
+        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
       },
       {
         key: 'step',
         value: createInput.step,
-        addToAdminSg: true,
+        addToAdminSg: false,
         addToWriterSg: false,
-        addToReaderSg: true,
+        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
         label: 'ProjectStep',
@@ -237,9 +208,9 @@ export class ProjectService {
       {
         key: 'status',
         value: createInput.status,
-        addToAdminSg: true,
+        addToAdminSg: false,
         addToWriterSg: false,
-        addToReaderSg: true,
+        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
         label: 'ProjectStatus',
@@ -247,36 +218,36 @@ export class ProjectService {
       {
         key: 'mouStart',
         value: createInput.mouStart,
-        addToAdminSg: true,
+        addToAdminSg: false,
         addToWriterSg: false,
-        addToReaderSg: true,
+        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
       },
       {
         key: 'mouEnd',
         value: createInput.mouEnd,
-        addToAdminSg: true,
+        addToAdminSg: false,
         addToWriterSg: false,
-        addToReaderSg: true,
+        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
       },
       {
         key: 'estimatedSubmission',
         value: createInput.estimatedSubmission,
-        addToAdminSg: true,
+        addToAdminSg: false,
         addToWriterSg: false,
-        addToReaderSg: true,
+        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
       },
       {
         key: 'modifiedAt',
         value: createInput.modifiedAt,
-        addToAdminSg: true,
+        addToAdminSg: false,
         addToWriterSg: false,
-        addToReaderSg: true,
+        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
       },
@@ -294,22 +265,16 @@ export class ProjectService {
         createProject.match([node('country', 'Country', { id: locationId })]);
       }
 
-      createProject
-        .call(
-          createBaseNode,
-          `Project:${input.type}Project`,
-          secureProps,
-          {
-            type: createInput.type,
-          },
-          canEdit ? ['name', 'mouStart', 'mouEnd'] : []
-        )
-        .create([
-          ...this.permission('engagement'),
-          ...this.permission('teamMember'),
-          ...this.permission('partnership'),
-          ...this.permission('location'),
-        ]);
+      createProject.call(
+        createBaseNode,
+        `Project:${input.type}Project`,
+        secureProps,
+        {
+          type: createInput.type,
+        },
+        canEdit ? ['name', 'mouStart', 'mouEnd'] : []
+      );
+
       if (locationId) {
         createProject.create([
           [
@@ -325,6 +290,12 @@ export class ProjectService {
       if (!result) {
         throw new ServerException('failed to create a project');
       }
+
+      // creating user must be an admin, use role change event
+      await this.eventBus.publish(
+        new RoleChangeEvent(session.userId, result.id, Role.Admin)
+      );
+
       let location;
       if (locationId) {
         location = await this.db
@@ -684,7 +655,7 @@ export class ProjectService {
           node('', 'SecurityGroup'),
           relation('out', '', 'permission'),
           node('canReadTeamMember', 'Permission', {
-            property: 'teamMember',
+            property: 'member',
             read: true,
           }),
           relation('out', '', 'baseNode'),

@@ -16,6 +16,7 @@ import {
   DatabaseService,
   getPermList,
   getPropList,
+  IEventBus,
   ILogger,
   Logger,
   matchRequestingUser,
@@ -34,6 +35,7 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../../core/database/results';
+import { RoleChangeEvent } from '../../role/events/role-change.event';
 import { UserService } from '../../user';
 import {
   CreateProjectMember,
@@ -55,6 +57,7 @@ export class ProjectMemberService {
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
     private readonly userService: UserService,
+    private readonly eventBus: IEventBus,
     @Logger('project:member:service') private readonly logger: ILogger
   ) {}
 
@@ -71,36 +74,6 @@ export class ProjectMemberService {
         node(prop, 'Property', {
           value,
         }),
-      ],
-    ];
-  };
-
-  // helper method for defining properties
-  permission = (property: string) => {
-    return [
-      [
-        node('adminSG'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property,
-          read: true,
-          edit: true,
-          admin: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('newProjectMember'),
-      ],
-      [
-        node('readerSG'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property,
-          read: true,
-          edit: false,
-          admin: false,
-        }),
-        relation('out', '', 'baseNode'),
-        node('newProjectMember'),
       ],
     ];
   };
@@ -183,12 +156,7 @@ export class ProjectMemberService {
     try {
       const createProjectMember = this.db
         .query()
-        .match(matchSession(session, { withAclEdit: 'canCreateProjectMember' }))
-        .match([
-          node('rootuser', 'User', {
-            id: this.config.rootAdmin.id,
-          }),
-        ])
+        .match(matchSession(session))
         .create([
           [
             node('newProjectMember', 'ProjectMember:BaseNode', {
@@ -198,34 +166,13 @@ export class ProjectMemberService {
           ],
           ...this.property('roles', input.roles),
           ...this.property('modifiedAt', createdAt),
-          [
-            node('adminSG', 'SecurityGroup', {
-              id: generate(),
-              name: `projectmember-SG admin`,
-            }),
-            relation('out', '', 'member'),
-            node('requestingUser'),
-          ],
-          [
-            node('readerSG', 'SecurityGroup', {
-              id: generate(),
-              name: `projectmember-SG users`,
-            }),
-            relation('out', '', 'member'),
-            node('requestingUser'),
-          ],
-          [node('adminSG'), relation('out', '', 'member'), node('rootuser')],
-          [node('readerSG'), relation('out', '', 'member'), node('rootuser')],
-          ...this.permission('roles'),
-          ...this.permission('modifiedAt'),
-          ...this.permission('user'),
         ])
         .return('newProjectMember.id as id');
       await createProjectMember.first();
 
       // connect the Project to the ProjectMember
       // and connect ProjectMember to User
-      await this.db
+      const memberQuery = await this.db
         .query()
         .match([
           [node('user', 'User', { id: userId })],
@@ -247,6 +194,11 @@ export class ProjectMemberService {
         ])
         .return('projectMember.id as id')
         .first();
+
+      // creating user must be an admin, use role change event
+      await this.eventBus.publish(
+        new RoleChangeEvent(userId, memberQuery?.id, Role.Admin)
+      );
 
       return await this.readOne(id, session);
     } catch (exception) {

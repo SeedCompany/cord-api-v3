@@ -23,6 +23,7 @@ export enum Role {
   SupportingProjectManager = 'SupportingProjectManager',
   Translator = 'Translator',
   Writer = 'Writer',
+  Admin = 'Admin',
 }
 
 registerEnumType(Role, { name: 'Role' });
