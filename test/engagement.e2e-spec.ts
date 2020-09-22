@@ -3,6 +3,7 @@ import * as faker from 'faker';
 import { some } from 'lodash';
 import { DateTime, Interval } from 'luxon';
 import { generate } from 'shortid';
+import { InputException } from '../src/common';
 import {
   CreateInternshipEngagement,
   EngagementStatus,
@@ -938,7 +939,12 @@ describe('Engagement e2e', () => {
       createInternshipEngagement(app, {
         projectId: project.id,
       })
-    ).rejects.toThrowError();
+    ).rejects.toThrowError(
+      new InputException(
+        'That Project type is not Internship',
+        'engagement.projectId'
+      )
+    );
   });
 
   it('should throw error if language engagement already exists with same project and language', async () => {

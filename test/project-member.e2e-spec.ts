@@ -3,6 +3,7 @@ import * as faker from 'faker';
 import { times } from 'lodash';
 import { DateTime, Interval } from 'luxon';
 import { isValid } from 'shortid';
+import { NotFoundException } from '../src/common';
 import { ProjectMember, Role } from '../src/components/project';
 import { User } from '../src/components/user';
 import {
@@ -173,7 +174,9 @@ describe('ProjectMember e2e', () => {
           id: projectMember.id,
         }
       )
-    ).rejects.toThrowError();
+    ).rejects.toThrowError(
+      new NotFoundException('Could not find project member')
+    );
   });
 
   it('Can create the same projectMember after deletion', async () => {
