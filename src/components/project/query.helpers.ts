@@ -22,7 +22,7 @@ export function projectListFilter(query: Query, filter: ProjectFilters) {
         : q
     );
 
-  if (filter.clusters) {
+  if (filter.onlyMultipleEngagements) {
     query
       .match([
         node('node'),

@@ -64,10 +64,9 @@ export abstract class ProjectFilters {
 
   @Field({
     nullable: true,
-    description:
-      'When a project works on more than one language it is a "cluster" project. It has more than one engagement',
+    description: 'Filter for projects with two or more engagements.',
   })
-  readonly clusters?: boolean;
+  readonly onlyMultipleEngagements?: boolean;
 }
 
 const defaultFilters = {};
