@@ -1,4 +1,4 @@
-import { Role } from '../dto';
+import { InternalRole, Role } from '../dto';
 import { BaseNodeType } from './BaseNodeType';
 
 // permissions are the intersection of a role and a base node type.
@@ -7,13 +7,13 @@ import { BaseNodeType } from './BaseNodeType';
 // the Admin role SHALL have all properties on a base node
 
 export function getRolePermissions(
-  role: Role,
+  role: Role | InternalRole,
   baseNodeType: BaseNodeType
 ): {
   read: string[];
   edit: string[];
 } {
-  if (role === Role.Admin && baseNodeType === BaseNodeType.Project) {
+  if (role === InternalRole.Admin && baseNodeType === BaseNodeType.Project) {
     return {
       read: [], // since edit will have all props, nothing for read perm
       edit: [
@@ -34,7 +34,10 @@ export function getRolePermissions(
     };
   }
 
-  if (role === Role.Admin && baseNodeType === BaseNodeType.ProjectMember) {
+  if (
+    role === InternalRole.Admin &&
+    baseNodeType === BaseNodeType.ProjectMember
+  ) {
     return {
       read: [], // since edit will have all props, nothing for read perm
       edit: ['roles', 'member', 'user', 'modifiedAt'],
@@ -42,7 +45,7 @@ export function getRolePermissions(
   }
 
   if (
-    role === Role.AdminViewOfProjectMember &&
+    role === InternalRole.AdminViewOfProjectMember &&
     baseNodeType === BaseNodeType.User
   ) {
     return {

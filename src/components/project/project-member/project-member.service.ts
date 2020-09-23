@@ -39,6 +39,7 @@ import { AuthorizationService } from '../../authorization/authorization.service'
 import { UserService } from '../../user';
 import {
   CreateProjectMember,
+  InternalRole,
   ProjectMember,
   ProjectMemberListInput,
   ProjectMemberListOutput,
@@ -200,7 +201,7 @@ export class ProjectMemberService {
       await this.authorizationService.addPermsForRole({
         userId: session.userId as string,
         baseNodeId: memberQuery?.id,
-        role: Role.Admin,
+        role: InternalRole.Admin,
       });
 
       await this.addProjectAdminsToUserSg(projectId, userId);
@@ -392,7 +393,7 @@ export class ProjectMemberService {
       .match([
         node('admins', 'User'),
         relation('in', '', 'member'),
-        node('sg', 'SecurityGroup', { role: Role.Admin }),
+        node('sg', 'SecurityGroup', { role: InternalRole.Admin }),
         relation('out', '', 'permission'),
         node('perms', 'Permission'),
         relation('out', '', 'baseNode'),
@@ -407,7 +408,7 @@ export class ProjectMemberService {
       await this.authorizationService.addPermsForRole({
         userId: id,
         baseNodeId: userId,
-        role: Role.AdminViewOfProjectMember,
+        role: InternalRole.AdminViewOfProjectMember,
       });
     }
   }

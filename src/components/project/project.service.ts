@@ -73,6 +73,7 @@ import {
   ProjectUpdatedEvent,
 } from './events';
 import {
+  InternalRole,
   ProjectMemberListInput,
   ProjectMemberService,
   Role,
@@ -294,7 +295,7 @@ export class ProjectService {
       await this.authorizationService.addPermsForRole({
         userId: session.userId,
         baseNodeId: result.id,
-        role: Role.Admin,
+        role: InternalRole.Admin,
       });
 
       let location;
