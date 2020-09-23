@@ -198,11 +198,12 @@ export class ProjectMemberService {
         .first();
 
       // creating user must be an admin, use role change event
-      await this.authorizationService.addPermsForRole({
-        userId: session.userId as string,
-        baseNodeId: memberQuery?.id,
-        role: InternalRole.Admin,
-      });
+      await this.authorizationService.addPermsForRole(
+        InternalRole.Admin,
+        'ProjectMember',
+        memberQuery?.id,
+        session.userId!
+      );
 
       await this.addProjectAdminsToUserSg(projectId, userId);
 
@@ -405,11 +406,12 @@ export class ProjectMemberService {
     for (const id of result?.ids) {
       this.logger.error(id);
       // creating user must be an admin, use role change event
-      await this.authorizationService.addPermsForRole({
-        userId: id,
-        baseNodeId: userId,
-        role: InternalRole.AdminViewOfProjectMember,
-      });
+      await this.authorizationService.addPermsForRole(
+        InternalRole.AdminViewOfProjectMember,
+        'ProjectMember',
+        userId,
+        id
+      );
     }
   }
 }

@@ -33,6 +33,8 @@ registerEnumType(Role, { name: 'Role' });
 export abstract class SecuredRoles extends SecuredEnumList(Role) {}
 
 export enum InternalRole {
-  Admin = 'Admin', // someone who needs access to all props of a base node
-  AdminViewOfProjectMember = 'AdminViewOfProjectMember', // a project admin that needs minimal information on a team member of the same project
+  // someone who needs access to all props of a base node
+  Admin = 'Admin',
+  // a project admin that needs minimal information on a team member of the same project
+  AdminViewOfProjectMember = 'AdminViewOfProjectMember',
 }
