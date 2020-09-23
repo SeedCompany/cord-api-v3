@@ -805,6 +805,18 @@ export const fundingAccount = gql`
   }
 `;
 
+export const marketingLocation = gql`
+  fragment marketingLocation on MarketingLocation {
+    id
+    name {
+      value
+      canRead
+      canEdit
+    }
+    createdAt
+  }
+`;
+
 export const fragments = {
   org,
   user,
@@ -834,4 +846,5 @@ export const fragments = {
   ceremony,
   partner,
   fundingAccount,
+  marketingLocation,
 };
