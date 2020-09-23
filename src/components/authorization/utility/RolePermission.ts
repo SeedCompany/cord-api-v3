@@ -34,6 +34,13 @@ export function getRolePermissions(
     };
   }
 
+  if (role === InternalRole.Admin && baseNodeType === BaseNodeType.Budget) {
+    return {
+      read: [], // since edit will have all props, nothing for read perm
+      edit: ['status', 'budget', 'record', 'universalTemplateFile'],
+    };
+  }
+
   if (
     role === InternalRole.Admin &&
     baseNodeType === BaseNodeType.ProjectMember

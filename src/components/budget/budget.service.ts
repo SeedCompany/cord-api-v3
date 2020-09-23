@@ -32,7 +32,9 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
+import { AuthorizationService } from '../authorization/authorization.service';
 import { FileService } from '../file';
+import { InternalRole } from '../project';
 import {
   Budget,
   BudgetListInput,
@@ -58,6 +60,7 @@ export class BudgetService {
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
     private readonly files: FileService,
+    private readonly authorizationService: AuthorizationService,
     @Logger('budget:service') private readonly logger: ILogger
   ) {}
 
@@ -77,36 +80,6 @@ export class BudgetService {
         node(prop, 'Property', {
           value,
         }),
-      ],
-    ];
-  };
-
-  // helper method for defining permissions
-  permission = (property: string, baseNode: string) => {
-    return [
-      [
-        node('adminSG'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property,
-          read: true,
-          edit: true,
-          admin: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node(baseNode),
-      ],
-      [
-        node('readerSG'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property,
-          read: true,
-          edit: false,
-          admin: false,
-        }),
-        relation('out', '', 'baseNode'),
-        node(baseNode),
       ],
     ];
   };
@@ -184,9 +157,9 @@ export class BudgetService {
       {
         key: 'status',
         value: BudgetStatus.Pending,
-        addToAdminSg: true,
+        addToAdminSg: false,
         addToWriterSg: false,
-        addToReaderSg: true,
+        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
         label: 'BudgetStatus',
@@ -194,9 +167,9 @@ export class BudgetService {
       {
         key: 'universalTemplateFile',
         value: universalTemplateFile,
-        addToAdminSg: true,
+        addToAdminSg: false,
         addToWriterSg: false,
-        addToReaderSg: true,
+        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
       },
@@ -238,6 +211,12 @@ export class BudgetService {
       this.logger.debug(`Created Budget`, {
         id: result.id,
         userId: session.userId,
+      });
+
+      await this.authorizationService.addPermsForRole({
+        userId: session.userId as string,
+        baseNodeId: result.id,
+        role: InternalRole.Admin,
       });
 
       return await this.readOne(result.id, session);
@@ -295,15 +274,19 @@ export class BudgetService {
           }),
         ]);
       createBudgetRecord.call(createBaseNode, 'BudgetRecord', secureProps);
-      createBudgetRecord
-        .create([...this.permission('organization', 'node')])
-        .return('node.id as id');
+      createBudgetRecord.return('node.id as id');
 
       const result = await createBudgetRecord.first();
 
       if (!result) {
         throw new ServerException('failed to create a budget record');
       }
+
+      await this.authorizationService.addPermsForRole({
+        userId: session.userId as string,
+        baseNodeId: result.id,
+        role: InternalRole.Admin,
+      });
 
       this.logger.debug(`Created Budget Record`, {
         id: result.id,

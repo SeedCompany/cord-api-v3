@@ -316,11 +316,6 @@ export class ProjectService {
         }
       }
 
-      await this.addPropertiesToSG(
-        ['engagement', 'teamMember', 'partnership', 'location'],
-        result.id
-      );
-
       await this.projectMembers.create(
         {
           userId: session.userId,
@@ -874,32 +869,5 @@ export class ProjectService {
         )
       ).every((n) => n)
     );
-  }
-
-  async addPropertiesToSG(properties: string[], projectId: string) {
-    for (const property of properties) {
-      await this.db
-        .query()
-        .match([
-          node('project', 'Project', { id: projectId }),
-          relation('in', '', 'baseNode'),
-          node('', 'Permission'),
-          relation('in', '', 'permission'),
-          node('sg', 'SecurityGroup'),
-        ])
-        .with('distinct(sg) as sg, project')
-        .merge([
-          node('sg'),
-          relation('out', '', 'permission'),
-          node('', 'Permission', {
-            edit: true,
-            read: true,
-            property,
-          }),
-          relation('out', '', 'baseNode'),
-          node('project'),
-        ])
-        .run();
-    }
   }
 }

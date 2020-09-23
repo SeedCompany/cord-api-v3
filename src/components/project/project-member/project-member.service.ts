@@ -386,6 +386,8 @@ export class ProjectMemberService {
     ]);
   }
 
+  // when a new user is added to a project, all the project admins need to have access
+  // to some of that user's properties in order to know about that user
   async addProjectAdminsToUserSg(projectId: string, userId: string) {
     // get all admins of a project, then add the role for them to see the user info
     const result = await this.db
