@@ -55,7 +55,7 @@ export class AuthorizationService {
       } else if ((baseNodeTypeQuery?.labels as string[]).includes('User')) {
         baseNodeType = BaseNodeType.User;
       } else if ((baseNodeTypeQuery?.labels as string[]).includes('Budget')) {
-        baseNodeType = BaseNodeType.User;
+        baseNodeType = BaseNodeType.Budget;
       } else {
         this.logger.error(baseNodeTypeQuery?.labels);
         throw new ServerException('Base node type not identified');
