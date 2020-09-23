@@ -247,18 +247,12 @@ export class BudgetService {
       {
         key: 'fiscalYear',
         value: input.fiscalYear,
-        addToAdminSg: true,
-        addToWriterSg: false,
-        addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
       },
       {
         key: 'amount',
         value: null,
-        addToAdminSg: true,
-        addToWriterSg: false,
-        addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
       },

@@ -58,9 +58,9 @@ function printQueryInConsole(query: Query) {
 export interface Property {
   key: string;
   value: any;
-  addToAdminSg: boolean;
-  addToWriterSg: boolean;
-  addToReaderSg: boolean;
+  addToAdminSg?: boolean;
+  addToWriterSg?: boolean;
+  addToReaderSg?: boolean;
   isPublic: boolean;
   isOrgPublic: boolean;
   label?: string;
@@ -97,12 +97,6 @@ export function createBaseNode(
     ]);
   }
 
-  createSG(query, 'adminSG');
-
-  if (!isRootuser) {
-    addUserToSG(query, 'requestingUser', 'adminSG');
-  }
-
   for (const prop of props) {
     const labels = ['Property'];
     if (prop.label) {
@@ -113,21 +107,6 @@ export function createBaseNode(
       relation('out', '', prop.key, { active: true, createdAt }),
       node('', labels, { createdAt, value: prop.value }),
     ]);
-
-    if (prop.addToAdminSg) {
-      query.create([
-        node('adminSG'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property: prop.key,
-          read: true,
-          edit: true,
-          admin: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('node'),
-      ]);
-    }
 
     if (prop.isPublic) {
       query.create([
@@ -174,18 +153,6 @@ export function createSG(
     node('root'),
     relation('in', '', 'member'),
     node(cypherIdentifier, labels, { createdAt, id: generate() }),
-  ]);
-}
-
-export function addUserToSG(
-  query: Query,
-  userCypherIdentifier: string,
-  sGcypherIdentifier: string
-) {
-  query.create([
-    node(userCypherIdentifier),
-    relation('in', '', 'member'),
-    node(sGcypherIdentifier),
   ]);
 }
 
