@@ -82,15 +82,7 @@ export const property = (
   propVar = prop,
   propLabel?: string
 ) => {
-  const createdAt = DateTime.local().toISO();
-  // let propLabel = 'Property';
-  // if (prop === 'position') {
-  //   propLabel = 'Property:InternPosition';
-  // } else if (prop === 'methodologies') {
-  //   propLabel = 'Property:ProductMethodology';
-  // } else if (prop === 'status') {
-  //   propLabel = 'Property:EngagementStatus';
-  // }
+  const createdAt = DateTime.local();
   return [
     [
       node(baseNode),
@@ -98,7 +90,7 @@ export const property = (
         active: true,
         createdAt,
       }),
-      node(propVar, propLabel ?? 'Property', {
+      node(propVar, ['Property', propLabel], {
         value,
       }),
     ],
