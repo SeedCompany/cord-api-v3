@@ -43,6 +43,23 @@ export function getRolePermissions(
 
   if (
     role === InternalRole.Admin &&
+    baseNodeType === BaseNodeType.BudgetRecord
+  ) {
+    return {
+      read: [], // since edit will have all props, nothing for read perm
+      edit: ['fiscalYear', 'amount', 'record', 'partnership'],
+    };
+  }
+
+  if (role === InternalRole.Admin && baseNodeType === BaseNodeType.Ceremony) {
+    return {
+      read: [], // since edit will have all props, nothing for read perm
+      edit: ['planned', 'actualDate', 'estimatedDate', 'type', 'ceremony'],
+    };
+  }
+
+  if (
+    role === InternalRole.Admin &&
     baseNodeType === BaseNodeType.ProjectMember
   ) {
     return {
