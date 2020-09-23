@@ -255,14 +255,7 @@ export class ProjectService {
       },
     ];
     try {
-      const createProject = this.db
-        .query()
-        .call(matchRequestingUser, session)
-        .match([
-          node('root', 'User', {
-            id: this.config.rootAdmin.id,
-          }),
-        ]);
+      const createProject = this.db.query().call(matchRequestingUser, session);
       if (locationId) {
         createProject.match([node('country', 'Country', { id: locationId })]);
       }

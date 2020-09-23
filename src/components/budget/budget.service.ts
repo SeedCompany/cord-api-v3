@@ -157,9 +157,6 @@ export class BudgetService {
       {
         key: 'status',
         value: BudgetStatus.Pending,
-        addToAdminSg: false,
-        addToWriterSg: false,
-        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
         label: 'BudgetStatus',
@@ -167,9 +164,6 @@ export class BudgetService {
       {
         key: 'universalTemplateFile',
         value: universalTemplateFile,
-        addToAdminSg: false,
-        addToWriterSg: false,
-        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
       },
@@ -261,12 +255,7 @@ export class BudgetService {
     try {
       const createBudgetRecord = this.db
         .query()
-        .call(matchRequestingUser, session)
-        .match([
-          node('root', 'User', {
-            id: this.config.rootAdmin.id,
-          }),
-        ]);
+        .call(matchRequestingUser, session);
       createBudgetRecord.call(createBaseNode, 'BudgetRecord', secureProps);
       createBudgetRecord.return('node.id as id');
 

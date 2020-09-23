@@ -30,6 +30,7 @@ export function getRolePermissions(
         'partnership',
         'budget',
         'modifiedAt',
+        'engagement',
       ],
     };
   }
@@ -38,6 +39,40 @@ export function getRolePermissions(
     return {
       read: [], // since edit will have all props, nothing for read perm
       edit: ['status', 'budget', 'record', 'universalTemplateFile'],
+    };
+  }
+
+  if (
+    role === InternalRole.Admin &&
+    baseNodeType === BaseNodeType.BudgetRecord
+  ) {
+    return {
+      read: [], // since edit will have all props, nothing for read perm
+      edit: ['fiscalYear', 'amount', 'record', 'partnership'],
+    };
+  }
+
+  if (
+    role === InternalRole.Admin &&
+    baseNodeType === BaseNodeType.Partnership
+  ) {
+    return {
+      read: [], // since edit will have all props, nothing for read perm
+      edit: [
+        'mou',
+        'agreement',
+        'agreementStatus',
+        'mouStatus',
+        'mouStart',
+        'mouEnd',
+        'mouStartOverride',
+        'mouEndOverride',
+        'type',
+        'comment',
+        'partnership',
+        'organization',
+        'financialReportingType',
+      ],
     };
   }
 

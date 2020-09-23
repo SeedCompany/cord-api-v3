@@ -3,4 +3,6 @@ export enum BaseNodeType {
   ProjectMember = 'ProjectMember',
   User = 'User',
   Budget = 'Budget',
+  BudgetRecord = 'BudgetRecord',
+  Partnership = 'Partnership',
 }
