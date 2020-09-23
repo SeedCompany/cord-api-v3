@@ -9,6 +9,7 @@ import {
   UnauthenticatedException,
 } from '../../common';
 import {
+  addUserToSG,
   ConfigService,
   createBaseNode,
   createSG,
@@ -90,6 +91,9 @@ export class OrganizationService {
       {
         key: 'name',
         value: input.name,
+        addToAdminSg: true,
+        addToWriterSg: true,
+        addToReaderSg: true,
         isPublic: true,
         isOrgPublic: true,
         label: 'OrgName',
@@ -108,6 +112,7 @@ export class OrganizationService {
       .call(matchRequestingUser, session)
       .call(createSG, 'orgSG', 'OrgPublicSecurityGroup')
       .call(createBaseNode, 'Organization', secureProps)
+      .call(addUserToSG, 'requestingUser', 'adminSG') // must come after base node creation
       .return('node.id as id');
 
     const result = await query.first();
