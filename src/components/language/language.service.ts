@@ -579,24 +579,15 @@ export class LanguageService {
 
     const queryProject = this.db
       .query()
-      .match(matchSession(session, { withAclRead: 'canReadProjects' }))
       .match([node('language', 'Language', { id: language.id })])
       .match([
         node('language'),
         relation('in', '', 'language', { active: true }),
-        node('langEngagement', 'LanguageEngagement'),
+        node('', 'LanguageEngagement'),
         relation('in', '', 'engagement', { active: true }),
         node('project', 'Project'),
-      ]);
-    queryProject.return({
-      project: [{ id: 'id', createdAt: 'createdAt' }],
-      requestingUser: [
-        {
-          canReadProjects: 'canReadProjects',
-          canCreateProject: 'canCreateProject',
-        },
-      ],
-    });
+      ])
+      .return({ project: [{ id: 'id', createdAt: 'createdAt' }] });
 
     let readProject = await queryProject.run();
     this.logger.debug(`list projects results`, { total: readProject.length });
@@ -617,8 +608,9 @@ export class LanguageService {
       items: result.items,
       hasMore: result.hasMore,
       total: result.total,
-      canCreate: !!readProject[0]?.canCreateProject,
-      canRead: !!readProject[0]?.canReadProjects,
+      //TODO: use the upcoming Roles service to determine permissions.
+      canCreate: true,
+      canRead: true,
     };
   }
 
