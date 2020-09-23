@@ -60,6 +60,71 @@ export function getRolePermissions(
 
   if (
     role === InternalRole.Admin &&
+    baseNodeType === BaseNodeType.LanguageEngagement
+  ) {
+    return {
+      read: [], // since edit will have all props, nothing for read perm
+      edit: [
+        'status',
+        'completeDate',
+        'disbursementCompleteDate',
+        'communicationsCompleteDate',
+        'initialEndDate',
+        'startDate',
+        'endDate',
+        'startDateOverride',
+        'endDateOverride',
+        'updatedAt',
+        'lastReactivatedAt',
+        'lastSuspendedAt',
+        'modifiedAt',
+        'product',
+        'ceremony',
+        'language',
+        'paraTextRegistryId',
+        'projectEngagementTag',
+        'ceremonyPlanned',
+        'sentPrinting',
+        'lukePartnership',
+        'firstScripture',
+      ],
+    };
+  }
+
+  if (
+    role === InternalRole.Admin &&
+    baseNodeType === BaseNodeType.InternshipEngagement
+  ) {
+    return {
+      read: [], // since edit will have all props, nothing for read perm
+      edit: [
+        'status',
+        'completeDate',
+        'disbursementCompleteDate',
+        'communicationsCompleteDate',
+        'initialEndDate',
+        'startDate',
+        'endDate',
+        'startDateOverride',
+        'endDateOverride',
+        'updatedAt',
+        'lastReactivatedAt',
+        'lastSuspendedAt',
+        'modifiedAt',
+        'position',
+        'methodologies',
+        'intern',
+        'mentor',
+        'ceremony',
+        'countryOfOrigin',
+        'language',
+        'growthPlan',
+      ],
+    };
+  }
+
+  if (
+    role === InternalRole.Admin &&
     baseNodeType === BaseNodeType.ProjectMember
   ) {
     return {

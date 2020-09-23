@@ -33,6 +33,8 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
+import { AuthorizationService } from '../authorization/authorization.service';
+import { InternalRole } from '../authorization/dto';
 import { CeremonyService } from '../ceremony';
 import { FileService } from '../file';
 import {
@@ -103,6 +105,7 @@ export class EngagementService {
     @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService,
     private readonly eventBus: IEventBus,
+    private readonly authorizationService: AuthorizationService,
     @Logger(`engagement.service`) private readonly logger: ILogger
   ) {}
 
@@ -380,45 +383,8 @@ export class EngagementService {
         node('languageEngagement'),
       ]);
     }
-    createLE.create([
-      [
-        node('adminSG', 'SecurityGroup', {
-          id: generate(),
-          name: 'languageEngagement admin',
-        }),
-        relation('out', '', 'member'),
-        node('requestingUser'),
-      ],
-      [
-        node('readerSG', 'SecurityGroup', {
-          id: generate(),
-          name: 'languageEngagement users',
-        }),
-        relation('out', '', 'member'),
-        node('requestingUser'),
-      ],
-      ...this.permission('firstScripture', 'languageEngagement'),
-      ...this.permission('lukePartnership', 'languageEngagement'),
-      ...this.permission('completeDate', 'languageEngagement'),
-      ...this.permission('disbursementCompleteDate', 'languageEngagement'),
-      ...this.permission('communicationsCompleteDate', 'languageEngagement'),
-      ...this.permission('startDateOverride', 'languageEngagement'),
-      ...this.permission('endDateOverride', 'languageEngagement'),
-      ...this.permission('initialEndDate', 'languageEngagement'),
-      ...this.permission('ceremony', 'languageEngagement'),
-      ...this.permission('language', 'languageEngagement'),
-      ...this.permission('status', 'languageEngagement'),
-      ...this.permission('paraTextRegistryId', 'languageEngagement'),
-      ...this.permission('pnp', 'languageEngagement'),
-      ...this.permission('modifiedAt', 'languageEngagement'),
-    ]);
-    if (session.userId !== this.config.rootAdmin.id) {
-      createLE.create([
-        [node('adminSG'), relation('out', '', 'member'), node('rootuser')],
-        [node('readerSG'), relation('out', '', 'member'), node('rootuser')],
-      ]);
-    }
     createLE.return('languageEngagement');
+
     let le;
     try {
       le = await createLE.first();
@@ -458,6 +424,13 @@ export class EngagementService {
       }
       throw new ServerException('Could not create Language Engagement');
     }
+
+    await this.authorizationService.addPermsForRole({
+      userId: session.userId,
+      baseNodeId: id,
+      role: InternalRole.Admin,
+    });
+
     const languageEngagement = (await this.readOne(
       id,
       session
@@ -624,47 +597,8 @@ export class EngagementService {
         node('internshipEngagement'),
       ]);
     }
-    createIE.create([
-      [
-        node('adminSG', 'SecurityGroup', {
-          name: 'internEngagement admin',
-          id: generate(),
-        }),
-        relation('out', '', 'member'),
-        node('requestingUser'),
-      ],
-      [
-        node('readerSG', 'SecurityGroup', {
-          name: 'internEngagement users',
-          id: generate(),
-        }),
-        relation('out', '', 'member'),
-        node('requestingUser'),
-      ],
-      ...this.permission('completeDate', 'internshipEngagement'),
-      ...this.permission('communicationsCompleteDate', 'internshipEngagement'),
-      ...this.permission('disbursementCompleteDate', 'internshipEngagement'),
-      ...this.permission('methodologies', 'internshipEngagement'),
-      ...this.permission('position', 'internshipEngagement'),
-      ...this.permission('modifiedAt', 'internshipEngagement'),
-      ...this.permission('startDateOverride', 'internshipEngagement'),
-      ...this.permission('endDateOverride', 'internshipEngagement'),
-      ...this.permission('initialEndDate', 'internshipEngagement'),
-      ...this.permission('language', 'internshipEngagement'),
-      ...this.permission('status', 'internshipEngagement'),
-      ...this.permission('countryOfOrigin', 'internshipEngagement'),
-      ...this.permission('ceremony', 'internshipEngagement'),
-      ...this.permission('intern', 'internshipEngagement'),
-      ...this.permission('mentor', 'internshipEngagement'),
-      ...this.permission('growthPlan', 'internshipEngagement'),
-    ]);
-    if (session.userId !== this.config.rootAdmin.id) {
-      createIE.create([
-        [node('adminSG'), relation('out', '', 'member'), node('rootuser')],
-        [node('readerSG'), relation('out', '', 'member'), node('rootuser')],
-      ]);
-    }
     createIE.return('internshipEngagement');
+
     let IE;
     try {
       IE = await createIE.first();
@@ -733,6 +667,13 @@ export class EngagementService {
       }
       throw new ServerException('Could not create Internship Engagement');
     }
+
+    await this.authorizationService.addPermsForRole({
+      userId: session.userId,
+      baseNodeId: id,
+      role: InternalRole.Admin,
+    });
+
     const internshipEngagement = (await this.readOne(
       id,
       session
