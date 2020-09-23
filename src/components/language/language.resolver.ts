@@ -12,6 +12,7 @@ import {
   firstLettersOfWords,
   IdArg,
   ISession,
+  SecuredDate,
   SecuredInt,
   Session,
 } from '../../common';
@@ -81,6 +82,16 @@ export class LanguageResolver {
     input: LocationListInput
   ): Promise<SecuredLocationList> {
     return this.langService.listLocations(language, input, session);
+  }
+
+  @ResolveField(() => SecuredDate, {
+    description: 'The earliest start date from its engagements.',
+  })
+  async sponsorStartDate(
+    @Session() session: ISession,
+    @Parent() language: Language
+  ): Promise<SecuredDate> {
+    return await this.langService.sponsorStartDate(language, session);
   }
 
   @ResolveField(() => SecuredProjectList, {

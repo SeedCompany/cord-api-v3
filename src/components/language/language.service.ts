@@ -3,10 +3,12 @@ import { node, relation } from 'cypher-query-builder';
 import { first, intersection } from 'lodash';
 import { DateTime } from 'luxon';
 import {
+  CalendarDate,
   DuplicateException,
   InputException,
   ISession,
   NotFoundException,
+  SecuredDate,
   ServerException,
   simpleSwitch,
 } from '../../common';
@@ -24,6 +26,7 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
+  collect,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
@@ -35,6 +38,7 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
+import { EngagementService } from '../engagement';
 import {
   Location,
   LocationListInput,
@@ -67,7 +71,6 @@ export class LanguageService {
     leastOfThese: true,
     leastOfTheseReason: true,
     displayNamePronunciation: true,
-    sponsorStartDate: true,
     isSignLanguage: true,
     signLanguageCode: true,
     sponsorEstimatedEndDate: true,
@@ -79,6 +82,7 @@ export class LanguageService {
     private readonly ethnologueLanguageService: EthnologueLanguageService,
     private readonly locationService: LocationService,
     private readonly projectService: ProjectService,
+    private readonly engagementService: EngagementService,
     @Logger('language:service') private readonly logger: ILogger
   ) {}
 
@@ -615,6 +619,52 @@ export class LanguageService {
       total: result.total,
       canCreate: !!readProject[0]?.canCreateProject,
       canRead: !!readProject[0]?.canReadProjects,
+    };
+  }
+
+  async sponsorStartDate(
+    language: Language,
+    session: ISession
+  ): Promise<SecuredDate> {
+    const result = await this.db
+      .query()
+      .match([
+        node('', 'Language', { id: language.id }),
+        relation('in', '', 'language', { active: true }),
+        node('engagement', 'LanguageEngagement'),
+      ])
+      .return(collect('engagement.id', 'engagementIds'))
+      .asResult<{ engagementIds: string[] }>()
+      .first();
+
+    if (!result) {
+      throw new ServerException('Error fetching sponsorStartDate');
+    }
+
+    const engagments = await Promise.all(
+      result.engagementIds.map((engagementId) =>
+        this.engagementService.readOne(engagementId, session)
+      )
+    );
+    const dates = engagments
+      .map((engagement) => engagement.startDate.value)
+      .filter((date) => date) as CalendarDate[];
+
+    if (!dates.length) {
+      return {
+        canRead: true,
+        canEdit: true,
+        value: undefined,
+      };
+    }
+
+    const minDate = CalendarDate.min(...dates);
+
+    return {
+      //TODO: use the upcoming roles service to determine permissions
+      canRead: true,
+      canEdit: true,
+      value: minDate,
     };
   }
 
