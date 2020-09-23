@@ -21,6 +21,7 @@ import {
   matchRequestingUser,
   matchSession,
   permissions,
+  property,
 } from '../../../core';
 import {
   calculateTotalAndPaginateList,
@@ -58,23 +59,6 @@ export class ProjectMemberService {
     private readonly userService: UserService,
     @Logger('project:member:service') private readonly logger: ILogger
   ) {}
-
-  // helper method for defining properties
-  property = (prop: string, value: any) => {
-    const createdAt = DateTime.local();
-    return [
-      [
-        node('newProjectMember'),
-        relation('out', '', prop, {
-          active: true,
-          createdAt,
-        }),
-        node(prop, 'Property', {
-          value,
-        }),
-      ],
-    ];
-  };
 
   protected async getPMByProjectAndUser(
     projectId: string,
@@ -130,8 +114,8 @@ export class ProjectMemberService {
               id,
             }),
           ],
-          ...this.property('roles', input.roles),
-          ...this.property('modifiedAt', createdAt),
+          ...property('roles', input.roles, 'newProjectMember'),
+          ...property('modifiedAt', createdAt, 'newProjectMember'),
           [
             node('adminSG', 'SecurityGroup', {
               id: generate(),

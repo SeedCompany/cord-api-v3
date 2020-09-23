@@ -21,6 +21,7 @@ import {
   matchSession,
   OnIndex,
   permissions,
+  property,
   UniquenessError,
 } from '../../core';
 import {
@@ -109,23 +110,6 @@ export class UserService {
     ];
   }
 
-  // helper method for defining properties
-  property = (prop: string, value: any | null, propVar = prop) => {
-    const createdAt = DateTime.local();
-    return [
-      [
-        node('user'),
-        relation('out', '', prop, {
-          active: true,
-          createdAt,
-        }),
-        node(propVar, 'Property', {
-          value,
-        }),
-      ],
-    ];
-  };
-
   rootUserAccess = (session?: ISession) => {
     if (!session) {
       return [];
@@ -138,7 +122,7 @@ export class UserService {
 
   roleProperties = (roles?: Role[]) => {
     return (roles || []).flatMap((role) =>
-      this.property('roles', role, `role${role}`)
+      property('roles', role, 'user', `role${role}`)
     );
   };
 
@@ -169,16 +153,16 @@ export class UserService {
           createdAt,
         }),
       ],
-      ...this.property('realFirstName', input.realFirstName),
-      ...this.property('realLastName', input.realLastName),
-      ...this.property('displayFirstName', input.displayFirstName),
-      ...this.property('displayLastName', input.displayLastName),
-      ...this.property('phone', input.phone),
-      ...this.property('timezone', input.timezone),
-      ...this.property('bio', input.bio),
-      ...this.property('status', input.status),
+      ...property('realFirstName', input.realFirstName, 'user'),
+      ...property('realLastName', input.realLastName, 'user'),
+      ...property('displayFirstName', input.displayFirstName, 'user'),
+      ...property('displayLastName', input.displayLastName, 'user'),
+      ...property('phone', input.phone, 'user'),
+      ...property('timezone', input.timezone, 'user'),
+      ...property('bio', input.bio, 'user'),
+      ...property('status', input.status, 'user'),
       ...this.roleProperties(input.roles),
-      ...this.property('title', input.title),
+      ...property('title', input.title, 'user'),
       [
         node('user'),
         relation('in', '', 'member'),

@@ -75,6 +75,36 @@ export const permissions = (baseNode: string, properties: string[]) => {
   return properties.flatMap((property) => permission(property, baseNode));
 };
 
+export const property = (
+  prop: string,
+  value: any | null,
+  baseNode: string,
+  propVar = prop,
+  propLabel?: string
+) => {
+  const createdAt = DateTime.local().toISO();
+  // let propLabel = 'Property';
+  // if (prop === 'position') {
+  //   propLabel = 'Property:InternPosition';
+  // } else if (prop === 'methodologies') {
+  //   propLabel = 'Property:ProductMethodology';
+  // } else if (prop === 'status') {
+  //   propLabel = 'Property:EngagementStatus';
+  // }
+  return [
+    [
+      node(baseNode),
+      relation('out', '', prop, {
+        active: true,
+        createdAt,
+      }),
+      node(propVar, propLabel ?? 'Property', {
+        value,
+      }),
+    ],
+  ];
+};
+
 export const matchSession = (
   session: ISession,
   {

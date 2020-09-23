@@ -19,6 +19,7 @@ import {
   matchRequestingUser,
   matchSession,
   permissions,
+  property,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -105,31 +106,6 @@ export class EngagementService {
     private readonly eventBus: IEventBus,
     @Logger(`engagement.service`) private readonly logger: ILogger
   ) {}
-
-  // helper method for defining properties
-  property = (prop: string, value: any | null, baseNode: string) => {
-    const createdAt = DateTime.local().toISO();
-    let propLabel = 'Property';
-    if (prop === 'position') {
-      propLabel = 'Property:InternPosition';
-    } else if (prop === 'methodologies') {
-      propLabel = 'Property:ProductMethodology';
-    } else if (prop === 'status') {
-      propLabel = 'Property:EngagementStatus';
-    }
-    return [
-      [
-        node(baseNode),
-        relation('out', '', prop, {
-          active: true,
-          createdAt,
-        }),
-        node(prop, propLabel, {
-          value,
-        }),
-      ],
-    ];
-  };
 
   protected async getProjectTypeById(
     projectId: string
@@ -245,54 +221,56 @@ export class EngagementService {
           }
         ),
       ],
-      ...this.property(
+      ...property(
         'completeDate',
         input.completeDate || undefined,
         'languageEngagement'
       ),
-      ...this.property(
+      ...property(
         'disbursementCompleteDate',
         input.disbursementCompleteDate || undefined,
         'languageEngagement'
       ),
-      ...this.property(
+      ...property(
         'communicationsCompleteDate',
         input.communicationsCompleteDate || undefined,
         'languageEngagement'
       ),
-      ...this.property(
+      ...property(
         'startDateOverride',
         input.startDateOverride || undefined,
         'languageEngagement'
       ),
-      ...this.property(
+      ...property(
         'endDateOverride',
         input.endDateOverride || undefined,
         'languageEngagement'
       ),
-      ...this.property('initialEndDate', undefined, 'languageEngagement'),
-      ...this.property(
+      ...property('initialEndDate', undefined, 'languageEngagement'),
+      ...property(
         'lukePartnership',
         input.lukePartnership || undefined,
         'languageEngagement'
       ),
-      ...this.property(
+      ...property(
         'firstScripture',
         input.firstScripture || undefined,
         'languageEngagement'
       ),
-      ...this.property(
+      ...property(
         'paraTextRegistryId',
         input.paraTextRegistryId || undefined,
         'languageEngagement'
       ),
-      ...this.property('pnp', pnp || undefined, 'languageEngagement'),
-      ...this.property(
+      ...property('pnp', pnp || undefined, 'languageEngagement'),
+      ...property(
         'status',
         input.status || EngagementStatus.InDevelopment,
-        'languageEngagement'
+        'languageEngagement',
+        'status',
+        'Property:EngagementStatus'
       ),
-      ...this.property('modifiedAt', createdAt, 'languageEngagement'),
+      ...property('modifiedAt', createdAt, 'languageEngagement'),
     ]);
     if (projectId) {
       createLE.create([
@@ -475,49 +453,53 @@ export class EngagementService {
           }
         ),
       ],
-      ...this.property('modifiedAt', createdAt, 'internshipEngagement'),
-      ...this.property(
+      ...property('modifiedAt', createdAt, 'internshipEngagement'),
+      ...property(
         'completeDate',
         input.completeDate || undefined,
         'internshipEngagement'
       ),
-      ...this.property(
+      ...property(
         'disbursementCompleteDate',
         input.disbursementCompleteDate || undefined,
         'internshipEngagement'
       ),
-      ...this.property(
+      ...property(
         'communicationsCompleteDate',
         input.communicationsCompleteDate || undefined,
         'internshipEngagement'
       ),
-      ...this.property(
+      ...property(
         'startDateOverride',
         input.startDateOverride || undefined,
         'internshipEngagement'
       ),
-      ...this.property(
+      ...property(
         'endDateOverride',
         input.endDateOverride || undefined,
         'internshipEngagement'
       ),
-      ...this.property('initialEndDate', undefined, 'internshipEngagement'),
-      ...this.property(
+      ...property('initialEndDate', undefined, 'internshipEngagement'),
+      ...property(
         'methodologies',
         input.methodologies || undefined,
-        'internshipEngagement'
+        'internshipEngagement',
+        'methodologies',
+        'Property:ProductMethodology'
       ),
-      ...this.property(
+      ...property(
         'position',
         input.position || undefined,
-        'internshipEngagement'
+        'internshipEngagement',
+        'position',
+        'Property:InternPosition'
       ),
-      ...this.property(
+      ...property(
         'growthPlan',
         growthPlan || undefined,
         'internshipEngagement'
       ),
-      ...this.property(
+      ...property(
         'status',
         input.status || EngagementStatus.InDevelopment,
         'internshipEngagement'

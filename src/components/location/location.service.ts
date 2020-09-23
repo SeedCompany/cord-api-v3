@@ -25,6 +25,7 @@ import {
   matchUserPermissions,
   OnIndex,
   permission,
+  property,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -113,26 +114,6 @@ export class LocationService {
       'CREATE CONSTRAINT ON (n:LocationName) ASSERT n.value IS UNIQUE',
     ];
   }
-  // helper method for defining properties
-  property = (prop: string, value: any, baseNode: string) => {
-    if (!value) {
-      return [];
-    }
-    const createdAt = DateTime.local();
-    const propLabel = prop === 'name' ? 'Property:LocationName' : 'Property';
-    return [
-      [
-        node(baseNode),
-        relation('out', '', prop, {
-          active: true,
-          createdAt,
-        }),
-        node(prop, propLabel, {
-          value,
-        }),
-      ],
-    ];
-  };
 
   async createZone(
     { directorId, ...input }: CreateZone,
@@ -157,7 +138,13 @@ export class LocationService {
               id,
             }),
           ],
-          ...this.property('name', input.name, 'newZone'),
+          ...property(
+            'name',
+            input.name,
+            'newZone',
+            'name',
+            'Property:LocationName'
+          ),
           [
             node('adminSG', 'SecurityGroup', {
               id: generate(),
@@ -257,7 +244,13 @@ export class LocationService {
               id,
             }),
           ],
-          ...this.property('name', input.name, 'newRegion'),
+          ...property(
+            'name',
+            input.name,
+            'newRegion',
+            'name',
+            'Property:LocationName'
+          ),
           [
             node('adminSG', 'SecurityGroup', {
               id: generate(),
@@ -375,7 +368,13 @@ export class LocationService {
               id,
             }),
           ],
-          ...this.property('name', input.name, 'newCountry'),
+          ...property(
+            'name',
+            input.name,
+            'newCountry',
+            'name',
+            'Property:LocationName'
+          ),
           [
             node('adminSG', 'SecurityGroup', {
               id: generate(),
