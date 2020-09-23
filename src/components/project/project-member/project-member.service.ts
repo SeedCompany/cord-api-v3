@@ -45,7 +45,6 @@ import {
   Role,
   UpdateProjectMember,
 } from './dto';
-import { TeamMemberCreatedEvent } from './events/team-member-created.event';
 
 @Injectable()
 export class ProjectMemberService {
@@ -199,12 +198,12 @@ export class ProjectMemberService {
 
       // creating user must be an admin, use role change event
       await this.authorizationService.addPermsForRole({
-        userId,
+        userId: session.userId as string,
         baseNodeId: memberQuery?.id,
         role: Role.Admin,
       });
 
-      await this.addProjectAdminsToUserSg({ projectId, userId });
+      await this.addProjectAdminsToUserSg(projectId, userId);
 
       return await this.readOne(id, session);
     } catch (exception) {
@@ -386,8 +385,7 @@ export class ProjectMemberService {
     ]);
   }
 
-  async addProjectAdminsToUserSg(event: TeamMemberCreatedEvent) {
-    this.logger.info('asdf', event);
+  async addProjectAdminsToUserSg(projectId: string, userId: string) {
     // get all admins of a project, then add the role for them to see the user info
     const result = await this.db
       .query()
@@ -398,17 +396,17 @@ export class ProjectMemberService {
         relation('out', '', 'permission'),
         node('perms', 'Permission'),
         relation('out', '', 'baseNode'),
-        node('project', 'Project', { id: event.projectId }),
+        node('project', 'Project', { id: projectId }),
       ])
       .raw('return collect(distinct admins.id) as ids')
       .first();
 
     for (const id of result?.ids) {
-      this.logger.info(id);
+      this.logger.error(id);
       // creating user must be an admin, use role change event
       await this.authorizationService.addPermsForRole({
         userId: id,
-        baseNodeId: event.userId,
+        baseNodeId: userId,
         role: Role.AdminViewOfProjectMember,
       });
     }
