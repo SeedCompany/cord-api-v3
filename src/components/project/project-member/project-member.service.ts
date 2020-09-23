@@ -403,7 +403,6 @@ export class ProjectMemberService {
       .first();
 
     for (const id of result?.ids) {
-      this.logger.error(id);
       // creating user must be an admin, use role change event
       await this.authorizationService.addPermsForRole({
         userId: id,
