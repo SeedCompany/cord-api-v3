@@ -3,7 +3,7 @@ import { node, relation } from 'cypher-query-builder';
 import { generate } from 'shortid';
 import { ServerException } from '../../common';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
-import { Role } from './dto';
+import { InternalRole } from './dto';
 import { RoleAddEvent } from './events/role-add.event';
 import { BaseNodeType } from './utility/BaseNodeType';
 import { getRolePermissions } from './utility/RolePermission';
@@ -119,7 +119,7 @@ export class AuthorizationService {
         }
 
         // if this is an admin role, ensure the root user is attached
-        if (event.role === Role.Admin) {
+        if (event.role === InternalRole.Admin) {
           createSgQuery
             .with('*')
             .match([node('root', 'User', { id: this.config.rootAdmin.id })])
@@ -144,7 +144,7 @@ export class AuthorizationService {
           .merge([node('sg'), relation('out', '', 'member'), node('user')]);
 
         // if this is an admin role, ensure the root user is attached
-        if (event.role === Role.Admin) {
+        if (event.role === InternalRole.Admin) {
           addUserToSgQuery
             .with('*')
             .match([node('root', 'User', { id: this.config.rootAdmin.id })])
