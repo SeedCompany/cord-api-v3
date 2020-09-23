@@ -323,9 +323,7 @@ describe('Partnership e2e', () => {
           },
         }
       )
-    ).rejects.toThrowError(
-      new NotFoundException('Could not find organization')
-    );
+    ).rejects.toThrowError(new NotFoundException('Could not find partner'));
   });
 
   it('should create partnership without mou dates but returns project mou dates if exists', async () => {
