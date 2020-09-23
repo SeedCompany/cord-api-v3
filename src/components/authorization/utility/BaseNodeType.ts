@@ -7,4 +7,8 @@ export enum BaseNodeType {
   Ceremony = 'Ceremony',
   LanguageEngagement = 'LanguageEngagement',
   InternshipEngagement = 'InternshipEngagement',
+  Film = 'Film',
+  FundingAccount = 'FundingAccount',
+  Language = 'Language',
+  EthnologueLanguage = 'EthnologueLanguage',
 }

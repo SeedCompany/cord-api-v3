@@ -70,6 +70,18 @@ export class AuthorizationService {
         (baseNodeTypeQuery?.labels as string[]).includes('InternshipEngagement')
       ) {
         baseNodeType = BaseNodeType.InternshipEngagement;
+      } else if ((baseNodeTypeQuery?.labels as string[]).includes('Film')) {
+        baseNodeType = BaseNodeType.Film;
+      } else if (
+        (baseNodeTypeQuery?.labels as string[]).includes('FundingAccount')
+      ) {
+        baseNodeType = BaseNodeType.FundingAccount;
+      } else if ((baseNodeTypeQuery?.labels as string[]).includes('Language')) {
+        baseNodeType = BaseNodeType.Language;
+      } else if (
+        (baseNodeTypeQuery?.labels as string[]).includes('EthnologueLanguage')
+      ) {
+        baseNodeType = BaseNodeType.EthnologueLanguage;
       } else {
         this.logger.error(baseNodeTypeQuery?.labels);
         throw new ServerException('Base node type not identified');

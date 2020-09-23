@@ -123,6 +123,54 @@ export function getRolePermissions(
     };
   }
 
+  if (role === InternalRole.Admin && baseNodeType === BaseNodeType.Film) {
+    return {
+      read: [], // since edit will have all props, nothing for read perm
+      edit: ['name', 'scriptureReferences', 'produces'],
+    };
+  }
+
+  if (
+    role === InternalRole.Admin &&
+    baseNodeType === BaseNodeType.FundingAccount
+  ) {
+    return {
+      read: [], // since edit will have all props, nothing for read perm
+      edit: ['name'],
+    };
+  }
+
+  if (role === InternalRole.Admin && baseNodeType === BaseNodeType.Language) {
+    return {
+      read: [], // since edit will have all props, nothing for read perm
+      edit: [
+        'name',
+        'displayName',
+        'sensitivity',
+        'isDialect',
+        'populationOverride',
+        'registryOfDialectsCode',
+        'leastOfThese',
+        'leastOfTheseReason',
+        'displayNamePronunciation',
+        'isSignLanguage',
+        'signLanguageCode',
+        'sponsorEstimatedEndDate',
+        'ethnologue',
+      ],
+    };
+  }
+
+  if (
+    role === InternalRole.Admin &&
+    baseNodeType === BaseNodeType.EthnologueLanguage
+  ) {
+    return {
+      read: [], // since edit will have all props, nothing for read perm
+      edit: ['code', 'provisionalCode', 'name', 'population'],
+    };
+  }
+
   if (
     role === InternalRole.Admin &&
     baseNodeType === BaseNodeType.ProjectMember
