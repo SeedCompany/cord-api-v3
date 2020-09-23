@@ -138,13 +138,7 @@ export class LocationService {
               id,
             }),
           ],
-          ...property(
-            'name',
-            input.name,
-            'newZone',
-            'name',
-            'Property:LocationName'
-          ),
+          ...property('name', input.name, 'newZone', 'name', 'LocationName'),
           [
             node('adminSG', 'SecurityGroup', {
               id: generate(),
@@ -244,13 +238,7 @@ export class LocationService {
               id,
             }),
           ],
-          ...property(
-            'name',
-            input.name,
-            'newRegion',
-            'name',
-            'Property:LocationName'
-          ),
+          ...property('name', input.name, 'newRegion', 'name', 'LocationName'),
           [
             node('adminSG', 'SecurityGroup', {
               id: generate(),
@@ -368,13 +356,7 @@ export class LocationService {
               id,
             }),
           ],
-          ...property(
-            'name',
-            input.name,
-            'newCountry',
-            'name',
-            'Property:LocationName'
-          ),
+          ...property('name', input.name, 'newCountry', 'name', 'LocationName'),
           [
             node('adminSG', 'SecurityGroup', {
               id: generate(),

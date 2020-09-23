@@ -268,7 +268,7 @@ export class EngagementService {
         input.status || EngagementStatus.InDevelopment,
         'languageEngagement',
         'status',
-        'Property:EngagementStatus'
+        'EngagementStatus'
       ),
       ...property('modifiedAt', createdAt, 'languageEngagement'),
     ]);
@@ -485,14 +485,14 @@ export class EngagementService {
         input.methodologies || undefined,
         'internshipEngagement',
         'methodologies',
-        'Property:ProductMethodology'
+        'ProductMethodology'
       ),
       ...property(
         'position',
         input.position || undefined,
         'internshipEngagement',
         'position',
-        'Property:InternPosition'
+        'InternPosition'
       ),
       ...property(
         'growthPlan',

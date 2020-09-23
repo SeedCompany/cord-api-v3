@@ -80,9 +80,15 @@ export const property = (
   value: any | null,
   baseNode: string,
   propVar = prop,
-  propLabel?: string
+  extraPropLabel?: string
 ) => {
   const createdAt = DateTime.local();
+  const propLabel = ['Property'];
+
+  if (extraPropLabel) {
+    propLabel.push(extraPropLabel);
+  }
+
   return [
     [
       node(baseNode),
@@ -90,7 +96,7 @@ export const property = (
         active: true,
         createdAt,
       }),
-      node(propVar, ['Property', propLabel], {
+      node(propVar, propLabel, {
         value,
       }),
     ],
