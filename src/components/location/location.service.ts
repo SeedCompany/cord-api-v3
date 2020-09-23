@@ -18,13 +18,14 @@ import {
   ChildBaseNodeMetaProperty,
   ConfigService,
   DatabaseService,
-  permission as dbPermission,
   ILogger,
   Logger,
   matchRequestingUser,
   matchSession,
   matchUserPermissions,
   OnIndex,
+  permission,
+  property,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -113,28 +114,6 @@ export class LocationService {
       'CREATE CONSTRAINT ON (n:LocationName) ASSERT n.value IS UNIQUE',
     ];
   }
-  // helper method for defining properties
-  property = (prop: string, value: any, baseNode: string) => {
-    if (!value) {
-      return [];
-    }
-    const createdAt = DateTime.local();
-    const propLabel = prop === 'name' ? 'Property:LocationName' : 'Property';
-    return [
-      [
-        node(baseNode),
-        relation('out', '', prop, {
-          active: true,
-          createdAt,
-        }),
-        node(prop, propLabel, {
-          value,
-        }),
-      ],
-    ];
-  };
-
-  permission = dbPermission;
 
   async createZone(
     { directorId, ...input }: CreateZone,
@@ -159,7 +138,7 @@ export class LocationService {
               id,
             }),
           ],
-          ...this.property('name', input.name, 'newZone'),
+          ...property('name', input.name, 'newZone', 'name', 'LocationName'),
           [
             node('adminSG', 'SecurityGroup', {
               id: generate(),
@@ -180,8 +159,8 @@ export class LocationService {
           ],
           [node('adminSG'), relation('out', '', 'member'), node('rootuser')],
           [node('readerSG'), relation('out', '', 'member'), node('rootuser')],
-          ...this.permission('name', 'newZone'),
-          ...this.permission('director', 'newZone'),
+          ...permission('name', 'newZone'),
+          ...permission('director', 'newZone'),
         ])
         .return('newZone.id as id');
 
@@ -259,7 +238,7 @@ export class LocationService {
               id,
             }),
           ],
-          ...this.property('name', input.name, 'newRegion'),
+          ...property('name', input.name, 'newRegion', 'name', 'LocationName'),
           [
             node('adminSG', 'SecurityGroup', {
               id: generate(),
@@ -280,9 +259,9 @@ export class LocationService {
           ],
           [node('adminSG'), relation('out', '', 'member'), node('rootuser')],
           [node('readerSG'), relation('out', '', 'member'), node('rootuser')],
-          ...this.permission('name', 'newRegion'),
-          ...this.permission('director', 'newRegion'),
-          ...this.permission('zone', 'newRegion'),
+          ...permission('name', 'newRegion'),
+          ...permission('director', 'newRegion'),
+          ...permission('zone', 'newRegion'),
         ])
         .return('newRegion.id as id');
 
@@ -377,7 +356,7 @@ export class LocationService {
               id,
             }),
           ],
-          ...this.property('name', input.name, 'newCountry'),
+          ...property('name', input.name, 'newCountry', 'name', 'LocationName'),
           [
             node('adminSG', 'SecurityGroup', {
               id: generate(),
@@ -398,8 +377,8 @@ export class LocationService {
           ],
           [node('adminSG'), relation('out', '', 'member'), node('rootuser')],
           [node('readerSG'), relation('out', '', 'member'), node('rootuser')],
-          ...this.permission('name', 'newCountry'),
-          ...this.permission('region', 'newCountry'),
+          ...permission('name', 'newCountry'),
+          ...permission('region', 'newCountry'),
         ])
         .return('newCountry.id as id');
       await createCountry.first();

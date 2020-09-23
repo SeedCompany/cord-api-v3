@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { first, intersection, upperFirst } from 'lodash';
+import { first, intersection } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
@@ -19,6 +19,7 @@ import {
   matchRequestingUser,
   matchSession,
   OnIndex,
+  permission,
   UniquenessError,
 } from '../../core';
 import {
@@ -128,78 +129,6 @@ export class LanguageService {
       //'CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.active)',
     ];
   }
-  // helper method for defining properties
-  property = (prop: string, value: any) => {
-    const createdAt = DateTime.local();
-    const propLabel =
-      simpleSwitch(prop, {
-        name: ['LanguageName'],
-        displayName: ['LanguageDisplayName'],
-        rodNumber: ['LanguageRodNumber'],
-      }) ?? [];
-    return [
-      [
-        node('newLang'),
-        relation('out', '', prop, {
-          active: true,
-          createdAt,
-        }),
-        node(prop, [...propLabel, 'Property'], {
-          value,
-        }),
-      ],
-    ];
-  };
-
-  // helper method for defining properties
-  permission = (property: string) => {
-    return [
-      [
-        node('adminSG'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property,
-          read: true,
-          edit: true,
-          admin: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('node'),
-      ],
-      [
-        node('readerSG'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property,
-          read: true,
-          edit: false,
-          admin: false,
-        }),
-        relation('out', '', 'baseNode'),
-        node('node'),
-      ],
-    ];
-  };
-
-  propMatch = (property: string) => {
-    const perm = 'canRead' + upperFirst(property);
-    return [
-      [
-        node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
-        node(perm, 'Permission', {
-          property,
-          read: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('lang'),
-        relation('out', '', property, { active: true }),
-        node(property, 'Property'),
-      ],
-    ];
-  };
 
   async create(input: CreateLanguage, session: ISession): Promise<Language> {
     const createdAt = DateTime.local();
@@ -339,7 +268,7 @@ export class LanguageService {
           [],
           session.userId === this.config.rootAdmin.id
         )
-        .create([...this.permission('ethnologue')])
+        .create([...permission('ethnologue', 'node')])
         .return('node.id as id');
 
       const resultLanguage = await createLanguage.first();

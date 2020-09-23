@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
-import { difference, upperFirst } from 'lodash';
+import { difference } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import {
@@ -20,6 +20,8 @@ import {
   Logger,
   matchRequestingUser,
   matchSession,
+  permissions,
+  property,
 } from '../../../core';
 import {
   calculateTotalAndPaginateList,
@@ -57,90 +59,6 @@ export class ProjectMemberService {
     private readonly userService: UserService,
     @Logger('project:member:service') private readonly logger: ILogger
   ) {}
-
-  // helper method for defining properties
-  property = (prop: string, value: any) => {
-    const createdAt = DateTime.local();
-    return [
-      [
-        node('newProjectMember'),
-        relation('out', '', prop, {
-          active: true,
-          createdAt,
-        }),
-        node(prop, 'Property', {
-          value,
-        }),
-      ],
-    ];
-  };
-
-  // helper method for defining properties
-  permission = (property: string) => {
-    return [
-      [
-        node('adminSG'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property,
-          read: true,
-          edit: true,
-          admin: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('newProjectMember'),
-      ],
-      [
-        node('readerSG'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property,
-          read: true,
-          edit: false,
-          admin: false,
-        }),
-        relation('out', '', 'baseNode'),
-        node('newProjectMember'),
-      ],
-    ];
-  };
-
-  propMatch = (query: Query, property: string) => {
-    const readPerm = 'canRead' + upperFirst(property);
-    const editPerm = 'canEdit' + upperFirst(property);
-    query.optionalMatch([
-      [
-        node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
-        node(editPerm, 'Permission', {
-          property,
-          edit: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('projectMember'),
-        relation('out', '', property, { active: true }),
-        node(property, 'Property'),
-      ],
-    ]);
-    query.optionalMatch([
-      [
-        node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
-        node(readPerm, 'Permission', {
-          property,
-          read: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('projectMember'),
-        relation('out', '', property, { active: true }),
-        node(property, 'Property'),
-      ],
-    ]);
-  };
 
   protected async getPMByProjectAndUser(
     projectId: string,
@@ -196,8 +114,8 @@ export class ProjectMemberService {
               id,
             }),
           ],
-          ...this.property('roles', input.roles),
-          ...this.property('modifiedAt', createdAt),
+          ...property('roles', input.roles, 'newProjectMember'),
+          ...property('modifiedAt', createdAt, 'newProjectMember'),
           [
             node('adminSG', 'SecurityGroup', {
               id: generate(),
@@ -216,9 +134,7 @@ export class ProjectMemberService {
           ],
           [node('adminSG'), relation('out', '', 'member'), node('rootuser')],
           [node('readerSG'), relation('out', '', 'member'), node('rootuser')],
-          ...this.permission('roles'),
-          ...this.permission('modifiedAt'),
-          ...this.permission('user'),
+          ...permissions('newProjectMember', ['roles', 'modifiedAt', 'user']),
         ])
         .return('newProjectMember.id as id');
       await createProjectMember.first();

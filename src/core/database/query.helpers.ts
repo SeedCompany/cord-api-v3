@@ -569,10 +569,7 @@ export function matchRequestingUser(query: Query, session: ISession) {
   ]);
 }
 
-export function property(
-  property: string,
-  cypherIdentifierForBaseNode: string
-) {
+function property(property: string, cypherIdentifierForBaseNode: string) {
   const perm = property + 'ReadPerm';
   return [
     node('requestingUser'),

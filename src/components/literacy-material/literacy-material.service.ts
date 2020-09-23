@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { DateTime } from 'luxon';
 import {
   DuplicateException,
   ISession,
@@ -17,6 +16,7 @@ import {
   Logger,
   matchRequestingUser,
   OnIndex,
+  permission,
   Property,
 } from '../../core';
 import {
@@ -64,60 +64,6 @@ export class LiteracyMaterialService {
     ];
   }
 
-  // helper method for defining properties
-  property = (prop: string, value: any, baseNode: string) => {
-    if (!value) {
-      return [];
-    }
-    const createdAt = DateTime.local();
-    const propLabel =
-      prop === 'name' ? 'Property:LiteracyName' : 'Property:Range';
-    return [
-      [
-        node(baseNode),
-        relation('out', '', prop, {
-          active: true,
-          createdAt,
-        }),
-        node(prop, propLabel, {
-          value,
-        }),
-      ],
-    ];
-  };
-
-  // helper method for defining permissions
-  permission = (property: string, baseNode: string) => {
-    return [
-      [
-        node('adminSG'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property,
-
-          read: true,
-          edit: true,
-          admin: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node(baseNode),
-      ],
-      [
-        node('readerSG'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property,
-
-          read: true,
-          edit: false,
-          admin: false,
-        }),
-        relation('out', '', 'baseNode'),
-        node(baseNode),
-      ],
-    ];
-  };
-
   async create(
     input: CreateLiteracyMaterial,
     session: ISession
@@ -159,7 +105,7 @@ export class LiteracyMaterialService {
           }),
         ])
         .call(createBaseNode, ['LiteracyMaterial', 'Producible'], secureProps)
-        .create([...this.permission('scriptureReferences', 'node')])
+        .create([...permission('scriptureReferences', 'node')])
         .return('node.id as id')
         .first();
 

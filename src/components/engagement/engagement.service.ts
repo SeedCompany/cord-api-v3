@@ -1,6 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
-import { upperFirst } from 'lodash';
+import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import {
@@ -19,6 +18,8 @@ import {
   Logger,
   matchRequestingUser,
   matchSession,
+  permissions,
+  property,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -105,100 +106,6 @@ export class EngagementService {
     private readonly eventBus: IEventBus,
     @Logger(`engagement.service`) private readonly logger: ILogger
   ) {}
-
-  // HELPER //////////////////////////////////////////////////////////
-
-  propMatch = (query: Query, property: string, baseNode: string) => {
-    const readPerm = 'canRead' + upperFirst(property);
-    const editPerm = 'canEdit' + upperFirst(property);
-    query.optionalMatch([
-      [
-        node('requestingUser'),
-        relation('in', '', 'member'),
-        node('sg', 'SecurityGroup'),
-        relation('out', '', 'permission'),
-        node(editPerm, 'Permission', {
-          property,
-          edit: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node(baseNode),
-        relation('out', '', property, { active: true }),
-        node(property, 'Property'),
-      ],
-    ]);
-    query.optionalMatch([
-      [
-        node('requestingUser'),
-        relation('in', '', 'member'),
-        node('sg', 'SecurityGroup'),
-        relation('out', '', 'permission'),
-        node(readPerm, 'Permission', {
-          property,
-          read: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node(baseNode),
-        relation('out', '', property, { active: true }),
-        node(property, 'Property'),
-      ],
-    ]);
-  };
-
-  // helper method for defining properties
-  property = (prop: string, value: any | null, baseNode: string) => {
-    const createdAt = DateTime.local().toISO();
-    let propLabel = 'Property';
-    if (prop === 'position') {
-      propLabel = 'Property:InternPosition';
-    } else if (prop === 'methodologies') {
-      propLabel = 'Property:ProductMethodology';
-    } else if (prop === 'status') {
-      propLabel = 'Property:EngagementStatus';
-    }
-    return [
-      [
-        node(baseNode),
-        relation('out', '', prop, {
-          active: true,
-          createdAt,
-        }),
-        node(prop, propLabel, {
-          value,
-        }),
-      ],
-    ];
-  };
-
-  // helper method for defining properties
-  permission = (property: string, baseNode: string) => {
-    return [
-      [
-        node('adminSG'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property,
-          read: true,
-          edit: true,
-          admin: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node(baseNode),
-      ],
-      [
-        node('readerSG'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property,
-          read: true,
-          edit: false,
-          admin: false,
-        }),
-        relation('out', '', 'baseNode'),
-        node(baseNode),
-      ],
-    ];
-  };
 
   protected async getProjectTypeById(
     projectId: string
@@ -314,54 +221,56 @@ export class EngagementService {
           }
         ),
       ],
-      ...this.property(
+      ...property(
         'completeDate',
         input.completeDate || undefined,
         'languageEngagement'
       ),
-      ...this.property(
+      ...property(
         'disbursementCompleteDate',
         input.disbursementCompleteDate || undefined,
         'languageEngagement'
       ),
-      ...this.property(
+      ...property(
         'communicationsCompleteDate',
         input.communicationsCompleteDate || undefined,
         'languageEngagement'
       ),
-      ...this.property(
+      ...property(
         'startDateOverride',
         input.startDateOverride || undefined,
         'languageEngagement'
       ),
-      ...this.property(
+      ...property(
         'endDateOverride',
         input.endDateOverride || undefined,
         'languageEngagement'
       ),
-      ...this.property('initialEndDate', undefined, 'languageEngagement'),
-      ...this.property(
+      ...property('initialEndDate', undefined, 'languageEngagement'),
+      ...property(
         'lukePartnership',
         input.lukePartnership || undefined,
         'languageEngagement'
       ),
-      ...this.property(
+      ...property(
         'firstScripture',
         input.firstScripture || undefined,
         'languageEngagement'
       ),
-      ...this.property(
+      ...property(
         'paraTextRegistryId',
         input.paraTextRegistryId || undefined,
         'languageEngagement'
       ),
-      ...this.property('pnp', pnp || undefined, 'languageEngagement'),
-      ...this.property(
+      ...property('pnp', pnp || undefined, 'languageEngagement'),
+      ...property(
         'status',
         input.status || EngagementStatus.InDevelopment,
-        'languageEngagement'
+        'languageEngagement',
+        'status',
+        'EngagementStatus'
       ),
-      ...this.property('modifiedAt', createdAt, 'languageEngagement'),
+      ...property('modifiedAt', createdAt, 'languageEngagement'),
     ]);
     if (projectId) {
       createLE.create([
@@ -397,20 +306,22 @@ export class EngagementService {
         relation('out', '', 'member'),
         node('requestingUser'),
       ],
-      ...this.permission('firstScripture', 'languageEngagement'),
-      ...this.permission('lukePartnership', 'languageEngagement'),
-      ...this.permission('completeDate', 'languageEngagement'),
-      ...this.permission('disbursementCompleteDate', 'languageEngagement'),
-      ...this.permission('communicationsCompleteDate', 'languageEngagement'),
-      ...this.permission('startDateOverride', 'languageEngagement'),
-      ...this.permission('endDateOverride', 'languageEngagement'),
-      ...this.permission('initialEndDate', 'languageEngagement'),
-      ...this.permission('ceremony', 'languageEngagement'),
-      ...this.permission('language', 'languageEngagement'),
-      ...this.permission('status', 'languageEngagement'),
-      ...this.permission('paraTextRegistryId', 'languageEngagement'),
-      ...this.permission('pnp', 'languageEngagement'),
-      ...this.permission('modifiedAt', 'languageEngagement'),
+      ...permissions('languageEngagement', [
+        'firstScripture',
+        'lukePartnership',
+        'completeDate',
+        'disbursementCompleteDate',
+        'communicationsCompleteDate',
+        'startDateOverride',
+        'endDateOverride',
+        'initialEndDate',
+        'ceremony',
+        'language',
+        'status',
+        'paraTextRegistryId',
+        'pnp',
+        'modifiedAt',
+      ]),
     ]);
     if (session.userId !== this.config.rootAdmin.id) {
       createLE.create([
@@ -542,49 +453,53 @@ export class EngagementService {
           }
         ),
       ],
-      ...this.property('modifiedAt', createdAt, 'internshipEngagement'),
-      ...this.property(
+      ...property('modifiedAt', createdAt, 'internshipEngagement'),
+      ...property(
         'completeDate',
         input.completeDate || undefined,
         'internshipEngagement'
       ),
-      ...this.property(
+      ...property(
         'disbursementCompleteDate',
         input.disbursementCompleteDate || undefined,
         'internshipEngagement'
       ),
-      ...this.property(
+      ...property(
         'communicationsCompleteDate',
         input.communicationsCompleteDate || undefined,
         'internshipEngagement'
       ),
-      ...this.property(
+      ...property(
         'startDateOverride',
         input.startDateOverride || undefined,
         'internshipEngagement'
       ),
-      ...this.property(
+      ...property(
         'endDateOverride',
         input.endDateOverride || undefined,
         'internshipEngagement'
       ),
-      ...this.property('initialEndDate', undefined, 'internshipEngagement'),
-      ...this.property(
+      ...property('initialEndDate', undefined, 'internshipEngagement'),
+      ...property(
         'methodologies',
         input.methodologies || undefined,
-        'internshipEngagement'
+        'internshipEngagement',
+        'methodologies',
+        'ProductMethodology'
       ),
-      ...this.property(
+      ...property(
         'position',
         input.position || undefined,
-        'internshipEngagement'
+        'internshipEngagement',
+        'position',
+        'InternPosition'
       ),
-      ...this.property(
+      ...property(
         'growthPlan',
         growthPlan || undefined,
         'internshipEngagement'
       ),
-      ...this.property(
+      ...property(
         'status',
         input.status || EngagementStatus.InDevelopment,
         'internshipEngagement'
@@ -641,22 +556,24 @@ export class EngagementService {
         relation('out', '', 'member'),
         node('requestingUser'),
       ],
-      ...this.permission('completeDate', 'internshipEngagement'),
-      ...this.permission('communicationsCompleteDate', 'internshipEngagement'),
-      ...this.permission('disbursementCompleteDate', 'internshipEngagement'),
-      ...this.permission('methodologies', 'internshipEngagement'),
-      ...this.permission('position', 'internshipEngagement'),
-      ...this.permission('modifiedAt', 'internshipEngagement'),
-      ...this.permission('startDateOverride', 'internshipEngagement'),
-      ...this.permission('endDateOverride', 'internshipEngagement'),
-      ...this.permission('initialEndDate', 'internshipEngagement'),
-      ...this.permission('language', 'internshipEngagement'),
-      ...this.permission('status', 'internshipEngagement'),
-      ...this.permission('countryOfOrigin', 'internshipEngagement'),
-      ...this.permission('ceremony', 'internshipEngagement'),
-      ...this.permission('intern', 'internshipEngagement'),
-      ...this.permission('mentor', 'internshipEngagement'),
-      ...this.permission('growthPlan', 'internshipEngagement'),
+      ...permissions('internshipEngagement', [
+        'completeDate',
+        'communicationsCompleteDate',
+        'disbursementCompleteDate',
+        'methodologies',
+        'position',
+        'modifiedAt',
+        'startDateOverride',
+        'endDateOverride',
+        'initialEndDate',
+        'language',
+        'status',
+        'countryOfOrigin',
+        'ceremony',
+        'intern',
+        'mentor',
+        'growthPlan',
+      ]),
     ]);
     if (session.userId !== this.config.rootAdmin.id) {
       createIE.create([

@@ -16,7 +16,7 @@ import {
   matchRequestingUser,
   OnIndex,
 } from '../../core';
-import { permission as dbPermission } from '../../core/database/database.service';
+import { permission } from '../../core/database/database.service';
 import {
   calculateTotalAndPaginateList,
   matchPermList,
@@ -61,9 +61,6 @@ export class PartnerService {
     ];
   }
 
-  // helper method for defining permissions
-  permission = dbPermission;
-
   async create(input: CreatePartner, session: ISession): Promise<Partner> {
     const createdAt = DateTime.local();
     // create partner
@@ -78,8 +75,8 @@ export class PartnerService {
       ])
       .call(createBaseNode, 'Partner', [])
       .create([
-        ...this.permission('organization', 'node'),
-        ...this.permission('pointOfContact', 'node'),
+        ...permission('organization', 'node'),
+        ...permission('pointOfContact', 'node'),
       ])
       .create([
         node('node'),
