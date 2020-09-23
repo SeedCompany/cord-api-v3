@@ -16,6 +16,7 @@ import {
   InputException,
   ISession,
   isSecured,
+  many,
   mapFromList,
   Order,
   Resource,
@@ -80,28 +81,19 @@ export const property = (
   value: any | null,
   baseNode: string,
   propVar = prop,
-  extraPropLabel?: string
-) => {
-  const createdAt = DateTime.local();
-  const propLabel = ['Property'];
-
-  if (extraPropLabel) {
-    propLabel.push(extraPropLabel);
-  }
-
-  return [
-    [
-      node(baseNode),
-      relation('out', '', prop, {
-        active: true,
-        createdAt,
-      }),
-      node(propVar, propLabel, {
-        value,
-      }),
-    ],
-  ];
-};
+  extraPropLabel?: Many<string>
+) => [
+  [
+    node(baseNode),
+    relation('out', '', prop, {
+      active: true,
+      createdAt: DateTime.local(),
+    }),
+    node(propVar, ['Property', ...many(extraPropLabel ?? [])], {
+      value,
+    }),
+  ],
+];
 
 export const matchSession = (
   session: ISession,
@@ -730,15 +722,15 @@ export class DatabaseService {
         })
         <-[:token {active: true}]-
         (requestingUser:User {
-          
+
           id: $requestingUserId
         }),
         (object {
-          
+
           id: $objectId
         })
         detach delete object
-        
+
         `,
         {
           requestingUserId: session.userId,
