@@ -34,12 +34,12 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
+import { Role } from '../authorization';
 import {
   OrganizationListInput,
   OrganizationService,
   SecuredOrganizationList,
 } from '../organization';
-import { Role } from '../role';
 import {
   AssignOrganizationToUser,
   CreatePerson,

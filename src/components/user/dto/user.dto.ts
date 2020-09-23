@@ -5,7 +5,7 @@ import {
   SecuredProperty,
   SecuredString,
 } from '../../../common';
-import { SecuredRoles } from '../../role';
+import { SecuredRoles } from '../../authorization';
 import { UserStatus } from './user-status.enum';
 
 @ObjectType({

@@ -35,7 +35,7 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../../core/database/results';
-import { RoleChangeEvent } from '../../role/events/role-change.event';
+import { AuthorizationService } from '../../authorization/authorization.service';
 import { UserService } from '../../user';
 import {
   CreateProjectMember,
@@ -45,6 +45,7 @@ import {
   Role,
   UpdateProjectMember,
 } from './dto';
+import { TeamMemberCreatedEvent } from './events/team-member-created.event';
 
 @Injectable()
 export class ProjectMemberService {
@@ -58,7 +59,8 @@ export class ProjectMemberService {
     private readonly config: ConfigService,
     private readonly userService: UserService,
     private readonly eventBus: IEventBus,
-    @Logger('project:member:service') private readonly logger: ILogger
+    @Logger('project:member:service') private readonly logger: ILogger,
+    private readonly authorizationService: AuthorizationService
   ) {}
 
   // helper method for defining properties
@@ -196,9 +198,13 @@ export class ProjectMemberService {
         .first();
 
       // creating user must be an admin, use role change event
-      await this.eventBus.publish(
-        new RoleChangeEvent(userId, memberQuery?.id, Role.Admin)
-      );
+      await this.authorizationService.addPermsForRole({
+        userId,
+        baseNodeId: memberQuery?.id,
+        role: Role.Admin,
+      });
+
+      await this.addProjectAdminsToUserSg({ projectId, userId });
 
       return await this.readOne(id, session);
     } catch (exception) {
@@ -378,5 +384,33 @@ export class ProjectMemberService {
       relation(relationshipDirection, '', relationshipType, { active: true }),
       node('node', label),
     ]);
+  }
+
+  async addProjectAdminsToUserSg(event: TeamMemberCreatedEvent) {
+    this.logger.info('asdf', event);
+    // get all admins of a project, then add the role for them to see the user info
+    const result = await this.db
+      .query()
+      .match([
+        node('admins', 'User'),
+        relation('in', '', 'member'),
+        node('sg', 'SecurityGroup', { role: Role.Admin }),
+        relation('out', '', 'permission'),
+        node('perms', 'Permission'),
+        relation('out', '', 'baseNode'),
+        node('project', 'Project', { id: event.projectId }),
+      ])
+      .raw('return collect(distinct admins.id) as ids')
+      .first();
+
+    for (const id of result?.ids) {
+      this.logger.info(id);
+      // creating user must be an admin, use role change event
+      await this.authorizationService.addPermsForRole({
+        userId: id,
+        baseNodeId: event.userId,
+        role: Role.AdminViewOfProjectMember,
+      });
+    }
   }
 }

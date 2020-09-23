@@ -6,7 +6,7 @@ import {
   SecuredList,
   SortablePaginationInput,
 } from '../../../../common';
-import { Role } from '../../../role';
+import { Role } from '../../../authorization';
 import { ProjectMember } from './project-member.dto';
 
 @InputType()

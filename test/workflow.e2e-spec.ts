@@ -1,7 +1,7 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
-import { CreateSecurityGroupOutput } from '../src/components/authorization/dto/create-security-group.dto';
+import { CreateSecurityGroupOutput } from '../src/components/authorization.old/dto/create-security-group.dto';
 import { Organization } from '../src/components/organization';
 import { User } from '../src/components/user';
 import {

@@ -39,6 +39,7 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
+import { AuthorizationService } from '../authorization/authorization.service';
 import { Budget, BudgetService, BudgetStatus, SecuredBudget } from '../budget';
 import {
   EngagementListInput,
@@ -53,7 +54,6 @@ import {
   PartnershipType,
   SecuredPartnershipList,
 } from '../partnership';
-import { RoleChangeEvent } from '../role/events/role-change.event';
 import {
   CreateProject,
   InternshipProject,
@@ -95,6 +95,7 @@ export class ProjectService {
     private readonly engagementService: EngagementService,
     private readonly config: ConfigService,
     private readonly eventBus: IEventBus,
+    private readonly authorizationService: AuthorizationService,
     @Logger('project:service') private readonly logger: ILogger
   ) {}
 
@@ -290,10 +291,11 @@ export class ProjectService {
         throw new ServerException('failed to create a project');
       }
 
-      // creating user must be an admin, use role change event
-      await this.eventBus.publish(
-        new RoleChangeEvent(session.userId, result.id, Role.Admin)
-      );
+      await this.authorizationService.addPermsForRole({
+        userId: session.userId,
+        baseNodeId: result.id,
+        role: Role.Admin,
+      });
 
       let location;
       if (locationId) {

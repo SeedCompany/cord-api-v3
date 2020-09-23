@@ -23,7 +23,8 @@ export enum Role {
   SupportingProjectManager = 'SupportingProjectManager',
   Translator = 'Translator',
   Writer = 'Writer',
-  Admin = 'Admin',
+  Admin = 'Admin', // someone who needs access to all props of a base node
+  AdminViewOfProjectMember = 'AdminViewOfProjectMember', // a project admin that needs minimal information on a team member of the same project
 }
 
 registerEnumType(Role, { name: 'Role' });

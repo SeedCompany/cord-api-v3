@@ -1,6 +1,6 @@
 import { Role } from '../dto';
 
-export class RoleChangeEvent {
+export class RoleAddEvent {
   constructor(
     readonly userId: string,
     readonly baseNodeId: string,

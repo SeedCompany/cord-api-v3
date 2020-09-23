@@ -1,7 +1,7 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { DateTimeField, Resource } from '../../../../common';
-import { SecuredRoles } from '../../../role';
+import { SecuredRoles } from '../../../authorization';
 import { SecuredUser } from '../../../user';
 
 @ObjectType({

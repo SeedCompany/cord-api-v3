@@ -1,4 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
+import { AuthorizationModule } from '../authorization/authorization.module';
 import { BudgetModule } from '../budget/budget.module';
 import { EngagementModule } from '../engagement/engagement.module';
 import { FileModule } from '../file/file.module';
@@ -19,6 +20,7 @@ import { ProjectService } from './project.service';
     LocationModule,
     FileModule,
     EngagementModule,
+    AuthorizationModule,
   ],
   providers: [ProjectResolver, OrganizationService, ProjectService],
   exports: [ProjectService, ProjectMemberModule],

@@ -41,8 +41,19 @@ export function getRolePermissions(
     };
   }
 
+  if (
+    role === Role.AdminViewOfProjectMember &&
+    baseNodeType === BaseNodeType.User
+  ) {
+    return {
+      read: ['displayFirstName', 'displayLastName', 'email'],
+      edit: [],
+    };
+  }
+
   if (role === Role.Translator && baseNodeType === BaseNodeType.Project) {
     return {
+      // these were just place holders for testing, not impl yet
       read: ['mouStart', 'mouEnd'],
       edit: ['name'],
     };
