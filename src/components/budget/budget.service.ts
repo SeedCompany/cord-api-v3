@@ -84,6 +84,36 @@ export class BudgetService {
     ];
   };
 
+  // helper method for defining permissions
+  permission = (property: string, baseNode: string) => {
+    return [
+      [
+        node('adminSG'),
+        relation('out', '', 'permission'),
+        node('', 'Permission', {
+          property,
+          read: true,
+          edit: true,
+          admin: true,
+        }),
+        relation('out', '', 'baseNode'),
+        node(baseNode),
+      ],
+      [
+        node('readerSG'),
+        relation('out', '', 'permission'),
+        node('', 'Permission', {
+          property,
+          read: true,
+          edit: false,
+          admin: false,
+        }),
+        relation('out', '', 'baseNode'),
+        node(baseNode),
+      ],
+    ];
+  };
+
   propMatch = (query: Query, property: string, baseNode: string) => {
     const readPerm = 'canRead' + upperFirst(property);
     const editPerm = 'canEdit' + upperFirst(property);
@@ -256,7 +286,9 @@ export class BudgetService {
       const createBudgetRecord = this.db
         .query()
         .call(matchRequestingUser, session);
-      createBudgetRecord.call(createBaseNode, 'BudgetRecord', secureProps);
+      createBudgetRecord
+        .call(createBaseNode, 'BudgetRecord', secureProps)
+        .create([...this.permission('organization', 'node')]);
       createBudgetRecord.return('node.id as id');
 
       const result = await createBudgetRecord.first();

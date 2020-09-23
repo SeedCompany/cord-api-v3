@@ -31,6 +31,7 @@ export function getRolePermissions(
         'budget',
         'modifiedAt',
         'engagement',
+        'organization',
       ],
     };
   }
@@ -38,7 +39,13 @@ export function getRolePermissions(
   if (role === InternalRole.Admin && baseNodeType === BaseNodeType.Budget) {
     return {
       read: [], // since edit will have all props, nothing for read perm
-      edit: ['status', 'budget', 'record', 'universalTemplateFile'],
+      edit: [
+        'status',
+        'budget',
+        'record',
+        'universalTemplateFile',
+        'organization',
+      ],
     };
   }
 
