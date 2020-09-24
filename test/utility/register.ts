@@ -16,7 +16,7 @@ export const generateRegisterInput = (): RegisterInput => ({
   password: faker.internet.password(10),
   phone: faker.phone.phoneNumber(),
   timezone: 'America/Chicago',
-  bio: 'bio detail',
+  about: 'about detail',
   status: UserStatus.Active,
   roles: [Role.ProjectManager, Role.Consultant],
   title: faker.name.title(),

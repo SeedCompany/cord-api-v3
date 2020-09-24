@@ -38,7 +38,7 @@ export class User extends Resource {
   timezone: SecuredString;
 
   @Field()
-  bio: SecuredString;
+  about: SecuredString;
 
   @Field()
   status: SecuredUserStatus;

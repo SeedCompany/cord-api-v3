@@ -70,7 +70,7 @@ export const user = gql`
       canEdit
       canRead
     }
-    bio {
+    about {
       value
       canEdit
       canRead

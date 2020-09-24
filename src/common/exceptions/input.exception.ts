@@ -34,11 +34,11 @@ export class InputException extends ClientException {
    * Create with a custom message
    *
    * @example
-   * throw new InputException(`User's bio must be written in MLA format`);
+   * throw new InputException(`User's about must be written in MLA format`);
    *
    * @example
    * catch (e) {
-   *   throw new InputException(`User's bio must be written in MLA format`, e);
+   *   throw new InputException(`User's about must be written in MLA format`, e);
    * }
    *
    * @param message A human (dev) readable message
@@ -49,15 +49,15 @@ export class InputException extends ClientException {
   /**
    * @example
    * throw new InputException(
-   *   `User's bio must be written in MLA format`,
-   *   'user.bio'
+   *   `User's about must be written in MLA format`,
+   *   'user.about'
    * );
    *
    * @example
    * catch (e) {
    *   throw new InputException(
-   *     `User's bio must be written in MLA format`,
-   *     'user.bio',
+   *     `User's about must be written in MLA format`,
+   *     'user.about',
    *     e
    *   );
    * }
