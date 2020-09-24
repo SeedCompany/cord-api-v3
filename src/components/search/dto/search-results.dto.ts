@@ -6,6 +6,7 @@ import { Language } from '../../language/dto';
 import { LiteracyMaterial } from '../../literacy-material/dto';
 import { Country, Location, Region, Zone } from '../../location/dto';
 import { Organization } from '../../organization/dto';
+import { Partner } from '../../partner/dto';
 import {
   InternshipProject,
   IProject as Project,
@@ -18,6 +19,7 @@ import { User } from '../../user/dto';
 // Expand this to add to searchable types / results
 const searchable = {
   Organization,
+  Partner,
   Country,
   Region,
   Zone,

@@ -12,6 +12,7 @@ import { LanguageService } from '../language';
 import { LiteracyMaterialService } from '../literacy-material';
 import { LocationService } from '../location';
 import { OrganizationService } from '../organization';
+import { PartnerService } from '../partner';
 import { ProjectService } from '../project';
 import { SongService } from '../song';
 import { StoryService } from '../story';
@@ -41,6 +42,7 @@ export class SearchService {
   private readonly hydrators: HydratorMap = {
     Organization: (...args) => this.orgs.readOne(...args),
     User: (...args) => this.users.readOne(...args),
+    Partner: (...args) => this.partners.readOne(...args),
     Country: (...args) => this.location.readOneCountry(...args),
     Region: (...args) => this.location.readOneRegion(...args),
     Zone: (...args) => this.location.readOneZone(...args),
@@ -58,6 +60,7 @@ export class SearchService {
     private readonly db: DatabaseService,
     private readonly users: UserService,
     private readonly orgs: OrganizationService,
+    private readonly partners: PartnerService,
     private readonly location: LocationService,
     private readonly language: LanguageService,
     private readonly projects: ProjectService,
