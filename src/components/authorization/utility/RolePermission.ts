@@ -31,7 +31,6 @@ export function getRolePermissions(
         'partnership',
         'budget',
         'modifiedAt',
-        'engagement',
         'organization',
       ],
     };
