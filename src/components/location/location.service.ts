@@ -40,6 +40,8 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
+import { AuthorizationService } from '../authorization/authorization.service';
+import { InternalRole } from '../authorization/dto';
 import {
   Country,
   CreateCountry,
@@ -64,7 +66,8 @@ export class LocationService {
   constructor(
     @Logger('location:service') private readonly logger: ILogger,
     private readonly config: ConfigService,
-    private readonly db: DatabaseService
+    private readonly db: DatabaseService,
+    private readonly authorizationService: AuthorizationService
   ) {}
 
   @OnIndex()
@@ -160,32 +163,16 @@ export class LocationService {
             }),
           ],
           ...this.property('name', input.name, 'newZone'),
-          [
-            node('adminSG', 'SecurityGroup', {
-              id: generate(),
-
-              name: input.name + ' admin',
-            }),
-            relation('out', '', 'member'),
-            node('requestingUser'),
-          ],
-          [
-            node('readerSG', 'SecurityGroup', {
-              id: generate(),
-
-              name: input.name + ' users',
-            }),
-            relation('out', '', 'member'),
-            node('requestingUser'),
-          ],
-          [node('adminSG'), relation('out', '', 'member'), node('rootuser')],
-          [node('readerSG'), relation('out', '', 'member'), node('rootuser')],
-          ...this.permission('name', 'newZone'),
-          ...this.permission('director', 'newZone'),
         ])
         .return('newZone.id as id');
 
       await createZone.first();
+
+      await this.authorizationService.addPermsForRole({
+        userId: session.userId as string,
+        baseNodeId: id,
+        role: InternalRole.Admin,
+      });
 
       // connect director User to zone
       if (directorId) {
@@ -260,35 +247,18 @@ export class LocationService {
             }),
           ],
           ...this.property('name', input.name, 'newRegion'),
-          [
-            node('adminSG', 'SecurityGroup', {
-              id: generate(),
-
-              name: input.name + ' admin',
-            }),
-            relation('out', '', 'member'),
-            node('requestingUser'),
-          ],
-          [
-            node('readerSG', 'SecurityGroup', {
-              id: generate(),
-
-              name: input.name + ' users',
-            }),
-            relation('out', '', 'member'),
-            node('requestingUser'),
-          ],
-          [node('adminSG'), relation('out', '', 'member'), node('rootuser')],
-          [node('readerSG'), relation('out', '', 'member'), node('rootuser')],
-          ...this.permission('name', 'newRegion'),
-          ...this.permission('director', 'newRegion'),
-          ...this.permission('zone', 'newRegion'),
         ])
         .return('newRegion.id as id');
 
       await createRegion.first();
 
       this.logger.debug(`Region created`, { input, userId: session.userId });
+
+      await this.authorizationService.addPermsForRole({
+        userId: session.userId as string,
+        baseNodeId: id,
+        role: InternalRole.Admin,
+      });
 
       // connect the Zone to Region
 

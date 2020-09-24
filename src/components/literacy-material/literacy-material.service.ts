@@ -31,6 +31,8 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
+import { AuthorizationService } from '../authorization/authorization.service';
+import { InternalRole } from '../authorization/dto';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
 import {
   CreateLiteracyMaterial,
@@ -45,7 +47,8 @@ export class LiteracyMaterialService {
     @Logger('literacyMaterial:service') private readonly logger: ILogger,
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
-    private readonly scriptureRefService: ScriptureReferenceService
+    private readonly scriptureRefService: ScriptureReferenceService,
+    private readonly authorizationService: AuthorizationService
   ) {}
 
   @OnIndex()
@@ -140,11 +143,11 @@ export class LiteracyMaterialService {
       {
         key: 'name',
         value: input.name,
-        addToAdminSg: true,
-        addToWriterSg: true,
-        addToReaderSg: true,
-        isPublic: true,
-        isOrgPublic: true,
+        addToAdminSg: false,
+        addToWriterSg: false,
+        addToReaderSg: false,
+        isPublic: false,
+        isOrgPublic: false,
         label: 'LiteracyName',
       },
     ];
@@ -159,13 +162,18 @@ export class LiteracyMaterialService {
           }),
         ])
         .call(createBaseNode, ['LiteracyMaterial', 'Producible'], secureProps)
-        .create([...this.permission('scriptureReferences', 'node')])
         .return('node.id as id')
         .first();
 
       if (!result) {
         throw new ServerException('failed to create a literacy material');
       }
+
+      await this.authorizationService.addPermsForRole({
+        userId: session.userId as string,
+        baseNodeId: result.id,
+        role: InternalRole.Admin,
+      });
 
       await this.scriptureRefService.create(
         result.id,

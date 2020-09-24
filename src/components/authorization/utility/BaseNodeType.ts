@@ -12,4 +12,9 @@ export enum BaseNodeType {
   FundingAccount = 'FundingAccount',
   Language = 'Language',
   EthnologueLanguage = 'EthnologueLanguage',
+  LiteracyMaterial = 'LiteracyMaterial',
+  Zone = 'Zone',
+  Region = 'Region',
+  Organization = 'Organization',
+  Partner = 'Partner',
 }

@@ -939,8 +939,6 @@ describe('Project e2e', () => {
       mouEnd: undefined,
     });
 
-    console.log(proj.id);
-
     const partnership: CreatePartnership = {
       projectId: proj.id,
       organizationId: 'seedcompanyid',

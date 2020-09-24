@@ -86,6 +86,20 @@ export class AuthorizationService {
         (baseNodeTypeQuery?.labels as string[]).includes('EthnologueLanguage')
       ) {
         baseNodeType = BaseNodeType.EthnologueLanguage;
+      } else if (
+        (baseNodeTypeQuery?.labels as string[]).includes('LiteracyMaterial')
+      ) {
+        baseNodeType = BaseNodeType.LiteracyMaterial;
+      } else if ((baseNodeTypeQuery?.labels as string[]).includes('Zone')) {
+        baseNodeType = BaseNodeType.Zone;
+      } else if ((baseNodeTypeQuery?.labels as string[]).includes('Region')) {
+        baseNodeType = BaseNodeType.Region;
+      } else if (
+        (baseNodeTypeQuery?.labels as string[]).includes('Organization')
+      ) {
+        baseNodeType = BaseNodeType.Organization;
+      } else if ((baseNodeTypeQuery?.labels as string[]).includes('Partner')) {
+        baseNodeType = BaseNodeType.Partner;
       } else {
         this.logger.error(baseNodeTypeQuery?.labels);
         throw new ServerException('Base node type not identified');

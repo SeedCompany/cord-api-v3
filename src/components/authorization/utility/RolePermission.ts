@@ -215,6 +215,52 @@ export function getRolePermissions(
 
   if (
     role === InternalRole.Admin &&
+    baseNodeType === BaseNodeType.LiteracyMaterial
+  ) {
+    return {
+      read: [], // since edit will have all props, nothing for read perm
+      edit: ['name', 'scriptureReferences', 'produces'],
+    };
+  }
+
+  if (role === InternalRole.Admin && baseNodeType === BaseNodeType.Zone) {
+    return {
+      read: [], // since edit will have all props, nothing for read perm
+      edit: ['name', 'director', 'zone'],
+    };
+  }
+
+  if (role === InternalRole.Admin && baseNodeType === BaseNodeType.Region) {
+    return {
+      read: [], // since edit will have all props, nothing for read perm
+      edit: ['name', 'director', 'zone', 'region'],
+    };
+  }
+
+  if (
+    role === InternalRole.Admin &&
+    baseNodeType === BaseNodeType.Organization
+  ) {
+    return {
+      read: [], // since edit will have all props, nothing for read perm
+      edit: ['name', 'organization', 'organizations'],
+    };
+  }
+
+  if (role === InternalRole.Admin && baseNodeType === BaseNodeType.Partner) {
+    return {
+      read: [], // since edit will have all props, nothing for read perm
+      edit: [
+        'pointOfContact',
+        'organization',
+        'type',
+        'financialReportingType',
+      ],
+    };
+  }
+
+  if (
+    role === InternalRole.Admin &&
     baseNodeType === BaseNodeType.ProjectMember
   ) {
     return {
