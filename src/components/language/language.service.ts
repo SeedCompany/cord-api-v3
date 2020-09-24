@@ -633,32 +633,36 @@ export class LanguageService {
       throw new ServerException('Error fetching sponsorStartDate');
     }
 
-    const engagments = await Promise.all(
-      result.engagementIds.map((engagementId) =>
-        this.engagementService.readOne(engagementId, session)
-      )
-    );
+    try {
+      const engagments = await Promise.all(
+        result.engagementIds.map((engagementId) =>
+          this.engagementService.readOne(engagementId, session)
+        )
+      );
+      const dates = compact(
+        engagments.map((engagement) => engagement.startDate.value)
+      );
 
-    const dates = compact(
-      engagments.map((engagement) => engagement.startDate.value)
-    );
+      const canRead = engagments.every(
+        (engagement) => engagement.startDate.canRead
+      );
 
-    if (!dates.length) {
+      const value =
+        dates.length && canRead ? CalendarDate.min(...dates) : undefined;
+
       return {
-        canRead: true,
-        canEdit: true,
+        canRead,
+        canEdit: false,
+        value,
+      };
+    } catch {
+      //if engagement readOne returns a not found exception, then don't have read permissions on the engagement
+      return {
+        canRead: false,
+        canEdit: false,
         value: undefined,
       };
     }
-
-    const minDate = CalendarDate.min(...dates);
-
-    return {
-      //TODO: use the upcoming roles service to determine permissions
-      canRead: true,
-      canEdit: true,
-      value: minDate,
-    };
   }
 
   async addLocation(
