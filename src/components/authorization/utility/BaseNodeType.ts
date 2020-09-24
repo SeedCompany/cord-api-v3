@@ -5,4 +5,11 @@ export enum BaseNodeType {
   Budget = 'Budget',
   BudgetRecord = 'BudgetRecord',
   Partnership = 'Partnership',
+  Ceremony = 'Ceremony',
+  LanguageEngagement = 'LanguageEngagement',
+  InternshipEngagement = 'InternshipEngagement',
+  Film = 'Film',
+  FundingAccount = 'FundingAccount',
+  Language = 'Language',
+  EthnologueLanguage = 'EthnologueLanguage',
 }

@@ -27,6 +27,7 @@ export function getRolePermissions(
         'rootDirectory',
         'member',
         'locations',
+        'engagement',
         'partnership',
         'budget',
         'modifiedAt',
@@ -80,6 +81,136 @@ export function getRolePermissions(
         'organization',
         'financialReportingType',
       ],
+    };
+  }
+
+  if (
+    role === InternalRole.Admin &&
+    baseNodeType === BaseNodeType.BudgetRecord
+  ) {
+    return {
+      read: [], // since edit will have all props, nothing for read perm
+      edit: ['fiscalYear', 'amount', 'record', 'partnership', 'organization'],
+    };
+  }
+
+  if (role === InternalRole.Admin && baseNodeType === BaseNodeType.Ceremony) {
+    return {
+      read: [], // since edit will have all props, nothing for read perm
+      edit: ['planned', 'actualDate', 'estimatedDate', 'type', 'ceremony'],
+    };
+  }
+
+  if (
+    role === InternalRole.Admin &&
+    baseNodeType === BaseNodeType.LanguageEngagement
+  ) {
+    return {
+      read: [], // since edit will have all props, nothing for read perm
+      edit: [
+        'status',
+        'completeDate',
+        'disbursementCompleteDate',
+        'communicationsCompleteDate',
+        'initialEndDate',
+        'startDate',
+        'endDate',
+        'startDateOverride',
+        'endDateOverride',
+        'updatedAt',
+        'lastReactivatedAt',
+        'lastSuspendedAt',
+        'modifiedAt',
+        'product',
+        'ceremony',
+        'language',
+        'paraTextRegistryId',
+        'projectEngagementTag',
+        'ceremonyPlanned',
+        'sentPrinting',
+        'lukePartnership',
+        'firstScripture',
+      ],
+    };
+  }
+
+  if (
+    role === InternalRole.Admin &&
+    baseNodeType === BaseNodeType.InternshipEngagement
+  ) {
+    return {
+      read: [], // since edit will have all props, nothing for read perm
+      edit: [
+        'status',
+        'completeDate',
+        'disbursementCompleteDate',
+        'communicationsCompleteDate',
+        'initialEndDate',
+        'startDate',
+        'endDate',
+        'startDateOverride',
+        'endDateOverride',
+        'updatedAt',
+        'lastReactivatedAt',
+        'lastSuspendedAt',
+        'modifiedAt',
+        'position',
+        'methodologies',
+        'intern',
+        'mentor',
+        'ceremony',
+        'countryOfOrigin',
+        'language',
+        'growthPlan',
+      ],
+    };
+  }
+
+  if (role === InternalRole.Admin && baseNodeType === BaseNodeType.Film) {
+    return {
+      read: [], // since edit will have all props, nothing for read perm
+      edit: ['name', 'scriptureReferences', 'produces'],
+    };
+  }
+
+  if (
+    role === InternalRole.Admin &&
+    baseNodeType === BaseNodeType.FundingAccount
+  ) {
+    return {
+      read: [], // since edit will have all props, nothing for read perm
+      edit: ['name'],
+    };
+  }
+
+  if (role === InternalRole.Admin && baseNodeType === BaseNodeType.Language) {
+    return {
+      read: [], // since edit will have all props, nothing for read perm
+      edit: [
+        'name',
+        'displayName',
+        'sensitivity',
+        'isDialect',
+        'populationOverride',
+        'registryOfDialectsCode',
+        'leastOfThese',
+        'leastOfTheseReason',
+        'displayNamePronunciation',
+        'isSignLanguage',
+        'signLanguageCode',
+        'sponsorEstimatedEndDate',
+        'ethnologue',
+      ],
+    };
+  }
+
+  if (
+    role === InternalRole.Admin &&
+    baseNodeType === BaseNodeType.EthnologueLanguage
+  ) {
+    return {
+      read: [], // since edit will have all props, nothing for read perm
+      edit: ['code', 'provisionalCode', 'name', 'population'],
     };
   }
 

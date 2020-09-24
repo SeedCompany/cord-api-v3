@@ -23,6 +23,8 @@ import {
   parseSecuredProperties,
   StandardReadResult,
 } from '../../../core/database/results';
+import { AuthorizationService } from '../../authorization/authorization.service';
+import { InternalRole } from '../../project';
 import {
   CreateEthnologueLanguage,
   EthnologueLanguage,
@@ -36,6 +38,7 @@ export class EthnologueLanguageService {
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
+    private readonly authorizationService: AuthorizationService,
     @Logger('language:ethnologue:service') private readonly logger: ILogger
   ) {}
 
@@ -118,9 +121,9 @@ export class EthnologueLanguageService {
       {
         key: 'code',
         value: input.code,
-        addToAdminSg: true,
+        addToAdminSg: false,
         addToWriterSg: false,
-        addToReaderSg: true,
+        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
         label: 'Code',
@@ -128,9 +131,9 @@ export class EthnologueLanguageService {
       {
         key: 'provisionalCode',
         value: input.provisionalCode,
-        addToAdminSg: true,
+        addToAdminSg: false,
         addToWriterSg: false,
-        addToReaderSg: true,
+        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
         label: 'ProvisionalCode',
@@ -138,9 +141,9 @@ export class EthnologueLanguageService {
       {
         key: 'name',
         value: input.name,
-        addToAdminSg: true,
+        addToAdminSg: false,
         addToWriterSg: false,
-        addToReaderSg: true,
+        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
         label: 'Name',
@@ -148,9 +151,9 @@ export class EthnologueLanguageService {
       {
         key: 'population',
         value: input.population,
-        addToAdminSg: true,
+        addToAdminSg: false,
         addToWriterSg: false,
-        addToReaderSg: true,
+        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
         label: 'Population',
@@ -175,6 +178,12 @@ export class EthnologueLanguageService {
     if (!result) {
       throw new ServerException('Failed to create ethnologue language');
     }
+
+    await this.authorizationService.addPermsForRole({
+      userId: session.userId as string,
+      baseNodeId: result.id,
+      role: InternalRole.Admin,
+    });
 
     const id = result.id;
 

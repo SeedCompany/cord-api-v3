@@ -1,4 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
+import { AuthorizationModule } from '../authorization/authorization.module';
 import { CeremonyModule } from '../ceremony/ceremony.module';
 import { FileModule } from '../file/file.module';
 import { LanguageModule } from '../language/language.module';
@@ -14,6 +15,7 @@ import { LanguageEngagementResolver } from './language-engagement.resolver';
 
 @Module({
   imports: [
+    AuthorizationModule,
     FileModule,
     UserModule,
     CeremonyModule,

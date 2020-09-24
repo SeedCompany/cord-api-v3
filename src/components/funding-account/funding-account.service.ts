@@ -29,6 +29,8 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
+import { AuthorizationService } from '../authorization/authorization.service';
+import { InternalRole } from '../project';
 import {
   CreateFundingAccount,
   FundingAccount,
@@ -46,7 +48,8 @@ export class FundingAccountService {
   constructor(
     @Logger('funding-account:service') private readonly logger: ILogger,
     private readonly db: DatabaseService,
-    private readonly config: ConfigService
+    private readonly config: ConfigService,
+    private readonly authorizationService: AuthorizationService
   ) {}
 
   @OnIndex()
@@ -82,9 +85,9 @@ export class FundingAccountService {
       {
         key: 'name',
         value: input.name,
-        addToAdminSg: true,
+        addToAdminSg: false,
         addToWriterSg: false,
-        addToReaderSg: true,
+        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
         label: 'FieldZoneName',
@@ -107,6 +110,12 @@ export class FundingAccountService {
       if (!result) {
         throw new ServerException('Failed to create funding account');
       }
+
+      await this.authorizationService.addPermsForRole({
+        userId: session.userId as string,
+        baseNodeId: result.id,
+        role: InternalRole.Admin,
+      });
 
       this.logger.info(`funding account created`, { id: result.id });
 
