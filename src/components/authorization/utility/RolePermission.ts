@@ -259,6 +259,75 @@ export function getRolePermissions(
     };
   }
 
+  if (role === InternalRole.Admin && baseNodeType === BaseNodeType.Product) {
+    return {
+      read: [], // since edit will have all props, nothing for read perm
+      edit: [
+        'scriptureReferences',
+        'scriptureReferencesOverride',
+        'mediums',
+        'purposes',
+        'methodology',
+        'produces',
+        'engagement',
+        'isOverriding',
+      ],
+    };
+  }
+
+  if (role === InternalRole.Admin && baseNodeType === BaseNodeType.Song) {
+    return {
+      read: [], // since edit will have all props, nothing for read perm
+      edit: ['name', 'scriptureReferences', 'produces'],
+    };
+  }
+
+  if (role === InternalRole.Admin && baseNodeType === BaseNodeType.Story) {
+    return {
+      read: [], // since edit will have all props, nothing for read perm
+      edit: ['name', 'scriptureReferences', 'produces'],
+    };
+  }
+
+  if (role === InternalRole.Admin && baseNodeType === BaseNodeType.User) {
+    return {
+      read: [], // since edit will have all props, nothing for read perm
+      edit: [
+        'realFirstName',
+        'realLastName',
+        'displayFirstName',
+        'displayLastName',
+        'email',
+        'education',
+        'organization',
+        'unavailablity',
+        'phone',
+        'timezone',
+        'bio',
+        'status',
+        'roles',
+        'title',
+      ],
+    };
+  }
+
+  if (
+    role === InternalRole.Admin &&
+    baseNodeType === BaseNodeType.Unavailability
+  ) {
+    return {
+      read: [], // since edit will have all props, nothing for read perm
+      edit: ['description', 'start', 'end', 'unavailability'],
+    };
+  }
+
+  if (role === InternalRole.Admin && baseNodeType === BaseNodeType.Education) {
+    return {
+      read: [], // since edit will have all props, nothing for read perm
+      edit: ['degree', 'major', 'institution', 'education'],
+    };
+  }
+
   if (
     role === InternalRole.Admin &&
     baseNodeType === BaseNodeType.ProjectMember

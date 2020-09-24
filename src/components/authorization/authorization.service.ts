@@ -46,61 +46,14 @@ export class AuthorizationService {
       // correct permissions for this combination of role and base node.
       let baseNodeType;
 
-      if ((baseNodeTypeQuery?.labels as string[]).includes('Project')) {
-        baseNodeType = BaseNodeType.Project;
-      } else if (
-        (baseNodeTypeQuery?.labels as string[]).includes('ProjectMember')
-      ) {
-        baseNodeType = BaseNodeType.ProjectMember;
-      } else if ((baseNodeTypeQuery?.labels as string[]).includes('User')) {
-        baseNodeType = BaseNodeType.User;
-      } else if ((baseNodeTypeQuery?.labels as string[]).includes('Budget')) {
-        baseNodeType = BaseNodeType.Budget;
-      } else if (
-        (baseNodeTypeQuery?.labels as string[]).includes('BudgetRecord')
-      ) {
-        baseNodeType = BaseNodeType.BudgetRecord;
-      } else if (
-        (baseNodeTypeQuery?.labels as string[]).includes('Partnership')
-      ) {
-        baseNodeType = BaseNodeType.Partnership;
-      } else if ((baseNodeTypeQuery?.labels as string[]).includes('Ceremony')) {
-        baseNodeType = BaseNodeType.Ceremony;
-      } else if (
-        (baseNodeTypeQuery?.labels as string[]).includes('LanguageEngagement')
-      ) {
-        baseNodeType = BaseNodeType.LanguageEngagement;
-      } else if (
-        (baseNodeTypeQuery?.labels as string[]).includes('InternshipEngagement')
-      ) {
-        baseNodeType = BaseNodeType.InternshipEngagement;
-      } else if ((baseNodeTypeQuery?.labels as string[]).includes('Film')) {
-        baseNodeType = BaseNodeType.Film;
-      } else if (
-        (baseNodeTypeQuery?.labels as string[]).includes('FundingAccount')
-      ) {
-        baseNodeType = BaseNodeType.FundingAccount;
-      } else if ((baseNodeTypeQuery?.labels as string[]).includes('Language')) {
-        baseNodeType = BaseNodeType.Language;
-      } else if (
-        (baseNodeTypeQuery?.labels as string[]).includes('EthnologueLanguage')
-      ) {
-        baseNodeType = BaseNodeType.EthnologueLanguage;
-      } else if (
-        (baseNodeTypeQuery?.labels as string[]).includes('LiteracyMaterial')
-      ) {
-        baseNodeType = BaseNodeType.LiteracyMaterial;
-      } else if ((baseNodeTypeQuery?.labels as string[]).includes('Zone')) {
-        baseNodeType = BaseNodeType.Zone;
-      } else if ((baseNodeTypeQuery?.labels as string[]).includes('Region')) {
-        baseNodeType = BaseNodeType.Region;
-      } else if (
-        (baseNodeTypeQuery?.labels as string[]).includes('Organization')
-      ) {
-        baseNodeType = BaseNodeType.Organization;
-      } else if ((baseNodeTypeQuery?.labels as string[]).includes('Partner')) {
-        baseNodeType = BaseNodeType.Partner;
-      } else {
+      for (const value of Object.values(BaseNodeType)) {
+        if ((baseNodeTypeQuery?.labels as string[]).includes(value)) {
+          baseNodeType = value;
+          break;
+        }
+      }
+
+      if (!baseNodeType) {
         this.logger.error(baseNodeTypeQuery?.labels);
         throw new ServerException('Base node type not identified');
       }

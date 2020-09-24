@@ -17,4 +17,9 @@ export enum BaseNodeType {
   Region = 'Region',
   Organization = 'Organization',
   Partner = 'Partner',
+  Product = 'Product',
+  Song = 'Song',
+  Story = 'Story',
+  Unavailability = 'Unavailability',
+  Education = 'Education',
 }

@@ -30,6 +30,8 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
+import { AuthorizationService } from '../authorization/authorization.service';
+import { InternalRole } from '../authorization/dto';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
 import {
   CreateSong,
@@ -45,7 +47,8 @@ export class SongService {
     @Logger('song:service') private readonly logger: ILogger,
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
-    private readonly scriptureRefService: ScriptureReferenceService
+    private readonly scriptureRefService: ScriptureReferenceService,
+    private readonly authorizationService: AuthorizationService
   ) {}
 
   @OnIndex()
@@ -135,9 +138,9 @@ export class SongService {
       {
         key: 'name',
         value: input.name,
-        addToAdminSg: true,
+        addToAdminSg: false,
         addToWriterSg: false,
-        addToReaderSg: true,
+        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
         label: 'SongName',
@@ -154,13 +157,18 @@ export class SongService {
           }),
         ])
         .call(createBaseNode, ['Song', 'Producible'], secureProps)
-        .create([...this.permission('scriptureReferences', 'node')])
         .return('node.id as id')
         .first();
 
       if (!result) {
         throw new ServerException('failed to create a song');
       }
+
+      await this.authorizationService.addPermsForRole({
+        userId: session.userId as string,
+        baseNodeId: result.id,
+        role: InternalRole.Admin,
+      });
 
       await this.scriptureRefService.create(
         result.id,
