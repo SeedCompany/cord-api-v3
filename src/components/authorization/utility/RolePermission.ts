@@ -74,7 +74,7 @@ export function getRolePermissions(
         'mouEnd',
         'mouStartOverride',
         'mouEndOverride',
-        'type',
+        'types',
         'comment',
         'partnership',
         'organization',
