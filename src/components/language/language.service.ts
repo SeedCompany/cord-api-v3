@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { first, intersection } from 'lodash';
+import { compact, first, intersection } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   CalendarDate,
@@ -638,9 +638,10 @@ export class LanguageService {
         this.engagementService.readOne(engagementId, session)
       )
     );
-    const dates = engagments
-      .map((engagement) => engagement.startDate.value)
-      .filter((date) => date) as CalendarDate[];
+
+    const dates = compact(
+      engagments.map((engagement) => engagement.startDate.value)
+    );
 
     if (!dates.length) {
       return {
