@@ -70,7 +70,7 @@ describe('User e2e', () => {
     expect((actual.timezone as SecuredTimeZone).value?.name).toBe(
       fakeUser.timezone
     );
-    expect(actual.bio.value).toBe(fakeUser.bio);
+    expect(actual.about.value).toBe(fakeUser.about);
     expect(actual.status.value).toBe(fakeUser.status);
 
     return true;
@@ -107,7 +107,7 @@ describe('User e2e', () => {
     expect(actual.displayFirstName.value).toBe(user.displayFirstName);
     expect(actual.displayLastName.value).toBe(user.displayLastName);
     expect(actual.phone.value).toBeNull();
-    expect(actual.bio.value).toBeNull();
+    expect(actual.about.value).toBeNull();
     expect(actual.status.value).toBeNull();
     expect((actual.timezone as SecuredTimeZone).value?.name).toBe(
       user.timezone
@@ -129,7 +129,7 @@ describe('User e2e', () => {
       displayLastName: faker.name.lastName(),
       phone: faker.phone.phoneNumber(),
       timezone: 'America/New_York',
-      bio: 'new bio detail',
+      about: 'new about detail',
       status: UserStatus.Disabled,
     };
 
@@ -181,7 +181,7 @@ describe('User e2e', () => {
     expect((actual.timezone as SecuredTimeZone).value?.name).toBe(
       fakeUser.timezone
     );
-    expect(actual.bio.value).toBe(fakeUser.bio);
+    expect(actual.about.value).toBe(fakeUser.about);
     expect(actual.status.value).toBe(fakeUser.status);
 
     return true;

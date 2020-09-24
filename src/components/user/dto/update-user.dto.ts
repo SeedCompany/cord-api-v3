@@ -34,7 +34,7 @@ export abstract class UpdateUser {
   readonly timezone?: string;
 
   @Field({ nullable: true })
-  readonly bio?: string;
+  readonly about?: string;
 
   @Field(() => UserStatus, { nullable: true })
   readonly status?: UserStatus;

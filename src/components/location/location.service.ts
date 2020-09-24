@@ -896,7 +896,7 @@ export class LocationService {
   //   const user = (): User => ({
   //     id: id(),
   //     createdAt: inPast(),
-  //     bio: ro(''),
+  //     about: ro(''),
   //     displayFirstName: ro(faker.name.firstName()),
   //     displayLastName: ro(faker.name.lastName()),
   //     realFirstName: ro(faker.name.firstName()),
