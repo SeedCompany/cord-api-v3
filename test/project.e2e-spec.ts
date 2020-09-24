@@ -932,7 +932,7 @@ describe('Project e2e', () => {
    * It should create Partnership with Funding type before creating Project
    * Update Project's mou dates and check if the budget records are created.
    */
-  it.only('should create budget records after updating project with mou dates', async () => {
+  it('should create budget records after updating project with mou dates', async () => {
     const proj = await createProject(app, {
       name: faker.random.uuid() + ' project',
       mouStart: undefined,
