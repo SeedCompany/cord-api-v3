@@ -27,6 +27,7 @@ export function getRolePermissions(
         'rootDirectory',
         'member',
         'locations',
+        'engagement',
         'partnership',
         'budget',
         'modifiedAt',
@@ -47,7 +48,7 @@ export function getRolePermissions(
   ) {
     return {
       read: [], // since edit will have all props, nothing for read perm
-      edit: ['fiscalYear', 'amount', 'record', 'partnership'],
+      edit: ['fiscalYear', 'amount', 'record', 'partnership', 'organization'],
     };
   }
 
