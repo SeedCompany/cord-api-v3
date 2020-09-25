@@ -30,6 +30,8 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
+import { AuthorizationService } from '../authorization/authorization.service';
+import { InternalRole } from '../authorization/dto';
 import {
   CreatePartner,
   Partner,
@@ -48,7 +50,8 @@ export class PartnerService {
   constructor(
     @Logger('partner:service') private readonly logger: ILogger,
     private readonly config: ConfigService,
-    private readonly db: DatabaseService
+    private readonly db: DatabaseService,
+    private readonly authorizationService: AuthorizationService
   ) {}
 
   @OnIndex()
@@ -78,10 +81,6 @@ export class PartnerService {
       ])
       .call(createBaseNode, 'Partner', [])
       .create([
-        ...this.permission('organization', 'node'),
-        ...this.permission('pointOfContact', 'node'),
-      ])
-      .create([
         node('node'),
         relation('out', '', 'organization', { active: true, createdAt }),
         node('organization'),
@@ -93,6 +92,12 @@ export class PartnerService {
     if (!result) {
       throw new ServerException('failed to create partner');
     }
+
+    await this.authorizationService.addPermsForRole({
+      userId: session.userId as string,
+      baseNodeId: result.id,
+      role: InternalRole.Admin,
+    });
 
     if (input.pointOfContactId) {
       await this.db

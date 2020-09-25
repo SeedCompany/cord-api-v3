@@ -33,6 +33,8 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
+import { AuthorizationService } from '../authorization/authorization.service';
+import { InternalRole } from '../authorization/dto';
 import {
   CreateOrganization,
   Organization,
@@ -50,7 +52,8 @@ export class OrganizationService {
   constructor(
     @Logger('org:service') private readonly logger: ILogger,
     private readonly config: ConfigService,
-    private readonly db: DatabaseService
+    private readonly db: DatabaseService,
+    private readonly authorizationService: AuthorizationService
   ) {}
 
   @OnIndex()
@@ -91,11 +94,11 @@ export class OrganizationService {
       {
         key: 'name',
         value: input.name,
-        addToAdminSg: true,
-        addToWriterSg: true,
-        addToReaderSg: true,
-        isPublic: true,
-        isOrgPublic: true,
+        addToAdminSg: false,
+        addToWriterSg: false,
+        addToReaderSg: false,
+        isPublic: false,
+        isOrgPublic: false,
         label: 'OrgName',
       },
     ];
@@ -120,6 +123,12 @@ export class OrganizationService {
     if (!result) {
       throw new ServerException('failed to create default org');
     }
+
+    await this.authorizationService.addPermsForRole({
+      userId: session.userId as string,
+      baseNodeId: result.id,
+      role: InternalRole.Admin,
+    });
 
     const id = result.id;
 

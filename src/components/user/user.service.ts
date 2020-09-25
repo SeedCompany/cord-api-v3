@@ -35,6 +35,8 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { Role } from '../authorization';
+import { AuthorizationService } from '../authorization/authorization.service';
+import { InternalRole } from '../authorization/dto';
 import {
   OrganizationListInput,
   OrganizationService,
@@ -82,6 +84,7 @@ export class UserService {
     private readonly unavailabilities: UnavailabilityService,
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
+    private readonly authorizationService: AuthorizationService,
     @Logger('user:service') private readonly logger: ILogger
   ) {}
 
@@ -208,43 +211,12 @@ export class UserService {
       ...this.property('status', input.status),
       ...this.roleProperties(input.roles),
       ...this.property('title', input.title),
-      [
-        node('user'),
-        relation('in', '', 'member'),
-        node('adminSG', 'SecurityGroup', {
-          id: generate(),
-          name: `${input.realFirstName} ${input.realLastName} admin`,
-        }),
-      ],
-      [
-        node('user'),
-        relation('in', '', 'member'),
-        node('readerSG', 'SecurityGroup', {
-          id: generate(),
-          name: `${input.realFirstName} ${input.realLastName} users`,
-        }),
-      ],
-      ...this.rootUserAccess(session),
-      ...this.permission('realFirstName'),
-      ...this.permission('realLastName'),
-      ...this.permission('displayFirstName'),
-      ...this.permission('displayLastName'),
-      ...this.permission('email'),
-      ...this.permission('education'),
-      ...this.permission('organization'),
-      ...this.permission('unavailablity'),
-      ...this.permission('phone'),
-      ...this.permission('timezone'),
-      ...this.permission('bio'),
-      ...this.permission('status'),
-      ...this.permission('roles'),
-      ...this.permission('title'),
     ]);
 
     query.return({
       user: [{ id: 'id' }],
-      readerSG: [{ id: 'readerSGid' }],
-      adminSG: [{ id: 'adminSGid' }],
+      // readerSG: [{ id: 'readerSGid' }],
+      // adminSG: [{ id: 'adminSGid' }],
     });
     let result;
     try {
@@ -262,6 +234,12 @@ export class UserService {
     if (!result) {
       throw new ServerException('Failed to create user');
     }
+
+    await this.authorizationService.addPermsForRole({
+      userId: id,
+      baseNodeId: id,
+      role: InternalRole.Admin,
+    });
 
     // attach user to publicSG
 

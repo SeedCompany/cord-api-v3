@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
+import { AuthorizationModule } from '../../authorization/authorization.module';
 import { EducationResolver } from './education.resolver';
 import { EducationService } from './education.service';
 
 @Module({
+  imports: [AuthorizationModule],
   providers: [EducationResolver, EducationService],
   exports: [EducationService],
 })

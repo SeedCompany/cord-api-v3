@@ -30,6 +30,8 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
+import { AuthorizationService } from '../authorization/authorization.service';
+import { InternalRole } from '../authorization/dto';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
 import {
   CreateStory,
@@ -44,7 +46,8 @@ export class StoryService {
     @Logger('story:service') private readonly logger: ILogger,
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
-    private readonly scriptureRefService: ScriptureReferenceService
+    private readonly scriptureRefService: ScriptureReferenceService,
+    private readonly authorizationService: AuthorizationService
   ) {}
 
   @OnIndex()
@@ -134,9 +137,9 @@ export class StoryService {
       {
         key: 'name',
         value: input.name,
-        addToAdminSg: true,
+        addToAdminSg: false,
         addToWriterSg: false,
-        addToReaderSg: true,
+        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
         label: 'StoryName',
@@ -152,13 +155,18 @@ export class StoryService {
           }),
         ])
         .call(createBaseNode, ['Story', 'Producible'], secureProps)
-        .create([...this.permission('scriptureReferences', 'node')])
         .return('node.id as id')
         .first();
 
       if (!result) {
         throw new ServerException('failed to create a story');
       }
+
+      await this.authorizationService.addPermsForRole({
+        userId: session.userId as string,
+        baseNodeId: result.id,
+        role: InternalRole.Admin,
+      });
 
       await this.scriptureRefService.create(
         result.id,
