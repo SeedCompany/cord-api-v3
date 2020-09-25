@@ -72,7 +72,14 @@ export class SearchService {
 
   async search(input: SearchInput, session: ISession): Promise<SearchOutput> {
     // if type isn't specified default to all types
-    const types = input.type || SearchResultTypes;
+    const inputTypes = input.type || SearchResultTypes;
+
+    const types = [
+      ...inputTypes,
+      // Add Organization label when searching for Partners we can search for
+      // Partner by organization name
+      inputTypes.includes('Partner') ? ['Organization'] : [],
+    ];
 
     // Search for nodes based on input, only returning their id and "type"
     // which is based on their first valid search label.
@@ -102,12 +109,25 @@ export class SearchService {
     // Individually convert each result (id & type) to its search result
     // based on this.hydrators
     const hydrated = await Promise.all(
-      results.map(
-        async ({ id, type }): Promise<SearchResult | null> => {
-          const hydrator = this.hydrate(type);
-          return await hydrator(id, session);
-        }
-      )
+      results
+        // Map Org results to Org & Partner results based on types asked for
+        .flatMap((result) =>
+          result.type !== 'Organization'
+            ? result
+            : [
+                ...(inputTypes.includes('Organization') ? [result] : []),
+                ...(inputTypes.includes('Partner')
+                  ? // partner hydrator will need to handle id of org and partner
+                    [{ id: result.id, type: 'Partner' as const }]
+                  : []),
+              ]
+        )
+        .map(
+          async ({ id, type }): Promise<SearchResult | null> => {
+            const hydrator = this.hydrate(type);
+            return await hydrator(id, session);
+          }
+        )
     );
 
     return {
