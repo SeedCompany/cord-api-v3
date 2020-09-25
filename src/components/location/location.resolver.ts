@@ -1,21 +1,13 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { IdArg, ISession, Session } from '../../common';
 import {
-  CreateCountryInput,
-  CreateCountryOutput,
-  CreateRegionInput,
-  CreateRegionOutput,
-  CreateZoneInput,
-  CreateZoneOutput,
+  CreateLocationInput,
+  CreateLocationOutput,
   Location,
   LocationListInput,
   LocationListOutput,
-  UpdateCountryInput,
-  UpdateCountryOutput,
-  UpdateRegionInput,
-  UpdateRegionOutput,
-  UpdateZoneInput,
-  UpdateZoneOutput,
+  UpdateLocationInput,
+  UpdateLocationOutput,
 } from './dto';
 import { LocationService } from './location.service';
 
@@ -48,70 +40,26 @@ export class LocationResolver {
     return this.locationService.list(input, session);
   }
 
-  @Mutation(() => CreateZoneOutput, {
-    description: 'Create a zone',
+  @Mutation(() => CreateLocationOutput, {
+    description: 'Create a location',
   })
-  async createZone(
+  async createLocation(
     @Session() session: ISession,
-    @Args('input') { zone: input }: CreateZoneInput
-  ): Promise<CreateZoneOutput> {
-    const zone = await this.locationService.createZone(input, session);
-    return { zone };
+    @Args('input') { location: input }: CreateLocationInput
+  ): Promise<CreateLocationOutput> {
+    const location = await this.locationService.create(input, session);
+    return { location };
   }
 
-  @Mutation(() => CreateRegionOutput, {
-    description: 'Create a region',
-  })
-  async createRegion(
-    @Session() session: ISession,
-    @Args('input') { region: input }: CreateRegionInput
-  ): Promise<CreateRegionOutput> {
-    const region = await this.locationService.createRegion(input, session);
-    return { region };
-  }
-
-  @Mutation(() => CreateCountryOutput, {
-    description: 'Create a country',
-  })
-  async createCountry(
-    @Session() session: ISession,
-    @Args('input') { country: input }: CreateCountryInput
-  ): Promise<CreateCountryOutput> {
-    const country = await this.locationService.createCountry(input, session);
-    return { country };
-  }
-
-  @Mutation(() => UpdateZoneOutput, {
-    description: 'Update a zone',
+  @Mutation(() => UpdateLocationOutput, {
+    description: 'Update a location',
   })
   async updateZone(
     @Session() session: ISession,
-    @Args('input') { zone: input }: UpdateZoneInput
-  ): Promise<UpdateZoneOutput> {
-    const zone = await this.locationService.updateZone(input, session);
-    return { zone };
-  }
-
-  @Mutation(() => UpdateRegionOutput, {
-    description: 'Update a region',
-  })
-  async updateRegion(
-    @Session() session: ISession,
-    @Args('input') { region: input }: UpdateRegionInput
-  ): Promise<UpdateRegionOutput> {
-    const region = await this.locationService.updateRegion(input, session);
-    return { region };
-  }
-
-  @Mutation(() => UpdateCountryOutput, {
-    description: 'Update a country',
-  })
-  async updateCountry(
-    @Session() session: ISession,
-    @Args('input') { country: input }: UpdateCountryInput
-  ): Promise<UpdateCountryOutput> {
-    const country = await this.locationService.updateCountry(input, session);
-    return { country };
+    @Args('input') { location: input }: UpdateLocationInput
+  ): Promise<UpdateLocationOutput> {
+    const location = await this.locationService.update(input, session);
+    return { location };
   }
 
   @Mutation(() => Boolean, {
@@ -123,14 +71,5 @@ export class LocationResolver {
   ): Promise<boolean> {
     await this.locationService.delete(id, session);
     return true;
-  }
-
-  @Query(() => Boolean, {
-    description: 'Check location consistency',
-  })
-  async checkLocationConsistency(
-    @Session() session: ISession
-  ): Promise<boolean> {
-    return await this.locationService.checkLocationConsistency(session);
   }
 }

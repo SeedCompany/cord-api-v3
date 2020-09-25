@@ -1,95 +1,42 @@
-import {
-  createUnionType,
-  Field,
-  InterfaceType,
-  ObjectType,
-} from '@nestjs/graphql';
+import { Field, ObjectType } from '@nestjs/graphql';
 import {
   Resource,
   Secured,
-  SecuredKeys,
+  SecuredEnum,
   SecuredProperty,
   SecuredString,
+  Sensitivity,
 } from '../../../common';
-
-@InterfaceType()
-export abstract class Place {
-  @Field()
-  name: SecuredString;
-}
+import { LocationType } from './location-type.enum';
 
 @ObjectType({
-  implements: [Resource, Place],
+  description: SecuredEnum.descriptionFor('location type'),
 })
-export class Zone extends Resource implements Place {
-  @Field()
-  readonly name: SecuredString;
-
-  readonly director: Secured<string>;
-}
+export abstract class SecuredLocationType extends SecuredEnum(LocationType) {}
 
 @ObjectType({
-  description: SecuredProperty.descriptionFor('a zone'),
+  implements: [Resource],
 })
-export class SecuredZone extends SecuredProperty(Zone) {}
-
-@ObjectType({
-  implements: [Resource, Place],
-})
-export class Region extends Resource implements Place {
-  @Field()
-  readonly name: SecuredString;
-
-  readonly zone: Secured<string>;
-
-  readonly director: Secured<string>;
-}
-
-@ObjectType({
-  description: SecuredProperty.descriptionFor('a region'),
-})
-export class SecuredRegion extends SecuredProperty(Region) {}
-
-@ObjectType({
-  implements: [Resource, Place],
-})
-export class Country extends Resource implements Place {
+export class Location extends Resource {
   @Field()
   readonly name: SecuredString;
 
   @Field()
-  readonly region: SecuredRegion;
+  readonly type: SecuredLocationType;
+
+  @Field(() => Sensitivity)
+  readonly sensitivity: Sensitivity;
+
+  @Field()
+  readonly iso31663: SecuredString;
+
+  @Field()
+  readonly geographyName: SecuredString;
+
+  readonly fundingAccount: Secured<string>;
 }
 
 @ObjectType({
-  description: SecuredProperty.descriptionFor('a country'),
+  description: SecuredProperty.descriptionFor('a location'),
 })
-export class SecuredCountry extends SecuredProperty(Country) {}
-
-export const Location = createUnionType({
-  name: 'Location',
-  types: () => [Country, Region, Zone] as any, // ignore errors for abstract classes
-  resolveType: (value) => {
-    if ('region' in value) {
-      return Country;
-    }
-    if ('zone' in value) {
-      return Region;
-    }
-    return Zone;
-  },
-});
-export type Location = Country | Region | Zone;
-
-declare module '../../authorization/policies/mapping' {
-  interface TypeToDto {
-    Country: Country;
-    Region: Region;
-    Zone: Zone;
-  }
-  interface TypeToSecuredProps {
-    Country: SecuredKeys<Country>;
-    Region: SecuredKeys<Region>;
-    Zone: SecuredKeys<Zone>;
-  }
-}
+export class SecuredLocation extends SecuredProperty(Location) {}

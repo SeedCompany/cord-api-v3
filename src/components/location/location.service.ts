@@ -1,30 +1,22 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { inArray, node, relation } from 'cypher-query-builder';
-import { first, intersection } from 'lodash';
+import { Injectable } from '@nestjs/common';
+import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { generate } from 'shortid';
 import {
-  InputException,
+  DuplicateException,
   ISession,
   NotFoundException,
+  Sensitivity,
   ServerException,
 } from '../../common';
 import {
-  addAllMetaPropertiesOfChildBaseNodes,
-  addAllSecureProperties,
-  addPropertyCoalesceWithClause,
-  addShapeForBaseNodeMetaProperty,
-  addShapeForChildBaseNodeMetaProperty,
-  ChildBaseNodeMetaProperty,
   ConfigService,
+  createBaseNode,
   DatabaseService,
   ILogger,
   Logger,
   matchRequestingUser,
-  matchSession,
-  matchUserPermissions,
   OnIndex,
-  property,
+  permission,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -43,24 +35,22 @@ import {
 import { AuthorizationService } from '../authorization/authorization.service';
 import { InternalRole } from '../authorization/dto';
 import {
-  Country,
-  CreateCountry,
-  CreateRegion,
-  CreateZone,
+  CreateLocation,
   Location,
   LocationListInput,
   LocationListOutput,
-  Region,
-  UpdateCountry,
-  UpdateRegion,
-  UpdateZone,
-  Zone,
+  UpdateLocation,
 } from './dto';
 
 @Injectable()
 export class LocationService {
   private readonly securedProperties = {
     name: true,
+    fundingAccount: true,
+    iso31663: true,
+    type: true,
+    geographyName: true,
+    sensitivity: true,
   };
 
   constructor(
@@ -74,338 +64,138 @@ export class LocationService {
   @OnIndex()
   async createIndexes() {
     return [
-      // ZONE NODE
-      'CREATE CONSTRAINT ON (n:Zone) ASSERT EXISTS(n.id)',
-      'CREATE CONSTRAINT ON (n:Zone) ASSERT n.id IS UNIQUE',
+      'CREATE CONSTRAINT ON (n:Location) ASSERT EXISTS(n.id)',
+      'CREATE CONSTRAINT ON (n:Location) ASSERT n.id IS UNIQUE',
+      'CREATE CONSTRAINT ON (n:Location) ASSERT EXISTS(n.createdAt)',
 
-      'CREATE CONSTRAINT ON (n:Zone) ASSERT EXISTS(n.createdAt)',
-
-      // ZONE NAME REL
-      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.active)',
-      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
-
-      // ZONE NAME NODE
+      // LOCATION NAME NODE
       'CREATE CONSTRAINT ON (n:LocationName) ASSERT EXISTS(n.value)',
       'CREATE CONSTRAINT ON (n:LocationName) ASSERT n.value IS UNIQUE',
 
-      // REGION NODE
-      'CREATE CONSTRAINT ON (n:Region) ASSERT EXISTS(n.id)',
-      'CREATE CONSTRAINT ON (n:Region) ASSERT n.id IS UNIQUE',
+      // GEOGRAPHY NAME NODE
+      'CREATE CONSTRAINT ON (n:GeographyName) ASSERT EXISTS(n.value)',
+      'CREATE CONSTRAINT ON (n:GeographyName) ASSERT n.value IS UNIQUE',
 
-      'CREATE CONSTRAINT ON (n:Region) ASSERT EXISTS(n.createdAt)',
+      // LOCATION TYPE NODE
+      'CREATE CONSTRAINT ON (n:LocationType) ASSERT EXISTS(n.value)',
 
-      // REGION NAME REL
-      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.active)',
-      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
-
-      // REGION NAME NODE
-      'CREATE CONSTRAINT ON (n:LocationName) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:LocationName) ASSERT n.value IS UNIQUE',
-
-      // COUNTRY NODE
-      'CREATE CONSTRAINT ON (n:Country) ASSERT EXISTS(n.id)',
-      'CREATE CONSTRAINT ON (n:Country) ASSERT n.id IS UNIQUE',
-
-      'CREATE CONSTRAINT ON (n:Country) ASSERT EXISTS(n.createdAt)',
-
-      // COUNTRY NAME REL
-      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.active)',
-      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
-
-      // COUNTRY NAME NODE
-      'CREATE CONSTRAINT ON (n:LocationName) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:LocationName) ASSERT n.value IS UNIQUE',
+      // ISO-3166-3 NODE
+      'CREATE CONSTRAINT ON (n:Iso-3166-3) ASSERT EXISTS(n.value)',
+      'CREATE CONSTRAINT ON (n:Iso-3166-3) ASSERT n.value IS UNIQUE',
     ];
   }
 
-  async createZone(
-    { directorId, ...input }: CreateZone,
-    session: ISession
-  ): Promise<Zone> {
-    let id = generate();
+  async create(input: CreateLocation, session: ISession): Promise<Location> {
+    const checkName = await this.db
+      .query()
+      .match([node('name', 'LocationName', { value: input.name })])
+      .return('name')
+      .first();
+
+    if (checkName) {
+      throw new DuplicateException(
+        'location.name',
+        'Location with this name already exists.'
+      );
+    }
+
     const createdAt = DateTime.local();
 
-    try {
-      const createZone = await this.db
+    const secureProps = [
+      {
+        key: 'name',
+        value: input.name,
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+        label: 'FieldRegionName',
+      },
+      {
+        key: 'iso-3166-3',
+        value: input.iso31663,
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+        label: 'Iso-3166-3',
+      },
+      {
+        key: 'type',
+        value: input.type,
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+        label: 'LocationType',
+      },
+      {
+        key: 'geographyName',
+        value: input.geographyName,
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+        label: 'GeographyName',
+      },
+      {
+        key: 'sensitivity',
+        value: input.sensitivity,
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+    ];
+
+    // create location
+    const query = this.db
+      .query()
+      .call(matchRequestingUser, session)
+      .match([node('root', 'User', { id: this.config.rootAdmin.id })])
+      .call(createBaseNode, 'Location', secureProps)
+      .create([...permission('fundingAccount', 'node')])
+      .return('node.id as id');
+
+    const result = await query.first();
+    if (!result) {
+      throw new ServerException('failed to create location');
+    }
+
+    if (input.fundingAccountId) {
+      await this.db
         .query()
-        .match(matchSession(session, { withAclEdit: 'canCreateZone' }))
+        .matchNode('location', 'Location', {
+          id: result.id,
+        })
+        .matchNode('fundingAccount', 'FundingAccount', {
+          id: input.fundingAccountId,
+        })
         .create([
-          [
-            node('newZone', ['Zone', 'BaseNode'], {
-              createdAt,
-              id,
-            }),
-          ],
-          ...property('name', input.name, 'newZone'),
+          node('location'),
+          relation('out', '', 'fundingAccount', {
+            active: true,
+            createdAt,
+          }),
+          node('fundingAccount'),
         ])
-        .return('newZone.id as id')
-        .first();
-
-      await this.authorizationService.addPermsForRole(
-        InternalRole.Admin,
-        'Zone',
-        createZone?.id,
-        session.userId as string
-      );
-
-      // connect director User to zone
-      if (directorId) {
-        const query = `
-      MATCH (director:User {id: $directorId}),
-        (zone:Zone {id: $id})
-      CREATE (director)<-[:director {active: true, createdAt: datetime()}]-(zone)
-      RETURN  zone.id as id
-      `;
-        const addDirector = await this.db
-          .query()
-          .raw(query, {
-            userId: session.userId,
-            directorId,
-            id,
-          })
-          .first();
-        if (!addDirector) {
-          throw new Error('already exists, try finding it');
-        }
-      }
-    } catch {
-      // creating this node may fail because the node exists.  Looking up the node by name
-      const lookup = this.db
-        .query()
-        .match([
-          node('zone', 'Zone'),
-          relation('out', 'name', 'name', { active: true }),
-          node('zoneName', 'Property', { value: input.name }),
-        ])
-        .return({
-          zone: [{ id: 'zoneId' }],
-        });
-      const zone = await lookup.first();
-      if (zone) {
-        id = zone.zoneId;
-      } else {
-        throw new ServerException(
-          'Cannot create Zone, cannot find matching name'
-        );
-      }
+        .run();
     }
 
-    try {
-      return await this.readOneZone(id, session);
-    } catch (e) {
-      throw new ServerException('Could not create zone', e);
-    }
-  }
-
-  async createRegion(
-    { zoneId, directorId, ...input }: CreateRegion,
-    session: ISession
-  ): Promise<Region> {
-    let id = generate();
-    const createdAt = DateTime.local();
-
-    try {
-      const createRegion = await this.db
-        .query()
-        .match(matchSession(session))
-        .create([
-          [
-            node('newRegion', ['Region', 'BaseNode'], {
-              createdAt,
-              id,
-            }),
-          ],
-          ...property('name', input.name, 'newRegion'),
-        ])
-        .return('newRegion.id as id')
-        .first();
-
-      this.logger.debug(`Region created`, { input, userId: session.userId });
-
-      await this.authorizationService.addPermsForRole(
-        InternalRole.Admin,
-        'Region',
-        createRegion?.id,
-        session.userId as string
-      );
-
-      // connect the Zone to Region
-
-      if (zoneId) {
-        const query = `
-          MATCH (zone:Zone {id: $zoneId}),
-            (region:Region {id: $id})
-          CREATE (zone)<-[:zone { active: true, createdAt: datetime() }]-(region)
-          RETURN region.id as id
-        `;
-
-        await this.db
-          .query()
-          .raw(query, {
-            zoneId,
-            id,
-          })
-          .first();
-      }
-      // and region to director
-
-      if (directorId) {
-        const query = `
-          MATCH
-            (region:Region {id: $id}),
-            (director:User {id: $directorId})
-          CREATE (director)<-[:director { active: true, createdAt: datetime() }]-(region)
-          RETURN region.id as id
-        `;
-
-        await this.db
-          .query()
-          .raw(query, {
-            id,
-            directorId,
-          })
-          .first();
-      }
-    } catch (exception) {
-      // creating this region may have failed because the name already exists.  Looking up the Region
-      const lookup = this.db
-        .query()
-        .match([
-          node('region', 'Region'),
-          relation('out', 'name', 'name', { active: true }),
-          node('regionName', 'Property', { value: input.name }),
-        ])
-        .return({ region: [{ id: 'regionId' }] });
-      const region = await lookup.first();
-      if (region) {
-        id = region.regionId;
-      } else {
-        this.logger.warning(`Could not create region`, {
-          exception,
-        });
-        throw new ServerException('Could not create region', exception);
-      }
-    }
-    try {
-      return await this.readOneRegion(id, session);
-    } catch (e) {
-      throw new ServerException('Could not create region', e);
-    }
-  }
-
-  async createCountry(
-    { regionId, ...input }: CreateCountry,
-    session: ISession
-  ): Promise<Country> {
-    let id = generate();
-    const createdAt = DateTime.local();
-
-    try {
-      const createCountry = this.db
-        .query()
-        .match(matchSession(session))
-        .create([
-          [
-            node('newCountry', ['Country', 'BaseNode'], {
-              createdAt,
-              id,
-            }),
-          ],
-          ...property('name', input.name, 'newCountry'),
-        ])
-        .return('newCountry.id as id');
-      const result = await createCountry.first();
-
-      this.logger.debug(`country created`);
-
-      await this.authorizationService.addPermsForRole(
-        InternalRole.Admin,
-        'Country',
-        result?.id,
-        session.userId as string
-      );
-
-      // connect the Region to Country
-      if (regionId) {
-        const query = `
-          MATCH (region:Region {id: $regionId}),
-            (country:Country {id: $id})
-          CREATE (country)-[:region { active: true, createdAt: datetime()}]->(region)
-          RETURN country.id as id
-        `;
-
-        await this.db
-          .query()
-          .raw(query, {
-            regionId,
-            id,
-          })
-          .first();
-      }
-    } catch (exception) {
-      // creating this region may have failed because the name already exists.  Looking up the Region
-      const lookup = this.db
-        .query()
-        .match([
-          node('country', 'Country'),
-          relation('out', 'name', 'name', { active: true }),
-          node('countryName', 'Property', { value: input.name }),
-        ])
-        .return({ country: [{ id: 'countryId' }] });
-      const country = await lookup.first();
-      if (country) {
-        id = country.countryId;
-      } else {
-        this.logger.warning(`Could not create country`, {
-          exception,
-        });
-        throw new ServerException('Could not create country', exception);
-      }
-    }
-    try {
-      return await this.readOneCountry(id, session);
-    } catch (e) {
-      throw new ServerException('Could not create country', e);
-    }
+    this.logger.debug(`location created`, { id: result.id });
+    return await this.readOne(result.id, session);
   }
 
   async readOne(id: string, session: ISession): Promise<Location> {
-    const query = `
-    MATCH (place {id: $id}) RETURN labels(place) as labels
-    `;
-    const results = await this.db.query().raw(query, { id }).first();
-    // MATCH one of these labels.
-    const label = first(
-      intersection(results?.labels, ['Country', 'Region', 'Zone'])
-    );
-
-    this.logger.debug('Looking for ', {
-      label,
-      id,
+    this.logger.debug(`Read Location`, {
+      id: id,
       userId: session.userId,
     });
-    switch (label) {
-      case 'Zone': {
-        return await this.readOneZone(id, session);
-      }
-      case 'Region': {
-        return await this.readOneRegion(id, session);
-      }
-      case 'Country': {
-        return await this.readOneCountry(id, session);
-      }
-      default: {
-        throw new InputException('Not a location', 'location.id');
-      }
-    }
-  }
-
-  async readOneZone(id: string, session: ISession): Promise<Zone> {
-    this.logger.debug(`Read Zone`, { id, userId: session.userId });
-
-    if (!id) {
-      throw new NotFoundException('no id given', 'zone.id');
-    }
 
     if (!session.userId) {
       session.userId = this.config.anonUser.id;
@@ -414,400 +204,70 @@ export class LocationService {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([node('node', 'Zone', { id: id })])
+      .match([node('node', 'Location', { id: id })])
       .call(matchPermList, 'requestingUser')
       .call(matchPropList, 'permList')
       .optionalMatch([
         node('node'),
-        relation('out', '', 'director', { active: true }),
-        node('director', 'User'),
+        relation('out', '', 'fundingAccount', { active: true }),
+        node('fundingAccount', 'FundingAccount'),
       ])
-      .return('propList, permList, node, director.id as directorId')
+      .return('propList, permList, node, fundingAccount.id as fundingAccountId')
       .asResult<
-        StandardReadResult<DbPropsOfDto<Zone>> & { directorId: string }
-      >();
-
-    const result = await query.first();
-    if (!result) {
-      this.logger.error(`Could not find zone`);
-      throw new NotFoundException('Could not find zone', 'zone.id');
-    }
-
-    const secured = parseSecuredProperties(result.propList, result.permList, {
-      name: true,
-      director: true,
-    });
-
-    return {
-      ...parseBaseNodeProperties(result.node),
-      ...secured,
-      director: {
-        ...secured.director,
-        value: result.directorId,
-      },
-    };
-  }
-
-  async readOneRegion(id: string, session: ISession): Promise<Region> {
-    this.logger.debug(`Read Region`, { id, userId: session.userId });
-
-    if (!id) {
-      throw new NotFoundException('no id given', 'region.id');
-    }
-
-    if (!session.userId) {
-      session.userId = this.config.anonUser.id;
-    }
-
-    const query = this.db
-      .query()
-      .call(matchRequestingUser, session)
-      .match([node('node', 'Region', { id: id })])
-      .call(matchPermList, 'requestingUser')
-      .call(matchPropList, 'permList')
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'director', { active: true }),
-        node('director', 'User'),
-      ])
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'zone', { active: true }),
-        node('zone', 'Zone'),
-      ])
-      .return([
-        'propList, permList, node',
-        'director.id as directorId',
-        'zone.id as zoneId',
-      ])
-      .asResult<
-        StandardReadResult<DbPropsOfDto<Region>> & {
-          directorId: string;
-          zoneId: string;
+        StandardReadResult<DbPropsOfDto<Location>> & {
+          fundingAccountId: string;
         }
       >();
 
     const result = await query.first();
+
     if (!result) {
-      this.logger.error(`Could not find region`);
-      throw new NotFoundException('Could not find region', 'region.id');
+      throw new NotFoundException('Could not find location', 'location.id');
     }
 
-    const secured = parseSecuredProperties(result.propList, result.permList, {
-      name: true,
-      director: true,
-      zone: true,
-    });
+    const secured = parseSecuredProperties(
+      result.propList,
+      result.permList,
+      this.securedProperties
+    );
 
     return {
       ...parseBaseNodeProperties(result.node),
       ...secured,
-      director: {
-        ...secured.director,
-        value: result.directorId,
+      fundingAccount: {
+        ...secured.fundingAccount,
+        value: result.fundingAccountId,
       },
-      zone: {
-        ...secured.zone,
-        value: result.zoneId,
-      },
+      sensitivity: secured.sensitivity.value || Sensitivity.High,
     };
   }
 
-  async readOneCountry(id: string, session: ISession): Promise<Country> {
-    this.logger.debug(`Query readOne Country`, { id, userId: session.userId });
-
-    if (!id) {
-      throw new InputException('No country id to search for', 'country.id');
-    }
-
-    const props = ['name'];
-    const baseNodeMetaProps = ['id', 'createdAt'];
-
-    const childBaseNodeMetaProps: ChildBaseNodeMetaProperty[] = [
-      {
-        parentBaseNodePropertyKey: 'region',
-        parentRelationDirection: 'out',
-        childBaseNodeLabel: 'Region',
-        childBaseNodeMetaPropertyKey: 'id',
-        returnIdentifier: 'regionId',
-      },
-    ];
-
-    const query = this.db
-      .query()
-      .call(matchRequestingUser, session)
-      .call(matchUserPermissions, 'Country', id)
-      .call(addAllSecureProperties, ...props)
-      .call(addAllMetaPropertiesOfChildBaseNodes, ...childBaseNodeMetaProps)
-      .with([
-        ...props.map(addPropertyCoalesceWithClause),
-        ...childBaseNodeMetaProps.map(addShapeForChildBaseNodeMetaProperty),
-        ...baseNodeMetaProps.map(addShapeForBaseNodeMetaProperty),
-        'node',
-        'coalesce(regionReadPerm.read, false) as canReadRegion',
-        'coalesce(regionEditPerm.edit, false) as canEditRegion',
-      ])
-      .returnDistinct([
-        ...props,
-        ...baseNodeMetaProps,
-        ...childBaseNodeMetaProps.map((x) => x.returnIdentifier),
-        'canReadRegion',
-        'canEditRegion',
-        'labels(node) as labels',
-      ]);
-
-    const result = await query.first();
-    if (!result) {
-      this.logger.error(`Could not find country`);
-      throw new NotFoundException('Could not find country', 'country.id');
-    }
-
-    const response: any = {
-      ...result,
-      region: {
-        value: await this.readOneRegion(result.regionId, session),
-        canRead: !!result.canReadRegion,
-        canEdit: !!result.canEditRegion,
-      },
-    };
-
-    return (response as unknown) as Country;
-  }
-
-  async updateZone(input: UpdateZone, session: ISession): Promise<Zone> {
-    const zone = await this.readOneZone(input.id, session);
-
-    // update director
-    if (input.directorId && input.directorId !== zone.director.value) {
-      const query = `
-        MATCH
-          (token:Token {
-            active: true,
-            value: $token
-          })<-[:token {active: true}]-
-          (requestingUser:User {
-
-            id: $requestingUserId
-          }),
-          (newDirector:User {id: $directorId}),
-          (zone:Zone {id: $id})-[rel:director {active: true}]->(oldDirector:User)
-        DELETE rel
-        CREATE (newDirector)<-[:director {active: true, createdAt: datetime()}]-(zone)
-        RETURN  zone.id as id
-      `;
-
-      await this.db
-        .query()
-        .raw(query, {
-          directorId: input.directorId,
-          id: input.id,
-
-          requestingUserId: session.userId,
-          token: session.token,
-          userId: session.userId,
-        })
-        .first();
-    }
+  async update(input: UpdateLocation, session: ISession): Promise<Location> {
+    const location = await this.readOne(input.id, session);
 
     await this.db.sgUpdateProperties({
       session,
-      object: zone,
-      props: ['name'],
+      object: location,
+      props: ['name', 'iso31663', 'type', 'geographyName', 'sensitivity'],
       changes: input,
-      nodevar: 'zone',
+      nodevar: 'location',
     });
 
-    return await this.readOneZone(input.id, session);
+    return await this.readOne(input.id, session);
   }
 
-  async updateRegion(input: UpdateRegion, session: ISession): Promise<Region> {
-    const region = await this.readOneRegion(input.id, session);
-
-    // update director
-    if (input.directorId && input.directorId !== region.director.value) {
-      const query = `
-          MATCH
-            (token:Token {
-              active: true,
-              value: $token
-            })<-[:token {active: true}]-
-            (requestingUser:User {
-
-              id: $requestingUserId
-            }),
-            (newDirector:User {id: $directorId}),
-            (region:Region {id: $id})-[rel:director {active: true}]->(oldDirector:User)
-          DELETE rel
-          CREATE (newDirector)<-[:director {active: true, createdAt: datetime()}]-(region)
-          RETURN  region.id as id
-        `;
-
-      await this.db
-        .query()
-        .raw(query, {
-          directorId: input.directorId,
-          id: input.id,
-
-          requestingUserId: session.userId,
-          token: session.token,
-          userId: session.userId,
-        })
-        .first();
-    }
-
-    // update zone
-    if (input.zoneId && input.zoneId !== region.zone.value) {
-      const query = `
-          MATCH
-            (token:Token {
-              active: true,
-              value: $token
-            })<-[:token {active: true}]-
-            (requestingUser:User {
-
-              id: $requestingUserId
-            }),
-            (newZone:Zone {id: $zoneId}),
-            (region:Region {id: $id})-[rel:zone {active: true}]->(oldZone:Zone)
-          DELETE rel
-          CREATE (newZone)<-[:zone {active: true, createdAt: datetime()}]-(region)
-          RETURN  region.id as id
-        `;
-
-      await this.db
-        .query()
-        .raw(query, {
-          directorId: input.directorId,
-          id: input.id,
-
-          requestingUserId: session.userId,
-          token: session.token,
-          userId: session.userId,
-          zoneId: input.zoneId,
-        })
-        .first();
-    }
-
-    await this.db.sgUpdateProperties({
-      session,
-      object: region,
-      props: ['name'],
-      changes: input,
-      nodevar: 'region',
-    });
-    return await this.readOneRegion(input.id, session);
-  }
-
-  async updateCountry(
-    input: UpdateCountry,
-    session: ISession
-  ): Promise<Country> {
-    const country = await this.readOneCountry(input.id, session);
-
-    // update region
-    if (input.regionId && input.regionId !== country.region.value?.id) {
-      const query = `
-          MATCH
-            (token:Token {
-              active: true,
-              value: $token
-            })<-[:token {active: true}]-
-            (requestingUser:User {
-
-              id: $requestingUserId
-            }),
-            (newRegion:Region {id: $regionId}),
-            (country:Country {id: $id})-[rel:region {active: true}]->(oldZone:Region)
-          DELETE rel
-          CREATE (newRegion)<-[:region {active: true, createdAt: datetime()}]-(country)
-          RETURN  country.id as id
-        `;
-
-      await this.db
-        .query()
-        .raw(query, {
-          id: input.id,
-
-          regionId: input.regionId,
-          requestingUserId: session.userId,
-          token: session.token,
-          userId: session.userId,
-        })
-        .first();
-    }
-
-    await this.db.sgUpdateProperties({
-      session,
-      object: country,
-      props: ['name'],
-      changes: input,
-      nodevar: 'country',
-    });
-
-    return await this.readOneCountry(input.id, session);
-  }
-
-  async delete(id: string, session: ISession): Promise<void> {
-    try {
-      await this.db
-        .query()
-        .raw(
-          `
-        MATCH
-        (token:Token {
-          active: true,
-          value: $token
-        })
-        <-[:token {active: true}]-
-        (requestingUser:User {
-
-          id: $requestingUserId,
-          canDeleteLocation: true
-        }),
-        (place {
-
-          id: $id
-        })
-        DETACH DELETE place
-        `,
-          {
-            id,
-
-            requestingUserId: session.userId,
-            token: session.token,
-          }
-        )
-        .run();
-
-      // if (!object) {
-      //   throw new NotFoundException('Location not found');
-      // }
-    } catch (exception) {
-      this.logger.error('Could not delete location', { exception });
-      throw new ServerException('Could not delete location', exception);
-    }
+  async delete(_id: string, _session: ISession): Promise<void> {
+    // Not Implemented
   }
 
   async list(
     { filter, ...input }: LocationListInput,
     session: ISession
   ): Promise<LocationListOutput> {
-    const types = filter.types ?? ['Zone', 'Region', 'Country'];
-
+    const label = 'Location';
     const query = this.db
       .query()
-      .match([requestingUser(session), ...permissionsOfNode()])
-      .match([
-        node('name', ['Property', 'LocationName']),
-        relation('in', '', 'name'),
-        node('node'),
-      ])
-      .with(
-        'name, node, head([x IN labels(node) WHERE x <> "BaseNode"]) as label'
-      )
-      .where({
-        label: inArray(types),
-      })
+      .match([requestingUser(session), ...permissionsOfNode(label)])
       .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
         sort in this.securedProperties
           ? q
@@ -822,167 +282,5 @@ export class LocationService {
       );
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
-  }
-
-  // private randomLocation() {
-  //   const id = () => faker.random.alphaNumeric(8);
-  //   const inPast = () => DateTime.fromJSDate(faker.date.past());
-  //   const ro = <T>(value: T) => ({
-  //     value,
-  //     canRead: true,
-  //     canEdit: false,
-  //   });
-
-  //   const user = (): User => ({
-  //     id: id(),
-  //     createdAt: inPast(),
-  //     about: ro(''),
-  //     displayFirstName: ro(faker.name.firstName()),
-  //     displayLastName: ro(faker.name.lastName()),
-  //     realFirstName: ro(faker.name.firstName()),
-  //     realLastName: ro(faker.name.lastName()),
-  //     email: ro(faker.internet.email()),
-  //     phone: ro(faker.phone.phoneNumber()),
-  //     timezone: ro(faker.lorem.words(2)),
-  //   });
-
-  //   const region: Zone = {
-  //     id: id(),
-  //     createdAt: inPast(),
-  //     name: ro(faker.address.country()),
-  //     director: ro(user()),
-  //   };
-
-  //   const area: Region = {
-  //     id: id(),
-  //     createdAt: inPast(),
-  //     name: ro(faker.address.state()),
-  //     zone: ro(region),
-  //     director: ro(user()),
-  //   };
-
-  //   const country: Country = {
-  //     id: id(),
-  //     createdAt: inPast(),
-  //     name: ro(faker.address.city()),
-  //     region: ro(area),
-  //   };
-
-  //   return faker.random.arrayElement([area, region, country]);
-  // }
-
-  async checkZoneConsistency(session: ISession): Promise<boolean> {
-    const zones = await this.db
-      .query()
-      .match([matchSession(session), [node('zone', 'Zone')]])
-      .return('zone.id as id')
-      .run();
-
-    return (
-      (
-        await Promise.all(
-          zones.map(async (zone) => {
-            return await this.db.isRelationshipUnique({
-              session,
-              id: zone.id,
-              relName: 'director',
-              srcNodeLabel: 'Zone',
-            });
-          })
-        )
-      ).every((n) => n) &&
-      (
-        await Promise.all(
-          zones.map(async (zone) => {
-            return await this.db.hasProperties({
-              session,
-              id: zone.id,
-              props: ['name'],
-              nodevar: 'zone',
-            });
-          })
-        )
-      ).every((n) => n)
-    );
-  }
-
-  async checkRegionConsistency(session: ISession): Promise<boolean> {
-    const regions = await this.db
-      .query()
-      .match([matchSession(session), [node('region', 'Region')]])
-      .return('region.id as id')
-      .run();
-
-    return (
-      (
-        await Promise.all(
-          regions.map(async (region) => {
-            return await this.db.isRelationshipUnique({
-              session,
-              id: region.id,
-              relName: 'zone',
-              srcNodeLabel: 'Region',
-            });
-          })
-        )
-      ).every((n) => n) &&
-      (
-        await Promise.all(
-          regions.map(async (region) => {
-            return await this.db.hasProperties({
-              session,
-              id: region.id,
-              props: ['name'],
-              nodevar: 'region',
-            });
-          })
-        )
-      ).every((n) => n)
-    );
-  }
-
-  async checkCountryConsistency(session: ISession): Promise<boolean> {
-    const countries = await this.db
-      .query()
-      .match([matchSession(session), [node('country', 'Country')]])
-      .return('country.id as id')
-      .run();
-
-    return (
-      (
-        await Promise.all(
-          countries.map(async (country) => {
-            return await this.db.isRelationshipUnique({
-              session,
-              id: country.id,
-              relName: 'region',
-              srcNodeLabel: 'Country',
-            });
-          })
-        )
-      ).every((n) => n) &&
-      (
-        await Promise.all(
-          countries.map(async (country) => {
-            return await this.db.hasProperties({
-              session,
-              id: country.id,
-              props: ['name'],
-              nodevar: 'country',
-            });
-          })
-        )
-      ).every((n) => n)
-    );
-  }
-
-  async checkLocationConsistency(session: ISession): Promise<boolean> {
-    return (
-      (await this.checkCountryConsistency(session)) &&
-      (await this.checkRegionConsistency(session)) &&
-      (await this.checkZoneConsistency(session))
-    );
-
-    return true;
   }
 }
