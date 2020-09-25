@@ -7,6 +7,8 @@ import { BudgetModule } from './components/budget/budget.module';
 import { CeremonyModule } from './components/ceremony/ceremony.module';
 import { EngagementModule } from './components/engagement/engagement.module';
 import { FavoriteModule } from './components/favorites/favorite.module';
+import { FieldRegionModule } from './components/field-region/field-region.module';
+import { FieldZonenModule } from './components/field-zone/field-zone.module';
 import { FileModule } from './components/file/file.module';
 import { FilmModule } from './components/film/film.module';
 import { FundingAccountModule } from './components/funding-account/funding-account.module';
@@ -56,6 +58,8 @@ import { CoreModule, LoggerModule } from './core';
     TimeZoneModule,
     PartnerModule,
     FundingAccountModule,
+    FieldRegionModule,
+    FieldZonenModule,
   ],
   controllers: [],
   providers: [DateTimeScalar, DateScalar],
