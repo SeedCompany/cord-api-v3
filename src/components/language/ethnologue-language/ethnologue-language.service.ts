@@ -185,16 +185,15 @@ export class EthnologueLanguageService {
       );
     }
 
-    const ethnologue = parseSecuredProperties(
-      result.propList,
-      result.permList,
-      {
+    const ethnologue = {
+      id: 'asdf',
+      ...parseSecuredProperties(result.propList, result.permList, {
         code: true,
         provisionalCode: true,
         name: true,
         population: true,
-      }
-    );
+      }),
+    };
 
     return ethnologue;
   }
