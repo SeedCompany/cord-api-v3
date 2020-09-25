@@ -60,38 +60,6 @@ export class EthnologueLanguageService {
     ];
   };
 
-  // helper method for defining properties
-  permission = (property: string) => {
-    return [
-      [
-        node('adminSG'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property,
-
-          read: true,
-          edit: true,
-          admin: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('newEthnologueLanguage'),
-      ],
-      [
-        node('readerSG'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property,
-
-          read: true,
-          edit: false,
-          admin: false,
-        }),
-        relation('out', '', 'baseNode'),
-        node('newEthnologueLanguage'),
-      ],
-    ];
-  };
-
   propMatch = (property: string) => {
     const perm = 'canRead' + upperFirst(property);
     return [
@@ -121,9 +89,6 @@ export class EthnologueLanguageService {
       {
         key: 'code',
         value: input.code,
-        addToAdminSg: false,
-        addToWriterSg: false,
-        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
         label: 'Code',
@@ -131,9 +96,6 @@ export class EthnologueLanguageService {
       {
         key: 'provisionalCode',
         value: input.provisionalCode,
-        addToAdminSg: false,
-        addToWriterSg: false,
-        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
         label: 'ProvisionalCode',
@@ -141,9 +103,6 @@ export class EthnologueLanguageService {
       {
         key: 'name',
         value: input.name,
-        addToAdminSg: false,
-        addToWriterSg: false,
-        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
         label: 'Name',
@@ -151,9 +110,6 @@ export class EthnologueLanguageService {
       {
         key: 'population',
         value: input.population,
-        addToAdminSg: false,
-        addToWriterSg: false,
-        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
         label: 'Population',
@@ -163,7 +119,6 @@ export class EthnologueLanguageService {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([node('root', 'User', { id: this.config.rootAdmin.id })])
       .call(
         createBaseNode,
         'EthnologueLanguage',
@@ -186,9 +141,6 @@ export class EthnologueLanguageService {
     });
 
     const id = result.id;
-
-    // add root admin to new org as an admin
-    await this.db.addRootAdminToBaseNodeAsAdmin(id, 'EthnologueLanguage');
 
     this.logger.debug(`ethnologue language created`, { id });
 

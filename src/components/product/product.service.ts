@@ -107,9 +107,6 @@ export class ProductService {
       {
         key: 'mediums',
         value: input.mediums,
-        addToAdminSg: false,
-        addToWriterSg: false,
-        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
         label: 'ProductMedium',
@@ -117,9 +114,6 @@ export class ProductService {
       {
         key: 'purposes',
         value: input.purposes,
-        addToAdminSg: false,
-        addToWriterSg: false,
-        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
         label: 'ProductPurpose',
@@ -127,9 +121,6 @@ export class ProductService {
       {
         key: 'methodology',
         value: input.methodology,
-        addToAdminSg: false,
-        addToWriterSg: false,
-        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
         label: 'ProductMethodology',
@@ -137,9 +128,6 @@ export class ProductService {
       {
         key: 'isOverriding',
         value: false,
-        addToAdminSg: false,
-        addToWriterSg: false,
-        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
         label: '',

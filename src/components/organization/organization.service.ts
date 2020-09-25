@@ -94,9 +94,6 @@ export class OrganizationService {
       {
         key: 'name',
         value: input.name,
-        addToAdminSg: false,
-        addToWriterSg: false,
-        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
         label: 'OrgName',
@@ -106,7 +103,6 @@ export class OrganizationService {
 
     const query = this.db
       .query()
-      .match([node('root', 'User', { id: this.config.rootAdmin.id })])
       .match([
         node('publicSG', 'PublicSecurityGroup', {
           id: this.config.publicSecurityGroup.id,
@@ -131,9 +127,6 @@ export class OrganizationService {
     });
 
     const id = result.id;
-
-    // add root admin to new org as an admin
-    await this.db.addRootAdminToBaseNodeAsAdmin(id, 'Organization');
 
     this.logger.debug(`organization created`, { id });
 

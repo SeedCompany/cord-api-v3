@@ -79,36 +79,6 @@ export class CeremonyService {
     ];
   };
 
-  // helper method for defining properties
-  permission = (property: string) => {
-    return [
-      [
-        node('adminSG'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property,
-          read: true,
-          edit: true,
-          admin: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('newCeremony'),
-      ],
-      [
-        node('readerSG'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property,
-          read: true,
-          edit: false,
-          admin: false,
-        }),
-        relation('out', '', 'baseNode'),
-        node('newCeremony'),
-      ],
-    ];
-  };
-
   propMatch = (property: string) => {
     const perm = 'canRead' + upperFirst(property);
     return [
@@ -134,36 +104,24 @@ export class CeremonyService {
       {
         key: 'type',
         value: input.type,
-        addToAdminSg: false,
-        addToWriterSg: false,
-        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
       },
       {
         key: 'planned',
         value: input.planned,
-        addToAdminSg: false,
-        addToWriterSg: false,
-        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
       },
       {
         key: 'estimatedDate',
         value: input.estimatedDate,
-        addToAdminSg: false,
-        addToWriterSg: false,
-        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
       },
       {
         key: 'actualDate',
         value: input.actualDate,
-        addToAdminSg: false,
-        addToWriterSg: false,
-        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
       },
@@ -173,11 +131,6 @@ export class CeremonyService {
       const query = this.db
         .query()
         .call(matchRequestingUser, session)
-        .match([
-          node('root', 'User', {
-            id: this.config.rootAdmin.id,
-          }),
-        ])
         .call(createBaseNode, 'Ceremony', secureProps)
         .return('node.id as id');
 

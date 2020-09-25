@@ -93,36 +93,6 @@ export class FilmService {
     ];
   };
 
-  // helper method for defining permissions
-  permission = (property: string, baseNode: string) => {
-    return [
-      [
-        node('adminSG'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property,
-          read: true,
-          edit: true,
-          admin: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node(baseNode),
-      ],
-      [
-        node('readerSG'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property,
-          read: true,
-          edit: false,
-          admin: false,
-        }),
-        relation('out', '', 'baseNode'),
-        node(baseNode),
-      ],
-    ];
-  };
-
   async create(input: CreateFilm, session: ISession): Promise<Film> {
     const checkFm = await this.db
       .query()
@@ -141,9 +111,6 @@ export class FilmService {
       {
         key: 'name',
         value: input.name,
-        addToAdminSg: false,
-        addToWriterSg: false,
-        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
         label: 'FilmName',
@@ -153,11 +120,6 @@ export class FilmService {
       const result = await this.db
         .query()
         .call(matchRequestingUser, session)
-        .match([
-          node('root', 'User', {
-            id: this.config.rootAdmin.id,
-          }),
-        ])
         .call(createBaseNode, ['Film', 'Producible'], secureProps)
         .return('node.id as id')
         .first();

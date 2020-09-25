@@ -85,9 +85,6 @@ export class FundingAccountService {
       {
         key: 'name',
         value: input.name,
-        addToAdminSg: false,
-        addToWriterSg: false,
-        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
         label: 'FieldZoneName',
@@ -98,11 +95,6 @@ export class FundingAccountService {
       const query = this.db
         .query()
         .call(matchRequestingUser, session)
-        .match([
-          node('root', 'User', {
-            id: this.config.rootAdmin.id,
-          }),
-        ])
         .call(createBaseNode, 'FundingAccount', secureProps)
         .return('node.id as id');
 

@@ -128,64 +128,17 @@ export class UserService {
     ];
   };
 
-  // helper method for defining properties
-  permission = (property: string) => {
-    return [
-      [
-        node('adminSG'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property,
-          read: true,
-          edit: true,
-          admin: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('user'),
-      ],
-      [
-        node('readerSG'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property,
-          read: true,
-          edit: false,
-          admin: false,
-        }),
-        relation('out', '', 'baseNode'),
-        node('user'),
-      ],
-    ];
-  };
-
-  rootUserAccess = (session?: ISession) => {
-    if (!session) {
-      return [];
-    }
-    return [
-      [node('adminSG'), relation('out', '', 'member'), node('rootuser')],
-      [node('readerSG'), relation('out', '', 'member'), node('rootuser')],
-    ];
-  };
-
   roleProperties = (roles?: Role[]) => {
     return (roles || []).flatMap((role) =>
       this.property('roles', role, `role${role}`)
     );
   };
 
-  async create(input: CreatePerson, session?: ISession): Promise<string> {
+  async create(input: CreatePerson, _session?: ISession): Promise<string> {
     const id = generate();
     const createdAt = DateTime.local();
 
     const query = this.db.query();
-    if (session) {
-      query.match([
-        node('rootuser', 'User', {
-          id: this.config.rootAdmin.id,
-        }),
-      ]);
-    }
     query.create([
       [
         node('user', ['User', 'BaseNode'], {
@@ -215,8 +168,6 @@ export class UserService {
 
     query.return({
       user: [{ id: 'id' }],
-      // readerSG: [{ id: 'readerSGid' }],
-      // adminSG: [{ id: 'adminSGid' }],
     });
     let result;
     try {
@@ -277,42 +228,6 @@ export class UserService {
       if (attachToOrgPublicSg) {
         //
       }
-    }
-
-    if (session?.userId) {
-      const assignSG = this.db
-        .query()
-        .match([node('requestingUser', 'User', { id: session.userId })])
-        .match([
-          node('rootuser', 'User', {
-            id: this.config.rootAdmin.id,
-          }),
-        ]);
-      assignSG
-        .create([
-          [
-            node('adminSG'),
-            relation('out', '', 'member', {
-              admin: true,
-            }),
-            node('requestingUser'),
-          ],
-          [
-            node('readerSG'),
-            relation('out', '', 'member', {
-              admin: true,
-            }),
-            node('requestingUser'),
-          ],
-          [node('adminSG'), relation('out', '', 'member'), node('rootuser')],
-          [node('readerSG'), relation('out', '', 'member'), node('rootuser')],
-        ])
-        .return({
-          requestingUser: [{ id: 'id' }],
-          readerSG: [{ id: 'readerSGid' }],
-          adminSG: [{ id: 'adminSGid' }],
-        });
-      await assignSG.first();
     }
 
     return result.id;

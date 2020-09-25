@@ -356,6 +356,14 @@ export function getRolePermissions(
     };
   }
 
+  if (role === InternalRole.Admin && baseNodeType === BaseNodeType.Country) {
+    return {
+      // these were just place holders for testing, not impl yet
+      read: [],
+      edit: ['name'],
+    };
+  }
+
   return {
     read: [],
     edit: [],

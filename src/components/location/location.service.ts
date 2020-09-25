@@ -18,7 +18,6 @@ import {
   ChildBaseNodeMetaProperty,
   ConfigService,
   DatabaseService,
-  permission as dbPermission,
   ILogger,
   Logger,
   matchRequestingUser,
@@ -137,8 +136,6 @@ export class LocationService {
     ];
   };
 
-  permission = dbPermission;
-
   async createZone(
     { directorId, ...input }: CreateZone,
     session: ISession
@@ -147,14 +144,9 @@ export class LocationService {
     const createdAt = DateTime.local();
 
     try {
-      const createZone = this.db
+      const createZone = await this.db
         .query()
         .match(matchSession(session, { withAclEdit: 'canCreateZone' }))
-        .match([
-          node('rootuser', 'User', {
-            id: this.config.rootAdmin.id,
-          }),
-        ])
         .create([
           [
             node('newZone', ['Zone', 'BaseNode'], {
@@ -164,13 +156,12 @@ export class LocationService {
           ],
           ...this.property('name', input.name, 'newZone'),
         ])
-        .return('newZone.id as id');
-
-      await createZone.first();
+        .return('newZone.id as id')
+        .first();
 
       await this.authorizationService.addPermsForRole({
         userId: session.userId as string,
-        baseNodeId: id,
+        baseNodeId: createZone?.id,
         role: InternalRole.Admin,
       });
 
@@ -231,14 +222,9 @@ export class LocationService {
     const createdAt = DateTime.local();
 
     try {
-      const createRegion = this.db
+      const createRegion = await this.db
         .query()
-        .match(matchSession(session, { withAclEdit: 'canCreateRegion' }))
-        .match([
-          node('rootuser', 'User', {
-            id: this.config.rootAdmin.id,
-          }),
-        ])
+        .match(matchSession(session))
         .create([
           [
             node('newRegion', ['Region', 'BaseNode'], {
@@ -248,15 +234,14 @@ export class LocationService {
           ],
           ...this.property('name', input.name, 'newRegion'),
         ])
-        .return('newRegion.id as id');
-
-      await createRegion.first();
+        .return('newRegion.id as id')
+        .first();
 
       this.logger.debug(`Region created`, { input, userId: session.userId });
 
       await this.authorizationService.addPermsForRole({
         userId: session.userId as string,
-        baseNodeId: id,
+        baseNodeId: createRegion?.id,
         role: InternalRole.Admin,
       });
 
@@ -334,12 +319,7 @@ export class LocationService {
     try {
       const createCountry = this.db
         .query()
-        .match(matchSession(session, { withAclEdit: 'canCreateCountry' }))
-        .match([
-          node('rootuser', 'User', {
-            id: this.config.rootAdmin.id,
-          }),
-        ])
+        .match(matchSession(session))
         .create([
           [
             node('newCountry', ['Country', 'BaseNode'], {
@@ -348,33 +328,17 @@ export class LocationService {
             }),
           ],
           ...this.property('name', input.name, 'newCountry'),
-          [
-            node('adminSG', 'SecurityGroup', {
-              id: generate(),
-
-              name: input.name + ' admin',
-            }),
-            relation('out', '', 'member'),
-            node('requestingUser'),
-          ],
-          [
-            node('readerSG', 'SecurityGroup', {
-              id: generate(),
-
-              name: input.name + ' users',
-            }),
-            relation('out', '', 'member'),
-            node('requestingUser'),
-          ],
-          [node('adminSG'), relation('out', '', 'member'), node('rootuser')],
-          [node('readerSG'), relation('out', '', 'member'), node('rootuser')],
-          ...this.permission('name', 'newCountry'),
-          ...this.permission('region', 'newCountry'),
         ])
         .return('newCountry.id as id');
-      await createCountry.first();
+      const result = await createCountry.first();
 
       this.logger.debug(`country created`);
+
+      await this.authorizationService.addPermsForRole({
+        userId: session.userId as string,
+        baseNodeId: result?.id,
+        role: InternalRole.Admin,
+      });
 
       // connect the Region to Country
       if (regionId) {

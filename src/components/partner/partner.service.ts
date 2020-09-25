@@ -16,7 +16,6 @@ import {
   matchRequestingUser,
   OnIndex,
 } from '../../core';
-import { permission as dbPermission } from '../../core/database/database.service';
 import {
   calculateTotalAndPaginateList,
   matchPermList,
@@ -64,16 +63,12 @@ export class PartnerService {
     ];
   }
 
-  // helper method for defining permissions
-  permission = dbPermission;
-
   async create(input: CreatePartner, session: ISession): Promise<Partner> {
     const createdAt = DateTime.local();
     // create partner
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([node('root', 'User', { id: this.config.rootAdmin.id })])
       .match([
         node('organization', 'Organization', {
           id: input.organizationId,

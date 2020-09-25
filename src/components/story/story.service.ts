@@ -87,38 +87,6 @@ export class StoryService {
     ];
   };
 
-  // helper method for defining permissions
-  permission = (property: string, baseNode: string) => {
-    return [
-      [
-        node('adminSG'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property,
-
-          read: true,
-          edit: true,
-          admin: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node(baseNode),
-      ],
-      [
-        node('readerSG'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property,
-
-          read: true,
-          edit: false,
-          admin: false,
-        }),
-        relation('out', '', 'baseNode'),
-        node(baseNode),
-      ],
-    ];
-  };
-
   async create(input: CreateStory, session: ISession): Promise<Story> {
     const checkStory = await this.db
       .query()
@@ -137,9 +105,6 @@ export class StoryService {
       {
         key: 'name',
         value: input.name,
-        addToAdminSg: false,
-        addToWriterSg: false,
-        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
         label: 'StoryName',
@@ -149,11 +114,6 @@ export class StoryService {
       const result = await this.db
         .query()
         .call(matchRequestingUser, session)
-        .match([
-          node('root', 'User', {
-            id: this.config.rootAdmin.id,
-          }),
-        ])
         .call(createBaseNode, ['Story', 'Producible'], secureProps)
         .return('node.id as id')
         .first();

@@ -88,38 +88,6 @@ export class SongService {
     ];
   };
 
-  // helper method for defining permissions
-  permission = (property: string, baseNode: string) => {
-    return [
-      [
-        node('adminSG'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property,
-
-          read: true,
-          edit: true,
-          admin: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node(baseNode),
-      ],
-      [
-        node('readerSG'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property,
-
-          read: true,
-          edit: false,
-          admin: false,
-        }),
-        relation('out', '', 'baseNode'),
-        node(baseNode),
-      ],
-    ];
-  };
-
   async create(input: CreateSong, session: ISession): Promise<Song> {
     const checkSong = await this.db
       .query()
@@ -138,9 +106,6 @@ export class SongService {
       {
         key: 'name',
         value: input.name,
-        addToAdminSg: false,
-        addToWriterSg: false,
-        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
         label: 'SongName',
@@ -151,11 +116,6 @@ export class SongService {
       const result = await this.db
         .query()
         .call(matchRequestingUser, session)
-        .match([
-          node('root', 'User', {
-            id: this.config.rootAdmin.id,
-          }),
-        ])
         .call(createBaseNode, ['Song', 'Producible'], secureProps)
         .return('node.id as id')
         .first();

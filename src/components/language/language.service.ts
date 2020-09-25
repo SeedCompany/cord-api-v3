@@ -154,36 +154,6 @@ export class LanguageService {
     ];
   };
 
-  // helper method for defining properties
-  permission = (property: string) => {
-    return [
-      [
-        node('adminSG'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property,
-          read: true,
-          edit: true,
-          admin: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('node'),
-      ],
-      [
-        node('readerSG'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property,
-          read: true,
-          edit: false,
-          admin: false,
-        }),
-        relation('out', '', 'baseNode'),
-        node('node'),
-      ],
-    ];
-  };
-
   propMatch = (property: string) => {
     const perm = 'canRead' + upperFirst(property);
     return [
@@ -217,9 +187,6 @@ export class LanguageService {
         {
           key: 'name',
           value: input.name,
-          addToAdminSg: false,
-          addToWriterSg: false,
-          addToReaderSg: false,
           isPublic: false,
           isOrgPublic: false,
           label: 'LanguageName',
@@ -227,9 +194,6 @@ export class LanguageService {
         {
           key: 'displayName',
           value: input.displayName,
-          addToAdminSg: false,
-          addToWriterSg: false,
-          addToReaderSg: false,
           isPublic: false,
           isOrgPublic: false,
           label: 'LanguageDisplayName',
@@ -237,90 +201,60 @@ export class LanguageService {
         {
           key: 'sensitivity',
           value: input.sensitivity,
-          addToAdminSg: false,
-          addToWriterSg: false,
-          addToReaderSg: false,
           isPublic: false,
           isOrgPublic: false,
         },
         {
           key: 'isDialect',
           value: input.isDialect,
-          addToAdminSg: false,
-          addToWriterSg: false,
-          addToReaderSg: false,
           isPublic: false,
           isOrgPublic: false,
         },
         {
           key: 'populationOverride',
           value: input.populationOverride,
-          addToAdminSg: false,
-          addToWriterSg: false,
-          addToReaderSg: false,
           isPublic: false,
           isOrgPublic: false,
         },
         {
           key: 'registryOfDialectsCode',
           value: input.registryOfDialectsCode,
-          addToAdminSg: false,
-          addToWriterSg: false,
-          addToReaderSg: false,
           isPublic: false,
           isOrgPublic: false,
         },
         {
           key: 'leastOfThese',
           value: input.leastOfThese,
-          addToAdminSg: false,
-          addToWriterSg: false,
-          addToReaderSg: false,
           isPublic: false,
           isOrgPublic: false,
         },
         {
           key: 'leastOfTheseReason',
           value: input.leastOfTheseReason,
-          addToAdminSg: false,
-          addToWriterSg: false,
-          addToReaderSg: false,
           isPublic: false,
           isOrgPublic: false,
         },
         {
           key: 'displayNamePronunciation',
           value: input.displayNamePronunciation,
-          addToAdminSg: false,
-          addToWriterSg: false,
-          addToReaderSg: false,
           isPublic: false,
           isOrgPublic: false,
         },
         {
           key: 'isSignLanguage',
           value: input.isSignLanguage,
-          addToAdminSg: false,
-          addToWriterSg: false,
-          addToReaderSg: false,
           isPublic: false,
           isOrgPublic: false,
         },
         {
           key: 'signLanguageCode',
           value: input.signLanguageCode,
-          addToAdminSg: false,
-          addToWriterSg: false,
-          addToReaderSg: false,
           isPublic: false,
           isOrgPublic: false,
         },
         {
           key: 'sponsorEstimatedEndDate',
           value: input.sponsorEstimatedEndDate,
-          addToAdminSg: false,
-          addToWriterSg: false,
-          addToReaderSg: false,
           isPublic: false,
           isOrgPublic: false,
         },
@@ -329,11 +263,6 @@ export class LanguageService {
       const createLanguage = this.db
         .query()
         .call(matchRequestingUser, session)
-        .match([
-          node('root', 'User', {
-            id: this.config.rootAdmin.id,
-          }),
-        ])
         .call(
           createBaseNode,
           'Language',
