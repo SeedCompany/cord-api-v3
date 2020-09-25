@@ -88,11 +88,12 @@ export class PartnerService {
       throw new ServerException('failed to create partner');
     }
 
-    await this.authorizationService.addPermsForRole({
-      userId: session.userId as string,
-      baseNodeId: result.id,
-      role: InternalRole.Admin,
-    });
+    await this.authorizationService.addPermsForRole(
+      InternalRole.Admin,
+      'Partner',
+      result.id,
+      session.userId as string
+    );
 
     if (input.pointOfContactId) {
       await this.db

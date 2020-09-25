@@ -122,11 +122,12 @@ export class StoryService {
         throw new ServerException('failed to create a story');
       }
 
-      await this.authorizationService.addPermsForRole({
-        userId: session.userId as string,
-        baseNodeId: result.id,
-        role: InternalRole.Admin,
-      });
+      await this.authorizationService.addPermsForRole(
+        InternalRole.Admin,
+        'Story',
+        result.id,
+        session.userId as string
+      );
 
       await this.scriptureRefService.create(
         result.id,

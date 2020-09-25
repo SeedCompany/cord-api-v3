@@ -103,11 +103,12 @@ export class FundingAccountService {
         throw new ServerException('Failed to create funding account');
       }
 
-      await this.authorizationService.addPermsForRole({
-        userId: session.userId as string,
-        baseNodeId: result.id,
-        role: InternalRole.Admin,
-      });
+      await this.authorizationService.addPermsForRole(
+        InternalRole.Admin,
+        'FundingAccount',
+        result.id,
+        session.userId as string
+      );
 
       this.logger.info(`funding account created`, { id: result.id });
 

@@ -207,11 +207,12 @@ export class BudgetService {
         userId: session.userId,
       });
 
-      await this.authorizationService.addPermsForRole({
-        userId: session.userId as string,
-        baseNodeId: result.id,
-        role: InternalRole.Admin,
-      });
+      await this.authorizationService.addPermsForRole(
+        InternalRole.Admin,
+        'Budget',
+        result.id,
+        session.userId as string
+      );
 
       return await this.readOne(result.id, session);
     } catch (exception) {
@@ -265,11 +266,12 @@ export class BudgetService {
         throw new ServerException('failed to create a budget record');
       }
 
-      await this.authorizationService.addPermsForRole({
-        userId: session.userId as string,
-        baseNodeId: result.id,
-        role: InternalRole.Admin,
-      });
+      await this.authorizationService.addPermsForRole(
+        InternalRole.Admin,
+        'BudgetRecord',
+        result.id,
+        session.userId as string
+      );
 
       this.logger.debug(`Created Budget Record`, {
         id: result.id,

@@ -164,11 +164,12 @@ export class EducationService {
       }
       this.logger.debug(`Created user education`, { id, userId });
 
-      await this.authorizationService.addPermsForRole({
-        userId: session.userId as string,
-        baseNodeId: id,
-        role: InternalRole.Admin,
-      });
+      await this.authorizationService.addPermsForRole(
+        InternalRole.Admin,
+        'Education',
+        id,
+        session.userId as string
+      );
 
       // connect the Education to the User.
       const query = `

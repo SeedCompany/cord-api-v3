@@ -135,11 +135,12 @@ export class OrganizationService {
       throw new ServerException('failed to create default org');
     }
 
-    await this.authorizationService.addPermsForRole({
-      userId: session.userId as string,
-      baseNodeId: result.id,
-      role: InternalRole.Admin,
-    });
+    await this.authorizationService.addPermsForRole(
+      InternalRole.Admin,
+      'Organization',
+      result.id,
+      session.userId as string
+    );
 
     const id = result.id;
 

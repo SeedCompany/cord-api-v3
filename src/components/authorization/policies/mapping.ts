@@ -56,14 +56,46 @@ type SecuredKeys<Dto extends Record<string, any>> = ConditionalKeys<
 >;
 
 export interface TypeToSecuredProps {
+  Budget: SecuredKeys<Budget> | 'status' | 'records';
+  BudgetRecord: SecuredKeys<BudgetRecord>;
+  Ceremony: SecuredKeys<Ceremony> | 'type';
+  Country: SecuredKeys<Country>;
+  Directory:
+    | SecuredKeys<Directory>
+    | 'name'
+    | 'type'
+    | 'createdBy'
+    | 'parent'
+    | 'description';
+  Education: SecuredKeys<Education>;
+  EthnologueLanguage: SecuredKeys<EthnologueLanguage>;
+  File: SecuredKeys<File>;
+  FileVersion: SecuredKeys<FileVersion>;
+  FundingAccount: SecuredKeys<FundingAccount>;
+  Language: SecuredKeys<Language>;
+  LanguageEngagement: SecuredKeys<LanguageEngagement>;
+  LiteracyMaterial: SecuredKeys<LiteracyMaterial>;
+  InternshipEngagement: SecuredKeys<InternshipEngagement>;
+  Organization: SecuredKeys<Organization>;
+  Partner: SecuredKeys<Partner>;
+  Partnership: SecuredKeys<Partnership>;
+  Product: SecuredKeys<Product>;
+
   Project:
     | SecuredKeys<Project>
+    | 'status'
+    | 'modifiedAt'
     | 'rootDirectory'
     | 'member'
     | 'locations'
     | 'partnership'
     | 'budget';
-  ProjectMember: SecuredKeys<ProjectMember>;
+  ProjectMember: SecuredKeys<ProjectMember> | 'modifiedAt';
+  Region: SecuredKeys<Region>;
+  Song: SecuredKeys<Song>;
+  Story: SecuredKeys<Story>;
+  Unavailability: SecuredKeys<Unavailability>;
   User: SecuredKeys<User>;
+  Zone: SecuredKeys<Zone>;
   // Add more here as needed
 }

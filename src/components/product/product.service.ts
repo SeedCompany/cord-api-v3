@@ -22,7 +22,6 @@ import {
   matchRequestingUser,
   Property,
 } from '../../core';
-import { permission as dbPermission } from '../../core/database/database.service';
 import {
   calculateTotalAndPaginateList,
   permissionsOfNode,
@@ -80,8 +79,6 @@ export class ProductService {
     private readonly authorizationService: AuthorizationService,
     @Logger('product:service') private readonly logger: ILogger
   ) {}
-
-  permission = dbPermission;
 
   async create(
     { engagementId, ...input }: CreateProduct,
@@ -256,11 +253,12 @@ export class ProductService {
       throw new ServerException('failed to create default product');
     }
 
-    await this.authorizationService.addPermsForRole({
-      userId: session.userId as string,
-      baseNodeId: result.id,
-      role: InternalRole.Admin,
-    });
+    await this.authorizationService.addPermsForRole(
+      InternalRole.Admin,
+      'Product',
+      result.id,
+      session.userId as string
+    );
 
     this.logger.debug(`product created`, { id: result.id });
     return await this.readOne(result.id, session);

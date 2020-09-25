@@ -159,11 +159,12 @@ export class LocationService {
         .return('newZone.id as id')
         .first();
 
-      await this.authorizationService.addPermsForRole({
-        userId: session.userId as string,
-        baseNodeId: createZone?.id,
-        role: InternalRole.Admin,
-      });
+      await this.authorizationService.addPermsForRole(
+        InternalRole.Admin,
+        'Zone',
+        createZone?.id,
+        session.userId as string
+      );
 
       // connect director User to zone
       if (directorId) {
@@ -239,11 +240,12 @@ export class LocationService {
 
       this.logger.debug(`Region created`, { input, userId: session.userId });
 
-      await this.authorizationService.addPermsForRole({
-        userId: session.userId as string,
-        baseNodeId: createRegion?.id,
-        role: InternalRole.Admin,
-      });
+      await this.authorizationService.addPermsForRole(
+        InternalRole.Admin,
+        'Region',
+        createRegion?.id,
+        session.userId as string
+      );
 
       // connect the Zone to Region
 
@@ -334,11 +336,12 @@ export class LocationService {
 
       this.logger.debug(`country created`);
 
-      await this.authorizationService.addPermsForRole({
-        userId: session.userId as string,
-        baseNodeId: result?.id,
-        role: InternalRole.Admin,
-      });
+      await this.authorizationService.addPermsForRole(
+        InternalRole.Admin,
+        'Country',
+        result?.id,
+        session.userId as string
+      );
 
       // connect the Region to Country
       if (regionId) {

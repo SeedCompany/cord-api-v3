@@ -276,11 +276,12 @@ export class FileRepository {
       throw new ServerException('Failed to create directory');
     }
 
-    await this.authorizationService.addPermsForRole({
-      userId: session.userId as string,
-      baseNodeId: result.id,
-      role: InternalRole.Admin,
-    });
+    await this.authorizationService.addPermsForRole(
+      InternalRole.Admin,
+      'Directory',
+      result.id,
+      session.userId as string
+    );
 
     await this.attachCreator(result.id, session);
 
@@ -321,11 +322,12 @@ export class FileRepository {
       throw new ServerException('Failed to create file');
     }
 
-    await this.authorizationService.addPermsForRole({
-      userId: session.userId as string,
-      baseNodeId: result.id,
-      role: InternalRole.Admin,
-    });
+    await this.authorizationService.addPermsForRole(
+      InternalRole.Admin,
+      'File',
+      result.id,
+      session.userId as string
+    );
 
     await this.attachCreator(result.id, session);
 
@@ -383,11 +385,12 @@ export class FileRepository {
       throw new ServerException('Failed to create file version');
     }
 
-    await this.authorizationService.addPermsForRole({
-      userId: session.userId as string,
-      baseNodeId: result.id,
-      role: InternalRole.Admin,
-    });
+    await this.authorizationService.addPermsForRole(
+      InternalRole.Admin,
+      'FileVersion',
+      result.id,
+      session.userId as string
+    );
 
     await this.attachCreator(input.id, session);
     await this.attachParent(input.id, fileId);

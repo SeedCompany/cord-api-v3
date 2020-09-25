@@ -124,11 +124,12 @@ export class SongService {
         throw new ServerException('failed to create a song');
       }
 
-      await this.authorizationService.addPermsForRole({
-        userId: session.userId as string,
-        baseNodeId: result.id,
-        role: InternalRole.Admin,
-      });
+      await this.authorizationService.addPermsForRole(
+        InternalRole.Admin,
+        'Song',
+        result.id,
+        session.userId as string
+      );
 
       await this.scriptureRefService.create(
         result.id,

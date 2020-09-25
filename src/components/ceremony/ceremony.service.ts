@@ -140,11 +140,12 @@ export class CeremonyService {
         throw new ServerException('failed to create a budget');
       }
 
-      await this.authorizationService.addPermsForRole({
-        userId: session.userId as string,
-        baseNodeId: result.id,
-        role: InternalRole.Admin,
-      });
+      await this.authorizationService.addPermsForRole(
+        InternalRole.Admin,
+        'Ceremony',
+        result.id,
+        session.userId as string
+      );
 
       return await this.readOne(result.id, session);
     } catch (exception) {

@@ -44,27 +44,18 @@ export class UnavailabilityService {
       {
         key: 'description',
         value: input.description,
-        addToAdminSg: false,
-        addToWriterSg: false,
-        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
       },
       {
         key: 'start',
         value: input.start,
-        addToAdminSg: false,
-        addToWriterSg: false,
-        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
       },
       {
         key: 'end',
         value: input.end,
-        addToAdminSg: false,
-        addToWriterSg: false,
-        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
       },
@@ -99,11 +90,12 @@ export class UnavailabilityService {
         throw new ServerException('Could not create unavailability');
       }
 
-      await this.authorizationService.addPermsForRole({
-        userId: session.userId as string,
-        baseNodeId: createUnavailabilityResult.id,
-        role: InternalRole.Admin,
-      });
+      await this.authorizationService.addPermsForRole(
+        InternalRole.Admin,
+        'Unavailability',
+        createUnavailabilityResult.id,
+        session.userId as string
+      );
 
       this.logger.debug(`Created user unavailability`, {
         id: createUnavailabilityResult.id,

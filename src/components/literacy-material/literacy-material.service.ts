@@ -129,11 +129,12 @@ export class LiteracyMaterialService {
         throw new ServerException('failed to create a literacy material');
       }
 
-      await this.authorizationService.addPermsForRole({
-        userId: session.userId as string,
-        baseNodeId: result.id,
-        role: InternalRole.Admin,
-      });
+      await this.authorizationService.addPermsForRole(
+        InternalRole.Admin,
+        'LiteracyMaterial',
+        result.id,
+        session.userId as string
+      );
 
       await this.scriptureRefService.create(
         result.id,

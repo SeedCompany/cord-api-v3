@@ -395,11 +395,12 @@ export class EngagementService {
       throw new ServerException('Could not create Language Engagement');
     }
 
-    await this.authorizationService.addPermsForRole({
-      userId: session.userId,
-      baseNodeId: id,
-      role: InternalRole.Admin,
-    });
+    await this.authorizationService.addPermsForRole(
+      InternalRole.Admin,
+      'LanguageEngagement',
+      id,
+      session.userId
+    );
 
     const languageEngagement = (await this.readOne(
       id,
@@ -638,11 +639,12 @@ export class EngagementService {
       throw new ServerException('Could not create Internship Engagement');
     }
 
-    await this.authorizationService.addPermsForRole({
-      userId: session.userId,
-      baseNodeId: id,
-      role: InternalRole.Admin,
-    });
+    await this.authorizationService.addPermsForRole(
+      InternalRole.Admin,
+      'InternshipEngagement',
+      id,
+      session.userId
+    );
 
     const internshipEngagement = (await this.readOne(
       id,
