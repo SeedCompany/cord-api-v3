@@ -1,6 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { find, flatMap } from 'lodash';
+import { flatMap } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
@@ -28,6 +28,8 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
+  matchPermList,
+  matchPropList,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
@@ -47,7 +49,11 @@ import {
   SecuredEngagementList,
 } from '../engagement';
 import { FileService, SecuredDirectory } from '../file';
-import { LocationService } from '../location';
+import {
+  LocationListInput,
+  LocationService,
+  SecuredLocationList,
+} from '../location';
 import {
   PartnershipListInput,
   PartnershipService,
@@ -83,6 +89,19 @@ import { projectListFilter } from './query.helpers';
 
 @Injectable()
 export class ProjectService {
+  private readonly securedProperties = {
+    name: true,
+    departmentId: true,
+    step: true,
+    mouStart: true,
+    mouEnd: true,
+    estimatedSubmission: true,
+    type: true,
+    primaryLocation: true,
+    nonPrimaryLocation: true,
+    marketingLocation: true,
+  };
+
   constructor(
     private readonly db: DatabaseService,
     private readonly projectMembers: ProjectMemberService,
@@ -116,7 +135,12 @@ export class ProjectService {
   }
 
   async create(
-    { locationId, ...input }: CreateProject,
+    {
+      primaryLocationId,
+      nonPrimaryLocationId,
+      marketingLocationId,
+      ...input
+    }: CreateProject,
     session: ISession
   ): Promise<Project> {
     if (!session.userId) {
@@ -218,9 +242,29 @@ export class ProjectService {
       },
     ];
     try {
-      const createProject = this.db.query().call(matchRequestingUser, session);
-      if (locationId) {
-        createProject.match([node('country', 'Country', { id: locationId })]);
+      const createProject = this.db
+        .query()
+        .call(matchRequestingUser, session)
+        .match([
+          node('root', 'User', {
+            id: this.config.rootAdmin.id,
+          }),
+        ]);
+
+      if (primaryLocationId) {
+        createProject.match([
+          node('primaryLocation', 'Location', { id: primaryLocationId }),
+        ]);
+      }
+      if (nonPrimaryLocationId) {
+        createProject.match([
+          node('nonPrimaryLocation', 'Location', { id: nonPrimaryLocationId }),
+        ]);
+      }
+      if (marketingLocationId) {
+        createProject.match([
+          node('marketingLocation', 'Location', { id: marketingLocationId }),
+        ]);
       }
 
       createProject.call(
@@ -232,15 +276,40 @@ export class ProjectService {
         },
         canEdit ? ['name', 'mouStart', 'mouEnd'] : []
       );
-      if (locationId) {
+      if (primaryLocationId) {
         createProject.create([
           [
-            node('country'),
-            relation('in', '', 'location', { active: true, createdAt }),
             node('node'),
+            relation('out', '', 'primaryLocation', { active: true, createdAt }),
+            node('primaryLocation'),
           ],
         ]);
       }
+      if (nonPrimaryLocationId) {
+        createProject.create([
+          [
+            node('node'),
+            relation('out', '', 'nonPrimaryLocation', {
+              active: true,
+              createdAt,
+            }),
+            node('nonPrimaryLocation'),
+          ],
+        ]);
+      }
+      if (marketingLocationId) {
+        createProject.create([
+          [
+            node('node'),
+            relation('out', '', 'marketingLocation', {
+              active: true,
+              createdAt,
+            }),
+            node('marketingLocation'),
+          ],
+        ]);
+      }
+
       createProject.return('node.id as id').asResult<{ id: string }>();
       const result = await createProject.first();
 
@@ -254,24 +323,6 @@ export class ProjectService {
         result.id,
         session.userId
       );
-
-      let location;
-      if (locationId) {
-        location = await this.db
-          .query()
-          .match([node('country', 'Country', { id: locationId })])
-          .return('country.id')
-          .first();
-      }
-
-      if (!result) {
-        if (locationId && !location) {
-          throw new InputException(
-            'Could not find location',
-            'project.locationId'
-          );
-        }
-      }
 
       await this.projectMembers.create(
         {
@@ -332,27 +383,22 @@ export class ProjectService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Project', { id })])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
-        node('perms', 'Permission'),
-        relation('out', '', 'baseNode'),
-        node('node'),
-      ])
-      .with('collect(distinct perms) as permList, node')
-      .match([
-        node('node'),
-        relation('out', 'r', { active: true }),
-        node('props', 'Property'),
-      ])
-      .with('{value: props.value, property: type(r)} as prop, permList, node')
-      .with('collect(prop) as propList, permList, node')
+      .call(matchPermList, 'requestingUser')
+      .call(matchPropList, 'permList')
       .optionalMatch([
         node('node'),
-        relation('out', '', 'location'),
-        node('country', 'Country'),
+        relation('out', '', 'primaryLocation', { active: true }),
+        node('primaryLocation', 'Location'),
+      ])
+      .optionalMatch([
+        node('node'),
+        relation('out', '', 'nonPrimaryLocation', { active: true }),
+        node('nonPrimaryLocation', 'Location'),
+      ])
+      .optionalMatch([
+        node('node'),
+        relation('out', '', 'marketingLocation', { active: true }),
+        node('marketingLocation', 'Location'),
       ])
       .optionalMatch([
         node('node'),
@@ -367,12 +413,16 @@ export class ProjectService {
         'propList',
         'permList',
         'node',
-        'country.id as countryId',
+        'primaryLocation.id as primaryLocationId',
+        'nonPrimaryLocation.id as nonPrimaryLocationId',
+        'marketingLocation.id as marketingLocationId',
         'collect(distinct sensitivity.value) as languageSensitivityList',
       ])
       .asResult<
         StandardReadResult<DbPropsOfDto<Project>> & {
-          countryId: string;
+          primaryLocationId: string;
+          nonPrimaryLocationId: string;
+          marketingLocationId: string;
           languageSensitivityList: Sensitivity[];
         }
       >();
@@ -383,42 +433,11 @@ export class ProjectService {
       throw new NotFoundException('Could not find Project');
     }
 
-    const location = result?.countryId
-      ? await this.locationService
-          .readOneCountry(result?.countryId, session)
-          .then((country) => {
-            return {
-              value: {
-                id: country.id,
-                name: { ...country.name },
-                region: { ...country.region },
-                createdAt: country.createdAt,
-              },
-            };
-          })
-          .catch(() => {
-            return {
-              value: undefined,
-            };
-          })
-      : {
-          value: undefined,
-        };
-
     const props = parsePropList(result.propList);
-    const securedProps = parseSecuredProperties(props, result.permList, {
-      name: true,
-      departmentId: true,
-      step: true,
-      mouStart: true,
-      mouEnd: true,
-      estimatedSubmission: true,
-      type: true,
-    });
-
-    const locationPerms: any = find(
+    const securedProps = parseSecuredProperties(
+      props,
       result.permList,
-      (item) => (item as any).properties.property === 'location'
+      this.securedProperties
     );
 
     return {
@@ -433,10 +452,17 @@ export class ProjectService {
       type: (result as any)?.node?.properties?.type,
       status: props.status,
       modifiedAt: props.modifiedAt,
-      location: {
-        ...location,
-        canRead: !!locationPerms?.properties?.read,
-        canEdit: !!locationPerms?.properties?.edit,
+      primaryLocation: {
+        ...securedProps.primaryLocation,
+        value: result.primaryLocationId,
+      },
+      nonPrimaryLocation: {
+        ...securedProps.nonPrimaryLocation,
+        value: result.nonPrimaryLocationId,
+      },
+      marketingLocation: {
+        ...securedProps.marketingLocation,
+        value: result.marketingLocationId,
       },
     };
   }
@@ -686,6 +712,15 @@ export class ProjectService {
       canRead: !!permission?.canReadPartnershipRead,
       canCreate: !!permission?.canReadPartnershipCreate,
     };
+  }
+
+  async listNonPrimaryLocations(
+    _projectId: string,
+    _input: LocationListInput,
+    _session: ISession
+  ): Promise<SecuredLocationList> {
+    // TODO
+    return ([] as unknown) as SecuredLocationList;
   }
 
   async currentBudget(

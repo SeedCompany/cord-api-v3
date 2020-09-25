@@ -21,10 +21,22 @@ export abstract class CreateProject {
   readonly type: ProjectType;
 
   @IdField({
-    description: 'A country ID',
+    description: 'A primary location ID',
     nullable: true,
   })
-  readonly locationId?: string;
+  readonly primaryLocationId?: string;
+
+  @IdField({
+    description: 'A primary location ID',
+    nullable: true,
+  })
+  readonly nonPrimaryLocationId?: string;
+
+  @IdField({
+    description: 'A primary location ID',
+    nullable: true,
+  })
+  readonly marketingLocationId?: string;
 
   @DateField({ nullable: true })
   readonly mouStart?: CalendarDate;

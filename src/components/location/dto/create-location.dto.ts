@@ -3,6 +3,7 @@ import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { IdField, NameField, Sensitivity } from '../../../common';
 import { LocationType } from './location-type.enum';
+import { Location } from './location.dto';
 
 @InputType()
 export abstract class CreateLocation {

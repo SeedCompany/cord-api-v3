@@ -1,5 +1,16 @@
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import {
+  Args,
+  Mutation,
+  Parent,
+  Query,
+  ResolveField,
+  Resolver,
+} from '@nestjs/graphql';
 import { IdArg, ISession, Session } from '../../common';
+import {
+  FundingAccountService,
+  SecuredFundingAccount,
+} from '../funding-account';
 import {
   CreateLocationInput,
   CreateLocationOutput,
@@ -11,9 +22,12 @@ import {
 } from './dto';
 import { LocationService } from './location.service';
 
-@Resolver()
+@Resolver(Location)
 export class LocationResolver {
-  constructor(private readonly locationService: LocationService) {}
+  constructor(
+    private readonly locationService: LocationService,
+    private readonly fundingAccountService: FundingAccountService
+  ) {}
 
   @Query(() => Location, {
     description: 'Read one Location by id',
@@ -40,6 +54,21 @@ export class LocationResolver {
     return this.locationService.list(input, session);
   }
 
+  @ResolveField(() => SecuredFundingAccount)
+  async fundingAccount(
+    @Parent() location: Location,
+    @Session() session: ISession
+  ): Promise<SecuredFundingAccount> {
+    const { value: id, ...rest } = location.fundingAccount;
+    const value = id
+      ? await this.fundingAccountService.readOne(id, session)
+      : undefined;
+    return {
+      value,
+      ...rest,
+    };
+  }
+
   @Mutation(() => CreateLocationOutput, {
     description: 'Create a location',
   })
@@ -54,7 +83,7 @@ export class LocationResolver {
   @Mutation(() => UpdateLocationOutput, {
     description: 'Update a location',
   })
-  async updateZone(
+  async updateLocation(
     @Session() session: ISession,
     @Args('input') { location: input }: UpdateLocationInput
   ): Promise<UpdateLocationOutput> {

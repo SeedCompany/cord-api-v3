@@ -80,8 +80,8 @@ export class LocationService {
       'CREATE CONSTRAINT ON (n:LocationType) ASSERT EXISTS(n.value)',
 
       // ISO-3166-3 NODE
-      'CREATE CONSTRAINT ON (n:Iso-3166-3) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:Iso-3166-3) ASSERT n.value IS UNIQUE',
+      'CREATE CONSTRAINT ON (n:Iso31663) ASSERT EXISTS(n.value)',
+      'CREATE CONSTRAINT ON (n:Iso31663) ASSERT n.value IS UNIQUE',
     ];
   }
 
@@ -120,7 +120,7 @@ export class LocationService {
         addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
-        label: 'Iso-3166-3',
+        label: 'Iso31663',
       },
       {
         key: 'type',
