@@ -185,8 +185,8 @@ export class EthnologueLanguageService {
       );
     }
 
-    const ethnologue = {
-      id: 'asdf',
+    return {
+      id,
       ...parseSecuredProperties(result.propList, result.permList, {
         code: true,
         provisionalCode: true,
@@ -194,8 +194,6 @@ export class EthnologueLanguageService {
         population: true,
       }),
     };
-
-    return ethnologue;
   }
 
   async readInList(ids: string[], session: ISession): Promise<any> {
