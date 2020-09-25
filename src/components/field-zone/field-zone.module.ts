@@ -8,4 +8,4 @@ import { FieldZoneService } from './field-zone.service';
   providers: [FieldZoneResolver, FieldZoneService],
   exports: [FieldZoneService],
 })
-export class FieldZonenModule {}
+export class FieldZoneModule {}

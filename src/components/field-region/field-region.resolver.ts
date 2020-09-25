@@ -1,5 +1,14 @@
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import {
+  Args,
+  Mutation,
+  Parent,
+  Query,
+  ResolveField,
+  Resolver,
+} from '@nestjs/graphql';
 import { IdArg, ISession, Session } from '../../common';
+import { FieldZoneService, SecuredFieldZone } from '../field-zone';
+import { SecuredUser, UserService } from '../user';
 import {
   CreateFieldRegionInput,
   CreateFieldRegionOutput,
@@ -11,9 +20,13 @@ import {
 } from './dto';
 import { FieldRegionService } from './field-region.service';
 
-@Resolver()
+@Resolver(FieldRegion)
 export class FieldRegionResolver {
-  constructor(private readonly fieldRegionService: FieldRegionService) {}
+  constructor(
+    private readonly fieldRegionService: FieldRegionService,
+    private readonly fieldZoneService: FieldZoneService,
+    private readonly userService: UserService
+  ) {}
 
   @Query(() => FieldRegion, {
     description: 'Read one field region by id',
@@ -38,6 +51,34 @@ export class FieldRegionResolver {
     input: FieldRegionListInput
   ): Promise<FieldRegionListOutput> {
     return this.fieldRegionService.list(input, session);
+  }
+
+  @ResolveField(() => SecuredUser)
+  async director(
+    @Parent() fieldRegion: FieldRegion,
+    @Session() session: ISession
+  ): Promise<SecuredUser> {
+    const { value: id, ...rest } = fieldRegion.director;
+    const value = id ? await this.userService.readOne(id, session) : undefined;
+    return {
+      value,
+      ...rest,
+    };
+  }
+
+  @ResolveField(() => SecuredFieldZone)
+  async fieldZone(
+    @Parent() region: FieldRegion,
+    @Session() session: ISession
+  ): Promise<SecuredFieldZone> {
+    const { value: id, ...rest } = region.fieldZone;
+    const value = id
+      ? await this.fieldZoneService.readOne(id, session)
+      : undefined;
+    return {
+      value,
+      ...rest,
+    };
   }
 
   @Mutation(() => CreateFieldRegionOutput, {

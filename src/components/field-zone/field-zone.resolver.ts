@@ -1,5 +1,13 @@
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import {
+  Args,
+  Mutation,
+  Parent,
+  Query,
+  ResolveField,
+  Resolver,
+} from '@nestjs/graphql';
 import { IdArg, ISession, Session } from '../../common';
+import { SecuredUser, UserService } from '../user';
 import {
   CreateFieldZoneInput,
   CreateFieldZoneOutput,
@@ -11,9 +19,12 @@ import {
 } from './dto';
 import { FieldZoneService } from './field-zone.service';
 
-@Resolver()
+@Resolver(FieldZone)
 export class FieldZoneResolver {
-  constructor(private readonly fieldZoneService: FieldZoneService) {}
+  constructor(
+    private readonly fieldZoneService: FieldZoneService,
+    private readonly userService: UserService
+  ) {}
 
   @Query(() => FieldZone, {
     description: 'Read one field zone by id',
@@ -38,6 +49,19 @@ export class FieldZoneResolver {
     input: FieldZoneListInput
   ): Promise<FieldZoneListOutput> {
     return this.fieldZoneService.list(input, session);
+  }
+
+  @ResolveField(() => SecuredUser)
+  async director(
+    @Parent() fieldZone: FieldZone,
+    @Session() session: ISession
+  ): Promise<SecuredUser> {
+    const { value: id, ...rest } = fieldZone.director;
+    const value = id ? await this.userService.readOne(id, session) : undefined;
+    return {
+      value,
+      ...rest,
+    };
   }
 
   @Mutation(() => CreateFieldZoneOutput, {
