@@ -107,16 +107,6 @@
 			"enabled": true
 		},
 		{
-			"key": "bio",
-			"value": "I'm Tester",
-			"enabled": true
-		},
-		{
-			"key": "displayFirstName",
-			"value": "DisplayFirstName2182020112415",
-			"enabled": true
-		},
-		{
 			"key": "displayLastName",
 			"value": "DisplayLastName2182020112415",
 			"enabled": true
@@ -914,10 +904,40 @@
 			"key": "userRoles",
 			"value": "",
 			"enabled": true
+		},
+		{
+			"key": "budgetName",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "about",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "title",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "displayFirstName",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "userTitle",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "bio",
+			"value": "",
+			"enabled": true
 		}
 	],
 	"name": "MyWorkspace Globals",
 	"_postman_variable_scope": "globals",
-	"_postman_exported_at": "2020-09-17T13:04:20.438Z",
-	"_postman_exported_using": "Postman/7.32.0"
+	"_postman_exported_at": "2020-09-25T13:27:43.016Z",
+	"_postman_exported_using": "Postman/7.33.1"
 }

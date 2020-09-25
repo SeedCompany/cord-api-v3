@@ -122,13 +122,40 @@
 									"pm.globals.set('timezoneObject', JSON.stringify(timezoneObject));\r",
 									"pm.globals.set(\"timezone\", timezoneObject.name);\r",
 									"\r",
-									"pm.globals.set(\"bio\", \"I'm Tester\");\r",
+									"pm.globals.set(\"about\", \"I'm Tester\");\r",
+									"\r",
+									"pm.globals.set(\"userTitle\", \"Tester\");\r",
 									"\r",
 									"// Taking random value for the User status from pre-defined possible values\r",
 									"var userStatusArray = ['Active','Disabled'];\r",
 									"var randomNumber = Math.floor(Math.random()*userStatusArray.length);\r",
 									"// pm.globals.set('userStatus', userStatusArray[randomNumber]);\r",
 									"pm.globals.set(\"userStatus\", \"Active\");\r",
+									"\r",
+									"var userRolesArray = ['BibleTranslationLiaison',\r",
+									"'Consultant',\r",
+									"'ConsultantManager',\r",
+									"'Controller',\r",
+									"'Development',\r",
+									"'ExecutiveDevelopmentRepresentative',\r",
+									"'ExecutiveLeadership',\r",
+									"'FieldOperationsDirector',\r",
+									"'FieldPartner',\r",
+									"'FinancialAnalyst',\r",
+									"'Intern',\r",
+									"'Liaison',\r",
+									"'LeadFinancialAnalyst',\r",
+									"'Mentor',\r",
+									"'OfficeOfThePresident',\r",
+									"'ProjectManager',\r",
+									"'RegionalCommunicationsCoordinator',\r",
+									"'RegionalDirector',\r",
+									"'SupportingProjectManager',\r",
+									"'Translator',\r",
+									"'Writer'\r",
+									"];\r",
+									"var randomNumber = Math.floor(Math.random()*userRolesArray.length);\r",
+									"pm.globals.set('userRoles', userRolesArray[randomNumber]);\r",
 									""
 								],
 								"type": "text/javascript"
@@ -151,8 +178,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation register($input: RegisterInput!) {\r\n  register(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value{\r\n          name\r\n          lat\r\n          long\r\n          countries{\r\n            code\r\n            name\r\n            zones{\r\n              name\r\n              lat\r\n              long\r\n              countries{\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      bio {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}",
-								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"realFirstName\": \"Piyush\",\r\n    \"realLastName\": \"Patel\",\r\n    \"email\" : \"{{login_email}}\",\r\n    \"password\": \"{{login_password}}\",\r\n    \"displayFirstName\": \"{{displayFirstName}}\",\r\n    \"displayLastName\": \"{{displayLastName}}\",\r\n    \"phone\": \"{{phone}}\",\r\n    \"timezone\": \"{{timezone}}\",\r\n    \"bio\": \"{{bio}}\",\r\n    \"status\": \"{{userStatus}}\"\r\n  }\r\n}"
+								"query": "mutation register($input: RegisterInput!) {\r\n  register(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"realFirstName\": \"Piyush\",\r\n        \"realLastName\": \"Patel\",\r\n        \"email\": \"{{login_email}}\",\r\n        \"password\": \"{{login_password}}\",\r\n        \"displayFirstName\": \"{{displayFirstName}}\",\r\n        \"displayLastName\": \"{{displayLastName}}\",\r\n        \"phone\": \"{{phone}}\",\r\n        \"timezone\": \"{{timezone}}\",\r\n        \"status\": \"{{userStatus}}\",\r\n        \"title\": \"{{userTitle}}\",\r\n        \"roles\": \"{{userRoles}}\"\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -217,8 +244,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation login($input: LoginInput!) {\r\n  login(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      bio {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": " {\r\n \t\"input\": \r\n  {\r\n     \"email\" : \"{{login_email}}\",\r\n     \"password\":\"{{login_password}}\"\r\n  }\r\n}\r\n"
+								"query": "mutation login($input: LoginInput!) {\r\n  login(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"email\": \"{{login_email}}\",\r\n        \"password\": \"{{login_password}}\"\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -2366,7 +2393,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation createOrganization($input: CreateOrganizationInput!) {\r\n  createOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\n  \"input\": \n  {\n    \"organization\" :\n    {\n      \"name\":\"{{orgName}}\"\n    }    \n  }\n}\n"
+								"variables": "{\n    \"input\": {\n        \"organization\": {\n            \"name\": \"{{orgName}}\"\n        }\n    }\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -2434,7 +2461,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation createOrganization($input: CreateOrganizationInput!) {\r\n  createOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\n  \"input\": \n  {\n    \"organization\" :\n    {\n      \"name\":\"{{orgName}}\"\n    }    \n  }\n}\n"
+								"variables": "{\n    \"input\": {\n        \"organization\": {\n            \"name\": \"{{orgName}}\"\n        }\n    }\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -2502,7 +2529,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation createOrganization($input: CreateOrganizationInput!) {\r\n  createOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\n  \"input\": \n  {\n    \"organization\" :\n    {\n      \"name\":\"{{orgName}}\"\n    }    \n  }\n}\n"
+								"variables": "{\n    \"input\": {\n        \"organization\": {\n            \"name\": \"{{orgName}}\"\n        }\n    }\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -2675,93 +2702,6 @@
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}} ,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
-							}
-						},
-						"url": {
-							"raw": "{{env}}/graphql",
-							"host": [
-								"{{env}}"
-							],
-							"path": [
-								"graphql"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get All Organizations Success - filter by name",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"id": "1a07ab6e-c904-4e73-b842-4daaf4c2814c",
-								"exec": [
-									"var jsonData = pm.response.json();",
-									"",
-									"//Common Verification",
-									"pm.test(\"Status code is 200\", function () {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test(\"Response time is less than 1000ms\", function () {",
-									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
-									"});",
-									"",
-									"//Test Specific - Filter by displayFirstName",
-									"pm.test(\"Verify that items are filtered by organization name\", function () {",
-									"",
-									"    var responseBody = jsonData.data.organizations.items;",
-									"    var multifilters = _.filter(responseBody, function (item) {",
-									"        return /^(.*?(fILTERsORTorgname)[^$]*)$/i.test(item.name.value);",
-									"    });",
-									"    pm.expect(responseBody).to.eql(multifilters);",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						},
-						{
-							"listen": "prerequest",
-							"script": {
-								"id": "ddc3c494-2787-4f49-b0bc-3c9966594191",
-								"exec": [
-									"pm.globals.set(\"itemCount\",100);\r",
-									"pm.globals.set(\"page\",1);\r",
-									"pm.globals.set('order', \"DESC\");"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "",
-								"type": "text",
-								"value": "",
-								"disabled": true
-							}
-						],
-						"body": {
-							"mode": "graphql",
-							"graphql": {
-								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}} ,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"FilterSortOrgName\"\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -3114,7 +3054,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count1\": {{itemCount}} ,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"\"\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"count1\": {{itemCount}} ,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -3201,7 +3141,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page1\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"\"\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page1\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -3288,7 +3228,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort1\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"\"\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort1\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -3375,181 +3315,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order1\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"\"\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
-							}
-						},
-						"url": {
-							"raw": "{{env}}/graphql",
-							"host": [
-								"{{env}}"
-							],
-							"path": [
-								"graphql"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get All Organizations Parameter Mismatch - filter",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"id": "7ba716d7-fe4e-4d51-be3d-12618f050a98",
-								"exec": [
-									"var jsonData = pm.response.json();",
-									"",
-									"//Common Verification",
-									"pm.test(\"Status code is 400 Bad Request\", function () {",
-									"    pm.response.to.have.status(400);",
-									"});",
-									"",
-									"pm.test(\"Response time is less than 1000ms\", function () {",
-									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
-									"});",
-									"",
-									"//Test Specific",
-									"pm.test(\"Verify that error message is correct\", function () {",
-									"    var error_message = jsonData.errors[0].message;  ",
-									"    pm.expect(error_message).to.include(\"is not defined by type \\\"OrganizationListInput\\\". Did you mean \\\"filter\\\"?\");",
-									"});",
-									"",
-									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {",
-									"    var error_code = jsonData.errors[0].extensions.code;  ",
-									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");",
-									"});",
-									""
-								],
-								"type": "text/javascript"
-							}
-						},
-						{
-							"listen": "prerequest",
-							"script": {
-								"id": "39c452e5-511e-409d-87e9-f2b230c335c9",
-								"exec": [
-									""
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "",
-								"type": "text",
-								"value": "",
-								"disabled": true
-							}
-						],
-						"body": {
-							"mode": "graphql",
-							"graphql": {
-								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}} ,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter1\": {\r\n      \"name\": \"\"\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
-							}
-						},
-						"url": {
-							"raw": "{{env}}/graphql",
-							"host": [
-								"{{env}}"
-							],
-							"path": [
-								"graphql"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get All Organizations Parameter Mismatch - filter name",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"id": "95219d4d-3e05-4593-acb7-7b2402500c4b",
-								"exec": [
-									"var jsonData = pm.response.json();",
-									"",
-									"//Common Verification",
-									"pm.test(\"Status code is 400 Bad Request\", function () {",
-									"    pm.response.to.have.status(400);",
-									"});",
-									"",
-									"pm.test(\"Response time is less than 1000ms\", function () {",
-									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
-									"});",
-									"",
-									"//Test Specific",
-									"pm.test(\"Verify that error message is correct\", function () {",
-									"    var error_message = jsonData.errors[0].message;",
-									"    pm.expect(error_message).to.include(\"is not defined by type \\\"OrganizationFilters\\\". Did you mean \\\"name\\\"?\");",
-									"});",
-									"",
-									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {",
-									"    var error_code = jsonData.errors[0].extensions.code;",
-									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");",
-									"});",
-									""
-								],
-								"type": "text/javascript"
-							}
-						},
-						{
-							"listen": "prerequest",
-							"script": {
-								"id": "b28fd268-c0c3-445f-8739-d60a60b2c5a5",
-								"exec": [
-									""
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "",
-								"type": "text",
-								"value": "",
-								"disabled": true
-							}
-						],
-						"body": {
-							"mode": "graphql",
-							"graphql": {
-								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}} ,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name1\": \"\"\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order1\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -3640,7 +3406,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": 0,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"\"\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": 0,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -3731,7 +3497,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": 580,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"\"\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": 580,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -3823,7 +3589,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{count}},\r\n    \"page\": 0,\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"\"\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{count}},\r\n    \"page\": 0,\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -4010,7 +3776,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{count}} ,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"ASCENDING\",\r\n    \"filter\": {\r\n      \"name\": \"\",\r\n      \"userId\" : \"\"\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{count}} ,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"ASCENDING\"\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
