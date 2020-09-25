@@ -97,12 +97,6 @@ export function createBaseNode(
     ]);
   }
 
-  createSG(query, 'adminSG');
-
-  if (!isRootuser) {
-    addUserToSG(query, 'requestingUser', 'adminSG');
-  }
-
   for (const prop of props) {
     const labels = ['Property'];
     if (prop.label) {
@@ -113,21 +107,6 @@ export function createBaseNode(
       relation('out', '', prop.key, { active: true, createdAt }),
       node('', labels, { createdAt, value: prop.value }),
     ]);
-
-    if (prop.addToAdminSg) {
-      query.create([
-        node('adminSG'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property: prop.key,
-          read: true,
-          edit: true,
-          admin: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('node'),
-      ]);
-    }
 
     if (prop.isPublic) {
       query.create([
@@ -156,37 +135,6 @@ export function createBaseNode(
       ]);
     }
   }
-}
-
-// assumes 'root' cypher variable is declared in query
-export function createSG(
-  query: Query,
-  cypherIdentifier: string,
-  label?: string
-) {
-  const labels = ['SecurityGroup'];
-  if (label) {
-    labels.push(label);
-  }
-  const createdAt = DateTime.local();
-
-  query.create([
-    node('root'),
-    relation('in', '', 'member'),
-    node(cypherIdentifier, labels, { createdAt, id: generate() }),
-  ]);
-}
-
-export function addUserToSG(
-  query: Query,
-  userCypherIdentifier: string,
-  sGcypherIdentifier: string
-) {
-  query.create([
-    node(userCypherIdentifier),
-    relation('in', '', 'member'),
-    node(sGcypherIdentifier),
-  ]);
 }
 
 // MATCHING LOOPS - not single matches //////////////////////////////////////////////////////

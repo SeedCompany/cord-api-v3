@@ -26,6 +26,8 @@ import {
   matchSession,
   Property,
 } from '../../core';
+import { AuthorizationService } from '../authorization/authorization.service';
+import { InternalRole } from '../project';
 import { BaseNode, FileListInput, FileNodeType, FileVersion } from './dto';
 
 @Injectable()
@@ -33,7 +35,8 @@ export class FileRepository {
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
-    @Logger('file:repository') private readonly logger: ILogger
+    @Logger('file:repository') private readonly logger: ILogger,
+    private readonly authorizationService: AuthorizationService
   ) {}
 
   async getBaseNodeById(id: string, session: ISession): Promise<BaseNode> {
@@ -263,11 +266,6 @@ export class FileRepository {
     const createFile = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([
-        node('root', 'User', {
-          id: this.config.rootAdmin.id,
-        }),
-      ])
       .call(createBaseNode, ['Directory', 'FileNode'], props)
       .return('node.id as id')
       .asResult<{ id: string }>();
@@ -277,6 +275,12 @@ export class FileRepository {
     if (!result) {
       throw new ServerException('Failed to create directory');
     }
+
+    await this.authorizationService.addPermsForRole({
+      userId: session.userId as string,
+      baseNodeId: result.id,
+      role: InternalRole.Admin,
+    });
 
     await this.attachCreator(result.id, session);
 
@@ -307,11 +311,6 @@ export class FileRepository {
     const createFile = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([
-        node('root', 'User', {
-          id: this.config.rootAdmin.id,
-        }),
-      ])
       .call(createBaseNode, ['File', 'FileNode'], props)
       .return('node.id as id')
       .asResult<{ id: string }>();
@@ -321,6 +320,12 @@ export class FileRepository {
     if (!result) {
       throw new ServerException('Failed to create file');
     }
+
+    await this.authorizationService.addPermsForRole({
+      userId: session.userId as string,
+      baseNodeId: result.id,
+      role: InternalRole.Admin,
+    });
 
     await this.attachCreator(result.id, session);
 
@@ -340,27 +345,18 @@ export class FileRepository {
       {
         key: 'name',
         value: input.name,
-        addToAdminSg: true,
-        addToWriterSg: true,
-        addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
       },
       {
         key: 'mimeType',
         value: input.mimeType,
-        addToAdminSg: true,
-        addToWriterSg: true,
-        addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
       },
       {
         key: 'size',
         value: input.size,
-        addToAdminSg: true,
-        addToWriterSg: true,
-        addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
       },
@@ -369,11 +365,6 @@ export class FileRepository {
     const createFile = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([
-        node('root', 'User', {
-          id: this.config.rootAdmin.id,
-        }),
-      ])
       .call(
         createBaseNode,
         ['FileVersion', 'FileNode'],
@@ -391,6 +382,12 @@ export class FileRepository {
     if (!result) {
       throw new ServerException('Failed to create file version');
     }
+
+    await this.authorizationService.addPermsForRole({
+      userId: session.userId as string,
+      baseNodeId: result.id,
+      role: InternalRole.Admin,
+    });
 
     await this.attachCreator(input.id, session);
     await this.attachParent(input.id, fileId);

@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { node, Query, relation } from 'cypher-query-builder';
 import { range } from 'lodash';
+import { DateTime } from 'luxon';
+import { generate } from 'shortid';
 import {
   DuplicateException,
   ISession,
@@ -9,10 +11,8 @@ import {
   UnauthenticatedException,
 } from '../../common';
 import {
-  addUserToSG,
   ConfigService,
   createBaseNode,
-  createSG,
   DatabaseService,
   ILogger,
   Logger,
@@ -71,6 +71,21 @@ export class OrganizationService {
     ];
   }
 
+  // assumes 'root' cypher variable is declared in query
+  createSG(query: Query, cypherIdentifier: string, label?: string) {
+    const labels = ['SecurityGroup'];
+    if (label) {
+      labels.push(label);
+    }
+    const createdAt = DateTime.local();
+
+    query.create([
+      node('root'),
+      relation('in', '', 'member'),
+      node(cypherIdentifier, labels, { createdAt, id: generate() }),
+    ]);
+  }
+
   async create(
     input: CreateOrganization,
     session: ISession
@@ -109,9 +124,9 @@ export class OrganizationService {
         }),
       ])
       .call(matchRequestingUser, session)
-      .call(createSG, 'orgSG', 'OrgPublicSecurityGroup')
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      .call(this.createSG, 'orgSG', 'OrgPublicSecurityGroup')
       .call(createBaseNode, 'Organization', secureProps)
-      .call(addUserToSG, 'requestingUser', 'adminSG') // must come after base node creation
       .return('node.id as id');
 
     const result = await query.first();

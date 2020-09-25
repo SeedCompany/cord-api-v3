@@ -364,6 +364,33 @@ export function getRolePermissions(
     };
   }
 
+  if (role === InternalRole.Admin && baseNodeType === BaseNodeType.File) {
+    return {
+      // these were just place holders for testing, not impl yet
+      read: [],
+      edit: ['name', 'createdBy', 'parent'],
+    };
+  }
+
+  if (
+    role === InternalRole.Admin &&
+    baseNodeType === BaseNodeType.FileVersion
+  ) {
+    return {
+      // these were just place holders for testing, not impl yet
+      read: [],
+      edit: ['name', 'category', 'size', 'mimeType', 'createdBy', 'parent'],
+    };
+  }
+
+  if (role === InternalRole.Admin && baseNodeType === BaseNodeType.Directory) {
+    return {
+      // these were just place holders for testing, not impl yet
+      read: [],
+      edit: ['name', 'createdBy', 'parent', 'rootDirectory'],
+    };
+  }
+
   return {
     read: [],
     edit: [],
