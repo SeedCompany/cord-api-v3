@@ -66,7 +66,7 @@ export interface Property {
   label?: string;
 }
 
-// assumes 'requestingUser', 'root' and 'publicSG' cypher identifiers have been matched
+// assumes 'requestingUser', and 'publicSG' cypher identifiers have been matched
 // add baseNodeProps and editableProps
 export function createBaseNode(
   query: Query,
