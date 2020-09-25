@@ -12,6 +12,9 @@ export async function createFundingAccount(
   input: Partial<CreateFundingAccount> = {}
 ) {
   const name = input.name || faker.hacker.noun() + faker.company.companyName();
+  const accountNumber =
+    input.accountNumber ||
+    faker.random.number({ min: 1000, max: 9999 }).toString();
 
   const result = await app.graphql.mutate(
     gql`
@@ -29,6 +32,7 @@ export async function createFundingAccount(
         fundingAccount: {
           ...input,
           name,
+          accountNumber,
         },
       },
     }

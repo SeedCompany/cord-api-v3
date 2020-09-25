@@ -8,6 +8,9 @@ import { FundingAccount } from './funding-account.dto';
 export abstract class CreateFundingAccount {
   @NameField()
   readonly name: string;
+
+  @Field()
+  readonly accountNumber: string;
 }
 
 @InputType()

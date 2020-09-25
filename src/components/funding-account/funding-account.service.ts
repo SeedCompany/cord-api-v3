@@ -43,6 +43,7 @@ import {
 export class FundingAccountService {
   private readonly securedProperties = {
     name: true,
+    accountNumber: true,
   };
 
   constructor(
@@ -61,6 +62,15 @@ export class FundingAccountService {
 
       'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.active)',
       'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
+
+      'CREATE CONSTRAINT ON (n:FundingAccountName) ASSERT EXISTS(n.value)',
+      'CREATE CONSTRAINT ON (n:FundingAccountName) ASSERT n.value IS UNIQUE',
+
+      'CREATE CONSTRAINT ON ()-[r:accountNumber]-() ASSERT EXISTS(r.active)',
+      'CREATE CONSTRAINT ON ()-[r:accountNumber]-() ASSERT EXISTS(r.createdAt)',
+
+      'CREATE CONSTRAINT ON (n:FundingAccountNumber) ASSERT EXISTS(n.value)',
+      'CREATE CONSTRAINT ON (n:FundingAccountNumber) ASSERT n.value IS UNIQUE',
     ];
   }
 
@@ -87,7 +97,17 @@ export class FundingAccountService {
         value: input.name,
         isPublic: false,
         isOrgPublic: false,
-        label: 'FieldZoneName',
+        label: 'FundingAccountName',
+      },
+      {
+        key: 'accountNumber',
+        value: input.accountNumber,
+        addToAdminSg: true,
+        addToWriterSg: false,
+        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+        label: 'FundingAccountNumber',
       },
     ];
 
@@ -169,7 +189,7 @@ export class FundingAccountService {
     return await this.db.sgUpdateProperties({
       session,
       object: fundingAccount,
-      props: ['name'],
+      props: ['name', 'accountNumber'],
       changes: input,
       nodevar: 'fundingAccount',
     });

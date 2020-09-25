@@ -801,6 +801,11 @@ export const fundingAccount = gql`
       canRead
       canEdit
     }
+    accountNumber {
+      value
+      canRead
+      canEdit
+    }
     createdAt
   }
 `;

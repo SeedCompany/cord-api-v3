@@ -51,12 +51,16 @@ describe('FundingAccount e2e', () => {
     expect(actual.id).toBe(st.id);
     expect(isValid(actual.id)).toBe(true);
     expect(actual.name.value).toBe(st.name.value);
+    expect(actual.accountNumber.value).toBe(st.accountNumber.value);
   });
 
   // Update FundingAccount
   it('update funding account', async () => {
     const st = await createFundingAccount(app);
     const newName = faker.company.companyName();
+    const newAccountNumber = faker.random
+      .number({ min: 1000, max: 9999 })
+      .toString();
     const result = await app.graphql.mutate(
       gql`
         mutation updateFundingAccount($input: UpdateFundingAccountInput!) {
@@ -73,6 +77,7 @@ describe('FundingAccount e2e', () => {
           fundingAccount: {
             id: st.id,
             name: newName,
+            accountNumber: newAccountNumber,
           },
         },
       }
@@ -80,6 +85,7 @@ describe('FundingAccount e2e', () => {
     const updated = result.updateFundingAccount.fundingAccount;
     expect(updated).toBeTruthy();
     expect(updated.name.value).toBe(newName);
+    expect(updated.accountNumber.value).toBe(newAccountNumber);
   });
 
   // Delete FundingAccount
