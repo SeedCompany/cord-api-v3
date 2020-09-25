@@ -186,11 +186,12 @@ export class UserService {
       throw new ServerException('Failed to create user');
     }
 
-    await this.authorizationService.addPermsForRole({
-      userId: id,
-      baseNodeId: id,
-      role: InternalRole.Admin,
-    });
+    await this.authorizationService.addPermsForRole(
+      InternalRole.Admin,
+      'User',
+      id,
+      id
+    );
 
     // attach user to publicSG
 
