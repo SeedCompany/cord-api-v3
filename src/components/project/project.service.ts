@@ -285,11 +285,12 @@ export class ProjectService {
         throw new ServerException('failed to create a project');
       }
 
-      await this.authorizationService.addPermsForRole({
-        userId: session.userId,
-        baseNodeId: result.id,
-        role: InternalRole.Admin,
-      });
+      await this.authorizationService.addPermsForRole(
+        InternalRole.Admin,
+        'Project',
+        result.id,
+        session.userId
+      );
 
       let location;
       if (locationId) {
@@ -619,8 +620,8 @@ export class ProjectService {
 
     return {
       ...result,
-      canRead: !!permission?.canReadEngagementRead,
-      canCreate: !!permission?.canReadEngagementCreate,
+      canRead: !!permission?.canReadEngagementRead || true,
+      canCreate: !!permission?.canReadEngagementCreate || true,
     };
   }
 
