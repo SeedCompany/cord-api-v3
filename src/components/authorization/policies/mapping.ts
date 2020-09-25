@@ -71,6 +71,7 @@ export interface TypeToSecuredProps {
   EthnologueLanguage: SecuredKeys<EthnologueLanguage>;
   File: SecuredKeys<File>;
   FileVersion: SecuredKeys<FileVersion>;
+  Film: SecuredKeys<Film>;
   FundingAccount: SecuredKeys<FundingAccount>;
   Language: SecuredKeys<Language>;
   LanguageEngagement: SecuredKeys<LanguageEngagement>;

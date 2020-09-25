@@ -58,6 +58,10 @@ const policies = [
     createdBy: Perm.ReadAndEdit,
     parent: Perm.ReadAndEdit,
   }),
+  policy('Film', InternalRole.Admin, {
+    name: Perm.ReadAndEdit,
+    scriptureReferences: Perm.ReadAndEdit,
+  }),
   policy('FundingAccount', InternalRole.Admin, {
     name: Perm.ReadAndEdit,
   }),
