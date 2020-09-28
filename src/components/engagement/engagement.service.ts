@@ -1083,8 +1083,8 @@ export class EngagementService {
 
     return {
       ...result,
-      canRead: !!permission?.canRead || true,
-      canCreate: !!permission?.canEdit || true,
+      canRead: !!permission?.canRead,
+      canCreate: !!permission?.canEdit,
     };
   }
 

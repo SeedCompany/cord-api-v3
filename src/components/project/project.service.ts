@@ -583,8 +583,8 @@ export class ProjectService {
 
     return {
       ...result,
-      canRead: !!permission?.canReadEngagementRead || true,
-      canCreate: !!permission?.canReadEngagementCreate || true,
+      canRead: !!permission?.canReadEngagementRead,
+      canCreate: !!permission?.canReadEngagementCreate,
     };
   }
 
