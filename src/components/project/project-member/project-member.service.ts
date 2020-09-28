@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
-import { difference, upperFirst } from 'lodash';
+import { difference } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import {
@@ -21,6 +21,7 @@ import {
   Logger,
   matchRequestingUser,
   matchSession,
+  property,
 } from '../../../core';
 import {
   calculateTotalAndPaginateList,
@@ -62,60 +63,6 @@ export class ProjectMemberService {
     @Logger('project:member:service') private readonly logger: ILogger,
     private readonly authorizationService: AuthorizationService
   ) {}
-
-  // helper method for defining properties
-  property = (prop: string, value: any) => {
-    const createdAt = DateTime.local();
-    return [
-      [
-        node('newProjectMember'),
-        relation('out', '', prop, {
-          active: true,
-          createdAt,
-        }),
-        node(prop, 'Property', {
-          value,
-        }),
-      ],
-    ];
-  };
-
-  propMatch = (query: Query, property: string) => {
-    const readPerm = 'canRead' + upperFirst(property);
-    const editPerm = 'canEdit' + upperFirst(property);
-    query.optionalMatch([
-      [
-        node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
-        node(editPerm, 'Permission', {
-          property,
-          edit: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('projectMember'),
-        relation('out', '', property, { active: true }),
-        node(property, 'Property'),
-      ],
-    ]);
-    query.optionalMatch([
-      [
-        node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
-        node(readPerm, 'Permission', {
-          property,
-          read: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('projectMember'),
-        relation('out', '', property, { active: true }),
-        node(property, 'Property'),
-      ],
-    ]);
-  };
 
   protected async getPMByProjectAndUser(
     projectId: string,
@@ -166,8 +113,8 @@ export class ProjectMemberService {
               id,
             }),
           ],
-          ...this.property('roles', input.roles),
-          ...this.property('modifiedAt', createdAt),
+          ...property('roles', input.roles, 'newProjectMember'),
+          ...property('modifiedAt', createdAt, 'newProjectMember'),
         ])
         .return('newProjectMember.id as id');
       await createProjectMember.first();

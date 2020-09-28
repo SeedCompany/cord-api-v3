@@ -1,6 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { find, flatMap, upperFirst } from 'lodash';
+import { find, flatMap } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
@@ -114,43 +114,6 @@ export class ProjectService {
       'CREATE CONSTRAINT ON (n:ProjectName) ASSERT n.value IS UNIQUE',
     ];
   }
-
-  // helper method for defining properties
-  property = (prop: string, value: any | null) => {
-    const createdAt = DateTime.local();
-    return [
-      [
-        node('newProject'),
-        relation('out', '', prop, {
-          active: true,
-          createdAt,
-        }),
-        node(prop, 'Property', {
-          value,
-        }),
-      ],
-    ];
-  };
-
-  propMatch = (property: string) => {
-    const perm = 'canRead' + upperFirst(property);
-    return [
-      [
-        node('requestingUser'),
-        relation('in', '', 'member'),
-        node('sg', 'SecurityGroup'),
-        relation('out', '', 'permission'),
-        node(perm, 'Permission', {
-          property,
-          read: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('project'),
-        relation('out', '', property, { active: true }),
-        node(property, 'Property'),
-      ],
-    ];
-  };
 
   async create(
     { locationId, ...input }: CreateProject,

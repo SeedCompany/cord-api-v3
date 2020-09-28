@@ -1,5 +1,6 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { AuthorizationModule } from '../authorization/authorization.module';
+import { EngagementModule } from '../engagement/engagement.module';
 import { LocationModule } from '../location/location.module';
 import { ProjectModule } from '../project/project.module';
 import { EthnologueLanguageService } from './ethnologue-language';
@@ -11,6 +12,7 @@ import { LanguageService } from './language.service';
     AuthorizationModule,
     LocationModule,
     forwardRef(() => ProjectModule),
+    forwardRef(() => EngagementModule),
   ],
   providers: [LanguageResolver, LanguageService, EthnologueLanguageService],
   exports: [LanguageService],

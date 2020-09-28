@@ -16,6 +16,7 @@ import {
   InputException,
   ISession,
   isSecured,
+  many,
   mapFromList,
   Order,
   Resource,
@@ -70,6 +71,29 @@ export const permission = (property: string, baseNode: string) => {
     ],
   ];
 };
+
+export const permissions = (baseNode: string, properties: string[]) => {
+  return properties.flatMap((property) => permission(property, baseNode));
+};
+
+export const property = (
+  prop: string,
+  value: any | null,
+  baseNode: string,
+  propVar = prop,
+  extraPropLabel?: Many<string>
+) => [
+  [
+    node(baseNode),
+    relation('out', '', prop, {
+      active: true,
+      createdAt: DateTime.local(),
+    }),
+    node(propVar, ['Property', ...many(extraPropLabel ?? [])], {
+      value,
+    }),
+  ],
+];
 
 export const matchSession = (
   session: ISession,
@@ -671,15 +695,15 @@ export class DatabaseService {
         })
         <-[:token {active: true}]-
         (requestingUser:User {
-          
+
           id: $requestingUserId
         }),
         (object {
-          
+
           id: $objectId
         })
         detach delete object
-        
+
         `,
         {
           requestingUserId: session.userId,

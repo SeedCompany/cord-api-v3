@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
-import { upperFirst } from 'lodash';
+import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   InputException,
@@ -63,63 +62,6 @@ export class BudgetService {
     private readonly authorizationService: AuthorizationService,
     @Logger('budget:service') private readonly logger: ILogger
   ) {}
-
-  // helper method for defining properties
-  property = (prop: string, value: any, baseNode: string) => {
-    if (!value) {
-      return [];
-    }
-    const createdAt = DateTime.local();
-    return [
-      [
-        node(baseNode),
-        relation('out', '', prop, {
-          active: true,
-          createdAt,
-        }),
-        node(prop, 'Property', {
-          value,
-        }),
-      ],
-    ];
-  };
-
-  propMatch = (query: Query, property: string, baseNode: string) => {
-    const readPerm = 'canRead' + upperFirst(property);
-    const editPerm = 'canEdit' + upperFirst(property);
-    query.optionalMatch([
-      [
-        node('requestingUser'),
-        relation('in', '', 'member'),
-        node('g', 'SecurityGroup'),
-        relation('out', '', 'permission'),
-        node(editPerm, 'Permission', {
-          property,
-          edit: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node(baseNode),
-        relation('out', '', property, { active: true }),
-        node(property, 'Property'),
-      ],
-    ]);
-    query.optionalMatch([
-      [
-        node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
-        node(readPerm, 'Permission', {
-          property,
-          read: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node(baseNode),
-        relation('out', '', property, { active: true }),
-        node(property, 'Property'),
-      ],
-    ]);
-  };
 
   async create(
     { projectId, ...input }: CreateBudget,

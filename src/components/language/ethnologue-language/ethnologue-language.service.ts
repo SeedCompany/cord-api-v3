@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { pickBy, upperFirst } from 'lodash';
-import { DateTime } from 'luxon';
+import { pickBy } from 'lodash';
 import { ISession, NotFoundException, ServerException } from '../../../common';
 import {
   ConfigService,
@@ -41,45 +40,6 @@ export class EthnologueLanguageService {
     private readonly authorizationService: AuthorizationService,
     @Logger('language:ethnologue:service') private readonly logger: ILogger
   ) {}
-
-  // helper method for defining properties
-  property = (prop: string, value: any) => {
-    const createdAt = DateTime.local();
-    const propLabel = 'Property';
-    return [
-      [
-        node('newEthnologueLanguage'),
-        relation('out', '', prop, {
-          active: true,
-          createdAt,
-        }),
-        node(prop, propLabel, {
-          value,
-        }),
-      ],
-    ];
-  };
-
-  propMatch = (property: string) => {
-    const perm = 'canRead' + upperFirst(property);
-    return [
-      [
-        node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
-        node(perm, 'Permission', {
-          property,
-
-          read: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('lang'),
-        relation('out', '', property, { active: true }),
-        node(property, 'Property'),
-      ],
-    ];
-  };
 
   async create(
     input: CreateEthnologueLanguage,

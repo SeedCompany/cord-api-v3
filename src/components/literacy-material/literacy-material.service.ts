@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { DateTime } from 'luxon';
 import {
   DuplicateException,
   ISession,
@@ -66,28 +65,6 @@ export class LiteracyMaterialService {
       'CREATE CONSTRAINT ON (n:LiteracyName) ASSERT n.value IS UNIQUE',
     ];
   }
-
-  // helper method for defining properties
-  property = (prop: string, value: any, baseNode: string) => {
-    if (!value) {
-      return [];
-    }
-    const createdAt = DateTime.local();
-    const propLabel =
-      prop === 'name' ? 'Property:LiteracyName' : 'Property:Range';
-    return [
-      [
-        node(baseNode),
-        relation('out', '', prop, {
-          active: true,
-          createdAt,
-        }),
-        node(prop, propLabel, {
-          value,
-        }),
-      ],
-    ];
-  };
 
   async create(
     input: CreateLiteracyMaterial,

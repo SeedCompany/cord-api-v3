@@ -156,7 +156,7 @@ export class AdminService implements OnApplicationBootstrap {
         realLastName: 'root',
         phone: 'root',
         timezone: 'root',
-        bio: 'root',
+        about: 'root',
         roles: Object.values(Role),
       });
 

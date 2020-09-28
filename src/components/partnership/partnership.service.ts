@@ -1,7 +1,7 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
-import { uniq, upperFirst } from 'lodash';
+import { uniq } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   InputException,
@@ -82,45 +82,6 @@ export class PartnershipService {
     private readonly authorizationService: AuthorizationService,
     @Logger('partnership:service') private readonly logger: ILogger
   ) {}
-
-  propMatch = (query: Query, property: string) => {
-    const readPerm = 'canRead' + upperFirst(property);
-    const editPerm = 'canEdit' + upperFirst(property);
-    query.optionalMatch([
-      [
-        node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
-        node(editPerm, 'Permission', {
-          property,
-
-          edit: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('partnership'),
-        relation('out', '', property, { active: true }),
-        node(property, 'Property'),
-      ],
-    ]);
-    query.optionalMatch([
-      [
-        node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
-        node(readPerm, 'Permission', {
-          property,
-
-          read: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('partnership'),
-        relation('out', '', property, { active: true }),
-        node(property, 'Property'),
-      ],
-    ]);
-  };
 
   async create(
     { organizationId, projectId, ...input }: CreatePartnership,

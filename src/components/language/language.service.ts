@@ -1,12 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { first, intersection, upperFirst } from 'lodash';
+import { compact, first, intersection } from 'lodash';
 import { DateTime } from 'luxon';
 import {
+  CalendarDate,
   DuplicateException,
   InputException,
   ISession,
   NotFoundException,
+  SecuredDate,
   ServerException,
   simpleSwitch,
 } from '../../common';
@@ -23,6 +25,7 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
+  collect,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
@@ -35,6 +38,7 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { EngagementService } from '../engagement';
 import {
   Location,
   LocationListInput,
@@ -68,7 +72,6 @@ export class LanguageService {
     leastOfThese: true,
     leastOfTheseReason: true,
     displayNamePronunciation: true,
-    sponsorStartDate: true,
     isSignLanguage: true,
     signLanguageCode: true,
     sponsorEstimatedEndDate: true,
@@ -80,6 +83,7 @@ export class LanguageService {
     private readonly ethnologueLanguageService: EthnologueLanguageService,
     private readonly locationService: LocationService,
     private readonly projectService: ProjectService,
+    private readonly engagementService: EngagementService,
     private readonly authorizationService: AuthorizationService,
     @Logger('language:service') private readonly logger: ILogger
   ) {}
@@ -131,48 +135,6 @@ export class LanguageService {
       //'CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.active)',
     ];
   }
-  // helper method for defining properties
-  property = (prop: string, value: any) => {
-    const createdAt = DateTime.local();
-    const propLabel =
-      simpleSwitch(prop, {
-        name: ['LanguageName'],
-        displayName: ['LanguageDisplayName'],
-        rodNumber: ['LanguageRodNumber'],
-      }) ?? [];
-    return [
-      [
-        node('newLang'),
-        relation('out', '', prop, {
-          active: true,
-          createdAt,
-        }),
-        node(prop, [...propLabel, 'Property'], {
-          value,
-        }),
-      ],
-    ];
-  };
-
-  propMatch = (property: string) => {
-    const perm = 'canRead' + upperFirst(property);
-    return [
-      [
-        node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
-        node(perm, 'Permission', {
-          property,
-          read: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('lang'),
-        relation('out', '', property, { active: true }),
-        node(property, 'Property'),
-      ],
-    ];
-  };
 
   async create(input: CreateLanguage, session: ISession): Promise<Language> {
     const createdAt = DateTime.local();
@@ -584,24 +546,15 @@ export class LanguageService {
 
     const queryProject = this.db
       .query()
-      .match(matchSession(session, { withAclRead: 'canReadProjects' }))
       .match([node('language', 'Language', { id: language.id })])
       .match([
         node('language'),
         relation('in', '', 'language', { active: true }),
-        node('langEngagement', 'LanguageEngagement'),
+        node('', 'LanguageEngagement'),
         relation('in', '', 'engagement', { active: true }),
         node('project', 'Project'),
-      ]);
-    queryProject.return({
-      project: [{ id: 'id', createdAt: 'createdAt' }],
-      requestingUser: [
-        {
-          canReadProjects: 'canReadProjects',
-          canCreateProject: 'canCreateProject',
-        },
-      ],
-    });
+      ])
+      .return({ project: [{ id: 'id', createdAt: 'createdAt' }] });
 
     let readProject = await queryProject.run();
     this.logger.debug(`list projects results`, { total: readProject.length });
@@ -622,9 +575,61 @@ export class LanguageService {
       items: result.items,
       hasMore: result.hasMore,
       total: result.total,
-      canCreate: !!readProject[0]?.canCreateProject,
-      canRead: !!readProject[0]?.canReadProjects,
+      //TODO: use the upcoming Roles service to determine permissions.
+      canCreate: true,
+      canRead: true,
     };
+  }
+
+  async sponsorStartDate(
+    language: Language,
+    session: ISession
+  ): Promise<SecuredDate> {
+    const result = await this.db
+      .query()
+      .match([
+        node('', 'Language', { id: language.id }),
+        relation('in', '', 'language', { active: true }),
+        node('engagement', 'LanguageEngagement'),
+      ])
+      .return(collect('engagement.id', 'engagementIds'))
+      .asResult<{ engagementIds: string[] }>()
+      .first();
+
+    if (!result) {
+      throw new ServerException('Error fetching sponsorStartDate');
+    }
+
+    try {
+      const engagments = await Promise.all(
+        result.engagementIds.map((engagementId) =>
+          this.engagementService.readOne(engagementId, session)
+        )
+      );
+      const dates = compact(
+        engagments.map((engagement) => engagement.startDate.value)
+      );
+
+      const canRead = engagments.every(
+        (engagement) => engagement.startDate.canRead
+      );
+
+      const value =
+        dates.length && canRead ? CalendarDate.min(...dates) : undefined;
+
+      return {
+        canRead,
+        canEdit: false,
+        value,
+      };
+    } catch {
+      //if engagement readOne returns a not found exception, then don't have read permissions on the engagement
+      return {
+        canRead: false,
+        canEdit: false,
+        value: undefined,
+      };
+    }
   }
 
   async addLocation(

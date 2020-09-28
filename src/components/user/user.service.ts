@@ -20,6 +20,7 @@ import {
   matchRequestingUser,
   matchSession,
   OnIndex,
+  property,
   UniquenessError,
 } from '../../core';
 import {
@@ -72,7 +73,7 @@ export class UserService {
     displayLastName: true,
     phone: true,
     timezone: true,
-    bio: true,
+    about: true,
     status: true,
     title: true,
     roles: true,
@@ -111,26 +112,9 @@ export class UserService {
     ];
   }
 
-  // helper method for defining properties
-  property = (prop: string, value: any | null, propVar = prop) => {
-    const createdAt = DateTime.local();
-    return [
-      [
-        node('user'),
-        relation('out', '', prop, {
-          active: true,
-          createdAt,
-        }),
-        node(propVar, 'Property', {
-          value,
-        }),
-      ],
-    ];
-  };
-
   roleProperties = (roles?: Role[]) => {
     return (roles || []).flatMap((role) =>
-      this.property('roles', role, `role${role}`)
+      property('roles', role, 'user', `role${role}`)
     );
   };
 
@@ -154,16 +138,16 @@ export class UserService {
           createdAt,
         }),
       ],
-      ...this.property('realFirstName', input.realFirstName),
-      ...this.property('realLastName', input.realLastName),
-      ...this.property('displayFirstName', input.displayFirstName),
-      ...this.property('displayLastName', input.displayLastName),
-      ...this.property('phone', input.phone),
-      ...this.property('timezone', input.timezone),
-      ...this.property('bio', input.bio),
-      ...this.property('status', input.status),
+      ...property('realFirstName', input.realFirstName, 'user'),
+      ...property('realLastName', input.realLastName, 'user'),
+      ...property('displayFirstName', input.displayFirstName, 'user'),
+      ...property('displayLastName', input.displayLastName, 'user'),
+      ...property('phone', input.phone, 'user'),
+      ...property('timezone', input.timezone, 'user'),
+      ...property('about', input.about, 'user'),
+      ...property('status', input.status, 'user'),
       ...this.roleProperties(input.roles),
-      ...this.property('title', input.title),
+      ...property('title', input.title, 'user'),
     ]);
 
     query.return({
@@ -285,7 +269,7 @@ export class UserService {
         'displayLastName',
         'phone',
         'timezone',
-        'bio',
+        'about',
         'status',
         'title',
       ],
@@ -729,7 +713,7 @@ export class UserService {
                 'displayLastName',
                 'phone',
                 'timezone',
-                'bio',
+                'about',
               ],
               nodevar: 'user',
             });
@@ -750,7 +734,7 @@ export class UserService {
                 'displayLastName',
                 'phone',
                 'timezone',
-                'bio',
+                'about',
               ],
               nodevar: 'user',
             });

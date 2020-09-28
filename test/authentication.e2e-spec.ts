@@ -120,7 +120,7 @@ describe('Authentication e2e', () => {
     expect((actual.timezone as SecuredTimeZone).value?.name).toBe(
       fakeUser.timezone
     );
-    expect(actual.bio.value).toBe(fakeUser.bio);
+    expect(actual.about.value).toBe(fakeUser.about);
 
     return true;
   });

@@ -1,7 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { upperFirst } from 'lodash';
-import { DateTime } from 'luxon';
 import {
   InputException,
   ISession,
@@ -58,46 +56,6 @@ export class CeremonyService {
     private readonly authorizationService: AuthorizationService,
     @Logger('ceremony:service') private readonly logger: ILogger
   ) {}
-
-  // helper method for defining properties
-  property = (prop: string, value: any) => {
-    if (!value) {
-      return [];
-    }
-    const createdAt = DateTime.local();
-    return [
-      [
-        node('newCeremony'),
-        relation('out', '', prop, {
-          active: true,
-          createdAt,
-        }),
-        node(prop, 'Property', {
-          value,
-        }),
-      ],
-    ];
-  };
-
-  propMatch = (property: string) => {
-    const perm = 'canRead' + upperFirst(property);
-    return [
-      [
-        node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
-        node(perm, 'Permission', {
-          property,
-          read: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('ceremony'),
-        relation('out', '', property, { active: true }),
-        node(property, 'Property'),
-      ],
-    ];
-  };
 
   async create(input: CreateCeremony, session: ISession): Promise<Ceremony> {
     const secureProps: Property[] = [

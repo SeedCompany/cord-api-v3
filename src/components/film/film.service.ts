@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { DateTime } from 'luxon';
 import {
   DuplicateException,
   ISession,
@@ -64,34 +63,6 @@ export class FilmService {
       'CREATE CONSTRAINT ON (n:FilmName) ASSERT n.value IS UNIQUE',
     ];
   }
-
-  // helper method for defining properties
-  property = (prop: string, value: any, baseNode: string) => {
-    if (!value) {
-      return [];
-    }
-    const createdAt = DateTime.local();
-    const propLabel =
-      prop === 'name'
-        ? 'Property:FilmName'
-        : prop === 'rangeStart'
-        ? 'Property:RangeStart'
-        : prop === 'rangeEnd'
-        ? 'Property:RangeEnd'
-        : 'Property:Range';
-    return [
-      [
-        node(baseNode),
-        relation('out', '', prop, {
-          active: true,
-          createdAt,
-        }),
-        node(prop, propLabel, {
-          value,
-        }),
-      ],
-    ];
-  };
 
   async create(input: CreateFilm, session: ISession): Promise<Film> {
     const checkFm = await this.db

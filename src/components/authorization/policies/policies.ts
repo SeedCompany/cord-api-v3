@@ -75,7 +75,6 @@ const policies = [
     registryOfDialectsCode: Perm.ReadAndEdit,
     signLanguageCode: Perm.ReadAndEdit,
     sponsorEstimatedEndDate: Perm.ReadAndEdit,
-    sponsorStartDate: Perm.ReadAndEdit,
     ethnologue: Perm.ReadAndEdit,
     sensitivity: Perm.ReadAndEdit,
   }),
@@ -207,7 +206,7 @@ const policies = [
     start: Perm.ReadAndEdit,
   }),
   policy('User', InternalRole.Admin, {
-    bio: Perm.ReadAndEdit,
+    about: Perm.ReadAndEdit,
     displayFirstName: Perm.ReadAndEdit,
     displayLastName: Perm.ReadAndEdit,
     email: Perm.ReadAndEdit,

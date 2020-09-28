@@ -237,10 +237,13 @@ export class FileService {
       tempUpload.status === 'rejected' &&
       existingUpload.status === 'fulfilled'
     ) {
-      const fileNode = await this.getFileNode(uploadId, session);
-
-      if (fileNode) {
+      try {
+        await this.getFileNode(uploadId, session);
         throw new InputException('Already uploaded', 'uploadId');
+      } catch (e) {
+        if (!(e instanceof NotFoundException)) {
+          throw e;
+        }
       }
     }
 
