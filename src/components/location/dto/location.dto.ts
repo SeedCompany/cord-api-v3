@@ -7,6 +7,7 @@ import {
 import {
   Resource,
   Secured,
+  SecuredKeys,
   SecuredProperty,
   SecuredString,
 } from '../../../common';
@@ -79,3 +80,16 @@ export const Location = createUnionType({
   },
 });
 export type Location = Country | Region | Zone;
+
+declare module '../../authorization/policies/mapping' {
+  interface TypeToDto {
+    Country: Country;
+    Region: Region;
+    Zone: Zone;
+  }
+  interface TypeToSecuredProps {
+    Country: SecuredKeys<Country>;
+    Region: SecuredKeys<Region>;
+    Zone: SecuredKeys<Zone>;
+  }
+}

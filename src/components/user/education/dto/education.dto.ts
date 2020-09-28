@@ -2,6 +2,7 @@ import { Field, ObjectType, registerEnumType } from '@nestjs/graphql';
 import {
   Resource,
   SecuredEnum,
+  SecuredKeys,
   SecuredProperty,
   SecuredString,
 } from '../../../../common';
@@ -34,4 +35,13 @@ export class Education extends Resource {
 
   @Field()
   readonly institution: SecuredString;
+}
+
+declare module '../../../authorization/policies/mapping' {
+  interface TypeToDto {
+    Education: Education;
+  }
+  interface TypeToSecuredProps {
+    Education: SecuredKeys<Education>;
+  }
 }

@@ -256,7 +256,7 @@ const policies = [
     title: Perm.ReadAndEdit,
     education: Perm.ReadAndEdit,
     organization: Perm.ReadAndEdit,
-    unavailablity: Perm.ReadAndEdit,
+    unavailability: Perm.ReadAndEdit,
   }),
   policy('User', InternalRole.AdminViewOfProjectMember, {
     displayFirstName: Perm.Read,

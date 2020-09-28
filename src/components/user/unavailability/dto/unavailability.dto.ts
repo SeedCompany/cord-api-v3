@@ -3,6 +3,7 @@ import {
   DateTimeField,
   Resource,
   SecuredDateTime,
+  SecuredKeys,
   SecuredString,
 } from '../../../../common';
 
@@ -18,4 +19,13 @@ export class Unavailability extends Resource {
 
   @DateTimeField()
   readonly end: SecuredDateTime;
+}
+
+declare module '../../../authorization/policies/mapping' {
+  interface TypeToDto {
+    Unavailability: Unavailability;
+  }
+  interface TypeToSecuredProps {
+    Unavailability: SecuredKeys<Unavailability>;
+  }
 }
