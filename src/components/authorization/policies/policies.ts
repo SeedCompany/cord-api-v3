@@ -218,6 +218,7 @@ const policies = [
     timezone: Perm.ReadAndEdit,
     title: Perm.ReadAndEdit,
     education: Perm.ReadAndEdit,
+    organization: Perm.ReadAndEdit,
     unavailability: Perm.ReadAndEdit,
   }),
   policy('User', InternalRole.AdminViewOfProjectMember, {
