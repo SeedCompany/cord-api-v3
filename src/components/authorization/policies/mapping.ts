@@ -213,6 +213,7 @@ export interface TypeToSecuredProps {
   Project:
     | SecuredKeys<Project>
     | 'estimatedSubmission'
+    | 'departmentId'
     | 'step'
     | 'name'
     | 'status'
@@ -224,6 +225,7 @@ export interface TypeToSecuredProps {
     | 'locations'
     | 'engagement'
     | 'partnership'
+    | 'partnerships'
     | 'budget'
     | 'modifiedAt'
     | 'organization';
