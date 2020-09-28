@@ -122,13 +122,40 @@
 									"pm.globals.set('timezoneObject', JSON.stringify(timezoneObject));\r",
 									"pm.globals.set(\"timezone\", timezoneObject.name);\r",
 									"\r",
-									"pm.globals.set(\"bio\", \"I'm Tester\");\r",
+									"pm.globals.set(\"about\", \"I'm Tester\");\r",
+									"\r",
+									"pm.globals.set(\"userTitle\", \"Tester\");\r",
 									"\r",
 									"// Taking random value for the User status from pre-defined possible values\r",
 									"var userStatusArray = ['Active','Disabled'];\r",
 									"var randomNumber = Math.floor(Math.random()*userStatusArray.length);\r",
 									"// pm.globals.set('userStatus', userStatusArray[randomNumber]);\r",
 									"pm.globals.set(\"userStatus\", \"Active\");\r",
+									"\r",
+									"var userRolesArray = ['BibleTranslationLiaison',\r",
+									"'Consultant',\r",
+									"'ConsultantManager',\r",
+									"'Controller',\r",
+									"'Development',\r",
+									"'ExecutiveDevelopmentRepresentative',\r",
+									"'ExecutiveLeadership',\r",
+									"'FieldOperationsDirector',\r",
+									"'FieldPartner',\r",
+									"'FinancialAnalyst',\r",
+									"'Intern',\r",
+									"'Liaison',\r",
+									"'LeadFinancialAnalyst',\r",
+									"'Mentor',\r",
+									"'OfficeOfThePresident',\r",
+									"'ProjectManager',\r",
+									"'RegionalCommunicationsCoordinator',\r",
+									"'RegionalDirector',\r",
+									"'SupportingProjectManager',\r",
+									"'Translator',\r",
+									"'Writer'\r",
+									"];\r",
+									"var randomNumber = Math.floor(Math.random()*userRolesArray.length);\r",
+									"pm.globals.set('userRoles', userRolesArray[randomNumber]);\r",
 									""
 								],
 								"type": "text/javascript"
@@ -151,8 +178,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation register($input: RegisterInput!) {\r\n  register(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value{\r\n          name\r\n          lat\r\n          long\r\n          countries{\r\n            code\r\n            name\r\n            zones{\r\n              name\r\n              lat\r\n              long\r\n              countries{\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      bio {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}",
-								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"realFirstName\": \"Piyush\",\r\n    \"realLastName\": \"Patel\",\r\n    \"email\" : \"{{login_email}}\",\r\n    \"password\": \"{{login_password}}\",\r\n    \"displayFirstName\": \"{{displayFirstName}}\",\r\n    \"displayLastName\": \"{{displayLastName}}\",\r\n    \"phone\": \"{{phone}}\",\r\n    \"timezone\": \"{{timezone}}\",\r\n    \"bio\": \"{{bio}}\",\r\n    \"status\": \"{{userStatus}}\"\r\n  }\r\n}"
+								"query": "mutation register($input: RegisterInput!) {\r\n  register(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"realFirstName\": \"Piyush\",\r\n        \"realLastName\": \"Patel\",\r\n        \"email\": \"{{login_email}}\",\r\n        \"password\": \"{{login_password}}\",\r\n        \"displayFirstName\": \"{{displayFirstName}}\",\r\n        \"displayLastName\": \"{{displayLastName}}\",\r\n        \"phone\": \"{{phone}}\",\r\n        \"timezone\": \"{{timezone}}\",\r\n        \"status\": \"{{userStatus}}\",\r\n        \"title\": \"{{userTitle}}\",\r\n        \"roles\": \"{{userRoles}}\"\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -217,7 +244,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation login($input: LoginInput!) {\r\n  login(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      bio {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation login($input: LoginInput!) {\r\n  login(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n   \"input\": {\r\n      \"email\": \"{{login_email}}\",\r\n      \"password\": \"{{login_password}}\"\r\n   }\r\n}"
 							},
 							"options": {
@@ -361,11 +388,6 @@
 									"    pm.expect(startBook).to.eql(pm.globals.get('storyScriptRefBookStart'));\r",
 									"});\r",
 									"\r",
-									"pm.test(\"Verify that story scriptureReferences start book name is same as requested\", function () {\r",
-									"    var startBook = jsonData.data.createStory.story.scriptureReferences.value[0].start.bookName;\r",
-									"    pm.expect(startBook).to.eql('Genesis');\r",
-									"});\r",
-									"\r",
 									"pm.test(\"Verify that story scriptureReferences start label is same as requested\", function () {\r",
 									"    var startLabel = jsonData.data.createStory.story.scriptureReferences.value[0].start.label;\r",
 									"    pm.expect(startLabel).to.eql(pm.globals.get('storyScriptRefLabelStart'));\r",
@@ -384,11 +406,6 @@
 									"pm.test(\"Verify that story scriptureReferences end book is same as requested\", function () {\r",
 									"    var endBook = jsonData.data.createStory.story.scriptureReferences.value[0].end.book;\r",
 									"    pm.expect(endBook).to.eql(pm.globals.get('storyScriptRefBookEnd'));\r",
-									"});\r",
-									"\r",
-									"pm.test(\"Verify that story scriptureReferences end book name is same as requested\", function () {\r",
-									"    var endBookName = jsonData.data.createStory.story.scriptureReferences.value[0].end.bookName;\r",
-									"    pm.expect(endBookName).to.eql('Genesis');\r",
 									"});\r",
 									"\r",
 									"pm.test(\"Verify that story scriptureReferences end label is same as requested\", function () {\r",
@@ -435,7 +452,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"story\": {\r\n            \"name\": \"{{storyName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{storyScriptRefBookStart}}\",\r\n                    \"chapter\": {{storyScriptRefChapterStart}},\r\n                    \"verse\": {{storyScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{storyScriptRefBookEnd}}\",\r\n                    \"chapter\": {{storyScriptRefChapterEnd}},\r\n                    \"verse\": {{storyScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -549,11 +566,6 @@
 									"    pm.expect(startBook).to.eql(pm.globals.get('storyScriptRefBookStart'));\r",
 									"});\r",
 									"\r",
-									"pm.test(\"Verify that story scriptureReferences start book name is same as requested\", function () {\r",
-									"    var startBook = jsonData.data.createStory.story.scriptureReferences.value[0].start.bookName;\r",
-									"    pm.expect(startBook).to.eql(pm.globals.get('storyScriptRefBookStart'));\r",
-									"});\r",
-									"\r",
 									"pm.test(\"Verify that story scriptureReferences start label is same as requested\", function () {\r",
 									"    var startLabel = jsonData.data.createStory.story.scriptureReferences.value[0].start.label;\r",
 									"    pm.expect(startLabel).to.eql(pm.globals.get('storyScriptRefLabelStart'));\r",
@@ -572,11 +584,6 @@
 									"pm.test(\"Verify that story scriptureReferences end book is same as requested\", function () {\r",
 									"    var endBook = jsonData.data.createStory.story.scriptureReferences.value[0].end.book;\r",
 									"    pm.expect(endBook).to.eql(pm.globals.get('storyScriptRefBookEnd'));\r",
-									"});\r",
-									"\r",
-									"pm.test(\"Verify that story scriptureReferences end book name is same as requested\", function () {\r",
-									"    var endBookName = jsonData.data.createStory.story.scriptureReferences.value[0].end.bookName;\r",
-									"    pm.expect(endBookName).to.eql(pm.globals.get('storyScriptRefBookEnd'));\r",
 									"});\r",
 									"\r",
 									"pm.test(\"Verify that story scriptureReferences end label is same as requested\", function () {\r",
@@ -625,7 +632,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"story\": {\r\n            \"name\": \"{{storyName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"Genesis\",\r\n                    \"chapter\": {{storyScriptRefChapterStart}},\r\n                    \"verse\": {{storyScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"Exo\",\r\n                    \"chapter\": {{storyScriptRefChapterEnd}},\r\n                    \"verse\": {{storyScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -709,7 +716,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"story\": {\r\n      \"name\": \"\"\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -789,7 +796,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"story\": {}\r\n  }\r\n}"
 							},
 							"options": {
@@ -869,7 +876,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"story\": {\r\n      \"name1\": \"{{storyName}}\"\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -949,7 +956,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"story\": {\r\n      \"name\": \"{{storyName}}\",\r\n      \"scriptureReferences1\": {\r\n        \"start\": {\r\n          \"book\": \"{{storyScriptRefBookStart}}\",\r\n          \"chapter\": {{storyScriptRefChapterStart}},\r\n          \"verse\": {{storyScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{storyScriptRefBookEnd}}\",\r\n          \"chapter\": {{storyScriptRefChapterEnd}},\r\n          \"verse\": {{storyScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -1029,7 +1036,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"story\": {\r\n      \"name\": \"{{storyName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start1\": {\r\n          \"book\": \"{{storyScriptRefBookStart}}\",\r\n          \"chapter\": {{storyScriptRefChapterStart}},\r\n          \"verse\": {{storyScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{storyScriptRefBookEnd}}\",\r\n          \"chapter\": {{storyScriptRefChapterEnd}},\r\n          \"verse\": {{storyScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -1109,7 +1116,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"story\": {\r\n      \"name\": \"{{storyName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book1\": \"{{storyScriptRefBookStart}}\",\r\n          \"chapter\": {{storyScriptRefChapterStart}},\r\n          \"verse\": {{storyScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{storyScriptRefBookEnd}}\",\r\n          \"chapter\": {{storyScriptRefChapterEnd}},\r\n          \"verse\": {{storyScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -1189,7 +1196,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"story\": {\r\n      \"name\": \"{{storyName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{storyScriptRefBookStart}}\",\r\n          \"chapter1\": {{storyScriptRefChapterStart}},\r\n          \"verse\": {{storyScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{storyScriptRefBookEnd}}\",\r\n          \"chapter\": {{storyScriptRefChapterEnd}},\r\n          \"verse\": {{storyScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -1269,7 +1276,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"story\": {\r\n      \"name\": \"{{storyName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{storyScriptRefBookStart}}\",\r\n          \"chapter\": {{storyScriptRefChapterStart}},\r\n          \"verse1\": {{storyScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{storyScriptRefBookEnd}}\",\r\n          \"chapter\": {{storyScriptRefChapterEnd}},\r\n          \"verse\": {{storyScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -1349,7 +1356,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"story\": {\r\n      \"name\": \"{{storyName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{storyScriptRefBookStart}}\",\r\n          \"chapter\": {{storyScriptRefChapterStart}},\r\n          \"verse\": {{storyScriptRefVerseStart}}\r\n        },\r\n        \"end1\": {\r\n          \"book\": \"{{storyScriptRefBookEnd}}\",\r\n          \"chapter\": {{storyScriptRefChapterEnd}},\r\n          \"verse\": {{storyScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -1429,7 +1436,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"story\": {\r\n      \"name\": \"{{storyName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{storyScriptRefBookStart}}\",\r\n          \"chapter\": {{storyScriptRefChapterStart}},\r\n          \"verse\": {{storyScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book1\": \"{{storyScriptRefBookEnd}}\",\r\n          \"chapter\": {{storyScriptRefChapterEnd}},\r\n          \"verse\": {{storyScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -1509,7 +1516,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"story\": {\r\n      \"name\": \"{{storyName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{storyScriptRefBookStart}}\",\r\n          \"chapter\": {{storyScriptRefChapterStart}},\r\n          \"verse\": {{storyScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{storyScriptRefBookEnd}}\",\r\n          \"chapter1\": {{storyScriptRefChapterEnd}},\r\n          \"verse\": {{storyScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -1589,7 +1596,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"story\": {\r\n      \"name\": \"{{storyName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{storyScriptRefBookStart}}\",\r\n          \"chapter\": {{storyScriptRefChapterStart}},\r\n          \"verse\": {{storyScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{storyScriptRefBookEnd}}\",\r\n          \"chapter\": {{storyScriptRefChapterEnd}},\r\n          \"verse1\": {{storyScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -1675,7 +1682,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"story\": {\r\n            \"name\": \"{{storyName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{storyScriptRefBookStart}}\",\r\n                    \"chapter\": {{storyScriptRefChapterStart}},\r\n                    \"verse\": {{storyScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{storyScriptRefBookEnd}}\",\r\n                    \"chapter\": {{storyScriptRefChapterEnd}},\r\n                    \"verse\": {{storyScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -1829,7 +1836,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query story($id: ID!) {\r\n  story(id: $id) {\r\n    id\r\n    createdAt\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          bookName\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          bookName\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n    name {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query story($id: ID!) {\r\n  story(id: $id) {\r\n    id\r\n    createdAt\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n    name {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"id\": \"{{storyId}}\"\r\n}"
 							},
 							"options": {
@@ -1913,7 +1920,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query story($id: ID!) {\r\n  story(id: $id) {\r\n    id\r\n    createdAt\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          bookName\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          bookName\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n    name {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query story($id: ID!) {\r\n  story(id: $id) {\r\n    id\r\n    createdAt\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n    name {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"id\": \"\"\r\n}"
 							},
 							"options": {
@@ -1993,7 +2000,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query story($id: ID!) {\r\n  story(id: $id) {\r\n    id\r\n    createdAt\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          bookName\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          bookName\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n    name {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query story($id: ID!) {\r\n  story(id: $id) {\r\n    id\r\n    createdAt\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n    name {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \r\n}"
 							},
 							"options": {
@@ -2073,7 +2080,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query story($id: ID!) {\r\n  story(id: $id) {\r\n    id\r\n    createdAt\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          bookName\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          bookName\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n    name {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query story($id: ID!) {\r\n  story(id: $id) {\r\n    id\r\n    createdAt\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n    name {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"id1\": \"{{storyId}}\"\r\n}"
 							},
 							"options": {
@@ -2157,7 +2164,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query story($id: ID!) {\r\n  story(id: $id) {\r\n    id\r\n    createdAt\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          bookName\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          bookName\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n    name {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query story($id: ID!) {\r\n  story(id: $id) {\r\n    id\r\n    createdAt\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n    name {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"id\": \"!@#$%^\"\r\n}"
 							},
 							"options": {
@@ -2271,11 +2278,6 @@
 									"});\r",
 									"\r",
 									"//Static\r",
-									"pm.test(\"Verify that updated story scriptureReferences start book name is same as requested\", function () {\r",
-									"    var startBookName = jsonData.data.updateStory.story.scriptureReferences.value[0].start.bookName;\r",
-									"    pm.expect(startBookName).to.eql('Genesis');\r",
-									"});\r",
-									"\r",
 									"pm.test(\"Verify that updated story scriptureReferences start label is same as requested\", function () {\r",
 									"    var startLabel = jsonData.data.updateStory.story.scriptureReferences.value[0].start.label;\r",
 									"    pm.expect(startLabel).to.eql(pm.globals.get('storyScriptRefLabelStart'));\r",
@@ -2298,11 +2300,6 @@
 									"});\r",
 									"\r",
 									"//Static\r",
-									"pm.test(\"Verify that updated story scriptureReferences end book name is same as requested\", function () {\r",
-									"    var endBookName = jsonData.data.updateStory.story.scriptureReferences.value[0].end.bookName;\r",
-									"    pm.expect(endBookName).to.eql('Genesis');\r",
-									"});\r",
-									"\r",
 									"pm.test(\"Verify that updated story scriptureReferences end label is same as requested\", function () {\r",
 									"    var endlabel = jsonData.data.updateStory.story.scriptureReferences.value[0].end.label;\r",
 									"    pm.expect(endlabel).to.eql(pm.globals.get('storyScriptRefLabelEnd'));\r",
@@ -2342,7 +2339,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateStory($input: UpdateStoryInput!) {\r\n  updateStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateStory($input: UpdateStoryInput!) {\r\n  updateStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"story\": {\r\n            \"id\": \"{{storyId}}\",\r\n            \"name\": \"{{storyName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{storyScriptRefBookStart}}\",\r\n                    \"chapter\": {{storyScriptRefChapterStart}},\r\n                    \"verse\": {{storyScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{storyScriptRefBookEnd}}\",\r\n                    \"chapter\": {{storyScriptRefChapterEnd}},\r\n                    \"verse\": {{storyScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -2431,11 +2428,6 @@
 									"});\r",
 									"\r",
 									"//Static\r",
-									"pm.test(\"Verify that updated story scriptureReferences start book name is same as requested\", function () {\r",
-									"    var startBookName = jsonData.data.updateStory.story.scriptureReferences.value[0].start.bookName;\r",
-									"    pm.expect(startBookName).to.eql('Genesis');\r",
-									"});\r",
-									"\r",
 									"pm.test(\"Verify that updated story scriptureReferences start label is same as requested\", function () {\r",
 									"    var startLabel = jsonData.data.updateStory.story.scriptureReferences.value[0].start.label;\r",
 									"    pm.expect(startLabel).to.eql(pm.globals.get('storyScriptRefLabelStart'));\r",
@@ -2458,11 +2450,6 @@
 									"});\r",
 									"\r",
 									"//Static\r",
-									"pm.test(\"Verify that updated story scriptureReferences end book name is same as requested\", function () {\r",
-									"    var endBookName = jsonData.data.updateStory.story.scriptureReferences.value[0].end.bookName;\r",
-									"    pm.expect(endBookName).to.eql('Genesis');\r",
-									"});\r",
-									"\r",
 									"pm.test(\"Verify that updated story scriptureReferences end label is same as requested\", function () {\r",
 									"    var endlabel = jsonData.data.updateStory.story.scriptureReferences.value[0].end.label;\r",
 									"    pm.expect(endlabel).to.eql(pm.globals.get('storyScriptRefLabelEnd'));\r",
@@ -2502,7 +2489,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateStory($input: UpdateStoryInput!) {\r\n  updateStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateStory($input: UpdateStoryInput!) {\r\n  updateStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"story\": {\r\n      \"id\": \"{{storyId}}\"\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -2582,7 +2569,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateStory($input: UpdateStoryInput!) {\r\n  updateStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateStory($input: UpdateStoryInput!) {\r\n  updateStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"story\": {\r\n            \"name\": \"{{storyName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{storyScriptRefBookStart}}\",\r\n                    \"chapter\": {{storyScriptRefChapterStart}},\r\n                    \"verse\": {{storyScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{storyScriptRefBookEnd}}\",\r\n                    \"chapter\": {{storyScriptRefChapterEnd}},\r\n                    \"verse\": {{storyScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -2666,7 +2653,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateStory($input: UpdateStoryInput!) {\r\n  updateStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateStory($input: UpdateStoryInput!) {\r\n  updateStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"story\": {\r\n            \"id\": \"\",\r\n            \"name\": \"{{storyName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{storyScriptRefBookStart}}\",\r\n                    \"chapter\": {{storyScriptRefChapterStart}},\r\n                    \"verse\": {{storyScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{storyScriptRefBookEnd}}\",\r\n                    \"chapter\": {{storyScriptRefChapterEnd}},\r\n                    \"verse\": {{storyScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -2749,7 +2736,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateStory($input: UpdateStoryInput!) {\r\n  updateStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateStory($input: UpdateStoryInput!) {\r\n  updateStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"story\": {\r\n            \"id\": \"{{storyId}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{storyScriptRefBookStart}}\",\r\n                    \"chapter\": {{storyScriptRefChapterStart}},\r\n                    \"verse\": {{storyScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{storyScriptRefBookEnd}}\",\r\n                    \"chapter\": {{storyScriptRefChapterEnd}},\r\n                    \"verse\": {{storyScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -2833,7 +2820,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateStory($input: UpdateStoryInput!) {\r\n  updateStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateStory($input: UpdateStoryInput!) {\r\n  updateStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"story\": {\r\n            \"id\": \"{{storyId}}\",\r\n            \"name\": \"\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{storyScriptRefBookStart}}\",\r\n                    \"chapter\": {{storyScriptRefChapterStart}},\r\n                    \"verse\": {{storyScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{storyScriptRefBookEnd}}\",\r\n                    \"chapter\": {{storyScriptRefChapterEnd}},\r\n                    \"verse\": {{storyScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -2918,7 +2905,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateStory($input: UpdateStoryInput!) {\r\n  updateStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateStory($input: UpdateStoryInput!) {\r\n  updateStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"story\": {\r\n            \"id\": \"!@#$%^\",\r\n            \"name\": \"{{storyName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{storyScriptRefBookStart}}\",\r\n                    \"chapter\": {{storyScriptRefChapterStart}},\r\n                    \"verse\": {{storyScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{storyScriptRefBookEnd}}\",\r\n                    \"chapter\": {{storyScriptRefChapterEnd}},\r\n                    \"verse\": {{storyScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -2998,7 +2985,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateStory($input: UpdateStoryInput!) {\r\n  updateStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateStory($input: UpdateStoryInput!) {\r\n  updateStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"story\": {\r\n            \"id1\": \"{{storyId}}\",\r\n            \"name\": \"{{storyName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{storyScriptRefBookStart}}\",\r\n                    \"chapter\": {{storyScriptRefChapterStart}},\r\n                    \"verse\": {{storyScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{storyScriptRefBookEnd}}\",\r\n                    \"chapter\": {{storyScriptRefChapterEnd}},\r\n                    \"verse\": {{storyScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -3078,7 +3065,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateStory($input: UpdateStoryInput!) {\r\n  updateStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateStory($input: UpdateStoryInput!) {\r\n  updateStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"story\": {\r\n            \"id\": \"{{storyId}}\",\r\n            \"name1\": \"{{storyName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{storyScriptRefBookStart}}\",\r\n                    \"chapter\": {{storyScriptRefChapterStart}},\r\n                    \"verse\": {{storyScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{storyScriptRefBookEnd}}\",\r\n                    \"chapter\": {{storyScriptRefChapterEnd}},\r\n                    \"verse\": {{storyScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -3170,7 +3157,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"story\": {\r\n      \"name\": \"{{storyName}}\",\r\n      \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{storyScriptRefBookStart}}\",\r\n                    \"chapter\": {{storyScriptRefChapterStart}},\r\n                    \"verse\": {{storyScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{storyScriptRefBookEnd}}\",\r\n                    \"chapter\": {{storyScriptRefChapterEnd}},\r\n                    \"verse\": {{storyScriptRefVerseEnd}}\r\n                }\r\n            }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -3307,7 +3294,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
@@ -3414,11 +3401,6 @@
 									"});\r",
 									"\r",
 									"//Static\r",
-									"pm.test(\"Verifying recently created stories scriptureReferences start book name\", function () {\r",
-									"    var startBookName = myStory.scriptureReferences.value[0].start.bookName;\r",
-									"    pm.expect(startBookName).to.eql('Genesis');\r",
-									"});\r",
-									"\r",
 									"pm.test(\"Verifying recently created stories scriptureReferences start label\", function () {\r",
 									"    var startLabel = myStory.scriptureReferences.value[0].start.label;\r",
 									"    pm.expect(startLabel).to.eql(story_data.scriptureReferences.value[0].start.label);\r",
@@ -3440,11 +3422,6 @@
 									"});\r",
 									"\r",
 									"//Static\r",
-									"pm.test(\"Verifying recently created stories scriptureReferences end book name\", function () {\r",
-									"    var endBookName = myStory.scriptureReferences.value[0].end.bookName;\r",
-									"    pm.expect(endBookName).to.eql('Genesis');\r",
-									"});\r",
-									"\r",
 									"pm.test(\"Verifying recently created stories scriptureReferences end label\", function () {\r",
 									"    var endLabel = myStory.scriptureReferences.value[0].end.label;\r",
 									"    pm.expect(endLabel).to.eql(story_data.scriptureReferences.value[0].end.label);\r",
@@ -3483,7 +3460,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
@@ -3559,7 +3536,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
@@ -3641,7 +3618,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
@@ -3728,7 +3705,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
@@ -3816,7 +3793,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
@@ -3902,7 +3879,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"story\": {\r\n      \"name\": \"{{storyName}}\",\r\n      \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{storyScriptRefBookStart}}\",\r\n                    \"chapter\": {{storyScriptRefChapterStart}},\r\n                    \"verse\": {{storyScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{storyScriptRefBookEnd}}\",\r\n                    \"chapter\": {{storyScriptRefChapterEnd}},\r\n                    \"verse\": {{storyScriptRefVerseEnd}}\r\n                }\r\n            }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -3988,7 +3965,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"story\": {\r\n            \"name\": \"{{storyName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{storyScriptRefBookStart}}\",\r\n                    \"chapter\": {{storyScriptRefChapterStart}},\r\n                    \"verse\": {{storyScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{storyScriptRefBookEnd}}\",\r\n                    \"chapter\": {{storyScriptRefChapterEnd}},\r\n                    \"verse\": {{storyScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -4073,7 +4050,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"story\": {\r\n            \"name\": \"{{storyName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{storyScriptRefBookStart}}\",\r\n                    \"chapter\": {{storyScriptRefChapterStart}},\r\n                    \"verse\": {{storyScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{storyScriptRefBookEnd}}\",\r\n                    \"chapter\": {{storyScriptRefChapterEnd}},\r\n                    \"verse\": {{storyScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -4156,7 +4133,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
@@ -4240,89 +4217,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
-							}
-						},
-						"url": {
-							"raw": "{{env}}/graphql",
-							"host": [
-								"{{env}}"
-							],
-							"path": [
-								"graphql"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get All Stories Success -  filter by Name",
-					"event": [
-						{
-							"listen": "prerequest",
-							"script": {
-								"id": "b593c823-ec41-4792-b878-682b5fa07b80",
-								"exec": [
-									"pm.globals.set(\"itemCount\", 25);\r",
-									"pm.globals.set(\"page\", 1);\r",
-									"pm.globals.set('order', \"ASC\");"
-								],
-								"type": "text/javascript"
-							}
-						},
-						{
-							"listen": "test",
-							"script": {
-								"id": "fd66d0c0-6299-4fc6-983d-26550ad75ff3",
-								"exec": [
-									"var jsonData = pm.response.json();\r",
-									"\r",
-									"//Common Verification\r",
-									"pm.test(\"Status code is 200\", function () {\r",
-									"    pm.response.to.have.status(200);\r",
-									"});\r",
-									"\r",
-									"pm.test(\"Response time is less than 1000ms\", function () {\r",
-									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
-									"});\r",
-									"\r",
-									"//Test Specific - Filter by Name\r",
-									"pm.test(\"Verify that items are filtered by Name\", function () {\r",
-									"\r",
-									"    var responseBody = jsonData.data.stories.items;\r",
-									"    var multifilters = _.filter(responseBody, function (item) {\r",
-									"        return /^(.*?(fILTERsORTstoryname)[^$]*)$/i.test(item.name.value);\r",
-									"    });\r",
-									"    pm.expect(responseBody).to.eql(multifilters);\r",
-									"});\r",
-									""
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "graphql",
-							"graphql": {
-								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"FilterSortStoryName\"\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -4397,8 +4293,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"{{storyName}}\"\r\n    }\r\n  }\r\n}"
+								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n  \"input\": {\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -4478,8 +4374,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\":{{count}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"{{storyName}}\"\r\n    }\r\n  }\r\n}"
+								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n  \"input\": {\r\n    \"count\":{{count}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -4558,8 +4454,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\":{{count}},\r\n    \"page\": \"{{page}}\",\r\n    \"sort\": \"name\",\r\n    \"order\": \"\",\r\n    \"filter\": {\r\n      \"name\": \"{{storyName}}\"\r\n    }\r\n  }\r\n}"
+								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n  \"input\": {\r\n    \"count\":{{count}},\r\n    \"page\": \"{{page}}\",\r\n    \"sort\": \"name\",\r\n    \"order\": \"\"\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -4638,8 +4534,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count1\":{{count}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"{{storyName}}\"\r\n    }\r\n  }\r\n}"
+								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n  \"input\": {\r\n    \"count1\":{{count}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -4718,8 +4614,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\":{{count}},\r\n    \"page1\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"{{storyName}}\"\r\n    }\r\n  }\r\n}"
+								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n  \"input\": {\r\n    \"count\":{{count}},\r\n    \"page1\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -4798,8 +4694,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\":{{count}},\r\n    \"page\": {{page}},\r\n    \"sort1\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"{{storyName}}\"\r\n    }\r\n  }\r\n}"
+								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n  \"input\": {\r\n    \"count\":{{count}},\r\n    \"page\": {{page}},\r\n    \"sort1\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -4878,168 +4774,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\":{{count}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order1\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"{{storyName}}\"\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
-							}
-						},
-						"url": {
-							"raw": "{{env}}/graphql",
-							"host": [
-								"{{env}}"
-							],
-							"path": [
-								"graphql"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get All Stories Parameter Mismatch - filter",
-					"event": [
-						{
-							"listen": "prerequest",
-							"script": {
-								"id": "866a34d0-64db-497f-8fb0-a4d4aa686f4d",
-								"exec": [
-									""
-								],
-								"type": "text/javascript"
-							}
-						},
-						{
-							"listen": "test",
-							"script": {
-								"id": "c7dcf11d-68ec-465a-acbc-1381bd094db6",
-								"exec": [
-									"var jsonData = pm.response.json();\r",
-									"\r",
-									"//Common Verification\r",
-									"pm.test(\"Status code is 400 Bad Request\", function () {\r",
-									"    pm.response.to.have.status(400);\r",
-									"});\r",
-									"\r",
-									"pm.test(\"Response time is less than 1000ms\", function () {\r",
-									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
-									"});\r",
-									"\r",
-									"//Test Specific\r",
-									"pm.test(\"Verify that error message is correct\", function () {\r",
-									"    var error_message = jsonData.errors[0].message;  \r",
-									"    pm.expect(error_message).to.include(\"is not defined by type \\\"StoryListInput\\\". Did you mean \\\"filter\\\"?\");\r",
-									"});\r",
-									"\r",
-									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {\r",
-									"    var error_code = jsonData.errors[0].extensions.code;  \r",
-									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");\r",
-									"});\r",
-									""
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "graphql",
-							"graphql": {
-								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\":{{count}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter1\": {\r\n      \"name\": \"{{storyName}}\"\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
-							}
-						},
-						"url": {
-							"raw": "{{env}}/graphql",
-							"host": [
-								"{{env}}"
-							],
-							"path": [
-								"graphql"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get All Stories Parameter Mismatch - filter by name",
-					"event": [
-						{
-							"listen": "prerequest",
-							"script": {
-								"id": "48c755d1-b042-4440-8c13-12113eb1c75e",
-								"exec": [
-									""
-								],
-								"type": "text/javascript"
-							}
-						},
-						{
-							"listen": "test",
-							"script": {
-								"id": "81dd7817-a1b0-4d4c-8e51-86a6750be290",
-								"exec": [
-									"var jsonData = pm.response.json();\r",
-									"\r",
-									"//Common Verification\r",
-									"pm.test(\"Status code is 400 Bad Request\", function () {\r",
-									"    pm.response.to.have.status(400);\r",
-									"});\r",
-									"\r",
-									"pm.test(\"Response time is less than 1000ms\", function () {\r",
-									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
-									"});\r",
-									"\r",
-									"//Test Specific\r",
-									"pm.test(\"Verify that error message is correct\", function () {\r",
-									"    var error_message = jsonData.errors[0].message;  \r",
-									"    pm.expect(error_message).to.include(\"is not defined by type \\\"StoryFilters\\\". Did you mean \\\"name\\\"?\");\r",
-									"});\r",
-									"\r",
-									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {\r",
-									"    var error_code = jsonData.errors[0].extensions.code;  \r",
-									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");\r",
-									"});\r",
-									""
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "graphql",
-							"graphql": {
-								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\":{{count}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name1\": \"{{storyName}}\"\r\n    }\r\n  }\r\n}"
+								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{count}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order1\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -5122,8 +4858,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": 0,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"{{storyName}}\"\r\n    }\r\n  }\r\n}"
+								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"count\": 0,\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -5206,8 +4942,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": 159,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"{{storyName}}\"\r\n    }\r\n  }\r\n}"
+								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"count\": 159,\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -5290,8 +5026,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{count}},\r\n    \"page\": 0,\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"{{storyName}}\"\r\n    }\r\n  }\r\n}"
+								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{count}},\r\n        \"page\": 0,\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -5369,8 +5105,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{count}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"QWERTYU\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"{{storyName}}\"\r\n    }\r\n  }\r\n}"
+								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{count}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"QWERTYU\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -5449,8 +5185,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{count}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"11 #$%% ^&*\",\r\n    \"filter\": {\r\n      \"name\": \"{{storyName}}\"\r\n    }\r\n  }\r\n}"
+								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{count}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"11 #$%% ^&*\"\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
