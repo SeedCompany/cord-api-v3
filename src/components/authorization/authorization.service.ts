@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { pickBy } from 'lodash';
 import { generate } from 'shortid';
-import { keys } from '../../common';
+import { keys, UnauthorizedException } from '../../common';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
 import { InternalRole, Role as ProjectRole } from './dto';
 import { Powers } from './dto/powers';
@@ -142,16 +142,36 @@ export class AuthorizationService {
       .merge([node('sg'), relation('out', '', 'member'), node('root')]);
   };
 
-  async hasPower(power: Powers, id: string) {
-    const result = await this.db
-      .query()
-      .match([
-        node('user', 'User', { id }),
-        relation('in', '', 'member'),
-        node('sg', 'SecurityGroup'),
-      ])
-      .raw(`${power} IN sg.powers as hasPower`)
-      .first();
-    return result?.hasPower;
+  async checkPower(power: Powers, id?: string) {
+    // if no id is given we check the public sg for public powers
+    let hasPower = false;
+
+    if (id === undefined) {
+      const result = await this.db
+        .query()
+        .match([
+          node('sg', 'PublicSecurityGroup', {
+            id: this.config.publicSecurityGroup,
+          }),
+        ])
+        .raw(`${power} IN sg.powers as hasPower`)
+        .first();
+      hasPower = result?.hasPower ? result.hasPower : false;
+    } else {
+      const result = await this.db
+        .query()
+        .match([
+          node('user', 'User', { id }),
+          relation('in', '', 'member'),
+          node('sg', 'SecurityGroup'),
+        ])
+        .raw(`${power} IN sg.powers as hasPower`)
+        .first();
+      hasPower = result?.hasPower ? result.hasPower : false;
+    }
+
+    if (!hasPower) {
+      throw new UnauthorizedException('user does not have the requested power');
+    }
   }
 }
