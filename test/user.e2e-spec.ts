@@ -37,7 +37,7 @@ describe('User e2e', () => {
     await app.close();
   });
 
-  it('read one user by id', async () => {
+  it.only('read one user by id', async () => {
     const fakeUser = generateRegisterInput();
 
     const user = await createUser(app, fakeUser);
