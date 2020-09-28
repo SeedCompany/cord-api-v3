@@ -8,7 +8,7 @@ export enum Perm {
   Delete = 4,
   // helper for a common case
   // eslint-disable-next-line @typescript-eslint/prefer-literal-enum-member
-  ReadAndEdit = Read & Edit,
+  ReadAndEdit = Read | Edit,
 }
 
 export const hasPerm = (perm: Perm | null | undefined, check: Perm) =>
