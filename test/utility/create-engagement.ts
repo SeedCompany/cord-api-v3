@@ -9,8 +9,8 @@ import {
 } from '../../src/components/engagement';
 import { ProductMethodology } from '../../src/components/product';
 import { TestApp } from './create-app';
-import { createCountry } from './create-country';
 import { createLanguage } from './create-language';
+import { createLocation } from './create-location';
 import { createPerson } from './create-person';
 import { createProject } from './create-project';
 import { getUserFromSession } from './create-session';
@@ -73,7 +73,8 @@ export async function createInternshipEngagement(
   const currentUserId = (await getUserFromSession(app)).id;
   const internshipEngagement: CreateInternshipEngagement = {
     projectId: input.projectId || (await createProject(app)).id,
-    countryOfOriginId: input.countryOfOriginId || (await createCountry(app)).id,
+    countryOfOriginId:
+      input.countryOfOriginId || (await createLocation(app)).id,
     internId: input.internId || currentUserId || (await createPerson(app)).id,
     mentorId: input.mentorId || currentUserId || (await createPerson(app)).id,
     position: InternPosition.AdministrativeSupportSpecialist,

@@ -15,6 +15,7 @@ import {
 } from '../../common';
 import { SecuredBudget } from '../budget';
 import { EngagementListInput, SecuredEngagementList } from '../engagement';
+import { FieldRegionService, SecuredFieldRegion } from '../field-region';
 import { SecuredDirectory } from '../file';
 import {
   LocationListInput,
@@ -43,7 +44,8 @@ import { ProjectService } from './project.service';
 export class ProjectResolver {
   constructor(
     private readonly projectService: ProjectService,
-    private readonly locationService: LocationService
+    private readonly locationService: LocationService,
+    private readonly fieldRegionService: FieldRegionService
   ) {}
 
   @Query(() => IProject, {
@@ -187,6 +189,18 @@ export class ProjectResolver {
     const { value: id, ...rest } = project.marketingLocation;
     const value = id
       ? await this.locationService.readOne(id, session)
+      : undefined;
+    return { value, ...rest };
+  }
+
+  @ResolveField(() => SecuredFieldRegion)
+  async fieldRegion(
+    @Parent() project: Project,
+    @Session() session: ISession
+  ): Promise<SecuredFieldRegion> {
+    const { value: id, ...rest } = project.fieldRegion;
+    const value = id
+      ? await this.fieldRegionService.readOne(id, session)
       : undefined;
     return { value, ...rest };
   }

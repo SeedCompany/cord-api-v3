@@ -2,6 +2,7 @@ import { forwardRef, Module } from '@nestjs/common';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { BudgetModule } from '../budget/budget.module';
 import { EngagementModule } from '../engagement/engagement.module';
+import { FieldRegionModule } from '../field-region/field-region.module';
 import { FileModule } from '../file/file.module';
 import { LocationModule } from '../location/location.module';
 import { OrganizationService } from '../organization';
@@ -13,6 +14,7 @@ import { ProjectService } from './project.service';
 
 @Module({
   imports: [
+    FieldRegionModule,
     ProjectMemberModule,
     forwardRef(() => BudgetModule),
     forwardRef(() => PartnershipModule),

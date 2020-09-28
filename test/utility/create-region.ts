@@ -1,7 +1,10 @@
 import { gql } from 'apollo-server-core';
 import { generate, isValid } from 'shortid';
 import { createPerson } from '.';
-import { CreateRegion, Region } from '../../src/components/location';
+import {
+  CreateFieldRegion,
+  FieldRegion,
+} from '../../src/components/field-region';
 import { TestApp } from './create-app';
 import { getUserFromSession } from './create-session';
 import { createZone } from './create-zone';
@@ -9,11 +12,11 @@ import { fragments } from './fragments';
 
 export async function createRegion(
   app: TestApp,
-  input: Partial<CreateRegion> = {}
+  input: Partial<CreateFieldRegion> = {}
 ) {
-  const region: CreateRegion = {
+  const fieldRegion: CreateFieldRegion = {
     name: 'Region' + generate(),
-    zoneId: input.zoneId || (await createZone(app)).id,
+    fieldZoneId: input.fieldZoneId || (await createZone(app)).id,
     directorId:
       input.directorId ||
       (await getUserFromSession(app)).id ||
@@ -23,13 +26,13 @@ export async function createRegion(
 
   const result = await app.graphql.mutate(
     gql`
-      mutation createRegion($input: CreateRegionInput!) {
-        createRegion(input: $input) {
-          region {
-            ...region
-            zone {
+      mutation createFieldRegion($input: CreateFieldRegionInput!) {
+        createFieldRegion(input: $input) {
+          fieldRegion {
+            ...fieldRegion
+            fieldZone {
               value {
-                ...zone
+                ...fieldZone
               }
               canRead
               canEdit
@@ -44,22 +47,22 @@ export async function createRegion(
           }
         }
       }
-      ${fragments.region}
-      ${fragments.zone}
+      ${fragments.fieldRegion}
+      ${fragments.fieldZone}
       ${fragments.user}
     `,
     {
       input: {
-        region,
+        fieldRegion,
       },
     }
   );
 
-  const actual: Region = result.createRegion.region;
+  const actual: FieldRegion = result.createFieldRegion.fieldRegion;
   expect(actual).toBeTruthy();
 
   expect(isValid(actual.id)).toBe(true);
-  expect(actual.name.value).toBe(region.name);
+  expect(actual.name.value).toBe(fieldRegion.name);
 
   return actual;
 }

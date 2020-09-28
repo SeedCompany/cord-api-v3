@@ -408,7 +408,7 @@ export class EngagementService {
     }
     if (countryOfOriginId) {
       createIE.match([
-        node('countryOfOrigin', 'Country', {
+        node('countryOfOrigin', 'Location', {
           id: countryOfOriginId,
         }),
       ]);
@@ -566,7 +566,7 @@ export class EngagementService {
         !(await this.db
           .query()
           .match([
-            node('country', 'Country', {
+            node('country', 'Location', {
               id: countryOfOriginId,
             }),
           ])
@@ -893,7 +893,7 @@ export class EngagementService {
         const countryQ = this.db
           .query()
           .match([
-            node('newCountry', 'Country', {
+            node('newCountry', 'Location', {
               id: countryOfOriginId,
             }),
           ])
@@ -902,7 +902,7 @@ export class EngagementService {
               id: input.id,
             }),
             relation('out', 'rel', 'countryOfOrigin', { active: true }),
-            node('oldCountry', 'Country'),
+            node('oldCountry', 'Location'),
           ])
           .delete('rel')
           .create([

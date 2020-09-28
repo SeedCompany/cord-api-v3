@@ -1,7 +1,8 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { isValid } from 'shortid';
-import { Region, Zone } from '../src/components/location';
+import { FieldRegion } from '../src/components/field-region';
+import { FieldZone } from '../src/components/field-zone';
 import { User } from '../src/components/user';
 import {
   createSession,
@@ -18,25 +19,25 @@ describe('Region e2e', () => {
   let app: TestApp;
   let director: User;
   let newDirector: User;
-  let zone: Zone;
+  let fieldZone: FieldZone;
   const password: string = faker.internet.password();
 
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
     director = await createUser(app, { password });
-    zone = await createZone(app, { directorId: director.id });
+    fieldZone = await createZone(app, { directorId: director.id });
   });
 
   afterAll(async () => {
     await app.close();
   });
 
-  it('create a region', async () => {
+  it('create a field region', async () => {
     await login(app, { email: director.email.value, password });
     const region = await createRegion(app, {
       directorId: director.id,
-      zoneId: zone.id,
+      fieldZoneId: fieldZone.id,
     });
     expect(region.id).toBeDefined();
   });
@@ -44,70 +45,75 @@ describe('Region e2e', () => {
   it.skip('should have unique name', async () => {
     // Old test.  Attempt to create a region with a name that is taken will return the existing region
     const name = faker.address.country() + ' Region';
-    await createRegion(app, { directorId: director.id, name, zoneId: zone.id });
+    await createRegion(app, {
+      directorId: director.id,
+      name,
+      fieldZoneId: fieldZone.id,
+    });
     await expect(
-      createRegion(app, { directorId: director.id, name, zoneId: zone.id })
+      createRegion(app, {
+        directorId: director.id,
+        name,
+        fieldZoneId: fieldZone.id,
+      })
     ).rejects.toThrowError();
   });
 
-  it('read one region by id', async () => {
-    const region = await createRegion(app, {
+  it('read one field region by id', async () => {
+    const fieldRegion = await createRegion(app, {
       directorId: director.id,
-      zoneId: zone.id,
+      fieldZoneId: fieldZone.id,
     });
 
-    const { location: actual } = await app.graphql.query(
+    const { fieldRegion: actual } = await app.graphql.query(
       gql`
-        query region($id: ID!) {
-          location(id: $id) {
-            __typename
-            ... on Region {
-              ...region
-              director {
-                value {
-                  ...user
-                }
-                canEdit
-                canRead
+        query fieldRegion($id: ID!) {
+          fieldRegion(id: $id) {
+            ...fieldRegion
+            director {
+              value {
+                ...user
               }
-              zone {
-                value {
-                  ...zone
-                }
-                canEdit
-                canRead
+              canEdit
+              canRead
+            }
+            fieldZone {
+              value {
+                ...fieldZone
               }
+              canEdit
+              canRead
             }
           }
         }
-        ${fragments.region}
-        ${fragments.zone}
+        ${fragments.fieldRegion}
+        ${fragments.fieldZone}
         ${fragments.user}
       `,
       {
-        id: region.id,
+        id: fieldRegion.id,
       }
     );
 
-    expect(actual.id).toBe(region.id);
+    expect(actual.id).toBe(fieldRegion.id);
     expect(isValid(actual.id)).toBe(true);
-    expect(actual.name).toEqual(region.name);
+    expect(actual.name).toEqual(fieldRegion.name);
     expect(actual.director.canEdit).toBe(true);
   });
 
-  it('update region', async () => {
-    const region = await createRegion(app, {
+  it('update field region', async () => {
+    const fieldRegion = await createRegion(app, {
       directorId: director.id,
-      zoneId: zone.id,
+      fieldZoneId: fieldZone.id,
     });
     const newName = faker.company.companyName();
 
     const result = await app.graphql.mutate(
       gql`
-        mutation updateRegion($input: UpdateRegionInput!) {
-          updateRegion(input: $input) {
-            region {
-              ...region
+        mutation updateFieldRegion($input: UpdateFieldRegionInput!) {
+          updateFieldRegion(input: $input) {
+            fieldRegion {
+              ...fieldRegion
               director {
                 value {
                   ...user
@@ -115,9 +121,9 @@ describe('Region e2e', () => {
                 canEdit
                 canRead
               }
-              zone {
+              fieldZone {
                 value {
-                  ...zone
+                  ...fieldZone
                 }
                 canEdit
                 canRead
@@ -125,73 +131,73 @@ describe('Region e2e', () => {
             }
           }
         }
-        ${fragments.region}
-        ${fragments.zone}
+        ${fragments.fieldRegion}
+        ${fragments.fieldZone}
         ${fragments.user}
       `,
       {
         input: {
-          region: {
-            id: region.id,
+          fieldRegion: {
+            id: fieldRegion.id,
             name: newName,
           },
         },
       }
     );
-    const updated = result.updateRegion.region;
+    const updated = result.updateFieldRegion.fieldRegion;
     expect(updated).toBeTruthy();
-    expect(updated.id).toBe(region.id);
+    expect(updated.id).toBe(fieldRegion.id);
     expect(updated.name.value).toBe(newName);
   });
 
   // This test should be updated with refactoring of location service for zone
-  it.skip('update region`s zone', async () => {
-    const region = await createRegion(app, { directorId: director.id });
+  it.skip('update field region`s zone', async () => {
+    const fieldRegion = await createRegion(app, { directorId: director.id });
     const newZone = await createZone(app, { directorId: newDirector.id });
 
     const result = await app.graphql.mutate(
       gql`
-        mutation updateRegion($input: UpdateRegionInput!) {
-          updateRegion(input: $input) {
-            region {
-              ...region
-              zone {
+        mutation updateFieldRegion($input: UpdateFieldRegionInput!) {
+          updateFieldRegion(input: $input) {
+            fieldRegion {
+              ...fieldRegion
+              fieldZone {
                 value {
-                  ...zone
+                  ...fieldZone
                 }
               }
             }
           }
         }
-        ${fragments.region}
-        ${fragments.zone}
+        ${fragments.fieldRegion}
+        ${fragments.fieldZone}
       `,
       {
         input: {
-          region: {
-            id: region.id,
+          fieldRegion: {
+            id: fieldRegion.id,
             zoneId: newZone.id,
           },
         },
       }
     );
-    const updated = result.updateRegion.region;
+    const updated = result.updateFieldRegion.fieldRegion;
 
     expect(updated).toBeTruthy();
-    expect(updated.id).toBe(region.id);
-    expect(updated.zone.value.id).toBe(newZone.id);
+    expect(updated.id).toBe(fieldRegion.id);
+    expect(updated.fieldZone.value.id).toBe(newZone.id);
   });
 
   // This test should be updated with refactoring of location service for zone
   it.skip('update region`s director', async () => {
-    const region = await createRegion(app, { directorId: director.id });
+    const fieldRegion = await createRegion(app, { directorId: director.id });
 
     const result = await app.graphql.mutate(
       gql`
-        mutation updateRegion($input: UpdateRegionInput!) {
-          updateRegion(input: $input) {
-            region {
-              ...region
+        mutation updateFieldRegion($input: UpdateFieldRegionInput!) {
+          updateFieldRegion(input: $input) {
+            fieldRegion {
+              ...fieldRegion
               director {
                 value {
                   ...user
@@ -200,42 +206,42 @@ describe('Region e2e', () => {
             }
           }
         }
-        ${fragments.region}
+        ${fragments.fieldRegion}
         ${fragments.user}
       `,
       {
         input: {
-          region: {
-            id: region.id,
+          fieldRegion: {
+            id: fieldRegion.id,
             directorId: newDirector.id,
           },
         },
       }
     );
-    const updated = result.updateRegion.region;
+    const updated = result.updateFieldregion.fieldRegion;
 
     expect(updated).toBeTruthy();
-    expect(updated.id).toBe(region.id);
+    expect(updated.id).toBe(fieldRegion.id);
     expect(updated.director.value.id).toBe(newDirector.id);
   });
 
   it.skip('delete region', async () => {
-    const region = await createRegion(app, {
+    const fieldRegion = await createRegion(app, {
       directorId: director.id,
-      zoneId: zone.id,
+      fieldZoneId: fieldZone.id,
     });
 
     const result = await app.graphql.mutate(
       gql`
-        mutation deleteLocation($id: ID!) {
-          deleteLocation(id: $id)
+        mutation deleteFieldRegion($id: ID!) {
+          deleteFieldRegion(id: $id)
         }
       `,
       {
-        id: region.id,
+        id: fieldRegion.id,
       }
     );
-    const actual: Region | undefined = result.deleteLocation;
+    const actual: FieldRegion | undefined = result.deleteFieldRegion;
     expect(actual).toBeTruthy();
   });
 
@@ -246,24 +252,24 @@ describe('Region e2e', () => {
         createRegion(app, {
           name: regionName,
           directorId: director.id,
-          zoneId: zone.id,
+          fieldZoneId: fieldZone.id,
         })
       )
     );
 
-    const { locations } = await app.graphql.query(gql`
+    const { fieldRegions } = await app.graphql.query(gql`
       query {
-        locations(input: { filter: { name: "Main", types: ["region"] } }) {
+        fieldRegions(input: { page: 1, count: 25 }) {
           items {
-            ...region
+            ...fieldRegion
           }
           hasMore
           total
         }
       }
-      ${fragments.region}
+      ${fragments.fieldRegion}
     `);
 
-    expect(locations.items.length).toBeGreaterThanOrEqual(2);
+    expect(fieldRegions.items.length).toBeGreaterThanOrEqual(2);
   });
 });

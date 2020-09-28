@@ -100,6 +100,7 @@ export class ProjectService {
     primaryLocation: true,
     nonPrimaryLocation: true,
     marketingLocation: true,
+    fieldRegion: true,
   };
 
   constructor(
@@ -139,6 +140,7 @@ export class ProjectService {
       primaryLocationId,
       nonPrimaryLocationId,
       marketingLocationId,
+      fieldRegionId,
       ...input
     }: CreateProject,
     session: ISession
@@ -249,7 +251,8 @@ export class ProjectService {
           node('root', 'User', {
             id: this.config.rootAdmin.id,
           }),
-        ]);
+        ])
+        .match([node('fieldRegion', 'FieldRegion', { id: fieldRegionId })]);
 
       if (primaryLocationId) {
         createProject.match([
@@ -267,15 +270,23 @@ export class ProjectService {
         ]);
       }
 
-      createProject.call(
-        createBaseNode,
-        `Project:${input.type}Project`,
-        secureProps,
-        {
-          type: createInput.type,
-        },
-        canEdit ? ['name', 'mouStart', 'mouEnd'] : []
-      );
+      createProject
+        .call(
+          createBaseNode,
+          `Project:${input.type}Project`,
+          secureProps,
+          {
+            type: createInput.type,
+          },
+          canEdit ? ['name', 'mouStart', 'mouEnd'] : []
+        )
+        .create([
+          [
+            node('node'),
+            relation('out', '', 'fieldRegion', { active: true, createdAt }),
+            node('fieldRegion'),
+          ],
+        ]);
       if (primaryLocationId) {
         createProject.create([
           [
@@ -402,6 +413,11 @@ export class ProjectService {
       ])
       .optionalMatch([
         node('node'),
+        relation('out', '', 'fieldRegion', { active: true }),
+        node('fieldRegion', 'FieldRegion'),
+      ])
+      .optionalMatch([
+        node('node'),
         relation('out', '', 'engagement', { active: true }),
         node('', 'LanguageEngagement'),
         relation('out', '', 'language', { active: true }),
@@ -416,6 +432,7 @@ export class ProjectService {
         'primaryLocation.id as primaryLocationId',
         'nonPrimaryLocation.id as nonPrimaryLocationId',
         'marketingLocation.id as marketingLocationId',
+        'fieldRegion.id as fieldRegionId',
         'collect(distinct sensitivity.value) as languageSensitivityList',
       ])
       .asResult<
@@ -423,6 +440,7 @@ export class ProjectService {
           primaryLocationId: string;
           nonPrimaryLocationId: string;
           marketingLocationId: string;
+          fieldRegionId: string;
           languageSensitivityList: Sensitivity[];
         }
       >();
@@ -463,6 +481,10 @@ export class ProjectService {
       marketingLocation: {
         ...securedProps.marketingLocation,
         value: result.marketingLocationId,
+      },
+      fieldRegion: {
+        ...securedProps.fieldRegion,
+        value: result.fieldRegionId,
       },
     };
   }

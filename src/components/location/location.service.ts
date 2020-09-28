@@ -73,14 +73,12 @@ export class LocationService {
       'CREATE CONSTRAINT ON (n:LocationName) ASSERT n.value IS UNIQUE',
 
       // GEOGRAPHY NAME NODE
-      'CREATE CONSTRAINT ON (n:GeographyName) ASSERT EXISTS(n.value)',
       'CREATE CONSTRAINT ON (n:GeographyName) ASSERT n.value IS UNIQUE',
 
       // LOCATION TYPE NODE
       'CREATE CONSTRAINT ON (n:LocationType) ASSERT EXISTS(n.value)',
 
       // ISO-3166-3 NODE
-      'CREATE CONSTRAINT ON (n:Iso31663) ASSERT EXISTS(n.value)',
       'CREATE CONSTRAINT ON (n:Iso31663) ASSERT n.value IS UNIQUE',
     ];
   }
@@ -113,7 +111,7 @@ export class LocationService {
         label: 'FieldRegionName',
       },
       {
-        key: 'iso-3166-3',
+        key: 'iso31663',
         value: input.iso31663,
         addToAdminSg: true,
         addToWriterSg: false,

@@ -55,6 +55,8 @@ class Project extends Resource {
 
   readonly marketingLocation: Secured<string>;
 
+  readonly fieldRegion: Secured<string>;
+
   @Field()
   readonly mouStart: SecuredDate;
 
