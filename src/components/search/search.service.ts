@@ -42,7 +42,8 @@ export class SearchService {
   private readonly hydrators: HydratorMap = {
     Organization: (...args) => this.orgs.readOne(...args),
     User: (...args) => this.users.readOne(...args),
-    Partner: (...args) => this.partners.readOne(...args),
+    Partner: (...args) =>
+      this.partners.readOnePartnerByPartnerIdOrOrgId(...args),
     Country: (...args) => this.location.readOneCountry(...args),
     Region: (...args) => this.location.readOneRegion(...args),
     Zone: (...args) => this.location.readOneZone(...args),
@@ -78,7 +79,7 @@ export class SearchService {
       ...inputTypes,
       // Add Organization label when searching for Partners we can search for
       // Partner by organization name
-      inputTypes.includes('Partner') ? ['Organization'] : [],
+      ...(inputTypes.includes('Partner') ? ['Organization'] : []),
     ];
 
     // Search for nodes based on input, only returning their id and "type"
@@ -146,12 +147,16 @@ export class SearchService {
       if (!hydrator) {
         return null;
       }
-      const obj = await hydrator(...args);
-      return {
-        ...obj,
-        // eslint-disable-next-line @typescript-eslint/naming-convention
-        __typename: type,
-      };
+      try {
+        const obj = await hydrator(...args);
+        return {
+          ...obj,
+          // eslint-disable-next-line @typescript-eslint/naming-convention
+          __typename: type,
+        };
+      } catch {
+        return null;
+      }
     };
   }
 }
