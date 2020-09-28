@@ -13,7 +13,6 @@ import { FundingAccountModule } from './components/funding-account/funding-accou
 import { LanguageModule } from './components/language/language.module';
 import { LiteracyMaterialModule } from './components/literacy-material/literacy-material.module';
 import { LocationModule } from './components/location/location.module';
-import { MarketingLocationModule } from './components/marketing-location/marketing-location.module';
 import { OrganizationModule } from './components/organization/organization.module';
 import { PartnerModule } from './components/partner/partner.module';
 import { PartnershipModule } from './components/partnership/partnership.module';
@@ -57,7 +56,6 @@ import { CoreModule, LoggerModule } from './core';
     TimeZoneModule,
     PartnerModule,
     FundingAccountModule,
-    MarketingLocationModule,
   ],
   controllers: [],
   providers: [DateTimeScalar, DateScalar],

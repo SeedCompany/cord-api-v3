@@ -32,4 +32,3 @@ export * from './create-partnership';
 export * from './create-song';
 export * from './create-partner';
 export * from './create-funding-account';
-export * from './create-marketing-location';
