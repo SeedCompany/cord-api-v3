@@ -5,6 +5,7 @@ import { generate } from 'shortid';
 import { keys } from '../../common';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
 import { InternalRole, Role as ProjectRole } from './dto';
+import { Powers } from './dto/powers';
 import { getRolePermissions, hasPerm, Perm, TypeToDto } from './policies';
 
 type Role = ProjectRole | InternalRole;
@@ -140,4 +141,17 @@ export class AuthorizationService {
       .match([node('root', 'User', { id: this.config.rootAdmin.id })])
       .merge([node('sg'), relation('out', '', 'member'), node('root')]);
   };
+
+  async hasPower(power: Powers, id: string) {
+    const result = await this.db
+      .query()
+      .match([
+        node('user', 'User', { id }),
+        relation('in', '', 'member'),
+        node('sg', 'SecurityGroup'),
+      ])
+      .raw(`${power} IN sg.powers as hasPower`)
+      .first();
+    return result?.hasPower;
+  }
 }
