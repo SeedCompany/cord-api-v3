@@ -1,4 +1,4 @@
-// keep alphabetized
+/* eslint typescript-sort-keys/string-enum: "warn" */
 
 export enum Powers {
   CreateBudget = 'CreateBudget',

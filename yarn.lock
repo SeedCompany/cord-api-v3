@@ -1786,6 +1786,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@typescript-eslint/experimental-utils@npm:^2.32.0":
+  version: 2.34.0
+  resolution: "@typescript-eslint/experimental-utils@npm:2.34.0"
+  dependencies:
+    "@types/json-schema": ^7.0.3
+    "@typescript-eslint/typescript-estree": 2.34.0
+    eslint-scope: ^5.0.0
+    eslint-utils: ^2.0.0
+  peerDependencies:
+    eslint: "*"
+  checksum: 53cbbcfe67ddc53b4bc23f78b3726b0c2de5ea04ee849ca8b619f1fcad16f644d9d72bb3ea9a08aabfc605ea4a9769fe1b81931af09ce2223ec49de749cde2d4
+  languageName: node
+  linkType: hard
+
 "@typescript-eslint/parser@npm:^3.9.1":
   version: 3.9.1
   resolution: "@typescript-eslint/parser@npm:3.9.1"
@@ -1812,6 +1826,26 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@typescript-eslint/typescript-estree@npm:2.34.0, @typescript-eslint/typescript-estree@npm:^2.29.0":
+  version: 2.34.0
+  resolution: "@typescript-eslint/typescript-estree@npm:2.34.0"
+  dependencies:
+    debug: ^4.1.1
+    eslint-visitor-keys: ^1.1.0
+    glob: ^7.1.6
+    is-glob: ^4.0.1
+    lodash: ^4.17.15
+    semver: ^7.3.2
+    tsutils: ^3.17.1
+  peerDependencies:
+    typescript: "*"
+  peerDependenciesMeta:
+    typescript:
+      optional: true
+  checksum: 77d1a758dfd4a2813fb51d6102aa79d7eccb006c66db8cff49a10706c8cf64cae6b256b8ec6694058c1c333775e1dbc6ca7501769138fc89165b9c10f8201e40
+  languageName: node
+  linkType: hard
+
 "@typescript-eslint/typescript-estree@npm:3.9.1":
   version: 3.9.1
   resolution: "@typescript-eslint/typescript-estree@npm:3.9.1"
@@ -1830,26 +1864,6 @@ __metadata:
     typescript:
       optional: true
   checksum: f9a962b6ffd557aff680ccc8a67e79e305002dd90f7637f0d22b9e6e9112dc143f629d12af769e6252c17025cc4bc381218a425fdb4bf9dbd8c12a235356d8c1
-  languageName: node
-  linkType: hard
-
-"@typescript-eslint/typescript-estree@npm:^2.29.0":
-  version: 2.34.0
-  resolution: "@typescript-eslint/typescript-estree@npm:2.34.0"
-  dependencies:
-    debug: ^4.1.1
-    eslint-visitor-keys: ^1.1.0
-    glob: ^7.1.6
-    is-glob: ^4.0.1
-    lodash: ^4.17.15
-    semver: ^7.3.2
-    tsutils: ^3.17.1
-  peerDependencies:
-    typescript: "*"
-  peerDependenciesMeta:
-    typescript:
-      optional: true
-  checksum: 77d1a758dfd4a2813fb51d6102aa79d7eccb006c66db8cff49a10706c8cf64cae6b256b8ec6694058c1c333775e1dbc6ca7501769138fc89165b9c10f8201e40
   languageName: node
   linkType: hard
 
@@ -4091,6 +4105,7 @@ __metadata:
     dotenv: ^8.2.0
     dotenv-expand: ^5.1.0
     eslint: ^7.7.0
+    eslint-plugin-typescript-sort-keys: ^1.5.0
     execa: ^4.0.3
     faker: ^4.1.0
     got: ^11.5.0
@@ -5359,6 +5374,21 @@ __metadata:
   peerDependencies:
     eslint: ^3 || ^4 || ^5 || ^6 || ^7
   checksum: e962f31c322f9b1a41187ef20c0c59cb0ca4185959d8a5345132512cc041d760d25fc6576e5763b86fcc01cb8918328400b793b184035384650b22e02c6f2c24
+  languageName: node
+  linkType: hard
+
+"eslint-plugin-typescript-sort-keys@npm:^1.5.0":
+  version: 1.5.0
+  resolution: "eslint-plugin-typescript-sort-keys@npm:1.5.0"
+  dependencies:
+    "@typescript-eslint/experimental-utils": ^2.32.0
+    json-schema: ^0.2.5
+    natural-compare-lite: ^1.4.0
+  peerDependencies:
+    "@typescript-eslint/parser": ^1 || ^2 || ^3 || ^4
+    eslint: ^5 || ^6 || ^7
+    typescript: ^3 || ^4
+  checksum: ae44f93d6bfe3d8c481478643aecae9603eadf6dc7151548349a4144d074adc0fff044799caed14f9a25ce20c55ecd93b9e6cac097de62f53772ad00b35415ef
   languageName: node
   linkType: hard
 
@@ -8143,6 +8173,13 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
+"json-schema@npm:^0.2.5":
+  version: 0.2.5
+  resolution: "json-schema@npm:0.2.5"
+  checksum: 553d8f98467d27b7a15445e1b21b0edc1ab3fc374b80f3f659b672b65cf132a4854b6d676625f221d80340aa922cd37c0cff1ad3ad5389474f4a5c1079d2c97b
+  languageName: node
+  linkType: hard
+
 "json-stable-stringify-without-jsonify@npm:^1.0.1":
   version: 1.0.1
   resolution: "json-stable-stringify-without-jsonify@npm:1.0.1"
@@ -9865,6 +9902,13 @@ fsevents@^1.2.7:
     snapdragon: ^0.8.1
     to-regex: ^3.0.1
   checksum: 2e1440c5705f0192b9d9b46bb682a1832052974dad359ed473b9f555abb5c55a08b3d5ba45d7d37c53a83f64b7f93866292824d3086a150ff7980e71874feb3b
+  languageName: node
+  linkType: hard
+
+"natural-compare-lite@npm:^1.4.0":
+  version: 1.4.0
+  resolution: "natural-compare-lite@npm:1.4.0"
+  checksum: 18c1c37b8523b08e9ea51043f3f6a7a50c9354fcc0b3ff4ec3437f017f766325e935cf427fd3b39657491f6174a8701c498235acb642c752537ddca5d378ff1f
   languageName: node
   linkType: hard
 
