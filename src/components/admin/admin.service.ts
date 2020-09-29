@@ -6,6 +6,7 @@ import { generate } from 'shortid';
 import { ServerException, UnauthenticatedException } from '../../common';
 import { ConfigService, DatabaseService } from '../../core';
 import { AuthenticationService } from '../authentication';
+import { Powers } from '../authorization/dto/powers';
 import { Role } from '../project';
 import { RootSecurityGroup } from './root-security-group';
 
@@ -46,6 +47,8 @@ export class AdminService implements OnApplicationBootstrap {
   async mergeRootSecurityGroup() {
     // merge root security group
 
+    const powers = Object.keys(Powers);
+
     await this.db
       .query()
       .merge([
@@ -58,6 +61,7 @@ export class AdminService implements OnApplicationBootstrap {
         sg: {
           id: this.config.rootSecurityGroup.id,
           ...RootSecurityGroup,
+          powers,
         },
       })
       .run();

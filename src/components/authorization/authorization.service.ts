@@ -154,20 +154,24 @@ export class AuthorizationService {
             id: this.config.publicSecurityGroup,
           }),
         ])
-        .raw(`${power} IN sg.powers as hasPower`)
+        .raw(`where '${power}' IN sg.powers`)
+        .raw(`return "${power}" IN sg.powers as hasPower`)
         .first();
-      hasPower = result?.hasPower ? result.hasPower : false;
+      hasPower = result?.hasPower ?? false;
     } else {
-      const result = await this.db
+      const query = this.db
         .query()
         .match([
           node('user', 'User', { id }),
           relation('in', '', 'member'),
           node('sg', 'SecurityGroup'),
         ])
-        .raw(`${power} IN sg.powers as hasPower`)
-        .first();
-      hasPower = result?.hasPower ? result.hasPower : false;
+        .raw(`where '${power}' IN sg.powers`)
+        .raw(`return "${power}" IN sg.powers as hasPower`);
+
+      const result = await query.first();
+
+      hasPower = result?.hasPower ?? false;
     }
 
     if (!hasPower) {
