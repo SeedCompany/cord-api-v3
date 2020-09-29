@@ -1,5 +1,5 @@
 import { createUnionType, registerEnumType } from '@nestjs/graphql';
-import { mapValues } from 'lodash';
+import { mapValues, uniq } from 'lodash';
 import { keys, simpleSwitch } from '../../../common';
 import { Film } from '../../film/dto';
 import { Language } from '../../language/dto';
@@ -31,6 +31,7 @@ const searchable = {
   Story,
   LiteracyMaterial,
   Song,
+  PartnerByOrg: Partner,
 } as const;
 
 // Expand this to add more search types, but not result types.
@@ -62,7 +63,8 @@ export type SearchResult = SearchResultMap[keyof SearchableMap];
 
 export const SearchResult = createUnionType({
   name: 'SearchResult',
-  types: () => Object.values(searchable) as any, // ignore errors for abstract classes
+  //@ts-expect-error ignore errors for abstract classes
+  types: () => uniq(Object.values(searchable)),
   resolveType: (value: SearchResult) =>
     simpleSwitch(value.__typename, searchable),
 });

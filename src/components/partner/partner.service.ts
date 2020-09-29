@@ -115,17 +115,6 @@ export class PartnerService {
     return await this.readOne(result.id, session);
   }
 
-  async readOnePartnerByPartnerIdOrOrgId(
-    id: string,
-    session: ISession
-  ): Promise<Partner> {
-    try {
-      return await this.readOne(id, session);
-    } catch {
-      return await this.readOnePartnerByOrgId(id, session);
-    }
-  }
-
   async readOnePartnerByOrgId(id: string, session: ISession): Promise<Partner> {
     this.logger.debug(`Read Partner by Org Id`, {
       id: id,

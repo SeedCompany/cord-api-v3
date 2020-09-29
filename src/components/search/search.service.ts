@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { Injectable } from '@nestjs/common';
 import { node, regexp, relation } from 'cypher-query-builder';
 import { compact } from 'lodash';
@@ -43,8 +42,8 @@ export class SearchService {
   private readonly hydrators: HydratorMap = {
     Organization: (...args) => this.orgs.readOne(...args),
     User: (...args) => this.users.readOne(...args),
-    Partner: (...args) =>
-      this.partners.readOnePartnerByPartnerIdOrOrgId(...args),
+    Partner: (...args) => this.partners.readOne(...args),
+    PartnerByOrg: (...args) => this.partners.readOnePartnerByOrgId(...args),
     Country: (...args) => this.location.readOneCountry(...args),
     Region: (...args) => this.location.readOneRegion(...args),
     Zone: (...args) => this.location.readOneZone(...args),
@@ -107,7 +106,6 @@ export class SearchService {
       .asResult<{ id: string; type: keyof SearchResultMap }>();
 
     const results = await query.run();
-    console.log('results: ', JSON.stringify(results));
 
     // Individually convert each result (id & type) to its search result
     // based on this.hydrators
@@ -121,7 +119,7 @@ export class SearchService {
                 ...(inputTypes.includes('Organization') ? [result] : []),
                 ...(inputTypes.includes('Partner')
                   ? // partner hydrator will need to handle id of org and partner
-                    [{ id: result.id, type: 'Partner' as const }]
+                    [{ id: result.id, type: 'PartnerByOrg' as const }]
                   : []),
               ]
         )
