@@ -2304,7 +2304,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation updateEducation($input: UpdateEducationInput!) {\r\n  updateEducation(input: $input) {\r\n    education {\r\n      id\r\n      createdAt\r\n      degree {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      major {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      institution {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"education\": \r\n    {\r\n      \"id\": \"{{educationid}}\"\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n    \"input\": {\r\n        \"education\": {\r\n            \"id\": \"{{educationid}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -2337,20 +2337,21 @@
 									"    pm.response.to.have.status(400);",
 									"});",
 									"",
-									"pm.test(\"Response time is less than 10000ms\", function () {",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
 									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
 									"});",
 									"",
 									"//Test Specific",
 									"pm.test(\"Verify that error message is correct\", function () {",
 									"    var error_message = jsonData.errors[0].message;",
-									"    pm.expect(error_message).to.include(\"Field \\\"id\\\" of required type \\\"ID!\\\" was not provided\");",
+									"    pm.expect(error_message).to.include(\"Field \\\"id\\\" of required type \\\"ID!\\\" was not provided.\");",
 									"});",
 									"",
 									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {",
 									"    var error_code = jsonData.errors[0].extensions.code;",
-									"    pm.expect(error_code).to.eql('INTERNAL_SERVER_ERROR');",
-									"});"
+									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");",
+									"});",
+									""
 								],
 								"type": "text/javascript"
 							}

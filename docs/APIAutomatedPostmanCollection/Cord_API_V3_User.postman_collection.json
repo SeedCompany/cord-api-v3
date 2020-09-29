@@ -2498,6 +2498,158 @@
 					"response": []
 				},
 				{
+					"name": "Update User Parameter Mismatch - title",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "27ecf201-73ed-4c42-a7f9-31c3c5becc57",
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"\r",
+									"//Common Verification\r",
+									"pm.test(\"Status code is 400 Bad Request\", function () {\r",
+									"    pm.response.to.have.status(400);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
+									"});\r",
+									"\r",
+									"//Test Specific\r",
+									"pm.test(\"Verify that error message is correct\", function () {\r",
+									"    var error_message = jsonData.errors[0].message;  \r",
+									"    pm.expect(error_message).to.include(\"Field \\\"title1\\\" is not defined by type \\\"UpdateUser\\\". Did you mean \\\"title\\\"?\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {\r",
+									"    var error_message = jsonData.errors[0].extensions.code;  \r",
+									"    pm.expect(error_message).to.eql(\"INTERNAL_SERVER_ERROR\");\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "",
+								"type": "text",
+								"value": "",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation updateUser($input: UpdateUserInput!) {\r\n  updateUser(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"user\": {\r\n            \"id\": \"{{userid}}\",\r\n            \"realFirstName\": \"{{realFirstName}}\",\r\n            \"realLastName\": \"{{realLastName}}\",\r\n            \"displayFirstName\": \"{{displayFirstName}}\",\r\n            \"displayLastName\": \"{{displayLastName}}\",\r\n            \"phone\": \"{{phone}}\",\r\n            \"timezone\": \"{{timezone}}\",\r\n            \"about\": \"{{about}}\",\r\n            \"status\": \"{{userStatus}}\",\r\n            \"title1\": \"{{userTitle}}\",\r\n            \"roles\": \"{{userRoles}}\"\r\n        }\r\n    }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update User Parameter Mismatch - roles",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "8dab08cd-bd5f-41a1-9504-5ce1180004b5",
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"\r",
+									"//Common Verification\r",
+									"pm.test(\"Status code is 400 Bad Request\", function () {\r",
+									"    pm.response.to.have.status(400);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
+									"});\r",
+									"\r",
+									"//Test Specific\r",
+									"pm.test(\"Verify that error message is correct\", function () {\r",
+									"    var error_message = jsonData.errors[0].message;  \r",
+									"    pm.expect(error_message).to.include(\"Field \\\"roles1\\\" is not defined by type \\\"UpdateUser\\\". Did you mean \\\"roles\\\"?\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {\r",
+									"    var error_message = jsonData.errors[0].extensions.code;  \r",
+									"    pm.expect(error_message).to.eql(\"INTERNAL_SERVER_ERROR\");\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "",
+								"type": "text",
+								"value": "",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation updateUser($input: UpdateUserInput!) {\r\n  updateUser(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"user\": {\r\n            \"id\": \"{{userid}}\",\r\n            \"realFirstName\": \"{{realFirstName}}\",\r\n            \"realLastName\": \"{{realLastName}}\",\r\n            \"displayFirstName\": \"{{displayFirstName}}\",\r\n            \"displayLastName\": \"{{displayLastName}}\",\r\n            \"phone\": \"{{phone}}\",\r\n            \"timezone\": \"{{timezone}}\",\r\n            \"about\": \"{{about}}\",\r\n            \"status\": \"{{userStatus}}\",\r\n            \"title\": \"{{userTitle}}\",\r\n            \"roles1\": \"{{userRoles}}\"\r\n        }\r\n    }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Update User Parameter Invalid - id",
 					"event": [
 						{
