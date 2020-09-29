@@ -155,7 +155,7 @@ export class LanguageService {
         {
           key: 'name',
           value: input.name,
-          isPublic: false,
+          isPublic: true,
           isOrgPublic: false,
           label: 'LanguageName',
         },
