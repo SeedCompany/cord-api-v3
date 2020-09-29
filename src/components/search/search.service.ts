@@ -1,7 +1,8 @@
+/* eslint-disable no-console */
 import { Injectable } from '@nestjs/common';
 import { node, regexp, relation } from 'cypher-query-builder';
 import { compact } from 'lodash';
-import { ISession } from '../../common';
+import { ISession, NotFoundException, ServerException } from '../../common';
 import {
   DatabaseService,
   matchRequestingUser,
@@ -106,6 +107,7 @@ export class SearchService {
       .asResult<{ id: string; type: keyof SearchResultMap }>();
 
     const results = await query.run();
+    console.log('results: ', JSON.stringify(results));
 
     // Individually convert each result (id & type) to its search result
     // based on this.hydrators
@@ -154,8 +156,9 @@ export class SearchService {
           // eslint-disable-next-line @typescript-eslint/naming-convention
           __typename: type,
         };
-      } catch {
-        return null;
+      } catch (err) {
+        if (err instanceof NotFoundException) return null;
+        else throw new ServerException(`Error searching on ${type}`, err);
       }
     };
   }
