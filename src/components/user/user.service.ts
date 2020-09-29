@@ -465,9 +465,7 @@ export class UserService {
   ): Promise<SecuredUnavailabilityList> {
     const query = this.db
       .query()
-      .match(
-        matchSession(session, { withAclEdit: 'canReadUnavailabilityList' })
-      )
+      .match(matchSession(session))
       .match([node('user', 'User', { id: userId })])
       .optionalMatch([
         node('requestingUser'),
@@ -475,7 +473,7 @@ export class UserService {
         node('', 'SecurityGroup'),
         relation('out', '', 'permission'),
         node('canRead', 'Permission', {
-          property: 'unavailablity',
+          property: 'unavailability',
           read: true,
         }),
         // relation('out', '', 'baseNode', { active: true }),

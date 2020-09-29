@@ -176,7 +176,7 @@ export class ProjectService {
         addToAdminSg: false,
         addToWriterSg: false,
         addToReaderSg: false,
-        isPublic: false,
+        isPublic: true,
         isOrgPublic: false,
         label: 'ProjectStatus',
       },
@@ -458,6 +458,30 @@ export class ProjectService {
 
     // TODO: re-connect the locationId node when locations are hooked up
 
+    // Update status manually
+    if (changes.status) {
+      await this.db
+        .query()
+        .match([
+          node('publicSG'),
+          relation('out', '', 'permission'),
+          node('', 'Permission', {
+            property: 'status',
+            read: true,
+          }),
+          relation('out', '', 'baseNode'),
+          node('node', 'Project', { id: input.id }),
+          relation('out', '', 'status'),
+          node('status', ['Property', 'ProjectStatus']),
+        ])
+        .set({
+          values: {
+            'status.value': changes.status,
+          },
+        })
+        .run();
+    }
+
     const result = await this.db.sgUpdateProperties({
       session,
       object: currentProject,
@@ -466,7 +490,7 @@ export class ProjectService {
         'mouStart',
         'mouEnd',
         'estimatedSubmission',
-        'status',
+        // 'status',
         'modifiedAt',
         'step',
         'sensitivity',
@@ -479,7 +503,7 @@ export class ProjectService {
       new ProjectUpdatedEvent(result, currentProject, input, session)
     );
 
-    return result;
+    return await this.readOne(input.id, session);
   }
 
   async delete(id: string, session: ISession): Promise<void> {
