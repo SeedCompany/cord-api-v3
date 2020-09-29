@@ -458,30 +458,6 @@ export class ProjectService {
 
     // TODO: re-connect the locationId node when locations are hooked up
 
-    // Update status manually
-    if (changes.status) {
-      await this.db
-        .query()
-        .match([
-          node('publicSG'),
-          relation('out', '', 'permission'),
-          node('', 'Permission', {
-            property: 'status',
-            read: true,
-          }),
-          relation('out', '', 'baseNode'),
-          node('node', 'Project', { id: input.id }),
-          relation('out', '', 'status'),
-          node('status', ['Property', 'ProjectStatus']),
-        ])
-        .set({
-          values: {
-            'status.value': changes.status,
-          },
-        })
-        .run();
-    }
-
     const result = await this.db.sgUpdateProperties({
       session,
       object: currentProject,
@@ -490,7 +466,7 @@ export class ProjectService {
         'mouStart',
         'mouEnd',
         'estimatedSubmission',
-        // 'status',
+        'status',
         'modifiedAt',
         'step',
         'sensitivity',

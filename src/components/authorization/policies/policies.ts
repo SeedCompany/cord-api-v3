@@ -152,6 +152,7 @@ const policies = [
     scriptureReferences: Perm.ReadAndEdit,
     produces: Perm.ReadAndEdit,
     scriptureReferencesOverride: Perm.ReadAndEdit,
+    isOverriding: Perm.ReadAndEdit,
   }),
   policy('Project', InternalRole.Admin, {
     estimatedSubmission: Perm.ReadAndEdit,
@@ -167,6 +168,7 @@ const policies = [
     modifiedAt: Perm.ReadAndEdit,
     engagement: Perm.ReadAndEdit,
     location: Perm.ReadAndEdit,
+    status: Perm.ReadAndEdit,
   }),
   policy(
     'Project',

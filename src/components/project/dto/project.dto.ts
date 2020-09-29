@@ -96,6 +96,7 @@ declare module '../../authorization/policies/mapping' {
       | 'member'
       | 'engagement'
       | 'budget'
-      | 'partnership';
+      | 'partnership'
+      | 'status';
   }
 }

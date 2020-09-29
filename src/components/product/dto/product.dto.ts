@@ -68,6 +68,6 @@ declare module '../../authorization/policies/mapping' {
     Product: AnyProduct;
   }
   interface TypeToSecuredProps {
-    Product: SecuredKeys<AnyProduct>;
+    Product: SecuredKeys<AnyProduct> | 'isOverriding';
   }
 }
