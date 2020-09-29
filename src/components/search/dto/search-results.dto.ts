@@ -16,8 +16,10 @@ import { Song } from '../../song/dto';
 import { Story } from '../../story/dto';
 import { User } from '../../user/dto';
 
-// Expand this to add to searchable types / results
-const searchable = {
+// A mapping of searchable types to their results. Expand as needed.
+// Keys become the SearchType enum. Values become the SearchResult union.
+// The keys should match DB "base-node" labels.
+const publicSearchable = {
   Organization,
   Partner,
   Country,
@@ -31,6 +33,11 @@ const searchable = {
   Story,
   LiteracyMaterial,
   Song,
+} as const;
+
+// Same as above, but the keys are ignored from from the SearchType enum,
+// since they are expected to be used only for internal use.
+const privateSearchable = {
   PartnerByOrg: Partner,
 } as const;
 
@@ -45,11 +52,13 @@ const searchableAbstracts = {
  * Everything below is based on objects above and should not need to be modified
  ******************************************************************************/
 
+const searchable = { ...publicSearchable, ...privateSearchable };
+
 export type SearchableMap = {
   [K in keyof typeof searchable]: typeof searchable[K]['prototype'];
 };
 
-export const SearchResultTypes = keys(searchable);
+export const SearchResultTypes = keys(publicSearchable);
 
 // __typename is a GQL thing to identify type at runtime
 // It makes since to match this to not conflict with actual properties and
@@ -63,20 +72,20 @@ export type SearchResult = SearchResultMap[keyof SearchableMap];
 
 export const SearchResult = createUnionType({
   name: 'SearchResult',
-  //@ts-expect-error ignore errors for abstract classes
+  // @ts-expect-error ignore errors for abstract classes
   types: () => uniq(Object.values(searchable)),
   resolveType: (value: SearchResult) =>
     simpleSwitch(value.__typename, searchable),
 });
 
 export type SearchType =
-  | keyof typeof searchable
+  | keyof typeof publicSearchable
   | keyof typeof searchableAbstracts;
 
 // Don't use outside of defining GQL schema
 export const GqlSearchType = mapValues(
   {
-    ...searchable,
+    ...publicSearchable,
     ...searchableAbstracts,
   },
   (v, k) => k
