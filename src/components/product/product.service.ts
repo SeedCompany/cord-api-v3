@@ -22,7 +22,6 @@ import {
   matchRequestingUser,
   Property,
 } from '../../core';
-import { permission, permissions } from '../../core/database/database.service';
 import {
   calculateTotalAndPaginateList,
   permissionsOfNode,
@@ -36,6 +35,8 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
+import { AuthorizationService } from '../authorization/authorization.service';
+import { InternalRole } from '../authorization/dto';
 import { Film, FilmService } from '../film';
 import {
   LiteracyMaterial,
@@ -75,6 +76,7 @@ export class ProductService {
     private readonly song: SongService,
     private readonly literacyMaterial: LiteracyMaterialService,
     private readonly scriptureRefService: ScriptureReferenceService,
+    private readonly authorizationService: AuthorizationService,
     @Logger('product:service') private readonly logger: ILogger
   ) {}
 
@@ -102,41 +104,29 @@ export class ProductService {
       {
         key: 'mediums',
         value: input.mediums,
-        addToAdminSg: true,
-        addToWriterSg: true,
-        addToReaderSg: true,
-        isPublic: true,
-        isOrgPublic: true,
+        isPublic: false,
+        isOrgPublic: false,
         label: 'ProductMedium',
       },
       {
         key: 'purposes',
         value: input.purposes,
-        addToAdminSg: true,
-        addToWriterSg: true,
-        addToReaderSg: true,
-        isPublic: true,
-        isOrgPublic: true,
+        isPublic: false,
+        isOrgPublic: false,
         label: 'ProductPurpose',
       },
       {
         key: 'methodology',
         value: input.methodology,
-        addToAdminSg: true,
-        addToWriterSg: true,
-        addToReaderSg: true,
-        isPublic: true,
-        isOrgPublic: true,
+        isPublic: false,
+        isOrgPublic: false,
         label: 'ProductMethodology',
       },
       {
         key: 'isOverriding',
         value: false,
-        addToAdminSg: true,
-        addToWriterSg: true,
-        addToReaderSg: true,
-        isPublic: true,
-        isOrgPublic: true,
+        isPublic: false,
+        isOrgPublic: false,
         label: '',
       },
     ];
@@ -211,7 +201,6 @@ export class ProductService {
           relation('out', '', 'product', { active: true, createdAt }),
           node('node'),
         ],
-        ...permission('product', 'engagement'),
       ]);
     }
 
@@ -258,19 +247,18 @@ export class ProductService {
       }
     }
 
-    query.create([
-      ...permissions('node', [
-        'scriptureReferences',
-        'scriptureReferencesOverride',
-        'produces',
-      ]),
-    ]);
-
     const result = await query.return('node.id as id').first();
 
     if (!result) {
       throw new ServerException('failed to create default product');
     }
+
+    await this.authorizationService.addPermsForRole(
+      InternalRole.Admin,
+      'Product',
+      result.id,
+      session.userId as string
+    );
 
     this.logger.debug(`product created`, { id: result.id });
     return await this.readOne(result.id, session);

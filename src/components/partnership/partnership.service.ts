@@ -20,7 +20,6 @@ import {
   Logger,
   matchRequestingUser,
   matchSession,
-  permission,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -34,9 +33,11 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
+import { AuthorizationService } from '../authorization/authorization.service';
 import { BudgetService } from '../budget';
 import { FileService } from '../file';
 import { OrganizationService } from '../organization';
+import { InternalRole } from '../project';
 import { ProjectService } from '../project/project.service';
 import {
   CreatePartnership,
@@ -78,6 +79,7 @@ export class PartnershipService {
     @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService,
     private readonly eventBus: IEventBus,
+    private readonly authorizationService: AuthorizationService,
     @Logger('partnership:service') private readonly logger: ILogger
   ) {}
 
@@ -127,72 +129,48 @@ export class PartnershipService {
       {
         key: 'agreementStatus',
         value: input.agreementStatus || PartnershipAgreementStatus.NotAttached,
-        addToAdminSg: true,
-        addToWriterSg: false,
-        addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
       },
       {
         key: 'agreement',
         value: agreement,
-        addToAdminSg: true,
-        addToWriterSg: false,
-        addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
       },
       {
         key: 'mou',
         value: mou,
-        addToAdminSg: true,
-        addToWriterSg: false,
-        addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
       },
       {
         key: 'mouStatus',
         value: input.mouStatus || PartnershipAgreementStatus.NotAttached,
-        addToAdminSg: true,
-        addToWriterSg: false,
-        addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
       },
       {
         key: 'mouStartOverride',
         value: input.mouStartOverride,
-        addToAdminSg: true,
-        addToWriterSg: false,
-        addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
       },
       {
         key: 'mouEndOverride',
         value: input.mouEndOverride,
-        addToAdminSg: true,
-        addToWriterSg: false,
-        addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
       },
       {
         key: 'types',
         value: uniq(input.types),
-        addToAdminSg: true,
-        addToWriterSg: false,
-        addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
       },
       {
         key: 'financialReportingType',
         value: input.financialReportingType,
-        addToAdminSg: true,
-        addToWriterSg: false,
-        addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
       },
@@ -202,11 +180,6 @@ export class PartnershipService {
       const createPartnership = this.db
         .query()
         .call(matchRequestingUser, session)
-        .match([
-          node('root', 'User', {
-            id: this.config.rootAdmin.id,
-          }),
-        ])
         .call(
           createBaseNode,
           'Partnership',
@@ -215,7 +188,6 @@ export class PartnershipService {
           [],
           session.userId === this.config.rootAdmin.id
         )
-        .create([...permission('organization', 'node')])
         .return('node.id as id');
 
       try {
@@ -227,6 +199,13 @@ export class PartnershipService {
       if (!result) {
         throw new ServerException('failed to create partnership');
       }
+
+      await this.authorizationService.addPermsForRole(
+        InternalRole.Admin,
+        'Partnership',
+        result.id,
+        session.userId as string
+      );
 
       // connect the Organization to the Partnership
       // and connect Partnership to Project

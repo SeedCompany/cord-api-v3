@@ -1,7 +1,7 @@
 import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { MergeExclusive } from 'type-fest';
-import { Resource } from '../../../common';
+import { Resource, SecuredKeys } from '../../../common';
 import { SecuredScriptureRangesOverride } from '../../scripture';
 import { Producible, SecuredProducible } from './producible.dto';
 import { SecuredProductMediums } from './product-medium';
@@ -62,3 +62,12 @@ export type AnyProduct = MergeExclusive<
   DirectScriptureProduct,
   DerivativeScriptureProduct
 >;
+
+declare module '../../authorization/policies/mapping' {
+  interface TypeToDto {
+    Product: AnyProduct;
+  }
+  interface TypeToSecuredProps {
+    Product: SecuredKeys<AnyProduct> | 'isOverriding';
+  }
+}

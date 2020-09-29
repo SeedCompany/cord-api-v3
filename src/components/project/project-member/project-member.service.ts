@@ -16,11 +16,11 @@ import {
   DatabaseService,
   getPermList,
   getPropList,
+  IEventBus,
   ILogger,
   Logger,
   matchRequestingUser,
   matchSession,
-  permissions,
   property,
 } from '../../../core';
 import {
@@ -36,9 +36,11 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../../core/database/results';
+import { AuthorizationService } from '../../authorization/authorization.service';
 import { UserService } from '../../user';
 import {
   CreateProjectMember,
+  InternalRole,
   ProjectMember,
   ProjectMemberListInput,
   ProjectMemberListOutput,
@@ -57,7 +59,9 @@ export class ProjectMemberService {
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
     private readonly userService: UserService,
-    @Logger('project:member:service') private readonly logger: ILogger
+    private readonly eventBus: IEventBus,
+    @Logger('project:member:service') private readonly logger: ILogger,
+    private readonly authorizationService: AuthorizationService
   ) {}
 
   protected async getPMByProjectAndUser(
@@ -101,12 +105,7 @@ export class ProjectMemberService {
     try {
       const createProjectMember = this.db
         .query()
-        .match(matchSession(session, { withAclEdit: 'canCreateProjectMember' }))
-        .match([
-          node('rootuser', 'User', {
-            id: this.config.rootAdmin.id,
-          }),
-        ])
+        .match(matchSession(session))
         .create([
           [
             node('newProjectMember', 'ProjectMember:BaseNode', {
@@ -116,32 +115,13 @@ export class ProjectMemberService {
           ],
           ...property('roles', input.roles, 'newProjectMember'),
           ...property('modifiedAt', createdAt, 'newProjectMember'),
-          [
-            node('adminSG', 'SecurityGroup', {
-              id: generate(),
-              name: `projectmember-SG admin`,
-            }),
-            relation('out', '', 'member'),
-            node('requestingUser'),
-          ],
-          [
-            node('readerSG', 'SecurityGroup', {
-              id: generate(),
-              name: `projectmember-SG users`,
-            }),
-            relation('out', '', 'member'),
-            node('requestingUser'),
-          ],
-          [node('adminSG'), relation('out', '', 'member'), node('rootuser')],
-          [node('readerSG'), relation('out', '', 'member'), node('rootuser')],
-          ...permissions('newProjectMember', ['roles', 'modifiedAt', 'user']),
         ])
         .return('newProjectMember.id as id');
       await createProjectMember.first();
 
       // connect the Project to the ProjectMember
       // and connect ProjectMember to User
-      await this.db
+      const memberQuery = await this.db
         .query()
         .match([
           [node('user', 'User', { id: userId })],
@@ -163,6 +143,16 @@ export class ProjectMemberService {
         ])
         .return('projectMember.id as id')
         .first();
+
+      // creating user must be an admin, use role change event
+      await this.authorizationService.addPermsForRole(
+        InternalRole.Admin,
+        'ProjectMember',
+        memberQuery?.id,
+        session.userId!
+      );
+
+      await this.addProjectAdminsToUserSg(projectId, userId);
 
       return await this.readOne(id, session);
     } catch (exception) {
@@ -342,5 +332,34 @@ export class ProjectMemberService {
       relation(relationshipDirection, '', relationshipType, { active: true }),
       node('node', label),
     ]);
+  }
+
+  // when a new user is added to a project, all the project admins need to have access
+  // to some of that user's properties in order to know about that user
+  async addProjectAdminsToUserSg(projectId: string, userId: string) {
+    // get all admins of a project, then add the role for them to see the user info
+    const result = await this.db
+      .query()
+      .match([
+        node('admins', 'User'),
+        relation('in', '', 'member'),
+        node('sg', 'SecurityGroup', { role: InternalRole.Admin }),
+        relation('out', '', 'permission'),
+        node('perms', 'Permission'),
+        relation('out', '', 'baseNode'),
+        node('project', 'Project', { id: projectId }),
+      ])
+      .raw('return collect(distinct admins.id) as ids')
+      .first();
+
+    for (const id of result?.ids) {
+      // creating user must be an admin, use role change event
+      await this.authorizationService.addPermsForRole(
+        InternalRole.AdminViewOfProjectMember,
+        'ProjectMember',
+        userId,
+        id
+      );
+    }
   }
 }

@@ -31,6 +31,8 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
+import { AuthorizationService } from '../authorization/authorization.service';
+import { InternalRole } from '../authorization/dto';
 import {
   Ceremony,
   CeremonyListInput,
@@ -51,6 +53,7 @@ export class CeremonyService {
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
+    private readonly authorizationService: AuthorizationService,
     @Logger('ceremony:service') private readonly logger: ILogger
   ) {}
 
@@ -59,36 +62,24 @@ export class CeremonyService {
       {
         key: 'type',
         value: input.type,
-        addToAdminSg: true,
-        addToWriterSg: false,
-        addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
       },
       {
         key: 'planned',
         value: input.planned,
-        addToAdminSg: true,
-        addToWriterSg: false,
-        addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
       },
       {
         key: 'estimatedDate',
         value: input.estimatedDate,
-        addToAdminSg: true,
-        addToWriterSg: false,
-        addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
       },
       {
         key: 'actualDate',
         value: input.actualDate,
-        addToAdminSg: true,
-        addToWriterSg: false,
-        addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
       },
@@ -98,11 +89,6 @@ export class CeremonyService {
       const query = this.db
         .query()
         .call(matchRequestingUser, session)
-        .match([
-          node('root', 'User', {
-            id: this.config.rootAdmin.id,
-          }),
-        ])
         .call(createBaseNode, 'Ceremony', secureProps)
         .return('node.id as id');
 
@@ -111,6 +97,13 @@ export class CeremonyService {
       if (!result) {
         throw new ServerException('failed to create a budget');
       }
+
+      await this.authorizationService.addPermsForRole(
+        InternalRole.Admin,
+        'Ceremony',
+        result.id,
+        session.userId as string
+      );
 
       return await this.readOne(result.id, session);
     } catch (exception) {

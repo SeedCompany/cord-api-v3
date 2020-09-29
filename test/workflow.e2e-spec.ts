@@ -1,14 +1,11 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
-import { CreateSecurityGroupOutput } from '../src/components/authorization/dto/create-security-group.dto';
 import { Organization } from '../src/components/organization';
 import { User } from '../src/components/user';
 import {
   addState,
   createOrganization,
-  createPermission,
-  createSecurityGroup,
   createSession,
   createTestApp,
   createUser,
@@ -20,7 +17,7 @@ import {
 describe.skip('Workflow e2e', () => {
   let app: TestApp;
   let org: Organization;
-  let sg: CreateSecurityGroupOutput;
+  // let sg: CreateSecurityGroupOutput;
   const password: string = faker.internet.password();
   const email = `${faker.internet.email()} ${Date.now()}`;
   let user: User;
@@ -38,7 +35,7 @@ describe.skip('Workflow e2e', () => {
       email: process.env.ROOT_ADMIN_EMAIL,
       password: process.env.ROOT_ADMIN_PASSWORD,
     });
-    sg = await createSecurityGroup(app);
+    // sg = await createSecurityGroup(app);
 
     user = await createUser(app, { password: password, email: email });
 
@@ -55,19 +52,19 @@ describe.skip('Workflow e2e', () => {
         }
       `,
       {
-        sgId: sg.id,
+        // sgId: sg.id,
         userId: user.id,
       }
     );
     await login(app, { email, password });
     org = await createOrganization(app);
-    await createPermission(app, {
-      sgId: sg.id!,
-      baseNodeId: org.id,
-      propertyName: 'name',
-      read: true,
-      write: true,
-    });
+    // await createPermission(app, {
+    //   sgId: sg.id!,
+    //   baseNodeId: org.id,
+    //   propertyName: 'name',
+    //   read: true,
+    //   write: true,
+    // });
   });
 
   afterAll(async () => {
@@ -122,7 +119,7 @@ describe.skip('Workflow e2e', () => {
         input: {
           groupState: {
             stateId: workflow.startingState.id,
-            securityGroupId: sg.id,
+            // securityGroupId: sg.id,
           },
         },
       }
@@ -247,7 +244,7 @@ describe.skip('Workflow e2e', () => {
         input: {
           groupState: {
             stateId: workflow.startingState.id,
-            securityGroupId: sg.id,
+            // securityGroupId: sg.id,
           },
         },
       }
@@ -316,7 +313,7 @@ describe.skip('Workflow e2e', () => {
         input: {
           groupState: {
             stateId: workflow.startingState.id,
-            securityGroupId: sg.id,
+            // securityGroupId: sg.id,
           },
         },
       }
@@ -349,7 +346,7 @@ describe.skip('Workflow e2e', () => {
         input: {
           groupState: {
             stateId: workflow.startingState.id,
-            securityGroupId: sg.id,
+            // securityGroupId: sg.id,
           },
         },
       }
@@ -365,7 +362,7 @@ describe.skip('Workflow e2e', () => {
         input: {
           groupState: {
             stateId: workflow.startingState.id,
-            securityGroupId: sg.id,
+            // securityGroupId: sg.id,
           },
         },
       }
@@ -393,7 +390,7 @@ describe.skip('Workflow e2e', () => {
         input: {
           groupState: {
             stateId: workflow.startingState.id,
-            securityGroupId: sg.id,
+            // securityGroupId: sg.id,
           },
         },
       }
@@ -421,7 +418,7 @@ describe.skip('Workflow e2e', () => {
         input: {
           groupState: {
             stateId: workflow.startingState.id,
-            securityGroupId: sg.id,
+            // securityGroupId: sg.id,
           },
         },
       }
@@ -437,7 +434,7 @@ describe.skip('Workflow e2e', () => {
         input: {
           groupState: {
             stateId: workflow.startingState.id,
-            securityGroupId: sg.id,
+            // securityGroupId: sg.id,
           },
         },
       }
@@ -467,7 +464,7 @@ describe.skip('Workflow e2e', () => {
         input: {
           groupState: {
             stateId: workflow.startingState.id,
-            securityGroupId: sg.id,
+            // securityGroupId: sg.id,
           },
         },
       }
@@ -535,7 +532,7 @@ describe.skip('Workflow e2e', () => {
         input: {
           groupState: {
             stateId: workflow.startingState.id,
-            securityGroupId: sg.id,
+            // securityGroupId: sg.id,
           },
         },
       }
@@ -590,7 +587,7 @@ describe.skip('Workflow e2e', () => {
         input: {
           groupState: {
             stateId: workflow.startingState.id,
-            securityGroupId: sg.id,
+            // securityGroupId: sg.id,
           },
         },
       }

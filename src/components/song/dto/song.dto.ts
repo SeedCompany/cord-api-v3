@@ -1,5 +1,5 @@
 import { Field, ObjectType } from '@nestjs/graphql';
-import { Resource, SecuredString } from '../../../common';
+import { Resource, SecuredKeys, SecuredString } from '../../../common';
 import { Producible, ProducibleType } from '../../product/dto';
 
 declare module '../../product/dto' {
@@ -16,4 +16,13 @@ Object.assign(ProducibleType, { Song: 'Song' });
 export class Song extends Producible {
   @Field()
   readonly name: SecuredString;
+}
+
+declare module '../../authorization/policies/mapping' {
+  interface TypeToDto {
+    Song: Song;
+  }
+  interface TypeToSecuredProps {
+    Song: SecuredKeys<Song>;
+  }
 }

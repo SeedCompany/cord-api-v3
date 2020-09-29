@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { inArray, node, relation } from 'cypher-query-builder';
 import { first, intersection } from 'lodash';
 import { DateTime } from 'luxon';
@@ -24,7 +24,6 @@ import {
   matchSession,
   matchUserPermissions,
   OnIndex,
-  permission,
   property,
 } from '../../core';
 import {
@@ -41,6 +40,8 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
+import { AuthorizationService } from '../authorization/authorization.service';
+import { InternalRole } from '../authorization/dto';
 import {
   Country,
   CreateCountry,
@@ -65,7 +66,9 @@ export class LocationService {
   constructor(
     @Logger('location:service') private readonly logger: ILogger,
     private readonly config: ConfigService,
-    private readonly db: DatabaseService
+    private readonly db: DatabaseService,
+    @Inject(forwardRef(() => AuthorizationService))
+    private readonly authorizationService: AuthorizationService
   ) {}
 
   @OnIndex()
@@ -123,14 +126,9 @@ export class LocationService {
     const createdAt = DateTime.local();
 
     try {
-      const createZone = this.db
+      const createZone = await this.db
         .query()
         .match(matchSession(session, { withAclEdit: 'canCreateZone' }))
-        .match([
-          node('rootuser', 'User', {
-            id: this.config.rootAdmin.id,
-          }),
-        ])
         .create([
           [
             node('newZone', ['Zone', 'BaseNode'], {
@@ -138,33 +136,17 @@ export class LocationService {
               id,
             }),
           ],
-          ...property('name', input.name, 'newZone', 'name', 'LocationName'),
-          [
-            node('adminSG', 'SecurityGroup', {
-              id: generate(),
-
-              name: input.name + ' admin',
-            }),
-            relation('out', '', 'member'),
-            node('requestingUser'),
-          ],
-          [
-            node('readerSG', 'SecurityGroup', {
-              id: generate(),
-
-              name: input.name + ' users',
-            }),
-            relation('out', '', 'member'),
-            node('requestingUser'),
-          ],
-          [node('adminSG'), relation('out', '', 'member'), node('rootuser')],
-          [node('readerSG'), relation('out', '', 'member'), node('rootuser')],
-          ...permission('name', 'newZone'),
-          ...permission('director', 'newZone'),
+          ...property('name', input.name, 'newZone'),
         ])
-        .return('newZone.id as id');
+        .return('newZone.id as id')
+        .first();
 
-      await createZone.first();
+      await this.authorizationService.addPermsForRole(
+        InternalRole.Admin,
+        'Zone',
+        createZone?.id,
+        session.userId as string
+      );
 
       // connect director User to zone
       if (directorId) {
@@ -223,14 +205,9 @@ export class LocationService {
     const createdAt = DateTime.local();
 
     try {
-      const createRegion = this.db
+      const createRegion = await this.db
         .query()
-        .match(matchSession(session, { withAclEdit: 'canCreateRegion' }))
-        .match([
-          node('rootuser', 'User', {
-            id: this.config.rootAdmin.id,
-          }),
-        ])
+        .match(matchSession(session))
         .create([
           [
             node('newRegion', ['Region', 'BaseNode'], {
@@ -238,36 +215,19 @@ export class LocationService {
               id,
             }),
           ],
-          ...property('name', input.name, 'newRegion', 'name', 'LocationName'),
-          [
-            node('adminSG', 'SecurityGroup', {
-              id: generate(),
-
-              name: input.name + ' admin',
-            }),
-            relation('out', '', 'member'),
-            node('requestingUser'),
-          ],
-          [
-            node('readerSG', 'SecurityGroup', {
-              id: generate(),
-
-              name: input.name + ' users',
-            }),
-            relation('out', '', 'member'),
-            node('requestingUser'),
-          ],
-          [node('adminSG'), relation('out', '', 'member'), node('rootuser')],
-          [node('readerSG'), relation('out', '', 'member'), node('rootuser')],
-          ...permission('name', 'newRegion'),
-          ...permission('director', 'newRegion'),
-          ...permission('zone', 'newRegion'),
+          ...property('name', input.name, 'newRegion'),
         ])
-        .return('newRegion.id as id');
-
-      await createRegion.first();
+        .return('newRegion.id as id')
+        .first();
 
       this.logger.debug(`Region created`, { input, userId: session.userId });
+
+      await this.authorizationService.addPermsForRole(
+        InternalRole.Admin,
+        'Region',
+        createRegion?.id,
+        session.userId as string
+      );
 
       // connect the Zone to Region
 
@@ -343,12 +303,7 @@ export class LocationService {
     try {
       const createCountry = this.db
         .query()
-        .match(matchSession(session, { withAclEdit: 'canCreateCountry' }))
-        .match([
-          node('rootuser', 'User', {
-            id: this.config.rootAdmin.id,
-          }),
-        ])
+        .match(matchSession(session))
         .create([
           [
             node('newCountry', ['Country', 'BaseNode'], {
@@ -356,34 +311,19 @@ export class LocationService {
               id,
             }),
           ],
-          ...property('name', input.name, 'newCountry', 'name', 'LocationName'),
-          [
-            node('adminSG', 'SecurityGroup', {
-              id: generate(),
-
-              name: input.name + ' admin',
-            }),
-            relation('out', '', 'member'),
-            node('requestingUser'),
-          ],
-          [
-            node('readerSG', 'SecurityGroup', {
-              id: generate(),
-
-              name: input.name + ' users',
-            }),
-            relation('out', '', 'member'),
-            node('requestingUser'),
-          ],
-          [node('adminSG'), relation('out', '', 'member'), node('rootuser')],
-          [node('readerSG'), relation('out', '', 'member'), node('rootuser')],
-          ...permission('name', 'newCountry'),
-          ...permission('region', 'newCountry'),
+          ...property('name', input.name, 'newCountry'),
         ])
         .return('newCountry.id as id');
-      await createCountry.first();
+      const result = await createCountry.first();
 
       this.logger.debug(`country created`);
+
+      await this.authorizationService.addPermsForRole(
+        InternalRole.Admin,
+        'Country',
+        result?.id,
+        session.userId as string
+      );
 
       // connect the Region to Country
       if (regionId) {

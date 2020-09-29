@@ -16,7 +16,6 @@ import {
   matchRequestingUser,
   OnIndex,
 } from '../../core';
-import { permission } from '../../core/database/database.service';
 import {
   calculateTotalAndPaginateList,
   matchPermList,
@@ -30,6 +29,8 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
+import { AuthorizationService } from '../authorization/authorization.service';
+import { InternalRole } from '../authorization/dto';
 import {
   CreatePartner,
   Partner,
@@ -48,7 +49,8 @@ export class PartnerService {
   constructor(
     @Logger('partner:service') private readonly logger: ILogger,
     private readonly config: ConfigService,
-    private readonly db: DatabaseService
+    private readonly db: DatabaseService,
+    private readonly authorizationService: AuthorizationService
   ) {}
 
   @OnIndex()
@@ -67,17 +69,12 @@ export class PartnerService {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([node('root', 'User', { id: this.config.rootAdmin.id })])
       .match([
         node('organization', 'Organization', {
           id: input.organizationId,
         }),
       ])
       .call(createBaseNode, 'Partner', [])
-      .create([
-        ...permission('organization', 'node'),
-        ...permission('pointOfContact', 'node'),
-      ])
       .create([
         node('node'),
         relation('out', '', 'organization', { active: true, createdAt }),
@@ -90,6 +87,13 @@ export class PartnerService {
     if (!result) {
       throw new ServerException('failed to create partner');
     }
+
+    await this.authorizationService.addPermsForRole(
+      InternalRole.Admin,
+      'Partner',
+      result.id,
+      session.userId as string
+    );
 
     if (input.pointOfContactId) {
       await this.db

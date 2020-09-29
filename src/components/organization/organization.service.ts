@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { node, Query, relation } from 'cypher-query-builder';
 import { range } from 'lodash';
+import { DateTime } from 'luxon';
+import { generate } from 'shortid';
 import {
   DuplicateException,
   ISession,
@@ -9,10 +11,8 @@ import {
   UnauthenticatedException,
 } from '../../common';
 import {
-  addUserToSG,
   ConfigService,
   createBaseNode,
-  createSG,
   DatabaseService,
   ILogger,
   Logger,
@@ -33,6 +33,8 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
+import { AuthorizationService } from '../authorization/authorization.service';
+import { InternalRole } from '../authorization/dto';
 import {
   CreateOrganization,
   Organization,
@@ -50,7 +52,8 @@ export class OrganizationService {
   constructor(
     @Logger('org:service') private readonly logger: ILogger,
     private readonly config: ConfigService,
-    private readonly db: DatabaseService
+    private readonly db: DatabaseService,
+    private readonly authorizationService: AuthorizationService
   ) {}
 
   @OnIndex()
@@ -66,6 +69,21 @@ export class OrganizationService {
       'CREATE CONSTRAINT ON (n:OrgName) ASSERT EXISTS(n.value)',
       'CREATE CONSTRAINT ON (n:OrgName) ASSERT n.value IS UNIQUE',
     ];
+  }
+
+  // assumes 'root' cypher variable is declared in query
+  createSG(query: Query, cypherIdentifier: string, label?: string) {
+    const labels = ['SecurityGroup'];
+    if (label) {
+      labels.push(label);
+    }
+    const createdAt = DateTime.local();
+
+    query.create([
+      node('root'),
+      relation('in', '', 'member'),
+      node(cypherIdentifier, labels, { createdAt, id: generate() }),
+    ]);
   }
 
   async create(
@@ -91,11 +109,8 @@ export class OrganizationService {
       {
         key: 'name',
         value: input.name,
-        addToAdminSg: true,
-        addToWriterSg: true,
-        addToReaderSg: true,
-        isPublic: true,
-        isOrgPublic: true,
+        isPublic: false,
+        isOrgPublic: false,
         label: 'OrgName',
       },
     ];
@@ -103,16 +118,15 @@ export class OrganizationService {
 
     const query = this.db
       .query()
-      .match([node('root', 'User', { id: this.config.rootAdmin.id })])
       .match([
         node('publicSG', 'PublicSecurityGroup', {
           id: this.config.publicSecurityGroup.id,
         }),
       ])
       .call(matchRequestingUser, session)
-      .call(createSG, 'orgSG', 'OrgPublicSecurityGroup')
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      .call(this.createSG, 'orgSG', 'OrgPublicSecurityGroup')
       .call(createBaseNode, 'Organization', secureProps)
-      .call(addUserToSG, 'requestingUser', 'adminSG') // must come after base node creation
       .return('node.id as id');
 
     const result = await query.first();
@@ -121,10 +135,14 @@ export class OrganizationService {
       throw new ServerException('failed to create default org');
     }
 
-    const id = result.id;
+    await this.authorizationService.addPermsForRole(
+      InternalRole.Admin,
+      'Organization',
+      result.id,
+      session.userId as string
+    );
 
-    // add root admin to new org as an admin
-    await this.db.addRootAdminToBaseNodeAsAdmin(id, 'Organization');
+    const id = result.id;
 
     this.logger.debug(`organization created`, { id });
 

@@ -11,6 +11,8 @@ import {
   Logger,
   matchSession,
 } from '../../../core';
+import { AuthorizationService } from '../../authorization/authorization.service';
+import { InternalRole } from '../../authorization/dto';
 import {
   CreateEducation,
   Education,
@@ -24,7 +26,8 @@ export class EducationService {
   constructor(
     @Logger('education:service') private readonly logger: ILogger,
     private readonly config: ConfigService,
-    private readonly db: DatabaseService
+    private readonly db: DatabaseService,
+    private readonly authorizationService: AuthorizationService
   ) {}
 
   // helper method for defining properties
@@ -151,29 +154,6 @@ export class EducationService {
           ...this.property('degree', input.degree),
           ...this.property('major', input.major),
           ...this.property('institution', input.institution),
-          [
-            node('adminSG', 'SecurityGroup', {
-              id: generate(),
-
-              name: `${input.degree} ${input.institution} admin`,
-            }),
-            relation('out', '', 'member'),
-            node('requestingUser'),
-          ],
-          [
-            node('readerSG', 'SecurityGroup', {
-              id: generate(),
-
-              name: `${input.degree} ${input.institution} users`,
-            }),
-            relation('out', '', 'member'),
-            node('requestingUser'),
-          ],
-          [node('adminSG'), relation('out', '', 'member'), node('rootuser')],
-          [node('readerSG'), relation('out', '', 'member'), node('rootuser')],
-          ...this.permission('degree'),
-          ...this.permission('major'),
-          ...this.permission('institution'),
         ])
         .return('newEducation.id as id');
 
@@ -183,6 +163,13 @@ export class EducationService {
         this.logger.error('e :>> ', e);
       }
       this.logger.debug(`Created user education`, { id, userId });
+
+      await this.authorizationService.addPermsForRole(
+        InternalRole.Admin,
+        'Education',
+        id,
+        session.userId as string
+      );
 
       // connect the Education to the User.
       const query = `

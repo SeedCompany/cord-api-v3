@@ -2,7 +2,7 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { IsEmail, IsIanaTimezone, NameField } from '../../../common';
-import { Role } from '../../project/project-member/dto/role.dto';
+import { Role } from '../../authorization';
 import { UserStatus } from './user-status.enum';
 import { User } from './user.dto';
 

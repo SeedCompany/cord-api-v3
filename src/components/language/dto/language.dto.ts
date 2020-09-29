@@ -5,6 +5,7 @@ import {
   SecuredBoolean,
   SecuredDate,
   SecuredInt,
+  SecuredKeys,
   SecuredProperty,
   SecuredString,
   Sensitivity,
@@ -12,6 +13,8 @@ import {
 
 @ObjectType()
 export class EthnologueLanguage {
+  readonly id: string;
+
   @Field({
     description: 'ISO 639-3 code',
   })
@@ -105,6 +108,17 @@ export class Language extends Resource {
 
   @Field()
   readonly isSignLanguage: SecuredBoolean;
+}
+
+declare module '../../authorization/policies/mapping' {
+  interface TypeToDto {
+    Language: Language;
+    EthnologueLanguage: EthnologueLanguage;
+  }
+  interface TypeToSecuredProps {
+    Language: SecuredKeys<Language> | 'sensitivity' | 'ethnologue';
+    EthnologueLanguage: SecuredKeys<EthnologueLanguage>;
+  }
 }
 
 @ObjectType({

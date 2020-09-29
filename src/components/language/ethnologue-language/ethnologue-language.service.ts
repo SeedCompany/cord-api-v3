@@ -22,6 +22,8 @@ import {
   parseSecuredProperties,
   StandardReadResult,
 } from '../../../core/database/results';
+import { AuthorizationService } from '../../authorization/authorization.service';
+import { InternalRole } from '../../project';
 import {
   CreateEthnologueLanguage,
   EthnologueLanguage,
@@ -35,6 +37,7 @@ export class EthnologueLanguageService {
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
+    private readonly authorizationService: AuthorizationService,
     @Logger('language:ethnologue:service') private readonly logger: ILogger
   ) {}
 
@@ -46,9 +49,6 @@ export class EthnologueLanguageService {
       {
         key: 'code',
         value: input.code,
-        addToAdminSg: true,
-        addToWriterSg: false,
-        addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
         label: 'Code',
@@ -56,9 +56,6 @@ export class EthnologueLanguageService {
       {
         key: 'provisionalCode',
         value: input.provisionalCode,
-        addToAdminSg: true,
-        addToWriterSg: false,
-        addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
         label: 'ProvisionalCode',
@@ -66,9 +63,6 @@ export class EthnologueLanguageService {
       {
         key: 'name',
         value: input.name,
-        addToAdminSg: true,
-        addToWriterSg: false,
-        addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
         label: 'Name',
@@ -76,9 +70,6 @@ export class EthnologueLanguageService {
       {
         key: 'population',
         value: input.population,
-        addToAdminSg: true,
-        addToWriterSg: false,
-        addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
         label: 'Population',
@@ -88,7 +79,6 @@ export class EthnologueLanguageService {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([node('root', 'User', { id: this.config.rootAdmin.id })])
       .call(
         createBaseNode,
         'EthnologueLanguage',
@@ -104,10 +94,14 @@ export class EthnologueLanguageService {
       throw new ServerException('Failed to create ethnologue language');
     }
 
-    const id = result.id;
+    await this.authorizationService.addPermsForRole(
+      InternalRole.Admin,
+      'EthnologueLanguage',
+      result.id,
+      session.userId as string
+    );
 
-    // add root admin to new org as an admin
-    await this.db.addRootAdminToBaseNodeAsAdmin(id, 'EthnologueLanguage');
+    const id = result.id;
 
     this.logger.debug(`ethnologue language created`, { id });
 
@@ -151,18 +145,15 @@ export class EthnologueLanguageService {
       );
     }
 
-    const ethnologue = parseSecuredProperties(
-      result.propList,
-      result.permList,
-      {
+    return {
+      id,
+      ...parseSecuredProperties(result.propList, result.permList, {
         code: true,
         provisionalCode: true,
         name: true,
         population: true,
-      }
-    );
-
-    return ethnologue;
+      }),
+    };
   }
 
   async readInList(ids: string[], session: ISession): Promise<any> {

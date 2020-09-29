@@ -21,7 +21,6 @@ import {
   matchRequestingUser,
   matchSession,
   OnIndex,
-  permission,
   UniquenessError,
 } from '../../core';
 import {
@@ -38,6 +37,7 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
+import { AuthorizationService } from '../authorization/authorization.service';
 import { EngagementService } from '../engagement';
 import {
   Location,
@@ -46,6 +46,7 @@ import {
   SecuredLocationList,
 } from '../location';
 import {
+  InternalRole,
   Project,
   ProjectListInput,
   ProjectService,
@@ -83,6 +84,7 @@ export class LanguageService {
     private readonly locationService: LocationService,
     private readonly projectService: ProjectService,
     private readonly engagementService: EngagementService,
+    private readonly authorizationService: AuthorizationService,
     @Logger('language:service') private readonly logger: ILogger
   ) {}
 
@@ -147,9 +149,6 @@ export class LanguageService {
         {
           key: 'name',
           value: input.name,
-          addToAdminSg: true,
-          addToWriterSg: false,
-          addToReaderSg: true,
           isPublic: false,
           isOrgPublic: false,
           label: 'LanguageName',
@@ -157,9 +156,6 @@ export class LanguageService {
         {
           key: 'displayName',
           value: input.displayName,
-          addToAdminSg: true,
-          addToWriterSg: false,
-          addToReaderSg: true,
           isPublic: false,
           isOrgPublic: false,
           label: 'LanguageDisplayName',
@@ -167,90 +163,60 @@ export class LanguageService {
         {
           key: 'sensitivity',
           value: input.sensitivity,
-          addToAdminSg: true,
-          addToWriterSg: false,
-          addToReaderSg: true,
           isPublic: false,
           isOrgPublic: false,
         },
         {
           key: 'isDialect',
           value: input.isDialect,
-          addToAdminSg: true,
-          addToWriterSg: false,
-          addToReaderSg: true,
           isPublic: false,
           isOrgPublic: false,
         },
         {
           key: 'populationOverride',
           value: input.populationOverride,
-          addToAdminSg: true,
-          addToWriterSg: false,
-          addToReaderSg: true,
           isPublic: false,
           isOrgPublic: false,
         },
         {
           key: 'registryOfDialectsCode',
           value: input.registryOfDialectsCode,
-          addToAdminSg: true,
-          addToWriterSg: false,
-          addToReaderSg: true,
           isPublic: false,
           isOrgPublic: false,
         },
         {
           key: 'leastOfThese',
           value: input.leastOfThese,
-          addToAdminSg: true,
-          addToWriterSg: false,
-          addToReaderSg: true,
           isPublic: false,
           isOrgPublic: false,
         },
         {
           key: 'leastOfTheseReason',
           value: input.leastOfTheseReason,
-          addToAdminSg: true,
-          addToWriterSg: false,
-          addToReaderSg: true,
           isPublic: false,
           isOrgPublic: false,
         },
         {
           key: 'displayNamePronunciation',
           value: input.displayNamePronunciation,
-          addToAdminSg: true,
-          addToWriterSg: false,
-          addToReaderSg: true,
           isPublic: false,
           isOrgPublic: false,
         },
         {
           key: 'isSignLanguage',
           value: input.isSignLanguage,
-          addToAdminSg: true,
-          addToWriterSg: false,
-          addToReaderSg: true,
           isPublic: false,
           isOrgPublic: false,
         },
         {
           key: 'signLanguageCode',
           value: input.signLanguageCode,
-          addToAdminSg: true,
-          addToWriterSg: false,
-          addToReaderSg: true,
           isPublic: false,
           isOrgPublic: false,
         },
         {
           key: 'sponsorEstimatedEndDate',
           value: input.sponsorEstimatedEndDate,
-          addToAdminSg: true,
-          addToWriterSg: false,
-          addToReaderSg: true,
           isPublic: false,
           isOrgPublic: false,
         },
@@ -259,11 +225,6 @@ export class LanguageService {
       const createLanguage = this.db
         .query()
         .call(matchRequestingUser, session)
-        .match([
-          node('root', 'User', {
-            id: this.config.rootAdmin.id,
-          }),
-        ])
         .call(
           createBaseNode,
           'Language',
@@ -272,7 +233,6 @@ export class LanguageService {
           [],
           session.userId === this.config.rootAdmin.id
         )
-        .create([...permission('ethnologue', 'node')])
         .return('node.id as id');
 
       const resultLanguage = await createLanguage.first();
@@ -280,6 +240,13 @@ export class LanguageService {
       if (!resultLanguage) {
         throw new ServerException('failed to create language');
       }
+
+      await this.authorizationService.addPermsForRole(
+        InternalRole.Admin,
+        'Language',
+        resultLanguage.id,
+        session.userId as string
+      );
 
       // connect ethnologueLanguage to language
       await this.db

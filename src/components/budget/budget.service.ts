@@ -16,7 +16,6 @@ import {
   Logger,
   matchRequestingUser,
   matchSession,
-  permission,
   Property,
 } from '../../core';
 import {
@@ -32,7 +31,9 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
+import { AuthorizationService } from '../authorization/authorization.service';
 import { FileService } from '../file';
+import { InternalRole } from '../project';
 import {
   Budget,
   BudgetListInput,
@@ -58,6 +59,7 @@ export class BudgetService {
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
     private readonly files: FileService,
+    private readonly authorizationService: AuthorizationService,
     @Logger('budget:service') private readonly logger: ILogger
   ) {}
 
@@ -97,9 +99,6 @@ export class BudgetService {
       {
         key: 'status',
         value: BudgetStatus.Pending,
-        addToAdminSg: true,
-        addToWriterSg: false,
-        addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
         label: 'BudgetStatus',
@@ -107,9 +106,6 @@ export class BudgetService {
       {
         key: 'universalTemplateFile',
         value: universalTemplateFile,
-        addToAdminSg: true,
-        addToWriterSg: false,
-        addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
       },
@@ -153,6 +149,13 @@ export class BudgetService {
         userId: session.userId,
       });
 
+      await this.authorizationService.addPermsForRole(
+        InternalRole.Admin,
+        'Budget',
+        result.id,
+        session.userId as string
+      );
+
       return await this.readOne(result.id, session);
     } catch (exception) {
       this.logger.error(`Could not create budget`, {
@@ -181,18 +184,12 @@ export class BudgetService {
       {
         key: 'fiscalYear',
         value: input.fiscalYear,
-        addToAdminSg: true,
-        addToWriterSg: false,
-        addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
       },
       {
         key: 'amount',
         value: null,
-        addToAdminSg: true,
-        addToWriterSg: false,
-        addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
       },
@@ -201,22 +198,22 @@ export class BudgetService {
     try {
       const createBudgetRecord = this.db
         .query()
-        .call(matchRequestingUser, session)
-        .match([
-          node('root', 'User', {
-            id: this.config.rootAdmin.id,
-          }),
-        ]);
+        .call(matchRequestingUser, session);
       createBudgetRecord.call(createBaseNode, 'BudgetRecord', secureProps);
-      createBudgetRecord
-        .create([...permission('organization', 'node')])
-        .return('node.id as id');
+      createBudgetRecord.return('node.id as id');
 
       const result = await createBudgetRecord.first();
 
       if (!result) {
         throw new ServerException('failed to create a budget record');
       }
+
+      await this.authorizationService.addPermsForRole(
+        InternalRole.Admin,
+        'BudgetRecord',
+        result.id,
+        session.userId as string
+      );
 
       this.logger.debug(`Created Budget Record`, {
         id: result.id,

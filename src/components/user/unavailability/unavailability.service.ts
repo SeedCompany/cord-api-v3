@@ -17,6 +17,8 @@ import {
   parseSecuredProperties,
   StandardReadResult,
 } from '../../../core/database/results';
+import { AuthorizationService } from '../../authorization/authorization.service';
+import { InternalRole } from '../../authorization/dto';
 import {
   CreateUnavailability,
   Unavailability,
@@ -30,7 +32,8 @@ export class UnavailabilityService {
   constructor(
     @Logger('unavailability:service') private readonly logger: ILogger,
     private readonly db: DatabaseService,
-    private readonly config: ConfigService
+    private readonly config: ConfigService,
+    private readonly authorizationService: AuthorizationService
   ) {}
 
   async create(
@@ -41,27 +44,18 @@ export class UnavailabilityService {
       {
         key: 'description',
         value: input.description,
-        addToAdminSg: true,
-        addToWriterSg: true,
-        addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
       },
       {
         key: 'start',
         value: input.start,
-        addToAdminSg: true,
-        addToWriterSg: true,
-        addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
       },
       {
         key: 'end',
         value: input.end,
-        addToAdminSg: true,
-        addToWriterSg: true,
-        addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
       },
@@ -95,6 +89,13 @@ export class UnavailabilityService {
         });
         throw new ServerException('Could not create unavailability');
       }
+
+      await this.authorizationService.addPermsForRole(
+        InternalRole.Admin,
+        'Unavailability',
+        createUnavailabilityResult.id,
+        session.userId as string
+      );
 
       this.logger.debug(`Created user unavailability`, {
         id: createUnavailabilityResult.id,

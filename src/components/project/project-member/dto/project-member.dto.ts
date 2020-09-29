@@ -1,8 +1,8 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
-import { DateTimeField, Resource } from '../../../../common';
+import { DateTimeField, Resource, SecuredKeys } from '../../../../common';
+import { SecuredRoles } from '../../../authorization';
 import { SecuredUser } from '../../../user';
-import { SecuredRoles } from './role.dto';
 
 @ObjectType({
   implements: [Resource],
@@ -16,4 +16,13 @@ export class ProjectMember extends Resource {
 
   @DateTimeField()
   readonly modifiedAt: DateTime;
+}
+
+declare module '../../../authorization/policies/mapping' {
+  interface TypeToDto {
+    ProjectMember: ProjectMember;
+  }
+  interface TypeToSecuredProps {
+    ProjectMember: SecuredKeys<ProjectMember> | 'modifiedAt';
+  }
 }

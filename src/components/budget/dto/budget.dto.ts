@@ -1,5 +1,5 @@
 import { Field, ObjectType } from '@nestjs/graphql';
-import { Resource, SecuredProperty } from '../../../common';
+import { Resource, SecuredKeys, SecuredProperty } from '../../../common';
 import { DefinedFile } from '../../file/dto';
 import { BudgetRecord } from './budget-record.dto';
 import { BudgetStatus } from './budget-status.enum';
@@ -15,6 +15,15 @@ export class Budget extends Resource {
   readonly records: readonly BudgetRecord[];
 
   readonly universalTemplateFile: DefinedFile;
+}
+
+declare module '../../authorization/policies/mapping' {
+  interface TypeToDto {
+    Budget: Budget;
+  }
+  interface TypeToSecuredProps {
+    Budget: SecuredKeys<Budget> | 'status' | 'records';
+  }
 }
 
 @ObjectType({

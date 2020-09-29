@@ -18,7 +18,6 @@ import {
   Logger,
   matchRequestingUser,
   matchSession,
-  permissions,
   property,
 } from '../../core';
 import {
@@ -34,6 +33,8 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
+import { AuthorizationService } from '../authorization/authorization.service';
+import { InternalRole } from '../authorization/dto';
 import { CeremonyService } from '../ceremony';
 import { FileService } from '../file';
 import {
@@ -104,6 +105,7 @@ export class EngagementService {
     @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService,
     private readonly eventBus: IEventBus,
+    private readonly authorizationService: AuthorizationService,
     @Logger(`engagement.service`) private readonly logger: ILogger
   ) {}
 
@@ -289,47 +291,8 @@ export class EngagementService {
         node('languageEngagement'),
       ]);
     }
-    createLE.create([
-      [
-        node('adminSG', 'SecurityGroup', {
-          id: generate(),
-          name: 'languageEngagement admin',
-        }),
-        relation('out', '', 'member'),
-        node('requestingUser'),
-      ],
-      [
-        node('readerSG', 'SecurityGroup', {
-          id: generate(),
-          name: 'languageEngagement users',
-        }),
-        relation('out', '', 'member'),
-        node('requestingUser'),
-      ],
-      ...permissions('languageEngagement', [
-        'firstScripture',
-        'lukePartnership',
-        'completeDate',
-        'disbursementCompleteDate',
-        'communicationsCompleteDate',
-        'startDateOverride',
-        'endDateOverride',
-        'initialEndDate',
-        'ceremony',
-        'language',
-        'status',
-        'paraTextRegistryId',
-        'pnp',
-        'modifiedAt',
-      ]),
-    ]);
-    if (session.userId !== this.config.rootAdmin.id) {
-      createLE.create([
-        [node('adminSG'), relation('out', '', 'member'), node('rootuser')],
-        [node('readerSG'), relation('out', '', 'member'), node('rootuser')],
-      ]);
-    }
     createLE.return('languageEngagement');
+
     let le;
     try {
       le = await createLE.first();
@@ -369,6 +332,14 @@ export class EngagementService {
       }
       throw new ServerException('Could not create Language Engagement');
     }
+
+    await this.authorizationService.addPermsForRole(
+      InternalRole.Admin,
+      'LanguageEngagement',
+      id,
+      session.userId
+    );
+
     const languageEngagement = (await this.readOne(
       id,
       session
@@ -539,49 +510,8 @@ export class EngagementService {
         node('internshipEngagement'),
       ]);
     }
-    createIE.create([
-      [
-        node('adminSG', 'SecurityGroup', {
-          name: 'internEngagement admin',
-          id: generate(),
-        }),
-        relation('out', '', 'member'),
-        node('requestingUser'),
-      ],
-      [
-        node('readerSG', 'SecurityGroup', {
-          name: 'internEngagement users',
-          id: generate(),
-        }),
-        relation('out', '', 'member'),
-        node('requestingUser'),
-      ],
-      ...permissions('internshipEngagement', [
-        'completeDate',
-        'communicationsCompleteDate',
-        'disbursementCompleteDate',
-        'methodologies',
-        'position',
-        'modifiedAt',
-        'startDateOverride',
-        'endDateOverride',
-        'initialEndDate',
-        'language',
-        'status',
-        'countryOfOrigin',
-        'ceremony',
-        'intern',
-        'mentor',
-        'growthPlan',
-      ]),
-    ]);
-    if (session.userId !== this.config.rootAdmin.id) {
-      createIE.create([
-        [node('adminSG'), relation('out', '', 'member'), node('rootuser')],
-        [node('readerSG'), relation('out', '', 'member'), node('rootuser')],
-      ]);
-    }
     createIE.return('internshipEngagement');
+
     let IE;
     try {
       IE = await createIE.first();
@@ -650,6 +580,14 @@ export class EngagementService {
       }
       throw new ServerException('Could not create Internship Engagement');
     }
+
+    await this.authorizationService.addPermsForRole(
+      InternalRole.Admin,
+      'InternshipEngagement',
+      id,
+      session.userId
+    );
+
     const internshipEngagement = (await this.readOne(
       id,
       session

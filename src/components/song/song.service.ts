@@ -16,7 +16,6 @@ import {
   Logger,
   matchRequestingUser,
   OnIndex,
-  permission,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -30,6 +29,8 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
+import { AuthorizationService } from '../authorization/authorization.service';
+import { InternalRole } from '../authorization/dto';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
 import {
   CreateSong,
@@ -45,7 +46,8 @@ export class SongService {
     @Logger('song:service') private readonly logger: ILogger,
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
-    private readonly scriptureRefService: ScriptureReferenceService
+    private readonly scriptureRefService: ScriptureReferenceService,
+    private readonly authorizationService: AuthorizationService
   ) {}
 
   @OnIndex()
@@ -82,9 +84,6 @@ export class SongService {
       {
         key: 'name',
         value: input.name,
-        addToAdminSg: true,
-        addToWriterSg: false,
-        addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
         label: 'SongName',
@@ -95,19 +94,20 @@ export class SongService {
       const result = await this.db
         .query()
         .call(matchRequestingUser, session)
-        .match([
-          node('root', 'User', {
-            id: this.config.rootAdmin.id,
-          }),
-        ])
         .call(createBaseNode, ['Song', 'Producible'], secureProps)
-        .create([...permission('scriptureReferences', 'node')])
         .return('node.id as id')
         .first();
 
       if (!result) {
         throw new ServerException('failed to create a song');
       }
+
+      await this.authorizationService.addPermsForRole(
+        InternalRole.Admin,
+        'Song',
+        result.id,
+        session.userId as string
+      );
 
       await this.scriptureRefService.create(
         result.id,

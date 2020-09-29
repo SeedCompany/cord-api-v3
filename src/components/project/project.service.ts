@@ -39,6 +39,7 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
+import { AuthorizationService } from '../authorization/authorization.service';
 import { Budget, BudgetService, BudgetStatus, SecuredBudget } from '../budget';
 import {
   EngagementListInput,
@@ -72,6 +73,7 @@ import {
   ProjectUpdatedEvent,
 } from './events';
 import {
+  InternalRole,
   ProjectMemberListInput,
   ProjectMemberService,
   Role,
@@ -94,6 +96,7 @@ export class ProjectService {
     private readonly engagementService: EngagementService,
     private readonly config: ConfigService,
     private readonly eventBus: IEventBus,
+    private readonly authorizationService: AuthorizationService,
     @Logger('project:service') private readonly logger: ILogger
   ) {}
 
@@ -141,9 +144,9 @@ export class ProjectService {
       {
         key: 'name',
         value: createInput.name,
-        addToAdminSg: true,
+        addToAdminSg: false,
         addToWriterSg: false,
-        addToReaderSg: true,
+        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
         label: 'ProjectName',
@@ -151,18 +154,18 @@ export class ProjectService {
       {
         key: 'sensitivity',
         value: createInput.sensitivity,
-        addToAdminSg: true,
+        addToAdminSg: false,
         addToWriterSg: false,
-        addToReaderSg: true,
+        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
       },
       {
         key: 'step',
         value: createInput.step,
-        addToAdminSg: true,
+        addToAdminSg: false,
         addToWriterSg: false,
-        addToReaderSg: true,
+        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
         label: 'ProjectStep',
@@ -170,59 +173,52 @@ export class ProjectService {
       {
         key: 'status',
         value: createInput.status,
-        addToAdminSg: true,
+        addToAdminSg: false,
         addToWriterSg: false,
-        addToReaderSg: true,
-        isPublic: false,
+        addToReaderSg: false,
+        isPublic: true,
         isOrgPublic: false,
         label: 'ProjectStatus',
       },
       {
         key: 'mouStart',
         value: createInput.mouStart,
-        addToAdminSg: true,
+        addToAdminSg: false,
         addToWriterSg: false,
-        addToReaderSg: true,
+        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
       },
       {
         key: 'mouEnd',
         value: createInput.mouEnd,
-        addToAdminSg: true,
+        addToAdminSg: false,
         addToWriterSg: false,
-        addToReaderSg: true,
+        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
       },
       {
         key: 'estimatedSubmission',
         value: createInput.estimatedSubmission,
-        addToAdminSg: true,
+        addToAdminSg: false,
         addToWriterSg: false,
-        addToReaderSg: true,
+        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
       },
       {
         key: 'modifiedAt',
         value: createInput.modifiedAt,
-        addToAdminSg: true,
+        addToAdminSg: false,
         addToWriterSg: false,
-        addToReaderSg: true,
+        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
       },
     ];
     try {
-      const createProject = this.db
-        .query()
-        .call(matchRequestingUser, session)
-        .match([
-          node('root', 'User', {
-            id: this.config.rootAdmin.id,
-          }),
-        ]);
+      const createProject = this.db.query().call(matchRequestingUser, session);
       if (locationId) {
         createProject.match([node('country', 'Country', { id: locationId })]);
       }
@@ -251,6 +247,14 @@ export class ProjectService {
       if (!result) {
         throw new ServerException('failed to create a project');
       }
+
+      await this.authorizationService.addPermsForRole(
+        InternalRole.Admin,
+        'Project',
+        result.id,
+        session.userId
+      );
+
       let location;
       if (locationId) {
         location = await this.db
@@ -268,11 +272,6 @@ export class ProjectService {
           );
         }
       }
-
-      await this.addPropertiesToSG(
-        ['engagement', 'teamMember', 'partnership', 'location'],
-        result.id
-      );
 
       await this.projectMembers.create(
         {
@@ -480,7 +479,7 @@ export class ProjectService {
       new ProjectUpdatedEvent(result, currentProject, input, session)
     );
 
-    return result;
+    return await this.readOne(input.id, session);
   }
 
   async delete(id: string, session: ISession): Promise<void> {
@@ -615,7 +614,7 @@ export class ProjectService {
           node('', 'SecurityGroup'),
           relation('out', '', 'permission'),
           node('canReadTeamMember', 'Permission', {
-            property: 'teamMember',
+            property: 'member',
             read: true,
           }),
           relation('out', '', 'baseNode'),
@@ -827,32 +826,5 @@ export class ProjectService {
         )
       ).every((n) => n)
     );
-  }
-
-  async addPropertiesToSG(properties: string[], projectId: string) {
-    for (const property of properties) {
-      await this.db
-        .query()
-        .match([
-          node('project', 'Project', { id: projectId }),
-          relation('in', '', 'baseNode'),
-          node('', 'Permission'),
-          relation('in', '', 'permission'),
-          node('sg', 'SecurityGroup'),
-        ])
-        .with('distinct(sg) as sg, project')
-        .merge([
-          node('sg'),
-          relation('out', '', 'permission'),
-          node('', 'Permission', {
-            edit: true,
-            read: true,
-            property,
-          }),
-          relation('out', '', 'baseNode'),
-          node('project'),
-        ])
-        .run();
-    }
   }
 }

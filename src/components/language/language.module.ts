@@ -1,4 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
+import { AuthorizationModule } from '../authorization/authorization.module';
 import { EngagementModule } from '../engagement/engagement.module';
 import { LocationModule } from '../location/location.module';
 import { ProjectModule } from '../project/project.module';
@@ -8,6 +9,7 @@ import { LanguageService } from './language.service';
 
 @Module({
   imports: [
+    AuthorizationModule,
     LocationModule,
     forwardRef(() => ProjectModule),
     forwardRef(() => EngagementModule),

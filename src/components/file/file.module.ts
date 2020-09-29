@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { AuthorizationModule } from '../authorization/authorization.module';
 import { OrganizationModule } from '../organization/organization.module';
 import { UserModule } from '../user/user.module';
 import { DirectoryResolver } from './directory.resolver';
@@ -12,7 +13,7 @@ import * as handlers from './handlers';
 import { LocalBucketController } from './local-bucket.controller';
 
 @Module({
-  imports: [OrganizationModule, UserModule],
+  imports: [AuthorizationModule, OrganizationModule, UserModule],
   providers: [
     DirectoryResolver,
     FilesBucketFactory,
