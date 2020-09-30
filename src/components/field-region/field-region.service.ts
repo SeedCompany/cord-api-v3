@@ -15,7 +15,6 @@ import {
   Logger,
   matchRequestingUser,
   OnIndex,
-  permission,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -31,6 +30,8 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
+import { AuthorizationService } from '../authorization/authorization.service';
+import { InternalRole } from '../project';
 import {
   CreateFieldRegion,
   FieldRegion,
@@ -50,7 +51,8 @@ export class FieldRegionService {
   constructor(
     @Logger('location:service') private readonly logger: ILogger,
     private readonly config: ConfigService,
-    private readonly db: DatabaseService
+    private readonly db: DatabaseService,
+    private readonly authorizationService: AuthorizationService
   ) {}
 
   @OnIndex()
@@ -94,9 +96,6 @@ export class FieldRegionService {
       {
         key: 'name',
         value: input.name,
-        addToAdminSg: true,
-        addToWriterSg: false,
-        addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
         label: 'FieldRegionName',
@@ -120,10 +119,6 @@ export class FieldRegionService {
       ])
       .call(createBaseNode, 'FieldRegion', secureProps)
       .create([
-        ...permission('director', 'node'),
-        ...permission('zone', 'node'),
-      ])
-      .create([
         node('node'),
         relation('out', '', 'director', { active: true, createdAt }),
         node('director'),
@@ -140,6 +135,13 @@ export class FieldRegionService {
     if (!result) {
       throw new ServerException('failed to create field region');
     }
+
+    await this.authorizationService.addPermsForRole(
+      InternalRole.Admin,
+      'FieldRegion',
+      result.id,
+      session.userId as string
+    );
 
     this.logger.debug(`field region created`, { id: result.id });
     return await this.readOne(result.id, session);

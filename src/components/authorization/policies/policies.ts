@@ -23,10 +23,6 @@ const policies = [
     estimatedDate: Perm.ReadAndEdit,
     planned: Perm.ReadAndEdit,
   }),
-  policy('Country', InternalRole.Admin, {
-    name: Perm.ReadAndEdit,
-    region: Perm.ReadAndEdit,
-  }),
   policy('Directory', InternalRole.Admin, {
     name: Perm.ReadAndEdit,
     createdBy: Perm.ReadAndEdit,
@@ -62,6 +58,7 @@ const policies = [
   }),
   policy('FundingAccount', InternalRole.Admin, {
     name: Perm.ReadAndEdit,
+    accountNumber: Perm.ReadAndEdit,
   }),
   policy('Language', InternalRole.Admin, {
     displayName: Perm.ReadAndEdit,
@@ -167,7 +164,10 @@ const policies = [
     budget: Perm.ReadAndEdit,
     modifiedAt: Perm.ReadAndEdit,
     engagement: Perm.ReadAndEdit,
-    location: Perm.ReadAndEdit,
+    primaryLocation: Perm.ReadAndEdit,
+    nonPrimaryLocation: Perm.ReadAndEdit,
+    marketingLocation: Perm.ReadAndEdit,
+    fieldRegion: Perm.ReadAndEdit,
     status: Perm.ReadAndEdit,
   }),
   policy(
@@ -189,10 +189,10 @@ const policies = [
     user: Perm.ReadAndEdit,
     modifiedAt: Perm.ReadAndEdit,
   }),
-  policy('Region', InternalRole.Admin, {
+  policy('FieldRegion', InternalRole.Admin, {
     director: Perm.ReadAndEdit,
     name: Perm.ReadAndEdit,
-    zone: Perm.ReadAndEdit,
+    fieldZone: Perm.ReadAndEdit,
   }),
   policy('Song', InternalRole.Admin, {
     name: Perm.ReadAndEdit,
@@ -228,9 +228,17 @@ const policies = [
     displayLastName: Perm.Read,
     email: Perm.Read,
   }),
-  policy('Zone', InternalRole.Admin, {
+  policy('FieldZone', InternalRole.Admin, {
     director: Perm.ReadAndEdit,
     name: Perm.ReadAndEdit,
+  }),
+  policy('Location', InternalRole.Admin, {
+    name: Perm.ReadAndEdit,
+    type: Perm.ReadAndEdit,
+    sensitivity: Perm.ReadAndEdit,
+    iso31663: Perm.ReadAndEdit,
+    geographyName: Perm.ReadAndEdit,
+    fundingAccount: Perm.ReadAndEdit,
   }),
 ];
 

@@ -16,7 +16,6 @@ import {
   Logger,
   matchRequestingUser,
   OnIndex,
-  permission,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -57,7 +56,6 @@ export class LocationService {
     @Logger('location:service') private readonly logger: ILogger,
     private readonly config: ConfigService,
     private readonly db: DatabaseService,
-    @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService
   ) {}
 
@@ -157,13 +155,19 @@ export class LocationService {
       .call(matchRequestingUser, session)
       .match([node('root', 'User', { id: this.config.rootAdmin.id })])
       .call(createBaseNode, 'Location', secureProps)
-      .create([...permission('fundingAccount', 'node')])
       .return('node.id as id');
 
     const result = await query.first();
     if (!result) {
       throw new ServerException('failed to create location');
     }
+
+    await this.authorizationService.addPermsForRole(
+      InternalRole.Admin,
+      'Location',
+      result.id,
+      session.userId as string
+    );
 
     if (input.fundingAccountId) {
       await this.db

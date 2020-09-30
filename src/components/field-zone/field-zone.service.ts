@@ -15,7 +15,6 @@ import {
   Logger,
   matchRequestingUser,
   OnIndex,
-  permission,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -31,6 +30,8 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
+import { AuthorizationService } from '../authorization/authorization.service';
+import { InternalRole } from '../project';
 import {
   CreateFieldZone,
   FieldZone,
@@ -49,7 +50,8 @@ export class FieldZoneService {
   constructor(
     @Logger('location:service') private readonly logger: ILogger,
     private readonly config: ConfigService,
-    private readonly db: DatabaseService
+    private readonly db: DatabaseService,
+    private readonly authorizationService: AuthorizationService
   ) {}
 
   @OnIndex()
@@ -93,9 +95,6 @@ export class FieldZoneService {
       {
         key: 'name',
         value: input.name,
-        addToAdminSg: true,
-        addToWriterSg: false,
-        addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
         label: 'FieldZoneName',
@@ -113,7 +112,6 @@ export class FieldZoneService {
         }),
       ])
       .call(createBaseNode, 'FieldZone', secureProps)
-      .create([...permission('director', 'node')])
       .create([
         node('node'),
         relation('out', '', 'director', { active: true, createdAt }),
@@ -126,6 +124,13 @@ export class FieldZoneService {
     if (!result) {
       throw new ServerException('failed to create field zone');
     }
+
+    await this.authorizationService.addPermsForRole(
+      InternalRole.Admin,
+      'FieldZone',
+      result.id,
+      session.userId as string
+    );
 
     this.logger.debug(`field zone created`, { id: result.id });
     return await this.readOne(result.id, session);
