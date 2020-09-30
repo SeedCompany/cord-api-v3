@@ -1,23 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
-import { pickBy } from 'lodash';
+import { pickBy, union } from 'lodash';
 import { generate } from 'shortid';
-import { keys, UnauthorizedException } from '../../common';
+import { keys, ServerException, UnauthorizedException } from '../../common';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
 import { InternalRole, Role as ProjectRole } from './dto';
 import { Powers } from './dto/powers';
 import { getRolePermissions, hasPerm, Perm, TypeToDto } from './policies';
 
 type Role = ProjectRole | InternalRole;
-
-/**
- * In order to use the new Security API (this handler) you must:
- * 1. Ensure the base node type has been added to the ../utility/BaseNodeType.ts enum
- *    ...then -> Add an if/else entry below to assert the type of your new base node
- * 2. Update the ../utility/RolePermission.ts file with your new permissions arrays
- * 3. Publish your role change event in your service file
- * 4. Voila, security groups and permission nodes will be created and attached to your user.
- */
 
 @Injectable()
 export class AuthorizationService {
@@ -142,7 +133,7 @@ export class AuthorizationService {
       .merge([node('sg'), relation('out', '', 'member'), node('root')]);
   };
 
-  async checkPower(power: Powers, id?: string) {
+  async checkPower(power: Powers, id?: string): Promise<boolean> {
     // if no id is given we check the public sg for public powers
     let hasPower = false;
 
@@ -176,6 +167,35 @@ export class AuthorizationService {
 
     if (!hasPower) {
       throw new UnauthorizedException('user does not have the requested power');
+    }
+
+    return hasPower;
+  }
+
+  async grantPower(power: Powers, id: string): Promise<boolean> {
+    // get power set
+    const powerSet = await this.db
+      .query()
+      .match([node('user', 'User', { id })])
+      .raw('return user.powers as powers')
+      .first();
+
+    if (powerSet === undefined) {
+      throw new UnauthorizedException('user not found');
+    } else {
+      const newPowers = union(powerSet.powers, [power]);
+
+      const result = await this.db
+        .query()
+        .match([node('user', 'User', { id })])
+        .setValues({ 'user.powers': newPowers })
+        .run();
+
+      if (result) {
+        return true;
+      } else {
+        throw new ServerException('failed to grant power');
+      }
     }
   }
 }
