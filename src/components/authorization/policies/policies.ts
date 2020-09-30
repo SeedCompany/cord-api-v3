@@ -141,6 +141,7 @@ const policies = [
     mouStatus: Perm.ReadAndEdit,
     types: Perm.ReadAndEdit,
     organization: Perm.ReadAndEdit,
+    partner: Perm.ReadAndEdit,
   }),
   policy('Product', InternalRole.Admin, {
     mediums: Perm.ReadAndEdit,
