@@ -3,6 +3,7 @@ import {
   Resource,
   Secured,
   SecuredEnumList,
+  SecuredKeys,
   SecuredProperty,
 } from '../../../common';
 import { PartnerType } from './partner-type.enum';
@@ -24,6 +25,15 @@ export class Partner extends Resource {
 
   @Field()
   readonly types: SecuredPartnerTypes;
+}
+
+declare module '../../authorization/policies/mapping' {
+  interface TypeToDto {
+    Partner: Partner;
+  }
+  interface TypeToSecuredProps {
+    Partner: SecuredKeys<Partner>;
+  }
 }
 
 @ObjectType({
