@@ -102,9 +102,6 @@ export class FundingAccountService {
       {
         key: 'accountNumber',
         value: input.accountNumber,
-        addToAdminSg: true,
-        addToWriterSg: false,
-        addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
         label: 'FundingAccountNumber',

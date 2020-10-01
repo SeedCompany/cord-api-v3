@@ -101,9 +101,6 @@ export class LocationService {
       {
         key: 'name',
         value: input.name,
-        addToAdminSg: true,
-        addToWriterSg: false,
-        addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
         label: 'FieldRegionName',
@@ -111,9 +108,6 @@ export class LocationService {
       {
         key: 'iso31663',
         value: input.iso31663,
-        addToAdminSg: true,
-        addToWriterSg: false,
-        addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
         label: 'Iso31663',
@@ -121,9 +115,6 @@ export class LocationService {
       {
         key: 'type',
         value: input.type,
-        addToAdminSg: true,
-        addToWriterSg: false,
-        addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
         label: 'LocationType',
@@ -131,9 +122,6 @@ export class LocationService {
       {
         key: 'geographyName',
         value: input.geographyName,
-        addToAdminSg: true,
-        addToWriterSg: false,
-        addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
         label: 'GeographyName',
@@ -141,9 +129,6 @@ export class LocationService {
       {
         key: 'sensitivity',
         value: input.sensitivity,
-        addToAdminSg: true,
-        addToWriterSg: false,
-        addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
       },
@@ -153,7 +138,6 @@ export class LocationService {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([node('root', 'User', { id: this.config.rootAdmin.id })])
       .call(createBaseNode, 'Location', secureProps)
       .return('node.id as id');
 

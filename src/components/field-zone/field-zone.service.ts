@@ -105,7 +105,6 @@ export class FieldZoneService {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([node('root', 'User', { id: this.config.rootAdmin.id })])
       .match([
         node('director', 'User', {
           id: directorId,

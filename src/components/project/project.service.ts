@@ -170,9 +170,6 @@ export class ProjectService {
       {
         key: 'name',
         value: createInput.name,
-        addToAdminSg: false,
-        addToWriterSg: false,
-        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
         label: 'ProjectName',
@@ -180,18 +177,12 @@ export class ProjectService {
       {
         key: 'sensitivity',
         value: createInput.sensitivity,
-        addToAdminSg: false,
-        addToWriterSg: false,
-        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
       },
       {
         key: 'step',
         value: createInput.step,
-        addToAdminSg: false,
-        addToWriterSg: false,
-        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
         label: 'ProjectStep',
@@ -199,9 +190,6 @@ export class ProjectService {
       {
         key: 'status',
         value: createInput.status,
-        addToAdminSg: false,
-        addToWriterSg: false,
-        addToReaderSg: false,
         isPublic: true,
         isOrgPublic: false,
         label: 'ProjectStatus',
@@ -209,36 +197,24 @@ export class ProjectService {
       {
         key: 'mouStart',
         value: createInput.mouStart,
-        addToAdminSg: false,
-        addToWriterSg: false,
-        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
       },
       {
         key: 'mouEnd',
         value: createInput.mouEnd,
-        addToAdminSg: false,
-        addToWriterSg: false,
-        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
       },
       {
         key: 'estimatedSubmission',
         value: createInput.estimatedSubmission,
-        addToAdminSg: false,
-        addToWriterSg: false,
-        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
       },
       {
         key: 'modifiedAt',
         value: createInput.modifiedAt,
-        addToAdminSg: false,
-        addToWriterSg: false,
-        addToReaderSg: false,
         isPublic: false,
         isOrgPublic: false,
       },
@@ -247,11 +223,6 @@ export class ProjectService {
       const createProject = this.db
         .query()
         .call(matchRequestingUser, session)
-        .match([
-          node('root', 'User', {
-            id: this.config.rootAdmin.id,
-          }),
-        ])
         .match([node('fieldRegion', 'FieldRegion', { id: fieldRegionId })]);
 
       if (primaryLocationId) {
