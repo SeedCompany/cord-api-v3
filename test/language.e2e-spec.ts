@@ -260,4 +260,70 @@ describe('Language e2e', () => {
       createLanguage(app, { signLanguageCode })
     ).rejects.toThrowError(new InputException('Input validation failed'));
   });
+
+  it('should throw error if trying to set hasExternalFirstScripture=true while language has engagements that have firstScripture=true', async () => {
+    const language = await createLanguage(app);
+    await createLanguageEngagement(app, {
+      languageId: language.id,
+      firstScripture: true,
+    });
+
+    await expect(
+      app.graphql.mutate(
+        gql`
+          mutation updateLanguage($input: UpdateLanguageInput!) {
+            updateLanguage(input: $input) {
+              language {
+                ...language
+              }
+            }
+          }
+          ${fragments.language}
+        `,
+        {
+          input: {
+            language: {
+              id: language.id,
+              hasExternalFirstScripture: true,
+            },
+          },
+        }
+      )
+    ).rejects.toThrowError(
+      'hasExternalFirstScripture can be set to true if the language has no engagements that have firstScripture=true'
+    );
+  });
+
+  it('can set hasExternalFirstScripture=true if language has no engagements that have firstScripture=true', async () => {
+    const language = await createLanguage(app);
+    await createLanguageEngagement(app, {
+      languageId: language.id,
+      firstScripture: false,
+    });
+
+    const result = await app.graphql.mutate(
+      gql`
+        mutation updateLanguage($input: UpdateLanguageInput!) {
+          updateLanguage(input: $input) {
+            language {
+              ...language
+            }
+          }
+        }
+        ${fragments.language}
+      `,
+      {
+        input: {
+          language: {
+            id: language.id,
+            hasExternalFirstScripture: true,
+          },
+        },
+      }
+    );
+    const updated = result.updateLanguage.language;
+    expect(updated).toBeTruthy();
+    expect(updated.id).toBe(language.id);
+    expect(updated.hasExternalFirstScripture.value).toBe(true);
+  });
 });

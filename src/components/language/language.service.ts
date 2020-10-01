@@ -75,6 +75,7 @@ export class LanguageService {
     isSignLanguage: true,
     signLanguageCode: true,
     sponsorEstimatedEndDate: true,
+    hasExternalFirstScripture: true,
   };
 
   constructor(
@@ -220,6 +221,12 @@ export class LanguageService {
           isPublic: false,
           isOrgPublic: false,
         },
+        {
+          key: 'hasExternalFirstScripture',
+          value: input.hasExternalFirstScripture,
+          isPublic: false,
+          isOrgPublic: false,
+        },
       ];
 
       const createLanguage = this.db
@@ -361,6 +368,11 @@ export class LanguageService {
       session
     );
 
+    if (input.hasExternalFirstScripture) {
+      // Check if the language has no engagements that have firstScripture=true.
+      await this.checkLEFirstScripture(input.id);
+    }
+
     await this.db.sgUpdateProperties({
       session,
       object: language,
@@ -377,6 +389,7 @@ export class LanguageService {
         'signLanguageCode',
         'sensitivity',
         'sponsorEstimatedEndDate',
+        'hasExternalFirstScripture',
       ],
       changes: input,
       nodevar: 'language', // not sure if this is right, just trying to get this to compile - michael
@@ -723,5 +736,31 @@ export class LanguageService {
     );
 
     return label;
+  }
+
+  protected async checkLEFirstScripture(id: string) {
+    const engagement = await this.db
+      .query()
+      .match([
+        node('language', 'Language', { id }),
+        relation('in', '', 'language', { active: true }),
+        node('languageEngagement', 'LanguageEngagement'),
+        relation('out', '', 'firstScripture', { active: true }),
+        node('firstScripture', 'Property'),
+      ])
+      .where({
+        firstScripture: {
+          value: true,
+        },
+      })
+      .return('languageEngagement')
+      .first();
+
+    if (engagement) {
+      throw new InputException(
+        'hasExternalFirstScripture can be set to true if the language has no engagements that have firstScripture=true',
+        'language.hasExternalFirstScripture'
+      );
+    }
   }
 }

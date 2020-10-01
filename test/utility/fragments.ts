@@ -147,6 +147,11 @@ export const language = gql`
       canRead
       canEdit
     }
+    hasExternalFirstScripture {
+      value
+      canRead
+      canEdit
+    }
   }
 `;
 
