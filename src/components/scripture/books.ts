@@ -261,7 +261,7 @@ const books = [
     ],
   },
   {
-    names: 'Judges Jg Jud Jdg Ju Jdgs Judg'.split(' '),
+    names: 'Judges Jg Jdg Ju Jdgs Judg'.split(' '),
     chapters: [
       36,
       23,
@@ -754,7 +754,7 @@ const books = [
     chapters: [18, 26, 22, 16, 20, 12, 29, 17, 18, 20, 10, 14],
   },
   {
-    names: ['Song of Solomon', 'SOS', 'Song of Songs', 'SongOfSongs'],
+    names: ['Song of Solomon', 'SOS', 'Song of Songs', 'SongOfSongs', 'Sng'],
     chapters: [17, 17, 11, 16, 16, 13, 13, 14],
   },
   {
@@ -890,7 +890,7 @@ const books = [
     chapters: [22, 22, 66, 22, 22],
   },
   {
-    names: 'Ezekiel Ek Ezek Eze'.split(' '),
+    names: 'Ezekiel Ek Ezk Ezek Eze'.split(' '),
     chapters: [
       28,
       10,
@@ -951,7 +951,7 @@ const books = [
     chapters: [11, 23, 5, 19, 15, 11, 16, 14, 17, 15, 12, 14, 16, 9],
   },
   {
-    names: 'Joel Jl Joel Joe'.split(' '),
+    names: 'Joel Jl Jol Joel Joe'.split(' '),
     chapters: [20, 32, 21],
   },
   {
@@ -971,7 +971,7 @@ const books = [
     chapters: [16, 13, 12, 13, 15, 16, 20],
   },
   {
-    names: 'Nahum Na Nah Na'.split(' '),
+    names: 'Nahum Nam Na Nah Na'.split(' '),
     chapters: [15, 13, 19],
   },
   {
@@ -1061,7 +1061,7 @@ const books = [
     ],
   },
   {
-    names: 'John Jn Joh Jo'.split(' '),
+    names: 'John Jn Jhn Joh Jo'.split(' '),
     chapters: [
       51,
       25,
@@ -1140,7 +1140,7 @@ const books = [
     chapters: [23, 22, 21, 32, 33, 24],
   },
   {
-    names: 'Philippians Phi Phil Phi'.split(' '),
+    names: 'Philippians Php Phi Phil Phi'.split(' '),
     chapters: [30, 30, 21, 23],
   },
   {
@@ -1174,7 +1174,7 @@ const books = [
     chapters: [16, 15, 15],
   },
   {
-    names: 'Philemon Pm Phile Philm Pm'.split(' '),
+    names: 'Philemon Phm Pm Phile Philm'.split(' '),
     chapters: [25],
   },
   {
@@ -1206,7 +1206,7 @@ const books = [
     chapters: [14],
   },
   {
-    names: 'Jude Jude'.split(' '),
+    names: 'Jude Jud'.split(' '),
     chapters: [25],
   },
   {
