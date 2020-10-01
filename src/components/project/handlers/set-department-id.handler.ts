@@ -42,18 +42,29 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
   }
 
   private async getDepartmentIdPrefixForProject(project: Project) {
-    // one of (1,2,3,4,5,7)
-    // TODO: fetch appropriate prefix via location.
-    return '1';
+    // TODO: validate if active property lives on relationship or BaseNode
+    const accountNumbers = await this.db
+      .query()
+      .raw(
+        `
+        MATCH (:Project {id: $projectId})-[:primaryLocation]-({active: true})-[:fundingAccount]-({active: true})-[:accountNumber]-(accountNumberNode:Property {active:true})
+        RETURN accountNumberNode.value
+        `,
+        { projectId: project.id }
+      )
+      .run();
+    return accountNumbers[0]['accountNumberNode.value'];
   }
 
   private async assignDepartmentIdForProject(project: Project) {
     const departmentIdPrefix = await this.getDepartmentIdPrefixForProject(
       project
     );
-    this.db.query().raw(
-      //TODO: determine if schema update should be applied to allow for transaction locks.
-      `
+    await this.db
+      .query()
+      .raw(
+        //TODO: determine if schema update should be applied to allow for transaction locks.
+        `
         MATCH ()-[:departmentId]-(departmentIdPropertyNode:Property)
         WHERE departmentIdPropertyNode.value STARTS WITH $departmentIdPrefix
         WITH collect(distinct(toInteger(right(departmentIdPropertyNode.value, 4)))) as listOfDepartmentIds
@@ -63,13 +74,13 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
         MATCH (project:Project {id: $projectId})
         OPTIONAL MATCH (project)-[oldDepartmentIdRelationship:departmentId {active: true}]-(oldDepartmentIdPropertyNode:Property)
         SET oldDepartmentIdRelationship.active = false
-        WITH *
-        LIMIT 1
-        CREATE (project)-[newDepartmentIdRelationship:departmentId { active: true, createdAt: datetime() }]->(:Property { createdAt: datetime(), value: coalesce(oldDepartmentIdPropertyNode.value, nextId) })
-        RETURN *
-    `,
-      { departmentIdPrefix: departmentIdPrefix, projectId: project.id }
-    );
+        WITH coalesce(oldDepartmentIdPropertyNode.value, nextId) as departmentId, project
+        CREATE (project)-[newDepartmentIdRelationship:departmentId { active: true, createdAt: datetime() }]->(:Property { createdAt: datetime(), value: departmentId })
+        RETURN departmentId
+        `,
+        { departmentIdPrefix: departmentIdPrefix, projectId: project.id }
+      )
+      .run();
 
     // TODO: refactor to use return from mutating cypher query
   }
