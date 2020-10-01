@@ -284,11 +284,14 @@ export class UserService {
           node('user', ['User', 'BaseNode'], {
             id: input.id,
           }),
-          relation('out', 'oldRoleRel', 'roles'),
+          relation('out', 'oldRoleRel', 'roles', { active: true }),
           node('oldRoles', 'Property'),
         ])
-        .delete('oldRoleRel')
-        .delete('oldRoles')
+        .set({
+          values: {
+            'oldRoleRel.active': false,
+          },
+        })
         .run();
 
       await this.db
