@@ -169,6 +169,7 @@ const policies = [
     engagement: Perm.ReadAndEdit,
     location: Perm.ReadAndEdit,
     status: Perm.ReadAndEdit,
+    sensitivity: Perm.ReadAndEdit,
   }),
   policy(
     'Project',
