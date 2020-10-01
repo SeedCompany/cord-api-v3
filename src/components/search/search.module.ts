@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { FilmModule } from '../film/film.module';
 import { LanguageModule } from '../language/language.module';
 import { LiteracyMaterialModule } from '../literacy-material/literacy-material.module';
-import { LocationModule } from '../location/location.module';
 import { OrganizationModule } from '../organization/organization.module';
 import { PartnerModule } from '../partner/partner.module';
 import { ProjectModule } from '../project/project.module';
@@ -17,7 +16,6 @@ import { SearchService } from './search.service';
     OrganizationModule,
     PartnerModule,
     UserModule,
-    LocationModule,
     LanguageModule,
     ProjectModule,
     FilmModule,

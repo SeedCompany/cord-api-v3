@@ -168,7 +168,7 @@ export class ProjectResolver {
   }
 
   @ResolveField(() => SecuredLocationList)
-  async nonPrimaryLocations(
+  async otherLocations(
     @Session() session: ISession,
     @Parent() { id }: Project,
     @Args({
@@ -178,7 +178,7 @@ export class ProjectResolver {
     })
     input: LocationListInput
   ): Promise<SecuredLocationList> {
-    return this.projectService.listNonPrimaryLocations(id, input, session);
+    return this.projectService.listOtherLocations(id, input, session);
   }
 
   @ResolveField(() => SecuredLocation)

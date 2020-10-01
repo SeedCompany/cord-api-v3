@@ -19,9 +19,6 @@ export abstract class CreateLocation {
   @Field({ nullable: true })
   readonly iso31663?: string;
 
-  @NameField({ nullable: true })
-  readonly geographyName?: string;
-
   @IdField({ nullable: true })
   readonly fundingAccountId?: string;
 }

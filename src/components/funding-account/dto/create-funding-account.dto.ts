@@ -10,7 +10,7 @@ export abstract class CreateFundingAccount {
   readonly name: string;
 
   @Field()
-  readonly accountNumber: string;
+  readonly accountNumber: number;
 }
 
 @InputType()

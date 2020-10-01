@@ -13,7 +13,7 @@ export abstract class UpdateFundingAccount {
   readonly name?: string;
 
   @Field({ nullable: true })
-  readonly accountNumber?: string;
+  readonly accountNumber?: number;
 }
 
 @InputType()

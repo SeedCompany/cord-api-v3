@@ -165,7 +165,7 @@ const policies = [
     modifiedAt: Perm.ReadAndEdit,
     engagement: Perm.ReadAndEdit,
     primaryLocation: Perm.ReadAndEdit,
-    nonPrimaryLocation: Perm.ReadAndEdit,
+    otherLocations: Perm.ReadAndEdit,
     marketingLocation: Perm.ReadAndEdit,
     fieldRegion: Perm.ReadAndEdit,
     status: Perm.ReadAndEdit,

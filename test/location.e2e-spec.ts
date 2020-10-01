@@ -57,7 +57,6 @@ describe('Location e2e', () => {
   it('update location', async () => {
     const st = await createLocation(app);
     const newName = faker.company.companyName();
-    const newGeographyName = faker.company.companyName();
     const result = await app.graphql.mutate(
       gql`
         mutation updateLocation($input: UpdateLocationInput!) {
@@ -74,7 +73,6 @@ describe('Location e2e', () => {
           location: {
             id: st.id,
             name: newName,
-            geographyName: newGeographyName,
           },
         },
       }
@@ -82,7 +80,6 @@ describe('Location e2e', () => {
     const updated = result.updateLocation.location;
     expect(updated).toBeTruthy();
     expect(updated.name.value).toBe(newName);
-    expect(updated.geographyName.value).toBe(newGeographyName);
   });
 
   // Delete Location

@@ -58,9 +58,7 @@ describe('FundingAccount e2e', () => {
   it('update funding account', async () => {
     const st = await createFundingAccount(app);
     const newName = faker.company.companyName();
-    const newAccountNumber = faker.random
-      .number({ min: 1000, max: 9999 })
-      .toString();
+    const newAccountNumber = faker.random.number({ min: 1000, max: 9999 });
     const result = await app.graphql.mutate(
       gql`
         mutation updateFundingAccount($input: UpdateFundingAccountInput!) {

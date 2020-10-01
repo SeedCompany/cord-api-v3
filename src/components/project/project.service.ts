@@ -98,7 +98,6 @@ export class ProjectService {
     estimatedSubmission: true,
     type: true,
     primaryLocation: true,
-    nonPrimaryLocation: true,
     marketingLocation: true,
     fieldRegion: true,
   };
@@ -138,7 +137,7 @@ export class ProjectService {
   async create(
     {
       primaryLocationId,
-      nonPrimaryLocationId,
+      otherLocationIds,
       marketingLocationId,
       fieldRegionId,
       ...input
@@ -230,10 +229,10 @@ export class ProjectService {
           node('primaryLocation', 'Location', { id: primaryLocationId }),
         ]);
       }
-      if (nonPrimaryLocationId) {
-        createProject.match([
-          node('nonPrimaryLocation', 'Location', { id: nonPrimaryLocationId }),
-        ]);
+      if (otherLocationIds?.length) {
+        otherLocationIds.forEach((id) => {
+          createProject.match([node(`otherLocation${id}`, 'Location', { id })]);
+        });
       }
       if (marketingLocationId) {
         createProject.match([
@@ -267,17 +266,19 @@ export class ProjectService {
           ],
         ]);
       }
-      if (nonPrimaryLocationId) {
-        createProject.create([
-          [
-            node('node'),
-            relation('out', '', 'nonPrimaryLocation', {
-              active: true,
-              createdAt,
-            }),
-            node('nonPrimaryLocation'),
-          ],
-        ]);
+      if (otherLocationIds?.length) {
+        otherLocationIds.forEach((id) => {
+          createProject.create([
+            [
+              node('node'),
+              relation('out', '', 'otherLocations', {
+                active: true,
+                createdAt,
+              }),
+              node(`otherLocation${id}`),
+            ],
+          ]);
+        });
       }
       if (marketingLocationId) {
         createProject.create([
@@ -374,11 +375,6 @@ export class ProjectService {
       ])
       .optionalMatch([
         node('node'),
-        relation('out', '', 'nonPrimaryLocation', { active: true }),
-        node('nonPrimaryLocation', 'Location'),
-      ])
-      .optionalMatch([
-        node('node'),
         relation('out', '', 'marketingLocation', { active: true }),
         node('marketingLocation', 'Location'),
       ])
@@ -401,7 +397,6 @@ export class ProjectService {
         'permList',
         'node',
         'primaryLocation.id as primaryLocationId',
-        'nonPrimaryLocation.id as nonPrimaryLocationId',
         'marketingLocation.id as marketingLocationId',
         'fieldRegion.id as fieldRegionId',
         'collect(distinct sensitivity.value) as languageSensitivityList',
@@ -409,7 +404,6 @@ export class ProjectService {
       .asResult<
         StandardReadResult<DbPropsOfDto<Project>> & {
           primaryLocationId: string;
-          nonPrimaryLocationId: string;
           marketingLocationId: string;
           fieldRegionId: string;
           languageSensitivityList: Sensitivity[];
@@ -444,10 +438,6 @@ export class ProjectService {
       primaryLocation: {
         ...securedProps.primaryLocation,
         value: result.primaryLocationId,
-      },
-      nonPrimaryLocation: {
-        ...securedProps.nonPrimaryLocation,
-        value: result.nonPrimaryLocationId,
       },
       marketingLocation: {
         ...securedProps.marketingLocation,
@@ -707,7 +697,7 @@ export class ProjectService {
     };
   }
 
-  async listNonPrimaryLocations(
+  async listOtherLocations(
     _projectId: string,
     _input: LocationListInput,
     _session: ISession

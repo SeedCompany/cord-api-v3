@@ -10,7 +10,6 @@ import {
 import { FilmService } from '../film';
 import { LanguageService } from '../language';
 import { LiteracyMaterialService } from '../literacy-material';
-import { LocationService } from '../location';
 import { OrganizationService } from '../organization';
 import { PartnerService } from '../partner';
 import { ProjectService } from '../project';
@@ -51,7 +50,6 @@ export class SearchService {
     Story: (...args) => this.story.readOne(...args),
     LiteracyMaterial: (...args) => this.literacyMaterial.readOne(...args),
     Song: (...args) => this.song.readOne(...args),
-    Location: (...args) => this.location.readOne(...args),
   };
   /* eslint-enable @typescript-eslint/naming-convention */
 
@@ -60,7 +58,6 @@ export class SearchService {
     private readonly users: UserService,
     private readonly orgs: OrganizationService,
     private readonly partners: PartnerService,
-    private readonly location: LocationService,
     private readonly language: LanguageService,
     private readonly projects: ProjectService,
     private readonly film: FilmService,
