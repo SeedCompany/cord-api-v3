@@ -4,12 +4,12 @@ import { MergeExclusive } from 'type-fest';
 import {
   DateTimeField,
   Resource,
+  Secured,
   SecuredDate,
   SecuredKeys,
   SecuredString,
   Sensitivity,
 } from '../../../common';
-import { SecuredCountry } from '../../location';
 import { ProjectStatus } from './status.enum';
 import { SecuredProjectStep } from './step.enum';
 import { ProjectType } from './type.enum';
@@ -49,8 +49,13 @@ class Project extends Resource {
   @Field(() => ProjectStatus)
   readonly status: ProjectStatus;
 
-  @Field()
-  readonly location: SecuredCountry;
+  readonly primaryLocation: Secured<string>;
+
+  readonly nonPrimaryLocation: Secured<string>;
+
+  readonly marketingLocation: Secured<string>;
+
+  readonly fieldRegion: Secured<string>;
 
   @Field()
   readonly mouStart: SecuredDate;
@@ -96,6 +101,7 @@ declare module '../../authorization/policies/mapping' {
       | 'member'
       | 'engagement'
       | 'budget'
-      | 'partnership';
+      | 'partnership'
+      | 'status';
   }
 }

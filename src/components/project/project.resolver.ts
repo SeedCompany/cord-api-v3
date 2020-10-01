@@ -15,7 +15,14 @@ import {
 } from '../../common';
 import { SecuredBudget } from '../budget';
 import { EngagementListInput, SecuredEngagementList } from '../engagement';
+import { FieldRegionService, SecuredFieldRegion } from '../field-region';
 import { SecuredDirectory } from '../file';
+import {
+  LocationListInput,
+  LocationService,
+  SecuredLocation,
+  SecuredLocationList,
+} from '../location';
 import { PartnershipListInput, SecuredPartnershipList } from '../partnership';
 import {
   CreateProjectInput,
@@ -35,7 +42,11 @@ import { ProjectService } from './project.service';
 
 @Resolver(IProject)
 export class ProjectResolver {
-  constructor(private readonly projectService: ProjectService) {}
+  constructor(
+    private readonly projectService: ProjectService,
+    private readonly locationService: LocationService,
+    private readonly fieldRegionService: FieldRegionService
+  ) {}
 
   @Query(() => IProject, {
     description: 'Look up a project by its ID',
@@ -142,6 +153,56 @@ export class ProjectResolver {
     @Parent() { id }: Project
   ): Promise<SecuredDirectory> {
     return await this.projectService.getRootDirectory(id, session);
+  }
+
+  @ResolveField(() => SecuredLocation)
+  async primaryLocation(
+    @Parent() project: Project,
+    @Session() session: ISession
+  ): Promise<SecuredLocation> {
+    const { value: id, ...rest } = project.primaryLocation;
+    const value = id
+      ? await this.locationService.readOne(id, session)
+      : undefined;
+    return { value, ...rest };
+  }
+
+  @ResolveField(() => SecuredLocationList)
+  async nonPrimaryLocations(
+    @Session() session: ISession,
+    @Parent() { id }: Project,
+    @Args({
+      name: 'input',
+      type: () => LocationListInput,
+      defaultValue: LocationListInput.defaultVal,
+    })
+    input: LocationListInput
+  ): Promise<SecuredLocationList> {
+    return this.projectService.listNonPrimaryLocations(id, input, session);
+  }
+
+  @ResolveField(() => SecuredLocation)
+  async marketingLocation(
+    @Parent() project: Project,
+    @Session() session: ISession
+  ): Promise<SecuredLocation> {
+    const { value: id, ...rest } = project.marketingLocation;
+    const value = id
+      ? await this.locationService.readOne(id, session)
+      : undefined;
+    return { value, ...rest };
+  }
+
+  @ResolveField(() => SecuredFieldRegion)
+  async fieldRegion(
+    @Parent() project: Project,
+    @Session() session: ISession
+  ): Promise<SecuredFieldRegion> {
+    const { value: id, ...rest } = project.fieldRegion;
+    const value = id
+      ? await this.fieldRegionService.readOne(id, session)
+      : undefined;
+    return { value, ...rest };
   }
 
   @Mutation(() => CreateProjectOutput, {

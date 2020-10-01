@@ -12,6 +12,9 @@ import {
 export class FundingAccount extends Resource {
   @Field()
   readonly name: SecuredString;
+
+  @Field()
+  readonly accountNumber: SecuredString;
 }
 
 declare module '../../authorization/policies/mapping' {

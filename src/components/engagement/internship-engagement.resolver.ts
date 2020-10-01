@@ -2,7 +2,7 @@ import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { ISession, Session } from '../../common';
 import { FileService, SecuredFile } from '../file';
 import { LocationService } from '../location';
-import { SecuredCountry } from '../location/dto';
+import { SecuredLocation } from '../location/dto';
 import { SecuredUser, UserService } from '../user';
 import { InternshipEngagement } from './dto';
 
@@ -48,15 +48,13 @@ export class InternshipEngagementResolver {
     };
   }
 
-  @ResolveField(() => SecuredCountry)
+  @ResolveField(() => SecuredLocation)
   async countryOfOrigin(
     @Parent() engagement: InternshipEngagement,
     @Session() session: ISession
-  ): Promise<SecuredCountry> {
+  ): Promise<SecuredLocation> {
     const { value: id, ...rest } = engagement.countryOfOrigin;
-    const value = id
-      ? await this.locations.readOneCountry(id, session)
-      : undefined;
+    const value = id ? await this.locations.readOne(id, session) : undefined;
     return {
       value,
       ...rest,

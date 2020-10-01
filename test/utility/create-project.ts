@@ -9,6 +9,7 @@ import {
   ProjectType,
 } from '../../src/components/project';
 import { TestApp } from './create-app';
+import { createRegion } from './create-region';
 import { fragments } from './fragments';
 import { Raw } from './raw.type';
 
@@ -22,6 +23,7 @@ export async function createProject(
     mouStart: CalendarDate.fromISO('1991-01-01'),
     mouEnd: CalendarDate.fromISO('1992-01-01'),
     step: ProjectStep.PendingConceptApproval,
+    fieldRegionId: input.fieldRegionId || (await createRegion(app)).id,
     ...input,
   };
 

@@ -1,15 +1,15 @@
 import { gql } from 'apollo-server-core';
 import { generate, isValid } from 'shortid';
 import { createPerson, getUserFromSession } from '.';
-import { CreateZone, Zone } from '../../src/components/location';
+import { CreateFieldZone, FieldZone } from '../../src/components/field-zone';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
 
 export async function createZone(
   app: TestApp,
-  input: Partial<CreateZone> = {}
+  input: Partial<CreateFieldZone> = {}
 ) {
-  const zone: CreateZone = {
+  const fieldZone: CreateFieldZone = {
     name: 'Zone' + generate(),
     directorId:
       input.directorId ||
@@ -20,10 +20,10 @@ export async function createZone(
 
   const result = await app.graphql.mutate(
     gql`
-      mutation createZone($input: CreateZoneInput!) {
-        createZone(input: $input) {
-          zone {
-            ...zone
+      mutation createFieldZone($input: CreateFieldZoneInput!) {
+        createFieldZone(input: $input) {
+          fieldZone {
+            ...fieldZone
             director {
               value {
                 ...user
@@ -34,21 +34,21 @@ export async function createZone(
           }
         }
       }
-      ${fragments.zone}
+      ${fragments.fieldZone}
       ${fragments.user}
     `,
     {
       input: {
-        zone,
+        fieldZone,
       },
     }
   );
 
-  const actual: Zone = result.createZone.zone;
+  const actual: FieldZone = result.createFieldZone.fieldZone;
   expect(actual).toBeTruthy();
 
   expect(isValid(actual.id)).toBe(true);
-  expect(actual.name.value).toBe(zone.name);
+  expect(actual.name.value).toBe(fieldZone.name);
 
   return actual;
 }

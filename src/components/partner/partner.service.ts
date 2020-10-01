@@ -119,8 +119,35 @@ export class PartnerService {
     return await this.readOne(result.id, session);
   }
 
+  async readOnePartnerByOrgId(id: string, session: ISession): Promise<Partner> {
+    this.logger.debug(`Read Partner by Org Id`, {
+      id: id,
+      userId: session.userId,
+    });
+    const query = this.db
+
+      .query()
+      .match([node('node', 'Organization', { id: id })])
+      .match([
+        node('node'),
+        relation('in', '', 'organization', { active: true }),
+        node('partner', 'Partner'),
+      ])
+      .return({
+        partner: [{ id: 'partnerId' }],
+      })
+      .asResult<{
+        partnerId: string;
+      }>();
+    const result = await query.first();
+    if (!result)
+      throw new NotFoundException('No Partner Exists for this Org Id');
+
+    return await this.readOne(result.partnerId, session);
+  }
+
   async readOne(id: string, session: ISession): Promise<Partner> {
-    this.logger.debug(`Read Partner`, {
+    this.logger.debug(`Read Partner by Partner Id`, {
       id: id,
       userId: session.userId,
     });

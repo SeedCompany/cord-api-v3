@@ -1,7 +1,7 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { isValid } from 'shortid';
-import { Zone } from '../src/components/location';
+import { FieldZone } from '../src/components/field-zone';
 import { User } from '../src/components/user';
 import {
   createSession,
@@ -13,7 +13,7 @@ import {
 import { createZone } from './utility/create-zone';
 import { fragments } from './utility/fragments';
 
-describe('Zone e2e', () => {
+describe('Field Zone e2e', () => {
   let app: TestApp;
   let director: User;
   const password: string = faker.internet.password();
@@ -30,10 +30,10 @@ describe('Zone e2e', () => {
     await app.close();
   });
 
-  it('create a zone', async () => {
+  it('create a field zone', async () => {
     await login(app, { email: director.email.value, password });
-    const zone = await createZone(app, { directorId: director.id });
-    expect(zone.id).toBeDefined();
+    const fieldZone = await createZone(app, { directorId: director.id });
+    expect(fieldZone.id).toBeDefined();
   });
 
   it.skip('should have unique name', async () => {
@@ -45,81 +45,78 @@ describe('Zone e2e', () => {
     ).rejects.toThrowError();
   });
 
-  it('read one zone by id', async () => {
-    const zone = await createZone(app, { directorId: director.id });
+  it('read one field zone by id', async () => {
+    const fieldZone = await createZone(app, { directorId: director.id });
 
-    const { location: actual } = await app.graphql.query(
+    const { fieldZone: actual } = await app.graphql.query(
       gql`
-        query zone($id: ID!) {
-          location(id: $id) {
-            __typename
-            ... on Zone {
-              ...zone
-              director {
-                value {
-                  ...user
-                }
-                canEdit
-                canRead
+        query fieldZone($id: ID!) {
+          fieldZone(id: $id) {
+            ...fieldZone
+            director {
+              value {
+                ...user
               }
+              canEdit
+              canRead
             }
           }
         }
 
-        ${fragments.zone}
+        ${fragments.fieldZone}
         ${fragments.user}
       `,
       {
-        id: zone.id,
+        id: fieldZone.id,
       }
     );
 
-    expect(actual.id).toBe(zone.id);
+    expect(actual.id).toBe(fieldZone.id);
     expect(isValid(actual.id)).toBe(true);
-    expect(actual.name).toEqual(zone.name);
+    expect(actual.name).toEqual(fieldZone.name);
     expect(actual.director.canEdit).toBe(true);
   });
 
-  it('update zone', async () => {
-    const zone = await createZone(app, { directorId: director.id });
+  it('update field zone', async () => {
+    const fieldZone = await createZone(app, { directorId: director.id });
     const newName = faker.company.companyName();
 
     const result = await app.graphql.mutate(
       gql`
-        mutation updateZone($input: UpdateZoneInput!) {
-          updateZone(input: $input) {
-            zone {
-              ...zone
+        mutation updateFieldZone($input: UpdateFieldZoneInput!) {
+          updateFieldZone(input: $input) {
+            fieldZone {
+              ...fieldZone
             }
           }
         }
-        ${fragments.zone}
+        ${fragments.fieldZone}
       `,
       {
         input: {
-          zone: {
-            id: zone.id,
+          fieldZone: {
+            id: fieldZone.id,
             name: newName,
           },
         },
       }
     );
-    const updated = result.updateZone.zone;
+    const updated = result.updateFieldZone.fieldZone;
     expect(updated).toBeTruthy();
-    expect(updated.id).toBe(zone.id);
+    expect(updated.id).toBe(fieldZone.id);
     expect(updated.name.value).toBe(newName);
   });
 
   // This function in location service should be updated because one session couldn't be connected to several users at a time.
-  it.skip("update zone's director", async () => {
-    const zone = await createZone(app, { directorId: director.id });
+  it.skip("update field zone's director", async () => {
+    const fieldZone = await createZone(app, { directorId: director.id });
 
     const result = await app.graphql.mutate(
       gql`
-        mutation updateZone($input: UpdateZoneInput!) {
-          updateZone(input: $input) {
-            zone {
-              ...zone
+        mutation updateFieldZone($input: UpdateFieldZoneInput!) {
+          updateFieldZone(input: $input) {
+            fieldZone {
+              ...fieldZone
               director {
                 value {
                   ...user
@@ -128,38 +125,38 @@ describe('Zone e2e', () => {
             }
           }
         }
-        ${fragments.zone}
+        ${fragments.fieldZone}
         ${fragments.user}
       `,
       {
         input: {
-          zone: {
-            id: zone.id,
+          fieldZone: {
+            id: fieldZone.id,
             directorId: newDirector.id,
           },
         },
       }
     );
-    const updated = result.updateZone.zone;
+    const updated = result.updateFieldZone.fieldZone;
     expect(updated).toBeTruthy();
-    expect(updated.id).toBe(zone.id);
+    expect(updated.id).toBe(fieldZone.id);
     expect(updated.director.value.id).toBe(newDirector.id);
   });
 
-  it.skip('delete zone', async () => {
-    const zone = await createZone(app, { directorId: director.id });
+  it.skip('delete field zone', async () => {
+    const fieldZone = await createZone(app, { directorId: director.id });
 
     const result = await app.graphql.mutate(
       gql`
-        mutation deleteLocation($id: ID!) {
-          deleteLocation(id: $id)
+        mutation deleteFieldRegion($id: ID!) {
+          deleteFieldRegion(id: $id)
         }
       `,
       {
-        id: zone.id,
+        id: fieldZone.id,
       }
     );
-    const actual: Zone | undefined = result.deleteLocation;
+    const actual: FieldZone | undefined = result.deleteFieldRegion;
 
     expect(actual).toBeTruthy();
   });
@@ -172,19 +169,19 @@ describe('Zone e2e', () => {
       )
     );
 
-    const { locations } = await app.graphql.query(gql`
+    const { fieldZones } = await app.graphql.query(gql`
       query {
-        locations(input: { filter: { name: "Asia", types: ["zone"] } }) {
+        fieldZones(input: { filter: { page: 1, count: 25 } }) {
           items {
-            ...zone
+            ...fieldZone
           }
           hasMore
           total
         }
       }
-      ${fragments.zone}
+      ${fragments.fieldZone}
     `);
 
-    expect(locations.items.length).toBeGreaterThanOrEqual(2);
+    expect(fieldZones.items.length).toBeGreaterThanOrEqual(2);
   });
 });

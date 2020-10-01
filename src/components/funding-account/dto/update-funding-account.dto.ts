@@ -11,6 +11,9 @@ export abstract class UpdateFundingAccount {
 
   @NameField({ nullable: true })
   readonly name?: string;
+
+  @Field({ nullable: true })
+  readonly accountNumber?: string;
 }
 
 @InputType()

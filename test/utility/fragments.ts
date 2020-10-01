@@ -330,7 +330,7 @@ export const project = gql`
       canEdit
     }
     status
-    location {
+    fieldRegion {
       value {
         id
         name {
@@ -572,8 +572,8 @@ export const internshipEngagement = gql`
   ${engagement}
 `;
 
-export const zone = gql`
-  fragment zone on Zone {
+export const fieldZone = gql`
+  fragment fieldZone on FieldZone {
     id
     createdAt
     name {
@@ -584,11 +584,39 @@ export const zone = gql`
   }
 `;
 
-export const region = gql`
-  fragment region on Region {
+export const fieldRegion = gql`
+  fragment fieldRegion on FieldRegion {
     id
     createdAt
     name {
+      value
+      canEdit
+      canRead
+    }
+  }
+`;
+
+export const location = gql`
+  fragment location on Location {
+    id
+    createdAt
+    name {
+      value
+      canEdit
+      canRead
+    }
+    type {
+      value
+      canEdit
+      canRead
+    }
+    sensitivity
+    iso31663 {
+      value
+      canEdit
+      canRead
+    }
+    geographyName {
       value
       canEdit
       canRead
@@ -801,6 +829,11 @@ export const fundingAccount = gql`
       canRead
       canEdit
     }
+    accountNumber {
+      value
+      canRead
+      canEdit
+    }
     createdAt
   }
 `;
@@ -829,8 +862,9 @@ export const fragments = {
   projectMember,
   languageEngagement,
   internshipEngagement,
-  zone,
-  region,
+  fieldZone,
+  fieldRegion,
+  location,
   country,
   budget,
   budgetRecord,

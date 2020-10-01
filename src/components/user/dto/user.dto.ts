@@ -56,7 +56,7 @@ declare module '../../authorization/policies/mapping' {
     User: User;
   }
   interface TypeToSecuredProps {
-    User: SecuredKeys<User> | 'education' | 'unavailability';
+    User: SecuredKeys<User> | 'education' | 'unavailability' | 'organization';
   }
 }
 

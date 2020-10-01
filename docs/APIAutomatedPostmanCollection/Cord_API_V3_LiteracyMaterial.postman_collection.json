@@ -122,13 +122,40 @@
 									"pm.globals.set('timezoneObject', JSON.stringify(timezoneObject));\r",
 									"pm.globals.set(\"timezone\", timezoneObject.name);\r",
 									"\r",
-									"pm.globals.set(\"bio\", \"I'm Tester\");\r",
+									"pm.globals.set(\"about\", \"I'm Tester\");\r",
+									"\r",
+									"pm.globals.set(\"userTitle\", \"Tester\");\r",
 									"\r",
 									"// Taking random value for the User status from pre-defined possible values\r",
 									"var userStatusArray = ['Active','Disabled'];\r",
 									"var randomNumber = Math.floor(Math.random()*userStatusArray.length);\r",
 									"// pm.globals.set('userStatus', userStatusArray[randomNumber]);\r",
 									"pm.globals.set(\"userStatus\", \"Active\");\r",
+									"\r",
+									"var userRolesArray = ['BibleTranslationLiaison',\r",
+									"'Consultant',\r",
+									"'ConsultantManager',\r",
+									"'Controller',\r",
+									"'Development',\r",
+									"'ExecutiveDevelopmentRepresentative',\r",
+									"'ExecutiveLeadership',\r",
+									"'FieldOperationsDirector',\r",
+									"'FieldPartner',\r",
+									"'FinancialAnalyst',\r",
+									"'Intern',\r",
+									"'Liaison',\r",
+									"'LeadFinancialAnalyst',\r",
+									"'Mentor',\r",
+									"'OfficeOfThePresident',\r",
+									"'ProjectManager',\r",
+									"'RegionalCommunicationsCoordinator',\r",
+									"'RegionalDirector',\r",
+									"'SupportingProjectManager',\r",
+									"'Translator',\r",
+									"'Writer'\r",
+									"];\r",
+									"var randomNumber = Math.floor(Math.random()*userRolesArray.length);\r",
+									"pm.globals.set('userRoles', userRolesArray[randomNumber]);\r",
 									""
 								],
 								"type": "text/javascript"
@@ -151,8 +178,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation register($input: RegisterInput!) {\r\n  register(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value{\r\n          name\r\n          lat\r\n          long\r\n          countries{\r\n            code\r\n            name\r\n            zones{\r\n              name\r\n              lat\r\n              long\r\n              countries{\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      bio {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}",
-								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"realFirstName\": \"Piyush\",\r\n    \"realLastName\": \"Patel\",\r\n    \"email\" : \"{{login_email}}\",\r\n    \"password\": \"{{login_password}}\",\r\n    \"displayFirstName\": \"{{displayFirstName}}\",\r\n    \"displayLastName\": \"{{displayLastName}}\",\r\n    \"phone\": \"{{phone}}\",\r\n    \"timezone\": \"{{timezone}}\",\r\n    \"bio\": \"{{bio}}\",\r\n    \"status\": \"{{userStatus}}\"\r\n  }\r\n}"
+								"query": "mutation register($input: RegisterInput!) {\r\n  register(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"realFirstName\": \"Piyush\",\r\n        \"realLastName\": \"Patel\",\r\n        \"email\": \"{{login_email}}\",\r\n        \"password\": \"{{login_password}}\",\r\n        \"displayFirstName\": \"{{displayFirstName}}\",\r\n        \"displayLastName\": \"{{displayLastName}}\",\r\n        \"phone\": \"{{phone}}\",\r\n        \"timezone\": \"{{timezone}}\",\r\n        \"status\": \"{{userStatus}}\",\r\n        \"title\": \"{{userTitle}}\",\r\n        \"roles\": \"{{userRoles}}\"\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -217,7 +244,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation login($input: LoginInput!) {\r\n  login(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      bio {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation login($input: LoginInput!) {\r\n  login(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n   \"input\": {\r\n      \"email\": \"{{login_email}}\",\r\n      \"password\": \"{{login_password}}\"\r\n   }\r\n}"
 							},
 							"options": {
@@ -367,11 +394,6 @@
 									"    pm.expect(startBook).to.eql(pm.globals.get('literacyMaterialScriptRefBookStart'));\r",
 									"});\r",
 									"\r",
-									"pm.test(\"Verify that literacyMaterial scriptureReferences start book name is same as requested\", function () {\r",
-									"    var startBook = jsonData.data.createLiteracyMaterial.literacyMaterial.scriptureReferences.value[0].start.bookName;\r",
-									"    pm.expect(startBook).to.eql('Genesis');\r",
-									"});\r",
-									"\r",
 									"pm.test(\"Verify that literacyMaterial scriptureReferences start label is same as requested\", function () {\r",
 									"    var startLabel = jsonData.data.createLiteracyMaterial.literacyMaterial.scriptureReferences.value[0].start.label;\r",
 									"    pm.expect(startLabel).to.eql(pm.globals.get('literacyMaterialScriptRefLabelStart'));\r",
@@ -390,11 +412,6 @@
 									"pm.test(\"Verify that literacyMaterial scriptureReferences end book is same as requested\", function () {\r",
 									"    var endBook = jsonData.data.createLiteracyMaterial.literacyMaterial.scriptureReferences.value[0].end.book;\r",
 									"    pm.expect(endBook).to.eql(pm.globals.get('literacyMaterialScriptRefBookEnd'));\r",
-									"});\r",
-									"\r",
-									"pm.test(\"Verify that literacyMaterial scriptureReferences end book name is same as requested\", function () {\r",
-									"    var endBookName = jsonData.data.createLiteracyMaterial.literacyMaterial.scriptureReferences.value[0].end.bookName;\r",
-									"    pm.expect(endBookName).to.eql('Genesis');\r",
 									"});\r",
 									"\r",
 									"pm.test(\"Verify that literacyMaterial scriptureReferences end label is same as requested\", function () {\r",
@@ -434,7 +451,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"literacyMaterial\": {\r\n            \"name\": \"{{literacyMaterialName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n                    \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n                    \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n                    \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n                    \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -559,11 +576,6 @@
 									"    pm.expect(startBook).to.eql(pm.globals.get('literacyMaterialScriptRefBookStart'));\r",
 									"});\r",
 									"\r",
-									"pm.test(\"Verify that literacyMaterial scriptureReferences start book name is same as requested\", function () {\r",
-									"    var startBook = jsonData.data.createLiteracyMaterial.literacyMaterial.scriptureReferences.value[0].start.bookName;\r",
-									"    pm.expect(startBook).to.eql(pm.globals.get('literacyMaterialScriptRefBookStart'));\r",
-									"});\r",
-									"\r",
 									"pm.test(\"Verify that literacyMaterial scriptureReferences start label is same as requested\", function () {\r",
 									"    var startLabel = jsonData.data.createLiteracyMaterial.literacyMaterial.scriptureReferences.value[0].start.label;\r",
 									"    pm.expect(startLabel).to.eql(pm.globals.get('literacyMaterialScriptRefLabelStart'));\r",
@@ -582,11 +594,6 @@
 									"pm.test(\"Verify that literacyMaterial scriptureReferences end book is same as requested\", function () {\r",
 									"    var endBook = jsonData.data.createLiteracyMaterial.literacyMaterial.scriptureReferences.value[0].end.book;\r",
 									"    pm.expect(endBook).to.eql(pm.globals.get('literacyMaterialScriptRefBookEnd'));\r",
-									"});\r",
-									"\r",
-									"pm.test(\"Verify that literacyMaterial scriptureReferences end book name is same as requested\", function () {\r",
-									"    var endBookName = jsonData.data.createLiteracyMaterial.literacyMaterial.scriptureReferences.value[0].end.bookName;\r",
-									"    pm.expect(endBookName).to.eql(pm.globals.get('literacyMaterialScriptRefBookEnd'));\r",
 									"});\r",
 									"\r",
 									"pm.test(\"Verify that literacyMaterial scriptureReferences end label is same as requested\", function () {\r",
@@ -626,7 +633,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"literacyMaterial\": {\r\n            \"name\": \"{{literacyMaterialName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n                    \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n                    \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n                    \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n                    \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -722,7 +729,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"literacyMaterial\": {\r\n      \"name\": \"\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -812,7 +819,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"literacyMaterial\": {\r\n     \r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -874,27 +881,27 @@
 							"script": {
 								"id": "fc47edb2-b552-4bae-9473-f427c1a862b6",
 								"exec": [
-									"// var jsonData = pm.response.json();\r",
+									"var jsonData = pm.response.json();\r",
 									"\r",
-									"// //Common Verification\r",
-									"// pm.test(\"Status code is 200\", function () {\r",
-									"//     pm.response.to.have.status(200);\r",
-									"// });\r",
+									"//Common Verification\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
 									"\r",
-									"// pm.test(\"Response time is less than 1000ms\", function () {\r",
-									"//     pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
-									"// });\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
+									"});\r",
 									"\r",
-									"// //Test Specific\r",
-									"// pm.test(\"Verify that error message is correct\", function () {\r",
-									"//     var error_message = jsonData.errors[0].message;\r",
-									"//     pm.expect(error_message).to.eql(\"Input validation failed\");\r",
-									"// });\r",
+									"//Test Specific\r",
+									"pm.test(\"Verify that error message is correct\", function () {\r",
+									"    var error_message = jsonData.errors[0].message;\r",
+									"    pm.expect(error_message).to.eql(\"Input validation failed\");\r",
+									"});\r",
 									"\r",
-									"// pm.test(\"Verify that error status is 400\", function () {\r",
-									"//     var error_status = jsonData.errors[0].extensions.status;\r",
-									"//     pm.expect(error_status).to.eql(400);\r",
-									"// });"
+									"pm.test(\"Verify that error status is 400\", function () {\r",
+									"    var error_status = jsonData.errors[0].extensions.status;\r",
+									"    pm.expect(error_status).to.eql(400);\r",
+									"});"
 								],
 								"type": "text/javascript"
 							}
@@ -916,7 +923,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"literacyMaterial\": {\r\n            \"name\": \"{{literacyMaterialName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"\",\r\n                    \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n                    \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n                    \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n                    \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -1006,7 +1013,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"literacyMaterial\": {\r\n      \"name\": \"{{literacyMaterialName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -1055,28 +1062,27 @@
 							"script": {
 								"id": "4f6ae666-f972-41f1-97ac-e39029f33a37",
 								"exec": [
-									"// var jsonData = pm.response.json();\r",
+									"var jsonData = pm.response.json();\r",
 									"\r",
-									"// //Common Verification\r",
-									"// pm.test(\"Status code is 200 Bad Request\", function () {\r",
-									"//     pm.response.to.have.status(200);\r",
-									"// });\r",
+									"//Common Verification\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
 									"\r",
-									"// pm.test(\"Response time is less than 1000ms\", function () {\r",
-									"//     pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
-									"// });\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
+									"});\r",
 									"\r",
-									"// //Test Specific\r",
-									"// pm.test(\"Verify that error message is correct\", function () {\r",
-									"//     var error_message = jsonData.errors[0].message;  \r",
-									"//     pm.expect(error_message).to.include(\"Int cannot represent non-integer value\");\r",
-									"// });\r",
+									"//Test Specific\r",
+									"pm.test(\"Verify that error message is correct\", function () {\r",
+									"    var error_message = jsonData.errors[0].message;\r",
+									"    pm.expect(error_message).to.eql(\"Input validation failed\");\r",
+									"});\r",
 									"\r",
-									"// pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {\r",
-									"//     var error_code = jsonData.errors[0].extensions.code;  \r",
-									"//     pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");\r",
-									"// });\r",
-									""
+									"pm.test(\"Verify that error status is 400\", function () {\r",
+									"    var error_status = jsonData.errors[0].extensions.status;\r",
+									"    pm.expect(error_status).to.eql(400);\r",
+									"});"
 								],
 								"type": "text/javascript"
 							}
@@ -1098,7 +1104,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"literacyMaterial\": {\r\n      \"name\": \"{{literacyMaterialName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -1190,7 +1196,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"literacyMaterial\": {\r\n      \"name\": \"{{literacyMaterialName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -1281,7 +1287,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"literacyMaterial\": {\r\n      \"name\": \"{{literacyMaterialName}}\"\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -1361,7 +1367,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"literacyMaterial\": {\r\n      \"name\": \"{{literacyMaterialName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book1\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -1441,7 +1447,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"literacyMaterial\": {\r\n      \"name\": \"{{literacyMaterialName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n          \"chapter1\": {{literacyMaterialScriptRefChapterStart}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -1521,7 +1527,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"literacyMaterial\": {\r\n      \"name\": \"{{literacyMaterialName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n          \"verse1\": {{literacyMaterialScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -1601,7 +1607,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"literacyMaterial\": {\r\n      \"name\": \"{{literacyMaterialName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book1\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -1681,7 +1687,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"literacyMaterial\": {\r\n      \"name\": \"{{literacyMaterialName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n          \"chapter1\": {{literacyMaterialScriptRefChapterEnd}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -1761,7 +1767,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"literacyMaterial\": {\r\n      \"name\": \"{{literacyMaterialName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n          \"verse1\": {{literacyMaterialScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -1858,7 +1864,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"literacyMaterial\": {\r\n            \"name\": \"{{literacyMaterialName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n                    \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n                    \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n                    \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n                    \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -2011,7 +2017,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query literacyMaterial($id: ID!) {\r\n  literacyMaterial(id: $id) {\r\n    id\r\n    createdAt\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          bookName\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          bookName\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n    name {\r\n      value\r\n      canRead\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query literacyMaterial($id: ID!) {\r\n  literacyMaterial(id: $id) {\r\n    id\r\n    createdAt\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n    name {\r\n      value\r\n      canRead\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"id\": \"{{literacyMaterialId}}\"\r\n}"
 							},
 							"options": {
@@ -2095,7 +2101,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query literacyMaterial($id: ID!) {\r\n  literacyMaterial(id: $id) {\r\n    id\r\n    createdAt\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          bookName\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          bookName\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n    name {\r\n      value\r\n      canRead\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query literacyMaterial($id: ID!) {\r\n  literacyMaterial(id: $id) {\r\n    id\r\n    createdAt\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n    name {\r\n      value\r\n      canRead\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"id\": \"\"\r\n}"
 							},
 							"options": {
@@ -2175,7 +2181,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query literacyMaterial($id: ID!) {\r\n  literacyMaterial(id: $id) {\r\n    id\r\n    createdAt\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          bookName\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          bookName\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n    name {\r\n      value\r\n      canRead\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query literacyMaterial($id: ID!) {\r\n  literacyMaterial(id: $id) {\r\n    id\r\n    createdAt\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n    name {\r\n      value\r\n      canRead\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \r\n}"
 							},
 							"options": {
@@ -2255,7 +2261,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query literacyMaterial($id: ID!) {\r\n  literacyMaterial(id: $id) {\r\n    id\r\n    createdAt\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          bookName\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          bookName\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n    name {\r\n      value\r\n      canRead\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query literacyMaterial($id: ID!) {\r\n  literacyMaterial(id: $id) {\r\n    id\r\n    createdAt\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n    name {\r\n      value\r\n      canRead\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"id1\": \"{{literacyMaterialId}}\"\r\n}"
 							},
 							"options": {
@@ -2339,7 +2345,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query literacyMaterial($id: ID!) {\r\n  literacyMaterial(id: $id) {\r\n    id\r\n    createdAt\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          bookName\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          bookName\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n    name {\r\n      value\r\n      canRead\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query literacyMaterial($id: ID!) {\r\n  literacyMaterial(id: $id) {\r\n    id\r\n    createdAt\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n    name {\r\n      value\r\n      canRead\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"id\": \"!@#$%^&\"\r\n}"
 							},
 							"options": {
@@ -2458,11 +2464,6 @@
 									"});\r",
 									"\r",
 									"//Static\r",
-									"pm.test(\"Verify that updated literacyMaterial scriptureReferences start book name is same as requested\", function () {\r",
-									"    var startBookName = jsonData.data.updateLiteracyMaterial.literacyMaterial.scriptureReferences.value[0].start.bookName;\r",
-									"    pm.expect(startBookName).to.eql('Genesis');\r",
-									"});\r",
-									"\r",
 									"pm.test(\"Verify that updated literacyMaterial scriptureReferences start label is same as requested\", function () {\r",
 									"    var startLabel = jsonData.data.updateLiteracyMaterial.literacyMaterial.scriptureReferences.value[0].start.label;\r",
 									"    pm.expect(startLabel).to.eql(pm.globals.get('literacyMaterialScriptRefLabelStart'));\r",
@@ -2485,11 +2486,6 @@
 									"});\r",
 									"\r",
 									"//Static\r",
-									"pm.test(\"Verify that updated literacyMaterial scriptureReferences end book name is same as requested\", function () {\r",
-									"    var endBookName = jsonData.data.updateLiteracyMaterial.literacyMaterial.scriptureReferences.value[0].end.bookName;\r",
-									"    pm.expect(endBookName).to.eql('Genesis');\r",
-									"});\r",
-									"\r",
 									"pm.test(\"Verify that updated literacyMaterial scriptureReferences end label is same as requested\", function () {\r",
 									"    var endlabel = jsonData.data.updateLiteracyMaterial.literacyMaterial.scriptureReferences.value[0].end.label;\r",
 									"    pm.expect(endlabel).to.eql(pm.globals.get('literacyMaterialScriptRefLabelEnd'));\r",
@@ -2531,7 +2527,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateLiteracyMaterial($input: UpdateLiteracyMaterialInput!) {\r\n  updateLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateLiteracyMaterial($input: UpdateLiteracyMaterialInput!) {\r\n  updateLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"literacyMaterial\": {\r\n            \"id\": \"{{literacyMaterialId}}\",\r\n            \"name\": \"{{literacyMaterialName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n                    \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n                    \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n                    \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n                    \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -2621,11 +2617,6 @@
 									"});\r",
 									"\r",
 									"//Static\r",
-									"pm.test(\"Verify that updated literacyMaterial scriptureReferences start book name is same as requested\", function () {\r",
-									"    var startBookName = jsonData.data.updateLiteracyMaterial.literacyMaterial.scriptureReferences.value[0].start.bookName;\r",
-									"    pm.expect(startBookName).to.eql('Genesis');\r",
-									"});\r",
-									"\r",
 									"pm.test(\"Verify that updated literacyMaterial scriptureReferences start label is same as requested\", function () {\r",
 									"    var startLabel = jsonData.data.updateLiteracyMaterial.literacyMaterial.scriptureReferences.value[0].start.label;\r",
 									"    pm.expect(startLabel).to.eql(pm.globals.get('literacyMaterialScriptRefLabelStart'));\r",
@@ -2648,11 +2639,6 @@
 									"});\r",
 									"\r",
 									"//Static\r",
-									"pm.test(\"Verify that updated literacyMaterial scriptureReferences end book name is same as requested\", function () {\r",
-									"    var endBookName = jsonData.data.updateLiteracyMaterial.literacyMaterial.scriptureReferences.value[0].end.bookName;\r",
-									"    pm.expect(endBookName).to.eql('Genesis');\r",
-									"});\r",
-									"\r",
 									"pm.test(\"Verify that updated literacyMaterial scriptureReferences end label is same as requested\", function () {\r",
 									"    var endlabel = jsonData.data.updateLiteracyMaterial.literacyMaterial.scriptureReferences.value[0].end.label;\r",
 									"    pm.expect(endlabel).to.eql(pm.globals.get('literacyMaterialScriptRefLabelEnd'));\r",
@@ -2694,7 +2680,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateLiteracyMaterial($input: UpdateLiteracyMaterialInput!) {\r\n  updateLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateLiteracyMaterial($input: UpdateLiteracyMaterialInput!) {\r\n  updateLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"literacyMaterial\": {\r\n            \"id\": \"{{literacyMaterialId}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -2774,7 +2760,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateLiteracyMaterial($input: UpdateLiteracyMaterialInput!) {\r\n  updateLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateLiteracyMaterial($input: UpdateLiteracyMaterialInput!) {\r\n  updateLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"literacyMaterial\": {\r\n      \"name\": \"{{literacyMaterialName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -2858,7 +2844,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateLiteracyMaterial($input: UpdateLiteracyMaterialInput!) {\r\n  updateLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateLiteracyMaterial($input: UpdateLiteracyMaterialInput!) {\r\n  updateLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"literacyMaterial\": {\r\n      \"id\": \"\",\r\n      \"name\": \"{{literacyMaterialName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -2940,7 +2926,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateLiteracyMaterial($input: UpdateLiteracyMaterialInput!) {\r\n  updateLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateLiteracyMaterial($input: UpdateLiteracyMaterialInput!) {\r\n  updateLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"literacyMaterial\": {\r\n      \"id\": \"{{literacyMaterialId}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -3026,7 +3012,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateLiteracyMaterial($input: UpdateLiteracyMaterialInput!) {\r\n  updateLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateLiteracyMaterial($input: UpdateLiteracyMaterialInput!) {\r\n  updateLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"literacyMaterial\": {\r\n      \"id\": \"{{literacyMaterialId}}\",\r\n      \"name\": \"\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -3106,7 +3092,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateLiteracyMaterial($input: UpdateLiteracyMaterialInput!) {\r\n  updateLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateLiteracyMaterial($input: UpdateLiteracyMaterialInput!) {\r\n  updateLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"literacyMaterial\": {\r\n      \"id\": \"{{literacyMaterialId}}\",\r\n      \"name\": \"{{literacyMaterialName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -3126,7 +3112,7 @@
 					"response": []
 				},
 				{
-					"name": "Update  LiteracyMaterial Not Mandatory Field Blank -  startBook ??",
+					"name": "Update  LiteracyMaterial Not Mandatory Field Blank -  startBook",
 					"event": [
 						{
 							"listen": "prerequest",
@@ -3155,26 +3141,20 @@
 									"});\r",
 									"\r",
 									"//Test Specific\r",
-									"pm.test(\"Verify that literacyMaterial ID is not blank or null\", function () {\r",
-									"    var id = jsonData.data.updateLiteracyMaterial.literacyMaterial.id;\r",
-									"    pm.expect(id).to.not.eql(null);\r",
-									"    pm.expect(id).to.not.eql(\"\");\r",
+									"pm.test(\"Verify that error message is correct\", function () {\r",
+									"    var error_message = jsonData.errors[0].message;\r",
+									"    pm.expect(error_message).to.eql(\"Input validation failed\");\r",
 									"});\r",
 									"\r",
-									"pm.test(\"PENDING >> BUG ADDED #944(closed-Sprint 15) scriptureReferences returned empty\", function () {\r",
-									"\r",
-									"    var startBook = jsonData.data.updateLiteracyMaterial.literacyMaterial.scriptureReferences.value;\r",
-									"    if (_.isEmpty(startBook)) {\r",
-									"        pm.expect(\"BACKEND\").to.eql(\"PENDING\"); // fail forcefully\r",
-									"    } else {\r",
-									"        pm.expect(\"WRITE TEST CASES\").to.eql(\"ERRORS >>> \" + jsonData.errors[0].message);\r",
-									"    }\r",
+									"pm.test(\"Verify that error status is 400\", function () {\r",
+									"    var error_status = jsonData.errors[0].extensions.status;\r",
+									"    pm.expect(error_status).to.eql(400);\r",
 									"});\r",
 									"\r",
-									"// pm.test(\"Verify that updated literacyMaterial startBook is null\", function () {\r",
-									"//     var startBook = jsonData.data.updateLiteracyMaterial.literacyMaterial.scriptureReferences.value;\r",
-									"//     pm.expect(startBook).to.eql(\"\");\r",
-									"// });"
+									"pm.test(\"Verify that error ScriptureBook message is correct\", function () {\r",
+									"    var error_message = jsonData.errors[0].extensions.errors['literacyMaterial.scriptureReferences.0.start.book'].ScriptureBook;\r",
+									"    pm.expect(error_message).to.eql(\"Not a valid Bible book\");\r",
+									"});"
 								],
 								"type": "text/javascript"
 							}
@@ -3196,7 +3176,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateLiteracyMaterial($input: UpdateLiteracyMaterialInput!) {\r\n  updateLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateLiteracyMaterial($input: UpdateLiteracyMaterialInput!) {\r\n  updateLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"literacyMaterial\": {\r\n      \"id\": \"{{literacyMaterialId}}\",\r\n      \"name\": \"{{literacyMaterialName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -3276,7 +3256,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateLiteracyMaterial($input: UpdateLiteracyMaterialInput!) {\r\n  updateLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateLiteracyMaterial($input: UpdateLiteracyMaterialInput!) {\r\n  updateLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"literacyMaterial\": {\r\n      \"id\": \"{{literacyMaterialId}}\",\r\n      \"name\": \"{{literacyMaterialName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -3303,6 +3283,22 @@
 							"script": {
 								"id": "0d9ee9d8-11ea-4711-826a-01e13203a46a",
 								"exec": [
+									"const moment = require('moment');\r",
+									"\r",
+									"pm.globals.set(\"literacyMaterialName\", \"LiteracyMaterialName\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
+									"\r",
+									"\r",
+									"// ScriptureReferences Value\r",
+									"// Static values \r",
+									"pm.globals.set('literacyMaterialScriptRefBookStart', \"Genesis\");\r",
+									"pm.globals.set('literacyMaterialScriptRefChapterStart', 3);\r",
+									"pm.globals.set('literacyMaterialScriptRefVerseStart', 4);\r",
+									"\r",
+									"pm.globals.set('literacyMaterialScriptRefBookEnd', \"Genesis\");\r",
+									"pm.globals.set('literacyMaterialScriptRefChapterEnd', 3);\r",
+									"pm.globals.set('literacyMaterialScriptRefVerseEnd', 4);\r",
+									"\r",
+									"\r",
 									""
 								],
 								"type": "text/javascript"
@@ -3325,26 +3321,20 @@
 									"});\r",
 									"\r",
 									"//Test Specific\r",
-									"pm.test(\"Verify that literacyMaterial ID is not blank or null\", function () {\r",
-									"    var id = jsonData.data.updateLiteracyMaterial.literacyMaterial.id;\r",
-									"    pm.expect(id).to.not.eql(null);\r",
-									"    pm.expect(id).to.not.eql(\"\");\r",
+									"pm.test(\"Verify that error message is correct\", function () {\r",
+									"    var error_message = jsonData.errors[0].message;\r",
+									"    pm.expect(error_message).to.eql(\"Input validation failed\");\r",
 									"});\r",
 									"\r",
-									"pm.test(\"PENDING >> BUG ADDED #944(closed-Sprint 15) scriptureReferences returned empty\", function () {\r",
-									"\r",
-									"    var endBook = jsonData.data.updateLiteracyMaterial.literacyMaterial.scriptureReferences.value;\r",
-									"    if (_.isEmpty(endBook)) {\r",
-									"        pm.expect(\"BACKEND\").to.eql(\"PENDING\"); // fail forcefully\r",
-									"    } else {\r",
-									"        pm.expect(\"WRITE TEST CASES\").to.eql(\"ERRORS >>> \" + jsonData.errors[0].message);\r",
-									"    }\r",
+									"pm.test(\"Verify that error status is 400\", function () {\r",
+									"    var error_status = jsonData.errors[0].extensions.status;\r",
+									"    pm.expect(error_status).to.eql(400);\r",
 									"});\r",
 									"\r",
-									"// pm.test(\"Verify that updated literacyMaterial endBook is null\", function () {\r",
-									"//     var endBook = jsonData.data.updateLiteracyMaterial.literacyMaterial.scriptureReferences.value;\r",
-									"//     pm.expect(endBook).to.eql(\"\");\r",
-									"// });"
+									"pm.test(\"Verify that error ScriptureBook message is correct\", function () {\r",
+									"    var error_message = jsonData.errors[0].extensions.errors['literacyMaterial.scriptureReferences.0.end.book'].ScriptureBook;\r",
+									"    pm.expect(error_message).to.eql(\"Not a valid Bible book\");\r",
+									"});"
 								],
 								"type": "text/javascript"
 							}
@@ -3366,7 +3356,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateLiteracyMaterial($input: UpdateLiteracyMaterialInput!) {\r\n  updateLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateLiteracyMaterial($input: UpdateLiteracyMaterialInput!) {\r\n  updateLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"literacyMaterial\": {\r\n      \"id\": \"{{literacyMaterialId}}\",\r\n      \"name\": \"{{literacyMaterialName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n          \"verse\":{{literacyMaterialScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -3461,7 +3451,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"literacyMaterial\": {\r\n            \"name\": \"{{literacyMaterialName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n                    \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n                    \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n                    \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n                    \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -3588,7 +3578,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
@@ -3695,11 +3685,6 @@
 									"});\r",
 									"\r",
 									"//Static\r",
-									"pm.test(\"Verifying recently created literacyMaterials scriptureReferences start book name\", function () {\r",
-									"    var startBookName = myliteracyMaterial.scriptureReferences.value[0].start.bookName;\r",
-									"    pm.expect(startBookName).to.eql('Genesis');\r",
-									"});\r",
-									"\r",
 									"pm.test(\"Verifying recently created literacyMaterials scriptureReferences start label\", function () {\r",
 									"    var startLabel = myliteracyMaterial.scriptureReferences.value[0].start.label;\r",
 									"    pm.expect(startLabel).to.eql(literacyMaterial_data.scriptureReferences.value[0].start.label);\r",
@@ -3722,11 +3707,6 @@
 									"});\r",
 									"\r",
 									"//Static\r",
-									"pm.test(\"Verifying recently created literacyMaterials scriptureReferences end book name\", function () {\r",
-									"    var endBookName = myliteracyMaterial.scriptureReferences.value[0].end.bookName;\r",
-									"    pm.expect(endBookName).to.eql('Genesis');\r",
-									"});\r",
-									"\r",
 									"pm.test(\"Verifying recently created literacyMaterials scriptureReferences end label\", function () {\r",
 									"    var endLabel = myliteracyMaterial.scriptureReferences.value[0].end.label;\r",
 									"    pm.expect(endLabel).to.eql(literacyMaterial_data.scriptureReferences.value[0].end.label);\r",
@@ -3767,7 +3747,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
@@ -3845,7 +3825,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
@@ -3929,7 +3909,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
@@ -4018,7 +3998,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
@@ -4108,7 +4088,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
@@ -4196,7 +4176,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"literacyMaterial\": {\r\n            \"name\": \"{{literacyMaterialName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n                    \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n                    \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n                    \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n                    \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -4280,7 +4260,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"literacyMaterial\": {\r\n            \"name\": \"{{literacyMaterialName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n                    \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n                    \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n                    \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n                    \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -4366,7 +4346,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"literacyMaterial\": {\r\n            \"name\": \"{{literacyMaterialName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n                    \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n                    \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n                    \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n                    \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -4453,7 +4433,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
@@ -4539,91 +4519,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
-							}
-						},
-						"url": {
-							"raw": "{{env}}/graphql",
-							"host": [
-								"{{env}}"
-							],
-							"path": [
-								"graphql"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get All LiteracyMaterials Success - Filter by literacyMaterialName",
-					"event": [
-						{
-							"listen": "prerequest",
-							"script": {
-								"id": "e1a06c99-0579-4cd3-bc14-3be508915dbc",
-								"exec": [
-									"pm.globals.set(\"itemCount\", 10);\r",
-									"pm.globals.set(\"page\", 1);\r",
-									"pm.globals.set('order', \"DESC\");\r",
-									"\r",
-									""
-								],
-								"type": "text/javascript"
-							}
-						},
-						{
-							"listen": "test",
-							"script": {
-								"id": "3a194a06-d5fb-4383-851a-6cb5ab6d25fc",
-								"exec": [
-									"var jsonData = pm.response.json();\r",
-									"\r",
-									"//Common Verification\r",
-									"pm.test(\"Status code is 200\", function () {\r",
-									"    pm.response.to.have.status(200);\r",
-									"});\r",
-									"\r",
-									"pm.test(\"Response time is less than 1000ms\", function () {\r",
-									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
-									"});\r",
-									"\r",
-									"\r",
-									"//Test Specific - Filter by LiteracyMaterialName\r",
-									"pm.test(\"Verify that items are filtered by Name\", function () {\r",
-									"\r",
-									"    var responseBody = jsonData.data.literacyMaterials.items;\r",
-									"    var multifilters = _.filter(responseBody, function (item) {\r",
-									"        return /^(.*?(fILTERsORTLiteracyName)[^$]*)$/i.test(item.name.value);\r",
-									"    });\r",
-									"    pm.expect(responseBody).to.eql(multifilters);\r",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "graphql",
-							"graphql": {
-								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"FilterSortLiteracyName\"\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -4698,7 +4595,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
@@ -4793,7 +4690,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
@@ -4873,8 +4770,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"\",\r\n    \"filter\": {\r\n      \"name\": \"{{literacyMaterialName}}\"\r\n    }\r\n  }\r\n}"
+								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"\"\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -4953,8 +4850,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"count1\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"{{literacyMaterialName}}\"\r\n    }\r\n    \r\n  }\r\n}"
+								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"count1\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -5033,8 +4930,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"count\": {{itemCount}},\r\n    \"page1\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"{{literacyMaterialName}}\"\r\n    }\r\n    \r\n  }\r\n}"
+								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page1\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -5113,8 +5010,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort1\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"{{literacyMaterialName}}\"\r\n    }\r\n    \r\n  }\r\n}"
+								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort1\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -5193,168 +5090,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order1\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"{{literacyMaterialName}}\"\r\n    }\r\n    \r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
-							}
-						},
-						"url": {
-							"raw": "{{env}}/graphql",
-							"host": [
-								"{{env}}"
-							],
-							"path": [
-								"graphql"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get All LiteracyMaterials Parameter Mismatch - filter",
-					"event": [
-						{
-							"listen": "prerequest",
-							"script": {
-								"id": "7e06767f-be93-41ef-9a11-c076b1661e54",
-								"exec": [
-									""
-								],
-								"type": "text/javascript"
-							}
-						},
-						{
-							"listen": "test",
-							"script": {
-								"id": "7e8d4c2f-d754-48ef-a54b-0d42e0036605",
-								"exec": [
-									"var jsonData = pm.response.json();\r",
-									"\r",
-									"//Common Verification\r",
-									"pm.test(\"Status code is 400 Bad Request\", function () {\r",
-									"    pm.response.to.have.status(400);\r",
-									"});\r",
-									"\r",
-									"pm.test(\"Response time is less than 1000ms\", function () {\r",
-									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
-									"});\r",
-									"\r",
-									"//Test Specific\r",
-									"pm.test(\"Verify that error message is correct\", function () {\r",
-									"    var error_message = jsonData.errors[0].message;\r",
-									"    pm.expect(error_message).to.include(\"is not defined by type \\\"LiteracyMaterialListInput\\\". Did you mean \\\"filter\\\"?\");\r",
-									"});\r",
-									"\r",
-									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {\r",
-									"    var error_code = jsonData.errors[0].extensions.code;\r",
-									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");\r",
-									"});\r",
-									""
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "graphql",
-							"graphql": {
-								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter1\": {\r\n      \"name\": \"{{literacyMaterialName}}\"\r\n    }\r\n    \r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
-							}
-						},
-						"url": {
-							"raw": "{{env}}/graphql",
-							"host": [
-								"{{env}}"
-							],
-							"path": [
-								"graphql"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get All LiteracyMaterials Parameter Mismatch - filter name",
-					"event": [
-						{
-							"listen": "prerequest",
-							"script": {
-								"id": "fccbe76f-d1b4-4b12-bd3e-08b1734a28f7",
-								"exec": [
-									""
-								],
-								"type": "text/javascript"
-							}
-						},
-						{
-							"listen": "test",
-							"script": {
-								"id": "4e516812-5fd4-4e4b-870a-8b2a28f3ae2a",
-								"exec": [
-									"var jsonData = pm.response.json();\r",
-									"\r",
-									"//Common Verification\r",
-									"pm.test(\"Status code is 400 Bad Request\", function () {\r",
-									"    pm.response.to.have.status(400);\r",
-									"});\r",
-									"\r",
-									"pm.test(\"Response time is less than 1000ms\", function () {\r",
-									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));\r",
-									"});\r",
-									"\r",
-									"//Test Specific\r",
-									"pm.test(\"Verify that error message is correct\", function () {\r",
-									"    var error_message = jsonData.errors[0].message;\r",
-									"    pm.expect(error_message).to.include(\"is not defined by type \\\"LiteracyMaterialFilters\\\". Did you mean \\\"name\\\"?\");\r",
-									"});\r",
-									"\r",
-									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {\r",
-									"    var error_code = jsonData.errors[0].extensions.code;\r",
-									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");\r",
-									"});\r",
-									""
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "graphql",
-							"graphql": {
-								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name1\": \"{{literacyMaterialName}}\"\r\n    }\r\n  }\r\n}"
+								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order1\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -5437,8 +5174,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": 0,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"{{literacyMaterialName}}\"\r\n    }\r\n  }\r\n}"
+								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"count\": 0,\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -5521,8 +5258,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": 159,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"{{literacyMaterialName}}\"\r\n    }\r\n  }\r\n}"
+								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"count\": 159,\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -5606,8 +5343,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{count}},\r\n    \"page\": 0,\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"{{literacyMaterialName}}\"\r\n    }\r\n  }\r\n}"
+								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{count}},\r\n        \"page\": 0,\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -5684,8 +5421,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{count}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"qwerty\",\r\n    \"order\": \"{{order}}\",\r\n    \"filter\": {\r\n      \"name\": \"{{literacyMaterialName}}\"\r\n    }\r\n  }\r\n}"
+								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{count}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"qwerty\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -5764,8 +5501,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{count}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"11 #$%% ^&*\",\r\n    \"filter\": {\r\n      \"name\": \"{{literacyMaterialName}}\"\r\n    }\r\n  }\r\n}"
+								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{count}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"11 #$%% ^&*\"\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}

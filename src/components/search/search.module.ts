@@ -4,6 +4,7 @@ import { LanguageModule } from '../language/language.module';
 import { LiteracyMaterialModule } from '../literacy-material/literacy-material.module';
 import { LocationModule } from '../location/location.module';
 import { OrganizationModule } from '../organization/organization.module';
+import { PartnerModule } from '../partner/partner.module';
 import { ProjectModule } from '../project/project.module';
 import { SongModule } from '../song/song.module';
 import { StoryModule } from '../story/story.module';
@@ -14,6 +15,7 @@ import { SearchService } from './search.service';
 @Module({
   imports: [
     OrganizationModule,
+    PartnerModule,
     UserModule,
     LocationModule,
     LanguageModule,

@@ -1,4 +1,4 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import {
@@ -10,13 +10,7 @@ import { Location } from './location.dto';
 
 @InputType()
 export abstract class LocationFilters {
-  @Field(() => [String], {
-    description: 'Filter to only these types of locations',
-  })
-  readonly types?: Array<'country' | 'region' | 'zone'>;
-
-  // User IDs ANY of which must be directors of the locations
-  readonly userIds?: string[];
+  readonly fundingAccountId?: string;
 }
 
 const defaultFilters = {};
@@ -27,7 +21,6 @@ export class LocationListInput extends SortablePaginationInput<keyof Location>({
 }) {
   static defaultVal = new LocationListInput();
 
-  @Field({ nullable: true })
   @Type(() => LocationFilters)
   @ValidateNested()
   readonly filter: LocationFilters = defaultFilters;

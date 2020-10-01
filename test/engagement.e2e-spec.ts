@@ -12,22 +12,20 @@ import {
   LanguageEngagement,
 } from '../src/components/engagement';
 import { Language } from '../src/components/language';
-import { Country, Region, Zone } from '../src/components/location';
+import { Location } from '../src/components/location';
 import { ProductMethodology } from '../src/components/product';
 import { Project, ProjectType } from '../src/components/project';
 import { User } from '../src/components/user';
 import {
-  createCountry,
   createInternshipEngagement,
   createLanguage,
   createLanguageEngagement,
+  createLocation,
   createPerson,
   createProject,
-  createRegion,
   createSession,
   createTestApp,
   createUser,
-  createZone,
   expectNotFound,
   fragments,
   getUserFromSession,
@@ -44,9 +42,7 @@ describe('Engagement e2e', () => {
   let project: Raw<Project>;
   let internshipProject: Raw<Project>;
   let language: Language;
-  let zone: Zone;
-  let region: Region;
-  let country: Country;
+  let location: Location;
   let user: User;
   let intern: Partial<User>;
   let mentor: Partial<User>;
@@ -59,9 +55,7 @@ describe('Engagement e2e', () => {
 
     user = await createUser(app, { password });
     language = await createLanguage(app);
-    zone = await createZone(app, { directorId: user.id });
-    region = await createRegion(app, { directorId: user.id, zoneId: zone.id });
-    country = await createCountry(app, { regionId: region.id });
+    location = await createLocation(app);
     intern = await getUserFromSession(app);
     mentor = await getUserFromSession(app);
     await login(app, { email: user.email.value, password });
@@ -140,7 +134,7 @@ describe('Engagement e2e', () => {
     });
     const internEngagement = await createInternshipEngagement(app, {
       projectId: internshipProject.id,
-      countryOfOriginId: country.id,
+      countryOfOriginId: location.id,
       internId: intern.id,
       mentorId: mentor.id,
     });
@@ -265,7 +259,7 @@ describe('Engagement e2e', () => {
     const internshipEngagement = await createInternshipEngagement(app, {
       mentorId: mentor.id,
       projectId: internshipProject.id,
-      countryOfOriginId: country.id,
+      countryOfOriginId: location.id,
       internId: intern.id,
       growthPlan: {
         uploadId: upload.id,
@@ -397,7 +391,7 @@ describe('Engagement e2e', () => {
           engagement: {
             id: internshipEngagement.id,
             // mentorId: mentor.id,
-            countryOfOriginId: country.id,
+            countryOfOriginId: location.id,
             position: updatePosition,
             methodologies: updateMethodologies,
           },
@@ -410,7 +404,7 @@ describe('Engagement e2e', () => {
     expect(updated).toBeTruthy();
     expect(updated.id).toBe(internshipEngagement.id);
     // expect(updated.mentor.value.id).toBe(mentor.id);
-    expect(updated.countryOfOrigin.value.id).toBe(country.id);
+    expect(updated.countryOfOrigin.value.id).toBe(location.id);
     expect(updated.position.value).toBe(updatePosition);
     expect(updated.methodologies.value).toEqual(
       expect.arrayContaining(updateMethodologies)
@@ -668,7 +662,7 @@ describe('Engagement e2e', () => {
       projectId: internshipProject.id,
       internId: intern.id,
       mentorId: mentor.id,
-      countryOfOriginId: country.id,
+      countryOfOriginId: location.id,
     });
 
     const internshipEngagementRead = await app.graphql.query(
@@ -801,7 +795,7 @@ describe('Engagement e2e', () => {
     });
     await createInternshipEngagement(app, {
       projectId: internshipProject.id,
-      countryOfOriginId: country.id,
+      countryOfOriginId: location.id,
       internId: intern.id,
       mentorId: mentor.id,
     });
@@ -846,7 +840,7 @@ describe('Engagement e2e', () => {
     await expect(
       createInternshipEngagement(app, {
         projectId: invalidId,
-        countryOfOriginId: country.id,
+        countryOfOriginId: location.id,
         internId: intern.id,
         mentorId: mentor.id,
       })
@@ -867,7 +861,7 @@ describe('Engagement e2e', () => {
     await expect(
       createInternshipEngagement(app, {
         projectId: internshipProject.id,
-        countryOfOriginId: country.id,
+        countryOfOriginId: location.id,
         internId: invalidId,
         mentorId: mentor.id,
       })
@@ -880,7 +874,7 @@ describe('Engagement e2e', () => {
     await expect(
       createInternshipEngagement(app, {
         projectId: internshipProject.id,
-        countryOfOriginId: country.id,
+        countryOfOriginId: location.id,
         internId: intern.id,
         mentorId: invalidId,
       })

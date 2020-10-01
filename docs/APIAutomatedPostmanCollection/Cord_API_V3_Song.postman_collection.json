@@ -122,13 +122,40 @@
 									"pm.globals.set('timezoneObject', JSON.stringify(timezoneObject));\r",
 									"pm.globals.set(\"timezone\", timezoneObject.name);\r",
 									"\r",
-									"pm.globals.set(\"bio\", \"I'm Tester\");\r",
+									"pm.globals.set(\"about\", \"I'm Tester\");\r",
+									"\r",
+									"pm.globals.set(\"userTitle\", \"Tester\");\r",
 									"\r",
 									"// Taking random value for the User status from pre-defined possible values\r",
 									"var userStatusArray = ['Active','Disabled'];\r",
 									"var randomNumber = Math.floor(Math.random()*userStatusArray.length);\r",
 									"// pm.globals.set('userStatus', userStatusArray[randomNumber]);\r",
 									"pm.globals.set(\"userStatus\", \"Active\");\r",
+									"\r",
+									"var userRolesArray = ['BibleTranslationLiaison',\r",
+									"'Consultant',\r",
+									"'ConsultantManager',\r",
+									"'Controller',\r",
+									"'Development',\r",
+									"'ExecutiveDevelopmentRepresentative',\r",
+									"'ExecutiveLeadership',\r",
+									"'FieldOperationsDirector',\r",
+									"'FieldPartner',\r",
+									"'FinancialAnalyst',\r",
+									"'Intern',\r",
+									"'Liaison',\r",
+									"'LeadFinancialAnalyst',\r",
+									"'Mentor',\r",
+									"'OfficeOfThePresident',\r",
+									"'ProjectManager',\r",
+									"'RegionalCommunicationsCoordinator',\r",
+									"'RegionalDirector',\r",
+									"'SupportingProjectManager',\r",
+									"'Translator',\r",
+									"'Writer'\r",
+									"];\r",
+									"var randomNumber = Math.floor(Math.random()*userRolesArray.length);\r",
+									"pm.globals.set('userRoles', userRolesArray[randomNumber]);\r",
 									""
 								],
 								"type": "text/javascript"
@@ -151,8 +178,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation register($input: RegisterInput!) {\r\n  register(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value{\r\n          name\r\n          lat\r\n          long\r\n          countries{\r\n            code\r\n            name\r\n            zones{\r\n              name\r\n              lat\r\n              long\r\n              countries{\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      bio {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}",
-								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"realFirstName\": \"Piyush\",\r\n    \"realLastName\": \"Patel\",\r\n    \"email\" : \"{{login_email}}\",\r\n    \"password\": \"{{login_password}}\",\r\n    \"displayFirstName\": \"{{displayFirstName}}\",\r\n    \"displayLastName\": \"{{displayLastName}}\",\r\n    \"phone\": \"{{phone}}\",\r\n    \"timezone\": \"{{timezone}}\",\r\n    \"bio\": \"{{bio}}\",\r\n    \"status\": \"{{userStatus}}\"\r\n  }\r\n}"
+								"query": "mutation register($input: RegisterInput!) {\r\n  register(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"realFirstName\": \"Piyush\",\r\n        \"realLastName\": \"Patel\",\r\n        \"email\": \"{{login_email}}\",\r\n        \"password\": \"{{login_password}}\",\r\n        \"displayFirstName\": \"{{displayFirstName}}\",\r\n        \"displayLastName\": \"{{displayLastName}}\",\r\n        \"phone\": \"{{phone}}\",\r\n        \"timezone\": \"{{timezone}}\",\r\n        \"status\": \"{{userStatus}}\",\r\n        \"title\": \"{{userTitle}}\",\r\n        \"roles\": \"{{userRoles}}\"\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -217,7 +244,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation login($input: LoginInput!) {\r\n  login(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      bio {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation login($input: LoginInput!) {\r\n  login(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n   \"input\": {\r\n      \"email\": \"{{login_email}}\",\r\n      \"password\": \"{{login_password}}\"\r\n   }\r\n}"
 							},
 							"options": {
@@ -303,11 +330,6 @@
 									"    pm.expect(startBook).to.eql(pm.globals.get('songScriptRefBookStart'));",
 									"});",
 									"",
-									"pm.test(\"Verify that song scriptureReferences start book name is same as requested\", function () {",
-									"    var startBook = jsonData.data.createSong.song.scriptureReferences.value[0].start.bookName;",
-									"    pm.expect(startBook).to.eql('Genesis');",
-									"});",
-									"",
 									"pm.test(\"Verify that song scriptureReferences start label is same as requested\", function () {",
 									"    var startLabel = jsonData.data.createSong.song.scriptureReferences.value[0].start.label;",
 									"    pm.expect(startLabel).to.eql(pm.globals.get('songScriptRefLabelStart'));",
@@ -326,11 +348,6 @@
 									"pm.test(\"Verify that song scriptureReferences end book is same as requested\", function () {",
 									"    var endBook = jsonData.data.createSong.song.scriptureReferences.value[0].end.book;",
 									"    pm.expect(endBook).to.eql(pm.globals.get('songScriptRefBookEnd'));",
-									"});",
-									"",
-									"pm.test(\"Verify that song scriptureReferences end book name is same as requested\", function () {",
-									"    var endBookName = jsonData.data.createSong.song.scriptureReferences.value[0].end.bookName;",
-									"    pm.expect(endBookName).to.eql('Genesis');",
 									"});",
 									"",
 									"pm.test(\"Verify that song scriptureReferences end label is same as requested\", function () {",
@@ -413,7 +430,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"song\": {\r\n            \"name\": \"{{songName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{songScriptRefBookStart}}\",\r\n                    \"chapter\": {{songScriptRefChapterStart}},\r\n                    \"verse\": {{songScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{songScriptRefBookEnd}}\",\r\n                    \"chapter\": {{songScriptRefChapterEnd}},\r\n                    \"verse\": {{songScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -492,11 +509,6 @@
 									"    pm.expect(startBook).to.eql(pm.globals.get('songScriptRefBookStart'));",
 									"});",
 									"",
-									"pm.test(\"Verify that song scriptureReferences start book name is same as requested\", function () {",
-									"    var startBook = jsonData.data.createSong.song.scriptureReferences.value[0].start.bookName;",
-									"    pm.expect(startBook).to.eql(pm.globals.get('songScriptRefBookStart'));",
-									"});",
-									"",
 									"pm.test(\"Verify that song scriptureReferences start label is same as requested\", function () {",
 									"    var startLabel = jsonData.data.createSong.song.scriptureReferences.value[0].start.label;",
 									"    pm.expect(startLabel).to.eql(pm.globals.get('songScriptRefLabelStart'));",
@@ -515,11 +527,6 @@
 									"pm.test(\"Verify that song scriptureReferences end book is same as requested\", function () {",
 									"    var endBook = jsonData.data.createSong.song.scriptureReferences.value[0].end.book;",
 									"    pm.expect(endBook).to.eql(pm.globals.get('songScriptRefBookEnd'));",
-									"});",
-									"",
-									"pm.test(\"Verify that song scriptureReferences end book name is same as requested\", function () {",
-									"    var endBookName = jsonData.data.createSong.song.scriptureReferences.value[0].end.bookName;",
-									"    pm.expect(endBookName).to.eql(pm.globals.get('songScriptRefBookEnd'));",
 									"});",
 									"",
 									"pm.test(\"Verify that song scriptureReferences end label is same as requested\", function () {",
@@ -604,7 +611,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"song\": {\r\n            \"name\": \"{{songName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{songScriptRefBookStart}}\",\r\n                    \"chapter\": {{songScriptRefChapterStart}},\r\n                    \"verse\": {{songScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{songScriptRefBookEnd}}\",\r\n                    \"chapter\": {{songScriptRefChapterEnd}},\r\n                    \"verse\": {{songScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -690,7 +697,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"song\": {\r\n      \"name\": \"\"\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -772,7 +779,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"song\": {}\r\n  }\r\n}"
 							},
 							"options": {
@@ -859,7 +866,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"song\": {\r\n      \"name\": \"{{songName}}\"\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -941,7 +948,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"song\": {\r\n      \"name1\": \"{{songName}}\"\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -1021,7 +1028,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"song\": {\r\n      \"name\": \"{{songName}}\",\r\n      \"scriptureReferences1\": {\r\n        \"start\": {\r\n          \"book\": \"{{songScriptRefBookStart}}\",\r\n          \"chapter\": {{songScriptRefChapterStart}},\r\n          \"verse\": {{songScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{songScriptRefBookEnd}}\",\r\n          \"chapter\": {{songScriptRefChapterEnd}},\r\n          \"verse\": {{songScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -1101,7 +1108,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"song\": {\r\n      \"name\": \"{{songName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start1\": {\r\n          \"book\": \"{{songScriptRefBookStart}}\",\r\n          \"chapter\": {{songScriptRefChapterStart}},\r\n          \"verse\": {{songScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{songScriptRefBookEnd}}\",\r\n          \"chapter\": {{songScriptRefChapterEnd}},\r\n          \"verse\": {{songScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -1181,7 +1188,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"song\": {\r\n      \"name\": \"{{songName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book1\": \"{{songScriptRefBookStart}}\",\r\n          \"chapter\": {{songScriptRefChapterStart}},\r\n          \"verse\": {{songScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{songScriptRefBookEnd}}\",\r\n          \"chapter\": {{songScriptRefChapterEnd}},\r\n          \"verse\": {{songScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -1261,7 +1268,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"song\": {\r\n      \"name\": \"{{songName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{songScriptRefBookStart}}\",\r\n          \"chapter1\": {{songScriptRefChapterStart}},\r\n          \"verse\": {{songScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{songScriptRefBookEnd}}\",\r\n          \"chapter\": {{songScriptRefChapterEnd}},\r\n          \"verse\": {{songScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -1341,7 +1348,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"song\": {\r\n      \"name\": \"{{songName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{songScriptRefBookStart}}\",\r\n          \"chapter\": {{songScriptRefChapterStart}},\r\n          \"verse1\": {{songScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{songScriptRefBookEnd}}\",\r\n          \"chapter\": {{songScriptRefChapterEnd}},\r\n          \"verse\": {{songScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -1421,7 +1428,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"song\": {\r\n      \"name\": \"{{songName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{songScriptRefBookStart}}\",\r\n          \"chapter\": {{songScriptRefChapterStart}},\r\n          \"verse\": {{songScriptRefVerseStart}}\r\n        },\r\n        \"end1\": {\r\n          \"book\": \"{{songScriptRefBookEnd}}\",\r\n          \"chapter\": {{songScriptRefChapterEnd}},\r\n          \"verse\": {{songScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -1501,7 +1508,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"song\": {\r\n      \"name\": \"{{songName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{songScriptRefBookStart}}\",\r\n          \"chapter\": {{songScriptRefChapterStart}},\r\n          \"verse\": {{songScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book1\": \"{{songScriptRefBookEnd}}\",\r\n          \"chapter\": {{songScriptRefChapterEnd}},\r\n          \"verse\": {{songScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -1581,7 +1588,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"song\": {\r\n      \"name\": \"{{songName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{songScriptRefBookStart}}\",\r\n          \"chapter\": {{songScriptRefChapterStart}},\r\n          \"verse\": {{songScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{songScriptRefBookEnd}}\",\r\n          \"chapter1\": {{songScriptRefChapterEnd}},\r\n          \"verse\": {{songScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -1661,7 +1668,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"song\": {\r\n      \"name\": \"{{songName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{songScriptRefBookStart}}\",\r\n          \"chapter\": {{songScriptRefChapterStart}},\r\n          \"verse\": {{songScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{songScriptRefBookEnd}}\",\r\n          \"chapter\": {{songScriptRefChapterEnd}},\r\n          \"verse1\": {{songScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -1758,7 +1765,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"song\": {\r\n            \"name\": \"{{songName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{songScriptRefBookStart}}\",\r\n                    \"chapter\": {{songScriptRefChapterStart}},\r\n                    \"verse\": {{songScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{songScriptRefBookEnd}}\",\r\n                    \"chapter\": {{songScriptRefChapterEnd}},\r\n                    \"verse\": {{songScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -1845,7 +1852,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query song($id: ID!) {\r\n  song(id: $id) {\r\n    id\r\n    createdAt\r\n    name {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          bookName\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          bookName\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query song($id: ID!) {\r\n  song(id: $id) {\r\n    id\r\n    createdAt\r\n    name {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"id\": \"{{songId}}\"\r\n}"
 							},
 							"options": {
@@ -1929,7 +1936,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query song($id: ID!) {\r\n  song(id: $id) {\r\n    id\r\n    createdAt\r\n    name {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          bookName\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          bookName\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query song($id: ID!) {\r\n  song(id: $id) {\r\n    id\r\n    createdAt\r\n    name {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"id\": \"\"\r\n}"
 							},
 							"options": {
@@ -2009,7 +2016,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query song($id: ID!) {\r\n  song(id: $id) {\r\n    id\r\n    createdAt\r\n    name {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          bookName\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          bookName\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query song($id: ID!) {\r\n  song(id: $id) {\r\n    id\r\n    createdAt\r\n    name {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \r\n}"
 							},
 							"options": {
@@ -2089,7 +2096,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query song($id: ID!) {\r\n  song(id: $id) {\r\n    id\r\n    createdAt\r\n    name {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          bookName\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          bookName\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query song($id: ID!) {\r\n  song(id: $id) {\r\n    id\r\n    createdAt\r\n    name {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"id1\": \"{{songId}}\"\r\n}"
 							},
 							"options": {
@@ -2173,7 +2180,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query song($id: ID!) {\r\n  song(id: $id) {\r\n    id\r\n    createdAt\r\n    name {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          bookName\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          bookName\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query song($id: ID!) {\r\n  song(id: $id) {\r\n    id\r\n    createdAt\r\n    name {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"id\": \"!@#$%^&\"\r\n}"
 							},
 							"options": {
@@ -2254,11 +2261,6 @@
 									"});",
 									"",
 									"//Static",
-									"pm.test(\"Verify that updated song scriptureReferences start book name is same as requested\", function () {",
-									"    var startBookName = jsonData.data.updateSong.song.scriptureReferences.value[0].start.bookName;",
-									"    pm.expect(startBookName).to.eql('Genesis');",
-									"});",
-									"",
 									"pm.test(\"Verify that updated song scriptureReferences start label is same as requested\", function () {",
 									"    var startLabel = jsonData.data.updateSong.song.scriptureReferences.value[0].start.label;",
 									"    pm.expect(startLabel).to.eql(pm.globals.get('songScriptRefLabelStart'));",
@@ -2281,11 +2283,6 @@
 									"});",
 									"",
 									"//Static",
-									"pm.test(\"Verify that updated song scriptureReferences end book name is same as requested\", function () {",
-									"    var endBookName = jsonData.data.updateSong.song.scriptureReferences.value[0].end.bookName;",
-									"    pm.expect(endBookName).to.eql('Genesis');",
-									"});",
-									"",
 									"pm.test(\"Verify that updated song scriptureReferences end label is same as requested\", function () {",
 									"    var endlabel = jsonData.data.updateSong.song.scriptureReferences.value[0].end.label;",
 									"    pm.expect(endlabel).to.eql(pm.globals.get('songScriptRefLabelEnd'));",
@@ -2359,7 +2356,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateSong($input: UpdateSongInput!) {\r\n  updateSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateSong($input: UpdateSongInput!) {\r\n  updateSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"song\": {\r\n            \"id\": \"{{songId}}\",\r\n            \"name\": \"{{songName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{songScriptRefBookStart}}\",\r\n                    \"chapter\": {{songScriptRefChapterStart}},\r\n                    \"verse\": {{songScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{songScriptRefBookEnd}}\",\r\n                    \"chapter\": {{songScriptRefChapterEnd}},\r\n                    \"verse\": {{songScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -2438,11 +2435,6 @@
 									"});",
 									"",
 									"//Static",
-									"pm.test(\"Verify that updated song scriptureReferences start book name is same as requested\", function () {",
-									"    var startBookName = jsonData.data.updateSong.song.scriptureReferences.value[0].start.bookName;",
-									"    pm.expect(startBookName).to.eql('Genesis');",
-									"});",
-									"",
 									"pm.test(\"Verify that updated song scriptureReferences start label is same as requested\", function () {",
 									"    var startLabel = jsonData.data.updateSong.song.scriptureReferences.value[0].start.label;",
 									"    pm.expect(startLabel).to.eql(pm.globals.get('songScriptRefLabelStart'));",
@@ -2465,11 +2457,6 @@
 									"});",
 									"",
 									"//Static",
-									"pm.test(\"Verify that updated song scriptureReferences end book name is same as requested\", function () {",
-									"    var endBookName = jsonData.data.updateSong.song.scriptureReferences.value[0].end.bookName;",
-									"    pm.expect(endBookName).to.eql('Genesis');",
-									"});",
-									"",
 									"pm.test(\"Verify that updated song scriptureReferences end label is same as requested\", function () {",
 									"    var endlabel = jsonData.data.updateSong.song.scriptureReferences.value[0].end.label;",
 									"    pm.expect(endlabel).to.eql(pm.globals.get('songScriptRefLabelEnd'));",
@@ -2517,7 +2504,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateSong($input: UpdateSongInput!) {\r\n  updateSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateSong($input: UpdateSongInput!) {\r\n  updateSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"song\": {\r\n      \"id\": \"{{songId}}\"\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -2596,7 +2583,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateSong($input: UpdateSongInput!) {\r\n  updateSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateSong($input: UpdateSongInput!) {\r\n  updateSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"song\": {\r\n      \"name\": \"{{songName}}\"\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -2680,7 +2667,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateSong($input: UpdateSongInput!) {\r\n  updateSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateSong($input: UpdateSongInput!) {\r\n  updateSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"song\": {\r\n      \"id\": \"\",\r\n      \"name\": \"aaaa\"\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -2763,7 +2750,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateSong($input: UpdateSongInput!) {\r\n  updateSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateSong($input: UpdateSongInput!) {\r\n  updateSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"song\": {\r\n      \"id\": \"{{songId}}\"\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -2847,7 +2834,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateSong($input: UpdateSongInput!) {\r\n  updateSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateSong($input: UpdateSongInput!) {\r\n  updateSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"song\": {\r\n      \"id\": \"{{songId}}\",\r\n      \"name\": \"\"\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -2927,7 +2914,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateSong($input: UpdateSongInput!) {\r\n  updateSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateSong($input: UpdateSongInput!) {\r\n  updateSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"song\": {\r\n      \"id1\": \"{{songId}}\",\r\n      \"name\": \"{{songName}}\"\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -3007,7 +2994,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateSong($input: UpdateSongInput!) {\r\n  updateSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateSong($input: UpdateSongInput!) {\r\n  updateSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"song\": {\r\n      \"id\": \"{{songId}}\",\r\n      \"name1\": \"{{songName}}\"\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -3092,7 +3079,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateSong($input: UpdateSongInput!) {\r\n  updateSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateSong($input: UpdateSongInput!) {\r\n  updateSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"song\": {\r\n      \"id\": \"!@#$%^&\",\r\n      \"name\": \"{{songName}}\"\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
@@ -3189,7 +3176,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"song\": {\r\n            \"name\": \"{{songName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{songScriptRefBookStart}}\",\r\n                    \"chapter\": {{songScriptRefChapterStart}},\r\n                    \"verse\": {{songScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{songScriptRefBookEnd}}\",\r\n                    \"chapter\": {{songScriptRefChapterEnd}},\r\n                    \"verse\": {{songScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -3318,7 +3305,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
@@ -3413,11 +3400,6 @@
 									"});",
 									"",
 									"//Static",
-									"pm.test(\"Verifying recently created song's scriptureReferences start book name\", function () {",
-									"    var startBookName = mySong.scriptureReferences.value[0].start.bookName;",
-									"    pm.expect(startBookName).to.eql('Genesis');",
-									"});",
-									"",
 									"pm.test(\"Verifying recently created song's scriptureReferences start label\", function () {",
 									"    var startLabel = mySong.scriptureReferences.value[0].start.label;",
 									"    pm.expect(startLabel).to.eql(song_data.scriptureReferences.value[0].start.label);",
@@ -3440,11 +3422,6 @@
 									"});",
 									"",
 									"//Static",
-									"pm.test(\"Verifying recently created song's scriptureReferences end book name\", function () {",
-									"    var endBookName = mySong.scriptureReferences.value[0].end.bookName;",
-									"    pm.expect(endBookName).to.eql('Genesis');",
-									"});",
-									"",
 									"pm.test(\"Verifying recently created song's scriptureReferences end label\", function () {",
 									"    var endLabel = mySong.scriptureReferences.value[0].end.label;",
 									"    pm.expect(endLabel).to.eql(song_data.scriptureReferences.value[0].end.label);",
@@ -3495,7 +3472,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
@@ -3571,7 +3548,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
@@ -3653,7 +3630,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
@@ -3740,7 +3717,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
@@ -3828,7 +3805,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
@@ -3915,7 +3892,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"song\": {\r\n            \"name\": \"{{songName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{songScriptRefBookStart}}\",\r\n                    \"chapter\": {{songScriptRefChapterStart}},\r\n                    \"verse\": {{songScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{songScriptRefBookEnd}}\",\r\n                    \"chapter\": {{songScriptRefChapterEnd}},\r\n                    \"verse\": {{songScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -4000,7 +3977,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"song\": {\r\n            \"name\": \"{{songName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{songScriptRefBookStart}}\",\r\n                    \"chapter\": {{songScriptRefChapterStart}},\r\n                    \"verse\": {{songScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{songScriptRefBookEnd}}\",\r\n                    \"chapter\": {{songScriptRefChapterEnd}},\r\n                    \"verse\": {{songScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -4085,7 +4062,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"song\": {\r\n            \"name\": \"{{songName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{songScriptRefBookStart}}\",\r\n                    \"chapter\": {{songScriptRefChapterStart}},\r\n                    \"verse\": {{songScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{songScriptRefBookEnd}}\",\r\n                    \"chapter\": {{songScriptRefChapterEnd}},\r\n                    \"verse\": {{songScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -4170,7 +4147,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
@@ -4255,89 +4232,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
-							}
-						},
-						"url": {
-							"raw": "{{env}}/graphql",
-							"host": [
-								"{{env}}"
-							],
-							"path": [
-								"graphql"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get All Songs Success -  filter by Name",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"id": "28ea344f-5b97-4e9a-b96c-96862af9137a",
-								"exec": [
-									"var jsonData = pm.response.json();",
-									"",
-									"//Common Verification",
-									"pm.test(\"Status code is 200\", function () {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test(\"Response time is less than 1000ms\", function () {",
-									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
-									"});",
-									"",
-									"//Test Specific - Filter by Name",
-									"pm.test(\"Verify that items are filtered by Name\", function () {",
-									"",
-									"    var responseBody = jsonData.data.songs.items;",
-									"    var multifilters = _.filter(responseBody, function (item) {",
-									"        return /^(.*?(fILTERsORTsongname)[^$]*)$/i.test(item.name.value);",
-									"    });",
-									"    pm.expect(responseBody).to.eql(multifilters);",
-									"});",
-									""
-								],
-								"type": "text/javascript"
-							}
-						},
-						{
-							"listen": "prerequest",
-							"script": {
-								"id": "ca958754-031e-4765-ad8a-a2c0ccd17c77",
-								"exec": [
-									"pm.globals.set(\"itemCount\", 25);\r",
-									"pm.globals.set(\"page\", 1);\r",
-									"pm.globals.set('order', \"DESC\");"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "graphql",
-							"graphql": {
-								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\",\r\n        \"filter\": {\r\n            \"name\": \"FilterSortSongName\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -4412,7 +4308,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
@@ -4508,7 +4404,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
@@ -4588,7 +4484,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"\"\r\n    }\r\n}"
 							},
 							"options": {
@@ -4668,7 +4564,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count1\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
@@ -4748,7 +4644,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page1\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
@@ -4828,7 +4724,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort1\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
@@ -4908,168 +4804,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order1\": \"{{order}}\"\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
-							}
-						},
-						"url": {
-							"raw": "{{env}}/graphql",
-							"host": [
-								"{{env}}"
-							],
-							"path": [
-								"graphql"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get All Songs Parameter Mismatch - filter",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"id": "15ba53a8-1454-4ef3-a9fa-52a02d799b0a",
-								"exec": [
-									"var jsonData = pm.response.json();",
-									"",
-									"//Common Verification",
-									"pm.test(\"Status code is 400 Bad Request\", function () {",
-									"    pm.response.to.have.status(400);",
-									"});",
-									"",
-									"pm.test(\"Response time is less than 1000ms\", function () {",
-									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
-									"});",
-									"",
-									"//Test Specific",
-									"pm.test(\"Verify that error message is correct\", function () {",
-									"    var error_message = jsonData.errors[0].message;  ",
-									"    pm.expect(error_message).to.include(\"is not defined by type \\\"SongListInput\\\". Did you mean \\\"filter\\\"?\");",
-									"});",
-									"",
-									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {",
-									"    var error_code = jsonData.errors[0].extensions.code;  ",
-									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");",
-									"});",
-									""
-								],
-								"type": "text/javascript"
-							}
-						},
-						{
-							"listen": "prerequest",
-							"script": {
-								"id": "f85cdbed-a983-41c6-874f-f5fc8ad34812",
-								"exec": [
-									""
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "graphql",
-							"graphql": {
-								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\",\r\n        \"filter1\": {\r\n            \"name\": \"{{songName}}\"\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
-							}
-						},
-						"url": {
-							"raw": "{{env}}/graphql",
-							"host": [
-								"{{env}}"
-							],
-							"path": [
-								"graphql"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get All Songs Parameter Mismatch - filter  by name",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"id": "6eeb282e-829c-415b-b3a5-14b79e26c899",
-								"exec": [
-									"var jsonData = pm.response.json();",
-									"",
-									"//Common Verification",
-									"pm.test(\"Status code is 400 Bad Request\", function () {",
-									"    pm.response.to.have.status(400);",
-									"});",
-									"",
-									"pm.test(\"Response time is less than 1000ms\", function () {",
-									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
-									"});",
-									"",
-									"//Test Specific",
-									"pm.test(\"Verify that error message is correct\", function () {",
-									"    var error_message = jsonData.errors[0].message;  ",
-									"    pm.expect(error_message).to.include(\"is not defined by type \\\"SongFilters\\\". Did you mean \\\"name\\\"?\");",
-									"});",
-									"",
-									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {",
-									"    var error_code = jsonData.errors[0].extensions.code;  ",
-									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");",
-									"});",
-									""
-								],
-								"type": "text/javascript"
-							}
-						},
-						{
-							"listen": "prerequest",
-							"script": {
-								"id": "78ea7ae9-771d-47b3-b752-3fcb4e53589e",
-								"exec": [
-									""
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "graphql",
-							"graphql": {
-								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\",\r\n        \"filter\": {\r\n            \"name1\": \"{{songName}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -5152,7 +4888,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": 0,\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
@@ -5236,7 +4972,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": 159,\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
@@ -5320,7 +5056,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": 0,\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
@@ -5415,7 +5151,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"qwerty\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
@@ -5495,7 +5231,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            bookName\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"11 #$%% ^&*\"\r\n    }\r\n}"
 							},
 							"options": {

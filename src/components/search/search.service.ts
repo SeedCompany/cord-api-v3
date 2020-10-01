@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { node, regexp, relation } from 'cypher-query-builder';
 import { compact } from 'lodash';
-import { ISession } from '../../common';
+import { ISession, NotFoundException, ServerException } from '../../common';
 import {
   DatabaseService,
   matchRequestingUser,
@@ -12,6 +12,7 @@ import { LanguageService } from '../language';
 import { LiteracyMaterialService } from '../literacy-material';
 import { LocationService } from '../location';
 import { OrganizationService } from '../organization';
+import { PartnerService } from '../partner';
 import { ProjectService } from '../project';
 import { SongService } from '../song';
 import { StoryService } from '../story';
@@ -41,9 +42,8 @@ export class SearchService {
   private readonly hydrators: HydratorMap = {
     Organization: (...args) => this.orgs.readOne(...args),
     User: (...args) => this.users.readOne(...args),
-    Country: (...args) => this.location.readOneCountry(...args),
-    Region: (...args) => this.location.readOneRegion(...args),
-    Zone: (...args) => this.location.readOneZone(...args),
+    Partner: (...args) => this.partners.readOne(...args),
+    PartnerByOrg: (...args) => this.partners.readOnePartnerByOrgId(...args),
     Language: (...args) => this.language.readOne(...args),
     TranslationProject: (...args) => this.projects.readOneTranslation(...args),
     InternshipProject: (...args) => this.projects.readOneInternship(...args),
@@ -51,6 +51,7 @@ export class SearchService {
     Story: (...args) => this.story.readOne(...args),
     LiteracyMaterial: (...args) => this.literacyMaterial.readOne(...args),
     Song: (...args) => this.song.readOne(...args),
+    Location: (...args) => this.location.readOne(...args),
   };
   /* eslint-enable @typescript-eslint/naming-convention */
 
@@ -58,6 +59,7 @@ export class SearchService {
     private readonly db: DatabaseService,
     private readonly users: UserService,
     private readonly orgs: OrganizationService,
+    private readonly partners: PartnerService,
     private readonly location: LocationService,
     private readonly language: LanguageService,
     private readonly projects: ProjectService,
@@ -69,7 +71,14 @@ export class SearchService {
 
   async search(input: SearchInput, session: ISession): Promise<SearchOutput> {
     // if type isn't specified default to all types
-    const types = input.type || SearchResultTypes;
+    const inputTypes = input.type || SearchResultTypes;
+
+    const types = [
+      ...inputTypes,
+      // Add Organization label when searching for Partners we can search for
+      // Partner by organization name
+      ...(inputTypes.includes('Partner') ? ['Organization'] : []),
+    ];
 
     // Search for nodes based on input, only returning their id and "type"
     // which is based on their first valid search label.
@@ -99,12 +108,25 @@ export class SearchService {
     // Individually convert each result (id & type) to its search result
     // based on this.hydrators
     const hydrated = await Promise.all(
-      results.map(
-        async ({ id, type }): Promise<SearchResult | null> => {
-          const hydrator = this.hydrate(type);
-          return await hydrator(id, session);
-        }
-      )
+      results
+        // Map Org results to Org & Partner results based on types asked for
+        .flatMap((result) =>
+          result.type !== 'Organization'
+            ? result
+            : [
+                ...(inputTypes.includes('Organization') ? [result] : []),
+                ...(inputTypes.includes('Partner')
+                  ? // partner hydrator will need to handle id of org and partner
+                    [{ id: result.id, type: 'PartnerByOrg' as const }]
+                  : []),
+              ]
+        )
+        .map(
+          async ({ id, type }): Promise<SearchResult | null> => {
+            const hydrator = this.hydrate(type);
+            return await hydrator(id, session);
+          }
+        )
     );
 
     return {
@@ -123,12 +145,17 @@ export class SearchService {
       if (!hydrator) {
         return null;
       }
-      const obj = await hydrator(...args);
-      return {
-        ...obj,
-        // eslint-disable-next-line @typescript-eslint/naming-convention
-        __typename: type,
-      };
+      try {
+        const obj = await hydrator(...args);
+        return {
+          ...obj,
+          // eslint-disable-next-line @typescript-eslint/naming-convention
+          __typename: type,
+        };
+      } catch (err) {
+        if (err instanceof NotFoundException) return null;
+        else throw new ServerException(`Error searching on ${type}`, err);
+      }
     };
   }
 }
