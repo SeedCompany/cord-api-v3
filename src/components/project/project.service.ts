@@ -575,15 +575,34 @@ export class ProjectService {
           relation('out', '', 'permission'),
           node('canReadEngagement', 'Permission', {
             property: 'engagement',
+            read: true,
           }),
           relation('out', '', 'baseNode'),
           node('project', 'Project', { id: project.id }),
+        ],
+      ])
+      .match([
+        [
+          node('requestingUser'),
+          relation('in', '', 'member'),
+          node('', 'SecurityGroup'),
+          relation('out', '', 'permission'),
+          node('canEditEngagement', 'Permission', {
+            property: 'engagement',
+            edit: true,
+          }),
+          relation('out', '', 'baseNode'),
+          node('project'),
         ],
       ])
       .return({
         canReadEngagement: [
           {
             read: 'canReadEngagementRead',
+          },
+        ],
+        canEditEngagement: [
+          {
             edit: 'canReadEngagementCreate',
           },
         ],
@@ -630,10 +649,28 @@ export class ProjectService {
           node('project', 'Project', { id: projectId }),
         ],
       ])
+      .match([
+        [
+          node('requestingUser'),
+          relation('in', '', 'member'),
+          node('', 'SecurityGroup'),
+          relation('out', '', 'permission'),
+          node('canEditTeamMember', 'Permission', {
+            property: 'member',
+            edit: true,
+          }),
+          relation('out', '', 'baseNode'),
+          node('project'),
+        ],
+      ])
       .return({
         canReadTeamMember: [
           {
             read: 'canReadTeamMemberRead',
+          },
+        ],
+        canEditTeamMember: [
+          {
             edit: 'canReadTeamMemberCreate',
           },
         ],
@@ -680,10 +717,28 @@ export class ProjectService {
           node('project', 'Project', { id: projectId }),
         ],
       ])
+      .match([
+        [
+          node('requestingUser'),
+          relation('in', '', 'member'),
+          node('', 'SecurityGroup'),
+          relation('out', '', 'permission'),
+          node('canEditPartnership', 'Permission', {
+            property: 'partnership',
+            edit: true,
+          }),
+          relation('out', '', 'baseNode'),
+          node('project'),
+        ],
+      ])
       .return({
         canReadPartnership: [
           {
             read: 'canReadPartnershipRead',
+          },
+        ],
+        canEditPartnership: [
+          {
             edit: 'canReadPartnershipCreate',
           },
         ],

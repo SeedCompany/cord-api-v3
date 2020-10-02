@@ -38,6 +38,7 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { Powers } from '../authorization/dto/powers';
 import { EngagementService } from '../engagement';
 import {
   Location,
@@ -139,6 +140,11 @@ export class LanguageService {
   async create(input: CreateLanguage, session: ISession): Promise<Language> {
     const createdAt = DateTime.local();
 
+    await this.authorizationService.checkPower(
+      Powers.CreateLanguage,
+      session.userId
+    );
+
     try {
       const ethnologueId = await this.ethnologueLanguageService.create(
         input?.ethnologue,
@@ -149,7 +155,7 @@ export class LanguageService {
         {
           key: 'name',
           value: input.name,
-          isPublic: false,
+          isPublic: true,
           isOrgPublic: false,
           label: 'LanguageName',
         },

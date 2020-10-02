@@ -6,8 +6,8 @@ import { generate } from 'shortid';
 import { ServerException, UnauthenticatedException } from '../../common';
 import { ConfigService, DatabaseService } from '../../core';
 import { AuthenticationService } from '../authentication';
+import { Powers } from '../authorization/dto/powers';
 import { Role } from '../project';
-import { RootSecurityGroup } from './root-security-group';
 
 @Injectable()
 export class AdminService implements OnApplicationBootstrap {
@@ -46,6 +46,8 @@ export class AdminService implements OnApplicationBootstrap {
   async mergeRootSecurityGroup() {
     // merge root security group
 
+    const powers = Object.keys(Powers);
+
     await this.db
       .query()
       .merge([
@@ -57,7 +59,7 @@ export class AdminService implements OnApplicationBootstrap {
       .setValues({
         sg: {
           id: this.config.rootSecurityGroup.id,
-          ...RootSecurityGroup,
+          powers,
         },
       })
       .run();
@@ -163,7 +165,8 @@ export class AdminService implements OnApplicationBootstrap {
       if (!adminUser) {
         throw new ServerException('Could not create root admin user');
       } else {
-        // set root admin id to config value
+        // set root admin id to config value, give all powers
+        const powers = Object.keys(Powers);
         await this.db
           .query()
           .match([
@@ -171,7 +174,10 @@ export class AdminService implements OnApplicationBootstrap {
               id: adminUser,
             }),
           ])
-          .setValues({ 'user.id': this.config.rootAdmin.id })
+          .setValues(
+            { user: { id: this.config.rootAdmin.id, powers: powers } },
+            true
+          )
           .run();
       }
     } else if (await argon2.verify(findRoot.pash, password)) {

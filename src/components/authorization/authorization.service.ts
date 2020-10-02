@@ -1,21 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
-import { pickBy } from 'lodash';
+import { pickBy, union } from 'lodash';
 import { generate } from 'shortid';
-import { keys } from '../../common';
+import { keys, ServerException, UnauthorizedException } from '../../common';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
 import { InternalRole, Role as ProjectRole } from './dto';
+import { Powers } from './dto/powers';
 import { getRolePermissions, hasPerm, Perm, TypeToDto } from './policies';
 
 type Role = ProjectRole | InternalRole;
 
 /**
- * In order to use the new Security API (this handler) you must:
- * 1. Ensure the base node type has been added to the ../utility/BaseNodeType.ts enum
- *    ...then -> Add an if/else entry below to assert the type of your new base node
- * 2. Update the ../utility/RolePermission.ts file with your new permissions arrays
- * 3. Publish your role change event in your service file
- * 4. Voila, security groups and permission nodes will be created and attached to your user.
+ * powers can exist on a security group or a user node
  */
 
 @Injectable()
@@ -140,4 +136,90 @@ export class AuthorizationService {
       .match([node('root', 'User', { id: this.config.rootAdmin.id })])
       .merge([node('sg'), relation('out', '', 'member'), node('root')]);
   };
+
+  async checkPower(power: Powers, id?: string): Promise<boolean> {
+    // if no id is given we check the public sg for public powers
+    let hasPower = false;
+
+    if (id === undefined) {
+      const result = await this.db
+        .query()
+        .match([
+          node('sg', 'PublicSecurityGroup', {
+            id: this.config.publicSecurityGroup.id,
+          }),
+        ])
+        .raw(`where '${power}' IN sg.powers`)
+        .raw(`return "${power}" IN sg.powers as hasPower`)
+        .union()
+        .match([
+          node('user', 'User', {
+            id: this.config.anonUser.id,
+          }),
+        ])
+        .raw(`where '${power}' IN user.powers`)
+        .raw(`return "${power}" IN user.powers as hasPower`)
+        .first();
+      hasPower = result?.hasPower ?? false;
+    } else {
+      const query = this.db
+        .query()
+        .match([
+          node('user', 'User', { id }),
+          relation('in', '', 'member'),
+          node('sg', 'SecurityGroup'),
+        ])
+        .raw(`where '${power}' IN sg.powers`)
+        .raw(`return "${power}" IN sg.powers as hasPower`)
+        .union()
+        .match([node('user', 'User', { id })])
+        .raw(`where '${power}' IN user.powers`)
+        .raw(`return "${power}" IN user.powers as hasPower`);
+
+      const result = await query.first();
+
+      hasPower = result?.hasPower ?? false;
+    }
+
+    if (!hasPower) {
+      throw new UnauthorizedException(
+        `user ${id ? id : 'anon'} does not have the requested power: ${power}`
+      );
+    }
+
+    return hasPower;
+  }
+
+  async grantPower(power: Powers, id: string): Promise<boolean> {
+    // get power set
+    const powerSet = await this.db
+      .query()
+      .match([node('user', 'User', { id })])
+      .raw('return user.powers as powers')
+      .unionAll()
+      .match([node('sg', 'SecurityGroup', { id })])
+      .raw('return sg.powers as powers')
+      .first();
+
+    if (powerSet === undefined) {
+      throw new UnauthorizedException('user not found');
+    } else {
+      const newPowers = union(powerSet.powers, [power]);
+
+      const result = await this.db
+        .query()
+        .optionalMatch([node('userOrSg', 'User', { id })])
+        .setValues({ 'userOrSg.powers': newPowers })
+        .with('*')
+        .optionalMatch([node('userOrSg', 'SecurityGroup', { id })])
+        .setValues({ 'userOrSg.powers': newPowers })
+        .run();
+
+      if (result) {
+        return true;
+      } else {
+        throw new ServerException('failed to grant power');
+      }
+    }
+  }
 }

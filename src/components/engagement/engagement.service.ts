@@ -1076,8 +1076,21 @@ export class EngagementService {
           }),
         ],
       ])
+      .match([
+        [
+          node('requestingUser'),
+          relation('in', '', 'member'),
+          node('', 'SecurityGroup'),
+          relation('out', '', 'permission'),
+          node('canEdit', 'Permission', {
+            property: 'product',
+            edit: true,
+          }),
+        ],
+      ])
       .return({
-        canRead: [{ read: 'canRead', edit: 'canEdit' }],
+        canRead: [{ read: 'canRead' }],
+        canEdit: [{ edit: 'canEdit' }],
       })
       .first();
 

@@ -109,7 +109,7 @@ export class OrganizationService {
       {
         key: 'name',
         value: input.name,
-        isPublic: false,
+        isPublic: true,
         isOrgPublic: false,
         label: 'OrgName',
       },
