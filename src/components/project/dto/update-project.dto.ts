@@ -1,4 +1,4 @@
-import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import {
@@ -24,12 +24,6 @@ export abstract class UpdateProject {
     nullable: true,
   })
   readonly primaryLocationId?: string;
-
-  @Field(() => [ID], {
-    description: 'Other location IDs',
-    nullable: true,
-  })
-  readonly otherLocationIds?: string[];
 
   @IdField({
     description: 'A marketing primary location ID',

@@ -1,4 +1,4 @@
-import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, ID, InputType, Int, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { NameField } from '../../../common';
@@ -12,7 +12,7 @@ export abstract class UpdateFundingAccount {
   @NameField({ nullable: true })
   readonly name?: string;
 
-  @Field({ nullable: true })
+  @Field(() => Int, { nullable: true })
   readonly accountNumber?: number;
 }
 

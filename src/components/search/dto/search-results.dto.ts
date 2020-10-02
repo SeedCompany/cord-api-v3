@@ -4,6 +4,7 @@ import { keys, simpleSwitch } from '../../../common';
 import { Film } from '../../film/dto';
 import { Language } from '../../language/dto';
 import { LiteracyMaterial } from '../../literacy-material/dto';
+import { Location } from '../../location/dto';
 import { Organization } from '../../organization/dto';
 import { Partner } from '../../partner/dto';
 import {
@@ -29,6 +30,7 @@ const publicSearchable = {
   Story,
   LiteracyMaterial,
   Song,
+  Location,
 } as const;
 
 // Same as above, but the keys are ignored from from the SearchType enum,
