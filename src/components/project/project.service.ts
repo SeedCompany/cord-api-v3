@@ -129,6 +129,7 @@ export class ProjectService {
     return [
       'CREATE CONSTRAINT ON (n:Project) ASSERT EXISTS(n.id)',
       'CREATE CONSTRAINT ON (n:Project) ASSERT n.id IS UNIQUE',
+      'CREATE CONSTRAINT ON (n:DepartmentId) ASSERT n.value IS UNIQUE',
       'CREATE CONSTRAINT ON (n:Project) ASSERT EXISTS(n.createdAt)',
 
       'CREATE CONSTRAINT ON ()-[r:step]-() ASSERT EXISTS(r.createdAt)',
@@ -219,6 +220,12 @@ export class ProjectService {
       {
         key: 'modifiedAt',
         value: createInput.modifiedAt,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'departmentId',
+        value: null,
         isPublic: false,
         isOrgPublic: false,
       },
@@ -437,8 +444,8 @@ export class ProjectService {
     return {
       ...parseBaseNodeProperties(result.node),
       ...securedProps,
-      // Sensitivity is calulated based on the highest language sensitivity (for Translation Projects).
-      // If project has no langauge engagements (new Translation projects and all Internship projects),
+      // Sensitivity is calculated based on the highest language sensitivity (for Translation Projects).
+      // If project has no language engagements (new Translation projects and all Internship projects),
       // then falls back to the sensitivity prop which defaulted to High on create for all projects.
       sensitivity:
         getHighestSensitivity(result.languageSensitivityList) ||
@@ -582,11 +589,14 @@ export class ProjectService {
       nodevar: 'project',
     });
 
-    await this.eventBus.publish(
-      new ProjectUpdatedEvent(result, currentProject, input, session)
+    const event = new ProjectUpdatedEvent(
+      result,
+      currentProject,
+      input,
+      session
     );
-
-    return await this.readOne(input.id, session);
+    await this.eventBus.publish(event);
+    return event.updated;
   }
 
   async delete(id: string, session: ISession): Promise<void> {

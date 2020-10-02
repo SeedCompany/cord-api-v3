@@ -8,6 +8,7 @@ import {
 } from '../../../core';
 import { Project, ProjectStep } from '../dto';
 import { ProjectUpdatedEvent } from '../events';
+import { ProjectService } from '../project.service';
 
 type SubscribedEvent = ProjectUpdatedEvent;
 
@@ -15,6 +16,7 @@ type SubscribedEvent = ProjectUpdatedEvent;
 export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
   constructor(
     private readonly db: DatabaseService,
+    private readonly projectService: ProjectService,
     @Logger('project:set-department-id') private readonly logger: ILogger
   ) {}
 
@@ -39,6 +41,11 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
         exception
       );
     }
+
+    event.updated = await this.projectService.readOne(
+      event.updated.id,
+      event.session
+    );
   }
 
   private async getDepartmentIdPrefixForProject(project: Project) {
@@ -47,7 +54,7 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
       .query()
       .raw(
         `
-        MATCH (:Project {id: $projectId})-[:primaryLocation]-({active: true})-[:fundingAccount]-({active: true})-[:accountNumber]-(accountNumberNode:Property {active:true})
+        MATCH (:Project {id: $projectId})-[:primaryLocation {active: true}]-()-[:fundingAccount {active: true}]-()-[:accountNumber {active:true}]-(accountNumberNode:Property)
         RETURN accountNumberNode.value
         `,
         { projectId: project.id }
@@ -81,7 +88,5 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
         { departmentIdPrefix: departmentIdPrefix, projectId: project.id }
       )
       .run();
-
-    // TODO: refactor to use return from mutating cypher query
   }
 }
