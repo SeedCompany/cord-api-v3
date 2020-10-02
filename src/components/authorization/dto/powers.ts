@@ -30,4 +30,5 @@ export enum Powers {
   CreateUnavailability = 'CreateUnavailability',
   CreateUser = 'CreateUser',
   CreateZone = 'CreateZone',
+  GrantPower = 'GrantPower',
 }
