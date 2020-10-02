@@ -13,7 +13,8 @@ export class CreateEngagementDefaultCeremonyHandler
     private readonly db: DatabaseService
   ) {}
 
-  async handle({ engagement, session }: EngagementCreatedEvent) {
+  async handle(event: EngagementCreatedEvent) {
+    const { engagement, session } = event;
     const input = {
       type:
         engagement.__typename === 'LanguageEngagement'
@@ -38,5 +39,13 @@ export class CreateEngagementDefaultCeremonyHandler
         node('engagement'),
       ])
       .run();
+
+    event.engagement = {
+      ...engagement,
+      ceremony: {
+        ...engagement.ceremony, // permissions
+        value: ceremony.id,
+      },
+    };
   }
 }

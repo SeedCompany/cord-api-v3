@@ -27,6 +27,7 @@ import {
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
+  parsePropList,
   parseSecuredProperties,
   runListQuery,
   StandardReadResult,
@@ -135,8 +136,9 @@ export class CeremonyService {
       throw new NotFoundException('Could not find ceremony', 'ceremony.id');
     }
 
+    const parsedProps = parsePropList(result.propList);
     const securedProps = parseSecuredProperties(
-      result.propList,
+      parsedProps,
       result.permList,
       this.securedProperties
     );
@@ -144,7 +146,7 @@ export class CeremonyService {
     return {
       ...parseBaseNodeProperties(result.node),
       ...securedProps,
-      type: securedProps.type.value!,
+      type: parsedProps.type,
     };
   }
 

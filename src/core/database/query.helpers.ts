@@ -58,9 +58,6 @@ function printQueryInConsole(query: Query) {
 export interface Property {
   key: string;
   value: any;
-  addToAdminSg?: boolean;
-  addToWriterSg?: boolean;
-  addToReaderSg?: boolean;
   isPublic: boolean;
   isOrgPublic: boolean;
   label?: string;
