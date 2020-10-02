@@ -363,15 +363,14 @@ export class LanguageService {
     { ethnologue: newEthnologue, ...input }: UpdateLanguage,
     session: ISession
   ): Promise<Language> {
+    if (input.hasExternalFirstScripture) {
+      await this.verifyExternalFirstScripture(input.id);
+    }
+
     const { ethnologue: oldEthnologue, ...language } = await this.readOne(
       input.id,
       session
     );
-
-    if (input.hasExternalFirstScripture) {
-      // Check if the language has no engagements that have firstScripture=true.
-      await this.checkLEFirstScripture(input.id);
-    }
 
     await this.db.sgUpdateProperties({
       session,
@@ -738,7 +737,10 @@ export class LanguageService {
     return label;
   }
 
-  protected async checkLEFirstScripture(id: string) {
+  /**
+   * Check if the language has no engagements that have firstScripture=true.
+   */
+  protected async verifyExternalFirstScripture(id: string) {
     const engagement = await this.db
       .query()
       .match([
