@@ -120,13 +120,6 @@ export class LocationService {
         label: 'LocationType',
       },
       {
-        key: 'geographyName',
-        value: input.geographyName,
-        isPublic: false,
-        isOrgPublic: false,
-        label: 'GeographyName',
-      },
-      {
         key: 'sensitivity',
         value: input.sensitivity,
         isPublic: false,
@@ -234,7 +227,7 @@ export class LocationService {
     await this.db.sgUpdateProperties({
       session,
       object: location,
-      props: ['name', 'iso31663', 'type', 'geographyName', 'sensitivity'],
+      props: ['name', 'iso31663', 'type', 'sensitivity'],
       changes: input,
       nodevar: 'location',
     });

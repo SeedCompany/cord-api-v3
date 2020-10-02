@@ -51,8 +51,6 @@ class Project extends Resource {
 
   readonly primaryLocation: Secured<string>;
 
-  readonly nonPrimaryLocation: Secured<string>;
-
   readonly marketingLocation: Secured<string>;
 
   readonly fieldRegion: Secured<string>;
@@ -102,6 +100,7 @@ declare module '../../authorization/policies/mapping' {
       | 'engagement'
       | 'budget'
       | 'partnership'
-      | 'status';
+      | 'status'
+      | 'otherLocations';
   }
 }

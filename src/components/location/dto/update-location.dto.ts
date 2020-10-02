@@ -21,9 +21,6 @@ export abstract class UpdateLocation {
 
   @Field({ nullable: true })
   readonly iso31663?: string;
-
-  @NameField({ nullable: true })
-  readonly geographyName?: string;
 }
 
 @InputType()

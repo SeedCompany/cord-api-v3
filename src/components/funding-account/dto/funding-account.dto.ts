@@ -1,6 +1,7 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import {
   Resource,
+  SecuredInt,
   SecuredKeys,
   SecuredProperty,
   SecuredString,
@@ -14,7 +15,7 @@ export class FundingAccount extends Resource {
   readonly name: SecuredString;
 
   @Field()
-  readonly accountNumber: SecuredString;
+  readonly accountNumber: SecuredInt;
 }
 
 declare module '../../authorization/policies/mapping' {

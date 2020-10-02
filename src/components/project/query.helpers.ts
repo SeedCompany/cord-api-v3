@@ -49,7 +49,7 @@ function propMatch(property: string) {
     [
       node('node'),
       relation('out', '', property, { active: true }),
-      node(property, 'Property', { active: true }),
+      node(property, 'Property'),
     ],
   ];
 }

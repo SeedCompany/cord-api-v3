@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { difference } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import {
@@ -279,7 +278,22 @@ export class UserService {
 
     // Update roles
     if (input.roles) {
-      const newRoles = difference(input.roles, user.roles.value);
+      await this.db
+        .query()
+        .match([
+          node('user', ['User', 'BaseNode'], {
+            id: input.id,
+          }),
+          relation('out', 'oldRoleRel', 'roles', { active: true }),
+          node('oldRoles', 'Property'),
+        ])
+        .set({
+          values: {
+            'oldRoleRel.active': false,
+          },
+        })
+        .run();
+
       await this.db
         .query()
         .match([
@@ -287,7 +301,7 @@ export class UserService {
             id: input.id,
           }),
         ])
-        .create([...this.roleProperties(newRoles)])
+        .create([...this.roleProperties(input.roles)])
         .run();
     }
 

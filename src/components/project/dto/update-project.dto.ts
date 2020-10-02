@@ -26,12 +26,6 @@ export abstract class UpdateProject {
   readonly primaryLocationId?: string;
 
   @IdField({
-    description: 'A non primary location ID',
-    nullable: true,
-  })
-  readonly nonPrimaryLocationId?: string;
-
-  @IdField({
     description: 'A marketing primary location ID',
     nullable: true,
   })

@@ -21,7 +21,6 @@ import {
   createLanguage,
   createLanguageEngagement,
   createLocation,
-  createPerson,
   createProject,
   createSession,
   createTestApp,
@@ -964,7 +963,7 @@ describe('Engagement e2e', () => {
     const project = await createProject(app, {
       type: ProjectType.Internship,
     });
-    const intern = await createPerson(app);
+    const intern = await createUser(app);
 
     await createInternshipEngagement(app, {
       projectId: project.id,

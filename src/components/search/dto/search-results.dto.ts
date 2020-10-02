@@ -43,7 +43,6 @@ const privateSearchable = {
 // Only use if not a concrete type.
 const searchableAbstracts = {
   Project,
-  Location,
 } as const;
 
 /*******************************************************************************
