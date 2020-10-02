@@ -166,7 +166,9 @@ export class AuthorizationService {
     }
 
     if (!hasPower) {
-      throw new UnauthorizedException('user does not have the requested power');
+      throw new UnauthorizedException(
+        `user ${id ? id : 'anon'} does not have the requested power: ${power}`
+      );
     }
 
     return hasPower;

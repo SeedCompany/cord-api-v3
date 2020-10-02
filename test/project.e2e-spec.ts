@@ -132,6 +132,11 @@ describe('Project e2e', () => {
   });
 
   it('create project with required fields', async () => {
+    await login(app, {
+      email: process.env.ROOT_ADMIN_EMAIL,
+      password: process.env.ROOT_ADMIN_PASSWORD,
+    });
+
     const project: CreateProject = {
       name: faker.random.uuid(),
       type: ProjectType.Translation,
@@ -167,11 +172,11 @@ describe('Project e2e', () => {
     expect(actual.mouEnd.value).toBeNull();
     expect(actual.estimatedSubmission.value).toBeNull();
     expect(actual.engagements.canRead).toBe(true);
-    // expect(actual.engagements.canCreate).toBe(true); // todo: query needs refactor to fix this
+    expect(actual.engagements.canCreate).toBe(true);
     expect(actual.partnerships.canRead).toBe(true);
-    // expect(actual.partnerships.canCreate).toBe(true); // todo: query needs refactor to fix this
+    expect(actual.partnerships.canCreate).toBe(true);
     expect(actual.team.canRead).toBe(true);
-    // expect(actual.team.canCreate).toBe(true); // todo: query needs refactor to fix this
+    expect(actual.team.canCreate).toBe(true);
   });
 
   it('should throw error if the location id is not valid', async () => {
@@ -552,6 +557,12 @@ describe('Project e2e', () => {
     // create 1 engagementsin a project
     const numEngagements = 1;
     //const type = ProjectType.Translation;
+
+    await login(app, {
+      email: process.env.ROOT_ADMIN_EMAIL,
+      password: process.env.ROOT_ADMIN_PASSWORD,
+    });
+
     const project = await createProject(app);
     const language = await createLanguage(app, {
       sensitivity: Sensitivity.Medium,
