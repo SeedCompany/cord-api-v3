@@ -10,6 +10,10 @@ import { getRolePermissions, hasPerm, Perm, TypeToDto } from './policies';
 
 type Role = ProjectRole | InternalRole;
 
+/**
+ * powers can exist on a security group or a user node
+ */
+
 @Injectable()
 export class AuthorizationService {
   constructor(
@@ -142,11 +146,19 @@ export class AuthorizationService {
         .query()
         .match([
           node('sg', 'PublicSecurityGroup', {
-            id: this.config.publicSecurityGroup,
+            id: this.config.publicSecurityGroup.id,
           }),
         ])
         .raw(`where '${power}' IN sg.powers`)
         .raw(`return "${power}" IN sg.powers as hasPower`)
+        .union()
+        .match([
+          node('user', 'User', {
+            id: this.config.anonUser.id,
+          }),
+        ])
+        .raw(`where '${power}' IN user.powers`)
+        .raw(`return "${power}" IN user.powers as hasPower`)
         .first();
       hasPower = result?.hasPower ?? false;
     } else {
@@ -158,7 +170,11 @@ export class AuthorizationService {
           node('sg', 'SecurityGroup'),
         ])
         .raw(`where '${power}' IN sg.powers`)
-        .raw(`return "${power}" IN sg.powers as hasPower`);
+        .raw(`return "${power}" IN sg.powers as hasPower`)
+        .union()
+        .match([node('user', 'User', { id })])
+        .raw(`where '${power}' IN user.powers`)
+        .raw(`return "${power}" IN user.powers as hasPower`);
 
       const result = await query.first();
 
@@ -180,6 +196,9 @@ export class AuthorizationService {
       .query()
       .match([node('user', 'User', { id })])
       .raw('return user.powers as powers')
+      .unionAll()
+      .match([node('sg', 'SecurityGroup', { id })])
+      .raw('return sg.powers as powers')
       .first();
 
     if (powerSet === undefined) {
@@ -189,8 +208,11 @@ export class AuthorizationService {
 
       const result = await this.db
         .query()
-        .match([node('user', 'User', { id })])
-        .setValues({ 'user.powers': newPowers })
+        .optionalMatch([node('userOrSg', 'User', { id })])
+        .setValues({ 'userOrSg.powers': newPowers })
+        .with('*')
+        .optionalMatch([node('userOrSg', 'SecurityGroup', { id })])
+        .setValues({ 'userOrSg.powers': newPowers })
         .run();
 
       if (result) {
