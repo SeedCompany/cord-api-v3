@@ -8,7 +8,6 @@ import {
 } from '../../../core';
 import { Project, ProjectStep } from '../dto';
 import { ProjectUpdatedEvent } from '../events';
-import { ProjectService } from '../project.service';
 
 type SubscribedEvent = ProjectUpdatedEvent;
 
@@ -16,7 +15,6 @@ type SubscribedEvent = ProjectUpdatedEvent;
 export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
   constructor(
     private readonly db: DatabaseService,
-    private readonly projectService: ProjectService,
     @Logger('project:set-department-id') private readonly logger: ILogger
   ) {}
 
@@ -41,11 +39,6 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
         exception
       );
     }
-
-    event.updated = await this.projectService.readOne(
-      event.updated.id,
-      event.session
-    );
   }
 
   private async getDepartmentIdPrefixForProject(project: Project) {
