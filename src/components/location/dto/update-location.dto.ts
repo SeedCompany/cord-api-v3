@@ -1,95 +1,38 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { IdField, NameField } from '../../../common';
-import { Country, Region, Zone } from './location.dto';
+import { IdField, NameField, Sensitivity } from '../../../common';
+import { LocationType } from './location-type.enum';
+import { Location } from './location.dto';
 
 @InputType()
-export abstract class UpdateZone {
+export abstract class UpdateLocation {
   @IdField()
   readonly id: string;
 
   @NameField({ nullable: true })
   readonly name?: string;
 
-  @IdField({
-    description: 'A user ID that will be the new director of the zone',
-    nullable: true,
-  })
-  readonly directorId?: string;
+  @Field(() => LocationType, { nullable: true })
+  readonly type: LocationType;
+
+  @Field(() => Sensitivity, { nullable: true })
+  readonly sensitivity?: Sensitivity;
+
+  @Field({ nullable: true })
+  readonly iso31663?: string;
 }
 
 @InputType()
-export abstract class UpdateRegion {
-  @IdField()
-  readonly id: string;
-
-  @NameField({ nullable: true })
-  readonly name?: string;
-
-  @IdField({
-    description: 'The zone ID that the region will be associated with',
-    nullable: true,
-  })
-  readonly zoneId?: string;
-
-  @IdField({
-    description: 'A user ID that will be the director of the region',
-    nullable: true,
-  })
-  readonly directorId?: string;
-}
-
-@InputType()
-export abstract class UpdateCountry {
-  @IdField()
-  readonly id: string;
-
-  @NameField({ nullable: true })
-  readonly name?: string;
-
-  @IdField({ nullable: true })
-  readonly regionId?: string;
-}
-
-@InputType()
-export abstract class UpdateZoneInput {
+export abstract class UpdateLocationInput {
   @Field()
-  @Type(() => UpdateZone)
+  @Type(() => UpdateLocation)
   @ValidateNested()
-  readonly zone: UpdateZone;
-}
-
-@InputType()
-export abstract class UpdateRegionInput {
-  @Field()
-  @Type(() => UpdateRegion)
-  @ValidateNested()
-  readonly region: UpdateRegion;
-}
-
-@InputType()
-export abstract class UpdateCountryInput {
-  @Field()
-  @Type(() => UpdateCountry)
-  @ValidateNested()
-  readonly country: UpdateCountry;
+  readonly location: UpdateLocation;
 }
 
 @ObjectType()
-export abstract class UpdateZoneOutput {
+export abstract class UpdateLocationOutput {
   @Field()
-  readonly zone: Zone;
-}
-
-@ObjectType()
-export abstract class UpdateRegionOutput {
-  @Field()
-  readonly region: Region;
-}
-
-@ObjectType()
-export abstract class UpdateCountryOutput {
-  @Field()
-  readonly country: Country;
+  readonly location: Location;
 }

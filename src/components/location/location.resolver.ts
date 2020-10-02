@@ -1,27 +1,33 @@
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import {
+  Args,
+  Mutation,
+  Parent,
+  Query,
+  ResolveField,
+  Resolver,
+} from '@nestjs/graphql';
 import { IdArg, ISession, Session } from '../../common';
 import {
-  CreateCountryInput,
-  CreateCountryOutput,
-  CreateRegionInput,
-  CreateRegionOutput,
-  CreateZoneInput,
-  CreateZoneOutput,
+  FundingAccountService,
+  SecuredFundingAccount,
+} from '../funding-account';
+import {
+  CreateLocationInput,
+  CreateLocationOutput,
   Location,
   LocationListInput,
   LocationListOutput,
-  UpdateCountryInput,
-  UpdateCountryOutput,
-  UpdateRegionInput,
-  UpdateRegionOutput,
-  UpdateZoneInput,
-  UpdateZoneOutput,
+  UpdateLocationInput,
+  UpdateLocationOutput,
 } from './dto';
 import { LocationService } from './location.service';
 
-@Resolver()
+@Resolver(Location)
 export class LocationResolver {
-  constructor(private readonly locationService: LocationService) {}
+  constructor(
+    private readonly locationService: LocationService,
+    private readonly fundingAccountService: FundingAccountService
+  ) {}
 
   @Query(() => Location, {
     description: 'Read one Location by id',
@@ -48,70 +54,41 @@ export class LocationResolver {
     return this.locationService.list(input, session);
   }
 
-  @Mutation(() => CreateZoneOutput, {
-    description: 'Create a zone',
-  })
-  async createZone(
-    @Session() session: ISession,
-    @Args('input') { zone: input }: CreateZoneInput
-  ): Promise<CreateZoneOutput> {
-    const zone = await this.locationService.createZone(input, session);
-    return { zone };
+  @ResolveField(() => SecuredFundingAccount)
+  async fundingAccount(
+    @Parent() location: Location,
+    @Session() session: ISession
+  ): Promise<SecuredFundingAccount> {
+    const { value: id, ...rest } = location.fundingAccount;
+    const value = id
+      ? await this.fundingAccountService.readOne(id, session)
+      : undefined;
+    return {
+      value,
+      ...rest,
+    };
   }
 
-  @Mutation(() => CreateRegionOutput, {
-    description: 'Create a region',
+  @Mutation(() => CreateLocationOutput, {
+    description: 'Create a location',
   })
-  async createRegion(
+  async createLocation(
     @Session() session: ISession,
-    @Args('input') { region: input }: CreateRegionInput
-  ): Promise<CreateRegionOutput> {
-    const region = await this.locationService.createRegion(input, session);
-    return { region };
+    @Args('input') { location: input }: CreateLocationInput
+  ): Promise<CreateLocationOutput> {
+    const location = await this.locationService.create(input, session);
+    return { location };
   }
 
-  @Mutation(() => CreateCountryOutput, {
-    description: 'Create a country',
+  @Mutation(() => UpdateLocationOutput, {
+    description: 'Update a location',
   })
-  async createCountry(
+  async updateLocation(
     @Session() session: ISession,
-    @Args('input') { country: input }: CreateCountryInput
-  ): Promise<CreateCountryOutput> {
-    const country = await this.locationService.createCountry(input, session);
-    return { country };
-  }
-
-  @Mutation(() => UpdateZoneOutput, {
-    description: 'Update a zone',
-  })
-  async updateZone(
-    @Session() session: ISession,
-    @Args('input') { zone: input }: UpdateZoneInput
-  ): Promise<UpdateZoneOutput> {
-    const zone = await this.locationService.updateZone(input, session);
-    return { zone };
-  }
-
-  @Mutation(() => UpdateRegionOutput, {
-    description: 'Update a region',
-  })
-  async updateRegion(
-    @Session() session: ISession,
-    @Args('input') { region: input }: UpdateRegionInput
-  ): Promise<UpdateRegionOutput> {
-    const region = await this.locationService.updateRegion(input, session);
-    return { region };
-  }
-
-  @Mutation(() => UpdateCountryOutput, {
-    description: 'Update a country',
-  })
-  async updateCountry(
-    @Session() session: ISession,
-    @Args('input') { country: input }: UpdateCountryInput
-  ): Promise<UpdateCountryOutput> {
-    const country = await this.locationService.updateCountry(input, session);
-    return { country };
+    @Args('input') { location: input }: UpdateLocationInput
+  ): Promise<UpdateLocationOutput> {
+    const location = await this.locationService.update(input, session);
+    return { location };
   }
 
   @Mutation(() => Boolean, {
@@ -123,14 +100,5 @@ export class LocationResolver {
   ): Promise<boolean> {
     await this.locationService.delete(id, session);
     return true;
-  }
-
-  @Query(() => Boolean, {
-    description: 'Check location consistency',
-  })
-  async checkLocationConsistency(
-    @Session() session: ISession
-  ): Promise<boolean> {
-    return await this.locationService.checkLocationConsistency(session);
   }
 }

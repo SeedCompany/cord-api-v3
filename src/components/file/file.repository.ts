@@ -255,9 +255,6 @@ export class FileRepository {
       {
         key: 'name',
         value: name,
-        addToAdminSg: true,
-        addToWriterSg: true,
-        addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
       },
@@ -301,9 +298,6 @@ export class FileRepository {
       {
         key: 'name',
         value: name,
-        addToAdminSg: true,
-        addToWriterSg: true,
-        addToReaderSg: true,
         isPublic: false,
         isOrgPublic: false,
       },

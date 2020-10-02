@@ -1,4 +1,4 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import {
@@ -21,10 +21,28 @@ export abstract class CreateProject {
   readonly type: ProjectType;
 
   @IdField({
-    description: 'A country ID',
+    description: 'A primary location ID',
     nullable: true,
   })
-  readonly locationId?: string;
+  readonly primaryLocationId?: string;
+
+  @Field(() => [ID], {
+    description: 'Other location IDs',
+    nullable: true,
+  })
+  readonly otherLocationIds?: string[];
+
+  @IdField({
+    description: 'A marketing primary location ID',
+    nullable: true,
+  })
+  readonly marketingLocationId?: string;
+
+  @IdField({
+    description: 'A field region ID',
+    nullable: true,
+  })
+  readonly fieldRegionId: string;
 
   @DateField({ nullable: true })
   readonly mouStart?: CalendarDate;

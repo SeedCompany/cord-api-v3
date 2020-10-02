@@ -20,10 +20,22 @@ export abstract class UpdateProject {
   readonly name?: string;
 
   @IdField({
-    description: 'A country ID',
+    description: 'A primary location ID',
     nullable: true,
   })
-  readonly locationId?: string;
+  readonly primaryLocationId?: string;
+
+  @IdField({
+    description: 'A marketing primary location ID',
+    nullable: true,
+  })
+  readonly marketingLocationId?: string;
+
+  @IdField({
+    description: 'A field region ID',
+    nullable: true,
+  })
+  readonly fieldRegionId?: string;
 
   @DateField({ nullable: true })
   readonly mouStart?: CalendarDate;

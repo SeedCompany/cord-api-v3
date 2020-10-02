@@ -1,7 +1,7 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import {
   Resource,
-  SecuredInt,
+  Secured,
   SecuredKeys,
   SecuredProperty,
   SecuredString,
@@ -10,24 +10,25 @@ import {
 @ObjectType({
   implements: [Resource],
 })
-export class FundingAccount extends Resource {
+export class FieldRegion extends Resource {
   @Field()
   readonly name: SecuredString;
 
-  @Field()
-  readonly accountNumber: SecuredInt;
+  readonly fieldZone: Secured<string>;
+
+  readonly director: Secured<string>;
 }
 
 declare module '../../authorization/policies/mapping' {
   interface TypeToDto {
-    FundingAccount: FundingAccount;
+    FieldRegion: FieldRegion;
   }
   interface TypeToSecuredProps {
-    FundingAccount: SecuredKeys<FundingAccount>;
+    FieldRegion: SecuredKeys<FieldRegion>;
   }
 }
 
 @ObjectType({
-  description: SecuredProperty.descriptionFor('a funding account'),
+  description: SecuredProperty.descriptionFor('a field region'),
 })
-export class SecuredFundingAccount extends SecuredProperty(FundingAccount) {}
+export class SecuredFieldRegion extends SecuredProperty(FieldRegion) {}

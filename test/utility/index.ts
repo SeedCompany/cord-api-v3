@@ -26,7 +26,7 @@ export * as fragments from './fragments';
 export * from './raw.type';
 export * from './add-favorite';
 export * from './create-region';
-export * from './create-country';
+export * from './create-location';
 export * from './create-engagement';
 export * from './create-partnership';
 export * from './create-song';

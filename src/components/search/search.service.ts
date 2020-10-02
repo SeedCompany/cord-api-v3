@@ -44,9 +44,6 @@ export class SearchService {
     User: (...args) => this.users.readOne(...args),
     Partner: (...args) => this.partners.readOne(...args),
     PartnerByOrg: (...args) => this.partners.readOnePartnerByOrgId(...args),
-    Country: (...args) => this.location.readOneCountry(...args),
-    Region: (...args) => this.location.readOneRegion(...args),
-    Zone: (...args) => this.location.readOneZone(...args),
     Language: (...args) => this.language.readOne(...args),
     TranslationProject: (...args) => this.projects.readOneTranslation(...args),
     InternshipProject: (...args) => this.projects.readOneInternship(...args),
@@ -54,6 +51,7 @@ export class SearchService {
     Story: (...args) => this.story.readOne(...args),
     LiteracyMaterial: (...args) => this.literacyMaterial.readOne(...args),
     Song: (...args) => this.song.readOne(...args),
+    Location: (...args) => this.location.readOne(...args),
   };
   /* eslint-enable @typescript-eslint/naming-convention */
 
