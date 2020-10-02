@@ -169,6 +169,7 @@ const policies = [
     marketingLocation: Perm.ReadAndEdit,
     fieldRegion: Perm.ReadAndEdit,
     status: Perm.ReadAndEdit,
+    sensitivity: Perm.ReadAndEdit,
   }),
   policy(
     'Project',
