@@ -1,6 +1,7 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
+import { uniq } from 'lodash';
 import { IdField, IsIanaTimezone, NameField } from '../../../common';
 import { Role } from '../../authorization';
 import { UserStatus } from './user-status.enum';
@@ -40,6 +41,7 @@ export abstract class UpdateUser {
   readonly status?: UserStatus;
 
   @Field(() => [Role], { nullable: true })
+  @Transform(uniq)
   readonly roles?: Role[];
 
   @Field({ nullable: true })
