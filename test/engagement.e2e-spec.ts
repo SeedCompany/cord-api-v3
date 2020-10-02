@@ -21,7 +21,6 @@ import {
   createLanguage,
   createLanguageEngagement,
   createLocation,
-  createPerson,
   createProject,
   createSession,
   createTestApp,
