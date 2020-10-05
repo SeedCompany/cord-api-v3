@@ -42,7 +42,7 @@ export abstract class CreateProject {
     description: 'A field region ID',
     nullable: true,
   })
-  readonly fieldRegionId: string;
+  readonly fieldRegionId?: string;
 
   @DateField({ nullable: true })
   readonly mouStart?: CalendarDate;

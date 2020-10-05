@@ -219,11 +219,13 @@ export class ProjectService {
       },
     ];
     try {
-      const createProject = this.db
-        .query()
-        .call(matchRequestingUser, session)
-        .match([node('fieldRegion', 'FieldRegion', { id: fieldRegionId })]);
+      const createProject = this.db.query().call(matchRequestingUser, session);
 
+      if (fieldRegionId) {
+        createProject.match([
+          node('fieldRegion', 'FieldRegion', { id: fieldRegionId }),
+        ]);
+      }
       if (primaryLocationId) {
         createProject.match([
           node('primaryLocation', 'Location', { id: primaryLocationId }),
@@ -240,23 +242,25 @@ export class ProjectService {
         ]);
       }
 
-      createProject
-        .call(
-          createBaseNode,
-          `Project:${input.type}Project`,
-          secureProps,
-          {
-            type: createInput.type,
-          },
-          canEdit ? ['name', 'mouStart', 'mouEnd'] : []
-        )
-        .create([
+      createProject.call(
+        createBaseNode,
+        `Project:${input.type}Project`,
+        secureProps,
+        {
+          type: createInput.type,
+        },
+        canEdit ? ['name', 'mouStart', 'mouEnd'] : []
+      );
+
+      if (fieldRegionId) {
+        createProject.create([
           [
             node('node'),
             relation('out', '', 'fieldRegion', { active: true, createdAt }),
             node('fieldRegion'),
           ],
         ]);
+      }
       if (primaryLocationId) {
         createProject.create([
           [
