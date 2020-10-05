@@ -8,6 +8,7 @@ import { InternalRole, Role as ProjectRole } from './dto';
 import { Powers } from './dto/powers';
 import { DbRole, OneBaseNode } from './model';
 import { getRolePermissions, hasPerm, Perm, TypeToDto } from './policies';
+import { InternalAdminRole } from './roles';
 
 type Role = ProjectRole | InternalRole;
 
@@ -131,7 +132,7 @@ export class AuthorizationService {
         .match([node('sg', 'SecurityGroup', { id: existingGroupId })])
         .match([node('user', 'User', { id: userId })])
         .merge([node('sg'), relation('out', '', 'member'), node('user')])
-        // .call(this.addRootUserForAdminRole2, role.name)
+        .call(this.addRootUserForAdminRole2, role)
         .run();
       this.logger.debug('Added user to existing security group', {
         securityGroup: existingGroupId,
@@ -177,7 +178,7 @@ export class AuthorizationService {
       ]);
     }
 
-    // createSgQuery.call(this.addRootUserForAdminRole, role.name);
+    createSgQuery.call(this.addRootUserForAdminRole2, role);
 
     await createSgQuery.run();
 
@@ -230,7 +231,7 @@ export class AuthorizationService {
   };
 
   private readonly addRootUserForAdminRole2 = (query: Query, role: DbRole) => {
-    if (role.name !== 'InternalAdmin') {
+    if (typeof role === typeof InternalAdminRole) {
       return;
     }
     query

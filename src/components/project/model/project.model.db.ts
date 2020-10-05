@@ -20,7 +20,3 @@ export class DbProject {
   engagement: any = null;
   sensitivity: any = null;
 }
-
-export class DbProject2 {
-  asdf: any;
-}

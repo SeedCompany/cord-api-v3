@@ -221,8 +221,12 @@ export class ProjectService {
     ];
     try {
       const createProject = this.db.query().call(matchRequestingUser, session);
-      // .match([node('fieldRegion', 'FieldRegion', { id: fieldRegionId })]);
 
+      if (fieldRegionId) {
+        createProject.match([
+          node('fieldRegion', 'FieldRegion', { id: fieldRegionId }),
+        ]);
+      }
       if (primaryLocationId) {
         createProject.match([
           node('primaryLocation', 'Location', { id: primaryLocationId }),
@@ -248,13 +252,16 @@ export class ProjectService {
         },
         canEdit ? ['name', 'mouStart', 'mouEnd'] : []
       );
-      // .create([
-      //   [
-      //     node('node'),
-      //     relation('out', '', 'fieldRegion', { active: true, createdAt }),
-      //     node('fieldRegion'),
-      //   ],
-      // ]);
+
+      if (fieldRegionId) {
+        createProject.create([
+          [
+            node('node'),
+            relation('out', '', 'fieldRegion', { active: true, createdAt }),
+            node('fieldRegion'),
+          ],
+        ]);
+      }
       if (primaryLocationId) {
         createProject.create([
           [
@@ -298,26 +305,7 @@ export class ProjectService {
         throw new ServerException('failed to create a project');
       }
 
-      const dbProject: DbProject = {
-        budget: null,
-        departmentId: null,
-        engagement: null,
-        estimatedSubmission: null,
-        fieldRegion: null,
-        marketingLocation: null,
-        member: null,
-        modifiedAt: null,
-        mouEnd: null,
-        mouStart: null,
-        name: null,
-        otherLocations: null,
-        partnership: null,
-        primaryLocation: null,
-        rootDirectory: null,
-        sensitivity: null,
-        status: null,
-        step: null,
-      };
+      const dbProject = new DbProject(); // wip: this will actually be used later. temp using an empty object now.
 
       await this.authorizationService.addPermsForRole2(
         InternalAdminRole,

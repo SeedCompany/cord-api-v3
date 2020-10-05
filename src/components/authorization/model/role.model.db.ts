@@ -1,5 +1,5 @@
 import { Powers } from '../dto/powers';
-import { AnyBaseNode } from './any-base-node';
+import { AnyBaseNode } from './any-base-node.type';
 import { DbBaseNodeGrant } from './base-node-grant.model.db';
 import { DbPermission } from './permission.model.db';
 
@@ -9,22 +9,18 @@ export class DbRole {
   grants: Array<DbBaseNodeGrant<AnyBaseNode>>;
 
   constructor({
-    name,
-    powers,
-    grants,
+    ...rest
   }: {
     name: string;
     powers: Powers[];
     grants: Array<DbBaseNodeGrant<AnyBaseNode>>;
   }) {
-    this.name = name;
-    this.powers = powers;
-    this.grants = grants;
+    Object.assign(this, rest);
   }
 
-  getPermissionsOnProperty<T>(
-    type: T,
-    prop: keyof T
+  getPermissionsOnProperty<AnyBaseNode>(
+    type: AnyBaseNode,
+    prop: keyof AnyBaseNode
   ): DbPermission | undefined {
     const grant = this.grants.find((element) => typeof element === typeof type);
 
