@@ -131,6 +131,7 @@ const policies = [
   policy('Partner', InternalRole.Admin, {
     organization: Perm.ReadAndEdit,
     pointOfContact: Perm.ReadAndEdit,
+    types: Perm.ReadAndEdit,
   }),
   policy('Partnership', InternalRole.Admin, {
     agreement: Perm.ReadAndEdit,

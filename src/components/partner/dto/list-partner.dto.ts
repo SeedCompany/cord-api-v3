@@ -6,7 +6,7 @@ import {
   SecuredList,
   SortablePaginationInput,
 } from '../../../common';
-import { Partner } from './partner';
+import { Partner } from './partner.dto';
 
 @InputType()
 export abstract class PartnerFilters {

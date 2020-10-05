@@ -1,11 +1,11 @@
 import { gql } from 'apollo-server-core';
 import { sample, times } from 'lodash';
 import { CalendarDate, NotFoundException } from '../src/common';
+import { PartnerType } from '../src/components/partner';
 import {
   CreatePartnership,
   Partnership,
   PartnershipAgreementStatus,
-  PartnershipType,
 } from '../src/components/partnership';
 import { Project } from '../src/components/project/dto';
 import {
@@ -77,10 +77,7 @@ describe('Partnership e2e', () => {
       Object.values(PartnershipAgreementStatus)
     );
     const newMouStatus = sample(Object.values(PartnershipAgreementStatus));
-    const newTypes = [
-      sample(Object.values(PartnershipType)),
-      PartnershipType.Managing,
-    ];
+    const newTypes = [sample(Object.values(PartnerType)), PartnerType.Managing];
 
     const result = await app.graphql.query(
       gql`
@@ -88,7 +85,7 @@ describe('Partnership e2e', () => {
           $id: ID!
           $agreementStatus: PartnershipAgreementStatus!
           $mouStatus: PartnershipAgreementStatus!
-          $types: [PartnershipType!]!
+          $types: [PartnerType!]!
         ) {
           updatePartnership(
             input: {
@@ -299,7 +296,7 @@ describe('Partnership e2e', () => {
       projectId: 'fakeProj',
       agreementStatus: PartnershipAgreementStatus.AwaitingSignature,
       mouStatus: PartnershipAgreementStatus.AwaitingSignature,
-      types: [PartnershipType.Managing],
+      types: [PartnerType.Managing],
       partnerId: 'fakePartner',
       mouStartOverride: CalendarDate.local(),
       mouEndOverride: CalendarDate.local(),
@@ -368,7 +365,7 @@ describe('Partnership e2e', () => {
     await createPartnership(app, {
       mouStartOverride: CalendarDate.fromISO('2020-08-01'),
       mouEndOverride: CalendarDate.fromISO('2022-08-01'),
-      types: [PartnershipType.Funding, PartnershipType.Managing],
+      types: [PartnerType.Funding, PartnerType.Managing],
       projectId: project.id,
     });
 

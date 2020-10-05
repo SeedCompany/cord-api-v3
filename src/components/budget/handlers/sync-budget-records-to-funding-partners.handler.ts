@@ -6,8 +6,9 @@ import {
   ILogger,
   Logger,
 } from '../../../core';
+import { PartnerType } from '../../partner';
 import { PartnershipService } from '../../partnership';
-import { Partnership, PartnershipType } from '../../partnership/dto';
+import { Partnership } from '../../partnership/dto';
 import {
   PartnershipCreatedEvent,
   PartnershipDeletedEvent,
@@ -93,7 +94,7 @@ export class SyncBudgetRecordsToFundingPartners
       !partnership.mouStart?.value ||
       !partnership.mouEnd?.value ||
       // TODO: decide whether to move the following funding and type checks to an earlier step.
-      !partnership.types.value.includes(PartnershipType.Funding) || // Partnership is not funding, so do nothing
+      !partnership.types.value.includes(PartnerType.Funding) || // Partnership is not funding, so do nothing
       !partnership.types?.value // Partnership Type is not provided, so do nothing.
     ) {
       expectedBudgetRecordYears = [];

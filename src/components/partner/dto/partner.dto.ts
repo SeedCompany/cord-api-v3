@@ -1,10 +1,11 @@
-import { ObjectType } from '@nestjs/graphql';
+import { Field, ObjectType } from '@nestjs/graphql';
 import {
   Resource,
   Secured,
   SecuredKeys,
   SecuredProperty,
 } from '../../../common';
+import { SecuredPartnerTypes } from './partner-type.enum';
 
 @ObjectType({
   implements: Resource,
@@ -13,6 +14,9 @@ export class Partner extends Resource {
   readonly organization: Secured<string>;
 
   readonly pointOfContact: Secured<string>;
+
+  @Field()
+  readonly types: SecuredPartnerTypes;
 }
 
 declare module '../../authorization/policies/mapping' {
