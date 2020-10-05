@@ -1,4 +1,6 @@
 import { DbBudget } from '../../budget/model';
+import { DbBudgetRecord } from '../../budget/model/budget-record.model.db';
+import { DbCeremony } from '../../ceremony/model';
 /* eslint-disable @typescript-eslint/naming-convention */
 import { DbProject } from '../../project/model';
 import { DbUser } from '../../user/model';
@@ -20,6 +22,20 @@ export const InternalAdminRole = new DbRole({
         { propertyName: 'universalTemplateFile',      permission: { read, write, }, },
         { propertyName: 'records',                    permission: { read, write, }, },
         { propertyName: 'status',                     permission: { read, write, }, },
+    ]}),
+    new DbBaseNodeGrant<DbBudgetRecord>({
+      __className: 'DbBudgetRecord',
+      properties: [
+        { propertyName: 'amount',                     permission: { read, write, }, },
+        { propertyName: 'fiscalYear',                 permission: { read, write, }, },
+        { propertyName: 'organization',               permission: { read, write, }, },
+    ]}),
+    new DbBaseNodeGrant<DbCeremony>({
+      __className: 'DbCeremony',
+      properties: [
+        { propertyName: 'actualDate',                 permission: { read, write, }, },
+        { propertyName: 'estimatedDate',              permission: { read, write, }, },
+        { propertyName: 'planned',                    permission: { read, write, }, },
     ]}),
     new DbBaseNodeGrant<DbProject>({
       __className: 'DbProject',

@@ -36,7 +36,6 @@ import {
 } from '../../core/database/results';
 import { Role } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { InternalRole } from '../authorization/dto';
 import { Powers } from '../authorization/dto/powers';
 import { InternalAdminRole } from '../authorization/roles';
 import {
