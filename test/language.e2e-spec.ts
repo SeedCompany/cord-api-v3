@@ -3,6 +3,7 @@ import * as faker from 'faker';
 import { times } from 'lodash';
 import { isValid } from 'shortid';
 import { DuplicateException, InputException } from '../src/common';
+import { Powers } from '../src/components/authorization/dto/powers';
 import {
   createLanguage,
   createLanguageEngagement,
@@ -12,17 +13,25 @@ import {
   createTestApp,
   createUser,
   expectNotFound,
+  grantPower,
+  login,
   TestApp,
 } from './utility';
 import { fragments } from './utility/fragments';
 
 describe('Language e2e', () => {
   let app: TestApp;
+  const password: string = faker.internet.password();
 
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await createUser(app);
+    const user = await createUser(app, { password });
+    await grantPower(app, user.id, Powers.CreateLanguage);
+    await login(app, {
+      email: user.email.value,
+      password,
+    });
   });
 
   afterAll(async () => {

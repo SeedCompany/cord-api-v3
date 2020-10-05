@@ -4,6 +4,7 @@ import { some } from 'lodash';
 import { DateTime, Interval } from 'luxon';
 import { generate } from 'shortid';
 import { InputException } from '../src/common';
+import { Powers } from '../src/components/authorization/dto/powers';
 import {
   CreateInternshipEngagement,
   EngagementStatus,
@@ -28,6 +29,7 @@ import {
   expectNotFound,
   fragments,
   getUserFromSession,
+  grantPower,
   login,
   Raw,
   requestFileUpload,
@@ -53,6 +55,11 @@ describe('Engagement e2e', () => {
     await createSession(app);
 
     user = await createUser(app, { password });
+    await grantPower(app, user.id, Powers.CreateLanguage);
+    await login(app, {
+      email: user.email.value,
+      password,
+    });
     language = await createLanguage(app);
     location = await createLocation(app);
     intern = await getUserFromSession(app);
