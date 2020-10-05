@@ -873,10 +873,19 @@ export class EngagementService {
             node('internshipEngagement', 'InternshipEngagement', {
               id: input.id,
             }),
+          ])
+          .optionalMatch([
+            node('internshipEngagement'),
             relation('out', 'rel', 'mentor', { active: true }),
             node('oldMentorUser', 'User'),
           ])
-          .delete('rel')
+          .set({
+            values: {
+              rel: {
+                active: false,
+              },
+            },
+          })
           .create([
             node('internshipEngagement'),
             relation('out', '', 'mentor', {
