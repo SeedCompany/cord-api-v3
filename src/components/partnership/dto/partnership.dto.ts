@@ -4,11 +4,10 @@ import {
   Secured,
   SecuredDateNullable,
   SecuredEnum,
-  SecuredEnumList,
   SecuredKeys,
 } from '../../../common';
 import { DefinedFile } from '../../file/dto';
-import { PartnerType } from '../../partner/dto/partner-type.enum';
+import { SecuredPartnerTypes } from '../../partner/dto/partner-type.enum';
 import { FinancialReportingType } from './financial-reporting-type';
 import { PartnershipAgreementStatus } from './partnership-agreement-status.enum';
 
@@ -17,13 +16,6 @@ import { PartnershipAgreementStatus } from './partnership-agreement-status.enum'
 })
 export abstract class SecuredPartnershipAgreementStatus extends SecuredEnum(
   PartnershipAgreementStatus
-) {}
-
-@ObjectType({
-  description: SecuredEnumList.descriptionFor('partnership types'),
-})
-export abstract class SecuredPartnershipTypes extends SecuredEnumList(
-  PartnerType
 ) {}
 
 @ObjectType({
@@ -63,7 +55,7 @@ export class Partnership extends Resource {
   readonly partner: Secured<string>;
 
   @Field()
-  readonly types: SecuredPartnershipTypes;
+  readonly types: SecuredPartnerTypes;
 
   @Field()
   readonly financialReportingType: SecuredFinancialReportingType;

@@ -1,4 +1,5 @@
-import { registerEnumType } from '@nestjs/graphql';
+import { ObjectType, registerEnumType } from '@nestjs/graphql';
+import { SecuredEnumList } from '../../../common';
 
 export enum PartnerType {
   Managing = 'Managing',
@@ -9,3 +10,10 @@ export enum PartnerType {
 }
 
 registerEnumType(PartnerType, { name: 'PartnerType' });
+
+@ObjectType({
+  description: SecuredEnumList.descriptionFor('partner types'),
+})
+export abstract class SecuredPartnerTypes extends SecuredEnumList(
+  PartnerType
+) {}

@@ -2,18 +2,10 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import {
   Resource,
   Secured,
-  SecuredEnumList,
   SecuredKeys,
   SecuredProperty,
 } from '../../../common';
-import { PartnerType } from './partner-type.enum';
-
-@ObjectType({
-  description: SecuredEnumList.descriptionFor('partnership types'),
-})
-export abstract class SecuredPartnerTypes extends SecuredEnumList(
-  PartnerType
-) {}
+import { SecuredPartnerTypes } from './partner-type.enum';
 
 @ObjectType({
   implements: Resource,
