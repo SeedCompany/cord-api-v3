@@ -31,9 +31,6 @@ export class Location extends Resource {
   @Field()
   readonly iso31663: SecuredString;
 
-  @Field()
-  readonly geographyName: SecuredString;
-
   readonly fundingAccount: Secured<string>;
 }
 

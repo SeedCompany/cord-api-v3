@@ -7,6 +7,8 @@ import {
   matchRequestingUser,
   matchUserPermissions,
 } from '../../core';
+import { FieldRegionService } from '../field-region';
+import { FieldZoneService } from '../field-zone';
 import { FilmService } from '../film';
 import { LanguageService } from '../language';
 import { LiteracyMaterialService } from '../literacy-material';
@@ -52,6 +54,8 @@ export class SearchService {
     LiteracyMaterial: (...args) => this.literacyMaterial.readOne(...args),
     Song: (...args) => this.song.readOne(...args),
     Location: (...args) => this.location.readOne(...args),
+    FieldZone: (...args) => this.zone.readOne(...args),
+    FieldRegion: (...args) => this.region.readOne(...args),
   };
   /* eslint-enable @typescript-eslint/naming-convention */
 
@@ -66,7 +70,9 @@ export class SearchService {
     private readonly film: FilmService,
     private readonly story: StoryService,
     private readonly literacyMaterial: LiteracyMaterialService,
-    private readonly song: SongService
+    private readonly song: SongService,
+    private readonly zone: FieldZoneService,
+    private readonly region: FieldRegionService
   ) {}
 
   async search(input: SearchInput, session: ISession): Promise<SearchOutput> {

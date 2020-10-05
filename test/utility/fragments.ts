@@ -616,11 +616,6 @@ export const location = gql`
       canEdit
       canRead
     }
-    geographyName {
-      value
-      canEdit
-      canRead
-    }
   }
 `;
 
