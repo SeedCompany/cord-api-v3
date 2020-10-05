@@ -11,7 +11,7 @@ import { Partnership } from './partnership.dto';
 @InputType()
 export class CreatePartnership {
   @IdField()
-  readonly organizationId: string;
+  readonly partnerId: string;
 
   @IdField()
   readonly projectId: string;

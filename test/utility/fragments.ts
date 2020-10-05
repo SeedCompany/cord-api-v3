@@ -373,6 +373,29 @@ export const project = gql`
   }
 `;
 
+export const partner = gql`
+  fragment partner on Partner {
+    id
+    createdAt
+    organization {
+      canEdit
+      canRead
+      value {
+        ...org
+      }
+    }
+    pointOfContact {
+      canEdit
+      canRead
+      value {
+        ...user
+      }
+    }
+  }
+  ${org}
+  ${user}
+`;
+
 export const partnership = gql`
   fragment partnership on Partnership {
     id
@@ -411,15 +434,15 @@ export const partnership = gql`
       canRead
       canEdit
     }
-    organization {
-      id
-      name {
-        value
-        canRead
-        canEdit
+    partner {
+      canEdit
+      canRead
+      value {
+        ...partner
       }
     }
   }
+  ${partner}
 `;
 
 export const projectMember = gql`
@@ -796,29 +819,6 @@ export const ceremony = gql`
       value
     }
   }
-`;
-
-export const partner = gql`
-  fragment partner on Partner {
-    id
-    createdAt
-    organization {
-      canEdit
-      canRead
-      value {
-        ...org
-      }
-    }
-    pointOfContact {
-      canEdit
-      canRead
-      value {
-        ...user
-      }
-    }
-  }
-  ${org}
-  ${user}
 `;
 
 export const fundingAccount = gql`
