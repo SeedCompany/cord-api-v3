@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { FieldRegionModule } from '../field-region/field-region.module';
+import { FieldZoneModule } from '../field-zone/field-zone.module';
 import { FilmModule } from '../film/film.module';
 import { LanguageModule } from '../language/language.module';
 import { LiteracyMaterialModule } from '../literacy-material/literacy-material.module';
@@ -24,6 +26,8 @@ import { SearchService } from './search.service';
     StoryModule,
     LiteracyMaterialModule,
     SongModule,
+    FieldZoneModule,
+    FieldRegionModule,
   ],
   providers: [SearchResolver, SearchService],
   exports: [SearchService],

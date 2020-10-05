@@ -240,7 +240,6 @@ const policies = [
     type: Perm.ReadAndEdit,
     sensitivity: Perm.ReadAndEdit,
     iso31663: Perm.ReadAndEdit,
-    geographyName: Perm.ReadAndEdit,
     fundingAccount: Perm.ReadAndEdit,
   }),
 ];

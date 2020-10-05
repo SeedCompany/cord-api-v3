@@ -1,6 +1,8 @@
 import { createUnionType, registerEnumType } from '@nestjs/graphql';
 import { mapValues, uniq } from 'lodash';
 import { keys, simpleSwitch } from '../../../common';
+import { FieldRegion } from '../../field-region/dto';
+import { FieldZone } from '../../field-zone/dto';
 import { Film } from '../../film/dto';
 import { Language } from '../../language/dto';
 import { LiteracyMaterial } from '../../literacy-material/dto';
@@ -31,6 +33,8 @@ const publicSearchable = {
   LiteracyMaterial,
   Song,
   Location,
+  FieldZone,
+  FieldRegion,
 } as const;
 
 // Same as above, but the keys are ignored from from the SearchType enum,

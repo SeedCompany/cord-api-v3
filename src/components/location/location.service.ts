@@ -48,7 +48,6 @@ export class LocationService {
     fundingAccount: true,
     iso31663: true,
     type: true,
-    geographyName: true,
     sensitivity: true,
   };
 
@@ -69,9 +68,6 @@ export class LocationService {
       // LOCATION NAME NODE
       'CREATE CONSTRAINT ON (n:LocationName) ASSERT EXISTS(n.value)',
       'CREATE CONSTRAINT ON (n:LocationName) ASSERT n.value IS UNIQUE',
-
-      // GEOGRAPHY NAME NODE
-      'CREATE CONSTRAINT ON (n:GeographyName) ASSERT n.value IS UNIQUE',
 
       // LOCATION TYPE NODE
       'CREATE CONSTRAINT ON (n:LocationType) ASSERT EXISTS(n.value)',
