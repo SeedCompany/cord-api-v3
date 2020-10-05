@@ -99,7 +99,7 @@ export class LocationService {
         value: input.name,
         isPublic: false,
         isOrgPublic: false,
-        label: 'FieldRegionName',
+        label: 'LocationName',
       },
       {
         key: 'iso31663',
