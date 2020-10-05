@@ -74,6 +74,7 @@ const policies = [
     sponsorEstimatedEndDate: Perm.ReadAndEdit,
     ethnologue: Perm.ReadAndEdit,
     sensitivity: Perm.ReadAndEdit,
+    hasExternalFirstScripture: Perm.ReadAndEdit,
   }),
   policy('LanguageEngagement', InternalRole.Admin, {
     ceremony: Perm.ReadAndEdit,

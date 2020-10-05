@@ -108,6 +108,9 @@ export class Language extends Resource {
 
   @Field()
   readonly isSignLanguage: SecuredBoolean;
+
+  @Field()
+  readonly hasExternalFirstScripture: SecuredBoolean;
 }
 
 declare module '../../authorization/policies/mapping' {
