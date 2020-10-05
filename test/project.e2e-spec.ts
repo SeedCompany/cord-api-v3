@@ -30,6 +30,7 @@ import {
   createLanguage,
   createLanguageEngagement,
   createLocation,
+  createPartner,
   createPartnership,
   createProject,
   createProjectMember,
@@ -887,7 +888,8 @@ describe('Project e2e', () => {
 
     const partnership: CreatePartnership = {
       projectId: proj.id,
-      organizationId: 'seedcompanyid',
+      partnerId: (await createPartner(app, { organizationId: 'seedcompanyid' }))
+        .id,
       types: [PartnershipType.Funding],
     };
 
@@ -956,7 +958,9 @@ describe('Project e2e', () => {
     });
     const partnership: CreatePartnership = {
       projectId: project.id,
-      organizationId: defaultOrganizationId,
+      partnerId: (
+        await createPartner(app, { organizationId: defaultOrganizationId })
+      ).id,
       types: [PartnershipType.Funding],
     };
 
@@ -1005,6 +1009,6 @@ describe('Project e2e', () => {
     );
     const firstBudgetRecordOrganizationId =
       projectQueryResult.project.budget.value.records[0].organization.value.id;
-    expect(firstBudgetRecordOrganizationId).toBe(partnership.organizationId);
+    expect(firstBudgetRecordOrganizationId).toBe(defaultOrganizationId);
   });
 });

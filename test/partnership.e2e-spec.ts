@@ -64,8 +64,8 @@ describe('Partnership e2e', () => {
     expect(actual.types.value).toEqual(
       expect.arrayContaining(partnership.types.value)
     );
-    expect(actual.organization).toBeTruthy();
-    expect(actual.organization).toEqual(partnership.organization);
+    expect(actual.partner).toBeTruthy();
+    expect(actual.partner).toEqual(partnership.partner);
     expect(actual.agreementStatus.canEdit).toBe(true);
   });
 
@@ -300,7 +300,7 @@ describe('Partnership e2e', () => {
       agreementStatus: PartnershipAgreementStatus.AwaitingSignature,
       mouStatus: PartnershipAgreementStatus.AwaitingSignature,
       types: [PartnershipType.Managing],
-      organizationId: 'fakeOrg',
+      partnerId: 'fakePartner',
       mouStartOverride: CalendarDate.local(),
       mouEndOverride: CalendarDate.local(),
     };
@@ -323,9 +323,7 @@ describe('Partnership e2e', () => {
           },
         }
       )
-    ).rejects.toThrowError(
-      new NotFoundException('Could not find organization')
-    );
+    ).rejects.toThrowError(new NotFoundException('Could not find partner'));
   });
 
   it('should create partnership without mou dates but returns project mou dates if exists', async () => {
@@ -361,8 +359,8 @@ describe('Partnership e2e', () => {
     expect(actual.types.value).toEqual(
       expect.arrayContaining(partnership.types.value)
     );
-    expect(actual.organization).toBeTruthy();
-    expect(actual.organization).toEqual(partnership.organization);
+    expect(actual.partner).toBeTruthy();
+    expect(actual.partner).toEqual(partnership.partner);
     expect(actual.agreementStatus.canEdit).toBe(true);
   });
 

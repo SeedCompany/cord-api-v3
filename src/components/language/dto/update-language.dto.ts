@@ -89,6 +89,9 @@ export abstract class UpdateLanguage {
 
   @DateField({ nullable: true })
   readonly sponsorEstimatedEndDate?: CalendarDate;
+
+  @Field({ nullable: true })
+  readonly hasExternalFirstScripture?: boolean;
 }
 
 @InputType()

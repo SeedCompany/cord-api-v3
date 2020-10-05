@@ -76,6 +76,7 @@ const policies = [
     sponsorEstimatedEndDate: Perm.ReadAndEdit,
     ethnologue: Perm.ReadAndEdit,
     sensitivity: Perm.ReadAndEdit,
+    hasExternalFirstScripture: Perm.ReadAndEdit,
   }),
   policy('LanguageEngagement', InternalRole.Admin, {
     ceremony: Perm.ReadAndEdit,
@@ -143,6 +144,7 @@ const policies = [
     mouStatus: Perm.ReadAndEdit,
     types: Perm.ReadAndEdit,
     organization: Perm.ReadAndEdit,
+    partner: Perm.ReadAndEdit,
   }),
   policy('Product', InternalRole.Admin, {
     mediums: Perm.ReadAndEdit,
