@@ -2,6 +2,8 @@ import { ProjectStatus } from '../../project/dto';
 import { InternalRole, Role } from '../dto';
 import { Perm, policy, policyExecutor } from './policy';
 
+// Keep policies sorted by Base Node first, then by Role
+
 // permissions are the intersection of a role and a base node type.
 // each role will have a unique collection of read and write
 // permissions on each type of base node.

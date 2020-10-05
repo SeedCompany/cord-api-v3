@@ -1,6 +1,6 @@
 import { registerEnumType } from '@nestjs/graphql';
 
-export enum BaseNode {
+export enum BaseNodeEnum {
   Project = 'Project',
   Language = 'Language',
   Organization = 'Organization',
@@ -11,6 +11,6 @@ export enum BaseNode {
   User = 'User',
 }
 
-registerEnumType(BaseNode, {
-  name: 'BaseNode',
+registerEnumType(BaseNodeEnum, {
+  name: 'BaseNodeEnum',
 });

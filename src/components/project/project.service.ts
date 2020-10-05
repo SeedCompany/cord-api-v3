@@ -42,6 +42,7 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { InternalAdminRole } from '../authorization/roles';
 import { Budget, BudgetService, BudgetStatus, SecuredBudget } from '../budget';
 import {
   EngagementListInput,
@@ -78,8 +79,8 @@ import {
   ProjectDeletedEvent,
   ProjectUpdatedEvent,
 } from './events';
+import { DbProject } from './model';
 import {
-  InternalRole,
   ProjectMemberListInput,
   ProjectMemberService,
   Role,
@@ -219,10 +220,8 @@ export class ProjectService {
       },
     ];
     try {
-      const createProject = this.db
-        .query()
-        .call(matchRequestingUser, session)
-        .match([node('fieldRegion', 'FieldRegion', { id: fieldRegionId })]);
+      const createProject = this.db.query().call(matchRequestingUser, session);
+      // .match([node('fieldRegion', 'FieldRegion', { id: fieldRegionId })]);
 
       if (primaryLocationId) {
         createProject.match([
@@ -240,23 +239,22 @@ export class ProjectService {
         ]);
       }
 
-      createProject
-        .call(
-          createBaseNode,
-          `Project:${input.type}Project`,
-          secureProps,
-          {
-            type: createInput.type,
-          },
-          canEdit ? ['name', 'mouStart', 'mouEnd'] : []
-        )
-        .create([
-          [
-            node('node'),
-            relation('out', '', 'fieldRegion', { active: true, createdAt }),
-            node('fieldRegion'),
-          ],
-        ]);
+      createProject.call(
+        createBaseNode,
+        `Project:${input.type}Project`,
+        secureProps,
+        {
+          type: createInput.type,
+        },
+        canEdit ? ['name', 'mouStart', 'mouEnd'] : []
+      );
+      // .create([
+      //   [
+      //     node('node'),
+      //     relation('out', '', 'fieldRegion', { active: true, createdAt }),
+      //     node('fieldRegion'),
+      //   ],
+      // ]);
       if (primaryLocationId) {
         createProject.create([
           [
@@ -300,9 +298,30 @@ export class ProjectService {
         throw new ServerException('failed to create a project');
       }
 
-      await this.authorizationService.addPermsForRole(
-        InternalRole.Admin,
-        'Project',
+      const dbProject: DbProject = {
+        budget: null,
+        departmentId: null,
+        engagement: null,
+        estimatedSubmission: null,
+        fieldRegion: null,
+        marketingLocation: null,
+        member: null,
+        modifiedAt: null,
+        mouEnd: null,
+        mouStart: null,
+        name: null,
+        otherLocations: null,
+        partnership: null,
+        primaryLocation: null,
+        rootDirectory: null,
+        sensitivity: null,
+        status: null,
+        step: null,
+      };
+
+      await this.authorizationService.addPermsForRole2(
+        InternalAdminRole,
+        dbProject,
         result.id,
         session.userId
       );
