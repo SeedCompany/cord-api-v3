@@ -1,4 +1,6 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import { DbProject } from '../../project/model';
+import { DbUser } from '../../user/model';
 import { Powers } from '../dto/powers';
 import { DbBaseNodeGrant, DbRole } from '../model';
 
@@ -11,25 +13,45 @@ export const InternalAdminRole = new DbRole({
   name: 'InternalAdmin',
   powers: [Powers.CreateBudget],
   grants: [
-    new DbBaseNodeGrant<DbProject>([
-      { propertyName: 'estimatedSubmission',        permission: { read, write, }, },
-      { propertyName: 'step',                       permission: { read, write, }, },
-      { propertyName: 'name',                       permission: { read, write, }, },
-      { propertyName: 'status',                     permission: { read, write, }, },
-      { propertyName: 'departmentId',               permission: { read, write, }, },
-      { propertyName: 'mouStart',                   permission: { read, write, }, },
-      { propertyName: 'mouEnd',                     permission: { read, write, }, },
-      { propertyName: 'rootDirectory',              permission: { read, write, }, },
-      { propertyName: 'member',                     permission: { read, write, }, },
-      { propertyName: 'otherLocations',             permission: { read, write, }, },
-      { propertyName: 'primaryLocation',            permission: { read, write, }, },
-      { propertyName: 'marketingLocation',          permission: { read, write, }, },
-      { propertyName: 'partnership',                permission: { read, write, }, },
-      { propertyName: 'budget',                     permission: { read, write, }, },
-      { propertyName: 'modifiedAt',                 permission: { read, write, }, },
-      { propertyName: 'fieldRegion',                permission: { read, write, }, },
-      { propertyName: 'engagement',                 permission: { read, write, }, },
-      { propertyName: 'sensitivity',                permission: { read, write, }, },
-    ]),
+    new DbBaseNodeGrant<DbProject>({
+      __className: 'DbProject',
+      properties: [
+        { propertyName: 'estimatedSubmission',        permission: { read, write, }, },
+        { propertyName: 'step',                       permission: { read, write, }, },
+        { propertyName: 'name',                       permission: { read, write, }, },
+        { propertyName: 'status',                     permission: { read, write, }, },
+        { propertyName: 'departmentId',               permission: { read, write, }, },
+        { propertyName: 'mouStart',                   permission: { read, write, }, },
+        { propertyName: 'mouEnd',                     permission: { read, write, }, },
+        { propertyName: 'rootDirectory',              permission: { read, write, }, },
+        { propertyName: 'member',                     permission: { read, write, }, },
+        { propertyName: 'otherLocations',             permission: { read, write, }, },
+        { propertyName: 'primaryLocation',            permission: { read, write, }, },
+        { propertyName: 'marketingLocation',          permission: { read, write, }, },
+        { propertyName: 'partnership',                permission: { read, write, }, },
+        { propertyName: 'budget',                     permission: { read, write, }, },
+        { propertyName: 'modifiedAt',                 permission: { read, write, }, },
+        { propertyName: 'fieldRegion',                permission: { read, write, }, },
+        { propertyName: 'engagement',                 permission: { read, write, }, },
+        { propertyName: 'sensitivity',                permission: { read, write, }, },
+      ]}),
+    new DbBaseNodeGrant<DbUser>({
+      __className: 'DbUser',
+      properties: [
+        { propertyName: 'about',                      permission: { read, write, }, },
+        { propertyName: 'displayFirstName',           permission: { read, write, }, },
+        { propertyName: 'displayLastName',            permission: { read, write, }, },
+        { propertyName: 'email',                      permission: { read, write, }, },
+        { propertyName: 'phone',                      permission: { read, write, }, },
+        { propertyName: 'realFirstName',              permission: { read, write, }, },
+        { propertyName: 'realLastName',               permission: { read, write, }, },
+        { propertyName: 'roles',                      permission: { read, write, }, },
+        { propertyName: 'status',                     permission: { read, write, }, },
+        { propertyName: 'timezone',                   permission: { read, write, }, },
+        { propertyName: 'title',                      permission: { read, write, }, },
+        { propertyName: 'education',                  permission: { read, write, }, },
+        { propertyName: 'organization',               permission: { read, write, }, },
+        { propertyName: 'unavailability',             permission: { read, write, }, },
+    ]}),
   ],
 });

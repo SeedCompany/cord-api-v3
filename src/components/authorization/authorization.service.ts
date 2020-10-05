@@ -159,7 +159,7 @@ export class AuthorizationService {
     // iterate through the key of the base node and get the permission object for each from the role object
     for (const key of Object.keys(baseNodeObj)) {
       const perms = role.getPermissionsOnProperty<typeof baseNodeObj>(
-        baseNodeObj,
+        baseNodeObj.__className,
         key as keyof OneBaseNode
       );
 

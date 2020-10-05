@@ -19,10 +19,13 @@ export class DbRole {
   }
 
   getPermissionsOnProperty<AnyBaseNode>(
-    type: AnyBaseNode,
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    __className: string,
     prop: keyof AnyBaseNode
   ): DbPermission | undefined {
-    const grant = this.grants.find((element) => typeof element === typeof type);
+    const grant = this.grants.find(
+      (element) => element.__className === __className
+    );
 
     const perms = grant?.properties.find(
       (element) => element.propertyName === prop

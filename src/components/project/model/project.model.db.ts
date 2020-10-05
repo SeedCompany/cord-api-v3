@@ -1,6 +1,10 @@
 // wip: types will be added later
 
-export class DbProject {
+import { DbBaseNode } from '../../authorization/model/db-base-node.model';
+
+export class DbProject extends DbBaseNode {
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  __className = 'DbProject';
   estimatedSubmission: any = null;
   step: any = null;
   name: any = null;
