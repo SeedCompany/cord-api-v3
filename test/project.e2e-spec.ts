@@ -12,10 +12,8 @@ import { BudgetStatus } from '../src/components/budget/dto';
 import { FieldRegion } from '../src/components/field-region';
 import { FieldZone } from '../src/components/field-zone';
 import { Location } from '../src/components/location';
-import {
-  CreatePartnership,
-  PartnershipType,
-} from '../src/components/partnership';
+import { PartnerType } from '../src/components/partner';
+import { CreatePartnership } from '../src/components/partnership';
 import {
   CreateProject,
   Project,
@@ -890,7 +888,7 @@ describe('Project e2e', () => {
       projectId: proj.id,
       partnerId: (await createPartner(app, { organizationId: 'seedcompanyid' }))
         .id,
-      types: [PartnershipType.Funding],
+      types: [PartnerType.Funding],
     };
 
     // Create Partnership with Funding type
@@ -961,7 +959,7 @@ describe('Project e2e', () => {
       partnerId: (
         await createPartner(app, { organizationId: defaultOrganizationId })
       ).id,
-      types: [PartnershipType.Funding],
+      types: [PartnerType.Funding],
     };
 
     await app.graphql.mutate(

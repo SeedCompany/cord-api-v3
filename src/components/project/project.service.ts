@@ -54,11 +54,10 @@ import {
   LocationService,
   SecuredLocationList,
 } from '../location';
-import { PartnerService } from '../partner';
+import { PartnerService, PartnerType } from '../partner';
 import {
   PartnershipListInput,
   PartnershipService,
-  PartnershipType,
   SecuredPartnershipList,
 } from '../partnership';
 import {
@@ -850,7 +849,7 @@ export class ProjectService {
     );
     const fundingOrgIds = await Promise.all(
       partners.items
-        .filter((p) => p.types.value.includes(PartnershipType.Funding))
+        .filter((p) => p.types.value.includes(PartnerType.Funding))
         .map(async (p) => {
           return (
             await this.partnerService.readOne(

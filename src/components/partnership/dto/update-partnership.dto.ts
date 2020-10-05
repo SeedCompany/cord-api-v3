@@ -1,11 +1,12 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
+import { uniq } from 'lodash';
 import { CalendarDate, DateField, IdField } from '../../../common';
 import { CreateDefinedFileVersionInput } from '../../file/dto';
+import { PartnerType } from '../../partner/dto';
 import { FinancialReportingType } from './financial-reporting-type';
 import { PartnershipAgreementStatus } from './partnership-agreement-status.enum';
-import { PartnershipType } from './partnership-type.enum';
 import { Partnership } from './partnership.dto';
 
 @InputType()
@@ -31,8 +32,9 @@ export abstract class UpdatePartnership {
   @DateField({ nullable: true })
   readonly mouEndOverride?: CalendarDate;
 
-  @Field(() => [PartnershipType], { nullable: true })
-  readonly types?: PartnershipType[];
+  @Field(() => [PartnerType], { nullable: true })
+  @Transform(uniq)
+  readonly types?: PartnerType[];
 
   @Field(() => FinancialReportingType, { nullable: true })
   readonly financialReportingType?: FinancialReportingType | null;

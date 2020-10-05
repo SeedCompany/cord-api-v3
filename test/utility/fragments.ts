@@ -391,6 +391,11 @@ export const partner = gql`
         ...user
       }
     }
+    types {
+      value
+      canRead
+      canEdit
+    }
   }
   ${org}
   ${user}

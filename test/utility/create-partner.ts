@@ -1,5 +1,9 @@
 import { gql } from 'apollo-server-core';
-import { CreatePartner, Partner } from '../../src/components/partner';
+import {
+  CreatePartner,
+  Partner,
+  PartnerType,
+} from '../../src/components/partner';
 import { TestApp } from './create-app';
 import { createOrganization } from './create-organization';
 import { createPerson } from './create-person';
@@ -9,10 +13,12 @@ export async function createPartner(
   app: TestApp,
   input: Partial<CreatePartner> = {}
 ) {
-  const organizationId =
-    input.organizationId || (await createOrganization(app)).id;
-  const pointOfContactId =
-    input.pointOfContactId || (await createPerson(app)).id;
+  const createPartner: CreatePartner = {
+    organizationId: input.organizationId || (await createOrganization(app)).id,
+    pointOfContactId: input.pointOfContactId || (await createPerson(app)).id,
+    types: [PartnerType.Managing],
+    ...input,
+  };
 
   const result = await app.graphql.mutate(
     gql`
@@ -27,11 +33,7 @@ export async function createPartner(
     `,
     {
       input: {
-        partner: {
-          ...input,
-          organizationId,
-          pointOfContactId,
-        },
+        partner: createPartner,
       },
     }
   );

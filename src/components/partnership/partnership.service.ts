@@ -1,7 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
-import { uniq } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   InputException,
@@ -35,9 +34,8 @@ import {
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { FileService } from '../file';
-import { PartnerService } from '../partner/partner.service';
-import { InternalRole } from '../project';
-import { ProjectService } from '../project/project.service';
+import { PartnerService, PartnerType } from '../partner';
+import { InternalRole, ProjectService } from '../project';
 import {
   CreatePartnership,
   FinancialReportingType,
@@ -45,7 +43,6 @@ import {
   PartnershipAgreementStatus,
   PartnershipListInput,
   PartnershipListOutput,
-  PartnershipType,
   UpdatePartnership,
 } from './dto';
 import {
@@ -163,7 +160,7 @@ export class PartnershipService {
       },
       {
         key: 'types',
-        value: uniq(input.types),
+        value: input.types,
         isPublic: false,
         isOrgPublic: false,
       },
@@ -341,10 +338,7 @@ export class PartnershipService {
   async update(input: UpdatePartnership, session: ISession) {
     // mou start and end are now computed fields and do not get updated directly
     const object = await this.readOne(input.id, session);
-    let changes = {
-      ...input,
-      types: uniq(input.types),
-    };
+    let changes = input;
 
     if (
       !this.validateFinancialReportingType(
@@ -532,7 +526,7 @@ export class PartnershipService {
 
   protected verifyFinancialReportingType(
     financialReportingType: FinancialReportingType | null | undefined,
-    types: PartnershipType[] | undefined
+    types: PartnerType[] | undefined
   ) {
     if (!this.validateFinancialReportingType(financialReportingType, types)) {
       throw new InputException(
@@ -544,9 +538,9 @@ export class PartnershipService {
 
   protected validateFinancialReportingType(
     financialReportingType: FinancialReportingType | null | undefined,
-    types: PartnershipType[] | undefined
+    types: PartnerType[] | undefined
   ) {
-    return financialReportingType && !types?.includes(PartnershipType.Managing)
+    return financialReportingType && !types?.includes(PartnerType.Managing)
       ? false
       : true;
   }
