@@ -8,6 +8,7 @@ import {
   Sensitivity,
   ServerException,
 } from '../src/common';
+import { Powers } from '../src/components/authorization/dto/powers';
 import { BudgetStatus } from '../src/components/budget/dto';
 import { FieldRegion } from '../src/components/field-region';
 import { FieldZone } from '../src/components/field-zone';
@@ -40,6 +41,7 @@ import {
   expectNotFound,
   fragments,
   getUserFromSession,
+  grantPower,
   login,
   TestApp,
 } from './utility';
@@ -52,6 +54,7 @@ describe('Project e2e', () => {
   let fieldZone: FieldZone;
   let fieldRegion: FieldRegion;
   let location: Location;
+  const password: string = faker.internet.password();
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -719,6 +722,9 @@ describe('Project e2e', () => {
   });
 
   it('List view of partnerships by projectId', async () => {
+    const user = await createUser(app, { password });
+    await grantPower(app, user.id, Powers.CreateOrganization);
+    await login(app, { email: user.email.value, password });
     //create 2 partnerships in a project
     const numPartnerships = 2;
     const type = ProjectType.Translation;

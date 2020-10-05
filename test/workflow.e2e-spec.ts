@@ -1,6 +1,7 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
+import { Powers } from '../src/components/authorization/dto/powers';
 import { Organization } from '../src/components/organization';
 import { User } from '../src/components/user';
 import {
@@ -10,6 +11,7 @@ import {
   createTestApp,
   createUser,
   createWorkflow,
+  grantPower,
   login,
   TestApp,
 } from './utility';
@@ -38,6 +40,7 @@ describe.skip('Workflow e2e', () => {
     // sg = await createSecurityGroup(app);
 
     user = await createUser(app, { password: password, email: email });
+    await grantPower(app, user.id, Powers.CreateOrganization);
 
     await login(app, {
       email: process.env.ROOT_ADMIN_EMAIL,

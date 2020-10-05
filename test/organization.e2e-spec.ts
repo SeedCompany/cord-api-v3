@@ -3,6 +3,7 @@ import * as faker from 'faker';
 import { orderBy, times } from 'lodash';
 import { generate, isValid } from 'shortid';
 import { InputException } from '../src/common';
+import { Powers } from '../src/components/authorization/dto/powers';
 import { Organization } from '../src/components/organization';
 import {
   createOrganization,
@@ -10,16 +11,21 @@ import {
   createTestApp,
   createUser,
   fragments,
+  grantPower,
+  login,
   TestApp,
 } from './utility';
 
 describe('Organization e2e', () => {
   let app: TestApp;
+  const password: string = faker.internet.password();
 
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await createUser(app);
+    const user = await createUser(app, { password });
+    await grantPower(app, user.id, Powers.CreateOrganization);
+    await login(app, { email: user.email.value, password });
   });
 
   afterAll(async () => {
