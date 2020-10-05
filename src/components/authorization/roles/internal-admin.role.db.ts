@@ -1,3 +1,4 @@
+import { DbBudget } from '../../budget/model';
 /* eslint-disable @typescript-eslint/naming-convention */
 import { DbProject } from '../../project/model';
 import { DbUser } from '../../user/model';
@@ -13,6 +14,13 @@ export const InternalAdminRole = new DbRole({
   name: 'InternalAdmin',
   powers: [Powers.CreateBudget],
   grants: [
+    new DbBaseNodeGrant<DbBudget>({
+      __className: 'DbBudget',
+      properties: [
+        { propertyName: 'universalTemplateFile',      permission: { read, write, }, },
+        { propertyName: 'records',                    permission: { read, write, }, },
+        { propertyName: 'status',                     permission: { read, write, }, },
+    ]}),
     new DbBaseNodeGrant<DbProject>({
       __className: 'DbProject',
       properties: [

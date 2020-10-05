@@ -32,6 +32,7 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { InternalAdminRole } from '../authorization/roles';
 import { FileService } from '../file';
 import { InternalRole } from '../project';
 import {
@@ -47,6 +48,7 @@ import {
   UpdateBudget,
   UpdateBudgetRecord,
 } from './dto';
+import { DbBudget } from './model';
 
 @Injectable()
 export class BudgetService {
@@ -149,9 +151,10 @@ export class BudgetService {
         userId: session.userId,
       });
 
-      await this.authorizationService.addPermsForRole(
-        InternalRole.Admin,
-        'Budget',
+      const dbBudget = new DbBudget();
+      await this.authorizationService.addPermsForRole2(
+        InternalAdminRole,
+        dbBudget,
         result.id,
         session.userId as string
       );
