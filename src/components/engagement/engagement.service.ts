@@ -1077,6 +1077,8 @@ export class EngagementService {
             property: 'product',
             read: true,
           }),
+          relation('out', '', 'baseNode'),
+          node('eng', 'Engagement', { id: engagement.id }),
         ],
       ])
       .match([
@@ -1089,6 +1091,8 @@ export class EngagementService {
             property: 'product',
             edit: true,
           }),
+          relation('out', '', 'baseNode'),
+          node('eng'),
         ],
       ])
       .return({
