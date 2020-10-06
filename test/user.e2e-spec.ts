@@ -208,7 +208,7 @@ describe('User e2e', () => {
   });
 
   // LIST USERS
-  it('list view of users', async () => {
+  it.skip('list view of users', async () => {
     await createUser(app);
     await createUser(app);
     await createUser(app);
