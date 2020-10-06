@@ -8,7 +8,6 @@ import {
   SecuredBoolean,
   SecuredDateNullable,
   SecuredDateTime,
-  SecuredKeys,
   SecuredString,
 } from '../../../common';
 import { DefinedFile } from '../../file/dto';
@@ -132,18 +131,4 @@ export class InternshipEngagement extends Engagement {
   readonly methodologies: SecuredMethodologies;
 
   readonly growthPlan: DefinedFile;
-}
-
-declare module '../../authorization/policies/mapping' {
-  interface TypeToDto {
-    LanguageEngagement: LanguageEngagement;
-    InternshipEngagement: InternshipEngagement;
-  }
-  interface TypeToSecuredProps {
-    LanguageEngagement:
-      | SecuredKeys<LanguageEngagement>
-      | 'modifiedAt'
-      | 'product';
-    InternshipEngagement: SecuredKeys<InternshipEngagement> | 'modifiedAt';
-  }
 }

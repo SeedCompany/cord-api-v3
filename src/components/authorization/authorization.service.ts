@@ -1,14 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
-import { pickBy, union } from 'lodash';
+import { union } from 'lodash';
 import { generate } from 'shortid';
-import { keys, ServerException, UnauthorizedException } from '../../common';
+import { ServerException, UnauthorizedException } from '../../common';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
-import { InternalRole, Role as ProjectRole } from './dto';
 import { Powers } from './dto/powers';
-import { getRolePermissions, hasPerm, Perm, TypeToDto } from './policies';
-
-type Role = ProjectRole | InternalRole;
+import { DbRole, OneBaseNode } from './model';
+import { InternalAdminRole } from './roles';
 
 /**
  * powers can exist on a security group or a user node
@@ -22,17 +20,17 @@ export class AuthorizationService {
     @Logger('authorization:service') private readonly logger: ILogger
   ) {}
 
-  async addPermsForRole<Type extends keyof TypeToDto>(
-    role: Role,
-    type: Type,
-    dtoOrId: TypeToDto[Type] | string,
+  async addPermsForRole(
+    role: DbRole,
+    baseNodeObj: OneBaseNode,
+    baseNodeId: string,
     userId: string
   ) {
-    const id = typeof dtoOrId === 'string' ? dtoOrId : dtoOrId.id;
-    const dto = typeof dtoOrId === 'string' ? undefined : dtoOrId;
-
     // check if SG for this role already exists
-    const existingGroupId = await this.getSecurityGroupForRole(id, role);
+    const existingGroupId = await this.getSecurityGroupForRole(
+      baseNodeId,
+      role.name
+    );
     if (existingGroupId) {
       // SG exists, merge member to it
       await this.db
@@ -46,53 +44,40 @@ export class AuthorizationService {
         securityGroup: existingGroupId,
         userId,
       });
+
       return;
     }
-
-    const permissions = getRolePermissions(type, role, dto);
-    const readProps = keys(
-      pickBy(permissions, (perm) => hasPerm(perm, Perm.Read))
-    );
-    const editProps = keys(
-      pickBy(permissions, (perm) => hasPerm(perm, Perm.Edit))
-    );
 
     // SG does not yet exist, create it and merge user to it
     const createSgQuery = this.db
       .query()
       .match([node('user', 'User', { id: userId })])
-      .match([node('baseNode', 'BaseNode', { id })])
+      .match([node('baseNode', 'BaseNode', { id: baseNodeId })])
       .merge([
         node('user'),
         relation('in', '', 'member'),
         node('sg', 'SecurityGroup', {
           id: generate(),
-          role,
+          role: role.name,
         }),
       ]);
 
-    for (const perm of editProps) {
+    // iterate through the key of the base node and get the permission object for each from the role object
+    for (const key of Object.keys(baseNodeObj)) {
+      const perms = role.getPermissionsOnProperty<typeof baseNodeObj>(
+        baseNodeObj.__className,
+        key as keyof OneBaseNode
+      );
+
+      // write the permission to the db if any of its perms are true
+
       createSgQuery.merge([
         node('sg'),
         relation('out', '', 'permission'),
         node('', 'Permission', {
-          read: true,
-          edit: true,
-          property: perm,
-        }),
-        relation('out', '', 'baseNode'),
-        node('baseNode'),
-      ]);
-    }
-
-    for (const perm of readProps) {
-      createSgQuery.merge([
-        node('sg'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          read: true,
-          edit: false,
-          property: perm,
+          read: perms?.read ? perms.read : false,
+          edit: perms?.write ? perms.write : false,
+          property: key,
         }),
         relation('out', '', 'baseNode'),
         node('baseNode'),
@@ -104,15 +89,15 @@ export class AuthorizationService {
     await createSgQuery.run();
 
     this.logger.debug('Created security group', {
-      type,
+      baseNodeObj,
       role,
       userId,
-      dto,
-      id,
     });
+
+    return true;
   }
 
-  private async getSecurityGroupForRole(baseNodeId: string, role: Role) {
+  private async getSecurityGroupForRole(baseNodeId: string, role: string) {
     const checkSg = await this.db
       .query()
       .match([
@@ -127,8 +112,8 @@ export class AuthorizationService {
   }
 
   // if this is an admin role, ensure the root user is attached
-  private readonly addRootUserForAdminRole = (query: Query, role: Role) => {
-    if (role !== InternalRole.Admin) {
+  private readonly addRootUserForAdminRole = (query: Query, role: DbRole) => {
+    if (typeof role === typeof InternalAdminRole) {
       return;
     }
     query
