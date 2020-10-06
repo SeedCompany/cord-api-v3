@@ -18,6 +18,8 @@ import { DbProduct } from '../../product/model';
 /* eslint-disable @typescript-eslint/naming-convention */
 import { DbProject } from '../../project/model';
 import { DbProjectMember } from '../../project/project-member/model';
+import { DbSong } from '../../song/model';
+import { DbStory } from '../../story/model';
 import { DbEducation, DbUnavailability, DbUser } from '../../user/model';
 import { Powers } from '../dto/powers';
 import { DbBaseNodeGrant, DbRole } from '../model';
@@ -291,6 +293,18 @@ export const InternalAdminRole = new DbRole({
         { propertyName: 'description',                permission: { read, write, }, },
         { propertyName: 'end',                        permission: { read, write, }, },
         { propertyName: 'start',                      permission: { read, write, }, },
+    ]}),
+    new DbBaseNodeGrant<DbSong>({
+      __className: 'DbSong',
+      properties: [
+        { propertyName: 'name',                       permission: { read, write, }, },
+        { propertyName: 'scriptureReferences',        permission: { read, write, }, },
+    ]}),
+    new DbBaseNodeGrant<DbStory>({
+      __className: 'DbStory',
+      properties: [
+        { propertyName: 'name',                       permission: { read, write, }, },
+        { propertyName: 'scriptureReferences',        permission: { read, write, }, },
     ]}),
   ],
 });
