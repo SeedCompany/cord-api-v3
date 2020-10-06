@@ -108,7 +108,7 @@ export class LiteracyMaterialService {
       }
 
       const dbLiteracyMaterial = new DbLiteracyMaterial();
-      await this.authorizationService.addPermsForRole2(
+      await this.authorizationService.addPermsForRole(
         InternalAdminRole,
         dbLiteracyMaterial,
         result.id,

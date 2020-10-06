@@ -199,7 +199,7 @@ export class PartnershipService {
       }
 
       const dbPartnership = new DbPartnership();
-      await this.authorizationService.addPermsForRole2(
+      await this.authorizationService.addPermsForRole(
         InternalAdminRole,
         dbPartnership,
         result.id,

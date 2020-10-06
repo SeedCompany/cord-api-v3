@@ -20,14 +20,14 @@ export class AuthorizationService {
     @Logger('authorization:service') private readonly logger: ILogger
   ) {}
 
-  async addPermsForRole2(
+  async addPermsForRole(
     role: DbRole,
     baseNodeObj: OneBaseNode,
     baseNodeId: string,
     userId: string
   ) {
     // check if SG for this role already exists
-    const existingGroupId = await this.getSecurityGroupForRole2(
+    const existingGroupId = await this.getSecurityGroupForRole(
       baseNodeId,
       role.name
     );
@@ -38,7 +38,7 @@ export class AuthorizationService {
         .match([node('sg', 'SecurityGroup', { id: existingGroupId })])
         .match([node('user', 'User', { id: userId })])
         .merge([node('sg'), relation('out', '', 'member'), node('user')])
-        .call(this.addRootUserForAdminRole2, role)
+        .call(this.addRootUserForAdminRole, role)
         .run();
       this.logger.debug('Added user to existing security group', {
         securityGroup: existingGroupId,
@@ -84,7 +84,7 @@ export class AuthorizationService {
       ]);
     }
 
-    createSgQuery.call(this.addRootUserForAdminRole2, role);
+    createSgQuery.call(this.addRootUserForAdminRole, role);
 
     await createSgQuery.run();
 
@@ -97,7 +97,7 @@ export class AuthorizationService {
     return true;
   }
 
-  private async getSecurityGroupForRole2(baseNodeId: string, role: string) {
+  private async getSecurityGroupForRole(baseNodeId: string, role: string) {
     const checkSg = await this.db
       .query()
       .match([
@@ -112,7 +112,7 @@ export class AuthorizationService {
   }
 
   // if this is an admin role, ensure the root user is attached
-  private readonly addRootUserForAdminRole2 = (query: Query, role: DbRole) => {
+  private readonly addRootUserForAdminRole = (query: Query, role: DbRole) => {
     if (typeof role === typeof InternalAdminRole) {
       return;
     }

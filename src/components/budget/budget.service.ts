@@ -152,7 +152,7 @@ export class BudgetService {
       });
 
       const dbBudget = new DbBudget();
-      await this.authorizationService.addPermsForRole2(
+      await this.authorizationService.addPermsForRole(
         InternalAdminRole,
         dbBudget,
         result.id,
@@ -212,7 +212,7 @@ export class BudgetService {
       }
 
       const dbBudgetRecord = new DbBudgetRecord();
-      await this.authorizationService.addPermsForRole2(
+      await this.authorizationService.addPermsForRole(
         InternalAdminRole,
         dbBudgetRecord,
         result.id,

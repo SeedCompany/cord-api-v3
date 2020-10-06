@@ -255,7 +255,7 @@ export class ProductService {
     }
 
     const dbProduct = new DbProduct();
-    await this.authorizationService.addPermsForRole2(
+    await this.authorizationService.addPermsForRole(
       InternalAdminRole,
       dbProduct,
       result.id,

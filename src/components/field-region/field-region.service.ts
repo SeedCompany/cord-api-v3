@@ -137,7 +137,7 @@ export class FieldRegionService {
     }
 
     const dbFieldRegion = new DbFieldRegion();
-    await this.authorizationService.addPermsForRole2(
+    await this.authorizationService.addPermsForRole(
       InternalAdminRole,
       dbFieldRegion,
       result.id,

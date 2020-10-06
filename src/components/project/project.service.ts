@@ -308,7 +308,7 @@ export class ProjectService {
 
       const dbProject = new DbProject(); // wip: this will actually be used later. temp using an empty object now.
 
-      await this.authorizationService.addPermsForRole2(
+      await this.authorizationService.addPermsForRole(
         InternalAdminRole,
         dbProject,
         result.id,

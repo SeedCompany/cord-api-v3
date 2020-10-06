@@ -104,7 +104,7 @@ export class SongService {
       }
 
       const dbSong = new DbSong();
-      await this.authorizationService.addPermsForRole2(
+      await this.authorizationService.addPermsForRole(
         InternalAdminRole,
         dbSong,
         result.id,

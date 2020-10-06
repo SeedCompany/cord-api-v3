@@ -96,7 +96,7 @@ export class EthnologueLanguageService {
     }
 
     const dbEthnologueLanguage = new DbEthnologueLanguage();
-    await this.authorizationService.addPermsForRole2(
+    await this.authorizationService.addPermsForRole(
       InternalAdminRole,
       dbEthnologueLanguage,
       result.id,

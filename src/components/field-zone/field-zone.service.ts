@@ -126,7 +126,7 @@ export class FieldZoneService {
     }
 
     const dbFieldZone = new DbFieldZone();
-    await this.authorizationService.addPermsForRole2(
+    await this.authorizationService.addPermsForRole(
       InternalAdminRole,
       dbFieldZone,
       result.id,

@@ -102,7 +102,7 @@ export class StoryService {
       }
 
       const dbStory = new DbStory();
-      await this.authorizationService.addPermsForRole2(
+      await this.authorizationService.addPermsForRole(
         InternalAdminRole,
         dbStory,
         result.id,

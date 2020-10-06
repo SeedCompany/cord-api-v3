@@ -166,7 +166,7 @@ export class EducationService {
       this.logger.debug(`Created user education`, { id, userId });
 
       const dbEducation = new DbEducation();
-      await this.authorizationService.addPermsForRole2(
+      await this.authorizationService.addPermsForRole(
         InternalAdminRole,
         dbEducation,
         id,

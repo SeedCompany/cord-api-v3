@@ -92,7 +92,7 @@ export class UnavailabilityService {
       }
 
       const dbUnavailability = new DbUnavailability();
-      await this.authorizationService.addPermsForRole2(
+      await this.authorizationService.addPermsForRole(
         InternalAdminRole,
         dbUnavailability,
         createUnavailabilityResult.id,

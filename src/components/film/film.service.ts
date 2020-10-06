@@ -101,7 +101,7 @@ export class FilmService {
       }
 
       const dbFilm = new DbFilm();
-      await this.authorizationService.addPermsForRole2(
+      await this.authorizationService.addPermsForRole(
         InternalAdminRole,
         dbFilm,
         result.id,

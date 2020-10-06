@@ -171,7 +171,7 @@ export class UserService {
       throw new ServerException('Failed to create user');
     }
     const dbUser = new DbUser();
-    await this.authorizationService.addPermsForRole2(
+    await this.authorizationService.addPermsForRole(
       InternalAdminRole,
       dbUser,
       id,
