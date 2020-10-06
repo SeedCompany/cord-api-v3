@@ -27,7 +27,6 @@ export async function createLanguageEngagement(
   const languageEngagement: CreateLanguageEngagement = {
     languageId: input.languageId ?? (await createLanguage(app)).id,
     projectId: input.projectId ?? (await createProject(app)).id,
-    firstScripture: true,
     lukePartnership: true,
     disbursementCompleteDate: DateTime.local(),
     communicationsCompleteDate: DateTime.local(),

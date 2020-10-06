@@ -1,5 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { node, Query, relation } from 'cypher-query-builder';
+import { cloneDeep } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import {
@@ -162,6 +163,78 @@ export class EngagementService {
     return result ? true : false;
   }
 
+  /**
+   * if firstScripture is true, validate that the engagement
+   * is the only engagement for the language that has firstScripture=true
+   * that the language doesn't have hasExternalFirstScripture=true
+   */
+  protected async verifyFirstScripture(
+    engagementId?: string,
+    languageId?: string
+  ) {
+    const languageQuery = this.db.query();
+    if (engagementId) {
+      languageQuery.match([
+        node('languageEngagement', 'LanguageEngagement', { id: engagementId }),
+        relation('out', '', 'language', { active: true }),
+        node('language', 'Language'),
+      ]);
+    } else if (languageId) {
+      languageQuery.match([node('language', 'Language', { id: languageId })]);
+    }
+
+    const engagementQuery = cloneDeep(languageQuery);
+    await this.verifyFirstScriptureWithLanguage(languageQuery);
+    await this.verifyFirstScriptureWithEngagement(engagementQuery);
+  }
+
+  protected async verifyFirstScriptureWithLanguage(query: Query) {
+    const languageResult = await query
+      .match([
+        node('language', 'Language'),
+        relation('out', '', 'hasExternalFirstScripture', { active: true }),
+        node('hasExternalFirstScripture', 'Property'),
+      ])
+      .where({
+        hasExternalFirstScripture: {
+          value: true,
+        },
+      })
+      .return('language')
+      .first();
+
+    if (languageResult) {
+      throw new InputException(
+        'firstScripture can not be set to true if the language has hasExternalFirstScripture=true',
+        'languageEngagement.firstScripture'
+      );
+    }
+  }
+  protected async verifyFirstScriptureWithEngagement(query: Query) {
+    const engagementResult = await query
+      .match([
+        node('language', 'Language'),
+        relation('in', '', 'language', { active: true }),
+        node('otherLanguageEngagements', 'LanguageEngagement'),
+        relation('out', '', 'firstScripture', { active: true }),
+        node('firstScripture', 'Property'),
+      ])
+      .where({
+        firstScripture: {
+          value: true,
+        },
+      })
+      .return('otherLanguageEngagements')
+      .first();
+
+    if (engagementResult) {
+      throw new InputException(
+        'firstScripture can not be set to true if it is not the only engagement for the language that has firstScripture=true',
+        'languageEngagement.firstScripture'
+      );
+    }
+  }
+
   // CREATE /////////////////////////////////////////////////////////
 
   async createLanguageEngagement(
@@ -186,6 +259,10 @@ export class EngagementService {
         'engagement.languageId',
         'Engagement for this project and language already exists'
       );
+    }
+
+    if (input.firstScripture) {
+      await this.verifyFirstScripture(undefined, languageId);
     }
 
     this.logger.debug('Mutation create language engagement ', {
@@ -780,6 +857,10 @@ export class EngagementService {
     input: UpdateLanguageEngagement,
     session: ISession
   ): Promise<LanguageEngagement> {
+    if (input.firstScripture) {
+      await this.verifyFirstScripture(input.id);
+    }
+
     const { pnp, ...rest } = input;
     const changes = {
       ...rest,
