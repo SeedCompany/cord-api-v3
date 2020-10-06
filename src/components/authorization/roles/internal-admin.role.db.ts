@@ -2,12 +2,15 @@ import { DbBudget } from '../../budget/model';
 import { DbBudgetRecord } from '../../budget/model/budget-record.model.db';
 import { DbCeremony } from '../../ceremony/model';
 import { DbInternshipEngagement, DbLanguageEngagement } from '../../engagement/model';
+import { DbFieldRegion } from '../../field-region/model';
+import { DbFieldZone } from '../../field-zone/model';
 import { DbDirectory, DbFile } from '../../file/model';
 import { DbFileVersion } from '../../file/model/file-version.model.db';
 import { DbFilm } from '../../film/model';
 import { DbFundingAccount } from '../../funding-account/model';
 import { DbEthnologueLanguage, DbLanguage } from '../../language/model';
 import { DbLiteracyMaterial } from '../../literacy-material/model';
+import { DbLocation } from '../../location/model';
 import { DbOrganization } from '../../organization/model';
 import { DbPartner } from '../../partner/model';
 import { DbPartnership } from '../../partnership/model';
@@ -71,6 +74,19 @@ export const InternalAdminRole = new DbRole({
         { propertyName: 'name',                       permission: { read, write, }, },
         { propertyName: 'population',                 permission: { read, write, }, },
         { propertyName: 'provisionalCode',            permission: { read, write, }, },
+    ]}),
+    new DbBaseNodeGrant<DbFieldRegion>({
+      __className: 'DbFieldRegion',
+      properties: [
+        { propertyName: 'director',                   permission: { read, write, }, },
+        { propertyName: 'name',                       permission: { read, write, }, },
+        { propertyName: 'fieldZone',                  permission: { read, write, }, },
+    ]}),
+    new DbBaseNodeGrant<DbFieldZone>({
+      __className: 'DbFieldZone',
+      properties: [
+        { propertyName: 'director',                   permission: { read, write, }, },
+        { propertyName: 'name',                       permission: { read, write, }, },
     ]}),
     new DbBaseNodeGrant<DbFile>({
       __className: 'DbFile',
@@ -173,6 +189,15 @@ export const InternalAdminRole = new DbRole({
       properties: [
         { propertyName: 'name',                       permission: { read, write, }, },
         { propertyName: 'scriptureReferences',        permission: { read, write, }, },
+    ]}),
+    new DbBaseNodeGrant<DbLocation>({
+      __className: 'DbLocation',
+      properties: [
+        { propertyName: 'name',                       permission: { read, write, }, },
+        { propertyName: 'type',                       permission: { read, write, }, },
+        { propertyName: 'sensitivity',                permission: { read, write, }, },
+        { propertyName: 'iso31663',                   permission: { read, write, }, },
+        { propertyName: 'fundingAccount',             permission: { read, write, }, },
     ]}),
     new DbBaseNodeGrant<DbOrganization>({
       __className: 'DbOrganization',

@@ -5,12 +5,15 @@ import {
   DbInternshipEngagement,
   DbLanguageEngagement,
 } from '../../engagement/model';
+import { DbFieldRegion } from '../../field-region/model';
+import { DbFieldZone } from '../../field-zone/model';
 import { DbDirectory, DbFile } from '../../file/model';
 import { DbFileVersion } from '../../file/model/file-version.model.db';
 import { DbFilm } from '../../film/model';
 import { DbFundingAccount } from '../../funding-account/model';
 import { DbEthnologueLanguage, DbLanguage } from '../../language/model';
 import { DbLiteracyMaterial } from '../../literacy-material/model';
+import { DbLocation } from '../../location/model';
 import { DbOrganization } from '../../organization/model';
 import { DbPartner } from '../../partner/model';
 import { DbPartnership } from '../../partnership/model';
@@ -25,6 +28,8 @@ export type AnyBaseNode = DbBudget &
   DbDirectory &
   DbEducation &
   DbEthnologueLanguage &
+  DbFieldRegion &
+  DbFieldZone &
   DbFile &
   DbFileVersion &
   DbFilm &
@@ -33,6 +38,7 @@ export type AnyBaseNode = DbBudget &
   DbLanguage &
   DbLanguageEngagement &
   DbLiteracyMaterial &
+  DbLocation &
   DbOrganization &
   DbPartner &
   DbPartnership &
@@ -48,6 +54,8 @@ export type OneBaseNode =
   | DbDirectory
   | DbEducation
   | DbEthnologueLanguage
+  | DbFieldRegion
+  | DbFieldZone
   | DbFile
   | DbFileVersion
   | DbFilm
@@ -56,6 +64,7 @@ export type OneBaseNode =
   | DbLanguage
   | DbLanguageEngagement
   | DbLiteracyMaterial
+  | DbLocation
   | DbOrganization
   | DbPartner
   | DbPartnership
