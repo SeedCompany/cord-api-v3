@@ -910,10 +910,19 @@ export class EngagementService {
             node('internshipEngagement', 'InternshipEngagement', {
               id: input.id,
             }),
+          ])
+          .optionalMatch([
+            node('internshipEngagement'),
             relation('out', 'rel', 'countryOfOrigin', { active: true }),
             node('oldCountry', 'Location'),
           ])
-          .delete('rel')
+          .set({
+            values: {
+              rel: {
+                active: false,
+              },
+            },
+          })
           .create([
             node('internshipEngagement'),
             relation('out', '', 'countryOfOrigin', {
