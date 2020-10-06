@@ -3,6 +3,7 @@ import { DbBudgetRecord } from '../../budget/model/budget-record.model.db';
 import { DbCeremony } from '../../ceremony/model';
 import { DbDirectory, DbFile } from '../../file/model';
 import { DbFileVersion } from '../../file/model/file-version.model.db';
+import { DbEthnologueLanguage, DbLanguage } from '../../language/model';
 /* eslint-disable @typescript-eslint/naming-convention */
 import { DbProject } from '../../project/model';
 import { DbEducation, DbUnavailability, DbUser } from '../../user/model';
@@ -53,6 +54,14 @@ export const InternalAdminRole = new DbRole({
         { propertyName: 'institution',                permission: { read, write, }, },
         { propertyName: 'major',                      permission: { read, write, }, },
     ]}),
+    new DbBaseNodeGrant<DbEthnologueLanguage>({
+      __className: 'DbEthnologueLanguage',
+      properties: [
+        { propertyName: 'code',                       permission: { read, write, }, },
+        { propertyName: 'name',                       permission: { read, write, }, },
+        { propertyName: 'population',                 permission: { read, write, }, },
+        { propertyName: 'provisionalCode',            permission: { read, write, }, },
+    ]}),
     new DbBaseNodeGrant<DbFile>({
       __className: 'DbFile',
       properties: [
@@ -69,6 +78,26 @@ export const InternalAdminRole = new DbRole({
         { propertyName: 'parent',                     permission: { read, write, }, },
         { propertyName: 'mimeType',                   permission: { read, write, }, },
         { propertyName: 'size',                       permission: { read, write, }, },
+    ]}),
+    new DbBaseNodeGrant<DbLanguage>({
+      __className: 'DbLanguage',
+      properties: [
+        { propertyName: 'displayName',                permission: { read, write, }, },
+        { propertyName: 'displayNamePronunciation',   permission: { read, write, }, },
+        { propertyName: 'isDialect',                  permission: { read, write, }, },
+        { propertyName: 'isSignLanguage',             permission: { read, write, }, },
+        { propertyName: 'leastOfThese',               permission: { read, write, }, },
+        { propertyName: 'name',                       permission: { read, write, }, },
+        { propertyName: 'leastOfTheseReason',         permission: { read, write, }, },
+        { propertyName: 'populationOverride',         permission: { read, write, }, },
+        { propertyName: 'registryOfDialectsCode',     permission: { read, write, }, },
+        { propertyName: 'name',                       permission: { read, write, }, },
+        { propertyName: 'signLanguageCode',           permission: { read, write, }, },
+        { propertyName: 'sponsorEstimatedEndDate',    permission: { read, write, }, },
+        { propertyName: 'ethnologue',                 permission: { read, write, }, },
+        { propertyName: 'name',                       permission: { read, write, }, },
+        { propertyName: 'sensitivity',                permission: { read, write, }, },
+        { propertyName: 'hasExternalFirstScripture',  permission: { read, write, }, },
     ]}),
     new DbBaseNodeGrant<DbProject>({
       __className: 'DbProject',
