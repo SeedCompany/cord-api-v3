@@ -1,6 +1,8 @@
 import { DbBudget } from '../../budget/model';
 import { DbBudgetRecord } from '../../budget/model/budget-record.model.db';
 import { DbCeremony } from '../../ceremony/model';
+import { DbDirectory, DbFile } from '../../file/model';
+import { DbFileVersion } from '../../file/model/file-version.model.db';
 /* eslint-disable @typescript-eslint/naming-convention */
 import { DbProject } from '../../project/model';
 import { DbUser } from '../../user/model';
@@ -36,6 +38,30 @@ export const InternalAdminRole = new DbRole({
         { propertyName: 'actualDate',                 permission: { read, write, }, },
         { propertyName: 'estimatedDate',              permission: { read, write, }, },
         { propertyName: 'planned',                    permission: { read, write, }, },
+    ]}),
+    new DbBaseNodeGrant<DbDirectory>({
+      __className: 'DbDirectory',
+      properties: [
+        { propertyName: 'name',                       permission: { read, write, }, },
+        { propertyName: 'createdBy',                  permission: { read, write, }, },
+        { propertyName: 'parent',                     permission: { read, write, }, },
+    ]}),
+    new DbBaseNodeGrant<DbFile>({
+      __className: 'DbFile',
+      properties: [
+        { propertyName: 'name',                       permission: { read, write, }, },
+        { propertyName: 'createdBy',                  permission: { read, write, }, },
+        { propertyName: 'parent',                     permission: { read, write, }, },
+        { propertyName: 'mimeType',                   permission: { read, write, }, },
+    ]}),
+    new DbBaseNodeGrant<DbFileVersion>({
+      __className: 'DbFileVersion',
+      properties: [
+        { propertyName: 'name',                       permission: { read, write, }, },
+        { propertyName: 'createdBy',                  permission: { read, write, }, },
+        { propertyName: 'parent',                     permission: { read, write, }, },
+        { propertyName: 'mimeType',                   permission: { read, write, }, },
+        { propertyName: 'size',                       permission: { read, write, }, },
     ]}),
     new DbBaseNodeGrant<DbProject>({
       __className: 'DbProject',
