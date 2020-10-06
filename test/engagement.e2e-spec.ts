@@ -228,7 +228,7 @@ describe('Engagement e2e', () => {
     expect(actual.firstScripture).toMatchObject(
       languageEngagement.firstScripture
     );
-    expect(actual.firstScripture).toMatchObject(
+    expect(actual.lukePartnership).toMatchObject(
       languageEngagement.lukePartnership
     );
     expect(actual.ceremony).toBeDefined();
@@ -977,6 +977,37 @@ describe('Engagement e2e', () => {
       })
     ).rejects.toThrowError(
       'Engagement for this project and person already exists'
+    );
+  });
+
+  it('can not set firstScripture=true if the language has hasExternalFirstScripture=true', async () => {
+    const language = await createLanguage(app, {
+      hasExternalFirstScripture: true,
+    });
+    await expect(
+      createLanguageEngagement(app, {
+        languageId: language.id,
+        firstScripture: true,
+      })
+    ).rejects.toThrowError(
+      'firstScripture can not be set to true if the language has hasExternalFirstScripture=true'
+    );
+  });
+
+  it('can not set firstScripture=true if it is not only engagement for the language that has firstScripture=true', async () => {
+    const language = await createLanguage(app);
+    await createLanguageEngagement(app, {
+      languageId: language.id,
+      firstScripture: true,
+    });
+    await createLanguageEngagement(app, { languageId: language.id });
+    await expect(
+      createLanguageEngagement(app, {
+        languageId: language.id,
+        firstScripture: true,
+      })
+    ).rejects.toThrowError(
+      'firstScripture can not be set to true if it is not the only engagement for the language that has firstScripture=true'
     );
   });
 });
