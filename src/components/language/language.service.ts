@@ -39,7 +39,6 @@ import {
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto/powers';
-import { InternalAdminRole } from '../authorization/roles';
 import { EngagementService } from '../engagement';
 import {
   Location,
@@ -48,6 +47,7 @@ import {
   SecuredLocationList,
 } from '../location';
 import {
+  InternalRole,
   Project,
   ProjectListInput,
   ProjectService,
@@ -61,7 +61,6 @@ import {
   UpdateLanguage,
 } from './dto';
 import { EthnologueLanguageService } from './ethnologue-language';
-import { DbLanguage } from './model';
 
 @Injectable()
 export class LanguageService {
@@ -255,10 +254,9 @@ export class LanguageService {
         throw new ServerException('failed to create language');
       }
 
-      const dbLanguage = new DbLanguage();
       await this.authorizationService.addPermsForRole(
-        InternalAdminRole,
-        dbLanguage,
+        InternalRole.Admin,
+        'Language',
         resultLanguage.id,
         session.userId as string
       );

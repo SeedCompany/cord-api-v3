@@ -30,7 +30,7 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { InternalAdminRole } from '../authorization/roles';
+import { InternalRole } from '../authorization/dto';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
 import {
   CreateStory,
@@ -39,7 +39,6 @@ import {
   StoryListOutput,
   UpdateStory,
 } from './dto';
-import { DbStory } from './model';
 @Injectable()
 export class StoryService {
   constructor(
@@ -101,10 +100,9 @@ export class StoryService {
         throw new ServerException('failed to create a story');
       }
 
-      const dbStory = new DbStory();
       await this.authorizationService.addPermsForRole(
-        InternalAdminRole,
-        dbStory,
+        InternalRole.Admin,
+        'Story',
         result.id,
         session.userId as string
       );

@@ -31,7 +31,7 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { InternalAdminRole } from '../authorization/roles';
+import { InternalRole } from '../authorization/dto';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
 import {
   CreateLiteracyMaterial,
@@ -40,7 +40,6 @@ import {
   LiteracyMaterialListOutput,
   UpdateLiteracyMaterial,
 } from './dto';
-import { DbLiteracyMaterial } from './model';
 @Injectable()
 export class LiteracyMaterialService {
   constructor(
@@ -107,10 +106,9 @@ export class LiteracyMaterialService {
         throw new ServerException('failed to create a literacy material');
       }
 
-      const dbLiteracyMaterial = new DbLiteracyMaterial();
       await this.authorizationService.addPermsForRole(
-        InternalAdminRole,
-        dbLiteracyMaterial,
+        InternalRole.Admin,
+        'LiteracyMaterial',
         result.id,
         session.userId as string
       );

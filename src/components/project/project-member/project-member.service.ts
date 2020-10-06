@@ -37,10 +37,6 @@ import {
   StandardReadResult,
 } from '../../../core/database/results';
 import { AuthorizationService } from '../../authorization/authorization.service';
-import {
-  InternalAdminRole,
-  InternalAdminViewOfProjectMemberRole,
-} from '../../authorization/roles';
 import { UserService } from '../../user';
 import {
   CreateProjectMember,
@@ -51,7 +47,6 @@ import {
   Role,
   UpdateProjectMember,
 } from './dto';
-import { DbProjectMember } from './model';
 
 @Injectable()
 export class ProjectMemberService {
@@ -150,10 +145,9 @@ export class ProjectMemberService {
         .first();
 
       // creating user must be an admin, use role change event
-      const dbProjectMember = new DbProjectMember();
       await this.authorizationService.addPermsForRole(
-        InternalAdminRole,
-        dbProjectMember,
+        InternalRole.Admin,
+        'ProjectMember',
         memberQuery?.id,
         session.userId!
       );
@@ -360,10 +354,9 @@ export class ProjectMemberService {
 
     for (const id of result?.ids) {
       // creating user must be an admin, use role change event
-      const dbProjectMember = new DbProjectMember();
       await this.authorizationService.addPermsForRole(
-        InternalAdminViewOfProjectMemberRole,
-        dbProjectMember,
+        InternalRole.AdminViewOfProjectMember,
+        'ProjectMember',
         userId,
         id
       );

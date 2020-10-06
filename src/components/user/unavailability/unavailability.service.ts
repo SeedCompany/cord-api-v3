@@ -18,8 +18,7 @@ import {
   StandardReadResult,
 } from '../../../core/database/results';
 import { AuthorizationService } from '../../authorization/authorization.service';
-import { InternalAdminRole } from '../../authorization/roles';
-import { DbUnavailability } from '../model';
+import { InternalRole } from '../../authorization/dto';
 import {
   CreateUnavailability,
   Unavailability,
@@ -91,10 +90,9 @@ export class UnavailabilityService {
         throw new ServerException('Could not create unavailability');
       }
 
-      const dbUnavailability = new DbUnavailability();
       await this.authorizationService.addPermsForRole(
-        InternalAdminRole,
-        dbUnavailability,
+        InternalRole.Admin,
+        'Unavailability',
         createUnavailabilityResult.id,
         session.userId as string
       );

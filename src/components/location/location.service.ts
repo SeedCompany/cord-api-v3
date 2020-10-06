@@ -32,7 +32,7 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { InternalAdminRole } from '../authorization/roles';
+import { InternalRole } from '../authorization/dto';
 import {
   CreateLocation,
   Location,
@@ -40,7 +40,6 @@ import {
   LocationListOutput,
   UpdateLocation,
 } from './dto';
-import { DbLocation } from './model';
 
 @Injectable()
 export class LocationService {
@@ -136,10 +135,9 @@ export class LocationService {
       throw new ServerException('failed to create location');
     }
 
-    const dbLocation = new DbLocation();
     await this.authorizationService.addPermsForRole(
-      InternalAdminRole,
-      dbLocation,
+      InternalRole.Admin,
+      'Location',
       result.id,
       session.userId as string
     );

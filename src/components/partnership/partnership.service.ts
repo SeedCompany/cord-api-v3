@@ -33,10 +33,9 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { InternalAdminRole } from '../authorization/roles';
 import { FileService } from '../file';
 import { PartnerService, PartnerType } from '../partner';
-import { ProjectService } from '../project';
+import { InternalRole, ProjectService } from '../project';
 import {
   CreatePartnership,
   FinancialReportingType,
@@ -51,7 +50,6 @@ import {
   PartnershipDeletedEvent,
   PartnershipUpdatedEvent,
 } from './events';
-import { DbPartnership } from './model';
 
 @Injectable()
 export class PartnershipService {
@@ -198,10 +196,9 @@ export class PartnershipService {
         throw new ServerException('failed to create partnership');
       }
 
-      const dbPartnership = new DbPartnership();
       await this.authorizationService.addPermsForRole(
-        InternalAdminRole,
-        dbPartnership,
+        InternalRole.Admin,
+        'Partnership',
         result.id,
         session.userId as string
       );

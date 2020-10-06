@@ -2,8 +2,7 @@ import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
 import { generate } from 'shortid';
-import { BaseNodeEnum } from '../src/common';
-import { Favorite } from '../src/components/favorites';
+import { BaseNode, Favorite } from '../src/components/favorites';
 import {
   addFavorite,
   createOrganization,
@@ -68,7 +67,7 @@ describe.skip('Favorite e2e', () => {
         await addFavorite(app, org.id);
       })
     );
-    const baseNode = BaseNodeEnum.Organization;
+    const baseNode = BaseNode.Organization;
 
     const { favorites } = await app.graphql.query(
       gql`

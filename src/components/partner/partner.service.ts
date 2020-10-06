@@ -31,7 +31,7 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { InternalAdminRole } from '../authorization/roles';
+import { InternalRole } from '../authorization/dto';
 import {
   CreatePartner,
   Partner,
@@ -39,7 +39,6 @@ import {
   PartnerListOutput,
   UpdatePartner,
 } from './dto';
-import { DbPartner } from './model';
 
 @Injectable()
 export class PartnerService {
@@ -102,10 +101,9 @@ export class PartnerService {
       throw new ServerException('failed to create partner');
     }
 
-    const dbPartner = new DbPartner();
     await this.authorizationService.addPermsForRole(
-      InternalAdminRole,
-      dbPartner,
+      InternalRole.Admin,
+      'Partner',
       result.id,
       session.userId as string
     );

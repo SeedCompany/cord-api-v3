@@ -36,7 +36,7 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { InternalAdminRole } from '../authorization/roles';
+import { InternalRole } from '../authorization/dto';
 import { Film, FilmService } from '../film';
 import {
   LiteracyMaterial,
@@ -59,7 +59,6 @@ import {
   ProductMethodology,
   UpdateProduct,
 } from './dto';
-import { DbProduct } from './model';
 
 @Injectable()
 export class ProductService {
@@ -254,10 +253,9 @@ export class ProductService {
       throw new ServerException('failed to create default product');
     }
 
-    const dbProduct = new DbProduct();
     await this.authorizationService.addPermsForRole(
-      InternalAdminRole,
-      dbProduct,
+      InternalRole.Admin,
+      'Product',
       result.id,
       session.userId as string
     );

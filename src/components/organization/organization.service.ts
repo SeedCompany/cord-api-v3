@@ -34,7 +34,7 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { InternalAdminRole } from '../authorization/roles';
+import { InternalRole } from '../authorization/dto';
 import {
   CreateOrganization,
   Organization,
@@ -42,7 +42,6 @@ import {
   OrganizationListOutput,
   UpdateOrganization,
 } from './dto';
-import { DbOrganization } from './model';
 
 @Injectable()
 export class OrganizationService {
@@ -136,10 +135,9 @@ export class OrganizationService {
       throw new ServerException('failed to create default org');
     }
 
-    const dbOrganization = new DbOrganization();
     await this.authorizationService.addPermsForRole(
-      InternalAdminRole,
-      dbOrganization,
+      InternalRole.Admin,
+      'Organization',
       result.id,
       session.userId as string
     );

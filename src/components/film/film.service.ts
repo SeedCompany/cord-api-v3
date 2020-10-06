@@ -30,7 +30,7 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { InternalAdminRole } from '../authorization/roles';
+import { InternalRole } from '../project';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
 import {
   CreateFilm,
@@ -39,7 +39,6 @@ import {
   FilmListOutput,
   UpdateFilm,
 } from './dto';
-import { DbFilm } from './model';
 @Injectable()
 export class FilmService {
   constructor(
@@ -100,10 +99,9 @@ export class FilmService {
         throw new ServerException('failed to create a film');
       }
 
-      const dbFilm = new DbFilm();
       await this.authorizationService.addPermsForRole(
-        InternalAdminRole,
-        dbFilm,
+        InternalRole.Admin,
+        'Film',
         result.id,
         session.userId as string
       );

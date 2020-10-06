@@ -30,7 +30,7 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { InternalAdminRole } from '../authorization/roles';
+import { InternalRole } from '../authorization/dto';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
 import {
   CreateSong,
@@ -39,7 +39,6 @@ import {
   SongListOutput,
   UpdateSong,
 } from './dto';
-import { DbSong } from './model';
 
 @Injectable()
 export class SongService {
@@ -103,10 +102,9 @@ export class SongService {
         throw new ServerException('failed to create a song');
       }
 
-      const dbSong = new DbSong();
       await this.authorizationService.addPermsForRole(
-        InternalAdminRole,
-        dbSong,
+        InternalRole.Admin,
+        'Song',
         result.id,
         session.userId as string
       );

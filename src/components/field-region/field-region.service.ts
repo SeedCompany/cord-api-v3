@@ -31,7 +31,7 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { InternalAdminRole } from '../authorization/roles';
+import { InternalRole } from '../project';
 import {
   CreateFieldRegion,
   FieldRegion,
@@ -39,7 +39,6 @@ import {
   FieldRegionListOutput,
   UpdateFieldRegion,
 } from './dto';
-import { DbFieldRegion } from './model';
 
 @Injectable()
 export class FieldRegionService {
@@ -136,10 +135,9 @@ export class FieldRegionService {
       throw new ServerException('failed to create field region');
     }
 
-    const dbFieldRegion = new DbFieldRegion();
     await this.authorizationService.addPermsForRole(
-      InternalAdminRole,
-      dbFieldRegion,
+      InternalRole.Admin,
+      'FieldRegion',
       result.id,
       session.userId as string
     );

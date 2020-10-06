@@ -31,7 +31,7 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { InternalAdminRole } from '../authorization/roles';
+import { InternalRole } from '../project';
 import {
   CreateFieldZone,
   FieldZone,
@@ -39,7 +39,6 @@ import {
   FieldZoneListOutput,
   UpdateFieldZone,
 } from './dto';
-import { DbFieldZone } from './model';
 
 @Injectable()
 export class FieldZoneService {
@@ -125,10 +124,9 @@ export class FieldZoneService {
       throw new ServerException('failed to create field zone');
     }
 
-    const dbFieldZone = new DbFieldZone();
     await this.authorizationService.addPermsForRole(
-      InternalAdminRole,
-      dbFieldZone,
+      InternalRole.Admin,
+      'FieldZone',
       result.id,
       session.userId as string
     );

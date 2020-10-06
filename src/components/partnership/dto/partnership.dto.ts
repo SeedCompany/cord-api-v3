@@ -4,6 +4,7 @@ import {
   Secured,
   SecuredDateNullable,
   SecuredEnum,
+  SecuredKeys,
 } from '../../../common';
 import { DefinedFile } from '../../file/dto';
 import { SecuredPartnerTypes } from '../../partner/dto/partner-type.enum';
@@ -58,4 +59,13 @@ export class Partnership extends Resource {
 
   @Field()
   readonly financialReportingType: SecuredFinancialReportingType;
+}
+
+declare module '../../authorization/policies/mapping' {
+  interface TypeToDto {
+    Partnership: Partnership;
+  }
+  interface TypeToSecuredProps {
+    Partnership: SecuredKeys<Partnership> | 'organization';
+  }
 }
