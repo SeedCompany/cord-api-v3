@@ -211,6 +211,8 @@ describe('User e2e', () => {
   it('list view of users', async () => {
     await createUser(app);
     await createUser(app);
+    await createUser(app);
+    await createUser(app);
 
     await login(app, {
       email: process.env.ROOT_ADMIN_EMAIL,
