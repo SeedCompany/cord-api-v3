@@ -31,7 +31,6 @@ import {
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { InternalAdminRole } from '../authorization/roles';
-import { InternalRole } from '../project';
 import {
   CreateFundingAccount,
   FundingAccount,

@@ -1,16 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
-import { pickBy, union } from 'lodash';
+import { union } from 'lodash';
 import { generate } from 'shortid';
-import { keys, ServerException, UnauthorizedException } from '../../common';
+import { ServerException, UnauthorizedException } from '../../common';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
-import { InternalRole, Role as ProjectRole } from './dto';
 import { Powers } from './dto/powers';
 import { DbRole, OneBaseNode } from './model';
-import { getRolePermissions, hasPerm, Perm, TypeToDto } from './policies';
 import { InternalAdminRole } from './roles';
-
-type Role = ProjectRole | InternalRole;
 
 /**
  * powers can exist on a security group or a user node

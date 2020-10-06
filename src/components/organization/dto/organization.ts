@@ -1,10 +1,5 @@
 import { Field, ObjectType } from '@nestjs/graphql';
-import {
-  Resource,
-  SecuredKeys,
-  SecuredProperty,
-  SecuredString,
-} from '../../../common';
+import { Resource, SecuredProperty, SecuredString } from '../../../common';
 
 @ObjectType({
   implements: Resource,
@@ -12,15 +7,6 @@ import {
 export class Organization extends Resource {
   @Field()
   readonly name: SecuredString;
-}
-
-declare module '../../authorization/policies/mapping' {
-  interface TypeToDto {
-    Organization: Organization;
-  }
-  interface TypeToSecuredProps {
-    Organization: SecuredKeys<Organization>;
-  }
 }
 
 @ObjectType({

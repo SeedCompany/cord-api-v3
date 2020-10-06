@@ -121,17 +121,3 @@ export const isFileVersion = (node: AnyFileNode): node is FileVersion =>
   isFileVersionNode(node);
 export const isFileVersionNode = (node: BaseNode) =>
   node.type === FileNodeType.FileVersion;
-
-declare module '../../authorization/policies/mapping' {
-  interface TypeToDto {
-    Directory: Directory;
-    File: File;
-    FileVersion: FileVersion;
-  }
-  type NodeKeys = 'name' | 'createdBy' | 'parent';
-  interface TypeToSecuredProps {
-    Directory: NodeKeys;
-    File: NodeKeys | 'mimeType' | 'size';
-    FileVersion: NodeKeys | 'mimeType' | 'size';
-  }
-}

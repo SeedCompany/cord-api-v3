@@ -3,7 +3,6 @@ import {
   Resource,
   SecuredBoolean,
   SecuredDate,
-  SecuredKeys,
   SecuredProperty,
 } from '../../../common';
 import { CeremonyType } from './type.enum';
@@ -23,15 +22,6 @@ export class Ceremony extends Resource {
 
   @Field()
   readonly actualDate: SecuredDate;
-}
-
-declare module '../../authorization/policies/mapping' {
-  interface TypeToDto {
-    Ceremony: Ceremony;
-  }
-  interface TypeToSecuredProps {
-    Ceremony: SecuredKeys<Ceremony>;
-  }
 }
 
 @ObjectType({
