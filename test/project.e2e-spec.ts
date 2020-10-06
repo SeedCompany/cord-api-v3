@@ -507,6 +507,65 @@ describe('Project e2e', () => {
     );
   });
 
+  it('List of projects sorted by Sensitivity', async () => {
+    //Create three projects, each beginning with lower or upper-cases.
+    await createProject(app, {
+      name: 'High Sensitivity Proj',
+      type: ProjectType.Internship,
+      sensitivity: Sensitivity.High,
+    });
+
+    await createProject(app, {
+      name: 'Low Sensitivity Proj',
+      type: ProjectType.Internship,
+      sensitivity: Sensitivity.Low,
+    });
+
+    await createProject(app, {
+      name: 'Med Sensitivity Proj',
+      type: ProjectType.Internship,
+      sensitivity: Sensitivity.Medium,
+    });
+
+    const getSensitivitySortedProjects = async (order: 'ASC' | 'DESC') =>
+      await app.graphql.query(
+        gql`
+          query projects($input: ProjectListInput!) {
+            projects(input: $input) {
+              hasMore
+              total
+              items {
+                id
+                sensitivity
+              }
+            }
+          }
+        `,
+        {
+          input: {
+            sort: 'sensitivity',
+            order,
+          },
+        }
+      );
+
+    const { projects: ascendingProjects } = await getSensitivitySortedProjects(
+      'ASC'
+    );
+
+    expect(ascendingProjects.items[0].sensitivity).toEqual(Sensitivity.Low);
+    expect(ascendingProjects.items[1].sensitivity).toEqual(Sensitivity.Medium);
+    expect(ascendingProjects.items[2].sensitivity).toEqual(Sensitivity.High);
+
+    const { projects: descendingProjects } = await getSensitivitySortedProjects(
+      'DESC'
+    );
+
+    expect(descendingProjects.items[0].sensitivity).toEqual(Sensitivity.High);
+    expect(descendingProjects.items[1].sensitivity).toEqual(Sensitivity.Medium);
+    expect(descendingProjects.items[2].sensitivity).toEqual(Sensitivity.Low);
+  });
+
   it('List view of my projects', async () => {
     const numProjects = 2;
     const type = ProjectType.Translation;
