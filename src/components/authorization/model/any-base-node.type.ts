@@ -4,22 +4,26 @@ import { DbCeremony } from '../../ceremony/model';
 import { DbDirectory, DbFile } from '../../file/model';
 import { DbFileVersion } from '../../file/model/file-version.model.db';
 import { DbProject } from '../../project/model';
-import { DbUser } from '../../user/model';
+import { DbEducation, DbUnavailability, DbUser } from '../../user/model';
 
 export type AnyBaseNode = DbBudget &
   DbBudgetRecord &
   DbCeremony &
   DbDirectory &
+  DbEducation &
   DbFile &
   DbFileVersion &
   DbProject &
+  DbUnavailability &
   DbUser;
 export type OneBaseNode =
   | DbBudget
   | DbBudgetRecord
   | DbCeremony
   | DbDirectory
+  | DbEducation
   | DbFile
   | DbFileVersion
   | DbProject
+  | DbUnavailability
   | DbUser;

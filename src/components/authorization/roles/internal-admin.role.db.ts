@@ -5,7 +5,7 @@ import { DbDirectory, DbFile } from '../../file/model';
 import { DbFileVersion } from '../../file/model/file-version.model.db';
 /* eslint-disable @typescript-eslint/naming-convention */
 import { DbProject } from '../../project/model';
-import { DbUser } from '../../user/model';
+import { DbEducation, DbUnavailability, DbUser } from '../../user/model';
 import { Powers } from '../dto/powers';
 import { DbBaseNodeGrant, DbRole } from '../model';
 
@@ -45,6 +45,13 @@ export const InternalAdminRole = new DbRole({
         { propertyName: 'name',                       permission: { read, write, }, },
         { propertyName: 'createdBy',                  permission: { read, write, }, },
         { propertyName: 'parent',                     permission: { read, write, }, },
+    ]}),
+    new DbBaseNodeGrant<DbEducation>({
+      __className: 'DbEducation',
+      properties: [
+        { propertyName: 'degree',                     permission: { read, write, }, },
+        { propertyName: 'institution',                permission: { read, write, }, },
+        { propertyName: 'major',                      permission: { read, write, }, },
     ]}),
     new DbBaseNodeGrant<DbFile>({
       __className: 'DbFile',
@@ -102,6 +109,13 @@ export const InternalAdminRole = new DbRole({
         { propertyName: 'education',                  permission: { read, write, }, },
         { propertyName: 'organization',               permission: { read, write, }, },
         { propertyName: 'unavailability',             permission: { read, write, }, },
+    ]}),
+    new DbBaseNodeGrant<DbUnavailability>({
+      __className: 'DbUnavailability',
+      properties: [
+        { propertyName: 'description',                permission: { read, write, }, },
+        { propertyName: 'end',                        permission: { read, write, }, },
+        { propertyName: 'start',                      permission: { read, write, }, },
     ]}),
   ],
 });
