@@ -36,8 +36,8 @@ import {
 } from '../../core/database/results';
 import { Role } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { InternalRole } from '../authorization/dto';
 import { Powers } from '../authorization/dto/powers';
+import { InternalAdminRole } from '../authorization/roles';
 import {
   OrganizationListInput,
   OrganizationService,
@@ -57,6 +57,7 @@ import {
   EducationService,
   SecuredEducationList,
 } from './education';
+import { DbUser } from './model';
 import {
   SecuredUnavailabilityList,
   UnavailabilityListInput,
@@ -169,10 +170,10 @@ export class UserService {
     if (!result) {
       throw new ServerException('Failed to create user');
     }
-
+    const dbUser = new DbUser();
     await this.authorizationService.addPermsForRole(
-      InternalRole.Admin,
-      'User',
+      InternalAdminRole,
+      dbUser,
       id,
       id
     );

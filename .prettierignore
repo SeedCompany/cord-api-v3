@@ -6,3 +6,4 @@
 tsconfig.json
 tsconfig.*.json
 schema.gql
+*.role.*

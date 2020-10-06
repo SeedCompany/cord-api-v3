@@ -12,7 +12,8 @@ import {
   matchSession,
 } from '../../../core';
 import { AuthorizationService } from '../../authorization/authorization.service';
-import { InternalRole } from '../../authorization/dto';
+import { InternalAdminRole } from '../../authorization/roles';
+import { DbEducation } from '../model';
 import {
   CreateEducation,
   Education,
@@ -164,9 +165,10 @@ export class EducationService {
       }
       this.logger.debug(`Created user education`, { id, userId });
 
+      const dbEducation = new DbEducation();
       await this.authorizationService.addPermsForRole(
-        InternalRole.Admin,
-        'Education',
+        InternalAdminRole,
+        dbEducation,
         id,
         session.userId as string
       );
