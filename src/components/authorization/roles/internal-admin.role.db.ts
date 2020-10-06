@@ -7,8 +7,14 @@ import { DbFileVersion } from '../../file/model/file-version.model.db';
 import { DbFilm } from '../../film/model';
 import { DbFundingAccount } from '../../funding-account/model';
 import { DbEthnologueLanguage, DbLanguage } from '../../language/model';
+import { DbLiteracyMaterial } from '../../literacy-material/model';
+import { DbOrganization } from '../../organization/model';
+import { DbPartner } from '../../partner/model';
+import { DbPartnership } from '../../partnership/model';
+import { DbProduct } from '../../product/model';
 /* eslint-disable @typescript-eslint/naming-convention */
 import { DbProject } from '../../project/model';
+import { DbProjectMember } from '../../project/project-member/model';
 import { DbEducation, DbUnavailability, DbUser } from '../../user/model';
 import { Powers } from '../dto/powers';
 import { DbBaseNodeGrant, DbRole } from '../model';
@@ -162,7 +168,51 @@ export const InternalAdminRole = new DbRole({
         { propertyName: 'modifiedAt',                 permission: { read, write, }, },
         { propertyName: 'product',                    permission: { read, write, }, },
     ]}),
-
+    new DbBaseNodeGrant<DbLiteracyMaterial>({
+      __className: 'DbLiteracyMaterial',
+      properties: [
+        { propertyName: 'name',                       permission: { read, write, }, },
+        { propertyName: 'scriptureReferences',        permission: { read, write, }, },
+    ]}),
+    new DbBaseNodeGrant<DbOrganization>({
+      __className: 'DbOrganization',
+      properties: [
+        { propertyName: 'name',                       permission: { read, write, }, },
+    ]}),
+    new DbBaseNodeGrant<DbPartner>({
+      __className: 'DbPartner',
+      properties: [
+        { propertyName: 'organization',               permission: { read, write, }, },
+        { propertyName: 'pointOfContact',             permission: { read, write, }, },
+        { propertyName: 'types',                      permission: { read, write, }, },
+    ]}),
+    new DbBaseNodeGrant<DbPartnership>({
+      __className: 'DbPartnership',
+      properties: [
+        { propertyName: 'agreement',                  permission: { read, write, }, },
+        { propertyName: 'agreementStatus',            permission: { read, write, }, },
+        { propertyName: 'financialReportingType',     permission: { read, write, }, },
+        { propertyName: 'mou',                        permission: { read, write, }, },
+        { propertyName: 'mouEnd',                     permission: { read, write, }, },
+        { propertyName: 'mouEndOverride',             permission: { read, write, }, },
+        { propertyName: 'mouStart',                   permission: { read, write, }, },
+        { propertyName: 'mouStartOverride',           permission: { read, write, }, },
+        { propertyName: 'mouStatus',                  permission: { read, write, }, },
+        { propertyName: 'types',                      permission: { read, write, }, },
+        { propertyName: 'organization',               permission: { read, write, }, },
+        { propertyName: 'partner',                    permission: { read, write, }, },
+    ]}),
+    new DbBaseNodeGrant<DbProduct>({
+      __className: 'DbProduct',
+      properties: [
+        { propertyName: 'mediums',                    permission: { read, write, }, },
+        { propertyName: 'methodology',                permission: { read, write, }, },
+        { propertyName: 'purposes',                   permission: { read, write, }, },
+        { propertyName: 'scriptureReferences',        permission: { read, write, }, },
+        { propertyName: 'produces',                   permission: { read, write, }, },
+        { propertyName: 'scriptureReferencesOverride',permission: { read, write, }, },
+        { propertyName: 'isOverriding',               permission: { read, write, }, },
+      ]}),
     new DbBaseNodeGrant<DbProject>({
       __className: 'DbProject',
       properties: [
@@ -185,6 +235,13 @@ export const InternalAdminRole = new DbRole({
         { propertyName: 'engagement',                 permission: { read, write, }, },
         { propertyName: 'sensitivity',                permission: { read, write, }, },
       ]}),
+    new DbBaseNodeGrant<DbProjectMember>({
+      __className: 'DbProjectMember',
+      properties: [
+        { propertyName: 'roles',                      permission: { read, write, }, },
+        { propertyName: 'user',                       permission: { read, write, }, },
+        { propertyName: 'modifiedAt',                 permission: { read, write, }, },
+        ]}),
     new DbBaseNodeGrant<DbUser>({
       __className: 'DbUser',
       properties: [
