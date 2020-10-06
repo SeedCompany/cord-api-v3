@@ -2,7 +2,6 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import {
   Resource,
   Secured,
-  SecuredKeys,
   SecuredProperty,
   SecuredString,
 } from '../../../common';
@@ -15,15 +14,6 @@ export class FieldZone extends Resource {
   readonly name: SecuredString;
 
   readonly director: Secured<string>;
-}
-
-declare module '../../authorization/policies/mapping' {
-  interface TypeToDto {
-    FieldZone: FieldZone;
-  }
-  interface TypeToSecuredProps {
-    FieldZone: SecuredKeys<FieldZone>;
-  }
 }
 
 @ObjectType({

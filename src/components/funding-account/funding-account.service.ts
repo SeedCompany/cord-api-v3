@@ -30,7 +30,7 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { InternalRole } from '../project';
+import { InternalAdminRole } from '../authorization/roles';
 import {
   CreateFundingAccount,
   FundingAccount,
@@ -38,6 +38,7 @@ import {
   FundingAccountListOutput,
   UpdateFundingAccount,
 } from './dto';
+import { DbFundingAccount } from './model';
 
 @Injectable()
 export class FundingAccountService {
@@ -120,9 +121,10 @@ export class FundingAccountService {
         throw new ServerException('Failed to create funding account');
       }
 
+      const dbFundingAccount = new DbFundingAccount();
       await this.authorizationService.addPermsForRole(
-        InternalRole.Admin,
-        'FundingAccount',
+        InternalAdminRole,
+        dbFundingAccount,
         result.id,
         session.userId as string
       );

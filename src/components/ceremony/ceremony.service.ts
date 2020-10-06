@@ -33,7 +33,7 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { InternalRole } from '../authorization/dto';
+import { InternalAdminRole } from '../authorization/roles';
 import {
   Ceremony,
   CeremonyListInput,
@@ -41,6 +41,7 @@ import {
   CreateCeremony,
   UpdateCeremony,
 } from './dto';
+import { DbCeremony } from './model';
 
 @Injectable()
 export class CeremonyService {
@@ -99,9 +100,10 @@ export class CeremonyService {
         throw new ServerException('failed to create a budget');
       }
 
+      const dbCeremony = new DbCeremony();
       await this.authorizationService.addPermsForRole(
-        InternalRole.Admin,
-        'Ceremony',
+        InternalAdminRole,
+        dbCeremony,
         result.id,
         session.userId as string
       );

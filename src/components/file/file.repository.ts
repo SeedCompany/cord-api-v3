@@ -27,8 +27,10 @@ import {
   Property,
 } from '../../core';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { InternalRole } from '../project';
+import { InternalAdminRole } from '../authorization/roles';
 import { BaseNode, FileListInput, FileNodeType, FileVersion } from './dto';
+import { DbDirectory, DbFile } from './model';
+import { DbFileVersion } from './model/file-version.model.db';
 
 @Injectable()
 export class FileRepository {
@@ -273,9 +275,10 @@ export class FileRepository {
       throw new ServerException('Failed to create directory');
     }
 
+    const dbDirectory = new DbDirectory();
     await this.authorizationService.addPermsForRole(
-      InternalRole.Admin,
-      'Directory',
+      InternalAdminRole,
+      dbDirectory,
       result.id,
       session.userId as string
     );
@@ -316,9 +319,10 @@ export class FileRepository {
       throw new ServerException('Failed to create file');
     }
 
+    const dbFile = new DbFile();
     await this.authorizationService.addPermsForRole(
-      InternalRole.Admin,
-      'File',
+      InternalAdminRole,
+      dbFile,
       result.id,
       session.userId as string
     );
@@ -379,9 +383,10 @@ export class FileRepository {
       throw new ServerException('Failed to create file version');
     }
 
+    const dbFileVersion = new DbFileVersion();
     await this.authorizationService.addPermsForRole(
-      InternalRole.Admin,
-      'FileVersion',
+      InternalAdminRole,
+      dbFileVersion,
       result.id,
       session.userId as string
     );

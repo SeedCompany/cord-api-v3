@@ -3,7 +3,6 @@ import {
   Resource,
   Secured,
   SecuredEnum,
-  SecuredKeys,
   SecuredProperty,
   SecuredString,
   Sensitivity,
@@ -32,15 +31,6 @@ export class Location extends Resource {
   readonly iso31663: SecuredString;
 
   readonly fundingAccount: Secured<string>;
-}
-
-declare module '../../authorization/policies/mapping' {
-  interface TypeToDto {
-    Location: Location;
-  }
-  interface TypeToSecuredProps {
-    Location: SecuredKeys<Location> | 'sensitivity';
-  }
 }
 
 @ObjectType({

@@ -32,8 +32,8 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { InternalAdminRole } from '../authorization/roles';
 import { FileService } from '../file';
-import { InternalRole } from '../project';
 import {
   Budget,
   BudgetListInput,
@@ -47,6 +47,8 @@ import {
   UpdateBudget,
   UpdateBudgetRecord,
 } from './dto';
+import { DbBudget } from './model';
+import { DbBudgetRecord } from './model/budget-record.model.db';
 
 @Injectable()
 export class BudgetService {
@@ -149,9 +151,10 @@ export class BudgetService {
         userId: session.userId,
       });
 
+      const dbBudget = new DbBudget();
       await this.authorizationService.addPermsForRole(
-        InternalRole.Admin,
-        'Budget',
+        InternalAdminRole,
+        dbBudget,
         result.id,
         session.userId as string
       );
@@ -208,9 +211,10 @@ export class BudgetService {
         throw new ServerException('failed to create a budget record');
       }
 
+      const dbBudgetRecord = new DbBudgetRecord();
       await this.authorizationService.addPermsForRole(
-        InternalRole.Admin,
-        'BudgetRecord',
+        InternalAdminRole,
+        dbBudgetRecord,
         result.id,
         session.userId as string
       );

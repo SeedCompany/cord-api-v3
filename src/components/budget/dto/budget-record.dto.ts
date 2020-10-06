@@ -3,7 +3,6 @@ import {
   Resource,
   SecuredFloatNullable,
   SecuredInt,
-  SecuredKeys,
   SecuredString,
 } from '../../../common';
 
@@ -18,13 +17,4 @@ export class BudgetRecord extends Resource {
 
   @Field()
   readonly amount: SecuredFloatNullable;
-}
-
-declare module '../../authorization/policies/mapping' {
-  interface TypeToDto {
-    BudgetRecord: BudgetRecord;
-  }
-  interface TypeToSecuredProps {
-    BudgetRecord: SecuredKeys<BudgetRecord>;
-  }
 }

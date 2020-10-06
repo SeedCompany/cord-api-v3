@@ -42,6 +42,7 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { InternalAdminRole } from '../authorization/roles';
 import { Budget, BudgetService, BudgetStatus, SecuredBudget } from '../budget';
 import {
   EngagementListInput,
@@ -78,8 +79,8 @@ import {
   ProjectDeletedEvent,
   ProjectUpdatedEvent,
 } from './events';
+import { DbProject } from './model';
 import {
-  InternalRole,
   ProjectMemberListInput,
   ProjectMemberService,
   Role,
@@ -305,9 +306,11 @@ export class ProjectService {
         throw new ServerException('failed to create a project');
       }
 
+      const dbProject = new DbProject(); // wip: this will actually be used later. temp using an empty object now.
+
       await this.authorizationService.addPermsForRole(
-        InternalRole.Admin,
-        'Project',
+        InternalAdminRole,
+        dbProject,
         result.id,
         session.userId
       );

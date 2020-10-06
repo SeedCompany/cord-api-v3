@@ -6,7 +6,6 @@ import {
   Resource,
   Secured,
   SecuredDate,
-  SecuredKeys,
   SecuredString,
   Sensitivity,
 } from '../../../common';
@@ -84,23 +83,4 @@ export class TranslationProject extends Project {
 })
 export class InternshipProject extends Project {
   readonly type: ProjectType.Internship;
-}
-
-declare module '../../authorization/policies/mapping' {
-  interface TypeToDto {
-    Project: AnyProject;
-  }
-  interface TypeToSecuredProps {
-    Project:
-      | SecuredKeys<Project>
-      | 'sensitivity'
-      | 'modifiedAt'
-      | 'rootDirectory'
-      | 'member'
-      | 'engagement'
-      | 'budget'
-      | 'partnership'
-      | 'status'
-      | 'otherLocations';
-  }
 }

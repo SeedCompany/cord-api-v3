@@ -34,7 +34,7 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { InternalRole } from '../authorization/dto';
+import { InternalAdminRole } from '../authorization/roles';
 import { CeremonyService } from '../ceremony';
 import { FileService } from '../file';
 import {
@@ -60,6 +60,7 @@ import {
   EngagementDeletedEvent,
   EngagementUpdatedEvent,
 } from './events';
+import { DbInternshipEngagement, DbLanguageEngagement } from './model';
 
 @Injectable()
 export class EngagementService {
@@ -333,9 +334,10 @@ export class EngagementService {
       throw new ServerException('Could not create Language Engagement');
     }
 
+    const dbLanguageEngagement = new DbLanguageEngagement();
     await this.authorizationService.addPermsForRole(
-      InternalRole.Admin,
-      'LanguageEngagement',
+      InternalAdminRole,
+      dbLanguageEngagement,
       id,
       session.userId
     );
@@ -581,9 +583,10 @@ export class EngagementService {
       throw new ServerException('Could not create Internship Engagement');
     }
 
+    const dbInternshipEngagement = new DbInternshipEngagement();
     await this.authorizationService.addPermsForRole(
-      InternalRole.Admin,
-      'InternshipEngagement',
+      InternalAdminRole,
+      dbInternshipEngagement,
       id,
       session.userId
     );
