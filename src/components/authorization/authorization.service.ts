@@ -113,13 +113,12 @@ export class AuthorizationService {
 
   // if this is an admin role, ensure the root user is attached
   private readonly addRootUserForAdminRole = (query: Query, role: DbRole) => {
-    if (typeof role === typeof InternalAdminRole) {
-      return;
+    if (role.name === InternalAdminRole.name) {
+      query
+        .with('*')
+        .match([node('root', 'User', { id: this.config.rootAdmin.id })])
+        .merge([node('sg'), relation('out', '', 'member'), node('root')]);
     }
-    query
-      .with('*')
-      .match([node('root', 'User', { id: this.config.rootAdmin.id })])
-      .merge([node('sg'), relation('out', '', 'member'), node('root')]);
   };
 
   async checkPower(power: Powers, id?: string): Promise<boolean> {
