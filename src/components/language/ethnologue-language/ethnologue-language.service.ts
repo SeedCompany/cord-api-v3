@@ -23,12 +23,13 @@ import {
   StandardReadResult,
 } from '../../../core/database/results';
 import { AuthorizationService } from '../../authorization/authorization.service';
-import { InternalRole } from '../../project';
+import { InternalAdminRole } from '../../authorization/roles';
 import {
   CreateEthnologueLanguage,
   EthnologueLanguage,
   UpdateEthnologueLanguage,
 } from '../dto';
+import { DbEthnologueLanguage } from '../model';
 
 type EthLangDbProps = DbPropsOfDto<EthnologueLanguage> & { id: string };
 
@@ -94,9 +95,10 @@ export class EthnologueLanguageService {
       throw new ServerException('Failed to create ethnologue language');
     }
 
-    await this.authorizationService.addPermsForRole(
-      InternalRole.Admin,
-      'EthnologueLanguage',
+    const dbEthnologueLanguage = new DbEthnologueLanguage();
+    await this.authorizationService.addPermsForRole2(
+      InternalAdminRole,
+      dbEthnologueLanguage,
       result.id,
       session.userId as string
     );

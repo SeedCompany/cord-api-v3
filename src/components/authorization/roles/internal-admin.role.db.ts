@@ -1,8 +1,11 @@
 import { DbBudget } from '../../budget/model';
 import { DbBudgetRecord } from '../../budget/model/budget-record.model.db';
 import { DbCeremony } from '../../ceremony/model';
+import { DbInternshipEngagement, DbLanguageEngagement } from '../../engagement/model';
 import { DbDirectory, DbFile } from '../../file/model';
 import { DbFileVersion } from '../../file/model/file-version.model.db';
+import { DbFilm } from '../../film/model';
+import { DbFundingAccount } from '../../funding-account/model';
 import { DbEthnologueLanguage, DbLanguage } from '../../language/model';
 /* eslint-disable @typescript-eslint/naming-convention */
 import { DbProject } from '../../project/model';
@@ -10,6 +13,7 @@ import { DbEducation, DbUnavailability, DbUser } from '../../user/model';
 import { Powers } from '../dto/powers';
 import { DbBaseNodeGrant, DbRole } from '../model';
 
+// do not auto format this file
 // turned off prettier for role files to prevent auto-format making this file huge
 
 const read = true;
@@ -79,6 +83,41 @@ export const InternalAdminRole = new DbRole({
         { propertyName: 'mimeType',                   permission: { read, write, }, },
         { propertyName: 'size',                       permission: { read, write, }, },
     ]}),
+    new DbBaseNodeGrant<DbFilm>({
+      __className: 'DbFilm',
+      properties: [
+        { propertyName: 'name',                       permission: { read, write, }, },
+        { propertyName: 'scriptureReferences',        permission: { read, write, }, },
+    ]}),
+    new DbBaseNodeGrant<DbFundingAccount>({
+      __className: 'DbFundingAccount',
+      properties: [
+        { propertyName: 'name',                       permission: { read, write, }, },
+        { propertyName: 'accountNumber',              permission: { read, write, }, },
+    ]}),
+    new DbBaseNodeGrant<DbInternshipEngagement>({
+      __className: 'DbInternshipEngagement',
+      properties: [
+        { propertyName: 'ceremony',                   permission: { read, write, }, },
+        { propertyName: 'communicationsCompleteDate', permission: { read, write, }, },
+        { propertyName: 'completeDate',               permission: { read, write, }, },
+        { propertyName: 'countryOfOrigin',            permission: { read, write, }, },
+        { propertyName: 'disbursementCompleteDate',   permission: { read, write, }, },
+        { propertyName: 'endDate',                    permission: { read, write, }, },
+        { propertyName: 'endDateOverride',            permission: { read, write, }, },
+        { propertyName: 'growthPlan',                 permission: { read, write, }, },
+        { propertyName: 'initialEndDate',             permission: { read, write, }, },
+        { propertyName: 'intern',                     permission: { read, write, }, },
+        { propertyName: 'lastReactivatedAt',          permission: { read, write, }, },
+        { propertyName: 'lastSuspendedAt',            permission: { read, write, }, },
+        { propertyName: 'mentor',                     permission: { read, write, }, },
+        { propertyName: 'methodologies',              permission: { read, write, }, },
+        { propertyName: 'position',                   permission: { read, write, }, },
+        { propertyName: 'startDate',                  permission: { read, write, }, },
+        { propertyName: 'startDateOverride',          permission: { read, write, }, },
+        { propertyName: 'statusModifiedAt',           permission: { read, write, }, },
+        { propertyName: 'modifiedAt',                 permission: { read, write, }, },
+    ]}),
     new DbBaseNodeGrant<DbLanguage>({
       __className: 'DbLanguage',
       properties: [
@@ -99,6 +138,31 @@ export const InternalAdminRole = new DbRole({
         { propertyName: 'sensitivity',                permission: { read, write, }, },
         { propertyName: 'hasExternalFirstScripture',  permission: { read, write, }, },
     ]}),
+    new DbBaseNodeGrant<DbLanguageEngagement>({
+      __className: 'DbLanguageEngagement',
+      properties: [
+        { propertyName: 'ceremony',                   permission: { read, write, }, },
+        { propertyName: 'communicationsCompleteDate', permission: { read, write, }, },
+        { propertyName: 'completeDate',               permission: { read, write, }, },
+        { propertyName: 'disbursementCompleteDate',   permission: { read, write, }, },
+        { propertyName: 'endDate',                    permission: { read, write, }, },
+        { propertyName: 'endDateOverride',            permission: { read, write, }, },
+        { propertyName: 'firstScripture',             permission: { read, write, }, },
+        { propertyName: 'initialEndDate',             permission: { read, write, }, },
+        { propertyName: 'language',                   permission: { read, write, }, },
+        { propertyName: 'lastReactivatedAt',          permission: { read, write, }, },
+        { propertyName: 'lastSuspendedAt',            permission: { read, write, }, },
+        { propertyName: 'lukePartnership',            permission: { read, write, }, },
+        { propertyName: 'paraTextRegistryId',         permission: { read, write, }, },
+        { propertyName: 'pnp',                        permission: { read, write, }, },
+        { propertyName: 'sentPrintingDate',           permission: { read, write, }, },
+        { propertyName: 'startDate',                  permission: { read, write, }, },
+        { propertyName: 'startDateOverride',          permission: { read, write, }, },
+        { propertyName: 'statusModifiedAt',           permission: { read, write, }, },
+        { propertyName: 'modifiedAt',                 permission: { read, write, }, },
+        { propertyName: 'product',                    permission: { read, write, }, },
+    ]}),
+
     new DbBaseNodeGrant<DbProject>({
       __className: 'DbProject',
       properties: [
