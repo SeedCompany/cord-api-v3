@@ -1,5 +1,12 @@
 import { Field, ObjectType } from '@nestjs/graphql';
-import { Resource, Secured, SecuredProperty } from '../../../common';
+import {
+  Resource,
+  Secured,
+  SecuredBoolean,
+  SecuredProperty,
+  SecuredString,
+} from '../../../common';
+import { SecuredFinancialReportingType } from '../../partnership/dto/partnership.dto';
 import { SecuredPartnerTypes } from './partner-type.enum';
 
 @ObjectType({
@@ -12,6 +19,21 @@ export class Partner extends Resource {
 
   @Field()
   readonly types: SecuredPartnerTypes;
+
+  @Field()
+  readonly financialReportingType: SecuredFinancialReportingType;
+
+  @Field()
+  readonly pmcEntityCode: SecuredString;
+
+  @Field()
+  readonly globalInnovationsClient: SecuredBoolean;
+
+  @Field()
+  readonly active: SecuredBoolean;
+
+  @Field()
+  readonly address: SecuredString;
 }
 
 @ObjectType({

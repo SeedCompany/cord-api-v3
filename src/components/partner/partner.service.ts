@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
+  InputException,
   ISession,
   NotFoundException,
   ServerException,
@@ -32,11 +33,13 @@ import {
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { InternalAdminRole } from '../authorization/roles';
+import { FinancialReportingType } from '../partnership/dto/financial-reporting-type';
 import {
   CreatePartner,
   Partner,
   PartnerListInput,
   PartnerListOutput,
+  PartnerType,
   UpdatePartner,
 } from './dto';
 import { DbPartner } from './model';
@@ -47,6 +50,11 @@ export class PartnerService {
     organization: true,
     pointOfContact: true,
     types: true,
+    financialReportingType: true,
+    pmcEntityCode: true,
+    globalInnovationsClient: true,
+    active: true,
+    address: true,
   };
 
   constructor(
@@ -67,14 +75,46 @@ export class PartnerService {
   }
 
   async create(input: CreatePartner, session: ISession): Promise<Partner> {
+    this.verifyFinancialReportingType(
+      input.financialReportingType,
+      input.types
+    );
+
     const createdAt = DateTime.local();
     const secureProps = [
       {
         key: 'types',
         value: input.types,
-        addToAdminSg: true,
-        addToWriterSg: false,
-        addToReaderSg: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'financialReportingType',
+        value: input.financialReportingType,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'pmcEntityCode',
+        value: input.pmcEntityCode,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'globalInnovationsClient',
+        value: input.globalInnovationsClient,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'active',
+        value: input.active,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'address',
+        value: input.address,
         isPublic: false,
         isOrgPublic: false,
       },
@@ -231,12 +271,37 @@ export class PartnerService {
 
   async update(input: UpdatePartner, session: ISession): Promise<Partner> {
     const object = await this.readOne(input.id, session);
+    let changes = input;
+    if (
+      !this.validateFinancialReportingType(
+        input.financialReportingType ?? object.financialReportingType.value,
+        input.types ?? object.types.value
+      )
+    ) {
+      if (input.financialReportingType && input.types) {
+        throw new InputException(
+          'Financial reporting type can only be applied to managing partners',
+          'partnership.financialReportingType'
+        );
+      }
+      changes = {
+        ...changes,
+        financialReportingType: null,
+      };
+    }
 
     await this.db.sgUpdateProperties({
       session,
       object,
-      props: ['types'],
-      changes: input,
+      props: [
+        'types',
+        'financialReportingType',
+        'pmcEntityCode',
+        'globalInnovationsClient',
+        'active',
+        'address',
+      ],
+      changes: changes,
       nodevar: 'partner',
     });
     // Update partner
@@ -322,5 +387,26 @@ export class PartnerService {
       );
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
+  }
+
+  protected verifyFinancialReportingType(
+    financialReportingType: FinancialReportingType | null | undefined,
+    types: PartnerType[] | undefined
+  ) {
+    if (!this.validateFinancialReportingType(financialReportingType, types)) {
+      throw new InputException(
+        'Financial reporting type can only be applied to managing partners',
+        'partnership.financialReportingType'
+      );
+    }
+  }
+
+  protected validateFinancialReportingType(
+    financialReportingType: FinancialReportingType | null | undefined,
+    types: PartnerType[] | undefined
+  ) {
+    return financialReportingType && !types?.includes(PartnerType.Managing)
+      ? false
+      : true;
   }
 }

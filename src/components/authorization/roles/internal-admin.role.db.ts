@@ -212,6 +212,11 @@ export const InternalAdminRole = new DbRole({
         { propertyName: 'organization',               permission: { read, write, }, },
         { propertyName: 'pointOfContact',             permission: { read, write, }, },
         { propertyName: 'types',                      permission: { read, write, }, },
+        { propertyName: 'financialReportingType',     permission: { read, write, }, },
+        { propertyName: 'pmcEntityCode',              permission: { read, write, }, },
+        { propertyName: 'globalInnovationsClient',    permission: { read, write, }, },
+        { propertyName: 'active',                     permission: { read, write, }, },
+        { propertyName: 'address',                    permission: { read, write, }, },
     ]}),
     new DbBaseNodeGrant<DbPartnership>({
       __className: 'DbPartnership',
