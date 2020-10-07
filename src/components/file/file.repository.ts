@@ -276,7 +276,7 @@ export class FileRepository {
     }
 
     const dbDirectory = new DbDirectory();
-    await this.authorizationService.addPermsForRole(
+    await this.authorizationService.addUsersToBaseNodeByRole(
       InternalAdminRole,
       dbDirectory,
       result.id,
@@ -320,7 +320,7 @@ export class FileRepository {
     }
 
     const dbFile = new DbFile();
-    await this.authorizationService.addPermsForRole(
+    await this.authorizationService.addUsersToBaseNodeByRole(
       InternalAdminRole,
       dbFile,
       result.id,
@@ -384,7 +384,7 @@ export class FileRepository {
     }
 
     const dbFileVersion = new DbFileVersion();
-    await this.authorizationService.addPermsForRole(
+    await this.authorizationService.addUsersToBaseNodeByRole(
       InternalAdminRole,
       dbFileVersion,
       result.id,

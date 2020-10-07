@@ -20,19 +20,20 @@ export class AuthorizationService {
     @Logger('authorization:service') private readonly logger: ILogger
   ) {}
 
-  async addPermsForRole(
+  async addUsersToBaseNodeByRole(
     role: DbRole,
     baseNodeObj: OneBaseNode,
     baseNodeId: string,
     userId: string
   ) {
-    // check if SG for this role already exists
-    const existingGroupId = await this.getSecurityGroupForRole(
+    // get or create the role's SG for this base node
+    const existingGroupId = await this.mergeSecurityGroupForRole(
+      baseNodeObj,
       baseNodeId,
-      role.name
+      role
     );
     if (existingGroupId) {
-      // SG exists, merge member to it
+      // merge member to it
       await this.db
         .query()
         .match([node('sg', 'SecurityGroup', { id: existingGroupId })])
@@ -45,21 +46,43 @@ export class AuthorizationService {
         userId,
       });
 
-      return;
+      return true;
+    } else {
+      throw new ServerException('failed to create SG for role');
+    }
+  }
+
+  private async mergeSecurityGroupForRole(
+    baseNodeObj: OneBaseNode,
+    baseNodeId: string,
+    role: DbRole
+  ): Promise<string | undefined> {
+    const checkSg = await this.db
+      .query()
+      .match([
+        node('sg', 'SecurityGroup', { role }),
+        relation('out', '', 'baseNode'),
+        node('baseNode', 'BaseNode', { id: baseNodeId }),
+      ])
+      .raw('return sg.id as id')
+      .asResult<{ id: string }>()
+      .first();
+
+    if (checkSg?.id) {
+      return checkSg.id;
     }
 
-    // SG does not yet exist, create it and merge user to it
+    // create SG with all role's perms
     const createSgQuery = this.db
       .query()
-      .match([node('user', 'User', { id: userId })])
       .match([node('baseNode', 'BaseNode', { id: baseNodeId })])
       .merge([
-        node('user'),
-        relation('in', '', 'member'),
         node('sg', 'SecurityGroup', {
           id: generate(),
           role: role.name,
         }),
+        relation('out', '', 'baseNode'),
+        node('baseNode'),
       ]);
 
     // iterate through the key of the base node and get the permission object for each from the role object
@@ -70,7 +93,6 @@ export class AuthorizationService {
       );
 
       // write the permission to the db if any of its perms are true
-
       createSgQuery.merge([
         node('sg'),
         relation('out', '', 'permission'),
@@ -84,31 +106,26 @@ export class AuthorizationService {
       ]);
     }
 
-    createSgQuery.call(this.addRootUserForAdminRole, role);
-
-    await createSgQuery.run();
-
-    this.logger.debug('Created security group', {
-      baseNodeObj,
-      role,
-      userId,
-    });
-
-    return true;
-  }
-
-  private async getSecurityGroupForRole(baseNodeId: string, role: string) {
-    const checkSg = await this.db
-      .query()
-      .match([
-        node('sg', 'SecurityGroup', { role }),
-        relation('out', '', 'permission'),
-        node('baseNode', 'BaseNode', { id: baseNodeId }),
-      ])
+    const result = await createSgQuery
       .raw('return sg.id as id')
       .asResult<{ id: string }>()
       .first();
-    return checkSg?.id;
+
+    return result?.id;
+  }
+
+  async addAllUsersToSgByRole(sgId: string, userRole: string) {
+    // grab all users who have a given user-role and add them as members to the new sg
+    const result = await this.db
+      .query()
+      .match([node('sg', 'SecurityGroup', { id: sgId })])
+      .match([
+        node('users', 'User'),
+        relation('out', '', 'roles', { active: true }),
+        node('roles', 'Property', { role: userRole }),
+      ])
+      .merge([node('users'), relation('in', '', 'member'), node('sg')])
+      .run();
   }
 
   // if this is an admin role, ensure the root user is attached

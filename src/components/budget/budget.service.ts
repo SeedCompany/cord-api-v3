@@ -152,7 +152,7 @@ export class BudgetService {
       });
 
       const dbBudget = new DbBudget();
-      await this.authorizationService.addPermsForRole(
+      await this.authorizationService.addUsersToBaseNodeByRole(
         InternalAdminRole,
         dbBudget,
         result.id,
@@ -212,7 +212,7 @@ export class BudgetService {
       }
 
       const dbBudgetRecord = new DbBudgetRecord();
-      await this.authorizationService.addPermsForRole(
+      await this.authorizationService.addUsersToBaseNodeByRole(
         InternalAdminRole,
         dbBudgetRecord,
         result.id,

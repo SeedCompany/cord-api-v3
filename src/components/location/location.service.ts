@@ -137,7 +137,7 @@ export class LocationService {
     }
 
     const dbLocation = new DbLocation();
-    await this.authorizationService.addPermsForRole(
+    await this.authorizationService.addUsersToBaseNodeByRole(
       InternalAdminRole,
       dbLocation,
       result.id,

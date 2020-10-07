@@ -335,7 +335,7 @@ export class EngagementService {
     }
 
     const dbLanguageEngagement = new DbLanguageEngagement();
-    await this.authorizationService.addPermsForRole(
+    await this.authorizationService.addUsersToBaseNodeByRole(
       InternalAdminRole,
       dbLanguageEngagement,
       id,
@@ -584,7 +584,7 @@ export class EngagementService {
     }
 
     const dbInternshipEngagement = new DbInternshipEngagement();
-    await this.authorizationService.addPermsForRole(
+    await this.authorizationService.addUsersToBaseNodeByRole(
       InternalAdminRole,
       dbInternshipEngagement,
       id,

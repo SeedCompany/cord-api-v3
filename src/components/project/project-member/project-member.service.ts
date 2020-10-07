@@ -151,7 +151,7 @@ export class ProjectMemberService {
 
       // creating user must be an admin, use role change event
       const dbProjectMember = new DbProjectMember();
-      await this.authorizationService.addPermsForRole(
+      await this.authorizationService.addUsersToBaseNodeByRole(
         InternalAdminRole,
         dbProjectMember,
         memberQuery?.id,
@@ -361,7 +361,7 @@ export class ProjectMemberService {
     for (const id of result?.ids) {
       // creating user must be an admin, use role change event
       const dbProjectMember = new DbProjectMember();
-      await this.authorizationService.addPermsForRole(
+      await this.authorizationService.addUsersToBaseNodeByRole(
         InternalAdminViewOfProjectMemberRole,
         dbProjectMember,
         userId,

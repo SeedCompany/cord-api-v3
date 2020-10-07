@@ -101,7 +101,7 @@ export class CeremonyService {
       }
 
       const dbCeremony = new DbCeremony();
-      await this.authorizationService.addPermsForRole(
+      await this.authorizationService.addUsersToBaseNodeByRole(
         InternalAdminRole,
         dbCeremony,
         result.id,

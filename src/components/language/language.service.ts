@@ -256,7 +256,7 @@ export class LanguageService {
       }
 
       const dbLanguage = new DbLanguage();
-      await this.authorizationService.addPermsForRole(
+      await this.authorizationService.addUsersToBaseNodeByRole(
         InternalAdminRole,
         dbLanguage,
         resultLanguage.id,

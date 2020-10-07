@@ -1,0 +1,291 @@
+import { DbBudget } from '../../budget/model';
+import { DbBudgetRecord } from '../../budget/model/budget-record.model.db';
+import { DbCeremony } from '../../ceremony/model';
+import { DbInternshipEngagement, DbLanguageEngagement } from '../../engagement/model';
+import { DbFieldRegion } from '../../field-region/model';
+import { DbFieldZone } from '../../field-zone/model';
+import { DbDirectory, DbFile } from '../../file/model';
+import { DbFileVersion } from '../../file/model/file-version.model.db';
+import { DbFilm } from '../../film/model';
+import { DbFundingAccount } from '../../funding-account/model';
+import { DbEthnologueLanguage, DbLanguage } from '../../language/model';
+import { DbLiteracyMaterial } from '../../literacy-material/model';
+import { DbLocation } from '../../location/model';
+import { DbOrganization } from '../../organization/model';
+import { DbPartner } from '../../partner/model';
+import { DbPartnership } from '../../partnership/model';
+import { DbProduct } from '../../product/model';
+/* eslint-disable @typescript-eslint/naming-convention */
+import { DbProject } from '../../project/model';
+import { DbProjectMember } from '../../project/project-member/model';
+import { DbSong } from '../../song/model';
+import { DbStory } from '../../story/model';
+import { DbEducation, DbUnavailability, DbUser } from '../../user/model';
+import { Powers } from '../dto/powers';
+import { DbBaseNodeGrant, DbRole } from '../model';
+
+// do not auto format this file
+// turned off prettier for role files to prevent auto-format making this file huge
+
+const read = true;
+const write = true;
+
+export const ProjectMangerRole = new DbRole({
+  name: 'ProjectManager',
+  powers: [Powers.CreateProject],
+  grants: [
+    new DbBaseNodeGrant<DbBudget>({
+      __className: 'DbBudget',
+      properties: [
+        { propertyName: 'universalTemplateFile',      permission: { read, write, }, },
+        { propertyName: 'records',                    permission: { read, write, }, },
+        { propertyName: 'status',                     permission: { read, write, }, },
+    ]}),
+    new DbBaseNodeGrant<DbBudgetRecord>({
+      __className: 'DbBudgetRecord',
+      properties: [
+        { propertyName: 'amount',                     permission: { read, write, }, },
+        { propertyName: 'fiscalYear',                 permission: { read, write, }, },
+        { propertyName: 'organization',               permission: { read, write, }, },
+    ]}),
+    new DbBaseNodeGrant<DbCeremony>({
+      __className: 'DbCeremony',
+      properties: [
+        { propertyName: 'actualDate',                 permission: { read, write, }, },
+        { propertyName: 'estimatedDate',              permission: { read, write, }, },
+        { propertyName: 'planned',                    permission: { read, write, }, },
+    ]}),
+    new DbBaseNodeGrant<DbDirectory>({
+      __className: 'DbDirectory',
+      properties: [
+        { propertyName: 'name',                       permission: { read, write, }, },
+        { propertyName: 'createdBy',                  permission: { read, write, }, },
+        { propertyName: 'parent',                     permission: { read, write, }, },
+    ]}),
+    new DbBaseNodeGrant<DbEducation>({
+      __className: 'DbEducation',
+      properties: [
+        { propertyName: 'degree',                     permission: { read, }, },
+        { propertyName: 'institution',                permission: { read, }, },
+        { propertyName: 'major',                      permission: { read, }, },
+    ]}),
+    new DbBaseNodeGrant<DbEthnologueLanguage>({
+      __className: 'DbEthnologueLanguage',
+      properties: [
+        { propertyName: 'code',                       permission: { read, }, },
+        { propertyName: 'name',                       permission: { read, }, },
+        { propertyName: 'population',                 permission: { read, }, },
+        { propertyName: 'provisionalCode',            permission: { read, }, },
+    ]}),
+    new DbBaseNodeGrant<DbFile>({
+      __className: 'DbFile',
+      properties: [
+        { propertyName: 'name',                       permission: { read, write, }, },
+        { propertyName: 'createdBy',                  permission: { read, write, }, },
+        { propertyName: 'parent',                     permission: { read, write, }, },
+        { propertyName: 'mimeType',                   permission: { read, write, }, },
+    ]}),
+    new DbBaseNodeGrant<DbFileVersion>({
+      __className: 'DbFileVersion',
+      properties: [
+        { propertyName: 'name',                       permission: { read, write, }, },
+        { propertyName: 'createdBy',                  permission: { read, write, }, },
+        { propertyName: 'parent',                     permission: { read, write, }, },
+        { propertyName: 'mimeType',                   permission: { read, write, }, },
+        { propertyName: 'size',                       permission: { read, write, }, },
+    ]}),
+    new DbBaseNodeGrant<DbFilm>({
+      __className: 'DbFilm',
+      properties: [
+        { propertyName: 'name',                       permission: { read, write, }, },
+        { propertyName: 'scriptureReferences',        permission: { read, write, }, },
+    ]}),
+    new DbBaseNodeGrant<DbInternshipEngagement>({
+      __className: 'DbInternshipEngagement',
+      properties: [
+        { propertyName: 'ceremony',                   permission: { read, write, }, },
+        { propertyName: 'communicationsCompleteDate', permission: { read, write, }, },
+        { propertyName: 'completeDate',               permission: { read, write, }, },
+        { propertyName: 'countryOfOrigin',            permission: { read, write, }, },
+        { propertyName: 'disbursementCompleteDate',   permission: { read, write, }, },
+        { propertyName: 'endDate',                    permission: { read, write, }, },
+        { propertyName: 'endDateOverride',            permission: { read, write, }, },
+        { propertyName: 'growthPlan',                 permission: { read, write, }, },
+        { propertyName: 'initialEndDate',             permission: { read, write, }, },
+        { propertyName: 'intern',                     permission: { read, write, }, },
+        { propertyName: 'lastReactivatedAt',          permission: { read, write, }, },
+        { propertyName: 'lastSuspendedAt',            permission: { read, write, }, },
+        { propertyName: 'mentor',                     permission: { read, write, }, },
+        { propertyName: 'methodologies',              permission: { read, write, }, },
+        { propertyName: 'position',                   permission: { read, write, }, },
+        { propertyName: 'startDate',                  permission: { read, write, }, },
+        { propertyName: 'startDateOverride',          permission: { read, write, }, },
+        { propertyName: 'statusModifiedAt',           permission: { read, write, }, },
+        { propertyName: 'modifiedAt',                 permission: { read, write, }, },
+    ]}),
+    new DbBaseNodeGrant<DbLanguage>({
+      __className: 'DbLanguage',
+      properties: [
+        { propertyName: 'displayName',                permission: { read, }, },
+        { propertyName: 'displayNamePronunciation',   permission: { read, }, },
+        { propertyName: 'isDialect',                  permission: { read, }, },
+        { propertyName: 'isSignLanguage',             permission: { read, }, },
+        { propertyName: 'leastOfThese',               permission: { read, }, },
+        { propertyName: 'name',                       permission: { read, }, },
+        { propertyName: 'leastOfTheseReason',         permission: { read, }, },
+        { propertyName: 'populationOverride',         permission: { read, }, },
+        { propertyName: 'registryOfDialectsCode',     permission: { read, }, },
+        { propertyName: 'name',                       permission: { read, }, },
+        { propertyName: 'signLanguageCode',           permission: { read, }, },
+        { propertyName: 'sponsorEstimatedEndDate',    permission: { read, }, },
+        { propertyName: 'ethnologue',                 permission: { read, }, },
+        { propertyName: 'name',                       permission: { read, }, },
+        { propertyName: 'sensitivity',                permission: { read, }, },
+        { propertyName: 'hasExternalFirstScripture',  permission: { read, }, },
+    ]}),
+    new DbBaseNodeGrant<DbLanguageEngagement>({
+      __className: 'DbLanguageEngagement',
+      properties: [
+        { propertyName: 'ceremony',                   permission: { read, write, }, },
+        { propertyName: 'communicationsCompleteDate', permission: { read, write, }, },
+        { propertyName: 'completeDate',               permission: { read, write, }, },
+        { propertyName: 'disbursementCompleteDate',   permission: { read, write, }, },
+        { propertyName: 'endDate',                    permission: { read, write, }, },
+        { propertyName: 'endDateOverride',            permission: { read, write, }, },
+        { propertyName: 'firstScripture',             permission: { read, write, }, },
+        { propertyName: 'initialEndDate',             permission: { read, write, }, },
+        { propertyName: 'language',                   permission: { read, write, }, },
+        { propertyName: 'lastReactivatedAt',          permission: { read, write, }, },
+        { propertyName: 'lastSuspendedAt',            permission: { read, write, }, },
+        { propertyName: 'lukePartnership',            permission: { read, write, }, },
+        { propertyName: 'paraTextRegistryId',         permission: { read, write, }, },
+        { propertyName: 'pnp',                        permission: { read, write, }, },
+        { propertyName: 'sentPrintingDate',           permission: { read, write, }, },
+        { propertyName: 'startDate',                  permission: { read, write, }, },
+        { propertyName: 'startDateOverride',          permission: { read, write, }, },
+        { propertyName: 'statusModifiedAt',           permission: { read, write, }, },
+        { propertyName: 'modifiedAt',                 permission: { read, write, }, },
+        { propertyName: 'product',                    permission: { read, write, }, },
+    ]}),
+    new DbBaseNodeGrant<DbLiteracyMaterial>({
+      __className: 'DbLiteracyMaterial',
+      properties: [
+        { propertyName: 'name',                       permission: { read, write, }, },
+        { propertyName: 'scriptureReferences',        permission: { read, write, }, },
+    ]}),
+    new DbBaseNodeGrant<DbLocation>({
+      __className: 'DbLocation',
+      properties: [
+        { propertyName: 'name',                       permission: { read, }, },
+        { propertyName: 'type',                       permission: { read, }, },
+        { propertyName: 'sensitivity',                permission: { read, }, },
+        { propertyName: 'iso31663',                   permission: { read, }, },
+        { propertyName: 'fundingAccount',             permission: { read, }, },
+    ]}),
+    new DbBaseNodeGrant<DbOrganization>({
+      __className: 'DbOrganization',
+      properties: [
+        { propertyName: 'name',                       permission: { read, }, },
+    ]}),
+    new DbBaseNodeGrant<DbPartner>({
+      __className: 'DbPartner',
+      properties: [
+        { propertyName: 'organization',               permission: { read, }, },
+        { propertyName: 'pointOfContact',             permission: { read, }, },
+        { propertyName: 'types',                      permission: { read, }, },
+    ]}),
+    new DbBaseNodeGrant<DbPartnership>({
+      __className: 'DbPartnership',
+      properties: [
+        { propertyName: 'agreement',                  permission: { read, write, }, },
+        { propertyName: 'agreementStatus',            permission: { read, write, }, },
+        { propertyName: 'financialReportingType',     permission: { read,  }, },
+        { propertyName: 'mou',                        permission: { read, write, }, },
+        { propertyName: 'mouEnd',                     permission: { read, write, }, },
+        { propertyName: 'mouEndOverride',             permission: { read, write, }, },
+        { propertyName: 'mouStart',                   permission: { read, write, }, },
+        { propertyName: 'mouStartOverride',           permission: { read, write, }, },
+        { propertyName: 'mouStatus',                  permission: { read, write, }, },
+        { propertyName: 'types',                      permission: { read, write, }, },
+        { propertyName: 'organization',               permission: { read, write, }, },
+        { propertyName: 'partner',                    permission: { read, write, }, },
+    ]}),
+    new DbBaseNodeGrant<DbProduct>({
+      __className: 'DbProduct',
+      properties: [
+        { propertyName: 'mediums',                    permission: { read, write, }, },
+        { propertyName: 'methodology',                permission: { read, write, }, },
+        { propertyName: 'purposes',                   permission: { read, write, }, },
+        { propertyName: 'scriptureReferences',        permission: { read, write, }, },
+        { propertyName: 'produces',                   permission: { read, write, }, },
+        { propertyName: 'scriptureReferencesOverride',permission: { read, write, }, },
+        { propertyName: 'isOverriding',               permission: { read, write, }, },
+      ]}),
+    new DbBaseNodeGrant<DbProject>({
+      __className: 'DbProject',
+      properties: [
+        { propertyName: 'estimatedSubmission',        permission: { read, write, }, },
+        { propertyName: 'step',                       permission: { read, write, }, },
+        { propertyName: 'name',                       permission: { read, write, }, },
+        { propertyName: 'status',                     permission: { read, write, }, },
+        { propertyName: 'departmentId',               permission: { read, write, }, },
+        { propertyName: 'mouStart',                   permission: { read, write, }, },
+        { propertyName: 'mouEnd',                     permission: { read, write, }, },
+        { propertyName: 'rootDirectory',              permission: { read, write, }, },
+        { propertyName: 'member',                     permission: { read, write, }, },
+        { propertyName: 'otherLocations',             permission: { read, write, }, },
+        { propertyName: 'primaryLocation',            permission: { read, write, }, },
+        { propertyName: 'marketingLocation',          permission: { read, write, }, },
+        { propertyName: 'partnership',                permission: { read, write, }, },
+        { propertyName: 'budget',                     permission: { read, write, }, },
+        { propertyName: 'modifiedAt',                 permission: { read, write, }, },
+        { propertyName: 'fieldRegion',                permission: { read, write, }, },
+        { propertyName: 'engagement',                 permission: { read, write, }, },
+        { propertyName: 'sensitivity',                permission: { read, write, }, },
+      ]}),
+    new DbBaseNodeGrant<DbProjectMember>({
+      __className: 'DbProjectMember',
+      properties: [
+        { propertyName: 'roles',                      permission: { read, write, }, },
+        { propertyName: 'user',                       permission: { read, write, }, },
+        { propertyName: 'modifiedAt',                 permission: { read, write, }, },
+        ]}),
+    new DbBaseNodeGrant<DbUser>({
+      __className: 'DbUser',
+      properties: [
+        { propertyName: 'about',                      permission: { read, }, },
+        { propertyName: 'displayFirstName',           permission: { read, }, },
+        { propertyName: 'displayLastName',            permission: { read, }, },
+        { propertyName: 'email',                      permission: { read, }, },
+        { propertyName: 'phone',                      permission: { read, }, },
+        { propertyName: 'realFirstName',              permission: { read, }, },
+        { propertyName: 'realLastName',               permission: { read, }, },
+        { propertyName: 'roles',                      permission: { read, }, },
+        { propertyName: 'status',                     permission: { read, }, },
+        { propertyName: 'timezone',                   permission: { read, }, },
+        { propertyName: 'title',                      permission: { read, }, },
+        { propertyName: 'education',                  permission: { read, }, },
+        { propertyName: 'organization',               permission: { read, }, },
+        { propertyName: 'unavailability',             permission: { read, }, },
+    ]}),
+    new DbBaseNodeGrant<DbUnavailability>({
+      __className: 'DbUnavailability',
+      properties: [
+        { propertyName: 'description',                permission: { read, }, },
+        { propertyName: 'end',                        permission: { read, }, },
+        { propertyName: 'start',                      permission: { read, }, },
+    ]}),
+    new DbBaseNodeGrant<DbSong>({
+      __className: 'DbSong',
+      properties: [
+        { propertyName: 'name',                       permission: { read, write, }, },
+        { propertyName: 'scriptureReferences',        permission: { read, write, }, },
+    ]}),
+    new DbBaseNodeGrant<DbStory>({
+      __className: 'DbStory',
+      properties: [
+        { propertyName: 'name',                       permission: { read, write, }, },
+        { propertyName: 'scriptureReferences',        permission: { read, write, }, },
+    ]}),
+  ],
+});

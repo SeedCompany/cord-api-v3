@@ -122,7 +122,7 @@ export class FundingAccountService {
       }
 
       const dbFundingAccount = new DbFundingAccount();
-      await this.authorizationService.addPermsForRole(
+      await this.authorizationService.addUsersToBaseNodeByRole(
         InternalAdminRole,
         dbFundingAccount,
         result.id,

@@ -137,7 +137,7 @@ export class OrganizationService {
     }
 
     const dbOrganization = new DbOrganization();
-    await this.authorizationService.addPermsForRole(
+    await this.authorizationService.addUsersToBaseNodeByRole(
       InternalAdminRole,
       dbOrganization,
       result.id,
