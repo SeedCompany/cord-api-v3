@@ -674,6 +674,30 @@ export class DatabaseService {
     };
   }
 
+  async deleteNodeNew<TObject extends Resource>({
+    object,
+  }: {
+    object: TObject;
+  }) {
+    const query = this.db
+
+      .query()
+      .match(node('node', { id: object.id }))
+      //Mark any parent base node relationships (pointing to the base node) as active = false.
+      .optionalMatch([
+        node('node'),
+        relation('in', 'rel'),
+        node('', 'BaseNode'),
+      ])
+      .set({
+        values: {
+          'rel.active': false,
+        },
+      })
+      .with('*');
+    await query.run();
+  }
+
   async deleteNode<TObject extends Resource>({
     session,
     object,
