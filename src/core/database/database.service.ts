@@ -27,7 +27,12 @@ import {
 } from '../../common';
 import { ILogger, Logger } from '..';
 import { ConfigService } from '../config/config.service';
-import { hasMore, setBaseNodeLabelsDeleted } from './query.helpers';
+import {
+  hasMore,
+  setBaseNodeLabelsDeleted,
+  setPropLabelsAndValuesDeleted,
+  UniqueProperties,
+} from './query.helpers';
 
 interface ReadPropertyResult {
   value: any;
@@ -677,12 +682,13 @@ export class DatabaseService {
   async deleteNodeNew<TObject extends Resource>({
     object,
     baseNodeLabels,
+    uniqueProperties,
   }: {
     object: TObject;
     baseNodeLabels: string[];
+    uniqueProperties: UniqueProperties<TObject>;
   }) {
     const query = this.db
-
       .query()
       .match(node('node', { id: object.id }))
       //Mark any parent base node relationships (pointing to the base node) as active = false.
@@ -696,11 +702,11 @@ export class DatabaseService {
           'rel.active': false,
         },
       })
-      .with('*')
+      .with('distinct(node) as node')
       //Mark labels Deleted
       .call(setBaseNodeLabelsDeleted, baseNodeLabels)
+      .call(setPropLabelsAndValuesDeleted, uniqueProperties)
       .return('*');
-
     await query.run();
   }
 

@@ -12,7 +12,13 @@ import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/rel
 import { isFunction } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
-import { ISession, mapFromList, SortablePaginationInput } from '../../common';
+import {
+  entries,
+  ISession,
+  mapFromList,
+  Resource,
+  SortablePaginationInput,
+} from '../../common';
 import { ILogger } from '../logger';
 import {
   coalesce,
@@ -893,7 +899,6 @@ export const setBaseNodeLabelsDeleted = (
 ) => {
   baseNodeLabels.forEach((label) => {
     query
-      .match(node('node'))
       .set({
         labels: {
           node: `Deleted_${label}`,
@@ -902,6 +907,51 @@ export const setBaseNodeLabelsDeleted = (
       .removeLabels({
         node: label,
       })
-      .with('*');
+      .with('distinct(node) as node');
   });
 };
+
+export type UniqueProperties<BaseNode extends Resource> = Partial<
+  Record<keyof BaseNode, string[]>
+>;
+
+export function setPropLabelsAndValuesDeleted<BaseNode extends Resource>(
+  query: Query,
+  uniqueProperties: UniqueProperties<BaseNode>
+) {
+  entries(uniqueProperties).forEach(([property, labels], i) => {
+    const currentPropertyNodeLabel = `propertyNode${i}`;
+    // Match the baseNode out to the propertyNode
+    query.optionalMatch([
+      node('node'),
+      relation('out', '', property),
+      node(currentPropertyNodeLabel, 'Property'),
+    ]);
+
+    // Reset all the labels on the propertyNode with the Delete_ prefix
+    labels?.forEach((label) => {
+      query
+        .set({
+          labels: {
+            [currentPropertyNodeLabel]: `Deleted_${label}`,
+          },
+        })
+        .removeLabels({
+          [currentPropertyNodeLabel]: label,
+        });
+    });
+
+    // Reset all the values on the propertyNode to deleted_value
+    query
+      .with(`*, ${currentPropertyNodeLabel}.value as propVal${i}`)
+      .set({
+        variables: {
+          [`${currentPropertyNodeLabel}.deleted_value`]: `propVal${i}`,
+        },
+      })
+      .removeProperties({
+        [currentPropertyNodeLabel]: 'value',
+      })
+      .with('*');
+  });
+}
