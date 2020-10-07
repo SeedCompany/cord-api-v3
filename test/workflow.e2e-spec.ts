@@ -9,10 +9,9 @@ import {
   createOrganization,
   createSession,
   createTestApp,
-  createUser,
   createWorkflow,
-  grantPower,
   login,
+  registerUserWithPower,
   TestApp,
 } from './utility';
 
@@ -25,12 +24,6 @@ describe.skip('Workflow e2e', () => {
   let user: User;
 
   beforeAll(async () => {
-    process.env = Object.assign(process.env, {
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      ROOT_ADMIN_EMAIL: 'admin@admin.admin',
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      ROOT_ADMIN_PASSWORD: 'admin',
-    });
     app = await createTestApp();
     await createSession(app);
     await login(app, {
@@ -39,8 +32,7 @@ describe.skip('Workflow e2e', () => {
     });
     // sg = await createSecurityGroup(app);
 
-    user = await createUser(app, { password: password, email: email });
-    await grantPower(app, user.id, Powers.CreateOrganization);
+    user = await registerUserWithPower(app, Powers.CreateOrganization);
 
     await login(app, {
       email: process.env.ROOT_ADMIN_EMAIL,

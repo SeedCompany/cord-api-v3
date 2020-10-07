@@ -196,7 +196,7 @@ export class AuthorizationService {
       throw new UnauthenticatedException('user not logged in');
     }
 
-    const requestingUserPowers = await this.readPower(session);
+    const requestingUserPowers = await this.readPowerByUserId(session.userId);
     if (requestingUserPowers.includes(Powers.GrantPower)) {
       return await this.grantPower(power, id);
     }
@@ -214,7 +214,7 @@ export class AuthorizationService {
       throw new UnauthenticatedException('user not logged in');
     }
 
-    const requestingUserPowers = await this.readPower(session);
+    const requestingUserPowers = await this.readPowerByUserId(session.userId);
     if (requestingUserPowers.includes(Powers.GrantPower)) {
       return await this.removePower(power, id);
     }

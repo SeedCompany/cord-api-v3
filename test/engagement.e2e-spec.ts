@@ -25,13 +25,11 @@ import {
   createProject,
   createSession,
   createTestApp,
-  createUser,
   expectNotFound,
   fragments,
   getUserFromSession,
-  grantPower,
-  login,
   Raw,
+  registerUserWithPower,
   requestFileUpload,
   TestApp,
   uploadFileContents,
@@ -47,24 +45,17 @@ describe('Engagement e2e', () => {
   let user: User;
   let intern: Partial<User>;
   let mentor: Partial<User>;
-  const password: string = faker.internet.password();
 
   beforeAll(async () => {
     app = await createTestApp();
 
     await createSession(app);
 
-    user = await createUser(app, { password });
-    await grantPower(app, user.id, Powers.CreateLanguage);
-    await login(app, {
-      email: user.email.value,
-      password,
-    });
+    user = await registerUserWithPower(app, Powers.CreateLanguage);
     language = await createLanguage(app);
     location = await createLocation(app);
     intern = await getUserFromSession(app);
     mentor = await getUserFromSession(app);
-    await login(app, { email: user.email.value, password });
   });
 
   afterAll(async () => {
@@ -970,7 +961,7 @@ describe('Engagement e2e', () => {
     const project = await createProject(app, {
       type: ProjectType.Internship,
     });
-    const intern = await createUser(app);
+    const intern = await registerUserWithPower(app, Powers.CreateLanguage);
 
     await createInternshipEngagement(app, {
       projectId: project.id,

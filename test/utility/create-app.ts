@@ -34,5 +34,12 @@ export const createTestApp = async () => {
   await app.init();
   app.graphql = await createGraphqlClient(app);
 
+  process.env = Object.assign(process.env, {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    ROOT_ADMIN_EMAIL: 'devops@tsco.org',
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    ROOT_ADMIN_PASSWORD: 'admin',
+  });
+
   return app;
 };

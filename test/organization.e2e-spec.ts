@@ -11,21 +11,17 @@ import {
   createTestApp,
   createUser,
   fragments,
-  grantPower,
-  login,
+  registerUserWithPower,
   TestApp,
 } from './utility';
 
 describe('Organization e2e', () => {
   let app: TestApp;
-  const password: string = faker.internet.password();
 
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    const user = await createUser(app, { password });
-    await grantPower(app, user.id, Powers.CreateOrganization);
-    await login(app, { email: user.email.value, password });
+    await registerUserWithPower(app, Powers.CreateOrganization);
   });
 
   afterAll(async () => {

@@ -16,22 +16,15 @@ import {
   fragments,
   generateRegisterInput,
   generateRequireFieldsRegisterInput,
-  grantPower,
   login,
+  registerUserWithPower,
   TestApp,
 } from './utility';
 
 describe('User e2e', () => {
   let app: TestApp;
-  const password: string = faker.internet.password();
 
   beforeAll(async () => {
-    process.env = Object.assign(process.env, {
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      ROOT_ADMIN_EMAIL: 'devops@tsco.org',
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      ROOT_ADMIN_PASSWORD: 'admin',
-    });
     app = await createTestApp();
     await createSession(app);
   });
@@ -262,9 +255,7 @@ describe('User e2e', () => {
   });
 
   it('assign organization to user', async () => {
-    const newUser = await createUser(app, { password });
-    await grantPower(app, newUser.id, Powers.CreateOrganization);
-    await login(app, { email: newUser.email.value, password });
+    const newUser = await registerUserWithPower(app, Powers.CreateOrganization);
     const org = await createOrganization(app);
     const result = await app.graphql.mutate(
       gql`
@@ -284,9 +275,7 @@ describe('User e2e', () => {
   });
 
   it('remove organization from user', async () => {
-    const newUser = await createUser(app, { password });
-    await grantPower(app, newUser.id, Powers.CreateOrganization);
-    await login(app, { email: newUser.email.value, password });
+    const newUser = await registerUserWithPower(app, Powers.CreateOrganization);
     const org = await createOrganization(app);
 
     // assign organization to user
@@ -323,9 +312,7 @@ describe('User e2e', () => {
   });
 
   it('assign primary organization to user', async () => {
-    const newUser = await createUser(app, { password });
-    await grantPower(app, newUser.id, Powers.CreateOrganization);
-    await login(app, { email: newUser.email.value, password });
+    const newUser = await registerUserWithPower(app, Powers.CreateOrganization);
     const org = await createOrganization(app);
     const result = await app.graphql.mutate(
       gql`
@@ -352,9 +339,7 @@ describe('User e2e', () => {
   });
 
   it('remove primary organization from user', async () => {
-    const newUser = await createUser(app, { password });
-    await grantPower(app, newUser.id, Powers.CreateOrganization);
-    await login(app, { email: newUser.email.value, password });
+    const newUser = await registerUserWithPower(app, Powers.CreateOrganization);
     const org = await createOrganization(app);
 
     // assign primary organization to user
@@ -400,9 +385,7 @@ describe('User e2e', () => {
   });
 
   it('read one users organizations', async () => {
-    const newUser = await createUser(app, { password });
-    await grantPower(app, newUser.id, Powers.CreateOrganization);
-    await login(app, { email: newUser.email.value, password });
+    const newUser = await registerUserWithPower(app, Powers.CreateOrganization);
     const org = await createOrganization(app);
     const result = await app.graphql.mutate(
       gql`
@@ -546,9 +529,7 @@ describe('User e2e', () => {
 
   // skipping because we will be refactoring how we do search
   it('list users with organizations', async () => {
-    const newUser = await createUser(app, { password });
-    await grantPower(app, newUser.id, Powers.CreateOrganization);
-    await login(app, { email: newUser.email.value, password });
+    const newUser = await registerUserWithPower(app, Powers.CreateOrganization);
     const org = await createOrganization(app);
 
     const result = await app.graphql.mutate(

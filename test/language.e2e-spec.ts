@@ -11,27 +11,19 @@ import {
   createProject,
   createSession,
   createTestApp,
-  createUser,
   expectNotFound,
-  grantPower,
-  login,
+  registerUserWithPower,
   TestApp,
 } from './utility';
 import { fragments } from './utility/fragments';
 
 describe('Language e2e', () => {
   let app: TestApp;
-  const password: string = faker.internet.password();
 
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    const user = await createUser(app, { password });
-    await grantPower(app, user.id, Powers.CreateLanguage);
-    await login(app, {
-      email: user.email.value,
-      password,
-    });
+    await registerUserWithPower(app, Powers.CreateLanguage);
   });
 
   afterAll(async () => {

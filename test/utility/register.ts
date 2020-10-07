@@ -2,10 +2,13 @@ import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { generate, isValid } from 'shortid';
 import { RegisterInput } from '../../src/components/authentication';
+import { Powers } from '../../src/components/authorization/dto/powers';
 import { Role } from '../../src/components/project';
 import { User, UserStatus } from '../../src/components/user';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
+import { grantPower } from './grant-power';
+import { login } from './login';
 
 export const generateRegisterInput = (): RegisterInput => ({
   email: faker.internet.email(),
@@ -63,6 +66,20 @@ export async function registerUser(
   expect(actual.email.value).toBe(user.email);
 
   return actual;
+}
+
+export async function registerUserWithPower(
+  app: TestApp,
+  power: Powers,
+  input: Partial<RegisterInput> = {}
+): Promise<User> {
+  const password: string = input.password || faker.internet.password();
+  const user = await registerUser(app, { ...input, password });
+
+  await grantPower(app, user.id, power);
+  await login(app, { email: user.email.value, password });
+
+  return user;
 }
 
 /** @deprecated use registerUser instead */

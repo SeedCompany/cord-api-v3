@@ -1,5 +1,4 @@
 import { gql } from 'apollo-server-core';
-import * as faker from 'faker';
 import { times } from 'lodash';
 import { Powers } from '../src/components/authorization/dto/powers';
 import { Partner, PartnerType } from '../src/components/partner';
@@ -8,23 +7,18 @@ import {
   createPerson,
   createSession,
   createTestApp,
-  createUser,
   fragments,
-  grantPower,
-  login,
+  registerUserWithPower,
   TestApp,
 } from './utility';
 
 describe('Partner e2e', () => {
   let app: TestApp;
-  const password: string = faker.internet.password();
 
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    const user = await createUser(app, { password });
-    await grantPower(app, user.id, Powers.CreateOrganization);
-    await login(app, { email: user.email.value, password });
+    await registerUserWithPower(app, Powers.CreateOrganization);
   });
 
   afterAll(async () => {

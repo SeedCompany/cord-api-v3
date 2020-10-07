@@ -1,5 +1,4 @@
 import { gql } from 'apollo-server-core';
-import * as faker from 'faker';
 import { sample, times } from 'lodash';
 import { CalendarDate, NotFoundException } from '../src/common';
 import { Powers } from '../src/components/authorization/dto/powers';
@@ -14,12 +13,10 @@ import {
   createProject,
   createSession,
   createTestApp,
-  createUser,
   expectNotFound,
   fragments,
-  grantPower,
-  login,
   Raw,
+  registerUserWithPower,
   TestApp,
 } from './utility';
 import { createPartnership } from './utility/create-partnership';
@@ -27,14 +24,11 @@ import { createPartnership } from './utility/create-partnership';
 describe('Partnership e2e', () => {
   let app: TestApp;
   let project: Raw<Project>;
-  const password: string = faker.internet.password();
 
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    const user = await createUser(app, { password });
-    await grantPower(app, user.id, Powers.CreateOrganization);
-    await login(app, { email: user.email.value, password });
+    await registerUserWithPower(app, Powers.CreateOrganization);
 
     project = await createProject(app);
   });

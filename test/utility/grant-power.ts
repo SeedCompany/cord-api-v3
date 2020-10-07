@@ -7,13 +7,13 @@ export async function grantPower(app: TestApp, id: string, power: Powers) {
   // Need to login as root user to grant another user the power needed
   // After calling this function, need to login as a normal user again
   await login(app, {
-    email: 'devops@tsco.org',
-    password: 'admin',
+    email: process.env.ROOT_ADMIN_EMAIL,
+    password: process.env.ROOT_ADMIN_PASSWORD,
   });
 
   const result = await app.graphql.mutate(
     gql`
-      mutation grantPower($id: ID!, $power: Powers!) {
+      mutation grantPower($id: ID!, $power: Power!) {
         grantPower(id: $id, power: $power)
       }
     `,

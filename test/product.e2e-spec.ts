@@ -1,5 +1,4 @@
 import { gql } from 'apollo-server-core';
-import * as faker from 'faker';
 import { times } from 'lodash';
 import { Powers } from '../src/components/authorization/dto/powers';
 import { Film } from '../src/components/film';
@@ -18,11 +17,9 @@ import {
   createSession,
   createStory,
   createTestApp,
-  createUser,
   expectNotFound,
   fragments,
-  grantPower,
-  login,
+  registerUserWithPower,
   TestApp,
 } from './utility';
 import { createProduct } from './utility/create-product';
@@ -33,20 +30,14 @@ describe('Product e2e', () => {
   let engagement: RawLanguageEngagement;
   let story: Story;
   let film: Film;
-  const password: string = faker.internet.password();
 
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    const user = await createUser(app, { password });
+    await registerUserWithPower(app, Powers.CreateLanguage);
     story = await createStory(app);
     film = await createFilm(app);
 
-    await grantPower(app, user.id, Powers.CreateLanguage);
-    await login(app, {
-      email: user.email.value,
-      password,
-    });
     engagement = await createLanguageEngagement(app);
   });
   afterAll(async () => {

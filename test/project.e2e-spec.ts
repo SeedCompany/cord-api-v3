@@ -41,8 +41,8 @@ import {
   expectNotFound,
   fragments,
   getUserFromSession,
-  grantPower,
   login,
+  registerUserWithPower,
   TestApp,
 } from './utility';
 
@@ -54,7 +54,6 @@ describe('Project e2e', () => {
   let fieldZone: FieldZone;
   let fieldRegion: FieldRegion;
   let location: Location;
-  const password: string = faker.internet.password();
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -68,13 +67,6 @@ describe('Project e2e', () => {
     location = await createLocation(app);
     intern = await getUserFromSession(app);
     mentor = await getUserFromSession(app);
-
-    process.env = Object.assign(process.env, {
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      ROOT_ADMIN_EMAIL: 'devops@tsco.org',
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      ROOT_ADMIN_PASSWORD: 'admin',
-    });
   });
   afterAll(async () => {
     await app.close();
@@ -722,9 +714,7 @@ describe('Project e2e', () => {
   });
 
   it('List view of partnerships by projectId', async () => {
-    const user = await createUser(app, { password });
-    await grantPower(app, user.id, Powers.CreateOrganization);
-    await login(app, { email: user.email.value, password });
+    await registerUserWithPower(app, Powers.CreateOrganization);
     //create 2 partnerships in a project
     const numPartnerships = 2;
     const type = ProjectType.Translation;
