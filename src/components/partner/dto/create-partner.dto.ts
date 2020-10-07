@@ -19,8 +19,9 @@ export abstract class CreatePartner {
   @Transform(uniq)
   readonly types?: PartnerType[] = [];
 
-  @Field(() => FinancialReportingType, { nullable: true })
-  readonly financialReportingType?: FinancialReportingType;
+  @Field(() => [FinancialReportingType], { nullable: true })
+  @Transform(uniq)
+  readonly financialReportingTypes?: FinancialReportingType[] = [];
 
   @Field({ nullable: true })
   @Matches(/^[A-Z]{3}$/)

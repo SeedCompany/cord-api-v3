@@ -3,11 +3,19 @@ import {
   Resource,
   Secured,
   SecuredBoolean,
+  SecuredEnumList,
   SecuredProperty,
   SecuredString,
 } from '../../../common';
-import { SecuredFinancialReportingType } from '../../partnership/dto/partnership.dto';
+import { FinancialReportingType } from '../../partnership/dto/financial-reporting-type';
 import { SecuredPartnerTypes } from './partner-type.enum';
+
+@ObjectType({
+  description: SecuredEnumList.descriptionFor('financial reporting types'),
+})
+export abstract class SecuredFinancialReportingTypes extends SecuredEnumList(
+  FinancialReportingType
+) {}
 
 @ObjectType({
   implements: Resource,
@@ -21,7 +29,7 @@ export class Partner extends Resource {
   readonly types: SecuredPartnerTypes;
 
   @Field()
-  readonly financialReportingType: SecuredFinancialReportingType;
+  readonly financialReportingTypes: SecuredFinancialReportingTypes;
 
   @Field()
   readonly pmcEntityCode: SecuredString;

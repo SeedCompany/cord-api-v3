@@ -110,6 +110,13 @@ export class PartnershipService {
       input.types
     );
 
+    // financialReportingType should be subset of its Partner's financialReportingTypes
+    const partner = await this.partnerService.readOne(partnerId, session);
+    this.assertFinancialReportingType(
+      input.financialReportingType,
+      partner.financialReportingTypes.value
+    );
+
     const mou = await this.files.createDefinedFile(
       `MOU`,
       session,
@@ -343,6 +350,16 @@ export class PartnershipService {
     const object = await this.readOne(input.id, session);
     let changes = input;
 
+    // financialReportingType should be subset of its Partner's financialReportingTypes
+    const partner = await this.partnerService.readOne(
+      object.partner.value as string,
+      session
+    );
+    this.assertFinancialReportingType(
+      input.financialReportingType,
+      partner.financialReportingTypes.value
+    );
+
     if (
       !this.validateFinancialReportingType(
         input.financialReportingType ?? object.financialReportingType.value,
@@ -546,5 +563,20 @@ export class PartnershipService {
     return financialReportingType && !types?.includes(PartnerType.Managing)
       ? false
       : true;
+  }
+
+  protected assertFinancialReportingType(
+    type: FinancialReportingType | null | undefined,
+    availableTypes: FinancialReportingType[] | undefined
+  ) {
+    if (!type) {
+      return;
+    }
+    if (!availableTypes?.includes(type)) {
+      throw new InputException(
+        `FinancialReportingType ${type} cannot be assigned to this partnership`,
+        'input.financialReportingType'
+      );
+    }
   }
 }

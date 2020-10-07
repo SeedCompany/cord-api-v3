@@ -39,7 +39,7 @@ describe('Partner e2e', () => {
     const pt = await createPartner(app);
     const person = await createPerson(app);
     const types = [PartnerType.Funding, PartnerType.Managing];
-    const financialReportingType = FinancialReportingType.FieldEngaged;
+    const financialReportingTypes = [FinancialReportingType.FieldEngaged];
     const pmcEntityCode = faker.helpers.replaceSymbols('???').toUpperCase();
     const globalInnovationsClient = true;
     const active = true;
@@ -62,7 +62,7 @@ describe('Partner e2e', () => {
             id: pt.id,
             pointOfContactId: person.id,
             types,
-            financialReportingType,
+            financialReportingTypes,
             pmcEntityCode,
             globalInnovationsClient,
             active,
@@ -75,8 +75,8 @@ describe('Partner e2e', () => {
     expect(updated).toBeTruthy();
     expect(updated.pointOfContact.value.id).toBe(person.id);
     expect(updated.types.value).toEqual(expect.arrayContaining(types));
-    expect(updated.financialReportingType.value).toEqual(
-      financialReportingType
+    expect(updated.financialReportingTypes.value).toEqual(
+      financialReportingTypes
     );
     expect(updated.pmcEntityCode.value).toEqual(pmcEntityCode);
     expect(updated.globalInnovationsClient.value).toEqual(
@@ -140,7 +140,7 @@ describe('Partner e2e', () => {
     await expect(
       createPartner(app, {
         types: [PartnerType.Funding],
-        financialReportingType: FinancialReportingType.Funded,
+        financialReportingTypes: [FinancialReportingType.Funded],
       })
     ).rejects.toThrowError(
       'Financial reporting type can only be applied to managing partners'

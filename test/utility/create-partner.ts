@@ -19,7 +19,7 @@ export async function createPartner(
     organizationId: input.organizationId || (await createOrganization(app)).id,
     pointOfContactId: input.pointOfContactId || (await createPerson(app)).id,
     types: [PartnerType.Managing],
-    financialReportingType: FinancialReportingType.Funded,
+    financialReportingTypes: [FinancialReportingType.Funded],
     pmcEntityCode: faker.helpers.replaceSymbols('???').toUpperCase(),
     globalInnovationsClient: false,
     active: false,

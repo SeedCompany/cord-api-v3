@@ -396,7 +396,7 @@ export const partner = gql`
       canRead
       canEdit
     }
-    financialReportingType {
+    financialReportingTypes {
       value
       canRead
       canEdit

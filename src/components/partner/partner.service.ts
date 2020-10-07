@@ -50,7 +50,7 @@ export class PartnerService {
     organization: true,
     pointOfContact: true,
     types: true,
-    financialReportingType: true,
+    financialReportingTypes: true,
     pmcEntityCode: true,
     globalInnovationsClient: true,
     active: true,
@@ -76,7 +76,7 @@ export class PartnerService {
 
   async create(input: CreatePartner, session: ISession): Promise<Partner> {
     this.verifyFinancialReportingType(
-      input.financialReportingType,
+      input.financialReportingTypes,
       input.types
     );
 
@@ -89,8 +89,8 @@ export class PartnerService {
         isOrgPublic: false,
       },
       {
-        key: 'financialReportingType',
-        value: input.financialReportingType,
+        key: 'financialReportingTypes',
+        value: input.financialReportingTypes,
         isPublic: false,
         isOrgPublic: false,
       },
@@ -266,6 +266,10 @@ export class PartnerService {
         ...secured.types,
         value: secured.types.value || [],
       },
+      financialReportingTypes: {
+        ...secured.financialReportingTypes,
+        value: secured.financialReportingTypes.value || [],
+      },
     };
   }
 
@@ -274,11 +278,11 @@ export class PartnerService {
     let changes = input;
     if (
       !this.validateFinancialReportingType(
-        input.financialReportingType ?? object.financialReportingType.value,
+        input.financialReportingTypes ?? object.financialReportingTypes.value,
         input.types ?? object.types.value
       )
     ) {
-      if (input.financialReportingType && input.types) {
+      if (input.financialReportingTypes && input.types) {
         throw new InputException(
           'Financial reporting type can only be applied to managing partners',
           'partnership.financialReportingType'
@@ -286,7 +290,7 @@ export class PartnerService {
       }
       changes = {
         ...changes,
-        financialReportingType: null,
+        financialReportingTypes: [],
       };
     }
 
@@ -295,7 +299,7 @@ export class PartnerService {
       object,
       props: [
         'types',
-        'financialReportingType',
+        'financialReportingTypes',
         'pmcEntityCode',
         'globalInnovationsClient',
         'active',
@@ -390,10 +394,10 @@ export class PartnerService {
   }
 
   protected verifyFinancialReportingType(
-    financialReportingType: FinancialReportingType | null | undefined,
+    financialReportingTypes: FinancialReportingType[] | undefined,
     types: PartnerType[] | undefined
   ) {
-    if (!this.validateFinancialReportingType(financialReportingType, types)) {
+    if (!this.validateFinancialReportingType(financialReportingTypes, types)) {
       throw new InputException(
         'Financial reporting type can only be applied to managing partners',
         'partnership.financialReportingType'
@@ -402,10 +406,11 @@ export class PartnerService {
   }
 
   protected validateFinancialReportingType(
-    financialReportingType: FinancialReportingType | null | undefined,
+    financialReportingTypes: FinancialReportingType[] | undefined,
     types: PartnerType[] | undefined
   ) {
-    return financialReportingType && !types?.includes(PartnerType.Managing)
+    return financialReportingTypes?.length &&
+      !types?.includes(PartnerType.Managing)
       ? false
       : true;
   }
