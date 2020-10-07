@@ -1087,6 +1087,8 @@
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
+									"",
+									"",
 									"//Common Verification",
 									"pm.test(\"Status code is 200\", function () {",
 									"    pm.response.to.have.status(200);",
@@ -1095,6 +1097,8 @@
 									"pm.test(\"Response time is less than 1000ms\", function () {",
 									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
 									"});",
+									"",
+									"// if (jsonData.errors) return; // Keep this Uncommented until #1221 resolves",
 									"",
 									"//Test Specific",
 									"pm.test(\"Verify that user ID is not blank or null\", function () {",
