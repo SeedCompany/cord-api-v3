@@ -885,3 +885,23 @@ export const getPermList = matchPermList;
 
 /** @deprecated */
 export const getPropList = matchPropList;
+
+//DELETE service
+export const setBaseNodeLabelsDeleted = (
+  query: Query,
+  baseNodeLabels: string[]
+) => {
+  baseNodeLabels.forEach((label) => {
+    query
+      .match(node('node'))
+      .set({
+        labels: {
+          node: `Deleted_${label}`,
+        },
+      })
+      .removeLabels({
+        node: label,
+      })
+      .with('*');
+  });
+};

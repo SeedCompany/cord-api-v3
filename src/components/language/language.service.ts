@@ -452,11 +452,12 @@ export class LanguageService {
       throw new NotFoundException('Could not find language', 'language.id');
     }
 
+    const baseNodeLabels = ['BaseNode', 'Language'];
+
     try {
-      await this.db.deleteNode({
-        session,
+      await this.db.deleteNodeNew<Language>({
         object,
-        aclEditProp: 'canDeleteOwnUser',
+        baseNodeLabels,
       });
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });

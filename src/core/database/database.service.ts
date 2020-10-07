@@ -27,7 +27,7 @@ import {
 } from '../../common';
 import { ILogger, Logger } from '..';
 import { ConfigService } from '../config/config.service';
-import { hasMore } from './query.helpers';
+import { hasMore, setBaseNodeLabelsDeleted } from './query.helpers';
 
 interface ReadPropertyResult {
   value: any;
@@ -676,8 +676,10 @@ export class DatabaseService {
 
   async deleteNodeNew<TObject extends Resource>({
     object,
+    baseNodeLabels,
   }: {
     object: TObject;
+    baseNodeLabels: string[];
   }) {
     const query = this.db
 
@@ -694,7 +696,11 @@ export class DatabaseService {
           'rel.active': false,
         },
       })
-      .with('*');
+      .with('*')
+      //Mark labels Deleted
+      .call(setBaseNodeLabelsDeleted, baseNodeLabels)
+      .return('*');
+
     await query.run();
   }
 
