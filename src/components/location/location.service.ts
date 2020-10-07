@@ -104,7 +104,7 @@ export class LocationService {
       },
       {
         key: 'iso31663',
-        value: input.iso31663,
+        value: input.iso31663?.toUpperCase(),
         isPublic: false,
         isOrgPublic: false,
         label: 'Iso31663',
