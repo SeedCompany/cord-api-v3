@@ -32,7 +32,7 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { InternalAdminRole } from '../authorization/roles';
+import { Administrator } from '../authorization/roles';
 import {
   CreateLocation,
   Location,
@@ -137,8 +137,7 @@ export class LocationService {
     }
 
     const dbLocation = new DbLocation();
-    await this.authorizationService.addUsersToBaseNodeByRole(
-      InternalAdminRole,
+    await this.authorizationService.processNewBaseNode(
       dbLocation,
       result.id,
       session.userId as string

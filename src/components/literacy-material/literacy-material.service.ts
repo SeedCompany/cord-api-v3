@@ -31,7 +31,7 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { InternalAdminRole } from '../authorization/roles';
+import { Administrator } from '../authorization/roles';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
 import {
   CreateLiteracyMaterial,
@@ -108,8 +108,7 @@ export class LiteracyMaterialService {
       }
 
       const dbLiteracyMaterial = new DbLiteracyMaterial();
-      await this.authorizationService.addUsersToBaseNodeByRole(
-        InternalAdminRole,
+      await this.authorizationService.processNewBaseNode(
         dbLiteracyMaterial,
         result.id,
         session.userId as string

@@ -2,6 +2,7 @@ import { ObjectType, registerEnumType } from '@nestjs/graphql';
 import { SecuredEnumList } from '../../../common';
 
 export enum Role {
+  Administrator = 'Administrator',
   BibleTranslationLiaison = 'BibleTranslationLiaison',
   Consultant = 'Consultant',
   ConsultantManager = 'ConsultantManager',
@@ -33,8 +34,5 @@ registerEnumType(Role, { name: 'Role' });
 export abstract class SecuredRoles extends SecuredEnumList(Role) {}
 
 export enum InternalRole {
-  // someone who needs access to all props of a base node
-  Admin = 'Admin',
-  // a project admin that needs minimal information on a team member of the same project
-  AdminViewOfProjectMember = 'AdminViewOfProjectMember',
+  ViewAll = 'ViewAll',
 }

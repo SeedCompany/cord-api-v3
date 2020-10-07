@@ -37,7 +37,7 @@ import {
 import { Role } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto/powers';
-import { InternalAdminRole } from '../authorization/roles';
+import { Administrator } from '../authorization/roles';
 import {
   OrganizationListInput,
   OrganizationService,
@@ -171,12 +171,7 @@ export class UserService {
       throw new ServerException('Failed to create user');
     }
     const dbUser = new DbUser();
-    await this.authorizationService.addUsersToBaseNodeByRole(
-      InternalAdminRole,
-      dbUser,
-      id,
-      id
-    );
+    await this.authorizationService.processNewBaseNode(dbUser, id, id);
 
     // todo: remove this and refactor tests
     // grant all powers to keep tests passing

@@ -31,7 +31,7 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { InternalAdminRole } from '../authorization/roles';
+import { Administrator } from '../authorization/roles';
 import {
   CreateFieldRegion,
   FieldRegion,
@@ -137,8 +137,7 @@ export class FieldRegionService {
     }
 
     const dbFieldRegion = new DbFieldRegion();
-    await this.authorizationService.addUsersToBaseNodeByRole(
-      InternalAdminRole,
+    await this.authorizationService.processNewBaseNode(
       dbFieldRegion,
       result.id,
       session.userId as string

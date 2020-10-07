@@ -31,7 +31,7 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { InternalAdminRole } from '../authorization/roles';
+import { Administrator } from '../authorization/roles';
 import {
   CreatePartner,
   Partner,
@@ -103,8 +103,7 @@ export class PartnerService {
     }
 
     const dbPartner = new DbPartner();
-    await this.authorizationService.addUsersToBaseNodeByRole(
-      InternalAdminRole,
+    await this.authorizationService.processNewBaseNode(
       dbPartner,
       result.id,
       session.userId as string

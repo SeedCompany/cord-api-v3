@@ -23,7 +23,7 @@ import {
   StandardReadResult,
 } from '../../../core/database/results';
 import { AuthorizationService } from '../../authorization/authorization.service';
-import { InternalAdminRole } from '../../authorization/roles';
+import { Administrator } from '../../authorization/roles';
 import {
   CreateEthnologueLanguage,
   EthnologueLanguage,
@@ -96,8 +96,7 @@ export class EthnologueLanguageService {
     }
 
     const dbEthnologueLanguage = new DbEthnologueLanguage();
-    await this.authorizationService.addUsersToBaseNodeByRole(
-      InternalAdminRole,
+    await this.authorizationService.processNewBaseNode(
       dbEthnologueLanguage,
       result.id,
       session.userId as string

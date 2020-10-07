@@ -32,7 +32,6 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { InternalAdminRole } from '../authorization/roles';
 import { FileService } from '../file';
 import {
   Budget,
@@ -152,8 +151,7 @@ export class BudgetService {
       });
 
       const dbBudget = new DbBudget();
-      await this.authorizationService.addUsersToBaseNodeByRole(
-        InternalAdminRole,
+      await this.authorizationService.processNewBaseNode(
         dbBudget,
         result.id,
         session.userId as string
@@ -212,8 +210,7 @@ export class BudgetService {
       }
 
       const dbBudgetRecord = new DbBudgetRecord();
-      await this.authorizationService.addUsersToBaseNodeByRole(
-        InternalAdminRole,
+      await this.authorizationService.processNewBaseNode(
         dbBudgetRecord,
         result.id,
         session.userId as string

@@ -18,7 +18,7 @@ import {
   StandardReadResult,
 } from '../../../core/database/results';
 import { AuthorizationService } from '../../authorization/authorization.service';
-import { InternalAdminRole } from '../../authorization/roles';
+import { Administrator } from '../../authorization/roles';
 import { DbUnavailability } from '../model';
 import {
   CreateUnavailability,
@@ -92,8 +92,7 @@ export class UnavailabilityService {
       }
 
       const dbUnavailability = new DbUnavailability();
-      await this.authorizationService.addUsersToBaseNodeByRole(
-        InternalAdminRole,
+      await this.authorizationService.processNewBaseNode(
         dbUnavailability,
         createUnavailabilityResult.id,
         session.userId as string

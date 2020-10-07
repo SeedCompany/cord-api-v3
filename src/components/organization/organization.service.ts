@@ -34,7 +34,7 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { InternalAdminRole } from '../authorization/roles';
+import { Administrator } from '../authorization/roles';
 import {
   CreateOrganization,
   Organization,
@@ -137,8 +137,7 @@ export class OrganizationService {
     }
 
     const dbOrganization = new DbOrganization();
-    await this.authorizationService.addUsersToBaseNodeByRole(
-      InternalAdminRole,
+    await this.authorizationService.processNewBaseNode(
       dbOrganization,
       result.id,
       session.userId as string

@@ -39,7 +39,7 @@ import {
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto/powers';
-import { InternalAdminRole } from '../authorization/roles';
+import { Administrator } from '../authorization/roles';
 import { EngagementService } from '../engagement';
 import {
   Location,
@@ -256,8 +256,7 @@ export class LanguageService {
       }
 
       const dbLanguage = new DbLanguage();
-      await this.authorizationService.addUsersToBaseNodeByRole(
-        InternalAdminRole,
+      await this.authorizationService.processNewBaseNode(
         dbLanguage,
         resultLanguage.id,
         session.userId as string
