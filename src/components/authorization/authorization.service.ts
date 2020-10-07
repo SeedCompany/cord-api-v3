@@ -8,6 +8,7 @@ import { Role } from './dto';
 import { Powers } from './dto/powers';
 import { DbRole, OneBaseNode } from './model';
 import { Administrator } from './roles';
+import { ReadAll } from './roles/read-all.role';
 
 /**
  * powers can exist on a security group or a user node
@@ -46,7 +47,11 @@ export class AuthorizationService {
       });
 
       // run all rules for all roles on this base node
-      await this.runRules(baseNodeObj, baseNodeId, adminSgId);
+      await this.runPostBaseNodeCreationRules(
+        baseNodeObj,
+        baseNodeId,
+        adminSgId
+      );
 
       return true;
     } else {
@@ -58,7 +63,7 @@ export class AuthorizationService {
     baseNodeObj: OneBaseNode,
     baseNodeId: string,
     role: DbRole
-  ): Promise<string | undefined> {
+  ): Promise<string> {
     const checkSg = await this.db
       .query()
       .match([
@@ -113,20 +118,56 @@ export class AuthorizationService {
       .asResult<{ id: string }>()
       .first();
 
-    return result?.id;
+    if (result === undefined) {
+      throw new ServerException('failed to create SG for role');
+    }
+
+    return result.id;
   }
 
-  private async runRules(
+  private async runPostBaseNodeCreationRules(
     baseNodeObj: OneBaseNode,
     baseNodeId: string,
     adminSgId: string
   ) {
-    // first add all users with the Administrator role to this role's adminSgId
-    await this.addAllUsersToSgByRole(adminSgId, Role.Administrator);
-
+    /**
+     * Remember, this is only run at base node creation,
+     * not every rule in the role def applies
+     */
     const labels = await this.getLabels(baseNodeId);
 
-    if (labels.includes('Project')) {
+    const readAllSgId = await this.mergeSecurityGroupForRole(
+      baseNodeObj,
+      baseNodeId,
+      ReadAll
+    );
+
+    if (labels.includes('User')) {
+      //
+    } else if (labels.includes('Project')) {
+      // these roles have access to all project base nodes, read/write
+      const adminAccess = [
+        Role.Administrator,
+        Role.ProjectManager,
+        Role.RegionalDirector,
+        Role.FieldOperationsDirector,
+        Role.FinancialAnalyst,
+        Role.Controller,
+      ];
+      for (const role of adminAccess) {
+        await this.addAllUsersToSgByTheUsersGlobalRole(adminSgId, role);
+      }
+
+      // these roles have read only access to all project properties
+      const ReadAllAccess = [
+        Role.Fundraising,
+        Role.Marketing,
+        Role.StaffMember,
+        Role.Leadership,
+      ];
+      for (const role of ReadAllAccess) {
+        await this.addAllUsersToSgByTheUsersGlobalRole(readAllSgId, role);
+      }
     }
   }
 
@@ -144,7 +185,7 @@ export class AuthorizationService {
     return result.labels;
   }
 
-  private async addAllUsersToSgByRole(sgId: string, role: Role) {
+  private async addAllUsersToSgByTheUsersGlobalRole(sgId: string, role: Role) {
     // grab all users who have a given user-role and add them as members to the new sg
     await this.db
       .query()
