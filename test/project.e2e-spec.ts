@@ -943,7 +943,7 @@ describe('Project e2e', () => {
 
     const actual = result.updateProject.project;
     expect(actual.id).toBe(proj.id);
-    expect(actual.budget.value.records.length).toBe(1);
+    expect(actual.budget.value.records.length).toBe(2);
   });
 
   /**

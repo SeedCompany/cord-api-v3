@@ -393,6 +393,6 @@ describe('Partnership e2e', () => {
 
     const actual = result.project;
     expect(actual.id).toBe(project.id);
-    expect(actual.budget.value.records.length).toBe(2);
+    expect(actual.budget.value.records.length).toBe(3);
   });
 });
