@@ -1,32 +1,15 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { node } from 'cypher-query-builder';
 import { IdArg, ISession, Session } from '../../common';
-import { DatabaseService } from '../../core';
 import { Powers } from '../authorization/dto/powers';
 import { AuthorizationService } from './authorization.service';
 
 @Resolver()
 export class AuthorizationResolver {
-  constructor(
-    private readonly db: DatabaseService,
-    private readonly authorizationService: AuthorizationService
-  ) {}
+  constructor(private readonly authorizationService: AuthorizationService) {}
 
   @Query(() => [Powers])
   async powers(@Session() session: ISession): Promise<Powers[]> {
-    if (!session.userId) {
-      return [];
-    }
-    const result = await this.db
-      .query()
-      .match([node('user', 'User', { id: session.userId })])
-      .return('user.powers as powers')
-      .first();
-
-    if (!result) {
-      return [];
-    }
-    return result.powers as Powers[];
+    return await this.authorizationService.readPower(session);
   }
 
   @Mutation(() => Boolean)
@@ -35,14 +18,15 @@ export class AuthorizationResolver {
     @IdArg() id: string,
     @Args({ name: 'power', type: () => Powers }) power: Powers
   ): Promise<boolean> {
-    if (!session.userId) {
-      return false;
-    }
+    return await this.authorizationService.createPower(id, power, session);
+  }
 
-    const requestingUserPowers = await this.powers(session);
-    if (requestingUserPowers.includes(Powers.GrantPower)) {
-      return this.authorizationService.grantPower(power, id);
-    }
-    return false;
+  @Mutation(() => Boolean)
+  async deletePower(
+    @Session() session: ISession,
+    @IdArg() id: string,
+    @Args({ name: 'power', type: () => Powers }) power: Powers
+  ): Promise<boolean> {
+    return await this.authorizationService.deletePower(id, power, session);
   }
 }

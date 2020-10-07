@@ -35,4 +35,4 @@ export enum Powers {
   GrantPower = 'GrantPower',
 }
 
-registerEnumType(Powers, { name: 'Powers' });
+registerEnumType(Powers, { name: 'Power' });
