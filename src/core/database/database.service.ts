@@ -29,7 +29,7 @@ import { ILogger, Logger } from '..';
 import { ConfigService } from '../config/config.service';
 import {
   hasMore,
-  setBaseNodeLabelsDeleted,
+  setBaseNodeLabelsAndIdDeleted,
   setPropLabelsAndValuesDeleted,
   UniqueProperties,
 } from './query.helpers';
@@ -703,8 +703,9 @@ export class DatabaseService {
         },
       })
       .with('distinct(node) as node')
-      //Mark labels Deleted
-      .call(setBaseNodeLabelsDeleted, baseNodeLabels)
+      //Mark baseNode labels and id deleted
+      .call(setBaseNodeLabelsAndIdDeleted, baseNodeLabels)
+      //Mark unique property labels and values deleted
       .call(setPropLabelsAndValuesDeleted, uniqueProperties)
       .return('*');
     await query.run();
