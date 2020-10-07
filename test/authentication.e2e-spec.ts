@@ -8,11 +8,11 @@ import { EmailService } from '../src/core/email';
 import {
   createSession,
   createTestApp,
-  createUser,
   fragments,
   generateRegisterInput,
   login,
   logout,
+  registerUser,
   TestApp,
 } from './utility';
 
@@ -32,7 +32,7 @@ describe('Authentication e2e', () => {
     const fakeUser = generateRegisterInput();
     const email = fakeUser.email;
     // create user first
-    await createUser(app, fakeUser);
+    await registerUser(app, fakeUser);
     const checkRes = await app.graphql.mutate(
       gql`
         mutation forgotPassword($email: String!) {
@@ -90,7 +90,7 @@ describe('Authentication e2e', () => {
 
   it('login user', async () => {
     const fakeUser = generateRegisterInput();
-    const user = await createUser(app, fakeUser);
+    const user = await registerUser(app, fakeUser);
     const _logout = await logout(app);
 
     await login(app, { email: fakeUser.email, password: fakeUser.password });
@@ -128,7 +128,7 @@ describe('Authentication e2e', () => {
   it('should return true after password changed', async () => {
     const fakeUser = generateRegisterInput();
 
-    const user = await createUser(app, fakeUser);
+    const user = await registerUser(app, fakeUser);
     await login(app, { email: fakeUser.email, password: fakeUser.password });
 
     const newPassword = faker.internet.password();

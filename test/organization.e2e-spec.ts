@@ -9,8 +9,8 @@ import {
   createOrganization,
   createSession,
   createTestApp,
-  createUser,
   fragments,
+  registerUser,
   registerUserWithPower,
   TestApp,
 } from './utility';
@@ -400,7 +400,7 @@ describe('Organization e2e', () => {
   });
 
   it.skip('List of organizations sorted by name to be alphabetical, ignoring case sensitivity. Order: ASCENDING', async () => {
-    await createUser(app, { displayFirstName: 'Tammy' });
+    await registerUser(app, { displayFirstName: 'Tammy' });
     //Create three projects, each beginning with lower or upper-cases
     await createOrganization(app, {
       name: 'an Organization ' + faker.random.uuid(),
@@ -446,7 +446,7 @@ describe('Organization e2e', () => {
   });
 
   it.skip('List of organizations sorted by name to be alphabetical, ignoring case sensitivity. Order: DESCENDING', async () => {
-    await createUser(app, { displayFirstName: 'Tammy' });
+    await registerUser(app, { displayFirstName: 'Tammy' });
     //Create three projects, each beginning with lower or upper-cases
     await createOrganization(app, {
       name: 'an Organization ' + faker.random.uuid(),

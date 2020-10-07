@@ -7,8 +7,8 @@ import {
   createLocation,
   createSession,
   createTestApp,
-  createUser,
   fragments,
+  registerUser,
   TestApp,
 } from './utility';
 
@@ -18,7 +18,7 @@ describe('Location e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await createUser(app);
+    await registerUser(app);
   });
 
   afterAll(async () => {

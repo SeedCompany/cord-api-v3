@@ -12,11 +12,11 @@ import {
   createSession,
   createTestApp,
   createUnavailability,
-  createUser,
   fragments,
   generateRegisterInput,
   generateRequireFieldsRegisterInput,
   login,
+  registerUser,
   registerUserWithPower,
   TestApp,
 } from './utility';
@@ -36,7 +36,7 @@ describe('User e2e', () => {
   it('read one user by id', async () => {
     const fakeUser = generateRegisterInput();
 
-    const user = await createUser(app, fakeUser);
+    const user = await registerUser(app, fakeUser);
     await login(app, { email: fakeUser.email, password: fakeUser.password });
 
     const result = await app.graphql.query(
@@ -114,7 +114,7 @@ describe('User e2e', () => {
     // create user first
     const newUser = generateRegisterInput();
     await createSession(app);
-    const user = await createUser(app, newUser);
+    const user = await registerUser(app, newUser);
     await login(app, { email: newUser.email, password: newUser.password });
 
     const fakeUser: UpdateUser = {
@@ -185,7 +185,7 @@ describe('User e2e', () => {
 
   it.skip('delete user', async () => {
     // create user first
-    const user = await createUser(app);
+    const user = await registerUser(app);
     const result = await app.graphql.query(
       gql`
         mutation deleteUser($id: ID!) {
@@ -205,10 +205,10 @@ describe('User e2e', () => {
 
   // LIST USERS
   it.skip('list view of users', async () => {
-    await createUser(app);
-    await createUser(app);
-    await createUser(app);
-    await createUser(app);
+    await registerUser(app);
+    await registerUser(app);
+    await registerUser(app);
+    await registerUser(app);
 
     await login(app, {
       email: process.env.ROOT_ADMIN_EMAIL,
@@ -233,7 +233,7 @@ describe('User e2e', () => {
 
   it.skip('Check consistency across user nodes', async () => {
     // create a user
-    const user = await createUser(app, { email: faker.internet.email() });
+    const user = await registerUser(app, { email: faker.internet.email() });
     // test it has proper schema
     const result = await app.graphql.query(gql`
       query {
@@ -439,7 +439,7 @@ describe('User e2e', () => {
   });
 
   it('read one users education', async () => {
-    const newUser = await createUser(app);
+    const newUser = await registerUser(app);
     const edu = await createEducation(app, { userId: newUser.id });
 
     const result = await app.graphql.query(
@@ -472,7 +472,7 @@ describe('User e2e', () => {
   });
 
   it('read one users unavailablity', async () => {
-    const newUser = await createUser(app);
+    const newUser = await registerUser(app);
     const unavail = await createUnavailability(app, { userId: newUser.id });
 
     const result = await app.graphql.query(
@@ -506,7 +506,7 @@ describe('User e2e', () => {
 
   it('read user avatar', async () => {
     const fakeUser = generateRegisterInput();
-    const newUser = await createUser(app, fakeUser);
+    const newUser = await registerUser(app, fakeUser);
 
     const result = await app.graphql.query(
       gql`

@@ -7,9 +7,9 @@ import { User } from '../src/components/user';
 import {
   createSession,
   createTestApp,
-  createUser,
   fragments,
   login,
+  registerUser,
   TestApp,
 } from './utility';
 import { createRegion } from './utility/create-region';
@@ -25,7 +25,7 @@ describe('Region e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    director = await createUser(app, { password });
+    director = await registerUser(app, { password });
     fieldZone = await createZone(app, { directorId: director.id });
   });
 

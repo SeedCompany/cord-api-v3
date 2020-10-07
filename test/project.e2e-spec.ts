@@ -36,12 +36,12 @@ import {
   createRegion,
   createSession,
   createTestApp,
-  createUser,
   createZone,
   expectNotFound,
   fragments,
   getUserFromSession,
   login,
+  registerUser,
   registerUserWithPower,
   TestApp,
 } from './utility';
@@ -58,7 +58,7 @@ describe('Project e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    director = await createUser(app);
+    director = await registerUser(app);
     fieldZone = await createZone(app, { directorId: director.id });
     fieldRegion = await createRegion(app, {
       directorId: director.id,
@@ -319,7 +319,7 @@ describe('Project e2e', () => {
   });
 
   it('List of projects sorted by name to be alphabetical, ignoring case sensitivity. Order: ASCENDING', async () => {
-    await createUser(app, { displayFirstName: 'Tammy' });
+    await registerUser(app, { displayFirstName: 'Tammy' });
     //Create three projects with mixed cases.
     await createProject(app, {
       name: 'a project 2' + faker.random.uuid(),
@@ -387,7 +387,7 @@ describe('Project e2e', () => {
   });
 
   it('List of projects sorted by name to be alphabetical, ignoring case sensitivity. Order: DESCENDING', async () => {
-    await createUser(app, { displayFirstName: 'Tammy' });
+    await registerUser(app, { displayFirstName: 'Tammy' });
     //Create three projects, each beginning with lower or upper-cases.
     await createProject(app, {
       name: 'a project 2' + faker.random.uuid(),
@@ -668,9 +668,9 @@ describe('Project e2e', () => {
     const projectId = project.id;
     const password = faker.internet.password();
     const password2 = faker.internet.password();
-    const userForList = await createUser(app, { password });
+    const userForList = await registerUser(app, { password });
     const userId = userForList.id;
-    const userForList2 = await createUser(app, { password: password2 });
+    const userForList2 = await registerUser(app, { password: password2 });
     const userId2 = userForList2.id;
     const memberIds: string[] = [userId, userId2];
 

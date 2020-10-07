@@ -17,13 +17,13 @@ import {
   createFileVersion,
   createSession,
   createTestApp,
-  createUser,
   expectNotFound,
   FakeFile,
   generateFakeFile,
   getFileNode,
   getFileNodeChildren,
   login,
+  registerUser,
   requestFileUpload,
   TestApp,
   uploadFileContents,
@@ -108,7 +108,7 @@ describe('File e2e', () => {
     app = await createTestApp();
     bucket = app.get(FilesBucketToken);
     await createSession(app);
-    me = await createUser(app, { password: myPassword });
+    me = await registerUser(app, { password: myPassword });
   });
 
   afterAll(async () => {

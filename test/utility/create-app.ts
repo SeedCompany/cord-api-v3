@@ -3,6 +3,7 @@ import { GRAPHQL_MODULE_OPTIONS } from '@nestjs/graphql/dist/graphql.constants';
 import { Test } from '@nestjs/testing';
 import * as faker from 'faker';
 import { AppModule } from '../../src/app.module';
+import { ConfigService } from '../../src/core';
 import { LogLevel } from '../../src/core/logger';
 import { LevelMatcher } from '../../src/core/logger/level-matcher';
 import {
@@ -34,11 +35,12 @@ export const createTestApp = async () => {
   await app.init();
   app.graphql = await createGraphqlClient(app);
 
+  const rootAdmin = app.get(ConfigService).rootAdmin;
   process.env = Object.assign(process.env, {
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    ROOT_ADMIN_EMAIL: 'devops@tsco.org',
+    ROOT_ADMIN_EMAIL: rootAdmin.email,
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    ROOT_ADMIN_PASSWORD: 'admin',
+    ROOT_ADMIN_PASSWORD: rootAdmin.password,
   });
 
   return app;
