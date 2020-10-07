@@ -897,6 +897,7 @@ export const setBaseNodeLabelsDeleted = (
   query: Query,
   baseNodeLabels: string[]
 ) => {
+  //set labels as Deleted
   baseNodeLabels.forEach((label) => {
     query
       .set({
@@ -909,6 +910,20 @@ export const setBaseNodeLabelsDeleted = (
       })
       .with('distinct(node) as node');
   });
+
+  //set id as deleted_id
+
+  query
+    .with('*, node.id as nodeId')
+    .set({
+      variables: {
+        'node.deleted_id': 'nodeId',
+      },
+    })
+    .removeProperties({
+      node: 'id',
+    })
+    .with('distinct(node) as node');
 };
 
 export type UniqueProperties<BaseNode extends Resource> = Partial<
