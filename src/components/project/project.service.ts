@@ -25,6 +25,7 @@ import {
   OnIndex,
   Property,
   UniquenessError,
+  UniqueProperties,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -42,6 +43,7 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { Powers } from '../authorization/dto/powers';
 import { Budget, BudgetService, BudgetStatus, SecuredBudget } from '../budget';
 import {
   EngagementListInput,
@@ -508,17 +510,27 @@ export class ProjectService {
   }
 
   async delete(id: string, session: ISession): Promise<void> {
-    const object = await this.readOne(id, session);
+    await this.authorizationService.checkPower(
+      Powers.DeleteLanguage,
+      session.userId
+    );
 
+    const object = await this.readOne(id, session);
     if (!object) {
       throw new NotFoundException('Could not find project');
     }
 
+    const baseNodeLabels = ['BaseNode', 'Project', `${object.type}Project`];
+
+    const uniqueProperties: UniqueProperties<Project> = {
+      name: ['Property', 'ProjectName'],
+    };
+
     try {
-      await this.db.deleteNode({
-        session,
+      await this.db.deleteNodeNew({
         object,
-        aclEditProp: 'canCreateProject',
+        baseNodeLabels,
+        uniqueProperties,
       });
     } catch (e) {
       this.logger.warning('Failed to delete project', {
