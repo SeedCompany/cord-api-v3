@@ -775,7 +775,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation CreateProduct($input: CreateProductInput!) {\r\n  createProduct(input: $input) {\r\n    product {\r\n      id\r\n      createdAt\r\n      approach\r\n      legacyType\r\n      mediums {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      purposes {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      methodology {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"product\": {\r\n      \"engagementId\": \"{{languageEngagementId}}\",\r\n      \"produces\": \"{{filmId}}\",\r\n      \"mediums\": \"{{productMediums}}\",\r\n      \"purposes\": \"{{productPurposes}}\",\r\n      \"methodology\": \"{{productMethodology}}\"\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"product\": {\r\n      \"engagementId\": \"{{languageEngagementId}}\",\r\n      \"produces\": \"{{filmId}}\", \r\n      \"mediums\": \"{{productMediums}}\",\r\n      \"purposes\": \"{{productPurposes}}\",\r\n      \"methodology\": \"{{productMethodology}}\"\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -907,7 +907,7 @@
 									"//Static\r",
 									"pm.test(\"Verify created product totalVerses is same as requested\", function () {\r",
 									"    var totalVerses = jsonData.data.createProduct.product.scriptureReferences.value[0].totalVerses;\r",
-									"    pm.expect(totalVerses).to.eql(0);\r",
+									"     pm.expect(totalVerses).to.be.above(0);\r",
 									"});\r",
 									""
 								],
@@ -1107,7 +1107,7 @@
 									"//Static\r",
 									"pm.test(\"Verify created product totalVerses is same as requested\", function () {\r",
 									"    var totalVerses = jsonData.data.createProduct.product.scriptureReferences.value[0].totalVerses;\r",
-									"    pm.expect(totalVerses).to.eql(0);\r",
+									"     pm.expect(totalVerses).to.be.above(0);\r",
 									"});\r",
 									""
 								],
@@ -5845,12 +5845,12 @@
 									"\r",
 									"pm.test(\"Verify updated product scriptureReferences label is same as requested\", function () {\r",
 									"    var label = jsonData.data.updateProduct.product.scriptureReferences.value[0].label;\r",
-									"    pm.expect(label).to.eql('');\r",
+									"    pm.expect(label).to.eql(pm.globals.get('productScriptRefLabelStart'));\r",
 									"});\r",
 									"\r",
 									"pm.test(\"Verify updated product scriptureReferences totalVerses is same as requested\", function () {\r",
 									"    var totalVerses = jsonData.data.updateProduct.product.scriptureReferences.value[0].totalVerses;\r",
-									"    pm.expect(totalVerses).to.eql(0);\r",
+									"     pm.expect(totalVerses).to.be.above(0);\r",
 									"});\r",
 									""
 								],
@@ -6303,12 +6303,12 @@
 									"\r",
 									"pm.test(\"Verify updated product scriptureReferences label is same as requested\", function () {\r",
 									"    var label = jsonData.data.updateProduct.product.scriptureReferences.value[0].label;\r",
-									"    pm.expect(label).to.eql('');\r",
+									"    pm.expect(label).to.eql(pm.globals.get('productScriptRefLabelStart'));\r",
 									"});\r",
 									"\r",
 									"pm.test(\"Verify updated product scriptureReferences totalVerses is same as requested\", function () {\r",
 									"    var totalVerses = jsonData.data.updateProduct.product.scriptureReferences.value[0].totalVerses;\r",
-									"    pm.expect(totalVerses).to.eql(0);\r",
+									"     pm.expect(totalVerses).to.be.above(0);\r",
 									"});\r",
 									"\r",
 									""
@@ -7175,6 +7175,15 @@
 									"pm.test(\"Verifying product scriptureReferences end label\", function () {\r",
 									"    var endLabel = myProduct.scriptureReferences.value[0].end.label;\r",
 									"    pm.expect(endLabel).to.eql(product_data.scriptureReferences.value[0].end.label);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verifying product scriptureReferences  label\", function () {\r",
+									"    var label = myProduct.scriptureReferences.value[0].label;\r",
+									"    pm.expect(label).to.eql(product_data.scriptureReferences.value[0].label);\r",
+									"\r",
+									"pm.test(\"Verifying product scriptureReferences  totalVerses\", function () {\r",
+									"    var totalVerses = myProduct.scriptureReferences.value[0].totalVerses;\r",
+									"    pm.expect(totalVerses).to.eql(product_data.scriptureReferences.value[0].totalVerses);\r",
 									"});"
 								],
 								"type": "text/javascript"

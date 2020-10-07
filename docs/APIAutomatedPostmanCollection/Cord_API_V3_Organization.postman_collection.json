@@ -473,7 +473,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation createOrganization($input: CreateOrganizationInput!) {\r\n  createOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\n  \"input\": \n  {\n    \"organization\" :\n    {\n      \"name\":\"\" \n    } \n        \n\t  }\n  }\n\n\n\n"
+								"variables": "{\n    \"input\": {\n        \"organization\": {\n            \"name\": \"\"\n        }\n    }\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -764,9 +764,9 @@
 									"    pm.expect(error_status).to.eql(400);",
 									"});",
 									"",
-									"pm.test(\"Verify that organization error message is correct\", function () {",
-									"    var error_organization_message = jsonData.errors[0].extensions.errors.id.IsShortId;",
-									"    pm.expect(error_organization_message).to.eql(\"Invalid ID\");",
+									"pm.test(\"Verify that location error message is correct\", function () {",
+									"    var error_location_message = jsonData.errors[0].extensions.errors.id.IsShortId;",
+									"    pm.expect(error_location_message).to.eql(\"Invalid ID\");",
 									"});"
 								],
 								"type": "text/javascript"
@@ -956,7 +956,6 @@
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"const moment = require('moment');",
-									"var organization_data = JSON.parse(pm.globals.get('organization_data'));",
 									"",
 									"//Common Verification",
 									"pm.test(\"Status code is 200\", function () {",
@@ -1083,7 +1082,7 @@
 									"",
 									"//Test Specific",
 									"pm.test(\"Verify that ID is not blank or null\", function () {",
-									"    var id = jsonData.data.updateOrganization.organization.id;  ",
+									"    var id = jsonData.data.updateOrganization.organization.id;",
 									"    pm.expect(id).to.not.eql(null);",
 									"    pm.expect(id).to.not.eql(\"\");",
 									"});",

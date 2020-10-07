@@ -36,3 +36,12 @@ newman run Cord_API_V3_Story.postman_collection.json -e local.postman_environmen
 
 >> FileUpload
 newman run Cord_API_V3_FileUpload.postman_collection.json -e local.postman_environment.json -g MyWorkspace.postman_globals.json -r htmlextra --delay-request 1000
+
+>> Song
+newman run Cord_API_V3_Song.postman_collection.json -e local.postman_environment.json -g MyWorkspace.postman_globals.json -r htmlextra --delay-request 1000
+
+>> Unavailability
+newman run Cord_API_V3_Unavailability.postman_collection.json -e local.postman_environment.json -g MyWorkspace.postman_globals.json -r htmlextra --delay-request 1000
+
+>> ChangePassword
+newman run Cord_API_V3_ChangePassword.postman_collection.json -e local.postman_environment.json -g MyWorkspace.postman_globals.json -r htmlextra --delay-request 1000
