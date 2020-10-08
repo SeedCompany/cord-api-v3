@@ -190,6 +190,11 @@ export const ProjectMangerRole = new DbRole({
         { propertyName: 'organization',               permission: { read, }, },
         { propertyName: 'pointOfContact',             permission: { read, }, },
         { propertyName: 'types',                      permission: { read, }, },
+        { propertyName: 'financialReportingTypes',    permission: { read, write, }, },
+        { propertyName: 'pmcEntityCode',              permission: { read, write, }, },
+        { propertyName: 'globalInnovationsClient',    permission: { read, write, }, },
+        { propertyName: 'active',                     permission: { read, write, }, },
+        { propertyName: 'address',                    permission: { read, write, }, },
     ]}),
     new DbBaseNodeGrant<DbPartnership>({
       __className: 'DbPartnership',

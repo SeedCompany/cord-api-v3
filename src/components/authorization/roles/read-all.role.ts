@@ -212,6 +212,11 @@ export const ReadAll = new DbRole({
         { propertyName: 'organization',               permission: { read, }, },
         { propertyName: 'pointOfContact',             permission: { read, }, },
         { propertyName: 'types',                      permission: { read, }, },
+        { propertyName: 'financialReportingTypes',    permission: { read, }, },
+        { propertyName: 'pmcEntityCode',              permission: { read, }, },
+        { propertyName: 'globalInnovationsClient',    permission: { read, }, },
+        { propertyName: 'active',                     permission: { read, }, },
+        { propertyName: 'address',                    permission: { read, }, },
     ]}),
     new DbBaseNodeGrant<DbPartnership>({
       __className: 'DbPartnership',
