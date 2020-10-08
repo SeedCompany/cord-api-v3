@@ -1,5 +1,5 @@
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { IdArg, ISession, Session } from '../../common';
+import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { ISession, Session } from '../../common';
 import { Powers } from '../authorization/dto/powers';
 import { AuthorizationService } from './authorization.service';
 
@@ -15,18 +15,18 @@ export class AuthorizationResolver {
   @Mutation(() => Boolean)
   async grantPower(
     @Session() session: ISession,
-    @IdArg() id: string,
+    @Args({ name: 'userId', type: () => ID }) userId: string,
     @Args({ name: 'power', type: () => Powers }) power: Powers
   ): Promise<boolean> {
-    return await this.authorizationService.createPower(id, power, session);
+    return await this.authorizationService.createPower(userId, power, session);
   }
 
   @Mutation(() => Boolean)
   async deletePower(
     @Session() session: ISession,
-    @IdArg() id: string,
+    @Args({ name: 'userId', type: () => ID }) userId: string,
     @Args({ name: 'power', type: () => Powers }) power: Powers
   ): Promise<boolean> {
-    return await this.authorizationService.deletePower(id, power, session);
+    return await this.authorizationService.deletePower(userId, power, session);
   }
 }
