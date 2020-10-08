@@ -30,7 +30,6 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { InternalAdminRole } from '../authorization/roles';
 import {
   CreateFundingAccount,
   FundingAccount,
@@ -122,8 +121,7 @@ export class FundingAccountService {
       }
 
       const dbFundingAccount = new DbFundingAccount();
-      await this.authorizationService.addPermsForRole(
-        InternalAdminRole,
+      await this.authorizationService.processNewBaseNode(
         dbFundingAccount,
         result.id,
         session.userId as string

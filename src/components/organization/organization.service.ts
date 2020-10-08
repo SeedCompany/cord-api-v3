@@ -35,7 +35,6 @@ import {
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto/powers';
-import { InternalAdminRole } from '../authorization/roles';
 import {
   CreateOrganization,
   Organization,
@@ -143,8 +142,7 @@ export class OrganizationService {
     }
 
     const dbOrganization = new DbOrganization();
-    await this.authorizationService.addPermsForRole(
-      InternalAdminRole,
+    await this.authorizationService.processNewBaseNode(
       dbOrganization,
       result.id,
       session.userId as string

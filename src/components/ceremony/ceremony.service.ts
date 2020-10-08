@@ -33,7 +33,6 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { InternalAdminRole } from '../authorization/roles';
 import {
   Ceremony,
   CeremonyListInput,
@@ -101,8 +100,7 @@ export class CeremonyService {
       }
 
       const dbCeremony = new DbCeremony();
-      await this.authorizationService.addPermsForRole(
-        InternalAdminRole,
+      await this.authorizationService.processNewBaseNode(
         dbCeremony,
         result.id,
         session.userId as string

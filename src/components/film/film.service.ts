@@ -30,7 +30,6 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { InternalAdminRole } from '../authorization/roles';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
 import {
   CreateFilm,
@@ -101,8 +100,7 @@ export class FilmService {
       }
 
       const dbFilm = new DbFilm();
-      await this.authorizationService.addPermsForRole(
-        InternalAdminRole,
+      await this.authorizationService.processNewBaseNode(
         dbFilm,
         result.id,
         session.userId as string

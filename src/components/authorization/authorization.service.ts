@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
+import { node, relation } from 'cypher-query-builder';
 import { difference, union } from 'lodash';
 import { generate } from 'shortid';
 import {
@@ -10,9 +10,10 @@ import {
   UnauthorizedException,
 } from '../../common';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
+import { Role } from './dto';
 import { Powers } from './dto/powers';
 import { DbRole, OneBaseNode } from './model';
-import { InternalAdminRole } from './roles';
+import { Administrator } from './roles';
 
 /**
  * powers can exist on a security group or a user node
@@ -26,46 +27,74 @@ export class AuthorizationService {
     @Logger('authorization:service') private readonly logger: ILogger
   ) {}
 
-  async addPermsForRole(
-    role: DbRole,
+  async processNewBaseNode(
     baseNodeObj: OneBaseNode,
     baseNodeId: string,
-    userId: string
+    creatorUserId: string
   ) {
-    // check if SG for this role already exists
-    const existingGroupId = await this.getSecurityGroupForRole(
+    // get or create the role's Admin SG for this base node
+    const adminSgId = await this.mergeSecurityGroupForRole(
+      baseNodeObj,
       baseNodeId,
-      role.name
+      Administrator
     );
-    if (existingGroupId) {
-      // SG exists, merge member to it
+    if (adminSgId) {
+      // merge member to it
       await this.db
         .query()
-        .match([node('sg', 'SecurityGroup', { id: existingGroupId })])
-        .match([node('user', 'User', { id: userId })])
+        .match([node('sg', 'SecurityGroup', { id: adminSgId })])
+        .match([node('user', 'User', { id: creatorUserId })])
         .merge([node('sg'), relation('out', '', 'member'), node('user')])
-        .call(this.addRootUserForAdminRole, role)
         .run();
       this.logger.debug('Added user to existing security group', {
-        securityGroup: existingGroupId,
-        userId,
+        securityGroup: adminSgId,
+        userId: creatorUserId,
       });
 
-      return;
+      // run all rules for all roles on this base node
+      await this.runPostBaseNodeCreationRules(
+        baseNodeObj,
+        baseNodeId,
+        adminSgId
+      );
+
+      return true;
+    } else {
+      throw new ServerException('failed to create SG for role');
+    }
+  }
+
+  private async mergeSecurityGroupForRole(
+    baseNodeObj: OneBaseNode,
+    baseNodeId: string,
+    role: DbRole
+  ): Promise<string> {
+    const checkSg = await this.db
+      .query()
+      .match([
+        node('sg', 'SecurityGroup', { role }),
+        relation('out', '', 'baseNode'),
+        node('baseNode', 'BaseNode', { id: baseNodeId }),
+      ])
+      .raw('return sg.id as id')
+      .asResult<{ id: string }>()
+      .first();
+
+    if (checkSg?.id) {
+      return checkSg.id;
     }
 
-    // SG does not yet exist, create it and merge user to it
+    // create SG with all role's perms
     const createSgQuery = this.db
       .query()
-      .match([node('user', 'User', { id: userId })])
       .match([node('baseNode', 'BaseNode', { id: baseNodeId })])
       .merge([
-        node('user'),
-        relation('in', '', 'member'),
         node('sg', 'SecurityGroup', {
           id: generate(),
           role: role.name,
         }),
+        relation('out', '', 'baseNode'),
+        node('baseNode'),
       ]);
 
     // iterate through the key of the base node and get the permission object for each from the role object
@@ -76,7 +105,6 @@ export class AuthorizationService {
       );
 
       // write the permission to the db if any of its perms are true
-
       createSgQuery.merge([
         node('sg'),
         relation('out', '', 'permission'),
@@ -90,42 +118,125 @@ export class AuthorizationService {
       ]);
     }
 
-    createSgQuery.call(this.addRootUserForAdminRole, role);
-
-    await createSgQuery.run();
-
-    this.logger.debug('Created security group', {
-      baseNodeObj,
-      role,
-      userId,
-    });
-
-    return true;
-  }
-
-  private async getSecurityGroupForRole(baseNodeId: string, role: string) {
-    const checkSg = await this.db
-      .query()
-      .match([
-        node('sg', 'SecurityGroup', { role }),
-        relation('out', '', 'permission'),
-        node('baseNode', 'BaseNode', { id: baseNodeId }),
-      ])
+    const result = await createSgQuery
       .raw('return sg.id as id')
       .asResult<{ id: string }>()
       .first();
-    return checkSg?.id;
+
+    if (result === undefined) {
+      throw new ServerException('failed to create SG for role');
+    }
+
+    return result.id;
   }
 
-  // if this is an admin role, ensure the root user is attached
-  private readonly addRootUserForAdminRole = (query: Query, role: DbRole) => {
-    if (role.name === InternalAdminRole.name) {
-      query
-        .with('*')
-        .match([node('root', 'User', { id: this.config.rootAdmin.id })])
-        .merge([node('sg'), relation('out', '', 'member'), node('root')]);
+  private async runPostBaseNodeCreationRules(
+    baseNodeObj: OneBaseNode,
+    baseNodeId: string,
+    adminSgId: string
+  ) {
+    /**
+     * Remember, this is only run at base node creation,
+     * not every rule in the role def applies
+     */
+
+    // wip: short cut approved by Seth, holding on this for now.
+    // const labels = await this.getLabels(baseNodeId);
+
+    // const readAllSgId = await this.mergeSecurityGroupForRole(
+    //   baseNodeObj,
+    //   baseNodeId,
+    //   ReadAll
+    // );
+
+    // temporarily giving certain roles admin access
+    const adminAccess = [
+      Role.Administrator,
+      Role.ProjectManager,
+      Role.RegionalDirector,
+      Role.FieldOperationsDirector,
+      Role.FinancialAnalyst,
+      Role.Controller,
+      Role.ConsultantManager,
+    ];
+    for (const role of adminAccess) {
+      await this.addAllUsersToSgByTheUsersGlobalRole(adminSgId, role);
     }
-  };
+
+    // commenting out for now as we are taking a short cut just for this week.
+    // if (labels.includes('User')) {
+    //   //
+    // } else if (labels.includes('Project')) {
+    //   // these roles have access to all project base nodes, read/write
+    //   const adminAccess = [
+    //     Role.Administrator,
+    //     Role.ProjectManager,
+    //     Role.RegionalDirector,
+    //     Role.FieldOperationsDirector,
+    //     Role.FinancialAnalyst,
+    //     Role.Controller,
+    //   ];
+    //   for (const role of adminAccess) {
+    //     await this.addAllUsersToSgByTheUsersGlobalRole(adminSgId, role);
+    //   }
+
+    //   // these roles have read only access to all projects and all properties on each project
+    //   const ReadAllAccess = [
+    //     Role.Fundraising,
+    //     Role.Marketing,
+    //     Role.StaffMember,
+    //     Role.Leadership,
+    //   ];
+    //   for (const role of ReadAllAccess) {
+    //     await this.addAllUsersToSgByTheUsersGlobalRole(readAllSgId, role);
+    //   }
+    // } else if (labels.includes('ProjectMember')) {
+    //   // a new project member needs to have access to all props that each of their roles gives them
+    // }
+  }
+
+  async roleAddedToUser(id: string, roles: string[]) {
+    // todo: this only applies to global roles, the only kind we have until next week
+    // iterate through all roles and assign to all SGs with that role
+    for (const role of roles) {
+      //
+      await this.db
+        .query()
+        .match([node('user', 'User', { id })])
+        .match([node('sg', 'SecurityGroup', { role })])
+        .merge([node('user'), relation('in', '', 'member'), node('sg')])
+        .run();
+    }
+  }
+
+  // private async getLabels(id: string): Promise<string[]> {
+  //   const result = await this.db
+  //     .query()
+  //     .match([node('baseNode', 'BaseNode', { id })])
+  //     .raw('return labels(baseNode) as labels')
+  //     .first();
+
+  //   if (result === undefined) {
+  //     throw new ServerException('baseNode not found');
+  //   }
+
+  //   return result.labels;
+  // }
+
+  private async addAllUsersToSgByTheUsersGlobalRole(sgId: string, role: Role) {
+    // grab all users who have a given user-role and add them as members to the new sg
+    const sgQuery = this.db
+      .query()
+      .match([node('sg', 'SecurityGroup', { id: sgId })])
+      .match([
+        node('users', 'User'),
+        relation('out', '', 'roles', { active: true }),
+        node('roles', 'Property', { value: role }),
+      ])
+      .merge([node('users'), relation('in', '', 'member'), node('sg')]);
+
+    await sgQuery.run();
+  }
 
   async checkPower(power: Powers, id?: string): Promise<boolean> {
     // if no id is given we check the public sg for public powers

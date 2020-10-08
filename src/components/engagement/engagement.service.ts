@@ -35,7 +35,6 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { InternalAdminRole } from '../authorization/roles';
 import { CeremonyService } from '../ceremony';
 import { FileService } from '../file';
 import {
@@ -287,8 +286,7 @@ export class EngagementService {
     }
 
     const dbLanguageEngagement = new DbLanguageEngagement();
-    await this.authorizationService.addPermsForRole(
-      InternalAdminRole,
+    await this.authorizationService.processNewBaseNode(
       dbLanguageEngagement,
       id,
       session.userId
@@ -536,8 +534,7 @@ export class EngagementService {
     }
 
     const dbInternshipEngagement = new DbInternshipEngagement();
-    await this.authorizationService.addPermsForRole(
-      InternalAdminRole,
+    await this.authorizationService.processNewBaseNode(
       dbInternshipEngagement,
       id,
       session.userId

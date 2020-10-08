@@ -32,7 +32,14 @@ export enum Powers {
   CreateUnavailability = 'CreateUnavailability',
   CreateUser = 'CreateUser',
   CreateZone = 'CreateZone',
+  GrantAdministratorRole = 'GrantAdministratorRole',
+  GrantConsultuntManagerRole = 'GrantConsultuntManagerRole',
+  GrantControllerRole = 'GrantControllerRole',
+  GrantFieldOperationsDirectorRole = 'GrantFieldOperationsDirectorRole',
+  GrantFinancialAnalystRole = 'GrantFinancialAnalystRole',
   GrantPower = 'GrantPower',
+  GrantProjectManagerRole = 'GrantProjectManagerRole',
+  GrantRegionalDirectorRole = 'GrantRegionalDirectorRole',
 }
 
 registerEnumType(Powers, { name: 'Power' });

@@ -31,7 +31,6 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { InternalAdminRole } from '../authorization/roles';
 import {
   CreateFieldZone,
   FieldZone,
@@ -126,8 +125,7 @@ export class FieldZoneService {
     }
 
     const dbFieldZone = new DbFieldZone();
-    await this.authorizationService.addPermsForRole(
-      InternalAdminRole,
+    await this.authorizationService.processNewBaseNode(
       dbFieldZone,
       result.id,
       session.userId as string

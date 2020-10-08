@@ -27,7 +27,6 @@ import {
   Property,
 } from '../../core';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { InternalAdminRole } from '../authorization/roles';
 import { BaseNode, FileListInput, FileNodeType, FileVersion } from './dto';
 import { DbDirectory, DbFile } from './model';
 import { DbFileVersion } from './model/file-version.model.db';
@@ -276,8 +275,7 @@ export class FileRepository {
     }
 
     const dbDirectory = new DbDirectory();
-    await this.authorizationService.addPermsForRole(
-      InternalAdminRole,
+    await this.authorizationService.processNewBaseNode(
       dbDirectory,
       result.id,
       session.userId as string
@@ -320,8 +318,7 @@ export class FileRepository {
     }
 
     const dbFile = new DbFile();
-    await this.authorizationService.addPermsForRole(
-      InternalAdminRole,
+    await this.authorizationService.processNewBaseNode(
       dbFile,
       result.id,
       session.userId as string
@@ -384,8 +381,7 @@ export class FileRepository {
     }
 
     const dbFileVersion = new DbFileVersion();
-    await this.authorizationService.addPermsForRole(
-      InternalAdminRole,
+    await this.authorizationService.processNewBaseNode(
       dbFileVersion,
       result.id,
       session.userId as string

@@ -37,7 +37,6 @@ import {
 import { Role } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto/powers';
-import { InternalAdminRole } from '../authorization/roles';
 import {
   OrganizationListInput,
   OrganizationService,
@@ -171,12 +170,7 @@ export class UserService {
       throw new ServerException('Failed to create user');
     }
     const dbUser = new DbUser();
-    await this.authorizationService.addPermsForRole(
-      InternalAdminRole,
-      dbUser,
-      id,
-      id
-    );
+    await this.authorizationService.processNewBaseNode(dbUser, id, id);
 
     // don't remove this when you remove the above function
     // grant the powers that all users will get
@@ -331,6 +325,8 @@ export class UserService {
         ])
         .create([...this.roleProperties(input.roles)])
         .run();
+
+      await this.authorizationService.roleAddedToUser(input.id, input.roles);
     }
 
     return await this.readOne(input.id, session);

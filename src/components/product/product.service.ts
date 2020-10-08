@@ -36,7 +36,6 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { InternalAdminRole } from '../authorization/roles';
 import { Film, FilmService } from '../film';
 import {
   LiteracyMaterial,
@@ -255,8 +254,7 @@ export class ProductService {
     }
 
     const dbProduct = new DbProduct();
-    await this.authorizationService.addPermsForRole(
-      InternalAdminRole,
+    await this.authorizationService.processNewBaseNode(
       dbProduct,
       result.id,
       session.userId as string

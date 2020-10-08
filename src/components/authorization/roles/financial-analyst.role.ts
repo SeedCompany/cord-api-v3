@@ -21,6 +21,7 @@ import { DbProjectMember } from '../../project/project-member/model';
 import { DbSong } from '../../song/model';
 import { DbStory } from '../../story/model';
 import { DbEducation, DbUnavailability, DbUser } from '../../user/model';
+import { Role } from '../dto';
 import { Powers } from '../dto/powers';
 import { DbBaseNodeGrant, DbRole } from '../model';
 
@@ -30,9 +31,9 @@ import { DbBaseNodeGrant, DbRole } from '../model';
 const read = true;
 const write = true;
 
-export const InternalAdminRole = new DbRole({
-  name: 'InternalAdmin',
-  powers: [Powers.CreateBudget],
+export const FinancialAnalyst = new DbRole({
+  name: Role.FinancialAnalyst,
+  powers: [...(Object.keys(Powers) as Powers[])],
   grants: [
     new DbBaseNodeGrant<DbBudget>({
       __className: 'DbBudget',

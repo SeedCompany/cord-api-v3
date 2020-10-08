@@ -30,7 +30,6 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { InternalAdminRole } from '../authorization/roles';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
 import {
   CreateSong,
@@ -104,8 +103,7 @@ export class SongService {
       }
 
       const dbSong = new DbSong();
-      await this.authorizationService.addPermsForRole(
-        InternalAdminRole,
+      await this.authorizationService.processNewBaseNode(
         dbSong,
         result.id,
         session.userId as string

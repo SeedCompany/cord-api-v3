@@ -42,7 +42,6 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { InternalAdminRole } from '../authorization/roles';
 import { Budget, BudgetService, BudgetStatus, SecuredBudget } from '../budget';
 import {
   EngagementListInput,
@@ -308,8 +307,7 @@ export class ProjectService {
 
       const dbProject = new DbProject(); // wip: this will actually be used later. temp using an empty object now.
 
-      await this.authorizationService.addPermsForRole(
-        InternalAdminRole,
+      await this.authorizationService.processNewBaseNode(
         dbProject,
         result.id,
         session.userId

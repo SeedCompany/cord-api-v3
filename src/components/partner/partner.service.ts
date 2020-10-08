@@ -32,7 +32,6 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { InternalAdminRole } from '../authorization/roles';
 import { FinancialReportingType } from '../partnership/dto/financial-reporting-type';
 import {
   CreatePartner,
@@ -143,8 +142,7 @@ export class PartnerService {
     }
 
     const dbPartner = new DbPartner();
-    await this.authorizationService.addPermsForRole(
-      InternalAdminRole,
+    await this.authorizationService.processNewBaseNode(
       dbPartner,
       result.id,
       session.userId as string
