@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
+import { compact } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import {
@@ -63,6 +64,25 @@ import {
   UnavailabilityListInput,
   UnavailabilityService,
 } from './unavailability';
+
+export const fullName = (user: User) => {
+  const realName = compact([
+    user.realFirstName.value,
+    user.realLastName.value,
+  ]).join(' ');
+  if (realName) {
+    return realName;
+  }
+  const displayName = compact([
+    user.displayFirstName.value,
+    user.displayLastName.value,
+  ]).join(' ');
+  if (displayName) {
+    return displayName;
+  }
+
+  return undefined;
+};
 
 @Injectable()
 export class UserService {
