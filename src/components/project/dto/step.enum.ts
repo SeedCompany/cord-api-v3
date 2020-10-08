@@ -4,27 +4,31 @@ import { SecuredEnum } from '../../../common';
 export enum ProjectStep {
   EarlyConversations = 'EarlyConversations',
   PendingConceptApproval = 'PendingConceptApproval',
-
   PrepForConsultantEndorsement = 'PrepForConsultantEndorsement',
   PendingConsultantEndorsement = 'PendingConsultantEndorsement',
-  PrepForGrowthPlanEndorsement = 'PrepForGrowthPlanEndorsement',
-  PendingGrowthPlanEndorsement = 'PendingGrowthPlanEndorsement',
-
   PrepForFinancialEndorsement = 'PrepForFinancialEndorsement',
   PendingFinancialEndorsement = 'PendingFinancialEndorsement',
   FinalizingProposal = 'FinalizingProposal',
-  PendingAreaDirectorApproval = 'PendingAreaDirectorApproval',
   PendingRegionalDirectorApproval = 'PendingRegionalDirectorApproval',
+  PendingZoneDirectorApproval = 'PendingZoneDirectorApproval',
   PendingFinanceConfirmation = 'PendingFinanceConfirmation',
   OnHoldFinanceConfirmation = 'OnHoldFinanceConfirmation',
 
   Active = 'Active',
-
-  Rejected = 'Rejected',
+  ActiveChangedPlan = 'ActiveChangedPlan',
+  DiscussingChangeToPlan = 'DiscussingChangeToPlan',
+  PendingChangeToPlanApproval = 'PendingChangeToPlanApproval',
+  DiscussingSuspension = 'DiscussingSuspension',
+  PendingSuspensionApproval = 'PendingSuspensionApproval',
   Suspended = 'Suspended',
+  DiscussingReactivation = 'DiscussingReactivation',
+  PendingReactivationApproval = 'PendingReactivationApproval',
+  DiscussingTermination = 'DiscussingTermination',
+  PendingTerminationApproval = 'PendingTerminationApproval',
+  FinalizingCompletion = 'FinalizingCompletion',
+
   Terminated = 'Terminated',
 
-  DidNotDevelop = 'DidNotDevelop',
   Completed = 'Completed',
 }
 

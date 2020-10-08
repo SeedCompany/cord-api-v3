@@ -1,4 +1,9 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { flatMap } from 'lodash';
 import { DateTime } from 'luxon';
@@ -85,6 +90,7 @@ import {
   Role,
   SecuredProjectMemberList,
 } from './project-member';
+import { ProjectRules } from './project.rules';
 import { projectListFilter } from './query.helpers';
 
 @Injectable()
@@ -117,6 +123,7 @@ export class ProjectService {
     private readonly config: ConfigService,
     private readonly eventBus: IEventBus,
     private readonly authorizationService: AuthorizationService,
+    private readonly projectRules: ProjectRules,
     @Logger('project:service') private readonly logger: ILogger
   ) {}
 
@@ -465,6 +472,20 @@ export class ProjectService {
         'project.sensitivity'
       );
 
+    if (input.step && session.userId !== undefined) {
+      const hasApproval = await this.projectRules.approveStepChange(
+        input.id,
+        input.step,
+        session.userId
+      );
+
+      if (!hasApproval) {
+        throw new UnauthorizedException(
+          'user is not an approver for this step change'
+        );
+      }
+    }
+
     const changes = {
       ...input,
       modifiedAt: DateTime.local(),
@@ -489,6 +510,14 @@ export class ProjectService {
       changes,
       nodevar: 'project',
     });
+
+    if (input.step && session.userId !== undefined) {
+      await this.projectRules.processStepChange(
+        input.id,
+        input.step,
+        session.userId
+      );
+    }
 
     await this.eventBus.publish(
       new ProjectUpdatedEvent(result, currentProject, input, session)

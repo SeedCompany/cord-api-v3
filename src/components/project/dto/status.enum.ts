@@ -3,10 +3,9 @@ import { ProjectStep } from './step.enum';
 
 export enum ProjectStatus {
   InDevelopment = 'InDevelopment',
-  Pending = 'Pending',
   Active = 'Active',
-  Stopped = 'Stopped',
-  Finished = 'Finished',
+  Terminated = 'Terminated',
+  Completed = 'Completed',
 }
 
 registerEnumType(ProjectStatus, {
@@ -17,29 +16,34 @@ registerEnumType(ProjectStatus, {
 const mapping: Record<ProjectStatus, ProjectStep[]> = {
   [ProjectStatus.InDevelopment]: [
     ProjectStep.EarlyConversations,
-    ProjectStep.PrepForConsultantEndorsement,
-    ProjectStep.PrepForFinancialEndorsement,
-    ProjectStep.FinalizingProposal,
-
-    ProjectStep.PrepForGrowthPlanEndorsement,
-    ProjectStep.PendingGrowthPlanEndorsement,
-  ],
-  [ProjectStatus.Pending]: [
     ProjectStep.PendingConceptApproval,
+    ProjectStep.PrepForConsultantEndorsement,
     ProjectStep.PendingConsultantEndorsement,
+    ProjectStep.PrepForFinancialEndorsement,
     ProjectStep.PendingFinancialEndorsement,
-    ProjectStep.PendingAreaDirectorApproval,
+    ProjectStep.FinalizingProposal,
     ProjectStep.PendingRegionalDirectorApproval,
+    ProjectStep.PendingZoneDirectorApproval,
     ProjectStep.PendingFinanceConfirmation,
     ProjectStep.OnHoldFinanceConfirmation,
   ],
-  [ProjectStatus.Active]: [ProjectStep.Active],
-  [ProjectStatus.Stopped]: [
+  [ProjectStatus.Active]: [
+    ProjectStep.Active,
+    ProjectStep.ActiveChangedPlan,
+    ProjectStep.DiscussingChangeToPlan,
+    ProjectStep.DiscussingChangeToPlan,
+    ProjectStep.PendingChangeToPlanApproval,
+    ProjectStep.DiscussingSuspension,
+    ProjectStep.PendingSuspensionApproval,
     ProjectStep.Suspended,
-    ProjectStep.Rejected,
-    ProjectStep.Terminated,
+    ProjectStep.DiscussingReactivation,
+    ProjectStep.PendingReactivationApproval,
+    ProjectStep.DiscussingTermination,
+    ProjectStep.PendingTerminationApproval,
+    ProjectStep.FinalizingCompletion,
   ],
-  [ProjectStatus.Finished]: [ProjectStep.DidNotDevelop, ProjectStep.Completed],
+  [ProjectStatus.Terminated]: [ProjectStep.Terminated],
+  [ProjectStatus.Completed]: [ProjectStep.Completed],
 };
 
 export const stepToStatus = (step: ProjectStep): ProjectStatus => {
