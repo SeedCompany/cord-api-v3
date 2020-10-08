@@ -4,16 +4,16 @@ import * as React from 'react';
 import { Project, ProjectStep } from '../../../components/project/dto';
 import { fullName } from '../../../components/user';
 import { User } from '../../../components/user/dto';
-import { EmailTemplate, Heading, Link } from './base';
+import { EmailTemplate, Heading } from './base';
 import { useFrontendUrl } from './frontend-url';
-import { Button, Column, Divider, Section, Text } from './mjml';
+import { Button, Column, Section, Text } from './mjml';
 import { HideInText } from './text-rendering';
 
 export interface ProjectStepChangedProps {
   project: Project;
   changedBy: User;
   changedAt: DateTime;
-  oldStep: ProjectStep;
+  oldStep?: ProjectStep;
 }
 
 export function ProjectStepChanged({
@@ -28,17 +28,19 @@ export function ProjectStepChanged({
   const changerUrl = useFrontendUrl(`/users/${changedBy.id}`);
   const changerName = fullName(changedBy);
 
-  const oldStep = startCase(oldStepVal);
+  const oldStep = startCase(oldStepVal) || undefined;
   const newStep = startCase(project.step.value) || undefined;
-  const changedAtString = changedAt
+
+  const changedAtFormatted = changedAt
     .setZone('America/Chicago') // TODO use recipient's timezone
     .toLocaleString(DateTime.DATETIME_FULL);
+
   return (
     <EmailTemplate title="Project Status Change">
       <Heading>
         {projectName && newStep ? (
           <>
-            {projectName} is now <i>{newStep}</i>
+            {projectName} is now <em>{newStep}</em>
           </>
         ) : (
           `${projectName ?? 'A project'} has a new status`
@@ -47,20 +49,22 @@ export function ProjectStepChanged({
 
       <Section>
         <Column>
-          <Text>
+          <Text paddingBottom={16}>
             {changerName ? <a href={changerUrl}>{changerName}</a> : 'Someone'}{' '}
             has changed {projectName ? 'project ' : ''}
-            <a href={projectUrl}>
-              {projectName ? `${projectName}` : 'a project'}
-            </a>
-            from <i>{oldStep}</i> to <i>{newStep}</i> at {changedAtString}
+            <a href={projectUrl}>{projectName ?? 'a project'}</a>{' '}
+            {oldStep ? (
+              <>
+                from <em>{oldStep}</em>{' '}
+              </>
+            ) : null}
+            to <em>{newStep}</em> at {changedAtFormatted}
           </Text>
-          <Divider borderWidth={1} />
-          <Text>View the project here:</Text>
           <HideInText>
-            <Button href={projectUrl}>View {projectName ?? 'Project'}</Button>
+            <Button href={projectUrl} paddingTop={16}>
+              View {projectName ?? 'Project'}
+            </Button>
           </HideInText>
-          <Link href={projectUrl} />
         </Column>
       </Section>
     </EmailTemplate>
