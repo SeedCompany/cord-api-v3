@@ -30,6 +30,7 @@ import {
   fragments,
   getUserFromSession,
   Raw,
+  registerUser,
   registerUserWithPower,
   requestFileUpload,
   TestApp,
@@ -360,7 +361,7 @@ describe('Engagement e2e', () => {
     internshipProject = await createProject(app, {
       type: ProjectType.Internship,
     });
-    const mentor = await createUser(app);
+    const mentor = await registerUser(app);
     const internshipEngagement = await createInternshipEngagementWithMinimumValues(
       app,
       {
