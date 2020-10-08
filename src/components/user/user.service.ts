@@ -222,6 +222,7 @@ export class UserService {
       Powers.CreateTranslationEngagement,
       Powers.CreateUnavailability,
       Powers.DeleteLanguage,
+      Powers.DeleteProject,
     ];
     for (const power of grants) {
       await this.authorizationService.grantPower(power, id);
