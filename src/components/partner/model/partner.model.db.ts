@@ -6,4 +6,9 @@ export class DbPartner extends DbBaseNode {
   organization: any = null;
   pointOfContact: any = null;
   types: any = null;
+  financialReportingTypes: any = null;
+  pmcEntityCode: any = null;
+  globalInnovationsClient: any = null;
+  active: any = null;
+  address: any = null;
 }
