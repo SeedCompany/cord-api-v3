@@ -40,6 +40,7 @@ export enum Powers {
   GrantPower = 'GrantPower',
   GrantProjectManagerRole = 'GrantProjectManagerRole',
   GrantRegionalDirectorRole = 'GrantRegionalDirectorRole',
+  GrantRole = 'GrantRole',
 }
 
 registerEnumType(Powers, { name: 'Power' });

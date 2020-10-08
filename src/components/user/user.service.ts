@@ -8,6 +8,7 @@ import {
   NotFoundException,
   ServerException,
   UnauthenticatedException,
+  UnauthorizedException,
 } from '../../common';
 import {
   ConfigService,
@@ -300,6 +301,13 @@ export class UserService {
 
     // Update roles
     if (input.roles) {
+      const hasPower = await this.authorizationService.checkPower(
+        Powers.GrantRole,
+        session.userId
+      );
+      if (!hasPower) {
+        throw new UnauthorizedException('user cannot grant that role');
+      }
       await this.db
         .query()
         .match([
