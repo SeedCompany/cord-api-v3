@@ -29,7 +29,7 @@ const write = true;
 
 export const ProjectMangerRole = new DbRole({
   name: 'ProjectManager',
-  powers: [Powers.CreateProject],
+  powers: [...(Object.keys(Powers) as Powers[])],
   grants: [
     new DbBaseNodeGrant<DbBudget>({
       __className: 'DbBudget',
@@ -202,7 +202,7 @@ export const ProjectMangerRole = new DbRole({
         { propertyName: 'mouEndOverride',             permission: { read, write, }, },
         { propertyName: 'mouStart',                   permission: { read, write, }, },
         { propertyName: 'mouStartOverride',           permission: { read, write, }, },
-        { propertyName: 'mouStatus',                  permission: { read, write, }, },
+        { propertyName: 'mouStatus',                  permission: { read, }, },
         { propertyName: 'types',                      permission: { read, write, }, },
         { propertyName: 'organization',               permission: { read, write, }, },
         { propertyName: 'partner',                    permission: { read, write, }, },

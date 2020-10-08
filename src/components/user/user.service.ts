@@ -37,7 +37,6 @@ import {
 import { Role } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto/powers';
-import { Administrator } from '../authorization/roles';
 import {
   OrganizationListInput,
   OrganizationService,
@@ -333,6 +332,8 @@ export class UserService {
         ])
         .create([...this.roleProperties(input.roles)])
         .run();
+
+      await this.authorizationService.roleAddedToUser(input.id, input.roles);
     }
 
     return await this.readOne(input.id, session);

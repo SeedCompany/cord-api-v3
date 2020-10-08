@@ -31,8 +31,8 @@ import { DbBaseNodeGrant, DbRole } from '../model';
 const read = true;
 const write = true;
 
-export const Administrator = new DbRole({
-  name: Role.Administrator,
+export const FieldOperationsDirector = new DbRole({
+  name: Role.FieldOperationsDirector,
   powers: [...(Object.keys(Powers) as Powers[])],
   grants: [
     new DbBaseNodeGrant<DbBudget>({
