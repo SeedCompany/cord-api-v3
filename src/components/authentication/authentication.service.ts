@@ -261,6 +261,9 @@ export class AuthenticationService {
     newPassword: string,
     session: ISession
   ): Promise<void> {
+    if (!oldPassword)
+      throw new InputException('Old Password Required', 'oldPassword');
+
     const result = await this.db
       .query()
       .call(matchRequestingUser, session)
