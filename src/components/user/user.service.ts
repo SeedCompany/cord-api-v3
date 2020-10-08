@@ -194,6 +194,7 @@ export class UserService {
       Powers.CreateStory,
       Powers.CreateTranslationEngagement,
       Powers.CreateUnavailability,
+      Powers.DeleteLanguage,
     ];
     for (const power of grants) {
       await this.authorizationService.grantPower(power, id);

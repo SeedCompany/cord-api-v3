@@ -447,6 +447,11 @@ export class LanguageService {
   }
 
   async delete(id: string, session: ISession): Promise<void> {
+    await this.authorizationService.checkPower(
+      Powers.DeleteLanguage,
+      session.userId
+    );
+
     const object = await this.readOne(id, session);
 
     if (!object) {
