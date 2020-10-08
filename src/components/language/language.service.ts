@@ -39,7 +39,6 @@ import {
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto/powers';
-import { Administrator } from '../authorization/roles';
 import { EngagementService } from '../engagement';
 import {
   Location,

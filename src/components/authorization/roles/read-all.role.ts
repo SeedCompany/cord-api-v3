@@ -21,7 +21,7 @@ import { DbProjectMember } from '../../project/project-member/model';
 import { DbSong } from '../../song/model';
 import { DbStory } from '../../story/model';
 import { DbEducation, DbUnavailability, DbUser } from '../../user/model';
-import { InternalRole, Role } from '../dto';
+import { InternalRole } from '../dto';
 import { Powers } from '../dto/powers';
 import { DbBaseNodeGrant, DbRole } from '../model';
 
@@ -29,7 +29,6 @@ import { DbBaseNodeGrant, DbRole } from '../model';
 // turned off prettier for role files to prevent auto-format making this file huge
 
 const read = true;
-const write = true;
 
 export const ReadAll = new DbRole({
   name: InternalRole.ReadAll,

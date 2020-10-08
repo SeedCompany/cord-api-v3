@@ -27,7 +27,6 @@ import {
   Property,
 } from '../../core';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { Administrator } from '../authorization/roles';
 import { BaseNode, FileListInput, FileNodeType, FileVersion } from './dto';
 import { DbDirectory, DbFile } from './model';
 import { DbFileVersion } from './model/file-version.model.db';
