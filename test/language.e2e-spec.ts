@@ -3,6 +3,7 @@ import * as faker from 'faker';
 import { times } from 'lodash';
 import { isValid } from 'shortid';
 import { DuplicateException, InputException } from '../src/common';
+import { Powers } from '../src/components/authorization/dto/powers';
 import {
   createLanguage,
   createLanguageEngagement,
@@ -10,8 +11,8 @@ import {
   createProject,
   createSession,
   createTestApp,
-  createUser,
   expectNotFound,
+  registerUserWithPower,
   TestApp,
 } from './utility';
 import { fragments } from './utility/fragments';
@@ -22,7 +23,7 @@ describe('Language e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await createUser(app);
+    await registerUserWithPower(app, Powers.CreateLanguage);
   });
 
   afterAll(async () => {

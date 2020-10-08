@@ -34,6 +34,7 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { Powers } from '../authorization/dto/powers';
 import {
   CreateOrganization,
   Organization,
@@ -90,6 +91,11 @@ export class OrganizationService {
     input: CreateOrganization,
     session: ISession
   ): Promise<Organization> {
+    await this.authorizationService.checkPower(
+      Powers.CreateOrganization,
+      session.userId
+    );
+
     const checkOrg = await this.db
       .query()
       .raw(`MATCH(org:OrgName {value: $name}) return org`, {

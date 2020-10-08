@@ -931,13 +931,83 @@
 			"enabled": true
 		},
 		{
-			"key": "bio",
+			"key": "signLanguageCode",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "languageSponsorEstimatedEndDate",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "new_password",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "login_password",
+			"value": "",
+			"enabled": false
+		},
+		{
+			"key": "login_password",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "accountNumber",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "fundingAccountName",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "fundingAccount_data",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "fundingAccountid",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "locationName",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "locationType",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "locationSensitivity",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "iso31663",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "location_data",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "locationid",
 			"value": "",
 			"enabled": true
 		}
 	],
 	"name": "MyWorkspace Globals",
 	"_postman_variable_scope": "globals",
-	"_postman_exported_at": "2020-09-25T13:27:43.016Z",
+	"_postman_exported_at": "2020-10-07T13:27:45.963Z",
 	"_postman_exported_using": "Postman/7.33.1"
 }

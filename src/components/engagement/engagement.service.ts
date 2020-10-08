@@ -1,7 +1,8 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
+import { MergeExclusive } from 'type-fest';
 import {
   DuplicateException,
   InputException,
@@ -109,59 +110,6 @@ export class EngagementService {
     @Logger(`engagement.service`) private readonly logger: ILogger
   ) {}
 
-  protected async getProjectTypeById(
-    projectId: string
-  ): Promise<ProjectType | undefined> {
-    const qr = `
-    MATCH (p:Project {id: $projectId}) RETURN p.type as type
-    `;
-    const results = await this.db.query().raw(qr, { projectId }).first();
-
-    return results?.type as ProjectType | undefined;
-  }
-
-  protected async getIEByProjectAndIntern(
-    projectId: string,
-    internId: string
-  ): Promise<boolean> {
-    const result = await this.db
-      .query()
-      .match([node('intern', 'User', { id: internId })])
-      .match([node('project', 'Project', { id: projectId })])
-      .match([
-        node('project'),
-        relation('out', '', 'engagement'),
-        node('internshipEngagement'),
-        relation('out', '', 'intern'),
-        node('intern'),
-      ])
-      .return('internshipEngagement.id as id')
-      .first();
-
-    return result ? true : false;
-  }
-
-  protected async getLEByProjectAndLanguage(
-    projectId: string,
-    languageId: string
-  ): Promise<boolean> {
-    const result = await this.db
-      .query()
-      .match([node('language', 'Language', { id: languageId })])
-      .match([node('project', 'Project', { id: projectId })])
-      .match([
-        node('project'),
-        relation('out', '', 'engagement'),
-        node('internshipEngagement'),
-        relation('out', '', 'language'),
-        node('language'),
-      ])
-      .return('internshipEngagement.id as id')
-      .first();
-
-    return result ? true : false;
-  }
-
   // CREATE /////////////////////////////////////////////////////////
 
   async createLanguageEngagement(
@@ -186,6 +134,10 @@ export class EngagementService {
         'engagement.languageId',
         'Engagement for this project and language already exists'
       );
+    }
+
+    if (input.firstScripture) {
+      await this.verifyFirstScripture({ languageId });
     }
 
     this.logger.debug('Mutation create language engagement ', {
@@ -780,6 +732,10 @@ export class EngagementService {
     input: UpdateLanguageEngagement,
     session: ISession
   ): Promise<LanguageEngagement> {
+    if (input.firstScripture) {
+      await this.verifyFirstScripture({ engagementId: input.id });
+    }
+
     const { pnp, ...rest } = input;
     const changes = {
       ...rest,
@@ -1074,6 +1030,8 @@ export class EngagementService {
             property: 'product',
             read: true,
           }),
+          relation('out', '', 'baseNode'),
+          node('eng', 'Engagement', { id: engagement.id }),
         ],
       ])
       .match([
@@ -1086,6 +1044,8 @@ export class EngagementService {
             property: 'product',
             edit: true,
           }),
+          relation('out', '', 'baseNode'),
+          node('eng'),
         ],
       ])
       .return({
@@ -1206,5 +1166,131 @@ export class EngagementService {
         )
       ).every((n) => n)
     );
+  }
+
+  protected async getProjectTypeById(
+    projectId: string
+  ): Promise<ProjectType | undefined> {
+    const qr = `
+    MATCH (p:Project {id: $projectId}) RETURN p.type as type
+    `;
+    const results = await this.db.query().raw(qr, { projectId }).first();
+
+    return results?.type as ProjectType | undefined;
+  }
+
+  protected async getIEByProjectAndIntern(
+    projectId: string,
+    internId: string
+  ): Promise<boolean> {
+    const result = await this.db
+      .query()
+      .match([node('intern', 'User', { id: internId })])
+      .match([node('project', 'Project', { id: projectId })])
+      .match([
+        node('project'),
+        relation('out', '', 'engagement'),
+        node('internshipEngagement'),
+        relation('out', '', 'intern'),
+        node('intern'),
+      ])
+      .return('internshipEngagement.id as id')
+      .first();
+
+    return result ? true : false;
+  }
+
+  protected async getLEByProjectAndLanguage(
+    projectId: string,
+    languageId: string
+  ): Promise<boolean> {
+    const result = await this.db
+      .query()
+      .match([node('language', 'Language', { id: languageId })])
+      .match([node('project', 'Project', { id: projectId })])
+      .match([
+        node('project'),
+        relation('out', '', 'engagement'),
+        node('internshipEngagement'),
+        relation('out', '', 'language'),
+        node('language'),
+      ])
+      .return('internshipEngagement.id as id')
+      .first();
+
+    return result ? true : false;
+  }
+
+  /**
+   * if firstScripture is true, validate that the engagement
+   * is the only engagement for the language that has firstScripture=true
+   * that the language doesn't have hasExternalFirstScripture=true
+   */
+  protected async verifyFirstScripture({
+    engagementId,
+    languageId,
+  }: MergeExclusive<{ engagementId: string }, { languageId: string }>) {
+    const startQuery = () =>
+      this.db.query().call((query) =>
+        engagementId
+          ? query.match([
+              node('languageEngagement', 'LanguageEngagement', {
+                id: engagementId,
+              }),
+              relation('out', '', 'language', { active: true }),
+              node('language', 'Language'),
+            ])
+          : query.match([node('language', 'Language', { id: languageId })])
+      );
+
+    await this.verifyFirstScriptureWithLanguage(startQuery());
+    await this.verifyFirstScriptureWithEngagement(startQuery());
+  }
+
+  protected async verifyFirstScriptureWithLanguage(query: Query) {
+    const languageResult = await query
+      .match([
+        node('language', 'Language'),
+        relation('out', '', 'hasExternalFirstScripture', { active: true }),
+        node('hasExternalFirstScripture', 'Property'),
+      ])
+      .where({
+        hasExternalFirstScripture: {
+          value: true,
+        },
+      })
+      .return('language')
+      .first();
+
+    if (languageResult) {
+      throw new InputException(
+        'firstScripture can not be set to true if the language has hasExternalFirstScripture=true',
+        'languageEngagement.firstScripture'
+      );
+    }
+  }
+  protected async verifyFirstScriptureWithEngagement(query: Query) {
+    const engagementResult = await query
+      .match([
+        node('language', 'Language'),
+        relation('in', '', 'language', { active: true }),
+        node('otherLanguageEngagements', 'LanguageEngagement'),
+        relation('out', '', 'firstScripture', { active: true }),
+        node('firstScripture', 'Property'),
+      ])
+      .where({
+        firstScripture: {
+          value: true,
+        },
+      })
+      .return('otherLanguageEngagements')
+      .first();
+
+    if (engagementResult) {
+      throw new InputException(
+        'firstScripture can not be set to true if it is not the only engagement for the language that has firstScripture=true',
+        'languageEngagement.firstScripture'
+      );
+    }
   }
 }

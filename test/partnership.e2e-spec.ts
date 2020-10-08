@@ -1,21 +1,24 @@
 import { gql } from 'apollo-server-core';
 import { sample, times } from 'lodash';
 import { CalendarDate, NotFoundException } from '../src/common';
+import { Powers } from '../src/components/authorization/dto/powers';
 import { PartnerType } from '../src/components/partner';
 import {
   CreatePartnership,
+  FinancialReportingType,
   Partnership,
   PartnershipAgreementStatus,
 } from '../src/components/partnership';
 import { Project } from '../src/components/project/dto';
 import {
+  createPartner,
   createProject,
   createSession,
   createTestApp,
-  createUser,
   expectNotFound,
   fragments,
   Raw,
+  registerUserWithPower,
   TestApp,
 } from './utility';
 import { createPartnership } from './utility/create-partnership';
@@ -27,7 +30,8 @@ describe('Partnership e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await createUser(app);
+    await registerUserWithPower(app, Powers.CreateOrganization);
+
     project = await createProject(app);
   });
   afterAll(async () => {
@@ -393,6 +397,59 @@ describe('Partnership e2e', () => {
 
     const actual = result.project;
     expect(actual.id).toBe(project.id);
-    expect(actual.budget.value.records.length).toBe(2);
+    expect(actual.budget.value.records.length).toBe(3);
+  });
+
+  it('should throw error if financialReportingType is not subset of its Partner financialReportingTypes on create', async () => {
+    const partner = await createPartner(app, {
+      types: [PartnerType.Funding],
+      financialReportingTypes: [],
+    });
+
+    await expect(
+      createPartnership(app, {
+        partnerId: partner.id,
+        financialReportingType: FinancialReportingType.Funded,
+      })
+    ).rejects.toThrowError(
+      `FinancialReportingType ${FinancialReportingType.Funded} cannot be assigned to this partnership`
+    );
+  });
+
+  it('should throw error if financialReportingType is not subset of its Partner financialReportingTypes on update', async () => {
+    const partner = await createPartner(app, {
+      types: [PartnerType.Funding],
+      financialReportingTypes: [],
+    });
+
+    const partnership = await createPartnership(app, {
+      partnerId: partner.id,
+      financialReportingType: undefined,
+    });
+
+    await expect(
+      app.graphql.mutate(
+        gql`
+          mutation updatePartnership($input: UpdatePartnershipInput!) {
+            updatePartnership(input: $input) {
+              partnership {
+                ...partnership
+              }
+            }
+          }
+          ${fragments.partnership}
+        `,
+        {
+          input: {
+            partnership: {
+              id: partnership.id,
+              financialReportingType: FinancialReportingType.Funded,
+            },
+          },
+        }
+      )
+    ).rejects.toThrowError(
+      `FinancialReportingType ${FinancialReportingType.Funded} cannot be assigned to this partnership`
+    );
   });
 });

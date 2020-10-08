@@ -7,8 +7,8 @@ import {
   createFundingAccount,
   createSession,
   createTestApp,
-  createUser,
   fragments,
+  registerUser,
   TestApp,
 } from './utility';
 
@@ -18,7 +18,7 @@ describe('FundingAccount e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await createUser(app);
+    await registerUser(app);
   });
 
   afterAll(async () => {

@@ -396,6 +396,31 @@ export const partner = gql`
       canRead
       canEdit
     }
+    financialReportingTypes {
+      value
+      canRead
+      canEdit
+    }
+    pmcEntityCode {
+      value
+      canRead
+      canEdit
+    }
+    globalInnovationsClient {
+      value
+      canRead
+      canEdit
+    }
+    active {
+      value
+      canRead
+      canEdit
+    }
+    address {
+      value
+      canRead
+      canEdit
+    }
   }
   ${org}
   ${user}

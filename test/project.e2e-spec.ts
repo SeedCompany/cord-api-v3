@@ -8,6 +8,7 @@ import {
   Sensitivity,
   ServerException,
 } from '../src/common';
+import { Powers } from '../src/components/authorization/dto/powers';
 import { BudgetStatus } from '../src/components/budget/dto';
 import { FieldRegion } from '../src/components/field-region';
 import { FieldZone } from '../src/components/field-zone';
@@ -35,12 +36,13 @@ import {
   createRegion,
   createSession,
   createTestApp,
-  createUser,
   createZone,
   expectNotFound,
   fragments,
   getUserFromSession,
   login,
+  registerUser,
+  registerUserWithPower,
   TestApp,
 } from './utility';
 
@@ -56,7 +58,7 @@ describe('Project e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    director = await createUser(app);
+    director = await registerUser(app);
     fieldZone = await createZone(app, { directorId: director.id });
     fieldRegion = await createRegion(app, {
       directorId: director.id,
@@ -65,13 +67,6 @@ describe('Project e2e', () => {
     location = await createLocation(app);
     intern = await getUserFromSession(app);
     mentor = await getUserFromSession(app);
-
-    process.env = Object.assign(process.env, {
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      ROOT_ADMIN_EMAIL: 'devops@tsco.org',
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      ROOT_ADMIN_PASSWORD: 'admin',
-    });
   });
   afterAll(async () => {
     await app.close();
@@ -324,7 +319,7 @@ describe('Project e2e', () => {
   });
 
   it('List of projects sorted by name to be alphabetical, ignoring case sensitivity. Order: ASCENDING', async () => {
-    await createUser(app, { displayFirstName: 'Tammy' });
+    await registerUser(app, { displayFirstName: 'Tammy' });
     //Create three projects with mixed cases.
     await createProject(app, {
       name: 'a project 2' + faker.random.uuid(),
@@ -392,7 +387,7 @@ describe('Project e2e', () => {
   });
 
   it('List of projects sorted by name to be alphabetical, ignoring case sensitivity. Order: DESCENDING', async () => {
-    await createUser(app, { displayFirstName: 'Tammy' });
+    await registerUser(app, { displayFirstName: 'Tammy' });
     //Create three projects, each beginning with lower or upper-cases.
     await createProject(app, {
       name: 'a project 2' + faker.random.uuid(),
@@ -673,9 +668,9 @@ describe('Project e2e', () => {
     const projectId = project.id;
     const password = faker.internet.password();
     const password2 = faker.internet.password();
-    const userForList = await createUser(app, { password });
+    const userForList = await registerUser(app, { password });
     const userId = userForList.id;
-    const userForList2 = await createUser(app, { password: password2 });
+    const userForList2 = await registerUser(app, { password: password2 });
     const userId2 = userForList2.id;
     const memberIds: string[] = [userId, userId2];
 
@@ -719,6 +714,7 @@ describe('Project e2e', () => {
   });
 
   it('List view of partnerships by projectId', async () => {
+    await registerUserWithPower(app, Powers.CreateOrganization);
     //create 2 partnerships in a project
     const numPartnerships = 2;
     const type = ProjectType.Translation;
@@ -943,7 +939,7 @@ describe('Project e2e', () => {
 
     const actual = result.updateProject.project;
     expect(actual.id).toBe(proj.id);
-    expect(actual.budget.value.records.length).toBe(1);
+    expect(actual.budget.value.records.length).toBe(2);
   });
 
   /**

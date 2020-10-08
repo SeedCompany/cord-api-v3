@@ -1,5 +1,6 @@
 import { gql } from 'apollo-server-core';
 import { times } from 'lodash';
+import { Powers } from '../src/components/authorization/dto/powers';
 import { Film } from '../src/components/film';
 import {
   AnyProduct,
@@ -16,9 +17,9 @@ import {
   createSession,
   createStory,
   createTestApp,
-  createUser,
   expectNotFound,
   fragments,
+  registerUserWithPower,
   TestApp,
 } from './utility';
 import { createProduct } from './utility/create-product';
@@ -33,9 +34,10 @@ describe('Product e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await createUser(app);
+    await registerUserWithPower(app, Powers.CreateLanguage);
     story = await createStory(app);
     film = await createFilm(app);
+
     engagement = await createLanguageEngagement(app);
   });
   afterAll(async () => {

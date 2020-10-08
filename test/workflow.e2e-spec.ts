@@ -1,6 +1,7 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
+import { Powers } from '../src/components/authorization/dto/powers';
 import { Organization } from '../src/components/organization';
 import { User } from '../src/components/user';
 import {
@@ -8,9 +9,9 @@ import {
   createOrganization,
   createSession,
   createTestApp,
-  createUser,
   createWorkflow,
   login,
+  registerUserWithPower,
   TestApp,
 } from './utility';
 
@@ -23,12 +24,6 @@ describe.skip('Workflow e2e', () => {
   let user: User;
 
   beforeAll(async () => {
-    process.env = Object.assign(process.env, {
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      ROOT_ADMIN_EMAIL: 'admin@admin.admin',
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      ROOT_ADMIN_PASSWORD: 'admin',
-    });
     app = await createTestApp();
     await createSession(app);
     await login(app, {
@@ -37,7 +32,7 @@ describe.skip('Workflow e2e', () => {
     });
     // sg = await createSecurityGroup(app);
 
-    user = await createUser(app, { password: password, email: email });
+    user = await registerUserWithPower(app, Powers.CreateOrganization);
 
     await login(app, {
       email: process.env.ROOT_ADMIN_EMAIL,

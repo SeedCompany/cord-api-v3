@@ -71,6 +71,7 @@ match (n) return n
 ## Documentation
 
 [Cord Database Schema](https://www.lucidchart.com/documents/view/d9131673-4ad4-4e9c-ae60-5c18029cd606)  
+[Cord Property Table](https://docs.google.com/spreadsheets/d/e/2PACX-1vTe065oOA5S8QXqfBZQGqK193kIi4La2ex9ig-lDjeYmwekjMxyx-w-Mol8YRkI5YNp4o8PjI6bmaoM/pubhtml)   
 [Nest.js](https://docs.nestjs.com/)  
 [Cypher Query Builder](https://jamesfer.me/cypher-query-builder/index.html#querying)  
 [Cypher Syntax](https://neo4j.com/developer/cypher-basics-i/)  

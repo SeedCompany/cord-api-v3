@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import { DateTime } from 'luxon';
 import { ISession, Session } from '../../common';
 import { ConfigService, ILogger, Logger } from '../../core';
+import { AuthorizationService } from '../authorization/authorization.service';
 import { UserService } from '../user';
 import {
   ChangePasswordArgs,
@@ -20,6 +21,7 @@ import { SessionPipe } from './session.pipe';
 export class AuthenticationResolver {
   constructor(
     private readonly authService: AuthenticationService,
+    private readonly authorizationService: AuthorizationService,
     private readonly userService: UserService,
     private readonly config: ConfigService,
     private readonly sessionPipe: SessionPipe,
@@ -62,6 +64,7 @@ export class AuthenticationResolver {
     }
 
     const userFromSession = await this.authService.userFromSession(session);
+    const powers = await this.authorizationService.readPower(session);
 
     if (browser) {
       // http cookies must have an expiration in order to persist, so we're setting it to 10 years in the future
@@ -74,10 +77,10 @@ export class AuthenticationResolver {
         domain: this.config.session.cookieDomain,
       });
 
-      return { user: userFromSession };
+      return { user: userFromSession, powers };
     }
 
-    return { token, user: userFromSession };
+    return { token, user: userFromSession, powers };
   }
 
   @Mutation(() => LoginOutput, {
@@ -91,7 +94,8 @@ export class AuthenticationResolver {
     const userId = await this.authService.login(input, session);
     const loggedInSession = await this.updateSession(req);
     const user = await this.userService.readOne(userId, loggedInSession);
-    return { user };
+    const powers = await this.authorizationService.readPower(loggedInSession);
+    return { user, powers };
   }
 
   @Mutation(() => Boolean, {

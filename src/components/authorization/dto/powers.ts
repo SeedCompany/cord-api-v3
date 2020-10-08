@@ -1,5 +1,7 @@
 /* eslint typescript-sort-keys/string-enum: "warn" */
 
+import { registerEnumType } from '@nestjs/graphql';
+
 export enum Powers {
   CreateBudget = 'CreateBudget',
   CreateBudgetRecord = 'CreateBudgetRecord',
@@ -39,3 +41,5 @@ export enum Powers {
   GrantProjectManagerRole = 'GrantProjectManagerRole',
   GrantRegionalDirectorRole = 'GrantRegionalDirectorRole',
 }
+
+registerEnumType(Powers, { name: 'Power' });

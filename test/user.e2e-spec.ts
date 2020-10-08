@@ -3,6 +3,7 @@ import * as faker from 'faker';
 import { isValid } from 'shortid';
 import { firstLettersOfWords } from '../src/common';
 import { RegisterInput } from '../src/components/authentication';
+import { Powers } from '../src/components/authorization/dto/powers';
 import { SecuredTimeZone } from '../src/components/timezone';
 import { UpdateUser, User, UserStatus } from '../src/components/user';
 import {
@@ -11,11 +12,12 @@ import {
   createSession,
   createTestApp,
   createUnavailability,
-  createUser,
   fragments,
   generateRegisterInput,
   generateRequireFieldsRegisterInput,
   login,
+  registerUser,
+  registerUserWithPower,
   TestApp,
 } from './utility';
 
@@ -23,12 +25,6 @@ describe('User e2e', () => {
   let app: TestApp;
 
   beforeAll(async () => {
-    process.env = Object.assign(process.env, {
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      ROOT_ADMIN_EMAIL: 'devops@tsco.org',
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      ROOT_ADMIN_PASSWORD: 'admin',
-    });
     app = await createTestApp();
     await createSession(app);
   });
@@ -40,7 +36,7 @@ describe('User e2e', () => {
   it('read one user by id', async () => {
     const fakeUser = generateRegisterInput();
 
-    const user = await createUser(app, fakeUser);
+    const user = await registerUser(app, fakeUser);
     await login(app, { email: fakeUser.email, password: fakeUser.password });
 
     const result = await app.graphql.query(
@@ -118,7 +114,7 @@ describe('User e2e', () => {
     // create user first
     const newUser = generateRegisterInput();
     await createSession(app);
-    const user = await createUser(app, newUser);
+    const user = await registerUser(app, newUser);
     await login(app, { email: newUser.email, password: newUser.password });
 
     const fakeUser: UpdateUser = {
@@ -189,7 +185,7 @@ describe('User e2e', () => {
 
   it.skip('delete user', async () => {
     // create user first
-    const user = await createUser(app);
+    const user = await registerUser(app);
     const result = await app.graphql.query(
       gql`
         mutation deleteUser($id: ID!) {
@@ -209,10 +205,10 @@ describe('User e2e', () => {
 
   // LIST USERS
   it.skip('list view of users', async () => {
-    await createUser(app);
-    await createUser(app);
-    await createUser(app);
-    await createUser(app);
+    await registerUser(app);
+    await registerUser(app);
+    await registerUser(app);
+    await registerUser(app);
 
     await login(app, {
       email: process.env.ROOT_ADMIN_EMAIL,
@@ -237,7 +233,7 @@ describe('User e2e', () => {
 
   it.skip('Check consistency across user nodes', async () => {
     // create a user
-    const user = await createUser(app, { email: faker.internet.email() });
+    const user = await registerUser(app, { email: faker.internet.email() });
     // test it has proper schema
     const result = await app.graphql.query(gql`
       query {
@@ -259,7 +255,7 @@ describe('User e2e', () => {
   });
 
   it('assign organization to user', async () => {
-    const newUser = await createUser(app);
+    const newUser = await registerUserWithPower(app, Powers.CreateOrganization);
     const org = await createOrganization(app);
     const result = await app.graphql.mutate(
       gql`
@@ -279,7 +275,7 @@ describe('User e2e', () => {
   });
 
   it('remove organization from user', async () => {
-    const newUser = await createUser(app);
+    const newUser = await registerUserWithPower(app, Powers.CreateOrganization);
     const org = await createOrganization(app);
 
     // assign organization to user
@@ -316,7 +312,7 @@ describe('User e2e', () => {
   });
 
   it('assign primary organization to user', async () => {
-    const newUser = await createUser(app);
+    const newUser = await registerUserWithPower(app, Powers.CreateOrganization);
     const org = await createOrganization(app);
     const result = await app.graphql.mutate(
       gql`
@@ -343,7 +339,7 @@ describe('User e2e', () => {
   });
 
   it('remove primary organization from user', async () => {
-    const newUser = await createUser(app);
+    const newUser = await registerUserWithPower(app, Powers.CreateOrganization);
     const org = await createOrganization(app);
 
     // assign primary organization to user
@@ -389,7 +385,7 @@ describe('User e2e', () => {
   });
 
   it('read one users organizations', async () => {
-    const newUser = await createUser(app);
+    const newUser = await registerUserWithPower(app, Powers.CreateOrganization);
     const org = await createOrganization(app);
     const result = await app.graphql.mutate(
       gql`
@@ -443,7 +439,7 @@ describe('User e2e', () => {
   });
 
   it('read one users education', async () => {
-    const newUser = await createUser(app);
+    const newUser = await registerUser(app);
     const edu = await createEducation(app, { userId: newUser.id });
 
     const result = await app.graphql.query(
@@ -476,7 +472,7 @@ describe('User e2e', () => {
   });
 
   it('read one users unavailablity', async () => {
-    const newUser = await createUser(app);
+    const newUser = await registerUser(app);
     const unavail = await createUnavailability(app, { userId: newUser.id });
 
     const result = await app.graphql.query(
@@ -510,7 +506,7 @@ describe('User e2e', () => {
 
   it('read user avatar', async () => {
     const fakeUser = generateRegisterInput();
-    const newUser = await createUser(app, fakeUser);
+    const newUser = await registerUser(app, fakeUser);
 
     const result = await app.graphql.query(
       gql`
@@ -533,7 +529,7 @@ describe('User e2e', () => {
 
   // skipping because we will be refactoring how we do search
   it('list users with organizations', async () => {
-    const newUser = await createUser(app);
+    const newUser = await registerUserWithPower(app, Powers.CreateOrganization);
     const org = await createOrganization(app);
 
     const result = await app.graphql.mutate(

@@ -1,4 +1,4 @@
-import { ISession, ServerException } from '../../../common';
+import { fiscalYears, ISession, ServerException } from '../../../common';
 import {
   DatabaseService,
   EventsHandler,
@@ -99,15 +99,10 @@ export class SyncBudgetRecordsToFundingPartners
     ) {
       expectedBudgetRecordYears = [];
     } else {
-      // TODO: mous starting at midnight on Jan 1st might cause issues with UTC vs local issues here.
-      // double check how year should be calculated
-      const mouStartYear = partnership.mouStart.value.year;
-      const mouEndYear = partnership.mouEnd.value.year;
+      const mouStart = partnership.mouStart.value;
+      const mouEnd = partnership.mouEnd.value;
 
-      expectedBudgetRecordYears = Array.from(
-        { length: mouEndYear - mouStartYear },
-        (_v, k) => k + mouStartYear
-      );
+      expectedBudgetRecordYears = fiscalYears(mouStart, mouEnd);
     }
     return expectedBudgetRecordYears;
   }

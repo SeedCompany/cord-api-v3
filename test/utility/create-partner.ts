@@ -1,9 +1,11 @@
 import { gql } from 'apollo-server-core';
+import * as faker from 'faker';
 import {
   CreatePartner,
   Partner,
   PartnerType,
 } from '../../src/components/partner';
+import { FinancialReportingType } from '../../src/components/partnership';
 import { TestApp } from './create-app';
 import { createOrganization } from './create-organization';
 import { createPerson } from './create-person';
@@ -17,6 +19,11 @@ export async function createPartner(
     organizationId: input.organizationId || (await createOrganization(app)).id,
     pointOfContactId: input.pointOfContactId || (await createPerson(app)).id,
     types: [PartnerType.Managing],
+    financialReportingTypes: [FinancialReportingType.Funded],
+    pmcEntityCode: faker.helpers.replaceSymbols('???').toUpperCase(),
+    globalInnovationsClient: false,
+    active: false,
+    address: faker.address.city(),
     ...input,
   };
 

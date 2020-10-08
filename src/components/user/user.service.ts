@@ -172,13 +172,6 @@ export class UserService {
     const dbUser = new DbUser();
     await this.authorizationService.processNewBaseNode(dbUser, id, id);
 
-    // todo: remove this and refactor tests
-    // grant all powers to keep tests passing
-    const powers = Object.keys(Powers);
-    for (const power of powers) {
-      await this.authorizationService.grantPower(power as Powers, id);
-    }
-
     // don't remove this when you remove the above function
     // grant the powers that all users will get
     const grants = [

@@ -6,8 +6,8 @@ import { User } from '../src/components/user';
 import {
   createSession,
   createTestApp,
-  createUser,
   login,
+  registerUser,
   TestApp,
 } from './utility';
 import { createZone } from './utility/create-zone';
@@ -22,8 +22,8 @@ describe('Field Zone e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    director = await createUser(app, { password });
-    newDirector = await createUser(app, { password });
+    director = await registerUser(app, { password });
+    newDirector = await registerUser(app, { password });
   });
 
   afterAll(async () => {

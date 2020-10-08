@@ -4,6 +4,7 @@ import { some } from 'lodash';
 import { DateTime, Interval } from 'luxon';
 import { generate } from 'shortid';
 import { InputException } from '../src/common';
+import { Powers } from '../src/components/authorization/dto/powers';
 import {
   CreateInternshipEngagement,
   EngagementStatus,
@@ -24,12 +25,11 @@ import {
   createProject,
   createSession,
   createTestApp,
-  createUser,
   expectNotFound,
   fragments,
   getUserFromSession,
-  login,
   Raw,
+  registerUserWithPower,
   requestFileUpload,
   TestApp,
   uploadFileContents,
@@ -45,19 +45,17 @@ describe('Engagement e2e', () => {
   let user: User;
   let intern: Partial<User>;
   let mentor: Partial<User>;
-  const password: string = faker.internet.password();
 
   beforeAll(async () => {
     app = await createTestApp();
 
     await createSession(app);
 
-    user = await createUser(app, { password });
+    user = await registerUserWithPower(app, Powers.CreateLanguage);
     language = await createLanguage(app);
     location = await createLocation(app);
     intern = await getUserFromSession(app);
     mentor = await getUserFromSession(app);
-    await login(app, { email: user.email.value, password });
   });
 
   afterAll(async () => {
@@ -228,7 +226,7 @@ describe('Engagement e2e', () => {
     expect(actual.firstScripture).toMatchObject(
       languageEngagement.firstScripture
     );
-    expect(actual.firstScripture).toMatchObject(
+    expect(actual.lukePartnership).toMatchObject(
       languageEngagement.lukePartnership
     );
     expect(actual.ceremony).toBeDefined();
@@ -963,7 +961,7 @@ describe('Engagement e2e', () => {
     const project = await createProject(app, {
       type: ProjectType.Internship,
     });
-    const intern = await createUser(app);
+    const intern = await registerUserWithPower(app, Powers.CreateLanguage);
 
     await createInternshipEngagement(app, {
       projectId: project.id,
@@ -977,6 +975,37 @@ describe('Engagement e2e', () => {
       })
     ).rejects.toThrowError(
       'Engagement for this project and person already exists'
+    );
+  });
+
+  it('can not set firstScripture=true if the language has hasExternalFirstScripture=true', async () => {
+    const language = await createLanguage(app, {
+      hasExternalFirstScripture: true,
+    });
+    await expect(
+      createLanguageEngagement(app, {
+        languageId: language.id,
+        firstScripture: true,
+      })
+    ).rejects.toThrowError(
+      'firstScripture can not be set to true if the language has hasExternalFirstScripture=true'
+    );
+  });
+
+  it('can not set firstScripture=true if it is not only engagement for the language that has firstScripture=true', async () => {
+    const language = await createLanguage(app);
+    await createLanguageEngagement(app, {
+      languageId: language.id,
+      firstScripture: true,
+    });
+    await createLanguageEngagement(app, { languageId: language.id });
+    await expect(
+      createLanguageEngagement(app, {
+        languageId: language.id,
+        firstScripture: true,
+      })
+    ).rejects.toThrowError(
+      'firstScripture can not be set to true if it is not the only engagement for the language that has firstScripture=true'
     );
   });
 });

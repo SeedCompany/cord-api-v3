@@ -2,6 +2,7 @@ import { ArgsType, Field, InputType, ObjectType } from '@nestjs/graphql';
 import { MinLength } from 'class-validator';
 import { stripIndent } from 'common-tags';
 import { IsEmail } from '../../common';
+import { Powers } from '../authorization/dto/powers';
 import { User } from '../user';
 
 @ObjectType()
@@ -21,6 +22,9 @@ export abstract class SessionOutput {
       'Only returned if there is a logged-in user tied to the current session.',
   })
   user: User | null;
+
+  @Field(() => [Powers], { nullable: true })
+  readonly powers: Powers[];
 }
 
 @InputType()
@@ -41,6 +45,8 @@ export class LoginOutput {
   user: User;
 
   // TODO Global Permissions
+  @Field(() => [Powers])
+  readonly powers: Powers[];
 }
 
 @InputType()
