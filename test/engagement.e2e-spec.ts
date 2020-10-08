@@ -30,7 +30,6 @@ import {
   fragments,
   getUserFromSession,
   Raw,
-  registerUser,
   registerUserWithPower,
   requestFileUpload,
   TestApp,
