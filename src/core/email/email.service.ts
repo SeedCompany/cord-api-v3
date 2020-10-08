@@ -11,6 +11,7 @@ import { file as tempFile } from 'tempy';
 import { assert } from 'ts-essentials';
 import { ConfigService, ILogger, Logger } from '..';
 import { Many, many, maybeMany, sleep } from '../../common';
+import { FrontendUrlProvider } from './templates/frontend-url';
 import { MjmlContext, RenderContext } from './templates/mjml';
 import { RenderForText } from './templates/text-rendering';
 
@@ -36,7 +37,11 @@ export class EmailService {
 
     const { send, open } = this.config.email;
 
-    const docEl = template(props);
+    const docEl = createElement(
+      FrontendUrlProvider,
+      { url: this.config.frontendUrl },
+      createElement(template, props)
+    );
     const { html, context } = this.renderHtml(docEl);
     const text = this.renderText(docEl);
 
