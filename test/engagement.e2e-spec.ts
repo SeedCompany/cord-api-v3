@@ -361,7 +361,7 @@ describe('Engagement e2e', () => {
     internshipProject = await createProject(app, {
       type: ProjectType.Internship,
     });
-    const mentor = await registerUser(app);
+    const mentor = await registerUserWithPower(app, Powers.CreateLanguage);
     const internshipEngagement = await createInternshipEngagementWithMinimumValues(
       app,
       {
