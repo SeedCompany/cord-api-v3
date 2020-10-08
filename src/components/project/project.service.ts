@@ -475,8 +475,8 @@ export class ProjectService {
     if (input.step && session.userId !== undefined) {
       const hasApproval = await this.projectRules.approveStepChange(
         input.id,
-        input.step,
-        session.userId
+        session.userId,
+        input.step
       );
 
       if (!hasApproval) {

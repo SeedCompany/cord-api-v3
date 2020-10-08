@@ -14,6 +14,9 @@ export enum ProjectStep {
   PendingFinanceConfirmation = 'PendingFinanceConfirmation',
   OnHoldFinanceConfirmation = 'OnHoldFinanceConfirmation',
 
+  DidNotDevelop = 'DidNotDevelop',
+  Rejected = 'Rejected',
+
   Active = 'Active',
   ActiveChangedPlan = 'ActiveChangedPlan',
   DiscussingChangeToPlan = 'DiscussingChangeToPlan',
