@@ -104,7 +104,7 @@ export class LocationService {
       },
       {
         key: 'iso31663',
-        value: input.iso31663?.toUpperCase(),
+        value: input.iso31663,
         isPublic: false,
         isOrgPublic: false,
         label: 'Iso31663',
@@ -222,16 +222,11 @@ export class LocationService {
   async update(input: UpdateLocation, session: ISession): Promise<Location> {
     const location = await this.readOne(input.id, session);
 
-    const inputNormalized = {
-      ...input,
-      iso31663: input.iso31663?.toUpperCase(),
-    };
-
     await this.db.sgUpdateProperties({
       session,
       object: location,
       props: ['name', 'iso31663', 'type', 'sensitivity'],
-      changes: inputNormalized,
+      changes: input,
       nodevar: 'location',
     });
 
