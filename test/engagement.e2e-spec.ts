@@ -15,7 +15,12 @@ import {
 import { Language } from '../src/components/language';
 import { Location } from '../src/components/location';
 import { ProductMethodology } from '../src/components/product';
-import { Project, ProjectType } from '../src/components/project';
+import {
+  Project,
+  ProjectStatus,
+  ProjectStep,
+  ProjectType,
+} from '../src/components/project';
 import { User } from '../src/components/user';
 import {
   createInternshipEngagement,
@@ -1011,5 +1016,49 @@ describe('Engagement e2e', () => {
     ).rejects.toThrowError(
       'firstScripture can not be set to true if it is not the only engagement for the language that has firstScripture=true'
     );
+  });
+
+  it('should update Engagement status to Active if Project becomes Active from InDevelopment', async () => {
+    const project = await createProject(app, {
+      step: ProjectStep.EarlyConversations,
+    });
+    expect(project.status).toBe(ProjectStatus.InDevelopment);
+
+    const engagement = await createLanguageEngagement(app, {
+      projectId: project.id,
+    });
+    expect(engagement.status !== EngagementStatus.Active).toBe(true);
+
+    // Update Project status to Active
+    await app.graphql.mutate(
+      gql`
+        mutation updateProject($id: ID!) {
+          updateProject(input: { project: { id: $id, step: Active } }) {
+            project {
+              id
+            }
+          }
+        }
+      `,
+      {
+        id: project.id,
+      }
+    );
+
+    const { engagement: actual } = await app.graphql.query(
+      gql`
+        query engagement($id: ID!) {
+          engagement(id: $id) {
+            ...languageEngagement
+          }
+        }
+        ${fragments.languageEngagement}
+      `,
+      {
+        id: engagement.id,
+      }
+    );
+    expect(actual.id).toBe(engagement.id);
+    expect(actual.status).toBe(EngagementStatus.Active);
   });
 });

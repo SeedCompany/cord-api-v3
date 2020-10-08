@@ -186,6 +186,7 @@ export const FinancialAnalyst = new DbRole({
         { propertyName: 'statusModifiedAt',           permission: { read, write, }, },
         { propertyName: 'modifiedAt',                 permission: { read, write, }, },
         { propertyName: 'product',                    permission: { read, write, }, },
+        { propertyName: 'status',                     permission: { read, write, }, },
     ]}),
     new DbBaseNodeGrant<DbLiteracyMaterial>({
       __className: 'DbLiteracyMaterial',
