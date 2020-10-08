@@ -1,13 +1,14 @@
 import { gql } from 'apollo-server-core';
 import { times } from 'lodash';
+import { Powers } from '../src/components/authorization/dto/powers';
 import { Partner, PartnerType } from '../src/components/partner';
 import {
   createPartner,
   createPerson,
   createSession,
   createTestApp,
-  createUser,
   fragments,
+  registerUserWithPower,
   TestApp,
 } from './utility';
 
@@ -17,7 +18,7 @@ describe('Partner e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await createUser(app);
+    await registerUserWithPower(app, Powers.CreateOrganization);
   });
 
   afterAll(async () => {

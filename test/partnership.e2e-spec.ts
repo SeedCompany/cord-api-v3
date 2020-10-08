@@ -1,6 +1,7 @@
 import { gql } from 'apollo-server-core';
 import { sample, times } from 'lodash';
 import { CalendarDate, NotFoundException } from '../src/common';
+import { Powers } from '../src/components/authorization/dto/powers';
 import { PartnerType } from '../src/components/partner';
 import {
   CreatePartnership,
@@ -12,10 +13,10 @@ import {
   createProject,
   createSession,
   createTestApp,
-  createUser,
   expectNotFound,
   fragments,
   Raw,
+  registerUserWithPower,
   TestApp,
 } from './utility';
 import { createPartnership } from './utility/create-partnership';
@@ -27,7 +28,8 @@ describe('Partnership e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await createUser(app);
+    await registerUserWithPower(app, Powers.CreateOrganization);
+
     project = await createProject(app);
   });
   afterAll(async () => {

@@ -8,7 +8,7 @@ import {
   createEducation,
   createSession,
   createTestApp,
-  createUser,
+  registerUser,
   TestApp,
 } from './utility';
 import { fragments } from './utility/fragments';
@@ -20,7 +20,7 @@ describe('Education e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    user = await createUser(app);
+    user = await registerUser(app);
   });
 
   afterAll(async () => {

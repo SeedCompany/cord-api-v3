@@ -8,8 +8,8 @@ import {
   createFilm,
   createSession,
   createTestApp,
-  createUser,
   fragments,
+  registerUser,
   TestApp,
 } from './utility';
 
@@ -19,7 +19,7 @@ describe('Film e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await createUser(app);
+    await registerUser(app);
   });
 
   afterAll(async () => {

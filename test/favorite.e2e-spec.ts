@@ -9,8 +9,8 @@ import {
   createOrganization,
   createSession,
   createTestApp,
-  createUser,
   fragments,
+  registerUser,
   TestApp,
 } from './utility';
 
@@ -20,7 +20,7 @@ describe.skip('Favorite e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await createUser(app);
+    await registerUser(app);
   });
 
   afterAll(async () => {
