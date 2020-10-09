@@ -1,6 +1,6 @@
 import { ISession } from '../../../common';
 import { Partnership } from '../dto';
 
-export class PartnershipDeletedEvent {
+export class PartnershipWillDeleteEvent {
   constructor(readonly partnership: Partnership, readonly session: ISession) {}
 }
