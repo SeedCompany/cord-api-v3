@@ -500,10 +500,6 @@ export class ProjectService {
       nodevar: 'project',
     });
 
-    if (input.step && session.userId !== undefined) {
-      await this.projectRules.processStepChange(input.id, input.step);
-    }
-
     await this.eventBus.publish(
       new ProjectUpdatedEvent(result, currentProject, input, session)
     );
@@ -544,7 +540,7 @@ export class ProjectService {
       sensitivity: 'sensitivityValue',
     };
 
-    const sensitivityCase = `case prop.value 
+    const sensitivityCase = `case prop.value
     when 'High' then 3
     when 'Medium' then 2
     when 'Low' then 1

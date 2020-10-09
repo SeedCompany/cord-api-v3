@@ -1,14 +1,21 @@
-import { EmailService, EventsHandler, IEventHandler } from '../../../core';
+import {
+  EmailService,
+  EventsHandler,
+  IEventHandler,
+  ILogger,
+  Logger,
+} from '../../../core';
 import { ProjectStepChanged } from '../../../core/email/templates';
-import { UserService } from '../../user';
 import { ProjectUpdatedEvent } from '../events';
+import { ProjectRules } from '../project.rules';
 
 @EventsHandler(ProjectUpdatedEvent)
 export class ProjectStepChangedNotificationHandler
   implements IEventHandler<ProjectUpdatedEvent> {
   constructor(
-    private readonly users: UserService,
-    private readonly emailService: EmailService
+    private readonly projectRules: ProjectRules,
+    private readonly emailService: EmailService,
+    @Logger('project:step-changed') private readonly logger: ILogger
   ) {}
 
   async handle(event: ProjectUpdatedEvent) {
@@ -16,34 +23,27 @@ export class ProjectStepChangedNotificationHandler
       return;
     }
 
-    const changedBy = await this.users.readOne(
-      event.session.userId!,
-      event.session
+    const recipients = await this.projectRules.getNotifications(
+      event.updated.id,
+      event.updated.step.value!
     );
 
-    const recipients = await this.determineRecipients(event);
+    this.logger.info('Notifying', {
+      emails: recipients.map((r) => r.recipient.email.value),
+      projectId: event.updated.id,
+      step: event.updated.step.value,
+      previousStep: event.previous.step.value,
+    });
 
-    for (const recipient of recipients) {
-      await this.emailService.send(recipient, ProjectStepChanged, {
-        // TODO objects should permission-ed based on the recipient, not the current user.
-        project: event.updated,
-        oldStep: event.previous.step.value,
-        changedBy,
-        changedAt: event.updated.modifiedAt,
-      });
+    for (const notification of recipients) {
+      if (!notification.recipient.email.value) {
+        continue;
+      }
+      await this.emailService.send(
+        notification.recipient.email.value,
+        ProjectStepChanged,
+        notification
+      );
     }
-  }
-
-  private async determineRecipients(
-    event: ProjectUpdatedEvent
-  ): Promise<string[]> {
-    const users = [
-      // TODO Connect up.
-      // Just the changer for now
-      await this.users.readOne(event.session.userId!, event.session),
-    ];
-
-    // TODO need to fetch email addresses regardless of current users permissions
-    return users.map((user) => user.email.value!);
   }
 }

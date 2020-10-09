@@ -21,9 +21,14 @@ interface StepRule {
   notifications: string[]; // email addresses
 }
 
-class EmailNotification {
-  user: Pick<User, 'id' | 'email' | 'realFirstName' | 'realLastName'>;
-  project: Pick<Project, 'id' | 'createdAt' | 'modifiedAt' | 'name'>;
+export interface EmailNotification {
+  recipient: Pick<
+    User,
+    'id' | 'email' | 'displayFirstName' | 'displayLastName' | 'timezone'
+  >;
+  changedBy: Pick<User, 'id' | 'displayFirstName' | 'displayLastName'>;
+  project: Pick<Project, 'id' | 'modifiedAt' | 'name' | 'step'>;
+  previousStep?: ProjectStep;
 }
 
 @Injectable()
@@ -773,7 +778,7 @@ export class ProjectRules {
     return userRolesQuery?.roles ?? [];
   }
 
-  async processStepChange(
+  async getNotifications(
     projectId: string,
     step: ProjectStep
   ): Promise<EmailNotification[]> {
@@ -784,7 +789,6 @@ export class ProjectRules {
       emails.map((email) => this.getEmailNotificationObject(email, projectId))
     );
 
-    this.logger.info('emailing', notifications);
     return notifications;
   }
 
@@ -933,9 +937,9 @@ export class ProjectRules {
     }
 
     return {
+      // @ts-expect-error TODO Fix this response
       project: {
         id: project.id,
-        createdAt: project.createdAt,
         modifiedAt: project.modifiedAt,
         name: { value: project.name, canRead: true, canEdit: false },
       },
