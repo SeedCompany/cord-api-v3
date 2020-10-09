@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { FC, ReactElement } from 'react';
+import { useFrontendUrl } from './frontend-url';
 import {
   All,
   Attributes,
@@ -55,25 +56,28 @@ export const Theme = () => (
   </>
 );
 
-export const Branding = (): ReactElement => (
-  <Section>
-    <Column verticalAlign="middle" width="80px">
-      <Image
-        src="https://cordfield.com/assets/images/android-chrome-192x192.png"
-        height={80}
-        width={80}
-        align="center"
-        padding={0}
-      />
-    </Column>
-    <Column verticalAlign="middle" width="220px">
-      <Text fontSize={32} align="center">
-        CORD Field
-      </Text>
-    </Column>
-    <TextBreak />
-  </Section>
-);
+export const Branding = (): ReactElement => {
+  const iconUrl = useFrontendUrl('/images/android-chrome-192x192.png');
+  return (
+    <Section>
+      <Column verticalAlign="middle" width="80px">
+        <Image
+          src={iconUrl}
+          height={80}
+          width={80}
+          align="center"
+          padding={0}
+        />
+      </Column>
+      <Column verticalAlign="middle" width="220px">
+        <Text fontSize={32} align="center">
+          CORD Field
+        </Text>
+      </Column>
+      <TextBreak />
+    </Section>
+  );
+};
 
 export const Heading: FC = ({ children }) => (
   <Section>
