@@ -65,17 +65,24 @@ import {
   UnavailabilityService,
 } from './unavailability';
 
-export const fullName = (user: User) => {
+export const fullName = (
+  user: Partial<
+    Pick<
+      User,
+      'realFirstName' | 'realLastName' | 'displayFirstName' | 'displayLastName'
+    >
+  >
+) => {
   const realName = compact([
-    user.realFirstName.value,
-    user.realLastName.value,
+    user.realFirstName?.value ?? '',
+    user.realLastName?.value ?? '',
   ]).join(' ');
   if (realName) {
     return realName;
   }
   const displayName = compact([
-    user.displayFirstName.value,
-    user.displayLastName.value,
+    user.displayFirstName?.value ?? '',
+    user.displayLastName?.value ?? '',
   ]).join(' ');
   if (displayName) {
     return displayName;
