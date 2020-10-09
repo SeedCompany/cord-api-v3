@@ -38,6 +38,14 @@ export class ProjectRules {
       // determine if the requested next step is allowed
       const nextPossibleSteps = this.getNextStepOptions(currentStep);
 
+      const validNextStep = nextPossibleSteps.includes(nextStep);
+
+      if (!validNextStep) {
+        throw new UnauthorizedException(
+          'this step is not in an authorized sequence'
+        );
+      }
+
       return true;
     }
 
@@ -200,87 +208,130 @@ export class ProjectRules {
           ProjectStep.Rejected,
         ];
       case ProjectStep.PrepForConsultantEndorsement:
-        return [ProjectStep.PendingConsultantEndorsement, ProjectStep];
+        return [
+          ProjectStep.PendingConsultantEndorsement,
+          ProjectStep.PendingConceptApproval,
+          ProjectStep.DidNotDevelop,
+        ];
       case ProjectStep.PendingConsultantEndorsement:
-        return [Role.Consultant, Role.ConsultantManager];
+        return [ProjectStep.PrepForFinancialEndorsement];
       case ProjectStep.PrepForFinancialEndorsement:
         return [
-          Role.ProjectManager,
-          Role.RegionalDirector,
-          Role.FieldOperationsDirector,
+          ProjectStep.PendingFinancialEndorsement,
+          ProjectStep.PendingConsultantEndorsement,
+          ProjectStep.PendingConceptApproval,
+          ProjectStep.DidNotDevelop,
         ];
       case ProjectStep.PendingFinancialEndorsement:
-        return [Role.Controller, Role.FinancialAnalyst];
+        return [ProjectStep.FinalizingProposal];
       case ProjectStep.FinalizingProposal:
         return [
-          Role.ProjectManager,
-          Role.RegionalDirector,
-          Role.FieldOperationsDirector,
+          ProjectStep.PendingRegionalDirectorApproval,
+          ProjectStep.PendingFinancialEndorsement,
+          ProjectStep.PendingConsultantEndorsement,
+          ProjectStep.PendingConceptApproval,
+          ProjectStep.DidNotDevelop,
         ];
       case ProjectStep.PendingRegionalDirectorApproval:
-        return [Role.RegionalDirector, Role.FieldOperationsDirector];
+        return [
+          ProjectStep.PendingFinanceConfirmation,
+          ProjectStep.PendingZoneDirectorApproval,
+          ProjectStep.FinalizingProposal,
+          ProjectStep.Rejected,
+        ];
       case ProjectStep.PendingZoneDirectorApproval:
-        return [Role.FieldOperationsDirector];
+        return [
+          ProjectStep.PendingFinanceConfirmation,
+          ProjectStep.FinalizingProposal,
+          ProjectStep.Rejected,
+        ];
       case ProjectStep.PendingFinanceConfirmation:
-        return [Role.Controller];
+        return [
+          ProjectStep.Active,
+          ProjectStep.OnHoldFinanceConfirmation,
+          ProjectStep.FinalizingProposal,
+          ProjectStep.Rejected,
+        ];
       case ProjectStep.OnHoldFinanceConfirmation:
-        return [Role.Controller];
+        return [
+          ProjectStep.Active,
+          ProjectStep.FinalizingProposal,
+          ProjectStep.Rejected,
+        ];
       case ProjectStep.Active:
         return [
-          Role.ProjectManager,
-          Role.RegionalDirector,
-          Role.FieldOperationsDirector,
+          ProjectStep.DiscussingChangeToPlan,
+          ProjectStep.DiscussingTermination,
+          ProjectStep.FinalizingCompletion,
         ];
       case ProjectStep.ActiveChangedPlan:
         return [
-          Role.ProjectManager,
-          Role.RegionalDirector,
-          Role.FieldOperationsDirector,
+          ProjectStep.DiscussingChangeToPlan,
+          ProjectStep.DiscussingTermination,
+          ProjectStep.FinalizingCompletion,
         ];
       case ProjectStep.DiscussingChangeToPlan:
         return [
-          Role.ProjectManager,
-          Role.RegionalDirector,
-          Role.FieldOperationsDirector,
+          ProjectStep.PendingChangeToPlanApproval,
+          ProjectStep.DiscussingSuspension,
+          ProjectStep.Active,
+          ProjectStep.ActiveChangedPlan,
         ];
       case ProjectStep.PendingChangeToPlanApproval:
-        return [Role.RegionalDirector, Role.FieldOperationsDirector];
+        return [
+          ProjectStep.DiscussingChangeToPlan,
+          ProjectStep.Active,
+          ProjectStep.ActiveChangedPlan,
+        ];
       case ProjectStep.DiscussingSuspension:
         return [
-          Role.ProjectManager,
-          Role.RegionalDirector,
-          Role.FieldOperationsDirector,
+          ProjectStep.PendingSuspensionApproval,
+          ProjectStep.Active,
+          ProjectStep.ActiveChangedPlan,
         ];
       case ProjectStep.PendingSuspensionApproval:
-        return [Role.RegionalDirector, Role.FieldOperationsDirector];
+        return [
+          ProjectStep.DiscussingSuspension,
+          ProjectStep.Suspended,
+          ProjectStep.Active,
+          ProjectStep.ActiveChangedPlan,
+        ];
       case ProjectStep.Suspended:
         return [
-          Role.ProjectManager,
-          Role.RegionalDirector,
-          Role.FieldOperationsDirector,
+          ProjectStep.DiscussingReactivation,
+          ProjectStep.DiscussingTermination,
         ];
       case ProjectStep.DiscussingReactivation:
         return [
-          Role.ProjectManager,
-          Role.RegionalDirector,
-          Role.FieldOperationsDirector,
+          ProjectStep.PendingReactivationApproval,
+          ProjectStep.DiscussingTermination,
         ];
       case ProjectStep.PendingReactivationApproval:
-        return [Role.RegionalDirector, Role.FieldOperationsDirector];
+        return [
+          ProjectStep.ActiveChangedPlan,
+          ProjectStep.DiscussingReactivation,
+          ProjectStep.DiscussingTermination,
+        ];
       case ProjectStep.DiscussingTermination:
         return [
-          Role.ProjectManager,
-          Role.RegionalDirector,
-          Role.FieldOperationsDirector,
+          ProjectStep.PendingTerminationApproval,
+          ProjectStep.DiscussingReactivation,
+          ProjectStep.Suspended,
+          ProjectStep.Active,
         ];
       case ProjectStep.PendingTerminationApproval:
-        return [Role.RegionalDirector, Role.FieldOperationsDirector];
+        return [
+          ProjectStep.Terminated,
+          ProjectStep.DiscussingTermination,
+          ProjectStep.DiscussingReactivation,
+          ProjectStep.Suspended,
+          ProjectStep.Active,
+        ];
       case ProjectStep.FinalizingCompletion:
         return [
-          Role.ProjectManager,
-          Role.RegionalDirector,
-          Role.FieldOperationsDirector,
-          Role.FinancialAnalyst,
+          ProjectStep.Active,
+          ProjectStep.ActiveChangedPlan,
+          ProjectStep.Completed,
         ];
       case ProjectStep.Terminated:
         return [];
@@ -296,7 +347,7 @@ export class ProjectRules {
     step: ProjectStep,
     userId: string
   ) {
-    //
+    // notify everyone
   }
 
   private async getNotifications() {
