@@ -1,3 +1,4 @@
+/* eslint-disable no-case-declarations */
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { intersection } from 'lodash';
@@ -7,6 +8,11 @@ import { Role } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { ProjectStep } from './dto';
 
+class StepRule {
+  approvers: Role[];
+  nextSteps: ProjectStep[];
+  notifications: string[]; // email addresses
+}
 @Injectable()
 export class ProjectRules {
   constructor(
@@ -15,6 +21,359 @@ export class ProjectRules {
     // eslint-disable-next-line @seedcompany/no-unused-vars
     @Logger('project:rules') private readonly logger: ILogger
   ) {}
+
+  private async getStepRules(step: ProjectStep, id: string): Promise<StepRule> {
+    switch (step) {
+      case ProjectStep.EarlyConversations:
+        return {
+          approvers: [
+            Role.ProjectManager,
+            Role.RegionalDirector,
+            Role.FieldOperationsDirector,
+          ],
+          nextSteps: [
+            ProjectStep.PendingConceptApproval,
+            ProjectStep.DidNotDevelop,
+          ],
+          notifications: await this.getProjectTeamEmail(id),
+        };
+      case ProjectStep.PendingConceptApproval:
+        return {
+          approvers: [Role.RegionalDirector, Role.FieldOperationsDirector],
+          nextSteps: [
+            ProjectStep.PrepForConsultantEndorsement,
+            ProjectStep.EarlyConversations,
+            ProjectStep.Rejected,
+          ],
+          notifications: await this.getProjectTeamEmail(id),
+        };
+      case ProjectStep.PrepForConsultantEndorsement:
+        return {
+          approvers: [
+            Role.ProjectManager,
+            Role.RegionalDirector,
+            Role.FieldOperationsDirector,
+          ],
+          nextSteps: [
+            ProjectStep.PendingConsultantEndorsement,
+            ProjectStep.PendingConceptApproval,
+            ProjectStep.DidNotDevelop,
+          ],
+          notifications: await this.getProjectTeamEmail(id),
+        };
+      case ProjectStep.PendingConsultantEndorsement:
+        return {
+          approvers: [Role.Consultant, Role.ConsultantManager],
+          nextSteps: [ProjectStep.PrepForFinancialEndorsement],
+          notifications: await this.getProjectTeamEmail(id),
+        };
+      case ProjectStep.PrepForFinancialEndorsement:
+        return {
+          approvers: [
+            Role.ProjectManager,
+            Role.RegionalDirector,
+            Role.FieldOperationsDirector,
+          ],
+          nextSteps: [
+            ProjectStep.PendingFinancialEndorsement,
+            ProjectStep.PendingConsultantEndorsement,
+            ProjectStep.PendingConceptApproval,
+            ProjectStep.DidNotDevelop,
+          ],
+          notifications: await this.getProjectTeamEmail(id),
+        };
+      case ProjectStep.PendingFinancialEndorsement:
+        return {
+          approvers: [Role.Controller, Role.FinancialAnalyst],
+          nextSteps: [ProjectStep.FinalizingProposal],
+          notifications: await this.getProjectTeamEmail(id),
+        };
+      case ProjectStep.FinalizingProposal:
+        return {
+          approvers: [
+            Role.ProjectManager,
+            Role.RegionalDirector,
+            Role.FieldOperationsDirector,
+          ],
+          nextSteps: [
+            ProjectStep.PendingRegionalDirectorApproval,
+            ProjectStep.PendingFinancialEndorsement,
+            ProjectStep.PendingConsultantEndorsement,
+            ProjectStep.PendingConceptApproval,
+            ProjectStep.DidNotDevelop,
+          ],
+          notifications: await this.getProjectTeamEmail(id),
+        };
+      case ProjectStep.PendingRegionalDirectorApproval:
+        return {
+          approvers: [Role.RegionalDirector, Role.FieldOperationsDirector],
+          nextSteps: [
+            ProjectStep.PendingFinanceConfirmation,
+            ProjectStep.PendingZoneDirectorApproval,
+            ProjectStep.FinalizingProposal,
+            ProjectStep.Rejected,
+          ],
+          notifications: await this.getProjectTeamEmail(id),
+        };
+      case ProjectStep.PendingZoneDirectorApproval:
+        return {
+          approvers: [Role.FieldOperationsDirector],
+          nextSteps: [
+            ProjectStep.PendingFinanceConfirmation,
+            ProjectStep.FinalizingProposal,
+            ProjectStep.Rejected,
+          ],
+          notifications: await this.getProjectTeamEmail(id),
+        };
+      case ProjectStep.PendingFinanceConfirmation:
+        return {
+          approvers: [Role.Controller],
+          nextSteps: [
+            ProjectStep.Active,
+            ProjectStep.OnHoldFinanceConfirmation,
+            ProjectStep.FinalizingProposal,
+            ProjectStep.Rejected,
+          ],
+          notifications: [
+            ...(await this.getProjectTeamEmail(id)),
+            ...(await this.getRoleEmails(Role.Controller)),
+          ],
+        };
+      case ProjectStep.OnHoldFinanceConfirmation:
+        return {
+          approvers: [Role.Controller],
+          nextSteps: [
+            ProjectStep.Active,
+            ProjectStep.FinalizingProposal,
+            ProjectStep.Rejected,
+          ],
+          notifications: [
+            ...(await this.getProjectTeamEmail(id)),
+            ...(await this.getRoleEmails(Role.Controller)),
+          ],
+        };
+      case ProjectStep.Active:
+        return {
+          approvers: [
+            Role.ProjectManager,
+            Role.RegionalDirector,
+            Role.FieldOperationsDirector,
+          ],
+          nextSteps: [
+            ProjectStep.DiscussingChangeToPlan,
+            ProjectStep.DiscussingTermination,
+            ProjectStep.FinalizingCompletion,
+          ],
+          notifications: [
+            ...(await this.getProjectTeamEmail(id)),
+            ...(await this.getRoleEmails(Role.Controller)),
+            'project_approve@tsco.org',
+          ],
+        };
+      case ProjectStep.ActiveChangedPlan:
+        return {
+          approvers: [
+            Role.ProjectManager,
+            Role.RegionalDirector,
+            Role.FieldOperationsDirector,
+          ],
+          nextSteps: [
+            ProjectStep.DiscussingChangeToPlan,
+            ProjectStep.DiscussingTermination,
+            ProjectStep.FinalizingCompletion,
+          ],
+          notifications: [
+            ...(await this.getProjectTeamEmail(id)),
+            'project_extension@tsco.org',
+            'project_revision@tsco.org',
+          ],
+        };
+      case ProjectStep.DiscussingChangeToPlan:
+        return {
+          approvers: [
+            Role.ProjectManager,
+            Role.RegionalDirector,
+            Role.FieldOperationsDirector,
+          ],
+          nextSteps: [
+            ProjectStep.PendingChangeToPlanApproval,
+            ProjectStep.DiscussingSuspension,
+            ProjectStep.Active,
+            ProjectStep.ActiveChangedPlan,
+          ],
+          notifications: [
+            ...(await this.getProjectTeamEmail(id)),
+            'project_extension@tsco.org',
+            'project_revision@tsco.org',
+          ],
+        };
+      case ProjectStep.PendingChangeToPlanApproval:
+        return {
+          approvers: [Role.RegionalDirector, Role.FieldOperationsDirector],
+          nextSteps: [
+            ProjectStep.DiscussingChangeToPlan,
+            ProjectStep.Active,
+            ProjectStep.ActiveChangedPlan,
+          ],
+          notifications: [
+            ...(await this.getProjectTeamEmail(id)),
+            'project_extension@tsco.org',
+            'project_revision@tsco.org',
+          ],
+        };
+      case ProjectStep.DiscussingSuspension:
+        return {
+          approvers: [
+            Role.ProjectManager,
+            Role.RegionalDirector,
+            Role.FieldOperationsDirector,
+          ],
+          nextSteps: [
+            ProjectStep.PendingSuspensionApproval,
+            ProjectStep.Active,
+            ProjectStep.ActiveChangedPlan,
+          ],
+          notifications: [
+            ...(await this.getProjectTeamEmail(id)),
+            'project_suspension@tsco.org',
+          ],
+        };
+      case ProjectStep.PendingSuspensionApproval:
+        return {
+          approvers: [Role.RegionalDirector, Role.FieldOperationsDirector],
+          nextSteps: [
+            ProjectStep.DiscussingSuspension,
+            ProjectStep.Suspended,
+            ProjectStep.Active,
+            ProjectStep.ActiveChangedPlan,
+          ],
+          notifications: [
+            ...(await this.getProjectTeamEmail(id)),
+            'project_suspension@tsco.org',
+          ],
+        };
+      case ProjectStep.Suspended:
+        return {
+          approvers: [
+            Role.ProjectManager,
+            Role.RegionalDirector,
+            Role.FieldOperationsDirector,
+          ],
+          nextSteps: [
+            ProjectStep.DiscussingReactivation,
+            ProjectStep.DiscussingTermination,
+          ],
+          notifications: [
+            ...(await this.getProjectTeamEmail(id)),
+            'project_suspension@tsco.org',
+          ],
+        };
+      case ProjectStep.DiscussingReactivation:
+        return {
+          approvers: [
+            Role.ProjectManager,
+            Role.RegionalDirector,
+            Role.FieldOperationsDirector,
+          ],
+          nextSteps: [
+            ProjectStep.PendingReactivationApproval,
+            ProjectStep.DiscussingTermination,
+          ],
+          notifications: [
+            ...(await this.getProjectTeamEmail(id)),
+            'project_suspension@tsco.org',
+          ],
+        };
+      case ProjectStep.PendingReactivationApproval:
+        return {
+          approvers: [Role.RegionalDirector, Role.FieldOperationsDirector],
+          nextSteps: [
+            ProjectStep.ActiveChangedPlan,
+            ProjectStep.DiscussingReactivation,
+            ProjectStep.DiscussingTermination,
+          ],
+          notifications: [
+            ...(await this.getProjectTeamEmail(id)),
+            'project_suspension@tsco.org',
+          ],
+        };
+      case ProjectStep.DiscussingTermination:
+        return {
+          approvers: [
+            Role.ProjectManager,
+            Role.RegionalDirector,
+            Role.FieldOperationsDirector,
+          ],
+          nextSteps: [
+            ProjectStep.PendingTerminationApproval,
+            ProjectStep.DiscussingReactivation,
+            ProjectStep.Suspended,
+            ProjectStep.Active,
+          ],
+          notifications: [
+            ...(await this.getProjectTeamEmail(id)),
+            'project_termination@tsco.org',
+          ],
+        };
+      case ProjectStep.PendingTerminationApproval:
+        return {
+          approvers: [Role.RegionalDirector, Role.FieldOperationsDirector],
+          nextSteps: [
+            ProjectStep.Terminated,
+            ProjectStep.DiscussingTermination,
+            ProjectStep.DiscussingReactivation,
+            ProjectStep.Suspended,
+            ProjectStep.Active,
+          ],
+          notifications: [
+            ...(await this.getProjectTeamEmail(id)),
+            'project_termination@tsco.org',
+          ],
+        };
+      case ProjectStep.FinalizingCompletion:
+        return {
+          approvers: [
+            Role.ProjectManager,
+            Role.RegionalDirector,
+            Role.FieldOperationsDirector,
+            Role.FinancialAnalyst,
+          ],
+          nextSteps: [
+            ProjectStep.Active,
+            ProjectStep.ActiveChangedPlan,
+            ProjectStep.Completed,
+          ],
+          notifications: [
+            ...(await this.getProjectTeamEmail(id)),
+            'project_closing@tsco.org',
+          ],
+        };
+      case ProjectStep.Terminated:
+        return {
+          approvers: [],
+          nextSteps: [],
+          notifications: [
+            ...(await this.getProjectTeamEmail(id)),
+            'project_termination@tsco.org',
+          ],
+        };
+      case ProjectStep.Completed:
+        return {
+          approvers: [],
+          nextSteps: [],
+          notifications: [
+            ...(await this.getProjectTeamEmail(id)),
+            'project_closing@tsco.org',
+          ],
+        };
+      default:
+        return {
+          approvers: [],
+          nextSteps: [],
+          notifications: [],
+        };
+    }
+  }
 
   async approveStepChange(
     projectId: string,
@@ -25,7 +384,8 @@ export class ProjectRules {
     const currentStep = await this.getCurrentStep(projectId);
 
     // get roles that can apporve the current step
-    const approvers = this.getApprovers(currentStep);
+    const approvers = (await this.getStepRules(currentStep, projectId))
+      .approvers;
 
     // get user's roles
     const roles = await this.getUserRoles(userId);
@@ -37,7 +397,9 @@ export class ProjectRules {
       // user is an approver for this step
 
       // determine if the requested next step is allowed
-      const nextPossibleSteps = this.getNextStepOptions(currentStep);
+      const nextPossibleSteps = (
+        await this.getStepRules(currentStep, projectId)
+      ).nextSteps;
 
       const validNextStep = nextPossibleSteps.includes(nextStep);
 
@@ -94,275 +456,42 @@ export class ProjectRules {
     return userRolesQuery.roles;
   }
 
-  private getApprovers(step: ProjectStep): Role[] {
-    switch (step) {
-      case ProjectStep.EarlyConversations:
-        return [
-          Role.ProjectManager,
-          Role.RegionalDirector,
-          Role.FieldOperationsDirector,
-        ];
-      case ProjectStep.PendingConceptApproval:
-        return [Role.RegionalDirector, Role.FieldOperationsDirector];
-      case ProjectStep.PrepForConsultantEndorsement:
-        return [
-          Role.ProjectManager,
-          Role.RegionalDirector,
-          Role.FieldOperationsDirector,
-        ];
-      case ProjectStep.PendingConsultantEndorsement:
-        return [Role.Consultant, Role.ConsultantManager];
-      case ProjectStep.PrepForFinancialEndorsement:
-        return [
-          Role.ProjectManager,
-          Role.RegionalDirector,
-          Role.FieldOperationsDirector,
-        ];
-      case ProjectStep.PendingFinancialEndorsement:
-        return [Role.Controller, Role.FinancialAnalyst];
-      case ProjectStep.FinalizingProposal:
-        return [
-          Role.ProjectManager,
-          Role.RegionalDirector,
-          Role.FieldOperationsDirector,
-        ];
-      case ProjectStep.PendingRegionalDirectorApproval:
-        return [Role.RegionalDirector, Role.FieldOperationsDirector];
-      case ProjectStep.PendingZoneDirectorApproval:
-        return [Role.FieldOperationsDirector];
-      case ProjectStep.PendingFinanceConfirmation:
-        return [Role.Controller];
-      case ProjectStep.OnHoldFinanceConfirmation:
-        return [Role.Controller];
-      case ProjectStep.Active:
-        return [
-          Role.ProjectManager,
-          Role.RegionalDirector,
-          Role.FieldOperationsDirector,
-        ];
-      case ProjectStep.ActiveChangedPlan:
-        return [
-          Role.ProjectManager,
-          Role.RegionalDirector,
-          Role.FieldOperationsDirector,
-        ];
-      case ProjectStep.DiscussingChangeToPlan:
-        return [
-          Role.ProjectManager,
-          Role.RegionalDirector,
-          Role.FieldOperationsDirector,
-        ];
-      case ProjectStep.PendingChangeToPlanApproval:
-        return [Role.RegionalDirector, Role.FieldOperationsDirector];
-      case ProjectStep.DiscussingSuspension:
-        return [
-          Role.ProjectManager,
-          Role.RegionalDirector,
-          Role.FieldOperationsDirector,
-        ];
-      case ProjectStep.PendingSuspensionApproval:
-        return [Role.RegionalDirector, Role.FieldOperationsDirector];
-      case ProjectStep.Suspended:
-        return [
-          Role.ProjectManager,
-          Role.RegionalDirector,
-          Role.FieldOperationsDirector,
-        ];
-      case ProjectStep.DiscussingReactivation:
-        return [
-          Role.ProjectManager,
-          Role.RegionalDirector,
-          Role.FieldOperationsDirector,
-        ];
-      case ProjectStep.PendingReactivationApproval:
-        return [Role.RegionalDirector, Role.FieldOperationsDirector];
-      case ProjectStep.DiscussingTermination:
-        return [
-          Role.ProjectManager,
-          Role.RegionalDirector,
-          Role.FieldOperationsDirector,
-        ];
-      case ProjectStep.PendingTerminationApproval:
-        return [Role.RegionalDirector, Role.FieldOperationsDirector];
-      case ProjectStep.FinalizingCompletion:
-        return [
-          Role.ProjectManager,
-          Role.RegionalDirector,
-          Role.FieldOperationsDirector,
-          Role.FinancialAnalyst,
-        ];
-      case ProjectStep.Terminated:
-        return [];
-      case ProjectStep.Completed:
-        return [];
-      default:
-        return [];
-    }
-  }
-
-  private getNextStepOptions(currentStep: ProjectStep): ProjectStep[] {
-    switch (currentStep) {
-      case ProjectStep.EarlyConversations:
-        return [ProjectStep.PendingConceptApproval, ProjectStep.DidNotDevelop];
-      case ProjectStep.PendingConceptApproval:
-        return [
-          ProjectStep.PrepForConsultantEndorsement,
-          ProjectStep.EarlyConversations,
-          ProjectStep.Rejected,
-        ];
-      case ProjectStep.PrepForConsultantEndorsement:
-        return [
-          ProjectStep.PendingConsultantEndorsement,
-          ProjectStep.PendingConceptApproval,
-          ProjectStep.DidNotDevelop,
-        ];
-      case ProjectStep.PendingConsultantEndorsement:
-        return [ProjectStep.PrepForFinancialEndorsement];
-      case ProjectStep.PrepForFinancialEndorsement:
-        return [
-          ProjectStep.PendingFinancialEndorsement,
-          ProjectStep.PendingConsultantEndorsement,
-          ProjectStep.PendingConceptApproval,
-          ProjectStep.DidNotDevelop,
-        ];
-      case ProjectStep.PendingFinancialEndorsement:
-        return [ProjectStep.FinalizingProposal];
-      case ProjectStep.FinalizingProposal:
-        return [
-          ProjectStep.PendingRegionalDirectorApproval,
-          ProjectStep.PendingFinancialEndorsement,
-          ProjectStep.PendingConsultantEndorsement,
-          ProjectStep.PendingConceptApproval,
-          ProjectStep.DidNotDevelop,
-        ];
-      case ProjectStep.PendingRegionalDirectorApproval:
-        return [
-          ProjectStep.PendingFinanceConfirmation,
-          ProjectStep.PendingZoneDirectorApproval,
-          ProjectStep.FinalizingProposal,
-          ProjectStep.Rejected,
-        ];
-      case ProjectStep.PendingZoneDirectorApproval:
-        return [
-          ProjectStep.PendingFinanceConfirmation,
-          ProjectStep.FinalizingProposal,
-          ProjectStep.Rejected,
-        ];
-      case ProjectStep.PendingFinanceConfirmation:
-        return [
-          ProjectStep.Active,
-          ProjectStep.OnHoldFinanceConfirmation,
-          ProjectStep.FinalizingProposal,
-          ProjectStep.Rejected,
-        ];
-      case ProjectStep.OnHoldFinanceConfirmation:
-        return [
-          ProjectStep.Active,
-          ProjectStep.FinalizingProposal,
-          ProjectStep.Rejected,
-        ];
-      case ProjectStep.Active:
-        return [
-          ProjectStep.DiscussingChangeToPlan,
-          ProjectStep.DiscussingTermination,
-          ProjectStep.FinalizingCompletion,
-        ];
-      case ProjectStep.ActiveChangedPlan:
-        return [
-          ProjectStep.DiscussingChangeToPlan,
-          ProjectStep.DiscussingTermination,
-          ProjectStep.FinalizingCompletion,
-        ];
-      case ProjectStep.DiscussingChangeToPlan:
-        return [
-          ProjectStep.PendingChangeToPlanApproval,
-          ProjectStep.DiscussingSuspension,
-          ProjectStep.Active,
-          ProjectStep.ActiveChangedPlan,
-        ];
-      case ProjectStep.PendingChangeToPlanApproval:
-        return [
-          ProjectStep.DiscussingChangeToPlan,
-          ProjectStep.Active,
-          ProjectStep.ActiveChangedPlan,
-        ];
-      case ProjectStep.DiscussingSuspension:
-        return [
-          ProjectStep.PendingSuspensionApproval,
-          ProjectStep.Active,
-          ProjectStep.ActiveChangedPlan,
-        ];
-      case ProjectStep.PendingSuspensionApproval:
-        return [
-          ProjectStep.DiscussingSuspension,
-          ProjectStep.Suspended,
-          ProjectStep.Active,
-          ProjectStep.ActiveChangedPlan,
-        ];
-      case ProjectStep.Suspended:
-        return [
-          ProjectStep.DiscussingReactivation,
-          ProjectStep.DiscussingTermination,
-        ];
-      case ProjectStep.DiscussingReactivation:
-        return [
-          ProjectStep.PendingReactivationApproval,
-          ProjectStep.DiscussingTermination,
-        ];
-      case ProjectStep.PendingReactivationApproval:
-        return [
-          ProjectStep.ActiveChangedPlan,
-          ProjectStep.DiscussingReactivation,
-          ProjectStep.DiscussingTermination,
-        ];
-      case ProjectStep.DiscussingTermination:
-        return [
-          ProjectStep.PendingTerminationApproval,
-          ProjectStep.DiscussingReactivation,
-          ProjectStep.Suspended,
-          ProjectStep.Active,
-        ];
-      case ProjectStep.PendingTerminationApproval:
-        return [
-          ProjectStep.Terminated,
-          ProjectStep.DiscussingTermination,
-          ProjectStep.DiscussingReactivation,
-          ProjectStep.Suspended,
-          ProjectStep.Active,
-        ];
-      case ProjectStep.FinalizingCompletion:
-        return [
-          ProjectStep.Active,
-          ProjectStep.ActiveChangedPlan,
-          ProjectStep.Completed,
-        ];
-      case ProjectStep.Terminated:
-        return [];
-      case ProjectStep.Completed:
-        return [];
-      default:
-        return [];
-    }
-  }
-
-  async processStepChange(
-    projectId: string,
-    step: ProjectStep,
-    userId: string
-  ) {
+  async processStepChange(projectId: string, step: ProjectStep) {
     // notify everyone
-    await this.getNotifications(projectId, step, userId);
+    const emails = (await this.getStepRules(step, projectId)).notifications;
+    this.logger.info('emailing', emails);
   }
 
-  private async getNotifications(
-    // eslint-disable-next-line @seedcompany/no-unused-vars
-    projectId: string,
-    // eslint-disable-next-line @seedcompany/no-unused-vars
-    step: ProjectStep,
-    // eslint-disable-next-line @seedcompany/no-unused-vars
-    userId: string
-  ): Promise<string[]> {
-    // todo
-    return [];
+  private async getProjectTeamEmail(id: string): Promise<string[]> {
+    const emails = await this.db
+      .query()
+      .match([
+        node('', 'Project', { id }),
+        relation('out', '', 'member', { active: true }),
+        node('', 'ProjectMember'),
+        relation('out', '', 'user', { active: true }),
+        node('', 'User'),
+        relation('out', '', 'email', { active: true }),
+        node('email', 'EmailAddress'),
+      ])
+      .raw('return collect(email.value) as emails')
+      .first();
+    return emails?.emails;
+  }
+
+  private async getRoleEmails(role: Role): Promise<string[]> {
+    const emails = await this.db
+      .query()
+      .match([
+        node('email', 'EmailAddress'),
+        relation('in', '', 'email', { active: true }),
+        node('user', 'User'),
+        relation('out', '', 'roles', { active: true, role }),
+        node('role', 'Property'),
+      ])
+      .raw('return collect(email.value) as emails')
+      .first();
+
+    return emails?.emails;
   }
 }

@@ -508,11 +508,7 @@ export class ProjectService {
     });
 
     if (input.step && session.userId !== undefined) {
-      await this.projectRules.processStepChange(
-        input.id,
-        input.step,
-        session.userId
-      );
+      await this.projectRules.processStepChange(input.id, input.step);
     }
 
     await this.eventBus.publish(
