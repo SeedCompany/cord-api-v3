@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { FC, ReactElement } from 'react';
+import { ComponentProps, FC, ReactElement } from 'react';
 import { useFrontendUrl } from './frontend-url';
 import {
   All,
@@ -14,8 +14,10 @@ import {
   Mjml,
   Raw,
   Section,
+  Style,
   Text,
   Title,
+  Wrapper,
 } from './mjml';
 import { InText } from './text-rendering';
 
@@ -24,11 +26,32 @@ export const EmailTemplate: FC<{ title: string }> = ({ title, children }) => (
     <Head>
       <Title>{`${title} - CORD Field`}</Title>
       <Theme />
+      <Style
+        inline
+        children={`
+.card-shadow {
+  -webkit-box-shadow: 0px 5px 5px -3px rgba(0,0,0,0.2), 0px 8px 10px 1px rgba(0,0,0,0.14), 0px 3px 14px 2px rgba(0,0,0,0.12);
+  -moz-box-shadow: 0px 5px 5px -3px rgba(0,0,0,0.2), 0px 8px 10px 1px rgba(0,0,0,0.14), 0px 3px 14px 2px rgba(0,0,0,0.12);
+  box-shadow: 0px 5px 5px -3px rgba(0,0,0,0.2), 0px 8px 10px 1px rgba(0,0,0,0.14), 0px 3px 14px 2px rgba(0,0,0,0.12);
+}
+.button-shadow td {
+  -webkit-box-shadow: 0px 3px 1px -2px rgba(0,0,0,0.2), 0px 2px 2px 0px rgba(0,0,0,0.14), 0px 1px 5px 0px rgba(0,0,0,0.12);
+  -moz-box-shadow: 0px 3px 1px -2px rgba(0,0,0,0.2), 0px 2px 2px 0px rgba(0,0,0,0.14), 0px 1px 5px 0px rgba(0,0,0,0.12);
+  box-shadow: 0px 3px 1px -2px rgba(0,0,0,0.2), 0px 2px 2px 0px rgba(0,0,0,0.14), 0px 1px 5px 0px rgba(0,0,0,0.12);
+}
+        `}
+      />
     </Head>
     <Body>
       <Branding />
 
-      {children}
+      <Wrapper
+        cssClass="card-shadow"
+        borderRadius={6}
+        backgroundColor="#ffffff"
+      >
+        {children}
+      </Wrapper>
     </Body>
   </Mjml>
 );
@@ -43,7 +66,12 @@ export const Theme = () => (
       </Body>
       <Section backgroundColor="#ffffff">{}</Section>
       <Text lineHeight="1.5">{}</Text>
-      <Button color="#ffffff" backgroundColor="#64b145" padding="8px 22px">
+      <Button
+        color="#ffffff"
+        backgroundColor="#64b145"
+        padding="8px 22px"
+        cssClass="button-shadow"
+      >
         {[]}
       </Button>
       <Divider
@@ -59,7 +87,7 @@ export const Theme = () => (
 export const Branding = (): ReactElement => {
   const iconUrl = useFrontendUrl('/images/android-chrome-192x192.png');
   return (
-    <Section>
+    <Section backgroundColor="#fafafa">
       <Column verticalAlign="middle" width="80px">
         <Image
           src={iconUrl}
@@ -80,11 +108,11 @@ export const Branding = (): ReactElement => {
   );
 };
 
-export const Heading: FC = ({ children }) => (
+export const Heading = (props: ComponentProps<typeof Text>) => (
   <Section>
-    <Column>
-      <Text align="center" fontSize={24}>
-        {children}
+    <Column padding={0}>
+      <Text fontSize={24} paddingTop={0} paddingBottom={0} {...props}>
+        {props.children}
       </Text>
       <TextBreak />
       <TextBreak />
@@ -103,6 +131,7 @@ export const Link: FC<{ href: string }> = ({ href, children }) => (
 export const ReplyInfoFooter = () => (
   <Section>
     <Column>
+      <Divider borderWidth={1} />
       <Text fontWeight={300}>
         If you are having any issues with your account, please don't hesitate to
         contact us by replying to this email.

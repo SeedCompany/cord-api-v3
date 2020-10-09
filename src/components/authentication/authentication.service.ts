@@ -16,11 +16,11 @@ import {
   ConfigService,
   DatabaseService,
   EmailService,
-  ForgotPassword,
   ILogger,
   Logger,
   matchRequestingUser,
 } from '../../core';
+import { ForgotPassword } from '../../core/email/templates';
 import { User, UserService } from '../user';
 import { LoginInput, ResetPasswordInput } from './authentication.dto';
 import { RegisterInput } from './dto';
