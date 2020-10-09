@@ -6,7 +6,6 @@ export enum ProjectStatus {
   Active = 'Active',
   Terminated = 'Terminated',
   Completed = 'Completed',
-  Pending = 'Pending',
 }
 
 registerEnumType(ProjectStatus, {
@@ -45,7 +44,6 @@ const mapping: Record<ProjectStatus, ProjectStep[]> = {
   ],
   [ProjectStatus.Terminated]: [ProjectStep.Terminated],
   [ProjectStatus.Completed]: [ProjectStep.Completed],
-  [ProjectStatus.Pending]: [ProjectStep.Active],
 };
 
 export const stepToStatus = (step: ProjectStep): ProjectStatus => {
