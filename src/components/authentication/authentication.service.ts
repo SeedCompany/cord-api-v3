@@ -16,11 +16,11 @@ import {
   ConfigService,
   DatabaseService,
   EmailService,
-  ForgotPassword,
   ILogger,
   Logger,
   matchRequestingUser,
 } from '../../core';
+import { ForgotPassword } from '../../core/email/templates';
 import { User, UserService } from '../user';
 import { LoginInput, ResetPasswordInput } from './authentication.dto';
 import { RegisterInput } from './dto';
@@ -340,7 +340,7 @@ export class AuthenticationService {
       )
       .first();
     await this.email.send(email, ForgotPassword, {
-      url: this.config.resetPasswordUrl(token),
+      token,
     });
   }
 

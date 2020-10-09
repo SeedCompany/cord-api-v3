@@ -114,3 +114,42 @@ export async function createInternshipEngagement(
 
   return actual;
 }
+
+export async function createInternshipEngagementWithMinimumValues(
+  app: TestApp,
+  input: Partial<CreateInternshipEngagement> = {}
+) {
+  const currentUserId = (await getUserFromSession(app)).id;
+  const internshipEngagement: CreateInternshipEngagement = {
+    projectId: input.projectId || (await createProject(app)).id,
+    internId: input.internId || currentUserId || (await createPerson(app)).id,
+  };
+
+  const result = await app.graphql.mutate(
+    gql`
+      mutation createInternshipEngagement(
+        $input: CreateInternshipEngagementInput!
+      ) {
+        createInternshipEngagement(input: $input) {
+          engagement {
+            ...internshipEngagement
+          }
+        }
+      }
+      ${fragments.internshipEngagement}
+    `,
+    {
+      input: {
+        engagement: internshipEngagement,
+      },
+    }
+  );
+
+  const actual: RawInternshipEngagement =
+    result.createInternshipEngagement.engagement;
+
+  expect(actual).toBeTruthy();
+  expect(isValid(actual.id)).toBe(true);
+
+  return actual;
+}

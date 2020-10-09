@@ -548,7 +548,15 @@ export class ProjectService {
     const label = `${filter.type ?? ''}Project`;
     const projectSortMap: Partial<Record<typeof input.sort, string>> = {
       name: 'lower(prop.value)',
+      sensitivity: 'sensitivityValue',
     };
+
+    const sensitivityCase = `case prop.value 
+    when 'High' then 3
+    when 'Medium' then 2
+    when 'Low' then 1
+    end as sensitivityValue`;
+
     const sortBy = projectSortMap[input.sort] ?? 'prop.value';
     const query = this.db
       .query()
@@ -559,10 +567,13 @@ export class ProjectService {
         q
           .match([
             node('node'),
-            relation('out', '', sort),
+            relation('out', '', sort, { active: true }),
             node('prop', 'Property'),
           ])
-          .with('*')
+          .with([
+            '*',
+            ...(input.sort === 'sensitivity' ? [sensitivityCase] : []),
+          ])
           .orderBy(sortBy, order)
       );
 

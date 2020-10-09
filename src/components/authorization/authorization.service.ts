@@ -299,7 +299,7 @@ export class AuthorizationService {
   }
 
   async createPower(
-    id: string,
+    userId: string,
     power: Powers,
     session: ISession
   ): Promise<boolean> {
@@ -309,7 +309,7 @@ export class AuthorizationService {
 
     const requestingUserPowers = await this.readPowerByUserId(session.userId);
     if (requestingUserPowers.includes(Powers.GrantPower)) {
-      return await this.grantPower(power, id);
+      return await this.grantPower(power, userId);
     }
     throw new InputException(
       'user does not have the power to grant power to others'
@@ -317,7 +317,7 @@ export class AuthorizationService {
   }
 
   async deletePower(
-    id: string,
+    userId: string,
     power: Powers,
     session: ISession
   ): Promise<boolean> {
@@ -327,44 +327,47 @@ export class AuthorizationService {
 
     const requestingUserPowers = await this.readPowerByUserId(session.userId);
     if (requestingUserPowers.includes(Powers.GrantPower)) {
-      return await this.removePower(power, id);
+      return await this.removePower(power, userId);
     }
     throw new InputException(
       'user does not have the power to remove power from others'
     );
   }
 
-  async grantPower(power: Powers, id: string): Promise<boolean> {
+  async grantPower(power: Powers, userId: string): Promise<boolean> {
     // get powers
-    const powers = await this.readPowerByUserId(id);
+    const powers = await this.readPowerByUserId(userId);
 
     if (powers === undefined) {
       throw new UnauthorizedException('user not found');
     } else {
       const newPowers = union(powers, [power]);
-      return await this.updateUserPowers(id, newPowers);
+      return await this.updateUserPowers(userId, newPowers);
     }
   }
 
-  async removePower(power: Powers, id: string): Promise<boolean> {
+  async removePower(power: Powers, userId: string): Promise<boolean> {
     // get power
-    const powers = await this.readPowerByUserId(id);
+    const powers = await this.readPowerByUserId(userId);
 
     if (powers === undefined) {
       throw new UnauthorizedException('user not found');
     } else {
       const newPowers = difference(powers, [power]);
-      return await this.updateUserPowers(id, newPowers);
+      return await this.updateUserPowers(userId, newPowers);
     }
   }
 
-  async updateUserPowers(id: string, newPowers: Powers[]): Promise<boolean> {
+  async updateUserPowers(
+    userId: string,
+    newPowers: Powers[]
+  ): Promise<boolean> {
     const result = await this.db
       .query()
-      .optionalMatch([node('userOrSg', 'User', { id })])
+      .optionalMatch([node('userOrSg', 'User', { id: userId })])
       .setValues({ 'userOrSg.powers': newPowers })
       .with('*')
-      .optionalMatch([node('userOrSg', 'SecurityGroup', { id })])
+      .optionalMatch([node('userOrSg', 'SecurityGroup', { id: userId })])
       .setValues({ 'userOrSg.powers': newPowers })
       .run();
 

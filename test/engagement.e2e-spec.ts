@@ -19,6 +19,7 @@ import { Project, ProjectType } from '../src/components/project';
 import { User } from '../src/components/user';
 import {
   createInternshipEngagement,
+  createInternshipEngagementWithMinimumValues,
   createLanguage,
   createLanguageEngagement,
   createLocation,
@@ -359,10 +360,14 @@ describe('Engagement e2e', () => {
     internshipProject = await createProject(app, {
       type: ProjectType.Internship,
     });
-    const internshipEngagement = await createInternshipEngagement(app, {
-      projectId: internshipProject.id,
-      internId: intern.id,
-    });
+    const mentor = await registerUserWithPower(app, Powers.CreateLanguage);
+    const internshipEngagement = await createInternshipEngagementWithMinimumValues(
+      app,
+      {
+        projectId: internshipProject.id,
+        internId: intern.id,
+      }
+    );
     const updatePosition = InternPosition.LanguageProgramManager;
     const updateMethodologies = [
       ProductMethodology.Paratext,
@@ -387,7 +392,7 @@ describe('Engagement e2e', () => {
         input: {
           engagement: {
             id: internshipEngagement.id,
-            // mentorId: mentor.id,
+            mentorId: mentor.id,
             countryOfOriginId: location.id,
             position: updatePosition,
             methodologies: updateMethodologies,
@@ -397,10 +402,9 @@ describe('Engagement e2e', () => {
     );
 
     const updated = result.updateInternshipEngagement.engagement;
-    // console.log('updated.mentor ', JSON.stringify(updated, null, 2));
     expect(updated).toBeTruthy();
     expect(updated.id).toBe(internshipEngagement.id);
-    // expect(updated.mentor.value.id).toBe(mentor.id);
+    expect(updated.mentor.value.id).toBe(mentor.id);
     expect(updated.countryOfOrigin.value.id).toBe(location.id);
     expect(updated.position.value).toBe(updatePosition);
     expect(updated.methodologies.value).toEqual(

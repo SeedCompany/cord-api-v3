@@ -9,6 +9,7 @@ import { OrganizationService } from '../organization';
 import { PartnerModule } from '../partner/partner.module';
 import { PartnershipModule } from '../partnership/partnership.module';
 import { UserModule } from '../user/user.module';
+import * as handlers from './handlers';
 import { ProjectMemberModule } from './project-member/project-member.module';
 import { ProjectResolver } from './project.resolver';
 import { ProjectRules } from './project.rules';
@@ -32,6 +33,7 @@ import { ProjectService } from './project.service';
     OrganizationService,
     ProjectService,
     ProjectRules,
+    ...Object.values(handlers),
   ],
   exports: [ProjectService, ProjectMemberModule],
 })
