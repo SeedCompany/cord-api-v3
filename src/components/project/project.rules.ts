@@ -2,16 +2,23 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { intersection } from 'lodash';
+import { DateTime } from 'luxon';
 import { ServerException, UnauthorizedException } from '../../common';
 import { DatabaseService, ILogger, Logger } from '../../core';
 import { Role } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { ProjectStep } from './dto';
+import { User } from '../user';
+import { Project, ProjectStep } from './dto';
 
 class StepRule {
   approvers: Role[];
   nextSteps: ProjectStep[];
   notifications: string[]; // email addresses
+}
+
+class EmailNotification {
+  user: Pick<User, 'id' | 'email' | 'realFirstName' | 'realLastName'>;
+  project: Pick<Project, 'id' | 'createdAt' | 'modifiedAt' | 'name'>;
 }
 @Injectable()
 export class ProjectRules {
@@ -22,7 +29,7 @@ export class ProjectRules {
     @Logger('project:rules') private readonly logger: ILogger
   ) {}
 
-  private async getStepRules(step: ProjectStep, id: string): Promise<StepRule> {
+  private async getStepRule(step: ProjectStep, id: string): Promise<StepRule> {
     switch (step) {
       case ProjectStep.EarlyConversations:
         return {
@@ -384,7 +391,7 @@ export class ProjectRules {
     const currentStep = await this.getCurrentStep(projectId);
 
     // get roles that can apporve the current step
-    const approvers = (await this.getStepRules(currentStep, projectId))
+    const approvers = (await this.getStepRule(currentStep, projectId))
       .approvers;
 
     // get user's roles
@@ -397,9 +404,8 @@ export class ProjectRules {
       // user is an approver for this step
 
       // determine if the requested next step is allowed
-      const nextPossibleSteps = (
-        await this.getStepRules(currentStep, projectId)
-      ).nextSteps;
+      const nextPossibleSteps = (await this.getStepRule(currentStep, projectId))
+        .nextSteps;
 
       const validNextStep = nextPossibleSteps.includes(nextStep);
 
@@ -456,10 +462,19 @@ export class ProjectRules {
     return userRolesQuery.roles;
   }
 
-  async processStepChange(projectId: string, step: ProjectStep) {
+  async processStepChange(
+    projectId: string,
+    step: ProjectStep
+  ): Promise<EmailNotification[]> {
     // notify everyone
-    const emails = (await this.getStepRules(step, projectId)).notifications;
-    this.logger.info('emailing', emails);
+    const emails = (await this.getStepRule(step, projectId)).notifications;
+
+    const notifications = await Promise.all(
+      emails.map((email) => this.getEmailNotificationObject(email, projectId))
+    );
+
+    this.logger.info('emailing', notifications);
+    return notifications;
   }
 
   private async getProjectTeamEmail(id: string): Promise<string[]> {
@@ -493,5 +508,140 @@ export class ProjectRules {
       .first();
 
     return emails?.emails;
+  }
+
+  private async getEmailNotificationObject(
+    email: string,
+    projectId: string
+  ): Promise<EmailNotification> {
+    const project = await this.db
+      .query()
+      .raw(
+        `
+        MATCH 
+          (email:EmailAddress {value: $email})
+            <-[:email {active: true}]-
+          (user:User)
+        MATCH
+          (project:Project {id: $projectId})
+        MATCH
+          (user)
+            <-[:member]-
+          (sg:SecurityGroup)
+        MATCH
+          (sg)
+            -[:permission]->
+          (:Permission {property: "modifiedAt", read: true})
+            -[:baseNode]->
+          (project)
+            -[:modifiedAt]->
+          (modifiedAtProp:Property),
+          (sg)
+            -[:permission]->
+          (:Permission {property: "name", read: true})
+            -[:baseNode]->
+          (project)
+            -[:name]->
+          (nameProp:Property)
+        RETURN
+          project.id as id,
+          project.createdAt as createdAt,
+          modifiedAtProp.value as modifiedAt,
+          nameProp.value as name
+      `,
+        {
+          email,
+          projectId,
+        }
+      )
+      .asResult<{
+        id: string;
+        createdAt: DateTime;
+        modifiedAt: DateTime;
+        name: string;
+      }>()
+      .first();
+
+    if (project === undefined) {
+      throw new ServerException('error finding project');
+    }
+
+    let user = {
+      id: '',
+      realFirstName: email,
+      realLastName: '',
+    };
+
+    this.logger.info(email);
+
+    switch (email) {
+      case 'project_extensions@tsco.org':
+      case 'project_revision@tsco.org':
+      case 'project_suspension@tsco.org':
+      case 'project_termination@tsco.org':
+      case 'project_closing@tsco.org':
+        break;
+      default:
+        const userQuery = await this.db
+          .query()
+          .raw(
+            `
+        MATCH 
+          (email:EmailAddress {value: $email})
+            <-[:email {active: true}]-
+          (user:User)
+        MATCH
+          (user)
+            -[:realFirstName]->
+          (realFirstNameProp:Property),
+          (user)
+            -[:realLastName]->
+          (realLastNameProp:Property)
+        RETURN
+          user.id as id,
+          realFirstNameProp.value as realFirstName,
+          realLastNameProp.value as realLastName
+    `,
+            {
+              email,
+              projectId,
+            }
+          )
+          .asResult<{
+            id: string;
+            realFirstName: string;
+            realLastName: string;
+          }>()
+          .first();
+
+        if (userQuery === undefined) {
+          throw new ServerException('error finding user');
+        }
+
+        user = userQuery;
+    }
+
+    return {
+      project: {
+        id: project.id,
+        createdAt: project.createdAt,
+        modifiedAt: project.modifiedAt,
+        name: { value: project.name, canRead: true, canEdit: false },
+      },
+      user: {
+        id: user.id,
+        email: { value: email, canRead: true, canEdit: false },
+        realFirstName: {
+          value: user.realFirstName,
+          canRead: true,
+          canEdit: false,
+        },
+        realLastName: {
+          value: user.realLastName,
+          canRead: true,
+          canEdit: false,
+        },
+      },
+    };
   }
 }
