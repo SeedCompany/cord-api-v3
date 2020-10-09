@@ -12,6 +12,7 @@ export class ProjectRules {
   constructor(
     private readonly db: DatabaseService,
     private readonly authorizationService: AuthorizationService,
+    // eslint-disable-next-line @seedcompany/no-unused-vars
     @Logger('project:rules') private readonly logger: ILogger
   ) {}
 
@@ -47,10 +48,12 @@ export class ProjectRules {
       }
 
       return true;
+    } else {
+      // user is not an approver for this step
+      throw new UnauthorizedException(
+        'user is not an approver for the current step'
+      );
     }
-
-    // user is not an approver for this step
-    return false;
   }
 
   private async getCurrentStep(id: string) {
@@ -348,10 +351,18 @@ export class ProjectRules {
     userId: string
   ) {
     // notify everyone
+    await this.getNotifications(projectId, step, userId);
   }
 
-  private async getNotifications(): Promise<string[]> {
-    //
+  private async getNotifications(
+    // eslint-disable-next-line @seedcompany/no-unused-vars
+    projectId: string,
+    // eslint-disable-next-line @seedcompany/no-unused-vars
+    step: ProjectStep,
+    // eslint-disable-next-line @seedcompany/no-unused-vars
+    userId: string
+  ): Promise<string[]> {
+    // todo
     return [];
   }
 }

@@ -1,9 +1,4 @@
-import {
-  forwardRef,
-  Inject,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { flatMap } from 'lodash';
 import { DateTime } from 'luxon';
@@ -17,6 +12,7 @@ import {
   Sensitivity,
   ServerException,
   UnauthenticatedException,
+  UnauthorizedException,
 } from '../../common';
 import {
   ConfigService,
