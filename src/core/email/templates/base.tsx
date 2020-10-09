@@ -75,6 +75,7 @@ export const Branding = (): ReactElement => {
         </Text>
       </Column>
       <TextBreak />
+      <TextBreak />
     </Section>
   );
 };
@@ -85,6 +86,7 @@ export const Heading: FC = ({ children }) => (
       <Text align="center" fontSize={24}>
         {children}
       </Text>
+      <TextBreak />
       <TextBreak />
     </Column>
   </Section>

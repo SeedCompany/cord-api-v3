@@ -117,9 +117,6 @@ export class EmailService {
             ? walk(el.children || [], options)
             : textFormatters.table(el, walk, options);
         },
-        text: (el, options) => {
-          return `${textFormatters.text(el, options)}\n`;
-        },
       },
     });
 
