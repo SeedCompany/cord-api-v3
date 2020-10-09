@@ -340,7 +340,7 @@ export class AuthenticationService {
       )
       .first();
     await this.email.send(email, ForgotPassword, {
-      url: this.config.resetPasswordUrl(token),
+      token,
     });
   }
 

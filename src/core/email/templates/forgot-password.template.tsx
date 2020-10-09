@@ -1,13 +1,15 @@
 import * as React from 'react';
 import { EmailTemplate, Heading, Link, ReplyInfoFooter } from './base';
+import { useFrontendUrl } from './frontend-url';
 import { Button, Column, Section, Text } from './mjml';
 import { HideInText, InText } from './text-rendering';
 
 export interface ForgotPasswordProps {
-  url: string;
+  token: string;
 }
 
-export function ForgotPassword({ url }: ForgotPasswordProps) {
+export function ForgotPassword({ token }: ForgotPasswordProps) {
+  const url = useFrontendUrl(`/reset-password/${token}`);
   return (
     <EmailTemplate title="Forgot Password">
       <Heading>You have submitted a password change request!</Heading>
