@@ -59,7 +59,7 @@ export class ProjectRules {
       .match([
         node('project', 'Project', { id }),
         relation('out', '', 'step', { active: true }),
-        node('step', 'ProjectStep'),
+        node('step', 'Property'),
       ])
       .raw('return step.value as step')
       .first();
@@ -350,7 +350,8 @@ export class ProjectRules {
     // notify everyone
   }
 
-  private async getNotifications() {
+  private async getNotifications(): Promise<string[]> {
     //
+    return [];
   }
 }
