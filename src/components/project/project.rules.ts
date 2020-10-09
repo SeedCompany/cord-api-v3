@@ -8,11 +8,16 @@ import { DatabaseService, ILogger, Logger } from '../../core';
 import { Role } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { User } from '../user';
-import { Project, ProjectStep } from './dto';
+import {
+  Project,
+  ProjectStep,
+  ProjectStepTransition,
+  TransitionType,
+} from './dto';
 
-class StepRule {
+interface StepRule {
   approvers: Role[];
-  nextSteps: ProjectStep[];
+  transitions: ProjectStepTransition[];
   notifications: string[]; // email addresses
 }
 
@@ -20,6 +25,7 @@ class EmailNotification {
   user: Pick<User, 'id' | 'email' | 'realFirstName' | 'realLastName'>;
   project: Pick<Project, 'id' | 'createdAt' | 'modifiedAt' | 'name'>;
 }
+
 @Injectable()
 export class ProjectRules {
   constructor(
@@ -38,19 +44,39 @@ export class ProjectRules {
             Role.RegionalDirector,
             Role.FieldOperationsDirector,
           ],
-          nextSteps: [
-            ProjectStep.PendingConceptApproval,
-            ProjectStep.DidNotDevelop,
+          transitions: [
+            {
+              to: ProjectStep.PendingConceptApproval,
+              type: TransitionType.Approve,
+              label: 'Submit for Concept Approval',
+            },
+            {
+              to: ProjectStep.DidNotDevelop,
+              type: TransitionType.Reject,
+              label: 'End Development',
+            },
           ],
           notifications: await this.getProjectTeamEmail(id),
         };
       case ProjectStep.PendingConceptApproval:
         return {
           approvers: [Role.RegionalDirector, Role.FieldOperationsDirector],
-          nextSteps: [
-            ProjectStep.PrepForConsultantEndorsement,
-            ProjectStep.EarlyConversations,
-            ProjectStep.Rejected,
+          transitions: [
+            {
+              to: ProjectStep.PrepForConsultantEndorsement,
+              type: TransitionType.Approve,
+              label: 'Approve Concept',
+            },
+            {
+              to: ProjectStep.EarlyConversations,
+              type: TransitionType.Reject,
+              label: 'Send Back for Corrections',
+            },
+            {
+              to: ProjectStep.Rejected,
+              type: TransitionType.Reject,
+              label: 'Reject',
+            },
           ],
           notifications: await this.getProjectTeamEmail(id),
         };
@@ -61,17 +87,40 @@ export class ProjectRules {
             Role.RegionalDirector,
             Role.FieldOperationsDirector,
           ],
-          nextSteps: [
-            ProjectStep.PendingConsultantEndorsement,
-            ProjectStep.PendingConceptApproval,
-            ProjectStep.DidNotDevelop,
+          transitions: [
+            {
+              to: ProjectStep.PendingConsultantEndorsement,
+              type: TransitionType.Approve,
+              label: 'Submit for Consultant Endorsement',
+            },
+            {
+              to: ProjectStep.PendingConceptApproval,
+              type: TransitionType.Approve,
+              label: 'Resubmit for Concept Approval',
+            },
+            {
+              to: ProjectStep.DidNotDevelop,
+              type: TransitionType.Reject,
+              label: 'End Development',
+            },
           ],
           notifications: await this.getProjectTeamEmail(id),
         };
       case ProjectStep.PendingConsultantEndorsement:
         return {
           approvers: [Role.Consultant, Role.ConsultantManager],
-          nextSteps: [ProjectStep.PrepForFinancialEndorsement],
+          transitions: [
+            {
+              to: ProjectStep.PrepForFinancialEndorsement,
+              type: TransitionType.Approve,
+              label: 'Endorse Plan',
+            },
+            {
+              to: ProjectStep.PrepForFinancialEndorsement,
+              type: TransitionType.Neutral,
+              label: 'Do Not Endorse Plan',
+            },
+          ],
           notifications: await this.getProjectTeamEmail(id),
         };
       case ProjectStep.PrepForFinancialEndorsement:
@@ -81,18 +130,45 @@ export class ProjectRules {
             Role.RegionalDirector,
             Role.FieldOperationsDirector,
           ],
-          nextSteps: [
-            ProjectStep.PendingFinancialEndorsement,
-            ProjectStep.PendingConsultantEndorsement,
-            ProjectStep.PendingConceptApproval,
-            ProjectStep.DidNotDevelop,
+          transitions: [
+            {
+              to: ProjectStep.PendingFinancialEndorsement,
+              type: TransitionType.Approve,
+              label: 'Submit for Financial Endorsement',
+            },
+            {
+              to: ProjectStep.PendingConsultantEndorsement,
+              type: TransitionType.Neutral,
+              label: 'Resubmit for Consultant Endorsement',
+            },
+            {
+              to: ProjectStep.PendingConceptApproval,
+              type: TransitionType.Neutral,
+              label: 'Resubmit for Concept Approval',
+            },
+            {
+              to: ProjectStep.DidNotDevelop,
+              type: TransitionType.Reject,
+              label: 'End Development',
+            },
           ],
           notifications: await this.getProjectTeamEmail(id),
         };
       case ProjectStep.PendingFinancialEndorsement:
         return {
           approvers: [Role.Controller, Role.FinancialAnalyst],
-          nextSteps: [ProjectStep.FinalizingProposal],
+          transitions: [
+            {
+              to: ProjectStep.FinalizingProposal,
+              type: TransitionType.Approve,
+              label: 'Endorse Project Plan',
+            },
+            {
+              to: ProjectStep.FinalizingProposal,
+              type: TransitionType.Neutral,
+              label: 'Do Not Endorse Project Plan',
+            },
+          ],
           notifications: await this.getProjectTeamEmail(id),
         };
       case ProjectStep.FinalizingProposal:
@@ -102,44 +178,108 @@ export class ProjectRules {
             Role.RegionalDirector,
             Role.FieldOperationsDirector,
           ],
-          nextSteps: [
-            ProjectStep.PendingRegionalDirectorApproval,
-            ProjectStep.PendingFinancialEndorsement,
-            ProjectStep.PendingConsultantEndorsement,
-            ProjectStep.PendingConceptApproval,
-            ProjectStep.DidNotDevelop,
+          transitions: [
+            {
+              to: ProjectStep.PendingRegionalDirectorApproval,
+              type: TransitionType.Approve,
+              label: 'Submit for Approval',
+            },
+            {
+              to: ProjectStep.PendingFinancialEndorsement,
+              type: TransitionType.Neutral,
+              label: 'Resubmit for Financial Endorsement',
+            },
+            {
+              to: ProjectStep.PendingConsultantEndorsement,
+              type: TransitionType.Neutral,
+              label: 'Resubmit for Consultant Endorsement',
+            },
+            {
+              to: ProjectStep.PendingConceptApproval,
+              type: TransitionType.Neutral,
+              label: 'Resubmit for Concept Approval',
+            },
+            {
+              to: ProjectStep.DidNotDevelop,
+              type: TransitionType.Reject,
+              label: 'End Development',
+            },
           ],
           notifications: await this.getProjectTeamEmail(id),
         };
       case ProjectStep.PendingRegionalDirectorApproval:
         return {
           approvers: [Role.RegionalDirector, Role.FieldOperationsDirector],
-          nextSteps: [
-            ProjectStep.PendingFinanceConfirmation,
-            ProjectStep.PendingZoneDirectorApproval,
-            ProjectStep.FinalizingProposal,
-            ProjectStep.Rejected,
+          transitions: [
+            {
+              to: ProjectStep.PendingFinanceConfirmation,
+              type: TransitionType.Approve,
+              label: 'Approve Project',
+            },
+            {
+              to: ProjectStep.PendingZoneDirectorApproval,
+              type: TransitionType.Approve,
+              label: 'Approve for Zonal Director Review',
+            },
+            {
+              to: ProjectStep.FinalizingProposal,
+              type: TransitionType.Reject,
+              label: 'Send Back for Corrections',
+            },
+            {
+              to: ProjectStep.Rejected,
+              type: TransitionType.Reject,
+              label: 'Reject',
+            },
           ],
           notifications: await this.getProjectTeamEmail(id),
         };
       case ProjectStep.PendingZoneDirectorApproval:
         return {
           approvers: [Role.FieldOperationsDirector],
-          nextSteps: [
-            ProjectStep.PendingFinanceConfirmation,
-            ProjectStep.FinalizingProposal,
-            ProjectStep.Rejected,
+          transitions: [
+            {
+              to: ProjectStep.PendingFinanceConfirmation,
+              type: TransitionType.Approve,
+              label: 'Approve Project',
+            },
+            {
+              to: ProjectStep.FinalizingProposal,
+              type: TransitionType.Reject,
+              label: 'Send Back for Corrections',
+            },
+            {
+              to: ProjectStep.Rejected,
+              type: TransitionType.Reject,
+              label: 'Reject',
+            },
           ],
           notifications: await this.getProjectTeamEmail(id),
         };
       case ProjectStep.PendingFinanceConfirmation:
         return {
           approvers: [Role.Controller],
-          nextSteps: [
-            ProjectStep.Active,
-            ProjectStep.OnHoldFinanceConfirmation,
-            ProjectStep.FinalizingProposal,
-            ProjectStep.Rejected,
+          transitions: [
+            {
+              to: ProjectStep.Active,
+              type: TransitionType.Approve,
+              label: 'Confirm Project 🎉',
+            },
+            {
+              to: ProjectStep.OnHoldFinanceConfirmation,
+              type: TransitionType.Neutral,
+              label: 'Hold Project for Confirmation',
+            },
+            {
+              to: ProjectStep.FinalizingProposal,
+              type: TransitionType.Reject,
+              label: 'Send Back for Corrections',
+            },
+            {
+              to: ProjectStep.Rejected,
+              type: TransitionType.Reject,
+              label: 'Reject',
+            },
           ],
           notifications: [
             ...(await this.getProjectTeamEmail(id)),
@@ -149,10 +289,22 @@ export class ProjectRules {
       case ProjectStep.OnHoldFinanceConfirmation:
         return {
           approvers: [Role.Controller],
-          nextSteps: [
-            ProjectStep.Active,
-            ProjectStep.FinalizingProposal,
-            ProjectStep.Rejected,
+          transitions: [
+            {
+              to: ProjectStep.Active,
+              type: TransitionType.Approve,
+              label: 'Confirm Project 🎉',
+            },
+            {
+              to: ProjectStep.FinalizingProposal,
+              type: TransitionType.Reject,
+              label: 'Send Back for Corrections',
+            },
+            {
+              to: ProjectStep.Rejected,
+              type: TransitionType.Reject,
+              label: 'Reject',
+            },
           ],
           notifications: [
             ...(await this.getProjectTeamEmail(id)),
@@ -166,10 +318,22 @@ export class ProjectRules {
             Role.RegionalDirector,
             Role.FieldOperationsDirector,
           ],
-          nextSteps: [
-            ProjectStep.DiscussingChangeToPlan,
-            ProjectStep.DiscussingTermination,
-            ProjectStep.FinalizingCompletion,
+          transitions: [
+            {
+              to: ProjectStep.DiscussingChangeToPlan,
+              type: TransitionType.Neutral,
+              label: 'Discuss Change to Plan',
+            },
+            {
+              to: ProjectStep.DiscussingTermination,
+              type: TransitionType.Neutral,
+              label: 'Discuss Termination',
+            },
+            {
+              to: ProjectStep.FinalizingCompletion,
+              type: TransitionType.Approve,
+              label: 'Finalize Completion',
+            },
           ],
           notifications: [
             ...(await this.getProjectTeamEmail(id)),
@@ -184,10 +348,22 @@ export class ProjectRules {
             Role.RegionalDirector,
             Role.FieldOperationsDirector,
           ],
-          nextSteps: [
-            ProjectStep.DiscussingChangeToPlan,
-            ProjectStep.DiscussingTermination,
-            ProjectStep.FinalizingCompletion,
+          transitions: [
+            {
+              to: ProjectStep.DiscussingChangeToPlan,
+              type: TransitionType.Neutral,
+              label: 'Discuss Change to Plan',
+            },
+            {
+              to: ProjectStep.DiscussingTermination,
+              type: TransitionType.Neutral,
+              label: 'Discuss Termination',
+            },
+            {
+              to: ProjectStep.FinalizingCompletion,
+              type: TransitionType.Approve,
+              label: 'Finalize Completion',
+            },
           ],
           notifications: [
             ...(await this.getProjectTeamEmail(id)),
@@ -202,11 +378,28 @@ export class ProjectRules {
             Role.RegionalDirector,
             Role.FieldOperationsDirector,
           ],
-          nextSteps: [
-            ProjectStep.PendingChangeToPlanApproval,
-            ProjectStep.DiscussingSuspension,
-            ProjectStep.Active,
-            ProjectStep.ActiveChangedPlan,
+          transitions: [
+            {
+              to: ProjectStep.PendingChangeToPlanApproval,
+              type: TransitionType.Approve,
+              label: 'Submit for Approval',
+            },
+            {
+              to: ProjectStep.DiscussingSuspension,
+              type: TransitionType.Neutral,
+              label: 'Discuss Suspension',
+            },
+            // TODO Dedup these next two. It should be based on whether the project had previously completed changed plan or not.
+            {
+              to: ProjectStep.Active,
+              type: TransitionType.Neutral,
+              label: 'Will Not Change Plan',
+            },
+            {
+              to: ProjectStep.ActiveChangedPlan,
+              type: TransitionType.Neutral,
+              label: 'Will Not Change Plan',
+            },
           ],
           notifications: [
             ...(await this.getProjectTeamEmail(id)),
@@ -217,10 +410,22 @@ export class ProjectRules {
       case ProjectStep.PendingChangeToPlanApproval:
         return {
           approvers: [Role.RegionalDirector, Role.FieldOperationsDirector],
-          nextSteps: [
-            ProjectStep.DiscussingChangeToPlan,
-            ProjectStep.Active,
-            ProjectStep.ActiveChangedPlan,
+          transitions: [
+            {
+              to: ProjectStep.DiscussingChangeToPlan,
+              type: TransitionType.Reject,
+              label: 'Send Back for Corrections',
+            },
+            {
+              to: ProjectStep.ActiveChangedPlan,
+              type: TransitionType.Approve,
+              label: 'Approve Change to Plan',
+            },
+            {
+              to: ProjectStep.Active, // TODO I think this should be back to ActiveChangedPlan if the project successfully changed plan previously
+              type: TransitionType.Reject,
+              label: 'Reject Change to Plan',
+            },
           ],
           notifications: [
             ...(await this.getProjectTeamEmail(id)),
@@ -235,10 +440,23 @@ export class ProjectRules {
             Role.RegionalDirector,
             Role.FieldOperationsDirector,
           ],
-          nextSteps: [
-            ProjectStep.PendingSuspensionApproval,
-            ProjectStep.Active,
-            ProjectStep.ActiveChangedPlan,
+          transitions: [
+            {
+              to: ProjectStep.PendingSuspensionApproval,
+              type: TransitionType.Neutral,
+              label: 'Submit for Approval',
+            },
+            // TODO dedup
+            {
+              to: ProjectStep.Active,
+              type: TransitionType.Neutral,
+              label: 'Will Not Suspend',
+            },
+            {
+              to: ProjectStep.ActiveChangedPlan,
+              type: TransitionType.Neutral,
+              label: 'Will Not Suspend',
+            },
           ],
           notifications: [
             ...(await this.getProjectTeamEmail(id)),
@@ -248,11 +466,28 @@ export class ProjectRules {
       case ProjectStep.PendingSuspensionApproval:
         return {
           approvers: [Role.RegionalDirector, Role.FieldOperationsDirector],
-          nextSteps: [
-            ProjectStep.DiscussingSuspension,
-            ProjectStep.Suspended,
-            ProjectStep.Active,
-            ProjectStep.ActiveChangedPlan,
+          transitions: [
+            {
+              to: ProjectStep.DiscussingSuspension,
+              type: TransitionType.Reject,
+              label: 'Send Back for Corrections',
+            },
+            {
+              to: ProjectStep.Suspended,
+              type: TransitionType.Approve,
+              label: 'Approve Suspension',
+            },
+            // TODO dedup
+            {
+              to: ProjectStep.Active,
+              type: TransitionType.Reject,
+              label: 'Reject Suspension',
+            },
+            {
+              to: ProjectStep.ActiveChangedPlan,
+              type: TransitionType.Reject,
+              label: 'Reject Suspension',
+            },
           ],
           notifications: [
             ...(await this.getProjectTeamEmail(id)),
@@ -266,9 +501,17 @@ export class ProjectRules {
             Role.RegionalDirector,
             Role.FieldOperationsDirector,
           ],
-          nextSteps: [
-            ProjectStep.DiscussingReactivation,
-            ProjectStep.DiscussingTermination,
+          transitions: [
+            {
+              to: ProjectStep.DiscussingReactivation,
+              type: TransitionType.Neutral,
+              label: 'Discuss Reactivation',
+            },
+            {
+              to: ProjectStep.DiscussingTermination,
+              type: TransitionType.Neutral,
+              label: 'Discuss Termination',
+            },
           ],
           notifications: [
             ...(await this.getProjectTeamEmail(id)),
@@ -282,9 +525,17 @@ export class ProjectRules {
             Role.RegionalDirector,
             Role.FieldOperationsDirector,
           ],
-          nextSteps: [
-            ProjectStep.PendingReactivationApproval,
-            ProjectStep.DiscussingTermination,
+          transitions: [
+            {
+              to: ProjectStep.PendingReactivationApproval,
+              type: TransitionType.Approve,
+              label: 'Submit for Approval',
+            },
+            {
+              to: ProjectStep.DiscussingTermination,
+              type: TransitionType.Neutral,
+              label: 'Discuss Termination',
+            },
           ],
           notifications: [
             ...(await this.getProjectTeamEmail(id)),
@@ -294,10 +545,22 @@ export class ProjectRules {
       case ProjectStep.PendingReactivationApproval:
         return {
           approvers: [Role.RegionalDirector, Role.FieldOperationsDirector],
-          nextSteps: [
-            ProjectStep.ActiveChangedPlan,
-            ProjectStep.DiscussingReactivation,
-            ProjectStep.DiscussingTermination,
+          transitions: [
+            {
+              to: ProjectStep.ActiveChangedPlan,
+              type: TransitionType.Approve,
+              label: 'Approve Reactivation',
+            },
+            {
+              to: ProjectStep.DiscussingReactivation,
+              type: TransitionType.Reject,
+              label: 'Send Back for Corrections',
+            },
+            {
+              to: ProjectStep.DiscussingTermination,
+              type: TransitionType.Neutral,
+              label: 'Discuss Termination',
+            },
           ],
           notifications: [
             ...(await this.getProjectTeamEmail(id)),
@@ -311,11 +574,28 @@ export class ProjectRules {
             Role.RegionalDirector,
             Role.FieldOperationsDirector,
           ],
-          nextSteps: [
-            ProjectStep.PendingTerminationApproval,
-            ProjectStep.DiscussingReactivation,
-            ProjectStep.Suspended,
-            ProjectStep.Active,
+          transitions: [
+            {
+              to: ProjectStep.PendingTerminationApproval,
+              type: TransitionType.Approve,
+              label: 'Submit for Approval',
+            },
+            // TODO dedup
+            {
+              to: ProjectStep.DiscussingReactivation,
+              type: TransitionType.Neutral,
+              label: 'Will Not Terminate',
+            },
+            {
+              to: ProjectStep.Suspended,
+              type: TransitionType.Neutral,
+              label: 'Will Not Terminate',
+            },
+            {
+              to: ProjectStep.Active,
+              type: TransitionType.Neutral,
+              label: 'Will Not Terminate',
+            },
           ],
           notifications: [
             ...(await this.getProjectTeamEmail(id)),
@@ -325,12 +605,33 @@ export class ProjectRules {
       case ProjectStep.PendingTerminationApproval:
         return {
           approvers: [Role.RegionalDirector, Role.FieldOperationsDirector],
-          nextSteps: [
-            ProjectStep.Terminated,
-            ProjectStep.DiscussingTermination,
-            ProjectStep.DiscussingReactivation,
-            ProjectStep.Suspended,
-            ProjectStep.Active,
+          transitions: [
+            {
+              to: ProjectStep.Terminated,
+              type: TransitionType.Approve,
+              label: 'Approve Termination',
+            },
+            {
+              to: ProjectStep.DiscussingTermination,
+              type: TransitionType.Reject,
+              label: 'Send Back for Corrections',
+            },
+            // TODO Dedup
+            {
+              to: ProjectStep.DiscussingReactivation,
+              type: TransitionType.Neutral,
+              label: 'Will Not Terminate',
+            },
+            {
+              to: ProjectStep.Suspended,
+              type: TransitionType.Neutral,
+              label: 'Will Not Terminate',
+            },
+            {
+              to: ProjectStep.Active,
+              type: TransitionType.Neutral,
+              label: 'Will Not Terminate',
+            },
           ],
           notifications: [
             ...(await this.getProjectTeamEmail(id)),
@@ -345,10 +646,23 @@ export class ProjectRules {
             Role.FieldOperationsDirector,
             Role.FinancialAnalyst,
           ],
-          nextSteps: [
-            ProjectStep.Active,
-            ProjectStep.ActiveChangedPlan,
-            ProjectStep.Completed,
+          transitions: [
+            // TODO Dedup
+            {
+              to: ProjectStep.Active,
+              type: TransitionType.Neutral,
+              label: 'Still Working',
+            },
+            {
+              to: ProjectStep.ActiveChangedPlan,
+              type: TransitionType.Neutral,
+              label: 'Still Working',
+            },
+            {
+              to: ProjectStep.Completed,
+              type: TransitionType.Approve,
+              label: 'Complete 🎉',
+            },
           ],
           notifications: [
             ...(await this.getProjectTeamEmail(id)),
@@ -358,7 +672,7 @@ export class ProjectRules {
       case ProjectStep.Terminated:
         return {
           approvers: [],
-          nextSteps: [],
+          transitions: [],
           notifications: [
             ...(await this.getProjectTeamEmail(id)),
             'project_termination@tsco.org',
@@ -367,7 +681,7 @@ export class ProjectRules {
       case ProjectStep.Completed:
         return {
           approvers: [],
-          nextSteps: [],
+          transitions: [],
           notifications: [
             ...(await this.getProjectTeamEmail(id)),
             'project_closing@tsco.org',
@@ -376,50 +690,47 @@ export class ProjectRules {
       default:
         return {
           approvers: [],
-          nextSteps: [],
+          transitions: [],
           notifications: [],
         };
     }
   }
 
-  async approveStepChange(
+  async getAvailableTransitions(
     projectId: string,
-    userId: string,
-    nextStep: ProjectStep
-  ) {
-    // get current step
+    userId?: string
+  ): Promise<ProjectStepTransition[]> {
     const currentStep = await this.getCurrentStep(projectId);
 
-    // get roles that can apporve the current step
-    const approvers = (await this.getStepRule(currentStep, projectId))
-      .approvers;
+    // get roles that can approve the current step
+    const { approvers, transitions } = await this.getStepRule(
+      currentStep,
+      projectId
+    );
 
-    // get user's roles
-    const roles = await this.getUserRoles(userId);
+    // If current user is not an approver (based on roles) then don't allow any transitions
+    const currentUserRoles = await this.getUserRoles(userId);
+    if (intersection(approvers, currentUserRoles).length === 0) {
+      return [];
+    }
 
-    // find if a user has any role within the set that can approve
-    const commonRoles = intersection(approvers, roles);
+    return transitions;
+  }
 
-    if (commonRoles.length > 0) {
-      // user is an approver for this step
+  async verifyStepChange(
+    projectId: string,
+    userId: string | undefined,
+    nextStep: ProjectStep
+  ) {
+    const transitions = await this.getAvailableTransitions(projectId, userId);
 
-      // determine if the requested next step is allowed
-      const nextPossibleSteps = (await this.getStepRule(currentStep, projectId))
-        .nextSteps;
-
-      const validNextStep = nextPossibleSteps.includes(nextStep);
-
-      if (!validNextStep) {
-        throw new UnauthorizedException(
-          'this step is not in an authorized sequence'
-        );
-      }
-
-      return true;
-    } else {
-      // user is not an approver for this step
+    const validNextStep = transitions.some(
+      (transition) => transition.to === nextStep
+    );
+    if (!validNextStep) {
       throw new UnauthorizedException(
-        'user is not an approver for the current step'
+        'This step is not in an authorized sequence',
+        'project.step'
       );
     }
   }
@@ -433,6 +744,7 @@ export class ProjectRules {
         node('step', 'Property'),
       ])
       .raw('return step.value as step')
+      .asResult<{ step: ProjectStep }>()
       .first();
 
     if (!currentStep?.step) {
@@ -442,7 +754,11 @@ export class ProjectRules {
     return currentStep.step;
   }
 
-  private async getUserRoles(id: string) {
+  private async getUserRoles(id?: string) {
+    if (!id) {
+      return [];
+    }
+
     const userRolesQuery = await this.db
       .query()
       .match([
@@ -451,15 +767,10 @@ export class ProjectRules {
         node('roles', 'Property'),
       ])
       .raw('return collect(roles.value) as roles')
+      .asResult<{ roles: Role[] }>()
       .first();
 
-    if (!userRolesQuery?.roles) {
-      throw new UnauthorizedException(
-        'user does not have the roles needed to update step'
-      );
-    }
-
-    return userRolesQuery.roles;
+    return userRolesQuery?.roles ?? [];
   }
 
   async processStepChange(
@@ -518,7 +829,7 @@ export class ProjectRules {
       .query()
       .raw(
         `
-        MATCH 
+        MATCH
           (email:EmailAddress {value: $email})
             <-[:email {active: true}]-
           (user:User)
@@ -586,7 +897,7 @@ export class ProjectRules {
           .query()
           .raw(
             `
-        MATCH 
+        MATCH
           (email:EmailAddress {value: $email})
             <-[:email {active: true}]-
           (user:User)

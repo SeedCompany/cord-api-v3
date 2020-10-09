@@ -1,4 +1,4 @@
-import { ObjectType, registerEnumType } from '@nestjs/graphql';
+import { Field, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { SecuredEnum } from '../../../common';
 
 export enum ProjectStep {
@@ -43,3 +43,22 @@ registerEnumType(ProjectStep, {
   description: SecuredEnum.descriptionFor('a project step'),
 })
 export class SecuredProjectStep extends SecuredEnum(ProjectStep) {}
+
+export enum TransitionType {
+  Neutral = 'Neutral',
+  Approve = 'Approve',
+  Reject = 'Reject',
+}
+registerEnumType(TransitionType, { name: 'TransitionType' });
+
+@ObjectType()
+export abstract class ProjectStepTransition {
+  @Field(() => ProjectStep)
+  to: ProjectStep;
+
+  @Field()
+  label: string;
+
+  @Field(() => TransitionType)
+  type: TransitionType;
+}

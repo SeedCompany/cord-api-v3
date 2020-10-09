@@ -55,7 +55,11 @@ export class ProjectResolver {
     @IdArg() id: string,
     @Session() session: ISession
   ): Promise<Project> {
-    return await this.projectService.readOne(id, session);
+    const project = await this.projectService.readOne(id, session);
+    // @ts-expect-error hack project id into step object so the lazy transitions
+    // field resolver can use it
+    project.step.projectId = project.id;
+    return project;
   }
 
   @Query(() => ProjectListOutput, {

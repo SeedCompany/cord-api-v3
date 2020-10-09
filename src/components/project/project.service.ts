@@ -12,7 +12,6 @@ import {
   Sensitivity,
   ServerException,
   UnauthenticatedException,
-  UnauthorizedException,
 } from '../../common';
 import {
   ConfigService,
@@ -468,18 +467,12 @@ export class ProjectService {
         'project.sensitivity'
       );
 
-    if (input.step && session.userId !== undefined) {
-      const hasApproval = await this.projectRules.approveStepChange(
+    if (input.step) {
+      await this.projectRules.verifyStepChange(
         input.id,
         session.userId,
         input.step
       );
-
-      if (!hasApproval) {
-        throw new UnauthorizedException(
-          'user is not an approver for this step change'
-        );
-      }
     }
 
     const changes = {
