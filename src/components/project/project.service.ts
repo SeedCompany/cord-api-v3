@@ -366,14 +366,14 @@ export class ProjectService {
     return project as InternshipProject;
   }
 
-  async readOne(id: string, session: ISession): Promise<Project> {
-    if (!session.userId) {
+  async readOne(id: string, { userId }: { userId?: string }): Promise<Project> {
+    if (!userId) {
       this.logger.debug('using anon user id');
-      session.userId = this.config.anonUser.id;
+      userId = this.config.anonUser.id;
     }
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
+      .call(matchRequestingUser, { userId })
       .match([node('node', 'Project', { id })])
       .call(matchPermList, 'requestingUser')
       .call(matchPropList, 'permList')

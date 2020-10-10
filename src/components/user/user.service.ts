@@ -260,13 +260,13 @@ export class UserService {
     return result.id;
   }
 
-  async readOne(id: string, session: ISession): Promise<User> {
-    if (!session.userId) {
-      session.userId = this.config.anonUser.id;
+  async readOne(id: string, { userId }: { userId?: string }): Promise<User> {
+    if (!userId) {
+      userId = this.config.anonUser.id;
     }
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
+      .call(matchRequestingUser, { userId })
       .match([node('node', 'User', { id })])
       .call(getPermList, 'node')
       .call(getPropList, 'permList')
