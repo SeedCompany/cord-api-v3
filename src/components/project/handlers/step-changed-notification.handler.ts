@@ -25,7 +25,9 @@ export class ProjectStepChangedNotificationHandler
 
     const recipients = await this.projectRules.getNotifications(
       event.updated.id,
-      event.updated.step.value!
+      event.updated.step.value!,
+      event.session.userId!,
+      event.previous.step.value
     );
 
     this.logger.info('Notifying', {
