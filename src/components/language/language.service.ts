@@ -543,6 +543,7 @@ export class LanguageService {
       hasMore: false,
       canCreate: !!permission?.canReadLocationCreate,
       canRead: !!permission?.canReadLocationRead,
+      canDelete: true,
     };
   }
 
@@ -596,6 +597,7 @@ export class LanguageService {
       //TODO: use the upcoming Roles service to determine permissions.
       canCreate: true,
       canRead: true,
+      canDelete: true,
     };
   }
 
@@ -638,6 +640,7 @@ export class LanguageService {
       return {
         canRead,
         canEdit: false,
+        canDelete: true,
         value,
       };
     } catch {
@@ -645,6 +648,7 @@ export class LanguageService {
       return {
         canRead: false,
         canEdit: false,
+        canDelete: false,
         value: undefined,
       };
     }

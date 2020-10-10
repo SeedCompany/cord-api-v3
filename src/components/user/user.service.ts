@@ -440,6 +440,7 @@ export class UserService {
       ...result,
       canRead: user.canRead,
       canCreate: user.canEdit,
+      canDelete: user.canDelete,
     };
   }
 
@@ -501,6 +502,7 @@ export class UserService {
       ...result,
       canRead: user.canRead,
       canCreate: user.canEdit,
+      canDelete: user.canDelete,
     };
   }
 
@@ -558,6 +560,7 @@ export class UserService {
       ...result,
       canRead: user.canRead,
       canCreate: user.canEdit,
+      canDelete: user.canDelete,
     };
   }
 

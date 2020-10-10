@@ -530,7 +530,7 @@ export class ProjectService {
       sensitivity: 'sensitivityValue',
     };
 
-    const sensitivityCase = `case prop.value 
+    const sensitivityCase = `case prop.value
     when 'High' then 3
     when 'Medium' then 2
     when 'Low' then 1
@@ -630,6 +630,7 @@ export class ProjectService {
       ...result,
       canRead: !!permission?.canReadEngagementRead,
       canCreate: !!permission?.canReadEngagementCreate,
+      canDelete: true,
     };
   }
 
@@ -698,6 +699,7 @@ export class ProjectService {
       ...result,
       canRead: !!permission?.canReadTeamMemberRead,
       canCreate: !!permission?.canReadTeamMemberCreate,
+      canDelete: true,
     };
   }
 
@@ -766,6 +768,7 @@ export class ProjectService {
       ...result,
       canRead: !!permission?.canReadPartnershipRead,
       canCreate: !!permission?.canReadPartnershipCreate,
+      canDelete: true,
     };
   }
 
@@ -805,6 +808,7 @@ export class ProjectService {
       value: current ? current : pendingBudget,
       canEdit: true,
       canRead: true,
+      canDelete: true,
     };
   }
 
@@ -831,6 +835,7 @@ export class ProjectService {
       return {
         canEdit: false,
         canRead: false,
+        canDelete: true,
         value: undefined,
       };
     }
@@ -844,6 +849,7 @@ export class ProjectService {
     return {
       canEdit: false,
       canRead: true,
+      canDelete: true,
       value: await this.fileService.getDirectory(rootRef.id, session),
     };
   }

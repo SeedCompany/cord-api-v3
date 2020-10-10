@@ -10,11 +10,13 @@ export interface PermissionNode<Key extends string = string> {
   admin: boolean;
   edit: boolean;
   read: boolean;
+  delete: boolean;
 }
 
 export const permissionDefaults = {
   canRead: false,
   canEdit: false,
+  canDelete: false,
 };
 export type Permission = typeof permissionDefaults;
 
@@ -28,7 +30,7 @@ export type PermListDbResult<DbProps extends Record<string, any>> = Array<
 /**
  * Parse a list of permission nodes (from DB) to an object.
  * The object's keys are the unique property names.
- * The object's values are an object of canRead/canEdit which take the most
+ * The object's values are an object of canRead/canEdit/canDelete which take the most
  * permissive (true) values of the matching permission nodes.
  */
 export function parsePermissions<DbProps extends Record<string, any>>(
@@ -48,6 +50,7 @@ export function parsePermissions<DbProps extends Record<string, any>>(
         pickBy({
           canRead: node.read || null,
           canEdit: node.edit || null,
+          canDelete: node.delete || null,
         })
       );
       // Merge the all the true permissions together, otherwise default to false

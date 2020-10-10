@@ -23,6 +23,11 @@ export function SecuredList<Type, ListItem = Type>(
       description: `Whether the current user can add items to this list via the appropriate mutation`,
     })
     readonly canCreate: boolean;
+
+    @Field({
+      description: `Whether the current user can remove items from this list via the appropriate mutation`,
+    })
+    readonly canDelete: boolean;
   }
 
   return SecuredListClass;

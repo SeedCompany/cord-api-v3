@@ -19,6 +19,7 @@ export interface Secured<T> {
   readonly value?: T;
   readonly canRead: boolean;
   readonly canEdit: boolean;
+  readonly canDelete: boolean;
 }
 
 export type SecuredKeys<Dto extends Record<string, any>> = ConditionalKeys<
@@ -106,6 +107,8 @@ function InnerSecuredProperty<
     readonly canRead: boolean;
     @Field()
     readonly canEdit: boolean;
+    @Field()
+    readonly canDelete: boolean;
   }
 
   return SecuredPropertyClass;
@@ -163,6 +166,8 @@ function SecuredList<GQL, TS, Nullable extends boolean | undefined = false>(
     readonly canRead: boolean;
     @Field()
     readonly canEdit: boolean;
+    @Field()
+    readonly canDelete: boolean;
   }
 
   return SecuredPropertyListClass;
@@ -242,6 +247,9 @@ export abstract class SecuredDateTime
 
   @Field()
   readonly canEdit: boolean;
+
+  @Field()
+  readonly canDelete: boolean;
 }
 
 @ObjectType({ implements: [Readable, Editable] })
@@ -255,6 +263,9 @@ export abstract class SecuredDateTimeNullable
 
   @Field()
   readonly canEdit: boolean;
+
+  @Field()
+  readonly canDelete: boolean;
 }
 
 @ObjectType({ implements: [Readable, Editable] })
@@ -268,6 +279,9 @@ export abstract class SecuredDate
 
   @Field()
   readonly canEdit: boolean;
+
+  @Field()
+  readonly canDelete: boolean;
 }
 
 @ObjectType({ implements: [Readable, Editable] })
@@ -281,4 +295,7 @@ export abstract class SecuredDateNullable
 
   @Field()
   readonly canEdit: boolean;
+
+  @Field()
+  readonly canDelete: boolean;
 }

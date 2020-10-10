@@ -63,6 +63,7 @@ export class LanguageResolver {
     const { canRead, value } = language.populationOverride;
     return {
       canEdit: false, // this is a computed field
+      canDelete: true,
       canRead,
       value: canRead
         ? value ?? language.ethnologue.population.value

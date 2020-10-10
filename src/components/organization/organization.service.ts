@@ -346,6 +346,7 @@ export class OrganizationService {
         value: result?.name,
         canRead: false,
         canEdit: false,
+        canDelete: true,
       },
     });
 

@@ -27,26 +27,31 @@ const createTestPartnership: Partial<Partnership> = {
     value: PartnershipAgreementStatus.Signed,
     canRead: true,
     canEdit: true,
+    canDelete: true,
   },
   mouStatus: {
     value: PartnershipAgreementStatus.Signed,
     canRead: true,
     canEdit: true,
+    canDelete: true,
   },
   mouStart: {
     value: DateTime.local(),
     canRead: true,
     canEdit: true,
+    canDelete: true,
   },
   mouEnd: {
     value: DateTime.local(),
     canRead: true,
     canEdit: true,
+    canDelete: true,
   },
   types: {
     value: [PartnerType.Technical],
     canRead: true,
     canEdit: true,
+    canDelete: true,
   },
 };
 

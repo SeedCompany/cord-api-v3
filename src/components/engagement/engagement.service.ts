@@ -693,11 +693,13 @@ export class EngagementService {
         value: startDate,
         canRead: canReadStartDate,
         canEdit: false,
+        canDelete: true,
       },
       endDate: {
         value: endDate,
         canRead: canReadEndDate,
         canEdit: false,
+        canDelete: true,
       },
       methodologies: {
         ...securedProperties.methodologies,
@@ -1076,6 +1078,8 @@ export class EngagementService {
       ...result,
       canRead: !!permission?.canRead,
       canCreate: !!permission?.canEdit,
+      // TODO update query to actually return this value and remove `?? true`
+      canDelete: !!permission?.canDelete ?? true,
     };
   }
 

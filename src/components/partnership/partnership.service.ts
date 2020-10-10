@@ -326,11 +326,13 @@ export class PartnershipService {
         value: mouStart,
         canRead: canReadMouStart,
         canEdit: false, // edit the project mou or edit the partnerhsip mou override
+        canDelete: true,
       },
       mouEnd: {
         value: mouEnd,
         canRead: canReadMouEnd,
         canEdit: false, // edit the project mou or edit the partnerhsip mou override
+        canDelete: true,
       },
       types: {
         ...securedProps.types,

@@ -33,6 +33,7 @@ interface ReadPropertyResult {
   value: any;
   canEdit: boolean;
   canRead: boolean;
+  canDelete: boolean;
 }
 
 export type ACLs = Record<string, boolean>;
@@ -269,17 +270,19 @@ export class DatabaseService {
     }
 
     return {
-      id: { value: id, canRead: true, canEdit: true },
+      id: { value: id, canRead: true, canEdit: true, canDelete: true },
       createdAt: {
         value: result.n.properties.createdat,
         canRead: true,
         canEdit: true,
+        canDelete: true,
       },
       ...mapFromList(nonMetaProps, (property) => {
         const val = {
           value: result[property].properties.value,
           canRead: result['perm' + property].properties.read,
           canEdit: result['perm' + property].properties.edit,
+          canDelete: true, // TODO: actually retrieve from properties list
         };
         return [property, val];
       }),
@@ -457,7 +460,7 @@ export class DatabaseService {
       .first()) as ReadPropertyResult;
 
     if (!result) {
-      return { value: null, canRead: false, canEdit: false };
+      return { value: null, canRead: false, canEdit: false, canDelete: false };
     }
 
     return result;
@@ -1215,6 +1218,7 @@ export class DatabaseService {
             value: rootResult![prop],
             canRead: true,
             canEdit: true,
+            canDelete: true,
           };
           return [prop, val];
         }),

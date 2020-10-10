@@ -777,6 +777,7 @@ export const securedProperty = (property: string) => ({
   value: coalesce(`${property}.value`),
   canRead: coalesce(`${property}ReadPerm.read`, false),
   canEdit: coalesce(`${property}EditPerm.edit`, false),
+  canDelete: coalesce(`${property}EditPerm.delete`, false),
 });
 
 export function returnWithSecurePropertyClauseForList(property: string) {
@@ -784,7 +785,8 @@ export function returnWithSecurePropertyClauseForList(property: string) {
     ${property}: {
       value: coalesce(${property}.value, null),
       canRead: coalesce(${property}ReadPerm.read, false),
-      canEdit: coalesce(${property}EditPerm.edit, false)
+      canEdit: coalesce(${property}EditPerm.edit, false),
+      canDelete: coalesce(${property}EditPerm.delete, false)
     }
   `;
 }
