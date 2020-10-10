@@ -506,10 +506,13 @@ export function matchUserPermissionsForList(
   //   );
 }
 
-export function matchRequestingUser(query: Query, session: ISession) {
+export function matchRequestingUser(
+  query: Query,
+  { userId }: Partial<ISession>
+) {
   query.match([
     node('requestingUser', 'User', {
-      id: session.userId,
+      id: userId,
     }),
   ]);
 }
