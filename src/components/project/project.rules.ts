@@ -15,10 +15,13 @@ import {
   TransitionType,
 } from './dto';
 
+type MaybeAsync<T> = T | Promise<T>;
+type EmailAddress = string;
+
 interface StepRule {
   approvers: Role[];
   transitions: ProjectStepTransition[];
-  notifications: string[]; // email addresses
+  getNotifiers: () => MaybeAsync<EmailAddress[]>;
 }
 
 export interface EmailNotification {
@@ -61,7 +64,7 @@ export class ProjectRules {
               label: 'End Development',
             },
           ],
-          notifications: await this.getProjectTeamEmail(id),
+          getNotifiers: () => this.getProjectTeamEmail(id),
         };
       case ProjectStep.PendingConceptApproval:
         return {
@@ -83,7 +86,7 @@ export class ProjectRules {
               label: 'Reject',
             },
           ],
-          notifications: await this.getProjectTeamEmail(id),
+          getNotifiers: () => this.getProjectTeamEmail(id),
         };
       case ProjectStep.PrepForConsultantEndorsement:
         return {
@@ -109,7 +112,7 @@ export class ProjectRules {
               label: 'End Development',
             },
           ],
-          notifications: await this.getProjectTeamEmail(id),
+          getNotifiers: () => this.getProjectTeamEmail(id),
         };
       case ProjectStep.PendingConsultantEndorsement:
         return {
@@ -126,7 +129,7 @@ export class ProjectRules {
               label: 'Do Not Endorse Plan',
             },
           ],
-          notifications: await this.getProjectTeamEmail(id),
+          getNotifiers: () => this.getProjectTeamEmail(id),
         };
       case ProjectStep.PrepForFinancialEndorsement:
         return {
@@ -157,7 +160,7 @@ export class ProjectRules {
               label: 'End Development',
             },
           ],
-          notifications: await this.getProjectTeamEmail(id),
+          getNotifiers: () => this.getProjectTeamEmail(id),
         };
       case ProjectStep.PendingFinancialEndorsement:
         return {
@@ -174,7 +177,7 @@ export class ProjectRules {
               label: 'Do Not Endorse Project Plan',
             },
           ],
-          notifications: await this.getProjectTeamEmail(id),
+          getNotifiers: () => this.getProjectTeamEmail(id),
         };
       case ProjectStep.FinalizingProposal:
         return {
@@ -210,7 +213,7 @@ export class ProjectRules {
               label: 'End Development',
             },
           ],
-          notifications: await this.getProjectTeamEmail(id),
+          getNotifiers: () => this.getProjectTeamEmail(id),
         };
       case ProjectStep.PendingRegionalDirectorApproval:
         return {
@@ -237,7 +240,7 @@ export class ProjectRules {
               label: 'Reject',
             },
           ],
-          notifications: await this.getProjectTeamEmail(id),
+          getNotifiers: () => this.getProjectTeamEmail(id),
         };
       case ProjectStep.PendingZoneDirectorApproval:
         return {
@@ -259,7 +262,7 @@ export class ProjectRules {
               label: 'Reject',
             },
           ],
-          notifications: await this.getProjectTeamEmail(id),
+          getNotifiers: () => this.getProjectTeamEmail(id),
         };
       case ProjectStep.PendingFinanceConfirmation:
         return {
@@ -286,7 +289,7 @@ export class ProjectRules {
               label: 'Reject',
             },
           ],
-          notifications: [
+          getNotifiers: async () => [
             ...(await this.getProjectTeamEmail(id)),
             ...(await this.getRoleEmails(Role.Controller)),
           ],
@@ -311,7 +314,7 @@ export class ProjectRules {
               label: 'Reject',
             },
           ],
-          notifications: [
+          getNotifiers: async () => [
             ...(await this.getProjectTeamEmail(id)),
             ...(await this.getRoleEmails(Role.Controller)),
           ],
@@ -340,7 +343,7 @@ export class ProjectRules {
               label: 'Finalize Completion',
             },
           ],
-          notifications: [
+          getNotifiers: async () => [
             ...(await this.getProjectTeamEmail(id)),
             ...(await this.getRoleEmails(Role.Controller)),
             'project_approve@tsco.org',
@@ -370,7 +373,7 @@ export class ProjectRules {
               label: 'Finalize Completion',
             },
           ],
-          notifications: [
+          getNotifiers: async () => [
             ...(await this.getProjectTeamEmail(id)),
             'project_extension@tsco.org',
             'project_revision@tsco.org',
@@ -406,7 +409,7 @@ export class ProjectRules {
               label: 'Will Not Change Plan',
             },
           ],
-          notifications: [
+          getNotifiers: async () => [
             ...(await this.getProjectTeamEmail(id)),
             'project_extension@tsco.org',
             'project_revision@tsco.org',
@@ -432,7 +435,7 @@ export class ProjectRules {
               label: 'Reject Change to Plan',
             },
           ],
-          notifications: [
+          getNotifiers: async () => [
             ...(await this.getProjectTeamEmail(id)),
             'project_extension@tsco.org',
             'project_revision@tsco.org',
@@ -463,7 +466,7 @@ export class ProjectRules {
               label: 'Will Not Suspend',
             },
           ],
-          notifications: [
+          getNotifiers: async () => [
             ...(await this.getProjectTeamEmail(id)),
             'project_suspension@tsco.org',
           ],
@@ -494,7 +497,7 @@ export class ProjectRules {
               label: 'Reject Suspension',
             },
           ],
-          notifications: [
+          getNotifiers: async () => [
             ...(await this.getProjectTeamEmail(id)),
             'project_suspension@tsco.org',
           ],
@@ -518,7 +521,7 @@ export class ProjectRules {
               label: 'Discuss Termination',
             },
           ],
-          notifications: [
+          getNotifiers: async () => [
             ...(await this.getProjectTeamEmail(id)),
             'project_suspension@tsco.org',
           ],
@@ -542,7 +545,7 @@ export class ProjectRules {
               label: 'Discuss Termination',
             },
           ],
-          notifications: [
+          getNotifiers: async () => [
             ...(await this.getProjectTeamEmail(id)),
             'project_suspension@tsco.org',
           ],
@@ -567,7 +570,7 @@ export class ProjectRules {
               label: 'Discuss Termination',
             },
           ],
-          notifications: [
+          getNotifiers: async () => [
             ...(await this.getProjectTeamEmail(id)),
             'project_suspension@tsco.org',
           ],
@@ -602,7 +605,7 @@ export class ProjectRules {
               label: 'Will Not Terminate',
             },
           ],
-          notifications: [
+          getNotifiers: async () => [
             ...(await this.getProjectTeamEmail(id)),
             'project_termination@tsco.org',
           ],
@@ -638,7 +641,7 @@ export class ProjectRules {
               label: 'Will Not Terminate',
             },
           ],
-          notifications: [
+          getNotifiers: async () => [
             ...(await this.getProjectTeamEmail(id)),
             'project_termination@tsco.org',
           ],
@@ -669,7 +672,7 @@ export class ProjectRules {
               label: 'Complete 🎉',
             },
           ],
-          notifications: [
+          getNotifiers: async () => [
             ...(await this.getProjectTeamEmail(id)),
             'project_closing@tsco.org',
           ],
@@ -678,7 +681,7 @@ export class ProjectRules {
         return {
           approvers: [],
           transitions: [],
-          notifications: [
+          getNotifiers: async () => [
             ...(await this.getProjectTeamEmail(id)),
             'project_termination@tsco.org',
           ],
@@ -687,7 +690,7 @@ export class ProjectRules {
         return {
           approvers: [],
           transitions: [],
-          notifications: [
+          getNotifiers: async () => [
             ...(await this.getProjectTeamEmail(id)),
             'project_closing@tsco.org',
           ],
@@ -696,7 +699,7 @@ export class ProjectRules {
         return {
           approvers: [],
           transitions: [],
-          notifications: [],
+          getNotifiers: () => [],
         };
     }
   }
@@ -783,7 +786,8 @@ export class ProjectRules {
     step: ProjectStep
   ): Promise<EmailNotification[]> {
     // notify everyone
-    const emails = (await this.getStepRule(step, projectId)).notifications;
+    const { getNotifiers } = await this.getStepRule(step, projectId);
+    const emails = await getNotifiers();
 
     const notifications = await Promise.all(
       emails.map((email) => this.getEmailNotificationObject(email, projectId))
