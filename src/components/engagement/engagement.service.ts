@@ -22,17 +22,10 @@ import {
   property,
 } from '../../core';
 import {
-  calculateTotalAndPaginateList,
-  permissionsOfNode,
-  requestingUser,
-} from '../../core/database/query';
-import {
-  DbPropsOfDto,
   parseBaseNodeProperties,
   parsePropList,
   parseSecuredProperties,
   runListQuery,
-  StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { CeremonyService } from '../ceremony';
@@ -61,6 +54,7 @@ import {
   EngagementUpdatedEvent,
 } from './events';
 import { DbInternshipEngagement, DbLanguageEngagement } from './model';
+import { EngagementRepository } from './repository/engagement.repository';
 
 @Injectable()
 export class EngagementService {
@@ -110,6 +104,75 @@ export class EngagementService {
     @Logger(`engagement.service`) private readonly logger: ILogger
   ) {}
 
+  protected async transformEngagementsFromRepositoryToDTO(
+    result: any,
+    session: ISession
+  ) {
+    const props = parsePropList(result.propList);
+    const securedProperties = parseSecuredProperties(
+      props,
+      result.permList,
+      this.securedProperties
+    );
+
+    const project = await this.projectService.readOne(
+      result.projectId,
+      session
+    );
+
+    const canReadStartDate =
+      project.mouStart.canRead && securedProperties.startDateOverride.canRead;
+    const startDate = canReadStartDate
+      ? props.startDateOverride ?? project.mouStart.value
+      : null;
+    const canReadEndDate =
+      project.mouEnd.canRead && securedProperties.endDateOverride.canRead;
+    const endDate = canReadEndDate
+      ? props.endDateOverride ?? project.mouEnd.value
+      : null;
+
+    return {
+      __typename: result.__typename,
+      ...securedProperties,
+      ...parseBaseNodeProperties(result.node),
+      status: props.status,
+      modifiedAt: props.modifiedAt,
+      startDate: {
+        value: startDate,
+        canRead: canReadStartDate,
+        canEdit: false,
+      },
+      endDate: {
+        value: endDate,
+        canRead: canReadEndDate,
+        canEdit: false,
+      },
+      methodologies: {
+        ...securedProperties.methodologies,
+        value: securedProperties.methodologies.value ?? [],
+      },
+      ceremony: {
+        ...securedProperties.ceremony,
+        value: result.ceremonyId,
+      },
+      language: {
+        ...securedProperties.language,
+        value: result.languageId,
+      },
+      intern: {
+        ...securedProperties.intern,
+        value: result.internId,
+      },
+      countryOfOrigin: {
+        ...securedProperties.countryOfOrigin,
+        value: result.countryOfOriginId,
+      },
+      mentor: {
+        ...securedProperties.mentor,
+        value: result.mentorId,
+      },
+    };
+  }
   // CREATE /////////////////////////////////////////////////////////
 
   async createLanguageEngagement(
@@ -561,169 +624,22 @@ export class EngagementService {
   ): Promise<LanguageEngagement | InternshipEngagement> {
     this.logger.debug('readOne', { id, userId: session.userId });
 
-    if (!id) {
-      throw new NotFoundException('no id given', 'engagement.id');
-    }
-
-    if (!session.userId) {
-      this.logger.debug('using anon user id');
-      session.userId = this.config.anonUser.id;
-    }
-
-    const query = this.db
-      .query()
-      .call(matchRequestingUser, session)
-      .match([node('node', 'Engagement', { id })])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
-        node('perms', 'Permission'),
-        relation('out', '', 'baseNode'),
-        node('node'),
-      ])
-      .with('collect(distinct perms) as permList, node')
-      .match([
-        node('node'),
-        relation('out', 'r', { active: true }),
-        node('props', 'Property'),
-      ])
-      .with('{value: props.value, property: type(r)} as prop, permList, node')
-      .with([
-        'collect(prop) as propList',
-        'permList',
-        'node',
-        `case
-          when 'InternshipEngagement' IN labels(node)
-          then 'InternshipEngagement'
-          when 'LanguageEngagement' IN labels(node)
-          then 'LanguageEngagement'
-          end as __typename
-          `,
-      ])
-      .optionalMatch([
-        node('project'),
-        relation('out', '', 'engagement', { active: true }),
-        node('node'),
-      ])
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'ceremony', { active: true }),
-        node('ceremony'),
-      ])
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'language', { active: true }),
-        node('language'),
-      ])
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'intern', { active: true }),
-        node('intern'),
-      ])
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'countryOfOrigin', { active: true }),
-        node('countryOfOrigin'),
-      ])
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'mentor', { active: true }),
-        node('mentor'),
-      ])
-      .return([
-        'propList, permList, node, project.id as projectId',
-        '__typename, ceremony.id as ceremonyId',
-        'language.id as languageId',
-        'intern.id as internId',
-        'countryOfOrigin.id as countryOfOriginId',
-        'mentor.id as mentorId',
-      ])
-      .asResult<
-        StandardReadResult<
-          DbPropsOfDto<LanguageEngagement & InternshipEngagement>
-        > & {
-          __typename: string;
-          languageId: string;
-          ceremonyId: string;
-          projectId: string;
-          internId: string;
-          countryOfOriginId: string;
-          mentorId: string;
-        }
-      >();
-
-    const result = await query.first();
-
-    if (!result) {
-      throw new NotFoundException('could not find Engagement', 'engagement.id');
-    }
-
-    const props = parsePropList(result.propList);
-    const securedProperties = parseSecuredProperties(
-      props,
-      result.permList,
-      this.securedProperties
+    const engagementRepository = new EngagementRepository(
+      this.db,
+      session,
+      this.files
     );
 
-    const project = await this.projectService.readOne(
-      result.projectId,
+    const response = await engagementRepository
+      .request()
+      .with({ engagementIds: [id] })
+      .hydrateEngagements(session)
+      .runQuery();
+
+    return await this.transformEngagementsFromRepositoryToDTO(
+      response.engagements[0],
       session
     );
-
-    const canReadStartDate =
-      project.mouStart.canRead && securedProperties.startDateOverride.canRead;
-    const startDate = canReadStartDate
-      ? props.startDateOverride ?? project.mouStart.value
-      : null;
-    const canReadEndDate =
-      project.mouEnd.canRead && securedProperties.endDateOverride.canRead;
-    const endDate = canReadEndDate
-      ? props.endDateOverride ?? project.mouEnd.value
-      : null;
-
-    return {
-      __typename: result.__typename,
-      ...securedProperties,
-      ...parseBaseNodeProperties(result.node),
-      status: props.status,
-      modifiedAt: props.modifiedAt,
-      startDate: {
-        value: startDate,
-        canRead: canReadStartDate,
-        canEdit: false,
-      },
-      endDate: {
-        value: endDate,
-        canRead: canReadEndDate,
-        canEdit: false,
-      },
-      methodologies: {
-        ...securedProperties.methodologies,
-        value: securedProperties.methodologies.value ?? [],
-      },
-      ceremony: {
-        ...securedProperties.ceremony,
-        value: result.ceremonyId,
-      },
-      language: {
-        ...securedProperties.language,
-        value: result.languageId,
-      },
-      intern: {
-        ...securedProperties.intern,
-        value: result.internId,
-      },
-      countryOfOrigin: {
-        ...securedProperties.countryOfOrigin,
-        value: result.countryOfOriginId,
-      },
-      mentor: {
-        ...securedProperties.mentor,
-        value: result.mentorId,
-      },
-    };
   }
 
   // UPDATE ////////////////////////////////////////////////////////
@@ -982,41 +898,23 @@ export class EngagementService {
     { filter, ...input }: EngagementListInput,
     session: ISession
   ): Promise<EngagementListOutput> {
-    let label = 'Engagement';
-    if (filter.type === 'language') {
-      label = 'LanguageEngagement';
-    } else if (filter.type === 'internship') {
-      label = 'InternshipEngagement';
-    }
+    const engagementRepository = new EngagementRepository(
+      this.db,
+      session,
+      this.files
+    );
 
-    const query = this.db
-      .query()
-      .match([
-        requestingUser(session),
-        ...permissionsOfNode(label),
-        ...(filter.projectId
-          ? [
-              relation('in', '', 'engagement', { active: true }),
-              node('project', 'Project', {
-                id: filter.projectId,
-              }),
-            ]
-          : []),
-      ])
-      .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
-        sort in this.securedProperties
-          ? q
-              .match([
-                node('node'),
-                relation('out', '', sort),
-                node('prop', 'Property'),
-              ])
-              .with('*')
-              .orderBy('prop.value', order)
-          : q.with('*').orderBy(`node.${sort}`, order)
-      );
+    const request = engagementRepository
+      .request()
+      .findEngagementIdsByProjectId(session, filter, input);
 
-    return await runListQuery(query, input, (id) => this.readOne(id, session));
+    return await runListQuery(
+      request.query
+        .return(['items', 'total'])
+        .asResult<{ items: string[]; total: number }>(), // TODO: refactor, this is a bit obtuse
+      input,
+      (id) => this.readOne(id, session)
+    );
   }
 
   async listProducts(
