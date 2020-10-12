@@ -282,7 +282,7 @@ export class UserService {
 
     const result = await query.first();
     if (!result) {
-      throw new NotFoundException('Could not find user', 'user.id');
+      throw new NotFoundException('Could not find user', userId);
     }
 
     const rolesValue = result.propList

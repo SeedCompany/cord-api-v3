@@ -3,7 +3,7 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { intersection } from 'lodash';
 import { ServerException, UnauthorizedException } from '../../common';
-import { DatabaseService, ILogger, Logger } from '../../core';
+import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
 import { Role } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { User, UserService } from '../user';
@@ -42,6 +42,7 @@ export class ProjectRules {
     private readonly userService: UserService,
     @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService,
+    private readonly configService: ConfigService,
     // eslint-disable-next-line @seedcompany/no-unused-vars
     @Logger('project:rules') private readonly logger: ILogger
   ) {}
@@ -51,6 +52,7 @@ export class ProjectRules {
       case ProjectStep.EarlyConversations:
         return {
           approvers: [
+            Role.Administrator,
             Role.ProjectManager,
             Role.RegionalDirector,
             Role.FieldOperationsDirector,
@@ -71,7 +73,11 @@ export class ProjectRules {
         };
       case ProjectStep.PendingConceptApproval:
         return {
-          approvers: [Role.RegionalDirector, Role.FieldOperationsDirector],
+          approvers: [
+            Role.Administrator,
+            Role.RegionalDirector,
+            Role.FieldOperationsDirector,
+          ],
           transitions: [
             {
               to: ProjectStep.PrepForConsultantEndorsement,
@@ -94,6 +100,7 @@ export class ProjectRules {
       case ProjectStep.PrepForConsultantEndorsement:
         return {
           approvers: [
+            Role.Administrator,
             Role.ProjectManager,
             Role.RegionalDirector,
             Role.FieldOperationsDirector,
@@ -119,7 +126,11 @@ export class ProjectRules {
         };
       case ProjectStep.PendingConsultantEndorsement:
         return {
-          approvers: [Role.Consultant, Role.ConsultantManager],
+          approvers: [
+            Role.Administrator,
+            Role.Consultant,
+            Role.ConsultantManager,
+          ],
           transitions: [
             {
               to: ProjectStep.PrepForFinancialEndorsement,
@@ -137,6 +148,7 @@ export class ProjectRules {
       case ProjectStep.PrepForFinancialEndorsement:
         return {
           approvers: [
+            Role.Administrator,
             Role.ProjectManager,
             Role.RegionalDirector,
             Role.FieldOperationsDirector,
@@ -167,7 +179,11 @@ export class ProjectRules {
         };
       case ProjectStep.PendingFinancialEndorsement:
         return {
-          approvers: [Role.Controller, Role.FinancialAnalyst],
+          approvers: [
+            Role.Administrator,
+            Role.Controller,
+            Role.FinancialAnalyst,
+          ],
           transitions: [
             {
               to: ProjectStep.FinalizingProposal,
@@ -185,6 +201,7 @@ export class ProjectRules {
       case ProjectStep.FinalizingProposal:
         return {
           approvers: [
+            Role.Administrator,
             Role.ProjectManager,
             Role.RegionalDirector,
             Role.FieldOperationsDirector,
@@ -220,7 +237,11 @@ export class ProjectRules {
         };
       case ProjectStep.PendingRegionalDirectorApproval:
         return {
-          approvers: [Role.RegionalDirector, Role.FieldOperationsDirector],
+          approvers: [
+            Role.Administrator,
+            Role.RegionalDirector,
+            Role.FieldOperationsDirector,
+          ],
           transitions: [
             {
               to: ProjectStep.PendingFinanceConfirmation,
@@ -247,7 +268,7 @@ export class ProjectRules {
         };
       case ProjectStep.PendingZoneDirectorApproval:
         return {
-          approvers: [Role.FieldOperationsDirector],
+          approvers: [Role.Administrator, Role.FieldOperationsDirector],
           transitions: [
             {
               to: ProjectStep.PendingFinanceConfirmation,
@@ -269,7 +290,7 @@ export class ProjectRules {
         };
       case ProjectStep.PendingFinanceConfirmation:
         return {
-          approvers: [Role.Controller],
+          approvers: [Role.Administrator, Role.Controller],
           transitions: [
             {
               to: ProjectStep.Active,
@@ -299,7 +320,7 @@ export class ProjectRules {
         };
       case ProjectStep.OnHoldFinanceConfirmation:
         return {
-          approvers: [Role.Controller],
+          approvers: [Role.Administrator, Role.Controller],
           transitions: [
             {
               to: ProjectStep.Active,
@@ -325,6 +346,7 @@ export class ProjectRules {
       case ProjectStep.Active:
         return {
           approvers: [
+            Role.Administrator,
             Role.ProjectManager,
             Role.RegionalDirector,
             Role.FieldOperationsDirector,
@@ -355,6 +377,7 @@ export class ProjectRules {
       case ProjectStep.ActiveChangedPlan:
         return {
           approvers: [
+            Role.Administrator,
             Role.ProjectManager,
             Role.RegionalDirector,
             Role.FieldOperationsDirector,
@@ -385,6 +408,7 @@ export class ProjectRules {
       case ProjectStep.DiscussingChangeToPlan:
         return {
           approvers: [
+            Role.Administrator,
             Role.ProjectManager,
             Role.RegionalDirector,
             Role.FieldOperationsDirector,
@@ -420,7 +444,11 @@ export class ProjectRules {
         };
       case ProjectStep.PendingChangeToPlanApproval:
         return {
-          approvers: [Role.RegionalDirector, Role.FieldOperationsDirector],
+          approvers: [
+            Role.Administrator,
+            Role.RegionalDirector,
+            Role.FieldOperationsDirector,
+          ],
           transitions: [
             {
               to: ProjectStep.DiscussingChangeToPlan,
@@ -447,6 +475,7 @@ export class ProjectRules {
       case ProjectStep.DiscussingSuspension:
         return {
           approvers: [
+            Role.Administrator,
             Role.ProjectManager,
             Role.RegionalDirector,
             Role.FieldOperationsDirector,
@@ -476,7 +505,11 @@ export class ProjectRules {
         };
       case ProjectStep.PendingSuspensionApproval:
         return {
-          approvers: [Role.RegionalDirector, Role.FieldOperationsDirector],
+          approvers: [
+            Role.Administrator,
+            Role.RegionalDirector,
+            Role.FieldOperationsDirector,
+          ],
           transitions: [
             {
               to: ProjectStep.DiscussingSuspension,
@@ -508,6 +541,7 @@ export class ProjectRules {
       case ProjectStep.Suspended:
         return {
           approvers: [
+            Role.Administrator,
             Role.ProjectManager,
             Role.RegionalDirector,
             Role.FieldOperationsDirector,
@@ -532,6 +566,7 @@ export class ProjectRules {
       case ProjectStep.DiscussingReactivation:
         return {
           approvers: [
+            Role.Administrator,
             Role.ProjectManager,
             Role.RegionalDirector,
             Role.FieldOperationsDirector,
@@ -555,7 +590,11 @@ export class ProjectRules {
         };
       case ProjectStep.PendingReactivationApproval:
         return {
-          approvers: [Role.RegionalDirector, Role.FieldOperationsDirector],
+          approvers: [
+            Role.Administrator,
+            Role.RegionalDirector,
+            Role.FieldOperationsDirector,
+          ],
           transitions: [
             {
               to: ProjectStep.ActiveChangedPlan,
@@ -581,6 +620,7 @@ export class ProjectRules {
       case ProjectStep.DiscussingTermination:
         return {
           approvers: [
+            Role.Administrator,
             Role.ProjectManager,
             Role.RegionalDirector,
             Role.FieldOperationsDirector,
@@ -615,7 +655,11 @@ export class ProjectRules {
         };
       case ProjectStep.PendingTerminationApproval:
         return {
-          approvers: [Role.RegionalDirector, Role.FieldOperationsDirector],
+          approvers: [
+            Role.Administrator,
+            Role.RegionalDirector,
+            Role.FieldOperationsDirector,
+          ],
           transitions: [
             {
               to: ProjectStep.Terminated,
@@ -652,6 +696,7 @@ export class ProjectRules {
       case ProjectStep.FinalizingCompletion:
         return {
           approvers: [
+            Role.Administrator,
             Role.ProjectManager,
             Role.RegionalDirector,
             Role.FieldOperationsDirector,
@@ -682,7 +727,7 @@ export class ProjectRules {
         };
       case ProjectStep.Terminated:
         return {
-          approvers: [],
+          approvers: [Role.Administrator],
           transitions: [],
           getNotifiers: async () => [
             ...(await this.getProjectTeamUserIds(id)),
@@ -691,7 +736,7 @@ export class ProjectRules {
         };
       case ProjectStep.Completed:
         return {
-          approvers: [],
+          approvers: [Role.Administrator],
           transitions: [],
           getNotifiers: async () => [
             ...(await this.getProjectTeamUserIds(id)),
@@ -700,7 +745,7 @@ export class ProjectRules {
         };
       default:
         return {
-          approvers: [],
+          approvers: [Role.Administrator],
           transitions: [],
           getNotifiers: () => [],
         };
@@ -722,6 +767,7 @@ export class ProjectRules {
     // If current user is not an approver (based on roles) then don't allow any transitions
     const currentUserRoles = await this.getUserRoles(userId);
     if (intersection(approvers, currentUserRoles).length === 0) {
+      throw new UnauthorizedException('user is not an approver of this step');
       return [];
     }
 
@@ -733,7 +779,6 @@ export class ProjectRules {
     userId: string | undefined,
     nextStep: ProjectStep
   ) {
-    console.log(projectId, nextStep);
     const transitions = await this.getAvailableTransitions(projectId, userId);
 
     const validNextStep = transitions.some(
@@ -848,16 +893,47 @@ export class ProjectRules {
     recipientId: string,
     previousStep?: ProjectStep
   ): Promise<EmailNotification> {
+    let recipient;
+    let changedBy;
+    let project;
+
+    if (recipientId.includes('@')) {
+      changedBy = await this.userService.readOne(changedById, {
+        userId: this.configService.rootAdmin.id,
+      });
+      project = await this.projectService.readOne(projectId, {
+        userId: this.configService.rootAdmin.id,
+      });
+      recipient = {
+        id: recipientId.split('@')[0],
+        email: { value: recipientId, canRead: true, canEdit: false },
+        displayFirstName: {
+          value: recipientId.split('@')[0],
+          canRead: true,
+          canEdit: false,
+        },
+        displayLastName: { value: '', canRead: true, canEdit: false },
+        timezone: {
+          value: this.configService.defaultTimeZone,
+          canRead: true,
+          canEdit: false,
+        },
+      };
+    } else {
+      changedBy = await this.userService.readOne(changedById, {
+        userId: recipientId,
+      });
+      project = await this.projectService.readOne(projectId, {
+        userId: recipientId,
+      });
+      recipient = await this.userService.readOne(recipientId, {
+        userId: recipientId,
+      });
+    }
     return {
-      changedBy: await this.userService.readOne(changedById, {
-        userId: recipientId,
-      }),
-      project: await this.projectService.readOne(projectId, {
-        userId: recipientId,
-      }),
-      recipient: await this.userService.readOne(recipientId, {
-        userId: recipientId,
-      }),
+      changedBy,
+      project,
+      recipient,
       previousStep,
     };
   }

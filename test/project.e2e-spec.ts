@@ -844,7 +844,12 @@ describe('Project e2e', () => {
     expect(queryProject.project.budget.value.status).toBe('Pending');
   });
 
-  it.only('Should have a current budget when made active', async () => {
+  it('Should have a current budget when made active', async () => {
+    await login(app, {
+      email: process.env.ROOT_ADMIN_EMAIL,
+      password: process.env.ROOT_ADMIN_PASSWORD,
+    });
+
     const project = await createProject(app);
 
     // all projects should start as 'EarlyConversations'
@@ -863,7 +868,6 @@ describe('Project e2e', () => {
 
     let result;
     for (const step of stepsInOrder) {
-      console.log(step);
       result = await app.graphql.mutate(
         gql`
           mutation updateProject($id: ID!, $step: ProjectStep!) {
