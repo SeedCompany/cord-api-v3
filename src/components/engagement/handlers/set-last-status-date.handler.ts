@@ -7,11 +7,12 @@ import {
   ILogger,
   Logger,
 } from '../../../core';
+import { EngagementStatus } from '../dto';
 import { EngagementService } from '../engagement.service';
 import { EngagementUpdatedEvent } from '../events';
 
 @EventsHandler(EngagementUpdatedEvent)
-export class SetInitialEndDate
+export class SetLastStatusDate
   implements IEventHandler<EngagementUpdatedEvent> {
   constructor(
     private readonly db: DatabaseService,
@@ -19,18 +20,36 @@ export class SetInitialEndDate
     @Logger('engagement:set-last-status-date') private readonly logger: ILogger
   ) {}
 
-  async handle({ updated, session }: EngagementUpdatedEvent) {
+  async handle({ previous, updated, session }: EngagementUpdatedEvent) {
+    if (previous.status === updated.status) {
+      return;
+    }
+
     try {
       const modifiedAt = DateTime.local();
-      // await this.db
-      //   .query()
-      //   .match([node('engagement', 'Engagement', { id: previous.id })])
-      //   .run();
-      updated = await this.db.sgUpdateProperty({
+      const changes = {
+        id: updated.id,
+        statusModifiedAt: modifiedAt,
+        lastSuspendedAt: (undefined as unknown) as DateTime,
+        lastReactivatedAt: (undefined as unknown) as DateTime,
+      };
+
+      if (updated.status === EngagementStatus.Suspended) {
+        changes.lastSuspendedAt = modifiedAt;
+      }
+
+      if (
+        previous.status === EngagementStatus.Suspended &&
+        updated.status === EngagementStatus.Active
+      ) {
+        changes.lastReactivatedAt = modifiedAt;
+      }
+
+      updated = await this.db.sgUpdateProperties({
         object: updated,
         session,
-        key: 'statusModifiedAt',
-        value: modifiedAt,
+        props: ['statusModifiedAt', 'lastSuspendedAt', 'lastReactivatedAt'],
+        changes,
         nodevar: 'Engagement',
       });
     } catch (exception) {
