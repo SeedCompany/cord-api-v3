@@ -31,7 +31,7 @@ export class ConfigService {
       from: this.env.string('EMAIL_FROM').optional('noreply@cordfield.com'),
       replyTo: this.env.string('EMAIL_REPLY_TO').optional() || undefined, // falsy -> undefined
       send,
-      open: this.env.boolean('EMAIL_OPEN').optional(!send),
+      open: this.env.boolean('EMAIL_OPEN').optional(!send && !this.jest),
       sesRegion: this.env.string('SES_REGION').optional(),
     };
   }
