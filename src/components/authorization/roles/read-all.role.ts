@@ -141,6 +141,7 @@ export const ReadAll = new DbRole({
         { propertyName: 'startDateOverride',          permission: { read, }, },
         { propertyName: 'statusModifiedAt',           permission: { read, }, },
         { propertyName: 'modifiedAt',                 permission: { read, }, },
+        { propertyName: 'status',                     permission: { read, }, },
     ]}),
     new DbBaseNodeGrant<DbLanguage>({
       __className: 'DbLanguage',
@@ -185,6 +186,7 @@ export const ReadAll = new DbRole({
         { propertyName: 'statusModifiedAt',           permission: { read, }, },
         { propertyName: 'modifiedAt',                 permission: { read, }, },
         { propertyName: 'product',                    permission: { read, }, },
+        { propertyName: 'status',                     permission: { read, }, },
     ]}),
     new DbBaseNodeGrant<DbLiteracyMaterial>({
       __className: 'DbLiteracyMaterial',
