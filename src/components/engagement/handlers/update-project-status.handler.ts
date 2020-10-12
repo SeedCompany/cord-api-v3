@@ -1,6 +1,6 @@
 import { node, relation } from 'cypher-query-builder';
 import { DatabaseService, EventsHandler, IEventHandler } from '../../../core';
-import { ProjectService, ProjectStatus, ProjectType } from '../../project';
+import { ProjectStatus, ProjectType } from '../../project';
 import { ProjectUpdatedEvent } from '../../project/events';
 import { EngagementStatus } from '../dto';
 import { EngagementService } from '../engagement.service';
@@ -10,19 +10,14 @@ export class UpdateProjectStatusHandler
   implements IEventHandler<ProjectUpdatedEvent> {
   constructor(
     private readonly db: DatabaseService,
-    private readonly engagementService: EngagementService,
-    private readonly projectService: ProjectService
+    private readonly engagementService: EngagementService
   ) {}
 
-  async handle({ previous, updates, session }: ProjectUpdatedEvent) {
+  async handle({ previous, updated, updates, session }: ProjectUpdatedEvent) {
     // When the project becomes Active if it is currently InDevelopment
-    const updatedProject = await this.projectService.readOne(
-      updates.id,
-      session
-    );
     if (
       previous.status !== ProjectStatus.InDevelopment ||
-      updatedProject.status !== ProjectStatus.Active
+      updated.status !== ProjectStatus.Active
     ) {
       return;
     }
@@ -46,7 +41,7 @@ export class UpdateProjectStatusHandler
           id: engagement.id,
           status: EngagementStatus.Active,
         };
-        updatedProject.type === ProjectType.Translation
+        updated.type === ProjectType.Translation
           ? await this.engagementService.updateLanguageEngagement(
               updateInput,
               session
