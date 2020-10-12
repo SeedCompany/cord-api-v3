@@ -12,6 +12,7 @@ import { EngagementService } from './engagement.service';
 import * as handlers from './handlers';
 import { InternshipEngagementResolver } from './internship-engagement.resolver';
 import { LanguageEngagementResolver } from './language-engagement.resolver';
+import { EngagementRepository } from './repository/engagement.repository';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { LanguageEngagementResolver } from './language-engagement.resolver';
     LanguageEngagementResolver,
     InternshipEngagementResolver,
     EngagementService,
+    EngagementRepository,
     ...Object.values(handlers),
   ],
   exports: [EngagementService],
