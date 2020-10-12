@@ -142,6 +142,7 @@ export const FinancialAnalyst = new DbRole({
         { propertyName: 'startDateOverride',          permission: { read, write, }, },
         { propertyName: 'statusModifiedAt',           permission: { read, write, }, },
         { propertyName: 'modifiedAt',                 permission: { read, write, }, },
+        { propertyName: 'status',                     permission: { read, write, }, },
     ]}),
     new DbBaseNodeGrant<DbLanguage>({
       __className: 'DbLanguage',
