@@ -8,6 +8,7 @@ import {
   Repository,
   RepositoryRequest,
 } from '../../../core/database/repository';
+import { securedPropertyDefinitions } from '../engagement.transformers';
 
 export class EngagementRepository extends Repository {
   requestClass = EngagementRepositoryRequest; // TODO: could perhaps infer this from class name
@@ -18,39 +19,6 @@ export class EngagementRepository extends Repository {
 }
 
 export class EngagementRepositoryRequest extends RepositoryRequest {
-  private readonly securedProperties = {
-    status: true,
-    statusModifiedAt: true,
-    completeDate: true,
-    disbursementCompleteDate: true,
-    communicationsCompleteDate: true,
-    initialEndDate: true,
-    startDate: true,
-    endDate: true,
-    startDateOverride: true,
-    endDateOverride: true,
-    modifiedAt: true,
-    lastSuspendedAt: true,
-    lastReactivatedAt: true,
-    ceremony: true,
-
-    //Language Specific
-    firstScripture: true,
-    lukePartnership: true,
-    sentPrintingDate: true,
-    paraTextRegistryId: true,
-    pnp: true,
-    language: true,
-
-    //Internship Specific
-    position: true,
-    growthPlan: true,
-    methodologies: true,
-    intern: true,
-    mentor: true,
-    countryOfOrigin: true,
-  };
-
   findEngagementIdsByProjectId(session: ISession, filter: any, input: any) {
     let label = 'Engagement';
     if (filter.type === 'language') {
@@ -72,7 +40,10 @@ export class EngagementRepositoryRequest extends RepositoryRequest {
         : []),
     ]);
 
-    const isSortOnNode = !(input.sort in this.securedProperties); // if sort is not in secured properties; it is on the node itself.
+    // TODO: refactor to remove dependence on securedProperties check
+    //       should be able to test in db if property exists on node and
+    //       if not search relationships. Test here will not be needed.
+    const isSortOnNode = !(input.sort in securedPropertyDefinitions); // if sort is not in secured properties; it is on the node itself.
     this.calculateTotalAndPaginateList(
       input.sort,
       input.order,

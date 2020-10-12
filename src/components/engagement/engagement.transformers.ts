@@ -5,7 +5,7 @@ import {
   parseSecuredProperties,
 } from '../../core/database/results';
 
-const securedPropertyDefinitions = {
+export const securedPropertyDefinitions = {
   status: true,
   statusModifiedAt: true,
   completeDate: true,
