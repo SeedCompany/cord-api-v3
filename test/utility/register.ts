@@ -32,6 +32,7 @@ export const generateRequireFieldsRegisterInput = (): RegisterInput => ({
   displayFirstName: faker.name.firstName() + generate(),
   displayLastName: faker.name.lastName() + generate(),
   password: faker.internet.password(10),
+  timezone: 'America/Chicago',
 });
 
 export async function registerUser(

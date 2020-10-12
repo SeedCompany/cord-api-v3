@@ -33,6 +33,8 @@ export enum ProjectStep {
   Terminated = 'Terminated',
 
   Completed = 'Completed',
+
+  Pending = 'Pending', // temp, while FE is updated
 }
 
 registerEnumType(ProjectStep, {

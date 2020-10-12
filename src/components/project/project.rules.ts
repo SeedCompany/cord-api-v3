@@ -733,6 +733,7 @@ export class ProjectRules {
     userId: string | undefined,
     nextStep: ProjectStep
   ) {
+    console.log(projectId, nextStep);
     const transitions = await this.getAvailableTransitions(projectId, userId);
 
     const validNextStep = transitions.some(

@@ -36,6 +36,10 @@ export class ConfigService {
     };
   }
 
+  defaultTimeZone = this.env
+    .string('DEFAULT_TIMEZONE')
+    .optional('America/Chicago');
+
   frontendUrl = this.env
     .string('FRONTEND_URL')
     .optional('http://localhost:3001');
