@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { difference, union } from 'lodash';
+import { union, without } from 'lodash';
 import { generate } from 'shortid';
 import {
-  InputException,
   ISession,
   ServerException,
   UnauthenticatedException,
@@ -302,66 +301,58 @@ export class AuthorizationService {
     userId: string,
     power: Powers,
     session: ISession
-  ): Promise<boolean> {
+  ): Promise<void> {
     if (!session.userId) {
       throw new UnauthenticatedException('user not logged in');
     }
 
     const requestingUserPowers = await this.readPowerByUserId(session.userId);
-    if (requestingUserPowers.includes(Powers.GrantPower)) {
-      return await this.grantPower(power, userId);
+    if (!requestingUserPowers.includes(Powers.GrantPower)) {
+      throw new UnauthorizedException(
+        'user does not have the power to grant power to others'
+      );
     }
-    throw new InputException(
-      'user does not have the power to grant power to others'
-    );
+
+    await this.grantPower(power, userId);
   }
 
   async deletePower(
     userId: string,
     power: Powers,
     session: ISession
-  ): Promise<boolean> {
+  ): Promise<void> {
     if (!session.userId) {
       throw new UnauthenticatedException('user not logged in');
     }
 
     const requestingUserPowers = await this.readPowerByUserId(session.userId);
-    if (requestingUserPowers.includes(Powers.GrantPower)) {
-      return await this.removePower(power, userId);
+    if (!requestingUserPowers.includes(Powers.GrantPower)) {
+      throw new UnauthorizedException(
+        'user does not have the power to remove power from others'
+      );
     }
-    throw new InputException(
-      'user does not have the power to remove power from others'
-    );
+
+    await this.removePower(power, userId);
   }
 
-  async grantPower(power: Powers, userId: string): Promise<boolean> {
-    // get powers
+  async grantPower(power: Powers, userId: string): Promise<void> {
     const powers = await this.readPowerByUserId(userId);
 
-    if (powers === undefined) {
-      throw new UnauthorizedException('user not found');
-    } else {
-      const newPowers = union(powers, [power]);
-      return await this.updateUserPowers(userId, newPowers);
-    }
+    const newPowers = union(powers, [power]);
+    await this.updateUserPowers(userId, newPowers);
   }
 
-  async removePower(power: Powers, userId: string): Promise<boolean> {
-    // get power
+  async removePower(power: Powers, userId: string): Promise<void> {
     const powers = await this.readPowerByUserId(userId);
 
-    if (powers === undefined) {
-      throw new UnauthorizedException('user not found');
-    } else {
-      const newPowers = difference(powers, [power]);
-      return await this.updateUserPowers(userId, newPowers);
-    }
+    const newPowers = without(powers, power);
+    await this.updateUserPowers(userId, newPowers);
   }
 
-  async updateUserPowers(
+  private async updateUserPowers(
     userId: string,
     newPowers: Powers[]
-  ): Promise<boolean> {
+  ): Promise<void> {
     const result = await this.db
       .query()
       .optionalMatch([node('userOrSg', 'User', { id: userId })])
@@ -371,14 +362,12 @@ export class AuthorizationService {
       .setValues({ 'userOrSg.powers': newPowers })
       .run();
 
-    if (result) {
-      return true;
-    } else {
-      throw new ServerException('failed to grant power');
+    if (!result) {
+      throw new ServerException('Failed to grant power');
     }
   }
 
-  async readPowerByUserId(id: string): Promise<Powers[]> {
+  private async readPowerByUserId(id: string): Promise<Powers[]> {
     const result = await this.db
       .query()
       .match([node('user', 'User', { id })])
@@ -386,11 +375,12 @@ export class AuthorizationService {
       .unionAll()
       .match([node('sg', 'SecurityGroup', { id })])
       .raw('return sg.powers as powers')
+      .asResult<{ powers: Powers[] }>()
       .first();
 
     if (!result) {
       return [];
     }
-    return result.powers as Powers[];
+    return result.powers;
   }
 }
