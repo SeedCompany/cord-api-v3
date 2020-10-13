@@ -217,6 +217,9 @@ export class EngagementService {
         'languageEngagement'
       ),
       ...property('pnp', pnp || undefined, 'languageEngagement'),
+      ...property('statusModifiedAt', undefined, 'languageEngagement'),
+      ...property('lastSuspendedAt', undefined, 'languageEngagement'),
+      ...property('lastReactivatedAt', undefined, 'languageEngagement'),
       ...property(
         'status',
         input.status || EngagementStatus.InDevelopment,
@@ -422,6 +425,9 @@ export class EngagementService {
         growthPlan || undefined,
         'internshipEngagement'
       ),
+      ...property('statusModifiedAt', undefined, 'internshipEngagement'),
+      ...property('lastSuspendedAt', undefined, 'internshipEngagement'),
+      ...property('lastReactivatedAt', undefined, 'internshipEngagement'),
       ...property(
         'status',
         input.status || EngagementStatus.InDevelopment,
