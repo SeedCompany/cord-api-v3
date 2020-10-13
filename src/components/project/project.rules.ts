@@ -113,7 +113,7 @@ export class ProjectRules {
             },
             {
               to: ProjectStep.PendingConceptApproval,
-              type: TransitionType.Approve,
+              type: TransitionType.Neutral,
               label: 'Resubmit for Concept Approval',
             },
             {
