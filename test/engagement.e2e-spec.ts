@@ -1068,4 +1068,176 @@ describe('Engagement e2e', () => {
       expect(actual.status).toBe(EngagementStatus.Active);
     });
   });
+
+  /**
+   * Whenever an engagement's status gets changed to anything different the statusModifiedAt date should get set to now
+   */
+  it('should update Engagement statusModifiedAt if status is updated', async () => {
+    const project = await createProject(app, { type: ProjectType.Internship });
+    const engagement = await createInternshipEngagement(app, {
+      projectId: project.id,
+    });
+
+    // Update Engagement status to AwaitingDedication
+    const modifiedAt = DateTime.local();
+    await app.graphql.mutate(
+      gql`
+        mutation updateInternshipEngagement($id: ID!) {
+          updateInternshipEngagement(
+            input: { engagement: { id: $id, status: AwaitingDedication } }
+          ) {
+            engagement {
+              ...internshipEngagement
+            }
+          }
+        }
+        ${fragments.internshipEngagement}
+      `,
+      {
+        id: engagement.id,
+      }
+    );
+
+    const { engagement: actual } = await app.graphql.query(
+      gql`
+        query engagement($id: ID!) {
+          engagement(id: $id) {
+            ...internshipEngagement
+          }
+        }
+        ${fragments.internshipEngagement}
+      `,
+      {
+        id: engagement.id,
+      }
+    );
+    expect(actual.id).toBe(engagement.id);
+    expect(actual.status).toBe(EngagementStatus.AwaitingDedication);
+    expect(
+      DateTime.fromISO(actual.statusModifiedAt.value).toMillis()
+    ).toBeGreaterThanOrEqual(modifiedAt.toMillis());
+  });
+
+  /**
+   * Whenever an engagement's status gets set to Suspended the lastSuspendedAt date should get set to now
+   */
+  it('should update Engagement lastSuspendedAt if status gets set to Suspended', async () => {
+    const project = await createProject(app, { type: ProjectType.Internship });
+    const engagement = await createInternshipEngagement(app, {
+      projectId: project.id,
+    });
+
+    // Update Engagement status to Suspended
+    const modifiedAt = DateTime.local();
+    await app.graphql.mutate(
+      gql`
+        mutation updateInternshipEngagement($id: ID!) {
+          updateInternshipEngagement(
+            input: { engagement: { id: $id, status: Suspended } }
+          ) {
+            engagement {
+              ...internshipEngagement
+            }
+          }
+        }
+        ${fragments.internshipEngagement}
+      `,
+      {
+        id: engagement.id,
+      }
+    );
+
+    const { engagement: actual } = await app.graphql.query(
+      gql`
+        query engagement($id: ID!) {
+          engagement(id: $id) {
+            ...internshipEngagement
+          }
+        }
+        ${fragments.internshipEngagement}
+      `,
+      {
+        id: engagement.id,
+      }
+    );
+    expect(actual.id).toBe(engagement.id);
+    expect(actual.status).toBe(EngagementStatus.Suspended);
+    expect(
+      DateTime.fromISO(actual.statusModifiedAt.value).toMillis()
+    ).toBeGreaterThanOrEqual(modifiedAt.toMillis());
+    expect(
+      DateTime.fromISO(actual.lastSuspendedAt.value).toMillis()
+    ).toBeGreaterThanOrEqual(modifiedAt.toMillis());
+  });
+
+  /**
+   * Whenever an engagement's status gets set to Active after previously being Suspended the lastReactivatedAt date should get set to now
+   */
+  it('should update Engagement lastReactivatedAt if status gets set to Active from Suspended', async () => {
+    const project = await createProject(app, { type: ProjectType.Internship });
+    const engagement = await createInternshipEngagement(app, {
+      projectId: project.id,
+    });
+
+    // Update Engagement status to Suspended
+    await app.graphql.mutate(
+      gql`
+        mutation updateInternshipEngagement($id: ID!) {
+          updateInternshipEngagement(
+            input: { engagement: { id: $id, status: Suspended } }
+          ) {
+            engagement {
+              ...internshipEngagement
+            }
+          }
+        }
+        ${fragments.internshipEngagement}
+      `,
+      {
+        id: engagement.id,
+      }
+    );
+
+    const modifiedAt = DateTime.local();
+    // Update Engagement status to Active
+    await app.graphql.mutate(
+      gql`
+        mutation updateInternshipEngagement($id: ID!) {
+          updateInternshipEngagement(
+            input: { engagement: { id: $id, status: Active } }
+          ) {
+            engagement {
+              ...internshipEngagement
+            }
+          }
+        }
+        ${fragments.internshipEngagement}
+      `,
+      {
+        id: engagement.id,
+      }
+    );
+
+    const { engagement: actual } = await app.graphql.query(
+      gql`
+        query engagement($id: ID!) {
+          engagement(id: $id) {
+            ...internshipEngagement
+          }
+        }
+        ${fragments.internshipEngagement}
+      `,
+      {
+        id: engagement.id,
+      }
+    );
+    expect(actual.id).toBe(engagement.id);
+    expect(actual.status).toBe(EngagementStatus.Active);
+    expect(
+      DateTime.fromISO(actual.statusModifiedAt.value).toMillis()
+    ).toBeGreaterThanOrEqual(modifiedAt.toMillis());
+    expect(
+      DateTime.fromISO(actual.lastReactivatedAt.value).toMillis()
+    ).toBeGreaterThanOrEqual(modifiedAt.toMillis());
+  });
 });
