@@ -25,7 +25,7 @@ export abstract class UpdateLocation {
   @IsAlpha()
   @Length(3, 3)
   @Transform(toUpper)
-  readonly iso31663?: string;
+  readonly isoAlpha3?: string;
 }
 
 @InputType()

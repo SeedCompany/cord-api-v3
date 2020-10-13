@@ -6,6 +6,6 @@ export class DbLocation extends DbBaseNode {
   name: any = null;
   type: any = null;
   sensitivity: any = null;
-  iso31663: any = null;
+  isoAlpha3: any = null;
   fundingAccount: any = null;
 }
