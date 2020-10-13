@@ -18,13 +18,14 @@ export class SetLastStatusDate
     @Logger('engagement:set-last-status-date') private readonly logger: ILogger
   ) {}
 
-  async handle({ previous, updated, session }: EngagementUpdatedEvent) {
+  async handle(event: EngagementUpdatedEvent) {
+    const { previous, updated, session } = event;
     if (previous.status === updated.status) {
       return;
     }
 
     try {
-      const modifiedAt = DateTime.local();
+      const modifiedAt = updated.modifiedAt;
       const changes = {
         id: updated.id,
         statusModifiedAt: modifiedAt,
@@ -43,7 +44,7 @@ export class SetLastStatusDate
         changes.lastReactivatedAt = modifiedAt;
       }
 
-      updated = await this.db.sgUpdateProperties({
+      event.updated = await this.db.sgUpdateProperties({
         object: updated,
         session,
         props: ['statusModifiedAt', 'lastSuspendedAt', 'lastReactivatedAt'],

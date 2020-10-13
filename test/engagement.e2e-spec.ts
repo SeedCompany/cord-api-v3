@@ -1079,8 +1079,9 @@ describe('Engagement e2e', () => {
     });
 
     // Update Engagement status to AwaitingDedication
-    const modifiedAt = DateTime.local();
-    await app.graphql.mutate(
+    const {
+      updateInternshipEngagement: { engagement: actual },
+    } = await app.graphql.mutate(
       gql`
         mutation updateInternshipEngagement($id: ID!) {
           updateInternshipEngagement(
@@ -1098,24 +1099,9 @@ describe('Engagement e2e', () => {
       }
     );
 
-    const { engagement: actual } = await app.graphql.query(
-      gql`
-        query engagement($id: ID!) {
-          engagement(id: $id) {
-            ...internshipEngagement
-          }
-        }
-        ${fragments.internshipEngagement}
-      `,
-      {
-        id: engagement.id,
-      }
-    );
     expect(actual.id).toBe(engagement.id);
     expect(actual.status).toBe(EngagementStatus.AwaitingDedication);
-    expect(
-      DateTime.fromISO(actual.statusModifiedAt.value).toMillis()
-    ).toBeGreaterThanOrEqual(modifiedAt.toMillis());
+    expect(actual.statusModifiedAt.value).toBe(actual.modifiedAt);
   });
 
   /**
@@ -1128,8 +1114,9 @@ describe('Engagement e2e', () => {
     });
 
     // Update Engagement status to Suspended
-    const modifiedAt = DateTime.local();
-    await app.graphql.mutate(
+    const {
+      updateInternshipEngagement: { engagement: actual },
+    } = await app.graphql.mutate(
       gql`
         mutation updateInternshipEngagement($id: ID!) {
           updateInternshipEngagement(
@@ -1147,27 +1134,10 @@ describe('Engagement e2e', () => {
       }
     );
 
-    const { engagement: actual } = await app.graphql.query(
-      gql`
-        query engagement($id: ID!) {
-          engagement(id: $id) {
-            ...internshipEngagement
-          }
-        }
-        ${fragments.internshipEngagement}
-      `,
-      {
-        id: engagement.id,
-      }
-    );
     expect(actual.id).toBe(engagement.id);
     expect(actual.status).toBe(EngagementStatus.Suspended);
-    expect(
-      DateTime.fromISO(actual.statusModifiedAt.value).toMillis()
-    ).toBeGreaterThanOrEqual(modifiedAt.toMillis());
-    expect(
-      DateTime.fromISO(actual.lastSuspendedAt.value).toMillis()
-    ).toBeGreaterThanOrEqual(modifiedAt.toMillis());
+    expect(actual.statusModifiedAt.value).toBe(actual.modifiedAt);
+    expect(actual.lastSuspendedAt.value).toBe(actual.modifiedAt);
   });
 
   /**
@@ -1198,9 +1168,10 @@ describe('Engagement e2e', () => {
       }
     );
 
-    const modifiedAt = DateTime.local();
     // Update Engagement status to Active
-    await app.graphql.mutate(
+    const {
+      updateInternshipEngagement: { engagement: actual },
+    } = await app.graphql.mutate(
       gql`
         mutation updateInternshipEngagement($id: ID!) {
           updateInternshipEngagement(
@@ -1218,26 +1189,9 @@ describe('Engagement e2e', () => {
       }
     );
 
-    const { engagement: actual } = await app.graphql.query(
-      gql`
-        query engagement($id: ID!) {
-          engagement(id: $id) {
-            ...internshipEngagement
-          }
-        }
-        ${fragments.internshipEngagement}
-      `,
-      {
-        id: engagement.id,
-      }
-    );
     expect(actual.id).toBe(engagement.id);
     expect(actual.status).toBe(EngagementStatus.Active);
-    expect(
-      DateTime.fromISO(actual.statusModifiedAt.value).toMillis()
-    ).toBeGreaterThanOrEqual(modifiedAt.toMillis());
-    expect(
-      DateTime.fromISO(actual.lastReactivatedAt.value).toMillis()
-    ).toBeGreaterThanOrEqual(modifiedAt.toMillis());
+    expect(actual.statusModifiedAt.value).toBe(actual.modifiedAt);
+    expect(actual.lastReactivatedAt.value).toBe(actual.modifiedAt);
   });
 });
