@@ -44,6 +44,7 @@ import {
   login,
   registerUser,
   registerUserWithPower,
+  runAsAdmin,
   TestApp,
 } from './utility';
 import {
@@ -849,41 +850,38 @@ describe('Project e2e', () => {
   });
 
   it('Should have a current budget when made active', async () => {
-    await login(app, {
-      email: process.env.ROOT_ADMIN_EMAIL,
-      password: process.env.ROOT_ADMIN_PASSWORD,
-    });
+    await runAsAdmin(app, async () => {
+      const project = await createProject(app);
 
-    const project = await createProject(app);
+      for (const next of stepsFromEarlyConversationToBeforeActive) {
+        await changeProjectStep(app, project.id, next);
+      }
 
-    for (const next of stepsFromEarlyConversationToBeforeActive) {
-      await changeProjectStep(app, project.id, next);
-    }
-
-    const result = await app.graphql.mutate(
-      gql`
-        mutation updateProject($id: ID!, $step: ProjectStep!) {
-          updateProject(input: { project: { id: $id, step: $step } }) {
-            project {
-              budget {
-                value {
-                  status
+      const result = await app.graphql.mutate(
+        gql`
+          mutation updateProject($id: ID!, $step: ProjectStep!) {
+            updateProject(input: { project: { id: $id, step: $step } }) {
+              project {
+                budget {
+                  value {
+                    status
+                  }
                 }
               }
             }
           }
+        `,
+        {
+          id: project.id,
+          // Ensure the result from the change to Active returns the correct budget status
+          step: ProjectStep.Active,
         }
-      `,
-      {
-        id: project.id,
-        // Ensure the result from the change to Active returns the correct budget status
-        step: ProjectStep.Active,
-      }
-    );
+      );
 
-    expect(result?.updateProject.project.budget.value.status).toBe(
-      BudgetStatus.Current
-    );
+      expect(result?.updateProject.project.budget.value.status).toBe(
+        BudgetStatus.Current
+      );
+    });
   });
 
   // #727 create without mouStart, mouEnd, estimatedSubmission
