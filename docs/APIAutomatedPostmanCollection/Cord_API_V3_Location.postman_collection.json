@@ -529,7 +529,7 @@
 									"    return result;\r",
 									"}\r",
 									"\r",
-									"pm.globals.set(\"iso31663\", makeid(false, false, true, 5));"
+									"pm.globals.set(\"iso31663\", makeid(false, true, false, 3));"
 								],
 								"type": "text/javascript"
 							}
@@ -1056,7 +1056,7 @@
 					"response": []
 				},
 				{
-					"name": "Create Location  Not Mandatory Field Blank - iso31663 ???",
+					"name": "Create Location  Not Mandatory Field Blank - iso31663",
 					"event": [
 						{
 							"listen": "test",
@@ -1066,8 +1066,8 @@
 									"var jsonData = pm.response.json();",
 									"",
 									"//Common Verification",
-									"pm.test(\"Status code is 400 Bad Request\", function () {",
-									"    pm.response.to.have.status(400);",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
 									"});",
 									"",
 									"pm.test(\"Response time is less than 1000ms\", function () {",
@@ -1076,14 +1076,25 @@
 									"",
 									"//Test Specific",
 									"pm.test(\"Verify that error message is correct\", function () {",
-									"    var error_message = jsonData.errors[0].message;  ",
-									"    pm.expect(error_message).to.include(\"does not exist in \\\"Sensitivity\\\" enum\");",
+									"    var error_message = jsonData.errors[0].message;",
+									"    pm.expect(error_message).to.eql(\"Input validation failed\");",
 									"});",
 									"",
-									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {",
-									"    var error_code = jsonData.errors[0].extensions.code;  ",
-									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");",
+									"pm.test(\"Verify that error status is 400\", function () {",
+									"    var error_status = jsonData.errors[0].extensions.status;",
+									"    pm.expect(error_status).to.eql(400);",
 									"});",
+									"",
+									"pm.test(\"Verify that length message is correct\", function () {",
+									"    var length_message = jsonData.errors[0].extensions.errors['location.iso31663'].length;",
+									"    pm.expect(length_message).to.eql(\"iso31663 must be longer than or equal to 3 characters\");",
+									"});",
+									"",
+									"pm.test(\"Verify that isAlpha message is correct\", function () {",
+									"    var isAlpha_message = jsonData.errors[0].extensions.errors['location.iso31663'].isAlpha;",
+									"    pm.expect(isAlpha_message).to.eql(\"iso31663 must contain only letters (a-zA-Z)\");",
+									"});",
+									"",
 									""
 								],
 								"type": "text/javascript"
@@ -2138,8 +2149,8 @@
 									"var jsonData = pm.response.json();",
 									"",
 									"//Common Verification",
-									"pm.test(\"Status code is 400 Bad Request\", function () {",
-									"    pm.response.to.have.status(400);",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
 									"});",
 									"",
 									"pm.test(\"Response time is less than 1000ms\", function () {",
@@ -2148,14 +2159,25 @@
 									"",
 									"//Test Specific",
 									"pm.test(\"Verify that error message is correct\", function () {",
-									"    var error_message = jsonData.errors[0].message;  ",
-									"    pm.expect(error_message).to.include(\"does not exist in \\\"Sensitivity\\\" enum\");",
+									"    var error_message = jsonData.errors[0].message;",
+									"    pm.expect(error_message).to.eql(\"Input validation failed\");",
 									"});",
 									"",
-									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {",
-									"    var error_code = jsonData.errors[0].extensions.code;  ",
-									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");",
+									"pm.test(\"Verify that error status is 400\", function () {",
+									"    var error_status = jsonData.errors[0].extensions.status;",
+									"    pm.expect(error_status).to.eql(400);",
 									"});",
+									"",
+									"pm.test(\"Verify that length message is correct\", function () {",
+									"    var length_message = jsonData.errors[0].extensions.errors['location.iso31663'].length;",
+									"    pm.expect(length_message).to.eql(\"iso31663 must be shorter than or equal to 3 characters\");",
+									"});",
+									"",
+									"pm.test(\"Verify that isAlpha message is correct\", function () {",
+									"    var isAlpha_message = jsonData.errors[0].extensions.errors['location.iso31663'].isAlpha;",
+									"    pm.expect(isAlpha_message).to.eql(\"iso31663 must contain only letters (a-zA-Z)\");",
+									"});",
+									"",
 									""
 								],
 								"type": "text/javascript"
@@ -2746,7 +2768,7 @@
 									"    return result;\r",
 									"}\r",
 									"\r",
-									"pm.globals.set(\"iso31663\", makeid(false, false, true, 5));"
+									"pm.globals.set(\"iso31663\", makeid(false, false, true, 3));"
 								],
 								"type": "text/javascript"
 							}
@@ -4561,20 +4583,7 @@
 									"    var sensitivity = myLocation.sensitivity;",
 									"    pm.expect(sensitivity).to.eql(location_data.sensitivity);",
 									"});",
-									"",
-									"// SORTING AND FILTER TESTS",
-									"pm.test(\"Verify that items are sorted by 'name' and orderd by requested order \", function () {",
-									"",
-									"    var responseBody = jsonData.data.locations.items;",
-									"    if (pm.globals.get('order') == \"ASC\") {",
-									"        var expectedSortedOrder = lodash.orderBy(responseBody, ['name.value'], ['asc'])",
-									"        pm.expect(responseBody).to.eql(expectedSortedOrder);",
-									"    } else {",
-									"        var expectedSortedOrder = lodash.orderBy(responseBody, ['name.value'], ['desc'])",
-									"        pm.expect(responseBody).to.eql(expectedSortedOrder);",
-									"    }",
-									"",
-									"});"
+									""
 								],
 								"type": "text/javascript"
 							}
@@ -4965,12 +4974,370 @@
 					"response": []
 				},
 				{
-					"name": "Get All Location Success  - Name sorting ASC",
+					"name": "Pre-req for Sort Location  by name  (Create Location)",
 					"event": [
 						{
 							"listen": "test",
 							"script": {
-								"id": "344f7e42-261a-4994-b673-cabfd0ff9737",
+								"id": "6a57b6c1-d336-4179-8f5a-ea8de0e88b1d",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"const moment = require('moment');",
+									"var lodash = require('lodash');",
+									"",
+									"var fundingAccount_data = JSON.parse(pm.globals.get('fundingAccount_data'));",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that location ID is not blank or null\", function () {",
+									"    var id = jsonData.data.createLocation.location.id;",
+									"    pm.expect(id).to.not.eql(null);",
+									"    pm.expect(id).to.not.eql(\"\");",
+									"",
+									"    // Saving data for future use",
+									"    pm.globals.set(\"locationid\", id);",
+									"});",
+									"",
+									"// Saving whole location Object to globals for future use",
+									"var location = JSON.stringify(jsonData.data.createLocation.location);",
+									"pm.globals.set(\"location_data\", location);",
+									"",
+									"pm.test(\"Verify that location's createdAt is in Specific time format\", function () {",
+									"    var time = jsonData.data.createLocation.location.createdAt;",
+									"    var isValidTime = moment(time, \"YYYY-MM-DDTHH:mm:ss.SSSZ\", true).isValid();",
+									"    pm.expect(isValidTime).to.eql(true);",
+									"});",
+									"",
+									"pm.test(\"Verify that location Name is same as requested\", function () {",
+									"    var locationName = jsonData.data.createLocation.location.name.value;",
+									"    pm.expect(locationName).to.eql(pm.globals.get('locationName'));",
+									"});",
+									"",
+									"pm.test(\"Verify that location type is same as requested\", function () {",
+									"    var type = jsonData.data.createLocation.location.type.value;",
+									"    pm.expect(type).to.eql(pm.globals.get('locationType'));",
+									"});",
+									"",
+									"pm.test(\"Verify that location sensitivity is same as requested\", function () {",
+									"    var sensitivity = jsonData.data.createLocation.location.sensitivity;",
+									"    pm.expect(sensitivity).to.eql(pm.globals.get('locationSensitivity'));",
+									"});",
+									"",
+									"pm.test(\"Verify that location iso31663 code  is same as requested\", function () {",
+									"    var iso31663 = jsonData.data.createLocation.location.iso31663.value;",
+									"    pm.expect(iso31663).to.eql(pm.globals.get('iso31663'));",
+									"});",
+									"",
+									"// Verify fundingAccount details",
+									"pm.test(\"Verifying fundingAccount ID\", function () {",
+									"    var id = jsonData.data.createLocation.location.fundingAccount.value.id;",
+									"    pm.expect(id).to.eql(fundingAccount_data.id);",
+									"});",
+									"",
+									"pm.test(\"Verifying fundingAccount createdAt\", function () {",
+									"    var createdAt = jsonData.data.createLocation.location.fundingAccount.value.createdAt;",
+									"    pm.expect(createdAt).to.eql(fundingAccount_data.createdAt);",
+									"});",
+									"",
+									"pm.test(\"Verifying fundingAccount name\", function () {",
+									"    var name = jsonData.data.createLocation.location.fundingAccount.value.name.value;",
+									"    pm.expect(name).to.eql(fundingAccount_data.name.value);",
+									"});",
+									"",
+									"pm.test(\"Verifying fundingAccount accountNumber\", function () {",
+									"    var accountNumber = jsonData.data.createLocation.location.fundingAccount.value.accountNumber.value;",
+									"    pm.expect(accountNumber).to.eql(fundingAccount_data.accountNumber.value);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "59f85784-17fb-4da6-97ee-0acf9214fcce",
+								"exec": [
+									"const moment = require('moment');\r",
+									"pm.globals.set(\"timestamp\", moment().format(\"DDMMYYYYhhmmss\"));\r",
+									"\r",
+									"pm.globals.set(\"locationName\", \"auto_LocationSort\" + moment().format(\"DDMMhhmmss\"));\r",
+									"\r",
+									"// Taking random value for the locationType from pre-defined possible values\r",
+									"var optionsArray = ['City',\r",
+									"    'County',\r",
+									"    'State',\r",
+									"    'Country',\r",
+									"    'CrossBorderArea'];\r",
+									"var randomNumber = Math.floor(Math.random() * optionsArray.length);\r",
+									"pm.globals.set('locationType', optionsArray[randomNumber]);\r",
+									"\r",
+									"// Taking random value for the locationSensitivity from pre-defined possible values\r",
+									"var optionsArray = ['Low', 'Medium', 'High'];\r",
+									"var randomNumber = Math.floor(Math.random() * optionsArray.length);\r",
+									"pm.globals.set('locationSensitivity', optionsArray[randomNumber]);\r",
+									"\r",
+									"// generate random id from characters\r",
+									"function makeid(lower, caps, mix, length) {\r",
+									"    var result = '';\r",
+									"    var characters;\r",
+									"    if (lower) {\r",
+									"        characters = 'abcdefghijklmnopqrstuvwxyz';\r",
+									"    } else if (caps) {\r",
+									"        characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';\r",
+									"    } else if (mix) {\r",
+									"        characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';\r",
+									"    } else {\r",
+									"        characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';\r",
+									"    }\r",
+									"    var charactersLength = characters.length;\r",
+									"    for (var i = 0; i < length; i++) {\r",
+									"        result += characters.charAt(Math.floor(Math.random() * charactersLength));\r",
+									"    }\r",
+									"    return result;\r",
+									"}\r",
+									"\r",
+									"pm.globals.set(\"iso31663\", makeid(false, false, true, 3));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      iso31663 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"name\": \"{{locationName}}\",\r\n            \"type\": \"{{locationType}}\",\r\n            \"sensitivity\": \"{{locationSensitivity}}\",\r\n            \"iso31663\": \"{{iso31663}}\",\r\n            \"fundingAccountId\": \"{{fundingAccountid}}\"\r\n        }\r\n    }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Pre-req for Sort Location  by name  (Create Location 2)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "ab4addd7-2698-4edf-84ea-f03a243c7c96",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"const moment = require('moment');",
+									"var lodash = require('lodash');",
+									"",
+									"var fundingAccount_data = JSON.parse(pm.globals.get('fundingAccount_data'));",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that location ID is not blank or null\", function () {",
+									"    var id = jsonData.data.createLocation.location.id;",
+									"    pm.expect(id).to.not.eql(null);",
+									"    pm.expect(id).to.not.eql(\"\");",
+									"",
+									"    // Saving data for future use",
+									"    pm.globals.set(\"locationid\", id);",
+									"});",
+									"",
+									"// Saving whole location Object to globals for future use",
+									"var location = JSON.stringify(jsonData.data.createLocation.location);",
+									"pm.globals.set(\"location_data\", location);",
+									"",
+									"pm.test(\"Verify that location's createdAt is in Specific time format\", function () {",
+									"    var time = jsonData.data.createLocation.location.createdAt;",
+									"    var isValidTime = moment(time, \"YYYY-MM-DDTHH:mm:ss.SSSZ\", true).isValid();",
+									"    pm.expect(isValidTime).to.eql(true);",
+									"});",
+									"",
+									"pm.test(\"Verify that location Name is same as requested\", function () {",
+									"    var locationName = jsonData.data.createLocation.location.name.value;",
+									"    pm.expect(locationName).to.eql(pm.globals.get('locationName'));",
+									"});",
+									"",
+									"pm.test(\"Verify that location type is same as requested\", function () {",
+									"    var type = jsonData.data.createLocation.location.type.value;",
+									"    pm.expect(type).to.eql(pm.globals.get('locationType'));",
+									"});",
+									"",
+									"pm.test(\"Verify that location sensitivity is same as requested\", function () {",
+									"    var sensitivity = jsonData.data.createLocation.location.sensitivity;",
+									"    pm.expect(sensitivity).to.eql(pm.globals.get('locationSensitivity'));",
+									"});",
+									"",
+									"pm.test(\"Verify that location iso31663 code  is same as requested\", function () {",
+									"    var iso31663 = jsonData.data.createLocation.location.iso31663.value;",
+									"    pm.expect(iso31663).to.eql(pm.globals.get('iso31663'));",
+									"});",
+									"",
+									"// Verify fundingAccount details",
+									"pm.test(\"Verifying fundingAccount ID\", function () {",
+									"    var id = jsonData.data.createLocation.location.fundingAccount.value.id;",
+									"    pm.expect(id).to.eql(fundingAccount_data.id);",
+									"});",
+									"",
+									"pm.test(\"Verifying fundingAccount createdAt\", function () {",
+									"    var createdAt = jsonData.data.createLocation.location.fundingAccount.value.createdAt;",
+									"    pm.expect(createdAt).to.eql(fundingAccount_data.createdAt);",
+									"});",
+									"",
+									"pm.test(\"Verifying fundingAccount name\", function () {",
+									"    var name = jsonData.data.createLocation.location.fundingAccount.value.name.value;",
+									"    pm.expect(name).to.eql(fundingAccount_data.name.value);",
+									"});",
+									"",
+									"pm.test(\"Verifying fundingAccount accountNumber\", function () {",
+									"    var accountNumber = jsonData.data.createLocation.location.fundingAccount.value.accountNumber.value;",
+									"    pm.expect(accountNumber).to.eql(fundingAccount_data.accountNumber.value);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "eaab3a60-8826-4889-b308-a3c567112034",
+								"exec": [
+									"const moment = require('moment');\r",
+									"pm.globals.set(\"timestamp\", moment().format(\"DDMMYYYYhhmmss\"));\r",
+									"\r",
+									"pm.globals.set(\"locationName\", \"Auto_LocationSort\" + moment().format(\"DDMMhhmmss\"));\r",
+									"\r",
+									"// Taking random value for the locationType from pre-defined possible values\r",
+									"var optionsArray = ['City',\r",
+									"    'County',\r",
+									"    'State',\r",
+									"    'Country',\r",
+									"    'CrossBorderArea'];\r",
+									"var randomNumber = Math.floor(Math.random() * optionsArray.length);\r",
+									"pm.globals.set('locationType', optionsArray[randomNumber]);\r",
+									"\r",
+									"// Taking random value for the locationSensitivity from pre-defined possible values\r",
+									"var optionsArray = ['Low', 'Medium', 'High'];\r",
+									"var randomNumber = Math.floor(Math.random() * optionsArray.length);\r",
+									"pm.globals.set('locationSensitivity', optionsArray[randomNumber]);\r",
+									"\r",
+									"// generate random id from characters\r",
+									"function makeid(lower, caps, mix, length) {\r",
+									"    var result = '';\r",
+									"    var characters;\r",
+									"    if (lower) {\r",
+									"        characters = 'abcdefghijklmnopqrstuvwxyz';\r",
+									"    } else if (caps) {\r",
+									"        characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';\r",
+									"    } else if (mix) {\r",
+									"        characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';\r",
+									"    } else {\r",
+									"        characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';\r",
+									"    }\r",
+									"    var charactersLength = characters.length;\r",
+									"    for (var i = 0; i < length; i++) {\r",
+									"        result += characters.charAt(Math.floor(Math.random() * charactersLength));\r",
+									"    }\r",
+									"    return result;\r",
+									"}\r",
+									"\r",
+									"pm.globals.set(\"iso31663\", makeid(false, false, true, 3));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      iso31663 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"name\": \"{{locationName}}\",\r\n            \"type\": \"{{locationType}}\",\r\n            \"sensitivity\": \"{{locationSensitivity}}\",\r\n            \"iso31663\": \"{{iso31663}}\",\r\n            \"fundingAccountId\": \"{{fundingAccountid}}\"\r\n        }\r\n    }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Location Success  - Name sorting ASC",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "46b271e4-c8a9-45b0-9e54-c6ba3e7bd844",
+								"exec": [
+									"pm.globals.set(\"itemCount\",25);\r",
+									"pm.globals.set(\"page\",1);\r",
+									"pm.globals.set('order', \"DESC\");"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "d403a65e-b244-4ca9-993d-8193e142b27d",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"var lodash = require('lodash');",
@@ -4992,18 +5359,6 @@
 									"    pm.expect(responseBody).to.eql(expectedSortedOrder);",
 									"",
 									"});"
-								],
-								"type": "text/javascript"
-							}
-						},
-						{
-							"listen": "prerequest",
-							"script": {
-								"id": "340162a3-8f36-4247-8e33-887d1e232274",
-								"exec": [
-									"pm.globals.set(\"itemCount\",25);\r",
-									"pm.globals.set(\"page\",1);\r",
-									"pm.globals.set('order', \"ASC\");"
 								],
 								"type": "text/javascript"
 							}
@@ -5347,6 +5702,1230 @@
 							"graphql": {
 								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      iso31663 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n    hasMore\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"\"\r\n    }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Location Parameter Mismatch - count",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "c6bc067f-bf26-4cf6-93f0-7331dd0dc1a0",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 400 Bad Request\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].message;  ",
+									"    pm.expect(error_message).to.include(\"is not defined by type \\\"LocationListInput\\\". Did you mean \\\"count\\\"?\");",
+									"});",
+									"",
+									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {",
+									"    var error_code = jsonData.errors[0].extensions.code;  ",
+									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "b149d2a8-12b3-4368-96e6-aaeabcbe1e18",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      iso31663 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n    hasMore\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"count1\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Location Parameter Mismatch - page",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "4044606d-39e1-4295-a526-175a8014654b",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 400 Bad Request\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].message;  ",
+									"    pm.expect(error_message).to.include(\"is not defined by type \\\"LocationListInput\\\". Did you mean \\\"page\\\"?\");",
+									"});",
+									"",
+									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {",
+									"    var error_code = jsonData.errors[0].extensions.code;  ",
+									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "04389168-5ae0-4633-b62a-e11cfec0e5d5",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      iso31663 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n    hasMore\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page1\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Location Parameter Mismatch - sort",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "ec3c8c19-5848-495d-9bc7-9be680affa30",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 400 Bad Request\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].message;  ",
+									"    pm.expect(error_message).to.include(\"is not defined by type \\\"LocationListInput\\\". Did you mean \\\"sort\\\"?\");",
+									"});",
+									"",
+									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {",
+									"    var error_code = jsonData.errors[0].extensions.code;  ",
+									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "5d710ba6-d30f-496c-b08c-8c7f5eb76ce0",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      iso31663 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n    hasMore\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort1\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Location Parameter Mismatch - order",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "1ea0f342-0a6e-4122-b645-622bacb5ed1e",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 400 Bad Request\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].message;  ",
+									"    pm.expect(error_message).to.include(\"is not defined by type \\\"LocationListInput\\\". Did you mean \\\"order\\\"?\");",
+									"});",
+									"",
+									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {",
+									"    var error_code = jsonData.errors[0].extensions.code;  ",
+									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "36c3423b-2b32-4d5a-ac57-de5ec14be271",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      iso31663 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n    hasMore\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order1\": \"{{order}}\"\r\n    }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Location Parameter Invalid - count min",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "682d8270-69fe-4b9f-bf2d-5c7fbdcb7d96",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].message;",
+									"    pm.expect(error_message).to.eql(\"Input validation failed\");",
+									"});",
+									"",
+									"pm.test(\"Verify that error status is 400\", function () {",
+									"    var error_status = jsonData.errors[0].extensions.status;",
+									"    pm.expect(error_status).to.eql(400);",
+									"});",
+									"",
+									"pm.test(\"Verify that count error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].extensions.errors.count.min;",
+									"    pm.expect(error_message).to.eql(\"count must not be less than 1\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "77bcb2fd-50a4-4f2d-aa95-d319f35b9895",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      iso31663 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n    hasMore\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"count\": 0,\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Location Parameter Invalid - count max",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "95aea0e1-0946-4ce2-9f13-fbd6f7fd0ae6",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].message;",
+									"    pm.expect(error_message).to.eql(\"Input validation failed\");",
+									"});",
+									"",
+									"pm.test(\"Verify that error status is 400\", function () {",
+									"    var error_status = jsonData.errors[0].extensions.status;",
+									"    pm.expect(error_status).to.eql(400);",
+									"});",
+									"",
+									"pm.test(\"Verify that count error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].extensions.errors.count.max;",
+									"    pm.expect(error_message).to.eql(\"count must not be greater than 100\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "9d5593b9-a30d-408a-9f8a-cfcc997a2286",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      iso31663 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n    hasMore\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"count\": 159,\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Location Parameter Invalid - page",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "489ede19-2c8e-484a-ad21-8f46ed7398de",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].message;  ",
+									"    pm.expect(error_message).to.eql(\"Input validation failed\");",
+									"});",
+									"",
+									"pm.test(\"Verify that error status is 400\", function () {",
+									"    var error_status = jsonData.errors[0].extensions.status;  ",
+									"    pm.expect(error_status).to.eql(400);",
+									"});",
+									"",
+									"pm.test(\"Verify that page error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].extensions.errors.page.min;  ",
+									"    pm.expect(error_message).to.eql(\"page must not be less than 1\");",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "9608435c-039a-4701-86a0-75bc69e2d06c",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      iso31663 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n    hasMore\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": 0,\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Location Parameter Invalid - sort",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "0340d874-294c-48ba-9117-2217b871299e",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"PENDING >> Similar to BUG #776(closed-Sprint 13) for Users (Sort Field allows empty value/unusual characters)\", function () {",
+									"",
+									"    if (jsonData.data) {",
+									"        pm.expect(\"BACKEND\").to.eql(\"PENDING\"); // fail forcefully",
+									"    } else {",
+									"        pm.expect(\"WRITE TEST CASES\").to.eql(\"ERRORS >>> \" + jsonData.errors[0].message);",
+									"    }",
+									"});",
+									"",
+									"// pm.test(\"Verify that error message is correct\", function () {",
+									"//     var error_message = jsonData.errors[0].message;  ",
+									"//     pm.expect(error_message).to.include(\"Invalid input\");",
+									"// });",
+									"",
+									"// pm.test(\"Verify that error code is InternalServerError\", function () {",
+									"//     var error_code = jsonData.errors[0].extensions.code;  ",
+									"//     pm.expect(error_code).to.eql(\"InternalServerError\");",
+									"// });",
+									"",
+									"// pm.test(\"Verify that error status is 500\", function () {",
+									"//     var error_status = jsonData.errors[0].extensions.status;  ",
+									"//     pm.expect(error_status).to.eql(500);",
+									"// });"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "5a263500-8915-4582-9f9b-161ca166f691",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      iso31663 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n    hasMore\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"abcd\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Location Parameter Invalid - order",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "0a99993c-6d5c-41d3-a700-072adc7b49ca",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 400 Bad Request\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].message;  ",
+									"    pm.expect(error_message).to.include(\"does not exist in \\\"Order\\\" enum\");",
+									"});",
+									"",
+									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {",
+									"    var error_code = jsonData.errors[0].extensions.code;  ",
+									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "a26e4ce9-eddf-4015-a49b-08879208cf36",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      iso31663 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n    hasMore\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"ASCENDING\"\r\n    }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Location - Success",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "53a8ff54-4a95-443c-a759-b64197b42f0b",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that education is deleted\", function () {",
+									"    pm.expect(jsonData.data.deleteLocation).to.eql(true);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "9cf6fe23-63e3-45fd-9c8f-e4b407ea24f1",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation deleteLocation($id: ID!) {\r\n  deleteLocation(id:$id)\r\n}",
+								"variables": "{\r\n    \"id\": \"{{locationid}}\"\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Location Mandatory Field Blank - Id",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "c7cede91-62c2-4fcd-8474-72fb2746d416",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that error message is 400\", function () {",
+									"    var error_message = jsonData.errors[0].message;",
+									"    pm.expect(error_message).to.eql(\"Input validation failed\");",
+									"});",
+									"",
+									"pm.test(\"Verify that error status is 400\", function () {",
+									"    var error_status = jsonData.errors[0].extensions.status;",
+									"    pm.expect(error_status).to.eql(400);",
+									"});",
+									"",
+									"pm.test(\"Verify that location error message is correct\", function () {",
+									"    var error_location_message = jsonData.errors[0].extensions.errors.id.IsShortId;",
+									"    pm.expect(error_location_message).to.eql(\"Invalid ID\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "469eac7f-8cfd-453c-8cc0-7ebdd4dda0bc",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation deleteLocation($id: ID!) {\r\n  deleteLocation(id:$id)\r\n}",
+								"variables": "{\r\n    \"id\": \"\"\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Location Mandatory Field Removed  - Id",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "db6e5db0-f6e1-4792-ba4f-decd0d49d097",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 400 Bad Request\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].message;  ",
+									"    pm.expect(error_message).to.eql(\"Variable \\\"$id\\\" of required type \\\"ID!\\\" was not provided.\");",
+									"});",
+									"",
+									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {",
+									"    var error_message = jsonData.errors[0].extensions.code;  ",
+									"    pm.expect(error_message).to.eql(\"INTERNAL_SERVER_ERROR\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "06f1ab7c-1524-4d8e-8d27-1e15b99ccc9e",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation deleteLocation($id: ID!) {\r\n  deleteLocation(id:$id)\r\n}",
+								"variables": "{\r\n    \r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Location Parameter  Mismatch - Id",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "e68981f4-236e-4476-9e72-b6482ba13a07",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 400 Bad Request\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].message;  ",
+									"    pm.expect(error_message).to.eql(\"Variable \\\"$id\\\" of required type \\\"ID!\\\" was not provided.\");",
+									"});",
+									"",
+									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {",
+									"    var error_message = jsonData.errors[0].extensions.code;  ",
+									"    pm.expect(error_message).to.eql(\"INTERNAL_SERVER_ERROR\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "f623e093-bbe4-4303-9e4f-10ee66a868df",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation deleteLocation($id: ID!) {\r\n  deleteLocation(id:$id)\r\n}",
+								"variables": "{\r\n    \"id1\": \"{{locationid}}\"\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Location Parameter - Invalid - Id",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "54dba668-96f4-4f41-9353-9d5d9b11bdc7",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that error message is 400\", function () {",
+									"    var error_message = jsonData.errors[0].message;",
+									"    pm.expect(error_message).to.eql(\"Input validation failed\");",
+									"});",
+									"",
+									"pm.test(\"Verify that error status is 400\", function () {",
+									"    var error_status = jsonData.errors[0].extensions.status;",
+									"    pm.expect(error_status).to.eql(400);",
+									"});",
+									"",
+									"pm.test(\"Verify that location error message is correct\", function () {",
+									"    var error_location_message = jsonData.errors[0].extensions.errors.id.IsShortId;",
+									"    pm.expect(error_location_message).to.eql(\"Invalid ID\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "3a1a0aeb-7fbc-4a64-8c84-f064fd61e06d",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation deleteLocation($id: ID!) {\r\n  deleteLocation(id:$id)\r\n}",
+								"variables": "{\r\n    \"id\": \"!@#$%^&*\"\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Location  Parameter  Invalid - Deleted Id",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "71c5fb69-92e4-4a84-9b6e-607a252971fb",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].message;",
+									"    pm.expect(error_message).to.eql(\"Could not find organization\");",
+									"});",
+									"",
+									"pm.test(\"Verify that error status is 400\", function () {",
+									"    var error_status = jsonData.errors[0].extensions.status;",
+									"    pm.expect(error_status).to.eql(400);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "6919077d-b211-4951-b1db-e08df8081894",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation deleteLocation($id: ID!) {\r\n  deleteLocation(id:$id)\r\n}",
+								"variables": "{\r\n    \"id\": \"{{locationid}}\"\r\n}"
 							},
 							"options": {
 								"graphql": {}

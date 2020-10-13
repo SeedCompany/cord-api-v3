@@ -1004,10 +1004,60 @@
 			"key": "locationid",
 			"value": "",
 			"enabled": true
+		},
+		{
+			"key": "bio",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "rootAdminUserid",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "rootAdminLogin_email",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "financialReportingTypes",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "partnerAddress",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "partnerType",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "pmcEntityCode",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "partner_data",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "partnerid",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "partnerTypeArray",
+			"value": "",
+			"enabled": true
 		}
 	],
 	"name": "MyWorkspace Globals",
 	"_postman_variable_scope": "globals",
-	"_postman_exported_at": "2020-10-07T13:27:45.963Z",
-	"_postman_exported_using": "Postman/7.33.1"
+	"_postman_exported_at": "2020-10-13T13:48:42.112Z",
+	"_postman_exported_using": "Postman/7.34.0"
 }
