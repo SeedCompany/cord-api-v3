@@ -178,7 +178,7 @@ export const ProjectMangerRole = new DbRole({
         { propertyName: 'name',                       permission: { read, }, },
         { propertyName: 'type',                       permission: { read, }, },
         { propertyName: 'sensitivity',                permission: { read, }, },
-        { propertyName: 'iso31663',                   permission: { read, }, },
+        { propertyName: 'isoAlpha3',                  permission: { read, }, },
         { propertyName: 'fundingAccount',             permission: { read, }, },
     ]}),
     new DbBaseNodeGrant<DbOrganization>({

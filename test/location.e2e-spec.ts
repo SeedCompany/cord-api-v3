@@ -51,6 +51,7 @@ describe('Location e2e', () => {
     expect(actual.id).toBe(st.id);
     expect(isValid(actual.id)).toBe(true);
     expect(actual.name.value).toBe(st.name.value);
+    expect(actual.isoAlpha3.value).toBe(st.isoAlpha3.value);
   });
 
   // Update Location

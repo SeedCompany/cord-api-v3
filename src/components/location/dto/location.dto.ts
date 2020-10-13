@@ -28,7 +28,7 @@ export class Location extends Resource {
   readonly sensitivity: Sensitivity;
 
   @Field()
-  readonly iso31663: SecuredString;
+  readonly isoAlpha3: SecuredString;
 
   readonly fundingAccount: Secured<string>;
 }

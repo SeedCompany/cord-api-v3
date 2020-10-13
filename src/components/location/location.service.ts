@@ -46,7 +46,7 @@ export class LocationService {
   private readonly securedProperties = {
     name: true,
     fundingAccount: true,
-    iso31663: true,
+    isoAlpha3: true,
     type: true,
     sensitivity: true,
   };
@@ -73,7 +73,7 @@ export class LocationService {
       'CREATE CONSTRAINT ON (n:LocationType) ASSERT EXISTS(n.value)',
 
       // ISO-3166-3 NODE
-      'CREATE CONSTRAINT ON (n:Iso31663) ASSERT n.value IS UNIQUE',
+      'CREATE CONSTRAINT ON (n:IsoAlpha3) ASSERT n.value IS UNIQUE',
     ];
   }
 
@@ -102,11 +102,11 @@ export class LocationService {
         label: 'LocationName',
       },
       {
-        key: 'iso31663',
-        value: input.iso31663,
+        key: 'isoAlpha3',
+        value: input.isoAlpha3,
         isPublic: false,
         isOrgPublic: false,
-        label: 'Iso31663',
+        label: 'IsoAlpha3',
       },
       {
         key: 'type',
@@ -223,7 +223,7 @@ export class LocationService {
     await this.db.sgUpdateProperties({
       session,
       object: location,
-      props: ['name', 'iso31663', 'type', 'sensitivity'],
+      props: ['name', 'isoAlpha3', 'type', 'sensitivity'],
       changes: input,
       nodevar: 'location',
     });
