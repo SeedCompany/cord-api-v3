@@ -46,6 +46,10 @@ import {
   registerUserWithPower,
   TestApp,
 } from './utility';
+import {
+  changeProjectStep,
+  stepsFromEarlyConversationToBeforeActive,
+} from './utility/transition-project';
 
 describe('Project e2e', () => {
   let app: TestApp;
@@ -852,42 +856,30 @@ describe('Project e2e', () => {
 
     const project = await createProject(app);
 
-    // all projects should start as 'EarlyConversations'
-    const stepsInOrder = [
-      ProjectStep.PendingConceptApproval,
-      ProjectStep.PrepForConsultantEndorsement,
-      ProjectStep.PendingConsultantEndorsement,
-      ProjectStep.PrepForFinancialEndorsement,
-      ProjectStep.PendingFinancialEndorsement,
-      ProjectStep.FinalizingProposal,
-      ProjectStep.PendingRegionalDirectorApproval,
-      ProjectStep.PendingZoneDirectorApproval,
-      ProjectStep.PendingFinanceConfirmation,
-      ProjectStep.Active,
-    ];
+    for (const next of stepsFromEarlyConversationToBeforeActive) {
+      await changeProjectStep(app, project.id, next);
+    }
 
-    let result;
-    for (const step of stepsInOrder) {
-      result = await app.graphql.mutate(
-        gql`
-          mutation updateProject($id: ID!, $step: ProjectStep!) {
-            updateProject(input: { project: { id: $id, step: $step } }) {
-              project {
-                budget {
-                  value {
-                    status
-                  }
+    const result = await app.graphql.mutate(
+      gql`
+        mutation updateProject($id: ID!, $step: ProjectStep!) {
+          updateProject(input: { project: { id: $id, step: $step } }) {
+            project {
+              budget {
+                value {
+                  status
                 }
               }
             }
           }
-        `,
-        {
-          id: project.id,
-          step,
         }
-      );
-    }
+      `,
+      {
+        id: project.id,
+        // Ensure the result from the change to Active returns the correct budget status
+        step: ProjectStep.Active,
+      }
+    );
 
     expect(result?.updateProject.project.budget.value.status).toBe(
       BudgetStatus.Current
