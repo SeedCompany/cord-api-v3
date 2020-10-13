@@ -16,6 +16,7 @@ import {
   generateRegisterInput,
   generateRequireFieldsRegisterInput,
   login,
+  loginAsAdmin,
   registerUser,
   registerUserWithPower,
   TestApp,
@@ -210,10 +211,7 @@ describe('User e2e', () => {
     await registerUser(app);
     await registerUser(app);
 
-    await login(app, {
-      email: process.env.ROOT_ADMIN_EMAIL,
-      password: process.env.ROOT_ADMIN_PASSWORD,
-    });
+    await loginAsAdmin(app);
 
     const { users } = await app.graphql.query(gql`
       query {

@@ -42,6 +42,7 @@ import {
   fragments,
   getUserFromSession,
   login,
+  loginAsAdmin,
   registerUser,
   registerUserWithPower,
   runAsAdmin,
@@ -132,10 +133,7 @@ describe('Project e2e', () => {
   });
 
   it('create project with required fields', async () => {
-    await login(app, {
-      email: process.env.ROOT_ADMIN_EMAIL,
-      password: process.env.ROOT_ADMIN_PASSWORD,
-    });
+    await loginAsAdmin(app);
 
     const project: CreateProject = {
       name: faker.random.uuid(),
@@ -617,10 +615,7 @@ describe('Project e2e', () => {
     const numEngagements = 1;
     //const type = ProjectType.Translation;
 
-    await login(app, {
-      email: process.env.ROOT_ADMIN_EMAIL,
-      password: process.env.ROOT_ADMIN_PASSWORD,
-    });
+    await loginAsAdmin(app);
 
     const project = await createProject(app);
     const language = await createLanguage(app, {
@@ -664,10 +659,7 @@ describe('Project e2e', () => {
     const numEngagements = 1;
     const type = ProjectType.Internship;
 
-    await login(app, {
-      email: process.env.ROOT_ADMIN_EMAIL,
-      password: process.env.ROOT_ADMIN_PASSWORD,
-    });
+    await loginAsAdmin(app);
 
     const project = await createProject(app, { type });
 

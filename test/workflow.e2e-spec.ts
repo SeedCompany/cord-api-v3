@@ -11,6 +11,7 @@ import {
   createTestApp,
   createWorkflow,
   login,
+  loginAsAdmin,
   registerUserWithPower,
   TestApp,
 } from './utility';
@@ -19,25 +20,19 @@ describe.skip('Workflow e2e', () => {
   let app: TestApp;
   let org: Organization;
   // let sg: CreateSecurityGroupOutput;
-  const password: string = faker.internet.password();
-  const email = `${faker.internet.email()} ${Date.now()}`;
+  const password = faker.internet.password();
+  const email = faker.internet.email();
   let user: User;
 
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await login(app, {
-      email: process.env.ROOT_ADMIN_EMAIL,
-      password: process.env.ROOT_ADMIN_PASSWORD,
-    });
+    await loginAsAdmin(app);
     // sg = await createSecurityGroup(app);
 
     user = await registerUserWithPower(app, Powers.CreateOrganization);
 
-    await login(app, {
-      email: process.env.ROOT_ADMIN_EMAIL,
-      password: process.env.ROOT_ADMIN_PASSWORD,
-    });
+    await loginAsAdmin(app);
     await app.graphql.mutate(
       gql`
         mutation attachUserToSecurityGroup($sgId: ID!, $userId: ID!) {
@@ -99,10 +94,7 @@ describe.skip('Workflow e2e', () => {
     const workflow = await createWorkflow(app, { baseNodeId: org.id });
     const toState = await addState(app, { workflowId: workflow.id });
 
-    await login(app, {
-      email: process.env.ROOT_ADMIN_EMAIL,
-      password: process.env.ROOT_ADMIN_PASSWORD,
-    });
+    await loginAsAdmin(app);
 
     await app.graphql.mutate(
       gql`
@@ -224,10 +216,7 @@ describe.skip('Workflow e2e', () => {
     const workflow = await createWorkflow(app, { baseNodeId: org.id });
     const toState = await addState(app, { workflowId: workflow.id });
 
-    await login(app, {
-      email: process.env.ROOT_ADMIN_EMAIL,
-      password: process.env.ROOT_ADMIN_PASSWORD,
-    });
+    await loginAsAdmin(app);
 
     await app.graphql.mutate(
       gql`
@@ -293,10 +282,7 @@ describe.skip('Workflow e2e', () => {
 
     const workflow = await createWorkflow(app, { baseNodeId: org.id });
 
-    await login(app, {
-      email: process.env.ROOT_ADMIN_EMAIL,
-      password: process.env.ROOT_ADMIN_PASSWORD,
-    });
+    await loginAsAdmin(app);
 
     const result = await app.graphql.mutate(
       gql`
@@ -326,10 +312,7 @@ describe.skip('Workflow e2e', () => {
 
     const workflow = await createWorkflow(app, { baseNodeId: org.id });
 
-    await login(app, {
-      email: process.env.ROOT_ADMIN_EMAIL,
-      password: process.env.ROOT_ADMIN_PASSWORD,
-    });
+    await loginAsAdmin(app);
 
     await app.graphql.mutate(
       gql`
@@ -444,10 +427,7 @@ describe.skip('Workflow e2e', () => {
     const workflow = await createWorkflow(app, { baseNodeId: org.id });
     const toState = await addState(app, { workflowId: workflow.id });
 
-    await login(app, {
-      email: process.env.ROOT_ADMIN_EMAIL,
-      password: process.env.ROOT_ADMIN_PASSWORD,
-    });
+    await loginAsAdmin(app);
 
     await app.graphql.mutate(
       gql`
@@ -512,10 +492,7 @@ describe.skip('Workflow e2e', () => {
     const workflow = await createWorkflow(app, { baseNodeId: org.id });
     const toState = await addState(app, { workflowId: workflow.id });
 
-    await login(app, {
-      email: process.env.ROOT_ADMIN_EMAIL,
-      password: process.env.ROOT_ADMIN_PASSWORD,
-    });
+    await loginAsAdmin(app);
 
     await app.graphql.mutate(
       gql`
@@ -567,10 +544,7 @@ describe.skip('Workflow e2e', () => {
     const workflow = await createWorkflow(app, { baseNodeId: org.id });
     const toState = await addState(app, { workflowId: workflow.id });
 
-    await login(app, {
-      email: process.env.ROOT_ADMIN_EMAIL,
-      password: process.env.ROOT_ADMIN_PASSWORD,
-    });
+    await loginAsAdmin(app);
 
     await app.graphql.mutate(
       gql`
