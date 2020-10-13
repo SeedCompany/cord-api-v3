@@ -85,6 +85,7 @@ import {
   Role,
   SecuredProjectMemberList,
 } from './project-member';
+import { ProjectRules } from './project.rules';
 import { projectListFilter } from './query.helpers';
 
 @Injectable()
@@ -117,6 +118,7 @@ export class ProjectService {
     private readonly config: ConfigService,
     private readonly eventBus: IEventBus,
     private readonly authorizationService: AuthorizationService,
+    private readonly projectRules: ProjectRules,
     @Logger('project:service') private readonly logger: ILogger
   ) {}
 
@@ -363,14 +365,14 @@ export class ProjectService {
     return project as InternshipProject;
   }
 
-  async readOne(id: string, session: ISession): Promise<Project> {
-    if (!session.userId) {
+  async readOne(id: string, { userId }: { userId?: string }): Promise<Project> {
+    if (!userId) {
       this.logger.debug('using anon user id');
-      session.userId = this.config.anonUser.id;
+      userId = this.config.anonUser.id;
     }
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
+      .call(matchRequestingUser, { userId })
       .match([node('node', 'Project', { id })])
       .call(matchPermList, 'requestingUser')
       .call(matchPropList, 'permList')
@@ -465,6 +467,14 @@ export class ProjectService {
         'project.sensitivity'
       );
 
+    if (input.step) {
+      await this.projectRules.verifyStepChange(
+        input.id,
+        session.userId,
+        input.step
+      );
+    }
+
     const changes = {
       ...input,
       modifiedAt: DateTime.local(),
@@ -530,7 +540,7 @@ export class ProjectService {
       sensitivity: 'sensitivityValue',
     };
 
-    const sensitivityCase = `case prop.value 
+    const sensitivityCase = `case prop.value
     when 'High' then 3
     when 'Medium' then 2
     when 'Low' then 1

@@ -6,7 +6,6 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { compact } from 'lodash';
 import { firstLettersOfWords, IdArg, ISession, Session } from '../../common';
 import {
   OrganizationListInput,
@@ -30,7 +29,7 @@ import {
   SecuredUnavailabilityList,
   UnavailabilityListInput,
 } from './unavailability';
-import { UserService } from './user.service';
+import { fullName, UserService } from './user.service';
 
 @Resolver(User)
 export class UserResolver {
@@ -48,22 +47,7 @@ export class UserResolver {
 
   @ResolveField(() => String, { nullable: true })
   fullName(@Parent() user: User): string | undefined {
-    const realName = compact([
-      user.realFirstName.value,
-      user.realLastName.value,
-    ]).join(' ');
-    if (realName) {
-      return realName;
-    }
-    const displayName = compact([
-      user.displayFirstName.value,
-      user.displayLastName.value,
-    ]).join(' ');
-    if (displayName) {
-      return displayName;
-    }
-
-    return undefined;
+    return fullName(user);
   }
 
   @ResolveField(() => String, { nullable: true })

@@ -30,7 +30,7 @@ export abstract class CreatePerson {
 
   @Field({ nullable: true })
   @IsIanaTimezone()
-  readonly timezone?: string;
+  readonly timezone?: string = 'America/Chicago';
 
   @Field({ nullable: true })
   readonly about?: string;

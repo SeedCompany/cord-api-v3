@@ -37,10 +37,15 @@ import {
   Raw,
   registerUserWithPower,
   requestFileUpload,
+  runAsAdmin,
   TestApp,
   uploadFileContents,
 } from './utility';
 import { createProduct } from './utility/create-product';
+import {
+  changeProjectStep,
+  stepsFromEarlyConversationToBeforeActive,
+} from './utility/transition-project';
 
 describe('Engagement e2e', () => {
   let app: TestApp;
@@ -1029,36 +1034,38 @@ describe('Engagement e2e', () => {
     });
     expect(engagement.status !== EngagementStatus.Active).toBe(true);
 
-    // Update Project status to Active
-    await app.graphql.mutate(
-      gql`
-        mutation updateProject($id: ID!) {
-          updateProject(input: { project: { id: $id, step: Active } }) {
-            project {
-              id
+    await runAsAdmin(app, async () => {
+      for (const next of stepsFromEarlyConversationToBeforeActive) {
+        await changeProjectStep(app, project.id, next);
+      }
+
+      // Update Project status to Active, and ensure result from this specific
+      // operation returns the correct engagement status
+      const result = await app.graphql.mutate(
+        gql`
+          mutation updateProject($id: ID!) {
+            updateProject(input: { project: { id: $id, step: Active } }) {
+              project {
+                id
+                engagements {
+                  items {
+                    id
+                    status
+                  }
+                }
+              }
             }
           }
+        `,
+        {
+          id: project.id,
         }
-      `,
-      {
-        id: project.id,
-      }
-    );
+      );
 
-    const { engagement: actual } = await app.graphql.query(
-      gql`
-        query engagement($id: ID!) {
-          engagement(id: $id) {
-            ...languageEngagement
-          }
-        }
-        ${fragments.languageEngagement}
-      `,
-      {
-        id: engagement.id,
-      }
-    );
-    expect(actual.id).toBe(engagement.id);
-    expect(actual.status).toBe(EngagementStatus.Active);
+      const actual = result.updateProject.project.engagements.items.find(
+        (e: { id: string }) => e.id === engagement.id
+      );
+      expect(actual.status).toBe(EngagementStatus.Active);
+    });
   });
 });

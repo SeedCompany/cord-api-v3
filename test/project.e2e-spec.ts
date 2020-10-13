@@ -2,6 +2,7 @@ import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { orderBy, times } from 'lodash';
 import { DateTime } from 'luxon';
+import { generate } from 'shortid';
 import {
   CalendarDate,
   DuplicateException,
@@ -41,10 +42,16 @@ import {
   fragments,
   getUserFromSession,
   login,
+  loginAsAdmin,
   registerUser,
   registerUserWithPower,
+  runAsAdmin,
   TestApp,
 } from './utility';
+import {
+  changeProjectStep,
+  stepsFromEarlyConversationToBeforeActive,
+} from './utility/transition-project';
 
 describe('Project e2e', () => {
   let app: TestApp;
@@ -85,12 +92,12 @@ describe('Project e2e', () => {
 
   it('should have project step', async () => {
     const project = await createProject(app);
-    expect(project.step.value).toBe(ProjectStep.PendingConceptApproval);
+    expect(project.step.value).toBe(ProjectStep.EarlyConversations);
   });
 
   it('should have project status', async () => {
     const project = await createProject(app);
-    expect(project.status).toBe(ProjectStatus.Pending);
+    expect(project.status).toBe(ProjectStatus.InDevelopment);
   });
 
   it('create & read project by id', async () => {
@@ -126,10 +133,7 @@ describe('Project e2e', () => {
   });
 
   it('create project with required fields', async () => {
-    await login(app, {
-      email: process.env.ROOT_ADMIN_EMAIL,
-      password: process.env.ROOT_ADMIN_PASSWORD,
-    });
+    await loginAsAdmin(app);
 
     const project: CreateProject = {
       name: faker.random.uuid(),
@@ -505,19 +509,19 @@ describe('Project e2e', () => {
   it('List of projects sorted by Sensitivity', async () => {
     //Create three projects, each beginning with lower or upper-cases.
     await createProject(app, {
-      name: 'High Sensitivity Proj',
+      name: 'High Sensitivity Proj ' + generate(),
       type: ProjectType.Internship,
       sensitivity: Sensitivity.High,
     });
 
     await createProject(app, {
-      name: 'Low Sensitivity Proj',
+      name: 'Low Sensitivity Proj ' + generate(),
       type: ProjectType.Internship,
       sensitivity: Sensitivity.Low,
     });
 
     await createProject(app, {
-      name: 'Med Sensitivity Proj',
+      name: 'Med Sensitivity Proj ' + generate(),
       type: ProjectType.Internship,
       sensitivity: Sensitivity.Medium,
     });
@@ -611,10 +615,7 @@ describe('Project e2e', () => {
     const numEngagements = 1;
     //const type = ProjectType.Translation;
 
-    await login(app, {
-      email: process.env.ROOT_ADMIN_EMAIL,
-      password: process.env.ROOT_ADMIN_PASSWORD,
-    });
+    await loginAsAdmin(app);
 
     const project = await createProject(app);
     const language = await createLanguage(app, {
@@ -658,10 +659,7 @@ describe('Project e2e', () => {
     const numEngagements = 1;
     const type = ProjectType.Internship;
 
-    await login(app, {
-      email: process.env.ROOT_ADMIN_EMAIL,
-      password: process.env.ROOT_ADMIN_PASSWORD,
-    });
+    await loginAsAdmin(app);
 
     const project = await createProject(app, { type });
 
@@ -844,30 +842,38 @@ describe('Project e2e', () => {
   });
 
   it('Should have a current budget when made active', async () => {
-    const project = await createProject(app);
+    await runAsAdmin(app, async () => {
+      const project = await createProject(app);
 
-    const result = await app.graphql.mutate(
-      gql`
-        mutation updateProject($id: ID!) {
-          updateProject(input: { project: { id: $id, step: Active } }) {
-            project {
-              budget {
-                value {
-                  status
+      for (const next of stepsFromEarlyConversationToBeforeActive) {
+        await changeProjectStep(app, project.id, next);
+      }
+
+      const result = await app.graphql.mutate(
+        gql`
+          mutation updateProject($id: ID!, $step: ProjectStep!) {
+            updateProject(input: { project: { id: $id, step: $step } }) {
+              project {
+                budget {
+                  value {
+                    status
+                  }
                 }
               }
             }
           }
+        `,
+        {
+          id: project.id,
+          // Ensure the result from the change to Active returns the correct budget status
+          step: ProjectStep.Active,
         }
-      `,
-      {
-        id: project.id,
-      }
-    );
+      );
 
-    expect(result.updateProject.project.budget.value.status).toBe(
-      BudgetStatus.Current
-    );
+      expect(result?.updateProject.project.budget.value.status).toBe(
+        BudgetStatus.Current
+      );
+    });
   });
 
   // #727 create without mouStart, mouEnd, estimatedSubmission

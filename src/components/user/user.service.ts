@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
+import { compact } from 'lodash';
 import { DateTime } from 'luxon';
 import { generate } from 'shortid';
 import {
@@ -63,6 +64,32 @@ import {
   UnavailabilityListInput,
   UnavailabilityService,
 } from './unavailability';
+
+export const fullName = (
+  user: Partial<
+    Pick<
+      User,
+      'realFirstName' | 'realLastName' | 'displayFirstName' | 'displayLastName'
+    >
+  >
+) => {
+  const realName = compact([
+    user.realFirstName?.value ?? '',
+    user.realLastName?.value ?? '',
+  ]).join(' ');
+  if (realName) {
+    return realName;
+  }
+  const displayName = compact([
+    user.displayFirstName?.value ?? '',
+    user.displayLastName?.value ?? '',
+  ]).join(' ');
+  if (displayName) {
+    return displayName;
+  }
+
+  return undefined;
+};
 
 @Injectable()
 export class UserService {
@@ -241,13 +268,13 @@ export class UserService {
     return result.id;
   }
 
-  async readOne(id: string, session: ISession): Promise<User> {
-    if (!session.userId) {
-      session.userId = this.config.anonUser.id;
+  async readOne(id: string, { userId }: { userId?: string }): Promise<User> {
+    if (!userId) {
+      userId = this.config.anonUser.id;
     }
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
+      .call(matchRequestingUser, { userId })
       .match([node('node', 'User', { id })])
       .call(getPermList, 'node')
       .call(getPropList, 'permList')

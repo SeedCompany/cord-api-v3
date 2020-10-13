@@ -1,30 +1,37 @@
-import { ObjectType, registerEnumType } from '@nestjs/graphql';
+import { Field, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { SecuredEnum } from '../../../common';
 
 export enum ProjectStep {
   EarlyConversations = 'EarlyConversations',
   PendingConceptApproval = 'PendingConceptApproval',
-
   PrepForConsultantEndorsement = 'PrepForConsultantEndorsement',
   PendingConsultantEndorsement = 'PendingConsultantEndorsement',
-  PrepForGrowthPlanEndorsement = 'PrepForGrowthPlanEndorsement',
-  PendingGrowthPlanEndorsement = 'PendingGrowthPlanEndorsement',
-
   PrepForFinancialEndorsement = 'PrepForFinancialEndorsement',
   PendingFinancialEndorsement = 'PendingFinancialEndorsement',
   FinalizingProposal = 'FinalizingProposal',
-  PendingAreaDirectorApproval = 'PendingAreaDirectorApproval',
   PendingRegionalDirectorApproval = 'PendingRegionalDirectorApproval',
+  PendingZoneDirectorApproval = 'PendingZoneDirectorApproval',
   PendingFinanceConfirmation = 'PendingFinanceConfirmation',
   OnHoldFinanceConfirmation = 'OnHoldFinanceConfirmation',
 
-  Active = 'Active',
-
+  DidNotDevelop = 'DidNotDevelop',
   Rejected = 'Rejected',
+
+  Active = 'Active',
+  ActiveChangedPlan = 'ActiveChangedPlan',
+  DiscussingChangeToPlan = 'DiscussingChangeToPlan',
+  PendingChangeToPlanApproval = 'PendingChangeToPlanApproval',
+  DiscussingSuspension = 'DiscussingSuspension',
+  PendingSuspensionApproval = 'PendingSuspensionApproval',
   Suspended = 'Suspended',
+  DiscussingReactivation = 'DiscussingReactivation',
+  PendingReactivationApproval = 'PendingReactivationApproval',
+  DiscussingTermination = 'DiscussingTermination',
+  PendingTerminationApproval = 'PendingTerminationApproval',
+  FinalizingCompletion = 'FinalizingCompletion',
+
   Terminated = 'Terminated',
 
-  DidNotDevelop = 'DidNotDevelop',
   Completed = 'Completed',
 }
 
@@ -36,3 +43,22 @@ registerEnumType(ProjectStep, {
   description: SecuredEnum.descriptionFor('a project step'),
 })
 export class SecuredProjectStep extends SecuredEnum(ProjectStep) {}
+
+export enum TransitionType {
+  Neutral = 'Neutral',
+  Approve = 'Approve',
+  Reject = 'Reject',
+}
+registerEnumType(TransitionType, { name: 'TransitionType' });
+
+@ObjectType()
+export abstract class ProjectStepTransition {
+  @Field(() => ProjectStep)
+  to: ProjectStep;
+
+  @Field()
+  label: string;
+
+  @Field(() => TransitionType)
+  type: TransitionType;
+}

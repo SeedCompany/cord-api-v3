@@ -4,7 +4,6 @@ import { GRAPHQL_MODULE_OPTIONS } from '@nestjs/graphql/dist/graphql.constants';
 import { ApolloServerBase } from 'apollo-server-core';
 import { createTestClient } from 'apollo-server-testing';
 import { GraphQLResponse } from 'apollo-server-types';
-import { Request } from 'express';
 import { DocumentNode, GraphQLFormattedError } from 'graphql';
 import { GqlContextType } from '../../src/common';
 
@@ -63,12 +62,14 @@ export const createGraphqlClient = async (
       );
     },
     set authToken(token: string) {
-      const fakeRequest: Request = {
+      // @ts-expect-error yes I know this is a fake request
+      options.context.request = {
         headers: {
-          authorization: `Bearer ${token}`,
+          ...(token && {
+            authorization: `Bearer ${token}`,
+          }),
         },
-      } as any;
-      options.context.request = fakeRequest;
+      };
     },
   };
 };

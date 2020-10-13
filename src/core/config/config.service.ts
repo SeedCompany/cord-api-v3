@@ -31,17 +31,18 @@ export class ConfigService {
       from: this.env.string('EMAIL_FROM').optional('noreply@cordfield.com'),
       replyTo: this.env.string('EMAIL_REPLY_TO').optional() || undefined, // falsy -> undefined
       send,
-      open: this.env.boolean('EMAIL_OPEN').optional(!send),
+      open: this.env.boolean('EMAIL_OPEN').optional(!send && !this.jest),
       sesRegion: this.env.string('SES_REGION').optional(),
     };
   }
 
+  defaultTimeZone = this.env
+    .string('DEFAULT_TIMEZONE')
+    .optional('America/Chicago');
+
   frontendUrl = this.env
     .string('FRONTEND_URL')
     .optional('http://localhost:3001');
-
-  resetPasswordUrl = (token: string) =>
-    `${this.frontendUrl}/reset-password/${token}`;
 
   @Lazy() get neo4j() {
     const driverConfig: Neo4JDriverConfig = {
