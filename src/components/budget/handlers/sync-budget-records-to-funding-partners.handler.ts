@@ -11,8 +11,8 @@ import { PartnershipService } from '../../partnership';
 import { Partnership } from '../../partnership/dto';
 import {
   PartnershipCreatedEvent,
-  PartnershipDeletedEvent,
   PartnershipUpdatedEvent,
+  PartnershipWillDeleteEvent,
 } from '../../partnership/events';
 import { Project } from '../../project/dto';
 import { ProjectUpdatedEvent } from '../../project/events';
@@ -23,13 +23,13 @@ type SubscribedEvent =
   | ProjectUpdatedEvent
   | PartnershipCreatedEvent
   | PartnershipUpdatedEvent
-  | PartnershipDeletedEvent;
+  | PartnershipWillDeleteEvent;
 
 @EventsHandler(
   ProjectUpdatedEvent,
   PartnershipCreatedEvent,
   PartnershipUpdatedEvent,
-  PartnershipDeletedEvent
+  PartnershipWillDeleteEvent
 )
 export class SyncBudgetRecordsToFundingPartners
   implements IEventHandler<SubscribedEvent> {
@@ -214,7 +214,7 @@ export class SyncBudgetRecordsToFundingPartners
         );
       }
 
-      if (event instanceof PartnershipDeletedEvent) {
+      if (event instanceof PartnershipWillDeleteEvent) {
         const expectedBudgetRecordYears: number[] = [];
         const existingBudgetRecordYears = await this.getExistingBudgetRecordYearsForPartnership(
           event.partnership,

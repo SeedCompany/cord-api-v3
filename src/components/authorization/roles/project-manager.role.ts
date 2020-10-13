@@ -119,6 +119,7 @@ export const ProjectMangerRole = new DbRole({
         { propertyName: 'startDateOverride',          permission: { read, write, }, },
         { propertyName: 'statusModifiedAt',           permission: { read, write, }, },
         { propertyName: 'modifiedAt',                 permission: { read, write, }, },
+        { propertyName: 'status',                     permission: { read, write, }, },
     ]}),
     new DbBaseNodeGrant<DbLanguage>({
       __className: 'DbLanguage',
@@ -163,6 +164,7 @@ export const ProjectMangerRole = new DbRole({
         { propertyName: 'statusModifiedAt',           permission: { read, write, }, },
         { propertyName: 'modifiedAt',                 permission: { read, write, }, },
         { propertyName: 'product',                    permission: { read, write, }, },
+        { propertyName: 'status',                     permission: { read, write, }, },
     ]}),
     new DbBaseNodeGrant<DbLiteracyMaterial>({
       __className: 'DbLiteracyMaterial',

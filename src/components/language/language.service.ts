@@ -22,6 +22,7 @@ import {
   matchSession,
   OnIndex,
   UniquenessError,
+  UniqueProperties,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -446,17 +447,30 @@ export class LanguageService {
   }
 
   async delete(id: string, session: ISession): Promise<void> {
+    await this.authorizationService.checkPower(
+      Powers.DeleteLanguage,
+      session.userId
+    );
+
     const object = await this.readOne(id, session);
 
     if (!object) {
       throw new NotFoundException('Could not find language', 'language.id');
     }
 
+    const baseNodeLabels = ['BaseNode', 'Language'];
+
+    const uniqueProperties: UniqueProperties<Language> = {
+      name: ['Property', 'LanguageName'],
+      displayName: ['Property', 'LanguageDisplayName'],
+      registryOfDialectsCode: ['Property'],
+    };
+
     try {
-      await this.db.deleteNode({
-        session,
+      await this.db.deleteNodeNew<Language>({
         object,
-        aclEditProp: 'canDeleteOwnUser',
+        baseNodeLabels,
+        uniqueProperties,
       });
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });

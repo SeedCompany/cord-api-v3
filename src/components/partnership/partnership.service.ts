@@ -47,8 +47,8 @@ import {
 } from './dto';
 import {
   PartnershipCreatedEvent,
-  PartnershipDeletedEvent,
   PartnershipUpdatedEvent,
+  PartnershipWillDeleteEvent,
 } from './events';
 import { DbPartnership } from './model';
 
@@ -421,6 +421,10 @@ export class PartnershipService {
       );
     }
 
+    await this.eventBus.publish(
+      new PartnershipWillDeleteEvent(object, session)
+    );
+
     try {
       await this.db.deleteNode({
         session,
@@ -434,8 +438,6 @@ export class PartnershipService {
 
       throw new ServerException('Failed to delete partnership', exception);
     }
-
-    await this.eventBus.publish(new PartnershipDeletedEvent(object, session));
   }
 
   async list(
