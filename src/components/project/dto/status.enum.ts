@@ -13,50 +13,35 @@ registerEnumType(ProjectStatus, {
   description: 'A alias for a group of project steps',
 });
 
-const mapping: Record<ProjectStatus, ProjectStep[]> = {
-  [ProjectStatus.InDevelopment]: [
-    ProjectStep.EarlyConversations,
-    ProjectStep.PendingConceptApproval,
-    ProjectStep.PrepForConsultantEndorsement,
-    ProjectStep.PendingConsultantEndorsement,
-    ProjectStep.PrepForFinancialEndorsement,
-    ProjectStep.PendingFinancialEndorsement,
-    ProjectStep.FinalizingProposal,
-    ProjectStep.PendingRegionalDirectorApproval,
-    ProjectStep.PendingZoneDirectorApproval,
-    ProjectStep.PendingFinanceConfirmation,
-    ProjectStep.OnHoldFinanceConfirmation,
-  ],
-  [ProjectStatus.Active]: [
-    ProjectStep.Active,
-    ProjectStep.ActiveChangedPlan,
-    ProjectStep.DiscussingChangeToPlan,
-    ProjectStep.DiscussingChangeToPlan,
-    ProjectStep.PendingChangeToPlanApproval,
-    ProjectStep.DiscussingSuspension,
-    ProjectStep.PendingSuspensionApproval,
-    ProjectStep.Suspended,
-    ProjectStep.DiscussingReactivation,
-    ProjectStep.PendingReactivationApproval,
-    ProjectStep.DiscussingTermination,
-    ProjectStep.PendingTerminationApproval,
-    ProjectStep.FinalizingCompletion,
-  ],
-  [ProjectStatus.Terminated]: [ProjectStep.Terminated],
-  [ProjectStatus.Completed]: [ProjectStep.Completed],
+const mapping: Record<ProjectStep, ProjectStatus> = {
+  [ProjectStep.EarlyConversations]: ProjectStatus.InDevelopment,
+  [ProjectStep.PendingConceptApproval]: ProjectStatus.InDevelopment,
+  [ProjectStep.PrepForConsultantEndorsement]: ProjectStatus.InDevelopment,
+  [ProjectStep.PendingConsultantEndorsement]: ProjectStatus.InDevelopment,
+  [ProjectStep.PrepForFinancialEndorsement]: ProjectStatus.InDevelopment,
+  [ProjectStep.PendingFinancialEndorsement]: ProjectStatus.InDevelopment,
+  [ProjectStep.FinalizingProposal]: ProjectStatus.InDevelopment,
+  [ProjectStep.PendingRegionalDirectorApproval]: ProjectStatus.InDevelopment,
+  [ProjectStep.PendingZoneDirectorApproval]: ProjectStatus.InDevelopment,
+  [ProjectStep.PendingFinanceConfirmation]: ProjectStatus.InDevelopment,
+  [ProjectStep.OnHoldFinanceConfirmation]: ProjectStatus.InDevelopment,
+  [ProjectStep.Active]: ProjectStatus.Active,
+  [ProjectStep.ActiveChangedPlan]: ProjectStatus.Active,
+  [ProjectStep.DiscussingChangeToPlan]: ProjectStatus.Active,
+  [ProjectStep.PendingChangeToPlanApproval]: ProjectStatus.Active,
+  [ProjectStep.DiscussingSuspension]: ProjectStatus.Active,
+  [ProjectStep.PendingSuspensionApproval]: ProjectStatus.Active,
+  [ProjectStep.Suspended]: ProjectStatus.Active,
+  [ProjectStep.DiscussingReactivation]: ProjectStatus.Active,
+  [ProjectStep.PendingReactivationApproval]: ProjectStatus.Active,
+  [ProjectStep.DiscussingTermination]: ProjectStatus.Active,
+  [ProjectStep.PendingTerminationApproval]: ProjectStatus.Active,
+  [ProjectStep.FinalizingCompletion]: ProjectStatus.Active,
+  [ProjectStep.Terminated]: ProjectStatus.Terminated,
+  [ProjectStep.Completed]: ProjectStatus.Completed,
 };
 
-export const stepToStatus = (step: ProjectStep): ProjectStatus => {
-  const entries = Object.entries(mapping) as Array<
-    [ProjectStatus, ProjectStep[]]
-  >;
-  for (const [status, steps] of entries) {
-    if (steps.includes(step)) {
-      return status;
-    }
-  }
-  throw new Error(`Could not find status for given step: ${step}`);
-};
+export const stepToStatus = (step: ProjectStep): ProjectStatus => mapping[step];
 
 export const ProjectStatusOrStep = createUnionType({
   name: 'ProjectStatusOrStep',
