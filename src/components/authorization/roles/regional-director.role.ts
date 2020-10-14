@@ -208,6 +208,7 @@ export const RegionalDirector = new DbRole({
       __className: 'DbOrganization',
       properties: [
         { propertyName: 'name',                       permission: { read, write, }, },
+        { propertyName: 'address',                    permission: { read, write, }, },
     ]}),
     new DbBaseNodeGrant<DbPartner>({
       __className: 'DbPartner',

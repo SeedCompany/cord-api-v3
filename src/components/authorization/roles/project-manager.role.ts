@@ -186,6 +186,7 @@ export const ProjectManager = new DbRole({
       __className: 'DbOrganization',
       properties: [
         { propertyName: 'name',                       permission: { read, }, },
+        { propertyName: 'address',                    permission: { read, }, },
     ]}),
     new DbBaseNodeGrant<DbPartner>({
       __className: 'DbPartner',

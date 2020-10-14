@@ -11,6 +11,9 @@ export abstract class UpdateOrganization {
 
   @NameField({ nullable: true })
   readonly name?: string;
+
+  @Field({ nullable: true })
+  readonly address?: string;
 }
 
 @InputType()

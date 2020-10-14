@@ -26,6 +26,11 @@ export const org = gql`
       canRead
       canEdit
     }
+    address {
+      value
+      canRead
+      canEdit
+    }
     createdAt
   }
 `;
