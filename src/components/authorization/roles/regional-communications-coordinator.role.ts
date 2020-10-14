@@ -31,8 +31,8 @@ import { DbBaseNodeGrant, DbRole } from '../model';
 const read = true;
 const write = true;
 
-export const StaffMember = new DbRole({
-  name: Role.StaffMember,
+export const RegionalCommunicationsCoordinator = new DbRole({
+  name: Role.RegionalCommunicationsCoordinator,
   powers: [...(Object.keys(Powers) as Powers[])],
   grants: [
     new DbBaseNodeGrant<DbBudget>({
