@@ -202,7 +202,7 @@ export class SyncBudgetRecordsToFundingPartners
     try {
       if (event instanceof PartnershipUpdatedEvent) {
         await this.synchronizePartnershipBudgetRecords(
-          event.partnership,
+          event.updated,
           event.session
         );
       }
