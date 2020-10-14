@@ -3,6 +3,7 @@ import { node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { DateTime } from 'luxon';
 import {
+  DuplicateException,
   InputException,
   ISession,
   NotFoundException,
@@ -102,6 +103,13 @@ export class PartnershipService {
         throw e.withField('partnership.projectId');
       }
       throw e;
+    }
+
+    if (await this.getPartnershipByProjectAndPartner(projectId, partnerId)) {
+      throw new DuplicateException(
+        'partnership.projectId',
+        'Partnership for this project and partner already exists'
+      );
     }
 
     this.verifyFinancialReportingType(
@@ -578,5 +586,26 @@ export class PartnershipService {
         'input.financialReportingType'
       );
     }
+  }
+
+  protected async getPartnershipByProjectAndPartner(
+    projectId: string,
+    partnerId: string
+  ): Promise<boolean> {
+    const result = await this.db
+      .query()
+      .match([node('partner', 'Partner', { id: partnerId })])
+      .match([node('project', 'Project', { id: projectId })])
+      .match([
+        node('project'),
+        relation('out', '', 'partnership'),
+        node('partnership'),
+        relation('out', '', 'partner'),
+        node('partner'),
+      ])
+      .return('partnership.id as id')
+      .first();
+
+    return result ? true : false;
   }
 }
