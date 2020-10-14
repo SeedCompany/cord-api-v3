@@ -17,7 +17,7 @@ export enum Role {
   Intern = 'Intern',
   LeadFinancialAnalyst = 'LeadFinancialAnalyst',
   Leadership = 'Leadership',
-  Liaison = 'Liaison',
+  Liason = 'Liason',
   Marketing = 'Marketing',
   Mentor = 'Mentor',
   OfficeOfThePresident = 'OfficeOfThePresident',
