@@ -767,7 +767,6 @@ export class ProjectRules {
     // If current user is not an approver (based on roles) then don't allow any transitions
     const currentUserRoles = await this.getUserRoles(userId);
     if (intersection(approvers, currentUserRoles).length === 0) {
-      throw new UnauthorizedException('user is not an approver of this step');
       return [];
     }
 
