@@ -355,7 +355,7 @@ export class AuthorizationService {
         .raw(
           `
           call apoc.periodic.iterate(
-            "MATCH (u:User {id:'${id}'}), (sg:SecurityGroup {role:'${role}'}) RETURN u, sg", 
+            "MATCH (u:User {id:'${id}'}), (sg:SecurityGroup {role:'Administrator'}) RETURN u, sg", 
             "MERGE (u)<-[:member]-(sg)", {batchSize:1000})
           yield batches, total return batches, total
       `
