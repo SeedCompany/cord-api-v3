@@ -9,13 +9,57 @@ import {
   UnauthorizedException,
 } from '../../common';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
+import { DbBudget } from '../budget/model';
+import { DbBudgetRecord } from '../budget/model/budget-record.model.db';
+import { DbCeremony } from '../ceremony/model';
+import {
+  DbInternshipEngagement,
+  DbLanguageEngagement,
+} from '../engagement/model';
+import { DbFieldRegion } from '../field-region/model';
+import { DbFieldZone } from '../field-zone/model';
+import { DbDirectory, DbFile } from '../file/model';
+import { DbFileVersion } from '../file/model/file-version.model.db';
+import { DbFilm } from '../film/model';
+import { DbFundingAccount } from '../funding-account/model';
+import { DbEthnologueLanguage, DbLanguage } from '../language/model';
+import { DbLiteracyMaterial } from '../literacy-material/model';
+import { DbLocation } from '../location/model';
+import { DbOrganization } from '../organization/model';
+import { DbPartner } from '../partner/model';
+import { DbPartnership } from '../partnership/model';
+import { DbProduct } from '../product/model';
+import { DbProject } from '../project/model';
+import { DbProjectMember } from '../project/project-member/model';
+import { DbSong } from '../song/model';
+import { DbStory } from '../story/model';
+import { DbEducation, DbUnavailability, DbUser } from '../user/model';
 import { Role } from './dto';
 import { Powers } from './dto/powers';
 import { DbRole, OneBaseNode } from './model';
-import { Administrator } from './roles';
+import {
+  Administrator,
+  Controller,
+  everyRole,
+  FieldOperationsDirector,
+  FinancialAnalyst,
+  ProjectManager,
+  RegionalDirector,
+} from './roles';
 
 /**
  * powers can exist on a security group or a user node
+ */
+
+/**
+ * Authorization events:
+ * 1. base node creation
+ *   a. assign all global roles membership for the base node
+ *   b. assign any per-object roles membership for the base node
+ * 2. adding a project member to a project
+ *   a. get the member's project role and assign membership for that project
+ * 3. assigning a role to a user
+ *   a. assign that user membership to all SGs for their new role.
  */
 
 @Injectable()
@@ -51,11 +95,7 @@ export class AuthorizationService {
       });
 
       // run all rules for all roles on this base node
-      await this.runPostBaseNodeCreationRules(
-        baseNodeObj,
-        baseNodeId,
-        adminSgId
-      );
+      await this.runPostBaseNodeCreationRules(baseNodeObj, baseNodeId);
 
       return true;
     } else {
@@ -63,11 +103,116 @@ export class AuthorizationService {
     }
   }
 
+  async createSGsForEveryRoleForAllBaseNodes(session: ISession) {
+    this.logger.info('begining to create/merge SGs for all base nodes');
+    if (session.userId !== this.config.rootAdmin.id) {
+      return true;
+    }
+    // loop through every base node and create the SGs for each role
+    // we're going to do this in the least memory intensive way,
+    // which is also the slowest/spammiest
+    const baseNodeCountQuery = await this.db
+      .query()
+      .match([node('baseNode', 'BaseNode')])
+      .raw('return count(baseNode) as total')
+      .first();
+
+    if (baseNodeCountQuery === undefined) {
+      return true;
+    }
+
+    this.logger.info('total base nodes: ', baseNodeCountQuery.total);
+    // eslint-disable-next-line no-restricted-syntax
+    for (let i = 0; i < baseNodeCountQuery.total; i++) {
+      const idQuery = await this.db
+        .query()
+        .match([node('baseNode', 'BaseNode')])
+        .raw(`return baseNode.id as id, labels(baseNode) as labels`)
+        .skip(i)
+        .limit(1)
+        .first();
+
+      if (idQuery === undefined) {
+        continue;
+      }
+
+      for (const role of everyRole) {
+        const baseNodeObj = this.getBaseNodeObjUsingLabel(idQuery.labels);
+        await this.mergeSecurityGroupForRole(baseNodeObj, idQuery.id, role);
+      }
+    }
+
+    this.logger.info('SG creation complete');
+    return true;
+  }
+
+  private getBaseNodeObjUsingLabel(labels: string[]): OneBaseNode {
+    if (labels.includes('Budget')) {
+      return new DbBudget();
+    } else if (labels.includes('BudgetRecord')) {
+      return new DbBudgetRecord();
+    } else if (labels.includes('Ceremony')) {
+      return new DbCeremony();
+    } else if (labels.includes('Directory')) {
+      return new DbDirectory();
+    } else if (labels.includes('Education')) {
+      return new DbEducation();
+    } else if (labels.includes('EthnologuLanguage')) {
+      return new DbEthnologueLanguage();
+    } else if (labels.includes('FieldRegion')) {
+      return new DbFieldRegion();
+    } else if (labels.includes('FieldZone')) {
+      return new DbFieldZone();
+    } else if (labels.includes('File')) {
+      return new DbFile();
+    } else if (labels.includes('FileVersion')) {
+      return new DbFileVersion();
+    } else if (labels.includes('Film')) {
+      return new DbFilm();
+    } else if (labels.includes('FundingAccount')) {
+      return new DbFundingAccount();
+    } else if (labels.includes('InternshipEngagement')) {
+      return new DbInternshipEngagement();
+    } else if (labels.includes('Language')) {
+      return new DbLanguage();
+    } else if (labels.includes('LanguageEngagement')) {
+      return new DbLanguageEngagement();
+    } else if (labels.includes('LiteracyMaterial')) {
+      return new DbLiteracyMaterial();
+    } else if (labels.includes('Location')) {
+      return new DbLocation();
+    } else if (labels.includes('Organization')) {
+      return new DbOrganization();
+    } else if (labels.includes('Partner')) {
+      return new DbPartner();
+    } else if (labels.includes('Partnership')) {
+      return new DbPartnership();
+    } else if (labels.includes('Product')) {
+      return new DbProduct();
+    } else if (labels.includes('Project')) {
+      return new DbProject();
+    } else if (labels.includes('ProjectMember')) {
+      return new DbProjectMember();
+    } else if (labels.includes('User')) {
+      return new DbUser();
+    } else if (labels.includes('Unavailability')) {
+      return new DbUnavailability();
+    } else if (labels.includes('Song')) {
+      return new DbSong();
+    } else if (labels.includes('Story')) {
+      return new DbStory();
+    }
+    throw new ServerException('base node label not found');
+  }
+
   private async mergeSecurityGroupForRole(
     baseNodeObj: OneBaseNode,
     baseNodeId: string,
     role: DbRole
   ): Promise<string> {
+    /**
+     * this creates or merges with the specific SG needed for a given role
+     */
     const checkSg = await this.db
       .query()
       .match([
@@ -131,96 +276,113 @@ export class AuthorizationService {
 
   private async runPostBaseNodeCreationRules(
     baseNodeObj: OneBaseNode,
-    baseNodeId: string,
-    adminSgId: string
+    baseNodeId: string
   ) {
     /**
      * Remember, this is only run at base node creation,
      * not every rule in the role def applies
      */
 
-    // wip: short cut approved by Seth, holding on this for now.
-    // const labels = await this.getLabels(baseNodeId);
+    // after a base node is created, only the admin SG is created.
+    // this function will create the remaining needed base nodes.
 
-    // const readAllSgId = await this.mergeSecurityGroupForRole(
-    //   baseNodeObj,
-    //   baseNodeId,
-    //   ReadAll
-    // );
+    // certain roles are 'global' in the sense that they get some form
+    // of access to each base node. because of that, we don't care what
+    // the base node type is, we can just apply the role
 
-    // temporarily giving certain roles admin access
-    const adminAccess = [
-      Role.Administrator,
-      Role.ProjectManager,
-      Role.RegionalDirector,
-      Role.FieldOperationsDirector,
-      Role.FinancialAnalyst,
-      Role.Controller,
-      Role.ConsultantManager,
+    const globalRoles = [
+      {
+        role: ProjectManager,
+        sgId: await this.mergeSecurityGroupForRole(
+          baseNodeObj,
+          baseNodeId,
+          ProjectManager
+        ),
+      },
+      {
+        role: RegionalDirector,
+        sgId: await this.mergeSecurityGroupForRole(
+          baseNodeObj,
+          baseNodeId,
+          RegionalDirector
+        ),
+      },
+      {
+        role: FieldOperationsDirector,
+        sgId: await this.mergeSecurityGroupForRole(
+          baseNodeObj,
+          baseNodeId,
+          FieldOperationsDirector
+        ),
+      },
+      {
+        role: FinancialAnalyst,
+        sgId: await this.mergeSecurityGroupForRole(
+          baseNodeObj,
+          baseNodeId,
+          FinancialAnalyst
+        ),
+      },
+      {
+        role: Controller,
+        sgId: await this.mergeSecurityGroupForRole(
+          baseNodeObj,
+          baseNodeId,
+          Controller
+        ),
+      },
     ];
-    for (const role of adminAccess) {
-      await this.addAllUsersToSgByTheUsersGlobalRole(adminSgId, role);
+
+    for (const role of globalRoles) {
+      const sgId = await this.mergeSecurityGroupForRole(
+        baseNodeObj,
+        baseNodeId,
+        role.role
+      );
+      await this.addAllUsersToSgByTheUsersGlobalRole(sgId, role.role.name);
     }
 
-    // commenting out for now as we are taking a short cut just for this week.
-    // if (labels.includes('User')) {
-    //   //
-    // } else if (labels.includes('Project')) {
-    //   // these roles have access to all project base nodes, read/write
-    //   const adminAccess = [
-    //     Role.Administrator,
-    //     Role.ProjectManager,
-    //     Role.RegionalDirector,
-    //     Role.FieldOperationsDirector,
-    //     Role.FinancialAnalyst,
-    //     Role.Controller,
-    //   ];
-    //   for (const role of adminAccess) {
-    //     await this.addAllUsersToSgByTheUsersGlobalRole(adminSgId, role);
-    //   }
-
-    //   // these roles have read only access to all projects and all properties on each project
-    //   const ReadAllAccess = [
-    //     Role.Fundraising,
-    //     Role.Marketing,
-    //     Role.StaffMember,
-    //     Role.Leadership,
-    //   ];
-    //   for (const role of ReadAllAccess) {
-    //     await this.addAllUsersToSgByTheUsersGlobalRole(readAllSgId, role);
-    //   }
-    // } else if (labels.includes('ProjectMember')) {
-    //   // a new project member needs to have access to all props that each of their roles gives them
-    // }
+    // create the rest of the SGs needed for each role
+    const labels = await this.getLabels(baseNodeId);
+    for (const role of everyRole) {
+      const baseNodeObj = this.getBaseNodeObjUsingLabel(labels);
+      await this.mergeSecurityGroupForRole(baseNodeObj, baseNodeId, role);
+    }
   }
 
   async roleAddedToUser(id: string, roles: string[]) {
     // todo: this only applies to global roles, the only kind we have until next week
     // iterate through all roles and assign to all SGs with that role
     for (const role of roles) {
-      //
       await this.db
         .query()
         .match([node('user', 'User', { id })])
         .match([node('sg', 'SecurityGroup', { role })])
         .merge([node('user'), relation('in', '', 'member'), node('sg')])
         .run();
+
+      // match the role to a real role object and grant powers
+      const roleObj = everyRole.find((i) => i.name === role);
+      if (roleObj === undefined) continue;
+      for (const power of roleObj.powers) {
+        await this.grantPower(power, id);
+      }
     }
   }
 
-  // private async getLabels(id: string): Promise<string[]> {
-  //   const result = await this.db
-  //     .query()
-  //     .match([node('baseNode', 'BaseNode', { id })])
-  //     .raw('return labels(baseNode) as labels')
-  //     .first();
+  private async getLabels(id: string): Promise<string[]> {
+    const result = await this.db
+      .query()
+      .match([node('baseNode', 'BaseNode', { id })])
+      .raw('return labels(baseNode) as labels')
+      .first();
 
-  //   if (result === undefined) {
-  //     throw new ServerException('baseNode not found');
-  //   }
+    if (result === undefined) {
+      throw new ServerException('baseNode not found');
+    }
 
-  //   return result.labels;
-  // }
+    return result.labels;
+  }
 
   private async addAllUsersToSgByTheUsersGlobalRole(sgId: string, role: Role) {
     // grab all users who have a given user-role and add them as members to the new sg
