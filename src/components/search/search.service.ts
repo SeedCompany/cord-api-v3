@@ -10,6 +10,7 @@ import {
 import { FieldRegionService } from '../field-region';
 import { FieldZoneService } from '../field-zone';
 import { FilmService } from '../film';
+import { FundingAccountService } from '../funding-account';
 import { LanguageService } from '../language';
 import { LiteracyMaterialService } from '../literacy-material';
 import { LocationService } from '../location';
@@ -56,6 +57,7 @@ export class SearchService {
     Location: (...args) => this.location.readOne(...args),
     FieldZone: (...args) => this.zone.readOne(...args),
     FieldRegion: (...args) => this.region.readOne(...args),
+    FundingAccount: (...args) => this.fundingAccount.readOne(...args),
   };
   /* eslint-enable @typescript-eslint/naming-convention */
 
@@ -72,7 +74,8 @@ export class SearchService {
     private readonly literacyMaterial: LiteracyMaterialService,
     private readonly song: SongService,
     private readonly zone: FieldZoneService,
-    private readonly region: FieldRegionService
+    private readonly region: FieldRegionService,
+    private readonly fundingAccount: FundingAccountService
   ) {}
 
   async search(input: SearchInput, session: ISession): Promise<SearchOutput> {

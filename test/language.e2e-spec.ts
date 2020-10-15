@@ -137,7 +137,7 @@ describe('Language e2e', () => {
   });
 
   // DELETE LANGUAGE
-  it.skip('delete language', async () => {
+  it('delete language', async () => {
     const language = await createLanguage(app);
 
     const result = await app.graphql.mutate(

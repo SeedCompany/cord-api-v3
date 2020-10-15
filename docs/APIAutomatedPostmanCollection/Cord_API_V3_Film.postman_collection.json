@@ -52,6 +52,131 @@
 					"response": []
 				},
 				{
+					"name": "Root Admin Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "b36481b3-0ebd-4a05-b1a8-3f467b20381f",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"var id = jsonData.data.login.user.id;",
+									"pm.globals.set(\"rootAdminUserid\", id);",
+									"",
+									"var email = jsonData.data.login.user.email.value;",
+									"pm.globals.set(\"email\", email);",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "ed90a629-60c4-4f40-96a8-5fc7d9f622c5",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation login($input: LoginInput!) {\r\n  login(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"email\": \"{{rootAdminLogin_email}}\",\r\n        \"password\": \"{{rootAdminLogin_password}}\"\r\n    }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Grant Power to RootAdmin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "48756c9a-bcf1-4791-aacb-5ca45234145a",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "d66201a9-eb4f-4157-9c15-72fec4e07d86",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation grantPower($userId: ID!,$power:Power!) {\r\n  grantPower(userId:$userId,power:$power)\r\n}\r\n",
+								"variables": "{\r\n    \"userId\": \"7F_3BFv0d\",\r\n    \"power\": \"GrantPower\"\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Root Register",
 					"event": [
 						{
@@ -262,6 +387,124 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "Grant Power to Root User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "9764c55f-4c2f-4f89-993f-f00befad39e3",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "85409be1-d908-431c-b2b4-e49ac0900108",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation grantPower($userId: ID!,$power:Power!) {\r\n  grantPower(userId:$userId,power:$power)\r\n}\r\n",
+								"variables": "{\r\n    \"userId\": \"{{userid}}\",\r\n    \"power\": \"GrantPower\"\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Grant Power to Create Film",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb767e2c-02c8-4789-8346-2ea67d0e4464",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "7344bdd7-1bc6-4c9b-9a90-3d4cefed11a4",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation grantPower($userId: ID!,$power:Power!) {\r\n  grantPower(userId:$userId,power:$power)\r\n}\r\n",
+								"variables": "{\r\n    \"userId\": \"{{userid}}\",\r\n    \"power\": \"CreateFilm\"\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
 				}
 			],
 			"event": [
@@ -447,7 +690,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createFilm($input: CreateFilmInput!) {\r\n  createFilm(input: $input) {\r\n    film {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          totalVerses\r\n          label\r\n          start {\r\n            book\r\n\r\n            label\r\n            chapter\r\n            verse\r\n          }\r\n          end {\r\n            book\r\n\r\n            label\r\n            chapter\r\n            verse\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createFilm($input: CreateFilmInput!) {\r\n  createFilm(input: $input) {\r\n    film {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          totalVerses\r\n          label\r\n          start {\r\n            book\r\n            label\r\n            chapter\r\n            verse\r\n          }\r\n          end {\r\n            book\r\n            label\r\n            chapter\r\n            verse\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"film\": {\r\n            \"name\": \"{{filmName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{filmScriptRefBookStart}}\",\r\n                    \"chapter\": {{filmScriptRefChapterStart}},\r\n                    \"verse\": {{filmScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{filmScriptRefBookEnd}}\",\r\n                    \"chapter\": {{filmScriptRefChapterEnd}},\r\n                    \"verse\": {{filmScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
 							},
 							"options": {

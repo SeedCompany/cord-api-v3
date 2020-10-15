@@ -25,6 +25,7 @@ import {
   OnIndex,
   Property,
   UniquenessError,
+  UniqueProperties,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -42,6 +43,7 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { Powers } from '../authorization/dto/powers';
 import { Budget, BudgetService, BudgetStatus, SecuredBudget } from '../budget';
 import {
   EngagementListInput,
@@ -85,6 +87,7 @@ import {
   Role,
   SecuredProjectMemberList,
 } from './project-member';
+import { ProjectRules } from './project.rules';
 import { projectListFilter } from './query.helpers';
 
 @Injectable()
@@ -117,6 +120,7 @@ export class ProjectService {
     private readonly config: ConfigService,
     private readonly eventBus: IEventBus,
     private readonly authorizationService: AuthorizationService,
+    private readonly projectRules: ProjectRules,
     @Logger('project:service') private readonly logger: ILogger
   ) {}
 
@@ -363,14 +367,14 @@ export class ProjectService {
     return project as InternshipProject;
   }
 
-  async readOne(id: string, session: ISession): Promise<Project> {
-    if (!session.userId) {
+  async readOne(id: string, { userId }: { userId?: string }): Promise<Project> {
+    if (!userId) {
       this.logger.debug('using anon user id');
-      session.userId = this.config.anonUser.id;
+      userId = this.config.anonUser.id;
     }
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
+      .call(matchRequestingUser, { userId })
       .match([node('node', 'Project', { id })])
       .call(matchPermList, 'requestingUser')
       .call(matchPropList, 'permList')
@@ -465,6 +469,14 @@ export class ProjectService {
         'project.sensitivity'
       );
 
+    if (input.step) {
+      await this.projectRules.verifyStepChange(
+        input.id,
+        session.userId,
+        input.step
+      );
+    }
+
     const changes = {
       ...input,
       modifiedAt: DateTime.local(),
@@ -498,17 +510,27 @@ export class ProjectService {
   }
 
   async delete(id: string, session: ISession): Promise<void> {
-    const object = await this.readOne(id, session);
+    await this.authorizationService.checkPower(
+      Powers.DeleteLanguage,
+      session.userId
+    );
 
+    const object = await this.readOne(id, session);
     if (!object) {
       throw new NotFoundException('Could not find project');
     }
 
+    const baseNodeLabels = ['BaseNode', 'Project', `${object.type}Project`];
+
+    const uniqueProperties: UniqueProperties<Project> = {
+      name: ['Property', 'ProjectName'],
+    };
+
     try {
-      await this.db.deleteNode({
-        session,
+      await this.db.deleteNodeNew({
         object,
-        aclEditProp: 'canCreateProject',
+        baseNodeLabels,
+        uniqueProperties,
       });
     } catch (e) {
       this.logger.warning('Failed to delete project', {
@@ -530,7 +552,7 @@ export class ProjectService {
       sensitivity: 'sensitivityValue',
     };
 
-    const sensitivityCase = `case prop.value 
+    const sensitivityCase = `case prop.value
     when 'High' then 3
     when 'Medium' then 2
     when 'Low' then 1

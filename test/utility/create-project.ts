@@ -22,7 +22,7 @@ export async function createProject(
     type: ProjectType.Translation,
     mouStart: CalendarDate.fromISO('1991-01-01'),
     mouEnd: CalendarDate.fromISO('1992-01-01'),
-    step: ProjectStep.PendingConceptApproval,
+    step: ProjectStep.EarlyConversations,
     fieldRegionId: input.fieldRegionId || (await createRegion(app)).id,
     ...input,
   };

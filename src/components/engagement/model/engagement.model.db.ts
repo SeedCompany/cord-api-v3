@@ -16,4 +16,5 @@ export class DbEngagement extends DbBaseNode {
   startDateOverride: any = null;
   statusModifiedAt: any = null;
   modifiedAt: any = null;
+  status: any = null;
 }

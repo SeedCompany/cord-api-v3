@@ -15,7 +15,12 @@ import {
 import { Language } from '../src/components/language';
 import { Location } from '../src/components/location';
 import { ProductMethodology } from '../src/components/product';
-import { Project, ProjectType } from '../src/components/project';
+import {
+  Project,
+  ProjectStatus,
+  ProjectStep,
+  ProjectType,
+} from '../src/components/project';
 import { User } from '../src/components/user';
 import {
   createInternshipEngagement,
@@ -32,10 +37,15 @@ import {
   Raw,
   registerUserWithPower,
   requestFileUpload,
+  runAsAdmin,
   TestApp,
   uploadFileContents,
 } from './utility';
 import { createProduct } from './utility/create-product';
+import {
+  changeProjectStep,
+  stepsFromEarlyConversationToBeforeActive,
+} from './utility/transition-project';
 
 describe('Engagement e2e', () => {
   let app: TestApp;
@@ -1011,5 +1021,177 @@ describe('Engagement e2e', () => {
     ).rejects.toThrowError(
       'firstScripture can not be set to true if it is not the only engagement for the language that has firstScripture=true'
     );
+  });
+
+  it('should update Engagement status to Active if Project becomes Active from InDevelopment', async () => {
+    const project = await createProject(app, {
+      step: ProjectStep.EarlyConversations,
+    });
+    expect(project.status).toBe(ProjectStatus.InDevelopment);
+
+    const engagement = await createLanguageEngagement(app, {
+      projectId: project.id,
+    });
+    expect(engagement.status !== EngagementStatus.Active).toBe(true);
+
+    await runAsAdmin(app, async () => {
+      for (const next of stepsFromEarlyConversationToBeforeActive) {
+        await changeProjectStep(app, project.id, next);
+      }
+
+      // Update Project status to Active, and ensure result from this specific
+      // operation returns the correct engagement status
+      const result = await app.graphql.mutate(
+        gql`
+          mutation updateProject($id: ID!) {
+            updateProject(input: { project: { id: $id, step: Active } }) {
+              project {
+                id
+                engagements {
+                  items {
+                    id
+                    status
+                  }
+                }
+              }
+            }
+          }
+        `,
+        {
+          id: project.id,
+        }
+      );
+
+      const actual = result.updateProject.project.engagements.items.find(
+        (e: { id: string }) => e.id === engagement.id
+      );
+      expect(actual.status).toBe(EngagementStatus.Active);
+    });
+  });
+
+  /**
+   * Whenever an engagement's status gets changed to anything different the statusModifiedAt date should get set to now
+   */
+  it('should update Engagement statusModifiedAt if status is updated', async () => {
+    const project = await createProject(app, { type: ProjectType.Internship });
+    const engagement = await createInternshipEngagement(app, {
+      projectId: project.id,
+    });
+
+    // Update Engagement status to AwaitingDedication
+    const {
+      updateInternshipEngagement: { engagement: actual },
+    } = await app.graphql.mutate(
+      gql`
+        mutation updateInternshipEngagement($id: ID!) {
+          updateInternshipEngagement(
+            input: { engagement: { id: $id, status: AwaitingDedication } }
+          ) {
+            engagement {
+              ...internshipEngagement
+            }
+          }
+        }
+        ${fragments.internshipEngagement}
+      `,
+      {
+        id: engagement.id,
+      }
+    );
+
+    expect(actual.id).toBe(engagement.id);
+    expect(actual.status).toBe(EngagementStatus.AwaitingDedication);
+    expect(actual.statusModifiedAt.value).toBe(actual.modifiedAt);
+  });
+
+  /**
+   * Whenever an engagement's status gets set to Suspended the lastSuspendedAt date should get set to now
+   */
+  it('should update Engagement lastSuspendedAt if status gets set to Suspended', async () => {
+    const project = await createProject(app, { type: ProjectType.Internship });
+    const engagement = await createInternshipEngagement(app, {
+      projectId: project.id,
+    });
+
+    // Update Engagement status to Suspended
+    const {
+      updateInternshipEngagement: { engagement: actual },
+    } = await app.graphql.mutate(
+      gql`
+        mutation updateInternshipEngagement($id: ID!) {
+          updateInternshipEngagement(
+            input: { engagement: { id: $id, status: Suspended } }
+          ) {
+            engagement {
+              ...internshipEngagement
+            }
+          }
+        }
+        ${fragments.internshipEngagement}
+      `,
+      {
+        id: engagement.id,
+      }
+    );
+
+    expect(actual.id).toBe(engagement.id);
+    expect(actual.status).toBe(EngagementStatus.Suspended);
+    expect(actual.statusModifiedAt.value).toBe(actual.modifiedAt);
+    expect(actual.lastSuspendedAt.value).toBe(actual.modifiedAt);
+  });
+
+  /**
+   * Whenever an engagement's status gets set to Active after previously being Suspended the lastReactivatedAt date should get set to now
+   */
+  it('should update Engagement lastReactivatedAt if status gets set to Active from Suspended', async () => {
+    const project = await createProject(app, { type: ProjectType.Internship });
+    const engagement = await createInternshipEngagement(app, {
+      projectId: project.id,
+    });
+
+    // Update Engagement status to Suspended
+    await app.graphql.mutate(
+      gql`
+        mutation updateInternshipEngagement($id: ID!) {
+          updateInternshipEngagement(
+            input: { engagement: { id: $id, status: Suspended } }
+          ) {
+            engagement {
+              ...internshipEngagement
+            }
+          }
+        }
+        ${fragments.internshipEngagement}
+      `,
+      {
+        id: engagement.id,
+      }
+    );
+
+    // Update Engagement status to Active
+    const {
+      updateInternshipEngagement: { engagement: actual },
+    } = await app.graphql.mutate(
+      gql`
+        mutation updateInternshipEngagement($id: ID!) {
+          updateInternshipEngagement(
+            input: { engagement: { id: $id, status: Active } }
+          ) {
+            engagement {
+              ...internshipEngagement
+            }
+          }
+        }
+        ${fragments.internshipEngagement}
+      `,
+      {
+        id: engagement.id,
+      }
+    );
+
+    expect(actual.id).toBe(engagement.id);
+    expect(actual.status).toBe(EngagementStatus.Active);
+    expect(actual.statusModifiedAt.value).toBe(actual.modifiedAt);
+    expect(actual.lastReactivatedAt.value).toBe(actual.modifiedAt);
   });
 });

@@ -3659,20 +3659,7 @@
 									"    var institution = myEducation.institution.value;",
 									"    pm.expect(institution).to.eql(education_data.institution.value);",
 									"});",
-									"",
-									"// SORTING AND FILTER TESTS",
-									"pm.test(\"Verify that items are sorted by 'institution' and orderd by requested order \", function () {",
-									"",
-									"    var responseBody = jsonData.data.educations.items;",
-									"    if (pm.globals.get('order') == \"ASC\") {",
-									"        var expectedSortedOrder = lodash.orderBy(responseBody, ['institution.value'], ['asc'])",
-									"        pm.expect(responseBody).to.eql(expectedSortedOrder);",
-									"    } else {",
-									"        var expectedSortedOrder = lodash.orderBy(responseBody, ['institution.value'], ['desc'])",
-									"        pm.expect(responseBody).to.eql(expectedSortedOrder);",
-									"    }",
-									"",
-									"});"
+									""
 								],
 								"type": "text/javascript"
 							}

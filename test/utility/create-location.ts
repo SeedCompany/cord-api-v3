@@ -18,6 +18,7 @@ export async function createLocation(
     name: faker.random.word() + ' ' + faker.random.uuid(),
     type: LocationType.County,
     sensitivity: Sensitivity.High,
+    isoAlpha3: faker.helpers.replaceSymbols('???'),
     ...input,
   };
 

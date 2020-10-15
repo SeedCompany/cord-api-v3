@@ -18,6 +18,7 @@ import { DbProjectMember } from '../../project/project-member/model';
 import { DbSong } from '../../song/model';
 import { DbStory } from '../../story/model';
 import { DbEducation, DbUnavailability, DbUser } from '../../user/model';
+import { Role } from '../dto';
 import { Powers } from '../dto/powers';
 import { DbBaseNodeGrant, DbRole } from '../model';
 
@@ -27,8 +28,8 @@ import { DbBaseNodeGrant, DbRole } from '../model';
 const read = true;
 const write = true;
 
-export const ProjectMangerRole = new DbRole({
-  name: 'ProjectManager',
+export const ProjectManager = new DbRole({
+  name: Role.ProjectManager,
   powers: [...(Object.keys(Powers) as Powers[])],
   grants: [
     new DbBaseNodeGrant<DbBudget>({
@@ -119,6 +120,7 @@ export const ProjectMangerRole = new DbRole({
         { propertyName: 'startDateOverride',          permission: { read, write, }, },
         { propertyName: 'statusModifiedAt',           permission: { read, write, }, },
         { propertyName: 'modifiedAt',                 permission: { read, write, }, },
+        { propertyName: 'status',                     permission: { read, write, }, },
     ]}),
     new DbBaseNodeGrant<DbLanguage>({
       __className: 'DbLanguage',
@@ -163,6 +165,7 @@ export const ProjectMangerRole = new DbRole({
         { propertyName: 'statusModifiedAt',           permission: { read, write, }, },
         { propertyName: 'modifiedAt',                 permission: { read, write, }, },
         { propertyName: 'product',                    permission: { read, write, }, },
+        { propertyName: 'status',                     permission: { read, write, }, },
     ]}),
     new DbBaseNodeGrant<DbLiteracyMaterial>({
       __className: 'DbLiteracyMaterial',
@@ -176,7 +179,7 @@ export const ProjectMangerRole = new DbRole({
         { propertyName: 'name',                       permission: { read, }, },
         { propertyName: 'type',                       permission: { read, }, },
         { propertyName: 'sensitivity',                permission: { read, }, },
-        { propertyName: 'iso31663',                   permission: { read, }, },
+        { propertyName: 'isoAlpha3',                  permission: { read, }, },
         { propertyName: 'fundingAccount',             permission: { read, }, },
     ]}),
     new DbBaseNodeGrant<DbOrganization>({

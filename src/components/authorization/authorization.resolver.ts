@@ -33,7 +33,8 @@ export class AuthorizationResolver {
     @Session() session: ISession,
     @Args() { userId, power }: ModifyPowerArgs
   ): Promise<boolean> {
-    return await this.authorizationService.createPower(userId, power, session);
+    await this.authorizationService.createPower(userId, power, session);
+    return true;
   }
 
   @Mutation(() => Boolean)
@@ -41,6 +42,15 @@ export class AuthorizationResolver {
     @Session() session: ISession,
     @Args() { userId, power }: ModifyPowerArgs
   ): Promise<boolean> {
-    return await this.authorizationService.deletePower(userId, power, session);
+    await this.authorizationService.deletePower(userId, power, session);
+    return true;
+  }
+
+  @Mutation(() => Boolean)
+  async authorizationSpecial1(@Session() session: ISession): Promise<boolean> {
+    await this.authorizationService.createSGsForEveryRoleForAllBaseNodes(
+      session
+    );
+    return true;
   }
 }

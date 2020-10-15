@@ -142,6 +142,7 @@ export const Administrator = new DbRole({
         { propertyName: 'startDateOverride',          permission: { read, write, }, },
         { propertyName: 'statusModifiedAt',           permission: { read, write, }, },
         { propertyName: 'modifiedAt',                 permission: { read, write, }, },
+        { propertyName: 'status',                     permission: { read, write, }, },
     ]}),
     new DbBaseNodeGrant<DbLanguage>({
       __className: 'DbLanguage',
@@ -186,6 +187,7 @@ export const Administrator = new DbRole({
         { propertyName: 'statusModifiedAt',           permission: { read, write, }, },
         { propertyName: 'modifiedAt',                 permission: { read, write, }, },
         { propertyName: 'product',                    permission: { read, write, }, },
+        { propertyName: 'status',                     permission: { read, write, }, },
     ]}),
     new DbBaseNodeGrant<DbLiteracyMaterial>({
       __className: 'DbLiteracyMaterial',
@@ -199,7 +201,7 @@ export const Administrator = new DbRole({
         { propertyName: 'name',                       permission: { read, write, }, },
         { propertyName: 'type',                       permission: { read, write, }, },
         { propertyName: 'sensitivity',                permission: { read, write, }, },
-        { propertyName: 'iso31663',                   permission: { read, write, }, },
+        { propertyName: 'isoAlpha3',                  permission: { read, write, }, },
         { propertyName: 'fundingAccount',             permission: { read, write, }, },
     ]}),
     new DbBaseNodeGrant<DbOrganization>({

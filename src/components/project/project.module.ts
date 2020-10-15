@@ -9,8 +9,11 @@ import { OrganizationService } from '../organization';
 import { PartnerModule } from '../partner/partner.module';
 import { PartnershipModule } from '../partnership/partnership.module';
 import { UserModule } from '../user/user.module';
+import * as handlers from './handlers';
 import { ProjectMemberModule } from './project-member/project-member.module';
+import { ProjectStepResolver } from './project-step.resolver';
 import { ProjectResolver } from './project.resolver';
+import { ProjectRules } from './project.rules';
 import { ProjectService } from './project.service';
 
 @Module({
@@ -26,7 +29,14 @@ import { ProjectService } from './project.service';
     AuthorizationModule,
     PartnerModule,
   ],
-  providers: [ProjectResolver, OrganizationService, ProjectService],
+  providers: [
+    ProjectResolver,
+    OrganizationService,
+    ProjectService,
+    ProjectStepResolver,
+    ProjectRules,
+    ...Object.values(handlers),
+  ],
   exports: [ProjectService, ProjectMemberModule],
 })
 export class ProjectModule {}

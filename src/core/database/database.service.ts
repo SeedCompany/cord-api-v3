@@ -27,7 +27,12 @@ import {
 } from '../../common';
 import { ILogger, Logger } from '..';
 import { ConfigService } from '../config/config.service';
-import { hasMore } from './query.helpers';
+import {
+  hasMore,
+  setBaseNodeLabelsAndIdDeleted,
+  setPropLabelsAndValuesDeleted,
+  UniqueProperties,
+} from './query.helpers';
 
 interface ReadPropertyResult {
   value: any;
@@ -672,6 +677,38 @@ export class DatabaseService {
       total,
       items,
     };
+  }
+
+  async deleteNodeNew<TObject extends Resource>({
+    object,
+    baseNodeLabels,
+    uniqueProperties,
+  }: {
+    object: TObject;
+    baseNodeLabels: string[];
+    uniqueProperties: UniqueProperties<TObject>;
+  }) {
+    const query = this.db
+      .query()
+      .match(node('node', { id: object.id }))
+      //Mark any parent base node relationships (pointing to the base node) as active = false.
+      .optionalMatch([
+        node('node'),
+        relation('in', 'rel'),
+        node('', 'BaseNode'),
+      ])
+      .set({
+        values: {
+          'rel.active': false,
+        },
+      })
+      .with('distinct(node) as node')
+      //Mark baseNode labels and id deleted
+      .call(setBaseNodeLabelsAndIdDeleted, baseNodeLabels)
+      //Mark unique property labels and values deleted
+      .call(setPropLabelsAndValuesDeleted, uniqueProperties)
+      .return('*');
+    await query.run();
   }
 
   async deleteNode<TObject extends Resource>({
