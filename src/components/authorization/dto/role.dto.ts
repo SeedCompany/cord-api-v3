@@ -36,7 +36,3 @@ registerEnumType(Role, { name: 'Role' });
   description: SecuredEnumList.descriptionFor('roles'),
 })
 export abstract class SecuredRoles extends SecuredEnumList(Role) {}
-
-export enum InternalRole {
-  ReadAll = 'ReadAll',
-}
