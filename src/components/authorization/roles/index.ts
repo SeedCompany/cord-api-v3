@@ -11,8 +11,9 @@ export * from './liason.role';
 export * from './marketing.role';
 export * from './mentor.role';
 export * from './project-manager.role';
-export * from './read-all.role';
 export * from './regional-communications-coordinator.role';
 export * from './regional-director.role';
 export * from './staff-member.role';
 export * from './translator.role';
+
+export * from './every-role.array';
