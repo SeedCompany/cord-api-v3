@@ -29,7 +29,7 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
 
   private async getDepartmentIdPrefixForProject(project: Project) {
     // TODO: validate if active property lives on relationship or BaseNode
-    const accountNumbers = await this.db
+    const accountNumber = await this.db
       .query()
       .raw(
         `
@@ -38,8 +38,14 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
         `,
         { projectId: project.id }
       )
-      .run();
-    return accountNumbers[0]['accountNumberNode.value'];
+      .first();
+
+    if (!accountNumber) {
+      throw new ServerException(
+        `Unable to find accountNumber associated with project: ${project.id}`
+      );
+    }
+    return accountNumber['accountNumberNode.value'];
   }
 
   private async assignDepartmentIdForProject(project: Project) {
