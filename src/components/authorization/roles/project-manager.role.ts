@@ -18,6 +18,7 @@ import { DbProjectMember } from '../../project/project-member/model';
 import { DbSong } from '../../song/model';
 import { DbStory } from '../../story/model';
 import { DbEducation, DbUnavailability, DbUser } from '../../user/model';
+import { Role } from '../dto';
 import { Powers } from '../dto/powers';
 import { DbBaseNodeGrant, DbRole } from '../model';
 
@@ -27,8 +28,8 @@ import { DbBaseNodeGrant, DbRole } from '../model';
 const read = true;
 const write = true;
 
-export const ProjectMangerRole = new DbRole({
-  name: 'ProjectManager',
+export const ProjectManager = new DbRole({
+  name: Role.ProjectManager,
   powers: [...(Object.keys(Powers) as Powers[])],
   grants: [
     new DbBaseNodeGrant<DbBudget>({
