@@ -823,17 +823,27 @@ export class EngagementService {
     // This is not ideal, as ideally the hydrateEngagements call would return
     // the projectSecuredProperties. A refactor to the hydrateEngagements query
     // would allow for this code to be deleted;
+    const memoizedProjectSecuredProperties = new Map();
     async function getProjectSecuredProperties(
       repository: EngagementRepository,
       userId: string,
       projectId: string
     ) {
-      const projectResponse = await repository
-        .request()
-        .getSecuredPropertiesMap(userId, projectId)
-        .runQuery(['securedPropertiesMap']);
+      const memoizationKey = userId + projectId;
+      const hasKey = memoizedProjectSecuredProperties.has(memoizationKey);
+      if (!hasKey) {
+        const projectResponse = repository
+          .request()
+          .getSecuredPropertiesMap(userId, projectId)
+          .runQuery(['securedPropertiesMap']);
 
-      return projectResponse.securedPropertiesMap;
+        memoizedProjectSecuredProperties.set(memoizationKey, projectResponse);
+      }
+      const memoizedValue = await memoizedProjectSecuredProperties.get(
+        memoizationKey
+      );
+      const securedPropertiesMap = memoizedValue.securedPropertiesMap;
+      return securedPropertiesMap;
     }
 
     const repositoryDTO = await Promise.all(
