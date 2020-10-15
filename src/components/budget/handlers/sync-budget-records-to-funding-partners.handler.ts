@@ -88,7 +88,7 @@ export class SyncBudgetRecordsToFundingPartners
     const partnerships = await this.determinePartnerships(event);
 
     for (const partnership of partnerships) {
-      await this.syncRecords(budget, partnership, event.session);
+      await this.syncRecords(budget, partnership, event);
     }
   }
 
@@ -126,7 +126,7 @@ export class SyncBudgetRecordsToFundingPartners
   private async syncRecords(
     budget: Budget,
     partnership: Partnership,
-    session: ISession
+    event: SubscribedEvent
   ) {
     const organizationId = await this.getOrganizationIdByPartnership(
       partnership
@@ -135,13 +135,16 @@ export class SyncBudgetRecordsToFundingPartners
     const previous = budget.records
       .filter((record) => recordOrganization(record) === organizationId)
       .map(recordFiscalYear);
-    const updated = partnershipFiscalYears(partnership);
+    const updated =
+      event instanceof PartnershipWillDeleteEvent
+        ? []
+        : partnershipFiscalYears(partnership);
 
     const removals = difference(previous, updated);
     const additions = difference(updated, previous);
 
-    await this.removeRecords(budget, organizationId, removals, session);
-    await this.addRecords(budget, organizationId, additions, session);
+    await this.removeRecords(budget, organizationId, removals, event.session);
+    await this.addRecords(budget, organizationId, additions, event.session);
   }
 
   private async addRecords(
