@@ -1,11 +1,5 @@
 import { ServerException } from '../../../common';
-import {
-  DatabaseService,
-  EventsHandler,
-  IEventHandler,
-  ILogger,
-  Logger,
-} from '../../../core';
+import { DatabaseService, EventsHandler, IEventHandler } from '../../../core';
 import { Project, ProjectStep } from '../dto';
 import { ProjectUpdatedEvent } from '../events';
 
@@ -13,17 +7,9 @@ type SubscribedEvent = ProjectUpdatedEvent;
 
 @EventsHandler(ProjectUpdatedEvent)
 export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
-  constructor(
-    private readonly db: DatabaseService,
-    @Logger('project:set-department-id') private readonly logger: ILogger
-  ) {}
+  constructor(private readonly db: DatabaseService) {}
 
   async handle(event: SubscribedEvent) {
-    this.logger.debug('Project mutation, set department id', {
-      ...event,
-      event: event.constructor.name,
-    });
-
     const shouldSetDepartmentId =
       event.updates.step === ProjectStep.PendingFinanceConfirmation &&
       !event.updated.departmentId.value;
