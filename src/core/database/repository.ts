@@ -10,7 +10,9 @@ export class Repository {
   requestClass = RepositoryRequest;
 
   request() {
-    return new this.requestClass(this.db);
+    const request = new this.requestClass(this.db);
+    request.query.raw('WITH {} AS stash');
+    return request;
   }
 }
 
@@ -22,10 +24,11 @@ export class RepositoryRequest {
   }
 
   with(includes: any) {
-    //this.query.raw('WITH *');
     for (const [key, value] of Object.entries(includes)) {
-      this.query.raw('WITH $value AS ' + key, { value: value }); // TODO: this needs escaping to prevent injection attacks.
-      //this.query.raw`WITH ${value} AS ` + key;
+      this.query.raw('WITH apoc.map.setKey(stash, $key, $value) AS stash', {
+        key: key,
+        value: value,
+      });
     }
 
     return this;
@@ -66,6 +69,37 @@ export class RepositoryRequest {
       'total',
     ]);
 
+    return this;
+  }
+
+  getSecuredPropertiesMap(userId: string, securedNodeId: string | null) {
+    // If called with securedNodeId null,
+    // then it expects "securedNodeId" to be in scope in cypher
+    if (securedNodeId != null) {
+      this.query.raw(
+        `
+          WITH $securedNodeId AS securedNodeId, stash
+        `,
+        { securedNodeId: securedNodeId }
+      );
+    }
+    this.query.raw(
+      `
+        WITH $userId AS requestingUserId, securedNodeId, stash
+
+        MATCH (requestingUser:User { id: requestingUserId })
+        MATCH (securedNode {id: securedNodeId})
+        OPTIONAL MATCH (requestingUser)<-[:member]-(:SecurityGroup)-[:permission]->(permissionNode:Permission)-[:baseNode]->(securedNode)
+        WITH requestingUser, permissionNode, securedNode, stash
+        
+        MATCH (permissionNode)-[:baseNode]-(securedNode)-[securedPropertyRelationship {active: true}]-(securedProperty:Property) WHERE type(securedPropertyRelationship) = permissionNode.property
+        WITH [type(securedPropertyRelationship),  [securedProperty.value, permissionNode.read, permissionNode.edit]] AS securedCollection, stash
+        WITH [securedCollection[0], {value: [n in COLLECT(securedCollection) | n[1][0]][0], canRead: true in [n in COLLECT(securedCollection) | n[1][1]], canEdit: true in [n in COLLECT(securedCollection) | n[1][2]]}] AS mergedPairs, stash
+        WITH apoc.map.fromPairs(COLLECT(mergedPairs)) AS securedPropertiesMap, stash
+        WITH apoc.map.setKey(stash, 'securedPropertiesMap', securedPropertiesMap) AS stash
+    `,
+      { userId: userId }
+    );
     return this;
   }
 

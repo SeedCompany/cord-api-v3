@@ -14,12 +14,14 @@ export class EngagementRepository extends Repository {
   requestClass = EngagementRepositoryRequest; // TODO: could perhaps infer this from class name
 
   request() {
-    return new this.requestClass(this.db);
+    const request = new this.requestClass(this.db);
+    request.query.raw('WITH {} AS stash');
+    return request;
   }
 }
 
 export class EngagementRepositoryRequest extends RepositoryRequest {
-  findEngagementIdsByProjectId(session: ISession, filter: any, input: any) {
+  findEngagementIdsByFilter(session: ISession, filter: any, input: any) {
     let label = 'Engagement';
     if (filter.type === 'language') {
       label = 'LanguageEngagement';
@@ -57,10 +59,6 @@ export class EngagementRepositoryRequest extends RepositoryRequest {
   }
 
   hydrateEngagements(requestingUserId: string) {
-    //if (engagementIds.length === 0) {
-    //  throw new NotFoundException('no id given', 'engagement.id');
-    //}
-
     this.query.raw(
       `
       WITH stash.engagementIds as engagementIds, $requestingUserId AS requestingUserId, stash

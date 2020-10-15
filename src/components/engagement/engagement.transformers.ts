@@ -1,4 +1,4 @@
-import { DateTime } from 'luxon';
+import { ServerException } from '../../common';
 import {
   parseBaseNodeProperties,
   parsePropList,
@@ -38,34 +38,147 @@ export const securedPropertyDefinitions = {
   countryOfOrigin: true,
 };
 
-export function transformEngagementFromRepositoryToDTO(result: any) {
+export const securedPropertyDefinitionsLanguageEngagement = {
+  status: true,
+  statusModifiedAt: true,
+  completeDate: true,
+  disbursementCompleteDate: true,
+  communicationsCompleteDate: true,
+  initialEndDate: true,
+  startDate: true,
+  endDate: true,
+  startDateOverride: true,
+  endDateOverride: true,
+  modifiedAt: true,
+  lastSuspendedAt: true,
+  lastReactivatedAt: true,
+  ceremony: true,
+
+  //Language Specific
+  firstScripture: true,
+  lukePartnership: true,
+  sentPrintingDate: true,
+  paraTextRegistryId: true,
+  pnp: true,
+  language: true,
+};
+
+export const securedPropertyDefinitionsInternshipEngagement = {
+  status: true,
+  statusModifiedAt: true,
+  completeDate: true,
+  disbursementCompleteDate: true,
+  communicationsCompleteDate: true,
+  initialEndDate: true,
+  startDate: true,
+  endDate: true,
+  startDateOverride: true,
+  endDateOverride: true,
+  modifiedAt: true,
+  lastSuspendedAt: true,
+  lastReactivatedAt: true,
+  ceremony: true,
+
+  //Internship Specific
+  position: true,
+  growthPlan: true,
+  methodologies: true,
+  intern: true,
+  mentor: true,
+  countryOfOrigin: true,
+};
+
+// TODO: This function accepting a result and a projectSecuredPropertiesMap as two separate objects
+//       is a compromise due to the current repository call for retrieving the securedPropertiesMap
+//       not chaining easily within the call to hydrate engagements. A refactor could simplify the
+//       required parameters down to one.
+export function transformEngagementFromRepositoryToDTO(repositoryDTO: any) {
+  const LanguageEngagementType = 'LanguageEngagement';
+  const InternshipEngagementType = 'InternshipEngagement';
+  const engagementType = repositoryDTO.engagementResult.__typename as string;
+  if (engagementType === LanguageEngagementType) {
+    return transformLanguageEngagementFromRepositoryToDTO(repositoryDTO);
+  } else if (engagementType === InternshipEngagementType) {
+    return transformInternshipEngagementFromRepositoryToDTO(repositoryDTO);
+  } else {
+    throw new ServerException(`unknown Engagement type: ${engagementType}`);
+  }
+}
+
+function transformLanguageEngagementFromRepositoryToDTO(repositoryDTO: any) {
+  const result = repositoryDTO.engagementResult;
+  const projectSecuredPropertiesMap = repositoryDTO.projectSecuredPropertiesMap;
+
   const props = parsePropList(result.propList);
   const securedProperties = parseSecuredProperties(
     props,
     result.permList,
-    securedPropertyDefinitions
+    securedPropertyDefinitionsLanguageEngagement
   );
 
-  //const project = await this.projectService.readOne(
-  //  result.projectId,
-  //  session
-  //);
+  const canReadStartDate =
+    projectSecuredPropertiesMap.mouStart.canRead &&
+    securedProperties.startDateOverride.canRead;
+  const startDate = canReadStartDate
+    ? props.startDateOverride ?? projectSecuredPropertiesMap.mouStart.value
+    : null;
+  const canReadEndDate =
+    projectSecuredPropertiesMap.mouEnd.canRead &&
+    securedProperties.endDateOverride.canRead;
+  const endDate = canReadEndDate
+    ? props.endDateOverride ?? projectSecuredPropertiesMap.mouEnd.value
+    : null;
 
-  //const canReadStartDate =
-  //  project.mouStart.canRead && securedProperties.startDateOverride.canRead;
-  //const startDate = canReadStartDate
-  //  ? props.startDateOverride ?? project.mouStart.value
-  //  : null;
-  //const canReadEndDate =
-  //  project.mouEnd.canRead && securedProperties.endDateOverride.canRead;
-  //const endDate = canReadEndDate
-  //  ? props.endDateOverride ?? project.mouEnd.value
-  //  : null;
+  return {
+    __typename: result.__typename,
+    ...securedProperties,
+    ...parseBaseNodeProperties(result.node),
+    status: props.status,
+    modifiedAt: props.modifiedAt,
+    startDate: {
+      value: startDate,
+      canRead: canReadStartDate,
+      canEdit: false,
+    },
+    endDate: {
+      value: endDate,
+      canRead: canReadEndDate,
+      canEdit: false,
+    },
+    ceremony: {
+      ...securedProperties.ceremony,
+      value: result.ceremonyId,
+    },
+    language: {
+      ...securedProperties.language,
+      value: result.languageId,
+    },
+  };
+}
 
-  const canReadEndDate = true;
-  const endDate = DateTime.utc();
-  const canReadStartDate = true;
-  const startDate = DateTime.utc();
+function transformInternshipEngagementFromRepositoryToDTO(repositoryDTO: any) {
+  const result = repositoryDTO.engagementResult;
+  const projectSecuredPropertiesMap = repositoryDTO.projectSecuredPropertiesMap;
+
+  const props = parsePropList(result.propList);
+  const securedProperties = parseSecuredProperties(
+    props,
+    result.permList,
+    securedPropertyDefinitionsInternshipEngagement
+  );
+
+  const canReadStartDate =
+    projectSecuredPropertiesMap.mouStart.canRead &&
+    securedProperties.startDateOverride.canRead;
+  const startDate = canReadStartDate
+    ? props.startDateOverride ?? projectSecuredPropertiesMap.mouStart.value
+    : null;
+  const canReadEndDate =
+    projectSecuredPropertiesMap.mouEnd.canRead &&
+    securedProperties.endDateOverride.canRead;
+  const endDate = canReadEndDate
+    ? props.endDateOverride ?? projectSecuredPropertiesMap.mouEnd.value
+    : null;
 
   return {
     __typename: result.__typename,
@@ -90,10 +203,6 @@ export function transformEngagementFromRepositoryToDTO(result: any) {
     ceremony: {
       ...securedProperties.ceremony,
       value: result.ceremonyId,
-    },
-    language: {
-      ...securedProperties.language,
-      value: result.languageId,
     },
     intern: {
       ...securedProperties.intern,

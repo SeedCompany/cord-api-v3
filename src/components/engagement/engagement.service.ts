@@ -532,7 +532,20 @@ export class EngagementService {
       .hydrateEngagements(session.userId)
       .runQuery(['engagements']);
 
-    return transformEngagementFromRepositoryToDTO(response.engagements[0]);
+    const projectResponse = await this.engagementRepository
+      .request()
+      .getSecuredPropertiesMap(
+        session.userId,
+        response.engagements[0].projectId
+      )
+      .runQuery(['securedPropertiesMap']);
+
+    const repositoryDTO = {
+      engagementResult: response.engagements[0],
+      projectSecuredPropertiesMap: projectResponse.securedPropertiesMap,
+    };
+
+    return transformEngagementFromRepositoryToDTO(repositoryDTO);
   }
 
   // UPDATE ////////////////////////////////////////////////////////
@@ -801,14 +814,46 @@ export class EngagementService {
 
     const response = await this.engagementRepository
       .request()
-      .findEngagementIdsByProjectId(session, filter, input)
+      .findEngagementIdsByFilter(session, filter, input)
       .hydrateEngagements(session.userId)
       .runQuery(['total', 'engagements']);
+
+    // Function is declared within the list so we can memoize the result
+    // without the result getting stale in a long lived singleton.
+    // This is not ideal, as ideally the hydrateEngagements call would return
+    // the projectSecuredProperties. A refactor to the hydrateEngagements query
+    // would allow for this code to be deleted;
+    async function getProjectSecuredProperties(
+      repository: EngagementRepository,
+      userId: string,
+      projectId: string
+    ) {
+      const projectResponse = await repository
+        .request()
+        .getSecuredPropertiesMap(userId, projectId)
+        .runQuery(['securedPropertiesMap']);
+
+      return projectResponse.securedPropertiesMap;
+    }
+
+    const repositoryDTO = await Promise.all(
+      response.engagements.map(async (engagementResult: any) => {
+        const projectSecuredPropertiesMap = await getProjectSecuredProperties(
+          this.engagementRepository,
+          session.userId!,
+          engagementResult.projectId
+        );
+        return {
+          engagementResult: engagementResult,
+          projectSecuredPropertiesMap: projectSecuredPropertiesMap,
+        };
+      })
+    );
 
     return {
       total: response.total,
       hasMore: hasMore(input, response.total),
-      items: response.engagements.map(transformEngagementFromRepositoryToDTO),
+      items: repositoryDTO.map(transformEngagementFromRepositoryToDTO),
     };
   }
 
