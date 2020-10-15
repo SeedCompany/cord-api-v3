@@ -352,9 +352,18 @@ export class AuthorizationService {
     for (const role of roles) {
       await this.db
         .query()
-        .match([node('user', 'User', { id })])
-        .match([node('sg', 'SecurityGroup', { role })])
-        .merge([node('user'), relation('in', '', 'member'), node('sg')])
+        .raw(
+          `
+          call apoc.periodic.iterate(
+            "MATCH (u:User {id:$id}), (sg:SecurityGroup {role:$role}) RETURN u, sg", 
+            "MERGE (u)<-[:member]-(sg)", {batchSize:1000})
+          yield batches, total return batches, total
+      `,
+          {
+            id,
+            role,
+          }
+        )
         .run();
 
       // match the role to a real role object and grant powers
