@@ -1,10 +1,8 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { flatMap } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
-  fiscalYears,
   getHighestSensitivity,
   InputException,
   ISession,
@@ -44,7 +42,7 @@ import {
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto/powers';
-import { Budget, BudgetService, BudgetStatus, SecuredBudget } from '../budget';
+import { BudgetService, BudgetStatus, SecuredBudget } from '../budget';
 import {
   EngagementListInput,
   EngagementService,
@@ -56,7 +54,7 @@ import {
   LocationService,
   SecuredLocationList,
 } from '../location';
-import { PartnerService, PartnerType } from '../partner';
+import { PartnerService } from '../partner';
 import {
   PartnershipListInput,
   PartnershipService,
@@ -868,49 +866,6 @@ export class ProjectService {
       canRead: true,
       value: await this.fileService.getDirectory(rootRef.id, session),
     };
-  }
-
-  async attachBudgetRecords(
-    budget: Budget,
-    project: Pick<Project, 'id' | 'mouStart' | 'mouEnd'>,
-    session: ISession
-  ) {
-    const partners = await this.partnerships.list(
-      {
-        filter: { projectId: project.id },
-      },
-      session
-    );
-    const fundingOrgIds = await Promise.all(
-      partners.items
-        .filter((p) => p.types.value.includes(PartnerType.Funding))
-        .map(async (p) => {
-          return (
-            await this.partnerService.readOne(
-              p.partner.value as string,
-              session
-            )
-          ).organization.value as string;
-        })
-    );
-
-    // calculate the fiscalYears covered by this date range
-    const fiscalRange = fiscalYears(
-      project.mouStart.value,
-      project.mouEnd.value
-    );
-    const inputRecords = flatMap(fiscalRange, (fiscalYear) =>
-      fundingOrgIds.map((organizationId) => ({
-        budgetId: budget.id,
-        organizationId,
-        fiscalYear,
-      }))
-    );
-    return Promise.all(
-      inputRecords.map((record) =>
-        this.budgetService.createRecord(record, session)
-      )
-    );
   }
 
   async consistencyChecker(session: ISession): Promise<boolean> {
