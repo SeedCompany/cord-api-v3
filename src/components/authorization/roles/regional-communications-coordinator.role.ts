@@ -2,9 +2,12 @@ import { DbBudget } from '../../budget/model';
 import { DbBudgetRecord } from '../../budget/model/budget-record.model.db';
 import { DbCeremony } from '../../ceremony/model';
 import { DbInternshipEngagement, DbLanguageEngagement } from '../../engagement/model';
+import { DbFieldRegion } from '../../field-region/model';
+import { DbFieldZone } from '../../field-zone/model';
 import { DbDirectory, DbFile } from '../../file/model';
 import { DbFileVersion } from '../../file/model/file-version.model.db';
 import { DbFilm } from '../../film/model';
+import { DbFundingAccount } from '../../funding-account/model';
 import { DbEthnologueLanguage, DbLanguage } from '../../language/model';
 import { DbLiteracyMaterial } from '../../literacy-material/model';
 import { DbLocation } from '../../location/model';
@@ -28,8 +31,8 @@ import { DbBaseNodeGrant, DbRole } from '../model';
 const read = true;
 const write = true;
 
-export const ProjectManager = new DbRole({
-  name: Role.ProjectManager,
+export const RegionalCommunicationsCoordinator = new DbRole({
+  name: Role.RegionalCommunicationsCoordinator,
   powers: [...(Object.keys(Powers) as Powers[])],
   grants: [
     new DbBaseNodeGrant<DbBudget>({
@@ -63,17 +66,30 @@ export const ProjectManager = new DbRole({
     new DbBaseNodeGrant<DbEducation>({
       __className: 'DbEducation',
       properties: [
-        { propertyName: 'degree',                     permission: { read, }, },
-        { propertyName: 'institution',                permission: { read, }, },
-        { propertyName: 'major',                      permission: { read, }, },
+        { propertyName: 'degree',                     permission: { read, write, }, },
+        { propertyName: 'institution',                permission: { read, write, }, },
+        { propertyName: 'major',                      permission: { read, write, }, },
     ]}),
     new DbBaseNodeGrant<DbEthnologueLanguage>({
       __className: 'DbEthnologueLanguage',
       properties: [
-        { propertyName: 'code',                       permission: { read, }, },
-        { propertyName: 'name',                       permission: { read, }, },
-        { propertyName: 'population',                 permission: { read, }, },
-        { propertyName: 'provisionalCode',            permission: { read, }, },
+        { propertyName: 'code',                       permission: { read, write, }, },
+        { propertyName: 'name',                       permission: { read, write, }, },
+        { propertyName: 'population',                 permission: { read, write, }, },
+        { propertyName: 'provisionalCode',            permission: { read, write, }, },
+    ]}),
+    new DbBaseNodeGrant<DbFieldRegion>({
+      __className: 'DbFieldRegion',
+      properties: [
+        { propertyName: 'director',                   permission: { read, write, }, },
+        { propertyName: 'name',                       permission: { read, write, }, },
+        { propertyName: 'fieldZone',                  permission: { read, write, }, },
+    ]}),
+    new DbBaseNodeGrant<DbFieldZone>({
+      __className: 'DbFieldZone',
+      properties: [
+        { propertyName: 'director',                   permission: { read, write, }, },
+        { propertyName: 'name',                       permission: { read, write, }, },
     ]}),
     new DbBaseNodeGrant<DbFile>({
       __className: 'DbFile',
@@ -97,6 +113,12 @@ export const ProjectManager = new DbRole({
       properties: [
         { propertyName: 'name',                       permission: { read, write, }, },
         { propertyName: 'scriptureReferences',        permission: { read, write, }, },
+    ]}),
+    new DbBaseNodeGrant<DbFundingAccount>({
+      __className: 'DbFundingAccount',
+      properties: [
+        { propertyName: 'name',                       permission: { read, write, }, },
+        { propertyName: 'accountNumber',              permission: { read, write, }, },
     ]}),
     new DbBaseNodeGrant<DbInternshipEngagement>({
       __className: 'DbInternshipEngagement',
@@ -125,22 +147,22 @@ export const ProjectManager = new DbRole({
     new DbBaseNodeGrant<DbLanguage>({
       __className: 'DbLanguage',
       properties: [
-        { propertyName: 'displayName',                permission: { read, }, },
-        { propertyName: 'displayNamePronunciation',   permission: { read, }, },
-        { propertyName: 'isDialect',                  permission: { read, }, },
-        { propertyName: 'isSignLanguage',             permission: { read, }, },
-        { propertyName: 'leastOfThese',               permission: { read, }, },
-        { propertyName: 'name',                       permission: { read, }, },
-        { propertyName: 'leastOfTheseReason',         permission: { read, }, },
-        { propertyName: 'populationOverride',         permission: { read, }, },
-        { propertyName: 'registryOfDialectsCode',     permission: { read, }, },
-        { propertyName: 'name',                       permission: { read, }, },
-        { propertyName: 'signLanguageCode',           permission: { read, }, },
-        { propertyName: 'sponsorEstimatedEndDate',    permission: { read, }, },
-        { propertyName: 'ethnologue',                 permission: { read, }, },
-        { propertyName: 'name',                       permission: { read, }, },
-        { propertyName: 'sensitivity',                permission: { read, }, },
-        { propertyName: 'hasExternalFirstScripture',  permission: { read, }, },
+        { propertyName: 'displayName',                permission: { read, write, }, },
+        { propertyName: 'displayNamePronunciation',   permission: { read, write, }, },
+        { propertyName: 'isDialect',                  permission: { read, write, }, },
+        { propertyName: 'isSignLanguage',             permission: { read, write, }, },
+        { propertyName: 'leastOfThese',               permission: { read, write, }, },
+        { propertyName: 'name',                       permission: { read, write, }, },
+        { propertyName: 'leastOfTheseReason',         permission: { read, write, }, },
+        { propertyName: 'populationOverride',         permission: { read, write, }, },
+        { propertyName: 'registryOfDialectsCode',     permission: { read, write, }, },
+        { propertyName: 'name',                       permission: { read, write, }, },
+        { propertyName: 'signLanguageCode',           permission: { read, write, }, },
+        { propertyName: 'sponsorEstimatedEndDate',    permission: { read, write, }, },
+        { propertyName: 'ethnologue',                 permission: { read, write, }, },
+        { propertyName: 'name',                       permission: { read, write, }, },
+        { propertyName: 'sensitivity',                permission: { read, write, }, },
+        { propertyName: 'hasExternalFirstScripture',  permission: { read, write, }, },
     ]}),
     new DbBaseNodeGrant<DbLanguageEngagement>({
       __className: 'DbLanguageEngagement',
@@ -176,23 +198,23 @@ export const ProjectManager = new DbRole({
     new DbBaseNodeGrant<DbLocation>({
       __className: 'DbLocation',
       properties: [
-        { propertyName: 'name',                       permission: { read, }, },
-        { propertyName: 'type',                       permission: { read, }, },
-        { propertyName: 'sensitivity',                permission: { read, }, },
-        { propertyName: 'isoAlpha3',                  permission: { read, }, },
-        { propertyName: 'fundingAccount',             permission: { read, }, },
+        { propertyName: 'name',                       permission: { read, write, }, },
+        { propertyName: 'type',                       permission: { read, write, }, },
+        { propertyName: 'sensitivity',                permission: { read, write, }, },
+        { propertyName: 'isoAlpha3',                  permission: { read, write, }, },
+        { propertyName: 'fundingAccount',             permission: { read, write, }, },
     ]}),
     new DbBaseNodeGrant<DbOrganization>({
       __className: 'DbOrganization',
       properties: [
-        { propertyName: 'name',                       permission: { read, }, },
+        { propertyName: 'name',                       permission: { read, write, }, },
     ]}),
     new DbBaseNodeGrant<DbPartner>({
       __className: 'DbPartner',
       properties: [
-        { propertyName: 'organization',               permission: { read, }, },
-        { propertyName: 'pointOfContact',             permission: { read, }, },
-        { propertyName: 'types',                      permission: { read, }, },
+        { propertyName: 'organization',               permission: { read, write, }, },
+        { propertyName: 'pointOfContact',             permission: { read, write, }, },
+        { propertyName: 'types',                      permission: { read, write, }, },
         { propertyName: 'financialReportingTypes',    permission: { read, write, }, },
         { propertyName: 'pmcEntityCode',              permission: { read, write, }, },
         { propertyName: 'globalInnovationsClient',    permission: { read, write, }, },
@@ -204,13 +226,13 @@ export const ProjectManager = new DbRole({
       properties: [
         { propertyName: 'agreement',                  permission: { read, write, }, },
         { propertyName: 'agreementStatus',            permission: { read, write, }, },
-        { propertyName: 'financialReportingType',     permission: { read,  }, },
+        { propertyName: 'financialReportingType',     permission: { read, write, }, },
         { propertyName: 'mou',                        permission: { read, write, }, },
         { propertyName: 'mouEnd',                     permission: { read, write, }, },
         { propertyName: 'mouEndOverride',             permission: { read, write, }, },
         { propertyName: 'mouStart',                   permission: { read, write, }, },
         { propertyName: 'mouStartOverride',           permission: { read, write, }, },
-        { propertyName: 'mouStatus',                  permission: { read, }, },
+        { propertyName: 'mouStatus',                  permission: { read, write, }, },
         { propertyName: 'types',                      permission: { read, write, }, },
         { propertyName: 'organization',               permission: { read, write, }, },
         { propertyName: 'partner',                    permission: { read, write, }, },
@@ -258,27 +280,27 @@ export const ProjectManager = new DbRole({
     new DbBaseNodeGrant<DbUser>({
       __className: 'DbUser',
       properties: [
-        { propertyName: 'about',                      permission: { read, }, },
-        { propertyName: 'displayFirstName',           permission: { read, }, },
-        { propertyName: 'displayLastName',            permission: { read, }, },
-        { propertyName: 'email',                      permission: { read, }, },
-        { propertyName: 'phone',                      permission: { read, }, },
-        { propertyName: 'realFirstName',              permission: { read, }, },
-        { propertyName: 'realLastName',               permission: { read, }, },
-        { propertyName: 'roles',                      permission: { read, }, },
-        { propertyName: 'status',                     permission: { read, }, },
-        { propertyName: 'timezone',                   permission: { read, }, },
-        { propertyName: 'title',                      permission: { read, }, },
-        { propertyName: 'education',                  permission: { read, }, },
-        { propertyName: 'organization',               permission: { read, }, },
-        { propertyName: 'unavailability',             permission: { read, }, },
+        { propertyName: 'about',                      permission: { read, write, }, },
+        { propertyName: 'displayFirstName',           permission: { read, write, }, },
+        { propertyName: 'displayLastName',            permission: { read, write, }, },
+        { propertyName: 'email',                      permission: { read, write, }, },
+        { propertyName: 'phone',                      permission: { read, write, }, },
+        { propertyName: 'realFirstName',              permission: { read, write, }, },
+        { propertyName: 'realLastName',               permission: { read, write, }, },
+        { propertyName: 'roles',                      permission: { read, write, }, },
+        { propertyName: 'status',                     permission: { read, write, }, },
+        { propertyName: 'timezone',                   permission: { read, write, }, },
+        { propertyName: 'title',                      permission: { read, write, }, },
+        { propertyName: 'education',                  permission: { read, write, }, },
+        { propertyName: 'organization',               permission: { read, write, }, },
+        { propertyName: 'unavailability',             permission: { read, write, }, },
     ]}),
     new DbBaseNodeGrant<DbUnavailability>({
       __className: 'DbUnavailability',
       properties: [
-        { propertyName: 'description',                permission: { read, }, },
-        { propertyName: 'end',                        permission: { read, }, },
-        { propertyName: 'start',                      permission: { read, }, },
+        { propertyName: 'description',                permission: { read, write, }, },
+        { propertyName: 'end',                        permission: { read, write, }, },
+        { propertyName: 'start',                      permission: { read, write, }, },
     ]}),
     new DbBaseNodeGrant<DbSong>({
       __className: 'DbSong',

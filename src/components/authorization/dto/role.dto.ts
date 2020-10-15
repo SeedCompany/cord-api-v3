@@ -17,7 +17,7 @@ export enum Role {
   Intern = 'Intern',
   LeadFinancialAnalyst = 'LeadFinancialAnalyst',
   Leadership = 'Leadership',
-  Liaison = 'Liaison',
+  Liason = 'Liason',
   Marketing = 'Marketing',
   Mentor = 'Mentor',
   OfficeOfThePresident = 'OfficeOfThePresident',
@@ -36,7 +36,3 @@ registerEnumType(Role, { name: 'Role' });
   description: SecuredEnumList.descriptionFor('roles'),
 })
 export abstract class SecuredRoles extends SecuredEnumList(Role) {}
-
-export enum InternalRole {
-  ReadAll = 'ReadAll',
-}
