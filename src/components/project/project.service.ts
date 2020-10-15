@@ -801,7 +801,7 @@ export class ProjectService {
   }
 
   async currentBudget(
-    project: Project,
+    project: Project | { id: string },
     session: ISession
   ): Promise<SecuredBudget> {
     const budgets = await this.budgetService.list(
