@@ -37,15 +37,7 @@ import { DbEducation, DbUnavailability, DbUser } from '../user/model';
 import { Role } from './dto';
 import { Powers } from './dto/powers';
 import { DbRole, OneBaseNode } from './model';
-import {
-  Administrator,
-  Controller,
-  everyRole,
-  FieldOperationsDirector,
-  FinancialAnalyst,
-  ProjectManager,
-  RegionalDirector,
-} from './roles';
+import { Administrator, everyRole } from './roles';
 
 /**
  * powers can exist on a security group or a user node
@@ -94,18 +86,12 @@ export class AuthorizationService {
         userId: creatorUserId,
       });
 
-      // for (const role of everyRole) {
-      //   await this.addAllUsersToSgByTheUsersGlobalRole(adminSgId, role.name);
-      // }
-
-      // add all admins to this base node
-      await this.addAllUsersToSgByTheUsersGlobalRole(
-        adminSgId,
-        Administrator.name
-      );
+      for (const role of everyRole) {
+        await this.addAllUsersToSgByTheUsersGlobalRole(adminSgId, role.name);
+      }
 
       // run all rules for all roles on this base node
-      await this.runPostBaseNodeCreationRules(baseNodeObj, baseNodeId);
+      // await this.runPostBaseNodeCreationRules(baseNodeObj, baseNodeId);
 
       return true;
     } else {
@@ -284,81 +270,81 @@ export class AuthorizationService {
     return result.id;
   }
 
-  private async runPostBaseNodeCreationRules(
-    baseNodeObj: OneBaseNode,
-    baseNodeId: string
-  ) {
-    /**
-     * Remember, this is only run at base node creation,
-     * not every rule in the role def applies
-     */
+  // private async runPostBaseNodeCreationRules(
+  //   baseNodeObj: OneBaseNode,
+  //   baseNodeId: string
+  // ) {
+  //   /**
+  //    * Remember, this is only run at base node creation,
+  //    * not every rule in the role def applies
+  //    */
 
-    // after a base node is created, only the admin SG is created.
-    // this function will create the remaining needed base nodes.
+  //   // after a base node is created, only the admin SG is created.
+  //   // this function will create the remaining needed base nodes.
 
-    // certain roles are 'global' in the sense that they get some form
-    // of access to each base node. because of that, we don't care what
-    // the base node type is, we can just apply the role
+  //   // certain roles are 'global' in the sense that they get some form
+  //   // of access to each base node. because of that, we don't care what
+  //   // the base node type is, we can just apply the role
 
-    const globalRoles = [
-      {
-        role: ProjectManager,
-        sgId: await this.mergeSecurityGroupForRole(
-          baseNodeObj,
-          baseNodeId,
-          ProjectManager
-        ),
-      },
-      {
-        role: RegionalDirector,
-        sgId: await this.mergeSecurityGroupForRole(
-          baseNodeObj,
-          baseNodeId,
-          RegionalDirector
-        ),
-      },
-      {
-        role: FieldOperationsDirector,
-        sgId: await this.mergeSecurityGroupForRole(
-          baseNodeObj,
-          baseNodeId,
-          FieldOperationsDirector
-        ),
-      },
-      {
-        role: FinancialAnalyst,
-        sgId: await this.mergeSecurityGroupForRole(
-          baseNodeObj,
-          baseNodeId,
-          FinancialAnalyst
-        ),
-      },
-      {
-        role: Controller,
-        sgId: await this.mergeSecurityGroupForRole(
-          baseNodeObj,
-          baseNodeId,
-          Controller
-        ),
-      },
-    ];
+  //   const globalRoles = [
+  //     {
+  //       role: ProjectManager,
+  //       sgId: await this.mergeSecurityGroupForRole(
+  //         baseNodeObj,
+  //         baseNodeId,
+  //         ProjectManager
+  //       ),
+  //     },
+  //     {
+  //       role: RegionalDirector,
+  //       sgId: await this.mergeSecurityGroupForRole(
+  //         baseNodeObj,
+  //         baseNodeId,
+  //         RegionalDirector
+  //       ),
+  //     },
+  //     {
+  //       role: FieldOperationsDirector,
+  //       sgId: await this.mergeSecurityGroupForRole(
+  //         baseNodeObj,
+  //         baseNodeId,
+  //         FieldOperationsDirector
+  //       ),
+  //     },
+  //     {
+  //       role: FinancialAnalyst,
+  //       sgId: await this.mergeSecurityGroupForRole(
+  //         baseNodeObj,
+  //         baseNodeId,
+  //         FinancialAnalyst
+  //       ),
+  //     },
+  //     {
+  //       role: Controller,
+  //       sgId: await this.mergeSecurityGroupForRole(
+  //         baseNodeObj,
+  //         baseNodeId,
+  //         Controller
+  //       ),
+  //     },
+  //   ];
 
-    for (const role of globalRoles) {
-      const sgId = await this.mergeSecurityGroupForRole(
-        baseNodeObj,
-        baseNodeId,
-        role.role
-      );
-      await this.addAllUsersToSgByTheUsersGlobalRole(sgId, role.role.name);
-    }
+  //   for (const role of globalRoles) {
+  //     const sgId = await this.mergeSecurityGroupForRole(
+  //       baseNodeObj,
+  //       baseNodeId,
+  //       role.role
+  //     );
+  //     await this.addAllUsersToSgByTheUsersGlobalRole(sgId, role.role.name);
+  //   }
 
-    // create the rest of the SGs needed for each role
-    const labels = await this.getLabels(baseNodeId);
-    for (const role of everyRole) {
-      const baseNodeObj = this.getBaseNodeObjUsingLabel(labels);
-      await this.mergeSecurityGroupForRole(baseNodeObj, baseNodeId, role);
-    }
-  }
+  //   // create the rest of the SGs needed for each role
+  //   const labels = await this.getLabels(baseNodeId);
+  //   for (const role of everyRole) {
+  //     const baseNodeObj = this.getBaseNodeObjUsingLabel(labels);
+  //     await this.mergeSecurityGroupForRole(baseNodeObj, baseNodeId, role);
+  //   }
+  // }
 
   async roleAddedToUser(id: string, roles: string[]) {
     // todo: this only applies to global roles, the only kind we have until next week
@@ -369,10 +355,14 @@ export class AuthorizationService {
         .raw(
           `
           call apoc.periodic.iterate(
-            "MATCH (u:User {id:'${id}'}), (sg:SecurityGroup {role:'${role}'}) RETURN u, sg", 
+            "MATCH (u:User {id:$id}), (sg:SecurityGroup {role:$role}) RETURN u, sg", 
             "MERGE (u)<-[:member]-(sg)", {batchSize:1000})
           yield batches, total return batches, total
-      `
+      `,
+          {
+            id,
+            role,
+          }
         )
         .run();
 
@@ -385,19 +375,19 @@ export class AuthorizationService {
     }
   }
 
-  private async getLabels(id: string): Promise<string[]> {
-    const result = await this.db
-      .query()
-      .match([node('baseNode', 'BaseNode', { id })])
-      .raw('return labels(baseNode) as labels')
-      .first();
+  // private async getLabels(id: string): Promise<string[]> {
+  //   const result = await this.db
+  //     .query()
+  //     .match([node('baseNode', 'BaseNode', { id })])
+  //     .raw('return labels(baseNode) as labels')
+  //     .first();
 
-    if (result === undefined) {
-      throw new ServerException('baseNode not found');
-    }
+  //   if (result === undefined) {
+  //     throw new ServerException('baseNode not found');
+  //   }
 
-    return result.labels;
-  }
+  //   return result.labels;
+  // }
 
   private async addAllUsersToSgByTheUsersGlobalRole(sgId: string, role: Role) {
     // grab all users who have a given user-role and add them as members to the new sg
