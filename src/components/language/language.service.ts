@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { compact, first, intersection } from 'lodash';
+import { compact } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   CalendarDate,
@@ -511,7 +511,7 @@ export class LanguageService {
       .matchNode('language', 'Language', { id: language.id })
       .match([
         node('language'),
-        relation('out', '', 'location', { active: true }),
+        relation('out', '', 'locations', { active: true }),
         node('location'),
       ])
       .return({
@@ -519,29 +519,10 @@ export class LanguageService {
       })
       .run();
 
-    const permission = await this.db
-      .query()
-      .match([
-        [
-          node('requestingUser'),
-          relation('in', '', 'member'),
-          node('', 'SecurityGroup'),
-          relation('out', '', 'permission'),
-          node('canReadLocation', 'Permission', {
-            property: 'location',
-            read: true,
-          }),
-        ],
-      ])
-      .return({
-        canReadLocation: [
-          {
-            read: 'canReadLocationRead',
-            create: 'canReadLocationCreate',
-          },
-        ],
-      })
-      .first();
+    const canCreateLocation = await this.authorizationService.checkPower(
+      Powers.CreateLocation,
+      session.userId
+    );
 
     const items = await Promise.all(
       result.map(
@@ -555,8 +536,8 @@ export class LanguageService {
       items: items,
       total: items.length,
       hasMore: false,
-      canCreate: !!permission?.canReadLocationCreate,
-      canRead: !!permission?.canReadLocationRead,
+      canCreate: canCreateLocation,
+      canRead: canCreateLocation,
     };
   }
 
@@ -669,28 +650,24 @@ export class LanguageService {
     locationId: string,
     session: ISession
   ): Promise<void> {
-    const locationLabel = await this.getLocationLabelById(locationId);
-
-    if (!locationLabel) {
-      throw new InputException('Cannot find location', 'locationId');
+    try {
+      await this.removeLocation(languageId, locationId, session);
+      await this.db
+        .query()
+        .matchNode('language', 'Language', { id: languageId })
+        .matchNode('location', 'Location', { id: locationId })
+        .create([
+          node('language'),
+          relation('out', '', 'locations', {
+            active: true,
+            createdAt: DateTime.local(),
+          }),
+          node('location'),
+        ])
+        .run();
+    } catch (e) {
+      throw new ServerException('Could not add location to language', e);
     }
-
-    await this.removeLocation(languageId, locationId, session);
-    await this.db
-      .query()
-      .matchNode('language', 'Language', { id: languageId })
-      .matchNode('location', locationLabel, {
-        id: locationId,
-      })
-      .create([
-        node('language'),
-        relation('out', '', 'location', {
-          active: true,
-          createdAt: DateTime.local(),
-        }),
-        node('location'),
-      ])
-      .run();
   }
 
   async removeLocation(
@@ -698,29 +675,25 @@ export class LanguageService {
     locationId: string,
     _session: ISession
   ): Promise<void> {
-    const locationLabel = await this.getLocationLabelById(locationId);
-
-    if (!locationLabel) {
-      throw new InputException('Cannot find location', 'locationId');
+    try {
+      await this.db
+        .query()
+        .matchNode('language', 'Language', { id: languageId })
+        .matchNode('location', 'Location', { id: locationId })
+        .match([
+          [
+            node('language'),
+            relation('out', 'rel', 'locations', { active: true }),
+            node('location'),
+          ],
+        ])
+        .setValues({
+          'rel.active': false,
+        })
+        .run();
+    } catch (e) {
+      throw new ServerException('Could not remove language from location', e);
     }
-
-    await this.db
-      .query()
-      .matchNode('language', 'Language', { id: languageId })
-      .matchNode('location', locationLabel, {
-        id: locationId,
-      })
-      .match([
-        [
-          node('language'),
-          relation('out', 'rel', 'location', { active: true }),
-          node('location'),
-        ],
-      ])
-      .setValues({
-        'rel.active': false,
-      })
-      .run();
   }
 
   async checkLanguageConsistency(session: ISession): Promise<boolean> {
@@ -742,19 +715,6 @@ export class LanguageService {
     );
 
     return yayNay.every((n) => n);
-  }
-
-  async getLocationLabelById(id: string): Promise<string | undefined> {
-    const query = `
-    MATCH (place {id: $id}) RETURN labels(place) as labels
-    `;
-    const results = await this.db.query().raw(query, { id }).first();
-    // MATCH one of these labels.
-    const label = first(
-      intersection(results?.labels, ['Country', 'Region', 'Zone'])
-    );
-
-    return label;
   }
 
   /**
