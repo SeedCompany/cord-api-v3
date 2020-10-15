@@ -1,5 +1,6 @@
 import {
   Args,
+  ID,
   Mutation,
   Parent,
   Query,
@@ -252,6 +253,34 @@ export class ProjectResolver {
   ): Promise<boolean> {
     await this.projectService.delete(id, session);
     return true;
+  }
+
+  @Mutation(() => IProject, {
+    description: 'Add a location to a project',
+  })
+  async addOtherLocationToProject(
+    @Session() session: ISession,
+    @Args('projectId', { type: () => ID }) projectId: string,
+    @Args('locationId', { type: () => ID }) locationId: string
+  ): Promise<Project> {
+    await this.projectService.addOtherLocation(projectId, locationId, session);
+    return this.projectService.readOne(projectId, session);
+  }
+
+  @Mutation(() => IProject, {
+    description: 'Remove a location from a project',
+  })
+  async removeOtherLocationFromProject(
+    @Session() session: ISession,
+    @Args('projectId', { type: () => ID }) projectId: string,
+    @Args('locationId', { type: () => ID }) locationId: string
+  ): Promise<Project> {
+    await this.projectService.removeOtherLocation(
+      projectId,
+      locationId,
+      session
+    );
+    return this.projectService.readOne(projectId, session);
   }
 
   @Query(() => Boolean, {

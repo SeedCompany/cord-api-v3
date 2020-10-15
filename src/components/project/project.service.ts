@@ -51,6 +51,7 @@ import {
 } from '../engagement';
 import { FileService, SecuredDirectory } from '../file';
 import {
+  Location,
   LocationListInput,
   LocationService,
   SecuredLocationList,
@@ -874,13 +875,98 @@ export class ProjectService {
     };
   }
 
-  async listOtherLocations(
-    _projectId: string,
-    _input: LocationListInput,
+  async addOtherLocation(
+    projectId: string,
+    locationId: string,
+    session: ISession
+  ): Promise<void> {
+    try {
+      await this.removeOtherLocation(projectId, locationId, session);
+      await this.db
+        .query()
+        .matchNode('project', 'Project', { id: projectId })
+        .matchNode('location', 'Location', { id: locationId })
+        .create([
+          node('project'),
+          relation('out', '', 'otherLocations', {
+            active: true,
+            createdAt: DateTime.local(),
+          }),
+          node('location'),
+        ])
+        .run();
+    } catch (e) {
+      throw new ServerException('Could not add other location to project', e);
+    }
+  }
+
+  async removeOtherLocation(
+    projectId: string,
+    locationId: string,
     _session: ISession
+  ): Promise<void> {
+    try {
+      await this.db
+        .query()
+        .matchNode('project', 'Project', { id: projectId })
+        .matchNode('location', 'Location', { id: locationId })
+        .match([
+          [
+            node('project'),
+            relation('out', 'rel', 'otherLocations', { active: true }),
+            node('location'),
+          ],
+        ])
+        .setValues({
+          'rel.active': false,
+        })
+        .run();
+    } catch (e) {
+      throw new ServerException(
+        'Could not remove other location from project',
+        e
+      );
+    }
+  }
+
+  async listOtherLocations(
+    projectId: string,
+    _input: LocationListInput,
+    session: ISession
   ): Promise<SecuredLocationList> {
-    // TODO
-    return ([] as unknown) as SecuredLocationList;
+    const result = await this.db
+      .query()
+      .matchNode('project', 'Project', { id: projectId })
+      .match([
+        node('project'),
+        relation('out', '', 'otherLocations', { active: true }),
+        node('location'),
+      ])
+      .return({
+        location: [{ id: 'id' }],
+      })
+      .run();
+
+    // const canCreateLocation = await this.authorizationService.checkPower(
+    //   Powers.CreateLocation,
+    //   session.userId
+    // );
+
+    const items = await Promise.all(
+      result.map(
+        async (location): Promise<Location> => {
+          return await this.locationService.readOne(location.id, session);
+        }
+      )
+    );
+
+    return {
+      items: items,
+      total: items.length,
+      hasMore: false,
+      canCreate: true,
+      canRead: true,
+    };
   }
 
   async currentBudget(
