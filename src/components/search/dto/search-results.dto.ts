@@ -4,6 +4,7 @@ import { keys, simpleSwitch } from '../../../common';
 import { FieldRegion } from '../../field-region/dto';
 import { FieldZone } from '../../field-zone/dto';
 import { Film } from '../../film/dto';
+import { FundingAccount } from '../../funding-account/dto';
 import { Language } from '../../language/dto';
 import { LiteracyMaterial } from '../../literacy-material/dto';
 import { Location } from '../../location/dto';
@@ -35,6 +36,7 @@ const publicSearchable = {
   Location,
   FieldZone,
   FieldRegion,
+  FundingAccount,
 } as const;
 
 // Same as above, but the keys are ignored from from the SearchType enum,
