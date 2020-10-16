@@ -11,4 +11,5 @@ export class DbPartner extends DbBaseNode {
   globalInnovationsClient: any = null;
   active: any = null;
   address: any = null;
+  modifiedAt: any = null;
 }

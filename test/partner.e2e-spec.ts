@@ -33,6 +33,7 @@ describe('Partner e2e', () => {
     expect(partner.id).toBeDefined();
     expect(partner.organization).toBeDefined();
     expect(partner.pointOfContact).toBeDefined();
+    expect(partner.modifiedAt).toBeDefined();
   });
 
   it('update partner', async () => {

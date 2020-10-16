@@ -199,6 +199,7 @@ export const ProjectManager = new DbRole({
         { propertyName: 'globalInnovationsClient',    permission: { read, write, }, },
         { propertyName: 'active',                     permission: { read, write, }, },
         { propertyName: 'address',                    permission: { read, write, }, },
+        { propertyName: 'modifiedAt',                 permission: { read, write, }, },
     ]}),
     new DbBaseNodeGrant<DbPartnership>({
       __className: 'DbPartnership',

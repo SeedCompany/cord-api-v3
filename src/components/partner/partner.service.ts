@@ -27,6 +27,7 @@ import {
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
+  parsePropList,
   parseSecuredProperties,
   runListQuery,
   StandardReadResult,
@@ -114,6 +115,12 @@ export class PartnerService {
       {
         key: 'address',
         value: input.address,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'modifiedAt',
+        value: createdAt,
         isPublic: false,
         isOrgPublic: false,
       },
@@ -243,6 +250,7 @@ export class PartnerService {
       throw new NotFoundException('Could not find partner', 'partner.id');
     }
 
+    const props = parsePropList(result.propList);
     const secured = parseSecuredProperties(
       result.propList,
       result.permList,
@@ -252,6 +260,7 @@ export class PartnerService {
     return {
       ...parseBaseNodeProperties(result.node),
       ...secured,
+      modifiedAt: props.modifiedAt,
       organization: {
         ...secured.organization,
         value: result.organizationId,
@@ -273,7 +282,10 @@ export class PartnerService {
 
   async update(input: UpdatePartner, session: ISession): Promise<Partner> {
     const object = await this.readOne(input.id, session);
-    let changes = input;
+    let changes = {
+      ...input,
+      modifiedAt: DateTime.local(),
+    };
     if (
       !this.validateFinancialReportingType(
         input.financialReportingTypes ?? object.financialReportingTypes.value,
@@ -302,6 +314,7 @@ export class PartnerService {
         'globalInnovationsClient',
         'active',
         'address',
+        'modifiedAt',
       ],
       changes: changes,
       nodevar: 'partner',
