@@ -763,7 +763,7 @@
 									"",
 									"pm.test(\"Verify that education major is null\", function () {",
 									"    var major = jsonData.data.createEducation.education.major.value;",
-									"    pm.expect(major).to.eql(null);",
+									"    pm.expect(major).to.eql(\"\");",
 									"});"
 								],
 								"type": "text/javascript"
@@ -923,7 +923,7 @@
 									"",
 									"pm.test(\"Verify that education institution is null\", function () {",
 									"    var institution = jsonData.data.createEducation.education.institution.value;",
-									"    pm.expect(institution).to.eql(null);",
+									"    pm.expect(institution).to.eql(\"\");",
 									"});"
 								],
 								"type": "text/javascript"
@@ -4327,7 +4327,7 @@
 									"pm.test(\"Verify that items are sorted by 'institution' and orderd by 'ASC' order \", function () {",
 									"",
 									"    var responseBody = jsonData.data.educations.items;",
-									"    var expectedSortedOrder = lodash.orderBy(responseBody, item => item.institution.value, ['asc']);",
+									"    var expectedSortedOrder = lodash.orderBy(responseBody, item => item.institution.value.toLowerCase(), ['asc']);",
 									"    pm.expect(responseBody).to.eql(expectedSortedOrder);",
 									"",
 									"});"
@@ -4407,7 +4407,7 @@
 									"pm.test(\"Verify that items are sorted by 'institution' and orderd by 'DESC' order \", function () {",
 									"",
 									"    var responseBody = jsonData.data.educations.items;",
-									"    var expectedSortedOrder = lodash.orderBy(responseBody, item => item.institution.value, ['desc']);",
+									"    var expectedSortedOrder = lodash.orderBy(responseBody, item => item.institution.value.toLowerCase(), ['desc']);",
 									"    pm.expect(responseBody).to.eql(expectedSortedOrder);",
 									"",
 									"});"

@@ -5370,7 +5370,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query($input: UnavailabilityListInput!) {\r\n  unavailabilities(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      description {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      start\r\n      end\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"qwerty\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
+								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"!@#$%\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
 								"graphql": {}

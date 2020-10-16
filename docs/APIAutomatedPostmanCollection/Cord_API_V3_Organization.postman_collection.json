@@ -766,7 +766,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation createOrganization($input: CreateOrganizationInput!) {\r\n  createOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}",
-								"variables": "{\n  \"input\": {\n    \"organization\": {\n      \"name\": \"{{orgName}}\"\n    }\n  }\n}"
+								"variables": "{\n    \"input\": {\n        \"organization\": {\n            \"name\": \"{{orgName}}\"\n        }\n    }\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -925,7 +925,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation createOrganization($input: CreateOrganizationInput!) {\r\n  createOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\n  \"input\": \n  {\n    \"organization\" :\n    {\n      \n    } \n        \n\t  }\n  }\n\n\n\n"
+								"variables": "{\n    \"input\": {\n        \"organization\": {}\n    }\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -1002,7 +1002,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation createOrganization($input: CreateOrganizationInput!) {\r\n  createOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\n  \"input\": \n  {\n    \"organization\" :\n    {\n      \"name1\":\"\" \n    } \n        \n\t  }\n  }\n\n\n\n"
+								"variables": "{\n    \"input\": {\n        \"organization\": {\n            \"name1\": \"\"\n        }\n    }\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -1096,7 +1096,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query organization($id : ID!) {\r\n  organization(id: $id) {\r\n    id\r\n    name {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    avatarLetters\r\n    createdAt\r\n  }\r\n}\r\n    \r\n# {\r\n#   \"id\": \"lKEsNY9FS\"\r\n# }\r\n\r\n# {\r\n#   organization(id: \"{{organizationid}}\") {\r\n#     id\r\n#     name {\r\n#       value\r\n#       canRead\r\n#       canEdit\r\n#     }\r\n#     avatarLetters\r\n#     createdAt\r\n#   }\r\n# }\r\n",
-								"variables": " {\r\n   \"id\": \"{{organizationid}}\"\r\n }"
+								"variables": "{\r\n    \"id\": \"{{organizationid}}\"\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -1165,7 +1165,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query organization($id : ID!) {\r\n  organization(id: $id) {\r\n    id\r\n    name {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    avatarLetters\r\n    createdAt\r\n  }\r\n}",
-								"variables": " {\r\n   \"id\": \"\"\r\n }"
+								"variables": "{\r\n    \"id\": \"\"\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -1234,7 +1234,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query organization($id : ID!) {\r\n  organization(id: $id) {\r\n    id\r\n    name {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    avatarLetters\r\n    createdAt\r\n  }\r\n}\r\n    \r\n# {\r\n#   \"id\": \"lKEsNY9FS\"\r\n# }\r\n\r\n# {\r\n#   organization(id: \"{{organizationid}}\") {\r\n#     id\r\n#     name {\r\n#       value\r\n#       canRead\r\n#       canEdit\r\n#     }\r\n#     avatarLetters\r\n#     createdAt\r\n#   }\r\n# }\r\n",
-								"variables": " {\r\n   \"id2\": \"lKEsNY9FS\"\r\n }"
+								"variables": "{\r\n    \"id2\": \"lKEsNY9FS\"\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -1303,7 +1303,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query organization($id : ID!) {\r\n  organization(id: $id) {\r\n    id\r\n    name {\r\n      canRead\r\n      canEdit\r\n      value\r\n    }\r\n    avatarLetters\r\n    createdAt\r\n  }\r\n}\r\n    \r\n# {\r\n#   \"id\": \"lKEsNY9FS\"\r\n# }\r\n\r\n# {\r\n#   organization(id: \"{{organizationid}}\") {\r\n#     id\r\n#     name {\r\n#       value\r\n#       canRead\r\n#       canEdit\r\n#     }\r\n#     avatarLetters\r\n#     createdAt\r\n#   }\r\n# }\r\n",
-								"variables": " {\r\n   \"id\": \"!@#$%^&*(\"\r\n }"
+								"variables": "{\r\n    \"id\": \"!@#$%^&*(\"\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -1419,7 +1419,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation updateOrganization($input: UpdateOrganizationInput!) {\r\n  updateOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"organization\": {\r\n      \"id\": \"{{organizationid}}\",\r\n      \"name\": \"{{orgName}}\"\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n    \"input\": {\r\n        \"organization\": {\r\n            \"id\": \"{{organizationid}}\",\r\n            \"name\": \"{{orgName}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -1510,7 +1510,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation updateOrganization($input: UpdateOrganizationInput!) {\r\n  updateOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"organization\": {\r\n      \"id\": \"{{organizationid}}\"\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n    \"input\": {\r\n        \"organization\": {\r\n            \"id\": \"{{organizationid}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -1599,7 +1599,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation updateOrganization($input: UpdateOrganizationInput!) {\r\n  updateOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"organization\": {\r\n      \"id\": \"{{organizationid}}\"\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n    \"input\": {\r\n        \"organization\": {\r\n            \"id\": \"{{organizationid}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -1691,7 +1691,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation updateOrganization($input: UpdateOrganizationInput!) {\r\n  updateOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"organization\" :\r\n    {\r\n\t\t  \"id\":\"{{organizationid}}\",\r\n      \"name\": \"\"\r\n    } \r\n        \r\n  }\r\n}"
+								"variables": "{\r\n    \"input\": {\r\n        \"organization\": {\r\n            \"id\": \"{{organizationid}}\",\r\n            \"name\": \"\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -1778,7 +1778,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation updateOrganization($input: UpdateOrganizationInput!) {\r\n  updateOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"organization\": {\r\n      \"name\": \"{{orgName}}\"\r\n    }\r\n  }\r\n}"
+								"variables": "{\r\n    \"input\": {\r\n        \"organization\": {\r\n            \"name\": \"{{orgName}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -1865,7 +1865,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation updateOrganization($input: UpdateOrganizationInput!) {\r\n  updateOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"organization\" :\r\n    {\r\n\t\t  \"id\":\"\",\r\n      \"name\": \"{{orgName}}\"\r\n    } \r\n        \r\n  }\r\n}"
+								"variables": "{\r\n    \"input\": {\r\n        \"organization\": {\r\n            \"id\": \"\",\r\n            \"name\": \"{{orgName}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -1941,7 +1941,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation updateOrganization($input: UpdateOrganizationInput!) {\r\n  updateOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"organization\" :\r\n    {\r\n\t\t  \"id5\":\"{{organizationid}}\",\r\n      \"name\": \"{{orgName}}\"\r\n    } \r\n        \r\n  }\r\n}"
+								"variables": "{\r\n    \"input\": {\r\n        \"organization\": {\r\n            \"id5\": \"{{organizationid}}\",\r\n            \"name\": \"{{orgName}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -2018,7 +2018,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation updateOrganization($input: UpdateOrganizationInput!) {\r\n  updateOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"organization\" :\r\n    {\r\n\t\t  \"id\":\"{{organizationid}}\",\r\n      \"name11\": \"{{orgName}}\"\r\n    } \r\n        \r\n  }\r\n}"
+								"variables": "{\r\n    \"input\": {\r\n        \"organization\": {\r\n            \"id\": \"{{organizationid}}\",\r\n            \"name11\": \"{{orgName}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -2095,7 +2095,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation updateOrganization($input: UpdateOrganizationInput!) {\r\n  updateOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"organization\" :\r\n    {\r\n\t\t  \"id\":\"!@#$%^\",\r\n      \"name\": \"{{orgName}}\"\r\n    } \r\n        \r\n  }\r\n}"
+								"variables": "{\r\n    \"input\": {\r\n        \"organization\": {\r\n            \"id\": \"!@#$%^\",\r\n            \"name\": \"{{orgName}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -2229,7 +2229,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}} ,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
+								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -2343,7 +2343,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}} ,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
+								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -2427,7 +2427,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}} ,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
+								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -2516,7 +2516,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}} ,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
+								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -2604,7 +2604,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}} ,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
+								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -2700,7 +2700,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}} ,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
+								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -2990,7 +2990,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}} ,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
+								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -3076,7 +3076,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}} ,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
+								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -3159,7 +3159,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
+								"variables": "{\r\n    \"input\": {\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -3255,7 +3255,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}} ,\r\n    \"page\": {{page}},\r\n    \"sort\": \"\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
+								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -3342,7 +3342,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}} ,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"\"\r\n  }\r\n}"
+								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"\"\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -3429,7 +3429,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count1\": {{itemCount}} ,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
+								"variables": "{\r\n    \"input\": {\r\n        \"count1\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -3516,7 +3516,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page1\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
+								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page1\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -3603,7 +3603,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort1\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
+								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort1\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -3690,7 +3690,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order1\": \"{{order}}\"\r\n  }\r\n}"
+								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order1\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -3781,7 +3781,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": 0,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
+								"variables": "{\r\n    \"input\": {\r\n        \"count\": 0,\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -3872,7 +3872,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": 580,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
+								"variables": "{\r\n    \"input\": {\r\n        \"count\": 580,\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -3964,7 +3964,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{count}},\r\n    \"page\": 0,\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
+								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{count}},\r\n        \"page\": 0,\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -4064,7 +4064,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{count}} ,\r\n    \"page\": {{page}},\r\n    \"sort\": \"abcd\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
+								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{count}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"abcd\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -4151,7 +4151,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query organizations($input: OrganizationListInput) {\r\n  organizations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      avatarLetters\r\n      createdAt\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{count}} ,\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"ASCENDING\"\r\n  }\r\n}"
+								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{count}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"ASCENDING\"\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -4221,7 +4221,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation deleteOrganization($id: ID!) {\n  deleteOrganization(id:$id)\n}",
-								"variables": "{\r\n  \"id\": \"{{organizationid}}\"\r\n}"
+								"variables": "{\r\n    \"id\": \"{{organizationid}}\"\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -4302,7 +4302,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation ($id: ID!) {\n  deleteOrganization(id:$id)\n}",
-								"variables": "{\r\n  \"id\": \"\"\r\n}"
+								"variables": "{\r\n    \"id\": \"\"\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -4378,7 +4378,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation ($id: ID!) {\n  deleteOrganization(id:$id)\n}",
-								"variables": "{\r\n  \r\n}"
+								"variables": "{}"
 							},
 							"options": {
 								"graphql": {}
@@ -4454,7 +4454,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation ($id: ID!) {\n  deleteOrganization(id:$id)\n}",
-								"variables": "{\r\n  \"id5\": \"{{organizationid}}\"\r\n}"
+								"variables": "{\r\n    \"id5\": \"{{organizationid}}\"\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -4535,7 +4535,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation ($id: ID!) {\n  deleteOrganization(id:$id)\n}",
-								"variables": "{\r\n  \"id\":\"!@#$%\"\r\n}"
+								"variables": "{\r\n    \"id\": \"!@#$%\"\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -4611,7 +4611,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation ($id: ID!) {\n  deleteOrganization(id:$id)\n}",
-								"variables": "{\r\n  \"id\":\"{{organizationid}}\"\r\n}"
+								"variables": "{\r\n    \"id\": \"{{organizationid}}\"\r\n}"
 							},
 							"options": {
 								"graphql": {}
