@@ -8,6 +8,9 @@ import { Organization } from './organization';
 export abstract class CreateOrganization {
   @NameField()
   readonly name: string;
+
+  @Field({ nullable: true })
+  readonly address?: string;
 }
 
 @InputType()

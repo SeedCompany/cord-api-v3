@@ -48,6 +48,7 @@ import { DbOrganization } from './model';
 export class OrganizationService {
   private readonly securedProperties = {
     name: true,
+    address: true,
   };
 
   constructor(
@@ -118,6 +119,12 @@ export class OrganizationService {
         isPublic: true,
         isOrgPublic: false,
         label: 'OrgName',
+      },
+      {
+        key: 'address',
+        value: input.address,
+        isPublic: false,
+        isOrgPublic: false,
       },
     ];
     // const baseMetaProps = [];
@@ -218,7 +225,7 @@ export class OrganizationService {
     return await this.db.sgUpdateProperties({
       session,
       object: organization,
-      props: ['name'],
+      props: ['name', 'address'],
       changes: input,
       nodevar: 'organization',
     });
@@ -344,6 +351,11 @@ export class OrganizationService {
       createdAt: result?.createdAt,
       name: {
         value: result?.name,
+        canRead: false,
+        canEdit: false,
+      },
+      address: {
+        value: result?.address,
         canRead: false,
         canEdit: false,
       },

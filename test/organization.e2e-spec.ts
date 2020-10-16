@@ -54,6 +54,7 @@ describe('Organization e2e', () => {
     expect(actual.id).toBe(org.id);
     expect(isValid(actual.id)).toBe(true);
     expect(actual.name.value).toBe(org.name.value);
+    expect(actual.address.value).toBe(org.address.value);
   });
 
   it('create & read organization by root security group member id', async () => {

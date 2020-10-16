@@ -7,6 +7,9 @@ import { Resource, SecuredProperty, SecuredString } from '../../../common';
 export class Organization extends Resource {
   @Field()
   readonly name: SecuredString;
+
+  @Field()
+  readonly address: SecuredString;
 }
 
 @ObjectType({
