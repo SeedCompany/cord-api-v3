@@ -12,5 +12,5 @@ export const isValidId = (value: unknown) => {
   if (typeof value !== 'string') {
     return false;
   }
-  return /^[0-9a-zA-Z]+$/.test(value);
+  return /^[0-9a-zA-Z_-]+$/.test(value);
 };
