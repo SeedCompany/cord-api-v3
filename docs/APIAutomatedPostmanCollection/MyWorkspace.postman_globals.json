@@ -991,7 +991,7 @@
 			"enabled": true
 		},
 		{
-			"key": "iso31663",
+			"key": "isoAlpha3",
 			"value": "",
 			"enabled": true
 		},
@@ -1054,10 +1054,30 @@
 			"key": "partnerTypeArray",
 			"value": "",
 			"enabled": true
+		},
+		{
+			"key": "agreementName",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "mouEndOverride",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "mouStartOverride",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "financialReportingTypesArray",
+			"value": "",
+			"enabled": true
 		}
 	],
 	"name": "MyWorkspace Globals",
 	"_postman_variable_scope": "globals",
-	"_postman_exported_at": "2020-10-13T13:48:42.112Z",
+	"_postman_exported_at": "2020-10-16T13:21:53.942Z",
 	"_postman_exported_using": "Postman/7.34.0"
 }
