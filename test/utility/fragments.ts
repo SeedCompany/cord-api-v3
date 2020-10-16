@@ -377,6 +377,7 @@ export const partner = gql`
   fragment partner on Partner {
     id
     createdAt
+    modifiedAt
     organization {
       canEdit
       canRead

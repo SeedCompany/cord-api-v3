@@ -1,5 +1,7 @@
 import { Field, ObjectType } from '@nestjs/graphql';
+import { DateTime } from 'luxon';
 import {
+  DateTimeField,
   Resource,
   Secured,
   SecuredBoolean,
@@ -42,6 +44,9 @@ export class Partner extends Resource {
 
   @Field()
   readonly address: SecuredString;
+
+  @DateTimeField()
+  readonly modifiedAt: DateTime;
 }
 
 @ObjectType({
