@@ -1,5 +1,16 @@
-import { generate, isValid } from 'shortid';
+import { customAlphabet } from 'nanoid/async';
 
-export const generateId = async () => generate();
+// 100 IDs / hour = 1k years to have 1% probability of a single collision
+// https://zelark.github.io/nano-id-cc/
+const alphabet =
+  '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+const size = 11;
 
-export const isValidId = isValid;
+export const generateId = customAlphabet(alphabet, size);
+
+export const isValidId = (value: unknown) => {
+  if (typeof value !== 'string') {
+    return false;
+  }
+  return /^[0-9a-zA-Z]+$/.test(value);
+};
