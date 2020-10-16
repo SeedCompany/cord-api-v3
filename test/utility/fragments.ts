@@ -654,29 +654,6 @@ export const fieldRegion = gql`
   }
 `;
 
-export const location = gql`
-  fragment location on Location {
-    id
-    createdAt
-    name {
-      value
-      canEdit
-      canRead
-    }
-    type {
-      value
-      canEdit
-      canRead
-    }
-    sensitivity
-    isoAlpha3 {
-      value
-      canEdit
-      canRead
-    }
-  }
-`;
-
 export const country = gql`
   fragment country on Country {
     id
@@ -866,6 +843,37 @@ export const fundingAccount = gql`
     }
     createdAt
   }
+`;
+
+export const location = gql`
+  fragment location on Location {
+    id
+    createdAt
+    name {
+      value
+      canEdit
+      canRead
+    }
+    type {
+      value
+      canEdit
+      canRead
+    }
+    sensitivity
+    isoAlpha3 {
+      value
+      canEdit
+      canRead
+    }
+    fundingAccount {
+      value {
+        ...fundingAccount
+      }
+      canEdit
+      canRead
+    }
+  }
+  ${fundingAccount}
 `;
 
 export const marketingLocation = gql`

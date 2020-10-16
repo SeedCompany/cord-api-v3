@@ -228,6 +228,39 @@ export class LocationService {
       nodevar: 'location',
     });
 
+    // Update partner
+    if (input.fundingAccountId) {
+      const createdAt = DateTime.local();
+      await this.db
+        .query()
+        .call(matchRequestingUser, session)
+        .matchNode('location', 'Location', { id: input.id })
+        .matchNode('newFundingAccount', 'FundingAccount', {
+          id: input.fundingAccountId,
+        })
+        .optionalMatch([
+          node('location'),
+          relation('out', 'oldFundingAccountRel', 'fundingAccount', {
+            active: true,
+          }),
+          node('fundingAccount', 'FundingAccount'),
+        ])
+        .create([
+          node('location'),
+          relation('out', '', 'fundingAccount', {
+            active: true,
+            createdAt,
+          }),
+          node('newFundingAccount'),
+        ])
+        .set({
+          values: {
+            'oldFundingAccountRel.active': false,
+          },
+        })
+        .run();
+    }
+
     return await this.readOne(input.id, session);
   }
 
