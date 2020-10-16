@@ -4,6 +4,7 @@ import { FileModule } from '../file/file.module';
 import { LocationModule } from '../location/location.module';
 import { OrganizationModule } from '../organization/organization.module';
 import { PartnershipModule } from '../partnership/partnership.module';
+import { ProjectModule } from '../project/project.module';
 import { EducationModule } from '../user/education/education.module';
 import { UnavailabilityModule } from '../user/unavailability/unavailability.module';
 import { UserModule } from '../user/user.module';
@@ -20,6 +21,7 @@ import * as handlers from './handlers';
     LocationModule,
     forwardRef(() => PartnershipModule),
     forwardRef(() => OrganizationModule),
+    ProjectModule,
     UnavailabilityModule,
     UserModule,
   ],

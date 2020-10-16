@@ -1,4 +1,12 @@
-import { fiscalYears, ISession, ServerException } from '../../../common';
+import { node, relation } from 'cypher-query-builder';
+import { difference } from 'lodash';
+import {
+  fiscalYears,
+  ISession,
+  NotFoundException,
+  Secured,
+  UnauthorizedException,
+} from '../../../common';
 import {
   DatabaseService,
   EventsHandler,
@@ -14,10 +22,10 @@ import {
   PartnershipUpdatedEvent,
   PartnershipWillDeleteEvent,
 } from '../../partnership/events';
-import { Project } from '../../project/dto';
+import { ProjectService } from '../../project';
 import { ProjectUpdatedEvent } from '../../project/events';
 import { BudgetService } from '../budget.service';
-import { BudgetRecord } from '../dto';
+import { Budget, BudgetRecord, BudgetStatus } from '../dto';
 
 type SubscribedEvent =
   | ProjectUpdatedEvent
@@ -37,161 +45,9 @@ export class SyncBudgetRecordsToFundingPartners
     private readonly db: DatabaseService,
     private readonly budgets: BudgetService,
     private readonly partnershipService: PartnershipService,
+    private readonly projects: ProjectService,
     @Logger('budget:sync-partnerships') private readonly logger: ILogger
   ) {}
-
-  // TODO: refactor into budget service or partnership service
-  private async getBudgetIdForPartnership(partnership: Partnership) {
-    const budgets = await this.db
-      .query()
-      .raw(
-        'MATCH (:Partnership { id: $partnershipId })-[:partnership]-(el)-[:budget]-(budget:Budget)',
-        { partnershipId: partnership.id }
-      )
-      .return('budget.id')
-      .run();
-
-    // TODO: determine if the business logic should allow for more then one budget per partnership
-    return budgets[0]['budget.id'];
-  }
-
-  // TODO: refactor into projectsService
-  private async getPartnershipsForProject(project: Project, session: ISession) {
-    const partnershipIds = await this.db
-      .query()
-      .raw(
-        'MATCH (:Project { id: $projectId })-[:partnership]-(partnership:Partnership)',
-        { projectId: project.id }
-      )
-      .return('partnership.id')
-      .run();
-
-    const partnerships = await Promise.all(
-      partnershipIds.map((partnershipId) =>
-        this.partnershipService.readOne(
-          partnershipId['partnership.id'],
-          session
-        )
-      )
-    );
-    return partnerships;
-  }
-
-  // TODO: refactor into partnershipsService
-  private async getExistingBudgetRecordYearsForPartnership(
-    partnership: Partnership,
-    session: ISession
-  ) {
-    const budgetId = await this.getBudgetIdForPartnership(partnership);
-    const budget = await this.budgets.readOne(budgetId, session);
-
-    return budget.records;
-  }
-
-  private calculateExpectedBudgetRecordYears(partnership: Partnership) {
-    let expectedBudgetRecordYears: number[];
-    if (
-      !partnership.mouStart?.value ||
-      !partnership.mouEnd?.value ||
-      // TODO: decide whether to move the following funding and type checks to an earlier step.
-      !partnership.types.value.includes(PartnerType.Funding) || // Partnership is not funding, so do nothing
-      !partnership.types?.value // Partnership Type is not provided, so do nothing.
-    ) {
-      expectedBudgetRecordYears = [];
-    } else {
-      const mouStart = partnership.mouStart.value;
-      const mouEnd = partnership.mouEnd.value;
-
-      expectedBudgetRecordYears = fiscalYears(mouStart, mouEnd);
-    }
-    return expectedBudgetRecordYears;
-  }
-
-  // TODO: refactor into partnershipsService
-  private async getOrganizationIdByPartnership(partnership: Partnership) {
-    // TODO: refactor so that partnership.organization.id returns a value instead of undefined.
-    // this is currently a workaround because of the partnership.organization.id returning undefined.
-    const organization = await this.db
-      .query()
-      .raw(
-        'MATCH (:Partnership { id: $partnershipId })-[:partner]->(partner:Partner)-[:organization]->(organization:Organization)',
-        { partnershipId: partnership.id }
-      )
-      .return('organization.id')
-      .run();
-
-    // TODO: determine if the business logic should allow for more then one budget per partnership
-    return organization[0]['organization.id'];
-  }
-
-  private async createMissingBudgetRecords(
-    partnership: Partnership,
-    session: ISession,
-    existing: readonly BudgetRecord[],
-    expected: number[]
-  ) {
-    const existingYears = existing.map(
-      (budgetRecord) => budgetRecord.fiscalYear.value
-    );
-    const budgetRecordsToBeCreated = expected.filter(
-      (year) => !existingYears.includes(year)
-    );
-    const budgetId = await this.getBudgetIdForPartnership(partnership);
-    const organizationId = await this.getOrganizationIdByPartnership(
-      partnership
-    );
-
-    const budgetRecords = budgetRecordsToBeCreated.map((year) => ({
-      budgetId: budgetId,
-      organizationId: organizationId,
-      fiscalYear: year,
-    }));
-    await Promise.all(
-      budgetRecords.map((record) => this.budgets.createRecord(record, session))
-    );
-  }
-
-  private async deactivateOldBudgetRecords(
-    session: ISession,
-    existing: readonly BudgetRecord[],
-    expected: number[]
-  ) {
-    // TODO: validate that record.fiscalYear.value cannot be undefined
-    const budgetRecoredsToBeDeactivated = existing.filter(
-      (record) => !expected.includes(record.fiscalYear.value!)
-    );
-
-    await Promise.all(
-      budgetRecoredsToBeDeactivated.map((record) =>
-        this.budgets.deleteRecord(record.id, session)
-      )
-    );
-  }
-
-  private async synchronizePartnershipBudgetRecords(
-    partnership: Partnership,
-    session: ISession
-  ) {
-    const expectedBudgetRecordYears = this.calculateExpectedBudgetRecordYears(
-      partnership
-    );
-    // in cases where the expected budget years array is empty you could optimize by skipping some queries
-    const existingBudgetRecordYears = await this.getExistingBudgetRecordYearsForPartnership(
-      partnership,
-      session
-    );
-    await this.createMissingBudgetRecords(
-      partnership,
-      session,
-      existingBudgetRecordYears,
-      expectedBudgetRecordYears
-    );
-    await this.deactivateOldBudgetRecords(
-      session,
-      existingBudgetRecordYears,
-      expectedBudgetRecordYears
-    );
-  }
 
   async handle(event: SubscribedEvent) {
     this.logger.debug('Partnership/Project mutation, syncing budget records', {
@@ -199,58 +55,211 @@ export class SyncBudgetRecordsToFundingPartners
       event: event.constructor.name,
     });
 
-    try {
-      if (event instanceof PartnershipUpdatedEvent) {
-        await this.synchronizePartnershipBudgetRecords(
-          event.partnership,
-          event.session
-        );
-      }
-
-      if (event instanceof PartnershipCreatedEvent) {
-        await this.synchronizePartnershipBudgetRecords(
-          event.partnership,
-          event.session
-        );
-      }
-
-      if (event instanceof PartnershipWillDeleteEvent) {
-        const expectedBudgetRecordYears: number[] = [];
-        const existingBudgetRecordYears = await this.getExistingBudgetRecordYearsForPartnership(
-          event.partnership,
-          event.session
-        );
-        await this.deactivateOldBudgetRecords(
-          event.session,
-          existingBudgetRecordYears,
-          expectedBudgetRecordYears
-        );
-      }
-
-      if (event instanceof ProjectUpdatedEvent) {
-        const partnerships = await this.getPartnershipsForProject(
-          event.updated,
-          event.session
-        );
-
-        await Promise.all(
-          partnerships.map((partnership) =>
-            this.synchronizePartnershipBudgetRecords(partnership, event.session)
-          )
-        );
-      }
-    } catch (exception) {
-      this.logger.error(`Could not synchronize budget records`, {
-        userId: event.session.userId,
-        exception,
-      });
-      throw new ServerException(
-        'Could not synchronize budget records',
-        exception
-      );
+    // Get some easy conditions out of the way that don't require DB queries
+    if (
+      event instanceof PartnershipCreatedEvent &&
+      !isFunding(event.partnership)
+    ) {
+      // Partnership is not and never was funding, so do nothing.
+      return;
+    }
+    if (
+      event instanceof PartnershipWillDeleteEvent &&
+      !isFunding(event.partnership)
+    ) {
+      // Partnership was not funding, so do nothing.
+      return;
     }
 
-    // TODO: only continue if budget is pending
-    // TODO: Fiscal years may need to be determined from project. See #596 for details
+    const projectId = await this.determineProjectId(event);
+
+    // Fetch budget & only continue if it is pending
+    const projectsCurrentBudget = await this.projects.currentBudget(
+      { id: projectId },
+      event.session
+    );
+    const budget = readSecured(projectsCurrentBudget, 'budget');
+
+    if (budget.status !== BudgetStatus.Pending) {
+      this.logger.debug('Budget is not pending, skipping sync', budget);
+      return;
+    }
+
+    const partnerships = await this.determinePartnerships(event);
+
+    for (const partnership of partnerships) {
+      await this.syncRecords(budget, partnership, event);
+    }
+  }
+
+  private async determineProjectId(event: SubscribedEvent) {
+    if (event instanceof ProjectUpdatedEvent) {
+      return event.updated.id;
+    }
+    if (event instanceof PartnershipUpdatedEvent) {
+      return await this.getProjectIdFromPartnership(event.updated);
+    }
+    return await this.getProjectIdFromPartnership(event.partnership);
+  }
+
+  private async determinePartnerships(event: SubscribedEvent) {
+    if (event instanceof PartnershipCreatedEvent) {
+      return [event.partnership];
+    }
+
+    if (event instanceof PartnershipUpdatedEvent) {
+      return [event.updated];
+    }
+
+    if (event instanceof PartnershipWillDeleteEvent) {
+      return [event.partnership];
+    }
+
+    // event instanceof ProjectUpdatedEvent
+    const list = await this.partnershipService.list(
+      { filter: { projectId: event.updated.id } },
+      event.session
+    );
+    return list.items.filter(isFunding);
+  }
+
+  private async syncRecords(
+    budget: Budget,
+    partnership: Partnership,
+    event: SubscribedEvent
+  ) {
+    const organizationId = await this.getOrganizationIdByPartnership(
+      partnership
+    );
+
+    const previous = budget.records
+      .filter((record) => recordOrganization(record) === organizationId)
+      .map(recordFiscalYear);
+    const updated =
+      event instanceof PartnershipWillDeleteEvent
+        ? []
+        : partnershipFiscalYears(partnership);
+
+    const removals = difference(previous, updated);
+    const additions = difference(updated, previous);
+
+    await this.removeRecords(budget, organizationId, removals, event.session);
+    await this.addRecords(budget, organizationId, additions, event.session);
+  }
+
+  private async addRecords(
+    budget: Budget,
+    organizationId: string,
+    additions: readonly FiscalYear[],
+    session: ISession
+  ) {
+    await Promise.all(
+      additions.map((fiscalYear) =>
+        this.budgets.createRecord(
+          {
+            budgetId: budget.id,
+            fiscalYear,
+            organizationId,
+          },
+          session
+        )
+      )
+    );
+  }
+
+  private async removeRecords(
+    budget: Budget,
+    organizationId: string,
+    removals: readonly FiscalYear[],
+    session: ISession
+  ) {
+    const recordsToDelete = budget.records.filter(
+      (record) =>
+        recordOrganization(record) === organizationId &&
+        removals.includes(recordFiscalYear(record))
+    );
+
+    await Promise.all(
+      recordsToDelete.map((record) =>
+        this.budgets.deleteRecord(record.id, session)
+      )
+    );
+  }
+
+  private async getOrganizationIdByPartnership(partnership: Partnership) {
+    const partnerId = readSecured(partnership.partner, `partnership's partner`);
+
+    const result = await this.db
+      .query()
+      .match([
+        node('partner', 'Partner', { id: partnerId }),
+        relation('out', '', 'organization', { active: true }),
+        node('organization', 'Organization'),
+      ])
+      .return('organization.id as id')
+      .asResult<{ id: string }>()
+      .first();
+    if (!result) {
+      throw new NotFoundException("Could not find partner's organization");
+    }
+
+    return result.id;
+  }
+
+  private async getProjectIdFromPartnership({ id }: Partnership) {
+    const result = await this.db
+      .query()
+      .match([
+        node('', 'Partnership', { id }),
+        relation('either', '', 'partnership', { active: true }),
+        node('project', 'Project'),
+      ])
+      .return('project.id as id')
+      .asResult<{ id: string }>()
+      .first();
+    if (!result) {
+      throw new NotFoundException("Unable to find partnership's project");
+    }
+    return result.id;
   }
 }
+
+const isFunding = (partnership: Partnership) =>
+  readSecured(partnership.types, `partnership's types`).includes(
+    PartnerType.Funding
+  );
+
+type FiscalYear = number;
+
+const partnershipFiscalYears = (
+  partnership: Partnership
+): readonly FiscalYear[] => {
+  if (!isFunding(partnership)) {
+    return [];
+  }
+
+  const start = readSecured(
+    partnership.mouStart,
+    `partnership's mouStart date`
+  );
+  const end = readSecured(partnership.mouEnd, `partnership's mouEnd date`);
+  return start && end ? fiscalYears(start, end) : [];
+};
+
+const recordOrganization = (record: BudgetRecord) =>
+  readSecured(record.organization, `budget record's organization`);
+
+const recordFiscalYear = (record: BudgetRecord) =>
+  readSecured(record.fiscalYear, `budget record's fiscal year`);
+
+const readSecured = <T extends Secured<any>>(
+  field: T,
+  errorMessage: string
+): Exclude<T['value'], undefined> => {
+  if (!field.canRead) {
+    throw new UnauthorizedException(
+      `Current user cannot read ${errorMessage} thus record sync cannot continue`
+    );
+  }
+  return field.value;
+};

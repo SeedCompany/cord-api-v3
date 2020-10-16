@@ -3,7 +3,8 @@ import { Partnership, UpdatePartnership } from '../dto';
 
 export class PartnershipUpdatedEvent {
   constructor(
-    readonly partnership: Partnership,
+    public updated: Partnership,
+    readonly previous: Partnership,
     readonly updates: UpdatePartnership,
     readonly session: ISession
   ) {}

@@ -413,10 +413,14 @@ export class PartnershipService {
     );
 
     const partnership = await this.readOne(input.id, session);
-    await this.eventBus.publish(
-      new PartnershipUpdatedEvent(partnership, input, session)
+    const event = new PartnershipUpdatedEvent(
+      partnership,
+      object,
+      input,
+      session
     );
-    return partnership;
+    await this.eventBus.publish(event);
+    return event.updated;
   }
 
   async delete(id: string, session: ISession): Promise<void> {
