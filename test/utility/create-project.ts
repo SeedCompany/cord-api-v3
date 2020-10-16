@@ -1,7 +1,6 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
-import { isValid } from 'shortid';
-import { CalendarDate } from '../../src/common';
+import { CalendarDate, isValidId } from '../../src/common';
 import {
   CreateProject,
   Project,
@@ -48,7 +47,7 @@ export async function createProject(
   const actual: Raw<Project> = result.createProject.project;
   expect(actual).toBeTruthy();
 
-  expect(isValid(actual.id)).toBe(true);
+  expect(isValidId(actual.id)).toBe(true);
   expect(actual.name.value).toBe(project.name);
   expect(actual.type).toBe(project.type);
 

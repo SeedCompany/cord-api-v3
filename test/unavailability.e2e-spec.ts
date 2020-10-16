@@ -1,7 +1,7 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
-import { isValid } from 'shortid';
+import { isValidId } from '../src/common';
 import { User } from '../src/components/user';
 import { Unavailability } from '../src/components/user/unavailability';
 import {
@@ -50,7 +50,7 @@ describe('Unavailability e2e', () => {
     );
 
     expect(actual.id).toBe(unavailability.id);
-    expect(isValid(actual.id)).toBe(true);
+    expect(isValidId(actual.id)).toBe(true);
     expect(actual.description).toEqual(unavailability.description);
   });
 

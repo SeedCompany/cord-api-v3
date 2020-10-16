@@ -1,8 +1,7 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
-import { isValid } from 'shortid';
-import { generateId } from '../src/common';
+import { generateId, isValidId } from '../src/common';
 import { Location } from '../src/components/location';
 import {
   createFundingAccount,
@@ -51,7 +50,7 @@ describe('Location e2e', () => {
       }
     );
     expect(actual.id).toBe(st.id);
-    expect(isValid(actual.id)).toBe(true);
+    expect(isValidId(actual.id)).toBe(true);
     expect(actual.name.value).toBe(st.name.value);
     expect(actual.isoAlpha3.value).toBe(st.isoAlpha3.value);
   });

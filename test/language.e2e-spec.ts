@@ -1,8 +1,7 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
-import { isValid } from 'shortid';
-import { DuplicateException, InputException } from '../src/common';
+import { DuplicateException, InputException, isValidId } from '../src/common';
 import { Powers } from '../src/components/authorization/dto/powers';
 import {
   createLanguage,
@@ -68,7 +67,7 @@ describe('Language e2e', () => {
     );
 
     expect(actual.id).toBe(language.id);
-    expect(isValid(actual.id)).toBeTruthy();
+    expect(isValidId(actual.id)).toBeTruthy();
     expect(actual.ethnologue.population.value).toEqual(
       language.ethnologue.population.value
     );

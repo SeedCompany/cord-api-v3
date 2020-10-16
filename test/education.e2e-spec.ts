@@ -1,7 +1,7 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
-import { isValid } from 'shortid';
+import { isValidId } from '../src/common';
 import { User } from '../src/components/user';
 import { Education } from '../src/components/user/education';
 import {
@@ -50,7 +50,7 @@ describe('Education e2e', () => {
     );
 
     expect(actual.id).toBe(education.id);
-    expect(isValid(actual.id)).toBe(true);
+    expect(isValidId(actual.id)).toBe(true);
     expect(actual.institution).toEqual(education.institution);
   });
 

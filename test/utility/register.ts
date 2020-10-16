@@ -1,7 +1,6 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
-import { isValid } from 'shortid';
-import { generateId } from '../../src/common';
+import { generateId, isValidId } from '../../src/common';
 import { RegisterInput } from '../../src/components/authentication';
 import { Powers } from '../../src/components/authorization/dto/powers';
 import { Role } from '../../src/components/project';
@@ -60,7 +59,7 @@ export async function registerUser(
   const actual: User = result.register.user;
   expect(actual).toBeTruthy();
 
-  expect(isValid(actual.id)).toBe(true);
+  expect(isValidId(actual.id)).toBe(true);
   expect(actual.email.value).toBe(user.email);
 
   return actual;

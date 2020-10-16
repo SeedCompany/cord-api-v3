@@ -1,7 +1,6 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
-import { isValid } from 'shortid';
-import { CalendarDate, generateId } from '../../src/common';
+import { CalendarDate, generateId, isValidId } from '../../src/common';
 import {
   CreateEthnologueLanguage,
   CreateLanguage,
@@ -64,7 +63,7 @@ export async function createLanguage(
 
   expect(actual).toBeTruthy();
 
-  expect(isValid(actual.id)).toBe(true);
+  expect(isValidId(actual.id)).toBe(true);
   expect(actual.name.value).toBe(language.name);
 
   return actual;
@@ -97,7 +96,7 @@ export async function createLanguageMinimal(app: TestApp) {
 
   expect(actual).toBeTruthy();
 
-  expect(isValid(actual.id)).toBe(true);
+  expect(isValidId(actual.id)).toBe(true);
   expect(actual.name.value).toBe(languageName);
 
   return actual;

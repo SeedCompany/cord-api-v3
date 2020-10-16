@@ -1,7 +1,6 @@
 import { gql } from 'apollo-server-core';
-import { isValid } from 'shortid';
 import { createPerson, getUserFromSession } from '.';
-import { generateId } from '../../src/common';
+import { generateId, isValidId } from '../../src/common';
 import { CreateFieldZone, FieldZone } from '../../src/components/field-zone';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
@@ -48,7 +47,7 @@ export async function createZone(
   const actual: FieldZone = result.createFieldZone.fieldZone;
   expect(actual).toBeTruthy();
 
-  expect(isValid(actual.id)).toBe(true);
+  expect(isValidId(actual.id)).toBe(true);
   expect(actual.name.value).toBe(fieldZone.name);
 
   return actual;

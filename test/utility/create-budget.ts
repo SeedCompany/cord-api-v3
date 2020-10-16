@@ -1,6 +1,5 @@
 import { gql } from 'apollo-server-core';
-import { isValid } from 'shortid';
-import { generateId } from '../../src/common';
+import { generateId, isValidId } from '../../src/common';
 import { Budget, CreateBudget } from '../../src/components/budget/dto';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
@@ -37,7 +36,7 @@ export async function createBudget(
   const actual: Budget = result.createBudget.budget;
   expect(actual).toBeTruthy();
 
-  expect(isValid(actual.id)).toBe(true);
+  expect(isValidId(actual.id)).toBe(true);
 
   return actual;
 }

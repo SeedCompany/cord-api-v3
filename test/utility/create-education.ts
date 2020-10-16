@@ -1,7 +1,7 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { upperFirst } from 'lodash';
-import { isValid } from 'shortid';
+import { isValidId } from '../../src/common';
 import {
   CreateEducation,
   Degree,
@@ -45,7 +45,7 @@ export async function createEducation(
   const actual: Education = result.createEducation.education;
   expect(actual).toBeTruthy();
 
-  expect(isValid(actual.id)).toBe(true);
+  expect(isValidId(actual.id)).toBe(true);
 
   return actual;
 }

@@ -1,7 +1,6 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
-import { isValid } from 'shortid';
-import { firstLettersOfWords } from '../src/common';
+import { firstLettersOfWords, isValidId } from '../src/common';
 import { Powers } from '../src/components/authorization/dto/powers';
 import { SecuredTimeZone } from '../src/components/timezone';
 import { UpdateUser, User, UserStatus } from '../src/components/user';
@@ -56,7 +55,7 @@ describe('User e2e', () => {
     const actual: User = result.user;
     expect(actual).toBeTruthy();
 
-    expect(isValid(actual.id)).toBe(true);
+    expect(isValidId(actual.id)).toBe(true);
     expect(actual.email.value).toBe(fakeUser.email);
     expect(actual.realFirstName.value).toBe(fakeUser.realFirstName);
     expect(actual.realLastName.value).toBe(fakeUser.realLastName);
@@ -94,7 +93,7 @@ describe('User e2e', () => {
     const actual: User = result.register.user;
     expect(actual).toBeTruthy();
 
-    expect(isValid(actual.id)).toBe(true);
+    expect(isValidId(actual.id)).toBe(true);
     expect(actual.email.value).toBe(user.email);
     expect(actual.realFirstName.value).toBe(user.realFirstName);
     expect(actual.realLastName.value).toBe(user.realLastName);
@@ -165,7 +164,7 @@ describe('User e2e', () => {
 
     expect(actual).toBeTruthy();
 
-    expect(isValid(actual.id)).toBe(true);
+    expect(isValidId(actual.id)).toBe(true);
 
     expect(actual.realFirstName.value).toBe(fakeUser.realFirstName);
     expect(actual.realLastName.value).toBe(fakeUser.realLastName);

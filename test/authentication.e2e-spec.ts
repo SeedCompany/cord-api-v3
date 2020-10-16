@@ -1,7 +1,7 @@
 import { gql } from 'apollo-server-core';
 import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
-import { isValid } from 'shortid';
+import { isValidId } from '../src/common';
 import { SecuredTimeZone } from '../src/components/timezone';
 import { User } from '../src/components/user';
 import { EmailService } from '../src/core/email';
@@ -110,7 +110,7 @@ describe('Authentication e2e', () => {
 
     const actual: User = result.user;
     expect(actual).toBeTruthy();
-    expect(isValid(actual.id)).toBe(true);
+    expect(isValidId(actual.id)).toBe(true);
     expect(actual.email.value).toBe(fakeUser.email);
     expect(actual.realFirstName.value).toBe(fakeUser.realFirstName);
     expect(actual.realLastName.value).toBe(fakeUser.realLastName);

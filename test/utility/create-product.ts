@@ -1,5 +1,5 @@
 import { gql } from 'apollo-server-core';
-import { isValid } from 'shortid';
+import { isValidId } from '../../src/common';
 import {
   CreateProduct,
   ProductMedium,
@@ -38,7 +38,7 @@ export async function createProduct(app: TestApp, input: CreateProduct) {
   const actual: RawProduct = result.createProduct.product;
   expect(actual).toBeTruthy();
 
-  expect(isValid(actual.id)).toBe(true);
+  expect(isValidId(actual.id)).toBe(true);
 
   return actual;
 }
